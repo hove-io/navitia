@@ -522,9 +522,17 @@ class Instance(flask_restful.Resource):
         )
 
         parser.add_argument(
-            'walking_transfer_penalty',
+            'arrival_transfer_penalty',
             type=int,
             help='transfer penalty, in second',
+            location=('json', 'values'),
+            default=instance.arrival_transfer_penalty,
+        )
+
+        parser.add_argument(
+            'walking_transfer_penalty',
+            type=int,
+            help='walking penalty, in second',
             location=('json', 'values'),
             default=instance.walking_transfer_penalty,
         )

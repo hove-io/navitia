@@ -46,12 +46,15 @@ struct StartingPointSndPhase;
 // by the pool).
 struct Dominates {
     bool request_clockwise;
-    navitia::time_duration transfer_penalty;
-    Dominates(bool rc, navitia::time_duration transfer_penalty)
-        : request_clockwise(rc), transfer_penalty(transfer_penalty) {}
+    navitia::time_duration arrival_transfer_penalty;
+    navitia::time_duration walking_transfer_penalty;
+    Dominates(bool rc, navitia::time_duration arrival_transfer_penalty, navitia::time_duration walking_transfer_penalty)
+        : request_clockwise(rc),
+          arrival_transfer_penalty(arrival_transfer_penalty),
+          walking_transfer_penalty(walking_transfer_penalty) {}
     bool operator()(const Journey& lhs, const Journey& rhs) const {
-        return lhs.better_on_dt(rhs, request_clockwise, transfer_penalty) && lhs.better_on_transfer(rhs)
-               && lhs.better_on_sn(rhs, navitia::time_duration(0, 0, 120, 0));
+        return lhs.better_on_dt(rhs, request_clockwise, arrival_transfer_penalty) && lhs.better_on_transfer(rhs)
+               && lhs.better_on_sn(rhs, walking_transfer_penalty);
     }
 };
 
@@ -95,7 +98,7 @@ void read_solutions(const RAPTOR& raptor,
                     const routing::map_stop_point_duration& arrs,
                     const type::RTLevel rt_level,
                     const type::AccessibiliteParams& accessibilite_params,
-                    const navitia::time_duration& transfer_penalty,
+                    const navitia::time_duration& arrival_transfer_penalty,
                     const StartingPointSndPhase& end_point);
 
 Path make_path(const Journey& journey, const type::Data& data);

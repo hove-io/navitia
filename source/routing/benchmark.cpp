@@ -209,7 +209,7 @@ int main(int argc, char** argv) {
         }
         auto res = router.compute(data.pt_data->stop_areas[demand.start], data.pt_data->stop_areas[demand.target],
                                   demand.hour, demand.date, DateTimeUtils::set(demand.date + 1, demand.hour),
-                                  type::RTLevel::Base, 2_min, true, {}, 10);
+                                  type::RTLevel::Base, 2_min, 2_min, true, {}, 10);
 
         Path path;
         if (!res.empty()) {

@@ -160,6 +160,7 @@ instance_fields = {
     'max_duration_criteria': fields.Raw,
     'max_duration_fallback_mode': fields.Raw,
     'max_duration': fields.Raw,
+    'arrival_transfer_penalty': fields.Raw,
     'walking_transfer_penalty': fields.Raw,
     'night_bus_filter_max_factor': fields.Raw,
     'night_bus_filter_base_factor': fields.Raw,

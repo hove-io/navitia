@@ -764,8 +764,8 @@ void Worker::journeys(const pbnavitia::JourneysRequest& request,
                 routing::make_pt_response(
                     this->pb_creator, *planner, arg.origins, arg.destinations, arg.datetimes[0], request.clockwise(),
                     arg.accessibilite_params, arg.forbidden, arg.allowed, arg.rt_level,
-                    seconds{request.walking_transfer_penalty()}, request.max_duration(), request.max_transfers(),
-                    max_extra_second_pass,
+                    seconds{request.arrival_transfer_penalty()}, seconds{request.walking_transfer_penalty()},
+                    request.max_duration(), request.max_transfers(), max_extra_second_pass,
                     request.has_direct_path_duration()
                         ? boost::optional<time_duration>(seconds{request.direct_path_duration()})
                         : boost::optional<time_duration>(),
@@ -780,8 +780,9 @@ void Worker::journeys(const pbnavitia::JourneysRequest& request,
                 routing::make_response(
                     this->pb_creator, *planner, arg.origins[0], arg.destinations[0], arg.datetimes, request.clockwise(),
                     arg.accessibilite_params, arg.forbidden, arg.allowed, *street_network_worker, arg.rt_level,
-                    seconds{request.walking_transfer_penalty()}, request.max_duration(), request.max_transfers(),
-                    max_extra_second_pass, request.free_radius_from(), request.free_radius_to(),
+                    seconds{request.arrival_transfer_penalty()}, seconds{request.arrival_transfer_penalty()},
+                    request.max_duration(), request.max_transfers(), max_extra_second_pass, request.free_radius_from(),
+                    request.free_radius_to(),
                     request.has_min_nb_journeys() ? boost::make_optional<uint32_t>(request.min_nb_journeys())
                                                   : boost::none,
                     request.night_bus_filter_max_factor(), request.night_bus_filter_base_factor(),

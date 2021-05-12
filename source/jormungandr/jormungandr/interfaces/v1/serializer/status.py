@@ -62,6 +62,7 @@ class ParametersSerializer(serpy.Serializer):
     scenario = Field(schema_type=str, attr=str('_scenario_name'))
     successive_physical_mode_to_limit_id = Field(schema_type=str)
     walking_speed = Field(schema_type=float)
+    arrival_transfer_penalty = Field(schema_type=int)
     walking_transfer_penalty = Field(schema_type=int)
     min_nb_journeys = Field(schema_type=int)
     max_nb_journeys = Field(schema_type=int)

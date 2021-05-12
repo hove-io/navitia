@@ -55,14 +55,14 @@ BOOST_AUTO_TEST_CASE(freq_vj) {
     const type::PT_Data& d = *b.data->pt_data;
 
     auto res1 = raptor.compute(d.stop_areas_map.at("stop1"), d.stop_areas_map.at("stop2"), 8 * 3600, 0,
-                               DateTimeUtils::inf, type::RTLevel::Base, 2_min, true);
+                               DateTimeUtils::inf, type::RTLevel::Base, 2_min, 2_min, true);
 
     BOOST_REQUIRE_EQUAL(res1.size(), 1);
 
     BOOST_CHECK_EQUAL(res1[0].items[0].arrival.time_of_day().total_seconds(), 8 * 3600 + 10 * 60);
 
     res1 = raptor.compute(d.stop_areas_map.at("stop1"), d.stop_areas_map.at("stop2"), 9 * 3600, 0, DateTimeUtils::inf,
-                          type::RTLevel::Base, 2_min, true);
+                          type::RTLevel::Base, 2_min, 2_min, true);
     BOOST_REQUIRE_EQUAL(res1.size(), 1);
     BOOST_CHECK_EQUAL(res1[0].items[0].arrival.time_of_day().total_seconds(), 9 * 3600 + 10 * 60);
 }
@@ -76,13 +76,13 @@ BOOST_AUTO_TEST_CASE(freq_vj_pam) {
     const type::PT_Data& d = *b.data->pt_data;
 
     auto res1 = raptor.compute(d.stop_areas_map.at("stop1"), d.stop_areas_map.at("stop2"), 23 * 3600, 0,
-                               DateTimeUtils::inf, type::RTLevel::Base, 2_min, true);
+                               DateTimeUtils::inf, type::RTLevel::Base, 2_min, 2_min, true);
 
     BOOST_REQUIRE_EQUAL(res1.size(), 1);
     BOOST_CHECK_EQUAL(res1[0].items[0].arrival.time_of_day().total_seconds(), 23 * 3600 + 10 * 60);
 
     /*auto*/ res1 = raptor.compute(d.stop_areas_map.at("stop1"), d.stop_areas_map.at("stop2"), 24 * 3600, 0,
-                                   DateTimeUtils::inf, type::RTLevel::Base, 2_min, true);
+                                   DateTimeUtils::inf, type::RTLevel::Base, 2_min, 2_min, true);
 
     BOOST_REQUIRE_EQUAL(res1.size(), 1);
     BOOST_CHECK_EQUAL(DateTimeUtils::date(to_datetime(res1[0].items[0].arrival, *(b.data))), 1);
@@ -90,7 +90,7 @@ BOOST_AUTO_TEST_CASE(freq_vj_pam) {
                       (24 * 3600 + 10 * 60) % DateTimeUtils::SECONDS_PER_DAY);
 
     /*auto*/ res1 = raptor.compute(d.stop_areas_map.at("stop1"), d.stop_areas_map.at("stop2"), 25 * 3600, 0,
-                                   DateTimeUtils::inf, type::RTLevel::Base, 2_min, true);
+                                   DateTimeUtils::inf, type::RTLevel::Base, 2_min, 2_min, true);
 
     BOOST_REQUIRE_EQUAL(res1.size(), 1);
     BOOST_CHECK_EQUAL(DateTimeUtils::date(to_datetime(res1[0].items[0].arrival, *(b.data))), 1);
@@ -123,14 +123,14 @@ BOOST_AUTO_TEST_CASE(freq_vj_stop_times) {
     };
 
     auto res_earliest = raptor.compute(d.stop_areas_map.at("stop1"), d.stop_areas_map.at("stop3"), 9 * 3600, 0,
-                                       DateTimeUtils::inf, type::RTLevel::Base, 2_min, true);
+                                       DateTimeUtils::inf, type::RTLevel::Base, 2_min, 2_min, true);
 
     BOOST_REQUIRE_EQUAL(res_earliest.size(), 1);
     check_journey(res_earliest[0]);
 
     // same but tardiest departure
     auto res_tardiest = raptor.compute(d.stop_areas_map.at("stop1"), d.stop_areas_map.at("stop3"), 9 * 3600 + 30 * 60,
-                                       0, DateTimeUtils::min, type::RTLevel::Base, 2_min, false);
+                                       0, DateTimeUtils::min, type::RTLevel::Base, 2_min, 2_min, false);
 
     BOOST_REQUIRE_EQUAL(res_tardiest.size(), 1);
     check_journey(res_tardiest[0]);
@@ -167,14 +167,14 @@ BOOST_AUTO_TEST_CASE(freq_vj_different_departure_arrival_duration) {
     };
 
     auto res_earliest = raptor.compute(d.stop_areas_map.at("stop1"), d.stop_areas_map.at("stop3"), 9 * 3600 + 5 * 60, 0,
-                                       DateTimeUtils::inf, type::RTLevel::Base, 2_min, true);
+                                       DateTimeUtils::inf, type::RTLevel::Base, 2_min, 2_min, true);
 
     BOOST_REQUIRE_EQUAL(res_earliest.size(), 1);
     check_journey(res_earliest[0]);
 
     // same but tardiest departure
     auto res_tardiest = raptor.compute(d.stop_areas_map.at("stop1"), d.stop_areas_map.at("stop3"), 10 * 3600, 0,
-                                       DateTimeUtils::min, type::RTLevel::Base, 2_min, false);
+                                       DateTimeUtils::min, type::RTLevel::Base, 2_min, 2_min, false);
 
     BOOST_REQUIRE_EQUAL(res_tardiest.size(), 1);
     check_journey(res_tardiest[0]);
@@ -210,14 +210,14 @@ BOOST_AUTO_TEST_CASE(freq_vj_overmidnight_different_dep_arr) {
 
     // leaving at 22:15, we have to wait for the next departure at 23:10
     auto res_earliest = raptor.compute(d.stop_areas_map.at("stop1"), d.stop_areas_map.at("stop3"), 22 * 3600 + 15 * 60,
-                                       2, DateTimeUtils::inf, type::RTLevel::Base, 2_min, true);
+                                       2, DateTimeUtils::inf, type::RTLevel::Base, 2_min, 2_min, true);
 
     BOOST_REQUIRE_EQUAL(res_earliest.size(), 1);
     check_journey(res_earliest[0]);
 
     // wwe want to arrive before 01:00 we'll take the same trip
     auto res_tardiest = raptor.compute(d.stop_areas_map.at("stop1"), d.stop_areas_map.at("stop3"), 1 * 3600, 3,
-                                       DateTimeUtils::min, type::RTLevel::Base, 2_min, false);
+                                       DateTimeUtils::min, type::RTLevel::Base, 2_min, 2_min, false);
 
     BOOST_REQUIRE_EQUAL(res_earliest.size(), 1);
     check_journey(res_earliest[0]);
@@ -275,13 +275,13 @@ BOOST_AUTO_TEST_CASE(freq_vj_transfer_with_regular_vj) {
     // leaving after 10:20, we have to wait for the next bus at 11:15
     // then we can catch the bus B at 12:10 and finish at 12:30
     auto res_earliest = raptor.compute(d.stop_areas_map.at("stop1"), d.stop_areas_map.at("stop5"), "10:20"_t, 2,
-                                       DateTimeUtils::inf, type::RTLevel::Base, 2_min, true);
+                                       DateTimeUtils::inf, type::RTLevel::Base, 2_min, 2_min, true);
 
     BOOST_REQUIRE_EQUAL(res_earliest.size(), 1);
     check_journey(res_earliest[0]);
 
     auto res_tardiest = raptor.compute(d.stop_areas_map.at("stop1"), d.stop_areas_map.at("stop5"), "12:40"_t, 2,
-                                       DateTimeUtils::min, type::RTLevel::Base, 2_min, false);
+                                       DateTimeUtils::min, type::RTLevel::Base, 2_min, 2_min, false);
 
     BOOST_REQUIRE_EQUAL(res_tardiest.size(), 1);
     check_journey(res_tardiest[0]);
@@ -350,13 +350,13 @@ BOOST_AUTO_TEST_CASE(transfer_between_freq) {
     // so we leave at 12:10 to arrive at 13:20
     // then we have to wait for the begin of the bust B at 14:04 and finish at 14:35
     auto res_earliest = raptor.compute(d.stop_areas_map.at("stop1"), d.stop_areas_map.at("stop5"), "11:10"_t, 2,
-                                       DateTimeUtils::inf, type::RTLevel::Base, 2_min, true);
+                                       DateTimeUtils::inf, type::RTLevel::Base, 2_min, 2_min, true);
 
     BOOST_REQUIRE_EQUAL(res_earliest.size(), 1);
     check_journey(res_earliest[0]);
 
     auto res_tardiest = raptor.compute(d.stop_areas_map.at("stop1"), d.stop_areas_map.at("stop5"), "14:35"_t, 2,
-                                       DateTimeUtils::min, type::RTLevel::Base, 2_min, false);
+                                       DateTimeUtils::min, type::RTLevel::Base, 2_min, 2_min, false);
 
     BOOST_REQUIRE_EQUAL(res_tardiest.size(), 1);
     check_journey(res_tardiest[0]);
@@ -382,7 +382,7 @@ BOOST_AUTO_TEST_CASE(freq_vj_end_time_is_smaller_than_start_time) {
 
     auto compute = [&](int day) {
         return raptor.compute(d.stop_areas_map.at("stop1"), d.stop_areas_map.at("stop3"), "21:30"_t, day,
-                              DateTimeUtils::inf, type::RTLevel::Base, 2_min, true);
+                              DateTimeUtils::inf, type::RTLevel::Base, 2_min, 2_min, true);
     };
 
     auto res = compute(1);
@@ -412,7 +412,7 @@ BOOST_AUTO_TEST_CASE(freq_vj_with_boarding_alighting) {
     RAPTOR raptor(*(b.data));
 
     auto result = raptor.compute(b.data->pt_data->stop_areas_map["stop1"], b.data->pt_data->stop_areas_map["stop3"],
-                                 "07:58"_t, 0, DateTimeUtils::inf, type::RTLevel::Base, 2_min);
+                                 "07:58"_t, 0, DateTimeUtils::inf, type::RTLevel::Base, 2_min, 2_min);
 
     BOOST_REQUIRE_EQUAL(result.size(), 1);
     BOOST_REQUIRE_EQUAL(result.at(0).items.size(), 3);
@@ -427,7 +427,7 @@ BOOST_AUTO_TEST_CASE(freq_vj_with_boarding_alighting) {
     BOOST_CHECK_EQUAL(result.at(0).items[2].arrival, "20170101T084500"_dt);
 
     result = raptor.compute(b.data->pt_data->stop_areas_map["stop1"], b.data->pt_data->stop_areas_map["stop3"],
-                            "08:43"_t, 0, DateTimeUtils::min, type::RTLevel::Base, 2_min, false);
+                            "08:43"_t, 0, DateTimeUtils::min, type::RTLevel::Base, 2_min, 2_min, false);
 
     BOOST_REQUIRE_EQUAL(result.size(), 1);
     BOOST_REQUIRE_EQUAL(result.at(0).items.size(), 3);
@@ -460,7 +460,7 @@ BOOST_AUTO_TEST_CASE(transfer_between_freq_with_boarding_alighting) {
     RAPTOR raptor(*(b.data));
 
     auto result = raptor.compute(b.data->pt_data->stop_areas_map["stop1"], b.data->pt_data->stop_areas_map["stop5"],
-                                 "08:00"_t, 0, DateTimeUtils::inf, type::RTLevel::Base, 2_min);
+                                 "08:00"_t, 0, DateTimeUtils::inf, type::RTLevel::Base, 2_min, 2_min);
 
     BOOST_REQUIRE_EQUAL(result.size(), 1);
     BOOST_REQUIRE_EQUAL(result.at(0).items.size(), 7);
@@ -487,7 +487,7 @@ BOOST_AUTO_TEST_CASE(transfer_between_freq_with_boarding_alighting) {
     BOOST_CHECK_EQUAL(result.at(0).items[6].arrival, "20170101T125000"_dt);
 
     result = raptor.compute(b.data->pt_data->stop_areas_map["stop1"], b.data->pt_data->stop_areas_map["stop5"],
-                            "18:00"_t, 0, DateTimeUtils::min, type::RTLevel::Base, 2_min, false);
+                            "18:00"_t, 0, DateTimeUtils::min, type::RTLevel::Base, 2_min, 2_min, false);
 
     BOOST_REQUIRE_EQUAL(result.size(), 1);
     BOOST_REQUIRE_EQUAL(result.at(0).items.size(), 7);
@@ -539,7 +539,7 @@ BOOST_AUTO_TEST_CASE(transfer_pass_midnight_freq_vj_to_vj_with_boarding_time) {
 
     // We should take the last possible vj on A in order to get vj:B1
     auto result = raptor.compute(b.data->pt_data->stop_areas_map["stop1"], b.data->pt_data->stop_areas_map["stop5"],
-                                 "22:10"_t, 0, DateTimeUtils::inf, type::RTLevel::Base, 2_min);
+                                 "22:10"_t, 0, DateTimeUtils::inf, type::RTLevel::Base, 2_min, 2_min);
 
     BOOST_REQUIRE_EQUAL(result.size(), 1);
     BOOST_REQUIRE_EQUAL(result.at(0).items.size(), 6);
@@ -564,7 +564,7 @@ BOOST_AUTO_TEST_CASE(transfer_pass_midnight_freq_vj_to_vj_with_boarding_time) {
 
     // We should take the last vj of the frequency (at 5am) and wait two hours to get vj:B2
     result = raptor.compute(b.data->pt_data->stop_areas_map["stop1"], b.data->pt_data->stop_areas_map["stop5"],
-                            "09:00"_t, 1, DateTimeUtils::min, type::RTLevel::Base, 2_min, false);
+                            "09:00"_t, 1, DateTimeUtils::min, type::RTLevel::Base, 2_min, 2_min, false);
 
     BOOST_REQUIRE_EQUAL(result.size(), 1);
     BOOST_REQUIRE_EQUAL(result.at(0).items.size(), 6);

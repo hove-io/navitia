@@ -422,7 +422,8 @@ std::vector<Path> RAPTOR::compute_all(const map_stop_point_duration& departures,
                                       const map_stop_point_duration& destinations,
                                       const DateTime& departure_datetime,
                                       const nt::RTLevel rt_level,
-                                      const navitia::time_duration& transfer_penalty,
+                                      const navitia::time_duration& arrival_transfer_penalty,
+                                      const navitia::time_duration& walking_transfer_penalty,
                                       const DateTime& bound,
                                       const uint32_t max_transfers,
                                       const type::AccessibiliteParams& accessibilite_params,
@@ -435,9 +436,10 @@ std::vector<Path> RAPTOR::compute_all(const map_stop_point_duration& departures,
     set_valid_jp_and_jpp(DateTimeUtils::date(departure_datetime), accessibilite_params, forbidden_uri, allowed_ids,
                          rt_level);
 
-    const auto& journeys = compute_all_journeys(departures, destinations, departure_datetime, rt_level,
-                                                transfer_penalty, bound, max_transfers, accessibilite_params, clockwise,
-                                                direct_path_dur, max_extra_second_pass, current_datetime);
+    const auto& journeys =
+        compute_all_journeys(departures, destinations, departure_datetime, rt_level, arrival_transfer_penalty,
+                             walking_transfer_penalty, bound, max_transfers, accessibilite_params, clockwise,
+                             direct_path_dur, max_extra_second_pass, current_datetime);
     return from_journeys_to_path(journeys);
 }
 
@@ -445,7 +447,8 @@ RAPTOR::Journeys RAPTOR::compute_all_journeys(const map_stop_point_duration& dep
                                               const map_stop_point_duration& destinations,
                                               const DateTime& departure_datetime,
                                               const nt::RTLevel rt_level,
-                                              const navitia::time_duration& transfer_penalty,
+                                              const navitia::time_duration& arrival_transfer_penalty,
+                                              const navitia::time_duration& walking_transfer_penalty,
                                               const DateTime& bound,
                                               const uint32_t max_transfers,
                                               const type::AccessibiliteParams& accessibilite_params,
@@ -456,7 +459,7 @@ RAPTOR::Journeys RAPTOR::compute_all_journeys(const map_stop_point_duration& dep
     auto start_raptor = std::chrono::system_clock::now();
 
     // auto solutions = ParetoFront<Journey, Dominates /*, JourneyParetoFrontVisitor*/>(Dominates(clockwise));
-    auto dominator = Dominates(clockwise, transfer_penalty);
+    auto dominator = Dominates(clockwise, arrival_transfer_penalty, walking_transfer_penalty);
     auto solutions = Solutions(dominator);
 
     if (direct_path_dur) {
@@ -550,7 +553,7 @@ RAPTOR::Journeys RAPTOR::compute_all_journeys(const map_stop_point_duration& dep
         boucleRAPTOR(accessibilite_params, !clockwise, rt_level, max_transfers);
 
         read_solutions(*this, solutions, !clockwise, departure_datetime, departures, destinations, rt_level,
-                       accessibilite_params, transfer_penalty, start);
+                       accessibilite_params, arrival_transfer_penalty, start);
 
         LOG4CPLUS_DEBUG(raptor_logger, "end of raptor loop body, nb of solutions : " << solutions.size());
 
@@ -964,7 +967,8 @@ std::vector<Path> RAPTOR::compute(const type::StopArea* departure,
                                   int departure_day,
                                   DateTime borne,
                                   const nt::RTLevel rt_level,
-                                  const navitia::time_duration& transfer_penalty,
+                                  const navitia::time_duration& arrival_transfer_penalty,
+                                  const navitia::time_duration& walking_transfer_penalty,
                                   bool clockwise,
                                   const type::AccessibiliteParams& accessibilite_params,
                                   uint32_t max_transfers,
@@ -982,8 +986,8 @@ std::vector<Path> RAPTOR::compute(const type::StopArea* departure,
     }
 
     return compute_all(departures, destinations, DateTimeUtils::set(departure_day, departure_hour), rt_level,
-                       transfer_penalty, borne, max_transfers, accessibilite_params, forbidden_uri, {}, clockwise,
-                       direct_path_dur, 0, current_datetime);
+                       arrival_transfer_penalty, walking_transfer_penalty, borne, max_transfers, accessibilite_params,
+                       forbidden_uri, {}, clockwise, direct_path_dur, 0, current_datetime);
 }
 
 int RAPTOR::best_round(SpIdx sp_idx) {

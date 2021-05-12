@@ -307,6 +307,7 @@ class PtJourneyPool:
                 wheelchair=request['wheelchair'] or False,
                 realtime_level=request['data_freshness'],
                 max_extra_second_pass=request['max_extra_second_pass'],
+                arrival_transfer_penalty=request['_arrival_transfer_penalty'],
                 walking_transfer_penalty=request['_walking_transfer_penalty'],
                 forbidden_uris=request['forbidden_uris[]'],
                 allowed_id=request['allowed_id[]'],
