@@ -93,7 +93,7 @@ class Geovelo(AbstractStreetNetworkService):
     @classmethod
     def _pt_object_summary_isochrone(cls, pt_object):
         coord = get_pt_object_coord(pt_object)
-        return coord.lat, coord.lon, None
+        return [coord.lat, coord.lon, None]
 
     @classmethod
     def _make_request_arguments_bike_details(cls, bike_speed_mps):
@@ -111,51 +111,36 @@ class Geovelo(AbstractStreetNetworkService):
         # In real life data physical_modes is never empty with depth = 2
         if len(obj.stop_point.physical_modes) == 0:
             return True
-        for mode in obj.stop_point.physical_modes:
-            if mode.uri in modes:
-                return True
+        return any((mode.uri in modes for mode in obj.stop_point.physical_modes))
 
     @classmethod
-    def _make_request_arguments_isochrone(cls, origins, destinations, bike_speed_mps=3.33):
+    def _filter_bike_matrix_by_modes(cls, points):
+        # Filter matrix points with modes having priority order:
+        # Train', 'RapidTransit', 'Metro', 'Tramway', Car, Bus
         train_modes = ['physical_mode:Train', 'physical_mode:RapidTransit']
         metro_modes = ['physical_mode:Metro']
         tram_modes = ['physical_mode:Tramway']
         bus_modes = ['physical_mode:Car', 'physical_mode:Bus']
+        points_coord = []
+        for modes in (train_modes, metro_modes, tram_modes, bus_modes):
+            for o in points:
+                if cls._keep_obj_for_mode(o, modes):
+                    coord = cls._pt_object_summary_isochrone(o)
+                    if coord not in points_coord:
+                        points_coord.append(coord)
+                        if len(points_coord) >= 50:
+                            break
+        return points_coord
 
-        origins_coord = set()
-        destinations_coord = set()
+    @classmethod
+    def _make_request_arguments_isochrone(cls, origins, destinations, bike_speed_mps=3.33):
         if len(origins) == 1:
-            origins_coord.update(cls._pt_object_summary_isochrone(o) for o in origins)
-
-            # Filter matrix points with modes having priority order:
-            # Train', 'RapidTransit', 'Metro', 'Tramway', Car, Bus
-            for modes in (train_modes, metro_modes, tram_modes, bus_modes):
-                if len(destinations_coord) < 50:
-                    destinations_coord.update(
-                        cls._pt_object_summary_isochrone(o)
-                        for o in destinations
-                        if cls._keep_obj_for_mode(o, modes)
-                    )
-                else:
-                    break
-
-            destinations_coord = list(destinations_coord)
-            del destinations_coord[50:]
+            origins_coord = [cls._pt_object_summary_isochrone(o) for o in origins]
+            destinations_coord = cls._filter_bike_matrix_by_modes(destinations)
         else:
-            destinations_coord.update(cls._pt_object_summary_isochrone(o) for o in destinations)
+            origins_coord = cls._filter_bike_matrix_by_modes(origins)
+            destinations_coord = [cls._pt_object_summary_isochrone(o) for o in destinations]
 
-            # Filter matrix points with modes having priority order:
-            # Train', 'RapidTransit', 'Metro', 'Tramway', Car, Bus
-            for modes in (train_modes, metro_modes, tram_modes, bus_modes):
-                if len(origins_coord) < 50:
-                    origins_coord.update(
-                        cls._pt_object_summary_isochrone(o) for o in origins if cls._keep_obj_for_mode(o, modes)
-                    )
-                else:
-                    break
-
-            origins_coord = list(origins_coord)
-            del origins_coord[50:]
         return {
             'starts': [o for o in origins_coord],
             'ends': [o for o in destinations_coord],
