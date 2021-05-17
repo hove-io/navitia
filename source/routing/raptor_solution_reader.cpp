@@ -548,7 +548,9 @@ struct RaptorSolutionReader {
         const DateTime begin_limit = raptor.labels[count][jpp.idx].dt_pt;
 
         // trying to begin
-        const auto begin_st_dt = raptor.next_st->next_stop_time(v.stop_event(), jpp.idx, begin_dt, v.clockwise());
+        const auto begin_st_dt =
+            raptor.next_st->next_stop_time(v.stop_event(), jpp.idx, begin_dt, v.clockwise(), rt_level,
+                                           accessibilite_params.vehicle_properties, true, begin_limit);
         if (begin_st_dt.first == nullptr) {
             return;
         }
@@ -582,7 +584,8 @@ struct RaptorSolutionReader {
         const DateTime begin_limit = raptor.labels[count][jpp.idx].dt_pt;
 
         // trying to begin
-        const auto begin_st_dt = raptor.next_st->next_stop_time(v.stop_event(), jpp.idx, begin_dt, v.clockwise());
+        const auto begin_st_dt = raptor.next_st->next_stop_time(v.stop_event(), jpp.idx, begin_dt, v.clockwise(),
+                                                                rt_level, accessibilite_params.vehicle_properties);
         if (begin_st_dt.first == nullptr) {
             return;
         }
@@ -636,17 +639,17 @@ void read_solutions(const RAPTOR& raptor,
                 auto j = make_bound_journey(working_label.dt_pt, a.second, first_endpoint_label.dt_transfer,
                                             end_point_street_network_duration, count,
                                             navitia::seconds(transfer_duration), v.clockwise());
-                LOG4CPLUS_DEBUG(raptor.raptor_logger, "Journey from " << stop_point->uri << " count : " << count
+                LOG4CPLUS_TRACE(raptor.raptor_logger, "Journey from " << stop_point->uri << " count : " << count
                                                                       << std::endl
                                                                       << j);
 
                 if (reader.solutions.contains_better_than(j)) {
-                    LOG4CPLUS_DEBUG(raptor.raptor_logger, "Journey discarded");
+                    LOG4CPLUS_TRACE(raptor.raptor_logger, "Journey discarded");
 
                     continue;
                 }
                 try {
-                    LOG4CPLUS_DEBUG(raptor.raptor_logger, "try to build journey ");
+                    LOG4CPLUS_TRACE(raptor.raptor_logger, "try to build journey ");
                     reader.begin_pt(count, jpp, working_label.dt_pt);
                 } catch (stop_search&) {
                 }
