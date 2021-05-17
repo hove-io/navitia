@@ -1045,6 +1045,10 @@ void Worker::direct_path(const pbnavitia::Request& request) {
                              dp_request.clockwise());
 }
 
+size_t Worker::get_raptor_next_st_cache_miss() const {
+    return planner->data.dataRaptor->cached_next_st_manager->get_nb_cache_miss();
+}
+
 void Worker::dispatch(const pbnavitia::Request& request, const nt::Data& data) {
     bool disable_geojson = get_geojson_state(request);
     boost::posix_time::ptime current_datetime = bt::from_time_t(request._current_datetime());

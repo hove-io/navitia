@@ -92,6 +92,7 @@ public:
     ~Worker();
 
     void dispatch(const pbnavitia::Request& request, const nt::Data& data);
+    size_t get_raptor_next_st_cache_miss() const;
 
 private:
     void init_worker_data(const navitia::type::Data* data,
