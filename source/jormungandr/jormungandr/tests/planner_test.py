@@ -47,17 +47,17 @@ def check_basic_journeys_request(journeys_req):
     assert journeys_req.night_bus_filter_base_factor == 900
     assert len(journeys_req.datetimes) == 1
     assert journeys_req.datetimes[0] == str_to_time_stamp("20120614T080000")
-    assert journeys_req.clockwise == True
+    assert journeys_req.clockwise is True
     assert journeys_req.realtime_level == type_pb2.BASE_SCHEDULE
     assert journeys_req.max_duration == 86400
     assert journeys_req.max_transfers == 10
-    assert journeys_req.wheelchair == False
+    assert journeys_req.wheelchair is False
     assert journeys_req.max_extra_second_pass == 0
     assert journeys_req.forbidden_uris == []
     assert journeys_req.allowed_id == []
     assert journeys_req.direct_path_duration == 0
-    assert journeys_req.bike_in_pt == False
-    assert journeys_req.min_nb_journeys == False
+    assert journeys_req.bike_in_pt is False
+    assert journeys_req.min_nb_journeys == 0
     assert journeys_req.timeframe_duration == 0
     assert journeys_req.depth == 1
     assert journeys_req.isochrone_center.place == ""
@@ -86,6 +86,8 @@ def create_journeys_request_test():
 
     assert req.requested_api == type_pb2.pt_planner
     check_basic_journeys_request(req.journeys)
+    assert req.journeys.walking_transfer_penalty == 120
+    assert req.journeys.arrival_transfer_penalty == 120
 
 
 def test_journey_request_current_time():
@@ -112,3 +114,18 @@ def create_graphical_isochrones_request_test():
 
     assert req.requested_api == type_pb2.graphical_isochrone
     check_graphical_isochrones_request(req.isochrone)
+
+
+def test_journey_request_tranfer_penalties():
+    origin = {"Kisio Digital": 42}
+    destination = {"Somewhere": 666}
+    journey_parameters = JourneyParameters(arrival_transfer_penalty=60, walking_transfer_penalty=240)
+    datetime = str_to_time_stamp("20120614T080000")
+    planner = Kraken(None)
+
+    req = planner._create_journeys_request(origin, destination, datetime, True, journey_parameters, False)
+
+    assert req.requested_api == type_pb2.pt_planner
+    check_basic_journeys_request(req.journeys)
+    assert req.journeys.walking_transfer_penalty == 240
+    assert req.journeys.arrival_transfer_penalty == 60

@@ -161,6 +161,12 @@ class Kraken(object):
         if journey_parameters.current_datetime:
             req._current_datetime = journey_parameters.current_datetime
 
+        if journey_parameters.walking_transfer_penalty:
+            req.journeys.walking_transfer_penalty = journey_parameters.walking_transfer_penalty
+
+        if journey_parameters.arrival_transfer_penalty:
+            req.journeys.arrival_transfer_penalty = journey_parameters.arrival_transfer_penalty
+
         return req
 
     def _create_graphical_isochrones_request(
