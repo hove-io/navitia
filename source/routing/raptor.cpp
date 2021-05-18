@@ -231,7 +231,6 @@ void RAPTOR::init(const map_jpp_duration& dep,
     }
 }
 
-
 RAPTOR::NEXT_STOPTIME_TYPE RAPTOR::choose_next_stop_time_type(
     const DateTime& departure_datetime,
     const boost::optional<boost::posix_time::ptime>& current_datetime) const {
