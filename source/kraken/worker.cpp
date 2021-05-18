@@ -1045,8 +1045,11 @@ void Worker::direct_path(const pbnavitia::Request& request) {
                              dp_request.clockwise());
 }
 
-size_t Worker::get_raptor_next_st_cache_miss() const {
-    return planner->data.dataRaptor->cached_next_st_manager->get_nb_cache_miss();
+boost::optional<size_t> Worker::get_raptor_next_st_cache_miss() const {
+    if (planner->data.dataRaptor && planner->data.dataRaptor->cached_next_st_manager) {
+        return planner->data.dataRaptor->cached_next_st_manager->get_nb_cache_miss();
+    }
+    return boost::none;
 }
 
 void Worker::dispatch(const pbnavitia::Request& request, const nt::Data& data) {
