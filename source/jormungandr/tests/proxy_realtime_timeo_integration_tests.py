@@ -30,16 +30,10 @@
 # www.navitia.io
 
 from __future__ import absolute_import, print_function, unicode_literals, division
-from collections import namedtuple
 
 from .tests_mechanism import AbstractTestFixture, dataset
-from jormungandr.realtime_schedule import realtime_proxy, realtime_proxy_manager
-from jormungandr.schedule import RealTimePassage
-import datetime
-import pytz
-from .check_utils import is_valid_stop_date_time, get_not_null, is_valid_notes
+from .check_utils import is_valid_notes
 from mock import MagicMock
-from navitiacommon import type_pb2
 from jormungandr.realtime_schedule.timeo import Timeo
 
 
@@ -116,6 +110,73 @@ class MockTimeo(Timeo):
                                     "NextStop": "10:13:52",
                                     "Destination": "DIRECTION AA",
                                     "Terminus": "Kisio数字_C:S43",
+                                },
+                            ],
+                        },
+                    }
+                ],
+                "MessageResponse": [{"ResponseCode": 0, "ResponseComment": "success"}],
+            }
+        if url == 'S39':
+            json = {
+                "CorrelationID": "AA",
+                "StopTimesResponse": [
+                    {
+                        "StopID": "S39",
+                        "StopTimeoCode": "AAAAA",
+                        "StopLongName": "Malraux",
+                        "StopShortName": "Malraux",
+                        "StopVocalName": "Malraux",
+                        "ReferenceTime": "08:54:53",
+                        "NextStopTimesMessage": {
+                            "LineID": "AAA",
+                            "Way": "A",
+                            "LineMainDirection": "DIRECTION AA",
+                            "NextExpectedStopTime": [
+                                {
+                                    "NextStop": "09:00:52",
+                                    "Destination": "DIRECTION AA",
+                                    "Terminus": "Kisio数字_C:S43",
+                                    "is_realtime": False,
+                                },
+                                {
+                                    "NextStop": "09:13:52",
+                                    "Destination": "DIRECTION AA",
+                                    "Terminus": "Kisio数字_C:S43",
+                                },
+                            ],
+                        },
+                    }
+                ],
+                "MessageResponse": [{"ResponseCode": 0, "ResponseComment": "success"}],
+            }
+        if url == 'TS39':
+            json = {
+                "CorrelationID": "AA",
+                "StopTimesResponse": [
+                    {
+                        "StopID": "TS39",
+                        "StopTimeoCode": "AAAAA",
+                        "StopLongName": "Malraux",
+                        "StopShortName": "Malraux",
+                        "StopVocalName": "Malraux",
+                        "ReferenceTime": "08:54:53",
+                        "NextStopTimesMessage": {
+                            "LineID": "AAA",
+                            "Way": "A",
+                            "LineMainDirection": "DIRECTION AA",
+                            "NextExpectedStopTime": [
+                                {
+                                    "NextStop": "09:00:52",
+                                    "Destination": "DIRECTION AA",
+                                    "Terminus": "Kisio数字_C:S43",
+                                    "is_realtime": False,
+                                },
+                                {
+                                    "NextStop": "09:13:52",
+                                    "Destination": "DIRECTION AA",
+                                    "Terminus": "Kisio数字_C:S43",
+                                    "is_realtime": False,
                                 },
                             ],
                         },
@@ -319,6 +380,84 @@ class TestDepartures(AbstractTestFixture):
         links = date_times[1]["links"]
         assert len(links) == 1
         assert links[0]['id'] == 'note:b5b328cb593ae7b1d73228345fe634fc'
+
+    def test_terminus_schedule_with_realtime_and_is_realtime_field(self):
+
+        query = self.query_template_ter.format(
+            sp='S39', dt='20160102T0800', data_freshness='', c_dt='20160102T0800'
+        )
+
+        response = self.query_region(query)
+        is_valid_notes(response["notes"])
+        terminus_schedules = response['terminus_schedules']
+        assert len(terminus_schedules) == 1
+        date_times = terminus_schedules[0]['date_times']
+        assert len(date_times) == 3
+        assert date_times[0]['data_freshness'] == 'base_schedule'
+        assert date_times[0]['date_time'] == '20160102T090200'
+
+        assert date_times[1]['data_freshness'] == 'base_schedule'
+        assert date_times[1]['date_time'] == '20160102T090700'
+
+        assert date_times[2]['data_freshness'] == 'base_schedule'
+        assert date_times[2]['date_time'] == '20160102T091100'
+
+        query = self.query_template_ter.format(
+            sp='S39', dt='20160102T0800', data_freshness='&data_freshness=realtime', c_dt='20160102T0800'
+        )
+        response = self.query_region(query)
+        is_valid_notes(response["notes"])
+        terminus_schedules = response['terminus_schedules']
+        assert len(terminus_schedules) == 1
+        date_times = terminus_schedules[0]['date_times']
+        assert len(date_times) == 1
+        assert date_times[0]['data_freshness'] == 'realtime'
+        assert date_times[0]['date_time'] == '20160102T081352'
+        links = date_times[0]["links"]
+        assert len(links) == 1
+        assert links[0]['id'] == 'note:b5b328cb593ae7b1d73228345fe634fc'
+
+    def test_terminus_schedule_with_realtime_and_is_realtime_field_all_false(self):
+        for data_freshness in ['', '&data_freshness=realtime']:
+            query = self.query_template_ter.format(
+                sp='TS39', dt='20160102T0800', data_freshness=data_freshness, c_dt='20160102T0800'
+            )
+
+            response = self.query_region(query)
+            is_valid_notes(response["notes"])
+            terminus_schedules = response['terminus_schedules']
+            assert len(terminus_schedules) == 1
+            date_times = terminus_schedules[0]['date_times']
+            assert len(date_times) == 3
+            assert date_times[0]['data_freshness'] == 'base_schedule'
+            assert date_times[0]['date_time'] == '20160102T090200'
+
+            assert date_times[1]['data_freshness'] == 'base_schedule'
+            assert date_times[1]['date_time'] == '20160102T090700'
+
+            assert date_times[2]['data_freshness'] == 'base_schedule'
+            assert date_times[2]['date_time'] == '20160102T091100'
+
+    def test_stop_schedule_with_realtime_and_is_realtime_field_all_false(self):
+        for data_freshness in ['', '&data_freshness=realtime']:
+            query = self.query_template_scs.format(
+                sp='TS39', dt='20160102T0800', data_freshness=data_freshness, c_dt='20160102T0800'
+            )
+
+            response = self.query_region(query)
+            is_valid_notes(response["notes"])
+            terminus_schedules = response['stop_schedules']
+            assert len(terminus_schedules) == 1
+            date_times = terminus_schedules[0]['date_times']
+            assert len(date_times) == 3
+            assert date_times[0]['data_freshness'] == 'base_schedule'
+            assert date_times[0]['date_time'] == '20160102T090200'
+
+            assert date_times[1]['data_freshness'] == 'base_schedule'
+            assert date_times[1]['date_time'] == '20160102T090700'
+
+            assert date_times[2]['data_freshness'] == 'base_schedule'
+            assert date_times[2]['date_time'] == '20160102T091100'
 
     def test_terminus_schedule_without_realtime(self):
         """

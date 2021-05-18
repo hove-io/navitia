@@ -231,10 +231,12 @@ class Timeo(RealtimeProxy):
             )
             raise RealtimeProxyError('invalid response')
 
-        next_st = st_responses[0]['NextStopTimesMessage']
-
+        next_st = st_responses[0]['NextStopTimesMessage'].get("NextExpectedStopTime", [])
+        new_next_st = [n_st for n_st in next_st if n_st.get("is_realtime", True)]
+        if not len(new_next_st) and len(next_st):
+            return None
         next_passages = []
-        for next_expected_st in next_st.get('NextExpectedStopTime', []):
+        for next_expected_st in new_next_st:
             # for the moment we handle only the NextStop and the direction
             dt = self._get_dt(next_expected_st['NextStop'], current_dt)
             direction = self._get_direction_name(

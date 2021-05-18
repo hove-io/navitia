@@ -83,6 +83,11 @@ struct departure_board_fixture {
                                              true, 900, 900)("stopf3", "18:10"_t, "18:10"_t,
                                                              std::numeric_limits<uint16_t>::max(), true, false, 300, 0);
 
+                b.vj("T")("TS39", "09:02"_t)("TS42", "10:02"_t)("S43", "11:02"_t);
+                b.vj("T")("TS39", "09:07"_t)("TS42", "10:07"_t)("S43", "11:07"_t);
+                b.vj("T")("TS39", "09:11"_t)("TS42", "10:11"_t)("S43", "11:11"_t);
+                b.lines.find("T")->second->properties["realtime_system"] = "Kisio数字";
+
                 navitia::georef::Admin* ad = new navitia::georef::Admin();
                 ad->name = "Quimper";
                 ad->uri = "Quimper";
