@@ -418,7 +418,7 @@ class TestDepartures(AbstractTestFixture):
         assert links[0]['id'] == 'note:b5b328cb593ae7b1d73228345fe634fc'
 
     def test_terminus_schedule_with_realtime_and_is_realtime_field_all_false(self):
-        for data_freshness in ['', '&data_freshness=realtime']:
+        for data_freshness in ['&data_freshness=base_schedule', '', '&data_freshness=realtime']:
             query = self.query_template_ter.format(
                 sp='TS39', dt='20160102T0800', data_freshness=data_freshness, c_dt='20160102T0800'
             )
@@ -439,7 +439,7 @@ class TestDepartures(AbstractTestFixture):
             assert date_times[2]['date_time'] == '20160102T091100'
 
     def test_stop_schedule_with_realtime_and_is_realtime_field_all_false(self):
-        for data_freshness in ['', '&data_freshness=realtime']:
+        for data_freshness in ['&data_freshness=base_schedule', '', '&data_freshness=realtime']:
             query = self.query_template_scs.format(
                 sp='TS39', dt='20160102T0800', data_freshness=data_freshness, c_dt='20160102T0800'
             )
