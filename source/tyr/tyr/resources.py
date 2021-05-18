@@ -842,6 +842,7 @@ class Instance(flask_restful.Resource):
                         'min_taxi',
                         'max_duration',
                         'walking_transfer_penalty',
+                        'arrival_transfer_penalty',
                         'night_bus_filter_max_factor',
                         'night_bus_filter_base_factor',
                         'successive_physical_mode_to_limit_id',
