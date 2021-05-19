@@ -101,9 +101,9 @@ bool Journey::better_on_sn(const Journey& that, const navitia::time_duration wal
     // we consider that the transfer duration as well as the street network duration are
     // walking duration
     // we consider that an extra transfer  is worthwhile
-    // only if it reduces the walking duration by at least arrival_transfer_penalty
-    return sn_dur + transfer_dur + walking_transfer_penalty * nb_transfer
-           <= that.sn_dur + that.transfer_dur + walking_transfer_penalty * that_nb_transfer;
+    // only if it reduces the walking duration by at least transfer_penalty
+    return sn_dur + transfer_dur + walking_transfer_penalty * std::max(2 * nb_transfer - 1, 0)
+           <= that.sn_dur + that.transfer_dur + walking_transfer_penalty * std::max(2 * that_nb_transfer - 1, 0);
     ;
 }
 
