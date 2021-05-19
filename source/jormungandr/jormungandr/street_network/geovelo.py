@@ -231,7 +231,7 @@ class Geovelo(AbstractStreetNetworkService):
         self._check_response(r)
         resp_json = ujson.loads(r.text)
 
-        if len(resp_json) - 1 != len(data['starts']) * len(data['ends']):
+        if len(resp_json) - 1 != len(data.get('starts', [])) * len(data.get('ends', [])):
             logging.getLogger(__name__).error('Geovelo nb response != nb requested')
             raise UnableToParse('Geovelo nb response != nb requested')
 
