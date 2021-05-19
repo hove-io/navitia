@@ -52,6 +52,7 @@ from navitiacommon.parser_args_type import (
     UnsignedInteger,
     DateTimeFormat,
     PositiveFloat,
+    RangeFloat,
 )
 
 
@@ -288,17 +289,17 @@ class JourneyCommon(ResourceUri, ResourceUtc):
         )
         parser_get.add_argument(
             "walking_speed",
-            type=PositiveFloat(),
+            type=RangeFloat(),
             help='Walking speed for the fallback sections.\n' 'Speed unit must be in meter/second',
         )
         parser_get.add_argument(
             "bike_speed",
-            type=PositiveFloat(),
+            type=RangeFloat(),
             help='Biking speed for the fallback sections.\n' 'Speed unit must be in meter/second',
         )
         parser_get.add_argument(
             "bss_speed",
-            type=PositiveFloat(),
+            type=RangeFloat(),
             help='Speed while using a bike from a bike sharing system for the '
             'fallback sections.\n'
             'Speed unit must be in meter/second',

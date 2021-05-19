@@ -36,6 +36,7 @@ import flask
 from dateutil import parser
 from flask_restful.inputs import boolean
 import six
+import sys
 
 
 class TypeSchema(object):
@@ -66,6 +67,28 @@ class PositiveFloat(CustomSchemaType):
         conv_value = float(value)
         if conv_value <= 0:
             raise ValueError("The {} argument has to be > 0, you gave : {}".format(name, value))
+        return conv_value
+
+    def schema(self):
+        return TypeSchema(type=float, metadata={'minimum': 0})
+
+
+class RangeFloat(CustomSchemaType):
+    map_range = {
+        'bike_speed': (1, 15),
+        'bss_speed': (1, 15),
+        'walking_speed': (0.2, 4),
+        'default': (sys.float_info.min, sys.float_info.max),
+    }
+
+    def __call__(self, value, name):
+        conv_value = float(value)
+        (range_min, range_max) = RangeFloat.map_range[name] \
+            if name in RangeFloat.map_range \
+            else RangeFloat.map_range['default']
+        if not range_min <= conv_value <= range_max:
+            raise ValueError("The {} argument has to be in range [{}, {}], you gave : {}"
+                             .format(name, range_min, range_max, value))
         return conv_value
 
     def schema(self):
