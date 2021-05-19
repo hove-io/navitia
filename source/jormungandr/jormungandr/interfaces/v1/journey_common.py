@@ -306,24 +306,24 @@ class JourneyCommon(ResourceUri, ResourceUtc):
         )
         parser_get.add_argument(
             "car_speed",
-            type=PositiveFloat(),
+            type=RangeFloat(),
             help='Driving speed for the fallback sections.\n' 'Speed unit must be in meter/second',
         )
         parser_get.add_argument(
             "ridesharing_speed",
-            type=PositiveFloat(),
+            type=RangeFloat(),
             dest="ridesharing_speed",
             help='ridesharing speed for the fallback sections.\n' 'Speed unit must be in meter/second',
         )
         parser_get.add_argument(
             "car_no_park_speed",
-            type=PositiveFloat(),
+            type=RangeFloat(),
             help='Driving speed without car park for the fallback sections.\n'
             'Speed unit must be in meter/second',
         )
         parser_get.add_argument(
             "taxi_speed",
-            type=PositiveFloat(),
+            type=RangeFloat(),
             help='taxi speed speed for the fallback sections.\n' 'Speed unit must be in meter/second',
         )
         parser_get.add_argument(

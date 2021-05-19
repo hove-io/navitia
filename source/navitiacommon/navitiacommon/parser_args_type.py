@@ -78,17 +78,26 @@ class RangeFloat(CustomSchemaType):
         'bike_speed': (1, 15),
         'bss_speed': (1, 15),
         'walking_speed': (0.2, 4),
+        'car_speed': (10, 40),
+        'taxi_speed': (10, 40),
+        'car_no_park_speed': (10, 40),
+        'ridesharing_speed': (10, 40),
         'default': (sys.float_info.min, sys.float_info.max),
     }
 
     def __call__(self, value, name):
         conv_value = float(value)
-        (range_min, range_max) = RangeFloat.map_range[name] \
-            if name in RangeFloat.map_range \
+        (range_min, range_max) = (
+            RangeFloat.map_range[name]
+            if name in RangeFloat.map_range
             else RangeFloat.map_range['default']
+        )
         if not range_min <= conv_value <= range_max:
-            raise ValueError("The {} argument has to be in range [{}, {}], you gave : {}"
-                             .format(name, range_min, range_max, value))
+            raise ValueError(
+                "The {} argument has to be in range [{}, {}], you gave : {}".format(
+                    name, range_min, range_max, value
+                )
+            )
         return conv_value
 
     def schema(self):
