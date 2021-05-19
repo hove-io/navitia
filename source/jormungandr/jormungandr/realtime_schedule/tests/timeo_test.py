@@ -141,7 +141,49 @@ def make_url_invalid_code_test():
     assert url is None
 
 
-def mock_good_timeo_response():
+def mock_good_timeo_response(criteria=1):
+    map_next_expected_stop_time = {
+        1: [
+            {"NextStop": "15:40:04", "Destination": "A direction", "Terminus": "StopPoint_Bob"},
+            {"NextStop": "15:55:04", "Destination": "A direction", "Terminus": "StopPoint_Bob"},
+            {"NextStop": "16:10:04", "Destination": "A direction", "Terminus": "StopPoint_Bob"},
+        ],
+        2: [
+            {"NextStop": "15:40:04", "Destination": "A direction", "Terminus": "StopPoint_Bob"},
+            {
+                "NextStop": "15:55:04",
+                "Destination": "A direction",
+                "Terminus": "StopPoint_Bob",
+                "is_realtime": True,
+            },
+            {
+                "NextStop": "16:10:04",
+                "Destination": "A direction",
+                "Terminus": "StopPoint_Bob",
+                "is_realtime": True,
+            },
+        ],
+        3: [
+            {
+                "NextStop": "15:40:04",
+                "Destination": "A direction",
+                "Terminus": "StopPoint_Bob",
+                "is_realtime": False,
+            },
+            {
+                "NextStop": "15:55:04",
+                "Destination": "A direction",
+                "Terminus": "StopPoint_Bob",
+                "is_realtime": False,
+            },
+            {
+                "NextStop": "16:10:04",
+                "Destination": "A direction",
+                "Terminus": "StopPoint_Bob",
+                "is_realtime": True,
+            },
+        ],
+    }
     mock_response = {
         "CorrelationID": "GetNextStopTimesResponse-16022016 15:30",
         "MessageResponse": [{"ResponseCode": 0, "ResponseComment": "success"}],
@@ -158,11 +200,7 @@ def mock_good_timeo_response():
                     "LineTimeoCode": "line_toto",
                     "Way": "route_tata",
                     "LineMainDirection": "Bicharderies",
-                    "NextExpectedStopTime": [
-                        {"NextStop": "15:40:04", "Destination": "A direction", "Terminus": "StopPoint_Bob"},
-                        {"NextStop": "15:55:04", "Destination": "A direction", "Terminus": "StopPoint_Bob"},
-                        {"NextStop": "16:10:04", "Destination": "A direction", "Terminus": "StopPoint_Bob"},
-                    ],
+                    "NextExpectedStopTime": map_next_expected_stop_time[criteria],
                 },
             }
         ],
@@ -211,6 +249,60 @@ def get_passages_test():
         passages = timeo._get_passages(
             MockResponse(504, 'http://bob.com/tata', mock_response), current_dt=_dt("02:02")
         )
+
+
+def get_passages_stop_time_without_is_realtime_test():
+    """
+    test the next departures get from timeo's response
+
+    the timezone is UTC for convenience
+    """
+    timeo = Timeo(
+        id='tata', timezone='UTC', service_url='http://bob.com/tata', service_args={'a': 'bobette', 'b': '12'}
+    )
+
+    mock_response = mock_good_timeo_response(criteria=2)
+
+    # we need to mock the datetime.now() because for timeo we don't have a choice but to combine
+    # the current day with the timeo's response
+    with mock.patch(
+        'jormungandr.realtime_schedule.timeo.Timeo._get_direction_name', lambda timeo, **kwargs: None
+    ):
+        passages = timeo._get_passages(
+            MockResponse(200, 'http://bob.com/tata', mock_response), current_dt=_dt("02:02")
+        )
+
+        assert len(passages) == 3
+
+        assert passages[0].datetime == _dt('15:40:04')
+        assert passages[1].datetime == _dt('15:55:04')
+        assert passages[2].datetime == _dt('16:10:04')
+
+
+def get_passages_stop_time_with_is_realtime_test():
+    """
+    test the next departures get from timeo's response
+
+    the timezone is UTC for convenience
+    """
+    timeo = Timeo(
+        id='tata', timezone='UTC', service_url='http://bob.com/tata', service_args={'a': 'bobette', 'b': '12'}
+    )
+
+    mock_response = mock_good_timeo_response(criteria=3)
+
+    # we need to mock the datetime.now() because for timeo we don't have a choice but to combine
+    # the current day with the timeo's response
+    with mock.patch(
+        'jormungandr.realtime_schedule.timeo.Timeo._get_direction_name', lambda timeo, **kwargs: None
+    ):
+        passages = timeo._get_passages(
+            MockResponse(200, 'http://bob.com/tata', mock_response), current_dt=_dt("02:02")
+        )
+
+        assert len(passages) == 1
+
+        assert passages[0].datetime == _dt('16:10:04')
 
 
 def get_next_passage_for_route_point_with_requests_response_model_test():
