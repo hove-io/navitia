@@ -163,7 +163,8 @@ BOOST_AUTO_TEST_CASE(simple_journey) {
     auto* data_ptr = b.data.get();
     navitia::PbCreator pb_creator(data_ptr, boost::gregorian::not_a_date_time, null_time_period);
     make_response(pb_creator, raptor, origin, destination, {ntest::to_posix_timestamp("20120614T021000")}, true,
-                  navitia::type::AccessibiliteParams() /*false*/, forbidden, {}, sn_worker, nt::RTLevel::Base, 2_min);
+                  navitia::type::AccessibiliteParams() /*false*/, forbidden, {}, sn_worker, nt::RTLevel::Base, 2_min,
+                  2_min);
     pbnavitia::Response resp = pb_creator.get_response();
 
     BOOST_REQUIRE_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
@@ -225,7 +226,8 @@ BOOST_AUTO_TEST_CASE(simple_journey_with_crow_fly) {
     auto* data_ptr = b.data.get();
     navitia::PbCreator pb_creator(data_ptr, boost::gregorian::not_a_date_time, null_time_period);
     make_response(pb_creator, raptor, origin, destination, {ntest::to_posix_timestamp("20120614T021000")}, true,
-                  navitia::type::AccessibiliteParams() /*false*/, forbidden, {}, sn_worker, nt::RTLevel::Base, 2_min);
+                  navitia::type::AccessibiliteParams() /*false*/, forbidden, {}, sn_worker, nt::RTLevel::Base, 2_min,
+                  2_min);
     pbnavitia::Response resp = pb_creator.get_response();
 
     BOOST_REQUIRE_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
@@ -256,7 +258,8 @@ BOOST_AUTO_TEST_CASE(simple_journey_with_crow_fly) {
 
     pb_creator.init(data_ptr, boost::gregorian::not_a_date_time, null_time_period);
     make_response(pb_creator, raptor, origin, destination, {ntest::to_posix_timestamp("20120614T021000")}, true,
-                  navitia::type::AccessibiliteParams() /*false*/, forbidden, {}, sn_worker, nt::RTLevel::Base, 2_min);
+                  navitia::type::AccessibiliteParams() /*false*/, forbidden, {}, sn_worker, nt::RTLevel::Base, 2_min,
+                  2_min);
     resp = pb_creator.get_response();
 
     BOOST_REQUIRE_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
@@ -298,7 +301,7 @@ BOOST_AUTO_TEST_CASE(journey_stay_in) {
     auto* data_ptr = b.data.get();
     navitia::PbCreator pb_creator(data_ptr, boost::gregorian::not_a_date_time, null_time_period);
     make_response(pb_creator, raptor, origin, destination, {ntest::to_posix_timestamp("20120614T165300")}, true,
-                  navitia::type::AccessibiliteParams(), forbidden, {}, sn_worker, nt::RTLevel::Base, 2_min);
+                  navitia::type::AccessibiliteParams(), forbidden, {}, sn_worker, nt::RTLevel::Base, 2_min, 2_min);
 
     pbnavitia::Response resp = pb_creator.get_response();
 
@@ -350,7 +353,7 @@ BOOST_AUTO_TEST_CASE(journey_stay_in_teleport) {
     auto* data_ptr = b.data.get();
     navitia::PbCreator pb_creator(data_ptr, boost::gregorian::not_a_date_time, null_time_period);
     make_response(pb_creator, raptor, origin, destination, {ntest::to_posix_timestamp("20120614T165300")}, true,
-                  navitia::type::AccessibiliteParams(), forbidden, {}, sn_worker, nt::RTLevel::Base, 2_min);
+                  navitia::type::AccessibiliteParams(), forbidden, {}, sn_worker, nt::RTLevel::Base, 2_min, 2_min);
     pbnavitia::Response resp = pb_creator.get_response();
 
     BOOST_REQUIRE_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
@@ -407,7 +410,7 @@ BOOST_AUTO_TEST_CASE(journey_stay_in_shortteleport) {
     auto* data_ptr = b.data.get();
     navitia::PbCreator pb_creator(data_ptr, boost::gregorian::not_a_date_time, null_time_period);
     make_response(pb_creator, raptor, origin, destination, {ntest::to_posix_timestamp("20120614T165300")}, true,
-                  navitia::type::AccessibiliteParams(), forbidden, {}, sn_worker, nt::RTLevel::Base, 2_min);
+                  navitia::type::AccessibiliteParams(), forbidden, {}, sn_worker, nt::RTLevel::Base, 2_min, 2_min);
     pbnavitia::Response resp = pb_creator.get_response();
 
     BOOST_REQUIRE_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
@@ -474,7 +477,7 @@ BOOST_AUTO_TEST_CASE(journey_departure_from_a_stay_in) {
     auto* data_ptr = b.data.get();
     navitia::PbCreator pb_creator(data_ptr, boost::gregorian::not_a_date_time, null_time_period);
     make_response(pb_creator, raptor, origin, destination, {ntest::to_posix_timestamp("20120614T165300")}, true,
-                  navitia::type::AccessibiliteParams(), forbidden, {}, sn_worker, nt::RTLevel::Base, 2_min);
+                  navitia::type::AccessibiliteParams(), forbidden, {}, sn_worker, nt::RTLevel::Base, 2_min, 2_min);
     pbnavitia::Response resp = pb_creator.get_response();
 
     BOOST_REQUIRE_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
@@ -533,7 +536,7 @@ BOOST_AUTO_TEST_CASE(journey_arrival_before_a_stay_in) {
     auto* data_ptr = b.data.get();
     navitia::PbCreator pb_creator(data_ptr, boost::gregorian::not_a_date_time, null_time_period);
     make_response(pb_creator, raptor, origin, destination, {ntest::to_posix_timestamp("20120614T165300")}, true,
-                  navitia::type::AccessibiliteParams(), forbidden, {}, sn_worker, nt::RTLevel::Base, 2_min);
+                  navitia::type::AccessibiliteParams(), forbidden, {}, sn_worker, nt::RTLevel::Base, 2_min, 2_min);
     pbnavitia::Response resp = pb_creator.get_response();
 
     BOOST_REQUIRE_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
@@ -579,7 +582,7 @@ BOOST_AUTO_TEST_CASE(journey_arrival_in_a_stay_in) {
     auto* data_ptr = b.data.get();
     navitia::PbCreator pb_creator(data_ptr, boost::gregorian::not_a_date_time, null_time_period);
     make_response(pb_creator, raptor, origin, destination, {ntest::to_posix_timestamp("20120614T165300")}, true,
-                  navitia::type::AccessibiliteParams(), forbidden, {}, sn_worker, nt::RTLevel::Base, 2_min);
+                  navitia::type::AccessibiliteParams(), forbidden, {}, sn_worker, nt::RTLevel::Base, 2_min, 2_min);
     pbnavitia::Response resp = pb_creator.get_response();
 
     dump_response(resp, "arrival_before");
@@ -1719,8 +1722,8 @@ BOOST_AUTO_TEST_CASE(projection_on_one_way) {
     nr::RAPTOR raptor(*b.data);
     auto* data_ptr = b.data.get();
     navitia::PbCreator pb_creator(data_ptr, boost::gregorian::not_a_date_time, null_time_period);
-    nr::make_response(pb_creator, raptor, origin, destination, {navitia::test::to_posix_timestamp("20120614T080000")},
-                      true, navitia::type::AccessibiliteParams(), {}, {}, sn_worker, nt::RTLevel::Base, 2_min, true);
+    make_response(pb_creator, raptor, origin, destination, {navitia::test::to_posix_timestamp("20120614T080000")}, true,
+                  navitia::type::AccessibiliteParams(), {}, {}, sn_worker, nt::RTLevel::Base, 2_min, 2_min, true);
     auto resp = pb_creator.get_response();
 
     dump_response(resp, "biking length test");
@@ -2386,8 +2389,8 @@ BOOST_AUTO_TEST_CASE(journeys_with_free_radius_filter) {
     auto* data_ptr = b.data.get();
     navitia::PbCreator pb_creator1(data_ptr, "20180309T080100"_dt, null_time_period);
     make_response(pb_creator1, raptor, origin, destination, {ntest::to_posix_timestamp("20180309T080000")}, true,
-                  navitia::type::AccessibiliteParams(), forbidden, {}, sn_worker, nt::RTLevel::Base, 2_min, 8640, 10, 0,
-                  free_radius_from, free_radius_to);
+                  navitia::type::AccessibiliteParams(), forbidden, {}, sn_worker, nt::RTLevel::Base, 2_min, 2_min, 8640,
+                  10, 0, free_radius_from, free_radius_to);
 
     // get the response
     pbnavitia::Response resp = pb_creator1.get_response();
@@ -2430,8 +2433,8 @@ BOOST_AUTO_TEST_CASE(journeys_with_free_radius_filter) {
     // send request
     navitia::PbCreator pb_creator2(data_ptr, "20180309T080100"_dt, null_time_period);
     make_response(pb_creator2, raptor, origin, destination, {ntest::to_posix_timestamp("20180309T080000")}, true,
-                  navitia::type::AccessibiliteParams(), forbidden, {}, sn_worker, nt::RTLevel::Base, 2_min, 8640, 10, 0,
-                  free_radius_from, free_radius_to);
+                  navitia::type::AccessibiliteParams(), forbidden, {}, sn_worker, nt::RTLevel::Base, 2_min, 2_min, 8640,
+                  10, 0, free_radius_from, free_radius_to);
 
     // get the response
     resp = pb_creator2.get_response();
@@ -2475,8 +2478,8 @@ BOOST_AUTO_TEST_CASE(journeys_with_free_radius_filter) {
     // send request
     navitia::PbCreator pb_creator3(data_ptr, "20180309T080100"_dt, null_time_period);
     make_response(pb_creator3, raptor, origin, destination, {ntest::to_posix_timestamp("20180309T080000")}, true,
-                  navitia::type::AccessibiliteParams(), forbidden, {}, sn_worker, nt::RTLevel::Base, 2_min, 8640, 10, 0,
-                  free_radius_from, free_radius_to);
+                  navitia::type::AccessibiliteParams(), forbidden, {}, sn_worker, nt::RTLevel::Base, 2_min, 2_min, 8640,
+                  10, 0, free_radius_from, free_radius_to);
 
     // get the response
     resp = pb_creator3.get_response();
@@ -2660,8 +2663,8 @@ BOOST_AUTO_TEST_CASE(journeys_with_min_nb_journeys) {
     auto* data_ptr = b.data.get();
     navitia::PbCreator pb_creator1(data_ptr, "20180309T080100"_dt, null_time_period);
     make_response(pb_creator1, raptor, origin, destination, {ntest::to_posix_timestamp("20180309T080000")}, true,
-                  navitia::type::AccessibiliteParams(), forbidden, {}, sn_worker, nt::RTLevel::Base, 2_min, 8640, 10,
-                  0);
+                  navitia::type::AccessibiliteParams(), forbidden, {}, sn_worker, nt::RTLevel::Base, 2_min, 2_min, 8640,
+                  10, 0);
 
     // get the response
     pbnavitia::Response resp = pb_creator1.get_response();
@@ -2686,8 +2689,8 @@ BOOST_AUTO_TEST_CASE(journeys_with_min_nb_journeys) {
     // send request
     navitia::PbCreator pb_creator2(data_ptr, "20180309T080000"_dt, null_time_period);
     make_response(pb_creator2, raptor, origin, destination, {ntest::to_posix_timestamp("20180309T080000")}, true,
-                  navitia::type::AccessibiliteParams(), forbidden, {}, sn_worker, nt::RTLevel::Base, 2_min, 8640, 10, 0,
-                  0, 0, min_nb_journeys);
+                  navitia::type::AccessibiliteParams(), forbidden, {}, sn_worker, nt::RTLevel::Base, 2_min, 2_min, 8640,
+                  10, 0, 0, 0, min_nb_journeys);
 
     // get the response
     resp = pb_creator2.get_response();
@@ -2744,8 +2747,8 @@ BOOST_AUTO_TEST_CASE(journeys_with_min_nb_journeys) {
     // send request
     navitia::PbCreator pb_creator3(data_ptr, "20180309T083000"_dt, null_time_period);
     make_response(pb_creator3, raptor, origin, destination, {ntest::to_posix_timestamp("20180309T083000")}, false,
-                  navitia::type::AccessibiliteParams(), forbidden, {}, sn_worker, nt::RTLevel::Base, 2_min, 8640, 10, 0,
-                  0, 0, min_nb_journeys);
+                  navitia::type::AccessibiliteParams(), forbidden, {}, sn_worker, nt::RTLevel::Base, 2_min, 2_min, 8640,
+                  10, 0, 0, 0, min_nb_journeys);
 
     // get the response
     resp = pb_creator3.get_response();
@@ -2879,8 +2882,8 @@ BOOST_AUTO_TEST_CASE(journeys_with_min_nb_journeys_with_similar_journeys_filteri
     // send request
     navitia::PbCreator pb_creator2(data_ptr, "20180309T080000"_dt, null_time_period);
     make_response(pb_creator2, raptor, origin, destination, {ntest::to_posix_timestamp("20180309T080000")}, clockwise,
-                  navitia::type::AccessibiliteParams(), forbidden, {}, sn_worker, nt::RTLevel::Base, 2_min, 8640, 10, 0,
-                  0, 0, min_nb_journeys);
+                  navitia::type::AccessibiliteParams(), forbidden, {}, sn_worker, nt::RTLevel::Base, 2_min, 2_min, 8640,
+                  10, 0, 0, 0, min_nb_journeys);
 
     // get the response
     auto resp = pb_creator2.get_response();
@@ -2938,8 +2941,8 @@ BOOST_AUTO_TEST_CASE(journeys_with_min_nb_journeys_with_similar_journeys_filteri
     // send request
     navitia::PbCreator pb_creator3(data_ptr, "20180309T083000"_dt, null_time_period);
     make_response(pb_creator3, raptor, origin, destination, {ntest::to_posix_timestamp("20180309T083000")}, clockwise,
-                  navitia::type::AccessibiliteParams(), forbidden, {}, sn_worker, nt::RTLevel::Base, 2_min, 8640, 10, 0,
-                  0, 0, min_nb_journeys);
+                  navitia::type::AccessibiliteParams(), forbidden, {}, sn_worker, nt::RTLevel::Base, 2_min, 2_min, 8640,
+                  10, 0, 0, 0, min_nb_journeys);
 
     // get the response
     resp = pb_creator3.get_response();
@@ -3180,7 +3183,7 @@ BOOST_AUTO_TEST_CASE(journeys_with_time_frame_duration) {
     navitia::PbCreator pb_creator_case1(data_ptr, "20180309T075900"_dt, null_time_period);
     make_response(pb_creator_case1, raptor, origin, destination, {ntest::to_posix_timestamp("20180309T075900")},
                   clockwise, navitia::type::AccessibiliteParams(), forbidden, {}, sn_worker, nt::RTLevel::Base, 2_min,
-                  24 * 60 * 60, 10, 0, 0, 0);
+                  2_min, 24 * 60 * 60, 10, 0, 0, 0);
 
     // get the response
     auto resp = pb_creator_case1.get_response();
@@ -3204,7 +3207,7 @@ BOOST_AUTO_TEST_CASE(journeys_with_time_frame_duration) {
     navitia::PbCreator pb_creator_case2(data_ptr, "20180309T075900"_dt, null_time_period);
     make_response(pb_creator_case2, raptor, origin, destination, {ntest::to_posix_timestamp("20180309T075900")},
                   clockwise, navitia::type::AccessibiliteParams(), forbidden, {}, sn_worker, nt::RTLevel::Base, 2_min,
-                  24 * 60 * 60, 10, 0, 0, 0, boost::none, 1.5, 900, timeframe_duration);
+                  2_min, 24 * 60 * 60, 10, 0, 0, 0, boost::none, 1.5, 900, timeframe_duration);
 
     // get the response
     resp = pb_creator_case2.get_response();
@@ -3238,7 +3241,7 @@ BOOST_AUTO_TEST_CASE(journeys_with_time_frame_duration) {
     navitia::PbCreator pb_creator_case3(data_ptr, "20180309T080000"_dt, null_time_period);
     make_response(pb_creator_case3, raptor, origin, destination, {ntest::to_posix_timestamp("20180309T083500")},
                   clockwise, navitia::type::AccessibiliteParams(), forbidden, {}, sn_worker, nt::RTLevel::Base, 2_min,
-                  24 * 60 * 60, 10, 0, 0, 0, boost::none, 1.5, 900, timeframe_duration);
+                  2_min, 24 * 60 * 60, 10, 0, 0, 0, boost::none, 1.5, 900, timeframe_duration);
 
     // get the response
     resp = pb_creator_case3.get_response();
@@ -3286,7 +3289,7 @@ BOOST_AUTO_TEST_CASE(journeys_with_time_frame_duration) {
     navitia::PbCreator pb_creator_case4(data_ptr, "20180309T075900"_dt, null_time_period);
     make_response(pb_creator_case4, raptor, origin, destination, {ntest::to_posix_timestamp("20180309T075900")},
                   clockwise, navitia::type::AccessibiliteParams(), forbidden, {}, sn_worker, nt::RTLevel::Base, 2_min,
-                  24 * 60 * 60, 10, 0, 0, 0, 20, 3, 6000, timeframe_duration);
+                  2_min, 24 * 60 * 60, 10, 0, 0, 0, 20, 3, 6000, timeframe_duration);
 
     // get the response
     resp = pb_creator_case4.get_response();
@@ -3310,7 +3313,7 @@ BOOST_AUTO_TEST_CASE(journeys_with_time_frame_duration) {
     navitia::PbCreator pb_creator_case5(data_ptr, "20180309T075900"_dt, null_time_period);
     make_response(pb_creator_case5, raptor, origin, destination, {ntest::to_posix_timestamp("20180309T075900")},
                   clockwise, navitia::type::AccessibiliteParams(), forbidden, {}, sn_worker, nt::RTLevel::Base, 2_min,
-                  timeframe_max_duration, 10, 0, 0, 0, boost::none, 1.5, 900, timeframe_duration);
+                  2_min, timeframe_max_duration, 10, 0, 0, 0, boost::none, 1.5, 900, timeframe_duration);
 
     // get the response
     resp = pb_creator_case5.get_response();
@@ -3333,7 +3336,7 @@ BOOST_AUTO_TEST_CASE(journeys_with_time_frame_duration) {
     navitia::PbCreator pb_creator_case6(data_ptr, "20180309T075900"_dt, null_time_period);
     make_response(pb_creator_case6, raptor, origin, destination, {ntest::to_posix_timestamp("20180309T075900")},
                   clockwise, navitia::type::AccessibiliteParams(), forbidden, {}, sn_worker, nt::RTLevel::Base, 2_min,
-                  timeframe_max_duration, 10, 0, 0, 0, boost::none, 1.5, 900, timeframe_duration);
+                  2_min, timeframe_max_duration, 10, 0, 0, 0, boost::none, 1.5, 900, timeframe_duration);
 
     // get the response
     resp = pb_creator_case6.get_response();
@@ -3360,7 +3363,7 @@ BOOST_AUTO_TEST_CASE(journeys_with_time_frame_duration) {
     navitia::PbCreator pb_creator_case7(data_ptr, "20180309T075900"_dt, null_time_period);
     make_response(pb_creator_case7, raptor, origin, destination, {ntest::to_posix_timestamp("20180309T075900")},
                   clockwise, navitia::type::AccessibiliteParams(), forbidden, {}, sn_worker, nt::RTLevel::Base, 2_min,
-                  timeframe_max_duration, 10, 0, 0, 0, boost::none, 1.5, 900, timeframe_duration);
+                  2_min, timeframe_max_duration, 10, 0, 0, 0, boost::none, 1.5, 900, timeframe_duration);
 
     // get the response
     resp = pb_creator_case7.get_response();
@@ -3386,7 +3389,7 @@ BOOST_AUTO_TEST_CASE(journeys_with_time_frame_duration) {
     navitia::PbCreator pb_creator_case8(data_ptr, "20180309T075900"_dt, null_time_period);
     make_response(pb_creator_case8, raptor, origin, destination, {ntest::to_posix_timestamp("20180309T075900")},
                   clockwise, navitia::type::AccessibiliteParams(), forbidden, {}, sn_worker, nt::RTLevel::Base, 2_min,
-                  timeframe_max_duration, 10, 0, 0, 0, boost::none, 1.5, 900, timeframe_duration);
+                  2_min, timeframe_max_duration, 10, 0, 0, 0, boost::none, 1.5, 900, timeframe_duration);
 
     // get the response
     resp = pb_creator_case8.get_response();

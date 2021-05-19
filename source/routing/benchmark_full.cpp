@@ -303,7 +303,8 @@ int main(int argc, char** argv) {
                           {},                        // allowed
                           georef_worker,
                           type::RTLevel::Base,             // real time level
-                          2_min,                           // transfer penalty
+                          2_min,                           // arrival_transfer penalty
+                          2_min,                           // walking_transfer penalty
                           DateTimeUtils::SECONDS_PER_DAY,  // max_duration
                           10,                              // max_transfers
                           nb_second_pass);

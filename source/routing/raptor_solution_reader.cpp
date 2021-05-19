@@ -231,7 +231,7 @@ const Journey& make_journey(const PathElt& path, RaptorSolutionReader<Visitor>& 
     j.nb_vj_extentions = count_vj_extentions(j);
 
     // transfer objectives
-    j.transfer_dur = reader.transfer_penalty * (j.nb_vj_extentions);
+    j.transfer_dur = reader.arrival_transfer_penalty * (j.nb_vj_extentions);
     j.total_waiting_dur = 0_s;
     if (j.sections.size() > 1) {
         const auto& data = *reader.raptor.data.pt_data;
@@ -402,7 +402,7 @@ struct RaptorSolutionReader {
                          const routing::map_stop_point_duration& arrs,
                          const type::RTLevel rt_level,
                          const type::AccessibiliteParams& access,
-                         navitia::time_duration transfer_penalty,
+                         navitia::time_duration arrival_transfer_penalty,
                          const StartingPointSndPhase& end_point)
         : raptor(r),
           v(vis),
@@ -411,7 +411,7 @@ struct RaptorSolutionReader {
           sp_dur_arrs(arrs),
           rt_level(rt_level),
           accessibilite_params(access),
-          transfer_penalty(std::move(transfer_penalty)),
+          arrival_transfer_penalty(std::move(arrival_transfer_penalty)),
           end_point(end_point),
           solutions(solutions) {}
     const RAPTOR& raptor;
@@ -421,7 +421,7 @@ struct RaptorSolutionReader {
     const routing::map_stop_point_duration& sp_dur_arrs;  // arrivals (not clockwise dependent)
     const type::RTLevel rt_level;
     const type::AccessibiliteParams& accessibilite_params;
-    const navitia::time_duration transfer_penalty;
+    const navitia::time_duration arrival_transfer_penalty;
     const StartingPointSndPhase& end_point;
     Solutions& solutions;  // raptor's solutions pool
 
@@ -608,10 +608,10 @@ void read_solutions(const RAPTOR& raptor,
                     const routing::map_stop_point_duration& arrs,
                     const type::RTLevel rt_level,
                     const type::AccessibiliteParams& accessibilite_params,
-                    const navitia::time_duration& transfer_penalty,
+                    const navitia::time_duration& arrival_transfer_penalty,
                     const StartingPointSndPhase& end_point) {
     auto reader = RaptorSolutionReader<Visitor>(raptor, solutions, v, departure_datetime, deps, arrs, rt_level,
-                                                accessibilite_params, transfer_penalty, end_point);
+                                                accessibilite_params, arrival_transfer_penalty, end_point);
     const auto end_point_street_network_duration = (v.clockwise() ? arrs : deps).at(end_point.sp_idx);
     for (unsigned count = 1; count <= raptor.count; ++count) {
         const auto& working_labels = raptor.labels[count];
@@ -689,14 +689,14 @@ void read_solutions(const RAPTOR& raptor,
                     const routing::map_stop_point_duration& arrs,
                     const type::RTLevel rt_level,
                     const type::AccessibiliteParams& accessibilite_params,
-                    const navitia::time_duration& transfer_penalty,
+                    const navitia::time_duration& arrival_transfer_penalty,
                     const StartingPointSndPhase& end_point) {
     if (clockwise) {
         return read_solutions(raptor, solutions, raptor_reverse_visitor(), departure_datetime, deps, arrs, rt_level,
-                              accessibilite_params, transfer_penalty, end_point);
+                              accessibilite_params, arrival_transfer_penalty, end_point);
     }
     return read_solutions(raptor, solutions, raptor_visitor(), departure_datetime, deps, arrs, rt_level,
-                          accessibilite_params, transfer_penalty, end_point);
+                          accessibilite_params, arrival_transfer_penalty, end_point);
 }
 
 Path make_path(const Journey& journey, const type::Data& data) {

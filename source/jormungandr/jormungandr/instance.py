@@ -479,6 +479,12 @@ class Instance(object):
         return get_value_or_default('walking_transfer_penalty', instance_db, self.name)
 
     @property
+    def arrival_transfer_penalty(self):
+        # type: () -> int
+        instance_db = self.get_models()
+        return get_value_or_default('arrival_transfer_penalty', instance_db, self.name)
+
+    @property
     def night_bus_filter_max_factor(self):
         # type: () -> int
         instance_db = self.get_models()

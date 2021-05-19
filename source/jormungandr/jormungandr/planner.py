@@ -31,6 +31,7 @@ class JourneyParameters(object):
         allowed_id=None,
         realtime_level='base_schedule',
         max_extra_second_pass=default_values.max_extra_second_pass,
+        arrival_transfer_penalty=default_values.arrival_transfer_penalty,
         walking_transfer_penalty=default_values.walking_transfer_penalty,
         direct_path_duration=None,
         night_bus_filter_max_factor=default_values.night_bus_filter_max_factor,
@@ -59,6 +60,8 @@ class JourneyParameters(object):
         self.isochrone_center = isochrone_center
         self.sn_params = sn_params
         self.current_datetime = current_datetime
+        self.arrival_transfer_penalty = arrival_transfer_penalty
+        self.walking_transfer_penalty = walking_transfer_penalty
 
 
 # Needed for GraphicalIsochrones
@@ -157,6 +160,12 @@ class Kraken(object):
 
         if journey_parameters.current_datetime:
             req._current_datetime = journey_parameters.current_datetime
+
+        if journey_parameters.walking_transfer_penalty:
+            req.journeys.walking_transfer_penalty = journey_parameters.walking_transfer_penalty
+
+        if journey_parameters.arrival_transfer_penalty:
+            req.journeys.arrival_transfer_penalty = journey_parameters.arrival_transfer_penalty
 
         return req
 
