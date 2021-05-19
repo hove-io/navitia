@@ -123,22 +123,12 @@ class Geovelo(AbstractStreetNetworkService):
                 return float('inf')
             return min((mode_weight.get(mode.uri, float('inf')) for mode in point.stop_point.physical_modes))
 
-        sorted_points = sorted(points, key=key_func)
-        if len(sorted_points) >= 50:
-            del sorted_points[50:]
-        return sorted_points
+        return sorted(points, key=key_func)
 
     @classmethod
     def _make_request_arguments_isochrone(cls, origins, destinations, bike_speed_mps=3.33):
-        if len(origins) == 1:
-            origins_coord = [cls._pt_object_summary_isochrone(o) for o in origins]
-            ord_destinations = cls.sort_by_mode(destinations)
-            destinations_coord = [cls._pt_object_summary_isochrone(o) for o in ord_destinations]
-        else:
-            ord_origins = cls.sort_by_mode(origins)
-            origins_coord = [cls._pt_object_summary_isochrone(o) for o in ord_origins]
-            destinations_coord = [cls._pt_object_summary_isochrone(o) for o in destinations]
-
+        origins_coord = [cls._pt_object_summary_isochrone(o) for o in origins]
+        destinations_coord = [cls._pt_object_summary_isochrone(o) for o in destinations]
         return {
             'starts': [o for o in origins_coord],
             'ends': [o for o in destinations_coord],
@@ -392,3 +382,9 @@ class Geovelo(AbstractStreetNetworkService):
 
     def feed_publisher(self):
         return self._feed_publisher
+
+    def filter_places_isochrone(self, places_isochrone):
+        ordered_isochrone = self.sort_by_mode(places_isochrone)
+        if len(ordered_isochrone) >= 50:
+            del ordered_isochrone[50:]
+        return ordered_isochrone

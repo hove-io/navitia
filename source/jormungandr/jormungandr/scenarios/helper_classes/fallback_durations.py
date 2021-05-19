@@ -179,6 +179,8 @@ class FallbackDurations:
             else:
                 return result
 
+        places_isochrone = self._streetnetwork_service.filter_places_isochrone(places_isochrone)
+
         if self._direct_path_type == StreetNetworkPathType.BEGINNING_FALLBACK:
             origins = [center_isochrone]
             destinations = places_isochrone
