@@ -132,9 +132,7 @@ class Kraken(AbstractStreetNetworkService):
             )
             # if the crowfly distance between origin and destination is
             # bigger than max_{mode}_direct_path_distance don't compute direct_path
-            if crowfly_distance > int(
-                   request['max_{mode}_direct_path_distance'.format(mode=mode)]
-            ):
+            if crowfly_distance > int(request['max_{mode}_direct_path_distance'.format(mode=mode)]):
                 return response_pb2.Response()
 
             if (

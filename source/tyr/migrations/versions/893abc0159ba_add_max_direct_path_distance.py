@@ -16,13 +16,34 @@ import sqlalchemy as sa
 
 
 def upgrade():
-    op.add_column('instance', sa.Column('max_bike_direct_path_distance', sa.Integer(), server_default='50000', nullable=False))
-    op.add_column('instance', sa.Column('max_bss_direct_path_distance', sa.Integer(), server_default='50000', nullable=False))
-    op.add_column('instance', sa.Column('max_car_direct_path_distance', sa.Integer(), server_default='200000', nullable=False))
-    op.add_column('instance', sa.Column('max_walking_direct_path_distance', sa.Integer(), server_default='50000', nullable=False))
-    op.add_column('instance', sa.Column('max_car_no_park_direct_path_distance', sa.Integer(), server_default='200000', nullable=False))
-    op.add_column('instance', sa.Column('max_ridesharing_direct_path_distance', sa.Integer(), server_default='200000', nullable=False))
-    op.add_column('instance', sa.Column('max_taxi_direct_path_distance', sa.Integer(), server_default='200000', nullable=False))
+    op.add_column(
+        'instance',
+        sa.Column('max_bike_direct_path_distance', sa.Integer(), server_default='50000', nullable=False),
+    )
+    op.add_column(
+        'instance',
+        sa.Column('max_bss_direct_path_distance', sa.Integer(), server_default='50000', nullable=False),
+    )
+    op.add_column(
+        'instance',
+        sa.Column('max_car_direct_path_distance', sa.Integer(), server_default='200000', nullable=False),
+    )
+    op.add_column(
+        'instance',
+        sa.Column('max_walking_direct_path_distance', sa.Integer(), server_default='50000', nullable=False),
+    )
+    op.add_column(
+        'instance',
+        sa.Column('max_car_no_park_direct_path_distance', sa.Integer(), server_default='200000', nullable=False),
+    )
+    op.add_column(
+        'instance',
+        sa.Column('max_ridesharing_direct_path_distance', sa.Integer(), server_default='200000', nullable=False),
+    )
+    op.add_column(
+        'instance',
+        sa.Column('max_taxi_direct_path_distance', sa.Integer(), server_default='200000', nullable=False),
+    )
 
 
 def downgrade():

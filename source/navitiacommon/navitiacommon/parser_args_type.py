@@ -88,9 +88,7 @@ class RangeFloat(CustomSchemaType):
     def __call__(self, value, name):
         conv_value = float(value)
         (range_min, range_max) = (
-            RangeFloat.map_range[name]
-            if name in RangeFloat.map_range
-            else RangeFloat.map_range['default']
+            RangeFloat.map_range[name] if name in RangeFloat.map_range else RangeFloat.map_range['default']
         )
         if not range_min <= conv_value <= range_max:
             raise ValueError(
