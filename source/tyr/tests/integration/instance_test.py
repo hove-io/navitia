@@ -139,6 +139,14 @@ def test_update_instances(create_instance):
         "max_car_direct_path_duration": 2323,
         "max_taxi_direct_path_duration": 4206,
         "max_ridesharing_direct_path_duration": 456,
+        "max_car_no_park_direct_path_duration": 555,
+        "max_walking_direct_path_distance": 10000,
+        "max_bike_direct_path_distance": 11000,
+        "max_bss_direct_path_distance": 12000,
+        "max_car_direct_path_distance": 13000,
+        "max_taxi_direct_path_distance": 14000,
+        "max_ridesharing_direct_path_distance": 15000,
+        "max_car_no_park_direct_path_distance": 16000,
         "street_network_car": "taxiKraken",
         "street_network_walking": "taxiKraken",
         "street_network_bike": "taxiKraken",
@@ -147,7 +155,6 @@ def test_update_instances(create_instance):
         "street_network_taxi": "kraken",
         "poi_dataset": "priv.poi_dataset",
         "max_taxi_duration_to_pt": 200,
-        "max_car_no_park_direct_path_duration": 555,
         "ridesharing_speed": 3.3,
         "max_ridesharing_duration_to_pt": 777,
         "stop_points_nearby_duration": 888,
@@ -173,6 +180,7 @@ def test_update_instances(create_instance):
     assert resp['poi_dataset'] == 'priv.poi_dataset'
     assert resp['max_taxi_duration_to_pt'] == 200
     assert resp['max_car_no_park_direct_path_duration'] == 555
+    assert resp['max_bike_direct_path_distance'] == 11000
     assert resp['ridesharing_speed'] == 3.3
     assert resp['max_ridesharing_duration_to_pt'] == 777
 
