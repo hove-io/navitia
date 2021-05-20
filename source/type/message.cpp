@@ -211,7 +211,6 @@ std::vector<ImpactedVJ> get_impacted_vehicle_journeys(const RailSection& rs,
     type::ValidityPattern impact_vp = impact.get_impact_vp(production_period);
 
     for (const auto* route : routes) {
-
         if (!is_route_to_impact_content_sa_list(blocked_sa_uri_sequence, route->stop_area_list)) {
             continue;
         }
@@ -234,8 +233,8 @@ std::vector<ImpactedVJ> get_impacted_vehicle_journeys(const RailSection& rs,
             // If the vj pass by both stops both elements will be different than nullptr, otherwise
             // it's not passing by both stops and should not be impacted
 
-            if ((!section.empty() && rs.blocked_stop_areas.empty()) || (!section.empty() && blocked_sa_sequence_matching(blocked_sa_uri_sequence, vj, section))) {
-
+            if ((!section.empty() && rs.blocked_stop_areas.empty())
+                || (!section.empty() && blocked_sa_sequence_matching(blocked_sa_uri_sequence, vj, section))) {
                 // Once we know the line section is part of the vj we compute the vp for the adapted_vj
                 nt::ValidityPattern new_vp{vj.validity_patterns[rt_level]->beginning_date};
                 for (const auto& period : impact.application_periods) {
@@ -257,10 +256,11 @@ std::vector<ImpactedVJ> get_impacted_vehicle_journeys(const RailSection& rs,
 
 // convert URI SA rail section into ordered list
 BlockedSAList create_blocked_sa_sequence(const RailSection& rs) {
-
     BlockedSAList blocked_sa_uri_sequence;
 
-    if (rs.start_point == nullptr || rs.end_point == nullptr) {return blocked_sa_uri_sequence;}
+    if (rs.start_point == nullptr || rs.end_point == nullptr) {
+        return blocked_sa_uri_sequence;
+    }
 
     // add start_point SA
     blocked_sa_uri_sequence.insert(std::make_pair(0, rs.start_point->uri));
@@ -278,12 +278,10 @@ BlockedSAList create_blocked_sa_sequence(const RailSection& rs) {
 // Only check if all blocked SA are contained inside route
 bool is_route_to_impact_content_sa_list(const BlockedSAList& blocked_sa_uri_sequence,
                                         const boost::container::flat_set<StopArea*>& stop_area_list) {
-    for (const auto sa : blocked_sa_uri_sequence){
+    for (const auto sa : blocked_sa_uri_sequence) {
         std::string bsa_uri = sa.second;
-        auto result = std::find_if(
-          stop_area_list.begin(),
-          stop_area_list.end(),
-          [bsa_uri](const auto& sa) {return sa->uri == bsa_uri; });
+        auto result = std::find_if(stop_area_list.begin(), stop_area_list.end(),
+                                   [bsa_uri](const auto& sa) { return sa->uri == bsa_uri; });
         if (result == stop_area_list.end()) {
             return false;
         }
@@ -295,13 +293,14 @@ bool is_route_to_impact_content_sa_list(const BlockedSAList& blocked_sa_uri_sequ
 bool blocked_sa_sequence_matching(const BlockedSAList& blocked_sa_uri_sequence,
                                   const nt::VehicleJourney& vj,
                                   const std::set<RankStopTime>& st_rank_list) {
-    if ((!blocked_sa_uri_sequence.empty() || !st_rank_list.empty()) || (blocked_sa_uri_sequence.size() == st_rank_list.size())) {
+    if ((!blocked_sa_uri_sequence.empty() || !st_rank_list.empty())
+        || (blocked_sa_uri_sequence.size() == st_rank_list.size())) {
         std::string st_meta_string = "";
-        for (const auto sp: st_rank_list) {
+        for (const auto sp : st_rank_list) {
             st_meta_string += vj.stop_time_list[sp.val].stop_point->stop_area->uri;
         }
         std::string bsa_meta_string = "";
-        for (const auto bsa: blocked_sa_uri_sequence) {
+        for (const auto bsa : blocked_sa_uri_sequence) {
             bsa_meta_string += bsa.second;
         }
         if (st_meta_string == bsa_meta_string) {
@@ -628,7 +627,8 @@ std::set<StopPoint*> get_stop_points_section(const RailSection& rs) {
         }
         route->for_each_vehicle_journey([&](const VehicleJourney& vj) {
             auto ranks = vj.get_sections_ranks(rs.start_point, rs.end_point);
-            if ((!ranks.empty() && rs.blocked_stop_areas.empty()) || (!ranks.empty() && blocked_sa_sequence_matching(blocked_sa_uri_sequence, vj, ranks))) {
+            if ((!ranks.empty() && rs.blocked_stop_areas.empty())
+                || (!ranks.empty() && blocked_sa_sequence_matching(blocked_sa_uri_sequence, vj, ranks))) {
                 return true;
             }
             for (const auto& rank : ranks) {

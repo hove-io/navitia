@@ -212,7 +212,7 @@ struct RailSection {
     Line* line = nullptr;
     StopArea* start_point = nullptr;
     StopArea* end_point = nullptr;
-    std::vector<std::pair<std::string, uint32_t> > blocked_stop_areas;
+    std::vector<std::pair<std::string, uint32_t>> blocked_stop_areas;
     std::vector<Route*> routes;
     template <class archive>
     void serialize(archive& ar, const unsigned int);
@@ -220,8 +220,9 @@ struct RailSection {
 
 std::set<StopPoint*> get_stop_points_section(const RailSection& rs);
 
-typedef boost::variant<UnknownPtObj, Network*, StopArea*, StopPoint*, LineSection, RailSection, Line*, Route*, MetaVehicleJourney*>
-    PtObj;
+typedef boost::
+    variant<UnknownPtObj, Network*, StopArea*, StopPoint*, LineSection, RailSection, Line*, Route*, MetaVehicleJourney*>
+        PtObj;
 
 PtObj make_pt_obj(Type_e type, const std::string& uri, PT_Data& pt_data);
 

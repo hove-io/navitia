@@ -1182,12 +1182,10 @@ struct DisruptedNetworkWithRailSection {
 };
 
 /**
- *   We want to make sure disruption on a rail section works with rail_reports
- *   and trafic_report along with disruption tag
+ *   We want to make sure disruption on a rail section works with line_reports
  */
 BOOST_FIXTURE_TEST_CASE(line_report_on_a_tagged_rail_section, DisruptedNetworkWithRailSection) {
-    disruption::line_reports(pb_creator, *b.data, 1, 25, 0, "", {}, since,
-                             until);
+    disruption::line_reports(pb_creator, *b.data, 1, 25, 0, "", {}, since, until);
 
     BOOST_CHECK_EQUAL(pb_creator.impacts.size(), 1);
 
@@ -1197,8 +1195,7 @@ BOOST_FIXTURE_TEST_CASE(line_report_on_a_tagged_rail_section, DisruptedNetworkWi
 }
 
 BOOST_FIXTURE_TEST_CASE(traffic_report_on_a_tagged_rail_section, DisruptedNetworkWithRailSection) {
-    disruption::traffic_reports(pb_creator, *b.data, 1, 25, 0, "", {},
-                                boost::none, boost::none);
+    disruption::traffic_reports(pb_creator, *b.data, 1, 25, 0, "", {}, boost::none, boost::none);
 
     BOOST_CHECK_EQUAL(pb_creator.impacts.size(), 1);
 
@@ -1206,4 +1203,3 @@ BOOST_FIXTURE_TEST_CASE(traffic_report_on_a_tagged_rail_section, DisruptedNetwor
     std::set<std::string> res = {"disrup_rail_section"};
     BOOST_CHECK_EQUAL_RANGE(res, uris);
 }
-

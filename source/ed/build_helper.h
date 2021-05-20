@@ -243,7 +243,7 @@ struct Impacter {
     Impacter& on_rail_section(const std::string& line_uri,
                               const std::string& start_stop_uri,
                               const std::string& end_stop_uri,
-                              const std::vector<std::pair<std::string, uint32_t> >& blocked_stop_areas,
+                              const std::vector<std::pair<std::string, uint32_t>>& blocked_stop_areas,
                               const std::vector<std::string>& route_uris,
                               nt::PT_Data& pt_data);
     Impacter& msg(nt::disruption::Message);

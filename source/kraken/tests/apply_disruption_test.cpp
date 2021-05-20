@@ -3306,8 +3306,7 @@ BOOST_AUTO_TEST_CASE(impact_with_timeslots_compare_timeslots_diff_size) {
     BOOST_REQUIRE_EQUAL(ts->end, "13:00"_t);
 }
 
-void check_rail_section_impact(const ed::builder& b){
-
+void check_rail_section_impact(const ed::builder& b) {
     BOOST_REQUIRE_EQUAL(b.data->pt_data->lines.size(), 1);
     BOOST_REQUIRE_EQUAL(b.data->pt_data->routes.size(), 2);
     BOOST_REQUIRE_EQUAL(b.data->pt_data->vehicle_journeys.size(), 3);
@@ -3321,7 +3320,6 @@ void check_rail_section_impact(const ed::builder& b){
     vj = b.get<nt::VehicleJourney>("vehicle_journey:vj:A-2");
     base_vp = vj->base_validity_pattern()->days;
     BOOST_CHECK_MESSAGE(ba::ends_with(base_vp.to_string(), "111111"), base_vp);
-
 
     // Check the adapted vj
     vj = b.get<nt::VehicleJourney>("vehicle_journey:vj:A-1:Adapted:0:rail_section_on_line1");
@@ -3343,7 +3341,7 @@ void check_rail_section_impact(const ed::builder& b){
     BOOST_REQUIRE_EQUAL(vj->stop_time_list[1].departure_time, "08:10"_t);
     // stopC
     BOOST_REQUIRE_EQUAL(vj->stop_time_list[2].stop_point->uri, "stopC");
-    BOOST_REQUIRE_EQUAL(vj->stop_time_list[2].pick_up_allowed(), false); // pick-up is forbidden now
+    BOOST_REQUIRE_EQUAL(vj->stop_time_list[2].pick_up_allowed(), false);  // pick-up is forbidden now
     BOOST_REQUIRE_EQUAL(vj->stop_time_list[2].drop_off_allowed(), true);
     BOOST_REQUIRE_EQUAL(vj->stop_time_list[2].departure_time, "08:20"_t);
 
@@ -3404,20 +3402,12 @@ BOOST_AUTO_TEST_CASE(classic_impact_with_rail_section) {
             b.sa("stopAreaD")("stopD");
             b.sa("stopAreaE")("stopE");
             b.sa("stopAreaF")("stopF");
-            b.vj("line:1", "111111", "", true, "vj:A-1").route("route-1")
-                ("stopA", "08:00"_t)
-                ("stopB", "08:10"_t)
-                ("stopC", "08:20"_t)
-                ("stopD", "08:30"_t)
-                ("stopE", "08:40"_t)
-                ("stopF", "08:50"_t);
-            b.vj("line:1", "111111", "", true, "vj:A-2").route("route-2")
-                ("stopF", "08:00"_t)
-                ("stopE", "08:10"_t)
-                ("stopD", "08:20"_t)
-                ("stopC", "08:30"_t)
-                ("stopB", "08:40"_t)
-                ("stopA", "08:50"_t);
+            b.vj("line:1", "111111", "", true, "vj:A-1")
+                .route("route-1")("stopA", "08:00"_t)("stopB", "08:10"_t)("stopC", "08:20"_t)("stopD", "08:30"_t)(
+                    "stopE", "08:40"_t)("stopF", "08:50"_t);
+            b.vj("line:1", "111111", "", true, "vj:A-2")
+                .route("route-2")("stopF", "08:00"_t)("stopE", "08:10"_t)("stopD", "08:20"_t)("stopC", "08:30"_t)(
+                    "stopB", "08:40"_t)("stopA", "08:50"_t);
         });
 
         b.data->meta->production_date = bg::date_period(bg::date(2021, 1, 1), bg::days(7));
@@ -3427,18 +3417,12 @@ BOOST_AUTO_TEST_CASE(classic_impact_with_rail_section) {
         BOOST_REQUIRE_EQUAL(b.data->pt_data->vehicle_journeys.size(), 2);
 
         // new rail_section disruption
-        navitia::apply_disruption(
-            b.impact(nt::RTLevel::Adapted, "rail_section_on_line1")
-                .severity(nt::disruption::Effect::NO_SERVICE)
-                .application_periods(btp("20210101T060000"_dt, "20210101T100000"_dt))
-                .on_rail_section("line:1",
-                                 "stopAreaC",
-                                 "stopAreaD",
-                                 {},
-                                 {},
-                                 *b.data->pt_data)
-                .get_disruption(),
-            *b.data->pt_data, *b.data->meta);
+        navitia::apply_disruption(b.impact(nt::RTLevel::Adapted, "rail_section_on_line1")
+                                      .severity(nt::disruption::Effect::NO_SERVICE)
+                                      .application_periods(btp("20210101T060000"_dt, "20210101T100000"_dt))
+                                      .on_rail_section("line:1", "stopAreaC", "stopAreaD", {}, {}, *b.data->pt_data)
+                                      .get_disruption(),
+                                  *b.data->pt_data, *b.data->meta);
 
         // Check every relevant fields
         check_rail_section_impact(b);
@@ -3471,20 +3455,12 @@ BOOST_AUTO_TEST_CASE(classic_impact_with_rail_section) {
             b.sa("stopAreaD")("stopD");
             b.sa("stopAreaE")("stopE");
             b.sa("stopAreaF")("stopF");
-            b.vj("line:1", "111111", "", true, "vj:A-1").route("route-1")
-                ("stopA", "08:00"_t)
-                ("stopB", "08:10"_t)
-                ("stopC", "08:20"_t)
-                ("stopD", "08:30"_t)
-                ("stopE", "08:40"_t)
-                ("stopF", "08:50"_t);
-            b.vj("line:1", "111111", "", true, "vj:A-2").route("route-2")
-                ("stopF", "08:00"_t)
-                ("stopE", "08:10"_t)
-                ("stopD", "08:20"_t)
-                ("stopC", "08:30"_t)
-                ("stopB", "08:40"_t)
-                ("stopA", "08:50"_t);
+            b.vj("line:1", "111111", "", true, "vj:A-1")
+                .route("route-1")("stopA", "08:00"_t)("stopB", "08:10"_t)("stopC", "08:20"_t)("stopD", "08:30"_t)(
+                    "stopE", "08:40"_t)("stopF", "08:50"_t);
+            b.vj("line:1", "111111", "", true, "vj:A-2")
+                .route("route-2")("stopF", "08:00"_t)("stopE", "08:10"_t)("stopD", "08:20"_t)("stopC", "08:30"_t)(
+                    "stopB", "08:40"_t)("stopA", "08:50"_t);
         });
 
         b.data->meta->production_date = bg::date_period(bg::date(2021, 1, 1), bg::days(7));
@@ -3498,12 +3474,7 @@ BOOST_AUTO_TEST_CASE(classic_impact_with_rail_section) {
             b.impact(nt::RTLevel::Adapted, "rail_section_on_line1")
                 .severity(nt::disruption::Effect::NO_SERVICE)
                 .application_periods(btp("20210101T060000"_dt, "20210101T100000"_dt))
-                .on_rail_section("line:1",
-                                 "stopAreaC",
-                                 "stopAreaD",
-                                 {},
-                                 {"route-1"},
-                                 *b.data->pt_data)
+                .on_rail_section("line:1", "stopAreaC", "stopAreaD", {}, {"route-1"}, *b.data->pt_data)
                 .get_disruption(),
             *b.data->pt_data, *b.data->meta);
 
@@ -3540,20 +3511,12 @@ BOOST_AUTO_TEST_CASE(classic_impact_with_rail_section) {
             b.sa("stopAreaD")("stopD");
             b.sa("stopAreaE")("stopE");
             b.sa("stopAreaF")("stopF");
-            b.vj("line:1", "111111", "", true, "vj:A-1").route("route-1")
-                ("stopA", "08:00"_t)
-                ("stopB", "08:10"_t)
-                ("stopC", "08:20"_t)
-                ("stopD", "08:30"_t)
-                ("stopE", "08:40"_t)
-                ("stopF", "08:50"_t);
-            b.vj("line:1", "111111", "", true, "vj:A-2").route("route-2")
-                ("stopF", "08:00"_t)
-                ("stopE", "08:10"_t)
-                ("stopD", "08:20"_t)
-                ("stopC", "08:30"_t)
-                ("stopB", "08:40"_t)
-                ("stopA", "08:50"_t);
+            b.vj("line:1", "111111", "", true, "vj:A-1")
+                .route("route-1")("stopA", "08:00"_t)("stopB", "08:10"_t)("stopC", "08:20"_t)("stopD", "08:30"_t)(
+                    "stopE", "08:40"_t)("stopF", "08:50"_t);
+            b.vj("line:1", "111111", "", true, "vj:A-2")
+                .route("route-2")("stopF", "08:00"_t)("stopE", "08:10"_t)("stopD", "08:20"_t)("stopC", "08:30"_t)(
+                    "stopB", "08:40"_t)("stopA", "08:50"_t);
         });
 
         b.data->meta->production_date = bg::date_period(bg::date(2021, 1, 1), bg::days(7));
@@ -3567,12 +3530,7 @@ BOOST_AUTO_TEST_CASE(classic_impact_with_rail_section) {
             b.impact(nt::RTLevel::Adapted, "rail_section_on_line1")
                 .severity(nt::disruption::Effect::NO_SERVICE)
                 .application_periods(btp("20210101T060000"_dt, "20210101T100000"_dt))
-                .on_rail_section("line:1",
-                                 "stopAreaC",
-                                 "stopAreaD",
-                                 {},
-                                 {"route-2"},
-                                 *b.data->pt_data)
+                .on_rail_section("line:1", "stopAreaC", "stopAreaD", {}, {"route-2"}, *b.data->pt_data)
                 .get_disruption(),
             *b.data->pt_data, *b.data->meta);
 
@@ -3612,20 +3570,12 @@ BOOST_AUTO_TEST_CASE(classic_impact_with_rail_section) {
             b.sa("stopAreaD")("stopD");
             b.sa("stopAreaE")("stopE");
             b.sa("stopAreaF")("stopF");
-            b.vj("line:1", "111111", "", true, "vj:A-1").route("route-1")
-                ("stopA", "08:00"_t)
-                ("stopB", "08:10"_t)
-                ("stopC", "08:20"_t)
-                ("stopD", "08:30"_t)
-                ("stopE", "08:40"_t)
-                ("stopF", "08:50"_t);
-            b.vj("line:1", "111111", "", true, "vj:A-2").route("route-2")
-                ("stopF", "08:00"_t)
-                ("stopE", "08:10"_t)
-                ("stopD", "08:20"_t)
-                ("stopC", "08:30"_t)
-                ("stopB", "08:40"_t)
-                ("stopA", "08:50"_t);
+            b.vj("line:1", "111111", "", true, "vj:A-1")
+                .route("route-1")("stopA", "08:00"_t)("stopB", "08:10"_t)("stopC", "08:20"_t)("stopD", "08:30"_t)(
+                    "stopE", "08:40"_t)("stopF", "08:50"_t);
+            b.vj("line:1", "111111", "", true, "vj:A-2")
+                .route("route-2")("stopF", "08:00"_t)("stopE", "08:10"_t)("stopD", "08:20"_t)("stopC", "08:30"_t)(
+                    "stopB", "08:40"_t)("stopA", "08:50"_t);
         });
 
         b.data->meta->production_date = bg::date_period(bg::date(2021, 1, 1), bg::days(7));
@@ -3635,18 +3585,12 @@ BOOST_AUTO_TEST_CASE(classic_impact_with_rail_section) {
         BOOST_REQUIRE_EQUAL(b.data->pt_data->vehicle_journeys.size(), 2);
 
         // new rail_section disruption
-        navitia::apply_disruption(
-            b.impact(nt::RTLevel::Adapted, "rail_section_on_line1")
-                .severity(nt::disruption::Effect::NO_SERVICE)
-                .application_periods(btp("20210101T060000"_dt, "20210101T100000"_dt))
-                .on_rail_section("line:1",
-                                 "stopAreaC",
-                                 "stopAreaF",
-                                 {},
-                                 {},
-                                 *b.data->pt_data)
-                .get_disruption(),
-            *b.data->pt_data, *b.data->meta);
+        navitia::apply_disruption(b.impact(nt::RTLevel::Adapted, "rail_section_on_line1")
+                                      .severity(nt::disruption::Effect::NO_SERVICE)
+                                      .application_periods(btp("20210101T060000"_dt, "20210101T100000"_dt))
+                                      .on_rail_section("line:1", "stopAreaC", "stopAreaF", {}, {}, *b.data->pt_data)
+                                      .get_disruption(),
+                                  *b.data->pt_data, *b.data->meta);
 
         // Check every relevant fields
         BOOST_REQUIRE_EQUAL(b.data->pt_data->lines.size(), 1);
@@ -3662,7 +3606,6 @@ BOOST_AUTO_TEST_CASE(classic_impact_with_rail_section) {
         vj = b.get<nt::VehicleJourney>("vehicle_journey:vj:A-2");
         base_vp = vj->base_validity_pattern()->days;
         BOOST_CHECK_MESSAGE(ba::ends_with(base_vp.to_string(), "111111"), base_vp);
-
 
         // Check the adapted vj
         vj = b.get<nt::VehicleJourney>("vehicle_journey:vj:A-1:Adapted:0:rail_section_on_line1");
@@ -3685,7 +3628,6 @@ BOOST_AUTO_TEST_CASE(classic_impact_with_rail_section) {
         BOOST_REQUIRE_EQUAL(b.get<nt::StopPoint>("stopE")->get_impacts().size(), 1);
         BOOST_REQUIRE_EQUAL(b.get<nt::StopPoint>("stopF")->get_impacts().size(), 1);
     }
-
 }
 
 BOOST_AUTO_TEST_CASE(classic_impact_with_long_rail_section) {
@@ -3720,20 +3662,12 @@ BOOST_AUTO_TEST_CASE(classic_impact_with_long_rail_section) {
         b.sa("stopAreaD")("stopD");
         b.sa("stopAreaE")("stopE");
         b.sa("stopAreaF")("stopF");
-        b.vj("line:1", "111111", "", true, "vj:A-1").route("route-1")
-            ("stopA", "08:00"_t)
-            ("stopB", "08:10"_t)
-            ("stopC", "08:20"_t)
-            ("stopD", "08:30"_t)
-            ("stopE", "08:40"_t)
-            ("stopF", "08:50"_t);
-        b.vj("line:1", "111111", "", true, "vj:A-2").route("route-2")
-            ("stopF", "08:00"_t)
-            ("stopE", "08:10"_t)
-            ("stopD", "08:20"_t)
-            ("stopC", "08:30"_t)
-            ("stopB", "08:40"_t)
-            ("stopA", "08:50"_t);
+        b.vj("line:1", "111111", "", true, "vj:A-1")
+            .route("route-1")("stopA", "08:00"_t)("stopB", "08:10"_t)("stopC", "08:20"_t)("stopD", "08:30"_t)(
+                "stopE", "08:40"_t)("stopF", "08:50"_t);
+        b.vj("line:1", "111111", "", true, "vj:A-2")
+            .route("route-2")("stopF", "08:00"_t)("stopE", "08:10"_t)("stopD", "08:20"_t)("stopC", "08:30"_t)(
+                "stopB", "08:40"_t)("stopA", "08:50"_t);
     });
 
     b.data->meta->production_date = bg::date_period(bg::date(2021, 1, 1), bg::days(7));
@@ -3747,15 +3681,8 @@ BOOST_AUTO_TEST_CASE(classic_impact_with_long_rail_section) {
         b.impact(nt::RTLevel::Adapted, "rail_section_on_line1")
             .severity(nt::disruption::Effect::NO_SERVICE)
             .application_periods(btp("20210101T060000"_dt, "20210101T100000"_dt))
-            .on_rail_section("line:1",
-                             "stopAreaC",
-                             "stopAreaF",
-                             {
-                                std::make_pair("stopAreaE", 3),
-                                std::make_pair("stopAreaD", 2)
-                             },
-                             {},
-                             *b.data->pt_data)
+            .on_rail_section("line:1", "stopAreaC", "stopAreaF",
+                             {std::make_pair("stopAreaE", 3), std::make_pair("stopAreaD", 2)}, {}, *b.data->pt_data)
             .get_disruption(),
         *b.data->pt_data, *b.data->meta);
 
@@ -3773,7 +3700,6 @@ BOOST_AUTO_TEST_CASE(classic_impact_with_long_rail_section) {
     vj = b.get<nt::VehicleJourney>("vehicle_journey:vj:A-2");
     base_vp = vj->base_validity_pattern()->days;
     BOOST_CHECK_MESSAGE(ba::ends_with(base_vp.to_string(), "111111"), base_vp);
-
 
     // Check the adapted vj
     vj = b.get<nt::VehicleJourney>("vehicle_journey:vj:A-1:Adapted:0:rail_section_on_line1");
@@ -3795,7 +3721,6 @@ BOOST_AUTO_TEST_CASE(classic_impact_with_long_rail_section) {
     BOOST_REQUIRE_EQUAL(b.get<nt::StopPoint>("stopD")->get_impacts().size(), 1);
     BOOST_REQUIRE_EQUAL(b.get<nt::StopPoint>("stopE")->get_impacts().size(), 1);
     BOOST_REQUIRE_EQUAL(b.get<nt::StopPoint>("stopF")->get_impacts().size(), 1);
-
 }
 
 BOOST_AUTO_TEST_CASE(rail_section_impact_with_wrong_blocked_sa) {
@@ -3828,20 +3753,12 @@ BOOST_AUTO_TEST_CASE(rail_section_impact_with_wrong_blocked_sa) {
         b.sa("stopAreaD")("stopD");
         b.sa("stopAreaE")("stopE");
         b.sa("stopAreaF")("stopF");
-        b.vj("line:1", "111111", "", true, "vj:A-1").route("route-1")
-            ("stopA", "08:00"_t)
-            ("stopB", "08:10"_t)
-            ("stopC", "08:20"_t)
-            ("stopD", "08:30"_t)
-            ("stopE", "08:40"_t)
-            ("stopF", "08:50"_t);
-        b.vj("line:1", "111111", "", true, "vj:A-2").route("route-2")
-            ("stopF", "08:00"_t)
-            ("stopE", "08:10"_t)
-            ("stopD", "08:20"_t)
-            ("stopC", "08:30"_t)
-            ("stopB", "08:40"_t)
-            ("stopA", "08:50"_t);
+        b.vj("line:1", "111111", "", true, "vj:A-1")
+            .route("route-1")("stopA", "08:00"_t)("stopB", "08:10"_t)("stopC", "08:20"_t)("stopD", "08:30"_t)(
+                "stopE", "08:40"_t)("stopF", "08:50"_t);
+        b.vj("line:1", "111111", "", true, "vj:A-2")
+            .route("route-2")("stopF", "08:00"_t)("stopE", "08:10"_t)("stopD", "08:20"_t)("stopC", "08:30"_t)(
+                "stopB", "08:40"_t)("stopA", "08:50"_t);
     });
 
     b.data->meta->production_date = bg::date_period(bg::date(2021, 1, 1), bg::days(7));
@@ -3854,15 +3771,8 @@ BOOST_AUTO_TEST_CASE(rail_section_impact_with_wrong_blocked_sa) {
         b.impact(nt::RTLevel::Adapted, "rail_section_on_line1")
             .severity(nt::disruption::Effect::NO_SERVICE)
             .application_periods(btp("20210101T060000"_dt, "20210101T100000"_dt))
-            .on_rail_section("line:1",
-                             "stopAreaC",
-                             "stopAreaF",
-                             {
-                                std::make_pair("stopAreaA", 3),
-                                std::make_pair("stopAreaB", 2)
-                             },
-                             {},
-                             *b.data->pt_data)
+            .on_rail_section("line:1", "stopAreaC", "stopAreaF",
+                             {std::make_pair("stopAreaA", 3), std::make_pair("stopAreaB", 2)}, {}, *b.data->pt_data)
             .get_disruption(),
         *b.data->pt_data, *b.data->meta);
 
@@ -3901,20 +3811,12 @@ BOOST_AUTO_TEST_CASE(rail_section_impact_with_unknown_blocked_sa) {
             b.sa("stopAreaD")("stopD");
             b.sa("stopAreaE")("stopE");
             b.sa("stopAreaF")("stopF");
-            b.vj("line:1", "111111", "", true, "vj:A-1").route("route-1")
-                ("stopA", "08:00"_t)
-                ("stopB", "08:10"_t)
-                ("stopC", "08:20"_t)
-                ("stopD", "08:30"_t)
-                ("stopE", "08:40"_t)
-                ("stopF", "08:50"_t);
-            b.vj("line:1", "111111", "", true, "vj:A-2").route("route-2")
-                ("stopF", "08:00"_t)
-                ("stopE", "08:10"_t)
-                ("stopD", "08:20"_t)
-                ("stopC", "08:30"_t)
-                ("stopB", "08:40"_t)
-                ("stopA", "08:50"_t);
+            b.vj("line:1", "111111", "", true, "vj:A-1")
+                .route("route-1")("stopA", "08:00"_t)("stopB", "08:10"_t)("stopC", "08:20"_t)("stopD", "08:30"_t)(
+                    "stopE", "08:40"_t)("stopF", "08:50"_t);
+            b.vj("line:1", "111111", "", true, "vj:A-2")
+                .route("route-2")("stopF", "08:00"_t)("stopE", "08:10"_t)("stopD", "08:20"_t)("stopC", "08:30"_t)(
+                    "stopB", "08:40"_t)("stopA", "08:50"_t);
         });
 
         b.data->meta->production_date = bg::date_period(bg::date(2021, 1, 1), bg::days(7));
@@ -3923,21 +3825,15 @@ BOOST_AUTO_TEST_CASE(rail_section_impact_with_unknown_blocked_sa) {
 
         BOOST_REQUIRE_EQUAL(b.data->pt_data->vehicle_journeys.size(), 2);
         // new rail_section disruption
-        navitia::apply_disruption(
-            b.impact(nt::RTLevel::Adapted, "rail_section_on_line1")
-                .severity(nt::disruption::Effect::NO_SERVICE)
-                .application_periods(btp("20210101T060000"_dt, "20210101T100000"_dt))
-                .on_rail_section("line:1",
-                                 "stopAreaC",
-                                 "stopAreaF",
-                                 {
-                                    std::make_pair("stopAreaZ", 3), // <---- Unknown SA !!
-                                    std::make_pair("stopAreaD", 2)
-                                 },
-                                 {},
-                                 *b.data->pt_data)
-                .get_disruption(),
-            *b.data->pt_data, *b.data->meta);
+        navitia::apply_disruption(b.impact(nt::RTLevel::Adapted, "rail_section_on_line1")
+                                      .severity(nt::disruption::Effect::NO_SERVICE)
+                                      .application_periods(btp("20210101T060000"_dt, "20210101T100000"_dt))
+                                      .on_rail_section("line:1", "stopAreaC", "stopAreaF",
+                                                       {std::make_pair("stopAreaZ", 3),  // <---- Unknown SA !!
+                                                        std::make_pair("stopAreaD", 2)},
+                                                       {}, *b.data->pt_data)
+                                      .get_disruption(),
+                                  *b.data->pt_data, *b.data->meta);
 
         // No VJ is added
         BOOST_REQUIRE_EQUAL(b.data->pt_data->vehicle_journeys.size(), 2);
@@ -3974,20 +3870,12 @@ BOOST_AUTO_TEST_CASE(rail_section_impact_with_unknown_blocked_sa) {
             b.sa("stopAreaF")("stopF");
             b.sa("stopAreaR")("stopF");
             b.sa("stopAreaZ")("stopF");
-            b.vj("line:1", "111111", "", true, "vj:A-1").route("route-1")
-                ("stopA", "08:00"_t)
-                ("stopB", "08:10"_t)
-                ("stopC", "08:20"_t)
-                ("stopD", "08:30"_t)
-                ("stopE", "08:40"_t)
-                ("stopF", "08:50"_t);
-            b.vj("line:1", "111111", "", true, "vj:A-2").route("route-2")
-                ("stopF", "08:00"_t)
-                ("stopE", "08:10"_t)
-                ("stopD", "08:20"_t)
-                ("stopC", "08:30"_t)
-                ("stopB", "08:40"_t)
-                ("stopA", "08:50"_t);
+            b.vj("line:1", "111111", "", true, "vj:A-1")
+                .route("route-1")("stopA", "08:00"_t)("stopB", "08:10"_t)("stopC", "08:20"_t)("stopD", "08:30"_t)(
+                    "stopE", "08:40"_t)("stopF", "08:50"_t);
+            b.vj("line:1", "111111", "", true, "vj:A-2")
+                .route("route-2")("stopF", "08:00"_t)("stopE", "08:10"_t)("stopD", "08:20"_t)("stopC", "08:30"_t)(
+                    "stopB", "08:40"_t)("stopA", "08:50"_t);
         });
 
         b.data->meta->production_date = bg::date_period(bg::date(2021, 1, 1), bg::days(7));
@@ -4000,15 +3888,9 @@ BOOST_AUTO_TEST_CASE(rail_section_impact_with_unknown_blocked_sa) {
             b.impact(nt::RTLevel::Adapted, "rail_section_on_line1")
                 .severity(nt::disruption::Effect::NO_SERVICE)
                 .application_periods(btp("20210101T060000"_dt, "20210101T100000"_dt))
-                .on_rail_section("line:1",
-                                 "stopAreaC",
-                                 "stopAreaR", // <----- Unknown SA !!!!
-                                 {
-                                    std::make_pair("stopAreaE", 3),
-                                    std::make_pair("stopAreaD", 2)
-                                 },
-                                 {},
-                                 *b.data->pt_data)
+                .on_rail_section("line:1", "stopAreaC",
+                                 "stopAreaR",  // <----- Unknown SA !!!!
+                                 {std::make_pair("stopAreaE", 3), std::make_pair("stopAreaD", 2)}, {}, *b.data->pt_data)
                 .get_disruption(),
             *b.data->pt_data, *b.data->meta);
 
@@ -4017,8 +3899,7 @@ BOOST_AUTO_TEST_CASE(rail_section_impact_with_unknown_blocked_sa) {
     }
 }
 
-ed::builder create_complex_data_for_rail_section()
-{
+ed::builder create_complex_data_for_rail_section() {
     /*
      *
      *          |------- J ------ K ------ L --------
@@ -4059,61 +3940,25 @@ ed::builder create_complex_data_for_rail_section()
         b.sa("stopAreaP")("stopP");
         b.sa("stopAreaQ")("stopQ");
         b.sa("stopAreaR")("stopR");
-        b.vj("line:1", "111111", "", true, "vj:1").route("route1")
-            ("stopA", "08:00"_t)
-            ("stopB", "08:05"_t)
-            ("stopC", "08:10"_t)
-            ("stopD", "08:15"_t)
-            ("stopE", "08:20"_t)
-            ("stopF", "08:25"_t)
-            ("stopG", "08:30"_t)
-            ("stopH", "08:35"_t)
-            ("stopI", "08:40"_t);
-        b.vj("line:1", "111111", "", true, "vj:2").route("route2")
-            ("stopI", "08:00"_t)
-            ("stopH", "08:05"_t)
-            ("stopG", "08:10"_t)
-            ("stopF", "08:15"_t)
-            ("stopE", "08:20"_t)
-            ("stopD", "08:25"_t)
-            ("stopC", "08:30"_t)
-            ("stopB", "08:35"_t)
-            ("stopA", "08:40"_t);
-        b.vj("line:1", "111111", "", true, "vj:3").route("route3")
-            ("stopA", "08:00"_t)
-            ("stopB", "08:05"_t)
-            ("stopJ", "08:10"_t)
-            ("stopK", "08:15"_t)
-            ("stopL", "08:20"_t)
-            ("stopF", "08:25"_t)
-            ("stopG", "08:30"_t)
-            ("stopH", "08:35"_t)
-            ("stopI", "08:40"_t);
-        b.vj("line:1", "111111", "", true, "vj:4").route("route4")
-            ("stopA", "08:00"_t)
-            ("stopB", "08:05"_t)
-            ("stopC", "08:10"_t)
-            ("stopD", "08:15"_t)
-            ("stopM", "08:20"_t)
-            ("stopN", "08:25"_t)
-            ("stopO", "08:30"_t)
-            ("stopG", "08:35"_t)
-            ("stopH", "08:40"_t)
-            ("stopI", "08:40"_t);
-        b.vj("line:1", "111111", "", true, "vj:5").route("route5")
-            ("stopA", "08:00"_t)
-            ("stopB", "08:05"_t)
-            ("stopC", "08:10"_t)
-            ("stopP", "08:15"_t)
-            ("stopQ", "08:20"_t)
-            ("stopR", "08:25"_t);
-        b.vj("line:1", "111111", "", true, "vj:6").route("route6")
-            ("stopR", "08:00"_t)
-            ("stopQ", "08:05"_t)
-            ("stopP", "08:10"_t)
-            ("stopC", "08:15"_t)
-            ("stopB", "08:20"_t)
-            ("stopA", "08:25"_t);
+        b.vj("line:1", "111111", "", true, "vj:1")
+            .route("route1")("stopA", "08:00"_t)("stopB", "08:05"_t)("stopC", "08:10"_t)("stopD", "08:15"_t)(
+                "stopE", "08:20"_t)("stopF", "08:25"_t)("stopG", "08:30"_t)("stopH", "08:35"_t)("stopI", "08:40"_t);
+        b.vj("line:1", "111111", "", true, "vj:2")
+            .route("route2")("stopI", "08:00"_t)("stopH", "08:05"_t)("stopG", "08:10"_t)("stopF", "08:15"_t)(
+                "stopE", "08:20"_t)("stopD", "08:25"_t)("stopC", "08:30"_t)("stopB", "08:35"_t)("stopA", "08:40"_t);
+        b.vj("line:1", "111111", "", true, "vj:3")
+            .route("route3")("stopA", "08:00"_t)("stopB", "08:05"_t)("stopJ", "08:10"_t)("stopK", "08:15"_t)(
+                "stopL", "08:20"_t)("stopF", "08:25"_t)("stopG", "08:30"_t)("stopH", "08:35"_t)("stopI", "08:40"_t);
+        b.vj("line:1", "111111", "", true, "vj:4")
+            .route("route4")("stopA", "08:00"_t)("stopB", "08:05"_t)("stopC", "08:10"_t)("stopD", "08:15"_t)(
+                "stopM", "08:20"_t)("stopN", "08:25"_t)("stopO", "08:30"_t)("stopG", "08:35"_t)("stopH", "08:40"_t)(
+                "stopI", "08:40"_t);
+        b.vj("line:1", "111111", "", true, "vj:5")
+            .route("route5")("stopA", "08:00"_t)("stopB", "08:05"_t)("stopC", "08:10"_t)("stopP", "08:15"_t)(
+                "stopQ", "08:20"_t)("stopR", "08:25"_t);
+        b.vj("line:1", "111111", "", true, "vj:6")
+            .route("route6")("stopR", "08:00"_t)("stopQ", "08:05"_t)("stopP", "08:10"_t)("stopC", "08:15"_t)(
+                "stopB", "08:20"_t)("stopA", "08:25"_t);
     });
 
     b.data->meta->production_date = bg::date_period(bg::date(2021, 1, 1), bg::days(7));
@@ -4122,7 +3967,6 @@ ed::builder create_complex_data_for_rail_section()
 }
 
 BOOST_AUTO_TEST_CASE(complex_impact_with_rail_section) {
-
     /**
      * We want to impact like this
 
@@ -4156,21 +4000,17 @@ BOOST_AUTO_TEST_CASE(complex_impact_with_rail_section) {
     BOOST_REQUIRE_EQUAL(b.data->pt_data->vehicle_journeys.size(), 6);
 
     // new rail_section disruption
-    navitia::apply_disruption(
-        b.impact(nt::RTLevel::Adapted, "rail_section_on_line1-1")
-            .severity(nt::disruption::Effect::NO_SERVICE)
-            .application_periods(btp("20210101T060000"_dt, "20210101T100000"_dt))
-            .on_rail_section("line:1",
-                             "stopAreaB",
-                             "stopAreaE",
-                             {
-                                std::make_pair("stopAreaC", 1),
-                                std::make_pair("stopAreaD", 2),
-                             },
-                             {"route1"},
-                             *b.data->pt_data)
-            .get_disruption(),
-        *b.data->pt_data, *b.data->meta);
+    navitia::apply_disruption(b.impact(nt::RTLevel::Adapted, "rail_section_on_line1-1")
+                                  .severity(nt::disruption::Effect::NO_SERVICE)
+                                  .application_periods(btp("20210101T060000"_dt, "20210101T100000"_dt))
+                                  .on_rail_section("line:1", "stopAreaB", "stopAreaE",
+                                                   {
+                                                       std::make_pair("stopAreaC", 1),
+                                                       std::make_pair("stopAreaD", 2),
+                                                   },
+                                                   {"route1"}, *b.data->pt_data)
+                                  .get_disruption(),
+                              *b.data->pt_data, *b.data->meta);
 
     BOOST_REQUIRE_EQUAL(b.data->pt_data->vehicle_journeys.size(), 7);
 
@@ -4205,23 +4045,15 @@ BOOST_AUTO_TEST_CASE(complex_impact_with_rail_section) {
     BOOST_REQUIRE_EQUAL(b.get<nt::StopPoint>("stopI")->get_impacts().size(), 0);
 
     // new rail_section disruption
-    navitia::apply_disruption(
-        b.impact(nt::RTLevel::Adapted, "rail_section_on_line1-2")
-            .severity(nt::disruption::Effect::NO_SERVICE)
-            .application_periods(btp("20210101T060000"_dt, "20210101T100000"_dt))
-            .on_rail_section("line:1",
-                             "stopAreaB",
-                             "stopAreaO",
-                             {
-                                std::make_pair("stopAreaC", 1),
-                                std::make_pair("stopAreaD", 2),
-                                std::make_pair("stopAreaM", 3),
-                                std::make_pair("stopAreaN", 4)
-                             },
-                             {"route4"},
-                             *b.data->pt_data)
-            .get_disruption(),
-        *b.data->pt_data, *b.data->meta);
+    navitia::apply_disruption(b.impact(nt::RTLevel::Adapted, "rail_section_on_line1-2")
+                                  .severity(nt::disruption::Effect::NO_SERVICE)
+                                  .application_periods(btp("20210101T060000"_dt, "20210101T100000"_dt))
+                                  .on_rail_section("line:1", "stopAreaB", "stopAreaO",
+                                                   {std::make_pair("stopAreaC", 1), std::make_pair("stopAreaD", 2),
+                                                    std::make_pair("stopAreaM", 3), std::make_pair("stopAreaN", 4)},
+                                                   {"route4"}, *b.data->pt_data)
+                                  .get_disruption(),
+                              *b.data->pt_data, *b.data->meta);
 
     BOOST_REQUIRE_EQUAL(b.data->pt_data->vehicle_journeys.size(), 8);
 
@@ -4257,22 +4089,15 @@ BOOST_AUTO_TEST_CASE(complex_impact_with_rail_section) {
     BOOST_REQUIRE_EQUAL(b.get<nt::StopPoint>("stopI")->get_impacts().size(), 0);
 
     // new rail_section disruption
-    navitia::apply_disruption(
-        b.impact(nt::RTLevel::Adapted, "rail_section_on_line1-3")
-            .severity(nt::disruption::Effect::NO_SERVICE)
-            .application_periods(btp("20210101T060000"_dt, "20210101T100000"_dt))
-            .on_rail_section("line:1",
-                             "stopAreaB",
-                             "stopAreaR",
-                             {
-                                std::make_pair("stopAreaC", 1),
-                                std::make_pair("stopAreaP", 2),
-                                std::make_pair("stopAreaQ", 3)
-                             },
-                             {"route5"},
-                             *b.data->pt_data)
-            .get_disruption(),
-        *b.data->pt_data, *b.data->meta);
+    navitia::apply_disruption(b.impact(nt::RTLevel::Adapted, "rail_section_on_line1-3")
+                                  .severity(nt::disruption::Effect::NO_SERVICE)
+                                  .application_periods(btp("20210101T060000"_dt, "20210101T100000"_dt))
+                                  .on_rail_section("line:1", "stopAreaB", "stopAreaR",
+                                                   {std::make_pair("stopAreaC", 1), std::make_pair("stopAreaP", 2),
+                                                    std::make_pair("stopAreaQ", 3)},
+                                                   {"route5"}, *b.data->pt_data)
+                                  .get_disruption(),
+                              *b.data->pt_data, *b.data->meta);
 
     BOOST_REQUIRE_EQUAL(b.data->pt_data->vehicle_journeys.size(), 9);
 
@@ -4303,4 +4128,3 @@ BOOST_AUTO_TEST_CASE(complex_impact_with_rail_section) {
     BOOST_REQUIRE_EQUAL(b.get<nt::StopPoint>("stopQ")->get_impacts().size(), 1);
     BOOST_REQUIRE_EQUAL(b.get<nt::StopPoint>("stopR")->get_impacts().size(), 1);
 }
-

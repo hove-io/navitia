@@ -472,6 +472,7 @@ void PbCreator::Filler::fill(NAV* nav_object, PB* pb_object) {
     }
     DumpMessageOptions new_dump_options{dump_message_options};
     new_dump_options.dump_line_section = DumpLineSectionMessage::No;
+    new_dump_options.dump_rail_section = DumpRailSectionMessage::No;
     copy(depth - 1, new_dump_options).fill_pb_object(nav_object, get_sub_object(nav_object, pb_object));
 }
 template <typename NAV, typename F>

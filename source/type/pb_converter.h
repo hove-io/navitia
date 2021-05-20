@@ -62,7 +62,10 @@ struct DumpMessageOptions {
                                  DumpLineSectionMessage dump_line_section = DumpLineSectionMessage::No,
                                  const nt::Line* line = nullptr,
                                  DumpRailSectionMessage dump_rail_section = DumpRailSectionMessage::No)
-        : dump_message(dump_message), dump_line_section(dump_line_section), dump_rail_section(dump_rail_section),line(line) {}
+        : dump_message(dump_message),
+          dump_line_section(dump_line_section),
+          dump_rail_section(dump_rail_section),
+          line(line) {}
 };
 
 static const auto null_time_period = pt::time_period(pt::not_a_date_time, pt::seconds(0));

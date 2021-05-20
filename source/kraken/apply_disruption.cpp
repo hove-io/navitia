@@ -876,7 +876,6 @@ void delete_disruption(const std::string& disruption_id, nt::PT_Data& pt_data, c
 void apply_disruption(const type::disruption::Disruption& disruption,
                       nt::PT_Data& pt_data,
                       const navitia::type::MetaData& meta) {
-    std::cout << "LOVE" << std::endl;
     LOG4CPLUS_DEBUG(log4cplus::Logger::getInstance("log"), "applying disruption: " << disruption.uri);
     for (const auto& impact : disruption.get_impacts()) {
         apply_impact(impact, pt_data, meta);

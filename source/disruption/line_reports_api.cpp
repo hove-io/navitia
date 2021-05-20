@@ -91,7 +91,8 @@ struct LineReport {
     }
 
     void to_pb(navitia::PbCreator& pb_creator, const size_t depth) const {
-        const auto with_sections = DumpMessageOptions{DumpMessage::Yes, DumpLineSectionMessage::Yes, line, DumpRailSectionMessage::Yes};
+        const auto with_sections =
+            DumpMessageOptions{DumpMessage::Yes, DumpLineSectionMessage::Yes, line, DumpRailSectionMessage::Yes};
         auto* report = pb_creator.add_line_reports();
         if (line->has_applicable_message(pb_creator.now, pb_creator.action_period)) {
             pb_creator.fill(line, report->add_pt_objects(), 0);
