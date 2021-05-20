@@ -180,9 +180,15 @@ def test_update_instances(create_instance):
     assert resp['poi_dataset'] == 'priv.poi_dataset'
     assert resp['max_taxi_duration_to_pt'] == 200
     assert resp['max_car_no_park_direct_path_duration'] == 555
-    assert resp['max_bike_direct_path_distance'] == 11000
     assert resp['ridesharing_speed'] == 3.3
     assert resp['max_ridesharing_duration_to_pt'] == 777
+    assert resp['max_walking_direct_path_distance'] == 10000
+    assert resp['max_bike_direct_path_distance'] == 11000
+    assert resp['max_bss_direct_path_distance'] == 12000
+    assert resp['max_car_direct_path_distance'] == 13000
+    assert resp['max_taxi_direct_path_distance'] == 14000
+    assert resp['max_ridesharing_direct_path_distance'] == 15000
+    assert resp['max_car_no_park_direct_path_distance'] == 16000
 
 
 def test_update_instances_is_free(create_instance):
