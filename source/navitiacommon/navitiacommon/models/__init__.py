@@ -519,6 +519,55 @@ class Instance(db.Model):  # type: ignore
         server_default=str(default_values.max_ridesharing_direct_path_duration),
     )
 
+    max_bike_direct_path_distance = db.Column(
+        db.Integer,
+        default=default_values.max_bike_direct_path_distance,
+        nullable=False,
+        server_default=str(default_values.max_bike_direct_path_distance),
+    )
+
+    max_bss_direct_path_distance = db.Column(
+        db.Integer,
+        default=default_values.max_bss_direct_path_distance,
+        nullable=False,
+        server_default=str(default_values.max_bss_direct_path_distance),
+    )
+
+    max_walking_direct_path_distance = db.Column(
+        db.Integer,
+        default=default_values.max_walking_direct_path_distance,
+        nullable=False,
+        server_default=str(default_values.max_walking_direct_path_distance),
+    )
+
+    max_car_direct_path_distance = db.Column(
+        db.Integer,
+        default=default_values.max_car_direct_path_distance,
+        nullable=False,
+        server_default=str(default_values.max_car_direct_path_distance),
+    )
+
+    max_car_no_park_direct_path_distance = db.Column(
+        db.Integer,
+        default=default_values.max_car_no_park_direct_path_distance,
+        nullable=False,
+        server_default=str(default_values.max_car_no_park_direct_path_distance),
+    )
+
+    max_ridesharing_direct_path_distance = db.Column(
+        db.Integer,
+        default=default_values.max_ridesharing_direct_path_distance,
+        nullable=False,
+        server_default=str(default_values.max_ridesharing_direct_path_distance),
+    )
+
+    max_taxi_direct_path_distance = db.Column(
+        db.Integer,
+        default=default_values.max_taxi_direct_path_distance,
+        nullable=False,
+        server_default=str(default_values.max_taxi_direct_path_distance),
+    )
+
     equipment_details_providers = db.relationship(
         "EquipmentsProvider", secondary=associate_instance_equipments, backref="instances", lazy='joined'
     )
