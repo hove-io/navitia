@@ -45,6 +45,8 @@ www.navitia.io
 #include <string>
 #include <set>
 
+typedef std::map<int, std::string> BlockedSAList;
+
 namespace navitia {
 namespace type {
 namespace disruption {
@@ -206,7 +208,19 @@ struct LineSection {
     std::set<StopPoint*> get_stop_points_section() const;
 };
 
-typedef boost::variant<UnknownPtObj, Network*, StopArea*, StopPoint*, LineSection, Line*, Route*, MetaVehicleJourney*>
+struct RailSection {
+    Line* line = nullptr;
+    StopArea* start_point = nullptr;
+    StopArea* end_point = nullptr;
+    std::vector<std::pair<std::string, uint32_t> > blocked_stop_areas;
+    std::vector<Route*> routes;
+    template <class archive>
+    void serialize(archive& ar, const unsigned int);
+};
+
+std::set<StopPoint*> get_stop_points_section(const RailSection& rs);
+
+typedef boost::variant<UnknownPtObj, Network*, StopArea*, StopPoint*, LineSection, RailSection, Line*, Route*, MetaVehicleJourney*>
     PtObj;
 
 PtObj make_pt_obj(Type_e type, const std::string& uri, PT_Data& pt_data);
@@ -336,7 +350,9 @@ struct Impact {
     bool is_relevant(const std::vector<const StopTime*>& stop_times) const;
     bool is_only_line_section() const;
     bool is_line_section_of(const Line&) const;
-    Indexes get(Type_e target, const PT_Data& pt_data) const;
+    bool is_only_rail_section() const;
+    bool is_rail_section_of(const Line&) const;
+    Indexes get(Type_e target, PT_Data& pt_data) const;
     const type::ValidityPattern get_impact_vp(const boost::gregorian::date_period& production_date) const;
 
     bool operator<(const Impact& other);
@@ -447,6 +463,20 @@ std::vector<ImpactedVJ> get_impacted_vehicle_journeys(const LineSection&,
                                                       const Impact&,
                                                       const boost::gregorian::date_period&,
                                                       type::RTLevel);
+/*
+ * return the list of vehicle journey that are impacted by the railsection
+ */
+std::vector<ImpactedVJ> get_impacted_vehicle_journeys(const RailSection& rs,
+                                                      const Impact& impact,
+                                                      const boost::gregorian::date_period& production_period,
+                                                      type::RTLevel rt_level);
+
+BlockedSAList create_blocked_sa_sequence(const RailSection& rs);
+bool is_route_to_impact_content_sa_list(const BlockedSAList& blocked_sa_uri_sequence,
+                                        const boost::container::flat_set<StopArea*>& stop_area_list);
+bool blocked_sa_sequence_matching(const BlockedSAList& blocked_sa_uri_sequence,
+                                  const navitia::type::VehicleJourney& vj,
+                                  const std::set<RankStopTime>& st_rank_list);
 
 }  // namespace disruption
 

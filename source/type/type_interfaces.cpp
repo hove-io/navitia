@@ -92,6 +92,9 @@ bool HasMessages::has_applicable_message(const boost::posix_time::ptime& current
         if (line && impact->is_only_line_section() && !impact->is_line_section_of(*line)) {
             continue;
         }
+        if (line && impact->is_only_rail_section() && !impact->is_rail_section_of(*line)) {
+            continue;
+        }
         if (impact->is_valid(current_time, action_period)) {
             return true;
         }

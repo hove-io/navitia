@@ -180,23 +180,33 @@ void TrafficReport::add_stop_areas(const type::Indexes& network_idx,
                 it->second.insert(sa_mess.second.begin(), sa_mess.second.end());
             }
 
-            // also add the lines if the disruptions are line sections
+            // also add the lines if the disruptions are line sections or rail sections
             for (auto& impact : sa_mess.second) {
                 for (auto& ptobj : impact->informed_entities()) {
                     const auto line_section = boost::get<nt::disruption::LineSection>(&ptobj);
-
-                    if (line_section == nullptr) {
-                        continue;
+                    if (line_section != nullptr) {
+                        auto find_predicate_ls = [&](const std::pair<const type::Line*, DisruptionSet>& item) {
+                            return line_section->line == item.first;
+                        };
+                        auto it = boost::find_if(dist.lines, find_predicate_ls);
+                        if (it == dist.lines.end()) {
+                            dist.lines.emplace_back(line_section->line, DisruptionSet({impact}));
+                        } else {
+                            it->second.insert({impact});
+                        }
                     }
 
-                    auto find_predicate = [&](const std::pair<const type::Line*, DisruptionSet>& item) {
-                        return line_section->line == item.first;
-                    };
-                    auto it = boost::find_if(dist.lines, find_predicate);
-                    if (it == dist.lines.end()) {
-                        dist.lines.emplace_back(line_section->line, DisruptionSet({impact}));
-                    } else {
-                        it->second.insert({impact});
+                    const auto rail_section = boost::get<nt::disruption::RailSection>(&ptobj);
+                    if (rail_section != nullptr) {
+                        auto find_predicate_rs = [&](const std::pair<const type::Line*, DisruptionSet>& item) {
+                            return rail_section->line == item.first;
+                        };
+                        auto it = boost::find_if(dist.lines, find_predicate_rs);
+                        if (it == dist.lines.end()) {
+                            dist.lines.emplace_back(rail_section->line, DisruptionSet({impact}));
+                        } else {
+                            it->second.insert({impact});
+                        }
                     }
                 }
             }
