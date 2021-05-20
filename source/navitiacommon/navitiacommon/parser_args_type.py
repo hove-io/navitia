@@ -73,24 +73,43 @@ class PositiveFloat(CustomSchemaType):
         return TypeSchema(type=float, metadata={'minimum': 0})
 
 
-class RangeFloat(CustomSchemaType):
+class FloatRange(CustomSchemaType):
+    def __init__(self, min, max):
+        self.min = min
+        self.max = max
+
+    def __call__(self, value, name):
+        conv_value = float(value)
+        if not self.min <= conv_value <= self.max:
+            raise ValueError(
+                "The {} argument has to be in range [{}, {}], you gave : {}".format(
+                    name, self.min, self.max, value
+                )
+            )
+        return conv_value
+
+    def schema(self):
+        return TypeSchema(type=float, metadata={'minimum': 0})
+
+
+class SpeedRange(CustomSchemaType):
     map_range = {
-        'bike_speed': (1, 15),
-        'bss_speed': (1, 15),
-        'walking_speed': (0.2, 4),
-        'car_speed': (10, 40),
-        'taxi_speed': (10, 40),
-        'car_no_park_speed': (10, 40),
-        'ridesharing_speed': (10, 40),
+        'bike_speed': (0.01, 15),
+        'bss_speed': (0.01, 15),
+        'walking_speed': (0.01, 4),
+        'car_speed': (0.01, 50),
+        'taxi_speed': (0.01, 50),
+        'car_no_park_speed': (0.01, 50),
+        'ridesharing_speed': (0.01, 50),
         'default': (sys.float_info.min, sys.float_info.max),
     }
 
     def __call__(self, value, name):
         conv_value = float(value)
         (range_min, range_max) = (
-            RangeFloat.map_range[name] if name in RangeFloat.map_range else RangeFloat.map_range['default']
+            SpeedRange.map_range[name] if name in SpeedRange.map_range else SpeedRange.map_range['default']
         )
-        if not range_min <= conv_value <= range_max:
+        if not range_min < conv_value <= range_max:
             raise ValueError(
                 "The {} argument has to be in range [{}, {}], you gave : {}".format(
                     name, range_min, range_max, value

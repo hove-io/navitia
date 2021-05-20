@@ -43,6 +43,7 @@ from jormungandr.instance_manager import instances_comparator
 from navitiacommon.default_traveler_profile_params import acceptable_traveler_types
 import pytz
 import six
+from jormungandr.fallback_modes import FallbackModes
 from navitiacommon.parser_args_type import (
     CustomSchemaType,
     TypeSchema,
@@ -52,7 +53,7 @@ from navitiacommon.parser_args_type import (
     UnsignedInteger,
     DateTimeFormat,
     PositiveFloat,
-    RangeFloat,
+    SpeedRange,
 )
 
 
@@ -287,43 +288,50 @@ class JourneyCommon(ResourceUri, ResourceUtc):
             dest="max_taxi_duration_to_pt",
             help="Maximal duration of taxi on public transport in second, only available in distributed scenario",
         )
+        for mode in FallbackModes.modes_str():
+            parser_get.add_argument(
+                "max_{}_direct_path_distance".format(mode),
+                type=int,
+                hidden=True,
+                help="limit distance of direct path in {}, used ONLY in distributed scenario".format(mode),
+            )
         parser_get.add_argument(
             "walking_speed",
-            type=RangeFloat(),
+            type=SpeedRange(),
             help='Walking speed for the fallback sections.\n' 'Speed unit must be in meter/second',
         )
         parser_get.add_argument(
             "bike_speed",
-            type=RangeFloat(),
+            type=SpeedRange(),
             help='Biking speed for the fallback sections.\n' 'Speed unit must be in meter/second',
         )
         parser_get.add_argument(
             "bss_speed",
-            type=RangeFloat(),
+            type=SpeedRange(),
             help='Speed while using a bike from a bike sharing system for the '
             'fallback sections.\n'
             'Speed unit must be in meter/second',
         )
         parser_get.add_argument(
             "car_speed",
-            type=RangeFloat(),
+            type=SpeedRange(),
             help='Driving speed for the fallback sections.\n' 'Speed unit must be in meter/second',
         )
         parser_get.add_argument(
             "ridesharing_speed",
-            type=RangeFloat(),
+            type=SpeedRange(),
             dest="ridesharing_speed",
             help='ridesharing speed for the fallback sections.\n' 'Speed unit must be in meter/second',
         )
         parser_get.add_argument(
             "car_no_park_speed",
-            type=RangeFloat(),
+            type=SpeedRange(),
             help='Driving speed without car park for the fallback sections.\n'
             'Speed unit must be in meter/second',
         )
         parser_get.add_argument(
             "taxi_speed",
-            type=RangeFloat(),
+            type=SpeedRange(),
             help='taxi speed speed for the fallback sections.\n' 'Speed unit must be in meter/second',
         )
         parser_get.add_argument(

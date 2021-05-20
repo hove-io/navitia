@@ -574,14 +574,6 @@ class Journeys(JourneyCommon):
                 help="limit duration of direct path in {}, used ONLY in distributed scenario".format(mode),
             )
 
-        for mode in FallbackModes.modes_str():
-            parser_get.add_argument(
-                "max_{}_direct_path_distance".format(mode),
-                type=int,
-                hidden=True,
-                help="limit distance of direct path in {}, used ONLY in distributed scenario".format(mode),
-            )
-
         parser_get.add_argument("depth", type=DepthArgument(), default=1, help="The depth of your object")
         args = self.parsers["get"].parse_args()
 
