@@ -76,6 +76,14 @@ class AbstractStreetNetworkService(ABC):  # type: ignore
     def status(self):
         pass
 
+    def filter_places_isochrone(self, places_isochrone):
+        """
+        This method is used by geovelo to sort places_isochrone by mode weight
+        :param places_isochrone:
+        :return: sorted and truncated places_isochrone
+        """
+        return places_isochrone
+
     def direct_path_with_fp(
         self,
         instance,
