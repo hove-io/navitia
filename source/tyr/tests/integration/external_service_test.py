@@ -311,6 +311,22 @@ def test_associate_instance_external_service(default_external_service_config):
     assert len(resp['instances'][0]['external_services']) == 1
     assert resp['instances'][0]['external_services'][0]['id'] == external_service_1.id
 
+    # associate Timeo service
+    resp = api_put(
+        '/v1/instances/{}?external_services={}&external_services={}&external_services={}'.format(
+            instance.name, external_service_1.id, external_service_2.id, external_service_3.id
+        )
+    )
+    assert len(resp["external_services"]) == 3
+
+    # Update associate without Timeo service
+    resp = api_put(
+        '/v1/instances/{}?external_services={}&external_services={}'.format(
+            instance.name, external_service_1.id, external_service_2.id
+        )
+    )
+    assert len(resp["external_services"]) == 2
+
 
 def test_external_service_schema():
     """
