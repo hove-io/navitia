@@ -385,6 +385,4 @@ class Geovelo(AbstractStreetNetworkService):
 
     def filter_places_isochrone(self, places_isochrone):
         ordered_isochrone = self.sort_by_mode(places_isochrone)
-        if len(ordered_isochrone) >= 50:
-            del ordered_isochrone[50:]
-        return ordered_isochrone
+        return ordered_isochrone[:50]
