@@ -203,7 +203,9 @@ class TestHeatMap(AbstractTestFixture):
         normal_response, error_code = self.query_no_assert(q)
 
         assert error_code == 400
-        assert 'The walking_speed argument has to be in range [0.01, 4], you gave : 0' in normal_response['message']
+        assert (
+            'The walking_speed argument has to be in range [0.01, 4], you gave : 0' in normal_response['message']
+        )
 
     def test_heat_maps_no_duration(self):
         q = "v1/coverage/main_routing_test/heat_maps?datetime={}&from={}"

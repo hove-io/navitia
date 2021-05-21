@@ -109,7 +109,7 @@ class SpeedRange(CustomSchemaType):
         (range_min, range_max) = (
             SpeedRange.map_range[name] if name in SpeedRange.map_range else SpeedRange.map_range['default']
         )
-        if not range_min < conv_value <= range_max:
+        if not range_min <= conv_value <= range_max:
             raise ValueError(
                 "The {} argument has to be in range [{}, {}], you gave : {}".format(
                     name, range_min, range_max, value

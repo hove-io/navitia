@@ -39,6 +39,7 @@ import mock
 from pytest import approx
 from navitiacommon.parser_args_type import SpeedRange
 
+
 def check_best(resp):
     assert not resp.get('journeys') or sum((1 for j in resp['journeys'] if j['type'] == "best")) == 1
 
@@ -359,11 +360,11 @@ class JourneyCommon(object):
     def test_journeys_bad_speed(self):
         """speed not in range"""
 
-        speed_range = SpeedRange().map_range
+        speed_range = SpeedRange.map_range
         speed_test = {}
         for sn in ["walking", "bike", "bss", "car", "car_no_park", "taxi", "ridesharing"]:
             sp_range = speed_range["{sn}_speed".format(sn=sn)]
-            speed_test[sn] = [sp_range[0]-1, sp_range[1]+1]
+            speed_test[sn] = [sp_range[0] - 1, sp_range[1] + 1]
 
         for sn in ["walking", "bike", "bss", "car", "car_no_park", "taxi", "ridesharing"]:
             (speed_min, speed_max) = speed_range["{sn}_speed".format(sn=sn)]
@@ -376,9 +377,10 @@ class JourneyCommon(object):
                 assert not 'journeys' in response
                 assert 'message' in response
                 assert (
-                        "The {sn}_speed argument has to be in range [{speed_min}, {speed_max}], you gave : {speed}"
-                        .format(sn=sn, speed=speed, speed_min=speed_min, speed_max=speed_max)
-                        in response['message']
+                    "The {sn}_speed argument has to be in range [{speed_min}, {speed_max}], you gave : {speed}".format(
+                        sn=sn, speed=speed, speed_min=speed_min, speed_max=speed_max
+                    )
+                    in response['message']
                 )
 
     def test_journeys_date_valid_not_zeropadded(self):
