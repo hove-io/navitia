@@ -61,6 +61,6 @@ jobs:
     - name: run artemis on github action
       uses: mvasigh/dispatch-action@1.1.6
       with:
-        token: ${{ secrets.ACCESS_TOKEN_GITHUB }}
+        token: ${{ secrets.ARTEMIS_GITHUB_TOKEN }}
         repo: artemis
         event_type: run_artemis_ng
