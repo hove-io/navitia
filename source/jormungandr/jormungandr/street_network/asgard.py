@@ -96,7 +96,7 @@ class Asgard(TransientSocket, Kraken):
     def make_location(self, obj):
         coord = get_pt_object_coord(obj)
         return type_pb2.LocationContext(
-            place="", access_duration=0, lon=round(coord.lon, 6), lat=round(coord.lat, 6)
+            place="", access_duration=0, lon=round(coord.lon, 5), lat=round(coord.lat, 5)
         )
 
     def _get_street_network_routing_matrix(
