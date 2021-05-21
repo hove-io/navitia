@@ -522,9 +522,17 @@ class Instance(flask_restful.Resource):
         )
 
         parser.add_argument(
-            'walking_transfer_penalty',
+            'arrival_transfer_penalty',
             type=int,
             help='transfer penalty, in second',
+            location=('json', 'values'),
+            default=instance.arrival_transfer_penalty,
+        )
+
+        parser.add_argument(
+            'walking_transfer_penalty',
+            type=int,
+            help='walking penalty, in second',
             location=('json', 'values'),
             default=instance.walking_transfer_penalty,
         )
@@ -834,6 +842,7 @@ class Instance(flask_restful.Resource):
                         'min_taxi',
                         'max_duration',
                         'walking_transfer_penalty',
+                        'arrival_transfer_penalty',
                         'night_bus_filter_max_factor',
                         'night_bus_filter_base_factor',
                         'successive_physical_mode_to_limit_id',

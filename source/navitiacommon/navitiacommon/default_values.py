@@ -83,8 +83,11 @@ car_park_duration = 5 * 60
 # specify the latest time point of request, relative to datetime, in second
 max_duration = 60 * 60 * 24  # seconds
 
-# the penalty for each walking transfer
+# the penalty on walking duration for each transfer
 walking_transfer_penalty = 120  # seconds
+
+# the penalty on arrival time for each transfer
+arrival_transfer_penalty = 120  # seconds
 
 # night bus filtering parameter
 night_bus_filter_max_factor = 1.5

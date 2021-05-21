@@ -1,3 +1,15 @@
+navitia2 (11.1.0) unstable; urgency=low
+
+  * [Jormun] Reduce coord precision for asgard  <https://github.com/CanalTP/navitia/pull/3448>
+  * [Jormun][Kraken] Fill crowfly matrix with stop_points having heavy modes for Geovelo  <https://github.com/CanalTP/navitia/pull/3437>
+  * [Jormungandr] Manage "is_realtime" in the Timeo response  <https://github.com/CanalTP/navitia/pull/3443>
+  * [Jormun][Kraken] Rename walking_transfer_penalty and add walking_transfer_penalty  <https://github.com/CanalTP/navitia/pull/3440>
+  * [Kraken] add next_stop_time cache miss metrics  <https://github.com/CanalTP/navitia/pull/3439>
+  * [CI] Enable Github Action cache to speed up sonar  <https://github.com/CanalTP/navitia/pull/3438>
+  * [Kraken] Decide which type of next stoptime to use in runtime  <https://github.com/CanalTP/navitia/pull/3432>
+
+ -- Hicham Azimani <hicham.azimani@kisio.com>  Fri, 21 May 2021 12:05:40 +0100
+
 navitia2 (11.0.0) unstable; urgency=low
 
   * [Newrelic] Record street_network_call in newrelic  <https://github.com/CanalTP/navitia/pull/3433>

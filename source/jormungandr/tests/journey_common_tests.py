@@ -242,6 +242,31 @@ class JourneyCommon(object):
         self.is_valid_journey_response(response, query)
         assert len(response["journeys"]) >= 3
 
+    def test_walking_transfer_penalty_parameter(self):
+        """
+        Test use of newly added parameter _walking_transfer_penalty
+        Default value is 120
+        """
+        query = (
+            "journeys?from={from_coord}&to={to_coord}&datetime={datetime}&"
+            "min_nb_transfers=2&debug=true".format(
+                from_coord='0.00148221477022527;0.0007186495855637672',
+                to_coord='0.0002694935945864127;8.98311981954709e-05',
+                datetime="20120614080000",
+            )
+        )
+        response = self.query_region(query + '&_walking_transfer_penalty=0')
+        assert len(response["journeys"]) == 3
+
+        response = self.query_region(query + '&_walking_transfer_penalty=120')
+        assert len(response["journeys"]) == 3
+
+        response = self.query_region(query)
+        assert len(response["journeys"]) == 3
+
+        response = self.query_region(query + '&_walking_transfer_penalty=480')
+        assert len(response["journeys"]) == 2
+
     """
     test on date format
     """

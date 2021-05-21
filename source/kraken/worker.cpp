@@ -745,7 +745,9 @@ void Worker::err_msg_isochron(navitia::PbCreator& pb_creator, const std::string&
     pb_creator.fill_pb_error(pbnavitia::Error::bad_format, pbnavitia::NO_SOLUTION, err_msg);
 }
 
-void Worker::journeys(const pbnavitia::JourneysRequest& request, pbnavitia::API api) {
+void Worker::journeys(const pbnavitia::JourneysRequest& request,
+                      pbnavitia::API api,
+                      const boost::posix_time::ptime& current_datetime) {
     try {
         navitia::JourneysArg arg = fill_journeys(request);
 
@@ -762,8 +764,8 @@ void Worker::journeys(const pbnavitia::JourneysRequest& request, pbnavitia::API 
                 routing::make_pt_response(
                     this->pb_creator, *planner, arg.origins, arg.destinations, arg.datetimes[0], request.clockwise(),
                     arg.accessibilite_params, arg.forbidden, arg.allowed, arg.rt_level,
-                    seconds{request.walking_transfer_penalty()}, request.max_duration(), request.max_transfers(),
-                    max_extra_second_pass,
+                    seconds{request.arrival_transfer_penalty()}, seconds{request.walking_transfer_penalty()},
+                    request.max_duration(), request.max_transfers(), max_extra_second_pass,
                     request.has_direct_path_duration()
                         ? boost::optional<time_duration>(seconds{request.direct_path_duration()})
                         : boost::optional<time_duration>(),
@@ -772,20 +774,21 @@ void Worker::journeys(const pbnavitia::JourneysRequest& request, pbnavitia::API 
                     request.night_bus_filter_max_factor(), request.night_bus_filter_base_factor(),
                     request.has_timeframe_duration() ? boost::make_optional<uint32_t>(request.timeframe_duration())
                                                      : boost::none,
-                    request.depth());
+                    request.depth(), current_datetime);
                 break;
             default:
                 routing::make_response(
                     this->pb_creator, *planner, arg.origins[0], arg.destinations[0], arg.datetimes, request.clockwise(),
                     arg.accessibilite_params, arg.forbidden, arg.allowed, *street_network_worker, arg.rt_level,
-                    seconds{request.walking_transfer_penalty()}, request.max_duration(), request.max_transfers(),
-                    max_extra_second_pass, request.free_radius_from(), request.free_radius_to(),
+                    seconds{request.arrival_transfer_penalty()}, seconds{request.walking_transfer_penalty()},
+                    request.max_duration(), request.max_transfers(), max_extra_second_pass, request.free_radius_from(),
+                    request.free_radius_to(),
                     request.has_min_nb_journeys() ? boost::make_optional<uint32_t>(request.min_nb_journeys())
                                                   : boost::none,
                     request.night_bus_filter_max_factor(), request.night_bus_filter_base_factor(),
                     request.has_timeframe_duration() ? boost::make_optional<uint32_t>(request.timeframe_duration())
                                                      : boost::none,
-                    request.depth());
+                    request.depth(), current_datetime);
         }
     } catch (const navitia::coord_conversion_exception& e) {
         this->pb_creator.fill_pb_error(pbnavitia::Error::bad_format, e.what());
@@ -1043,6 +1046,13 @@ void Worker::direct_path(const pbnavitia::Request& request) {
                              dp_request.clockwise());
 }
 
+boost::optional<size_t> Worker::get_raptor_next_st_cache_miss() const {
+    if (planner && planner->data.dataRaptor && planner->data.dataRaptor->cached_next_st_manager) {
+        return planner->data.dataRaptor->cached_next_st_manager->get_nb_cache_miss();
+    }
+    return boost::none;
+}
+
 void Worker::dispatch(const pbnavitia::Request& request, const nt::Data& data) {
     bool disable_geojson = get_geojson_state(request);
     boost::posix_time::ptime current_datetime = bt::from_time_t(request._current_datetime());
@@ -1085,7 +1095,7 @@ void Worker::dispatch(const pbnavitia::Request& request, const nt::Data& data) {
         case pbnavitia::NMPLANNER:
         case pbnavitia::pt_planner:
         case pbnavitia::PLANNER:
-            journeys(request.journeys(), request.requested_api());
+            journeys(request.journeys(), request.requested_api(), current_datetime);
             break;
         case pbnavitia::ISOCHRONE:
             isochrone(request.journeys());

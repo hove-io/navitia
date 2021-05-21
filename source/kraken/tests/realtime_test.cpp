@@ -169,7 +169,7 @@ BOOST_AUTO_TEST_CASE(simple_train_cancellation_routing) {
 
     auto compute = [&](nt::RTLevel level, navitia::routing::RAPTOR& raptor) {
         return raptor.compute(pt_data->stop_areas_map.at("stop1"), pt_data->stop_areas_map.at("stop2"), "08:00"_t, 0,
-                              navitia::DateTimeUtils::inf, level, 2_min, true);
+                              navitia::DateTimeUtils::inf, level, 2_min, 2_min, true);
     };
 
     // on the theoric level, we should get one solution
@@ -204,7 +204,7 @@ BOOST_AUTO_TEST_CASE(train_cancellation_with_choice_routing) {
 
     auto compute = [&](nt::RTLevel level, navitia::routing::RAPTOR& raptor) {
         return raptor.compute(pt_data->stop_areas_map.at("stop1"), pt_data->stop_areas_map.at("stop2"), "08:00"_t, 0,
-                              navitia::DateTimeUtils::inf, level, 2_min, true);
+                              navitia::DateTimeUtils::inf, level, 2_min, 2_min, true);
     };
 
     // on the theoric and realtime level, we should arrive at 9:00 (with line A)
@@ -311,7 +311,7 @@ BOOST_AUTO_TEST_CASE(train_delayed) {
 
     auto compute = [&](nt::RTLevel level) {
         return raptor.compute(pt_data->stop_areas_map.at("stop1"), pt_data->stop_areas_map.at("stop2"), "08:00"_t, 0,
-                              navitia::DateTimeUtils::inf, level, 2_min, true);
+                              navitia::DateTimeUtils::inf, level, 2_min, 2_min, true);
     };
 
     auto res = compute(nt::RTLevel::Base);
@@ -378,7 +378,7 @@ BOOST_AUTO_TEST_CASE(two_different_delays_on_same_vj) {
 
         auto compute = [&](nt::RTLevel level, const std::string& from, const std::string& to) {
             return raptor.compute(pt_data->stop_areas_map.at(from), pt_data->stop_areas_map.at(to), "08:00"_t, 0,
-                                  navitia::DateTimeUtils::inf, level, 2_min, true);
+                                  navitia::DateTimeUtils::inf, level, 2_min, 2_min, true);
         };
 
         auto res = compute(nt::RTLevel::Base, "stop1", "stop2");
@@ -406,7 +406,7 @@ BOOST_AUTO_TEST_CASE(two_different_delays_on_same_vj) {
 
         auto compute = [&](nt::RTLevel level, const std::string& from, const std::string& to) {
             return raptor.compute(pt_data->stop_areas_map.at(from), pt_data->stop_areas_map.at(to), "08:00"_t, 0,
-                                  navitia::DateTimeUtils::inf, level, 2_min, true);
+                                  navitia::DateTimeUtils::inf, level, 2_min, 2_min, true);
         };
 
         auto res = compute(nt::RTLevel::Base, "stop1", "stop2");
@@ -472,7 +472,7 @@ BOOST_AUTO_TEST_CASE(train_pass_midnight_delayed) {
 
     auto compute = [&](nt::RTLevel level) {
         return raptor.compute(pt_data->stop_areas_map.at("stop1"), pt_data->stop_areas_map.at("stop2"), "08:00"_t, 0,
-                              navitia::DateTimeUtils::inf, level, 2_min, true);
+                              navitia::DateTimeUtils::inf, level, 2_min, 2_min, true);
     };
 
     auto res = compute(nt::RTLevel::Base);
@@ -536,7 +536,7 @@ BOOST_AUTO_TEST_CASE(add_two_delay_disruption) {
 
     auto compute = [&](nt::RTLevel level, const std::string& from, const std::string& to) {
         return raptor.compute(pt_data->stop_areas_map.at(from), pt_data->stop_areas_map.at(to), "08:00"_t, 0,
-                              navitia::DateTimeUtils::inf, level, 2_min, true);
+                              navitia::DateTimeUtils::inf, level, 2_min, 2_min, true);
     };
 
     auto res = compute(nt::RTLevel::Base, "stop1", "stop2");
@@ -607,7 +607,7 @@ BOOST_AUTO_TEST_CASE(add_blocking_disruption_and_delay_disruption) {
 
         auto compute = [&](nt::RTLevel level, const std::string& from, const std::string& to) {
             return raptor.compute(pt_data->stop_areas_map.at(from), pt_data->stop_areas_map.at(to), "08:00"_t, 0,
-                                  navitia::DateTimeUtils::inf, level, 2_min, true);
+                                  navitia::DateTimeUtils::inf, level, 2_min, 2_min, true);
         };
 
         auto res = compute(nt::RTLevel::Base, "stop1", "stop2");
@@ -634,7 +634,7 @@ BOOST_AUTO_TEST_CASE(add_blocking_disruption_and_delay_disruption) {
 
         auto compute = [&](nt::RTLevel level, const std::string& from, const std::string& to) {
             return raptor.compute(pt_data->stop_areas_map.at(from), pt_data->stop_areas_map.at(to), "08:00"_t, 0,
-                                  navitia::DateTimeUtils::inf, level, 2_min, true);
+                                  navitia::DateTimeUtils::inf, level, 2_min, 2_min, true);
         };
 
         auto res = compute(nt::RTLevel::Base, "stop1", "stop2");
@@ -745,7 +745,7 @@ BOOST_AUTO_TEST_CASE(train_delayed_day_after) {
 
     auto compute = [&](nt::RTLevel level) {
         return raptor.compute(pt_data->stop_areas_map.at("stop1"), pt_data->stop_areas_map.at("stop2"), "08:00"_t, 0,
-                              navitia::DateTimeUtils::inf, level, 2_min, true);
+                              navitia::DateTimeUtils::inf, level, 2_min, 2_min, true);
     };
 
     auto res = compute(nt::RTLevel::Base);
@@ -804,7 +804,7 @@ BOOST_AUTO_TEST_CASE(train_delayed_pass_midnight_day_after) {
 
     auto compute = [&](nt::RTLevel level, int hour, int day) {
         return raptor.compute(pt_data->stop_areas_map.at("stop1"), pt_data->stop_areas_map.at("stop2"), hour, day,
-                              navitia::DateTimeUtils::inf, level, 2_min, true);
+                              navitia::DateTimeUtils::inf, level, 2_min, 2_min, true);
     };
 
     auto res = compute(nt::RTLevel::Base, "08:00"_t, 0);
@@ -872,7 +872,7 @@ BOOST_AUTO_TEST_CASE(train_delayed_day_after_then_one_hour) {
 
     auto compute = [&](nt::RTLevel level) {
         return raptor.compute(pt_data->stop_areas_map.at("stop1"), pt_data->stop_areas_map.at("stop2"), "08:00"_t, 0,
-                              navitia::DateTimeUtils::inf, level, 2_min, true);
+                              navitia::DateTimeUtils::inf, level, 2_min, 2_min, true);
     };
 
     auto res = compute(nt::RTLevel::Base);
@@ -884,7 +884,7 @@ BOOST_AUTO_TEST_CASE(train_delayed_day_after_then_one_hour) {
     BOOST_CHECK_EQUAL(res[0].items[0].arrival, "20150928T1001"_dt);
 
     res = raptor.compute(pt_data->stop_areas_map.at("stop1"), pt_data->stop_areas_map.at("stop2"), "06:00"_t, 1,
-                         navitia::DateTimeUtils::inf, nt::RTLevel::RealTime, 2_min, true);
+                         navitia::DateTimeUtils::inf, nt::RTLevel::RealTime, 2_min, 2_min, true);
     BOOST_REQUIRE_EQUAL(res.size(), 1);
     BOOST_CHECK_EQUAL(res[0].items[0].arrival, "20150929T0901"_dt);
 }
@@ -1010,7 +1010,7 @@ BOOST_AUTO_TEST_CASE(train_delayed_day_after_then_back_to_normal) {
 
     auto compute = [&](nt::RTLevel level) {
         return raptor.compute(pt_data->stop_areas_map.at("stop1"), pt_data->stop_areas_map.at("stop2"), "08:00"_t, 0,
-                              navitia::DateTimeUtils::inf, level, 2_min, true);
+                              navitia::DateTimeUtils::inf, level, 2_min, 2_min, true);
     };
 
     auto res = compute(nt::RTLevel::Base);
@@ -1022,7 +1022,7 @@ BOOST_AUTO_TEST_CASE(train_delayed_day_after_then_back_to_normal) {
     BOOST_CHECK_EQUAL(res[0].items[0].arrival, "20150928T0901"_dt);
 
     res = raptor.compute(pt_data->stop_areas_map.at("stop1"), pt_data->stop_areas_map.at("stop2"), "06:00"_t, 1,
-                         navitia::DateTimeUtils::inf, nt::RTLevel::RealTime, 2_min, true);
+                         navitia::DateTimeUtils::inf, nt::RTLevel::RealTime, 2_min, 2_min, true);
     BOOST_REQUIRE_EQUAL(res.size(), 1);
     BOOST_CHECK_EQUAL(res[0].items[0].arrival, "20150929T0901"_dt);
 }
@@ -1079,7 +1079,7 @@ BOOST_AUTO_TEST_CASE(train_delayed_day_after_then_one_hour_on_next_day) {
 
     auto compute = [&](nt::RTLevel level, int hour, int day) {
         return raptor.compute(pt_data->stop_areas_map.at("stop1"), pt_data->stop_areas_map.at("stop2"), hour, day,
-                              navitia::DateTimeUtils::inf, level, 2_min, true);
+                              navitia::DateTimeUtils::inf, level, 2_min, 2_min, true);
     };
 
     auto res = compute(nt::RTLevel::Base, "08:00"_t, 0);
@@ -1145,7 +1145,7 @@ BOOST_AUTO_TEST_CASE(train_delayed_day_after_then_cancel) {
 
     auto compute = [&](nt::RTLevel level, int hour, int day) {
         return raptor.compute(pt_data->stop_areas_map.at("stop1"), pt_data->stop_areas_map.at("stop2"), hour, day,
-                              navitia::DateTimeUtils::inf, level, 2_min, true);
+                              navitia::DateTimeUtils::inf, level, 2_min, 2_min, true);
     };
 
     auto res = compute(nt::RTLevel::Base, "08:00"_t, 0);
@@ -1207,7 +1207,7 @@ BOOST_AUTO_TEST_CASE(train_delayed_day_after_then_day_after_cancel) {
 
     auto compute = [&](nt::RTLevel level, int hour, int day) {
         return raptor.compute(pt_data->stop_areas_map.at("stop1"), pt_data->stop_areas_map.at("stop2"), hour, day,
-                              navitia::DateTimeUtils::inf, level, 2_min, true);
+                              navitia::DateTimeUtils::inf, level, 2_min, 2_min, true);
     };
 
     auto res = compute(nt::RTLevel::Base, "08:00"_t, 0);
@@ -1268,7 +1268,7 @@ BOOST_AUTO_TEST_CASE(train_canceled_first_day_then_cancel_second_day) {
 
     auto compute = [&](nt::RTLevel level) {
         return raptor.compute(pt_data->stop_areas_map.at("stop1"), pt_data->stop_areas_map.at("stop2"), "08:00"_t, 0,
-                              navitia::DateTimeUtils::inf, level, 2_min, true);
+                              navitia::DateTimeUtils::inf, level, 2_min, 2_min, true);
     };
 
     auto res = compute(nt::RTLevel::Base);
@@ -1279,7 +1279,7 @@ BOOST_AUTO_TEST_CASE(train_canceled_first_day_then_cancel_second_day) {
     BOOST_REQUIRE_EQUAL(res.size(), 0);
 
     res = raptor.compute(pt_data->stop_areas_map.at("stop1"), pt_data->stop_areas_map.at("stop2"), "09:02"_t, 1,
-                         navitia::DateTimeUtils::inf, nt::RTLevel::RealTime, 2_min, true);
+                         navitia::DateTimeUtils::inf, nt::RTLevel::RealTime, 2_min, 2_min, true);
     BOOST_REQUIRE_EQUAL(res.size(), 1);
     BOOST_CHECK_EQUAL(res[0].items[0].arrival, "20150930T0901"_dt);
 }
@@ -1332,7 +1332,7 @@ BOOST_AUTO_TEST_CASE(train_delayed_10_hours_then_canceled) {
 
     auto compute = [&](nt::RTLevel level, int hour, int day) {
         return raptor.compute(pt_data->stop_areas_map.at("stop1"), pt_data->stop_areas_map.at("stop2"), hour, day,
-                              navitia::DateTimeUtils::inf, level, 2_min, true);
+                              navitia::DateTimeUtils::inf, level, 2_min, 2_min, true);
     };
 
     auto res = compute(nt::RTLevel::Base, "08:00"_t, 0);
@@ -1617,7 +1617,7 @@ BOOST_AUTO_TEST_CASE(unknown_stop_point) {
 
         auto compute = [&](nt::RTLevel level, const std::string& from, const std::string& to) {
             return raptor.compute(pt_data->stop_areas_map.at(from), pt_data->stop_areas_map.at(to), "08:00"_t, 0,
-                                  navitia::DateTimeUtils::inf, level, 2_min, true);
+                                  navitia::DateTimeUtils::inf, level, 2_min, 2_min, true);
         };
 
         auto res = compute(nt::RTLevel::Base, "stop1", "stop2");
@@ -1677,7 +1677,7 @@ BOOST_AUTO_TEST_CASE(ordered_delay_message_test) {
 
         auto compute = [&](nt::RTLevel level, const std::string& from, const std::string& to) {
             return raptor.compute(pt_data->stop_areas_map.at(from), pt_data->stop_areas_map.at(to), "08:00"_t, 0,
-                                  navitia::DateTimeUtils::inf, level, 2_min, true);
+                                  navitia::DateTimeUtils::inf, level, 2_min, 2_min, true);
         };
 
         auto res = compute(nt::RTLevel::Base, "stop1", "stop2");
@@ -1698,7 +1698,7 @@ BOOST_AUTO_TEST_CASE(ordered_delay_message_test) {
 
         auto compute = [&](nt::RTLevel level, const std::string& from, const std::string& to) {
             return raptor.compute(pt_data->stop_areas_map.at(from), pt_data->stop_areas_map.at(to), "08:00"_t, 0,
-                                  navitia::DateTimeUtils::inf, level, 2_min, true);
+                                  navitia::DateTimeUtils::inf, level, 2_min, 2_min, true);
         };
 
         auto res = compute(nt::RTLevel::Base, "stop1", "stop2");
@@ -1864,7 +1864,7 @@ BOOST_AUTO_TEST_CASE(simple_skipped_stop) {
 
     auto get_journeys = [&](nt::RTLevel level, const std::string& from, const std::string& to) {
         return raptor.compute(b.get<nt::StopArea>(from), b.get<nt::StopArea>(to), "08:00"_t, 0,
-                              navitia::DateTimeUtils::inf, level, 2_min, true);
+                              navitia::DateTimeUtils::inf, level, 2_min, 2_min, true);
     };
 
     BOOST_CHECK(!get_journeys(nt::RTLevel::Base, "A", "B").empty());
@@ -1945,7 +1945,7 @@ BOOST_AUTO_TEST_CASE(skipped_stop_then_delay) {
 
     auto get_journeys = [&](nt::RTLevel level, const std::string& from, const std::string& to) {
         return raptor.compute(b.get<nt::StopArea>(from), b.get<nt::StopArea>(to), "08:00"_t, 0,
-                              navitia::DateTimeUtils::inf, level, 2_min, true);
+                              navitia::DateTimeUtils::inf, level, 2_min, 2_min, true);
     };
 
     BOOST_CHECK(!get_journeys(nt::RTLevel::Base, "A", "B").empty());

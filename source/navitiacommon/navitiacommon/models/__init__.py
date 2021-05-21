@@ -395,8 +395,12 @@ class Instance(db.Model):  # type: ignore
         db.Integer, default=default_values.max_duration, nullable=False, server_default='86400'
     )
 
+    arrival_transfer_penalty = db.Column(
+        db.Integer, default=default_values.arrival_transfer_penalty, nullable=False, server_default='120'
+    )
+
     walking_transfer_penalty = db.Column(
-        db.Integer, default=default_values.walking_transfer_penalty, nullable=False, server_default='2'
+        db.Integer, default=default_values.walking_transfer_penalty, nullable=False, server_default='120'
     )
 
     night_bus_filter_max_factor = db.Column(

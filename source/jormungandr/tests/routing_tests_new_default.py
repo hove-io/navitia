@@ -327,6 +327,12 @@ class TestJourneysNewDefault(
         assert response[1] == 400
         assert "your origin and destination points are the same" in response[0]["message"]
 
+    def test_walking_transfer_penalty_parameter(self):
+        """
+        This feature is no longer supported
+        """
+        pass
+
 
 @config(
     {
@@ -369,6 +375,12 @@ class TestJourneysRidesharingNewDefault(
         pass
 
     def test_other_filtering(self):
+        """
+        This feature is no longer supported
+        """
+        pass
+
+    def test_walking_transfer_penalty_parameter(self):
         """
         This feature is no longer supported
         """

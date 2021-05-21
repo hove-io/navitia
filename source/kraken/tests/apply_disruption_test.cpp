@@ -170,7 +170,7 @@ static std::vector<navitia::routing::Path> compute(navitia::type::Data& data,
     data.build_raptor();
     navitia::routing::RAPTOR raptor{data};
     return raptor.compute(data.pt_data->stop_areas_map.at(from), data.pt_data->stop_areas_map.at(to), datetime, day,
-                          navitia::DateTimeUtils::inf, level, 2_min, true);
+                          navitia::DateTimeUtils::inf, level, 2_min, 2_min, true);
 }
 
 /*

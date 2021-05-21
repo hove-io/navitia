@@ -31,6 +31,8 @@ www.navitia.io
 #include "raptor.h"
 
 #include "raptor_visitors.h"
+#include "type/meta_data.h"
+
 #include "utils/logger.h"
 
 #include <boost/functional/hash.hpp>
@@ -225,23 +227,64 @@ void RAPTOR::init(const map_stop_point_duration& dep,
     }
 }
 
+RAPTOR::NEXT_STOPTIME_TYPE RAPTOR::choose_next_stop_time_type(
+    const DateTime& departure_datetime,
+    const boost::optional<boost::posix_time::ptime>& current_datetime) const {
+    boost::posix_time::ptime now =
+        current_datetime ? *current_datetime : boost::posix_time::second_clock::universal_time();
+    size_t now_days = static_cast<size_t>((now.date() - data.meta->production_date.begin()).days());
+    size_t requested_days = static_cast<size_t>(departure_datetime / navitia::DateTimeUtils::SECONDS_PER_DAY);
+
+    size_t cache_size = data.dataRaptor->cached_next_st_manager->get_max_size();
+    if (now_days <= requested_days && requested_days < (now_days + cache_size)) {
+        return NEXT_STOPTIME_TYPE::CACHED;
+    }
+    return NEXT_STOPTIME_TYPE::UNCACHED;
+    ;
+}
+
+void RAPTOR::set_next_stop_time(const DateTime& departure_datetime,
+                                const nt::RTLevel rt_level,
+                                const DateTime& bound,
+                                const type::AccessibiliteParams& accessibilite_params,
+                                const bool clockwise,
+                                const NEXT_STOPTIME_TYPE next_st_type) {
+    assert(data.dataRaptor->cached_next_st_manager);
+
+    switch (next_st_type) {
+        case RAPTOR::NEXT_STOPTIME_TYPE::CACHED:
+            LOG4CPLUS_INFO(raptor_logger, "Raptor: Using cached next_stop_time");
+            next_st = data.dataRaptor->cached_next_st_manager->load(clockwise ? departure_datetime : bound, rt_level,
+                                                                    accessibilite_params);
+            break;
+        case RAPTOR::NEXT_STOPTIME_TYPE::UNCACHED:
+            LOG4CPLUS_INFO(raptor_logger, "Raptor: Using uncached next_stop_time");
+            next_st = uncached_next_st;
+            break;
+        default:
+            throw std::runtime_error("Raptor Unknown next stop time type");
+            break;
+    }
+}
+
 void RAPTOR::first_raptor_loop(const map_stop_point_duration& departures,
                                const DateTime& departure_datetime,
                                const nt::RTLevel rt_level,
                                const DateTime& bound_limit,
                                const uint32_t max_transfers,
                                const type::AccessibiliteParams& accessibilite_params,
-                               const bool clockwise) {
+                               const bool clockwise,
+                               const boost::optional<boost::posix_time::ptime>& current_datetime) {
     const DateTime bound = limit_bound(clockwise, departure_datetime, bound_limit);
 
-    assert(data.dataRaptor->cached_next_st_manager);
-    next_st = data.dataRaptor->cached_next_st_manager->load(clockwise ? departure_datetime : bound, rt_level,
-                                                            accessibilite_params);
+    auto next_st_type = choose_next_stop_time_type(clockwise ? departure_datetime : bound, current_datetime);
+
+    set_next_stop_time(departure_datetime, rt_level, bound, accessibilite_params, clockwise, next_st_type);
 
     clear(clockwise, bound);
     init(departures, departure_datetime, clockwise, accessibilite_params.properties);
 
-    boucleRAPTOR(clockwise, rt_level, max_transfers);
+    boucleRAPTOR(accessibilite_params, clockwise, rt_level, max_transfers);
 }
 
 namespace {
@@ -379,7 +422,8 @@ std::vector<Path> RAPTOR::compute_all(const map_stop_point_duration& departures,
                                       const map_stop_point_duration& destinations,
                                       const DateTime& departure_datetime,
                                       const nt::RTLevel rt_level,
-                                      const navitia::time_duration& transfer_penalty,
+                                      const navitia::time_duration& arrival_transfer_penalty,
+                                      const navitia::time_duration& walking_transfer_penalty,
                                       const DateTime& bound,
                                       const uint32_t max_transfers,
                                       const type::AccessibiliteParams& accessibilite_params,
@@ -387,13 +431,15 @@ std::vector<Path> RAPTOR::compute_all(const map_stop_point_duration& departures,
                                       const std::vector<std::string>& allowed_ids,
                                       bool clockwise,
                                       const boost::optional<navitia::time_duration>& direct_path_dur,
-                                      const size_t max_extra_second_pass) {
+                                      const size_t max_extra_second_pass,
+                                      const boost::optional<boost::posix_time::ptime>& current_datetime) {
     set_valid_jp_and_jpp(DateTimeUtils::date(departure_datetime), accessibilite_params, forbidden_uri, allowed_ids,
                          rt_level);
 
     const auto& journeys =
-        compute_all_journeys(departures, destinations, departure_datetime, rt_level, transfer_penalty, bound,
-                             max_transfers, accessibilite_params, clockwise, direct_path_dur, max_extra_second_pass);
+        compute_all_journeys(departures, destinations, departure_datetime, rt_level, arrival_transfer_penalty,
+                             walking_transfer_penalty, bound, max_transfers, accessibilite_params, clockwise,
+                             direct_path_dur, max_extra_second_pass, current_datetime);
     return from_journeys_to_path(journeys);
 }
 
@@ -401,17 +447,19 @@ RAPTOR::Journeys RAPTOR::compute_all_journeys(const map_stop_point_duration& dep
                                               const map_stop_point_duration& destinations,
                                               const DateTime& departure_datetime,
                                               const nt::RTLevel rt_level,
-                                              const navitia::time_duration& transfer_penalty,
+                                              const navitia::time_duration& arrival_transfer_penalty,
+                                              const navitia::time_duration& walking_transfer_penalty,
                                               const DateTime& bound,
                                               const uint32_t max_transfers,
                                               const type::AccessibiliteParams& accessibilite_params,
                                               bool clockwise,
                                               const boost::optional<navitia::time_duration>& direct_path_dur,
-                                              const size_t max_extra_second_pass) {
+                                              const size_t max_extra_second_pass,
+                                              const boost::optional<boost::posix_time::ptime>& current_datetime) {
     auto start_raptor = std::chrono::system_clock::now();
 
     // auto solutions = ParetoFront<Journey, Dominates /*, JourneyParetoFrontVisitor*/>(Dominates(clockwise));
-    auto dominator = Dominates(clockwise, transfer_penalty);
+    auto dominator = Dominates(clockwise, arrival_transfer_penalty, walking_transfer_penalty);
     auto solutions = Solutions(dominator);
 
     if (direct_path_dur) {
@@ -430,7 +478,8 @@ RAPTOR::Journeys RAPTOR::compute_all_journeys(const map_stop_point_duration& dep
     const auto& calc_dep = clockwise ? departures : destinations;
     const auto& calc_dest = clockwise ? destinations : departures;
 
-    first_raptor_loop(calc_dep, departure_datetime, rt_level, bound, max_transfers, accessibilite_params, clockwise);
+    first_raptor_loop(calc_dep, departure_datetime, rt_level, bound, max_transfers, accessibilite_params, clockwise,
+                      current_datetime);
 
     LOG4CPLUS_TRACE(raptor_logger, "labels after first pass : " << std::endl << print_all_labels());
 
@@ -501,10 +550,10 @@ RAPTOR::Journeys RAPTOR::compute_all_journeys(const map_stop_point_duration& dep
         best_labels = best_labels_for_snd_pass;
         const Label& working_label = working_labels[start.sp_idx];
         init(init_map, working_label.dt_pt, !clockwise, accessibilite_params.properties);
-        boucleRAPTOR(!clockwise, rt_level, max_transfers);
+        boucleRAPTOR(accessibilite_params, !clockwise, rt_level, max_transfers);
 
         read_solutions(*this, solutions, !clockwise, departure_datetime, departures, destinations, rt_level,
-                       accessibilite_params, transfer_penalty, start);
+                       accessibilite_params, arrival_transfer_penalty, start);
 
         LOG4CPLUS_DEBUG(raptor_logger, "end of raptor loop body, nb of solutions : " << solutions.size());
 
@@ -680,7 +729,10 @@ void RAPTOR::set_valid_jp_and_jpp(uint32_t date,
 }
 
 template <typename Visitor>
-void RAPTOR::raptor_loop(Visitor visitor, const nt::RTLevel rt_level, uint32_t max_transfers) {
+void RAPTOR::raptor_loop(Visitor visitor,
+                         const type::AccessibiliteParams& accessibilite_params,
+                         const nt::RTLevel rt_level,
+                         uint32_t max_transfers) {
     bool continue_algorithm = true;
     count = 0;  //< Count iteration of raptor algorithm
 
@@ -790,8 +842,12 @@ void RAPTOR::raptor_loop(Visitor visitor, const nt::RTLevel rt_level, uint32_t m
                     ///   tmp_st_dt.second
                     /// the corresponding StopTime is
                     ///    tmp_st_dt.first
+
                     const auto tmp_st_dt =
-                        next_st->next_stop_time(visitor.stop_event(), jpp.idx, previous_dt, visitor.clockwise());
+                        next_st->next_stop_time(visitor.stop_event(), jpp.idx, previous_dt, visitor.clockwise(),
+                                                rt_level, accessibilite_params.vehicle_properties, jpp.has_freq);
+                    // const auto tmp_st_dt =
+                    //    next_st->next_stop_time(visitor.stop_event(), jpp.idx, previous_dt, visitor.clockwise());
 
                     /// if there is no vehicle arriving after previous_dt, nothing to do
                     if (tmp_st_dt.first == nullptr) {
@@ -894,11 +950,14 @@ void RAPTOR::raptor_loop(Visitor visitor, const nt::RTLevel rt_level, uint32_t m
     }
 }
 
-void RAPTOR::boucleRAPTOR(const bool clockwise, const nt::RTLevel rt_level, uint32_t max_transfers) {
+void RAPTOR::boucleRAPTOR(const type::AccessibiliteParams& accessibilite_params,
+                          const bool clockwise,
+                          const nt::RTLevel rt_level,
+                          uint32_t max_transfers) {
     if (clockwise) {
-        raptor_loop(raptor_visitor(), rt_level, max_transfers);
+        raptor_loop(raptor_visitor(), accessibilite_params, rt_level, max_transfers);
     } else {
-        raptor_loop(raptor_reverse_visitor(), rt_level, max_transfers);
+        raptor_loop(raptor_reverse_visitor(), accessibilite_params, rt_level, max_transfers);
     }
 }
 
@@ -908,12 +967,14 @@ std::vector<Path> RAPTOR::compute(const type::StopArea* departure,
                                   int departure_day,
                                   DateTime borne,
                                   const nt::RTLevel rt_level,
-                                  const navitia::time_duration& transfer_penalty,
+                                  const navitia::time_duration& arrival_transfer_penalty,
+                                  const navitia::time_duration& walking_transfer_penalty,
                                   bool clockwise,
                                   const type::AccessibiliteParams& accessibilite_params,
                                   uint32_t max_transfers,
                                   const std::vector<std::string>& forbidden_uri,
-                                  const boost::optional<navitia::time_duration>& direct_path_dur) {
+                                  const boost::optional<navitia::time_duration>& direct_path_dur,
+                                  const boost::optional<boost::posix_time::ptime>& current_datetime) {
     map_stop_point_duration departures, destinations;
 
     for (const type::StopPoint* sp : departure->stop_point_list) {
@@ -925,8 +986,8 @@ std::vector<Path> RAPTOR::compute(const type::StopArea* departure,
     }
 
     return compute_all(departures, destinations, DateTimeUtils::set(departure_day, departure_hour), rt_level,
-                       transfer_penalty, borne, max_transfers, accessibilite_params, forbidden_uri, {}, clockwise,
-                       direct_path_dur);
+                       arrival_transfer_penalty, walking_transfer_penalty, borne, max_transfers, accessibilite_params,
+                       forbidden_uri, {}, clockwise, direct_path_dur, 0, current_datetime);
 }
 
 int RAPTOR::best_round(SpIdx sp_idx) {

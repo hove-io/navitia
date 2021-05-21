@@ -392,6 +392,7 @@ class Journeys(JourneyCommon):
             "_street_network", type=six.text_type, hidden=True, help="choose the streetnetwork component"
         )
         parser_get.add_argument("_walking_transfer_penalty", hidden=True, type=int)
+        parser_get.add_argument("_arrival_transfer_penalty", hidden=True, type=int)
         parser_get.add_argument("_max_successive_physical_mode", hidden=True, type=int)
         parser_get.add_argument("_max_additional_connections", hidden=True, type=int)
         parser_get.add_argument("_night_bus_filter_base_factor", hidden=True, type=int)
@@ -668,6 +669,8 @@ class Journeys(JourneyCommon):
         def _set_specific_params(mod):
             if args.get('max_duration') is None:
                 args['max_duration'] = mod.max_duration
+            if args.get('_arrival_transfer_penalty') is None:
+                args['_arrival_transfer_penalty'] = mod.arrival_transfer_penalty
             if args.get('_walking_transfer_penalty') is None:
                 args['_walking_transfer_penalty'] = mod.walking_transfer_penalty
             if args.get('_night_bus_filter_base_factor') is None:

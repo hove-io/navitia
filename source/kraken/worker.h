@@ -92,6 +92,7 @@ public:
     ~Worker();
 
     void dispatch(const pbnavitia::Request& request, const nt::Data& data);
+    boost::optional<size_t> get_raptor_next_st_cache_miss() const;
 
 private:
     void init_worker_data(const navitia::type::Data* data,
@@ -112,7 +113,9 @@ private:
 
     JourneysArg fill_journeys(const pbnavitia::JourneysRequest& request);
     void err_msg_isochron(navitia::PbCreator& pb_creator, const std::string& err_msg);
-    void journeys(const pbnavitia::JourneysRequest& request, pbnavitia::API api);
+    void journeys(const pbnavitia::JourneysRequest& request,
+                  pbnavitia::API api,
+                  const boost::posix_time::ptime& current_datetime);
     void isochrone(const pbnavitia::JourneysRequest& request);
     void pt_ref(const pbnavitia::PTRefRequest& request);
     void traffic_reports(const pbnavitia::TrafficReportsRequest& request);

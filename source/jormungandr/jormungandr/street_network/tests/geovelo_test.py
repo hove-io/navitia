@@ -32,7 +32,7 @@ from jormungandr.street_network.geovelo import Geovelo
 from navitiacommon import type_pb2, response_pb2
 import pybreaker
 from mock import MagicMock
-from .streetnetwork_test_utils import make_pt_object
+from .streetnetwork_test_utils import make_pt_object, make_pt_object_with_sp_mode
 from jormungandr.utils import str_to_time_stamp, PeriodExtremity
 import requests_mock
 import ujson
@@ -403,3 +403,24 @@ def status_test():
     assert status['circuit_breaker']['current_state'] == 'closed'
     assert status['circuit_breaker']['fail_counter'] == 0
     assert status['circuit_breaker']['reset_timeout'] == 60
+
+
+def sort_by_mode_test():
+    # Sort order Train, RapidTransit, Metro, Tramway, Car, Bus
+    points = [
+        make_pt_object_with_sp_mode(lon=3, lat=48.3, uri='ref_Bus', mode_uri='physical_mode:Bus'),
+        make_pt_object_with_sp_mode(lon=4, lat=48.4, uri='ref_Metro', mode_uri='physical_mode:Metro'),
+        make_pt_object_with_sp_mode(lon=5, lat=48.5, uri='ref_Tram', mode_uri='physical_mode:Tramway'),
+        make_pt_object_with_sp_mode(lon=6, lat=48.6, uri='ref_Car', mode_uri='physical_mode:Car'),
+        make_pt_object_with_sp_mode(lon=6, lat=48.6, uri='ref_NoMode'),
+        make_pt_object_with_sp_mode(lon=7, lat=48.7, uri='ref_Train', mode_uri='physical_mode:Train'),
+        make_pt_object_with_sp_mode(lon=8, lat=48.8, uri='ref_Rapid', mode_uri='physical_mode:RapidTransit'),
+    ]
+    points = Geovelo.sort_by_mode(points)
+    points[0].uri = 'ref_Train'
+    points[1].uri = 'ref_Rapid'
+    points[2].uri = 'ref_Metro'
+    points[3].uri = 'ref_Tram'
+    points[4].uri = 'ref_Car'
+    points[5].uri = 'ref_Bus'
+    points[6].uri = 'ref_NoMode'

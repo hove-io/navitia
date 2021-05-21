@@ -106,10 +106,32 @@ class Geovelo(AbstractStreetNetworkService):
         }
 
     @classmethod
+    def sort_by_mode(cls, points):
+        # Filter matrix points with modes having priority order:
+        # Train', 'RapidTransit', 'Metro', 'Tramway', Car, Bus
+        mode_weight = {
+            'physical_mode:Train': 1,
+            'physical_mode:RapidTransit': 2,
+            'physical_mode:Metro': 3,
+            'physical_mode:Tramway': 4,
+            'physical_mode:Car': 5,
+            'physical_mode:Bus': 6,
+        }
+
+        def key_func(point):
+            if len(point.stop_point.physical_modes) == 0:
+                return float('inf')
+            return min((mode_weight.get(mode.uri, float('inf')) for mode in point.stop_point.physical_modes))
+
+        return sorted(points, key=key_func)
+
+    @classmethod
     def _make_request_arguments_isochrone(cls, origins, destinations, bike_speed_mps=3.33):
+        origins_coord = [cls._pt_object_summary_isochrone(o) for o in origins]
+        destinations_coord = [cls._pt_object_summary_isochrone(o) for o in destinations]
         return {
-            'starts': [cls._pt_object_summary_isochrone(o) for o in origins],
-            'ends': [cls._pt_object_summary_isochrone(o) for o in destinations],
+            'starts': [o for o in origins_coord],
+            'ends': [o for o in destinations_coord],
             'bikeDetails': cls._make_request_arguments_bike_details(bike_speed_mps),
             'transportMode': 'BIKE',
         }
@@ -209,7 +231,7 @@ class Geovelo(AbstractStreetNetworkService):
         self._check_response(r)
         resp_json = ujson.loads(r.text)
 
-        if len(resp_json) - 1 != len(origins) * len(destinations):
+        if len(resp_json) - 1 != len(data.get('starts', [])) * len(data.get('ends', [])):
             logging.getLogger(__name__).error('Geovelo nb response != nb requested')
             raise UnableToParse('Geovelo nb response != nb requested')
 
@@ -360,3 +382,7 @@ class Geovelo(AbstractStreetNetworkService):
 
     def feed_publisher(self):
         return self._feed_publisher
+
+    def filter_places_isochrone(self, places_isochrone):
+        ordered_isochrone = self.sort_by_mode(places_isochrone)
+        return ordered_isochrone[:50]

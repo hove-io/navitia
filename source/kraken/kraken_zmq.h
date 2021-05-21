@@ -153,6 +153,10 @@ inline void doWork(zmq::context_t& context,
         auto end = pt::microsec_clock::universal_time();
         auto duration = end - start;
         metrics.observe_api(api, duration.total_milliseconds() / 1000.0);
+        auto cache_miss = w.get_raptor_next_st_cache_miss();
+        if (cache_miss) {
+            metrics.set_raptor_cache_miss(*cache_miss);
+        }
         if (duration >= slow_request_duration) {
             LOG4CPLUS_WARN(logger, "slow request! duration: " << duration.total_milliseconds()
                                                               << "ms request: " << pb_req.DebugString());
