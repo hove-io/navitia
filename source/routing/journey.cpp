@@ -102,8 +102,9 @@ bool Journey::better_on_sn(const Journey& that, const navitia::time_duration wal
     // walking duration
     // we consider that an extra transfer  is worthwhile
     // only if it reduces the walking duration by at least transfer_penalty
-    return sn_dur + transfer_dur + walking_transfer_penalty * std::max(2 * nb_transfer - 1, 0)
-           <= that.sn_dur + that.transfer_dur + walking_transfer_penalty * std::max(2 * that_nb_transfer - 1, 0);
+
+    return (sn_dur + transfer_dur) * 2 + total_waiting_dur
+           <= (that.sn_dur + that.transfer_dur) * 2 + that.total_waiting_dur;
     ;
 }
 
