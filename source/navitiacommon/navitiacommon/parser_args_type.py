@@ -36,6 +36,7 @@ import flask
 from dateutil import parser
 from flask_restful.inputs import boolean
 import six
+import sys
 
 
 class TypeSchema(object):
@@ -66,6 +67,54 @@ class PositiveFloat(CustomSchemaType):
         conv_value = float(value)
         if conv_value <= 0:
             raise ValueError("The {} argument has to be > 0, you gave : {}".format(name, value))
+        return conv_value
+
+    def schema(self):
+        return TypeSchema(type=float, metadata={'minimum': 0})
+
+
+class FloatRange(CustomSchemaType):
+    def __init__(self, min, max):
+        self.min = min
+        self.max = max
+
+    def __call__(self, value, name):
+        conv_value = float(value)
+        if not self.min <= conv_value <= self.max:
+            raise ValueError(
+                "The {} argument has to be in range [{}, {}], you gave : {}".format(
+                    name, self.min, self.max, value
+                )
+            )
+        return conv_value
+
+    def schema(self):
+        return TypeSchema(type=float, metadata={'minimum': 0})
+
+
+class SpeedRange(CustomSchemaType):
+    map_range = {
+        'bike_speed': (0.01, 15),
+        'bss_speed': (0.01, 15),
+        'walking_speed': (0.01, 4),
+        'car_speed': (0.01, 50),
+        'taxi_speed': (0.01, 50),
+        'car_no_park_speed': (0.01, 50),
+        'ridesharing_speed': (0.01, 50),
+        'default': (sys.float_info.min, sys.float_info.max),
+    }
+
+    def __call__(self, value, name):
+        conv_value = float(value)
+        (range_min, range_max) = (
+            SpeedRange.map_range[name] if name in SpeedRange.map_range else SpeedRange.map_range['default']
+        )
+        if not range_min <= conv_value <= range_max:
+            raise ValueError(
+                "The {} argument has to be in range [{}, {}], you gave : {}".format(
+                    name, range_min, range_max, value
+                )
+            )
         return conv_value
 
     def schema(self):

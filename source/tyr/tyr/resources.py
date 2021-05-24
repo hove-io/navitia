@@ -744,6 +744,13 @@ class Instance(flask_restful.Resource):
                 location=('json', 'values'),
                 default=getattr(instance, "max_{}_direct_path_duration".format(mode)),
             )
+            parser.add_argument(
+                'max_{}_direct_path_distance'.format(mode),
+                type=int,
+                help='maximum distance of direct path for the mode {}'.format(mode),
+                location=('json', 'values'),
+                default=getattr(instance, "max_{}_direct_path_distance".format(mode)),
+            )
 
         parser.add_argument(
             'poi_dataset',
@@ -878,9 +885,16 @@ class Instance(flask_restful.Resource):
                         'max_car_direct_path_duration',
                         'max_taxi_direct_path_duration',
                         'max_ridesharing_direct_path_duration',
+                        'max_car_no_park_direct_path_duration',
+                        'max_walking_direct_path_distance',
+                        'max_bike_direct_path_distance',
+                        'max_bss_direct_path_distance',
+                        'max_car_direct_path_distance',
+                        'max_taxi_direct_path_distance',
+                        'max_ridesharing_direct_path_distance',
+                        'max_car_no_park_direct_path_distance',
                         'poi_dataset',
                         'max_taxi_duration_to_pt',
-                        'max_car_no_park_direct_path_duration',
                         'ridesharing_speed',
                         'stop_points_nearby_duration',
                         'max_ridesharing_duration_to_pt',

@@ -37,6 +37,7 @@ from jormungandr import i_manager
 from .check_utils import *
 import mock
 from pytest import approx
+from navitiacommon.parser_args_type import SpeedRange
 
 
 def check_best(resp):
@@ -357,20 +358,28 @@ class JourneyCommon(object):
         assert "Unable to parse datetime, date is too early!" in response['message']
 
     def test_journeys_bad_speed(self):
-        """speed <= 0 is invalid"""
+        """speed not in range"""
 
-        for speed in ["0", "-1"]:
-            for sn in ["walking", "bike", "bss", "car"]:
+        speed_range = SpeedRange.map_range
+        speed_test = {}
+        for sn in ["walking", "bike", "bss", "car", "car_no_park", "taxi", "ridesharing"]:
+            sp_range = speed_range["{sn}_speed".format(sn=sn)]
+            speed_test[sn] = [sp_range[0] - 1, sp_range[1] + 1]
+
+        for sn in ["walking", "bike", "bss", "car", "car_no_park", "taxi", "ridesharing"]:
+            (speed_min, speed_max) = speed_range["{sn}_speed".format(sn=sn)]
+            for speed in speed_test[sn]:
                 query = "journeys?from={from_coord}&to={to_coord}&datetime={d}&{sn}_speed={speed}".format(
                     from_coord=s_coord, to_coord=r_coord, d="20120614T133700", sn=sn, speed=speed
                 )
-
                 response, status_code = self.query_no_assert("v1/coverage/main_routing_test/" + query)
 
                 assert not 'journeys' in response
                 assert 'message' in response
                 assert (
-                    "The {sn}_speed argument has to be > 0, you gave : {speed}".format(sn=sn, speed=speed)
+                    "The {sn}_speed argument has to be in range [{speed_min}, {speed_max}], you gave : {speed}".format(
+                        sn=sn, speed=speed, speed_min=speed_min, speed_max=speed_max
+                    )
                     in response['message']
                 )
 

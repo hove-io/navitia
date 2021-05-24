@@ -587,6 +587,48 @@ class Instance(object):
         instance_db = self.get_models()
         return get_value_or_default('min_ridesharing', instance_db, self.name)
 
+    @property
+    def max_bike_direct_path_distance(self):
+        # type: () -> int
+        instance_db = self.get_models()
+        return get_value_or_default('max_bike_direct_path_distance', instance_db, self.name)
+
+    @property
+    def max_bss_direct_path_distance(self):
+        # type: () -> int
+        instance_db = self.get_models()
+        return get_value_or_default('max_bss_direct_path_distance', instance_db, self.name)
+
+    @property
+    def max_walking_direct_path_distance(self):
+        # type: () -> int
+        instance_db = self.get_models()
+        return get_value_or_default('max_walking_direct_path_distance', instance_db, self.name)
+
+    @property
+    def max_car_direct_path_distance(self):
+        # type: () -> int
+        instance_db = self.get_models()
+        return get_value_or_default('max_car_direct_path_distance', instance_db, self.name)
+
+    @property
+    def max_car_no_park_direct_path_distance(self):
+        # type: () -> int
+        instance_db = self.get_models()
+        return get_value_or_default('max_car_no_park_direct_path_distance', instance_db, self.name)
+
+    @property
+    def max_ridesharing_direct_path_distance(self):
+        # type: () -> int
+        instance_db = self.get_models()
+        return get_value_or_default('max_ridesharing_direct_path_distance', instance_db, self.name)
+
+    @property
+    def max_taxi_direct_path_distance(self):
+        # type: () -> int
+        instance_db = self.get_models()
+        return get_value_or_default('max_taxi_direct_path_distance', instance_db, self.name)
+
     # TODO: refactorise all properties
     taxi_speed = _make_property_getter('taxi_speed')
     additional_time_after_first_section_taxi = _make_property_getter('additional_time_after_first_section_taxi')
