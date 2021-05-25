@@ -1,4 +1,4 @@
-"""Add timeo in external_service table
+"""Add realtime_proxies in external_service table
 
 Revision ID: 941b197dbd58
 Revises: 1918ed13e84f
@@ -11,11 +11,10 @@ revision = '941b197dbd58'
 down_revision = '1918ed13e84f'
 
 from alembic import op
-import sqlalchemy as sa
 
 
 def upgrade():
-    op.execute("ALTER TYPE navitia_service_type ADD VALUE 'timeo'")
+    op.execute("ALTER TYPE navitia_service_type ADD VALUE 'realtime_proxies'")
 
 
 def downgrade():

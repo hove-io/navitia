@@ -59,7 +59,7 @@ def default_external_service_config():
         }
         external_service_3 = models.ExternalService('Timeo_Horizon')
         external_service_3.klass = "jormungandr.realtime_schedule.timeo.Timeo"
-        external_service_3.navitia_service = "timeo"
+        external_service_3.navitia_service = "realtime_proxies"
         external_service_3.args = {
             "service_url": "http://my_external_service.com",
             "timeout": 5,
@@ -182,14 +182,14 @@ def test_external_service_put(default_external_service_config):
     )
 
 
-def test_timeo_external_service_put(default_external_service_config):
+def test_realtime_proxies_external_service_put(default_external_service_config):
     """
     Test that a service is correctly created/updated in db and the info returned when queried
     """
 
     service = {
         "klass": "jormungandr.realtime_schedule.timeo.Timeo",
-        "navitia_service": "timeo",
+        "navitia_service": "realtime_proxies",
         "args": {
             "service_url": "http://my_external_service_free_floating.com",
             "timeout": 5,
