@@ -47,14 +47,11 @@ jobs:
       image: navitia/debian10_dev
     needs: build
     steps:
-    - name: install  dependency
+    - name: install dependency
       run: apt update && apt install -y httpie
     - name: run artemis NG on push
       if: ${{ github.event_name == 'push' }}
       run: http --ignore-stdin -v -f POST https://${{secrets.JENKINS_NG_TOKEN}}@jenkins-core.canaltp.fr/job/artemis_ng/buildWithParameters event=push navitia_branch=dev commit_id=${{ github.event.head_commit.id }} commit_message="${{ github.event.head_commit.message }}" commit_timestamp=${{ github.event.head_commit.timestamp }} commit_url=${{ github.event.repository.html_url }} commit_username=${{ github.event.head_commit.author.name }}
-    - name: run artemis NG on pull request
-      if: ${{ github.event_name == 'pull_request' }}
-      run: http --ignore-stdin -v -f POST https://${{secrets.JENKINS_NG_TOKEN}}@jenkins-core.canaltp.fr/job/artemis_ng/buildWithParameters event=pull_request navitia_branch=${{github.head_ref}} commit_id=${{ github.event.pull_request.head.sha }} commit_message="${{ github.event.pull_request.title }}" commit_timestamp=${{ github.event.pull_request.head.repo.updated_at }} commit_url=${{ github.event.repository.html_url }} commit_username=${{ github.event.pull_request.head.user.login }}
     - name: run deploy on artemis machine https://jenkins-core.canaltp.fr/job/deploy-navitia
       if: ${{ github.event_name == 'push' }}
       run: http --ignore-stdin -v -f POST https://${{secrets.JENKINS_NG_TOKEN}}@jenkins-core.canaltp.fr/job/deploy-navitia/buildWithParameters PLATFORM=artemis_debian8
