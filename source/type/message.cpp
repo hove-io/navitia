@@ -196,14 +196,19 @@ std::vector<ImpactedVJ> get_impacted_vehicle_journeys(const RailSection& rs,
                                                       const boost::gregorian::date_period& production_period,
                                                       type::RTLevel rt_level) {
     auto log = log4cplus::Logger::getInstance("log");
-    // Get all impacted VJs and compute the corresponding base_canceled vp
+    std::vector<ImpactedVJ> vj_vp_pairs;
+
+    if (rs.routes.empty() && rs.line == nullptr){
+        LOG4CPLUS_ERROR(log, "rail section: routes or line have to be filled");
+        return vj_vp_pairs;
+    }
+
     std::vector<navitia::type::Route*> routes;
     if (rs.routes.empty()) {
         routes = rs.line->route_list;
     } else {
         routes = rs.routes;
     }
-    std::vector<ImpactedVJ> vj_vp_pairs;
 
     auto blocked_sa_uri_sequence = create_blocked_sa_sequence(rs);
 
