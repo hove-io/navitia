@@ -356,8 +356,7 @@ struct add_impacts_visitor : public apply_impacts_visitor {
         std::string uri = "new rail section, start: " + rs.start_point->uri + " - end: " + rs.end_point->uri;
         if (rs.line) {
             uri += ", line : " + rs.line->uri;
-        }
-        else if (!rs.routes.empty()) {
+        } else if (!rs.routes.empty()) {
             for (const auto& r : rs.routes) {
                 uri += ", route : " + r->uri;
             }

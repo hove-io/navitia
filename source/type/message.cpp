@@ -198,7 +198,7 @@ std::vector<ImpactedVJ> get_impacted_vehicle_journeys(const RailSection& rs,
     auto log = log4cplus::Logger::getInstance("log");
     std::vector<ImpactedVJ> vj_vp_pairs;
 
-    if (rs.routes.empty() && rs.line == nullptr){
+    if (rs.routes.empty() && rs.line == nullptr) {
         LOG4CPLUS_ERROR(log, "rail section: routes or line have to be filled");
         return vj_vp_pairs;
     }
