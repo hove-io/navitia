@@ -1,14 +1,14 @@
 """Add realtime_proxies in external_service table
 
 Revision ID: 941b197dbd58
-Revises: 1918ed13e84f
+Revises: 893abc0159ba
 Create Date: 2021-05-20 12:26:27.292726
 
 """
 
 # revision identifiers, used by Alembic.
 revision = '941b197dbd58'
-down_revision = '1918ed13e84f'
+down_revision = '893abc0159ba'
 
 from alembic import op
 
