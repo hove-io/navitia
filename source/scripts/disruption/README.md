@@ -5,7 +5,7 @@ RabbitMq is used as a broker to exchange disruption messages.
 
 ## Set up
 
-Disruptor depends on **chaos-proto** sources for disrurption messages.
+Disruptor depends on [chaos-proto](https://github.com/CanalTP/chaos-proto) sources for disrurption messages.
 
 ```
 # Install protobuf compiler
@@ -74,6 +74,7 @@ optional arguments:
                         List of possibility:
                         Line('line_uri'),
                         LineSection('line_uri','stop_area_uri', 'stop_area_uri'),
+                        RailSection('line_uri', 'stop_area_uri', 'stop_area_uri'),
                         StopArea('stop_area_uri'),
                         StopPoint('stop_point_uri'),
                         Route('route_uri'),
@@ -104,6 +105,10 @@ optional arguments:
                                 },
                                 {
                                     "pt_object": LineSection("line_uri", "stop_area_uri", "stop_area_uri"),
+                                    "impact_type": "NO_SERVICE"
+                                },
+                                {
+                                    "pt_object": RailSection("line_uri", "stop_area_uri", "stop_area_uri"),
                                     "impact_type": "NO_SERVICE"
                                 },
                                 {
@@ -159,6 +164,9 @@ PYTHONPATH="navitia_source_dir/source/chaos-proto" python2.7 disruptor.py -b pya
 # Line section - impact NO SERVICE
 PYTHONPATH="navitia_source_dir/source/chaos-proto" python2.7 disruptor.py -b pyamqp://guest:guest@localhost:5672 -e "navitia" -t "shortterm.transilien" -p "LineSection('line_uri', 'stop_area_uri', 'stop_area_uri')"
 
+# Rail section - impact NO SERVICE
+PYTHONPATH="navitia_source_dir/source/chaos-proto" python2.7 disruptor.py -b pyamqp://guest:guest@localhost:5672 -e "navitia" -t "shortterm.transilien" -p "RailSection('line_uri', 'stop_area_uri', 'stop_area_uri')"
+
 # Route - impact REDUCED SERVICE
 PYTHONPATH="navitia_source_dir/source/chaos-proto" python2.7 disruptor.py -b pyamqp://guest:guest@localhost:5672 -e "navitia" -t "shortterm.transilien" -p "Route('route_uri')" -i "REDUCED_SERVICE"
 ```
@@ -181,6 +189,9 @@ You have to add real ID object. Values on the example file are indicative.
         },
         {
             "pt_object": "LineSection('line:DUA:810806753', 'stop_area:DUA:SA:8876553', 'stop_area:DUA:SA:6252567')",
+            "impact_type": "NO_SERVICE"
+        },
+            "pt_object": "RailSection('line:DUA:810806758', 'stop_area:DUA:SA:8876543', 'stop_area:DUA:SA:6252521')",
             "impact_type": "NO_SERVICE"
         },
         {
@@ -332,4 +343,3 @@ Logs looks like that:
 When you load a disruption with Disruptor, like **-p Line('line:DUA:800853022')**, you need to be sure of your ID.<br>
 Kraken loads a data.nav.lz4' that have to contain the same ID. Otherwise, the disruption will not be loaded.<br>
 You can use **navitia API** like lines/stop_points/networks/... to find if the concerned ID exists.
-

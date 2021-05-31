@@ -93,6 +93,16 @@ class LineSection(Line):
         self.type = 'line_section'
 
 
+class RailSection(Line):
+    def __init__(self, uri, start, end, routes=[], blocked_stop_areas=[]):
+        self.uri = uri
+        self.start = start
+        self.end = end
+        self.routes = routes
+        self.blocked_stop_areas = blocked_stop_areas
+        self.type = 'rail_section'
+
+
 class Disruption(object):
     def __init__(self, impacted_obj, start, end, logger, impact_type="NO_SERVICE"):
         self.id = str(uuid.uuid4())
@@ -172,6 +182,7 @@ class Disruption(object):
             "stop_area": chaos_pb2.PtObject.stop_area,
             "line": chaos_pb2.PtObject.line,
             "line_section": chaos_pb2.PtObject.line_section,
+            "rail_section": chaos_pb2.PtObject.rail_section,
             "route": chaos_pb2.PtObject.route,
             "stop_point": chaos_pb2.PtObject.stop_point,
         }
@@ -187,6 +198,16 @@ class Disruption(object):
             pb_start.uri = self.impacted_obj.start
             pb_start.pt_object_type = chaos_pb2.PtObject.stop_area
             pb_end = line_section.end_point
+            pb_end.uri = self.impacted_obj.end
+            pb_end.pt_object_type = chaos_pb2.PtObject.stop_area
+        if ptobject.pt_object_type == chaos_pb2.PtObject.rail_section:
+            rail_section = ptobject.pt_rail_section
+            rail_section.line.uri = self.impacted_obj.uri
+            rail_section.line.pt_object_type = chaos_pb2.PtObject.line
+            pb_start = rail_section.start_point
+            pb_start.uri = self.impacted_obj.start
+            pb_start.pt_object_type = chaos_pb2.PtObject.stop_area
+            pb_end = rail_section.end_point
             pb_end.uri = self.impacted_obj.end
             pb_end.pt_object_type = chaos_pb2.PtObject.stop_area
 
@@ -233,6 +254,7 @@ def parse_args(parser, logger):
         "List of possibility: "
         'Line("line_uri"), '
         'LineSection("line_uri", "stop_area_uri", "stop_area_uri"), '
+        'RailSection("line_uri", "stop_area_uri", "stop_area_uri"), '
         'StopArea("stop_area_uri"), '
         'StopPoints("stop_point_uri"), '
         'Route("route_uri"), '
@@ -262,6 +284,7 @@ def parse_args(parser, logger):
         'Here an example of what the file can contain: '
         '{"impacts": [{"pt_object": "Line("line:DUA:800853022"),"impact_type":"NO_SERVICE"}, '
         '{"pt_object": LineSection("line:DUA:800803071", "stop_area:DUA:SA:8778543", "stop_area:DUA:SA:8732832"),"impact_type":"NO_SERVICE"}, '
+        '{"pt_object": RailSection("line:DUA:800803071", "stop_area:DUA:SA:8778543", "stop_area:DUA:SA:8732832"),"impact_type":"NO_SERVICE"}, '
         '{"pt_object": StopArea("stop_area:DUA:SA:93:1316"),"impact_type":"NO_SERVICE"}, '
         '{"pt_object": StopPoint("stop_point:DUA:SP:93:1317"),"impact_type":"NO_SERVICE"}, '
         '{"pt_object": Route("route:DUA:8008555486001"),"impact_type":"NO_SERVICE"}, '
