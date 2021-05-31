@@ -138,7 +138,8 @@ class RealtimeProxyManager(object):
         self.logger.info('updating/adding {} realtime proxy'.format(rt_proxy.id))
         try:
             object_id_tag = rt_proxy.args.get('object_id_tag', rt_proxy.id)
-            args = rt_proxy.args
+            if 'object_id_tag' in rt_proxy.args:
+                del rt_proxy.args["object_id_tag"]
             self._realtime_proxies[rt_proxy.id] = self._init_class(
                 rt_proxy.id, rt_proxy.klass, object_id_tag, rt_proxy.args
             )
@@ -150,10 +151,10 @@ class RealtimeProxyManager(object):
         realtime_proxies_from_db = list(self._realtime_proxies.values())
         realtime_proxies_legacy = self._realtime_proxies_legacy
         if realtime_proxies_legacy and realtime_proxies_from_db:
-            new_realtime_proxies_legacy = []
-            for rt in realtime_proxies_legacy:
+            new_realtime_proxies_legacy = dict()
+            for rt_proxy_id, rt in realtime_proxies_legacy.items():
                 if rt not in realtime_proxies_from_db:
-                    new_realtime_proxies_legacy.append(rt)
+                    new_realtime_proxies_legacy[rt_proxy_id] = rt
             self._realtime_proxies_legacy = new_realtime_proxies_legacy
 
     def get(self, proxy_name):

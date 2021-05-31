@@ -247,4 +247,7 @@ def multi_proxy_conf_file_and_database_test():
     manager.update_config()
 
     assert len(manager._realtime_proxies) == 4
+    for rt_proxy in ["clever_age_TBC", "SytralRT", "Timeo_Amelys", "Siri_TAO"]:
+        assert rt_proxy in manager._realtime_proxies
+
     assert len(manager._realtime_proxies_legacy) == 0
