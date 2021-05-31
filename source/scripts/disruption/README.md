@@ -74,7 +74,7 @@ optional arguments:
                         List of possibility:
                         Line('line_uri'),
                         LineSection('line_uri','stop_area_uri', 'stop_area_uri'),
-                        RailSection('ine_uri', 'stop_area_uri', 'stop_area_uri'),
+                        RailSection('line_uri', 'stop_area_uri', 'stop_area_uri'),
                         StopArea('stop_area_uri'),
                         StopPoint('stop_point_uri'),
                         Route('route_uri'),
@@ -343,4 +343,3 @@ Logs looks like that:
 When you load a disruption with Disruptor, like **-p Line('line:DUA:800853022')**, you need to be sure of your ID.<br>
 Kraken loads a data.nav.lz4' that have to contain the same ID. Otherwise, the disruption will not be loaded.<br>
 You can use **navitia API** like lines/stop_points/networks/... to find if the concerned ID exists.
-
