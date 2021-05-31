@@ -215,56 +215,58 @@ std::vector<ImpactedVJ> get_impacted_vehicle_journeys(const RailSection& rs,
     // Computing a validity_pattern of impact used to pre-filter concerned vjs later
     type::ValidityPattern impact_vp = impact.get_impact_vp(production_period);
 
+    auto apply_impacts_on_vj = [&](const nt::VehicleJourney& vj) {
+        /*
+         * Pre-filtering by validity pattern, which allows us to check if the vj is impacted quickly
+         *
+         * Since the validity pattern runs only by day not by hour, we'll compute in detail to
+         * check if the vj is really impacted or not.
+         *
+         * */
+        if ((vj.validity_patterns[rt_level]->days & impact_vp.days).none()) {
+            return true;
+        }
+
+        // Filtering each journey to see if it's impacted by the section.
+        auto section = vj.get_sections_ranks(rs.start_point, rs.end_point);
+        // If the vj pass by both stops both elements will be different than nullptr, otherwise
+        // it's not passing by both stops and should not be impacted
+
+        if ((!section.empty() && rs.blocked_stop_areas.empty())
+            || (!section.empty() && blocked_sa_sequence_matching(blocked_sa_uri_sequence.second, vj, section))) {
+            // Once we know the line section is part of the vj we compute the vp for the adapted_vj
+            nt::ValidityPattern new_vp{vj.validity_patterns[rt_level]->beginning_date};
+            for (const auto& period : impact.application_periods) {
+                // get the vp of the section
+                new_vp.days |= vj.get_vp_for_section(section, rt_level, period).days;
+            }
+            // If there is effective days for the adapted vp we're keeping it
+            if (!new_vp.days.none()) {
+                LOG4CPLUS_TRACE(log, "vj " << vj.uri << " is affected, keeping it.");
+                new_vp.days >>= vj.shift;
+                vj_vp_pairs.emplace_back(vj.uri, new_vp, std::move(section));
+            }
+        }
+        return true;
+    };
+
     for (const auto* route : routes) {
-        if (!is_route_to_impact_content_sa_list(blocked_sa_uri_sequence, route->stop_area_list)) {
+        if (!is_route_to_impact_content_sa_list(blocked_sa_uri_sequence.first, route->stop_area_list)) {
             continue;
         }
 
         // Loop on each vj
-        route->for_each_vehicle_journey([&](const nt::VehicleJourney& vj) {
-            /*
-             * Pre-filtering by validity pattern, which allows us to check if the vj is impacted quickly
-             *
-             * Since the validity pattern runs only by day not by hour, we'll compute in detail to
-             * check if the vj is really impacted or not.
-             *
-             * */
-            if ((vj.validity_patterns[rt_level]->days & impact_vp.days).none()) {
-                return true;
-            }
-
-            // Filtering each journey to see if it's impacted by the section.
-            auto section = vj.get_sections_ranks(rs.start_point, rs.end_point);
-            // If the vj pass by both stops both elements will be different than nullptr, otherwise
-            // it's not passing by both stops and should not be impacted
-
-            if ((!section.empty() && rs.blocked_stop_areas.empty())
-                || (!section.empty() && blocked_sa_sequence_matching(blocked_sa_uri_sequence, vj, section))) {
-                // Once we know the line section is part of the vj we compute the vp for the adapted_vj
-                nt::ValidityPattern new_vp{vj.validity_patterns[rt_level]->beginning_date};
-                for (const auto& period : impact.application_periods) {
-                    // get the vp of the section
-                    new_vp.days |= vj.get_vp_for_section(section, rt_level, period).days;
-                }
-                // If there is effective days for the adapted vp we're keeping it
-                if (!new_vp.days.none()) {
-                    LOG4CPLUS_TRACE(log, "vj " << vj.uri << " is affected, keeping it.");
-                    new_vp.days >>= vj.shift;
-                    vj_vp_pairs.emplace_back(vj.uri, new_vp, std::move(section));
-                }
-            }
-            return true;
-        });
+        route->for_each_vehicle_journey(apply_impacts_on_vj);
     }
     return vj_vp_pairs;
 }
 
 // convert URI SA rail section into ordered list
-BlockedSAList create_blocked_sa_sequence(const RailSection& rs) {
+std::pair<BlockedSAList, ConcatenateBlockedSASequence> create_blocked_sa_sequence(const RailSection& rs) {
     BlockedSAList blocked_sa_uri_sequence;
 
     if (rs.start_point == nullptr || rs.end_point == nullptr) {
-        return blocked_sa_uri_sequence;
+        return std::make_pair(blocked_sa_uri_sequence, "");
     }
 
     // add start_point SA
@@ -277,16 +279,20 @@ BlockedSAList create_blocked_sa_sequence(const RailSection& rs) {
     if (blocked_sa_uri_sequence.rbegin() != blocked_sa_uri_sequence.rend()) {
         blocked_sa_uri_sequence.insert(std::make_pair(blocked_sa_uri_sequence.rbegin()->first + 1, rs.end_point->uri));
     }
-    return blocked_sa_uri_sequence;
+    std::string concatenate_bsa_uri_sequence_string = "";
+    for (const auto bsa : blocked_sa_uri_sequence) {
+        concatenate_bsa_uri_sequence_string += bsa.second;
+    }
+    return std::make_pair(blocked_sa_uri_sequence, concatenate_bsa_uri_sequence_string);
 }
 
 // Only check if all blocked SA are contained inside route
 bool is_route_to_impact_content_sa_list(const BlockedSAList& blocked_sa_uri_sequence,
                                         const boost::container::flat_set<StopArea*>& stop_area_list) {
-    for (const auto sa : blocked_sa_uri_sequence) {
+    for (const auto& sa : blocked_sa_uri_sequence) {
         std::string bsa_uri = sa.second;
         auto result = std::find_if(stop_area_list.begin(), stop_area_list.end(),
-                                   [bsa_uri](const auto& sa) { return sa->uri == bsa_uri; });
+                                   [&bsa_uri](const auto& sa) { return sa->uri == bsa_uri; });
         if (result == stop_area_list.end()) {
             return false;
         }
@@ -295,20 +301,15 @@ bool is_route_to_impact_content_sa_list(const BlockedSAList& blocked_sa_uri_sequ
 }
 
 // Check if the SA sequence (start point - blocked sa list - end point) match with the founded sa list
-bool blocked_sa_sequence_matching(const BlockedSAList& blocked_sa_uri_sequence,
+bool blocked_sa_sequence_matching(const ConcatenateBlockedSASequence& concatenate_bsa_uri_sequence_string,
                                   const nt::VehicleJourney& vj,
                                   const std::set<RankStopTime>& st_rank_list) {
-    if ((!blocked_sa_uri_sequence.empty() || !st_rank_list.empty())
-        || (blocked_sa_uri_sequence.size() == st_rank_list.size())) {
+    if (!concatenate_bsa_uri_sequence_string.empty() || !st_rank_list.empty()) {
         std::string st_meta_string = "";
         for (const auto sp : st_rank_list) {
             st_meta_string += vj.stop_time_list[sp.val].stop_point->stop_area->uri;
         }
-        std::string bsa_meta_string = "";
-        for (const auto bsa : blocked_sa_uri_sequence) {
-            bsa_meta_string += bsa.second;
-        }
-        if (st_meta_string == bsa_meta_string) {
+        if (st_meta_string == concatenate_bsa_uri_sequence_string) {
             return true;
         }
     }
@@ -627,13 +628,13 @@ std::set<StopPoint*> get_stop_points_section(const RailSection& rs) {
     }
     auto blocked_sa_uri_sequence = create_blocked_sa_sequence(rs);
     for (const auto* route : routes) {
-        if (!is_route_to_impact_content_sa_list(blocked_sa_uri_sequence, route->stop_area_list)) {
+        if (!is_route_to_impact_content_sa_list(blocked_sa_uri_sequence.first, route->stop_area_list)) {
             continue;
         }
         route->for_each_vehicle_journey([&](const VehicleJourney& vj) {
             auto ranks = vj.get_sections_ranks(rs.start_point, rs.end_point);
             if ((!ranks.empty() && rs.blocked_stop_areas.empty())
-                || (!ranks.empty() && blocked_sa_sequence_matching(blocked_sa_uri_sequence, vj, ranks))) {
+                || (!ranks.empty() && blocked_sa_sequence_matching(blocked_sa_uri_sequence.second, vj, ranks))) {
                 return true;
             }
             for (const auto& rank : ranks) {

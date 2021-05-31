@@ -296,7 +296,7 @@ std::set<RankStopTime> VehicleJourney::get_sections_ranks(const StopArea* start_
      * */
     std::set<RankStopTime> res;
 
-    if (start_sa == nullptr || start_sa == nullptr) {
+    if (start_sa == nullptr || end_sa == nullptr) {
         return res;
     }
 

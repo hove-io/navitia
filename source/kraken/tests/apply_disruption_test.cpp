@@ -3548,7 +3548,7 @@ BOOST_AUTO_TEST_CASE(classic_impact_with_rail_section) {
      A ------ B ------ C ------ D ------ E ------ F   |
                    |        |                 |       |
                    ------------------------------------
-                  The rail is broken between C and D.
+                  The rail is broken between C and F.
                   Oh my gosh !
                   Trains are stopped at C and the pick-up is forbidden
 
@@ -3640,7 +3640,7 @@ BOOST_AUTO_TEST_CASE(classic_impact_with_long_rail_section) {
      A ------ B ------ C ------ D ------ E ------ F   |
                    |        |                 |       |
                    ------------------------------------
-                  The rail is broken between C and D.
+                  The rail is broken between C and F.
                   Oh my gosh !
                   Trains are stopped at C and the pick-up is forbidden
 
@@ -3733,7 +3733,7 @@ BOOST_AUTO_TEST_CASE(rail_section_impact_with_wrong_blocked_sa) {
      A ------ B ------ C ------ D ------ E ------ F   |
                    |        |                 |       |
                    ------------------------------------
-                  The rail is broken between C and D.
+                  The rail is broken between C and F.
                   Oh my gosh !
                   Trains are stopped at C and the pick-up is forbidden
 
@@ -3790,7 +3790,7 @@ BOOST_AUTO_TEST_CASE(rail_section_impact_with_unknown_blocked_sa) {
      A ------ B ------ C ------ D ------ E ------ F   |
                    |        |                 |       |
                    ------------------------------------
-                  The rail is broken between C and D.
+                  The rail is broken between C and F.
                   Oh my gosh !
                   Trains are stopped at C and the pick-up is forbidden
 
@@ -3847,7 +3847,7 @@ BOOST_AUTO_TEST_CASE(rail_section_impact_with_unknown_blocked_sa) {
      A ------ B ------ C ------ D ------ E ------ F   |
                    |        |                 |       |
                    ------------------------------------
-                  The rail is broken between C and D.
+                  The rail is broken between C and F.
                   Oh my gosh !
                   Trains are stopped at C and the pick-up is forbidden
 
@@ -4081,6 +4081,7 @@ BOOST_AUTO_TEST_CASE(complex_impact_with_rail_section) {
     BOOST_REQUIRE_EQUAL(b.get<nt::StopPoint>("stopB")->get_impacts().size(), 2);
     BOOST_REQUIRE_EQUAL(b.get<nt::StopPoint>("stopC")->get_impacts().size(), 2);
     BOOST_REQUIRE_EQUAL(b.get<nt::StopPoint>("stopD")->get_impacts().size(), 2);
+    BOOST_REQUIRE_EQUAL(b.get<nt::StopPoint>("stopE")->get_impacts().size(), 1);
     BOOST_REQUIRE_EQUAL(b.get<nt::StopPoint>("stopM")->get_impacts().size(), 1);
     BOOST_REQUIRE_EQUAL(b.get<nt::StopPoint>("stopN")->get_impacts().size(), 1);
     BOOST_REQUIRE_EQUAL(b.get<nt::StopPoint>("stopO")->get_impacts().size(), 1);

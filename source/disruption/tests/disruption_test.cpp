@@ -1167,7 +1167,7 @@ struct DisruptedNetworkWithRailSection {
           }) {
         auto period = time_period(since, until);
 
-        // now applying disruption on a 'Line Section'
+        // now applying disruption on a 'Rail Section'
         navitia::apply_disruption(b.disrupt(nt::RTLevel::Adapted, "disrup_rail_section")
                                       .tag("TAG_RAIL_SECTION")
                                       .impact()
