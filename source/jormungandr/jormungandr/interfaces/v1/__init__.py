@@ -45,7 +45,7 @@ def add_common_status(response, instance):
     response['status']["is_open_data"] = instance.is_open_data
     response['status']["is_open_service"] = instance.is_free
     response['status']['realtime_proxies'] = []
-    for realtime_proxy in instance.realtime_proxy_manager.realtime_proxies.values():
+    for realtime_proxy in instance.realtime_proxy_manager._realtime_proxies_legacy.values():
         response['status']['realtime_proxies'].append(realtime_proxy.status())
 
     response['status']['street_networks'] = []
