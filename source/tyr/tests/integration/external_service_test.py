@@ -30,6 +30,7 @@
 from __future__ import absolute_import, print_function, division, unicode_literals
 from tyr import app
 from navitiacommon import models
+from navitiacommon.constants import ENUM_EXTERNAL_SERVICE
 from tests.check_utils import api_get, api_delete, api_put
 import pytest
 import ujson
@@ -56,14 +57,27 @@ def default_external_service_config():
             "circuit_breaker_max_fail": 2,
             "circuit_breaker_reset_timeout": 30,
         }
+        external_service_3 = models.ExternalService('Timeo_Horizon')
+        external_service_3.klass = "jormungandr.realtime_schedule.timeo.Timeo"
+        external_service_3.navitia_service = "realtime_proxies"
+        external_service_3.args = {
+            "service_url": "http://my_external_service.com",
+            "timeout": 5,
+            "timezone": "aa",
+            "destination_id_tag": "",
+            "service_args": {'serviceID': "10", 'EntityID': "658", 'Media': "spec_navit_comp"},
+        }
         models.db.session.add(external_service_1)
         models.db.session.add(external_service_2)
+        models.db.session.add(external_service_3)
         models.db.session.commit()
         # refresh and detach the objets from the db before returning them
         models.db.session.refresh(external_service_1)
         models.db.session.refresh(external_service_2)
+        models.db.session.refresh(external_service_3)
         models.db.session.expunge(external_service_1)
         models.db.session.expunge(external_service_2)
+        models.db.session.expunge(external_service_3)
         # Create instance
         instance = models.Instance('default')
         models.db.session.add(instance)
@@ -71,11 +85,12 @@ def default_external_service_config():
         models.db.session.refresh(instance)
         models.db.session.expunge(instance)
 
-        yield instance, external_service_1, external_service_2
+        yield instance, external_service_1, external_service_2, external_service_3
 
         models.db.session.delete(instance)
         models.db.session.delete(external_service_1)
         models.db.session.delete(external_service_2)
+        models.db.session.delete(external_service_3)
         models.db.session.commit()
 
 
@@ -90,10 +105,10 @@ def test_external_service_get(default_external_service_config):
     """
     Test that the list of services with their info is correctly returned when queried
     """
-    _, external_service_1, external_service_2 = default_external_service_config
+    _, external_service_1, external_service_2, external_service_3 = default_external_service_config
     resp = api_get('/v0/external_services')
     assert "external_services" in resp
-    assert len(resp['external_services']) == 2
+    assert len(resp['external_services']) == 3
 
     resp = api_get('/v0/external_services/forseti_free_floatings')
     assert "external_services" in resp
@@ -103,6 +118,15 @@ def test_external_service_get(default_external_service_config):
     assert resp['external_services'][0]['navitia_service'] == external_service_1.navitia_service
     assert resp['external_services'][0]['klass'] == external_service_1.klass
     assert resp['external_services'][0]['args'] == external_service_1.args
+    assert not resp['external_services'][0]['discarded']
+
+    resp = api_get('/v0/external_services/Timeo_Horizon')
+    assert "external_services" in resp
+    assert len(resp['external_services']) == 1
+    assert resp['external_services'][0]['id'] == external_service_3.id
+    assert resp['external_services'][0]['navitia_service'] == external_service_3.navitia_service
+    assert resp['external_services'][0]['klass'] == external_service_3.klass
+    assert resp['external_services'][0]['args'] == external_service_3.args
     assert not resp['external_services'][0]['discarded']
 
 
@@ -135,7 +159,7 @@ def test_external_service_put(default_external_service_config):
 
     resp = api_get('/v0/external_services')
     assert 'external_services' in resp
-    assert len(resp['external_services']) == 3
+    assert len(resp['external_services']) == 4
 
     # Update existing service
     service['args']['service_url'] = "http://my_external_service_free_floating_update.com"
@@ -156,6 +180,46 @@ def test_external_service_put(default_external_service_config):
         resp['external_services'][0]['args']['service_url']
         == "http://my_external_service_free_floating_update.com"
     )
+
+
+def test_realtime_proxies_external_service_put(default_external_service_config):
+    """
+    Test that a service is correctly created/updated in db and the info returned when queried
+    """
+
+    service = {
+        "klass": "jormungandr.realtime_schedule.timeo.Timeo",
+        "navitia_service": "realtime_proxies",
+        "args": {
+            "service_url": "http://my_external_service_free_floating.com",
+            "timeout": 5,
+            "timezone": "aa",
+            "destination_id_tag": "",
+            "service_args": {'serviceID': "10", 'EntityID': "658", 'Media': "spec_navit_comp"},
+        },
+    }
+    resp, status = api_put(
+        'v0/external_services/Timeo_Amelys',
+        data=ujson.dumps(service),
+        content_type='application/json',
+        check=False,
+    )
+    assert status == 201
+    assert 'external_services' in resp
+    assert len(resp['external_services']) == 1
+
+    # Update existing service
+    service['args']['service_url'] = "http://new_timeo_url.com"
+    resp = api_put(
+        'v0/external_services/Timeo_Amelys', data=ujson.dumps(service), content_type='application/json'
+    )
+    assert 'external_services' in resp
+    assert len(resp['external_services']) == 1
+
+    resp = api_get('/v0/external_services/Timeo_Amelys')
+    assert 'external_services' in resp
+    assert len(resp['external_services']) == 1
+    assert resp['external_services'][0]['args']['service_url'] == "http://new_timeo_url.com"
 
 
 def test_external_service_put_without_id():
@@ -183,23 +247,28 @@ def test_external_service_delete(default_external_service_config):
     """
     resp = api_get('/v0/external_services')
     assert 'external_services' in resp
-    assert len(resp['external_services']) == 2
+    assert len(resp['external_services']) == 3
 
     _, status_code = api_delete('v0/external_services/forseti_free_floatings', check=False, no_json=True)
     assert status_code == 204
 
     resp = api_get('/v0/external_services')
     assert 'external_services' in resp
-    assert len(resp['external_services']) == 1
+    assert len(resp['external_services']) == 2
 
     resp = api_get('/v0/external_services/forseti_free_floatings')
     assert 'external_services' in resp
     assert len(resp['external_services']) == 1
     assert resp['external_services'][0]['discarded']
 
+    resp = api_get('/v0/external_services/Timeo_Horizon')
+    assert 'external_services' in resp
+    assert len(resp['external_services']) == 1
+    assert not resp['external_services'][0]['discarded']
+
 
 def test_associate_instance_external_service(default_external_service_config):
-    instance, external_service_1, external_service_2 = default_external_service_config
+    instance, external_service_1, external_service_2, external_service_3 = default_external_service_config
 
     # Associate one external service
     resp = api_put('/v1/instances/{}?external_services={}'.format(instance.name, external_service_1.id))
@@ -241,6 +310,22 @@ def test_associate_instance_external_service(default_external_service_config):
     assert len(resp['instances']) == 1
     assert len(resp['instances'][0]['external_services']) == 1
     assert resp['instances'][0]['external_services'][0]['id'] == external_service_1.id
+
+    # associate Timeo service
+    resp = api_put(
+        '/v1/instances/{}?external_services={}&external_services={}&external_services={}'.format(
+            instance.name, external_service_1.id, external_service_2.id, external_service_3.id
+        )
+    )
+    assert len(resp["external_services"]) == 3
+
+    # Update associate without Timeo service
+    resp = api_put(
+        '/v1/instances/{}?external_services={}&external_services={}'.format(
+            instance.name, external_service_1.id, external_service_2.id
+        )
+    )
+    assert len(resp["external_services"]) == 2
 
 
 def test_external_service_schema():
@@ -292,4 +377,4 @@ def test_external_service_schema():
         "navitia_service": "navitia_service",
     }
     massage = send_and_check('external_service_1', corrupted_provider)
-    assert "'{}' is not one of ['free_floatings', 'vehicle_occupancies']".format('navitia_service') in massage
+    assert "'{}' is not one of {}".format('navitia_service', list(ENUM_EXTERNAL_SERVICE)) in massage

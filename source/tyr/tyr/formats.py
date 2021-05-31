@@ -27,6 +27,8 @@
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 
+from navitiacommon.constants import ENUM_EXTERNAL_SERVICE
+
 
 def parse_error(error):
     res = None
@@ -124,12 +126,11 @@ ridesharing_service_format = {
     'required': ['klass', 'args'],
 }
 
-navitia_service_type = ["free_floatings", "vehicle_occupancies"]
 external_service_format = {
     'type': 'object',
     'properties': {
         'klass': {'type': 'string'},
-        'navitia_service': {'enum': navitia_service_type},
+        'navitia_service': {'enum': list(ENUM_EXTERNAL_SERVICE)},
         'args': {
             'type': 'object',
             'properties': {
