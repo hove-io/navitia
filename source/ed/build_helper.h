@@ -240,6 +240,12 @@ struct Impacter {
                               const std::string& end_stop_uri,
                               const std::vector<std::string>& route_uris,
                               nt::PT_Data& pt_data);  // add section in informed_entities
+    Impacter& on_rail_section(const std::string& line_uri,
+                              const std::string& start_stop_uri,
+                              const std::string& end_stop_uri,
+                              const std::vector<std::pair<std::string, uint32_t>>& blocked_stop_areas,
+                              const std::vector<std::string>& route_uris,
+                              nt::PT_Data& pt_data);
     Impacter& msg(nt::disruption::Message);
     Impacter& msg(const std::string& text, nt::disruption::ChannelType = nt::disruption::ChannelType::email);
     Impacter& publish(const boost::posix_time::time_period& p);

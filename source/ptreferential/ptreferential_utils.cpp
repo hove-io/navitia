@@ -103,6 +103,9 @@ struct VariantVisitor : boost::static_visitor<pair_indexes> {
     pair_indexes operator()(const type::disruption::LineSection /*unused*/&) {
         return {type::Type_e::Unknown, Indexes{}};
     }
+    pair_indexes operator()(const type::disruption::RailSection /*unused*/&) {
+        return {type::Type_e::Unknown, Indexes{}};
+    }
     pair_indexes operator()(const type::Line* /*unused*/) { return {type::Type_e::Line, Indexes{}}; }
     pair_indexes operator()(const type::Route* /*unused*/) { return {type::Type_e::Route, Indexes{}}; }
     pair_indexes operator()(const type::MetaVehicleJourney* meta_vj) {
