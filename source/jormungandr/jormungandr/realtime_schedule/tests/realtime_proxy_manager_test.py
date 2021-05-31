@@ -179,10 +179,15 @@ All_realtime_proxies = [
         "id": "clever_age_TBC",
         "args": {
             "timezone": "Europe/Paris",
-            "service_url": "https://clever_age.come",
+            "service_url": "https://clever_age.com",
             "timeout": 1,
             "service_args": {"X-Keolis-Api-Version": "1.0", "X-Keolis-Api-Key": "KISIO_2021"},
         },
+    },
+    {
+        "class": "jormungandr.realtime_schedule.siri_lite.SiriLite",
+        "id": "siri_stif",
+        "args": {"service_url": "https://siri_stif.com", "timeout": 1},
     },
 ]
 
@@ -199,16 +204,14 @@ def mock_get_realtime_proxies_from_db():
             "service_args": {"X-Keolis-Api-Version": "1.0", "X-Keolis-Api-Key": "KISIO_2021"},
         },
     }
-    tmp_es = ExternalService(id='clever_age_TBC', json=json)
-    rt_proxies["clever_age_TBC"] = tmp_es
+    rt_proxies["clever_age_TBC"] = ExternalService(id='clever_age_TBC', json=json)
 
     json = {
         "navitia_service": 'realtime_proxies',
         "klass": 'jormungandr.realtime_schedule.sytral.Sytral',
         "args": {"service_url": "http://sytralrt.com", "timeout": 10, "object_id_tag": "source"},
     }
-    tmp_es = ExternalService(id='SytralRT', json=json)
-    rt_proxies["SytralRT"] = tmp_es
+    rt_proxies["SytralRT"] = ExternalService(id='SytralRT', json=json)
 
     json = {
         "navitia_service": 'realtime_proxies',
@@ -221,16 +224,21 @@ def mock_get_realtime_proxies_from_db():
             "destination_id": None,
         },
     }
-    tmp_es = ExternalService(id='Timeo_Amelys', json=json)
-    rt_proxies["Timeo_Amelys"] = tmp_es
+    rt_proxies["Timeo_Amelys"] = ExternalService(id='Timeo_Amelys', json=json)
 
     json = {
         "navitia_service": 'realtime_proxies',
         "klass": 'jormungandr.realtime_schedule.siri.Siri',
         "args": {"requestor_ref": "AA_Siri_TAO", "service_url": "http://siri.com", "timeout": 1},
     }
-    tmp_es = ExternalService(id='Siri_TAO', json=json)
-    rt_proxies["Siri_TAO"] = tmp_es
+    rt_proxies["Siri_TAO"] = ExternalService(id='Siri_TAO', json=json)
+
+    json = {
+        "navitia_service": 'realtime_proxies',
+        "klass": 'jormungandr.realtime_schedule.siri_lite.SiriLite',
+        "args": {"service_url": "https://siri_stif.com", "timeout": 1},
+    }
+    rt_proxies["siri_stif"] = ExternalService(id='siri_stif', json=json)
 
     return list(rt_proxies.values())
 
@@ -240,14 +248,14 @@ def multi_proxy_conf_file_and_database_test():
         All_realtime_proxies, MockInstance(), providers_getter=mock_get_realtime_proxies_from_db
     )
     assert len(manager._realtime_proxies) == 0
-    assert len(manager._realtime_proxies_legacy) == 4
-    for rt_proxy in ["clever_age_TBC", "SytralRT", "Timeo_Amelys", "Siri_TAO"]:
+    assert len(manager._realtime_proxies_legacy) == 5
+    for rt_proxy in ["clever_age_TBC", "SytralRT", "Timeo_Amelys", "Siri_TAO", "siri_stif"]:
         assert rt_proxy in manager._realtime_proxies_legacy
 
     manager.update_config()
 
-    assert len(manager._realtime_proxies) == 4
-    for rt_proxy in ["clever_age_TBC", "SytralRT", "Timeo_Amelys", "Siri_TAO"]:
+    assert len(manager._realtime_proxies) == 5
+    for rt_proxy in ["clever_age_TBC", "SytralRT", "Timeo_Amelys", "Siri_TAO", "siri_stif"]:
         assert rt_proxy in manager._realtime_proxies
 
     assert len(manager._realtime_proxies_legacy) == 0
