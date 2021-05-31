@@ -32,6 +32,7 @@ from __future__ import absolute_import, print_function, unicode_literals, divisi
 from importlib import import_module
 import logging
 import datetime
+from copy import deepcopy
 
 
 class RealtimeProxyManager(object):
@@ -160,3 +161,8 @@ class RealtimeProxyManager(object):
     def get(self, proxy_name):
         self.update_config()
         return self._realtime_proxies.get(proxy_name, self._realtime_proxies_legacy.get(proxy_name))
+
+    def get_all_realtime_proxies(self):
+        realtime_proxies = deepcopy(self._realtime_proxies)
+        realtime_proxies.update(self._realtime_proxies_legacy)
+        return realtime_proxies
