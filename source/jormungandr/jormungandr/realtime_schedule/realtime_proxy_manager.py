@@ -163,6 +163,4 @@ class RealtimeProxyManager(object):
         return self._realtime_proxies.get(proxy_name, self._realtime_proxies_legacy.get(proxy_name))
 
     def get_all_realtime_proxies(self):
-        realtime_proxies = deepcopy(self._realtime_proxies)
-        realtime_proxies.update(self._realtime_proxies_legacy)
-        return realtime_proxies
+        return list(self._realtime_proxies.values()) + list(self._realtime_proxies_legacy.values())

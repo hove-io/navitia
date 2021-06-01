@@ -215,7 +215,7 @@ class Instance(object):
         :return: a callable query of external services associated to the current instance in db
         """
         result = self._get_models().external_services
-        return [res for res in result if res.navitia_service != 'realtime_proxies']
+        return [res for res in result if res.navitia_service in ['free_floatings', 'vehicle_occupancies']]
 
     def get_realtime_proxies_from_db(self):
         """
