@@ -200,6 +200,18 @@ boost::optional<nt::disruption::LineSection> make_line_section(const chaos::PtOb
     return line_section;
 }
 
+boost::optional<nt::disruption::RailSection> make_rail_section(const chaos::PtObject& chaos_section,
+                                                               nt::PT_Data& pt_data) {
+    if (!chaos_section.has_pt_rail_section()) {
+        LOG4CPLUS_WARN(log4cplus::Logger::getInstance("log"), "fill_disruption_from_chaos: RailSection invalid!");
+        return boost::none;
+    }
+    const auto& pb_section = chaos_section.pt_rail_section();
+    nt::disruption::RailSection rail_section;
+
+    return rail_section;
+}
+
 static std::vector<nt::disruption::PtObj> make_pt_objects(
     const google::protobuf::RepeatedPtrField<chaos::PtObject>& chaos_pt_objects,
     nt::PT_Data& pt_data) {
@@ -220,6 +232,11 @@ static std::vector<nt::disruption::PtObj> make_pt_objects(
             case chaos::PtObject_Type_line_section:
                 if (auto line_section = make_line_section(chaos_pt_object, pt_data)) {
                     res.emplace_back(*line_section);
+                }
+                break;
+            case chaos::PtObject_Type_rail_section:
+                if (auto rail_section = make_rail_section(chaos_pt_object, pt_data)) {
+                    res.emplace_back(*rail_section);
                 }
                 break;
             case chaos::PtObject_Type_line:
