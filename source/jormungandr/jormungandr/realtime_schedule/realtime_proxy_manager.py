@@ -146,9 +146,9 @@ class RealtimeProxyManager(object):
             )
             self._realtime_proxies_last_update[rt_proxy.id] = rt_proxy.last_update()
         except Exception:
-            self.logger.exception('impossible to initialize realtime proxy')
+            self.logger.exception('impossible to update realtime proxy {}'.format(rt_proxy.id))
 
-        # If the realtime proxy added in db is also defined in legacy, delete it.
+        # If a legacy realtime proxy exists in db, remove it from self._realtime_proxies_legacy
         realtime_proxies_from_db = list(self._realtime_proxies.values())
         realtime_proxies_legacy = self._realtime_proxies_legacy
         if realtime_proxies_legacy and realtime_proxies_from_db:
