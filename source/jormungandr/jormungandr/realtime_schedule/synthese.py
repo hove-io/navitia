@@ -345,3 +345,6 @@ class Synthese(RealtimeProxy):
             log.info('impossible to find a valid passage for {} (passage = {})'.format(route_point, passages))
 
         return None
+
+    def __eq__(self, other):
+        return self.rt_system_id == other.rt_system_id

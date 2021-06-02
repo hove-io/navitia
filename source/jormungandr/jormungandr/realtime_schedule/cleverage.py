@@ -192,3 +192,6 @@ class Cleverage(RealtimeProxy):
                 'reset_timeout': self.breaker.reset_timeout,
             },
         }
+
+    def __eq__(self, other):
+        return self.rt_system_id == other.rt_system_id

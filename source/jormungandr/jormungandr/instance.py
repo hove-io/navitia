@@ -161,8 +161,9 @@ class Instance(object):
         self.ptref = ptref.PtRef(self)
 
         self.schedule = schedule.MixedSchedule(self)
+        providers_getter = None if disable_database else self.get_realtime_proxies_from_db
         self.realtime_proxy_manager = realtime_schedule.RealtimeProxyManager(
-            realtime_proxies_configuration, self
+            realtime_proxies_configuration, self, providers_getter
         )
 
         self._autocomplete_type = autocomplete_type
@@ -213,7 +214,15 @@ class Instance(object):
         """
         :return: a callable query of external services associated to the current instance in db
         """
-        return self._get_models().external_services
+        result = self._get_models().external_services
+        return [res for res in result if res.navitia_service in ['free_floatings', 'vehicle_occupancies']]
+
+    def get_realtime_proxies_from_db(self):
+        """
+        :return: a callable query of external services associated to the current instance in db
+        """
+        result = self._get_models().external_services
+        return [res for res in result if res.navitia_service == 'realtime_proxies']
 
     @property
     def autocomplete(self):

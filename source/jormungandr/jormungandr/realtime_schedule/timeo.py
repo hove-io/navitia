@@ -350,3 +350,6 @@ class Timeo(RealtimeProxy):
         ):
             return stop_point.stop_area.label
         return default_value
+
+    def __eq__(self, other):
+        return self.rt_system_id == other.rt_system_id
