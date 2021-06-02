@@ -28,10 +28,8 @@
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 from __future__ import absolute_import, print_function, division
-import datetime
 import mock
 import requests_mock
-from time import sleep
 from jormungandr.realtime_schedule.timeo import Timeo
 from jormungandr.realtime_schedule.realtime_proxy import RealtimeProxyError
 import validators
@@ -39,6 +37,13 @@ from jormungandr.realtime_schedule.tests.utils import MockRoutePoint, _timestamp
 from jormungandr.tests.utils_test import MockRequests
 from pytest import raises
 from six.moves import range
+from jormungandr import ptref
+from navitiacommon import type_pb2
+
+
+class MockInstance:
+    def __init__(self):
+        self.ptref = ptref.PtRef(self)
 
 
 class MockResponse:
@@ -500,3 +505,36 @@ def status_test():
     )
     status = timeo.status()
     assert status['id'] == u'tata-é$~#@"*!\'`§èû'
+
+
+def get_direction_name_without_destination_id_tag_test():
+    timeo = Timeo(
+        id=u"tata-é$~#@\"*!'`§èû",
+        timezone='UTC',
+        service_url='http://bob.com/',
+        service_args={'a': 'bobette', 'b': '12'},
+    )
+    result = timeo._get_direction_name("line_uri", "object_code", "default_value")
+    assert result == "default_value"
+
+
+def get_direction_name_with_destination_id_tag_test():
+
+    timeo = Timeo(
+        id=u"tata-é$~#@\"*!'`§èû",
+        timezone='UTC',
+        service_url='http://bob.com/',
+        service_args={'a': 'bobette', 'b': '12'},
+        destination_id_tag="source",
+        instance=MockInstance(),
+    )
+    stop_point = type_pb2.PtObject()
+    stop_point.embedded_type = type_pb2.STOP_POINT
+    stop_point.stop_area.label = 'destination de Bob'
+
+    with mock.patch(
+        'jormungandr.ptref.PtRef.get_stop_point',
+        lambda PtRef, line_uri, destination_id_tag, object_code: stop_point,
+    ):
+        result = timeo._get_direction_name("line_uri", "object_code", "default_value")
+        assert result == "destination de Bob"
