@@ -35,7 +35,7 @@ from jormungandr.transient_socket import TransientSocket
 from jormungandr.fallback_modes import FallbackModes
 from jormungandr.street_network.kraken import Kraken
 from jormungandr.utils import get_pt_object_coord
-from jormungandr.street_network.utils import make_speed_switcher
+from jormungandr.street_network.utils import make_speed_switcher, crowfly_distance_between
 
 from navitiacommon import response_pb2, type_pb2
 from zmq import green as zmq
@@ -148,6 +148,22 @@ class Asgard(TransientSocket, Kraken):
         direct_path_type,
         request_id,
     ):
+        # if the crowfly distance between origin and destination is too large, there is no need to call kraken
+        crowfly_distance = crowfly_distance_between(
+            get_pt_object_coord(pt_object_origin), get_pt_object_coord(pt_object_destination)
+        )
+
+        # if the crowfly distance between origin and destination is
+        # bigger than max_{mode}_direct_path_distance don't compute direct_path
+        if crowfly_distance > int(request['max_{mode}_direct_path_distance'.format(mode=mode)]):
+            return response_pb2.Response()
+
+        if (
+            crowfly_distance / float(request['{mode}_speed'.format(mode=mode)])
+            > request['max_{mode}_direct_path_duration'.format(mode=mode)]
+        ):
+            return response_pb2.Response()
+
         req = self._create_direct_path_request(
             mode, pt_object_origin, pt_object_destination, fallback_extremity, request
         )
