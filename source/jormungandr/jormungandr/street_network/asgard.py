@@ -148,7 +148,7 @@ class Asgard(TransientSocket, Kraken):
         direct_path_type,
         request_id,
     ):
-        # if the crowfly distance between origin and destination is too large, there is no need to call kraken
+        # if the crowfly distance between origin and destination is too large, there is no need to call asgard
         crowfly_distance = crowfly_distance_between(
             get_pt_object_coord(pt_object_origin), get_pt_object_coord(pt_object_destination)
         )
