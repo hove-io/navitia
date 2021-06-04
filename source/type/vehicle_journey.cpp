@@ -295,12 +295,17 @@ std::set<RankStopTime> VehicleJourney::get_sections_ranks(const StopArea* start_
      *  - s1/s2/s5 from the 11th to the 15th
      * */
     std::set<RankStopTime> res;
+
+    if (start_sa == nullptr || end_sa == nullptr) {
+        return res;
+    }
+
     auto section_start_rank = boost::make_optional(false, RankStopTime{});
     bool section_starting = false, section_ending = false;
     const auto* base_vj = this->get_corresponding_base();
     const auto* vj = base_vj ? base_vj : this;
     for (const auto& st : vj->stop_time_list) {
-        // The line section is using stop_areas so we make sure we have one
+        // The line section and rail section are using stop_areas so we make sure we have one
         if (!st.stop_point || !st.stop_point->stop_area) {
             continue;
         }

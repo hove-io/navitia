@@ -1151,3 +1151,55 @@ BOOST_FIXTURE_TEST_CASE(traffic_report_stop_area_since_until, StopAreaTrafficRep
     disruption::traffic_reports(pb_creator, *b.data, 1, 25, 0, "", {}, "20180429T060000"_dt, "20180430T060000"_dt);
     BOOST_CHECK_EQUAL(pb_creator.impacts.size(), 0);
 }
+
+struct DisruptedNetworkWithRailSection {
+    ed::builder b;
+    navitia::PbCreator pb_creator;
+    const boost::posix_time::ptime since = "20180102T060000"_dt;
+    const boost::posix_time::ptime until = "20180103T060000"_dt;
+
+    DisruptedNetworkWithRailSection()
+        : b("20180101", [](ed::builder& b) {
+              b.vj_with_network("network_1", "line_1").route("route_1")("sp1_1", "08:10"_t)("sp1_2", "08:20"_t);
+              b.vj_with_network("network_2", "line_2").route("route_2")("sp2_1", "08:10"_t)("sp2_2", "08:20"_t);
+              b.vj_with_network("network_3", "line_3")
+                  .route("route_3")("sp3_1", "08:10"_t)("sp3_2", "08:20"_t)("sp3_3", "08:30"_t)("sp3_4", "08:40"_t);
+          }) {
+        auto period = time_period(since, until);
+
+        // now applying disruption on a 'Rail Section'
+        navitia::apply_disruption(b.disrupt(nt::RTLevel::Adapted, "disrup_rail_section")
+                                      .tag("TAG_RAIL_SECTION")
+                                      .impact()
+                                      .severity(nt::disruption::Effect::NO_SERVICE)
+                                      .application_periods(period)
+                                      .publish(period)
+                                      .on_rail_section("line_3", "sp3_2", "sp3_3", {}, {"route_3"}, *b.data->pt_data)
+                                      .get_disruption(),
+                                  *b.data->pt_data, *b.data->meta);
+        pb_creator.init(b.data.get(), since, period);
+    }
+};
+
+/**
+ *   We want to make sure disruption on a rail section works with line_reports
+ */
+BOOST_FIXTURE_TEST_CASE(line_report_on_a_tagged_rail_section, DisruptedNetworkWithRailSection) {
+    disruption::line_reports(pb_creator, *b.data, 1, 25, 0, "", {}, since, until);
+
+    BOOST_CHECK_EQUAL(pb_creator.impacts.size(), 1);
+
+    std::set<std::string> uris = navitia::test::get_impacts_uris(pb_creator.impacts);
+    std::set<std::string> res = {"disrup_rail_section"};
+    BOOST_CHECK_EQUAL_RANGE(res, uris);
+}
+
+BOOST_FIXTURE_TEST_CASE(traffic_report_on_a_tagged_rail_section, DisruptedNetworkWithRailSection) {
+    disruption::traffic_reports(pb_creator, *b.data, 1, 25, 0, "", {}, boost::none, boost::none);
+
+    BOOST_CHECK_EQUAL(pb_creator.impacts.size(), 1);
+
+    std::set<std::string> uris = navitia::test::get_impacts_uris(pb_creator.impacts);
+    std::set<std::string> res = {"disrup_rail_section"};
+    BOOST_CHECK_EQUAL_RANGE(res, uris);
+}

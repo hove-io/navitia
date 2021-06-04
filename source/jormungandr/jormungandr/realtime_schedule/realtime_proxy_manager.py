@@ -31,6 +31,8 @@
 from __future__ import absolute_import, print_function, unicode_literals, division
 from importlib import import_module
 import logging
+import datetime
+from copy import deepcopy
 
 
 class RealtimeProxyManager(object):
@@ -38,7 +40,7 @@ class RealtimeProxyManager(object):
     class managing real-time proxies
     """
 
-    def __init__(self, proxies_configuration, instance=None):
+    def __init__(self, proxies_configuration, instance, providers_getter=None, update_interval=600):
         """
         Read the dict configuration to build realtime proxies
         Each entry contains 3 values:
@@ -46,42 +48,119 @@ class RealtimeProxyManager(object):
             * class: the class (the full python path) handling the proxy
             * args: the argument to forward to the class contructor
         """
-        self.realtime_proxies = {}
-        log = logging.getLogger(__name__)
+        self.logger = logging.getLogger(__name__)
+        self._proxies_configuration = proxies_configuration if proxies_configuration else []
+        self._realtime_proxies_getter = providers_getter
+        self._realtime_proxies = {}
+        self._realtime_proxies_legacy = {}
+        self._realtime_proxies_from_db = {}
+        self._realtime_proxies_last_update = {}
+        self._last_update = datetime.datetime(1970, 1, 1)
+        self._update_interval = update_interval
+        self.instance = instance
 
-        for configuration in proxies_configuration:
+        self.init_realtime_proxies()
+
+    def init_realtime_proxies(self):
+
+        for configuration in self._proxies_configuration:
             try:
                 cls = configuration['class']
                 proxy_id = configuration['id']
             except KeyError:
-                log.warning('impossible to build a realtime proxy, missing mandatory field in configuration')
+                self.logger.warning(
+                    'impossible to build a realtime proxy, missing mandatory field in configuration'
+                )
                 continue
+
             object_id_tag = configuration.get('object_id_tag', proxy_id)
             args = configuration.get('args', {})
 
-            try:
-                if '.' not in cls:
-                    log.warning(
-                        'impossible to build rt proxy {}, wrongly formated class: {}'.format(proxy_id, cls)
-                    )
-                    continue
-
-                module_path, name = cls.rsplit('.', 1)
-                module = import_module(module_path)
-                attr = getattr(module, name)
-            except ImportError:
-                log.warning('impossible to build rt proxy {}, cannot find class: {}'.format(proxy_id, cls))
+            rt_proxy = self._init_class(proxy_id, cls, object_id_tag, args)
+            if not rt_proxy:
                 continue
 
-            try:
-                rt_proxy = attr(
-                    id=proxy_id, object_id_tag=object_id_tag, instance=instance, **args
-                )  # all services must have an ID
-            except TypeError as e:
-                log.warning('impossible to build rt proxy {}, wrong arguments: {}'.format(proxy_id, e))
-                continue
+            self._realtime_proxies_legacy[proxy_id] = rt_proxy
 
-            self.realtime_proxies[proxy_id] = rt_proxy
+    def _init_class(self, proxy_id, cls, object_id_tag, args):
+        try:
+            if '.' not in cls:
+                self.logger.warning(
+                    'impossible to build rt proxy {}, wrongly formated class: {}'.format(proxy_id, cls)
+                )
+                return None
+
+            module_path, name = cls.rsplit('.', 1)
+            module = import_module(module_path)
+            attr = getattr(module, name)
+        except ImportError:
+            self.logger.warning('impossible to build rt proxy {}, cannot find class: {}'.format(proxy_id, cls))
+            return None
+
+        try:
+            return attr(id=proxy_id, object_id_tag=object_id_tag, instance=self.instance, **args)
+        except TypeError as e:
+            self.logger.warning('impossible to build rt proxy {}, wrong arguments: {}'.format(proxy_id, e))
+            return None
+
+    def update_config(self):
+        """
+        Update list of realtime proxies services from db
+        """
+        if (
+            self._last_update + datetime.timedelta(seconds=self._update_interval) > datetime.datetime.utcnow()
+            or not self._realtime_proxies_getter
+        ):
+            return
+
+        self.logger.debug('Updating realtime proxies from db')
+        self._last_update = datetime.datetime.utcnow()
+
+        realtime_proxies = []
+        try:
+            realtime_proxies = self._realtime_proxies_getter()
+        except Exception:
+            self.logger.exception('Failure to retrieve realtime proxies configuration')
+        if not realtime_proxies:
+            self.logger.debug('No realtime proxies available in db')
+            self._realtime_proxies = {}
+            self._realtime_proxies_last_update = {}
+
+            return
+
+        for rt_proxy in realtime_proxies:
+            if (
+                rt_proxy.id not in self._realtime_proxies_last_update
+                or rt_proxy.last_update() > self._realtime_proxies_last_update[rt_proxy.id]
+            ):
+                self._update_realtime_proxies(rt_proxy)
+
+    def _update_realtime_proxies(self, rt_proxy):
+        self.logger.info('updating/adding {} realtime proxy'.format(rt_proxy.id))
+        try:
+            object_id_tag = rt_proxy.args.get('object_id_tag', rt_proxy.id)
+            if 'object_id_tag' in rt_proxy.args:
+                del rt_proxy.args["object_id_tag"]
+            self._realtime_proxies[rt_proxy.id] = self._init_class(
+                rt_proxy.id, rt_proxy.klass, object_id_tag, rt_proxy.args
+            )
+            self._realtime_proxies_last_update[rt_proxy.id] = rt_proxy.last_update()
+        except Exception:
+            self.logger.exception('impossible to update realtime proxy {}'.format(rt_proxy.id))
+
+        # If a legacy realtime proxy exists in db, remove it from self._realtime_proxies_legacy
+        realtime_proxies_from_db = list(self._realtime_proxies.values())
+        realtime_proxies_legacy = self._realtime_proxies_legacy
+        if realtime_proxies_legacy and realtime_proxies_from_db:
+            new_realtime_proxies_legacy = dict()
+            for rt_proxy_id, rt in realtime_proxies_legacy.items():
+                if rt not in realtime_proxies_from_db:
+                    new_realtime_proxies_legacy[rt_proxy_id] = rt
+            self._realtime_proxies_legacy = new_realtime_proxies_legacy
 
     def get(self, proxy_name):
-        return self.realtime_proxies.get(proxy_name)
+        self.update_config()
+        return self._realtime_proxies.get(proxy_name, self._realtime_proxies_legacy.get(proxy_name))
+
+    def get_all_realtime_proxies(self):
+        return list(self._realtime_proxies.values()) + list(self._realtime_proxies_legacy.values())

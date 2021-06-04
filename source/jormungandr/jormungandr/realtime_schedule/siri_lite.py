@@ -220,3 +220,6 @@ class SiriLite(RealtimeProxy):
         )
 
         return [r.uri for r in pb_routes]
+
+    def __eq__(self, other):
+        return self.rt_system_id == other.rt_system_id

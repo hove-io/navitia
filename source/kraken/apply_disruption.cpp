@@ -352,6 +352,95 @@ struct add_impacts_visitor : public apply_impacts_visitor {
         log_end_action(mvj->uri);
     }
 
+    void operator()(nt::disruption::RailSection& rs) {
+        std::string uri = "new rail section, start: " + rs.start_point->uri + " - end: " + rs.end_point->uri;
+        if (rs.line) {
+            uri += ", line : " + rs.line->uri;
+        } else if (!rs.routes.empty()) {
+            for (const auto& r : rs.routes) {
+                uri += ", route : " + r->uri;
+            }
+        } else {
+            LOG4CPLUS_ERROR(log, "Unhandled " << uri << ". We need line or routes");
+            return;
+        }
+        this->log_start_action(uri);
+
+        if (impact->severity->effect != nt::disruption::Effect::NO_SERVICE) {
+            LOG4CPLUS_DEBUG(log, "Unhandled action on " << uri);
+            this->log_end_action(uri);
+            return;
+        }
+
+        LOG4CPLUS_TRACE(log, "canceling " << uri);
+
+        // Get all impacted VJs and compute the corresponding base_canceled vp
+        auto impacted_vjs = nt::disruption::get_impacted_vehicle_journeys(rs, *impact, meta.production_date, rt_level);
+
+        // Loop on each affected vj
+        for (auto& impacted_vj : impacted_vjs) {
+            std::vector<nt::StopTime> new_stop_times;
+            const std::string& vj_uri = impacted_vj.vj_uri;
+            LOG4CPLUS_TRACE(log, "Impacted vj : " << vj_uri);
+            auto vj_iterator = pt_data.vehicle_journeys_map.find(vj_uri);
+            if (vj_iterator == pt_data.vehicle_journeys_map.end()) {
+                LOG4CPLUS_TRACE(log, "impacted vj : " << vj_uri << " not found in data. I ignore it.");
+                continue;
+            }
+            nt::VehicleJourney* vj = vj_iterator->second;
+            auto& new_vp = impacted_vj.new_vp;
+
+            // We keep only stop time before to touch the first impacted stop time
+            bool first_sa = false;
+            for (const auto& st : vj->stop_time_list) {
+                // We need to get the associated base stop_time to compare its rank
+                const auto base_st = st.get_base_stop_time();
+                // stop is ignored if its stop_point is not in impacted_stops
+                // if we don't find an associated base we keep it
+                if (base_st && impacted_vj.impacted_ranks.count(base_st->order())) {
+                    LOG4CPLUS_TRACE(log, "Ignoring stop " << st.stop_point->uri << "on " << vj->uri);
+                    if (first_sa == true) {
+                        break;
+                    }
+                    first_sa = true;
+                }
+                nt::StopTime new_st = st.clone();
+                if (first_sa == true) {
+                    new_st.set_pick_up_allowed(false);
+                }
+                new_st.arrival_time = st.arrival_time + ndtu::SECONDS_PER_DAY * vj->shift;
+                new_st.departure_time = st.departure_time + ndtu::SECONDS_PER_DAY * vj->shift;
+                new_st.alighting_time = st.alighting_time + ndtu::SECONDS_PER_DAY * vj->shift;
+                new_st.boarding_time = st.boarding_time + ndtu::SECONDS_PER_DAY * vj->shift;
+                new_stop_times.push_back(std::move(new_st));
+            }
+
+            auto mvj = vj->meta_vj;
+            mvj->push_unique_impact(impact);
+
+            // If all stop times have been ignored
+            if (new_stop_times.empty()) {
+                LOG4CPLUS_DEBUG(log, "All stop times has been ignored on " << vj->uri << ". Cancelling it.");
+                mvj->cancel_vj(rt_level, impact->application_periods, pt_data);
+                continue;
+            }
+            auto nb_rt_vj = mvj->get_vjs_at(rt_level).size();
+            std::string new_vj_uri = vj->uri + ":" + type::get_string_from_rt_level(rt_level) + ":"
+                                     + std::to_string(nb_rt_vj) + ":" + impact->disruption->uri;
+
+            new_vp.days = new_vp.days & (vj->validity_patterns[rt_level]->days >> vj->shift);
+
+            LOG4CPLUS_TRACE(log, "meta_vj : " << mvj->uri << " \n  old_vj: " << vj->uri
+                                              << " to be deleted \n new_vj_uri " << new_vj_uri);
+            auto* new_vj =
+                create_vj_from_old_vj(mvj, vj, new_vj_uri, rt_level, new_vp, std::move(new_stop_times), pt_data);
+            vj = nullptr;  // after the call to create_vj, vj may have been deleted :(
+
+            LOG4CPLUS_TRACE(log, "new_vj: " << new_vj->uri << " is created");
+        }
+        this->log_end_action(uri);
+    }
+
     void operator()(nt::disruption::LineSection& ls) {
         std::string uri = "line section (" + ls.line->uri + " : " + ls.start_point->uri + "/" + ls.end_point->uri + ")";
         this->log_start_action(uri);
@@ -735,6 +824,20 @@ struct delete_impacts_visitor : public apply_impacts_visitor {
     }
 
     void operator()(nt::disruption::LineSection& /*unused*/) {
+        auto find_impact = [&](const boost::weak_ptr<nt::disruption::Impact>& weak_ptr) {
+            if (auto i = weak_ptr.lock()) {
+                return i->uri == impact->uri;
+            }
+            return false;
+        };
+        for (auto& mvj : pt_data.meta_vjs) {
+            if (std::any_of(std::begin(mvj->modified_by), std::end(mvj->modified_by), find_impact)) {
+                (*this)(mvj.get());
+            };
+        }
+    }
+
+    void operator()(nt::disruption::RailSection& /*unused*/) {
         auto find_impact = [&](const boost::weak_ptr<nt::disruption::Impact>& weak_ptr) {
             if (auto i = weak_ptr.lock()) {
                 return i->uri == impact->uri;

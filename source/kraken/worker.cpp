@@ -326,6 +326,8 @@ void Worker::metadatas() {
         }
         if (!d->meta->publisher_name.empty()) {
             metadatas->set_name(d->meta->publisher_name);
+        } else {
+            metadatas->set_name("");
         }
         metadatas->set_last_load_at(navitia::to_posix_timestamp(d->last_load_at));
         metadatas->set_dataset_created_at(pt::to_iso_string(d->meta->dataset_created_at));
@@ -350,6 +352,8 @@ void Worker::feed_publisher() {
         pt_feed_publisher->set_id(d->meta->instance_name);
         if (!d->meta->publisher_name.empty()) {
             pt_feed_publisher->set_name(d->meta->publisher_name);
+        } else {
+            pt_feed_publisher->set_name("");
         }
         if (!d->meta->publisher_url.empty()) {
             pt_feed_publisher->set_url(d->meta->publisher_url);

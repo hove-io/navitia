@@ -334,6 +334,18 @@ class TestAsgardDirectPath(AbstractTestFixture):
         # all other sections
         assert all((not sections[i].get('cycle_lane_length') for i in [0, 1, 3, 4]))
 
+    def test_journey_with_max_direct_path_distance(self):
+        """
+        we only want direct path
+        """
+        query = journey_basic_query + "&direct_path=only"
+        response = self.query_region(query)
+        assert len(response['exceptions']) == 0
+
+        query = journey_basic_query + "&max_walking_direct_path_distance={}".format(2) + "&direct_path=only"
+        response = self.query_region(query, check=False)
+        assert response[1] == 404
+
 
 @dataset(
     {

@@ -84,6 +84,23 @@ struct PbCreator::Filler::PtObjVisitor : public boost::static_visitor<> {
         filler.copy(0, DumpMessage::No).fill_pb_object(line_section.end_point, impacted_section->mutable_to());
         filler.copy(0, DumpMessage::No).fill(line_section.routes, impacted_section->mutable_routes());
     }
+    void operator()(const nd::RailSection& rail_section) const {
+        // a line section is displayed as a disruption on a line with additional information
+        auto* pobj = add_pt_object(rail_section.line);
+
+        auto* impacted_rail_section = pobj->mutable_impacted_rail_section();
+
+        filler.copy(0, DumpMessage::No).fill_pb_object(rail_section.start_point, impacted_rail_section->mutable_from());
+        filler.copy(0, DumpMessage::No).fill_pb_object(rail_section.end_point, impacted_rail_section->mutable_to());
+
+        std::vector<navitia::type::Route*> routes;
+        if (rail_section.routes.empty()) {
+            routes = rail_section.line->route_list;
+        } else {
+            routes = rail_section.routes;
+        }
+        filler.copy(0, DumpMessage::No).fill(routes, impacted_rail_section->mutable_routes());
+    }
 
     pbnavitia::StopTimeUpdateStatus get_effect(nd::StopTimeUpdate::Status status) const {
         switch (status) {
@@ -455,6 +472,7 @@ void PbCreator::Filler::fill(NAV* nav_object, PB* pb_object) {
     }
     DumpMessageOptions new_dump_options{dump_message_options};
     new_dump_options.dump_line_section = DumpLineSectionMessage::No;
+    new_dump_options.dump_rail_section = DumpRailSectionMessage::No;
     copy(depth - 1, new_dump_options).fill_pb_object(nav_object, get_sub_object(nav_object, pb_object));
 }
 template <typename NAV, typename F>
@@ -742,6 +760,25 @@ void PbCreator::Filler::fill_pb_object(const nt::Line* l, pbnavitia::Line* line)
         };
         for (const auto* route : l->route_list) {
             route->for_each_vehicle_journey(fill_line_section_message);
+        }
+    }
+    if (dump_message_options.dump_message == DumpMessage::Yes
+        && dump_message_options.dump_rail_section == DumpRailSectionMessage::Yes) {
+        /*
+         * Here we dump the impacts which impact RailSection.
+         * We could have link the LineSection impact with the line, but that would change the code and
+         * the behavior too much.
+         * */
+        auto fill_rail_section_message = [&](const nt::VehicleJourney& vj) {
+            for (const auto& impact_ptr : vj.meta_vj->get_publishable_messages(pb_creator.now)) {
+                if (impact_ptr->is_rail_section_of(*vj.route->line)) {
+                    fill_message(impact_ptr, line);
+                }
+            }
+            return true;
+        };
+        for (const auto* route : l->route_list) {
+            route->for_each_vehicle_journey(fill_rail_section_message);
         }
     }
 }
@@ -1443,6 +1480,9 @@ void PbCreator::Filler::fill_messages(const VjStopTimes* vj_stoptimes, pbnavitia
         if (message->is_only_line_section()) {
             continue;
         }
+        if (message->is_only_rail_section()) {
+            continue;
+        }
         fill_message(message, pt_display_info);
     }
 
@@ -1460,6 +1500,9 @@ void PbCreator::Filler::fill_messages(const VjStopTimes* vj_stoptimes, pbnavitia
     const auto& to_sp = vj_stoptimes->stop_times.back()->stop_point;
     for (const auto& message : to_sp->get_applicable_messages(pb_creator.now, pb_creator.action_period)) {
         if (message->is_only_line_section()) {
+            continue;
+        }
+        if (message->is_only_rail_section()) {
             continue;
         }
         fill_message(message, pt_display_info);

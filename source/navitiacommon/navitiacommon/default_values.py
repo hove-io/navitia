@@ -194,6 +194,15 @@ bss_rent_penalty = 0
 bss_return_duration = 2 * 60
 bss_return_penalty = 0
 
+# max_{mode}_direct_path_distance default
+max_bike_direct_path_distance = 50000  # 50 Km
+max_bss_direct_path_distance = 50000  # 50 Km
+max_walking_direct_path_distance = 50000  # 50 Km
+max_car_direct_path_distance = 200000  # 200 Km
+max_car_no_park_direct_path_distance = 200000  # 200 Km
+max_ridesharing_direct_path_distance = 200000  # 200 Km
+max_taxi_direct_path_distance = 200000  # 200 Km
+
 
 def get_value_or_default(attr, instance, instance_name):
     if not instance or getattr(instance, attr, None) == None:

@@ -130,6 +130,10 @@ class Kraken(AbstractStreetNetworkService):
             crowfly_distance = crowfly_distance_between(
                 utils.get_pt_object_coord(pt_object_origin), utils.get_pt_object_coord(pt_object_destination)
             )
+            # if the crowfly distance between origin and destination is
+            # bigger than max_{mode}_direct_path_distance don't compute direct_path
+            if crowfly_distance > int(request['max_{mode}_direct_path_distance'.format(mode=mode)]):
+                return response_pb2.Response()
 
             if (
                 crowfly_distance / float(direct_path_request['{mode}_speed'.format(mode=mode)])

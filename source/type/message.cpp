@@ -77,6 +77,12 @@ void LineSection::serialize(archive& ar, const unsigned int /*unused*/) {
 }
 SERIALIZABLE(LineSection)
 
+template <class archive>
+void RailSection::serialize(archive& ar, const unsigned int /*unused*/) {
+    ar& line& start_point& end_point& blocked_stop_areas& routes;
+}
+SERIALIZABLE(RailSection)
+
 template <class Archive>
 void StopTimeUpdate::serialize(Archive& ar, const unsigned int /*unused*/) {
     ar& stop_time& cause& departure_status& arrival_status;
@@ -185,6 +191,131 @@ std::vector<ImpactedVJ> get_impacted_vehicle_journeys(const LineSection& ls,
     return vj_vp_pairs;
 }
 
+std::vector<ImpactedVJ> get_impacted_vehicle_journeys(const RailSection& rs,
+                                                      const Impact& impact,
+                                                      const boost::gregorian::date_period& production_period,
+                                                      type::RTLevel rt_level) {
+    auto log = log4cplus::Logger::getInstance("log");
+    std::vector<ImpactedVJ> vj_vp_pairs;
+
+    if (rs.routes.empty() && rs.line == nullptr) {
+        LOG4CPLUS_ERROR(log, "rail section: routes or line have to be filled");
+        return vj_vp_pairs;
+    }
+
+    std::vector<navitia::type::Route*> routes;
+    if (rs.routes.empty()) {
+        routes = rs.line->route_list;
+    } else {
+        routes = rs.routes;
+    }
+
+    auto blocked_sa_uri_sequence = create_blocked_sa_sequence(rs);
+
+    // Computing a validity_pattern of impact used to pre-filter concerned vjs later
+    type::ValidityPattern impact_vp = impact.get_impact_vp(production_period);
+
+    auto apply_impacts_on_vj = [&](const nt::VehicleJourney& vj) {
+        /*
+         * Pre-filtering by validity pattern, which allows us to check if the vj is impacted quickly
+         *
+         * Since the validity pattern runs only by day not by hour, we'll compute in detail to
+         * check if the vj is really impacted or not.
+         *
+         * */
+        if ((vj.validity_patterns[rt_level]->days & impact_vp.days).none()) {
+            return true;
+        }
+
+        // Filtering each journey to see if it's impacted by the section.
+        auto section = vj.get_sections_ranks(rs.start_point, rs.end_point);
+        // If the vj pass by both stops both elements will be different than nullptr, otherwise
+        // it's not passing by both stops and should not be impacted
+
+        if ((!section.empty() && rs.blocked_stop_areas.empty())
+            || (!section.empty() && blocked_sa_sequence_matching(blocked_sa_uri_sequence.second, vj, section))) {
+            // Once we know the line section is part of the vj we compute the vp for the adapted_vj
+            nt::ValidityPattern new_vp{vj.validity_patterns[rt_level]->beginning_date};
+            for (const auto& period : impact.application_periods) {
+                // get the vp of the section
+                new_vp.days |= vj.get_vp_for_section(section, rt_level, period).days;
+            }
+            // If there is effective days for the adapted vp we're keeping it
+            if (!new_vp.days.none()) {
+                LOG4CPLUS_TRACE(log, "vj " << vj.uri << " is affected, keeping it.");
+                new_vp.days >>= vj.shift;
+                vj_vp_pairs.emplace_back(vj.uri, new_vp, std::move(section));
+            }
+        }
+        return true;
+    };
+
+    for (const auto* route : routes) {
+        if (!is_route_to_impact_content_sa_list(blocked_sa_uri_sequence.first, route->stop_area_list)) {
+            continue;
+        }
+
+        // Loop on each vj
+        route->for_each_vehicle_journey(apply_impacts_on_vj);
+    }
+    return vj_vp_pairs;
+}
+
+// convert URI SA rail section into ordered list
+std::pair<BlockedSAList, ConcatenateBlockedSASequence> create_blocked_sa_sequence(const RailSection& rs) {
+    BlockedSAList blocked_sa_uri_sequence;
+
+    if (rs.start_point == nullptr || rs.end_point == nullptr) {
+        return std::make_pair(blocked_sa_uri_sequence, "");
+    }
+
+    // add start_point SA
+    blocked_sa_uri_sequence.insert(std::make_pair(0, rs.start_point->uri));
+    // add blocked_stop_areas list
+    for (const auto bsa : rs.blocked_stop_areas) {
+        blocked_sa_uri_sequence.insert(std::make_pair(bsa.second + 1, bsa.first));
+    }
+    // add end_point SA
+    if (blocked_sa_uri_sequence.rbegin() != blocked_sa_uri_sequence.rend()) {
+        blocked_sa_uri_sequence.insert(std::make_pair(blocked_sa_uri_sequence.rbegin()->first + 1, rs.end_point->uri));
+    }
+    std::string concatenate_bsa_uri_sequence_string = "";
+    for (const auto bsa : blocked_sa_uri_sequence) {
+        concatenate_bsa_uri_sequence_string += bsa.second;
+    }
+    return std::make_pair(blocked_sa_uri_sequence, concatenate_bsa_uri_sequence_string);
+}
+
+// Only check if all blocked SA are contained inside route
+bool is_route_to_impact_content_sa_list(const BlockedSAList& blocked_sa_uri_sequence,
+                                        const boost::container::flat_set<StopArea*>& stop_area_list) {
+    for (const auto& sa : blocked_sa_uri_sequence) {
+        std::string bsa_uri = sa.second;
+        auto result = std::find_if(stop_area_list.begin(), stop_area_list.end(),
+                                   [&bsa_uri](const auto& sa) { return sa->uri == bsa_uri; });
+        if (result == stop_area_list.end()) {
+            return false;
+        }
+    }
+    return true;
+}
+
+// Check if the SA sequence (start point - blocked sa list - end point) match with the founded sa list
+bool blocked_sa_sequence_matching(const ConcatenateBlockedSASequence& concatenate_bsa_uri_sequence_string,
+                                  const nt::VehicleJourney& vj,
+                                  const std::set<RankStopTime>& st_rank_list) {
+    if (!concatenate_bsa_uri_sequence_string.empty() || !st_rank_list.empty()) {
+        std::string st_meta_string = "";
+        for (const auto sp : st_rank_list) {
+            st_meta_string += vj.stop_time_list[sp.val].stop_point->stop_area->uri;
+        }
+        if (st_meta_string == concatenate_bsa_uri_sequence_string) {
+            return true;
+        }
+    }
+    return false;
+}
+
 struct InformedEntitiesLinker : public boost::static_visitor<> {
     const boost::shared_ptr<Impact>& impact;
     const boost::gregorian::date_period& production_period;
@@ -211,6 +342,39 @@ struct InformedEntitiesLinker : public boost::static_visitor<> {
         std::set<type::MetaVehicleJourney*> impacted_meta_vjs;
         if (impacted_vjs.empty()) {
             LOG4CPLUS_INFO(log, "line section impact " << impact->uri
+                                                       << " does not impact any vj, it will not be linked to anything");
+        }
+        for (auto& impacted_vj : impacted_vjs) {
+            const std::string& vj_uri = impacted_vj.vj_uri;
+            LOG4CPLUS_TRACE(log, "Impacted vj : " << vj_uri);
+            auto vj_iterator = pt_data.vehicle_journeys_map.find(vj_uri);
+            if (vj_iterator == pt_data.vehicle_journeys_map.end()) {
+                LOG4CPLUS_TRACE(log, "impacted vj : " << vj_uri << " not found in data. I ignore it.");
+                continue;
+            }
+            nt::VehicleJourney* vj = vj_iterator->second;
+
+            if (impacted_meta_vjs.insert(vj->meta_vj).second) {
+                // it's the first time we see this metavj, we add the impact to it
+                vj->meta_vj->add_impact(impact);
+            }
+            // Get base vj to impact all stop_points
+            auto base_vj = vj->get_corresponding_base();
+            for (const auto& st : base_vj->stop_time_list) {
+                // if the stop_point is impacted and it's the first time we see it
+                if (impacted_vj.impacted_ranks.count(st.order()) && impacted_stop_points.insert(st.stop_point).second) {
+                    // it's the first time we see this stoppoint, we add the impact to it
+                    st.stop_point->add_impact(impact);
+                }
+            }
+        }
+    }
+    void operator()(const nt::disruption::RailSection& rail_section) const {
+        auto impacted_vjs = get_impacted_vehicle_journeys(rail_section, *impact, production_period, rt_level);
+        std::set<type::StopPoint*> impacted_stop_points;
+        std::set<type::MetaVehicleJourney*> impacted_meta_vjs;
+        if (impacted_vjs.empty()) {
+            LOG4CPLUS_INFO(log, "rail section impact " << impact->uri
                                                        << " does not impact any vj, it will not be linked to anything");
         }
         for (auto& impacted_vj : impacted_vjs) {
@@ -324,6 +488,25 @@ bool Impact::is_relevant(const std::vector<const StopTime*>& stop_times) const {
         return false;
     }
 
+    // rail section not relevant
+    auto rail_section_impacted_obj_it = boost::find_if(
+        informed_entities(), [](const PtObj& ptobj) { return boost::get<RailSection>(&ptobj) != nullptr; });
+    if (rail_section_impacted_obj_it != informed_entities().end()) {
+        // note in this we take the premise that an impact
+        // cannot impact a line section AND a vj
+
+        // if the origin or the destination is impacted by the same impact
+        // it means the section is impacted
+        for (const auto& st : {stop_times.front(), stop_times.back()}) {
+            for (const auto& sp_message : st->stop_point->get_impacts()) {
+                if (sp_message.get() == this) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
     // else, no reason to not be interested by it
     return true;
 }
@@ -340,6 +523,21 @@ bool Impact::is_line_section_of(const Line& line) const {
     return boost::algorithm::any_of(informed_entities(), [&](const PtObj& entity) {
         const auto* line_section = boost::get<nt::disruption::LineSection>(&entity);
         return line_section && line_section->line && line_section->line->idx == line.idx;
+    });
+}
+
+bool Impact::is_only_rail_section() const {
+    if (_informed_entities.empty()) {
+        return false;
+    }
+    return boost::algorithm::all_of(
+        informed_entities(), [](const PtObj& entity) { return boost::get<nt::disruption::RailSection>(&entity); });
+}
+
+bool Impact::is_rail_section_of(const Line& line) const {
+    return boost::algorithm::any_of(informed_entities(), [&](const PtObj& entity) {
+        const auto* rail_section = boost::get<nt::disruption::RailSection>(&entity);
+        return rail_section && rail_section->line && rail_section->line->idx == line.idx;
     });
 }
 
@@ -420,12 +618,41 @@ std::set<StopPoint*> LineSection::get_stop_points_section() const {
     return res;
 }
 
+std::set<StopPoint*> get_stop_points_section(const RailSection& rs) {
+    std::set<StopPoint*> res;
+    std::vector<navitia::type::Route*> routes;
+    if (rs.routes.empty()) {
+        routes = rs.line->route_list;
+    } else {
+        routes = rs.routes;
+    }
+    auto blocked_sa_uri_sequence = create_blocked_sa_sequence(rs);
+    for (const auto* route : routes) {
+        if (!is_route_to_impact_content_sa_list(blocked_sa_uri_sequence.first, route->stop_area_list)) {
+            continue;
+        }
+        route->for_each_vehicle_journey([&](const VehicleJourney& vj) {
+            auto ranks = vj.get_sections_ranks(rs.start_point, rs.end_point);
+            if ((!ranks.empty() && rs.blocked_stop_areas.empty())
+                || (!ranks.empty() && blocked_sa_sequence_matching(blocked_sa_uri_sequence.second, vj, ranks))) {
+                return true;
+            }
+            for (const auto& rank : ranks) {
+                res.insert(vj.get_stop_time(rank).stop_point);
+            }
+
+            return false;
+        });
+    }
+    return res;
+}
+
 using pair_indexes = std::pair<Type_e, Indexes>;
 struct ImpactVisitor : boost::static_visitor<pair_indexes> {
     Type_e target = Type_e::Unknown;
-    const PT_Data& pt_data;
+    PT_Data& pt_data;
 
-    ImpactVisitor(Type_e target, const PT_Data& pt_data) : target(target), pt_data(pt_data) {}
+    ImpactVisitor(Type_e target, PT_Data& pt_data) : target(target), pt_data(pt_data) {}
 
     pair_indexes operator()(const disruption::UnknownPtObj /*unused*/) { return {Type_e::Unknown, Indexes{}}; }
     pair_indexes operator()(const Network* n) { return {Type_e::Network, make_indexes(n->idx)}; }
@@ -447,12 +674,28 @@ struct ImpactVisitor : boost::static_visitor<pair_indexes> {
                 return {Type_e::Unknown, Indexes{}};
         }
     }
+    pair_indexes operator()(const RailSection& rs) {
+        switch (target) {
+            case Type_e::Line:
+                return {target, make_indexes(rs.line->idx)};
+            case Type_e::Network:
+                return {target, make_indexes(rs.line->network->idx)};
+            case Type_e::Route:
+                return {target, make_indexes(rs.line->route_list)};
+            case Type_e::StopPoint: {
+                const auto& sps = get_stop_points_section(rs);
+                return {target, make_indexes(sps)};
+            }
+            default:
+                return {Type_e::Unknown, Indexes{}};
+        }
+    }
     pair_indexes operator()(const Line* l) { return {Type_e::Line, make_indexes(l->idx)}; }
     pair_indexes operator()(const Route* r) { return {Type_e::Route, make_indexes(r->idx)}; }
     pair_indexes operator()(const MetaVehicleJourney* mvj) { return {Type_e::ValidityPattern, make_indexes(mvj->idx)}; }
 };
 
-Indexes Impact::get(Type_e target, const PT_Data& pt_data) const {
+Indexes Impact::get(Type_e target, PT_Data& pt_data) const {
     Indexes result;
     ImpactVisitor visitor(target, pt_data);
 

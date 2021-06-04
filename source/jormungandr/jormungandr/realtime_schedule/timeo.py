@@ -338,6 +338,8 @@ class Timeo(RealtimeProxy):
 
     @cache.memoize(app.config.get(str('CACHE_CONFIGURATION'), {}).get(str('TIMEOUT_PTOBJECTS'), 600))
     def _get_direction_name(self, line_uri, object_code, default_value):
+        if not self.destination_id_tag:
+            return default_value
         stop_point = self.instance.ptref.get_stop_point(line_uri, self.destination_id_tag, object_code)
 
         if (
@@ -348,3 +350,6 @@ class Timeo(RealtimeProxy):
         ):
             return stop_point.stop_area.label
         return default_value
+
+    def __eq__(self, other):
+        return self.rt_system_id == other.rt_system_id

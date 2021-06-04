@@ -221,6 +221,27 @@ def updated_common_journey_request_with_default(request, instance):
     if request['max_taxi_duration_to_pt'] is None:
         request['max_taxi_duration_to_pt'] = instance.max_taxi_duration_to_pt
 
+    if request['max_bike_direct_path_distance'] is None:
+        request['max_bike_direct_path_distance'] = instance.max_bike_direct_path_distance
+
+    if request['max_bss_direct_path_distance'] is None:
+        request['max_bss_direct_path_distance'] = instance.max_bss_direct_path_distance
+
+    if request['max_walking_direct_path_distance'] is None:
+        request['max_walking_direct_path_distance'] = instance.max_walking_direct_path_distance
+
+    if request['max_car_direct_path_distance'] is None:
+        request['max_car_direct_path_distance'] = instance.max_car_direct_path_distance
+
+    if request['max_car_no_park_direct_path_distance'] is None:
+        request['max_car_no_park_direct_path_distance'] = instance.max_car_no_park_direct_path_distance
+
+    if request['max_ridesharing_direct_path_distance'] is None:
+        request['max_ridesharing_direct_path_distance'] = instance.max_ridesharing_direct_path_distance
+
+    if request['max_taxi_direct_path_distance'] is None:
+        request['max_taxi_direct_path_distance'] = instance.max_taxi_direct_path_distance
+
     if request['max_transfers'] is None:
         request['max_transfers'] = instance.max_nb_transfers
 
