@@ -11,6 +11,9 @@ jobs:
 
     container:
         image: navitia/debian10_dev
+        volumes:
+          - /usr/share/dotnet:/usr/share/dotnet
+        # Mount /dotnet so we can delete files from docker and free up space (>20GB)
 
     services:
       rabbitmq:
@@ -19,6 +22,10 @@ jobs:
           - 5672:5672
 
     steps:
+    - name: Free up space
+      run: rm -rf /usr/share/dotnet/*
+    - name: Display remaining space
+      run: df -h
     - uses: actions/checkout@v2
       with:
           submodules: 'recursive'
