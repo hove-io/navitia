@@ -472,6 +472,9 @@ bool Impact::is_relevant(const std::vector<const StopTime*>& stop_times) const {
     // line section not relevant
     auto line_section_impacted_obj_it = boost::find_if(
         informed_entities(), [](const PtObj& ptobj) { return boost::get<LineSection>(&ptobj) != nullptr; });
+    // rail section not relevant
+    auto rail_section_impacted_obj_it = boost::find_if(
+        informed_entities(), [](const PtObj& ptobj) { return boost::get<RailSection>(&ptobj) != nullptr; });
     if (line_section_impacted_obj_it != informed_entities().end()) {
         // note in this we take the premise that an impact
         // cannot impact a line section AND a vj
@@ -486,29 +489,12 @@ bool Impact::is_relevant(const std::vector<const StopTime*>& stop_times) const {
             }
         }
         return false;
+    } else if (rail_section_impacted_obj_it != informed_entities().end()) {
+        return true;
+    } else {
+        // else, no reason to not be interested by it
+        return true;
     }
-
-    // rail section not relevant
-    auto rail_section_impacted_obj_it = boost::find_if(
-        informed_entities(), [](const PtObj& ptobj) { return boost::get<RailSection>(&ptobj) != nullptr; });
-    if (rail_section_impacted_obj_it != informed_entities().end()) {
-        // note in this we take the premise that an impact
-        // cannot impact a line section AND a vj
-
-        // if the origin or the destination is impacted by the same impact
-        // it means the section is impacted
-        for (const auto& st : {stop_times.front(), stop_times.back()}) {
-            for (const auto& sp_message : st->stop_point->get_impacts()) {
-                if (sp_message.get() == this) {
-                    return true;
-                }
-            }
-        }
-        return false;
-    }
-
-    // else, no reason to not be interested by it
-    return true;
 }
 
 bool Impact::is_only_line_section() const {

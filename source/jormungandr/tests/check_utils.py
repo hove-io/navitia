@@ -1150,6 +1150,28 @@ def is_valid_line_section_disruption(disruption):
     is_valid_pt_object(get_not_null(line_section, 'to'))
 
 
+def is_valid_rail_section_disruption(disruption):
+    """
+    a rail section disruption is a classic disruption with it's line as the impacted object
+    and aside this a 'rail_section' section with additional information on the rail section
+    """
+    is_valid_disruption(disruption, chaos_disrup=False)
+
+    rail_section_impacted = next(
+        (
+            d
+            for d in get_not_null(disruption, 'impacted_objects')
+            if d['pt_object']['embedded_type'] == 'line' and d.get('impacted_rail_section')
+        ),
+        None,
+    )
+
+    assert rail_section_impacted
+    rail_section = get_not_null(rail_section_impacted, 'impacted_rail_section')
+    is_valid_pt_object(get_not_null(rail_section, 'from'))
+    is_valid_pt_object(get_not_null(rail_section, 'to'))
+
+
 def is_valid_disruption(disruption, chaos_disrup=True):
     get_not_null(disruption, 'id')
     get_not_null(disruption, 'disruption_id')

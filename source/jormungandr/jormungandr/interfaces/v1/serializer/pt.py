@@ -252,6 +252,7 @@ class ImpactedSerializer(PbNestedSerializer):
     pt_object = PtObjectSerializer(display_none=False)
     impacted_stops = ImpactedStopSerializer(many=True, display_none=False)
     impacted_section = ImpactedSectionSerializer(display_none=False)
+    impacted_rail_section = ImpactedSectionSerializer(display_none=False)
 
 
 class StringListField(Field):
