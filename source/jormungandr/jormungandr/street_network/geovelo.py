@@ -61,6 +61,7 @@ class Geovelo(AbstractStreetNetworkService):
         timeout=10,
         api_key=None,
         feed_publisher=DEFAULT_GEOVELO_FEED_PUBLISHER,
+        verify=True,
         **kwargs
     ):
         self.instance = instance
@@ -76,6 +77,7 @@ class Geovelo(AbstractStreetNetworkService):
             reset_timeout=app.config['CIRCUIT_BREAKER_GEOVELO_TIMEOUT_S'],
         )
         self._feed_publisher = FeedPublisher(**feed_publisher) if feed_publisher else None
+        self.verify = verify
 
     def status(self):
         return {
@@ -162,6 +164,7 @@ class Geovelo(AbstractStreetNetworkService):
                     'Api-Key': self.api_key,
                     'Accept-Encoding': 'gzip, br',
                 },
+                verify=self.verify,
             )
         except pybreaker.CircuitBreakerError as e:
             logging.getLogger(__name__).error('Geovelo routing service dead (error: {})'.format(e))
