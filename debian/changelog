@@ -1,3 +1,18 @@
+navitia2 (11.2.0) unstable; urgency=low
+
+  * [Jormungandr] Certificate verification can be disabled by param in config  <https://github.com/CanalTP/navitia/pull/3458>
+  * [Jormungandr] add max_distance for asgard  <https://github.com/CanalTP/navitia/pull/3461>
+  * [Jormungandr] Manage realtime proxies from database  <https://github.com/CanalTP/navitia/pull/3456>
+  * [Jormungandr] Not call Kraken if empty destination_id_tag param  <https://github.com/CanalTP/navitia/pull/3459>
+  * [kraken] Rail section feature  <https://github.com/CanalTP/navitia/pull/3447>
+  * script: update disruptor with rail_section  <https://github.com/CanalTP/navitia/pull/3452>
+  * Fix: transaction block error while adding element in a type  <https://github.com/CanalTP/navitia/pull/3455>
+  * [Tyr] Realtime proxies add in external services  <https://github.com/CanalTP/navitia/pull/3446>
+  * [kraken] feed publisher name are required, it can not be null  <https://github.com/CanalTP/navitia/pull/3453>
+  * [Jormungandr] Add speed and distance limitation for car/bike/walking   <https://github.com/CanalTP/navitia/pull/3444>
+
+ -- Abderrahim AZIME <azime_1@yahoo.fr>  Fri, 04 Jun 2021 14:06:15 +0100
+
 navitia2 (11.1.0) unstable; urgency=low
 
   * [Jormun] Reduce coord precision for asgard  <https://github.com/CanalTP/navitia/pull/3448>
