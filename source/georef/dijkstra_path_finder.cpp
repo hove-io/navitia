@@ -48,7 +48,7 @@ void DijkstraPathFinder::start_distance_dijkstra(const navitia::time_duration& r
     // We start dijkstra from source and target nodes
     try {
         dijkstra({starting_edge[source_e], starting_edge[target_e]}, dijkstra_distance_visitor(radius, distances));
-    } catch (DestinationFound) {
+    } catch (const DestinationFound&) {
     }
 }
 
@@ -237,7 +237,7 @@ std::pair<navitia::time_duration, ProjectionData::Direction> DijkstraPathFinder:
         try {
             dijkstra({starting_edge[source_e], starting_edge[target_e]},
                      dijkstra_target_all_visitor({target[source_e], target[target_e]}));
-        } catch (DestinationFound) {
+        } catch (const DestinationFound&) {
             found = true;
         }
 

@@ -1039,7 +1039,7 @@ class TestKirinSchedulesNewStopTimeInBetween(MockKirinDisruptionsFixture):
         stop_schedules = self.query_region(
             base_query.format(api='stop_schedules', dt='20120614T080100', df='realtime')
         )
-        len(stop_schedules['stop_schedules']) == 1
+        assert len(stop_schedules['stop_schedules']) == 1
         assert stop_schedules['stop_schedules'][0]['display_informations']['label'] == '1D'
         assert not stop_schedules['stop_schedules'][0]['date_times']
 
@@ -1088,7 +1088,7 @@ class TestKirinSchedulesNewStopTimeInBetween(MockKirinDisruptionsFixture):
         stop_schedules = self.query_region(
             base_query.format(api='stop_schedules', dt='20120614T080100', df='base_schedule')
         )
-        len(stop_schedules['stop_schedules']) == 2  # a new route is linked (not used in base_schedule)
+        assert len(stop_schedules['stop_schedules']) == 2  # a new route is linked (not used in base_schedule)
         assert not stop_schedules['stop_schedules'][0]['date_times']
         assert not stop_schedules['stop_schedules'][1]['date_times']
 
@@ -1111,7 +1111,7 @@ class TestKirinSchedulesNewStopTimeInBetween(MockKirinDisruptionsFixture):
         stop_schedules = self.query_region(
             base_query.format(api='stop_schedules', dt='20120614T080100', df='realtime')
         )
-        len(stop_schedules['stop_schedules']) == 2
+        assert len(stop_schedules['stop_schedules']) == 2
         assert stop_schedules['stop_schedules'][1]['display_informations']['label'] == '1D'
         assert not stop_schedules['stop_schedules'][1]['date_times']  # still no departure on other route
         assert stop_schedules['stop_schedules'][0]['display_informations']['label'] == '1A'

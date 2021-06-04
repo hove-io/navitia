@@ -230,7 +230,7 @@ class Disruption(object):
         producer.publish(self.to_pb())
 
 
-def parse_args(parser, logger):
+def parse_args(logger):
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "-b",
@@ -352,7 +352,7 @@ def config_logger():
 def main():
     logger = config_logger()
 
-    args = parse_args(argparse.ArgumentParser(), logger)
+    args = parse_args(logger)
 
     logger.info("launch disruptor")
     logger.info("create disruption sample for test")

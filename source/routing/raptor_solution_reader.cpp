@@ -708,7 +708,7 @@ Path make_path(const Journey& journey, const type::Data& data) {
     const Journey::Section* last_section = nullptr;
     for (const auto& section : journey.sections) {
         const auto dep_stop_point = section.get_in_st->stop_point;
-        if (!path.items.empty()) {
+        if (!path.items.empty() && last_section != nullptr) {
             // we add a connexion
             auto waiting_section_start = posix(last_section->get_out_dt);
             const auto previous_stop = last_section->get_out_st->stop_point;

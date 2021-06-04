@@ -1207,7 +1207,7 @@ def is_valid_disruption(disruption, chaos_disrup=True):
                     'base_arrival_time' in impacted_stop
                     and 'base_departure_time' in impacted_stop
                     or 'amended_arrival_time' in impacted_stop
-                    and 'amended_arrival_time' in impacted_stop
+                    and 'amended_departure_time' in impacted_stop
                 )
 
 
