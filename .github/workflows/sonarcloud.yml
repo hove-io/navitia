@@ -45,7 +45,9 @@ jobs:
       uses: actions/cache@v2
       with:
         path: sonar_cache
-        key: sonar-cache
+        key: sonar-cache-${{ github.event.head_commit.id }}
+        restore-keys: |
+            sonar-cache-
     - name: Configure
       run: cmake -DCMAKE_BUILD_TYPE=Profile -DSTRIP_SYMBOLS=ON source
     - name: Build
