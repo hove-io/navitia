@@ -125,10 +125,10 @@ static Boundary find_boundary(const std::pair<int, int>& rank_source,
                               const size_t offset_lon,
                               const size_t offset_lat,
                               const size_t step) {
-    auto end_lon_box = get_rank(rank_source.first, rank_target.first, +offset_lon, step);
-    auto end_lat_box = get_rank(rank_source.second, rank_target.second, +offset_lat, step);
-    auto begin_lon_box = get_rank(rank_source.first, rank_target.first, -offset_lon, step);
-    auto begin_lat_box = get_rank(rank_source.second, rank_target.second, -offset_lat, step);
+    auto end_lon_box = get_rank(rank_source.first, rank_target.first, offset_lon, step);
+    auto end_lat_box = get_rank(rank_source.second, rank_target.second, offset_lat, step);
+    auto begin_lon_box = get_rank(rank_source.first, rank_target.first, -static_cast<int32_t>(offset_lon), step);
+    auto begin_lat_box = get_rank(rank_source.second, rank_target.second, -static_cast<int32_t>(offset_lat), step);
     return {end_lon_box, end_lat_box, begin_lon_box, begin_lat_box};
 }
 

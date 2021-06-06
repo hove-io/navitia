@@ -47,7 +47,7 @@ int main(int argc, const char* const argv[]) {
     const auto date = "20170101";
     const auto begin = boost::gregorian::date_from_iso_string(date);
     const boost::gregorian::date_period production_date = {begin, begin + boost::gregorian::years(1)};
-    navitia::type::TimeZoneHandler::dst_periods timezones = {{-"01:00"_t, {production_date}}};
+    navitia::type::TimeZoneHandler::dst_periods timezones = {{-static_cast<int32_t>("01:00"_t), {production_date}}};
     ed::builder b("20170101",
                   [](ed::builder& b) {
                       // UTC and local pass midnight vj
