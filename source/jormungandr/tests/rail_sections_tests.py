@@ -284,6 +284,23 @@ class TestRailSections(AbstractTestFixture):
         assert False == self.has_disruption(ObjGetter('lines', 'line:2'), 'rail_section_on_line1-3')
         assert False == self.has_disruption(ObjGetter('lines', 'line:2'), 'rail_section_on_line1-3')
 
+    def test_line_reports_impacted_by_line_section(self):
+        r = self.default_query('line_reports')
+        assert len(get_not_null(r, 'disruptions')) == 3
+        is_valid_rail_section_disruption(r['disruptions'][0])
+        is_valid_rail_section_disruption(r['disruptions'][1])
+        is_valid_rail_section_disruption(r['disruptions'][2])
+
+    def test_terminus_schedules_impacted_by_line_section(self):
+        r = self.default_query('lines/line:1/terminus_schedules')
+        assert len(get_not_null(r, 'disruptions')) == 3
+        is_valid_rail_section_disruption(r['disruptions'][0])
+        is_valid_rail_section_disruption(r['disruptions'][1])
+        is_valid_rail_section_disruption(r['disruptions'][2])
+
+        r = self.default_query('lines/line:2/terminus_schedules')
+        assert len(r['disruptions']) == 0
+
     def test_journeys_with_rail_section(self):
         """
         for /journeys, we should display a rail section disruption only if we use an impacted section
