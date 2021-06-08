@@ -379,7 +379,7 @@ struct StopTime {
           is_frequency(freq),
           wheelchair_boarding(wheel),
           date_time_estimated(estim),
-          headsign(std::forward<std::string>(headsign)) {}
+          headsign(std::move(headsign)) {}
     bool operator<(const StopTime& other) const;
     void shift_times(int n_days) {
         arrival_time += n_days * int(navitia::DateTimeUtils::SECONDS_PER_DAY);

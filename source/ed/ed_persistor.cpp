@@ -1037,7 +1037,7 @@ void EdPersistor::insert_vehicle_journeys(const std::vector<types::VehicleJourne
 
         if (vj->adapted_validity_pattern != nullptr) {
             values.push_back(std::to_string(vj->adapted_validity_pattern->idx));
-        } else {
+        } else if (vj->validity_pattern != nullptr) {
             values.push_back(std::to_string(vj->validity_pattern->idx));
         }
         if (vj->company != nullptr) {

@@ -670,6 +670,7 @@ void builder::connection(const std::string& name1, const std::string& name2, flo
     auto* connexion = new navitia::type::StopPointConnection();
     connexion->idx = data->pt_data->stop_point_connections.size();
     if (sps.count(name1) == 0 || sps.count(name2) == 0) {
+        delete connexion;  // fix possible memory leak
         return;
     }
     connexion->departure = (*(sps.find(name1))).second;
