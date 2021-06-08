@@ -179,6 +179,7 @@ class PathSerializer(PbNestedSerializer):
     direction = jsonschema.Field(schema_type=int, display_none=True)
     instruction = jsonschema.MethodField(schema_type=str, display_none=False)
     coordinate = jsonschema.MethodField(schema_type=lambda: CoordSerializer())
+    instruction_start_coordinates = jsonschema.MethodField(schema_type=lambda: CoordSerializer())
 
     def get_id(self, obj):
         if obj.HasField(str('id')):
@@ -195,6 +196,12 @@ class PathSerializer(PbNestedSerializer):
     def get_coordinate(self, obj):
         if obj.HasField(str('coordinate')):
             return CoordSerializer(obj.coordinate, display_none=False).data
+        else:
+            return None
+
+    def get_instruction_start_coordinates(self, obj):
+        if obj.HasField(str('instruction_start_coordinates')):
+            return CoordSerializer(obj.instruction_start_coordinates, display_none=False).data
         else:
             return None
 
