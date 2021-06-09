@@ -665,6 +665,8 @@ class Instance(object):
     bss_return_duration = _make_property_getter('bss_return_duration')
     bss_return_penalty = _make_property_getter('bss_rent_penalty')
 
+    places_proximity_radius = _make_property_getter('places_proximity_radius')
+
     def reap_socket(self, ttl):
         # type: (int) -> None
         if self.zmq_socket_type != 'transient':

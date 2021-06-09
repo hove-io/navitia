@@ -817,6 +817,14 @@ class Instance(flask_restful.Resource):
             default=instance.max_waiting_duration,
         )
 
+        parser.add_argument(
+            'places_proximity_radius',
+            type=int,
+            help='Radius used to prioritize objects in autocomplete (m)',
+            location=('json', 'values'),
+            default=instance.places_proximity_radius,
+        )
+
         args = parser.parse_args()
 
         try:
@@ -902,6 +910,7 @@ class Instance(flask_restful.Resource):
                         'greenlet_pool_for_ridesharing_services',
                         'ridesharing_greenlet_pool_size',
                         'max_waiting_duration',
+                        'places_proximity_radius',
                     ],
                 ),
                 maxlen=0,

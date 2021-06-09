@@ -649,6 +649,13 @@ class Instance(db.Model):  # type: ignore
         db.Integer, nullable=False, server_default='{}'.format(default_values.max_waiting_duration)
     )
 
+    places_proximity_radius = db.Column(
+        db.Integer,
+        default=default_values.places_proximity_radius,
+        nullable=False,
+        server_default=str(default_values.places_proximity_radius),
+    )
+
     def __init__(self, name=None, is_free=False, authorizations=None, jobs=None):
         self.name = name
         self.is_free = is_free

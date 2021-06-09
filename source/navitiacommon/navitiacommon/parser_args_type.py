@@ -73,6 +73,25 @@ class PositiveFloat(CustomSchemaType):
         return TypeSchema(type=float, metadata={'minimum': 0})
 
 
+class IntRange(CustomSchemaType):
+    def __init__(self, min, max):
+        self.min = min
+        self.max = max
+
+    def __call__(self, value, name):
+        conv_value = int(value)
+        if not self.min <= conv_value <= self.max:
+            raise ValueError(
+                "The {} argument has to be in range [{}, {}], you gave : {}".format(
+                    name, self.min, self.max, value
+                )
+            )
+        return conv_value
+
+    def schema(self):
+        return TypeSchema(type=float, metadata={'minimum': 0})
+
+
 class FloatRange(CustomSchemaType):
     def __init__(self, min, max):
         self.min = min

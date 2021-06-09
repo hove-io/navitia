@@ -86,6 +86,7 @@ class ParametersSerializer(serpy.Serializer):
     max_taxi_direct_path_duration = Field(schema_type=int)
     max_ridesharing_direct_path_duration = Field(schema_type=int)
     max_nb_crowfly_by_mode = Field(schema_type=dict)
+    places_proximity_radius = Field(schema_type=int)
 
 
 class TravelerProfilesSerializer(serpy.Serializer):

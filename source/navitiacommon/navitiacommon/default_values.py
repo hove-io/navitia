@@ -203,6 +203,9 @@ max_car_no_park_direct_path_distance = 200000  # 200 Km
 max_ridesharing_direct_path_distance = 200000  # 200 Km
 max_taxi_direct_path_distance = 200000  # 200 Km
 
+# Proximity radius for autocomplete used in /places endpoint
+places_proximity_radius = 20000  # 20 Km
+
 
 def get_value_or_default(attr, instance, instance_name):
     if not instance or getattr(instance, attr, None) == None:
