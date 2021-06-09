@@ -271,11 +271,11 @@ boost::optional<nt::disruption::RailSection> make_rail_section(const chaos::PtOb
             return boost::none;
         }
         if (!pb_section.has_line()) {
-            auto* route = find_or_default(pb_section.routes()[0].uri(), pt_data.routes_map);
+            auto* route = find_or_default(pb_section.routes().Get(0).uri(), pt_data.routes_map);
             if (route) {
                 rail_section.line = route->line;
             } else {
-                LOG4CPLUS_WARN(log, "fill_disruption_from_chaos: route id " << pb_section.routes()[0].uri()
+                LOG4CPLUS_WARN(log, "fill_disruption_from_chaos: route id " << pb_section.routes().Get(0).uri()
                                                                             << " in RailSection invalid!");
             }
         }
