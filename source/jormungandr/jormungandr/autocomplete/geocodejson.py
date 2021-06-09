@@ -320,7 +320,7 @@ class GeocodeJson(AbstractAutocomplete):
             params.append(("shape_scope[]", ss))
 
         # if places_proximity_radius is not provided bragi will used default values
-        if request['places_proximity_radius']:
+        if 'places_proximity_radius' in request and request['places_proximity_radius'] is not None:
             params.extend(
                 [
                     ('proximity_scale', 6.5 * request['places_proximity_radius'] / 1000),
