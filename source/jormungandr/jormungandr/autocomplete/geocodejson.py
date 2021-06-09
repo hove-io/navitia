@@ -319,17 +319,15 @@ class GeocodeJson(AbstractAutocomplete):
         for ss in shape_scope:
             params.append(("shape_scope[]", ss))
 
-        # instances contains only one instance
-        if request['places_proximity_radius'] is None:
-            request['places_proximity_radius'] = instances[0].places_proximity_radius
-
-        params.extend(
-            [
-                ('proximity_scale', 6.5 * request['places_proximity_radius'] / 1000),
-                ('proximity_offset', request['places_proximity_radius'] / 1000),
-                ('proximity_decay', 0.4),
-            ]
-        )
+        # if places_proximity_radius is not provided bragi will used default values
+        if request['places_proximity_radius']:
+            params.extend(
+                [
+                    ('proximity_scale', 6.5 * request['places_proximity_radius'] / 1000),
+                    ('proximity_offset', request['places_proximity_radius'] / 1000),
+                    ('proximity_decay', 0.4),
+                ]
+            )
 
         if request.get("from"):
             lon, lat = self.get_coords(request["from"])

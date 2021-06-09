@@ -665,7 +665,11 @@ class Instance(object):
     bss_return_duration = _make_property_getter('bss_return_duration')
     bss_return_penalty = _make_property_getter('bss_rent_penalty')
 
-    places_proximity_radius = _make_property_getter('places_proximity_radius')
+    @property
+    def places_proximity_radius(self):
+        # type: () -> int
+        instance_db = self.get_models()
+        return get_value_or_default('places_proximity_radius', instance_db, self.name)
 
     def reap_socket(self, ttl):
         # type: (int) -> None
