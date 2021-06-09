@@ -251,9 +251,11 @@ std::vector<ImpactedVJ> get_impacted_vehicle_journeys(const RailSection& rs,
     };
 
     for (const auto* route : routes) {
-        if (!is_route_to_impact_content_sa_list(blocked_sa_uri_sequence.first, route->stop_area_list)) {
-            continue;
-        }
+        // TODO : fix the stop_area_list issue
+        // The list is empty
+        // if (!is_route_to_impact_content_sa_list(blocked_sa_uri_sequence.first, route->stop_area_list)) {
+        // continue;
+        //}
 
         // Loop on each vj
         route->for_each_vehicle_journey(apply_impacts_on_vj);
@@ -614,9 +616,11 @@ std::set<StopPoint*> get_stop_points_section(const RailSection& rs) {
     }
     auto blocked_sa_uri_sequence = create_blocked_sa_sequence(rs);
     for (const auto* route : routes) {
-        if (!is_route_to_impact_content_sa_list(blocked_sa_uri_sequence.first, route->stop_area_list)) {
-            continue;
-        }
+        // TODO : fix the stop_area_list issue
+        // The list is empty
+        // if (!is_route_to_impact_content_sa_list(blocked_sa_uri_sequence.first, route->stop_area_list)) {
+        // continue;
+        //}
         route->for_each_vehicle_journey([&](const VehicleJourney& vj) {
             auto ranks = vj.get_sections_ranks(rs.start_point, rs.end_point);
             if ((!ranks.empty() && rs.blocked_stop_areas.empty())

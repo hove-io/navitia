@@ -31,6 +31,7 @@ www.navitia.io
 
 #include "apply_disruption.h"
 #include "type/line.h"
+#include "type/route.h"
 #include "utils/logger.h"
 
 #include <boost/make_shared.hpp>
@@ -200,6 +201,99 @@ boost::optional<nt::disruption::LineSection> make_line_section(const chaos::PtOb
     return line_section;
 }
 
+boost::optional<nt::disruption::RailSection> make_rail_section(const chaos::PtObject& chaos_section,
+                                                               nt::PT_Data& pt_data) {
+    auto log = log4cplus::Logger::getInstance("log");
+    if (!chaos_section.has_pt_rail_section()) {
+        LOG4CPLUS_WARN(log, "fill_disruption_from_chaos: RailSection invalid!");
+        return boost::none;
+    }
+    std::string log_message = "new rail Section disruption received -";
+    const auto& pb_section = chaos_section.pt_rail_section();
+    nt::disruption::RailSection rail_section;
+
+    // Start
+    if (auto* start = find_or_default(pb_section.start_point().uri(), pt_data.stop_areas_map)) {
+        rail_section.start_point = start;
+        log_message += " start: " + pb_section.start_point().uri();
+    } else {
+        LOG4CPLUS_WARN(log, "fill_disruption_from_chaos: start_point id " << pb_section.start_point().uri()
+                                                                          << " in RailSection invalid!");
+        return boost::none;
+    }
+
+    // End
+    if (auto* end = find_or_default(pb_section.end_point().uri(), pt_data.stop_areas_map)) {
+        rail_section.end_point = end;
+        log_message += " end: " + pb_section.end_point().uri();
+    } else {
+        LOG4CPLUS_WARN(log, "fill_disruption_from_chaos: end_point id " << pb_section.end_point().uri()
+                                                                        << " in RailSection invalid!");
+        return boost::none;
+    }
+
+    if (pb_section.routes().empty() && !pb_section.has_line()) {
+        LOG4CPLUS_WARN(log, "routes or line are mandatory. Railsection ignored");
+        return boost::none;
+    }
+
+    // Line
+    if (pb_section.has_line()) {
+        auto* line = find_or_default(pb_section.line().uri(), pt_data.lines_map);
+        if (line) {
+            rail_section.line = line;
+            log_message += " line: " + pb_section.line().uri();
+        } else {
+            LOG4CPLUS_WARN(
+                log, "fill_disruption_from_chaos: line id " << pb_section.line().uri() << " in RailSection invalid!");
+            return boost::none;
+        }
+        if (pb_section.routes().empty()) {
+            rail_section.routes = rail_section.line->route_list;
+        }
+    }
+
+    // Routes
+    if (!pb_section.routes().empty()) {
+        log_message += " route: ";
+        for (const auto& pb_route : pb_section.routes()) {
+            auto* route = find_or_default(pb_route.uri(), pt_data.routes_map);
+            if (route) {
+                rail_section.routes.push_back(route);
+                log_message += pb_route.uri() + ";";
+            } else {
+                LOG4CPLUS_WARN(log,
+                               "fill_disruption_from_chaos: route id " << pb_route.uri() << " in RailSection invalid!");
+            }
+        }
+        if (rail_section.routes.empty()) {
+            LOG4CPLUS_WARN(log, "fill_disruption_from_chaos: no valid routes. Railsection ignored");
+            return boost::none;
+        }
+        if (!pb_section.has_line()) {
+            auto* route = find_or_default(pb_section.routes()[0].uri(), pt_data.routes_map);
+            if (route) {
+                rail_section.line = route->line;
+            } else {
+                LOG4CPLUS_WARN(log, "fill_disruption_from_chaos: route id " << pb_section.routes()[0].uri()
+                                                                            << " in RailSection invalid!");
+            }
+        }
+    }
+
+    // Blocked_stop_areas
+    if (!pb_section.blocked_stop_areas().empty()) {
+        log_message += " blocked stop _areas: ";
+        for (const auto& pb_bsa : pb_section.blocked_stop_areas()) {
+            rail_section.blocked_stop_areas.push_back(std::make_pair(pb_bsa.uri(), pb_bsa.order()));
+            log_message += pb_bsa.uri() + ";";
+        }
+    }
+
+    LOG4CPLUS_DEBUG(log, log_message);
+    return rail_section;
+}
+
 static std::vector<nt::disruption::PtObj> make_pt_objects(
     const google::protobuf::RepeatedPtrField<chaos::PtObject>& chaos_pt_objects,
     nt::PT_Data& pt_data) {
@@ -220,6 +314,11 @@ static std::vector<nt::disruption::PtObj> make_pt_objects(
             case chaos::PtObject_Type_line_section:
                 if (auto line_section = make_line_section(chaos_pt_object, pt_data)) {
                     res.emplace_back(*line_section);
+                }
+                break;
+            case chaos::PtObject_Type_rail_section:
+                if (auto rail_section = make_rail_section(chaos_pt_object, pt_data)) {
+                    res.emplace_back(*rail_section);
                 }
                 break;
             case chaos::PtObject_Type_line:
