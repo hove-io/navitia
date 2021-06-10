@@ -327,6 +327,13 @@ class Geovelo(AbstractStreetNetworkService):
             for sh in shape:
                 section.street_network.coordinates.add(lon=sh[0], lat=sh[1])
 
+            elevations = geovelo_section.get('details', {}).get('elevations', [])
+            if elevations:
+                for geovelo_elevation in itertools.islice(elevations, 1, sys.maxsize):
+                    elevation = section.street_network.elevations.add()
+                    elevation.distance_from_start = geovelo_elevation[0]
+                    elevation.elevation = geovelo_elevation[1]
+
         return resp
 
     def _direct_path(
@@ -352,7 +359,7 @@ class Geovelo(AbstractStreetNetworkService):
                 self.service_url,
                 'api/v2/computedroutes?'
                 'instructions=true&'
-                'elevations=false&'
+                'elevations=true&'
                 'geometry=true&'
                 'single_result=true&'
                 'bike_stations=false&'

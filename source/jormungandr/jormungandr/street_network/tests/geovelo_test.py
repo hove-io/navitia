@@ -82,7 +82,12 @@ def direct_path_response_valid():
                             "total": 11393.0,
                             "zone30": 793.0,
                         },
-                        "elevations": None,
+                        "elevations": [
+                            ["distanceFromStart", "elevation", "geometryIndex"],
+                            [0, 45.5, 0],
+                            [128, 44, 1],
+                            [274, 50, 7],
+                        ],
                         "instructions": [
                             [
                                 "direction",
@@ -262,7 +267,7 @@ def direct_path_geovelo_test():
     fallback_extremity = PeriodExtremity(str_to_time_stamp('20161010T152000'), False)
     with requests_mock.Mocker() as req:
         req.post(
-            'http://bob.com/api/v2/computedroutes?instructions=true&elevations=false&geometry=true'
+            'http://bob.com/api/v2/computedroutes?instructions=true&elevations=true&geometry=true'
             '&single_result=true&bike_stations=false&objects_as_ids=true&',
             json=resp_json,
         )
@@ -288,6 +293,12 @@ def direct_path_geovelo_test():
         assert geovelo_resp.journeys[0].sections[0].street_network.path_items[1].direction == 0
         assert geovelo_resp.journeys[0].sections[0].street_network.path_items[1].length == 40
         assert geovelo_resp.journeys[0].sections[0].street_network.path_items[1].duration == 11
+        assert geovelo_resp.journeys[0].sections[0].street_network.elevations[0].distance_from_start == 0
+        assert geovelo_resp.journeys[0].sections[0].street_network.elevations[0].elevation == 45.5
+        assert geovelo_resp.journeys[0].sections[0].street_network.elevations[1].distance_from_start == 128
+        assert geovelo_resp.journeys[0].sections[0].street_network.elevations[1].elevation == 44
+        assert geovelo_resp.journeys[0].sections[0].street_network.elevations[2].distance_from_start == 274
+        assert geovelo_resp.journeys[0].sections[0].street_network.elevations[2].elevation == 50
 
 
 def direct_path_geovelo_zero_test():
@@ -300,7 +311,7 @@ def direct_path_geovelo_zero_test():
     fallback_extremity = PeriodExtremity(str_to_time_stamp('20161010T152000'), False)
     with requests_mock.Mocker() as req:
         req.post(
-            'http://bob.com/api/v2/computedroutes?instructions=true&elevations=false&geometry=true'
+            'http://bob.com/api/v2/computedroutes?instructions=true&elevations=true&geometry=true'
             '&single_result=true&bike_stations=false&objects_as_ids=true&',
             json=resp_json,
         )

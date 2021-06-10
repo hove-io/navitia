@@ -199,6 +199,11 @@ class PathSerializer(PbNestedSerializer):
             return None
 
 
+class ElevationSerializer(PbNestedSerializer):
+    distance_from_start = RoundedField(display_none=True)
+    elevation = RoundedField(display_none=True)
+
+
 class SectionTypeEnum(EnumField):
     def as_getter(self, serializer_field_name, serializer_cls):
         def getter(value):
@@ -339,6 +344,7 @@ class SectionSerializer(PbNestedSerializer):
         return JourneySerializer(obj.ridesharing_journeys, display_none=False, many=True).data
 
     cycle_lane_length = PbIntField(display_none=False)
+    elevations = ElevationSerializer(attr="street_network.elevations", many=True, display_none=False)
 
 
 class JourneySerializer(PbNestedSerializer):
