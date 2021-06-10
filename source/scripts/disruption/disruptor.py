@@ -219,7 +219,6 @@ class Disruption(object):
                 oPtObj = rail_section.blocked_stop_areas.add()
                 oPtObj.uri = bsa[0]
                 oPtObj.order = bsa[1]
-                rail_section.blocked_stop_areas.append(oPtObj)
 
         # Message with one channel and two channel types: web
         message = impact.messages.add()
