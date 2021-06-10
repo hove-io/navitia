@@ -384,7 +384,7 @@ class TestDepartures(AbstractTestFixture):
     def test_terminus_schedule_with_realtime_and_is_realtime_field(self):
 
         query = self.query_template_ter.format(
-            sp='S39', dt='20160102T0800', data_freshness='', c_dt='20160102T0800'
+            sp='S39', dt='20160102T0800', data_freshness='&data_freshness=base_schedule', c_dt='20160102T0800'
         )
 
         response = self.query_region(query)

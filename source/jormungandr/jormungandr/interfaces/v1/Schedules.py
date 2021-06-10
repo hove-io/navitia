@@ -202,9 +202,9 @@ class Schedules(ResourceUri, ResourceUtc):
     def _get_default_freshness(self):
         # The data freshness depends on the endpoint
         # for route_schedule, by default we want the base schedule
-        if self.endpoint in ['route_schedules', 'terminus_schedules']:
+        if self.endpoint in ['route_schedules']:
             return 'base_schedule'
-        # for stop_schedule and previous/next departure/arrival, we want the freshest data by default
+        # for terminus_schedules, stop_schedule and previous/next departure/arrival, we want the freshest data by default
         else:
             return 'realtime'
 
