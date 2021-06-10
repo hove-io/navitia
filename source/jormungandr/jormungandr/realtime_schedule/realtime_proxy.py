@@ -151,7 +151,10 @@ class RealtimeProxy(six.with_metaclass(ABCMeta, object)):
     def _filter_base_stop_schedule(self, date_time):
         return True
 
-    def _update_stop_schedule(self, stop_schedule, next_realtime_passages):
+    def _is_valid_direction(self, direction_uri, passage_direction_uri):
+        return True
+
+    def _update_stop_schedule(self, stop_schedule, next_realtime_passages, groub_by_dest=False):
         """
         Update the stopschedule response with the new realtime passages
 
@@ -170,7 +173,10 @@ class RealtimeProxy(six.with_metaclass(ABCMeta, object)):
 
         # we clean up the old schedule
         pb_del_if(stop_schedule.date_times, self._filter_base_stop_schedule)
+        direction_uri = stop_schedule.pt_display_informations.uris.stop_area
         for passage in next_realtime_passages:
+            if groub_by_dest and not self._is_valid_direction(direction_uri, passage.direction_uri):
+                continue
             new_dt = stop_schedule.date_times.add()
             # the midnight is calculated from passage.datetime and it keeps the same timezone as passage.datetime
             midnight = passage.datetime.replace(hour=0, minute=0, second=0, microsecond=0)
