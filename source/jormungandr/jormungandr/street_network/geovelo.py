@@ -327,7 +327,7 @@ class Geovelo(AbstractStreetNetworkService):
             for sh in shape:
                 section.street_network.coordinates.add(lon=sh[0], lat=sh[1])
 
-            elevations = geovelo_section['details'].get('elevations')
+            elevations = geovelo_section.get('details', {}).get('elevations', [])
             if elevations:
                 for geovelo_elevation in itertools.islice(elevations, 1, sys.maxsize):
                     elevation = section.street_network.elevations.add()
