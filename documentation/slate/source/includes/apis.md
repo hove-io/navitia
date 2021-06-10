@@ -1043,18 +1043,6 @@ Examples:
 * A user doesn't like line A metro in hers city. She adds the parameter `forbidden_uris[]=line:A` when calling the API.
 * A user would only like to use Buses and Tramways. She adds the parameter `allowed_id[]=physical_mode:Bus&allowed_id[]=physical_mode:Tramway`.
 
-### Precisions on `free_radius_from/free_radius_to`
-
-These parameters find the nearest stop point (within free_radius distance) to the given coordinates.
-Then, it allows skipping walking sections between the point of departure/arrival and those nearest stop points.
-
-Example:
-
-![image](free_radius.png)
-
-In this example, the stop points within the circle (SP1, SP2 et SP3) can be reached via a crowfly of 0 second. The other stop points, outside the circle, will be reached by walking.
-
-
 #### Technically
 
 The journeys can only use allowed vehicle journeys (as present in the `public_transport` or `on_demand_transport` sections).
@@ -1095,6 +1083,17 @@ Without any constraint, all these objects can be used to propose a solution. Let
 |                    | line 3, line 5, stop C | No solution, as we can't get in neither get out
 |                    | stop A, stop C, stop B | As without any constraint, passing via stop C is not needed
 | stop A, stop B     | stop A, stop B         | No solution, as no stop point are allowed.
+
+### Precisions on `free_radius_from/free_radius_to`
+
+These parameters find the nearest stop point (within free_radius distance) to the given coordinates.
+Then, it allows skipping walking sections between the point of departure/arrival and those nearest stop points.
+
+Example:
+
+![image](free_radius.png)
+
+In this example, the stop points within the circle (SP1, SP2 et SP3) can be reached via a crowfly of 0 second. The other stop points, outside the circle, will be reached by walking.
 
 ### Objects
 
