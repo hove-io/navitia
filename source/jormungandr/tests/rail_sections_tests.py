@@ -36,38 +36,10 @@ from .check_utils import (
     is_valid_rail_section_disruption,
     get_used_vj,
     get_all_element_disruptions,
+    impacted_ids,
+    impacted_headsigns,
 )
 import pytest
-
-
-# Looking for (identifiable) objects impacted by 'disruptions' inputed
-def impacted_ids(disruptions):
-    # for the impacted object returns:
-    #  * id
-    #  * or the id of the vehicle_journey for stop_schedule.date_time
-    def get_id(obj):
-        id = obj.impacted_object.get('id')
-        if id is None:
-            # stop_schedule.date_time case
-            assert obj.impacted_object['links'][0]['type'] == 'vehicle_journey'
-            id = obj.impacted_object['links'][0]['id']
-        return id
-
-    ids = set()
-    for d in disruptions.values():
-        ids.update(set(get_id(o) for o in d))
-
-    return ids
-
-
-def impacted_headsigns(disruptions):
-    # for the impacted object returns the headsign (for the display_information field)
-
-    ids = set()
-    for d in disruptions.values():
-        ids.update(set(o.impacted_object.get('headsign') for o in d))
-
-    return ids
 
 
 @dataset({"rail_sections_test": {}})
@@ -276,22 +248,22 @@ class TestRailSections(AbstractTestFixture):
         for vj, result in scenario.items():
             assert result == self.has_disruption(ObjGetter('vehicle_journeys', vj), 'rail_section_on_line1-3')
 
-    def test_line_impacted_by_line_section(self):
+    def test_line_impacted_by_rail_section(self):
         assert True == self.has_disruption(ObjGetter('lines', 'line:1'), 'rail_section_on_line1-1')
         assert True == self.has_disruption(ObjGetter('lines', 'line:1'), 'rail_section_on_line1-2')
         assert True == self.has_disruption(ObjGetter('lines', 'line:1'), 'rail_section_on_line1-3')
-        assert False == self.has_disruption(ObjGetter('lines', 'line:2'), 'rail_section_on_line1-3')
-        assert False == self.has_disruption(ObjGetter('lines', 'line:2'), 'rail_section_on_line1-3')
+        assert False == self.has_disruption(ObjGetter('lines', 'line:2'), 'rail_section_on_line1-1')
+        assert False == self.has_disruption(ObjGetter('lines', 'line:2'), 'rail_section_on_line1-2')
         assert False == self.has_disruption(ObjGetter('lines', 'line:2'), 'rail_section_on_line1-3')
 
-    def test_line_reports_impacted_by_line_section(self):
+    def test_line_reports_impacted_by_rail_section(self):
         r = self.default_query('line_reports')
         assert len(get_not_null(r, 'disruptions')) == 3
         is_valid_rail_section_disruption(r['disruptions'][0])
         is_valid_rail_section_disruption(r['disruptions'][1])
         is_valid_rail_section_disruption(r['disruptions'][2])
 
-    def test_terminus_schedules_impacted_by_line_section(self):
+    def test_terminus_schedules_impacted_by_rail_section(self):
         r = self.default_query('lines/line:1/terminus_schedules')
         assert len(get_not_null(r, 'disruptions')) == 3
         is_valid_rail_section_disruption(r['disruptions'][0])
@@ -497,11 +469,7 @@ class TestRailSections(AbstractTestFixture):
             'vehicle_journey:vj:6': True,
         }
 
-        for disruption_label in [
-            'rail_section_on_line1-1',
-            'rail_section_on_line1-2',
-            # 'rail_section_on_line1-3',
-        ]:
+        for disruption_label in ['rail_section_on_line1-1', 'rail_section_on_line1-2']:
             for vj, result in scenario.items():
                 assert result == self.has_dis('vehicle_journeys/{}/traffic_reports'.format(vj), disruption_label)
 
@@ -660,7 +628,7 @@ class TestRailSections(AbstractTestFixture):
         for route, result in scenario.items():
             assert result == self.has_dis('routes/{}/traffic_reports'.format(route), 'rail_section_on_line1-3')
 
-    def test_route_schedule_impacted_by_line_section(self):
+    def test_route_schedule_impacted_by_rail_section(self):
         cur = '_current_datetime=20170101T100000'
         dt = 'from_datetime=20170101T080000'
         fresh = 'data_freshness=base_schedule'
