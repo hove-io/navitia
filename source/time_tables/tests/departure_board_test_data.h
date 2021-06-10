@@ -113,6 +113,22 @@ struct departure_board_fixture {
                     "A2", "11:10"_t)("Avj2", "11:25"_t);
                 b.lines.find("Line1")->second->properties["realtime_system"] = "Kisio数字";
 
+                // 1 line, 1 routes and 2 VJs
+                // * VJ1 : AA->BB->CC->DD->EE
+                // * VJ2 : AA->BB->CC->DD
+
+                b.sa("AA", 1., 1., false)("AA:sp");
+                b.sa("BB", 2., 2., false)("BB:sp");
+                b.sa("CC", 3., 3., false)("CC:sp");
+                b.sa("DD", 4., 4., false)("DD:sp");
+                b.sa("EE", 5., 5., false)("EE:sp");
+
+                b.vj("Line2").route("Route11").name("AA:VJ1")("AA:sp", "07:45"_t)("BB:sp", "08:00"_t)(
+                    "CC:sp", "09:00"_t)("DD:sp", "10:00"_t)("EE:sp", "11:00"_t);
+                b.vj("Line2").route("Route12").name("BB:VJ2")("AA:sp", "07:55"_t)("BB:sp", "08:55"_t)(
+                    "CC:sp", "09:30"_t)("DD:sp", "10:10"_t);
+                b.lines.find("Line2")->second->properties["realtime_system"] = "Kisio数字";
+
                 navitia::georef::Admin* ad = new navitia::georef::Admin();
                 ad->name = "Quimper";
                 ad->uri = "Quimper";
@@ -131,6 +147,9 @@ struct departure_board_fixture {
             },
             true) {
         b.data->meta->production_date = bg::date_period(bg::date(2016, 1, 1), bg::days(5));
+
+        sp_ptr = b.data->pt_data->stop_points_map["BB:sp"];
+        b.data->pt_data->codes.add(sp_ptr, "Kisio数字", "Kisio数字_BB:sp");
 
         sp_ptr = b.data->pt_data->stop_points_map["C:sp"];
         b.data->pt_data->codes.add(sp_ptr, "Kisio数字", "Kisio数字_C:sp");
