@@ -210,6 +210,15 @@ class Disruption(object):
             pb_end = rail_section.end_point
             pb_end.uri = self.impacted_obj.end
             pb_end.pt_object_type = chaos_pb2.PtObject.stop_area
+            for route_uri in self.impacted_obj.routes:
+                ptobject_rs = impact.informed_entities.add()
+                ptobject_rs.uri = route_uri
+                ptobject_rs.pt_object_type = chaos_pb2.PtObject.route
+                rail_section.routes.append(ptobject_rs)
+            for bsa in self.impacted_obj.blocked_stop_areas:
+                oPtObj = rail_section.blocked_stop_areas.add()
+                oPtObj.uri = bsa[0]
+                oPtObj.order = bsa[1]
 
         # Message with one channel and two channel types: web
         message = impact.messages.add()

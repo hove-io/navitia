@@ -35,38 +35,10 @@ from .check_utils import (
     is_valid_line_section_disruption,
     get_used_vj,
     get_all_element_disruptions,
+    impacted_ids,
+    impacted_headsigns,
 )
 import pytest
-
-
-# Looking for (identifiable) objects impacted by 'disruptions' inputed
-def impacted_ids(disruptions):
-    # for the impacted object returns:
-    #  * id
-    #  * or the id of the vehicle_journey for stop_schedule.date_time
-    def get_id(obj):
-        id = obj.impacted_object.get('id')
-        if id is None:
-            # stop_schedule.date_time case
-            assert obj.impacted_object['links'][0]['type'] == 'vehicle_journey'
-            id = obj.impacted_object['links'][0]['id']
-        return id
-
-    ids = set()
-    for d in disruptions.values():
-        ids.update(set(get_id(o) for o in d))
-
-    return ids
-
-
-def impacted_headsigns(disruptions):
-    # for the impacted object returns the headsign (for the display_information field)
-
-    ids = set()
-    for d in disruptions.values():
-        ids.update(set(o.impacted_object.get('headsign') for o in d))
-
-    return ids
 
 
 @dataset({"line_sections_test": {}})

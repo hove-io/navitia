@@ -1150,6 +1150,28 @@ def is_valid_line_section_disruption(disruption):
     is_valid_pt_object(get_not_null(line_section, 'to'))
 
 
+def is_valid_rail_section_disruption(disruption):
+    """
+    a rail section disruption is a classic disruption with it's line as the impacted object
+    and aside this a 'rail_section' section with additional information on the rail section
+    """
+    is_valid_disruption(disruption, chaos_disrup=False)
+
+    rail_section_impacted = next(
+        (
+            d
+            for d in get_not_null(disruption, 'impacted_objects')
+            if d['pt_object']['embedded_type'] == 'line' and d.get('impacted_rail_section')
+        ),
+        None,
+    )
+
+    assert rail_section_impacted
+    rail_section = get_not_null(rail_section_impacted, 'impacted_rail_section')
+    is_valid_pt_object(get_not_null(rail_section, 'from'))
+    is_valid_pt_object(get_not_null(rail_section, 'to'))
+
+
 def is_valid_disruption(disruption, chaos_disrup=True):
     get_not_null(disruption, 'id')
     get_not_null(disruption, 'disruption_id')
@@ -1426,3 +1448,33 @@ def get_schedule(scs, sp_uri, line_code):
 
 def get_disruption(disruptions, disrupt_id):
     return next((d for d in disruptions if d['id'] == disrupt_id), None)
+
+
+# Looking for (identifiable) objects impacted by 'disruptions' inputed
+def impacted_ids(disruptions):
+    # for the impacted object returns:
+    #  * id
+    #  * or the id of the vehicle_journey for stop_schedule.date_time
+    def get_id(obj):
+        id = obj.impacted_object.get('id')
+        if id is None:
+            # stop_schedule.date_time case
+            assert obj.impacted_object['links'][0]['type'] == 'vehicle_journey'
+            id = obj.impacted_object['links'][0]['id']
+        return id
+
+    ids = set()
+    for d in disruptions.values():
+        ids.update(set(get_id(o) for o in d))
+
+    return ids
+
+
+def impacted_headsigns(disruptions):
+    # for the impacted object returns the headsign (for the display_information field)
+
+    ids = set()
+    for d in disruptions.values():
+        ids.update(set(o.impacted_object.get('headsign') for o in d))
+
+    return ids
