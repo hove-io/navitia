@@ -767,6 +767,24 @@ class TestBragiAutocomplete(AbstractTestFixture):
             assert params.get('lat') == ['49.84']
             assert params.get('timeout') == ['2000']
 
+    def test_autocomplete_call_with_param_places_proximity_radius(self):
+        """
+        test that the from param of the autocomplete is correctly given to bragi
+        :return:
+        """
+        with requests_mock.Mocker() as m:
+            m.post('https://host_of_bragi/autocomplete', json={})
+            self.query_region('places?q=bob&from=3.25;49.84&places_proximity_radius=10000')
+            assert m.called
+            params = m.request_history[0].qs
+            assert params
+            assert params.get('lon') == ['3.25']
+            assert params.get('lat') == ['49.84']
+            assert params.get('timeout') == ['2000']
+            assert params.get('proximity_offset') == ['10.0']
+            assert params.get('proximity_scale') == ['65.0']  # 10 * 6.5
+            assert params.get('proximity_decay') == ['0.4']
+
     def test_autocomplete_call_override(self):
         """"
         test that the _autocomplete param switch the right autocomplete service
