@@ -429,7 +429,7 @@ bool Impact::is_valid(const boost::posix_time::ptime& publication_date,
         return false;
     }
 
-    // if we have a active_period, we check if the impact applies on this period
+    // if we have a active_period we check if the impact applies on this period
     if (active_period.is_null()) {
         return true;
     }
@@ -440,6 +440,23 @@ bool Impact::is_valid(const boost::posix_time::ptime& publication_date,
         }
     }
     return false;
+}
+
+ActiveStatus Impact::get_active_status(const boost::posix_time::ptime& publication_date) const {
+    bool is_future = false;
+    for (const auto& period : application_periods) {
+        if (period.contains(publication_date)) {
+            return ActiveStatus::active;
+        }
+        if (!period.is_null() && period.begin() >= publication_date) {
+            is_future = true;
+        }
+    }
+
+    if (is_future) {
+        return ActiveStatus::future;
+    }
+    return ActiveStatus::past;
 }
 
 bool Impact::is_relevant(const std::vector<const StopTime*>& stop_times) const {

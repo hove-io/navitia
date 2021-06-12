@@ -29,8 +29,9 @@ www.navitia.io
 */
 
 #include "type/type_interfaces.h"
-#include "type/message.h"
 #include "utils/functions.h"
+#include "type/type.pb.h"
+#include "type/message.h"
 
 namespace navitia {
 namespace type {
@@ -83,6 +84,7 @@ std::vector<boost::shared_ptr<disruption::Impact>> HasMessages::get_publishable_
 
 bool HasMessages::has_applicable_message(const boost::posix_time::ptime& current_time,
                                          const boost::posix_time::time_period& action_period,
+                                         const std::vector<disruption::ActiveStatus>& filter_status,
                                          const Line* line) const {
     for (const auto& i : this->impacts) {
         auto impact = i.lock();
@@ -96,7 +98,13 @@ bool HasMessages::has_applicable_message(const boost::posix_time::ptime& current
             continue;
         }
         if (impact->is_valid(current_time, action_period)) {
-            return true;
+            // if filter empty == no filter
+            // else we return true only if active status is wanted
+            if (filter_status.empty()
+                || std::find(filter_status.begin(), filter_status.end(), impact->get_active_status(current_time))
+                       != filter_status.end()) {
+                return true;
+            }
         }
     }
     return false;

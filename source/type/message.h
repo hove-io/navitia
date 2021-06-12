@@ -64,6 +64,8 @@ enum class Effect {
     STOP_MOVED
 };
 
+enum class ActiveStatus { past = 0, active = 1, future = 2 };
+
 enum class ChannelType { web = 0, sms, email, mobile, notification, twitter, facebook, unknown_type, title, beacon };
 
 inline std::string to_string(Effect effect) {
@@ -354,6 +356,7 @@ struct Impact {
     bool is_line_section_of(const Line&) const;
     bool is_only_rail_section() const;
     bool is_rail_section_of(const Line&) const;
+    ActiveStatus get_active_status(const boost::posix_time::ptime& publication_date) const;
     Indexes get(Type_e target, PT_Data& pt_data) const;
     const type::ValidityPattern get_impact_vp(const boost::gregorian::date_period& production_date) const;
 

@@ -88,6 +88,7 @@ struct Disruption;
 struct Impact;
 struct Message;
 struct ApplicationPattern;
+enum class ActiveStatus;
 }  // namespace disruption
 }  // namespace type
 }  // namespace navitia
