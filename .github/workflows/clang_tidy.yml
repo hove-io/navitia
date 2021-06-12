@@ -23,7 +23,7 @@ jobs:
           ref: ${{ github.head_ref }}
           submodules: 'recursive'
     - name : Install dependencies
-      run: sudo apt install -y liblog4cplus-dev libgoogle-perftools-dev libprotobuf-dev protobuf-compiler libssl-dev libosmpbf-dev libpqxx-dev libproj-dev libzmq3-dev python-yaml clang-tools clang-tidy libboost-all-dev 2to3 xmlto
+      run: sudo apt update && sudo apt install -y liblog4cplus-dev libgoogle-perftools-dev libprotobuf-dev protobuf-compiler libssl-dev libosmpbf-dev libpqxx-dev libproj-dev libzmq3-dev python-yaml clang-tools clang-tidy libboost-all-dev 2to3 xmlto
     - name : Clang-tidy Info
       run: clang-tidy --version
     - name: Cmake
