@@ -346,8 +346,12 @@ class Here(AbstractStreetNetworkService):
             path_item.instruction = maneuver.get('instruction', '')
             path_item.name = maneuver.get('roadName', '')
             path_item.direction = _convert_direction(maneuver.get('direction', ''))
-            path_item.coordinate.lat = float(maneuver.get('position', 0.0).get('latitude', 0.0))
-            path_item.coordinate.lon = float(maneuver.get('position', 0.0).get('longitude', 0.0))
+            path_item.instruction_start_coordinate.lat = float(
+                maneuver.get('position', 0.0).get('latitude', 0.0)
+            )
+            path_item.instruction_start_coordinate.lon = float(
+                maneuver.get('position', 0.0).get('longitude', 0.0)
+            )
 
         shape = route.get('shape', [])
         for sh in shape:
