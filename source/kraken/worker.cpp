@@ -213,8 +213,8 @@ static type::RTLevel get_realtime_level(pbnavitia::RTLevel pb_level) {
     }
 }
 
-static nt::disruption::ActiveStatus get_active_status(pbnavitia::ActiveStatus pb_level) {
-    switch (pb_level) {
+static nt::disruption::ActiveStatus from_pb_active_status(pbnavitia::ActiveStatus pb_active_status) {
+    switch (pb_active_status) {
         case pbnavitia::past:
             return nt::disruption::ActiveStatus::past;
         case pbnavitia::active:
@@ -440,7 +440,7 @@ void Worker::line_reports(const pbnavitia::LineReportsRequest& request) {
     }
     std::vector<nt::disruption::ActiveStatus> filter_status;
     for (const auto& filter_st : request.filter_status()) {
-        filter_status.push_back(get_active_status(pbnavitia::ActiveStatus(filter_st)));
+        filter_status.push_back(from_pb_active_status(pbnavitia::ActiveStatus(filter_st)));
     }
     navitia::disruption::line_reports(
         this->pb_creator, *data, request.depth(), request.count(), request.start_page(), request.filter(),

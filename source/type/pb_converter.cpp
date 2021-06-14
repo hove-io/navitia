@@ -41,6 +41,7 @@ www.navitia.io
 #include "utils/exception.h"
 #include "utils/exception.h"
 #include "utils/functions.h"
+#include "type/type_utils.h"
 
 #include <boost/algorithm/cxx11/none_of.hpp>
 #include <boost/date_time/date_defs.hpp>
@@ -1143,20 +1144,7 @@ void PbCreator::Filler::fill_informed_entity(const nd::PtObj& ptobj,
 }
 
 static pbnavitia::ActiveStatus compute_disruption_status(const nd::Impact& impact, const pt::ptime& now) {
-    bool is_future = false;
-    for (const auto& period : impact.application_periods) {
-        if (period.contains(now)) {
-            return pbnavitia::active;
-        }
-        if (!period.is_null() && period.begin() >= now) {
-            is_future = true;
-        }
-    }
-
-    if (is_future) {
-        return pbnavitia::future;
-    }
-    return pbnavitia::past;
+    return to_pb_active_status(impact.get_active_status(now));
 }
 
 static pbnavitia::Severity_Effect get_severity_effect(nd::Effect e) {

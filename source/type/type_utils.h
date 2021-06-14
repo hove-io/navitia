@@ -50,4 +50,6 @@ const type::StopTime& earliest_stop_time(const std::vector<type::StopTime>& sts)
 
 pbnavitia::RTLevel to_pb_realtime_level(const navitia::type::RTLevel realtime_level);
 
+pbnavitia::ActiveStatus to_pb_active_status(navitia::type::disruption::ActiveStatus active_status);
+
 }  // namespace navitia
