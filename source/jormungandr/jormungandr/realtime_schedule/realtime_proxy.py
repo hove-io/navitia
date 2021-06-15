@@ -41,6 +41,11 @@ import hashlib
 import logging
 import six
 import math
+from jormungandr import cache, app
+from collections import namedtuple
+
+
+Direction = namedtuple("Direction", "uri, label")
 
 
 def floor_datetime(dt, step):
@@ -174,6 +179,7 @@ class RealtimeProxy(six.with_metaclass(ABCMeta, object)):
         # we clean up the old schedule
         pb_del_if(stop_schedule.date_times, self._filter_base_stop_schedule)
         direction_uri = stop_schedule.pt_display_informations.uris.stop_area
+
         for passage in next_realtime_passages:
             if groub_by_dest and not self._is_valid_direction(direction_uri, passage.direction_uri):
                 continue
@@ -263,3 +269,19 @@ class RealtimeProxy(six.with_metaclass(ABCMeta, object)):
         params = {'realtime_system_id': six.text_type(self.rt_system_id), 'status': status}
         params.update(kwargs)
         new_relic.record_custom_event('realtime_proxy_additional_info', params)
+
+    @cache.memoize(app.config.get(str('CACHE_CONFIGURATION'), {}).get(str('TIMEOUT_PTOBJECTS'), 600))
+    def _get_direction(self, line_uri, object_code, default_value):
+        if not self.destination_id_tag:
+            return Direction(object_code, default_value)
+
+        stop_point = self.instance.ptref.get_stop_point(line_uri, self.destination_id_tag, object_code)
+
+        if (
+            stop_point
+            and stop_point.HasField('stop_area')
+            and stop_point.stop_area.HasField('label')
+            and stop_point.stop_area.label != ''
+        ):
+            return Direction(stop_point.stop_area.uri, stop_point.stop_area.label)
+        return Direction(object_code, default_value)

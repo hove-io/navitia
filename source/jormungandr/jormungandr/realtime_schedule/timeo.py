@@ -39,10 +39,6 @@ from jormungandr.schedule import RealTimePassage
 from datetime import datetime, time
 from navitiacommon.ratelimit import RateLimiter, FakeRateLimiter
 import six
-from collections import namedtuple
-
-
-Direction = namedtuple("Direction", "uri, label")
 
 
 def _to_duration(hour_str):
@@ -342,22 +338,6 @@ class Timeo(RealtimeProxy):
                 'reset_timeout': self.breaker.reset_timeout,
             },
         }
-
-    @cache.memoize(app.config.get(str('CACHE_CONFIGURATION'), {}).get(str('TIMEOUT_PTOBJECTS'), 600))
-    def _get_direction(self, line_uri, object_code, default_value):
-        if not self.destination_id_tag:
-            return Direction(object_code, default_value)
-
-        stop_point = self.instance.ptref.get_stop_point(line_uri, self.destination_id_tag, object_code)
-
-        if (
-            stop_point
-            and stop_point.HasField('stop_area')
-            and stop_point.stop_area.HasField('label')
-            and stop_point.stop_area.label != ''
-        ):
-            return Direction(stop_point.stop_area.uri, stop_point.stop_area.label)
-        return Direction(object_code, default_value)
 
     def __eq__(self, other):
         return self.rt_system_id == other.rt_system_id

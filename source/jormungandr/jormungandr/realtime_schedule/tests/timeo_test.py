@@ -30,8 +30,8 @@
 from __future__ import absolute_import, print_function, division
 import mock
 import requests_mock
-from jormungandr.realtime_schedule.timeo import Timeo, Direction
-from jormungandr.realtime_schedule.realtime_proxy import RealtimeProxyError
+from jormungandr.realtime_schedule.timeo import Timeo
+from jormungandr.realtime_schedule.realtime_proxy import RealtimeProxyError, Direction
 import validators
 from jormungandr.realtime_schedule.tests.utils import MockRoutePoint, _timestamp, _dt
 from jormungandr.tests.utils_test import MockRequests

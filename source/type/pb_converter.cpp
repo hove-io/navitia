@@ -1324,9 +1324,6 @@ void PbCreator::Filler::fill_pb_object(const nt::Route* r, pbnavitia::PtDisplayI
             }
         }
     }
-    if (r->destination != nullptr) {
-        uris->set_stop_area(r->destination->uri);
-    }
     if (r->line != nullptr) {
         pt_display_info->set_color(r->line->color);
         pt_display_info->set_text_color(r->line->text_color);
