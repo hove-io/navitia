@@ -315,16 +315,16 @@ class TestHere(NewDefaultScenarioAbstractTestFixture):
         assert path[0].get('duration') == 100
         assert path[0].get('direction') == -90
         assert path[0].get('instruction') == "blabla turn left 4"
-        assert path[0].get('coordinate').get('lat') == "48.8756444"
-        assert path[0].get('coordinate').get('lon') == "2.0944333"
+        assert path[0].get('instruction_start_coordinate').get('lat') == "48.8756444"
+        assert path[0].get('instruction_start_coordinate').get('lon') == "2.0944333"
         assert path[1].get('id') == 2
         assert path[1].get('name') == "street 5"
         assert path[1].get('length') == 80
         assert path[1].get('duration') == 200
         assert path[1].get('direction') == 90
         assert path[1].get('instruction') == "blabla turn right 5"
-        assert path[1].get('coordinate').get('lat') == "50.0061111"
-        assert path[1].get('coordinate').get('lon') == "2.2468054"
+        assert path[1].get('instruction_start_coordinate').get('lat') == "50.0061111"
+        assert path[1].get('instruction_start_coordinate').get('lon') == "2.2468054"
 
         car_fallback = journeys[1]
 
@@ -346,8 +346,8 @@ class TestHere(NewDefaultScenarioAbstractTestFixture):
         assert path[0].get('duration') == 15
         assert path[0].get('direction') == -90
         assert path[0].get('instruction') == "blabla turn left 1"
-        assert path[0].get('coordinate').get('lat') == "48.9995432"
-        assert path[0].get('coordinate').get('lon') == "2.34986"
+        assert path[0].get('instruction_start_coordinate').get('lat') == "48.9995432"
+        assert path[0].get('instruction_start_coordinate').get('lon') == "2.34986"
 
         assert sections[1].get('departure_date_time') == '20120614T080100'
         assert sections[1].get('arrival_date_time') == '20120614T080102'
@@ -367,16 +367,16 @@ class TestHere(NewDefaultScenarioAbstractTestFixture):
         assert path[0].get('duration') == 10
         assert path[0].get('direction') == -90
         assert path[0].get('instruction') == "blabla turn left 2"
-        assert path[0].get('coordinate').get('lat') == "48.8765432"
-        assert path[0].get('coordinate').get('lon') == "2.2798654"
+        assert path[0].get('instruction_start_coordinate').get('lat') == "48.8765432"
+        assert path[0].get('instruction_start_coordinate').get('lon') == "2.2798654"
         assert path[1].get('id') == 2
         assert path[1].get('name') == "street 3"
         assert path[1].get('length') == 90
         assert path[1].get('duration') == 50
         assert path[1].get('direction') == 0
         assert path[1].get('instruction') == "blabla continue on 3"
-        assert path[1].get('coordinate').get('lat') == "60.8765432"
-        assert path[1].get('coordinate').get('lon') == "3.2798654"
+        assert path[1].get('instruction_start_coordinate').get('lat') == "60.8765432"
+        assert path[1].get('instruction_start_coordinate').get('lon') == "3.2798654"
 
     def test_feed_publishers(self):
 
