@@ -15,10 +15,13 @@ Checks: '-*,
         modernize-use-equals-delete,
         modernize-use-noexcept,
         modernize-use-nullptr,
+        modernize-use-auto,
         modernize-use-override,
         modernize-use-using,
+        modernize-loop-convert,
         bugprone-move-forwarding-reference,
-        performance-noexcept-move-constructor'
+        performance-noexcept-move-constructor,
+        performance-faster-string-find'
 HeaderFilterRegex: '*'
 AnalyzeTemporaryDtors: false
 FormatStyle:     file
