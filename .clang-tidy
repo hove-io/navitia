@@ -5,7 +5,23 @@ Checks: '-*,
         modernize-deprecated-ios-base-aliases,
         modernize-loop-convert,
         modernize-make-shared, modernize-make-unique,
-        modernize-pass-by-value'
+        modernize-pass-by-value,
+        modernize-replace-auto-ptr,
+        modernize-return-braced-init-list,
+        modernize-unary-static-assert,
+        modernize-use-bool-literals,
+        modernize-use-emplace,
+        modernize-use-equals-default,
+        modernize-use-equals-delete,
+        modernize-use-noexcept,
+        modernize-use-nullptr,
+        modernize-use-auto,
+        modernize-use-override,
+        modernize-use-using,
+        modernize-loop-convert,
+        bugprone-move-forwarding-reference,
+        performance-noexcept-move-constructor,
+        performance-faster-string-find'
 HeaderFilterRegex: '*'
 AnalyzeTemporaryDtors: false
 FormatStyle:     file
