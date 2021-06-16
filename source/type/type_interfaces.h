@@ -249,6 +249,7 @@ public:
 
     bool has_applicable_message(const boost::posix_time::ptime& current_time,
                                 const boost::posix_time::time_period& action_period,
+                                const std::vector<disruption::ActiveStatus>& filter_status = {},
                                 const Line* line = nullptr) const;
 
     bool has_publishable_message(const boost::posix_time::ptime& current_time) const;

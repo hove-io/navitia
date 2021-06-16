@@ -34,6 +34,7 @@ from jormungandr.utils import date_to_timestamp, timestamp_to_str, dt_to_str, ti
 
 import navitiacommon.type_pb2 as type_pb2
 import navitiacommon.request_pb2 as request_pb2
+from navitiacommon.type_pb2 import ActiveStatus
 from jormungandr.interfaces.common import pb_odt_level
 from jormungandr.scenarios.utils import places_type, pt_object_type, add_link
 from jormungandr.scenarios.utils import build_pagination
@@ -124,6 +125,10 @@ class Scenario(object):
         if request["forbidden_uris[]"]:
             for forbidden_uri in request["forbidden_uris[]"]:
                 req.line_reports.forbidden_uris.append(forbidden_uri)
+
+        if request["filter_status[]"]:
+            for filter_status in request["filter_status[]"]:
+                req.line_reports.filter_status.append(ActiveStatus.Value(filter_status))
 
         if request['since']:
             req.line_reports.since_datetime = request['since']
