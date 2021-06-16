@@ -381,7 +381,7 @@ class MixedSchedule(object):
                 # elements (less than 5000 for line 40 and 45). The Cache with 1 hour duration works well
                 occupancy = vo_service.get_response(args)
                 if occupancy is not None:
-                    date_time.occupancy = vo_service.get_response(args)
+                    date_time.occupancy = occupancy
 
     def terminus_schedules(self, request):
         resp = self.__stop_times(request, api=type_pb2.terminus_schedules, departure_filter=request["filter"])
