@@ -44,11 +44,14 @@ import pytest
 
 @dataset({"rail_sections_test": {}})
 class TestRailSections(AbstractTestFixture):
-    def default_query(self, q, **kwargs):
+    def default_query(self, q, data_freshness=None, **kwargs):
         """
         query navitia with a current date in the publication period of the impacts
         """
-        return self.query_region('{}?_current_datetime=20170101T100000'.format(q), **kwargs)
+        query = '{}?_current_datetime=20170101T100000'.format(q)
+        if data_freshness:
+            query += "&data_freshness={}".format(data_freshness)
+        return self.query_region(query, **kwargs)
 
     def has_disruption(self, object_get, disruption_uri):
         """
@@ -264,13 +267,14 @@ class TestRailSections(AbstractTestFixture):
         is_valid_rail_section_disruption(r['disruptions'][2])
 
     def test_terminus_schedules_impacted_by_rail_section(self):
-        r = self.default_query('lines/line:1/terminus_schedules')
+
+        r = self.default_query('lines/line:1/terminus_schedules', data_freshness="base_schedule")
         assert len(get_not_null(r, 'disruptions')) == 3
         is_valid_rail_section_disruption(r['disruptions'][0])
         is_valid_rail_section_disruption(r['disruptions'][1])
         is_valid_rail_section_disruption(r['disruptions'][2])
 
-        r = self.default_query('lines/line:2/terminus_schedules')
+        r = self.default_query('lines/line:2/terminus_schedules', data_freshness="base_schedule")
         assert len(r['disruptions']) == 0
 
     def test_journeys_with_rail_section(self):
