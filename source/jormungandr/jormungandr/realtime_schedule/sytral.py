@@ -101,6 +101,9 @@ class Sytral(RealtimeProxy):
             params.append(("direction_type", direction_type))
         return params
 
+    def _is_valid_direction(self, direction_uri, passage_direction_uri):
+        return direction_uri == passage_direction_uri
+
     @cache.memoize(app.config['CACHE_CONFIGURATION'].get('TIMEOUT_SYTRAL', 30))
     def _call(self, params):
         """
@@ -145,6 +148,7 @@ class Sytral(RealtimeProxy):
 
         # One line navitia can be multiple lines on the SAE side
         line_ids = route_point.fetch_all_line_id(self.object_id_tag)
+        line_uri = route_point.fetch_line_uri()
 
         departures = resp.get('departures', [])
         next_passages = []
@@ -152,9 +156,12 @@ class Sytral(RealtimeProxy):
             if next_expected_st['line'] not in line_ids:
                 continue
             dt = self._get_dt(next_expected_st['datetime'])
-            direction = next_expected_st.get('direction_name')
+            direction_name = next_expected_st.get('direction_name')
             is_real_time = next_expected_st.get('type') == 'E'
-            next_passage = RealTimePassage(dt, direction, is_real_time)
+            direction = self._get_direction(
+                line_uri=line_uri, object_code=next_expected_st.get('direction'), default_value=direction_name
+            )
+            next_passage = RealTimePassage(dt, direction_name, is_real_time, direction.uri)
             next_passages.append(next_passage)
 
         return next_passages

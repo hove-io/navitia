@@ -64,9 +64,10 @@ def get_realtime_system_code(route_point):
 
 
 class RealTimePassage(object):
-    def __init__(self, datetime, direction=None, is_real_time=True):
+    def __init__(self, datetime, direction=None, is_real_time=True, direction_uri=None):
         self.datetime = datetime
         self.direction = direction
+        self.direction_uri = direction_uri
         self.is_real_time = is_real_time
 
 
@@ -341,7 +342,7 @@ class MixedSchedule(object):
 
         return resp
 
-    def _manage_realtime(self, request, schedules):
+    def _manage_realtime(self, request, schedules, groub_by_dest=False):
         futures = []
         pool = gevent.pool.Pool(self.instance.realtime_pool_size)
 
@@ -365,7 +366,7 @@ class MixedSchedule(object):
 
         for future in gevent.iwait(futures):
             rt_proxy, schedule, next_rt_passages = future.get()
-            rt_proxy._update_stop_schedule(schedule, next_rt_passages)
+            rt_proxy._update_stop_schedule(schedule, next_rt_passages, groub_by_dest)
 
     def _manage_occupancies(self, schedules):
         vo_service = self.instance.external_service_provider_manager.get_vehicle_occupancy_service()
@@ -388,7 +389,7 @@ class MixedSchedule(object):
 
         if request['data_freshness'] != RT_PROXY_DATA_FRESHNESS:
             return resp
-        self._manage_realtime(request, resp.terminus_schedules)
+        self._manage_realtime(request, resp.terminus_schedules, groub_by_dest=True)
         return resp
 
     def departure_boards(self, request):

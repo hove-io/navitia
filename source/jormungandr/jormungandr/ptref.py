@@ -62,6 +62,11 @@ class PtRef(object):
         req.ptref.count = 1
         req.ptref.start_page = 0
         req.ptref.depth = 1
+        if not all([code_key, code_value]):
+            logging.getLogger(__name__).warning(
+                'PtRef, not valid filter you give: code_key = {},  code_value= {}'.format(code_key, code_value)
+            )
+            return None
         req.ptref.filter = 'stop_point.has_code("{code_key}", "{code_value}")'.format(
             code_key=code_key, code_value=code_value
         )
