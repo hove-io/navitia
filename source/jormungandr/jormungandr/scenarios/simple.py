@@ -346,12 +346,12 @@ class Scenario(object):
         req['region'] = instance.name
         add_link(resp, rel='ridesharing_journeys', **req)
 
-    def _add_realtime_link(self, resp, params):
+    def _add_bypass_disruptions_link(self, resp, params):
         # find first impact wit a NO_SERVICE severity
         found = next((True for impact in resp.impacts if impact.severity.effect == Severity.NO_SERVICE), False)
         if found:
             params['data_freshness'] = 'realtime'
-            add_link(resp, rel='realtime', **params)
+            add_link(resp, rel='bypass_disruptions', **params)
 
     def _add_prev_link(self, resp, params, clockwise):
         prev_dt = self.previous_journey_datetime(resp.journeys, clockwise)
@@ -393,7 +393,7 @@ class Scenario(object):
         cloned_params = request.args.to_dict(flat=False)
         cloned_params['region'] = instance.name  # we add the region in the args to have fully qualified links
 
-        self._add_realtime_link(resp, cloned_params)
+        self._add_bypass_disruptions_link(resp, cloned_params)
 
         self._add_next_link(resp, cloned_params, clockwise)
         self._add_prev_link(resp, cloned_params, clockwise)

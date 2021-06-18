@@ -48,6 +48,7 @@ from .check_utils import *
 import jormungandr
 from jormungandr import app, i_manager, utils
 from navitiacommon.models import User
+from navitiacommon.type_pb2 import Severity
 from jormungandr.instance import Instance
 from jormungandr.parking_space_availability import (
     AbstractParkingPlacesProvider,
@@ -328,7 +329,17 @@ class AbstractTestFixture(unittest.TestCase):
         journeys_links = get_links_dict(response)
         clockwise = query_dict.get('datetime_represents', 'departure') == "departure"
         has_pt = any(s['type'] == 'public_transport' for j in response['journeys'] for s in j['sections'])
-        for l in ["prev", "next", "first", "last"]:
+        tested_link = ["prev", "next", "first", "last"]
+
+        has_disruption_no_service = False
+        if 'impacts' in response:
+            has_disruption_no_service = next(
+                (True for impact in response.impacts if impact.severity.effect == Severity.NO_SERVICE), False
+            )
+        if has_disruption_no_service:
+            tested_link.append("bypass_disruptions")
+
+        for l in tested_link:
             if l in ["prev", "next"] and not has_pt:  # no prev and next if no pt
                 continue
 
@@ -348,14 +359,20 @@ class AbstractTestFixture(unittest.TestCase):
                     elif l == 'last':
                         assert v.endswith('T235959')
                     continue
+                if k == 'data_freshness':
+                    if l == 'bypass_disruptions':
+                        assert query_dict[k] == u'base_schedule'
+                        assert v.endswith('realtime')
                 if k == 'datetime_represents':
                     if l in ['prev', 'last']:
                         assert v == 'arrival'
                     else:
                         assert v == 'departure'
                     continue
-
-                assert query_dict[k] == v
+                # assert query_dict[k] == v, except for bypass_disruptions link
+                # we change query with  query_dict['data_freshness']='realtime'
+                if k != 'data_freshness':
+                    assert query_dict[k] == v
 
         if has_pt and '/coverage/' in query:
             types = [l['type'] for l in response['links']]
