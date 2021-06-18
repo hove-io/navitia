@@ -34,7 +34,7 @@ from jormungandr.utils import date_to_timestamp, timestamp_to_str, dt_to_str, ti
 
 import navitiacommon.type_pb2 as type_pb2
 import navitiacommon.request_pb2 as request_pb2
-from navitiacommon.type_pb2 import ActiveStatus
+from navitiacommon.type_pb2 import ActiveStatus, Severity
 from jormungandr.interfaces.common import pb_odt_level
 from jormungandr.scenarios.utils import places_type, pt_object_type, add_link
 from jormungandr.scenarios.utils import build_pagination
@@ -346,6 +346,13 @@ class Scenario(object):
         req['region'] = instance.name
         add_link(resp, rel='ridesharing_journeys', **req)
 
+    def _add_realtime_link(self, resp, params):
+        # find first impact wit a NO_SERVICE severity
+        found = next((True for impact in resp.impacts if impact.severity.effect == Severity.NO_SERVICE), False)
+        if found:
+            params['data_freshness'] = 'realtime'
+            add_link(resp, rel='realtime', **params)
+
     def _add_prev_link(self, resp, params, clockwise):
         prev_dt = self.previous_journey_datetime(resp.journeys, clockwise)
         if prev_dt is not None:
@@ -385,6 +392,8 @@ class Scenario(object):
         # request.args is a MultiDict, we want to flatten it by having list as value when needed (flat=True)
         cloned_params = request.args.to_dict(flat=False)
         cloned_params['region'] = instance.name  # we add the region in the args to have fully qualified links
+
+        self._add_realtime_link(resp, cloned_params)
 
         self._add_next_link(resp, cloned_params, clockwise)
         self._add_prev_link(resp, cloned_params, clockwise)
