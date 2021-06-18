@@ -213,6 +213,19 @@ static type::RTLevel get_realtime_level(pbnavitia::RTLevel pb_level) {
     }
 }
 
+static nt::disruption::ActiveStatus from_pb_active_status(pbnavitia::ActiveStatus pb_active_status) {
+    switch (pb_active_status) {
+        case pbnavitia::past:
+            return nt::disruption::ActiveStatus::past;
+        case pbnavitia::active:
+            return nt::disruption::ActiveStatus::active;
+        case pbnavitia::future:
+            return nt::disruption::ActiveStatus::future;
+        default:
+            throw navitia::recoverable_exception("unhandled disruption active status");
+    }
+}
+
 template <class T>
 std::vector<std::string> vector_of_admins(const T& admin) {
     std::vector<std::string> result;
@@ -425,9 +438,14 @@ void Worker::line_reports(const pbnavitia::LineReportsRequest& request) {
     for (const auto& uri : request.forbidden_uris()) {
         forbidden_uris.push_back(uri);
     }
+    std::vector<nt::disruption::ActiveStatus> filter_status;
+    for (const auto& filter_st : request.filter_status()) {
+        filter_status.push_back(from_pb_active_status(pbnavitia::ActiveStatus(filter_st)));
+    }
     navitia::disruption::line_reports(
         this->pb_creator, *data, request.depth(), request.count(), request.start_page(), request.filter(),
-        forbidden_uris, boost::make_optional(request.has_since_datetime(), bt::from_time_t(request.since_datetime())),
+        forbidden_uris, filter_status,
+        boost::make_optional(request.has_since_datetime(), bt::from_time_t(request.since_datetime())),
         boost::make_optional(request.has_until_datetime(), bt::from_time_t(request.until_datetime())));
 }
 

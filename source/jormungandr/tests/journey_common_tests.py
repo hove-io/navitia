@@ -1338,7 +1338,7 @@ class DirectPath(object):
         assert car_journey
         assert len(car_journey['sections']) == 3
         # without filter we use the parking poi:parking_2
-        car_journey['sections'][0]['to']['id'] == 'poi:parking_2'
+        assert car_journey['sections'][0]['to']['id'] == 'poi:parking_2'
 
         walking_journey = find_with_tag(response['journeys'], 'non_pt_walking')
         assert walking_journey
@@ -1353,7 +1353,8 @@ class DirectPath(object):
         assert car_journey
         assert len(car_journey['sections']) == 3
         # when the parking 'poi:parking_2' is forbidden we use the parking poi:parking_1
-        car_journey['sections'][0]['to']['id'] == 'poi:parking_1'
+        if self.data_sets['main_routing_test']['scenario'] == u"distributed":
+            assert car_journey['sections'][0]['to']['id'] == 'poi:parking_1'
 
         # Test car_journey with filter to force the parking 'poi:parking_1', not used without any filter on parking
         query_with_ai = query + '&allowed_id[]=poi:parking_1'
@@ -1364,7 +1365,8 @@ class DirectPath(object):
         assert car_journey
         assert len(car_journey['sections']) == 3
         # when the parking 'poi:parking_1' is forced in parameter, we use it
-        car_journey['sections'][0]['to']['id'] == 'poi:parking_1'
+        if self.data_sets['main_routing_test']['scenario'] == u"distributed":
+            assert car_journey['sections'][0]['to']['id'] == 'poi:parking_1'
 
         # Test car_journey with more than one allowed_id, uses only one of the parking
         # as itinerary using another parking is deleted by the raptor
@@ -1375,7 +1377,7 @@ class DirectPath(object):
         car_journey = find_with_tag(response['journeys'], 'car')
         assert car_journey
         assert len(car_journey['sections']) == 3
-        car_journey['sections'][0]['to']['id'] == 'poi:parking_2'
+        assert car_journey['sections'][0]['to']['id'] == 'poi:parking_2'
 
         # Test car_journey with a forbidden_uris[] and an allowed_id[]
         query_with_both = query + '&allowed[]=poi:parking_1&forbidden_uris[]=poi:parking_2'
@@ -1385,7 +1387,8 @@ class DirectPath(object):
         car_journey = find_with_tag(response['journeys'], 'car')
         assert car_journey
         assert len(car_journey['sections']) == 3
-        car_journey['sections'][0]['to']['id'] == 'poi:parking_1'
+        if self.data_sets['main_routing_test']['scenario'] == u"distributed":
+            assert car_journey['sections'][0]['to']['id'] == 'poi:parking_1'
 
     def test_journey_direct_path_only(self):
         query = journey_basic_query + "&first_section_mode[]=walking" + "&direct_path=only"

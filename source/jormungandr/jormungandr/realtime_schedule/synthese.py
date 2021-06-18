@@ -177,7 +177,6 @@ class Synthese(RealtimeProxy):
                 'Synthese RT service unavailable, impossible to query : {}'.format(r.url)
             )
             raise RealtimeProxyError('non 200 response')
-            return None
 
         logging.getLogger(__name__).debug("synthese response: {}".format(r.text))
         passages = self._get_synthese_passages(r.content)

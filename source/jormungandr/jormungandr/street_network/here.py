@@ -346,8 +346,12 @@ class Here(AbstractStreetNetworkService):
             path_item.instruction = maneuver.get('instruction', '')
             path_item.name = maneuver.get('roadName', '')
             path_item.direction = _convert_direction(maneuver.get('direction', ''))
-            path_item.coordinate.lat = float(maneuver.get('position', 0.0).get('latitude', 0.0))
-            path_item.coordinate.lon = float(maneuver.get('position', 0.0).get('longitude', 0.0))
+            path_item.instruction_start_coordinate.lat = float(
+                maneuver.get('position', 0.0).get('latitude', 0.0)
+            )
+            path_item.instruction_start_coordinate.lon = float(
+                maneuver.get('position', 0.0).get('longitude', 0.0)
+            )
 
         shape = route.get('shape', [])
         for sh in shape:
@@ -649,6 +653,7 @@ class Here(AbstractStreetNetworkService):
     ):
         sn_routing_matrix = response_pb2.StreetNetworkRoutingMatrix()
         row = sn_routing_matrix.rows.add()
+        language = self.get_language_parameter(request)
         for origin in itertools.islice(origins, int(max_matrix_points)):
             for destination in itertools.islice(destinations, int(max_matrix_points)):
                 params = self.get_direct_path_params(
@@ -658,6 +663,9 @@ class Here(AbstractStreetNetworkService):
                     PeriodExtremity(datetime=request['datetime'], represents_start=request['clockwise']),
                     request,
                     realtime_traffic,
+                    language,
+                    self.engine_type,
+                    self.engine_average_consumption,
                 )
                 r = self._call_here(self.routing_service_url, params=params)
                 r.raise_for_status()

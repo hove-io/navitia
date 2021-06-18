@@ -79,7 +79,7 @@ class Timeo(RealtimeProxy):
         self.timeout = timeout  # timeout in seconds
         self.rt_system_id = id
         self.object_id_tag = object_id_tag if object_id_tag else id
-        self.destination_id_tag = destination_id_tag
+        self.destination_id_tag = destination_id_tag if destination_id_tag else "source"
         self.instance = instance
         fail_max = kwargs.get(
             'circuit_breaker_max_fail', app.config.get(str('CIRCUIT_BREAKER_MAX_TIMEO_FAIL'), 5)
@@ -121,6 +121,9 @@ class Timeo(RealtimeProxy):
             return self.rt_system_id.encode('utf-8', 'backslashreplace')
         except:
             return self.rt_system_id
+
+    def _is_valid_direction(self, direction_uri, passage_direction_uri):
+        return direction_uri == passage_direction_uri
 
     @cache.memoize(app.config.get(str('CACHE_CONFIGURATION'), {}).get(str('TIMEOUT_TIMEO'), 60))
     def _call_timeo(self, url):
@@ -239,12 +242,12 @@ class Timeo(RealtimeProxy):
         for next_expected_st in new_next_st:
             # for the moment we handle only the NextStop and the direction
             dt = self._get_dt(next_expected_st['NextStop'], current_dt)
-            direction = self._get_direction_name(
+            direction = self._get_direction(
                 line_uri=line_uri,
-                object_code=next_expected_st.get('Terminus'),
+                object_code=next_expected_st.get('TerminusSAECode'),
                 default_value=next_expected_st.get('Destination'),
             )
-            next_passage = RealTimePassage(dt, direction)
+            next_passage = RealTimePassage(dt, direction.label, direction_uri=direction.uri)
             next_passages.append(next_passage)
 
         return next_passages
@@ -335,21 +338,6 @@ class Timeo(RealtimeProxy):
                 'reset_timeout': self.breaker.reset_timeout,
             },
         }
-
-    @cache.memoize(app.config.get(str('CACHE_CONFIGURATION'), {}).get(str('TIMEOUT_PTOBJECTS'), 600))
-    def _get_direction_name(self, line_uri, object_code, default_value):
-        if not self.destination_id_tag:
-            return default_value
-        stop_point = self.instance.ptref.get_stop_point(line_uri, self.destination_id_tag, object_code)
-
-        if (
-            stop_point
-            and stop_point.HasField('stop_area')
-            and stop_point.stop_area.HasField('label')
-            and stop_point.stop_area.label != ''
-        ):
-            return stop_point.stop_area.label
-        return default_value
 
     def __eq__(self, other):
         return self.rt_system_id == other.rt_system_id

@@ -32,9 +32,9 @@
 from __future__ import absolute_import, print_function, unicode_literals, division
 from flask_restful import abort
 from jormungandr.interfaces.v1.serializer.free_floating import FreeFloatingsSerializer
-from jormungandr import i_manager, timezone, global_autocomplete, authentication
+from jormungandr import i_manager, timezone
 from jormungandr.interfaces.v1.ResourceUri import ResourceUri
-from jormungandr.interfaces.parsers import default_count_arg_type, places_count_arg_type
+from jormungandr.interfaces.parsers import default_count_arg_type
 from jormungandr.interfaces.v1.transform_id import transform_id
 from jormungandr.scenarios.utils import free_floatings_type
 from navitiacommon.parser_args_type import OptionValue, CoordFormat
@@ -51,7 +51,7 @@ def build_instance_shape(instance):
 
 class FreeFloatingsNearby(ResourceUri):
     def __init__(self, *args, **kwargs):
-        ResourceUri.__init__(self, *args, **kwargs)
+        ResourceUri.__init__(self, output_type_serializer=FreeFloatingsSerializer, *args, **kwargs)
         parser_get = self.parsers["get"]
         parser_get.add_argument(
             "type[]",
@@ -66,6 +66,9 @@ class FreeFloatingsNearby(ResourceUri):
             type=CoordFormat(nullable=True),
             help="Coordinates longitude;latitude used to search " "the objects around this coordinate",
         )
+
+    def options(self, **kwargs):
+        return self.api_description(**kwargs)
 
     def get(self, region=None, lon=None, lat=None, uri=None):
         self.region = i_manager.get_region(region, lon, lat)

@@ -28,9 +28,9 @@ if( NOT CLANG_TIDY_BIN STREQUAL "CLANG_TIDY_BIN-NOTFOUND"
     AND NOT RUN_CLANG_TIDY_BIN STREQUAL "RUN_CLANG_TIDY_BIN-NOTFOUND")
     # Get all .cpp files in navitia/source/ and remove everything
     # From utils and /third_party
-    file(GLOB_RECURSE FILES_TO_SCAN "${CMAKE_SOURCE_DIR}/*.cpp")
-    list(FILTER FILES_TO_SCAN EXCLUDE REGEX "(third_party|utils)")
-    list(APPEND RUN_CLANG_TIDY_BIN_ARGS -clang-tidy-binary ${CLANG_TIDY_BIN} "${FILES_TO_SCAN}")
+    file(GLOB_RECURSE FILES_TO_SCAN "${CMAKE_SOURCE_DIR}/*.cpp" "${CMAKE_SOURCE_DIR}/*.h" "${CMAKE_SOURCE_DIR}/*.hpp")
+    list(FILTER FILES_TO_SCAN EXCLUDE REGEX "(third_party)")
+    list(APPEND RUN_CLANG_TIDY_BIN_ARGS -header-filter=.* -clang-tidy-binary ${CLANG_TIDY_BIN} "${FILES_TO_SCAN}")
 
     add_custom_target(
         tidy

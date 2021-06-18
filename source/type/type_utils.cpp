@@ -81,4 +81,18 @@ pbnavitia::RTLevel to_pb_realtime_level(const navitia::type::RTLevel realtime_le
             throw navitia::exception("realtime level case not handled");
     }
 }
+
+pbnavitia::ActiveStatus to_pb_active_status(navitia::type::disruption::ActiveStatus active_status) {
+    switch (active_status) {
+        case nt::disruption::ActiveStatus::past:
+            return pbnavitia::past;
+        case nt::disruption::ActiveStatus::active:
+            return pbnavitia::active;
+        case nt::disruption::ActiveStatus::future:
+            return pbnavitia::future;
+        default:
+            throw navitia::recoverable_exception("unhandled disruption active status");
+    }
+}
+
 }  // namespace navitia

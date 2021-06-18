@@ -11,6 +11,9 @@ jobs:
 
     container:
         image: navitia/debian10_dev
+        volumes:
+          - /usr/share/dotnet:/usr/share/dotnet
+        # Mount /dotnet so we can delete files from docker and free up space (>20GB)
 
     services:
       rabbitmq:
@@ -19,6 +22,10 @@ jobs:
           - 5672:5672
 
     steps:
+    - name: Free up space
+      run: rm -rf /usr/share/dotnet/*
+    - name: Display remaining space
+      run: df -h
     - uses: actions/checkout@v2
       with:
           submodules: 'recursive'
@@ -38,7 +45,9 @@ jobs:
       uses: actions/cache@v2
       with:
         path: sonar_cache
-        key: sonar-cache
+        key: sonar-cache-${{ github.event.head_commit.id }}
+        restore-keys: |
+            sonar-cache-
     - name: Configure
       run: cmake -DCMAKE_BUILD_TYPE=Profile -DSTRIP_SYMBOLS=ON source
     - name: Build

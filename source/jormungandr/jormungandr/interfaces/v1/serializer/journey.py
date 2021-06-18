@@ -178,7 +178,7 @@ class PathSerializer(PbNestedSerializer):
     duration = RoundedField(display_none=True)
     direction = jsonschema.Field(schema_type=int, display_none=True)
     instruction = jsonschema.MethodField(schema_type=str, display_none=False)
-    coordinate = jsonschema.MethodField(schema_type=lambda: CoordSerializer())
+    instruction_start_coordinate = jsonschema.MethodField(schema_type=lambda: CoordSerializer())
 
     def get_id(self, obj):
         if obj.HasField(str('id')):
@@ -192,11 +192,16 @@ class PathSerializer(PbNestedSerializer):
         else:
             return None
 
-    def get_coordinate(self, obj):
-        if obj.HasField(str('coordinate')):
-            return CoordSerializer(obj.coordinate, display_none=False).data
+    def get_instruction_start_coordinate(self, obj):
+        if obj.HasField(str('instruction_start_coordinate')):
+            return CoordSerializer(obj.instruction_start_coordinate, display_none=False).data
         else:
             return None
+
+
+class ElevationSerializer(PbNestedSerializer):
+    distance_from_start = RoundedField(display_none=True)
+    elevation = RoundedField(display_none=True)
 
 
 class SectionTypeEnum(EnumField):
@@ -339,6 +344,7 @@ class SectionSerializer(PbNestedSerializer):
         return JourneySerializer(obj.ridesharing_journeys, display_none=False, many=True).data
 
     cycle_lane_length = PbIntField(display_none=False)
+    elevations = ElevationSerializer(attr="street_network.elevations", many=True, display_none=False)
 
 
 class JourneySerializer(PbNestedSerializer):

@@ -564,6 +564,37 @@ def bragi_make_params_with_instance_test():
     assert rsp == params
 
 
+def bragi_make_params_with_places_proximity_radius_test():
+    """
+    test of generate params with instance & places_proximity_radius
+    """
+    instance = mock.MagicMock()
+    instance.name = 'bib'
+    instance.poi_dataset = None
+    bragi = GeocodeJson(host='http://bob.com/autocomplete')
+
+    request = {"q": "aa", "count": 20, "request_id": "1234", "places_proximity_radius": 5000}
+
+    params = bragi.make_params(request=request, instances=[instance], timeout=1)
+    rsp = [
+        ('q', 'aa'),
+        ('limit', 20),
+        ('pt_dataset[]', 'bib'),
+        ('timeout', 1000),
+        ("request_id", "1234"),
+        ('shape_scope[]', 'addr'),
+        ('shape_scope[]', 'admin'),
+        ('shape_scope[]', 'poi'),
+        ('shape_scope[]', 'street'),
+        ('proximity_scale', 32.5),
+        ('proximity_offset', 5.0),
+        ('proximity_decay', 0.4),
+    ]
+    params.sort()
+    rsp.sort()
+    assert rsp == params
+
+
 def bragi_make_params_with_multiple_instances_test():
     """
     test of generate params with instance

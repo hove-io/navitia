@@ -207,7 +207,7 @@ void RAPTOR::init(const map_stop_point_duration& dep,
             continue;
         }
         const DateTime sn_dur = sp_dt.second.total_seconds();
-        const DateTime begin_dt = bound + (clockwise ? sn_dur : -sn_dur);
+        const DateTime begin_dt = bound + (clockwise ? sn_dur : -static_cast<int32_t>(sn_dur));
 
         Label& label = labels[0][sp_dt.first];
         label.dt_transfer = begin_dt;
@@ -351,7 +351,8 @@ std::vector<StartingPointSndPhase> make_starting_points_snd_phase(const RAPTOR& 
                 fallback_duration_to_arrival_stop_point + walking_duration_from_departure_stop_point;
             const DateTime arrival_date_time =
                 working_label.dt_pt
-                + (clockwise ? fallback_duration_to_arrival_stop_point : -fallback_duration_to_arrival_stop_point);
+                + (clockwise ? fallback_duration_to_arrival_stop_point
+                             : -static_cast<int32_t>(fallback_duration_to_arrival_stop_point));
             StartingPointSndPhase starting_point = {a.first, count, arrival_date_time, total_walking_duration, false};
 
             overfilter.add({res.size(), starting_point});

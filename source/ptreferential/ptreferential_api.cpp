@@ -50,7 +50,8 @@ static void extract_data(navitia::PbCreator& pb_creator,
                          const type::Indexes& rows,
                          const int depth) {
     pb_creator.action_period = data.meta->production_period();
-    const auto with_line_sections = DumpMessageOptions{DumpMessage::Yes, DumpLineSectionMessage::Yes};
+    auto with_line_sections = DumpMessageOptions{DumpMessage::Yes, DumpLineSectionMessage::Yes};
+    with_line_sections.dump_rail_section = DumpRailSectionMessage::Yes;
     switch (requested_type) {
         case Type_e::ValidityPattern:
             pb_creator.pb_fill(data.get_data<nt::ValidityPattern>(rows), depth);

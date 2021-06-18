@@ -31,7 +31,7 @@
 
 from __future__ import absolute_import, print_function, unicode_literals, division
 
-from navitiacommon.parser_args_type import BooleanType, DateTimeFormat, DepthArgument
+from navitiacommon.parser_args_type import BooleanType, DateTimeFormat, DepthArgument, OptionValue
 from jormungandr import i_manager, timezone
 from jormungandr.interfaces.parsers import default_count_arg_type
 from jormungandr.interfaces.v1.decorators import get_obj_serializer
@@ -41,6 +41,7 @@ from jormungandr.interfaces.v1.serializer import api
 from jormungandr.interfaces.common import split_uri
 from jormungandr.resources_utils import ResourceUtc
 from jormungandr.utils import date_to_timestamp
+from navitiacommon.type_pb2 import ActiveStatus
 from flask.globals import g
 from datetime import datetime
 import six
@@ -86,6 +87,15 @@ class LineReports(ResourceUri, ResourceUtc):
             hidden=True,
             action="append",
             help="If filled, will restrain the search within the given disruption tags",
+        )
+        parser_get.add_argument(
+            "filter_status[]",
+            type=OptionValue(ActiveStatus.keys()),
+            help="filter_status uris",
+            dest="filter_status[]",
+            default=[],
+            action="append",
+            schema_metadata={'format': 'pt-object'},
         )
 
         self.collection = 'line_reports'

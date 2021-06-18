@@ -48,19 +48,21 @@ struct LineReport {
     LineReport(const nt::Line* line,
                const std::string& filter,
                const std::vector<std::string>& forbidden_uris,
+               const std::vector<nt::disruption::ActiveStatus>& filter_status,
                const type::Data& d,
                const boost::posix_time::ptime now,
                const boost::posix_time::time_period& filter_period)
         : line(line) {
-        add_objects(filter, forbidden_uris, d, now, filter_period, networks);
-        add_objects(filter, forbidden_uris, d, now, filter_period, routes);
-        add_objects(filter, forbidden_uris, d, now, filter_period, stop_areas);
-        add_objects(filter, forbidden_uris, d, now, filter_period, stop_points);
+        add_objects(filter, forbidden_uris, filter_status, d, now, filter_period, networks);
+        add_objects(filter, forbidden_uris, filter_status, d, now, filter_period, routes);
+        add_objects(filter, forbidden_uris, filter_status, d, now, filter_period, stop_areas);
+        add_objects(filter, forbidden_uris, filter_status, d, now, filter_period, stop_points);
     }
 
     template <typename T>
     void add_objects(const std::string& filter,
                      const std::vector<std::string>& forbidden_uris,
+                     const std::vector<nt::disruption::ActiveStatus>& filter_status,
                      const type::Data& d,
                      const boost::posix_time::ptime now,
                      const boost::posix_time::time_period& filter_period,
@@ -78,16 +80,17 @@ struct LineReport {
 
         for (const auto& idx : indices) {
             const auto* obj = d.pt_data->collection<T>()[idx];
-            if (obj->has_applicable_message(now, filter_period, line)) {
+            if (obj->has_applicable_message(now, filter_period, filter_status, line)) {
                 objects.push_back(obj);
             }
         }
     }
 
     bool has_disruption(const boost::posix_time::ptime& current_time,
-                        const boost::posix_time::time_period& filter_period) const {
-        return line->has_applicable_message(current_time, filter_period) || !networks.empty() || !routes.empty()
-               || !stop_areas.empty() || !stop_points.empty();
+                        const boost::posix_time::time_period& filter_period,
+                        const std::vector<nt::disruption::ActiveStatus>& filter_status) const {
+        return line->has_applicable_message(current_time, filter_period, filter_status) || !networks.empty()
+               || !routes.empty() || !stop_areas.empty() || !stop_points.empty();
     }
 
     void to_pb(navitia::PbCreator& pb_creator, const size_t depth) const {
@@ -112,6 +115,7 @@ void line_reports(navitia::PbCreator& pb_creator,
                   size_t start_page,
                   const std::string& filter,
                   const std::vector<std::string>& forbidden_uris,
+                  const std::vector<nt::disruption::ActiveStatus>& filter_status,
                   const boost::optional<boost::posix_time::ptime>& since,
                   const boost::optional<boost::posix_time::ptime>& until) {
     const auto start = get_optional_value_or(since, bt::ptime(bt::neg_infin));
@@ -135,9 +139,9 @@ void line_reports(navitia::PbCreator& pb_creator,
     }
     std::vector<LineReport> line_reports;
     for (auto idx : line_indices) {
-        auto line_report =
-            LineReport(d.pt_data->lines[idx], filter, forbidden_uris, d, pb_creator.now, pb_creator.action_period);
-        if (line_report.has_disruption(pb_creator.now, pb_creator.action_period)) {
+        auto line_report = LineReport(d.pt_data->lines[idx], filter, forbidden_uris, filter_status, d, pb_creator.now,
+                                      pb_creator.action_period);
+        if (line_report.has_disruption(pb_creator.now, pb_creator.action_period, filter_status)) {
             line_reports.push_back(line_report);
         }
     }

@@ -178,7 +178,7 @@ results Fare::compute_fare(const routing::Path& path) const {
                                     ticket = it->second.get_fare(section_key.date);
                                     ticket_found = true;
                                 }
-                            } catch (no_ticket) {  // the ticket_found bool is still false
+                            } catch (const no_ticket&) {  // the ticket_found bool is still false
                                 LOG4CPLUS_TRACE(logger, " Throw no ticket \n");
                             }
                             if (!ticket_found) {
@@ -213,7 +213,7 @@ results Fare::compute_fare(const routing::Path& path) const {
                                 n.current_type = Ticket::FlatFare;
                                 LOG4CPLUS_TRACE(logger, "Adding ODFare label to node 0 : \n" << n);
                                 new_labels[0].push_back(n);
-                            } catch (no_ticket) {
+                            } catch (const no_ticket&) {
                                 LOG4CPLUS_TRACE(logger, "Unable to get the OD ticket SA="
                                                             << next.stop_area << ", zone=" << next.zone
                                                             << ", section start_zone=" << section_key.start_zone

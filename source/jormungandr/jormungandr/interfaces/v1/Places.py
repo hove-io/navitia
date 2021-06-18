@@ -54,6 +54,7 @@ from navitiacommon.parser_args_type import (
     OptionValue,
     DateTimeFormat,
     DepthArgument,
+    IntRange,
 )
 from navitiacommon.constants import ENUM_SHAPE_SCOPE, DEFAULT_SHAPE_SCOPE
 from jormungandr.interfaces.common import add_poi_infos_types, handle_poi_infos
@@ -148,6 +149,11 @@ class Places(ResourceUri):
             type=OptionValue(ENUM_SHAPE_SCOPE),
             action="append",
             help="The scope shape on data to search",
+        )
+        self.parsers['get'].add_argument(
+            "places_proximity_radius",
+            type=IntRange(100, 1000000),
+            help="Radius used to prioritize " "the objects around coordinate from",
         )
 
     def get(self, region=None, lon=None, lat=None):

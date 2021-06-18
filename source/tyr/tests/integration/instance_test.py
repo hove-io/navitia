@@ -158,6 +158,7 @@ def test_update_instances(create_instance):
         "ridesharing_speed": 3.3,
         "max_ridesharing_duration_to_pt": 777,
         "stop_points_nearby_duration": 888,
+        "places_proximity_radius": 10000,
     }
 
     resp = api_put('/v0/instances/fr', data=json.dumps(params), content_type='application/json')
@@ -189,6 +190,7 @@ def test_update_instances(create_instance):
     assert resp['max_taxi_direct_path_distance'] == 14000
     assert resp['max_ridesharing_direct_path_distance'] == 15000
     assert resp['max_car_no_park_direct_path_distance'] == 16000
+    assert resp['places_proximity_radius'] == 10000
 
 
 def test_update_instances_is_free(create_instance):

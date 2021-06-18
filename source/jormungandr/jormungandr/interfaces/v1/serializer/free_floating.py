@@ -33,6 +33,31 @@ from jormungandr.interfaces.v1.serializer.base import (
     BetaEndpointsSerializer,
     DoubleToStringField,
 )
+from jormungandr.scenarios.utils import free_floatings_type
+
+
+coord_schema = {
+    "type": "object",
+    "properties": {"lat": {"type": ["string", "null"]}, "lon": {"type": ["string", "null"]}},
+    "required": ["lat", "lon"],
+}
+
+free_floating_schema = {
+    "type": "object",
+    "properties": {
+        "public_id": {"type": ["string"]},
+        "provider_name": {"type": ["string"]},
+        "id": {"type": ["string"]},
+        "type": {"enum": free_floatings_type},
+        "propulsion": {"type": ["string"]},
+        "battery": {"type": ["integer"]},
+        "distance": {"type": ["integer"]},
+        "deeplink": {"type": ["string"]},
+        "coord": coord_schema,
+    },
+}
+
+free_floatings_schema = {"type": "array", "items": free_floating_schema}
 
 
 class CoordSerializer(serpy.DictSerializer):
@@ -54,7 +79,7 @@ class FreeFloatingSerializer(serpy.DictSerializer):
 
 
 class FreeFloatingsSerializer(serpy.DictSerializer):
-    free_floatings = jsonschema.MethodField(display_none=True)
+    free_floatings = jsonschema.MethodField(schema_metadata=free_floatings_schema, display_none=True)
     warnings = BetaEndpointsSerializer()
 
     def get_free_floatings(self, obj):

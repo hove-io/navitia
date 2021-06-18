@@ -58,7 +58,7 @@ VEHICLE_OCCUPANCIES_RESPONSE = {
             "vehiclejourney_id": "vehicle_journey:0:123714928-1",
             "stop_id": "stop_point:0:SP:80:4165",
             "date_time": "2021-03-03T08:56:00+01:00",
-            "occupancy": 55,
+            "occupancy": "STANDING_ROOM_ONLY",
         }
     ]
 }
@@ -85,7 +85,7 @@ class MockVehicleOccupancyProvider(VehicleOccupancyProvider):
                         "vehiclejourney_id": "vehicle_journey:0:123714928-1",
                         "stop_id": "stop_point:0:SP:80:4165",
                         "date_time": "2021-03-03T08:56:00+01:00",
-                        "occupancy": 55,
+                        "occupancy": "STANDING_ROOM_ONLY",
                     }
                 ]
             }
@@ -96,7 +96,7 @@ class MockVehicleOccupancyProvider(VehicleOccupancyProvider):
                         "vehiclejourney_id": "vehicle_journey:M:14",
                         "stop_id": "S11",
                         "date_time": "2021-03-03T08:56:00+01:00",
-                        "occupancy": 0,
+                        "occupancy": "EMPTY",
                     }
                 ]
             }
@@ -132,7 +132,7 @@ class TestFreeFloating(AbstractTestFixture):
         response = self.query_region(query)
         stop_schedules = response['stop_schedules'][0]['date_times']
         assert len(stop_schedules) == 1
-        assert stop_schedules[0]['occupancy'] == 55
+        assert stop_schedules[0]['occupancy'] == "STANDING_ROOM_ONLY"
 
     def test_occupancy_empty_vehicle(self):
         query = self.query_template_scs.format(
@@ -141,7 +141,7 @@ class TestFreeFloating(AbstractTestFixture):
         response = self.query_region(query)
         stop_schedules = response['stop_schedules'][0]['date_times']
         assert len(stop_schedules) == 1
-        assert stop_schedules[0]['occupancy'] == 0
+        assert stop_schedules[0]['occupancy'] == "EMPTY"
 
     def test_occupancy_empty_list_occupancies(self):
         query = self.query_template_scs.format(

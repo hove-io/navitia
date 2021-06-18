@@ -31,6 +31,9 @@ www.navitia.io
 #pragma once
 #include "type/data.h"
 #include "type/pb_converter.h"
+#include "type/message.h"
+
+namespace nt = navitia::type;
 
 namespace navitia {
 namespace disruption {
@@ -42,6 +45,7 @@ void line_reports(navitia::PbCreator& pb_creator,
                   size_t start_page,
                   const std::string& filter,
                   const std::vector<std::string>& forbidden_uris,
+                  const std::vector<nt::disruption::ActiveStatus>& filter_status,
                   const boost::optional<boost::posix_time::ptime>& since,
                   const boost::optional<boost::posix_time::ptime>& until);
 }  // namespace disruption

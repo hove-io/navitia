@@ -375,7 +375,7 @@ static nt::Indexes query(nt::Type_e requested_type,
         return navitia::ptref::make_query(requested_type, request, {}, nt::OdtLevel_e::all, since, until, data);
     } catch (const navitia::ptref::ptref_error& e) {
         if (fail) {
-            throw e;
+            throw;  // rethrow (the right way)
         }
         BOOST_CHECK_MESSAGE(false, " error on ptref request " + std::string(e.what()));
         return nt::Indexes{};

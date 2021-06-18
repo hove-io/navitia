@@ -61,6 +61,74 @@ class MockTimeo(Timeo):
         resp = Obj()
         resp.status_code = 200
         json = {}
+        if url == 'BB:sp':
+            json = {
+                "CorrelationID": "AA",
+                "StopTimesResponse": [
+                    {
+                        "StopID": "BB:sp",
+                        "StopTimeoCode": "AAAAA",
+                        "StopLongName": "Malraux",
+                        "StopShortName": "Malraux",
+                        "StopVocalName": "Malraux",
+                        "ReferenceTime": "09:54:53",
+                        "NextStopTimesMessage": {
+                            "LineID": "AAA",
+                            "Way": "A",
+                            "LineMainDirection": "DIRECTION AA",
+                            "NextExpectedStopTime": [
+                                {"NextStop": "10:00:52", "Destination": "DIRECTION AA", "TerminusSAECode": "EE"},
+                                {"NextStop": "10:10:52", "Destination": "DIRECTION AA", "TerminusSAECode": "EE"},
+                                {"NextStop": "10:13:52", "Destination": "DIRECTION AA", "TerminusSAECode": "EE"},
+                                {"NextStop": "10:15:52", "Destination": "DIRECTION AA", "TerminusSAECode": "EE"},
+                            ],
+                        },
+                    }
+                ],
+                "MessageResponse": [{"ResponseCode": 0, "ResponseComment": "success"}],
+            }
+        if url == 'C:sp':
+            json = {
+                "CorrelationID": "AA",
+                "StopTimesResponse": [
+                    {
+                        "StopID": "C:sp",
+                        "StopTimeoCode": "AAAAA",
+                        "StopLongName": "Malraux",
+                        "StopShortName": "Malraux",
+                        "StopVocalName": "Malraux",
+                        "ReferenceTime": "09:54:53",
+                        "NextStopTimesMessage": {
+                            "LineID": "AAA",
+                            "Way": "A",
+                            "LineMainDirection": "DIRECTION AA",
+                            "NextExpectedStopTime": [
+                                {
+                                    "NextStop": "10:00:52",
+                                    "Destination": "DIRECTION AA",
+                                    "TerminusSAECode": "Avj1",
+                                },
+                                {
+                                    "NextStop": "10:10:52",
+                                    "Destination": "DIRECTION AA",
+                                    "TerminusSAECode": "Avj1",
+                                },
+                                {
+                                    "NextStop": "10:13:52",
+                                    "Destination": "DIRECTION AA",
+                                    "TerminusSAECode": "Avj2",
+                                },
+                                {
+                                    "NextStop": "10:15:52",
+                                    "Destination": "DIRECTION AA",
+                                    "TerminusSAECode": "Avj2",
+                                },
+                            ],
+                        },
+                    }
+                ],
+                "MessageResponse": [{"ResponseCode": 0, "ResponseComment": "success"}],
+            }
         if url == 'S41':
             json = {
                 "CorrelationID": "AA",
@@ -105,11 +173,13 @@ class MockTimeo(Timeo):
                                     "NextStop": "10:00:52",
                                     "Destination": "DIRECTION AA",
                                     "Terminus": "Kisio数字_C:S43",
+                                    "TerminusSAECode": "Kisio数字_C:S43",
                                 },
                                 {
                                     "NextStop": "10:13:52",
                                     "Destination": "DIRECTION AA",
                                     "Terminus": "Kisio数字_C:S43",
+                                    "TerminusSAECode": "Kisio数字_C:S43",
                                 },
                             ],
                         },
@@ -137,12 +207,14 @@ class MockTimeo(Timeo):
                                     "NextStop": "09:00:52",
                                     "Destination": "DIRECTION AA",
                                     "Terminus": "Kisio数字_C:S43",
+                                    "TerminusSAECode": "Kisio数字_C:S43",
                                     "is_realtime": False,
                                 },
                                 {
                                     "NextStop": "09:13:52",
                                     "Destination": "DIRECTION AA",
                                     "Terminus": "Kisio数字_C:S43",
+                                    "TerminusSAECode": "Kisio数字_C:S43",
                                 },
                             ],
                         },
@@ -170,12 +242,14 @@ class MockTimeo(Timeo):
                                     "NextStop": "09:00:52",
                                     "Destination": "DIRECTION AA",
                                     "Terminus": "Kisio数字_C:S43",
+                                    "TerminusSAECode": "S43",
                                     "is_realtime": False,
                                 },
                                 {
                                     "NextStop": "09:13:52",
                                     "Destination": "DIRECTION AA",
                                     "Terminus": "Kisio数字_C:S43",
+                                    "TerminusSAECode": "S43",
                                     "is_realtime": False,
                                 },
                             ],
@@ -384,7 +458,7 @@ class TestDepartures(AbstractTestFixture):
     def test_terminus_schedule_with_realtime_and_is_realtime_field(self):
 
         query = self.query_template_ter.format(
-            sp='S39', dt='20160102T0800', data_freshness='', c_dt='20160102T0800'
+            sp='S39', dt='20160102T0800', data_freshness='&data_freshness=base_schedule', c_dt='20160102T0800'
         )
 
         response = self.query_region(query)
@@ -475,3 +549,54 @@ class TestDepartures(AbstractTestFixture):
         stop_time = date_times[0]
         assert stop_time['data_freshness'] == 'base_schedule'
         assert stop_time['date_time'] == '20160102T113000'
+
+    def test_terminus_schedule_groub_by_destination(self):
+        """
+        Schema line:         /----------------------------
+          ------------------
+                            \ ----------------------------
+        """
+        query = self.query_template_ter.format(
+            sp='C:sp', dt='20160102T0900', data_freshness='&data_freshness=realtime', c_dt='20160102T0900'
+        )
+        response = self.query_region(query)
+        is_valid_notes(response["notes"])
+        terminus_schedules = response['terminus_schedules']
+        assert len(terminus_schedules) == 2
+        tmp = terminus_schedules[0]
+
+        assert tmp["display_informations"]["direction"] == "Avj1"
+        date_times = tmp['date_times']
+        assert date_times[0]["data_freshness"] == 'realtime'
+        assert date_times[0]["date_time"] == "20160102T090052"
+        assert date_times[1]["data_freshness"] == 'realtime'
+        assert date_times[1]["date_time"] == "20160102T091052"
+
+        tmp = terminus_schedules[1]
+        assert tmp["display_informations"]["direction"] == "Avj2"
+        date_times = tmp['date_times']
+        assert date_times[0]["data_freshness"] == 'realtime'
+        assert date_times[0]["date_time"] == "20160102T091352"
+        assert date_times[1]["data_freshness"] == 'realtime'
+        assert date_times[1]["date_time"] == "20160102T091552"
+
+    def test_terminus_schedule_groub_by_destination_terminus_partial(self):
+        query = self.query_template_ter.format(
+            sp='BB:sp', dt='20160102T0730', data_freshness='&data_freshness=realtime', c_dt='20160102T0730'
+        )
+        response = self.query_region(query)
+        is_valid_notes(response["notes"])
+        terminus_schedules = response['terminus_schedules']
+        assert len(terminus_schedules) == 1
+        tmp = terminus_schedules[0]
+
+        assert tmp["display_informations"]["direction"] == "EE"
+        date_times = tmp['date_times']
+        assert date_times[0]["data_freshness"] == 'realtime'
+        assert date_times[0]["date_time"] == "20160102T090052"
+        assert date_times[1]["data_freshness"] == 'realtime'
+        assert date_times[1]["date_time"] == "20160102T091052"
+        assert date_times[2]["data_freshness"] == 'realtime'
+        assert date_times[2]["date_time"] == "20160102T091352"
+        assert date_times[3]["data_freshness"] == 'realtime'
+        assert date_times[3]["date_time"] == "20160102T091552"

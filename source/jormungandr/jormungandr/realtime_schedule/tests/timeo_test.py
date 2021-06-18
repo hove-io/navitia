@@ -31,7 +31,7 @@ from __future__ import absolute_import, print_function, division
 import mock
 import requests_mock
 from jormungandr.realtime_schedule.timeo import Timeo
-from jormungandr.realtime_schedule.realtime_proxy import RealtimeProxyError
+from jormungandr.realtime_schedule.realtime_proxy import RealtimeProxyError, Direction
 import validators
 from jormungandr.realtime_schedule.tests.utils import MockRoutePoint, _timestamp, _dt
 from jormungandr.tests.utils_test import MockRequests
@@ -228,7 +228,8 @@ def get_passages_test():
     # we need to mock the datetime.now() because for timeo we don't have a choice but to combine
     # the current day with the timeo's response
     with mock.patch(
-        'jormungandr.realtime_schedule.timeo.Timeo._get_direction_name', lambda timeo, **kwargs: None
+        'jormungandr.realtime_schedule.timeo.Timeo._get_direction',
+        lambda timeo, **kwargs: Direction("StopPoint_Bob", "A direction"),
     ):
         passages = timeo._get_passages(
             MockResponse(200, 'http://bob.com/tata', mock_response), current_dt=_dt("02:02")
@@ -242,14 +243,14 @@ def get_passages_test():
 
     # http error raise an error
     with mock.patch(
-        'jormungandr.realtime_schedule.timeo.Timeo._get_direction_name', lambda timeo, **kwargs: None
+        'jormungandr.realtime_schedule.timeo.Timeo._get_direction', lambda timeo, **kwargs: None
     ), raises(RealtimeProxyError):
         passages = timeo._get_passages(
             MockResponse(404, 'http://bob.com/tata', mock_response), current_dt=_dt("02:02")
         )
 
     with mock.patch(
-        'jormungandr.realtime_schedule.timeo.Timeo._get_direction_name', lambda timeo, **kwargs: None
+        'jormungandr.realtime_schedule.timeo.Timeo._get_direction', lambda timeo, **kwargs: None
     ), raises(RealtimeProxyError):
         passages = timeo._get_passages(
             MockResponse(504, 'http://bob.com/tata', mock_response), current_dt=_dt("02:02")
@@ -271,7 +272,8 @@ def get_passages_stop_time_without_is_realtime_test():
     # we need to mock the datetime.now() because for timeo we don't have a choice but to combine
     # the current day with the timeo's response
     with mock.patch(
-        'jormungandr.realtime_schedule.timeo.Timeo._get_direction_name', lambda timeo, **kwargs: None
+        'jormungandr.realtime_schedule.timeo.Timeo._get_direction',
+        lambda timeo, **kwargs: Direction("StopPoint_Bob", "A direction"),
     ):
         passages = timeo._get_passages(
             MockResponse(200, 'http://bob.com/tata', mock_response), current_dt=_dt("02:02")
@@ -299,7 +301,8 @@ def get_passages_stop_time_with_is_realtime_test():
     # we need to mock the datetime.now() because for timeo we don't have a choice but to combine
     # the current day with the timeo's response
     with mock.patch(
-        'jormungandr.realtime_schedule.timeo.Timeo._get_direction_name', lambda timeo, **kwargs: None
+        'jormungandr.realtime_schedule.timeo.Timeo._get_direction',
+        lambda timeo, **kwargs: Direction("StopPoint_Bob", "A direction"),
     ):
         passages = timeo._get_passages(
             MockResponse(200, 'http://bob.com/tata', mock_response), current_dt=_dt("02:02")
@@ -363,9 +366,7 @@ def get_passages_no_passages_test():
 
     # we need to mock the datetime.now() because for timeo we don't have a choice but to combine
     # the current day with the timeo's response
-    with mock.patch(
-        'jormungandr.realtime_schedule.timeo.Timeo._get_direction_name', lambda timeo, **kwargs: None
-    ):
+    with mock.patch('jormungandr.realtime_schedule.timeo.Timeo._get_direction', lambda timeo, **kwargs: None):
         passages = timeo._get_passages(
             MockResponse(200, 'http://bob.com/tata', mock_response), current_dt=_dt("02:02")
         )
@@ -389,7 +390,7 @@ def get_passages_wrong_response_test():
     # we need to mock the datetime.now() because for timeo we don't have a choice but to combine
     # the current day with the timeo's response
     with mock.patch(
-        'jormungandr.realtime_schedule.timeo.Timeo._get_direction_name', lambda timeo, **kwargs: None
+        'jormungandr.realtime_schedule.timeo.Timeo._get_direction', lambda timeo, **kwargs: None
     ), raises(RealtimeProxyError):
         passages = timeo._get_passages(
             MockResponse(200, 'http://bob.com/tata', mock_response), current_dt=_dt("02:02")
@@ -419,7 +420,8 @@ def next_passage_for_route_point_test():
     # we mock the http call to return the hard coded mock_response
     with mock.patch('requests.get', mock_requests.get):
         with mock.patch(
-            'jormungandr.realtime_schedule.timeo.Timeo._get_direction_name', lambda timeo, **kwargs: None
+            'jormungandr.realtime_schedule.timeo.Timeo._get_direction',
+            lambda timeo, **kwargs: Direction("StopPoint_Bob", "A direction"),
         ):
             passages = timeo.next_passage_for_route_point(route_point, current_dt=_dt("02:02"))
 
@@ -507,17 +509,6 @@ def status_test():
     assert status['id'] == u'tata-é$~#@"*!\'`§èû'
 
 
-def get_direction_name_without_destination_id_tag_test():
-    timeo = Timeo(
-        id=u"tata-é$~#@\"*!'`§èû",
-        timezone='UTC',
-        service_url='http://bob.com/',
-        service_args={'a': 'bobette', 'b': '12'},
-    )
-    result = timeo._get_direction_name("line_uri", "object_code", "default_value")
-    assert result == "default_value"
-
-
 def get_direction_name_with_destination_id_tag_test():
 
     timeo = Timeo(
@@ -531,10 +522,11 @@ def get_direction_name_with_destination_id_tag_test():
     stop_point = type_pb2.PtObject()
     stop_point.embedded_type = type_pb2.STOP_POINT
     stop_point.stop_area.label = 'destination de Bob'
+    stop_point.stop_area.uri = 'destination_de_Bob'
 
     with mock.patch(
         'jormungandr.ptref.PtRef.get_stop_point',
         lambda PtRef, line_uri, destination_id_tag, object_code: stop_point,
     ):
-        result = timeo._get_direction_name("line_uri", "object_code", "default_value")
-        assert result == "destination de Bob"
+        result = timeo._get_direction("line_uri", "object_code", "default_value")
+        assert result == Direction("destination_de_Bob", "destination de Bob")

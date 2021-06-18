@@ -188,6 +188,8 @@ static void render(PbCreator& pb_creator,
         const type::StopArea* sa =
             pb_creator.data->pt_data->stop_points[jpc.get(jp_dir.jpps.back()).sp_idx.val]->stop_area;
         pt_display_information->set_direction(sa->name + get_admin_name(sa));
+        pbnavitia::Uris* uris = pt_display_information->mutable_uris();
+        uris->set_stop_area(sa->uri);
 
         // Now we fill the date_times
         for (auto dt_st : id_vec.second) {

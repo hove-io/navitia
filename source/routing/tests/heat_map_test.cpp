@@ -180,7 +180,7 @@ BOOST_AUTO_TEST_CASE(heat_map_test) {
     box.set_box(A, 0);
     box.set_box(D, 0);
     auto height_step = (A.lat() - D.lat()) / step;
-    auto width_step = (D.lon() - D.lon()) / step;
+    auto width_step = (A.lon() - D.lon()) / step;
     auto min_dist = std::max(height_step * N_DEG_TO_DISTANCE, width_step * N_DEG_TO_DISTANCE);
     min_dist = std::min(500., min_dist);
     auto mode = navitia::type::Mode_e::Walking;
@@ -204,9 +204,9 @@ BOOST_AUTO_TEST_CASE(heat_map_test) {
             result.push_back(heat_map.body[i].second[j]);
         }
     }
-    BOOST_CHECK_EQUAL(result[0].total_seconds(), 236);
-    BOOST_CHECK_EQUAL(result[1].total_seconds(), 194);
-    BOOST_CHECK_EQUAL(result[2].total_seconds(), 152);
+    BOOST_CHECK_EQUAL(result[0].total_seconds(), 244);
+    BOOST_CHECK_EQUAL(result[1].total_seconds(), 207);
+    BOOST_CHECK_EQUAL(result[2].total_seconds(), 178);
     for (size_t i = 3; i < result.size(); i++) {
         BOOST_CHECK(result[i].is_pos_infinity());
     }

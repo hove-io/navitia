@@ -38,25 +38,25 @@ mock_data = {
             "vehiclejourney_id": "vehicle_journey:0:123714928-1",
             "stop_id": "stop_point:0:SP:80:4165",
             "date_time": "2021-03-03T08:56:00+01:00",
-            "occupancy": 55,
+            "occupancy": "STANDING_ROOM_ONLY",
         },
         {
             "vehiclejourney_id": "vehicle_journey:0:123714950-1",
             "stop_id": "stop_point:0:SP:80:4165",
             "date_time": "2021-03-03T17:23:00+01:00",
-            "occupancy": 27,
+            "occupancy": "FEW_SEATS_AVAILABLE",
         },
         {
             "vehiclejourney_id": "vehicle_journey:0:123714970-1",
             "stop_id": "stop_point:0:SP:80:4165",
             "date_time": "2021-03-03T20:31:00+01:00",
-            "occupancy": 85,
+            "occupancy": "CRUSHED_STANDING_ROOM_ONLY",
         },
         {
             "vehiclejourney_id": "vehicle_journey:0:123714944-1",
             "stop_id": "stop_point:0:SP:80:4165",
             "date_time": "2021-03-03T16:26:00+01:00",
-            "occupancy": 70,
+            "occupancy": "CRUSHED_STANDING_ROOM_ONLY",
         },
     ]
 }
@@ -73,4 +73,4 @@ def vehicle_occupancy_get_information_test():
     assert vehicle_occupancies[0]['vehiclejourney_id'] == "vehicle_journey:0:123714928-1"
     assert vehicle_occupancies[0]['stop_id'] == "stop_point:0:SP:80:4165"
     assert vehicle_occupancies[0]['date_time'] == "2021-03-03T08:56:00+01:00"
-    assert vehicle_occupancies[0]['occupancy'] == 55
+    assert vehicle_occupancies[0]['occupancy'] == "STANDING_ROOM_ONLY"
