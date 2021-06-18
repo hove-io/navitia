@@ -612,7 +612,7 @@ BOOST_AUTO_TEST_CASE(autocomplete_main_stop_area_test) {
     b.sa("Zebre", 0, 0);
 
     b.make();
-    Admin* ad = new Admin;
+    auto* ad = new Admin;
     ad->name = "Quimper";
     ad->uri = "Quimper";
     ad->level = 8;
@@ -691,7 +691,7 @@ BOOST_AUTO_TEST_CASE(autocomplete_functional_test_admin_and_SA_test) {
     b.sa("Zebre", 0, 0);
 
     b.data->pt_data->sort_and_index();
-    Admin* ad = new Admin;
+    auto* ad = new Admin;
     ad->name = "Quimper";
     ad->uri = "Quimper";
     ad->level = 8;
@@ -754,7 +754,7 @@ BOOST_AUTO_TEST_CASE(autocomplete_functional_test_SA_test) {
     b.sa("Bourgogne", 0, 0);
 
     b.data->pt_data->sort_and_index();
-    Admin* ad = new Admin;
+    auto* ad = new Admin;
     ad->name = "Quimper";
     ad->uri = "Quimper";
     ad->level = 8;
@@ -806,7 +806,7 @@ BOOST_AUTO_TEST_CASE(autocomplete_functional_test_admin_SA_and_Address_test) {
     b.add_way("rue VIS", "");
     b.add_way("quai NEUF", "");
 
-    Admin* ad = new Admin;
+    auto* ad = new Admin;
     ad->name = "Quimper";
     ad->uri = "Quimper";
     ad->level = 8;
@@ -852,7 +852,7 @@ BOOST_AUTO_TEST_CASE(autocomplete_pt_object_Network_Mode_Line_Route_test) {
     b.generate_dummy_basis();
 
     // Create a new line and affect it to mode "Tramway"
-    navitia::type::Line* line = new navitia::type::Line();
+    auto* line = new navitia::type::Line();
     line->idx = b.data->pt_data->lines.size();
     line->uri = "line 1";
     line->name = "line 1";
@@ -860,7 +860,7 @@ BOOST_AUTO_TEST_CASE(autocomplete_pt_object_Network_Mode_Line_Route_test) {
     b.data->pt_data->lines.push_back(line);
 
     // Add two routes in the line
-    navitia::type::Route* route = new navitia::type::Route();
+    auto* route = new navitia::type::Route();
     route->idx = b.data->pt_data->routes.size();
     route->name = line->name;
     route->uri = line->name + ":" + std::to_string(b.data->pt_data->routes.size());
@@ -922,7 +922,7 @@ BOOST_AUTO_TEST_CASE(autocomplete_pt_object_Network_Mode_Line_Route_stop_area_te
     b.generate_dummy_basis();
 
     // Create a new line and affect it to mode "Metro"
-    navitia::type::Line* line = new navitia::type::Line();
+    auto* line = new navitia::type::Line();
     line->idx = b.data->pt_data->lines.size();
     line->uri = "line 1";
     line->name = "Chatelet - Vincennes";
@@ -930,7 +930,7 @@ BOOST_AUTO_TEST_CASE(autocomplete_pt_object_Network_Mode_Line_Route_stop_area_te
     b.data->pt_data->lines.push_back(line);
 
     // Add two routes in the line
-    navitia::type::Route* route = new navitia::type::Route();
+    auto* route = new navitia::type::Route();
     route->idx = b.data->pt_data->routes.size();
     route->name = line->name;
     route->uri = line->name + ":" + std::to_string(b.data->pt_data->routes.size());
@@ -950,7 +950,7 @@ BOOST_AUTO_TEST_CASE(autocomplete_pt_object_Network_Mode_Line_Route_stop_area_te
     b.sa("chatelet", 0, 0);
     b.sa("Chateau", 0, 0);
     b.sa("Mettray", 0, 0);
-    Admin* ad = new Admin;
+    auto* ad = new Admin;
     ad->name = "paris";
     ad->uri = "paris";
     ad->level = 8;
@@ -1125,7 +1125,7 @@ BOOST_AUTO_TEST_CASE(autocomplete_functional_test_SA_temp_test) {
     b.sa("Tourbie", 0, 0);
     b.sa("Bourgogne", 0, 0);
 
-    Admin* ad = new Admin;
+    auto* ad = new Admin;
     ad->name = "Santec";
     ad->uri = "Santec";
     ad->level = 8;
@@ -1285,7 +1285,7 @@ BOOST_AUTO_TEST_CASE(autocomplete_with_multi_postal_codes_test) {
     b.sa("Santec", 0, 0);
 
     b.data->pt_data->sort_and_index();
-    Admin* ad = new Admin;
+    auto* ad = new Admin;
     ad->name = "Nantes";
     ad->uri = "URI-NANTES";
     ad->level = 8;
@@ -1320,7 +1320,7 @@ BOOST_AUTO_TEST_CASE(autocomplete_with_multi_postal_codes_alphanumeric_test) {
     b.sa("Santec", 0, 0);
 
     b.data->pt_data->sort_and_index();
-    Admin* ad = new Admin;
+    auto* ad = new Admin;
     ad->name = "Nantes";
     ad->uri = "URI-NANTES";
     ad->level = 8;
@@ -1356,7 +1356,7 @@ BOOST_AUTO_TEST_CASE(autocomplete_without_postal_codes_test) {
     b.sa("Santec", 0, 0);
 
     b.data->pt_data->sort_and_index();
-    Admin* ad = new Admin;
+    auto* ad = new Admin;
     ad->name = "Nantes";
     ad->uri = "URI-NANTES";
     ad->level = 8;
@@ -1396,7 +1396,7 @@ BOOST_AUTO_TEST_CASE(autocomplete_way_without_edges) {
     w->uri = w->name;
     b.data->geo_ref->ways.push_back(w);
 
-    Admin* ad = new Admin;
+    auto* ad = new Admin;
     ad->name = "Quimper";
     ad->uri = "Quimper";
     ad->level = 8;
@@ -1424,7 +1424,7 @@ BOOST_AUTO_TEST_CASE(autocomplete_with_multi_postal_codes_testAA) {
     std::vector<navitia::type::Type_e> type_filter;
     ed::builder b("20140614");
 
-    Admin* ad = new Admin;
+    auto* ad = new Admin;
     ad->name = "Nantes";
     ad->uri = "URI-NANTES";
     ad->level = 8;
@@ -1572,7 +1572,7 @@ BOOST_AUTO_TEST_CASE(autocomplete_with_ghostword_test) {
     ghostwords.insert("en");
     ghostwords.insert("et");
 
-    Admin* ad = new Admin;
+    auto* ad = new Admin;
     ad->name = "Beaune";
     ad->uri = "URI-Beaune";
     ad->level = 8;
@@ -1587,7 +1587,7 @@ BOOST_AUTO_TEST_CASE(autocomplete_with_ghostword_test) {
     w->admin_list.push_back(ad);
 
     // Create a new StopArea
-    navitia::type::StopArea* sa = new navitia::type::StopArea();
+    auto* sa = new navitia::type::StopArea();
     sa->idx = 0;
     sa->name = "gare";
     sa->uri = sa->name;
@@ -1757,7 +1757,7 @@ BOOST_AUTO_TEST_CASE(synonyms_with_capital_and_non_ascii) {
 BOOST_AUTO_TEST_CASE(autocomplete_admin_filtering_tests) {
     ed::builder b("20140614");
 
-    Admin* bobville = new Admin;
+    auto* bobville = new Admin;
     bobville->name = "BobVille";
     bobville->uri = "BobVille";
     bobville->level = 8;
@@ -1929,7 +1929,7 @@ BOOST_AUTO_TEST_CASE(autocomplete_functional_test_piquet) {
     b.sa("MPT kerfeunteun", 0, 0);
 
     b.data->pt_data->sort_and_index();
-    Admin* ad = new Admin;
+    auto* ad = new Admin;
     ad->name = "Quimper";
     ad->uri = "Quimper";
     ad->level = 8;
@@ -1970,7 +1970,7 @@ BOOST_AUTO_TEST_CASE(autocomplete_functional_test_orleans) {
     b.sa("MPT kerfeunteun", 0, 0);
 
     b.data->pt_data->sort_and_index();
-    Admin* ad = new Admin;
+    auto* ad = new Admin;
     ad->name = "Quimper";
     ad->uri = "Quimper";
     ad->level = 8;
@@ -2021,7 +2021,7 @@ BOOST_AUTO_TEST_CASE(autocomplete_test_stop_area_longest_substring) {
     b.sa("Jean Jaurès", 0, 0);
 
     b.data->pt_data->sort_and_index();
-    Admin* ad = new Admin;
+    auto* ad = new Admin;
     ad->name = "Toulouse";
     ad->uri = "admin:fr:31555";
     ad->level = 8;

@@ -93,14 +93,14 @@ private:
     }
     const stop_time_key get_as_key(const navitia::type::StopTime& st) const;
 
-    typedef boost::fusion::map<fusion_pair_comment_map<navitia::type::StopArea>,
-                               fusion_pair_comment_map<navitia::type::StopPoint>,
-                               fusion_pair_comment_map<navitia::type::Line>,
-                               fusion_pair_comment_map<navitia::type::Route>,
-                               fusion_pair_comment_map<navitia::type::VehicleJourney>,
-                               fusion_pair_comment_map<navitia::type::LineGroup>,
-                               boost::fusion::pair<navitia::type::StopTime, std::map<stop_time_key, comment_list>>>
-        comment_map_type;
+    using comment_map_type =
+        boost::fusion::map<fusion_pair_comment_map<navitia::type::StopArea>,
+                           fusion_pair_comment_map<navitia::type::StopPoint>,
+                           fusion_pair_comment_map<navitia::type::Line>,
+                           fusion_pair_comment_map<navitia::type::Route>,
+                           fusion_pair_comment_map<navitia::type::VehicleJourney>,
+                           fusion_pair_comment_map<navitia::type::LineGroup>,
+                           boost::fusion::pair<navitia::type::StopTime, std::map<stop_time_key, comment_list>>>;
 
     comment_map_type map;
 };

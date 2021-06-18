@@ -39,7 +39,7 @@ struct SynonymParserException : public navitia::exception {
     SynonymParserException(const std::string& message) : navitia::exception(message) {}
     SynonymParserException(const SynonymParserException&) = default;
     SynonymParserException& operator=(const SynonymParserException&) = default;
-    virtual ~SynonymParserException() noexcept;
+    ~SynonymParserException() noexcept override;
 };
 
 class SynonymParser {

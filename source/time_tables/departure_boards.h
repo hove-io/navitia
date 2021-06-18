@@ -38,9 +38,9 @@ namespace navitia {
 namespace timetables {
 
 typedef std::vector<DateTime> vector_datetime;
-typedef std::vector<routing::datetime_stop_time> vector_dt_st;
-typedef std::pair<boost::optional<routing::datetime_stop_time>, boost::optional<routing::datetime_stop_time>>
-    first_and_last_stop_time;
+using vector_dt_st = std::vector<routing::datetime_stop_time>;
+using first_and_last_stop_time =
+    std::pair<boost::optional<routing::datetime_stop_time>, boost::optional<routing::datetime_stop_time> >;
 
 void departure_board(PbCreator& pb_creator,
                      const std::string& request,

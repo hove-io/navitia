@@ -56,7 +56,7 @@ public:
     std::string tz_name;
     using dst_periods = std::map<int32_t, std::vector<boost::gregorian::date_period>>;
     TimeZoneHandler(std::string name, const boost::gregorian::date& production_period_beg, const dst_periods&);
-    TimeZoneHandler() {}
+    TimeZoneHandler() = default;
     int32_t get_utc_offset(boost::gregorian::date day) const;
     int32_t get_utc_offset(int day) const;
     int32_t get_utc_offset(const ValidityPattern& vp) const;

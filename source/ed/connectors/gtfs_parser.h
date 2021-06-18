@@ -38,6 +38,8 @@ www.navitia.io
 #include <boost/container/flat_set.hpp>
 #include <boost/date_time/time_zone_base.hpp>
 #include <boost/date_time/local_time/local_time.hpp>
+#include <utility>
+
 #include "tz_db_wrapper.h"
 
 /**
@@ -267,7 +269,7 @@ struct TransfersGtfsHandler : public GenericHandler {
     int from_c, to_c, time_c;
 
     size_t nblines = 0;
-    virtual ~TransfersGtfsHandler() {}
+    virtual ~TransfersGtfsHandler() = default;
     void init(Data&);
     void finish(Data& data);
     void handle_line(Data& data, const csv_row& line, bool is_first_line);
@@ -402,7 +404,7 @@ inline void GenericGtfsParser::parse(Data& data) {
  * simply define the list of elemental parsers to use
  */
 struct GtfsParser : public GenericGtfsParser {
-    virtual void parse_files(Data&, const std::string& beginning_date);
+    void parse_files(Data&, const std::string& beginning_date) override;
     GtfsParser(const std::string& path) : GenericGtfsParser(path) {}
 };
 
@@ -417,14 +419,14 @@ int time_to_int(const std::string& time);
 
 struct FileNotFoundException {
     std::string filename;
-    FileNotFoundException(std::string filename) : filename(filename) {}
+    FileNotFoundException(std::string filename) : filename(std::move(filename)) {}
 };
 
 struct UnableToFindProductionDateException {};
 
 struct InvalidHeaders {
     std::string filename;
-    InvalidHeaders(std::string filename) : filename(filename) {}
+    InvalidHeaders(std::string filename) : filename(std::move(filename)) {}
 };
 
 template <typename Handler>

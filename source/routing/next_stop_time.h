@@ -70,12 +70,13 @@ struct NextStopTimeInterface {
         const type::VehicleProperties& vehicle_props,
         const bool check_freq = true,
         const boost::optional<DateTime>& bound = boost::none) const = 0;
-    virtual ~NextStopTimeInterface(){};
+    virtual ~NextStopTimeInterface() = default;
+    ;
 };
 
 struct NextStopTimeData {
-    typedef boost::iterator_range<std::vector<const type::StopTime*>::const_iterator> StopTimeIter;
-    typedef boost::iterator_range<std::vector<const type::StopTime*>::const_reverse_iterator> StopTimeReverseIter;
+    using StopTimeIter = boost::iterator_range<std::vector<const type::StopTime*>::const_iterator>;
+    using StopTimeReverseIter = boost::iterator_range<std::vector<const type::StopTime*>::const_reverse_iterator>;
 
     void load(const JourneyPatternContainer&);
 
@@ -162,7 +163,7 @@ private:
 
 struct NextStopTime : public NextStopTimeInterface {
     explicit NextStopTime(const type::Data& d) : data(d) {}
-    virtual ~NextStopTime() = default;
+    ~NextStopTime() override = default;
     // Returns the next stop time at given journey pattern point
     // either a vehicle that leaves or that arrives depending on
     // clockwise The last parametter, check_freq, allow to forget to
@@ -298,8 +299,8 @@ struct CachedNextStopTimeManager {
 
 private:
     struct CacheCreator {
-        typedef CachedNextStopTimeKey const& argument_type;
-        typedef CachedNextStopTime result_type;
+        using argument_type = const CachedNextStopTimeKey&;
+        using result_type = CachedNextStopTime;
         const dataRAPTOR& dataRaptor;
         CacheCreator(const dataRAPTOR& d) : dataRaptor(d) {}
         CachedNextStopTime operator()(const CachedNextStopTimeKey& key) const;

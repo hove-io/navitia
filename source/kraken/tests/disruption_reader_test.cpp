@@ -39,7 +39,7 @@ www.navitia.io
 struct Const_it {
     struct Value {
         std::string value = "";
-        Value() {}
+        Value() = default;
         Value(std::string value) : value(std::move(value)) {}
 
         template <typename T>

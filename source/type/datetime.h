@@ -130,8 +130,7 @@ inline DateTime operator+(DateTime time, boost::date_time::time_duration<Args...
 
 inline boost::posix_time::ptime strip_fractional_second(boost::posix_time::ptime ptime) {
     boost::posix_time::time_duration tod = ptime.time_of_day();
-    return boost::posix_time::ptime(ptime.date(),
-                                    boost::posix_time::seconds(tod.total_seconds()));  // striping fractional seconds
+    return {ptime.date(), boost::posix_time::seconds(tod.total_seconds())};  // striping fractional seconds
 }
 
 inline boost::posix_time::time_duration strip_fractional_second(boost::posix_time::time_duration dur) {

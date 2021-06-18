@@ -71,16 +71,16 @@ struct calendar_fixture {
 
         auto calA = new navitia::type::Calendar(b.data->meta->production_date.begin());
         calA->uri = "calA";
-        calA->active_periods.push_back({date("20140301"), date("20140305")});
-        calA->active_periods.push_back({date("20140310"), date("20140314")});
+        calA->active_periods.emplace_back(date("20140301"), date("20140305"));
+        calA->active_periods.emplace_back(date("20140310"), date("20140314"));
         calA->week_pattern = std::bitset<7>{"1111100"};
         b.data->pt_data->calendars.push_back(calA);
 
         auto calB = new navitia::type::Calendar(b.data->meta->production_date.begin());
         calB->uri = "calB";
-        calB->active_periods.push_back({date("20140307"), date("20140309")});
-        calB->active_periods.push_back({date("20140312"), date("20140316")});
-        calB->active_periods.push_back({date("20140321"), date("20140325")});
+        calB->active_periods.emplace_back(date("20140307"), date("20140309"));
+        calB->active_periods.emplace_back(date("20140312"), date("20140316"));
+        calB->active_periods.emplace_back(date("20140321"), date("20140325"));
         calB->week_pattern = std::bitset<7>{"0000011"};
         b.data->pt_data->calendars.push_back(calB);
 

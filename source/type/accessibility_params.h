@@ -40,7 +40,7 @@ struct AccessibiliteParams {
     Properties properties;                 // Accessibility StopPoint, Connection, ...
     VehicleProperties vehicle_properties;  // Accessibility VehicleJourney
 
-    AccessibiliteParams() {}
+    AccessibiliteParams() = default;
 
     bool operator<(const AccessibiliteParams& other) const {
         if (properties.to_ulong() != other.properties.to_ulong()) {

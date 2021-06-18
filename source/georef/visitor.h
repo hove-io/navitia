@@ -35,6 +35,7 @@ www.navitia.io
 
 #include <boost/graph/dijkstra_shortest_paths.hpp>
 #include <boost/graph/astar_search.hpp>
+#include <utility>
 
 namespace navitia {
 namespace georef {
@@ -49,8 +50,8 @@ struct distance_visitor : virtual public Base {
     navitia::time_duration max_duration;
     const std::vector<navitia::time_duration>& durations;
 
-    distance_visitor(const time_duration& max_dur, const std::vector<time_duration>& dur)
-        : max_duration(max_dur), durations(dur) {}
+    distance_visitor(time_duration max_dur, const std::vector<time_duration>& dur)
+        : max_duration(std::move(max_dur)), durations(dur) {}
     distance_visitor(const distance_visitor& other) = default;
 
     /*

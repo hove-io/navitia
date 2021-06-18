@@ -44,8 +44,8 @@ void dataRAPTOR::Connections::load(const type::PT_Data& data) {
     for (const auto* conn : data.stop_point_connections) {
         const SpIdx departure_stop_point = SpIdx(*conn->departure);
         const SpIdx arrival_stop_point = SpIdx(*conn->destination);
-        const DateTime walking_duration = DateTime(conn->display_duration);
-        const DateTime total_duration = DateTime(conn->duration);
+        const auto walking_duration = DateTime(conn->display_duration);
+        const auto total_duration = DateTime(conn->duration);
         forward_connections[departure_stop_point].push_back({total_duration, walking_duration, arrival_stop_point});
         backward_connections[arrival_stop_point].push_back({total_duration, walking_duration, departure_stop_point});
     }

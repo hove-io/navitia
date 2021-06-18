@@ -39,6 +39,7 @@ www.navitia.io
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/fusion/adapted/struct.hpp>
 #include <boost/variant/recursive_variant.hpp>
+#include <utility>
 
 namespace navitia {
 namespace ptref {
@@ -83,7 +84,7 @@ struct Expr {
 
     Expr() : expr(All()) {}
     template <typename E>
-    Expr(E const& expr) : expr(expr) {}
+    Expr(E expr) : expr(std::move(expr)) {}
 
     Expr& operator+=(Expr const& rhs);
     Expr& operator-=(Expr const& rhs);
@@ -100,7 +101,7 @@ template <typename OpTag>
 struct BinaryOp {
     Expr lhs;
     Expr rhs;
-    BinaryOp(Expr l, Expr r) : lhs(l), rhs(r) {}
+    BinaryOp(Expr l, Expr r) : lhs(std::move(l)), rhs(std::move(r)) {}
 };
 
 void print_quoted_string(std::ostream& os, const std::string& s);

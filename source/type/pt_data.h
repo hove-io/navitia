@@ -52,7 +52,7 @@ struct enum_size_trait<pbnavitia::PlaceCodeRequest::Type> {
 namespace type {
 
 typedef std::map<std::string, std::string> code_value_map_type;
-typedef std::map<std::string, code_value_map_type> type_code_codes_map_type;
+using type_code_codes_map_type = std::map<std::string, code_value_map_type>;
 class PT_Data : boost::noncopyable {
 public:
     PT_Data();

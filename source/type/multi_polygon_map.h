@@ -44,8 +44,8 @@ namespace bg = boost::geometry;
 template <typename T>
 struct MultiPolygonMap {
     typedef boost::geometry::model::box<GeographicalCoord> Box;
-    typedef std::pair<MultiPolygon, T> Value;
-    typedef RTree<const Value*, double, 2> RT;
+    using Value = std::pair<MultiPolygon, T>;
+    using RT = RTree<const Value*, double, 2>;
 
     void insert(const MultiPolygon& key, T data) {
         pool.emplace_back(key, data);
@@ -66,9 +66,9 @@ struct MultiPolygonMap {
     BOOST_SERIALIZATION_SPLIT_MEMBER()
 
     std::vector<T> find(const GeographicalCoord& key) const {
-        typedef std::vector<T> result_type;
+        using result_type = std::vector<T>;
         result_type res;
-        typedef std::pair<const GeographicalCoord&, result_type&> context_type;
+        using context_type = std::pair<const GeographicalCoord&, result_type&>;
         context_type ctx = {key, res};
         const double coord[] = {key.lon(), key.lat()};
         auto callback = [](const Value* val, void* ctx_ptr) -> bool {

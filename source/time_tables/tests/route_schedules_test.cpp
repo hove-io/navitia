@@ -191,22 +191,22 @@ struct route_schedule_calendar_fixture {
 
                 c1 = new navitia::type::Calendar(begin);
                 c1->uri = "C1";
-                c1->active_periods.push_back({begin, end});
+                c1->active_periods.emplace_back(begin, end);
                 c1->week_pattern = std::bitset<7>("1111100");
                 save_cal(c1);
                 c2 = new navitia::type::Calendar(begin);
                 c2->uri = "C2";
-                c2->active_periods.push_back({begin, end});
+                c2->active_periods.emplace_back(begin, end);
                 c2->week_pattern = std::bitset<7>("0000011");
                 save_cal(c2);
                 c3 = new navitia::type::Calendar(begin);
                 c3->uri = "C3";
-                c3->active_periods.push_back({begin, end});
+                c3->active_periods.emplace_back(begin, end);
                 c3->week_pattern = std::bitset<7>("1111111");
                 save_cal(c3);
                 c4 = new navitia::type::Calendar(begin);
                 c4->uri = "C4";
-                c4->active_periods.push_back({begin, end});
+                c4->active_periods.emplace_back(begin, end);
                 c4->week_pattern = std::bitset<7>("0000000");
                 save_cal(c4);
 
@@ -457,7 +457,7 @@ BOOST_AUTO_TEST_CASE(test_route_schedule_with_different_vp_over_midnight) {
 
         c1 = new navitia::type::Calendar(begin);
         c1->uri = "C1";
-        c1->active_periods.push_back({begin, end});
+        c1->active_periods.emplace_back(begin, end);
         c1->week_pattern = std::bitset<7>("1111111");
         save_cal(c1);
 
@@ -681,7 +681,7 @@ BOOST_AUTO_TEST_CASE(complicated_order_with_impacts) {
 BOOST_AUTO_TEST_CASE(route_schedule_with_boarding_time_frequency_and_calendar) {
     boost::gregorian::date begin = boost::gregorian::date_from_iso_string("20170101");
     boost::gregorian::date end = boost::gregorian::date_from_iso_string("20180101");
-    navitia::type::Calendar* c = new navitia::type::Calendar(begin);
+    auto* c = new navitia::type::Calendar(begin);
 
     ed::builder b("20170101", [&](ed::builder& b) {
         b.vj("L1").name("vj:0")("stop1", "8:00"_t, "8:00"_t, std::numeric_limits<uint16_t>::max(), false, true, 0, 300)(
@@ -698,7 +698,7 @@ BOOST_AUTO_TEST_CASE(route_schedule_with_boarding_time_frequency_and_calendar) {
                 "stop3", "18:10"_t, "18:10"_t, std::numeric_limits<uint16_t>::max(), true, false, 300, 0);
 
         c->uri = "C1";
-        c->active_periods.push_back({begin, end});
+        c->active_periods.emplace_back(begin, end);
         c->week_pattern = std::bitset<7>("1111111");
         b.data->pt_data->calendars.push_back(c);
         b.data->pt_data->calendars_map[c->uri] = c;

@@ -30,6 +30,8 @@ www.navitia.io
 
 #pragma once
 
+#include <utility>
+
 #include "types.h"
 
 #include "type/comment.h"
@@ -58,9 +60,9 @@ void normalize_uri(std::vector<T*>& vec) {
 
 // if ED we associate the timezone manager with the boost timezone object
 struct EdTZWrapper {
-    EdTZWrapper() {}
-    EdTZWrapper(const std::string& name, boost::local_time::time_zone_ptr boost_tz)
-        : boost_timezone(boost_tz), tz_name(name) {}
+    EdTZWrapper() = default;
+    EdTZWrapper(std::string name, boost::local_time::time_zone_ptr boost_tz)
+        : boost_timezone(std::move(boost_tz)), tz_name(std::move(name)) {}
 
     navitia::type::TimeZoneHandler tz_handler;
 

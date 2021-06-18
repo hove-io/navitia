@@ -149,7 +149,7 @@ bool operator==(const GeographicalCoord& a, const GeographicalCoord& b);
 
 // Used to modelize the shapes of the different objects
 typedef std::vector<GeographicalCoord> LineString;
-typedef std::vector<LineString> MultiLineString;
+using MultiLineString = std::vector<LineString>;
 
 // Project a point on a line.  The returned point is the nearest point on the line.
 GeographicalCoord project(const LineString&, const GeographicalCoord&);
@@ -178,8 +178,8 @@ BOOST_GEOMETRY_REGISTER_MULTI_LINESTRING(navitia::type::MultiLineString)
 
 namespace navitia {
 namespace type {
-typedef boost::geometry::model::polygon<GeographicalCoord> Polygon;
-typedef boost::geometry::model::multi_polygon<Polygon> MultiPolygon;
+using Polygon = boost::geometry::model::polygon<GeographicalCoord>;
+using MultiPolygon = boost::geometry::model::multi_polygon<Polygon>;
 }  // namespace type
 }  // namespace navitia
 

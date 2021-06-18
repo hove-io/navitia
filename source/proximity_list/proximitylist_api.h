@@ -42,7 +42,7 @@ namespace type {
 class Data;
 enum class Type_e;
 struct GeographicalCoord;
-typedef uint32_t idx_t;
+using idx_t = uint32_t;
 }  // namespace type
 
 namespace proximitylist {

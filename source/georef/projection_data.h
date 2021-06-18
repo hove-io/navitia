@@ -68,7 +68,7 @@ struct ProjectionData {
     // Distance between the projected point and the ends
     flat_enum_map<Direction, double> distances{{{-1, -1}}};
 
-    ProjectionData() {}
+    ProjectionData() = default;
     // Project the coordinate on the graph corresponding to the transportation mode of the offset
     ProjectionData(const type::GeographicalCoord& coord, const GeoRef& sn, type::Mode_e mode = type::Mode_e::Walking);
 

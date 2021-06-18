@@ -51,8 +51,8 @@ struct Projection {
     Projection() : Projection("wgs84", "4326", true) {}
     Projection(const Projection&);
     Projection& operator=(const Projection&);
-    Projection(Projection&&);
-    Projection& operator=(Projection&&);
+    Projection(Projection&&) noexcept;
+    Projection& operator=(Projection&&) noexcept;
     void custom_pj_init_plus();
     void custom_pj_free();
     ~Projection();

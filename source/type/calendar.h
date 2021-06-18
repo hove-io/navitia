@@ -94,7 +94,7 @@ struct Calendar : public Nameable, public Header {
 
     ValidityPattern validity_pattern;  // computed validity pattern
 
-    Calendar() {}
+    Calendar() = default;
     Calendar(boost::gregorian::date beginning_date);
 
     // we limit the validity pattern to the production period

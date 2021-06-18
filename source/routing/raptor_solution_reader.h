@@ -30,6 +30,8 @@ www.navitia.io
 
 #pragma once
 
+#include <utility>
+
 #include "journey.h"
 #include "raptor_utils.h"
 #include "utils/multi_obj_pool.h"
@@ -50,8 +52,8 @@ struct Dominates {
     navitia::time_duration walking_transfer_penalty;
     Dominates(bool rc, navitia::time_duration arrival_transfer_penalty, navitia::time_duration walking_transfer_penalty)
         : request_clockwise(rc),
-          arrival_transfer_penalty(arrival_transfer_penalty),
-          walking_transfer_penalty(walking_transfer_penalty) {}
+          arrival_transfer_penalty(std::move(arrival_transfer_penalty)),
+          walking_transfer_penalty(std::move(walking_transfer_penalty)) {}
     bool operator()(const Journey& lhs, const Journey& rhs) const {
         return lhs.better_on_dt(rhs, request_clockwise, arrival_transfer_penalty) && lhs.better_on_transfer(rhs)
                && lhs.better_on_sn(rhs, walking_transfer_penalty);

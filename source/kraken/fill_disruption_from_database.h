@@ -38,6 +38,7 @@ www.navitia.io
 
 #include <string>
 #include <memory>
+#include <utility>
 
 namespace navitia {
 #define FILL_NULLABLE_(var_name, arg_name, col_name, type_name) \
@@ -62,7 +63,7 @@ struct DisruptionDatabaseReader {
     DisruptionDatabaseReader(type::PT_Data& pt_data,
                              const type::MetaData& meta,
                              ChaosDisruptionApplier disruption_callback = make_and_apply_disruption)
-        : pt_data(pt_data), meta(meta), disruption_callback(disruption_callback) {}
+        : pt_data(pt_data), meta(meta), disruption_callback(std::move(disruption_callback)) {}
 
     std::unique_ptr<chaos::Disruption> disruption = nullptr;
     chaos::Impact* impact = nullptr;

@@ -68,7 +68,7 @@ const flat_enum_map<nt::Mode_e, float> default_speed{{{
 struct Vertex {
     nt::GeographicalCoord coord;
 
-    Vertex() {}
+    Vertex() = default;
     Vertex(double x, double y, bool is_meters = false) : coord(x, y) {
         if (is_meters) {
             coord.set_xy(x, y);
@@ -138,7 +138,7 @@ public:
     const Way* way;
     nt::GeographicalCoord coord;
     int number;
-    Address() {}
+    Address() = default;
     Address(const Way* way, const nt::GeographicalCoord& coord, const int number)
         : way(way), coord(coord), number(number) {}
 
@@ -216,7 +216,7 @@ struct GeoRef {
     typedef flat_enum_map<nt::Mode_e, ProjectionData> ProjectionByMode;
     std::vector<ProjectionByMode> projected_stop_points = {};
 
-    typedef std::unordered_map<nt::GeographicalCoord, ProjectionByMode> ProjectedCoords;
+    using ProjectedCoords = std::unordered_map<nt::GeographicalCoord, ProjectionByMode>;
     ProjectedCoords projected_coords;
 
     /// Graphe pour effectuer le calcul d'itinéraire

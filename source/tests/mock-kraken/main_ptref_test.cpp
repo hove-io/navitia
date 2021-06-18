@@ -116,14 +116,14 @@ struct data_set {
                                                                                     "10:05:00"_t);
 
                 // Company added
-                navitia::type::Company* cmp1 = new navitia::type::Company();
+                auto* cmp1 = new navitia::type::Company();
                 cmp1->line_list.push_back(b.lines["line:A"]);
                 b.data->pt_data->companies.push_back(cmp1);
                 cmp1->idx = b.data->pt_data->companies.size();
                 cmp1->name = "CMP1";
                 cmp1->uri = "CMP1";
                 b.lines["line:A"]->company_list.push_back(cmp1);
-                navitia::type::Company* cmp2 = new navitia::type::Company();
+                auto* cmp2 = new navitia::type::Company();
                 cmp2->line_list.push_back(b.lines["line:A"]);
                 b.data->pt_data->companies.push_back(cmp2);
                 cmp2->idx = b.data->pt_data->companies.size();
@@ -174,7 +174,7 @@ struct data_set {
                     .application_periods(btp("20140101T000000"_dt, "20140120T235959"_dt))
                     .publish(btp("20140101T000000"_dt, "20140120T235959"_dt));
                 // LineGroup added
-                navitia::type::LineGroup* lg = new navitia::type::LineGroup();
+                auto* lg = new navitia::type::LineGroup();
                 lg->name = "A group";
                 lg->uri = "group:A";
                 lg->main_line = b.lines["line:A"];
@@ -191,7 +191,7 @@ struct data_set {
                     .publish(btp("20140101T000000"_dt, "20140120T235959"_dt));
 
                 // contributor "c1" contains dataset "d1"
-                navitia::type::Contributor* contributor = new navitia::type::Contributor();
+                auto* contributor = new navitia::type::Contributor();
                 contributor->idx = b.data->pt_data->contributors.size();
                 contributor->uri = "c1";
                 contributor->name = "name-c1";
@@ -199,7 +199,7 @@ struct data_set {
                 contributor->license = "ls-c1";
                 b.data->pt_data->contributors.push_back(contributor);
 
-                navitia::type::Dataset* dataset = new navitia::type::Dataset();
+                auto* dataset = new navitia::type::Dataset();
                 dataset->idx = b.data->pt_data->datasets.size();
                 dataset->uri = "d1";
                 dataset->name = "name-d1";

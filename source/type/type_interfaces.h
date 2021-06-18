@@ -38,6 +38,7 @@ www.navitia.io
 
 #include <bitset>
 #include <iostream>
+#include <utility>
 
 namespace navitia {
 namespace type {
@@ -95,7 +96,7 @@ enum class Type_e {
     size = 29
 };
 
-typedef std::bitset<7> WeekPattern;
+using WeekPattern = std::bitset<7>;
 
 enum class OdtLevel_e { scheduled = 0, with_stops = 1, zonal = 2, all = 3 };
 
@@ -104,7 +105,7 @@ struct Nameable {
     bool visible = true;
 
     Nameable() = default;
-    Nameable(const std::string& name) : name(name) {}
+    Nameable(std::string name) : name(std::move(name)) {}
 };
 
 class PT_Data;
@@ -125,11 +126,11 @@ struct Header {
     std::string uri;          // unique indentifier of the object
 
     Header() = default;
-    Header(idx_t idx, const std::string& uri) : idx(idx), uri(uri) {}
+    Header(idx_t idx, std::string uri) : idx(idx), uri(std::move(uri)) {}
     Indexes get(Type_e, const PT_Data&) const { return Indexes{}; }
 };
 
-typedef std::bitset<10> Properties;
+using Properties = std::bitset<10>;
 struct hasProperties {
     static const uint8_t WHEELCHAIR_BOARDING = 0;
     static const uint8_t SHELTERED = 1;
@@ -183,7 +184,7 @@ struct hasProperties {
     Properties _properties;
 };
 
-typedef std::bitset<8> VehicleProperties;
+using VehicleProperties = std::bitset<8>;
 struct hasVehicleProperties {
     static const uint8_t WHEELCHAIR_ACCESSIBLE = 0;
     static const uint8_t BIKE_ACCEPTED = 1;
@@ -241,7 +242,7 @@ protected:
     std::vector<boost::weak_ptr<disruption::Impact>> impacts;
 
 public:
-    void add_impact(const boost::shared_ptr<disruption::Impact>& i) { impacts.push_back(i); }
+    void add_impact(const boost::shared_ptr<disruption::Impact>& i) { impacts.emplace_back(i); }
 
     std::vector<boost::shared_ptr<disruption::Impact>> get_applicable_messages(
         const boost::posix_time::ptime& current_time,

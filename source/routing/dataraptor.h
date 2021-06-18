@@ -110,7 +110,7 @@ struct dataRAPTOR {
     // jp_validity_patterns[date][jp_idx] == any(vj.validity_pattern->check2(date) for vj in jp)
     flat_enum_map<type::RTLevel, std::vector<boost::dynamic_bitset<>>> jp_validity_patterns;
 
-    dataRAPTOR() {}
+    dataRAPTOR() = default;
     void load(const navitia::type::PT_Data&, size_t cache_size = 10);
 
     void warmup(const dataRAPTOR& other);

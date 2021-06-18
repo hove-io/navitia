@@ -5,10 +5,10 @@
 namespace navitia {
 namespace routing {
 struct raptor_visitor {
-    raptor_visitor() {}
+    raptor_visitor() = default;
 
-    typedef std::vector<type::StopTime>::const_iterator stop_time_iterator;
-    typedef boost::iterator_range<stop_time_iterator> stop_time_range;
+    using stop_time_iterator = std::vector<type::StopTime>::const_iterator;
+    using stop_time_range = boost::iterator_range<stop_time_iterator>;
 
     inline bool better_or_equal(const DateTime& a, const DateTime& current_dt, const type::StopTime& st) const {
         return a <= st.section_end(current_dt, !clockwise());
@@ -60,10 +60,10 @@ struct raptor_visitor {
 };
 
 struct raptor_reverse_visitor {
-    raptor_reverse_visitor() {}
+    raptor_reverse_visitor() = default;
 
-    typedef std::vector<type::StopTime>::const_reverse_iterator stop_time_iterator;
-    typedef boost::iterator_range<stop_time_iterator> stop_time_range;
+    using stop_time_iterator = std::vector<type::StopTime>::const_reverse_iterator;
+    using stop_time_range = boost::iterator_range<stop_time_iterator>;
 
     inline bool better_or_equal(const DateTime& a, const DateTime& current_dt, const type::StopTime& st) const {
         return a >= st.section_end(current_dt, !clockwise());

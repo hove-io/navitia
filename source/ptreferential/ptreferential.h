@@ -37,6 +37,7 @@ www.navitia.io
 
 #include <boost/optional.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
+#include <utility>
 
 namespace navitia {
 namespace ptref {
@@ -44,8 +45,8 @@ namespace ptref {
 struct ptref_error : public navitia::recoverable_exception {
     std::string more;
 
-    ptref_error(const std::string& more) : more(more) {}
-    virtual const char* what() const noexcept override;
+    ptref_error(std::string more) : more(std::move(more)) {}
+    const char* what() const noexcept override;
 };
 
 struct parsing_error : public ptref_error {
@@ -56,7 +57,7 @@ struct parsing_error : public ptref_error {
     parsing_error(error_type type, const std::string& str) : ptref_error(str), type(type) {}
     parsing_error(const parsing_error&) = default;
     parsing_error& operator=(const parsing_error&) = default;
-    ~parsing_error() noexcept;
+    ~parsing_error() noexcept override;
 };
 
 /// Runs the query on the data, and returns the corresponding indexes.
