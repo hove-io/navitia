@@ -1,3 +1,21 @@
+navitia2 (12.0.0) unstable; urgency=low
+
+  * [Jormungandr]Group by destination in Terminus_schedules API RT timeo  <https://github.com/CanalTP/navitia/pull/3470>
+  * [Kraken] Filter disruption on current status   <https://github.com/CanalTP/navitia/pull/3472>
+  * [Jormungandr] Changing occupancy data type to string from integer  <https://github.com/CanalTP/navitia/pull/3474>
+  * [Format] Clang-tidy Modernize   <https://github.com/CanalTP/navitia/pull/3473>
+  * [Jormungandr] More precise name for instruction start coordinate for Here  <https://github.com/CanalTP/navitia/pull/3471>
+  * [Jormungandr] Add instruction start coordinates to journey PathSerializer  <https://github.com/CanalTP/navitia/pull/3467>
+  * [Jormungandr] Add elevations in geovelo bike section  <https://github.com/CanalTP/navitia/pull/3469>
+  * [Jormungandr] rail section into jormun  <https://github.com/CanalTP/navitia/pull/3466>
+  * [Doc] regroup doc about forbidden/allowed  <https://github.com/CanalTP/navitia/pull/3454>
+  * [Autocomplete] Added Proximity radius for /places endpoint  <https://github.com/CanalTP/navitia/pull/3468>
+  * [Jormungandr] Fix schema for freefloatings_nearby  <https://github.com/CanalTP/navitia/pull/3462>
+  * [Sonar] Fixed bugs reported by Sonar  <https://github.com/CanalTP/navitia/pull/3465>
+  * [CI] Fix Sonar Analyze  <https://github.com/CanalTP/navitia/pull/3464>
+
+ -- xlqian <patrick.qian@kisio.com>  Fri, 18 Jun 2021 12:06:19 +0100
+
 navitia2 (11.2.0) unstable; urgency=low
 
   * [Jormungandr] Certificate verification can be disabled by param in config  <https://github.com/CanalTP/navitia/pull/3458>
