@@ -634,6 +634,20 @@ def apply_final_journey_filters(response_list, instance, request):
     _filter_too_much_connections(journeys, instance, request)
 
 
+def replace_bss_tag(journeys):
+    """
+    replace the gss tag by walking, if there's no bss section in the journey
+    """
+    for j in journeys:
+        if not j.tags or "bss" not in j.tags:
+            continue
+        has_bss = any((s.type == response_pb2.BSS_RENT for s in j.sections))
+        if has_bss:
+            continue
+        j.tags.remove("bss")
+        j.tags.append("walking")
+
+
 def filter_detailed_journeys(responses, request):
     journey_generator = get_qualified_journeys
     if request.get('debug', False):
@@ -654,6 +668,12 @@ def filter_detailed_journeys(responses, request):
     f_wrapped = filter_wrapper(is_debug=request.get('debug', False), filter_obj=too_heavy_journey_filter)
 
     [f_wrapped(j) for j in journeys]
+
+    it1, it2 = itertools.tee(journey_generator(responses))
+    journey_pairs_pool = itertools.product(it1, it2)
+    filter_similar_vj_journeys(journey_pairs_pool, request)
+
+    replace_bss_tag(journey_generator(responses))
 
 
 def _get_worst_similar(j1, j2, request):
@@ -758,6 +778,9 @@ def _filter_similar_journeys(journey_pairs_pool, request, *similar_journey_gener
     logger = logging.getLogger(__name__)
     is_debug = request.get('debug', False)
     for j1, j2 in journey_pairs_pool:
+        if j1 is j2:
+            continue
+
         if to_be_deleted(j1) or to_be_deleted(j2):
             continue
 
