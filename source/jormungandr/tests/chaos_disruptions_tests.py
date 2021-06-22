@@ -394,6 +394,11 @@ class TestChaosDisruptions2(ChaosDisruptionsFixture):
         for b in stops_b_to:
             assert not get_disruptions(b['stop_area'], response)
 
+        # We should not have a bypass_disruption link
+        # in case there is no disruption
+        links = get_links_dict(response)
+        assert 'bypass_disruptions' not in links
+
         # we create a list with every 'to' section to the stop B (the one we added the disruption on)
         self.send_mock("bob_the_disruption", "stopB", "stop_area")
         query = journey_basic_query + '&_current_datetime=20160314T144100'
@@ -418,6 +423,11 @@ class TestChaosDisruptions2(ChaosDisruptionsFixture):
             assert len(disruptions) == 1
 
             assert any(d['disruption_id'] == 'bob_the_disruption' for d in disruptions)
+
+        # We should have a bypass_disruption link
+        # in case there is disruptions but without NO_SERVICE severity
+        links = get_links_dict(response)
+        assert 'bypass_disruptions' not in links
 
     def test_journey_with_current_datetime_out_of_bounds(self):
         """
@@ -508,6 +518,36 @@ class TestChaosDisruptions2(ChaosDisruptionsFixture):
         assert any(link['id'] == 'impact_bob_the_disruption_1' for link in links)
         assert any(link['id'] == 'impact_bob_the_disruption_on_line_1' for link in links)
         assert any(link['id'] == 'impact_bob_the_disruption_on_stop_point_1' for link in links)
+
+    def test_disruption_on_journey_with_blocking_disruption(self):
+        """
+        same kind of test with a call on journeys
+
+        at first no disruptions, we add one with NO_SERVICE severity
+        and we should get it
+        """
+        # we create a list with every 'to' section to the stop B (the one we added the disruption on)
+        self.send_mock("bob_the_disruption", "stopB", "stop_area", blocking=True)
+        query = journey_basic_query + '&_current_datetime=20160314T144100'
+        response = self.query_region(query)
+
+        self.is_valid_journey_response(response, query)
+
+        # We should have a bypass_disruption link
+        # in case there is disruptions with NO_SERVICE severity
+        links = get_links_dict(response)
+        assert 'bypass_disruptions' in links
+        assert '&data_freshness=realtime' in links['bypass_disruptions']['href']
+
+        # We call journey with realtime data_freshness
+        # We should not receive bypass_disruptions link
+        # even if we have a disruption with NO_SERVICE severity
+        query = query + "&data_freshness=realtime"
+        response = self.query_region(query)
+
+        self.is_valid_journey_response(response, query)
+        links = get_links_dict(response)
+        assert 'bypass_disruptions' not in links
 
 
 @dataset(MAIN_ROUTING_TEST_SETTING)

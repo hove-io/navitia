@@ -31,10 +31,11 @@ from flask_restful import abort
 from flask.globals import request
 import flask
 from jormungandr.utils import date_to_timestamp, timestamp_to_str, dt_to_str, timestamp_to_datetime
+import copy
 
 import navitiacommon.type_pb2 as type_pb2
 import navitiacommon.request_pb2 as request_pb2
-from navitiacommon.type_pb2 import ActiveStatus
+from navitiacommon.type_pb2 import ActiveStatus, Severity
 from jormungandr.interfaces.common import pb_odt_level
 from jormungandr.scenarios.utils import places_type, pt_object_type, add_link
 from jormungandr.scenarios.utils import build_pagination
@@ -346,6 +347,14 @@ class Scenario(object):
         req['region'] = instance.name
         add_link(resp, rel='ridesharing_journeys', **req)
 
+    def _add_bypass_disruptions_link(self, resp, params):
+        # find first impact wit a NO_SERVICE severity
+        found = next((True for impact in resp.impacts if impact.severity.effect == Severity.NO_SERVICE), False)
+        if found:
+            cloned_params = copy.deepcopy(params)
+            cloned_params['data_freshness'] = 'realtime'
+            add_link(resp, rel='bypass_disruptions', **cloned_params)
+
     def _add_prev_link(self, resp, params, clockwise):
         prev_dt = self.previous_journey_datetime(resp.journeys, clockwise)
         if prev_dt is not None:
@@ -390,3 +399,5 @@ class Scenario(object):
         self._add_prev_link(resp, cloned_params, clockwise)
         # we also compute first/last journey link
         self._add_first_last_links(resp, cloned_params)
+        # we also compute bypass_disruptions link
+        self._add_bypass_disruptions_link(resp, cloned_params)
