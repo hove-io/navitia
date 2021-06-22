@@ -85,7 +85,7 @@ struct SectionHash {
     size_t operator()(const Journey::Section& s, size_t seed) const;
 };
 
-typedef std::unordered_set<Journey, JourneyHash> JourneySet;
+using JourneySet = std::unordered_set<Journey, JourneyHash>;
 
 /**
  * @brief Get the pseudo-best journey

@@ -35,7 +35,7 @@ namespace navitia {
 namespace type {
 
 struct hasOdtProperties {
-    typedef std::bitset<2> OdtProperties;
+    using OdtProperties = std::bitset<2>;
     static const uint8_t ESTIMATED_ODT = 0;
     static const uint8_t ZONAL_ODT = 1;
     OdtProperties odt_properties;

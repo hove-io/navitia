@@ -221,8 +221,8 @@ struct disruption_fixture {
         auto publication_period = boost::gregorian::date_period(boost::gregorian::from_undelimited_string("20130301"),
                                                                 boost::gregorian::from_undelimited_string("20130401"));
         for (boost::gregorian::day_iterator it(publication_period.begin()); it < publication_period.end(); ++it) {
-            impact_acquired->application_periods.push_back(pt::time_period(
-                pt::ptime(*it, pt::duration_from_string("06:00")), pt::ptime(*it, pt::duration_from_string("20:00"))));
+            impact_acquired->application_periods.emplace_back(pt::ptime(*it, pt::duration_from_string("06:00")),
+                                                              pt::ptime(*it, pt::duration_from_string("20:00")));
         }
         navitia::type::disruption::ApplicationPattern application_pattern;
         application_pattern.add_time_slot("06:00"_t, "20:00"_t);

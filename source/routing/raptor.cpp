@@ -233,7 +233,7 @@ RAPTOR::NEXT_STOPTIME_TYPE RAPTOR::choose_next_stop_time_type(
     boost::posix_time::ptime now =
         current_datetime ? *current_datetime : boost::posix_time::second_clock::universal_time();
     size_t now_days = static_cast<size_t>((now.date() - data.meta->production_date.begin()).days());
-    size_t requested_days = static_cast<size_t>(departure_datetime / navitia::DateTimeUtils::SECONDS_PER_DAY);
+    auto requested_days = static_cast<size_t>(departure_datetime / navitia::DateTimeUtils::SECONDS_PER_DAY);
 
     size_t cache_size = data.dataRaptor->cached_next_st_manager->get_max_size();
     if (now_days <= requested_days && requested_days < (now_days + cache_size)) {

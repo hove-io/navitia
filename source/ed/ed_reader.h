@@ -36,6 +36,8 @@ www.navitia.io
 
 #include <boost/graph/strong_components.hpp>
 #include <boost/graph/connected_components.hpp>
+#include <memory>
+
 #include <pqxx/pqxx>
 
 #include <unordered_map>
@@ -48,7 +50,7 @@ struct EdReader {
 
     EdReader(const std::string& connection_string) {
         try {
-            conn = std::unique_ptr<pqxx::connection>(new pqxx::connection(connection_string));
+            conn = std::make_unique<pqxx::connection>(connection_string);
         } catch (const pqxx::pqxx_exception& e) {
             throw navitia::exception(e.base().what());
         }

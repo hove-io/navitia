@@ -40,7 +40,7 @@ struct wrong_version : public navitia::recoverable_exception {
     wrong_version(const std::string& msg) : navitia::recoverable_exception(msg) {}
     wrong_version(const wrong_version&) = default;
     wrong_version& operator=(const wrong_version&) = default;
-    virtual ~wrong_version() noexcept;
+    ~wrong_version() noexcept override;
 };
 
 // Data loading exceptions handler
@@ -48,7 +48,7 @@ struct data_loading_error : public navitia::recoverable_exception {
     data_loading_error(const std::string& msg) : navitia::recoverable_exception(msg) {}
     data_loading_error(const data_loading_error&) = default;
     data_loading_error& operator=(const data_loading_error&) = default;
-    virtual ~data_loading_error() noexcept;
+    ~data_loading_error() noexcept override;
 };
 
 // Disruptions exceptions handler. Broken connection
@@ -56,7 +56,7 @@ struct disruptions_broken_connection : public navitia::recoverable_exception {
     disruptions_broken_connection(const std::string& msg) : navitia::recoverable_exception(msg) {}
     disruptions_broken_connection(const disruptions_broken_connection&) = default;
     disruptions_broken_connection& operator=(const disruptions_broken_connection&) = default;
-    virtual ~disruptions_broken_connection() noexcept;
+    ~disruptions_broken_connection() noexcept override;
 };
 
 // Disruptions exceptions handler. Loading error
@@ -64,7 +64,7 @@ struct disruptions_loading_error : public navitia::recoverable_exception {
     disruptions_loading_error(const std::string& msg) : navitia::recoverable_exception(msg) {}
     disruptions_loading_error(const disruptions_loading_error&) = default;
     disruptions_loading_error& operator=(const disruptions_loading_error&) = default;
-    virtual ~disruptions_loading_error() noexcept;
+    ~disruptions_loading_error() noexcept override;
 };
 
 // Raptor building exceptions handler
@@ -72,7 +72,7 @@ struct raptor_building_error : public navitia::recoverable_exception {
     raptor_building_error(const std::string& msg) : navitia::recoverable_exception(msg) {}
     raptor_building_error(const raptor_building_error&) = default;
     raptor_building_error& operator=(const raptor_building_error&) = default;
-    virtual ~raptor_building_error() noexcept;
+    ~raptor_building_error() noexcept override;
 };
 
 }  // namespace data

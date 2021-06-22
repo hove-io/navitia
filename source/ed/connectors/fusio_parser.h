@@ -92,9 +92,9 @@ struct RouteFusioHandler : public GenericHandler {
 struct TransfersFusioHandler : public TransfersGtfsHandler {
     TransfersFusioHandler(GtfsData& gdata, CsvReader& reader) : TransfersGtfsHandler(gdata, reader) {}
     int real_time_c, property_id_c;
-    virtual ~TransfersFusioHandler() {}
+    ~TransfersFusioHandler() override = default;
     void init(Data&);
-    virtual void fill_stop_point_connection(ed::types::StopPointConnection* connection, const csv_row& row) const;
+    void fill_stop_point_connection(ed::types::StopPointConnection* connection, const csv_row& row) const override;
 };
 
 struct GeometriesFusioHandler : public GenericHandler {
@@ -353,7 +353,7 @@ struct ObjectCodesFusioHandler : public GenericHandler {
  * simply define the list of elemental parsers to use
  */
 struct FusioParser : public GenericGtfsParser {
-    void parse_files(Data&, const std::string& beginning_date = "");
+    void parse_files(Data&, const std::string& beginning_date = "") override;
     FusioParser(const std::string& path) : GenericGtfsParser(path) {}
 };
 }  // namespace connectors

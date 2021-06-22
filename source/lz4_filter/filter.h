@@ -31,7 +31,7 @@ www.navitia.io
 #pragma once
 #include <iosfwd>
 #include <boost/iostreams/concepts.hpp>
-#include <string.h>
+#include <cstring>
 #include <iostream>
 #include "lz4.h"
 #include <boost/iostreams/write.hpp>

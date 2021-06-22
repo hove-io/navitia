@@ -835,10 +835,10 @@ BOOST_AUTO_TEST_CASE(compute_nearest) {
     pl.build();
     b.init();
 
-    StopPoint* sp1 = new StopPoint();
+    auto* sp1 = new StopPoint();
     sp1->idx = 0;
     sp1->coord = c1;
-    StopPoint* sp2 = new StopPoint();
+    auto* sp2 = new StopPoint();
     sp2->idx = 1;
     sp2->coord = c2;
     std::vector<StopPoint*> stop_points;
@@ -909,8 +909,8 @@ BOOST_AUTO_TEST_CASE(numero_impair) {
 
     boost::add_edge(debut, fin, e1, graph);
     boost::add_edge(fin, debut, e1, graph);
-    way.edges.push_back(std::make_pair(debut, fin));
-    way.edges.push_back(std::make_pair(fin, debut));
+    way.edges.emplace_back(debut, fin);
+    way.edges.emplace_back(fin, debut);
 
     hn.coord.set_lon(1.0);
     hn.coord.set_lat(17.0);
@@ -921,8 +921,8 @@ BOOST_AUTO_TEST_CASE(numero_impair) {
 
     boost::add_edge(fin, debut, e1, graph);
     boost::add_edge(debut, fin, e1, graph);
-    way.edges.push_back(std::make_pair(fin, debut));
-    way.edges.push_back(std::make_pair(debut, fin));
+    way.edges.emplace_back(fin, debut);
+    way.edges.emplace_back(debut, fin);
 
     hn.coord = upper;
     hn.number = 53;
@@ -932,8 +932,8 @@ BOOST_AUTO_TEST_CASE(numero_impair) {
 
     boost::add_edge(debut, fin, e1, graph);
     boost::add_edge(fin, debut, e1, graph);
-    way.edges.push_back(std::make_pair(debut, fin));
-    way.edges.push_back(std::make_pair(fin, debut));
+    way.edges.emplace_back(debut, fin);
+    way.edges.emplace_back(fin, debut);
 
     // Numéro recherché est > au plus grand numéro dans la rue
     nt::GeographicalCoord result = way.nearest_coord(55, graph);
@@ -994,8 +994,8 @@ BOOST_AUTO_TEST_CASE(numero_pair) {
 
     boost::add_edge(debut, fin, e1, graph);
     boost::add_edge(fin, debut, e1, graph);
-    way.edges.push_back(std::make_pair(debut, fin));
-    way.edges.push_back(std::make_pair(fin, debut));
+    way.edges.emplace_back(debut, fin);
+    way.edges.emplace_back(fin, debut);
 
     hn.coord.set_lon(2.0);
     hn.coord.set_lat(18.0);
@@ -1006,8 +1006,8 @@ BOOST_AUTO_TEST_CASE(numero_pair) {
 
     boost::add_edge(fin, debut, e1, graph);
     boost::add_edge(debut, fin, e1, graph);
-    way.edges.push_back(std::make_pair(fin, debut));
-    way.edges.push_back(std::make_pair(debut, fin));
+    way.edges.emplace_back(fin, debut);
+    way.edges.emplace_back(debut, fin);
 
     hn.coord = upper;
     hn.number = 54;
@@ -1017,8 +1017,8 @@ BOOST_AUTO_TEST_CASE(numero_pair) {
 
     boost::add_edge(debut, fin, e1, graph);
     boost::add_edge(fin, debut, e1, graph);
-    way.edges.push_back(std::make_pair(debut, fin));
-    way.edges.push_back(std::make_pair(fin, debut));
+    way.edges.emplace_back(debut, fin);
+    way.edges.emplace_back(fin, debut);
 
     // Numéro recherché est > au plus grand numéro dans la rue
     nt::GeographicalCoord result = way.nearest_coord(56, graph);
@@ -1142,8 +1142,8 @@ BOOST_AUTO_TEST_CASE(build_autocomplete_test) {
 
     boost::add_edge(debut, fin, navitia::georef::Edge{way->idx, 1_s}, b.data->geo_ref->graph);
     boost::add_edge(fin, debut, navitia::georef::Edge{way->idx, 1_s}, b.data->geo_ref->graph);
-    way->edges.push_back(std::make_pair(debut, fin));
-    way->edges.push_back(std::make_pair(fin, debut));
+    way->edges.emplace_back(debut, fin);
+    way->edges.emplace_back(fin, debut);
 
     hn.coord.set_lon(2.0);
     hn.coord.set_lat(18.0);
@@ -1154,8 +1154,8 @@ BOOST_AUTO_TEST_CASE(build_autocomplete_test) {
 
     boost::add_edge(fin, debut, navitia::georef::Edge{way->idx, 1_s}, b.data->geo_ref->graph);
     boost::add_edge(debut, fin, navitia::georef::Edge{way->idx, 1_s}, b.data->geo_ref->graph);
-    way->edges.push_back(std::make_pair(fin, debut));
-    way->edges.push_back(std::make_pair(debut, fin));
+    way->edges.emplace_back(fin, debut);
+    way->edges.emplace_back(debut, fin);
 
     hn.coord = upper;
     hn.number = 54;
@@ -1165,11 +1165,11 @@ BOOST_AUTO_TEST_CASE(build_autocomplete_test) {
 
     boost::add_edge(debut, fin, navitia::georef::Edge{way->idx, 1_s}, b.data->geo_ref->graph);
     boost::add_edge(fin, debut, navitia::georef::Edge{way->idx, 1_s}, b.data->geo_ref->graph);
-    way->edges.push_back(std::make_pair(debut, fin));
-    way->edges.push_back(std::make_pair(fin, debut));
+    way->edges.emplace_back(debut, fin);
+    way->edges.emplace_back(fin, debut);
     b.data->geo_ref->ways.push_back(way);
 
-    Admin* ad = new Admin;
+    auto* ad = new Admin;
     ad->name = "Quimper";
     ad->uri = "Quimper";
     ad->level = 8;
@@ -1221,9 +1221,9 @@ BOOST_AUTO_TEST_CASE(two_scc) {
     pl.build();
     b.init();
 
-    StopPoint* sp1 = new StopPoint();
+    auto* sp1 = new StopPoint();
     sp1->coord = c1;
-    StopPoint* sp2 = new StopPoint();
+    auto* sp2 = new StopPoint();
     sp2->coord = c2;
     std::vector<StopPoint*> stop_points;
     stop_points.push_back(sp1);
@@ -1253,9 +1253,9 @@ BOOST_AUTO_TEST_CASE(angle_computation) {
      *=> 90
      */
     Path p;
-    p.path_items.push_back(PathItem());
-    p.path_items.back().coordinates.push_back({1, 1});
-    p.path_items.back().coordinates.push_back({1, 2});
+    p.path_items.emplace_back();
+    p.path_items.back().coordinates.emplace_back(1, 1);
+    p.path_items.back().coordinates.emplace_back(1, 2);
 
     int angle = compute_directions(p, {2, 2});
 
@@ -1264,9 +1264,9 @@ BOOST_AUTO_TEST_CASE(angle_computation) {
 
 BOOST_AUTO_TEST_CASE(angle_computation_2) {
     Path p;
-    p.path_items.push_back(PathItem());
-    p.path_items.back().coordinates.push_back({2, -3});
-    p.path_items.back().coordinates.push_back({3, 1});
+    p.path_items.emplace_back();
+    p.path_items.back().coordinates.emplace_back(2, -3);
+    p.path_items.back().coordinates.emplace_back(3, 1);
 
     int angle = compute_directions(p, {-1, 4});
 
@@ -1275,7 +1275,7 @@ BOOST_AUTO_TEST_CASE(angle_computation_2) {
 
 BOOST_AUTO_TEST_CASE(angle_computation_lon_lat) {
     Path p;
-    p.path_items.push_back(PathItem());
+    p.path_items.emplace_back();
 
     nt::GeographicalCoord a{48.849143, 2.391776};
     nt::GeographicalCoord b{48.850456, 2.390596};
@@ -1289,7 +1289,7 @@ BOOST_AUTO_TEST_CASE(angle_computation_lon_lat) {
     BOOST_CHECK_CLOSE(1.0 * angle, val, 1);
 
     Path p2;
-    p2.path_items.push_back(PathItem());
+    p2.path_items.emplace_back();
 
     p2.path_items.back().coordinates.push_back(c);
     p2.path_items.back().coordinates.push_back(b);
@@ -1380,33 +1380,33 @@ BOOST_AUTO_TEST_CASE(geolocalization) {
     admin->level = 8;
     admin->postal_codes.push_back("32100");
 
-    navitia::georef::Way* ab = new navitia::georef::Way();
+    auto* ab = new navitia::georef::Way();
     ab->name = "rue AB";
     ab->idx = 0;
     ab->way_type = "rue";
-    ab->house_number_right.push_back(HouseNumber(D.lon(), D.lat(), 2));
+    ab->house_number_right.emplace_back(D.lon(), D.lat(), 2);
     ab->admin_list.push_back(admin);
     b.data->geo_ref->ways.push_back(ab);
 
-    navitia::georef::Way* ac = new navitia::georef::Way();
+    auto* ac = new navitia::georef::Way();
     ac->name = "rue AC";
     ac->idx = 1;
     ac->way_type = "rue";
-    ac->house_number_left.push_back(HouseNumber(E.lon(), E.lat(), 3));
+    ac->house_number_left.emplace_back(E.lon(), E.lat(), 3);
     ac->admin_list.push_back(admin);
     b.data->geo_ref->ways.push_back(ac);
 
     // A->B
     add_edge(AA, BB, Edge(0, 42_s), b.data->geo_ref->graph);
     add_edge(BB, AA, Edge(0, 42_s), b.data->geo_ref->graph);
-    ab->edges.push_back(std::make_pair(AA, BB));
-    ab->edges.push_back(std::make_pair(BB, AA));
+    ab->edges.emplace_back(AA, BB);
+    ab->edges.emplace_back(BB, AA);
 
     // A->C
     add_edge(AA, CC, Edge(1, 42_s), b.data->geo_ref->graph);
     add_edge(CC, AA, Edge(1, 42_s), b.data->geo_ref->graph);
-    ac->edges.push_back(std::make_pair(AA, CC));
-    ac->edges.push_back(std::make_pair(CC, AA));
+    ac->edges.emplace_back(AA, CC);
+    ac->edges.emplace_back(CC, AA);
 
     b.data->build_uri();
     b.data->build_proximity_list();
@@ -1417,37 +1417,37 @@ BOOST_AUTO_TEST_CASE(geolocalization) {
 }
 
 BOOST_AUTO_TEST_CASE(range_postal_codes) {
-    navitia::georef::Admin* admin = new navitia::georef::Admin();
+    auto* admin = new navitia::georef::Admin();
     admin->postal_codes = {"44000", "44100", "44200", "44300"};
     BOOST_CHECK_EQUAL(admin->get_range_postal_codes(), "44000-44300");
 }
 
 BOOST_AUTO_TEST_CASE(empty_postal_codes) {
-    navitia::georef::Admin* admin = new navitia::georef::Admin();
+    auto* admin = new navitia::georef::Admin();
     admin->postal_codes = {};
     BOOST_CHECK_EQUAL(admin->get_range_postal_codes(), "");
 }
 
 BOOST_AUTO_TEST_CASE(one_postal_code) {
-    navitia::georef::Admin* admin = new navitia::georef::Admin();
+    auto* admin = new navitia::georef::Admin();
     admin->postal_codes = {"03430"};
     BOOST_CHECK_EQUAL(admin->get_range_postal_codes(), "03430");
 }
 
 BOOST_AUTO_TEST_CASE(first_number_0) {
-    navitia::georef::Admin* admin = new navitia::georef::Admin();
+    auto* admin = new navitia::georef::Admin();
     admin->postal_codes = {"04400", "04410", "04420", "04430"};
     BOOST_CHECK_EQUAL(admin->get_range_postal_codes(), "04400-04430");
 }
 
 BOOST_AUTO_TEST_CASE(string_and_int_post_codes) {
-    navitia::georef::Admin* admin = new navitia::georef::Admin();
+    auto* admin = new navitia::georef::Admin();
     admin->postal_codes = {"44000", "44100", "44200", "44300", "abcd"};
     BOOST_CHECK_EQUAL(admin->get_range_postal_codes(), "44000;44100;44200;44300;abcd");
 }
 
 BOOST_AUTO_TEST_CASE(list_postal_codes) {
-    navitia::georef::Admin* admin = new navitia::georef::Admin();
+    auto* admin = new navitia::georef::Admin();
     admin->postal_codes = {"44000", "44100", "44200", "44300"};
     BOOST_CHECK_EQUAL(admin->postal_codes_to_string(), "44000;44100;44200;44300");
 }
@@ -1480,16 +1480,16 @@ BOOST_AUTO_TEST_CASE(find_nearest_on_same_edge) {
     pl.build();
     b.init();
 
-    StopPoint* sp0 = new StopPoint();
+    auto* sp0 = new StopPoint();
     sp0->coord = c0;
     sp0->idx = 0;
-    StopPoint* sp1 = new StopPoint();
+    auto* sp1 = new StopPoint();
     sp1->coord = c1;
     sp1->idx = 1;
-    StopPoint* sp2 = new StopPoint();
+    auto* sp2 = new StopPoint();
     sp2->coord = c2;
     sp2->idx = 2;
-    StopPoint* sp3 = new StopPoint();
+    auto* sp3 = new StopPoint();
     sp3->coord = c3;
     std::vector<StopPoint*> stop_points;
     stop_points.push_back(sp0);

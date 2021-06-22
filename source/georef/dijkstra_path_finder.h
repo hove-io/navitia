@@ -42,7 +42,7 @@ class DijkstraPathFinder : public PathFinder {
 public:
     DijkstraPathFinder(const GeoRef& geo_ref) : PathFinder(geo_ref) {}
     DijkstraPathFinder(const DijkstraPathFinder& o) = default;
-    virtual ~DijkstraPathFinder();
+    ~DijkstraPathFinder() override;
 
     void init(const type::GeographicalCoord& start_coord, nt::Mode_e mode, const float speed_factor) {
         PathFinder::init_start(start_coord, mode, speed_factor);

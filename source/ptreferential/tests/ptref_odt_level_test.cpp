@@ -58,14 +58,14 @@ public:
     nt::Line* current_ln;
     nt::Route* current_rt;
     void add_network(const std::string& ntw_name) {
-        nt::Network* nt = new nt::Network();
+        auto* nt = new nt::Network();
         nt->uri = ntw_name;
         nt->name = ntw_name;
         data.pt_data->networks.push_back(nt);
         current_ntw = nt;
     }
     void add_line(const std::string& ln_name) {
-        nt::Line* ln = new nt::Line();
+        auto* ln = new nt::Line();
         ln->uri = ln_name;
         ln->name = ln_name;
         data.pt_data->lines.push_back(ln);
@@ -73,7 +73,7 @@ public:
         current_ntw->line_list.push_back(ln);
     }
     void add_route(const std::string& rt_name) {
-        nt::Route* rt = new nt::Route();
+        auto* rt = new nt::Route();
         rt->uri = rt_name;
         rt->name = rt_name;
         data.pt_data->routes.push_back(rt);

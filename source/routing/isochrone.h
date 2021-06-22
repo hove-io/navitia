@@ -44,7 +44,7 @@ struct IsochroneException : public recoverable_exception {
     IsochroneException() = default;
     IsochroneException(const IsochroneException&) = default;
     IsochroneException& operator=(const IsochroneException&) = default;
-    virtual ~IsochroneException() noexcept;
+    ~IsochroneException() noexcept override;
 };
 
 constexpr static double N_RAD_TO_DEG = 57.295779513;

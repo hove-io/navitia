@@ -1811,7 +1811,7 @@ void EdReader::fill_calendars(navitia::type::Data& data, pqxx::work& work) {
         "where cal.week_pattern_id = wp.id;";
     pqxx::result result = work.exec(request);
     for (auto const_it = result.begin(); const_it != result.end(); ++const_it) {
-        navitia::type::Calendar* cal = new navitia::type::Calendar(data.meta->production_date.begin());
+        auto* cal = new navitia::type::Calendar(data.meta->production_date.begin());
         const_it["name"].to(cal->name);
         const_it["uri"].to(cal->uri);
         cal->week_pattern[navitia::Monday] = const_it["monday"].as<bool>();

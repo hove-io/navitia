@@ -36,8 +36,8 @@ www.navitia.io
 namespace navitia {
 namespace timetables {
 
-typedef std::vector<idx_t> vector_idx;
-typedef std::vector<uint16_t> vector_size;
+using vector_idx = std::vector<idx_t>;
+using vector_size = std::vector<uint16_t>;
 
 struct Thermometer {
     void generate_thermometer(const std::vector<vector_idx>& sps);

@@ -29,6 +29,8 @@ www.navitia.io
 */
 
 #pragma once
+#include <utility>
+
 #include "fare/fare.h"
 #include "ed/data.h"
 
@@ -50,8 +52,11 @@ struct fare_parser {
     const std::string prices_filename;
     const std::string od_filename;
 
-    fare_parser(Data& data_, const std::string& state, const std::string& prices, const std::string od)
-        : data(data_), state_transition_filename(state), prices_filename(prices), od_filename(od) {}
+    fare_parser(Data& data_, std::string state, std::string prices, const std::string od)
+        : data(data_),
+          state_transition_filename(std::move(state)),
+          prices_filename(std::move(prices)),
+          od_filename(od) {}
 
     void load();
 

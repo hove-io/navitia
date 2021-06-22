@@ -129,7 +129,7 @@ struct departure_board_fixture {
                     "CC:sp", "09:30"_t)("DD:sp", "10:10"_t);
                 b.lines.find("Line2")->second->properties["realtime_system"] = "Kisio数字";
 
-                navitia::georef::Admin* ad = new navitia::georef::Admin();
+                auto* ad = new navitia::georef::Admin();
                 ad->name = "Quimper";
                 ad->uri = "Quimper";
                 ad->level = 8;
@@ -331,7 +331,7 @@ struct calendar_fixture {
                 b.lines["line:A"]->code = "A";
 
                 // Add admins to test display_informations.direction
-                navitia::georef::Admin* ad = new navitia::georef::Admin();
+                auto* ad = new navitia::georef::Admin();
                 ad->name = "admin_name";
                 ad->uri = "admin_uri";
                 ad->level = 8;
@@ -380,7 +380,7 @@ struct calendar_fixture {
                 // Check partial terminus for calendar
                 auto cal_partial_terminus = new navitia::type::Calendar(b.data->meta->production_date.begin());
                 cal_partial_terminus->uri = "cal_partial_terminus";
-                cal_partial_terminus->active_periods.push_back({beg, end_of_year});
+                cal_partial_terminus->active_periods.emplace_back(beg, end_of_year);
                 cal_partial_terminus->week_pattern = std::bitset<7>{"1111111"};
                 pt_data.calendars.push_back(cal_partial_terminus);
                 b.lines["A"]->calendar_list.push_back(cal_partial_terminus);
@@ -388,20 +388,20 @@ struct calendar_fixture {
                 // we now add 2 similar calendars
                 auto week_cal = new navitia::type::Calendar(b.data->meta->production_date.begin());
                 week_cal->uri = "week_cal";
-                week_cal->active_periods.push_back({beg, end_of_year});
+                week_cal->active_periods.emplace_back(beg, end_of_year);
                 week_cal->week_pattern = std::bitset<7>{"1111100"};
                 pt_data.calendars.push_back(week_cal);
                 b.lines["A"]->calendar_list.push_back(week_cal);
 
                 auto weekend_cal = new navitia::type::Calendar(b.data->meta->production_date.begin());
                 weekend_cal->uri = "weekend_cal";
-                weekend_cal->active_periods.push_back({beg, end_of_year});
+                weekend_cal->active_periods.emplace_back(beg, end_of_year);
                 weekend_cal->week_pattern = std::bitset<7>{"0000011"};
                 pt_data.calendars.push_back(weekend_cal);
 
                 auto not_associated_cal = new navitia::type::Calendar(b.data->meta->production_date.begin());
                 not_associated_cal->uri = "not_associated_cal";
-                not_associated_cal->active_periods.push_back({beg, end_of_year});
+                not_associated_cal->active_periods.emplace_back(beg, end_of_year);
                 not_associated_cal->week_pattern = std::bitset<7>{"0010000"};
                 pt_data.calendars.push_back(not_associated_cal);  // not associated to the line
 
@@ -431,15 +431,11 @@ struct calendar_fixture {
 
                 // load metavj calendar association from database (association is tested in
                 // ed/tests/associated_calendar_test.cpp)
-                navitia::type::AssociatedCalendar* associated_calendar_for_week =
-                    new navitia::type::AssociatedCalendar();
-                navitia::type::AssociatedCalendar* associated_calendar_for_week_end =
-                    new navitia::type::AssociatedCalendar();
-                navitia::type::AssociatedCalendar* associated_calendar_for_terminus =
-                    new navitia::type::AssociatedCalendar();
+                auto* associated_calendar_for_week = new navitia::type::AssociatedCalendar();
+                auto* associated_calendar_for_week_end = new navitia::type::AssociatedCalendar();
+                auto* associated_calendar_for_terminus = new navitia::type::AssociatedCalendar();
 
-                navitia::type::AssociatedCalendar* associated_calendar_for_line_r =
-                    new navitia::type::AssociatedCalendar();
+                auto* associated_calendar_for_line_r = new navitia::type::AssociatedCalendar();
 
                 associated_calendar_for_week->calendar = week_cal;
                 associated_calendar_for_week_end->calendar = weekend_cal;

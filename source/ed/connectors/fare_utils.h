@@ -39,7 +39,7 @@ struct invalid_key : navitia::exception {
     invalid_key(const std::string& s) : navitia::exception(s) {}
     invalid_key(const invalid_key&) = default;
     invalid_key& operator=(const invalid_key&) = default;
-    virtual ~invalid_key() noexcept;
+    ~invalid_key() noexcept override;
 };
 
 /// Exception levée si on n'arrive pas à parser une condition
@@ -47,7 +47,7 @@ struct invalid_condition : navitia::exception {
     invalid_condition(const std::string& s) : navitia::exception(s) {}
     invalid_condition(const invalid_condition&) = default;
     invalid_condition& operator=(const invalid_condition&) = default;
-    ~invalid_condition() noexcept;
+    ~invalid_condition() noexcept override;
 };
 
 navitia::fare::Condition parse_condition(const std::string& condition_str);

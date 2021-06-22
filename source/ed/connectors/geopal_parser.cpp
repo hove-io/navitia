@@ -38,7 +38,7 @@ www.navitia.io
 namespace ed {
 namespace connectors {
 
-GeopalParserException::~GeopalParserException() noexcept {}
+GeopalParserException::~GeopalParserException() noexcept = default;
 
 GeopalParser::GeopalParser(std::string path) : path(std::move(path)) {
     logger = log4cplus::Logger::getInstance("log");
@@ -86,7 +86,7 @@ void GeopalParser::fill() {
 }
 
 ed::types::Node* GeopalParser::add_node(const navitia::type::GeographicalCoord& coord, const std::string& uri) {
-    ed::types::Node* node = new ed::types::Node;
+    auto* node = new ed::types::Node;
     node->id = this->data.nodes.size() + 1;
     node->coord = this->conv_coord.convert_to(coord);
     this->data.nodes[uri] = node;
@@ -146,7 +146,7 @@ void GeopalParser::fill_admins() {
             if (reader.is_valid(insee_c, row) && reader.is_valid(x_c, row) && reader.is_valid(y_c, row)) {
                 auto itm = this->data.admins.find(row[insee_c]);
                 if (itm == this->data.admins.end()) {
-                    ed::types::Admin* admin = new ed::types::Admin;
+                    auto* admin = new ed::types::Admin;
                     admin->insee = row[insee_c];
                     admin->id = this->data.admins.size() + 1;
                     if (reader.is_valid(name_c, row))
@@ -177,7 +177,7 @@ namespace {
 //     2       4       8
 struct HouseNumberFromEdgesFiller {
     typedef navitia::type::GeographicalCoord Coord;
-    typedef ed::types::Way Way;
+    using Way = ed::types::Way;
 
     HouseNumberFromEdgesFiller(const CsvReader& r, GeopalParser& p)
         : reader(r),
@@ -281,7 +281,7 @@ private:
         //
         // We translate our current position using the vector vec to
         // go from point to point.
-        const double nb = double((last_num - begin_num) / 2 + 1);
+        const auto nb = double((last_num - begin_num) / 2 + 1);
         const Coord vec((to.lon() - from.lon()) / nb, (to.lat() - from.lat()) / nb);
         Coord coord = translate(from, Coord(vec.lon() / 2, vec.lat() / 2));
         for (int house_nb = begin_num; house_nb <= last_num; house_nb += 2) {
@@ -376,7 +376,7 @@ void GeopalParser::fill_ways_edges() {
                 std::string wayd_uri = row[id];
                 auto way = this->data.ways.find(wayd_uri);
                 if (way == this->data.ways.end()) {
-                    ed::types::Way* wy = new ed::types::Way;
+                    auto* wy = new ed::types::Way;
                     if (admin) {
                         wy->admin = admin;
                         admin->is_used = true;
@@ -399,7 +399,7 @@ void GeopalParser::fill_ways_edges() {
                 }
                 auto edge = this->data.edges.find(wayd_uri);
                 if (edge == this->data.edges.end()) {
-                    ed::types::Edge* edg = new ed::types::Edge;
+                    auto* edg = new ed::types::Edge;
                     edg->source = source_node;
                     edg->source->is_used = true;
                     edg->target = target_node;

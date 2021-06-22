@@ -292,36 +292,36 @@ struct routing_api_data {
 
         // A->B
         add_edges(0, *b.data->geo_ref, AA, BB, distance_ab, navitia::type::Mode_e::Walking);
-        b.data->geo_ref->ways[0]->edges.push_back(std::make_pair(AA, BB));
-        b.data->geo_ref->ways[0]->edges.push_back(std::make_pair(BB, AA));
+        b.data->geo_ref->ways[0]->edges.emplace_back(AA, BB);
+        b.data->geo_ref->ways[0]->edges.emplace_back(BB, AA);
 
         // A->E
         add_edges(1, *b.data->geo_ref, AA, EE, A, E, navitia::type::Mode_e::Walking);
         add_edges(1, *b.data->geo_ref, AA, EE, A, E, navitia::type::Mode_e::Car);
         add_edges(1, *b.data->geo_ref, AA, EE, A, E, navitia::type::Mode_e::CarNoPark);
-        b.data->geo_ref->ways[1]->edges.push_back(std::make_pair(AA, EE));
-        b.data->geo_ref->ways[1]->edges.push_back(std::make_pair(EE, AA));
+        b.data->geo_ref->ways[1]->edges.emplace_back(AA, EE);
+        b.data->geo_ref->ways[1]->edges.emplace_back(EE, AA);
 
         // E->F
         add_edges(2, *b.data->geo_ref, FF, EE, F, E, navitia::type::Mode_e::Car);
         add_edges(2, *b.data->geo_ref, FF, EE, F, E, navitia::type::Mode_e::CarNoPark);
         add_edges(2, *b.data->geo_ref, FF, EE, F, E, navitia::type::Mode_e::Walking);
-        b.data->geo_ref->ways[2]->edges.push_back(std::make_pair(EE, FF));
-        b.data->geo_ref->ways[2]->edges.push_back(std::make_pair(FF, EE));
+        b.data->geo_ref->ways[2]->edges.emplace_back(EE, FF);
+        b.data->geo_ref->ways[2]->edges.emplace_back(FF, EE);
 
         // F->C
         add_edges(3, *b.data->geo_ref, FF, CC, F, C, navitia::type::Mode_e::Walking);
         add_edges(3, *b.data->geo_ref, FF, CC, F, C, navitia::type::Mode_e::Car);
         add_edges(3, *b.data->geo_ref, FF, CC, F, C, navitia::type::Mode_e::CarNoPark);
-        b.data->geo_ref->ways[3]->edges.push_back(std::make_pair(FF, CC));
-        b.data->geo_ref->ways[3]->edges.push_back(std::make_pair(CC, FF));
+        b.data->geo_ref->ways[3]->edges.emplace_back(FF, CC);
+        b.data->geo_ref->ways[3]->edges.emplace_back(CC, FF);
 
         // C->B
         add_edges(4, *b.data->geo_ref, BB, CC, B, C, navitia::type::Mode_e::Walking);
         add_edges(4, *b.data->geo_ref, BB, CC, 50, navitia::type::Mode_e::Car);
         add_edges(4, *b.data->geo_ref, BB, CC, 50, navitia::type::Mode_e::CarNoPark);
-        b.data->geo_ref->ways[4]->edges.push_back(std::make_pair(CC, BB));
-        b.data->geo_ref->ways[4]->edges.push_back(std::make_pair(BB, CC));
+        b.data->geo_ref->ways[4]->edges.emplace_back(CC, BB);
+        b.data->geo_ref->ways[4]->edges.emplace_back(BB, CC);
 
         // A->G
         distance_ag =
@@ -329,52 +329,52 @@ struct routing_api_data {
             - .5;  // the cost of the edge is a bit less than the distance not to get a conflict with the projection
         add_edges(5, *b.data->geo_ref, AA, GG, distance_ag, navitia::type::Mode_e::Walking);
         add_edges(5, *b.data->geo_ref, AA, GG, distance_ag, navitia::type::Mode_e::Bike);
-        b.data->geo_ref->ways[5]->edges.push_back(std::make_pair(AA, GG));
-        b.data->geo_ref->ways[5]->edges.push_back(std::make_pair(GG, AA));
+        b.data->geo_ref->ways[5]->edges.emplace_back(AA, GG);
+        b.data->geo_ref->ways[5]->edges.emplace_back(GG, AA);
 
         // G->H
         add_edges(6, *b.data->geo_ref, HH, GG, G, H, navitia::type::Mode_e::Walking);
         add_edges(6, *b.data->geo_ref, HH, GG, G, H, navitia::type::Mode_e::Bike);
-        b.data->geo_ref->ways[6]->edges.push_back(std::make_pair(GG, HH));
-        b.data->geo_ref->ways[6]->edges.push_back(std::make_pair(HH, GG));
+        b.data->geo_ref->ways[6]->edges.emplace_back(GG, HH);
+        b.data->geo_ref->ways[6]->edges.emplace_back(HH, GG);
 
         // H->I
         add_edges(7, *b.data->geo_ref, HH, II, H, I, navitia::type::Mode_e::Walking);
         add_edges(7, *b.data->geo_ref, HH, II, H, I, navitia::type::Mode_e::Bike);
-        b.data->geo_ref->ways[7]->edges.push_back(std::make_pair(HH, II));
-        b.data->geo_ref->ways[7]->edges.push_back(std::make_pair(II, HH));
+        b.data->geo_ref->ways[7]->edges.emplace_back(HH, II);
+        b.data->geo_ref->ways[7]->edges.emplace_back(II, HH);
 
         // I->J
         add_edges(8, *b.data->geo_ref, II, JJ, I, J, navitia::type::Mode_e::Walking);
         add_edges(8, *b.data->geo_ref, II, JJ, I, J, navitia::type::Mode_e::Bike);
-        b.data->geo_ref->ways[8]->edges.push_back(std::make_pair(II, JJ));
-        b.data->geo_ref->ways[8]->edges.push_back(std::make_pair(JJ, II));
+        b.data->geo_ref->ways[8]->edges.emplace_back(II, JJ);
+        b.data->geo_ref->ways[8]->edges.emplace_back(JJ, II);
 
         // J->K
         add_edges(9, *b.data->geo_ref, KK, JJ, K, J, navitia::type::Mode_e::Walking);
         add_edges(9, *b.data->geo_ref, KK, JJ, K, J, navitia::type::Mode_e::Bike);
-        b.data->geo_ref->ways[9]->edges.push_back(std::make_pair(JJ, KK));
-        b.data->geo_ref->ways[9]->edges.push_back(std::make_pair(KK, JJ));
+        b.data->geo_ref->ways[9]->edges.emplace_back(JJ, KK);
+        b.data->geo_ref->ways[9]->edges.emplace_back(KK, JJ);
 
         // K->B
         add_edges(10, *b.data->geo_ref, KK, BB, K, B, navitia::type::Mode_e::Walking);
         add_edges(10, *b.data->geo_ref, KK, BB, K, B, navitia::type::Mode_e::Bike);
-        b.data->geo_ref->ways[10]->edges.push_back(std::make_pair(KK, BB));
-        b.data->geo_ref->ways[10]->edges.push_back(std::make_pair(BB, KK));
+        b.data->geo_ref->ways[10]->edges.emplace_back(KK, BB);
+        b.data->geo_ref->ways[10]->edges.emplace_back(BB, KK);
 
         // A->R
         add_edges(11, *b.data->geo_ref, AA, RR, A, R, navitia::type::Mode_e::Walking);
         add_edges(11, *b.data->geo_ref, AA, RR, A, R, navitia::type::Mode_e::CarNoPark);
-        b.data->geo_ref->ways[11]->edges.push_back(std::make_pair(AA, RR));
-        b.data->geo_ref->ways[11]->edges.push_back(std::make_pair(RR, AA));
+        b.data->geo_ref->ways[11]->edges.emplace_back(AA, RR);
+        b.data->geo_ref->ways[11]->edges.emplace_back(RR, AA);
 
         // B->S
         add_edges(12, *b.data->geo_ref, BB, SS, B, S, navitia::type::Mode_e::Walking);
         add_edges(12, *b.data->geo_ref, BB, SS, B, S, navitia::type::Mode_e::Bike);
         add_edges(12, *b.data->geo_ref, BB, SS, B, S, navitia::type::Mode_e::Car);
         add_edges(12, *b.data->geo_ref, BB, SS, B, S, navitia::type::Mode_e::CarNoPark);
-        b.data->geo_ref->ways[12]->edges.push_back(std::make_pair(BB, SS));
-        b.data->geo_ref->ways[12]->edges.push_back(std::make_pair(SS, BB));
+        b.data->geo_ref->ways[12]->edges.emplace_back(BB, SS);
+        b.data->geo_ref->ways[12]->edges.emplace_back(SS, BB);
 
         // B->D
         add_edges(13, *b.data->geo_ref, BB, DD, B, D, navitia::type::Mode_e::Walking);
@@ -393,33 +393,33 @@ struct routing_api_data {
         b.data->geo_ref->ways[14]->edges.emplace_back(SS, TT);
 
         // and we add 2 bike sharing poi, to check the placemark
-        navitia::georef::POIType* poi_type = new navitia::georef::POIType();
+        auto* poi_type = new navitia::georef::POIType();
         poi_type->uri = "poi_type:amenity:bicycle_rental";
         poi_type->name = "bicycle rental station";
         poi_type->idx = 0;
         b.data->geo_ref->poitypes.push_back(poi_type);
 
-        navitia::georef::POIType* poi_type_parking = new navitia::georef::POIType();
+        auto* poi_type_parking = new navitia::georef::POIType();
         poi_type_parking->uri = "poi_type:amenity:parking";
         poi_type_parking->name = "parking";
         poi_type_parking->idx = 1;
         b.data->geo_ref->poitypes.push_back(poi_type_parking);
 
-        navitia::georef::POI* poi_1 = new navitia::georef::POI();
+        auto* poi_1 = new navitia::georef::POI();
         poi_1->uri = "poi:station_1";
         poi_1->name = "first station";
         poi_1->coord = B;
         poi_1->poitype_idx = 0;
         poi_1->idx = 0;
         poi_1->admin_list.push_back(admin);
-        navitia::georef::POI* poi_2 = new navitia::georef::POI();
+        auto* poi_2 = new navitia::georef::POI();
         poi_2->uri = "poi:station_2";
         poi_2->name = "second station";
         poi_2->coord = G;
         poi_2->poitype_idx = 0;
         poi_2->idx = 1;
         poi_2->admin_list.push_back(admin);
-        navitia::georef::POI* poi_3 = new navitia::georef::POI();
+        auto* poi_3 = new navitia::georef::POI();
         poi_3->uri = "poi:parking_1";
         poi_3->name = "first parking";
         poi_3->coord = D;
@@ -428,7 +428,7 @@ struct routing_api_data {
         poi_3->admin_list.push_back(admin);
         poi_3->properties["park_ride"] = "yes";
 
-        navitia::georef::POI* poi_4 = new navitia::georef::POI();
+        auto* poi_4 = new navitia::georef::POI();
         poi_4->uri = "poi:parking_2";
         poi_4->name = "second parking";
         poi_4->coord = E;

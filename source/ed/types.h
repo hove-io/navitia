@@ -43,7 +43,7 @@ www.navitia.io
 #include <boost/date_time/local_time/local_time.hpp>
 #include <boost/optional.hpp>
 
-#include <limits.h>
+#include <climits>
 #include <bitset>
 #include <unordered_map>
 #include <utility>
@@ -123,7 +123,7 @@ struct Calendar : public Nameable, public Header {
 
     ValidityPattern validity_pattern;  // computed validity pattern
 
-    Calendar() {}
+    Calendar() = default;
     Calendar(boost::gregorian::date beginning_date);
 
     // we limit the validity pattern to the production period
@@ -148,7 +148,7 @@ struct StopArea : public Header, Nameable, hasProperties {
     nt::GeographicalCoord coord;
     std::pair<std::string, boost::local_time::time_zone_ptr> time_zone_with_name;
 
-    StopArea() {}
+    StopArea() = default;
     StopArea(idx_t idx, std::string uri) : Header(idx, uri), Nameable(uri) {}
 
     bool operator<(const StopArea& other) const;
@@ -158,7 +158,7 @@ struct Contributor : public Header, Nameable {
     const static nt::Type_e type = nt::Type_e::Contributor;
     std::string website;
     std::string license;
-    Contributor() {}
+    Contributor() = default;
 
     bool operator<(const Contributor& other) const { return this->name < other.name; }
 };
@@ -210,7 +210,7 @@ struct CommercialMode : public Header, Nameable {
 struct PhysicalMode : public Header, Nameable {
     const static nt::Type_e type = nt::Type_e::PhysicalMode;
     boost::optional<double> co2_emission;
-    PhysicalMode() {}
+    PhysicalMode() = default;
 
     bool operator<(const PhysicalMode& other) const;
 };
@@ -324,7 +324,7 @@ struct StopPoint : public Header, Nameable, hasProperties {
 struct Shape {
     size_t idx = 0;
     nt::LineString geom;
-    Shape(const nt::LineString& ls) : geom(ls) {}
+    Shape(nt::LineString ls) : geom(std::move(ls)) {}
 };
 
 struct StopTime {
@@ -347,7 +347,7 @@ struct StopTime {
 
     uint16_t local_traffic_zone = std::numeric_limits<uint16_t>::max();
 
-    StopTime() {}
+    StopTime() = default;
     StopTime(idx_t idx,
              int arr,
              int dep,
@@ -371,7 +371,7 @@ struct StopTime {
           alighting_time(ali),
           vehicle_journey(vj),
           stop_point(sp),
-          shape_from_prev(shape),
+          shape_from_prev(std::move(shape)),
           order(order),
           ODT(odt),
           pick_up_allowed(pick),
@@ -470,8 +470,8 @@ struct PoiType {
     size_t id = 0;
     std::string name = "";
 
-    PoiType() {}
-    PoiType(size_t id, const std::string& name) : id(id), name(name) {}
+    PoiType() = default;
+    PoiType(size_t id, std::string name) : id(id), name(std::move(name)) {}
 };
 
 struct Poi {

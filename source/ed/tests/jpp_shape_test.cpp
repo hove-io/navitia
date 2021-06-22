@@ -136,7 +136,7 @@ static const navitia::type::GeographicalCoord Y(0.00012, 0);
 static const navitia::type::LineString curved_shape = {S, T, U, V, W, X, Y};
 
 BOOST_AUTO_TEST_CASE(simplify_create_shape) {
-    typedef navitia::type::LineString LS;
+    using LS = navitia::type::LineString;
 
     // Based on the coordinates we will remove T, V and X from the resulting string
     BOOST_REQUIRE_EQUAL(ed::create_shape(S, Y, curved_shape), LS({S, U, W, Y}));

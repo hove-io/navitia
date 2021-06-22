@@ -119,13 +119,13 @@ BOOST_AUTO_TEST_CASE(add_impact_on_line) {
     ch_application_pattern->set_end_date(ntest::to_int_date("20120616T123200"));
 
     auto week = ch_application_pattern->mutable_week_pattern();
-    week->set_monday(1);
-    week->set_tuesday(1);
-    week->set_wednesday(1);
-    week->set_thursday(1);
-    week->set_friday(1);
-    week->set_saturday(1);
-    week->set_sunday(1);
+    week->set_monday(true);
+    week->set_tuesday(true);
+    week->set_wednesday(true);
+    week->set_thursday(true);
+    week->set_friday(true);
+    week->set_saturday(true);
+    week->set_sunday(true);
 
     auto* ch_time_slot = ch_application_pattern->add_time_slots();
     ch_time_slot->set_begin("15:32"_t);
@@ -238,13 +238,13 @@ BOOST_AUTO_TEST_CASE(add_impact_and_update_on_stop_area) {
         ch_application_pattern->set_end_date(ntest::to_int_date("20120617T123200"));
 
         auto week = ch_application_pattern->mutable_week_pattern();
-        week->set_monday(1);
-        week->set_tuesday(1);
-        week->set_wednesday(1);
-        week->set_thursday(1);
-        week->set_friday(1);
-        week->set_saturday(1);
-        week->set_sunday(1);
+        week->set_monday(true);
+        week->set_tuesday(true);
+        week->set_wednesday(true);
+        week->set_thursday(true);
+        week->set_friday(true);
+        week->set_saturday(true);
+        week->set_sunday(true);
 
         auto* ch_time_slot = ch_application_pattern->add_time_slots();
         ch_time_slot->set_begin("12:32"_t);
@@ -354,13 +354,13 @@ BOOST_AUTO_TEST_CASE(add_impact_on_line_over_midnigt) {
     ch_application_pattern->set_end_date(ntest::to_int_date("20120618T123200"));
 
     auto week = ch_application_pattern->mutable_week_pattern();
-    week->set_monday(1);
-    week->set_tuesday(0);
-    week->set_wednesday(0);
-    week->set_thursday(0);
-    week->set_friday(0);
-    week->set_saturday(1);
-    week->set_sunday(1);
+    week->set_monday(true);
+    week->set_tuesday(false);
+    week->set_wednesday(false);
+    week->set_thursday(false);
+    week->set_friday(false);
+    week->set_saturday(true);
+    week->set_sunday(true);
 
     auto* ch_time_slot = ch_application_pattern->add_time_slots();
     ch_time_slot->set_begin("17:32"_t);
@@ -1004,13 +1004,13 @@ BOOST_AUTO_TEST_CASE(add_impact_on_line_with_many_time_slots) {
     ch_application_pattern->set_end_date(ntest::to_int_date("20120610T000000"));
 
     auto week = ch_application_pattern->mutable_week_pattern();
-    week->set_monday(1);
-    week->set_tuesday(0);
-    week->set_wednesday(0);
-    week->set_thursday(1);
-    week->set_friday(1);
-    week->set_saturday(1);
-    week->set_sunday(0);
+    week->set_monday(true);
+    week->set_tuesday(false);
+    week->set_wednesday(false);
+    week->set_thursday(true);
+    week->set_friday(true);
+    week->set_saturday(true);
+    week->set_sunday(false);
 
     auto* ch_time_slot = ch_application_pattern->add_time_slots();
     ch_time_slot->set_begin("10:32"_t);

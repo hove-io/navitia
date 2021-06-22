@@ -234,7 +234,7 @@ BOOST_AUTO_TEST_CASE(train_delayed) {
         b.vj("A", "000001", "", true, "vj:1")("stop1", "08:01"_t)("stop2", "09:01"_t);
 
         // to test company
-        navitia::type::Company* cmp1 = new navitia::type::Company();
+        auto* cmp1 = new navitia::type::Company();
         cmp1->line_list.push_back(b.lines["A"]);
         cmp1->idx = b.data->pt_data->companies.size();
         cmp1->name = "Comp1";
@@ -2741,7 +2741,7 @@ struct AddTripDataset {
                   "stop_point:B", "08:30"_t)("stop_point:C", "09:00"_t)("stop_point:D", "09:30"_t);
 
               // Add company
-              navitia::type::Company* cmp1 = new navitia::type::Company();
+              auto* cmp1 = new navitia::type::Company();
               cmp1->line_list.push_back(b.lines["1"]);
               cmp1->idx = b.data->pt_data->companies.size();
               cmp1->name = comp_name;
@@ -2751,7 +2751,7 @@ struct AddTripDataset {
               b.lines["1"]->company_list.push_back(cmp1);
 
               // Add physical mode
-              navitia::type::PhysicalMode* phy_mode = new navitia::type::PhysicalMode();
+              auto* phy_mode = new navitia::type::PhysicalMode();
               phy_mode->idx = b.data->pt_data->physical_modes.size();
               phy_mode->name = phy_mode_name;
               phy_mode->uri = phy_mode_uri;
@@ -2770,7 +2770,7 @@ struct AddTripDataset {
               b.data->pt_data->physical_modes_map[phy_mode_uri_2] = phy_mode;
 
               // Add contributor
-              navitia::type::Contributor* contributor = new navitia::type::Contributor();
+              auto* contributor = new navitia::type::Contributor();
               contributor->idx = b.data->pt_data->contributors.size();
               contributor->name = contributor_name;
               contributor->uri = contributor_uri;
@@ -2778,7 +2778,7 @@ struct AddTripDataset {
               b.data->pt_data->contributors_map[contributor->uri] = contributor;
 
               // Add dataset
-              navitia::type::Dataset* dataset = new navitia::type::Dataset();
+              auto* dataset = new navitia::type::Dataset();
               dataset->idx = b.data->pt_data->datasets.size();
               dataset->name = dataset_name;
               dataset->uri = dataset_uri;

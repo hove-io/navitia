@@ -30,6 +30,8 @@ www.navitia.io
 
 #pragma once
 
+#include <utility>
+
 #include "isochrone.h"
 #include "raptor.h"
 
@@ -78,16 +80,16 @@ struct BoundBox {
 struct HeatMap {
     std::vector<SingleCoord> header;
     std::vector<std::pair<SingleCoord, std::vector<navitia::time_duration>>> body;
-    HeatMap(const std::vector<SingleCoord>& header,
-            const std::vector<std::pair<SingleCoord, std::vector<navitia::time_duration>>>& body)
-        : header(header), body(body) {}
+    HeatMap(std::vector<SingleCoord> header,
+            std::vector<std::pair<SingleCoord, std::vector<navitia::time_duration>>> body)
+        : header(std::move(header)), body(std::move(body)) {}
 
     HeatMap(const uint step, const BoundBox& box, const double height_step, const double width_step) {
         for (uint i = 0; i < step; i++) {
             auto lon = SingleCoord(box.min.lon() + i * width_step, width_step);
             for (uint j = 0; j < step; j++) {
                 if (i == 0) {
-                    header.push_back(SingleCoord((box.min.lat() + j * height_step), height_step));
+                    header.emplace_back((box.min.lat() + j * height_step), height_step);
                 }
             }
             body.push_back({lon, std::vector<navitia::time_duration>{step, bt::pos_infin}});

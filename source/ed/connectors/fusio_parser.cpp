@@ -152,7 +152,7 @@ void AgencyFusioHandler::handle_line(Data& data, const csv_row& row, bool is_fir
         return;
     }
 
-    ed::types::Network* network = new ed::types::Network();
+    auto* network = new ed::types::Network();
     network->uri = row[id_c];
 
     if (is_valid(ext_code_c, row)) {
@@ -358,7 +358,7 @@ void RouteFusioHandler::handle_line(Data& data, const csv_row& row, bool) {
         LOG4CPLUS_WARN(logger, "Route orphan " + row[route_id_c]);
         return;
     }
-    ed::types::Route* ed_route = new ed::types::Route();
+    auto* ed_route = new ed::types::Route();
     ed_route->line = ed_line;
     ed_route->uri = row[route_id_c];
 
@@ -471,7 +471,7 @@ void StopTimeFusioHandler::handle_line(Data& data, const csv_row& row, bool is_f
         }
 
         if (is_valid(itl_c, row)) {
-            uint16_t local_traffic_zone = boost::lexical_cast<uint16_t>(row[itl_c]);
+            auto local_traffic_zone = boost::lexical_cast<uint16_t>(row[itl_c]);
             if (local_traffic_zone > 0) {
                 stop_time->local_traffic_zone = local_traffic_zone;
             }
@@ -617,7 +617,7 @@ std::vector<ed::types::VehicleJourney*> TripsFusioHandler::get_split_vj(Data& da
     for (auto vp_it = vp_range.first; vp_it != vp_range.second; ++vp_it, cpt_vj++) {
         navitia::type::ValidityPattern* vp_xx = vp_it->second;
 
-        ed::types::VehicleJourney* vj = new ed::types::VehicleJourney();
+        auto* vj = new ed::types::VehicleJourney();
 
         const std::string original_uri = row[trip_c];
         std::string vj_uri = original_uri;
@@ -759,7 +759,7 @@ void ContributorFusioHandler::handle_line(Data& data, const csv_row& row, bool i
                                     + "  file has more than one contributor and no contributor_id column");
         throw InvalidHeaders(csv.filename);
     }
-    ed::types::Contributor* contributor = new ed::types::Contributor();
+    auto* contributor = new ed::types::Contributor();
     if (is_valid(id_c, row)) {
         contributor->uri = row[id_c];
     } else {
@@ -823,7 +823,7 @@ void FrameFusioHandler::handle_line(Data& data, const csv_row& row, bool is_firs
         throw navitia::exception(error);
     }
 
-    ed::types::Dataset* dataset = new ed::types::Dataset();
+    auto* dataset = new ed::types::Dataset();
     dataset->contributor = contributor->second;
     dataset->uri = row[id_c];
     dataset->validation_period = boost::gregorian::date_period(start_date, end_date);
@@ -888,7 +888,7 @@ void DatasetFusioHandler::handle_line(Data& data, const csv_row& row, bool is_fi
         throw navitia::exception(error);
     }
 
-    ed::types::Dataset* dataset = new ed::types::Dataset();
+    auto* dataset = new ed::types::Dataset();
     dataset->contributor = contributor->second;
     dataset->uri = row[id_c];
     dataset->validation_period = boost::gregorian::date_period(start_date, end_date);
@@ -936,7 +936,7 @@ void LineFusioHandler::handle_line(Data& data, const csv_row& row, bool is_first
                         "Error while reading " + csv.filename + "  file has more than one line and no line_id column");
         throw InvalidHeaders(csv.filename);
     }
-    ed::types::Line* line = new ed::types::Line();
+    auto* line = new ed::types::Line();
     line->uri = row[id_c];
     line->name = row[name_c];
 
@@ -1035,7 +1035,7 @@ void LineGroupFusioHandler::handle_line(Data& data, const csv_row& row, bool) {
         LOG4CPLUS_WARN(logger, "LineGroupFusioHandler: Impossible to find the line " << row[main_line_id_c]);
         return;
     }
-    ed::types::LineGroup* line_group = new ed::types::LineGroup();
+    auto* line_group = new ed::types::LineGroup();
     line_group->uri = row[id_c];
     line_group->name = row[name_c];
     line_group->main_line = line->second;
@@ -1144,7 +1144,7 @@ void PhysicalModeFusioHandler::handle_line(Data& data, const csv_row& row, bool 
                                     + "  file has more than one physical mode and no physical_mode_id column");
         throw InvalidHeaders(csv.filename);
     }
-    ed::types::PhysicalMode* mode = new ed::types::PhysicalMode();
+    auto* mode = new ed::types::PhysicalMode();
     double co2_emission;
     mode->name = row[name_c];
     mode->uri = row[id_c];
@@ -1178,7 +1178,7 @@ void CommercialModeFusioHandler::handle_line(Data& data, const csv_row& row, boo
                        "invalid line on " << csv.filename << "  commercial mode " << row[id_c] << " is missing a name");
         return;
     }
-    ed::types::CommercialMode* commercial_mode = new ed::types::CommercialMode();
+    auto* commercial_mode = new ed::types::CommercialMode();
     commercial_mode->name = row[name_c];
     commercial_mode->uri = row[id_c];
     data.commercial_modes.push_back(commercial_mode);
@@ -1460,7 +1460,7 @@ void GridCalendarFusioHandler::handle_line(Data& data, const csv_row& row, bool 
         LOG4CPLUS_INFO(logger, "calendar name is empty, we skip it");
         return;
     }
-    ed::types::Calendar* calendar = new ed::types::Calendar();
+    auto* calendar = new ed::types::Calendar();
     calendar->uri = row[id_c];
     calendar->name = row[name_c];
     calendar->week_pattern[navitia::Monday] = is_active(monday_c, row);

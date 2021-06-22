@@ -152,8 +152,8 @@ namespace navitia {
 
 // traits struct for time_resolution_traits using unsigned int32
 struct time_resolution_traits_adapted_int32_impl {
-    typedef int32_t int_type;
-    typedef boost::date_time::int_adapter<int_type> impl_type;
+    using int_type = int32_t;
+    using impl_type = boost::date_time::int_adapter<int_type>;
     static int_type as_number(impl_type i) { return i.as_number(); }
     static bool is_adapted() { return true; }
 };
@@ -173,14 +173,14 @@ using time_res_traits =
  */
 class time_duration : public boost::date_time::time_duration<time_duration, time_res_traits> {
 public:
-    typedef time_res_traits rep_type;
-    typedef time_res_traits::day_type day_type;
-    typedef time_res_traits::hour_type hour_type;
-    typedef time_res_traits::min_type min_type;
-    typedef time_res_traits::sec_type sec_type;
-    typedef time_res_traits::fractional_seconds_type fractional_seconds_type;
-    typedef time_res_traits::tick_type tick_type;
-    typedef time_res_traits::impl_type impl_type;
+    using rep_type = time_res_traits;
+    using day_type = time_res_traits::day_type;
+    using hour_type = time_res_traits::hour_type;
+    using min_type = time_res_traits::min_type;
+    using sec_type = time_res_traits::sec_type;
+    using fractional_seconds_type = time_res_traits::fractional_seconds_type;
+    using tick_type = time_res_traits::tick_type;
+    using impl_type = time_res_traits::impl_type;
 
     time_duration(hour_type hour, min_type min, sec_type sec, fractional_seconds_type fs = 0)
         : boost::date_time::time_duration<time_duration, time_res_traits>(hour, min, sec, fs) {}
@@ -193,7 +193,7 @@ public:
     static time_duration from_boost_duration(boost::posix_time::time_duration d) {
         if (d.is_special()) {
             if (d.is_pos_infinity()) {
-                return time_duration(boost::date_time::pos_infin);
+                return {boost::date_time::pos_infin};
             }
             if (d.is_neg_infinity()) {
                 return time_duration(boost::date_time::neg_infin);
@@ -212,9 +212,7 @@ public:
         }
         return dur;
     }
-    boost::posix_time::time_duration to_posix() const {
-        return boost::posix_time::time_duration(hours(), minutes(), seconds(), fractional_seconds());
-    }
+    boost::posix_time::time_duration to_posix() const { return {hours(), minutes(), seconds(), fractional_seconds()}; }
 
     // TODO
     // benchmark if a build-in constructor with bt::pos_infin improve perf
