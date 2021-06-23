@@ -89,14 +89,22 @@ struct departure_board_fixture {
                 b.lines.find("T")->second->properties["realtime_system"] = "Kisio数字";
 
                 // Terminus_schedule
-                // 1 line, 2 routes and 2 VJs
+                // 1 line, 1 routes and 2 VJs
                 // * VJ1 : E->D->C->B->A1->AVj1
                 // * VJ2 : D->C->B->A2->AVj2
 
+                // * VJ3 : E<-D<-C->B<-A1<-AVj1
+                // * VJ4 : D<-C<-B<-A2<-AVj2
+
                 // * Route1       Avj2 <------A2---
                 // *                               |
-                // * Route2       Avj1 <------A1-------- B <- C <- D <- E
+                // * Route1       Avj1 <------A1-------- B <- C <- D <- E
                 // *
+                //                  01  02  03  04  05  06  07  08  09      Direction
+                // Active VJ1 :         *   *   *       *   *       *       AVj1
+                // Active VJ2 :         *   *   *   *   *                   AVj2
+                // Active VJ3 :         *   *   *   *               *       E
+                // Active VJ4 :     *   *   *                               E
 
                 b.sa("Avj1", 0., 0., false)("Avj1");
                 b.sa("Avj2", 0., 0., false)("Avj2");
@@ -107,10 +115,24 @@ struct departure_board_fixture {
                 b.sa("A1", 0., 0., false)("A1:sp");
                 b.sa("A2", 0., 0., false)("A2:sp");
 
-                b.vj("Line1").route("Route1").name("AVJ1")("E:sp", "07:45"_t)("D:sp", "08:00"_t)("C:sp", "09:00"_t)(
-                    "B:sp", "10:00"_t)("A1", "11:00"_t)("Avj1", "11:15"_t);
-                b.vj("Line1").route("Route2").name("AVJ2")("D:sp", "09:00"_t)("C:sp", "09:10"_t)("B:sp", "10:10"_t)(
-                    "A2", "11:10"_t)("Avj2", "11:25"_t);
+                b.vj("Line1", "101101110")
+                    .route("Route1")
+                    .name("AVJ1")("E:sp", "07:45"_t)("D:sp", "08:00"_t)("C:sp", "09:00"_t)("B:sp", "10:00"_t)(
+                        "A1", "11:00"_t)("Avj1", "11:15"_t);
+                b.vj("Line1", "100011110")
+                    .route("Route2_R")
+                    .name("AVJ3")("Avj1", "07:45"_t)("A1", "08:00"_t)("B:sp", "09:00"_t)("C:sp", "10:00"_t)(
+                        "D:sp", "11:00"_t)("E:sp", "11:15"_t);
+
+                b.vj("Line1", "000111110")
+                    .route("Route1")
+                    .name("AVJ2")("D:sp", "09:00"_t)("C:sp", "09:10"_t)("B:sp", "10:10"_t)("A2", "11:10"_t)("Avj2",
+                                                                                                            "11:25"_t);
+                b.vj("Line1", "000000111")
+                    .route("Route2_R")
+                    .name("AVJ4")("Avj2", "09:00"_t)("A2", "09:10"_t)("B:sp", "10:10"_t)("C:sp", "11:10"_t)("D:sp",
+                                                                                                            "11:25"_t);
+
                 b.lines.find("Line1")->second->properties["realtime_system"] = "Kisio数字";
 
                 // 1 line, 1 routes and 2 VJs
@@ -129,6 +151,33 @@ struct departure_board_fixture {
                     "CC:sp", "09:30"_t)("DD:sp", "10:10"_t);
                 b.lines.find("Line2")->second->properties["realtime_system"] = "Kisio数字";
 
+                // Terminus_schedule
+                // 1 line, 2 routes and 2 VJs
+                // * Route1, VJ1 : TS_A->TS_B->TS_C->TS_D
+                // * Route2, VJ2 : TS_A<-TS_B<-TS_C<-TS_D
+
+                // Active only, VJ1 : 04/01/2016, VJ2: 03/01/2016 and VJ1, VJ2: 07/01/2016
+
+                b.sa("TS_A", 0., 0., false)("TS_A:sp");
+                b.sa("TS_B", 0., 0., false)("TS_B:sp");
+                b.sa("TS_C", 0., 0., false)("TS_C:sp");
+                b.sa("TS_D", 0., 0., false)("TS_D:sp");
+
+                b.vj("Line3", "001001000")
+                    .route("TS_Route1")
+                    .name("TS_AVJ1")("TS_A:sp", "07:45"_t)("TS_B:sp", "08:00"_t)("TS_C:sp", "09:00"_t)("TS_D:sp",
+                                                                                                       "10:00"_t);
+                b.vj("Line3", "001000100")
+                    .route("TS_Route2")
+                    .name("TS_AVJ2")("TS_D:sp", "09:00"_t)("TS_C:sp", "09:10"_t)("TS_B:sp", "10:10"_t)("TS_A:sp",
+                                                                                                       "11:10"_t);
+
+                b.lines.find("Line3")->second->properties["realtime_system"] = "Kisio数字";
+                b.lines.find("Line3")->second->opening_time =
+                    boost::make_optional(boost::posix_time::duration_from_string("06:00"));
+                b.lines.find("Line3")->second->closing_time =
+                    boost::make_optional(boost::posix_time::duration_from_string("14:00"));
+
                 auto* ad = new navitia::georef::Admin();
                 ad->name = "Quimper";
                 ad->uri = "Quimper";
@@ -144,9 +193,10 @@ struct departure_board_fixture {
 
                 b.data->complete();
                 b.data->compute_labels();
+                b.make();
             },
             true) {
-        b.data->meta->production_date = bg::date_period(bg::date(2016, 1, 1), bg::days(5));
+        b.data->meta->production_date = bg::date_period(bg::date(2016, 1, 1), bg::days(10));
 
         sp_ptr = b.data->pt_data->stop_points_map["BB:sp"];
         b.data->pt_data->codes.add(sp_ptr, "Kisio数字", "Kisio数字_BB:sp");

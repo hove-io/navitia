@@ -473,10 +473,13 @@ void terminus_schedules(PbCreator& pb_creator,
         // check whether that calendar exists, to raise an early error
         if (pb_creator.data->pt_data->calendars_map.find(*calendar_id)
             == pb_creator.data->pt_data->calendars_map.end()) {
-            pb_creator.fill_pb_error(pbnavitia::Error::bad_filter, "stop_schedules : calendar does not exist");
+            pb_creator.fill_pb_error(pbnavitia::Error::bad_filter, "terminus_schedules : calendar does not exist");
             return;
         }
     }
+    // <route, <route_point>>
+    std::map<const type::Route*, vector_jpp_idx> map_route_route_point;
+
     //  <stop_point_route, status>
     std::map<routing::JppIdx, pbnavitia::ResponseStatus> response_status;
 
@@ -621,12 +624,49 @@ void terminus_schedules(PbCreator& pb_creator,
         }
 
         map_route_stop_point[route_point] = stop_times;
+        if (map_route_route_point.find(route) == map_route_route_point.end()) {
+            map_route_route_point[route] = {route_point};
+        } else {
+            map_route_route_point[route].emplace_back(route_point);
+        }
     }
+
+    clean_terminus_schedules(map_route_route_point, response_status, map_route_stop_point);
 
     render(pb_creator, response_status, map_route_stop_point, map_route_point_first_last_st, handler.date_time,
            handler.max_datetime, calendar_id, depth);
 
     pb_creator.make_paginate(total_result, start_page, count, pb_creator.terminus_schedules_size());
+}
+
+void clean_terminus_schedules(const std::map<const type::Route*, vector_jpp_idx>& map_route_route_point,
+                              std::map<routing::JppIdx, pbnavitia::ResponseStatus>& response_status,
+                              std::map<routing::JppIdx, vector_dt_st>& map_route_stop_point) {
+    for (const auto& rt_rp : map_route_route_point) {
+        bool with_stop_times = false;
+        if (rt_rp.second.size() > 1) {
+            for (const auto& route_point : rt_rp.second) {
+                const auto& it = map_route_stop_point.find(route_point);
+                if (!it->second.empty()) {
+                    with_stop_times = true;
+                    break;
+                }
+            }
+
+            for (const auto& route_point : rt_rp.second) {
+                const auto& it = map_route_stop_point.find(route_point);
+                if (it->second.empty()) {
+                    if (with_stop_times) {
+                        map_route_stop_point.erase(it);
+                        const auto& st_it = response_status.find(route_point);
+                        response_status.erase(st_it);
+                    } else {
+                        with_stop_times = true;
+                    }
+                }
+            }
+        }
+    }
 }
 
 std::pair<DateTime, DateTime> get_daily_opening_time_bounds(const routing::datetime_stop_time& next_stop_time,
