@@ -395,9 +395,11 @@ class Scenario(object):
         cloned_params = request.args.to_dict(flat=False)
         cloned_params['region'] = instance.name  # we add the region in the args to have fully qualified links
 
+        # we compute bypass_disruptions link first
+        # to avoid other link to mess up with it ...
+        self._add_bypass_disruptions_link(resp, cloned_params)
+
         self._add_next_link(resp, cloned_params, clockwise)
         self._add_prev_link(resp, cloned_params, clockwise)
         # we also compute first/last journey link
         self._add_first_last_links(resp, cloned_params)
-        # we also compute bypass_disruptions link
-        self._add_bypass_disruptions_link(resp, cloned_params)
