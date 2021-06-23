@@ -636,7 +636,7 @@ def apply_final_journey_filters(response_list, instance, request):
 
 def replace_bss_tag(journeys):
     """
-    replace the gss tag by walking, if there's no bss section in the journey
+    replace the bss tag by walking, if there's no bss section in the journey
     """
     for j in journeys:
         if not j.tags or "bss" not in j.tags:
