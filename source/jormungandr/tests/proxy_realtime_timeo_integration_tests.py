@@ -61,6 +61,27 @@ class MockTimeo(Timeo):
         resp = Obj()
         resp.status_code = 200
         json = {}
+        if url == "CC:sp":
+            json = {
+                "CorrelationID": "AA",
+                "StopTimesResponse": [
+                    {
+                        "StopID": "CC:sp",
+                        "StopTimeoCode": "AAAAA",
+                        "StopLongName": "Malraux",
+                        "StopShortName": "Malraux",
+                        "StopVocalName": "Malraux",
+                        "ReferenceTime": "09:54:53",
+                        "NextStopTimesMessage": {
+                            "LineID": "AAA",
+                            "Way": "A",
+                            "LineMainDirection": "DIRECTION AA",
+                            "NextExpectedStopTime": [],
+                        },
+                    }
+                ],
+                "MessageResponse": [{"ResponseCode": 0, "ResponseComment": "success"}],
+            }
         if url == 'BB:sp':
             json = {
                 "CorrelationID": "AA",
@@ -929,3 +950,17 @@ class TestDepartures(AbstractTestFixture):
         assert date_times[2]["date_time"] == "20160102T091352"
         assert date_times[3]["data_freshness"] == 'realtime'
         assert date_times[3]["date_time"] == "20160102T091552"
+
+    def test_terminus_schedule_groub_by_destination_empty_timeo_response(self):
+        query = self.query_template_ter.format(
+            sp='CC:sp', dt='20160102T0730', data_freshness='&data_freshness=realtime', c_dt='20160102T0730'
+        )
+        response = self.query_region(query)
+        is_valid_notes(response["notes"])
+        terminus_schedules = response['terminus_schedules']
+        assert len(terminus_schedules) == 1
+        tmp = terminus_schedules[0]
+
+        assert tmp["display_informations"]["direction"] == "EE"
+        assert len(tmp['date_times']) == 0
+        assert tmp['additional_informations'] == 'no_departure_this_day'

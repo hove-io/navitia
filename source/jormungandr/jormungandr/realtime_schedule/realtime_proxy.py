@@ -205,6 +205,8 @@ class RealtimeProxy(six.with_metaclass(ABCMeta, object)):
                 )  # the id is a md5 of the direction to factorize them
                 new_dt.properties.notes.extend([note])
         stop_schedule.date_times.sort(key=lambda dt: dt.date + dt.time)
+        if not len(stop_schedule.date_times) and not stop_schedule.HasField('response_status'):
+            stop_schedule.response_status = type_pb2.ResponseStatus.no_departure_this_day
 
     # By default filter passage if they are on the same route point
     def _filter_base_passage(self, passage, route_point):
