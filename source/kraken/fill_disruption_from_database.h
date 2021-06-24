@@ -346,7 +346,7 @@ struct DisruptionDatabaseReader {
                     auto* rs_line = rs->mutable_line();
                     rs_line->set_pt_object_type(chaos::PtObject_Type_line);
                     FILL_NULLABLE(rs_line, updated_at, uint64_t)
-                    FILL_NULLABLE(rs_line, created_at, uint64_t)
+                    FILL_REQUIRED(rs_line, created_at, uint64_t)
                     FILL_NULLABLE(rs_line, uri, std::string)
                 }
                 auto* rs_start = rs->mutable_start_point();
