@@ -659,7 +659,9 @@ void clean_terminus_schedules(const std::map<const type::Route*, vector_jpp_idx>
                     if (with_stop_times) {
                         map_route_stop_point.erase(it);
                         const auto& st_it = response_status.find(route_point);
-                        response_status.erase(st_it);
+                        if (st_it != response_status.end()) {
+                            response_status.erase(st_it);
+                        }
                     } else {
                         with_stop_times = true;
                     }

@@ -71,7 +71,6 @@ struct NextStopTimeInterface {
         const bool check_freq = true,
         const boost::optional<DateTime>& bound = boost::none) const = 0;
     virtual ~NextStopTimeInterface() = default;
-    ;
 };
 
 struct NextStopTimeData {
