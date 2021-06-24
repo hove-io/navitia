@@ -349,6 +349,8 @@ class Scenario(object):
 
     def _add_bypass_disruptions_link(self, resp, params):
         # find first impact wit a NO_SERVICE severity
+        if 'data_freshness' in params and params['data_freshness'] == 'realtime':
+            return
         found = next((True for impact in resp.impacts if impact.severity.effect == Severity.NO_SERVICE), False)
         if found:
             cloned_params = copy.deepcopy(params)
