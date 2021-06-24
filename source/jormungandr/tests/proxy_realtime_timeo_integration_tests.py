@@ -894,6 +894,35 @@ class TestDepartures(AbstractTestFixture):
         assert tmp['additional_informations'] == 'no_departure_this_day'
         assert len(tmp['date_times']) == 0
 
+    def test_terminus_schedule_groub_by_destination_base_schedule_active_disruption(self):
+        """
+                          01  02  03  04  05  06  07  08  09      Direction
+         Active VJ1 :         *   *   *       *   *       *       AVj1
+         Active VJ2 :         *   *   *   *   *                   AVj2
+         Active VJ3 :         *   *   *   *               *       E
+         Active VJ4 :     *   *   *                               E
+
+        Schema line:          /---------------------------- Avj1
+          E ------------------
+                             \ ---------------------------- Avj2
+        """
+        query = self.query_template_ter.format(
+            sp='D:sp', dt='20160103T0700', data_freshness='&data_freshness=realtime', c_dt='20160103T0700'
+        )
+        response = self.query_region(query)
+        is_valid_notes(response["notes"])
+        terminus_schedules = response['terminus_schedules']
+        assert len(terminus_schedules) == 2
+        tmp = terminus_schedules[0]
+        assert tmp['display_informations']['direction'] == "Avj1"
+        assert tmp['additional_informations'] == 'active_disruption'
+        assert len(tmp['date_times']) == 0
+
+        tmp = terminus_schedules[1]
+        assert tmp['display_informations']['direction'] == "E"
+        assert tmp['additional_informations'] == 'active_disruption'
+        assert len(tmp['date_times']) == 0
+
     def test_terminus_schedule_groub_by_destination_real_time_0(self):
         """
         Schema line:         /----------------------------

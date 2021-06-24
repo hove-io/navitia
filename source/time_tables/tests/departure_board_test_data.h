@@ -6,6 +6,7 @@
 #include "type/pt_data.h"
 #include "kraken/realtime.h"
 #include "georef/adminref.h"
+#include "kraken/apply_disruption.h"
 
 namespace ntest = navitia::test;
 namespace bg = boost::gregorian;
@@ -194,6 +195,17 @@ struct departure_board_fixture {
                 b.data->complete();
                 b.data->compute_labels();
                 b.make();
+                // Disruption NO_SERVICE on StopArea
+                using btp = boost::posix_time::time_period;
+
+                navitia::apply_disruption(b.impact(nt::RTLevel::Adapted, "Disruption 1")
+                                              .severity(nt::disruption::Effect::NO_SERVICE)
+                                              .on(nt::Type_e::StopArea, "D", *b.data->pt_data)
+                                              .application_periods(btp("20160103T000000"_dt, "20160103T235900"_dt))
+                                              .publish(btp("20160103T000000"_dt, "20160103T235900"_dt))
+                                              .msg("Disruption on stop area D")
+                                              .get_disruption(),
+                                          *b.data->pt_data, *b.data->meta);
             },
             true) {
         b.data->meta->production_date = bg::date_period(bg::date(2016, 1, 1), bg::days(10));
