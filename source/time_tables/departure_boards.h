@@ -39,6 +39,7 @@ namespace timetables {
 
 typedef std::vector<DateTime> vector_datetime;
 using vector_dt_st = std::vector<routing::datetime_stop_time>;
+using vector_jpp_idx = std::vector<routing::JppIdx>;
 using first_and_last_stop_time =
     std::pair<boost::optional<routing::datetime_stop_time>, boost::optional<routing::datetime_stop_time> >;
 
@@ -106,6 +107,15 @@ first_and_last_stop_time get_first_and_last_stop_time(const routing::datetime_st
                                                       const type::Data& data,
                                                       const type::RTLevel rt_level,
                                                       const int utc_offset);
+/**
+ * @brief clean_terminus_schedules
+ * @param map_route_route_point: Route and list of JourneyPatternPoint
+ * @param response_status: JourneyPatternPoint and Status
+ * @param map_route_stop_point: JourneyPatternPoint and list of StopTimes
+ */
+void clean_terminus_schedules(const std::map<const type::Route*, vector_jpp_idx>& map_route_route_point,
+                              std::map<routing::JppIdx, pbnavitia::ResponseStatus>& response_status,
+                              std::map<routing::JppIdx, vector_dt_st>& map_route_stop_point);
 
 }  // namespace timetables
 }  // namespace navitia

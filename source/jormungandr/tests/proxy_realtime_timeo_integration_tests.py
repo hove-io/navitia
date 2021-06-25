@@ -61,6 +61,59 @@ class MockTimeo(Timeo):
         resp = Obj()
         resp.status_code = 200
         json = {}
+        if url == 'TS_C:sp':
+            json = {
+                "CorrelationID": "AA",
+                "StopTimesResponse": [
+                    {
+                        "StopID": "BB:sp",
+                        "StopTimeoCode": "AAAAA",
+                        "StopLongName": "Malraux",
+                        "StopShortName": "Malraux",
+                        "StopVocalName": "Malraux",
+                        "ReferenceTime": "09:54:53",
+                        "NextStopTimesMessage": {
+                            "LineID": "AAA",
+                            "Way": "A",
+                            "LineMainDirection": "DIRECTION AA",
+                            "NextExpectedStopTime": [
+                                {
+                                    "NextStop": "10:00:52",
+                                    "Destination": "DIRECTION AA",
+                                    "TerminusSAECode": "TS_D",
+                                },
+                                {
+                                    "NextStop": "10:10:52",
+                                    "Destination": "DIRECTION AA",
+                                    "TerminusSAECode": "TS_D",
+                                },
+                            ],
+                        },
+                    }
+                ],
+                "MessageResponse": [{"ResponseCode": 0, "ResponseComment": "success"}],
+            }
+        if url == "CC:sp":
+            json = {
+                "CorrelationID": "AA",
+                "StopTimesResponse": [
+                    {
+                        "StopID": "CC:sp",
+                        "StopTimeoCode": "AAAAA",
+                        "StopLongName": "Malraux",
+                        "StopShortName": "Malraux",
+                        "StopVocalName": "Malraux",
+                        "ReferenceTime": "09:54:53",
+                        "NextStopTimesMessage": {
+                            "LineID": "AAA",
+                            "Way": "A",
+                            "LineMainDirection": "DIRECTION AA",
+                            "NextExpectedStopTime": [],
+                        },
+                    }
+                ],
+                "MessageResponse": [{"ResponseCode": 0, "ResponseComment": "success"}],
+            }
         if url == 'BB:sp':
             json = {
                 "CorrelationID": "AA",
@@ -123,6 +176,7 @@ class MockTimeo(Timeo):
                                     "Destination": "DIRECTION AA",
                                     "TerminusSAECode": "Avj2",
                                 },
+                                {"NextStop": "10:25:52", "Destination": "DIRECTION AA", "TerminusSAECode": "E"},
                             ],
                         },
                     }
@@ -550,7 +604,358 @@ class TestDepartures(AbstractTestFixture):
         assert stop_time['data_freshness'] == 'base_schedule'
         assert stop_time['date_time'] == '20160102T113000'
 
-    def test_terminus_schedule_groub_by_destination(self):
+    def test_terminus_schedule_0(self):
+        """
+        Terminus_schedule
+                        // 1 line, 2 routes and 2 VJs
+                        // * Route1, VJ1 : TS_A->TS_B->TS_C->TS_D
+                        // * Route2, VJ2 : TS_A<-TS_B<-TS_C<-TS_D
+
+                        // Active only, VJ1 : 04/01/2016, VJ2: 03/01/2016 and VJ1, VJ2: 07/01/2016
+        """
+        query = self.query_template_ter.format(
+            sp='TS_C:sp',
+            dt='20160104T0900',
+            data_freshness='&data_freshness=base_schedule',
+            c_dt='20160104T0900',
+        )
+        response = self.query_region(query)
+        is_valid_notes(response["notes"])
+        terminus_schedules = response['terminus_schedules']
+        assert len(terminus_schedules) == 2
+        ts = terminus_schedules[0]
+        assert ts['display_informations']['direction'] == 'TS_E'
+        date_times = ts['date_times']
+        assert len(date_times) == 1
+        stop_time = date_times[0]
+        assert stop_time['data_freshness'] == 'base_schedule'
+        assert stop_time['date_time'] == '20160104T090000'
+
+        ts = terminus_schedules[1]
+        assert ts['additional_informations'] == 'no_departure_this_day'
+        assert ts['display_informations']['direction'] == 'TS_A'
+        assert len(ts['date_times']) == 0
+
+    def test_terminus_schedule_1(self):
+        """
+        Terminus_schedule
+                        // 1 line, 2 routes and 2 VJs
+                        // * Route1, VJ1 : TS_A->TS_B->TS_C->TS_D
+                        // * Route2, VJ2 : TS_A<-TS_B<-TS_C<-TS_D
+
+                        // Active only, VJ1 : 04/01/2016, VJ2: 03/01/2016 and VJ1, VJ2: 07/01/2016
+        """
+        query = self.query_template_ter.format(
+            sp='TS_C:sp',
+            dt='20160103T0900',
+            data_freshness='&data_freshness=base_schedule',
+            c_dt='20160103T0900',
+        )
+        response = self.query_region(query)
+        is_valid_notes(response["notes"])
+        terminus_schedules = response['terminus_schedules']
+        assert len(terminus_schedules) == 2
+        ts = terminus_schedules[0]
+        assert ts['additional_informations'] == 'no_departure_this_day'
+        assert ts['display_informations']['direction'] == 'TS_E'
+        assert len(ts['date_times']) == 0
+
+        ts = terminus_schedules[1]
+        assert ts['display_informations']['direction'] == 'TS_A'
+        date_times = ts['date_times']
+        assert len(date_times) == 1
+        stop_time = date_times[0]
+        assert stop_time['data_freshness'] == 'base_schedule'
+        assert stop_time['date_time'] == '20160103T091000'
+
+    def test_terminus_schedule_2(self):
+        """
+        Terminus_schedule
+                        // 1 line, 2 routes and 2 VJs
+                        // * Route1, VJ1 : TS_A->TS_B->TS_C->TS_D
+                        // * Route2, VJ2 : TS_A<-TS_B<-TS_C<-TS_D
+
+                        // Active only, VJ1 : 04/01/2016, VJ2: 03/01/2016 and VJ1, VJ2: 07/01/2016
+        """
+        query = self.query_template_ter.format(
+            sp='TS_C:sp',
+            dt='20160105T0900',
+            data_freshness='&data_freshness=base_schedule',
+            c_dt='20160105T0900',
+        )
+        response = self.query_region(query)
+        is_valid_notes(response["notes"])
+        terminus_schedules = response['terminus_schedules']
+        assert len(terminus_schedules) == 2
+        ts = terminus_schedules[0]
+        assert ts['additional_informations'] == 'no_departure_this_day'
+        assert ts['display_informations']['direction'] == 'TS_D'
+        assert len(ts['date_times']) == 0
+
+        ts = terminus_schedules[1]
+        assert ts['additional_informations'] == 'no_departure_this_day'
+        assert ts['display_informations']['direction'] == 'TS_A'
+        assert len(ts['date_times']) == 0
+
+    def test_terminus_schedule_2(self):
+        """
+        Terminus_schedule
+                        // 1 line, 2 routes and 2 VJs
+                        // * Route1, VJ1 : TS_A->TS_B->TS_C->TS_D
+                        // * Route2, VJ2 : TS_A<-TS_B<-TS_C<-TS_D
+
+                        // Active only, VJ1 : 04/01/2016, VJ2: 03/01/2016 and VJ1, VJ2: 07/01/2016
+        """
+        query = self.query_template_ter.format(
+            sp='TS_C:sp',
+            dt='20160107T0900',
+            data_freshness='&data_freshness=base_schedule',
+            c_dt='20160107T0900',
+        )
+        response = self.query_region(query)
+        is_valid_notes(response["notes"])
+        terminus_schedules = response['terminus_schedules']
+        assert len(terminus_schedules) == 2
+        ts = terminus_schedules[0]
+        assert ts['display_informations']['direction'] == 'TS_E'
+        assert len(ts['date_times']) == 1
+        stop_time = ts['date_times'][0]
+        assert stop_time['data_freshness'] == 'base_schedule'
+        assert stop_time['date_time'] == '20160107T090000'
+
+        ts = terminus_schedules[1]
+        assert ts['display_informations']['direction'] == 'TS_A'
+        assert len(ts['date_times']) == 1
+        stop_time = ts['date_times'][0]
+        assert stop_time['data_freshness'] == 'base_schedule'
+        assert stop_time['date_time'] == '20160107T091000'
+
+    def test_terminus_schedule_groub_by_destination_base_schedule_0(self):
+        """
+                          01  02  03  04  05  06  07  08  09      Direction
+         Active VJ1 :         *   *   *       *   *       *       AVj1
+         Active VJ2 :         *   *   *   *   *                   AVj2
+         Active VJ3 :         *   *   *   *               *       E
+         Active VJ4 :     *   *   *                               E
+
+        Schema line:          /---------------------------- Avj1
+          E ------------------
+                             \ ---------------------------- Avj2
+        """
+        query = self.query_template_ter.format(
+            sp='C:sp', dt='20160102T0900', data_freshness='&data_freshness=base_schedule', c_dt='20160102T0900'
+        )
+        response = self.query_region(query)
+        is_valid_notes(response["notes"])
+        terminus_schedules = response['terminus_schedules']
+        assert len(terminus_schedules) == 3
+        tmp = terminus_schedules[0]
+        assert tmp['display_informations']['direction'] == "Avj1"
+        assert len(tmp['date_times']) == 1
+        assert tmp['date_times'][0]['data_freshness'] == 'base_schedule'
+        assert tmp['date_times'][0]['date_time'] == '20160102T090000'
+
+        tmp = terminus_schedules[1]
+        assert tmp['display_informations']['direction'] == "Avj2"
+        assert len(tmp['date_times']) == 1
+        assert tmp['date_times'][0]['data_freshness'] == 'base_schedule'
+        assert tmp['date_times'][0]['date_time'] == '20160102T091000'
+
+        tmp = terminus_schedules[2]
+        assert tmp['display_informations']['direction'] == "E"
+        assert len(tmp['date_times']) == 2
+        assert tmp['date_times'][0]['data_freshness'] == 'base_schedule'
+        assert tmp['date_times'][0]['date_time'] == '20160102T100000'
+        assert tmp['date_times'][1]['data_freshness'] == 'base_schedule'
+        assert tmp['date_times'][1]['date_time'] == '20160102T111000'
+
+    def test_terminus_schedule_groub_by_destination_base_schedule_1(self):
+        """
+                          01  02  03  04  05  06  07  08  09      Direction
+         Active VJ1 :         *   *   *       *   *       *       AVj1
+         Active VJ2 :         *   *   *   *   *                   AVj2
+         Active VJ3 :         *   *   *   *               *       E
+         Active VJ4 :     *   *   *                               E
+
+        Schema line:          /---------------------------- Avj1
+          E ------------------
+                             \ ---------------------------- Avj2
+        """
+        query = self.query_template_ter.format(
+            sp='C:sp', dt='20160106T0900', data_freshness='&data_freshness=base_schedule', c_dt='20160106T0900'
+        )
+        response = self.query_region(query)
+        is_valid_notes(response["notes"])
+        terminus_schedules = response['terminus_schedules']
+        assert len(terminus_schedules) == 3
+        tmp = terminus_schedules[0]
+        assert tmp['display_informations']['direction'] == "Avj1"
+        assert len(tmp['date_times']) == 1
+        assert tmp['date_times'][0]['data_freshness'] == 'base_schedule'
+        assert tmp['date_times'][0]['date_time'] == '20160106T090000'
+
+        tmp = terminus_schedules[1]
+        assert tmp['display_informations']['direction'] == "Avj2"
+        assert len(tmp['date_times']) == 1
+        assert tmp['date_times'][0]['data_freshness'] == 'base_schedule'
+        assert tmp['date_times'][0]['date_time'] == '20160106T091000'
+
+        tmp = terminus_schedules[2]
+        assert tmp['display_informations']['direction'] == "E"
+        assert tmp['additional_informations'] == 'no_departure_this_day'
+        assert len(tmp['date_times']) == 0
+
+    def test_terminus_schedule_groub_by_destination_base_schedule_2(self):
+        """
+                          01  02  03  04  05  06  07  08  09      Direction
+         Active VJ1 :         *   *   *       *   *       *       AVj1
+         Active VJ2 :         *   *   *   *   *                   AVj2
+         Active VJ3 :         *   *   *   *               *       E
+         Active VJ4 :     *   *   *                               E
+
+        Schema line:          /---------------------------- Avj1
+          E ------------------
+                             \ ---------------------------- Avj2
+        """
+        query = self.query_template_ter.format(
+            sp='C:sp', dt='20160107T0900', data_freshness='&data_freshness=base_schedule', c_dt='20160107T0900'
+        )
+        response = self.query_region(query)
+        is_valid_notes(response["notes"])
+        terminus_schedules = response['terminus_schedules']
+        assert len(terminus_schedules) == 2
+        tmp = terminus_schedules[0]
+        assert tmp['display_informations']['direction'] == "Avj1"
+        assert len(tmp['date_times']) == 1
+        assert tmp['date_times'][0]['data_freshness'] == 'base_schedule'
+        assert tmp['date_times'][0]['date_time'] == '20160107T090000'
+
+        tmp = terminus_schedules[1]
+        assert tmp['display_informations']['direction'] == "E"
+        assert tmp['additional_informations'] == 'no_departure_this_day'
+        assert len(tmp['date_times']) == 0
+
+    def test_terminus_schedule_groub_by_destination_base_schedule_3(self):
+        """
+                          01  02  03  04  05  06  07  08  09      Direction
+         Active VJ1 :         *   *   *       *   *       *       AVj1
+         Active VJ2 :         *   *   *   *   *                   AVj2
+         Active VJ3 :         *   *   *   *               *       E
+         Active VJ4 :     *   *   *                               E
+
+        Schema line:          /---------------------------- Avj1
+          E ------------------
+                             \ ---------------------------- Avj2
+        """
+        query = self.query_template_ter.format(
+            sp='C:sp', dt='20160105T0900', data_freshness='&data_freshness=base_schedule', c_dt='20160105T0900'
+        )
+        response = self.query_region(query)
+        is_valid_notes(response["notes"])
+        terminus_schedules = response['terminus_schedules']
+        assert len(terminus_schedules) == 2
+
+        tmp = terminus_schedules[0]
+        assert tmp['display_informations']['direction'] == "Avj2"
+        assert len(tmp['date_times']) == 1
+        assert tmp['date_times'][0]['data_freshness'] == 'base_schedule'
+        assert tmp['date_times'][0]['date_time'] == '20160105T091000'
+
+        tmp = terminus_schedules[1]
+        assert tmp['display_informations']['direction'] == "E"
+        assert len(tmp['date_times']) == 1
+        assert tmp['date_times'][0]['data_freshness'] == 'base_schedule'
+        assert tmp['date_times'][0]['date_time'] == '20160105T100000'
+
+    def test_terminus_schedule_groub_by_destination_base_schedule_4(self):
+        """
+                          01  02  03  04  05  06  07  08  09      Direction
+         Active VJ1 :         *   *   *       *   *       *       AVj1
+         Active VJ2 :         *   *   *   *   *                   AVj2
+         Active VJ3 :         *   *   *   *               *       E
+         Active VJ4 :     *   *   *                               E
+
+        Schema line:          /---------------------------- Avj1
+          E ------------------
+                             \ ---------------------------- Avj2
+        """
+        query = self.query_template_ter.format(
+            sp='C:sp', dt='20160101T0900', data_freshness='&data_freshness=base_schedule', c_dt='20160101T0900'
+        )
+        response = self.query_region(query)
+        is_valid_notes(response["notes"])
+        terminus_schedules = response['terminus_schedules']
+        assert len(terminus_schedules) == 2
+        tmp = terminus_schedules[0]
+        assert tmp['display_informations']['direction'] == "Avj1"
+        assert tmp['additional_informations'] == 'no_departure_this_day'
+        assert len(tmp['date_times']) == 0
+
+        tmp = terminus_schedules[1]
+        assert tmp['display_informations']['direction'] == "E"
+        assert len(tmp['date_times']) == 1
+        assert tmp['date_times'][0]['data_freshness'] == 'base_schedule'
+        assert tmp['date_times'][0]['date_time'] == '20160101T111000'
+
+    def test_terminus_schedule_groub_by_destination_base_schedule_5(self):
+        """
+                          01  02  03  04  05  06  07  08  09      Direction
+         Active VJ1 :         *   *   *       *   *       *       AVj1
+         Active VJ2 :         *   *   *   *   *                   AVj2
+         Active VJ3 :         *   *   *   *               *       E
+         Active VJ4 :     *   *   *                               E
+
+        Schema line:          /---------------------------- Avj1
+          E ------------------
+                             \ ---------------------------- Avj2
+        """
+        query = self.query_template_ter.format(
+            sp='C:sp', dt='20160108T0900', data_freshness='&data_freshness=base_schedule', c_dt='20160108T0900'
+        )
+        response = self.query_region(query)
+        is_valid_notes(response["notes"])
+        terminus_schedules = response['terminus_schedules']
+        assert len(terminus_schedules) == 2
+        tmp = terminus_schedules[0]
+        assert tmp['display_informations']['direction'] == "Avj1"
+        assert tmp['additional_informations'] == 'no_departure_this_day'
+        assert len(tmp['date_times']) == 0
+
+        tmp = terminus_schedules[1]
+        assert tmp['display_informations']['direction'] == "E"
+        assert tmp['additional_informations'] == 'no_departure_this_day'
+        assert len(tmp['date_times']) == 0
+
+    def test_terminus_schedule_groub_by_destination_base_schedule_active_disruption(self):
+        """
+                          01  02  03  04  05  06  07  08  09      Direction
+         Active VJ1 :         *   *   *       *   *       *       AVj1
+         Active VJ2 :         *   *   *   *   *                   AVj2
+         Active VJ3 :         *   *   *   *               *       E
+         Active VJ4 :     *   *   *                               E
+
+        Schema line:          /---------------------------- Avj1
+          E ------------------
+                             \ ---------------------------- Avj2
+        """
+        query = self.query_template_ter.format(
+            sp='D:sp', dt='20160103T0700', data_freshness='&data_freshness=realtime', c_dt='20160103T0700'
+        )
+        response = self.query_region(query)
+        is_valid_notes(response["notes"])
+        terminus_schedules = response['terminus_schedules']
+        assert len(terminus_schedules) == 2
+        tmp = terminus_schedules[0]
+        assert tmp['display_informations']['direction'] == "Avj1"
+        assert tmp['additional_informations'] == 'active_disruption'
+        assert len(tmp['date_times']) == 0
+
+        tmp = terminus_schedules[1]
+        assert tmp['display_informations']['direction'] == "E"
+        assert tmp['additional_informations'] == 'active_disruption'
+        assert len(tmp['date_times']) == 0
+
+    def test_terminus_schedule_groub_by_destination_real_time_0(self):
         """
         Schema line:         /----------------------------
           ------------------
@@ -562,7 +967,7 @@ class TestDepartures(AbstractTestFixture):
         response = self.query_region(query)
         is_valid_notes(response["notes"])
         terminus_schedules = response['terminus_schedules']
-        assert len(terminus_schedules) == 2
+        assert len(terminus_schedules) == 3
         tmp = terminus_schedules[0]
 
         assert tmp["display_informations"]["direction"] == "Avj1"
@@ -579,6 +984,12 @@ class TestDepartures(AbstractTestFixture):
         assert date_times[0]["date_time"] == "20160102T091352"
         assert date_times[1]["data_freshness"] == 'realtime'
         assert date_times[1]["date_time"] == "20160102T091552"
+
+        tmp = terminus_schedules[2]
+        assert tmp["display_informations"]["direction"] == "E"
+        date_times = tmp['date_times']
+        assert date_times[0]["data_freshness"] == 'realtime'
+        assert date_times[0]["date_time"] == "20160102T092552"
 
     def test_terminus_schedule_groub_by_destination_terminus_partial(self):
         query = self.query_template_ter.format(
@@ -600,3 +1011,42 @@ class TestDepartures(AbstractTestFixture):
         assert date_times[2]["date_time"] == "20160102T091352"
         assert date_times[3]["data_freshness"] == 'realtime'
         assert date_times[3]["date_time"] == "20160102T091552"
+
+    def test_terminus_schedule_groub_by_destination_empty_timeo_response(self):
+        query = self.query_template_ter.format(
+            sp='CC:sp', dt='20160102T0730', data_freshness='&data_freshness=realtime', c_dt='20160102T0730'
+        )
+        response = self.query_region(query)
+        is_valid_notes(response["notes"])
+        terminus_schedules = response['terminus_schedules']
+        assert len(terminus_schedules) == 1
+        tmp = terminus_schedules[0]
+
+        assert tmp["display_informations"]["direction"] == "EE"
+        assert len(tmp['date_times']) == 0
+        assert tmp['additional_informations'] == 'no_departure_this_day'
+
+    def test_terminus_schedule_groub_by_destination_partial_terminus(self):
+        """
+        Schema line:
+                1 line, 2 routes and 2 VJs
+                * Route1, VJ1 : TS_A->TS_B->TS_C->TS_D->TS_E
+                * Route2, VJ2 : TS_A<-TS_B<-TS_C<-TS_D<-TS_E
+            Timeo destination TS_D
+        """
+        query = self.query_template_ter.format(
+            sp='TS_C:sp', dt='20160107T0730', data_freshness='&data_freshness=realtime', c_dt='20160107T0730'
+        )
+        response = self.query_region(query)
+        is_valid_notes(response["notes"])
+        terminus_schedules = response['terminus_schedules']
+        assert len(terminus_schedules) == 2
+        tmp = terminus_schedules[0]
+
+        assert tmp["display_informations"]["direction"] == "TS_E"
+        assert len(tmp['date_times']) == 2
+        assert tmp['date_times'][0]["date_time"] == '20160107T090052'
+        assert tmp['date_times'][0]['data_freshness'] == 'realtime'
+
+        assert tmp['date_times'][1]["date_time"] == '20160107T091052'
+        assert tmp['date_times'][1]['data_freshness'] == 'realtime'
