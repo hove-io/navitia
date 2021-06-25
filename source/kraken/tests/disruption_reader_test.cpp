@@ -54,6 +54,8 @@ struct Const_it {
 
     Const_it() { reinit(); }
 
+    void erase(const std::string& key) { values.erase(key); }
+
     Value operator[](const std::string& key) { return values[key]; }
 
     void reinit() {
@@ -103,6 +105,21 @@ struct Const_it {
                   {"ls_route_uri", Value()},
                   {"ls_route_created_at", Value()},
                   {"ls_route_updated_at", Value()},
+                  {"rs_line_id", Value()},
+                  {"rs_line_uri", Value()},
+                  {"rs_line_created_at", Value()},
+                  {"rs_line_updated_at", Value()},
+                  {"rs_start_uri", Value()},
+                  {"rs_start_created_at", Value()},
+                  {"rs_start_updated_at", Value()},
+                  {"rs_end_uri", Value()},
+                  {"rs_end_created_at", Value()},
+                  {"rs_end_updated_at", Value()},
+                  {"rs_route_id", Value()},
+                  {"rs_route_uri", Value()},
+                  {"rs_route_created_at", Value()},
+                  {"rs_route_updated_at", Value()},
+                  {"rs_blocked_sa", Value()},
                   {"property_key", Value()},
                   {"property_type", Value()},
                   {"property_value", Value()},
@@ -245,6 +262,44 @@ struct Const_it {
         values["ls_route_uri"] = Value(ls_route_uri);
         values["ls_route_created_at"] = Value(ls_route_created_at);
         values["ls_route_updated_at"] = Value(ls_route_updated_at);
+    }
+
+    void set_rail_section(const std::string& rs_line_id,
+                          const std::string& rs_line_uri,
+                          const std::string& rs_line_created_at,
+                          const std::string& rs_line_updated_at,
+                          const std::string& rs_start_uri,
+                          const std::string& rs_start_created_at,
+                          const std::string& rs_start_updated_at,
+                          const std::string& rs_end_uri,
+                          const std::string& rs_end_created_at,
+                          const std::string& rs_end_updated_at,
+                          const std::string& rs_route_id,
+                          const std::string& rs_route_uri,
+                          const std::string& rs_route_created_at,
+                          const std::string& rs_route_updated_at,
+                          const std::string& rs_blocked_sa) {
+        if (rs_line_id != "") {
+            values["rs_line_id"] = Value(rs_line_id);
+            values["rs_line_uri"] = Value(rs_line_uri);
+            values["rs_line_created_at"] = Value(rs_line_created_at);
+            values["rs_line_updated_at"] = Value(rs_line_updated_at);
+        }
+        values["rs_start_uri"] = Value(rs_start_uri);
+        values["rs_start_created_at"] = Value(rs_start_created_at);
+        values["rs_start_updated_at"] = Value(rs_start_updated_at);
+        values["rs_end_uri"] = Value(rs_end_uri);
+        values["rs_end_created_at"] = Value(rs_end_created_at);
+        values["rs_end_updated_at"] = Value(rs_end_updated_at);
+        if (rs_route_id != "") {
+            values["rs_route_id"] = Value(rs_route_id);
+            values["rs_route_uri"] = Value(rs_route_uri);
+            values["rs_route_created_at"] = Value(rs_route_created_at);
+            values["rs_route_updated_at"] = Value(rs_route_updated_at);
+        }
+        if (rs_blocked_sa != "") {
+            values["rs_blocked_sa"] = Value(rs_blocked_sa);
+        }
     }
 
     void set_property(const std::string& key, const std::string& type, const std::string& value) {
@@ -1175,6 +1230,211 @@ BOOST_AUTO_TEST_CASE(disruption_with_line_sections) {
     BOOST_CHECK_EQUAL(route_1.uri(), "ls_r_uri_3");
     route_2 = pt_object.pt_line_section().routes(1);
     BOOST_CHECK_EQUAL(route_2.uri(), "ls_r_uri_4");
+
+    // Check messages, channels and channel_types
+    BOOST_REQUIRE_EQUAL(impact.messages_size(), 3);
+    // Message web
+    auto message = impact.messages(0);
+    BOOST_CHECK_EQUAL(message.text(), "message_text_web");
+    auto channel = message.channel();
+    BOOST_CHECK_EQUAL(channel.name(), "channel_name_web");
+    BOOST_REQUIRE_EQUAL(channel.types_size(), 1);
+    auto channel_type = channel.types(0);
+    BOOST_CHECK_EQUAL(channel_type, chaos::Channel_Type_web);
+
+    // Message mobile
+    message = impact.messages(1);
+    BOOST_CHECK_EQUAL(message.text(), "message_text_mobile");
+    channel = message.channel();
+    BOOST_CHECK_EQUAL(channel.name(), "channel_name_mobile");
+    BOOST_REQUIRE_EQUAL(channel.types_size(), 1);
+    channel_type = channel.types(0);
+    BOOST_CHECK_EQUAL(channel_type, chaos::Channel_Type_mobile);
+
+    // Message notification
+    message = impact.messages(2);
+    BOOST_CHECK_EQUAL(message.text(), "message_text_notification");
+    channel = message.channel();
+    BOOST_CHECK_EQUAL(channel.name(), "channel_name_notification");
+    BOOST_REQUIRE_EQUAL(channel.types_size(), 1);
+    channel_type = channel.types(0);
+    BOOST_CHECK_EQUAL(channel_type, chaos::Channel_Type_notification);
+}
+
+BOOST_AUTO_TEST_CASE(disruption_with_rail_sections) {
+    navitia::type::PT_Data pt_data;
+    navitia::type::MetaData meta;
+    navitia::DisruptionDatabaseReader reader(pt_data, meta);
+
+    Const_it const_it;
+    const_it.set_disruption("1", "22", "33", "44", "55", "note", "reference");
+    const_it.set_cause("1", "wording", "11", "22");
+    const_it.set_tag("1", "name", "11", "22");
+    const_it.set_impact("1", "11", "22");
+    const_it.set_severity("2", "wording", "22", "33", "blocking", "color", "2");
+    const_it.set_application_period("0", "1", "2");
+
+    // Add a rail section with a line, start stop_area, end stop_area and two routes
+    const_it.set_ptobject("id_1", "uri_1", "rail_section", "1", "2");
+    const_it.set_rail_section("rs_id_1", "rs_uri_1", "1", "2", "rs_start_uri_1", "1", "2", "rs_end_uri_1", "1", "2",
+                              "rs_r_id_1", "rs_r_uri_1", "1", "2",
+                              R"([{"id" : "rs_start_uri_1", "order" : 1}, {"id" : "rs_end_uri_1", "order" : 3}])");
+    reader(const_it);
+    const_it.set_rail_section("rs_id_1", "rs_uri_1", "1", "2", "rs_start_uri_1", "1", "2", "rs_end_uri_1", "1", "2",
+                              "rs_r_id_2", "rs_r_uri_2", "1", "2",
+                              R"([{"id" : "rs_start_uri_1", "order" : 1}, {"id" : "rs_end_uri_1", "order" : 3}])");
+    reader(const_it);
+    // We try to add a duplicate route in line_section but wont be added.
+    const_it.set_rail_section("rs_id_1", "rs_uri_1", "1", "2", "rs_start_uri_1", "1", "2", "rs_end_uri_1", "1", "2",
+                              "rs_r_id_2", "rs_r_uri_2", "1", "2",
+                              R"([{"id" : "rs_start_uri_1", "order" : 1}, {"id" : "rs_end_uri_1", "order" : 3}])");
+    reader(const_it);
+
+    // First combination of message, channel and channel_type with duplicate values
+    const_it.set_message("m_id_1", "message_text_web", "1", "2");
+    const_it.set_channel("channel_id", "channel_name_web", "type", "400", "1", "2");
+    const_it.set_channel_type("id_1", "web");
+    reader(const_it);
+
+    // Second combination of message, channel and channel_type with duplicate values
+    const_it.set_message("m_id_2", "message_text_mobile", "1", "2");
+    const_it.set_channel("channel_id_2", "channel_name_mobile", "type", "400", "1", "2");
+    const_it.set_channel_type("id_2", "mobile");
+    reader(const_it);
+
+    // Third combination of message, channel and channel_type with duplicate values
+    const_it.set_message("m_id_3", "message_text_notification", "1", "2");
+    const_it.set_channel("channel_id_3", "channel_name_notification", "type", "400", "1", "2");
+    const_it.set_channel_type("id_3", "notification");
+    reader(const_it);
+
+    const_it.set_message("m_id_3", "message_text_notification", "1", "2");
+    const_it.set_channel("channel_id_3", "channel_name_notification", "type", "400", "1", "2");
+    const_it.set_channel_type("id_3", "notification");
+    reader(const_it);
+
+    // Add another rail section with a line, start stop_area, end stop_area and two routes
+    const_it.set_ptobject("id_2", "uri_2", "rail_section", "1", "2");
+    const_it.set_rail_section("rs_id_2", "rs_uri_2", "1", "2", "rs_start_uri_2", "1", "2", "rs_end_uri_2", "1", "2",
+                              "rs_r_id_3", "rs_r_uri_3", "1", "2",
+                              R"([{"id" : "rs_end_uri_2", "order" : 4}, {"id" : "rs_start_uri_2", "order" : 1}])");
+    reader(const_it);
+    const_it.set_rail_section("rs_id_2", "rs_uri_2", "1", "2", "rs_start_uri_2", "1", "2", "rs_end_uri_2", "1", "2",
+                              "rs_r_id_4", "rs_r_uri_4", "1", "2",
+                              R"([{"id" : "rs_end_uri_2", "order" : 4}, {"id" : "rs_start_uri_2", "order" : 1}])");
+    reader(const_it);
+
+    // Add another rail section with a line, start stop_area, end stop_area and without routes
+    const_it.erase("rs_line_id");
+    const_it.erase("rs_route_id");
+    const_it.erase("rs_blocked_sa");
+    const_it.set_ptobject("id_3", "uri_3", "rail_section", "1", "2");
+    const_it.set_rail_section("rs_id_3", "rs_uri_3", "1", "2", "rs_start_uri_3", "1", "2", "rs_end_uri_3", "1", "2", "",
+                              "", "", "", "");
+    reader(const_it);
+
+    // Add another rail section without a line but with start stop_area, end stop_area and 2 routes
+    const_it.erase("rs_line_id");
+    const_it.erase("rs_route_id");
+    const_it.set_ptobject("id_4", "uri_4", "rail_section", "1", "2");
+    const_it.set_rail_section("", "", "", "", "rs_start_uri_4", "1", "2", "rs_end_uri_4", "1", "2", "rs_r_id_5",
+                              "rs_r_uri_5", "1", "2",
+                              R"([{"id" : "rs_start_uri_4", "order" : 0}, {"id" : "rs_end_uri_4", "order" : 1}])");
+    reader(const_it);
+    const_it.set_rail_section("", "", "", "", "rs_start_uri_4", "1", "2", "rs_end_uri_4", "1", "2", "rs_r_id_6",
+                              "rs_r_uri_6", "1", "2",
+                              R"([{"id" : "rs_start_uri_4", "order" : 0}, {"id" : "rs_end_uri_4", "order" : 1}])");
+    reader(const_it);
+
+    const auto& disruption = reader.disruption;
+    BOOST_CHECK_EQUAL(disruption->id(), "1");
+    auto cause = disruption->cause();
+    BOOST_CHECK_EQUAL(cause.id(), "1");
+    BOOST_CHECK_EQUAL(disruption->tags_size(), 1);
+    BOOST_REQUIRE_EQUAL(disruption->impacts_size(), 1);
+    auto impact = disruption->impacts(0);
+    BOOST_CHECK_EQUAL(impact.id(), "1");
+    auto severity = impact.severity();
+    BOOST_CHECK_EQUAL(severity.id(), "2");
+    BOOST_CHECK_EQUAL(impact.application_periods_size(), 1);
+    BOOST_REQUIRE_EQUAL(impact.informed_entities_size(), 4);
+
+    // First impacted_object
+    auto pt_object = impact.informed_entities(0);
+    BOOST_CHECK_EQUAL(pt_object.pt_object_type(), chaos::PtObject_Type_rail_section);
+    auto line = pt_object.pt_rail_section().line();
+    BOOST_CHECK_EQUAL(line.uri(), "rs_uri_1");
+    auto start_sa = pt_object.pt_rail_section().start_point();
+    BOOST_CHECK_EQUAL(start_sa.uri(), "rs_start_uri_1");
+    auto end_sa = pt_object.pt_rail_section().end_point();
+    BOOST_CHECK_EQUAL(end_sa.uri(), "rs_end_uri_1");
+    BOOST_REQUIRE_EQUAL(pt_object.pt_rail_section().routes_size(), 2);
+    auto route_1 = pt_object.pt_rail_section().routes(0);
+    BOOST_CHECK_EQUAL(route_1.uri(), "rs_r_uri_1");
+    auto route_2 = pt_object.pt_rail_section().routes(1);
+    BOOST_CHECK_EQUAL(route_2.uri(), "rs_r_uri_2");
+    BOOST_REQUIRE_EQUAL(pt_object.pt_rail_section().blocked_stop_areas_size(), 2);
+    auto blocked_sa_1 = pt_object.pt_rail_section().blocked_stop_areas(0);
+    BOOST_CHECK_EQUAL(blocked_sa_1.uri(), "rs_start_uri_1");
+    BOOST_CHECK_EQUAL(blocked_sa_1.order(), 1);
+    auto blocked_sa_2 = pt_object.pt_rail_section().blocked_stop_areas(1);
+    BOOST_CHECK_EQUAL(blocked_sa_2.uri(), "rs_end_uri_1");
+    BOOST_CHECK_EQUAL(blocked_sa_2.order(), 3);
+
+    // second impacted_object
+    pt_object = impact.informed_entities(1);
+    BOOST_CHECK_EQUAL(pt_object.pt_object_type(), chaos::PtObject_Type_rail_section);
+    line = pt_object.pt_rail_section().line();
+    BOOST_CHECK_EQUAL(line.uri(), "rs_uri_2");
+    start_sa = pt_object.pt_rail_section().start_point();
+    BOOST_CHECK_EQUAL(start_sa.uri(), "rs_start_uri_2");
+    end_sa = pt_object.pt_rail_section().end_point();
+    BOOST_CHECK_EQUAL(end_sa.uri(), "rs_end_uri_2");
+    BOOST_REQUIRE_EQUAL(pt_object.pt_rail_section().routes_size(), 2);
+    route_1 = pt_object.pt_rail_section().routes(0);
+    BOOST_CHECK_EQUAL(route_1.uri(), "rs_r_uri_3");
+    route_2 = pt_object.pt_rail_section().routes(1);
+    BOOST_CHECK_EQUAL(route_2.uri(), "rs_r_uri_4");
+    BOOST_REQUIRE_EQUAL(pt_object.pt_rail_section().blocked_stop_areas_size(), 2);
+    blocked_sa_1 = pt_object.pt_rail_section().blocked_stop_areas(0);
+    BOOST_CHECK_EQUAL(blocked_sa_1.uri(), "rs_end_uri_2");
+    BOOST_CHECK_EQUAL(blocked_sa_1.order(), 4);
+    blocked_sa_2 = pt_object.pt_rail_section().blocked_stop_areas(1);
+    BOOST_CHECK_EQUAL(blocked_sa_2.uri(), "rs_start_uri_2");
+    BOOST_CHECK_EQUAL(blocked_sa_2.order(), 1);
+
+    // third impacted_object
+    pt_object = impact.informed_entities(2);
+    BOOST_CHECK_EQUAL(pt_object.pt_object_type(), chaos::PtObject_Type_rail_section);
+    line = pt_object.pt_rail_section().line();
+    BOOST_CHECK_EQUAL(line.uri(), "rs_uri_3");
+    start_sa = pt_object.pt_rail_section().start_point();
+    BOOST_CHECK_EQUAL(start_sa.uri(), "rs_start_uri_3");
+    end_sa = pt_object.pt_rail_section().end_point();
+    BOOST_CHECK_EQUAL(end_sa.uri(), "rs_end_uri_3");
+    BOOST_REQUIRE_EQUAL(pt_object.pt_rail_section().routes_size(), 0);
+    BOOST_REQUIRE_EQUAL(pt_object.pt_rail_section().blocked_stop_areas_size(), 0);
+
+    // fourth impacted_object
+    pt_object = impact.informed_entities(3);
+    BOOST_CHECK_EQUAL(pt_object.pt_object_type(), chaos::PtObject_Type_rail_section);
+    BOOST_CHECK_EQUAL(pt_object.pt_rail_section().has_line(), false);
+    start_sa = pt_object.pt_rail_section().start_point();
+    BOOST_CHECK_EQUAL(start_sa.uri(), "rs_start_uri_4");
+    end_sa = pt_object.pt_rail_section().end_point();
+    BOOST_CHECK_EQUAL(end_sa.uri(), "rs_end_uri_4");
+    BOOST_REQUIRE_EQUAL(pt_object.pt_rail_section().routes_size(), 2);
+    route_1 = pt_object.pt_rail_section().routes(0);
+    BOOST_CHECK_EQUAL(route_1.uri(), "rs_r_uri_5");
+    route_2 = pt_object.pt_rail_section().routes(1);
+    BOOST_CHECK_EQUAL(route_2.uri(), "rs_r_uri_6");
+    BOOST_REQUIRE_EQUAL(pt_object.pt_rail_section().blocked_stop_areas_size(), 2);
+    blocked_sa_1 = pt_object.pt_rail_section().blocked_stop_areas(0);
+    BOOST_CHECK_EQUAL(blocked_sa_1.uri(), "rs_start_uri_4");
+    BOOST_CHECK_EQUAL(blocked_sa_1.order(), 0);
+    blocked_sa_2 = pt_object.pt_rail_section().blocked_stop_areas(1);
+    BOOST_CHECK_EQUAL(blocked_sa_2.uri(), "rs_end_uri_4");
+    BOOST_CHECK_EQUAL(blocked_sa_2.order(), 1);
 
     // Check messages, channels and channel_types
     BOOST_REQUIRE_EQUAL(impact.messages_size(), 3);

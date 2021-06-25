@@ -35,6 +35,7 @@ www.navitia.io
 #include "make_disruption_from_chaos.h"
 
 #include <pqxx/result.hxx>
+#include <boost/property_tree/json_parser.hpp>
 
 #include <string>
 #include <memory>
@@ -82,6 +83,7 @@ struct DisruptionDatabaseReader {
     std::set<std::string> pattern_ids;
     std::set<std::string> time_slot_ids;
     std::set<std::tuple<std::string, std::string>> line_section_route_set;
+    std::set<std::tuple<std::string, std::string>> rail_section_route_set;
     type::PT_Data& pt_data;
     const type::MetaData& meta;
     ChaosDisruptionApplier disruption_callback;
@@ -112,6 +114,7 @@ struct DisruptionDatabaseReader {
             message_ids.clear();
             application_periods_ids.clear();
             line_section_route_set.clear();
+            rail_section_route_set.clear();
             pattern = nullptr;
             pattern_ids.clear();
             time_slot_ids.clear();
@@ -172,6 +175,16 @@ struct DisruptionDatabaseReader {
             if (!line_section_route_set.count(line_section_route)) {
                 fill_associate_route(const_it, pt_object);
                 line_section_route_set.insert(line_section_route);
+            }
+        }
+
+        if (impact && !const_it["rs_route_uri"].is_null()) {
+            std::tuple<std::string, std::string> rail_section_route(
+                const_it["ptobject_uri"].template as<std::string>(),
+                const_it["rs_route_uri"].template as<std::string>());
+            if (!rail_section_route_set.count(rail_section_route)) {
+                fill_associate_route(const_it, pt_object);
+                rail_section_route_set.insert(rail_section_route);
             }
         }
 
@@ -325,6 +338,27 @@ struct DisruptionDatabaseReader {
                 FILL_NULLABLE(ls_end, updated_at, uint64_t)
                 FILL_REQUIRED(ls_end, created_at, uint64_t)
                 FILL_NULLABLE(ls_end, uri, std::string)
+            } else if (type_ == "rail_section") {
+                ptobject->set_pt_object_type(chaos::PtObject_Type_rail_section);
+                auto* rs = ptobject->mutable_pt_rail_section();
+                fill_blocked_stop_area(const_it, rs);
+                if (!const_it["rs_line_id"].is_null()) {
+                    auto* rs_line = rs->mutable_line();
+                    rs_line->set_pt_object_type(chaos::PtObject_Type_line);
+                    FILL_NULLABLE(rs_line, updated_at, uint64_t)
+                    FILL_REQUIRED(rs_line, created_at, uint64_t)
+                    FILL_NULLABLE(rs_line, uri, std::string)
+                }
+                auto* rs_start = rs->mutable_start_point();
+                rs_start->set_pt_object_type(chaos::PtObject_Type_stop_area);
+                FILL_NULLABLE(rs_start, updated_at, uint64_t)
+                FILL_REQUIRED(rs_start, created_at, uint64_t)
+                FILL_NULLABLE(rs_start, uri, std::string)
+                auto* rs_end = rs->mutable_end_point();
+                rs_end->set_pt_object_type(chaos::PtObject_Type_stop_area);
+                FILL_NULLABLE(rs_end, updated_at, uint64_t)
+                FILL_REQUIRED(rs_end, created_at, uint64_t)
+                FILL_NULLABLE(rs_end, uri, std::string)
             } else {
                 ptobject->set_pt_object_type(chaos::PtObject_Type_unkown_type);
             }
@@ -343,6 +377,30 @@ struct DisruptionDatabaseReader {
                     FILL_REQUIRED(ls_route, created_at, uint64_t)
                     FILL_NULLABLE(ls_route, uri, std::string)
                 }
+            } else if (type_ == "rail_section") {
+                if (!const_it["rs_route_id"].is_null()) {
+                    auto* rs_route = ptobject->mutable_pt_rail_section()->add_routes();
+                    rs_route->set_pt_object_type(chaos::PtObject_Type_route);
+                    FILL_NULLABLE(rs_route, updated_at, uint64_t)
+                    FILL_REQUIRED(rs_route, created_at, uint64_t)
+                    FILL_NULLABLE(rs_route, uri, std::string)
+                }
+            }
+        }
+    }
+
+    template <typename T>
+    void fill_blocked_stop_area(T const_it, chaos::RailSection* rail_section) {
+        if (!const_it["rs_blocked_sa"].is_null()) {
+            auto json_blocked_sa = const_it["rs_blocked_sa"].template as<std::string>();
+            std::stringstream ss;
+            ss << json_blocked_sa;
+            boost::property_tree::ptree pt;
+            boost::property_tree::read_json(ss, pt);
+            for (const auto& it : pt) {
+                auto* ordered_pt = rail_section->add_blocked_stop_areas();
+                ordered_pt->set_uri(it.second.get_child("id").get_value<std::string>());
+                ordered_pt->set_order(it.second.get_child("order").get_value<uint32_t>());
             }
         }
     }
