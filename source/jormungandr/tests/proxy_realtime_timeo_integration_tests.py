@@ -61,6 +61,38 @@ class MockTimeo(Timeo):
         resp = Obj()
         resp.status_code = 200
         json = {}
+        if url == 'TS_C:sp':
+            json = {
+                "CorrelationID": "AA",
+                "StopTimesResponse": [
+                    {
+                        "StopID": "BB:sp",
+                        "StopTimeoCode": "AAAAA",
+                        "StopLongName": "Malraux",
+                        "StopShortName": "Malraux",
+                        "StopVocalName": "Malraux",
+                        "ReferenceTime": "09:54:53",
+                        "NextStopTimesMessage": {
+                            "LineID": "AAA",
+                            "Way": "A",
+                            "LineMainDirection": "DIRECTION AA",
+                            "NextExpectedStopTime": [
+                                {
+                                    "NextStop": "10:00:52",
+                                    "Destination": "DIRECTION AA",
+                                    "TerminusSAECode": "TS_D",
+                                },
+                                {
+                                    "NextStop": "10:10:52",
+                                    "Destination": "DIRECTION AA",
+                                    "TerminusSAECode": "TS_D",
+                                },
+                            ],
+                        },
+                    }
+                ],
+                "MessageResponse": [{"ResponseCode": 0, "ResponseComment": "success"}],
+            }
         if url == "CC:sp":
             json = {
                 "CorrelationID": "AA",
@@ -592,7 +624,7 @@ class TestDepartures(AbstractTestFixture):
         terminus_schedules = response['terminus_schedules']
         assert len(terminus_schedules) == 2
         ts = terminus_schedules[0]
-        assert ts['display_informations']['direction'] == 'TS_D'
+        assert ts['display_informations']['direction'] == 'TS_E'
         date_times = ts['date_times']
         assert len(date_times) == 1
         stop_time = date_times[0]
@@ -625,7 +657,7 @@ class TestDepartures(AbstractTestFixture):
         assert len(terminus_schedules) == 2
         ts = terminus_schedules[0]
         assert ts['additional_informations'] == 'no_departure_this_day'
-        assert ts['display_informations']['direction'] == 'TS_D'
+        assert ts['display_informations']['direction'] == 'TS_E'
         assert len(ts['date_times']) == 0
 
         ts = terminus_schedules[1]
@@ -685,7 +717,7 @@ class TestDepartures(AbstractTestFixture):
         terminus_schedules = response['terminus_schedules']
         assert len(terminus_schedules) == 2
         ts = terminus_schedules[0]
-        assert ts['display_informations']['direction'] == 'TS_D'
+        assert ts['display_informations']['direction'] == 'TS_E'
         assert len(ts['date_times']) == 1
         stop_time = ts['date_times'][0]
         assert stop_time['data_freshness'] == 'base_schedule'
@@ -993,3 +1025,28 @@ class TestDepartures(AbstractTestFixture):
         assert tmp["display_informations"]["direction"] == "EE"
         assert len(tmp['date_times']) == 0
         assert tmp['additional_informations'] == 'no_departure_this_day'
+
+    def test_terminus_schedule_groub_by_destination_partial_terminus(self):
+        """
+        Schema line:
+                1 line, 2 routes and 2 VJs
+                * Route1, VJ1 : TS_A->TS_B->TS_C->TS_D->TS_E
+                * Route2, VJ2 : TS_A<-TS_B<-TS_C<-TS_D<-TS_E
+            Timeo destination TS_D
+        """
+        query = self.query_template_ter.format(
+            sp='TS_C:sp', dt='20160107T0730', data_freshness='&data_freshness=realtime', c_dt='20160107T0730'
+        )
+        response = self.query_region(query)
+        is_valid_notes(response["notes"])
+        terminus_schedules = response['terminus_schedules']
+        assert len(terminus_schedules) == 2
+        tmp = terminus_schedules[0]
+
+        assert tmp["display_informations"]["direction"] == "TS_E"
+        assert len(tmp['date_times']) == 2
+        assert tmp['date_times'][0]["date_time"] == '20160107T090052'
+        assert tmp['date_times'][0]['data_freshness'] == 'realtime'
+
+        assert tmp['date_times'][1]["date_time"] == '20160107T091052'
+        assert tmp['date_times'][1]['data_freshness'] == 'realtime'

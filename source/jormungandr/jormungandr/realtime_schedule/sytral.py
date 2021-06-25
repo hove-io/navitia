@@ -161,7 +161,9 @@ class Sytral(RealtimeProxy):
             direction = self._get_direction(
                 line_uri=line_uri, object_code=next_expected_st.get('direction'), default_value=direction_name
             )
-            next_passage = RealTimePassage(dt, direction_name, is_real_time, direction.uri)
+            next_passage = RealTimePassage(
+                dt, direction_name, is_real_time, direction.uri, way=next_expected_st.get('direction_type')
+            )
             next_passages.append(next_passage)
 
         return next_passages

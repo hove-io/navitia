@@ -154,8 +154,8 @@ struct departure_board_fixture {
 
                 // Terminus_schedule
                 // 1 line, 2 routes and 2 VJs
-                // * Route1, VJ1 : TS_A->TS_B->TS_C->TS_D
-                // * Route2, VJ2 : TS_A<-TS_B<-TS_C<-TS_D
+                // * Route1, VJ1 : TS_A->TS_B->TS_C->TS_D->TS_E
+                // * Route2, VJ2 : TS_A<-TS_B<-TS_C<-TS_D<-TS_E
 
                 // Active only, VJ1 : 04/01/2016, VJ2: 03/01/2016 and VJ1, VJ2: 07/01/2016
 
@@ -163,21 +163,28 @@ struct departure_board_fixture {
                 b.sa("TS_B", 0., 0., false)("TS_B:sp");
                 b.sa("TS_C", 0., 0., false)("TS_C:sp");
                 b.sa("TS_D", 0., 0., false)("TS_D:sp");
+                b.sa("TS_E", 0., 0., false)("TS_E:sp");
 
                 b.vj("Line3", "001001000")
                     .route("TS_Route1")
-                    .name("TS_AVJ1")("TS_A:sp", "07:45"_t)("TS_B:sp", "08:00"_t)("TS_C:sp", "09:00"_t)("TS_D:sp",
-                                                                                                       "10:00"_t);
+                    .name("TS_AVJ1")("TS_A:sp", "07:45"_t)("TS_B:sp", "08:00"_t)("TS_C:sp", "09:00"_t)(
+                        "TS_D:sp", "10:00"_t)("TS_E:sp", "10:10"_t);
                 b.vj("Line3", "001000100")
                     .route("TS_Route2")
-                    .name("TS_AVJ2")("TS_D:sp", "09:00"_t)("TS_C:sp", "09:10"_t)("TS_B:sp", "10:10"_t)("TS_A:sp",
-                                                                                                       "11:10"_t);
+                    .name("TS_AVJ2")("TS_D:sp", "08:45"_t)("TS_D:sp", "09:00"_t)("TS_C:sp", "09:10"_t)(
+                        "TS_B:sp", "10:10"_t)("TS_A:sp", "11:10"_t);
 
                 b.lines.find("Line3")->second->properties["realtime_system"] = "Kisio数字";
                 b.lines.find("Line3")->second->opening_time =
                     boost::make_optional(boost::posix_time::duration_from_string("06:00"));
                 b.lines.find("Line3")->second->closing_time =
                     boost::make_optional(boost::posix_time::duration_from_string("14:00"));
+                // Timeo R
+                auto it_rt = b.data->pt_data->routes_map.find("TS_Route1");
+                it_rt->second->direction_type = "backward";
+                // Timeo A
+                it_rt = b.data->pt_data->routes_map.find("TS_Route1");
+                it_rt->second->direction_type = "forward";
 
                 auto* ad = new navitia::georef::Admin();
                 ad->name = "Quimper";

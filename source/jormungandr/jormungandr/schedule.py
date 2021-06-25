@@ -64,11 +64,12 @@ def get_realtime_system_code(route_point):
 
 
 class RealTimePassage(object):
-    def __init__(self, datetime, direction=None, is_real_time=True, direction_uri=None):
+    def __init__(self, datetime, direction=None, is_real_time=True, direction_uri=None, way=None):
         self.datetime = datetime
         self.direction = direction
         self.direction_uri = direction_uri
         self.is_real_time = is_real_time
+        self.way = way
 
 
 def _create_template_from_passage(passage):

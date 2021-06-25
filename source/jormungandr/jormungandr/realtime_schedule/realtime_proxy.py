@@ -159,6 +159,27 @@ class RealtimeProxy(six.with_metaclass(ABCMeta, object)):
     def _is_valid_direction(self, direction_uri, passage_direction_uri):
         return True
 
+    def _add_datetime(self, stop_schedule, passage):
+        new_dt = stop_schedule.date_times.add()
+        # the midnight is calculated from passage.datetime and it keeps the same timezone as passage.datetime
+        midnight = passage.datetime.replace(hour=0, minute=0, second=0, microsecond=0)
+        time = (passage.datetime - midnight).total_seconds()
+        new_dt.time = int(time)
+        new_dt.date = date_to_timestamp(midnight)
+
+        if passage.is_real_time:
+            new_dt.realtime_level = type_pb2.REALTIME
+        else:
+            new_dt.realtime_level = type_pb2.BASE_SCHEDULE
+
+        # we also add the direction in the note
+        if passage.direction:
+            note = type_pb2.Note()
+            note.note = passage.direction
+            note_uri = hashlib.md5(note.note.encode('utf-8', 'backslashreplace')).hexdigest()
+            note.uri = 'note:{md5}'.format(md5=note_uri)  # the id is a md5 of the direction to factorize them
+            new_dt.properties.notes.extend([note])
+
     def _update_stop_schedule(self, stop_schedule, next_realtime_passages, groub_by_dest=False):
         """
         Update the stopschedule response with the new realtime passages
@@ -179,31 +200,27 @@ class RealtimeProxy(six.with_metaclass(ABCMeta, object)):
         # we clean up the old schedule
         pb_del_if(stop_schedule.date_times, self._filter_base_stop_schedule)
         direction_uri = stop_schedule.pt_display_informations.uris.stop_area
-
+        not_attached = list()
         for passage in next_realtime_passages:
             if groub_by_dest and not self._is_valid_direction(direction_uri, passage.direction_uri):
+                not_attached.append(passage)
                 continue
-            new_dt = stop_schedule.date_times.add()
-            # the midnight is calculated from passage.datetime and it keeps the same timezone as passage.datetime
-            midnight = passage.datetime.replace(hour=0, minute=0, second=0, microsecond=0)
-            time = (passage.datetime - midnight).total_seconds()
-            new_dt.time = int(time)
-            new_dt.date = date_to_timestamp(midnight)
+            self._add_datetime(stop_schedule, passage)
 
-            if passage.is_real_time:
-                new_dt.realtime_level = type_pb2.REALTIME
-            else:
-                new_dt.realtime_level = type_pb2.BASE_SCHEDULE
+        # Build attached next_passages
+        if (
+            groub_by_dest
+            and not_attached
+            and stop_schedule.HasField("route")
+            and stop_schedule.route.HasField("direction_type")
+        ):
+            direction_type = stop_schedule.route.direction_type
+            for passage in not_attached:
+                if not passage.way:
+                    continue
+                if direction_type == passage.way:
+                    self._add_datetime(stop_schedule, passage)
 
-            # we also add the direction in the note
-            if passage.direction:
-                note = type_pb2.Note()
-                note.note = passage.direction
-                note_uri = hashlib.md5(note.note.encode('utf-8', 'backslashreplace')).hexdigest()
-                note.uri = 'note:{md5}'.format(
-                    md5=note_uri
-                )  # the id is a md5 of the direction to factorize them
-                new_dt.properties.notes.extend([note])
         stop_schedule.date_times.sort(key=lambda dt: dt.date + dt.time)
         if not len(stop_schedule.date_times) and not stop_schedule.HasField('response_status'):
             stop_schedule.response_status = type_pb2.no_departure_this_day
