@@ -119,6 +119,7 @@ struct Const_it {
                   {"rs_route_uri", Value()},
                   {"rs_route_created_at", Value()},
                   {"rs_route_updated_at", Value()},
+                  {"rs_blocked_sa", Value()},
                   {"property_key", Value()},
                   {"property_type", Value()},
                   {"property_value", Value()},
@@ -276,7 +277,8 @@ struct Const_it {
                           const std::string& rs_route_id,
                           const std::string& rs_route_uri,
                           const std::string& rs_route_created_at,
-                          const std::string& rs_route_updated_at) {
+                          const std::string& rs_route_updated_at,
+                          const std::string& rs_blocked_sa) {
         if (rs_line_id != "") {
             values["rs_line_id"] = Value(rs_line_id);
             values["rs_line_uri"] = Value(rs_line_uri);
@@ -294,6 +296,9 @@ struct Const_it {
             values["rs_route_uri"] = Value(rs_route_uri);
             values["rs_route_created_at"] = Value(rs_route_created_at);
             values["rs_route_updated_at"] = Value(rs_route_updated_at);
+        }
+        if (rs_blocked_sa != "") {
+            values["rs_blocked_sa"] = Value(rs_blocked_sa);
         }
     }
 
@@ -1272,14 +1277,17 @@ BOOST_AUTO_TEST_CASE(disruption_with_rail_sections) {
     // Add a rail section with a line, start stop_area, end stop_area and two routes
     const_it.set_ptobject("id_1", "uri_1", "rail_section", "1", "2");
     const_it.set_rail_section("rs_id_1", "rs_uri_1", "1", "2", "rs_start_uri_1", "1", "2", "rs_end_uri_1", "1", "2",
-                              "rs_r_id_1", "rs_r_uri_1", "1", "2");
+                              "rs_r_id_1", "rs_r_uri_1", "1", "2",
+                              R"([{"id" : "rs_start_uri_1", "order" : 1}, {"id" : "rs_end_uri_1", "order" : 3}])");
     reader(const_it);
     const_it.set_rail_section("rs_id_1", "rs_uri_1", "1", "2", "rs_start_uri_1", "1", "2", "rs_end_uri_1", "1", "2",
-                              "rs_r_id_2", "rs_r_uri_2", "1", "2");
+                              "rs_r_id_2", "rs_r_uri_2", "1", "2",
+                              R"([{"id" : "rs_start_uri_1", "order" : 1}, {"id" : "rs_end_uri_1", "order" : 3}])");
     reader(const_it);
     // We try to add a duplicate route in line_section but wont be added.
     const_it.set_rail_section("rs_id_1", "rs_uri_1", "1", "2", "rs_start_uri_1", "1", "2", "rs_end_uri_1", "1", "2",
-                              "rs_r_id_2", "rs_r_uri_2", "1", "2");
+                              "rs_r_id_2", "rs_r_uri_2", "1", "2",
+                              R"([{"id" : "rs_start_uri_1", "order" : 1}, {"id" : "rs_end_uri_1", "order" : 3}])");
     reader(const_it);
 
     // First combination of message, channel and channel_type with duplicate values
@@ -1308,18 +1316,21 @@ BOOST_AUTO_TEST_CASE(disruption_with_rail_sections) {
     // Add another rail section with a line, start stop_area, end stop_area and two routes
     const_it.set_ptobject("id_2", "uri_2", "rail_section", "1", "2");
     const_it.set_rail_section("rs_id_2", "rs_uri_2", "1", "2", "rs_start_uri_2", "1", "2", "rs_end_uri_2", "1", "2",
-                              "rs_r_id_3", "rs_r_uri_3", "1", "2");
+                              "rs_r_id_3", "rs_r_uri_3", "1", "2",
+                              R"([{"id" : "rs_end_uri_2", "order" : 4}, {"id" : "rs_start_uri_2", "order" : 1}])");
     reader(const_it);
     const_it.set_rail_section("rs_id_2", "rs_uri_2", "1", "2", "rs_start_uri_2", "1", "2", "rs_end_uri_2", "1", "2",
-                              "rs_r_id_4", "rs_r_uri_4", "1", "2");
+                              "rs_r_id_4", "rs_r_uri_4", "1", "2",
+                              R"([{"id" : "rs_end_uri_2", "order" : 4}, {"id" : "rs_start_uri_2", "order" : 1}])");
     reader(const_it);
 
     // Add another rail section with a line, start stop_area, end stop_area and without routes
     const_it.erase("rs_line_id");
     const_it.erase("rs_route_id");
+    const_it.erase("rs_blocked_sa");
     const_it.set_ptobject("id_3", "uri_3", "rail_section", "1", "2");
     const_it.set_rail_section("rs_id_3", "rs_uri_3", "1", "2", "rs_start_uri_3", "1", "2", "rs_end_uri_3", "1", "2", "",
-                              "", "", "");
+                              "", "", "", "");
     reader(const_it);
 
     // Add another rail section without a line but with start stop_area, end stop_area and 2 routes
@@ -1327,10 +1338,12 @@ BOOST_AUTO_TEST_CASE(disruption_with_rail_sections) {
     const_it.erase("rs_route_id");
     const_it.set_ptobject("id_4", "uri_4", "rail_section", "1", "2");
     const_it.set_rail_section("", "", "", "", "rs_start_uri_4", "1", "2", "rs_end_uri_4", "1", "2", "rs_r_id_5",
-                              "rs_r_uri_5", "1", "2");
+                              "rs_r_uri_5", "1", "2",
+                              R"([{"id" : "rs_start_uri_4", "order" : 0}, {"id" : "rs_end_uri_4", "order" : 1}])");
     reader(const_it);
     const_it.set_rail_section("", "", "", "", "rs_start_uri_4", "1", "2", "rs_end_uri_4", "1", "2", "rs_r_id_6",
-                              "rs_r_uri_6", "1", "2");
+                              "rs_r_uri_6", "1", "2",
+                              R"([{"id" : "rs_start_uri_4", "order" : 0}, {"id" : "rs_end_uri_4", "order" : 1}])");
     reader(const_it);
 
     const auto& disruption = reader.disruption;
@@ -1360,6 +1373,13 @@ BOOST_AUTO_TEST_CASE(disruption_with_rail_sections) {
     BOOST_CHECK_EQUAL(route_1.uri(), "rs_r_uri_1");
     auto route_2 = pt_object.pt_rail_section().routes(1);
     BOOST_CHECK_EQUAL(route_2.uri(), "rs_r_uri_2");
+    BOOST_REQUIRE_EQUAL(pt_object.pt_rail_section().blocked_stop_areas_size(), 2);
+    auto blocked_sa_1 = pt_object.pt_rail_section().blocked_stop_areas(0);
+    BOOST_CHECK_EQUAL(blocked_sa_1.uri(), "rs_start_uri_1");
+    BOOST_CHECK_EQUAL(blocked_sa_1.order(), 1);
+    auto blocked_sa_2 = pt_object.pt_rail_section().blocked_stop_areas(1);
+    BOOST_CHECK_EQUAL(blocked_sa_2.uri(), "rs_end_uri_1");
+    BOOST_CHECK_EQUAL(blocked_sa_2.order(), 3);
 
     // second impacted_object
     pt_object = impact.informed_entities(1);
@@ -1375,6 +1395,13 @@ BOOST_AUTO_TEST_CASE(disruption_with_rail_sections) {
     BOOST_CHECK_EQUAL(route_1.uri(), "rs_r_uri_3");
     route_2 = pt_object.pt_rail_section().routes(1);
     BOOST_CHECK_EQUAL(route_2.uri(), "rs_r_uri_4");
+    BOOST_REQUIRE_EQUAL(pt_object.pt_rail_section().blocked_stop_areas_size(), 2);
+    blocked_sa_1 = pt_object.pt_rail_section().blocked_stop_areas(0);
+    BOOST_CHECK_EQUAL(blocked_sa_1.uri(), "rs_end_uri_2");
+    BOOST_CHECK_EQUAL(blocked_sa_1.order(), 4);
+    blocked_sa_2 = pt_object.pt_rail_section().blocked_stop_areas(1);
+    BOOST_CHECK_EQUAL(blocked_sa_2.uri(), "rs_start_uri_2");
+    BOOST_CHECK_EQUAL(blocked_sa_2.order(), 1);
 
     // third impacted_object
     pt_object = impact.informed_entities(2);
@@ -1386,6 +1413,7 @@ BOOST_AUTO_TEST_CASE(disruption_with_rail_sections) {
     end_sa = pt_object.pt_rail_section().end_point();
     BOOST_CHECK_EQUAL(end_sa.uri(), "rs_end_uri_3");
     BOOST_REQUIRE_EQUAL(pt_object.pt_rail_section().routes_size(), 0);
+    BOOST_REQUIRE_EQUAL(pt_object.pt_rail_section().blocked_stop_areas_size(), 0);
 
     // fourth impacted_object
     pt_object = impact.informed_entities(3);
@@ -1400,6 +1428,13 @@ BOOST_AUTO_TEST_CASE(disruption_with_rail_sections) {
     BOOST_CHECK_EQUAL(route_1.uri(), "rs_r_uri_5");
     route_2 = pt_object.pt_rail_section().routes(1);
     BOOST_CHECK_EQUAL(route_2.uri(), "rs_r_uri_6");
+    BOOST_REQUIRE_EQUAL(pt_object.pt_rail_section().blocked_stop_areas_size(), 2);
+    blocked_sa_1 = pt_object.pt_rail_section().blocked_stop_areas(0);
+    BOOST_CHECK_EQUAL(blocked_sa_1.uri(), "rs_start_uri_4");
+    BOOST_CHECK_EQUAL(blocked_sa_1.order(), 0);
+    blocked_sa_2 = pt_object.pt_rail_section().blocked_stop_areas(1);
+    BOOST_CHECK_EQUAL(blocked_sa_2.uri(), "rs_end_uri_4");
+    BOOST_CHECK_EQUAL(blocked_sa_2.order(), 1);
 
     // Check messages, channels and channel_types
     BOOST_REQUIRE_EQUAL(impact.messages_size(), 3);
