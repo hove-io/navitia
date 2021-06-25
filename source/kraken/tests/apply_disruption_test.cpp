@@ -3723,6 +3723,100 @@ BOOST_AUTO_TEST_CASE(classic_impact_with_long_rail_section) {
     BOOST_REQUIRE_EQUAL(b.get<nt::StopPoint>("stopF")->get_impacts().size(), 1);
 }
 
+BOOST_AUTO_TEST_CASE(classic_impact_rail_section_with_start_and_end_sa_in_blocked_sa) {
+    /**
+     We receive a disruption with rail_section
+
+                        disruption
+                   ------------------------------------
+                   |        |                 |       |
+     A ------ B ------ C ------ D ------ E ------ F   |
+                   |        |                 |       |
+                   ------------------------------------
+                  The rail is broken between C and F.
+                  Oh my gosh !
+                  Trains are stopped at C and the pick-up is forbidden
+
+                  -> chaos fields
+                  line               : line:1
+                  start_point        : C
+                  end_point          : F
+                  blocked stop areas : C, D, E, F
+                  routes             : empty
+
+        NOTE : Select all routes, but only route-1 is impacted because C->F section only
+        exists with it.
+    */
+
+    ed::builder b("20210101", [](ed::builder& b) {
+        b.sa("stopAreaA")("stopA");
+        b.sa("stopAreaB")("stopB");
+        b.sa("stopAreaC")("stopC");
+        b.sa("stopAreaD")("stopD");
+        b.sa("stopAreaE")("stopE");
+        b.sa("stopAreaF")("stopF");
+        b.vj("line:1", "111111", "", true, "vj:A-1")
+            .route("route-1")("stopA", "08:00"_t)("stopB", "08:10"_t)("stopC", "08:20"_t)("stopD", "08:30"_t)(
+                "stopE", "08:40"_t)("stopF", "08:50"_t);
+        b.vj("line:1", "111111", "", true, "vj:A-2")
+            .route("route-2")("stopF", "08:00"_t)("stopE", "08:10"_t)("stopD", "08:20"_t)("stopC", "08:30"_t)(
+                "stopB", "08:40"_t)("stopA", "08:50"_t);
+    });
+
+    b.data->meta->production_date = bg::date_period(bg::date(2021, 1, 1), bg::days(7));
+
+    using btp = boost::posix_time::time_period;
+
+    BOOST_REQUIRE_EQUAL(b.data->pt_data->vehicle_journeys.size(), 2);
+
+    // new rail_section disruption
+    navitia::apply_disruption(b.impact(nt::RTLevel::Adapted, "rail_section_on_line1")
+                                  .severity(nt::disruption::Effect::NO_SERVICE)
+                                  .application_periods(btp("20210101T060000"_dt, "20210101T100000"_dt))
+                                  .on_rail_section("line:1", "stopAreaC", "stopAreaF",
+                                                   {std::make_pair("stopAreaE", 5), std::make_pair("stopAreaD", 4),
+                                                    std::make_pair("stopAreaF", 7), std::make_pair("stopAreaC", 1)},
+                                                   {}, *b.data->pt_data)
+                                  .get_disruption(),
+                              *b.data->pt_data, *b.data->meta);
+
+    // Check every relevant fields
+    BOOST_REQUIRE_EQUAL(b.data->pt_data->lines.size(), 1);
+    BOOST_REQUIRE_EQUAL(b.data->pt_data->routes.size(), 2);
+    BOOST_REQUIRE_EQUAL(b.data->pt_data->vehicle_journeys.size(), 3);
+
+    // Check the original vj
+    auto* vj = b.get<nt::VehicleJourney>("vehicle_journey:vj:A-1");
+    auto adapted_vp = vj->adapted_validity_pattern()->days;
+    auto base_vp = vj->base_validity_pattern()->days;
+    BOOST_CHECK_MESSAGE(ba::ends_with(base_vp.to_string(), "111111"), base_vp);
+    BOOST_CHECK_MESSAGE(ba::ends_with(adapted_vp.to_string(), "111110"), adapted_vp);
+    vj = b.get<nt::VehicleJourney>("vehicle_journey:vj:A-2");
+    base_vp = vj->base_validity_pattern()->days;
+    BOOST_CHECK_MESSAGE(ba::ends_with(base_vp.to_string(), "111111"), base_vp);
+
+    // Check the adapted vj
+    vj = b.get<nt::VehicleJourney>("vehicle_journey:vj:A-1:Adapted:0:rail_section_on_line1");
+    adapted_vp = vj->adapted_validity_pattern()->days;
+    base_vp = vj->base_validity_pattern()->days;
+    BOOST_CHECK_MESSAGE(ba::ends_with(adapted_vp.to_string(), "000001"), adapted_vp);
+    BOOST_CHECK_MESSAGE(ba::ends_with(base_vp.to_string(), "000000"), base_vp);
+    // The adapted vj should have only 2 stop_times, for A, B and C stop point
+    BOOST_REQUIRE_EQUAL(vj->stop_time_list.size(), 3);
+    BOOST_REQUIRE_EQUAL(vj->stop_time_list[0].stop_point->uri, "stopA");
+    BOOST_REQUIRE_EQUAL(vj->stop_time_list[1].stop_point->uri, "stopB");
+    BOOST_REQUIRE_EQUAL(vj->stop_time_list[2].stop_point->uri, "stopC");
+
+    // disruption
+    BOOST_REQUIRE_EQUAL(b.data->pt_data->disruption_holder.nb_disruptions(), 1);
+    BOOST_REQUIRE_EQUAL(b.get<nt::StopPoint>("stopA")->get_impacts().size(), 0);
+    BOOST_REQUIRE_EQUAL(b.get<nt::StopPoint>("stopB")->get_impacts().size(), 0);
+    BOOST_REQUIRE_EQUAL(b.get<nt::StopPoint>("stopC")->get_impacts().size(), 1);
+    BOOST_REQUIRE_EQUAL(b.get<nt::StopPoint>("stopD")->get_impacts().size(), 1);
+    BOOST_REQUIRE_EQUAL(b.get<nt::StopPoint>("stopE")->get_impacts().size(), 1);
+    BOOST_REQUIRE_EQUAL(b.get<nt::StopPoint>("stopF")->get_impacts().size(), 1);
+}
+
 BOOST_AUTO_TEST_CASE(rail_section_impact_with_wrong_blocked_sa) {
     /**
      We receive a disruption with rail_section
