@@ -81,6 +81,116 @@ def make_url_test():
     assert 'NextStopTimeNumber=5' in url
 
 
+def make_url_with_timeo_stop_code_test():
+    timeo = Timeo(
+        id='tata',
+        timezone='Europe/Paris',
+        service_url='http://bob.com/tata',
+        service_args={'a': 'bobette', 'b': '12'},
+        source_stop_code="StopSAECode",
+    )
+
+    url = timeo._make_url(MockRoutePoint(route_id='route_tata', line_id='line_toto', stop_id='stop_tutu'))
+
+    # it should be a valid url
+    assert validators.url(url)
+
+    assert url.startswith('http://bob.com')
+    assert 'a=bobette' in url
+    assert 'b=12' in url
+    assert 'StopSAECode=stop_tutu' in url
+    assert 'LineTimeoCode=line_toto' in url
+    assert 'Way=route_tata' in url
+    # we did not provide a datetime, we should not have it in the url
+    assert 'NextStopReferenceTime' not in url
+    # we did not provide a count, we should have the default value
+    assert 'NextStopTimeNumber=5' in url
+
+
+def make_url_with_next_stop_time_number_test():
+    timeo = Timeo(
+        id='tata',
+        timezone='Europe/Paris',
+        service_url='http://bob.com/tata',
+        service_args={'a': 'bobette', 'b': '12'},
+        source_stop_code="StopSAECode",
+        source_line_code="LineSAECode",
+        next_stop_time_number=10,
+    )
+
+    url = timeo._make_url(MockRoutePoint(route_id='route_tata', line_id='line_toto', stop_id='stop_tutu'))
+
+    # it should be a valid url
+    assert validators.url(url)
+
+    assert url.startswith('http://bob.com')
+    assert 'a=bobette' in url
+    assert 'b=12' in url
+    assert 'StopSAECode=stop_tutu' in url
+    assert 'LineSAECode=line_toto' in url
+    assert 'Way=route_tata' in url
+    # we did not provide a datetime, we should not have it in the url
+    assert 'NextStopReferenceTime' not in url
+    # we did not provide a count, we should have the default value
+    assert 'NextStopTimeNumber=10' in url
+
+
+def make_url_with_next_stop_time_number_max_test():
+    # next_stop_time_number > Max
+    timeo = Timeo(
+        id='tata',
+        timezone='Europe/Paris',
+        service_url='http://bob.com/tata',
+        service_args={'a': 'bobette', 'b': '12'},
+        source_stop_code="StopSAECode",
+        source_line_code="LineSAECode",
+        next_stop_time_number=20,
+    )
+
+    url = timeo._make_url(MockRoutePoint(route_id='route_tata', line_id='line_toto', stop_id='stop_tutu'))
+
+    # it should be a valid url
+    assert validators.url(url)
+
+    assert url.startswith('http://bob.com')
+    assert 'a=bobette' in url
+    assert 'b=12' in url
+    assert 'StopSAECode=stop_tutu' in url
+    assert 'LineSAECode=line_toto' in url
+    assert 'Way=route_tata' in url
+    # we did not provide a datetime, we should not have it in the url
+    assert 'NextStopReferenceTime' not in url
+    # we did not provide a count, we should have the default value
+    assert 'NextStopTimeNumber=10' in url
+
+
+def make_url_with_timeo_line_code_test():
+    timeo = Timeo(
+        id='tata',
+        timezone='Europe/Paris',
+        service_url='http://bob.com/tata',
+        service_args={'a': 'bobette', 'b': '12'},
+        source_stop_code="StopSAECode",
+        source_line_code="LineSAECode",
+    )
+
+    url = timeo._make_url(MockRoutePoint(route_id='route_tata', line_id='line_toto', stop_id='stop_tutu'))
+
+    # it should be a valid url
+    assert validators.url(url)
+
+    assert url.startswith('http://bob.com')
+    assert 'a=bobette' in url
+    assert 'b=12' in url
+    assert 'StopSAECode=stop_tutu' in url
+    assert 'LineSAECode=line_toto' in url
+    assert 'Way=route_tata' in url
+    # we did not provide a datetime, we should not have it in the url
+    assert 'NextStopReferenceTime' not in url
+    # we did not provide a count, we should have the default value
+    assert 'NextStopTimeNumber=5' in url
+
+
 def make_url_count_and_dt_test():
     """
     same as make_url_test but with a count and a from_dt
