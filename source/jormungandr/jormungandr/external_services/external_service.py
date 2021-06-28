@@ -42,10 +42,6 @@ class ExternalServiceError(RuntimeError):
     pass
 
 
-class ExternalServiceUnavailable(RuntimeError):
-    pass
-
-
 @six.add_metaclass(abc.ABCMeta)
 class AbstractExternalService(object):
     def _call_webservice(self, arguments):
@@ -89,10 +85,10 @@ class AbstractExternalService(object):
 
     @classmethod
     def _check_response(cls, response):
-        if not response:
+        if response is None:
             raise ExternalServiceError('impossible to access external service')
         if response.status_code == 503:
-            raise ExternalServiceUnavailable('forseti responded with 503')
+            raise ExternalServiceError('forseti responded with 503')
         if response.status_code != 200:
             error_msg = 'external service request failed with HTTP code {}'.format(response.status_code)
             if response.text:

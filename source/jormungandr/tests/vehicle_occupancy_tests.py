@@ -102,6 +102,8 @@ class MockVehicleOccupancyProvider(VehicleOccupancyProvider):
             }
         if stop_id == "stopP2" and vehicle_journey_id == 'vehicle_journey:vjP:1:modified:0:bib':
             json = {"vehicle_occupancies": []}
+        if stop_id == "stopQ2":
+            return MagicMock(return_value=None)
 
         resp.json = MagicMock(return_value=json)
         return resp
@@ -146,6 +148,15 @@ class TestFreeFloating(AbstractTestFixture):
     def test_occupancy_empty_list_occupancies(self):
         query = self.query_template_scs.format(
             sp='stopP2', dt='20160103T100000', data_freshness='&data_freshness=realtime'
+        )
+        response = self.query_region(query)
+        stop_schedules = response['stop_schedules'][0]['date_times']
+        assert len(stop_schedules) == 1
+        assert "occupancy" not in stop_schedules[0]
+
+    def test_occupancy_empty_list_occupancies_on_error(self):
+        query = self.query_template_scs.format(
+            sp='stopQ2', dt='20160103T100000', data_freshness='&data_freshness=realtime'
         )
         response = self.query_region(query)
         stop_schedules = response['stop_schedules'][0]['date_times']
