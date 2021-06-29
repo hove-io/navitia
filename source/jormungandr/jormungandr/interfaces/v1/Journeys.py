@@ -621,6 +621,8 @@ class Journeys(JourneyCommon):
             help="Only used in bss mode, how much the maneuver is penalized in the search algorithm",
         )
 
+        parser_get.add_argument("transfer_path", type=BooleanType(), default=False, hidden=False, help="TODO")
+
     @add_tad_links()
     @add_debug_info()
     @add_fare_links()

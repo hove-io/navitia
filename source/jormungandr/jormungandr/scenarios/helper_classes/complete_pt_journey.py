@@ -28,7 +28,14 @@
 # www.navitia.io
 from __future__ import absolute_import
 import logging
-from .helper_utils import complete_pt_journey, compute_fallback, _build_crowflies, timed_logger
+from .helper_utils import (
+    complete_pt_journey,
+    compute_fallback,
+    _build_crowflies,
+    timed_logger,
+    compute_transfert,
+    complete_transfert,
+)
 from .helper_exceptions import InvalidDateBoundException
 from jormungandr.street_network.street_network import StreetNetworkPathType
 from collections import namedtuple
@@ -153,7 +160,6 @@ def wait_and_complete_pt_journey(
     # launch fallback direct path asynchronously
     sub_request_id = "{}_fallback".format(request_id)
     with timed_logger(logger, 'compute_fallback', sub_request_id):
-
         compute_fallback(
             from_obj=requested_orig_obj,
             to_obj=requested_dest_obj,
@@ -166,6 +172,17 @@ def wait_and_complete_pt_journey(
             pt_journeys=journeys,
             request_id=sub_request_id,
         )
+
+    # launch compute transfert asynchronously
+    if request['transfer_path'] is True:
+        sub_request_id = "{}_transfert".format(request_id)
+        with timed_logger(logger, 'compute_transfert', sub_request_id):
+            compute_transfert(
+                pt_journey=journeys,
+                transfert_path_pool=streetnetwork_path_pool,
+                request=request,
+                request_id=sub_request_id,
+            )
 
     with timed_logger(logger, 'complete_pt_journeys', request_id):
         for pt_element in journeys:
@@ -182,3 +199,7 @@ def wait_and_complete_pt_journey(
                 dest_fallback_durations_pool=dest_fallback_durations_pool,
                 request=request,
             )
+
+    if request['transfer_path'] is True:
+        with timed_logger(logger, 'complete_transfert', request_id):
+            complete_transfert(pt_journey=journeys, transfert_path_pool=streetnetwork_path_pool, request=request)
