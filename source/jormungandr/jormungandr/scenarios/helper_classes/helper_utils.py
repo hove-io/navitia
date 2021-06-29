@@ -49,6 +49,7 @@ import time
 
 
 CAR_PARK_DURATION = 300  # secs
+allowed_physical_mode_for_transfert_path = ['Bus', 'Tramway']
 
 
 def _create_crowfly(pt_journey, crowfly_origin, crowfly_destination, begin, end, mode):
@@ -651,6 +652,36 @@ def timed_logger(logger, task_name, request_id):
             logger.info('time  in {}: {}s'.format(task_name, '%.2e' % elapsed_time))
 
 
+def filter_transfert_path(journey_sections):
+    transfert_sections = []
+    for (index, s) in enumerate(journey_sections):
+        if s.type != response_pb2.SectionType.TRANSFER:
+            continue
+
+        if index - 1 < 0:
+            continue
+        prev_section = journey_sections[index - 1]
+        if not (
+            prev_section.HasField(str('pt_display_informations'))
+            and prev_section.pt_display_informations.HasField(str('physical_mode'))
+            and prev_section.pt_display_informations.physical_mode in allowed_physical_mode_for_transfert_path
+        ):
+            continue
+
+        if index + 2 > len(journey_sections):
+            continue
+        next_section = journey_sections[index + 2]
+        if not (
+            next_section.HasField(str('pt_display_informations'))
+            and next_section.pt_display_informations.HasField(str('physical_mode'))
+            and next_section.pt_display_informations.physical_mode in allowed_physical_mode_for_transfert_path
+        ):
+            continue
+
+        transfert_sections.append(s)
+    return transfert_sections
+
+
 def compute_transfert(pt_journey, transfert_path_pool, request, request_id):
     """
     Launching transfert computation asynchronously once the pt_journey is finished
@@ -660,39 +691,26 @@ def compute_transfert(pt_journey, transfert_path_pool, request, request_id):
     direct_path_type = StreetNetworkPathType.DIRECT
     real_mode = 'walking'
     for (_, (_, _, journey)) in enumerate(pt_journey):
-        for s in journey.sections:
-            if s.type == response_pb2.SectionType.TRANSFER:
-                print(s.duration)
-                print(s.origin.uri)
-                print(s.destination.uri)
-                pt_arrival = 1624960380
-                fallback_extremity = PeriodExtremity(pt_arrival, True)
-                print(fallback_extremity)
-                sub_request_id = "{}_{}_{}".format(request_id, s.origin.uri, s.destination.uri)
-                transfert_path_pool.add_async_request(
-                    s.origin,
-                    s.destination,
-                    real_mode,
-                    fallback_extremity,
-                    request,
-                    direct_path_type,
-                    sub_request_id,
-                )
+        for s in filter_transfert_path(journey.sections):
+            pt_arrival = 1624960380
+            fallback_extremity = PeriodExtremity(pt_arrival, True)
+            sub_request_id = "{}_{}_{}".format(request_id, s.origin.uri, s.destination.uri)
+            transfert_path_pool.add_async_request(
+                s.origin, s.destination, real_mode, fallback_extremity, request, direct_path_type, sub_request_id
+            )
 
 
 def complete_transfert(pt_journey, transfert_path_pool, request):
     direct_path_type = StreetNetworkPathType.DIRECT
     real_mode = 'walking'
     for (_, (_, _, journey)) in enumerate(pt_journey):
-        for s in journey.sections:
-            if s.type == response_pb2.SectionType.TRANSFER:
-                fallback_extremity = PeriodExtremity(s.end_date_time, True)
-                transfert_journeys = transfert_path_pool.wait_and_get(
-                    s.origin, s.destination, real_mode, fallback_extremity, direct_path_type, request
-                )
-
-                for j in transfert_journeys.journeys:
-                    if j.sections:
-                        s.type = response_pb2.SectionType.STREET_NETWORK
-                        s.street_network.CopyFrom(j.sections[0].street_network)
-                        s.shape.extend(j.sections[0].shape)
+        for s in filter_transfert_path(journey.sections):
+            fallback_extremity = PeriodExtremity(s.end_date_time, True)
+            transfert_journeys = transfert_path_pool.wait_and_get(
+                s.origin, s.destination, real_mode, fallback_extremity, direct_path_type, request
+            )
+            for j in transfert_journeys.journeys:
+                if j.sections:
+                    s.type = response_pb2.SectionType.STREET_NETWORK
+                    s.street_network.CopyFrom(j.sections[0].street_network)
+                    s.shape.extend(j.sections[0].shape)
