@@ -87,8 +87,6 @@ class AbstractExternalService(object):
     def _check_response(cls, response):
         if response is None:
             raise ExternalServiceError('impossible to access external service')
-        if response.status_code == 503:
-            raise ExternalServiceError('forseti responded with 503')
         if response.status_code != 200:
             error_msg = 'external service request failed with HTTP code {}'.format(response.status_code)
             if response.text:
