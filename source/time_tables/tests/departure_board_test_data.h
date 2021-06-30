@@ -180,7 +180,14 @@ struct departure_board_fixture {
                 b.lines.find("Line3")->second->closing_time =
                     boost::make_optional(boost::posix_time::duration_from_string("14:00"));
                 // Timeo R
-                auto it_rt = b.data->pt_data->routes_map.find("TS_Route1");
+                auto it_rt = b.data->pt_data->routes_map.find("Route2_R");
+                it_rt->second->direction_type = "backward";
+                // Timeo A
+                it_rt = b.data->pt_data->routes_map.find("Route1");
+                it_rt->second->direction_type = "forward";
+
+                // Timeo R
+                it_rt = b.data->pt_data->routes_map.find("TS_Route2");
                 it_rt->second->direction_type = "backward";
                 // Timeo A
                 it_rt = b.data->pt_data->routes_map.find("TS_Route1");
@@ -232,12 +239,19 @@ struct departure_board_fixture {
         sp_ptr = b.data->pt_data->stop_points_map["S43"];
         b.data->pt_data->codes.add(sp_ptr, "Kisio数字", "Kisio数字_C:S43");
 
-        sp_ptr = b.data->pt_data->stop_points_map["TS_D:sp"];
-        b.data->pt_data->codes.add(sp_ptr, "Kisio数字", "Kisio数字_TS_D:sp");
+        sp_ptr = b.data->pt_data->stop_points_map["Avj1"];
+        b.data->pt_data->codes.add(sp_ptr, "Kisio数字", "Avj1");
 
+        sp_ptr = b.data->pt_data->stop_points_map["Avj2"];
+        b.data->pt_data->codes.add(sp_ptr, "Kisio数字", "Avj2");
+
+        sp_ptr = b.data->pt_data->stop_points_map["E:sp"];
+        b.data->pt_data->codes.add(sp_ptr, "Kisio数字", "E:sp");
+
+        sp_ptr = b.data->pt_data->stop_points_map["TS_D:sp"];
+        b.data->pt_data->codes.add(sp_ptr, "Kisio数字", "TS_D:sp");
         sp_ptr = b.data->pt_data->stop_points_map["C:S2"];
         b.data->pt_data->codes.add(sp_ptr, "Kisio数字", "Kisio数字_C:S2");
-
         using ntest::RTStopTime;
         // we delay all A's vjs by 7mn (to be able to test whether it's base schedule or realtime data)
         auto trip_update1 = ntest::make_trip_update_message("A:vj1", "20160101",

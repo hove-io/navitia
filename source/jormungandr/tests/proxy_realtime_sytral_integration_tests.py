@@ -75,7 +75,7 @@ class TestSytralSchedules(AbstractTestFixture):
                             {
                                 "line": "Kisio数字 A",
                                 "stop": "syn_stoppoint1",
-                                "direction_id": "3341",
+                                "direction_id": "SP_2",
                                 "direction_name": "Piscine Chambéry",
                                 "datetime": "2016-01-02T10:17:17+02:00",
                                 "type": "E",
@@ -83,7 +83,7 @@ class TestSytralSchedules(AbstractTestFixture):
                             {
                                 "line": "Kisio数字 A",
                                 "stop": "syn_stoppoint1",
-                                "direction_id": "3341",
+                                "direction_id": "SP_2",
                                 "direction_name": "Piscine Chambéry",
                                 "type": "E",
                                 "datetime": "2016-01-02T11:17:17+02:00",
