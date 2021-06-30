@@ -1318,6 +1318,7 @@ void PbCreator::Filler::fill_pb_object(const nt::Route* r, pbnavitia::PtDisplayI
     if (r->destination != nullptr) {
         // Here we format display_informations.direction for stop_schedules.
         pt_display_info->set_direction(r->destination->name);
+        uris->set_stop_area(r->destination->uri);
         for (auto admin : r->destination->admin_list) {
             if (admin->level == 8) {
                 pt_display_info->set_direction(r->destination->name + " (" + admin->name + ")");

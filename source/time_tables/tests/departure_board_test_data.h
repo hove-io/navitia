@@ -232,6 +232,12 @@ struct departure_board_fixture {
         sp_ptr = b.data->pt_data->stop_points_map["S43"];
         b.data->pt_data->codes.add(sp_ptr, "Kisio数字", "Kisio数字_C:S43");
 
+        sp_ptr = b.data->pt_data->stop_points_map["TS_D:sp"];
+        b.data->pt_data->codes.add(sp_ptr, "Kisio数字", "Kisio数字_TS_D:sp");
+
+        sp_ptr = b.data->pt_data->stop_points_map["C:S2"];
+        b.data->pt_data->codes.add(sp_ptr, "Kisio数字", "Kisio数字_C:S2");
+
         using ntest::RTStopTime;
         // we delay all A's vjs by 7mn (to be able to test whether it's base schedule or realtime data)
         auto trip_update1 = ntest::make_trip_update_message("A:vj1", "20160101",

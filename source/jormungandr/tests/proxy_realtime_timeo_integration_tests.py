@@ -80,12 +80,12 @@ class MockTimeo(Timeo):
                                 {
                                     "NextStop": "10:00:52",
                                     "Destination": "DIRECTION AA",
-                                    "TerminusSAECode": "TS_D",
+                                    "TerminusSAECode": "Kisio数字_TS_D:sp",
                                 },
                                 {
                                     "NextStop": "10:10:52",
                                     "Destination": "DIRECTION AA",
-                                    "TerminusSAECode": "TS_D",
+                                    "TerminusSAECode": "Kisio数字_TS_D:sp",
                                 },
                             ],
                         },
@@ -199,8 +199,16 @@ class MockTimeo(Timeo):
                             "Way": "A",
                             "LineMainDirection": "DIRECTION AA",
                             "NextExpectedStopTime": [
-                                {"NextStop": "10:00:52", "Destination": "DIRECTION AA"},
-                                {"NextStop": "10:13:52", "Destination": "DIRECTION AA"},
+                                {
+                                    "NextStop": "10:00:52",
+                                    "Destination": "DIRECTION AA",
+                                    "TerminusSAECode": "Kisio数字_C:S43",
+                                },
+                                {
+                                    "NextStop": "10:13:52",
+                                    "Destination": "DIRECTION AA",
+                                    "TerminusSAECode": "Kisio数字_C:S43",
+                                },
                             ],
                         },
                     }
@@ -425,20 +433,16 @@ class TestDepartures(AbstractTestFixture):
         assert stop_times[0]['data_freshness'] == 'realtime'
         assert stop_times[0]['date_time'] == '20160102T090052'
         links = stop_times[0]["links"]
-        assert len(links) == 1
-        assert links[0]['id'] == 'note:7a0967bbb281e0d1548d2d5bc6933a20'
+        assert len(links) == 0
 
         assert stop_times[1]['data_freshness'] == 'realtime'
         assert stop_times[1]['date_time'] == '20160102T091352'
         links = stop_times[1]["links"]
-        assert len(links) == 1
-        assert links[0]['id'] == 'note:7a0967bbb281e0d1548d2d5bc6933a20'
+        assert len(links) == 0
 
         notes = response['notes']
-        assert len(notes) == 1
-        assert notes[0]["type"] == "notes"
-        assert notes[0]["value"] == "DIRECTION AA"
-        assert notes[0]["id"] == "note:7a0967bbb281e0d1548d2d5bc6933a20"
+        assert len(notes) == 0
+        assert stop_schedules[0]["display_informations"]["direction"] == "Terminus (Quimper)"
 
     def test_stop_schedule_with_rt_and_with_destination(self):
         query = self.query_template_scs.format(
@@ -454,20 +458,18 @@ class TestDepartures(AbstractTestFixture):
         assert stop_times[0]['data_freshness'] == 'realtime'
         assert stop_times[0]['date_time'] == '20160102T090052'
         links = stop_times[0]["links"]
-        assert len(links) == 1
-        assert links[0]['id'] == 'note:b5b328cb593ae7b1d73228345fe634fc'
+        assert len(links) == 0
 
         assert stop_times[1]['data_freshness'] == 'realtime'
         assert stop_times[1]['date_time'] == '20160102T091352'
         links = stop_times[1]["links"]
-        assert len(links) == 1
-        assert links[0]['id'] == 'note:b5b328cb593ae7b1d73228345fe634fc'
+        assert len(links) == 0
 
         notes = response['notes']
-        assert len(notes) == 1
-        assert notes[0]["type"] == "notes"
-        assert notes[0]["value"] == "Terminus (Quimper)"
-        assert notes[0]["id"] == "note:b5b328cb593ae7b1d73228345fe634fc"
+        assert len(notes) == 0
+        assert stop_schedules[0]["display_informations"]["direction"] == "Terminus (Quimper)"
+        assert stop_schedules[1]["display_informations"]["direction"] == "Terminus (Quimper)"
+        assert stop_schedules[2]["display_informations"]["direction"] == "Terminus (Quimper)"
 
     def test_stop_schedule_with_from_datetime_tomorrow(self):
         query = self.query_template_scs.format(
@@ -500,14 +502,15 @@ class TestDepartures(AbstractTestFixture):
         assert date_times[0]['data_freshness'] == 'realtime'
         assert date_times[0]['date_time'] == '20160102T090052'
         links = date_times[0]["links"]
-        assert len(links) == 1
-        assert links[0]['id'] == 'note:b5b328cb593ae7b1d73228345fe634fc'
+        assert len(links) == 0
 
         assert date_times[1]['data_freshness'] == 'realtime'
         assert date_times[1]['date_time'] == '20160102T091352'
         links = date_times[1]["links"]
-        assert len(links) == 1
-        assert links[0]['id'] == 'note:b5b328cb593ae7b1d73228345fe634fc'
+        assert len(links) == 0
+        assert terminus_schedules[0]["display_informations"]["direction"] == 'Terminus (Quimper)'
+        assert terminus_schedules[1]["display_informations"]["direction"] == 'Terminus (Quimper)'
+        assert terminus_schedules[2]["display_informations"]["direction"] == 'Terminus (Quimper)'
 
     def test_terminus_schedule_with_realtime_and_is_realtime_field(self):
 
@@ -542,8 +545,8 @@ class TestDepartures(AbstractTestFixture):
         assert date_times[0]['data_freshness'] == 'realtime'
         assert date_times[0]['date_time'] == '20160102T081352'
         links = date_times[0]["links"]
-        assert len(links) == 1
-        assert links[0]['id'] == 'note:b5b328cb593ae7b1d73228345fe634fc'
+        assert len(links) == 0
+        assert terminus_schedules[0]["display_informations"]["direction"] == 'Terminus (Quimper)'
 
     def test_terminus_schedule_with_realtime_and_is_realtime_field_all_false(self):
         for data_freshness in ['&data_freshness=base_schedule', '', '&data_freshness=realtime']:
@@ -1038,7 +1041,11 @@ class TestDepartures(AbstractTestFixture):
             sp='TS_C:sp', dt='20160107T0730', data_freshness='&data_freshness=realtime', c_dt='20160107T0730'
         )
         response = self.query_region(query)
+        notes = response["notes"]
         is_valid_notes(response["notes"])
+        assert len(notes) == 1
+        assert notes[0]["id"] == 'note:9c11592e360d41f232a6e669432d5c3d'
+        assert notes[0]["value"] == 'TS_D'
         terminus_schedules = response['terminus_schedules']
         assert len(terminus_schedules) == 2
         tmp = terminus_schedules[0]

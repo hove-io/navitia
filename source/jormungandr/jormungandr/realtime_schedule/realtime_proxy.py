@@ -159,7 +159,7 @@ class RealtimeProxy(six.with_metaclass(ABCMeta, object)):
     def _is_valid_direction(self, direction_uri, passage_direction_uri):
         return True
 
-    def _add_datetime(self, stop_schedule, passage):
+    def _add_datetime(self, stop_schedule, passage, add_direction):
         new_dt = stop_schedule.date_times.add()
         # the midnight is calculated from passage.datetime and it keeps the same timezone as passage.datetime
         midnight = passage.datetime.replace(hour=0, minute=0, second=0, microsecond=0)
@@ -173,7 +173,7 @@ class RealtimeProxy(six.with_metaclass(ABCMeta, object)):
             new_dt.realtime_level = type_pb2.BASE_SCHEDULE
 
         # we also add the direction in the note
-        if passage.direction:
+        if add_direction and passage.direction:
             note = type_pb2.Note()
             note.note = passage.direction
             note_uri = hashlib.md5(note.note.encode('utf-8', 'backslashreplace')).hexdigest()
@@ -205,7 +205,8 @@ class RealtimeProxy(six.with_metaclass(ABCMeta, object)):
             if groub_by_dest and not self._is_valid_direction(direction_uri, passage.direction_uri):
                 not_attached.append(passage)
                 continue
-            self._add_datetime(stop_schedule, passage)
+            add_direction = direction_uri != passage.direction_uri
+            self._add_datetime(stop_schedule, passage, add_direction=add_direction)
 
         # Build attached next_passages
         if (
@@ -216,10 +217,11 @@ class RealtimeProxy(six.with_metaclass(ABCMeta, object)):
         ):
             direction_type = stop_schedule.route.direction_type
             for passage in not_attached:
+                add_direction = direction_uri != passage.direction_uri
                 if not passage.way:
                     continue
                 if direction_type == passage.way:
-                    self._add_datetime(stop_schedule, passage)
+                    self._add_datetime(stop_schedule, passage, add_direction=add_direction)
 
         stop_schedule.date_times.sort(key=lambda dt: dt.date + dt.time)
         if not len(stop_schedule.date_times) and not stop_schedule.HasField('response_status'):
