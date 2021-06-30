@@ -149,7 +149,6 @@ class StreetNetworkPathPool:
         streetnetwork_path_type,
         request_id,
     ):
-
         streetnetwork_service = self._instance.get_street_network(mode, request)
         key = (
             streetnetwork_service.make_path_key(

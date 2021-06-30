@@ -652,65 +652,81 @@ def timed_logger(logger, task_name, request_id):
             logger.info('time  in {}: {}s'.format(task_name, '%.2e' % elapsed_time))
 
 
-def filter_transfert_path(journey_sections):
-    transfert_sections = []
+def filter_transfer_path(journey_sections):
+    logger = logging.getLogger(__name__)
+
+    transfer_sections = []
     for (index, s) in enumerate(journey_sections):
         if s.type != response_pb2.SectionType.TRANSFER:
             continue
 
-        if index - 1 < 0:
-            continue
+        # we assume journey_sections[index - 1] is valid
         prev_section = journey_sections[index - 1]
         if not (
-            prev_section.HasField(str('pt_display_informations'))
-            and prev_section.pt_display_informations.HasField(str('physical_mode'))
+            prev_section.HasField('pt_display_informations')
+            and prev_section.pt_display_informations.HasField('physical_mode')
             and prev_section.pt_display_informations.physical_mode in allowed_physical_mode_for_transfert_path
         ):
+            logger.debug("pt_display_informations or physical_mode not found in section")
             continue
 
-        if index + 2 > len(journey_sections):
-            continue
+        # we assume journey_sections[index + 2] is valid
         next_section = journey_sections[index + 2]
         if not (
-            next_section.HasField(str('pt_display_informations'))
-            and next_section.pt_display_informations.HasField(str('physical_mode'))
+            next_section.HasField('pt_display_informations')
+            and next_section.pt_display_informations.HasField('physical_mode')
             and next_section.pt_display_informations.physical_mode in allowed_physical_mode_for_transfert_path
         ):
+            logger.debug("pt_display_informations or physical_mode not found in section")
             continue
 
-        transfert_sections.append(s)
-    return transfert_sections
+        transfer_sections.append(s)
+    return transfer_sections
 
 
-def compute_transfert(pt_journey, transfert_path_pool, request, request_id):
+def compute_transfer(pt_journey, transfer_path_pool, request, request_id):
     """
-    Launching transfert computation asynchronously once the pt_journey is finished
+    Launching transfer computation asynchronously once the pt_journey is finished
     """
     logger = logging.getLogger(__name__)
-    logger.debug("completing walking transfert in pt journey")
+    logger.debug("computing walking transfer in pt journey")
+
     direct_path_type = StreetNetworkPathType.DIRECT
     real_mode = 'walking'
-    for (_, (_, _, journey)) in enumerate(pt_journey):
-        for s in filter_transfert_path(journey.sections):
-            pt_arrival = 1624960380
+    transfer_sections = []
+
+    for (_, _, journey) in pt_journey:
+        for s in filter_transfer_path(journey.sections):
+            pt_arrival = s.end_date_time
             fallback_extremity = PeriodExtremity(pt_arrival, True)
             sub_request_id = "{}_{}_{}".format(request_id, s.origin.uri, s.destination.uri)
-            transfert_path_pool.add_async_request(
+            transfer_path_pool.add_async_request(
                 s.origin, s.destination, real_mode, fallback_extremity, request, direct_path_type, sub_request_id
             )
+            transfer_sections.append(s)
+    return transfer_sections
 
 
-def complete_transfert(pt_journey, transfert_path_pool, request):
+def complete_transfer(pt_journey, transfer_path_pool, request, transfer_sections):
+    """
+        We complete the pt_journey by adding to transfer section :
+        - path
+        - shape/geojson
+    """
+    logger = logging.getLogger(__name__)
+    logger.debug("completing walking transfer in pt journey")
+
     direct_path_type = StreetNetworkPathType.DIRECT
     real_mode = 'walking'
-    for (_, (_, _, journey)) in enumerate(pt_journey):
-        for s in filter_transfert_path(journey.sections):
-            fallback_extremity = PeriodExtremity(s.end_date_time, True)
-            transfert_journeys = transfert_path_pool.wait_and_get(
-                s.origin, s.destination, real_mode, fallback_extremity, direct_path_type, request
-            )
-            for j in transfert_journeys.journeys:
-                if j.sections:
-                    s.type = response_pb2.SectionType.STREET_NETWORK
-                    s.street_network.CopyFrom(j.sections[0].street_network)
-                    s.shape.extend(j.sections[0].shape)
+
+    for s in transfer_sections:
+        fallback_extremity = PeriodExtremity(s.end_date_time, True)
+        transfer_journeys = transfer_path_pool.wait_and_get(
+            s.origin, s.destination, real_mode, fallback_extremity, direct_path_type, request
+        )
+
+        if transfer_journeys and transfer_journeys.journeys:
+            new_section = transfer_journeys.journeys[0].sections
+            s.type = response_pb2.SectionType.STREET_NETWORK
+            s.street_network.CopyFrom(new_section[0].street_network)
+            s.shape.extend(new_section[0].shape)
