@@ -203,7 +203,8 @@ class RealtimeProxy(six.with_metaclass(ABCMeta, object)):
         for passage in next_realtime_passages:
             if groub_by_dest and not self._is_valid_direction(direction_uri, passage.direction_uri):
                 continue
-            self._add_datetime(stop_schedule, passage)
+            add_direction = direction_uri != passage.direction_uri
+            self._add_datetime(stop_schedule, passage, add_direction)
 
         stop_schedule.date_times.sort(key=lambda dt: dt.date + dt.time)
         if not len(stop_schedule.date_times) and not stop_schedule.HasField('response_status'):
