@@ -50,10 +50,15 @@ class SiriLite(RealtimeProxy):
         self.timeout = timeout  # timeout in seconds
         self.rt_system_id = id
         self.object_id_tag = object_id_tag if object_id_tag else id
-        self.breaker = pybreaker.CircuitBreaker(
-            fail_max=app.config.get('CIRCUIT_BREAKER_MAX_SIRILITE_FAIL', 5),
-            reset_timeout=app.config.get('CIRCUIT_BREAKER_SIRILITE_TIMEOUT_S', 60),
+
+        fail_max = kwargs.get(
+            'circuit_breaker_max_fail', app.config.get(str('CIRCUIT_BREAKER_MAX_SIRILITE_FAIL'), 5)
         )
+        reset_timeout = kwargs.get(
+            'circuit_breaker_reset_timeout', app.config.get(str('CIRCUIT_BREAKER_SIRILITE_TIMEOUT_S'), 60)
+        )
+        self.breaker = pybreaker.CircuitBreaker(fail_max=fail_max, reset_timeout=reset_timeout)
+
         self.instance = instance
         self.log = logging.LoggerAdapter(logging.getLogger(__name__), extra={'rt_proxy': id})
 

@@ -147,10 +147,13 @@ class Siri(RealtimeProxy):
         self.object_id_tag = object_id_tag if object_id_tag else id
         self.destination_id_tag = destination_id_tag
         self.instance = instance
-        self.breaker = pybreaker.CircuitBreaker(
-            fail_max=app.config.get('CIRCUIT_BREAKER_MAX_SIRI_FAIL', 5),
-            reset_timeout=app.config.get('CIRCUIT_BREAKER_SIRI_TIMEOUT_S', 60),
+        fail_max = kwargs.get(
+            'circuit_breaker_max_fail', app.config.get(str('CIRCUIT_BREAKER_MAX_SIRI_FAIL'), 5)
         )
+        reset_timeout = kwargs.get(
+            'circuit_breaker_reset_timeout', app.config.get(str('CIRCUIT_BREAKER_SIRI_TIMEOUT_S'), 60)
+        )
+        self.breaker = pybreaker.CircuitBreaker(fail_max=fail_max, reset_timeout=reset_timeout)
         # A step is applied on from_datetime to discretize calls and allow caching them
         self.from_datetime_step = kwargs.get(
             'from_datetime_step', app.config['CACHE_CONFIGURATION'].get('TIMEOUT_SIRI', 60)
