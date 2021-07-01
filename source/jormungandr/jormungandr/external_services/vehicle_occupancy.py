@@ -31,7 +31,7 @@ from __future__ import absolute_import, print_function, unicode_literals, divisi
 from jormungandr import cache, app
 import pybreaker
 import logging
-from jormungandr.external_services.external_service import AbstractExternalService
+from jormungandr.external_services.external_service import AbstractExternalService, ExternalServiceError
 
 
 class VehicleOccupancyProvider(AbstractExternalService):
@@ -56,7 +56,13 @@ class VehicleOccupancyProvider(AbstractExternalService):
         Get vehicle_occupancy information from Forseti webservice
         """
         raw_response = self._call_webservice(arguments)
+
+        # We don't need any further action if raw_response is None
+        if raw_response is None:
+            return None
         resp = self.response_marshaller(raw_response)
+        if resp is None:
+            return None
         vehicle_occupancies = resp.get('vehicle_occupancies', [])
         if not vehicle_occupancies:
             return None
@@ -65,12 +71,17 @@ class VehicleOccupancyProvider(AbstractExternalService):
 
     @classmethod
     def response_marshaller(cls, response):
-        cls._check_response(response)
+        try:
+            cls._check_response(response)
+        except ExternalServiceError as e:
+            logging.getLogger(__name__).exception('Forseti service error: {}'.format(e))
+            return None
+
         try:
             json_response = response.json()
         except ValueError:
             logging.getLogger(__name__).error(
                 "impossible to get json for response %s with body: %s", response.status_code, response.text
             )
-            raise
+            return None
         return json_response
