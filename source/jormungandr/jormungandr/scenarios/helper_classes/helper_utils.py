@@ -656,11 +656,10 @@ def filter_transfer_path(journey_sections):
     logger = logging.getLogger(__name__)
 
     transfer_sections = []
-    for (index, s) in enumerate(journey_sections):
-        if s.type != response_pb2.SectionType.TRANSFER:
+    for index in xrange(1, len(journey_sections) - 2):
+        if journey_sections[index].type != response_pb2.SectionType.TRANSFER:
             continue
 
-        # we assume journey_sections[index - 1] is valid
         prev_section = journey_sections[index - 1]
         if not (
             prev_section.HasField('pt_display_informations')
@@ -670,7 +669,6 @@ def filter_transfer_path(journey_sections):
             logger.debug("pt_display_informations or physical_mode not found in section")
             continue
 
-        # we assume journey_sections[index + 2] is valid
         next_section = journey_sections[index + 2]
         if not (
             next_section.HasField('pt_display_informations')
@@ -680,7 +678,7 @@ def filter_transfer_path(journey_sections):
             logger.debug("pt_display_informations or physical_mode not found in section")
             continue
 
-        transfer_sections.append(s)
+        transfer_sections.append(journey_sections[index])
     return transfer_sections
 
 
