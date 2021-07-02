@@ -657,7 +657,7 @@ def filter_transfer_path(journey_sections):
 
     transfer_sections = []
     for index in xrange(1, len(journey_sections) - 2):
-        if journey_sections[index].type != response_pb2.SectionType.TRANSFER:
+        if journey_sections[index].type != response_pb2.TRANSFER:
             continue
 
         prev_section = journey_sections[index - 1]
