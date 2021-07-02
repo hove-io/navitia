@@ -175,7 +175,7 @@ def wait_and_complete_pt_journey(
 
     # launch compute transfer asynchronously
     transfer_sections = []
-    if request['transfer_path'] is True:
+    if request['_transfer_path'] is True:
         sub_request_transfer_id = "{}_transfer".format(request_id)
         with timed_logger(logger, 'compute_transfer', sub_request_transfer_id):
             transfer_sections = compute_transfer(
@@ -201,7 +201,7 @@ def wait_and_complete_pt_journey(
                 request=request,
             )
 
-    if request['transfer_path'] is True:
+    if request['_transfer_path'] is True:
         with timed_logger(logger, 'complete_transfer', request_id):
             complete_transfer(
                 pt_journey=journeys,

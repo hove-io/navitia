@@ -49,7 +49,7 @@ import time
 
 
 CAR_PARK_DURATION = 300  # secs
-allowed_physical_mode_for_transfert_path = ['Bus', 'Tramway']
+allowed_physical_mode_for_transfert_path = ['Bus', 'Tramway', 'RapidTransit']
 
 
 def _create_crowfly(pt_journey, crowfly_origin, crowfly_destination, begin, end, mode):
@@ -698,7 +698,7 @@ def compute_transfer(pt_journey, transfer_path_pool, request, request_id):
     for (_, _, journey) in pt_journey:
         for s in filter_transfer_path(journey.sections):
             pt_arrival = s.end_date_time
-            fallback_extremity = PeriodExtremity(pt_arrival, True)
+            fallback_extremity = PeriodExtremity(pt_arrival, False)
             sub_request_id = "{}_{}_{}".format(request_id, s.origin.uri, s.destination.uri)
             transfer_path_pool.add_async_request(
                 s.origin, s.destination, real_mode, fallback_extremity, request, direct_path_type, sub_request_id
@@ -711,7 +711,7 @@ def complete_transfer(pt_journey, transfer_path_pool, request, transfer_sections
     """
         We complete the pt_journey by adding to transfer section :
         - path
-        - shape/geojson
+        - We do not modify duration !!
     """
     logger = logging.getLogger(__name__)
     logger.debug("completing walking transfer in pt journey")
@@ -727,6 +727,4 @@ def complete_transfer(pt_journey, transfer_path_pool, request, transfer_sections
 
         if transfer_journeys and transfer_journeys.journeys:
             new_section = transfer_journeys.journeys[0].sections
-            s.type = response_pb2.SectionType.STREET_NETWORK
             s.street_network.CopyFrom(new_section[0].street_network)
-            s.shape.extend(new_section[0].shape)

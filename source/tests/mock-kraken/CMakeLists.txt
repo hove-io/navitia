@@ -20,6 +20,7 @@ add_executable(main_autocomplete_test main_autocomplete_test.cpp)
 add_executable(main_stif_test main_stif_test.cpp)
 add_executable(null_status_test null_status_test.cpp)
 add_executable(main_routing_without_pt_test main_routing_without_pt_test.cpp)
+add_executable(routing_with_transfer_test routing_with_transfer_test.cpp)
 add_executable(multiple_schedules multiple_schedules.cpp)
 add_executable(line_sections_test line_sections_test.cpp)
 add_executable(rail_sections_test rail_sections_test.cpp)
@@ -38,6 +39,7 @@ add_custom_target(integration_tests_bin DEPENDS main_routing_test
                                                 main_stif_test
                                                 null_status_test
                                                 main_routing_without_pt_test
+                                                routing_with_transfer_test
                                                 multiple_schedules
                                                 line_sections_test
                                                 rail_sections_test
@@ -56,6 +58,7 @@ target_link_libraries(main_autocomplete_test ${ALL_LIBS})
 target_link_libraries(main_stif_test ${ALL_LIBS})
 target_link_libraries(null_status_test ${ALL_LIBS})
 target_link_libraries(main_routing_without_pt_test ${ALL_LIBS})
+target_link_libraries(routing_with_transfer_test ${ALL_LIBS})
 target_link_libraries(multiple_schedules ${ALL_LIBS})
 target_link_libraries(line_sections_test ${ALL_LIBS})
 target_link_libraries(rail_sections_test ${ALL_LIBS})
