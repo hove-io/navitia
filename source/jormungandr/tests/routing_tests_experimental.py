@@ -1045,6 +1045,7 @@ class TestRoutingWithTransfer(NewDefaultScenarioAbstractTestFixture):
             We first query without requesting walking _transfer_path and then with _transfer_path
             With _transfer_path enabled we expect in transfer section :
             - a path
+            - detailed geojson instead of a simple line (crow_fly)
             - same duration as with _transfer_path=false
         """
         query = (
@@ -1065,6 +1066,9 @@ class TestRoutingWithTransfer(NewDefaultScenarioAbstractTestFixture):
         assert journeys[0]['sections'][3]['type'] == 'waiting'
         assert journeys[0]['sections'][4]['display_informations']['physical_mode'] == 'Bus'
         assert 'path' not in journeys[0]['sections'][2]
+        assert 'geojson' in journeys[0]['sections'][2]
+        assert 'coordinates' in journeys[0]['sections'][2]['geojson']
+        assert len(journeys[0]['sections'][2]['geojson']['coordinates']) == 2
 
         query = (
             '/v1/coverage/routing_with_transfer_test/journeys?'
@@ -1089,6 +1093,9 @@ class TestRoutingWithTransfer(NewDefaultScenarioAbstractTestFixture):
         assert journeys[0]['sections'][2]['path'][0]['name'] == 'rue de'
         assert journeys[0]['sections'][2]['path'][1]['name'] == 'rue cd'
         assert journeys[0]['sections'][2]['path'][2]['name'] == 'rue bc'
+        assert 'geojson' in journeys[0]['sections'][2]
+        assert 'coordinates' in journeys[0]['sections'][2]['geojson']
+        assert len(journeys[0]['sections'][2]['geojson']['coordinates']) == 4
 
     def test_complete_transfer_path_metro_tramway(self):
         """
@@ -1114,6 +1121,9 @@ class TestRoutingWithTransfer(NewDefaultScenarioAbstractTestFixture):
         assert journeys[0]['sections'][3]['type'] == 'waiting'
         assert journeys[0]['sections'][4]['display_informations']['physical_mode'] == 'Metro'
         assert 'path' not in journeys[0]['sections'][2]
+        assert 'geojson' in journeys[0]['sections'][2]
+        assert 'coordinates' in journeys[0]['sections'][2]['geojson']
+        assert len(journeys[0]['sections'][2]['geojson']['coordinates']) == 2
 
         query = (
             '/v1/coverage/routing_with_transfer_test/journeys?'
@@ -1134,3 +1144,6 @@ class TestRoutingWithTransfer(NewDefaultScenarioAbstractTestFixture):
         assert journeys[0]['sections'][3]['type'] == 'waiting'
         assert journeys[0]['sections'][4]['display_informations']['physical_mode'] == 'Metro'
         assert 'path' not in journeys[0]['sections'][2]
+        assert 'geojson' in journeys[0]['sections'][2]
+        assert 'coordinates' in journeys[0]['sections'][2]['geojson']
+        assert len(journeys[0]['sections'][2]['geojson']['coordinates']) == 2

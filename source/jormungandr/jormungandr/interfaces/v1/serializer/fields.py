@@ -199,8 +199,11 @@ class SectionGeoJsonField(jsonschema.Field):
         elif value.type == response_pb2.PUBLIC_TRANSPORT:
             coords = value.shape
         elif value.type == response_pb2.TRANSFER:
-            coords.append(value.origin.stop_point.coord)
-            coords.append(value.destination.stop_point.coord)
+            if value.street_network and value.street_network.coordinates:
+                coords = value.street_network.coordinates
+            else:
+                coords.append(value.origin.stop_point.coord)
+                coords.append(value.destination.stop_point.coord)
         else:
             return
 
