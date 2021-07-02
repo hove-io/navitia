@@ -1044,7 +1044,6 @@ class TestRoutingWithTransfer(NewDefaultScenarioAbstractTestFixture):
         """
             We first query without requesting walking _transfer_path and then with _transfer_path
             With _transfer_path enabled we expect in transfer section :
-            - a geojson (with more details, not just a simple crow_fly)
             - a path
             - same duration as with _transfer_path=false
         """
