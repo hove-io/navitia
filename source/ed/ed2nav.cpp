@@ -183,18 +183,12 @@ struct FindAdminWithCities {
                 ST_Y(coord::geometry) as lat,
                 ST_ASTEXT(boundary) as boundary
             FROM
-                administrative_regions,
-                (
-                    SELECT boundary as within_bound
-                    FROM administrative_regions
+                administrative_regions
                     WHERE ST_DWithin(
                     ST_GeographyFromText('POINT(%.16f %.16f)'),
                     boundary, 0.001
-                    )
-                ) AS within
-            WHERE
-                ST_DWithin(within_bound, boundary, 0.001)
-            )sql") % c.lon() % c.lat();
+                    ))sql") % c.lon()
+                             % c.lat();
         pqxx::result db_result = work->exec(sql_req.str());
 
         auto not_in_insee_admins_map = [&](const pqxx_row& row) {
