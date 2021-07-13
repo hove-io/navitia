@@ -361,7 +361,7 @@ class InstanceManager(object):
             req.requested_api = type_pb2.METADATAS
 
             try:
-                resp = self.instances[key_region].send_and_receive(req, request_id=request_id, timeout=1000)
+                resp = self.instances[key_region].send_and_receive(req, request_id=request_id)
                 resp_dict = protobuf_to_dict(resp.metadatas)
             except DeadSocketException:
                 resp_dict = {
