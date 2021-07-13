@@ -128,8 +128,7 @@ inline void doWork(zmq::context_t& context,
         LOG4CPLUS_DEBUG(logger, "deadline set to " << deadline.get());
         const auto data = data_manager.get_data();
         try {
-            deadline.check();
-            w.dispatch(pb_req, *data);
+            w.dispatch(deadline, pb_req, *data);
             if (api != pbnavitia::METADATAS) {
                 LOG4CPLUS_TRACE(logger, "response: " << w.pb_creator.get_response().DebugString());
             }
