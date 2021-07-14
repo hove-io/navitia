@@ -669,7 +669,11 @@ def filter_transfer_path(journey_sections):
             logger.debug("pt_display_informations or physical_mode not found in section")
             continue
 
-        next_section = journey_sections[index + 2]
+        next_section = (
+            journey_sections[index + 2]
+            if journey_sections[index + 1].type == response_pb2.WAITING
+            else journey_sections[index + 1]
+        )
         if not (
             next_section.HasField('pt_display_informations')
             and next_section.pt_display_informations.HasField('physical_mode')
