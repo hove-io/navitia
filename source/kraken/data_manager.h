@@ -88,6 +88,8 @@ public:
             throw navitia::exception("Giving a null Data to DataManager::set_data");
         }
         data->is_connected_to_rabbitmq = current_data->is_connected_to_rabbitmq.load();
+
+        std::lock_guard<std::mutex> lock(*mutex);
         current_data = std::move(data);
     }
     boost::shared_ptr<const Data> get_data() const {

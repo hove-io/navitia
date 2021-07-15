@@ -93,7 +93,9 @@ public:
     // see: https://stackoverflow.com/questions/6012157/is-stdunique-ptrt-required-to-know-the-full-definition-of-t
     ~Worker();
 
-    void dispatch(const navitia::Deadline& deadline, const pbnavitia::Request& request, const nt::Data& data);
+    void dispatch(const pbnavitia::Request& request,
+                  const nt::Data& data,
+                  const boost::optional<const navitia::Deadline&>& deadline = boost::none);
     boost::optional<size_t> get_raptor_next_st_cache_miss() const;
 
 private:

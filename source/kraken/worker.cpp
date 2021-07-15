@@ -1076,12 +1076,16 @@ boost::optional<size_t> Worker::get_raptor_next_st_cache_miss() const {
     return boost::none;
 }
 
-void Worker::dispatch(const navitia::Deadline& deadline, const pbnavitia::Request& request, const nt::Data& data) {
+void Worker::dispatch(const pbnavitia::Request& request,
+                      const nt::Data& data,
+                      const boost::optional<const navitia::Deadline&>& deadline) {
     bool disable_geojson = get_geojson_state(request);
     boost::posix_time::ptime current_datetime = bt::from_time_t(request._current_datetime());
     this->init_worker_data(&data, current_datetime, null_time_period, disable_geojson, request.disable_feedpublisher(),
                            request.disable_disruption());
-    deadline.check();
+    if (deadline) {
+        deadline->check();
+    }
     // These api can respond even if the data isn't loaded
     if (request.requested_api() == pbnavitia::STATUS) {
         status();
