@@ -553,6 +553,74 @@ class Journeys(JourneyCommon):
             ' - This is a list, you can add to the maximun 20 _here_exclusion_area[]\n',
         )
         parser_get.add_argument(
+            "_asgard_language",
+            type=OptionValue(
+                [
+                    'bulgarian',
+                    'catalan',
+                    'czech',
+                    'danish',
+                    'german',
+                    'greek',
+                    'english_gb',
+                    'english_pirate',
+                    'english_us',
+                    'spanish',
+                    'estonian',
+                    'finnish',
+                    'french',
+                    'hindi',
+                    'hungarian',
+                    'italian',
+                    'japanese',
+                    'bokmal',
+                    'dutch',
+                    'polish',
+                    'portuguese_br',
+                    'portuguese_pt',
+                    'romanian',
+                    'russian',
+                    'slovak',
+                    'slovenian',
+                    'swedish',
+                    'turkish',
+                    'ukrainian',
+                ]
+            ),
+            hidden=True,
+            help='Select a specific language for Asgard guidance instruction.\n'
+            'list available:\n'
+            '- bulgarian = bg-BG\n'
+            '- catalan = ca-ES\n'
+            '- czech = cs-CZ\n'
+            '- danish = da-DK\n'
+            '- german = de-DE\n'
+            '- greek = el-GR\n'
+            '- english_gb = en-GB\n'
+            '- english_pirate = en-US-x-pirate\n'
+            '- english_us = en-US\n'
+            '- spanish = es-ES\n'
+            '- estonian = et-EE\n'
+            '- finnish = fi-FI\n'
+            '- french = fr-FR\n'
+            '- hindi = hi-IN\n'
+            '- hungarian = hu-HU\n'
+            '- italian = it-IT\n'
+            '- japanese = ja-JP\n'
+            '- bokmal = nb-NO\n'
+            '- dutch = nl-NL\n'
+            '- polish = pl-PL\n'
+            '- portuguese_br = pt-BR\n'
+            '- portuguese_pt = pt-PT\n'
+            '- romanian = ro-RO\n'
+            '- russian = ru-RU\n'
+            '- slovak = sk-SK\n'
+            '- slovenian = sl-SI\n'
+            '- swedish = sv-SE\n'
+            '- turkish = tr-TR\n'
+            '- ukrainian = uk-UA\n',
+        )
+        parser_get.add_argument(
             "equipment_details",
             default=True,
             type=BooleanType(),
@@ -725,6 +793,9 @@ class Journeys(JourneyCommon):
                 tmp = 'max_{}_direct_path_distance'.format(mode)
                 if args.get(tmp) is None:
                     args[tmp] = getattr(mod, tmp)
+
+            if args.get('_asgard_language') is None:
+                args['_asgard_language'] = mod.asgard_language
 
         # When computing 'same_journey_schedules'(is_journey_schedules=True), some parameters need to be overridden
         # because they are contradictory to the request
