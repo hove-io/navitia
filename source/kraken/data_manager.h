@@ -40,6 +40,7 @@ www.navitia.io
 
 #include <boost/make_shared.hpp>
 #include <boost/optional.hpp>
+#include <boost/thread.hpp>
 
 #include <mutex>
 #include <memory>
@@ -77,7 +78,7 @@ private:
         }
     }
 
-    std::unique_ptr<std::mutex> mutex = std::make_unique<std::mutex>();
+    std::unique_ptr<boost::shared_mutex> write = std::make_unique<boost::shared_mutex>();
 
 public:
     DataManager() : current_data(create_data(0)) { data_identifier = 0; }
@@ -89,11 +90,11 @@ public:
         }
         data->is_connected_to_rabbitmq = current_data->is_connected_to_rabbitmq.load();
 
-        std::lock_guard<std::mutex> lock(*mutex);
+        boost::lock_guard<boost::shared_mutex> lock(*write);
         current_data = std::move(data);
     }
     boost::shared_ptr<const Data> get_data() const {
-        std::lock_guard<std::mutex> lock(*mutex);
+        boost::shared_lock<boost::shared_mutex> lock(*write);
         return current_data;
     }
     boost::shared_ptr<Data> get_data_clone() {
