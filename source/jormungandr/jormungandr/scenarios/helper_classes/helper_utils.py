@@ -49,7 +49,7 @@ import time
 
 
 CAR_PARK_DURATION = 300  # secs
-allowed_physical_mode_for_transfert_path = ['Bus', 'Tramway', 'RapidTransit']
+allowed_physical_mode_for_transfert_path = ('Bus', 'Tramway', 'RapidTransit')
 
 
 def _create_crowfly(pt_journey, crowfly_origin, crowfly_destination, begin, end, mode):
