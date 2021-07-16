@@ -176,7 +176,11 @@ class MockTimeo(Timeo):
                                     "Destination": "DIRECTION AA",
                                     "TerminusSAECode": "Avj2",
                                 },
-                                {"NextStop": "10:25:52", "Destination": "DIRECTION AA", "TerminusSAECode": "E"},
+                                {
+                                    "NextStop": "10:25:52",
+                                    "Destination": "DIRECTION AA",
+                                    "TerminusSAECode": "E:sp",
+                                },
                             ],
                         },
                     }
@@ -1041,19 +1045,14 @@ class TestDepartures(AbstractTestFixture):
             sp='TS_C:sp', dt='20160107T0730', data_freshness='&data_freshness=realtime', c_dt='20160107T0730'
         )
         response = self.query_region(query)
-        notes = response["notes"]
-        is_valid_notes(response["notes"])
-        assert len(notes) == 1
-        assert notes[0]["id"] == 'note:9c11592e360d41f232a6e669432d5c3d'
-        assert notes[0]["value"] == 'TS_D'
         terminus_schedules = response['terminus_schedules']
         assert len(terminus_schedules) == 2
         tmp = terminus_schedules[0]
-
+        assert tmp["additional_informations"] == "no_departure_this_day"
         assert tmp["display_informations"]["direction"] == "TS_E"
-        assert len(tmp['date_times']) == 2
-        assert tmp['date_times'][0]["date_time"] == '20160107T090052'
-        assert tmp['date_times'][0]['data_freshness'] == 'realtime'
+        assert len(tmp['date_times']) == 0
 
-        assert tmp['date_times'][1]["date_time"] == '20160107T091052'
-        assert tmp['date_times'][1]['data_freshness'] == 'realtime'
+        tmp = terminus_schedules[1]
+        assert tmp["additional_informations"] == "no_departure_this_day"
+        assert tmp["display_informations"]["direction"] == "TS_A"
+        assert len(tmp['date_times']) == 0

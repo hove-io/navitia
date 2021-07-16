@@ -230,7 +230,6 @@ class Timeo(RealtimeProxy):
                 raise RealtimeProxyError(timeo_internal_error_message)
 
         st_responses = timeo_resp.get('StopTimesResponse')
-        map_direction = {"A": "forward", "R": "backward"}
         # by construction there should be only one StopTimesResponse
         if not st_responses or len(st_responses) != 1:
             logging.getLogger(__name__).warning(
@@ -241,7 +240,6 @@ class Timeo(RealtimeProxy):
 
         next_stoptimes_message = st_responses[0]['NextStopTimesMessage']
         next_st = next_stoptimes_message.get("NextExpectedStopTime", [])
-        way = map_direction.get(next_stoptimes_message.get("Way"))
         new_next_st = [n_st for n_st in next_st if n_st.get("is_realtime", True)]
         if not len(new_next_st) and len(next_st):
             return None
@@ -254,7 +252,7 @@ class Timeo(RealtimeProxy):
                 object_code=next_expected_st.get('TerminusSAECode'),
                 default_value=next_expected_st.get('Destination'),
             )
-            next_passage = RealTimePassage(dt, direction.label, direction_uri=direction.uri, way=way)
+            next_passage = RealTimePassage(dt, direction.label, direction_uri=direction.uri)
             next_passages.append(next_passage)
 
         return next_passages

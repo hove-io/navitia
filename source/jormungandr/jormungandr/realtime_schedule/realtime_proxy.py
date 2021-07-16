@@ -200,28 +200,11 @@ class RealtimeProxy(six.with_metaclass(ABCMeta, object)):
         # we clean up the old schedule
         pb_del_if(stop_schedule.date_times, self._filter_base_stop_schedule)
         direction_uri = stop_schedule.pt_display_informations.uris.stop_area
-        not_attached = list()
         for passage in next_realtime_passages:
             if groub_by_dest and not self._is_valid_direction(direction_uri, passage.direction_uri):
-                not_attached.append(passage)
                 continue
             add_direction = direction_uri != passage.direction_uri
-            self._add_datetime(stop_schedule, passage, add_direction=add_direction)
-
-        # Build attached next_passages
-        if (
-            groub_by_dest
-            and not_attached
-            and stop_schedule.HasField("route")
-            and stop_schedule.route.HasField("direction_type")
-        ):
-            direction_type = stop_schedule.route.direction_type
-            for passage in not_attached:
-                add_direction = direction_uri != passage.direction_uri
-                if not passage.way:
-                    continue
-                if direction_type == passage.way:
-                    self._add_datetime(stop_schedule, passage, add_direction=add_direction)
+            self._add_datetime(stop_schedule, passage, add_direction)
 
         stop_schedule.date_times.sort(key=lambda dt: dt.date + dt.time)
         if not len(stop_schedule.date_times) and not stop_schedule.HasField('response_status'):
