@@ -621,6 +621,14 @@ class Journeys(JourneyCommon):
             help="Only used in bss mode, how much the maneuver is penalized in the search algorithm",
         )
 
+        parser_get.add_argument(
+            "_transfer_path",
+            type=BooleanType(),
+            default=False,
+            hidden=True,
+            help="Compute pathways using the street_network engine for transfers between surface physical modes",
+        )
+
     @add_tad_links()
     @add_debug_info()
     @add_fare_links()

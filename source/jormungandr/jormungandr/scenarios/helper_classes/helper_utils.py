@@ -49,6 +49,7 @@ import time
 
 
 CAR_PARK_DURATION = 300  # secs
+allowed_physical_mode_for_transfert_path = ('Bus', 'Tramway', 'RapidTransit')
 
 
 def _create_crowfly(pt_journey, crowfly_origin, crowfly_destination, begin, end, mode):
@@ -649,3 +650,83 @@ def timed_logger(logger, task_name, request_id):
         )
         if elapsed_time > 1e-5:
             logger.info('time  in {}: {}s'.format(task_name, '%.2e' % elapsed_time))
+
+
+def filter_transfer_path(journey_sections):
+    logger = logging.getLogger(__name__)
+
+    transfer_sections = []
+    for index in range(1, len(journey_sections) - 2):
+        if journey_sections[index].type != response_pb2.TRANSFER:
+            continue
+
+        prev_section = journey_sections[index - 1]
+        if not (
+            prev_section.HasField('pt_display_informations')
+            and prev_section.pt_display_informations.HasField('physical_mode')
+            and prev_section.pt_display_informations.physical_mode in allowed_physical_mode_for_transfert_path
+        ):
+            logger.debug("pt_display_informations or physical_mode not found in section")
+            continue
+
+        next_section = (
+            journey_sections[index + 2]
+            if journey_sections[index + 1].type == response_pb2.WAITING
+            else journey_sections[index + 1]
+        )
+        if not (
+            next_section.HasField('pt_display_informations')
+            and next_section.pt_display_informations.HasField('physical_mode')
+            and next_section.pt_display_informations.physical_mode in allowed_physical_mode_for_transfert_path
+        ):
+            logger.debug("pt_display_informations or physical_mode not found in section")
+            continue
+
+        transfer_sections.append(journey_sections[index])
+    return transfer_sections
+
+
+def compute_transfer(pt_journey, transfer_path_pool, request, request_id):
+    """
+    Launching transfer computation asynchronously once the pt_journey is finished
+    """
+    logger = logging.getLogger(__name__)
+    logger.debug("computing walking transfer in pt journey")
+
+    direct_path_type = StreetNetworkPathType.DIRECT
+    real_mode = 'walking'
+    transfer_sections = []
+
+    for (_, _, journey) in pt_journey:
+        for s in filter_transfer_path(journey.sections):
+            pt_arrival = s.end_date_time
+            fallback_extremity = PeriodExtremity(pt_arrival, False)
+            sub_request_id = "{}_{}_{}".format(request_id, s.origin.uri, s.destination.uri)
+            transfer_path_pool.add_async_request(
+                s.origin, s.destination, real_mode, fallback_extremity, request, direct_path_type, sub_request_id
+            )
+            transfer_sections.append(s)
+    return transfer_sections
+
+
+def complete_transfer(pt_journey, transfer_path_pool, request, transfer_sections):
+    """
+        We complete the pt_journey by adding to transfer section :
+        - path
+        - We do not modify duration !!
+    """
+    logger = logging.getLogger(__name__)
+    logger.debug("completing walking transfer in pt journey")
+
+    direct_path_type = StreetNetworkPathType.DIRECT
+    real_mode = 'walking'
+
+    for s in transfer_sections:
+        fallback_extremity = PeriodExtremity(s.end_date_time, True)
+        transfer_journeys = transfer_path_pool.wait_and_get(
+            s.origin, s.destination, real_mode, fallback_extremity, direct_path_type, request
+        )
+
+        if transfer_journeys and transfer_journeys.journeys:
+            new_section = transfer_journeys.journeys[0].sections
+            s.street_network.CopyFrom(new_section[0].street_network)
