@@ -56,52 +56,52 @@ namespace type {
 
 template <typename T>
 struct ContainerTrait {
-    typedef std::vector<T*> vect_type;
-    typedef std::unordered_map<std::string, T*> associative_type;
+    using vect_type = std::vector<T*>;
+    using associative_type = std::unordered_map<std::string, T*>;
 };
 
 // specialization for impact
 // Instead of pure pointer, we can only get a weak_ptr when requesting impacts
 template <>
 struct ContainerTrait<type::disruption::Impact> {
-    typedef std::vector<boost::weak_ptr<type::disruption::Impact>> vect_type;
+    using vect_type = std::vector<boost::weak_ptr<type::disruption::Impact> >;
     // for impacts, we don't want to have a map, we use the vector as the associative_type
-    typedef vect_type associative_type;
+    using associative_type = vect_type;
 };
 
 // specialization for StopPointConnection, there is no map too
 template <>
 struct ContainerTrait<type::StopPointConnection> {
-    typedef std::vector<type::StopPointConnection*> vect_type;
-    typedef vect_type associative_type;
+    using vect_type = std::vector<type::StopPointConnection*>;
+    using associative_type = vect_type;
 };
 
 template <>
 struct ContainerTrait<navitia::georef::POIType> {
-    typedef std::vector<navitia::georef::POIType*> vect_type;
-    typedef std::map<std::string, navitia::georef::POIType*> associative_type;
+    using vect_type = std::vector<navitia::georef::POIType*>;
+    using associative_type = std::map<std::string, navitia::georef::POIType*>;
 };
 template <>
 struct ContainerTrait<navitia::georef::POI> {
-    typedef std::vector<navitia::georef::POI*> vect_type;
-    typedef std::map<std::string, navitia::georef::POI*> associative_type;
+    using vect_type = std::vector<navitia::georef::POI*>;
+    using associative_type = std::map<std::string, navitia::georef::POI*>;
 };
 template <>
 struct ContainerTrait<navitia::routing::JourneyPattern> {
-    typedef std::vector<navitia::routing::JourneyPattern*> vect_type;
-    typedef vect_type associative_type;
+    using vect_type = std::vector<navitia::routing::JourneyPattern*>;
+    using associative_type = vect_type;
 };
 template <>
 struct ContainerTrait<navitia::routing::JourneyPatternPoint> {
-    typedef std::vector<navitia::routing::JourneyPatternPoint*> vect_type;
-    typedef vect_type associative_type;
+    using vect_type = std::vector<navitia::routing::JourneyPatternPoint*>;
+    using associative_type = vect_type;
 };
 // specialization for meta-vj
 // Instead of vector, we can only get an objFactory when requesting meta-vj
 template <>
 struct ContainerTrait<type::MetaVehicleJourney> {
-    typedef ObjFactory<MetaVehicleJourney> vect_type;
-    typedef vect_type associative_type;
+    using vect_type = ObjFactory<MetaVehicleJourney>;
+    using associative_type = vect_type;
 };
 
 /** Contains all the Public Transport Referential data (aka. PT-Ref), base-schedule and realtime.

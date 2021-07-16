@@ -129,7 +129,7 @@ BOOST_AUTO_TEST_CASE(heat_map_test) {
 
     size_t way_idx = 0;
     for (const auto& name : {"ab", "bc", "ac", "cd"}) {
-        ng::Way* way = new ng::Way();
+        auto* way = new ng::Way();
         way->name = "rue " + std::string(name);
         way->idx = way_idx++;
         way->way_type = "rue";
@@ -144,10 +144,10 @@ BOOST_AUTO_TEST_CASE(heat_map_test) {
     boost::add_edge(AA, CC, ng::Edge(e_idx++, navitia::seconds(1000)), b.data->geo_ref->graph);
     boost::add_edge(CC, DD, ng::Edge(e_idx++, navitia::seconds(10)), b.data->geo_ref->graph);
 
-    b.data->geo_ref->ways[0]->edges.push_back(std::make_pair(AA, BB));
-    b.data->geo_ref->ways[1]->edges.push_back(std::make_pair(BB, CC));
-    b.data->geo_ref->ways[2]->edges.push_back(std::make_pair(AA, CC));
-    b.data->geo_ref->ways[3]->edges.push_back(std::make_pair(CC, DD));
+    b.data->geo_ref->ways[0]->edges.emplace_back(AA, BB);
+    b.data->geo_ref->ways[1]->edges.emplace_back(BB, CC);
+    b.data->geo_ref->ways[2]->edges.emplace_back(AA, CC);
+    b.data->geo_ref->ways[3]->edges.emplace_back(CC, DD);
 
     b.data->geo_ref->init();
     b.data->geo_ref->build_proximity_list();

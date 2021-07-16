@@ -40,6 +40,7 @@ www.navitia.io
 #include <boost/serialization/serialization.hpp>
 #include <boost/date_time/gregorian/greg_serialize.hpp>
 #include <boost/serialization/utility.hpp>
+#include <utility>
 
 namespace navitia {
 namespace fare {
@@ -107,12 +108,8 @@ struct Ticket {
     bool is_default_ticket() const { return value.undefined; }
 
     Ticket() : value(0), type(None) {}
-    Ticket(const std::string& key,
-           const std::string& caption,
-           int value,
-           const std::string& comment,
-           ticket_type type = FlatFare)
-        : key(key), caption(caption), value(value), comment(comment), type(type) {}
+    Ticket(std::string key, std::string caption, int value, std::string comment, ticket_type type = FlatFare)
+        : key(std::move(key)), caption(std::move(caption)), value(value), comment(std::move(comment)), type(type) {}
 
     template <class Archive>
     void serialize(Archive& ar, const unsigned int) {
@@ -130,8 +127,8 @@ inline Ticket make_default_ticket() {
 
 /// Defines a ticket for a given period
 struct PeriodTicket {
-    PeriodTicket() {}
-    PeriodTicket(boost::gregorian::date_period p, Ticket t) : validity_period(p), ticket(t) {}
+    PeriodTicket() = default;
+    PeriodTicket(boost::gregorian::date_period p, Ticket t) : validity_period(p), ticket(std::move(t)) {}
 
     boost::gregorian::date_period validity_period =
         boost::gregorian::date_period(boost::gregorian::date(boost::gregorian::not_a_date_time),
@@ -185,7 +182,7 @@ struct State {
     /// Ticket used
     std::string ticket;
 
-    State() {}
+    State() = default;
 
     bool operator==(const State& other) const { return this->concat() == other.concat(); }
 
@@ -227,7 +224,7 @@ struct Condition {
 
     std::string to_string() const { return key + comp_to_string(comparaison) + value; }
 
-    Condition() {}
+    Condition() = default;
 
     template <class Archive>
     void serialize(Archive& ar, const unsigned int) {
@@ -255,7 +252,7 @@ struct Label {
 
     std::vector<Ticket> tickets;  //< Ensemble de billets à acheter pour arriver à cette étiquette
     /// Constructeur par défaut
-    Label() {}
+    Label() = default;
     bool operator==(const Label& l) const {
         return cost == l.cost && start_time == l.start_time && nb_changes == l.nb_changes && stop_area == l.stop_area
                && zone == l.zone && mode == l.mode && line == l.line && network == l.network;
@@ -320,8 +317,8 @@ struct OD_key {
     enum od_type { Zone, StopArea, Mode };  // NOTE: don't forget to change the bdd enum if this change
     od_type type;
     std::string value;
-    OD_key() {}
-    OD_key(od_type type, std::string value) : type(type), value(value) {}
+    OD_key() = default;
+    OD_key(od_type type, std::string value) : type(type), value(std::move(value)) {}
 
     bool operator<(const OD_key& other) const {
         if (value != other.value)
@@ -349,9 +346,9 @@ struct Fare {
     std::map<OD_key, std::map<OD_key, std::vector<std::string>>> od_tickets;
 
     /// Contient le graph des transitions
-    typedef boost::adjacency_list<boost::listS, boost::vecS, boost::directedS, State, Transition> Graph;
-    typedef boost::graph_traits<Graph>::vertex_descriptor vertex_t;
-    typedef boost::graph_traits<Graph>::edge_descriptor edge_t;
+    using Graph = boost::adjacency_list<boost::listS, boost::vecS, boost::directedS, State, Transition>;
+    using vertex_t = boost::graph_traits<Graph>::vertex_descriptor;
+    using edge_t = boost::graph_traits<Graph>::edge_descriptor;
     Graph g;
     Fare::vertex_t begin_v{};  // begin vertex descriptor
 

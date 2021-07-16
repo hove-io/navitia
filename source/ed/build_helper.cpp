@@ -535,7 +535,7 @@ Impacter& Impacter::on_rail_section(const std::string& line_uri,
     for (const auto& bsa : blocked_stop_areas) {
         auto* sa = b.get<nt::StopArea>(bsa.first);
         if (sa) {
-            rail_section.blocked_stop_areas.push_back(std::make_pair(bsa.first, bsa.second));
+            rail_section.blocked_stop_areas.emplace_back(bsa.first, bsa.second);
         }
     }
 

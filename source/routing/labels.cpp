@@ -34,7 +34,7 @@ www.navitia.io
 namespace navitia {
 namespace routing {
 
-Labels::Labels() {}
+Labels::Labels() = default;
 Labels::Labels(const std::vector<type::StopPoint*> stop_points) : labels(stop_points) {}
 
 Labels::Labels(const Map& dt_pts, const Map& dt_transfers, const Map& walkings, const Map& walking_transfers) {

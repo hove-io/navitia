@@ -44,9 +44,9 @@ struct Edge {
 };
 
 struct Jointures {
-    typedef boost::adjacency_list<boost::listS, boost::vecS, boost::directedS, type::Type_e, Edge> Graph;
-    typedef boost::graph_traits<Graph>::vertex_descriptor vertex_t;
-    typedef boost::graph_traits<Graph>::edge_descriptor edge_t;
+    using Graph = boost::adjacency_list<boost::listS, boost::vecS, boost::directedS, type::Type_e, Edge>;
+    using vertex_t = boost::graph_traits<Graph>::vertex_descriptor;
+    using edge_t = boost::graph_traits<Graph>::edge_descriptor;
 
     navitia::flat_enum_map<type::Type_e, vertex_t> vertex_map{};
     Graph g;

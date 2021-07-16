@@ -72,7 +72,7 @@ Projection& Projection::operator=(const Projection& other) {
     this->custom_pj_init_plus();
     return *this;
 }
-Projection& Projection::operator=(Projection&& other) {
+Projection& Projection::operator=(Projection&& other) noexcept {
     this->custom_pj_free();
 
     name = other.name;
@@ -86,7 +86,7 @@ Projection& Projection::operator=(Projection&& other) {
     return *this;
 }
 
-Projection::Projection(Projection&& other)
+Projection::Projection(Projection&& other) noexcept
     : name(other.name), definition(other.definition), is_degree(other.is_degree) {
 // we got the proj4 ptr, no need for another allocation
 #ifdef PROJ_API_VERSION_MAJOR_4
@@ -137,7 +137,8 @@ navitia::type::GeographicalCoord ConvCoord::convert_to(navitia::type::Geographic
 }
 void ConvCoord::init_proj_for_gis() {
 #ifdef PROJ_API_VERSION_MAJOR_6
-    PJ* prj = proj_create_crs_to_crs(0, this->origin.definition.c_str(), this->destination.definition.c_str(), 0);
+    PJ* prj =
+        proj_create_crs_to_crs(nullptr, this->origin.definition.c_str(), this->destination.definition.c_str(), nullptr);
     if (!prj) {
         throw navitia::exception("invalid projection system");
     }

@@ -48,7 +48,7 @@ public:
     year_bitset days;
     boost::gregorian::date beginning_date;
 
-    ValidityPattern() {}
+    ValidityPattern() = default;
     ValidityPattern(const boost::gregorian::date& beginning_date) : beginning_date(beginning_date) {}
     ValidityPattern(const boost::gregorian::date& beginning_date, const std::string& vp)
         : days(vp), beginning_date(beginning_date) {}

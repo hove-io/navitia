@@ -1675,7 +1675,7 @@ BOOST_AUTO_TEST_CASE(projection_on_one_way) {
 
                          size_t way_idx = 0;
                          for (const auto& name : {"ab", "bc", "ac", "cd"}) {
-                             ng::Way* way = new ng::Way();
+                             auto* way = new ng::Way();
                              way->name = "rue " + std::string(name);
                              way->idx = way_idx++;
                              way->way_type = "rue";
@@ -1690,10 +1690,10 @@ BOOST_AUTO_TEST_CASE(projection_on_one_way) {
                          boost::add_edge(AA, CC, ng::Edge(e_idx++, navitia::seconds(1000)), b.data->geo_ref->graph);
                          boost::add_edge(CC, DD, ng::Edge(e_idx++, navitia::seconds(10)), b.data->geo_ref->graph);
 
-                         b.data->geo_ref->ways[0]->edges.push_back(std::make_pair(BB, AA));
-                         b.data->geo_ref->ways[1]->edges.push_back(std::make_pair(BB, CC));
-                         b.data->geo_ref->ways[2]->edges.push_back(std::make_pair(AA, CC));
-                         b.data->geo_ref->ways[3]->edges.push_back(std::make_pair(CC, DD));
+                         b.data->geo_ref->ways[0]->edges.emplace_back(BB, AA);
+                         b.data->geo_ref->ways[1]->edges.emplace_back(BB, CC);
+                         b.data->geo_ref->ways[2]->edges.emplace_back(AA, CC);
+                         b.data->geo_ref->ways[3]->edges.emplace_back(CC, DD);
 
                          b.data->build_proximity_list();
                      }};
@@ -1754,7 +1754,7 @@ BOOST_AUTO_TEST_CASE(use_crow_fly) {
     navitia::type::EntryPoint ep;
     navitia::type::StopPoint sp;
     navitia::type::StopArea sa;
-    ng::Admin* admin = new ng::Admin();
+    auto* admin = new ng::Admin();
     sp.stop_area = &sa;
     sa.admin_list.push_back(admin);
 
@@ -2062,7 +2062,7 @@ BOOST_AUTO_TEST_CASE(journey_with_forbidden) {
     BOOST_REQUIRE_EQUAL(resp.journeys(0).sections_size(), 3);
     BOOST_REQUIRE_EQUAL(resp.journeys(0).sections(1).pt_display_informations().uris().line(), "A");
 
-    forbidden.push_back("A");
+    forbidden.emplace_back("A");
     pb_creator.init(data_ptr, boost::gregorian::not_a_date_time, null_time_period);
     make_response(pb_creator, raptor, origin, destination, {ntest::to_posix_timestamp("20120614T021000")}, true,
                   navitia::type::AccessibiliteParams(), forbidden, {}, sn_worker, nt::RTLevel::Base, 2_min);
@@ -3010,20 +3010,20 @@ std::tuple<nr::Journey, nr::Journey, nr::Journey> build_night_bus_journeys(ed::b
     const auto& stl2 = d.vehicle_journeys[2]->stop_time_list;
 
     nr::Journey j0;
-    j0.sections.push_back(nr::Journey::Section(stl0[0], navitia::DateTimeUtils::set(0, "08:55"_t), stl0[1],
-                                               navitia::DateTimeUtils::set(0, "23:30"_t)));
+    j0.sections.emplace_back(stl0[0], navitia::DateTimeUtils::set(0, "08:55"_t), stl0[1],
+                             navitia::DateTimeUtils::set(0, "23:30"_t));
     j0.departure_dt = navitia::DateTimeUtils::set(0, "08:15"_t);
     j0.arrival_dt = navitia::DateTimeUtils::set(0, "23:45"_t);
 
     nr::Journey j1;
-    j1.sections.push_back(nr::Journey::Section(stl1[0], navitia::DateTimeUtils::set(0, "09:00"_t), stl1[1],
-                                               navitia::DateTimeUtils::set(0, "10:00"_t)));
+    j1.sections.emplace_back(stl1[0], navitia::DateTimeUtils::set(0, "09:00"_t), stl1[1],
+                             navitia::DateTimeUtils::set(0, "10:00"_t));
     j1.departure_dt = navitia::DateTimeUtils::set(0, "08:30"_t);
     j1.arrival_dt = navitia::DateTimeUtils::set(0, "10:30"_t);
 
     nr::Journey j2;
-    j2.sections.push_back(nr::Journey::Section(stl2[0], navitia::DateTimeUtils::set(0, "22:00"_t), stl2[1],
-                                               navitia::DateTimeUtils::set(0, "23:00"_t)));
+    j2.sections.emplace_back(stl2[0], navitia::DateTimeUtils::set(0, "22:00"_t), stl2[1],
+                             navitia::DateTimeUtils::set(0, "23:00"_t));
     j2.departure_dt = navitia::DateTimeUtils::set(0, "21:55"_t);
     j2.arrival_dt = navitia::DateTimeUtils::set(0, "23:10"_t);
 

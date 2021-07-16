@@ -34,6 +34,7 @@ www.navitia.io
 #include "routing/raptor_utils.h"
 
 #include <boost/graph/two_bit_color_map.hpp>
+#include <utility>
 
 namespace bt = boost::posix_time;
 
@@ -51,7 +52,7 @@ struct RoutingElement {
     RoutingStatus_e routing_status = RoutingStatus_e::reached;
     RoutingElement(navitia::time_duration time_duration = navitia::time_duration(),
                    RoutingStatus_e routing_status = RoutingStatus_e::reached)
-        : time_duration(time_duration), routing_status(routing_status) {}
+        : time_duration(std::move(time_duration)), routing_status(routing_status) {}
 };
 
 template <typename T>

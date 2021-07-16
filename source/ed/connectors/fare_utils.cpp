@@ -53,8 +53,8 @@ BOOST_FUSION_ADAPT_STRUCT(navitia::fare::Condition,
 namespace ed {
 namespace connectors {
 
-invalid_key::~invalid_key() noexcept {}
-invalid_condition::~invalid_condition() noexcept {}
+invalid_key::~invalid_key() noexcept = default;
+invalid_condition::~invalid_condition() noexcept = default;
 
 namespace qi = ::boost::spirit::qi;
 namespace ph = ::boost::phoenix;

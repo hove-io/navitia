@@ -45,13 +45,13 @@ www.navitia.io
 
 namespace bg = boost::geometry;
 typedef bg::model::point<double, 2, bg::cs::cartesian> point;
-typedef bg::model::polygon<point, false, false> polygon_type;  // ccw, open polygon
-typedef bg::model::multi_polygon<polygon_type> mpolygon_type;
+using polygon_type = bg::model::polygon<point, false, false>;  // ccw, open polygon
+using mpolygon_type = bg::model::multi_polygon<polygon_type>;
 
 namespace navitia {
 namespace cities {
 
-typedef uint64_t OSMId;
+using OSMId = uint64_t;
 
 struct Rect {
     double min[2];
@@ -139,10 +139,10 @@ struct OSMWay {
     std::string coord_to_string() const;
 };
 
-typedef std::set<OSMWay>::const_iterator it_way;
-typedef std::map<const OSMRelation*, std::vector<it_way>> rel_ways;
-typedef std::set<OSMRelation>::const_iterator admin_type;
-typedef std::pair<admin_type, double> admin_distance;
+using it_way = std::set<OSMWay>::const_iterator;
+using rel_ways = std::map<const OSMRelation*, std::vector<it_way> >;
+using admin_type = std::set<OSMRelation>::const_iterator;
+using admin_distance = std::pair<admin_type, double>;
 
 struct OSMCache {
     std::unordered_map<OSMId, OSMRelation> relations;

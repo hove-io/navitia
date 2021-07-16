@@ -80,6 +80,10 @@ class Timeo(RealtimeProxy):
         self.rt_system_id = id
         self.object_id_tag = object_id_tag if object_id_tag else id
         self.destination_id_tag = destination_id_tag if destination_id_tag else "source"
+        self.timeo_stop_code = kwargs.get("source_stop_code", "StopTimeoCode")
+        self.timeo_line_code = kwargs.get("source_line_code", "LineTimeoCode")
+        self.next_stop_time_number = kwargs.get("next_stop_time_number", 5)
+
         self.instance = instance
         fail_max = kwargs.get(
             'circuit_breaker_max_fail', app.config.get(str('CIRCUIT_BREAKER_MAX_TIMEO_FAIL'), 5)
@@ -234,7 +238,8 @@ class Timeo(RealtimeProxy):
             )
             raise RealtimeProxyError('invalid response')
 
-        next_st = st_responses[0]['NextStopTimesMessage'].get("NextExpectedStopTime", [])
+        next_stoptimes_message = st_responses[0]['NextStopTimesMessage']
+        next_st = next_stoptimes_message.get("NextExpectedStopTime", [])
         new_next_st = [n_st for n_st in next_st if n_st.get("is_realtime", True)]
         if not len(new_next_st) and len(next_st):
             return None
@@ -283,8 +288,8 @@ class Timeo(RealtimeProxy):
             self.record_internal_failure('missing id')
             return None
 
-        # timeo can only handle items_per_schedule if it's < 5
-        count = min(count or 5, 5)  # if no value defined we ask for 5 passages
+        # timeo can only handle items_per_schedule if it's < 10
+        count = min(count or self.next_stop_time_number, 10)  # if no value defined we ask for 10 passages
 
         # if a custom datetime is provided we give it to timeo but we round it to improve cachability
         dt_param = (
@@ -302,11 +307,20 @@ class Timeo(RealtimeProxy):
         stop_id_url = (
             "StopDescription=?"
             "StopTimeType={data_freshness}"
-            "&LineTimeoCode={line}"
+            "&{line_timeo_code}={line}"
             "&Way={route}"
             "&NextStopTimeNumber={count}"
-            "&StopTimeoCode={stop}{dt};"
-        ).format(stop=stop, line=line, route=route, count=count, data_freshness='TR', dt=dt_param)
+            "&{stop_timeo_code}={stop}{dt};"
+        ).format(
+            stop=stop,
+            line=line,
+            route=route,
+            count=count,
+            data_freshness='TR',
+            dt=dt_param,
+            stop_timeo_code=self.timeo_stop_code,
+            line_timeo_code=self.timeo_line_code,
+        )
 
         url = "{base_url}?{base_params}&{stop_id}".format(
             base_url=self.service_url, base_params=base_params, stop_id=stop_id_url

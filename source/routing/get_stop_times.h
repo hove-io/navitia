@@ -37,7 +37,7 @@ www.navitia.io
 
 namespace navitia {
 namespace routing {
-typedef std::pair<DateTime, const type::StopTime*> datetime_stop_time;
+using datetime_stop_time = std::pair<DateTime, const type::StopTime*>;
 
 /**
  * @brief get_stop_times: Return all departures leaving from the journey_pattern points

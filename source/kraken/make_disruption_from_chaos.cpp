@@ -285,7 +285,7 @@ boost::optional<nt::disruption::RailSection> make_rail_section(const chaos::PtOb
     if (!pb_section.blocked_stop_areas().empty()) {
         log_message += " blocked stop _areas: ";
         for (const auto& pb_bsa : pb_section.blocked_stop_areas()) {
-            rail_section.blocked_stop_areas.push_back(std::make_pair(pb_bsa.uri(), pb_bsa.order()));
+            rail_section.blocked_stop_areas.emplace_back(pb_bsa.uri(), pb_bsa.order());
             log_message += pb_bsa.uri() + ";";
         }
     }

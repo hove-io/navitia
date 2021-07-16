@@ -160,7 +160,8 @@ class ExternalServiceManager(object):
         :return: response: external_services json
         """
         service = self._get_external_service(navitia_service)
-        return service.get_response(arguments) if service else None
+        # Return empty object instead of None if error occurs while calling external service.
+        return service.get_response(arguments) if service else {'free_floatings': []}
 
     def _get_external_service(self, navitia_service):
         # Make sure we update the external services list from the database before returning them

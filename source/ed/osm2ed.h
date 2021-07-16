@@ -45,13 +45,14 @@ www.navitia.io
 
 #include <unordered_map>
 #include <set>
+#include <utility>
 
 namespace bg = boost::geometry;
 typedef bg::model::point<double, 2, bg::cs::cartesian> point;
-typedef bg::model::polygon<point, false, false> polygon_type;  // ccw, open polygon
-typedef bg::model::multi_polygon<polygon_type> mpolygon_type;
-typedef bg::model::multi_point<point> mpoint_type;
-typedef bg::model::linestring<point> ls_type;
+using polygon_type = bg::model::polygon<point, false, false>;  // ccw, open polygon
+using mpolygon_type = bg::model::multi_polygon<polygon_type>;
+using mpoint_type = bg::model::multi_point<point>;
+using ls_type = bg::model::linestring<point>;
 
 namespace ed {
 namespace connectors {
@@ -155,9 +156,9 @@ struct OSMAdminRelation : public Admin {
                      const std::string& postal_code,
                      const std::string& name,
                      const uint32_t level);
-    virtual ~OSMAdminRelation() {}
+    ~OSMAdminRelation() override = default;
 
-    virtual void build_geometry(OSMCache& cache);
+    void build_geometry(OSMCache& cache) override;
     void build_polygon(OSMCache& cache);
 };
 
@@ -188,9 +189,9 @@ struct OSMWay {
     }
     OSMWay(const u_int64_t osm_id,
            const std::bitset<8>& properties,
-           const std::string& name,
+           std::string name,
            boost::optional<float> car_speed = boost::none)
-        : osm_id(osm_id), properties(properties), name(name), car_speed(car_speed) {}
+        : osm_id(osm_id), properties(properties), name(std::move(name)), car_speed(car_speed) {}
 
     void add_node(std::set<OSMNode>::const_iterator node) const {
         nodes.push_back(node);
@@ -253,18 +254,18 @@ struct AssociateStreetRelation {
     const uint64_t way_id = std::numeric_limits<uint64_t>::max();
     const std::string streetname = "";
 
-    AssociateStreetRelation(const uint64_t osm_id, const uint64_t way_id, const std::string& streetname)
-        : osm_id(osm_id), way_id(way_id), streetname(streetname) {}
+    AssociateStreetRelation(const uint64_t osm_id, const uint64_t way_id, std::string streetname)
+        : osm_id(osm_id), way_id(way_id), streetname(std::move(streetname)) {}
 
     AssociateStreetRelation(const uint64_t osm_id) : osm_id(osm_id) {}
 
     bool operator<(const AssociateStreetRelation& other) const { return this->osm_id < other.osm_id; }
 };
 
-typedef std::set<OSMWay>::const_iterator it_way;
-typedef std::map<std::set<const Admin*>, std::set<it_way>> rel_ways;
-typedef std::set<OSMAdminRelation>::const_iterator admin_type;
-typedef std::pair<admin_type, double> admin_distance;
+using it_way = std::set<OSMWay>::const_iterator;
+using rel_ways = std::map<std::set<const Admin*>, std::set<it_way>>;
+using admin_type = std::set<OSMAdminRelation>::const_iterator;
+using admin_distance = std::pair<admin_type, double>;
 
 constexpr double M_TO_DEG = 1.0 / 111320.0;  // approximate the convertion between meter to degree
 
@@ -326,9 +327,9 @@ struct ReadWaysVisitor {
     const PoiTypeParams poi_params;
     SpeedsParser speed_parser;
 
-    ReadWaysVisitor(OSMCache& cache, const PoiTypeParams& poi_params) : cache(cache), poi_params(poi_params) {}
-    ReadWaysVisitor(OSMCache& cache, const PoiTypeParams& poi_params, const SpeedsParser& parser)
-        : cache(cache), poi_params(poi_params), speed_parser(parser) {}
+    ReadWaysVisitor(OSMCache& cache, PoiTypeParams poi_params) : cache(cache), poi_params(std::move(poi_params)) {}
+    ReadWaysVisitor(OSMCache& cache, PoiTypeParams poi_params, SpeedsParser parser)
+        : cache(cache), poi_params(std::move(poi_params)), speed_parser(std::move(parser)) {}
     ~ReadWaysVisitor();
 
     void node_callback(uint64_t, double, double, const CanalTP::Tags&) {}

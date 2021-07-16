@@ -29,6 +29,8 @@ www.navitia.io
 */
 
 #pragma once
+#include <utility>
+
 #include "type/type_interfaces.h"
 
 namespace navitia {
@@ -41,9 +43,9 @@ struct Comment {
     void serialize(Archive& ar, const unsigned int);
     bool operator==(const Comment& other) const;
 
-    Comment() {}
-    Comment(const std::string& value, const std::string& type) : value(value), type(type) {}
-    explicit Comment(const std::string& value) : value(value) {}
+    Comment() = default;
+    Comment(std::string value, std::string type) : value(std::move(value)), type(std::move(type)) {}
+    explicit Comment(std::string value) : value(std::move(value)) {}
 };
 
 std::ostream& operator<<(std::ostream& os, const Comment& comment);

@@ -271,18 +271,27 @@ std::pair<BlockedSAList, ConcatenateBlockedSASequence> create_blocked_sa_sequenc
         return std::make_pair(blocked_sa_uri_sequence, "");
     }
 
-    // add start_point SA
-    blocked_sa_uri_sequence.insert(std::make_pair(0, rs.start_point->uri));
+    // add start_point SA only if start_point SA is not first (ordered)
+    // element of blocked_stop_areas
+    const auto min = std::min_element(std::begin(rs.blocked_stop_areas), std::end(rs.blocked_stop_areas),
+                                      [](const auto& lhs, const auto& rhs) { return lhs.second < rhs.second; });
+
+    if (min != std::end(rs.blocked_stop_areas) && min->first != rs.start_point->uri) {
+        blocked_sa_uri_sequence.insert(std::make_pair(0, rs.start_point->uri));
+    }
+
     // add blocked_stop_areas list
-    for (const auto bsa : rs.blocked_stop_areas) {
+    for (const auto& bsa : rs.blocked_stop_areas) {
         blocked_sa_uri_sequence.insert(std::make_pair(bsa.second + 1, bsa.first));
     }
-    // add end_point SA
-    if (blocked_sa_uri_sequence.rbegin() != blocked_sa_uri_sequence.rend()) {
+    // add end_point SA only if end_point SA is not already in blocked_stop_areas
+    if (blocked_sa_uri_sequence.rbegin() != blocked_sa_uri_sequence.rend()
+        && blocked_sa_uri_sequence.rbegin()->second != rs.end_point->uri) {
         blocked_sa_uri_sequence.insert(std::make_pair(blocked_sa_uri_sequence.rbegin()->first + 1, rs.end_point->uri));
     }
+
     std::string concatenate_bsa_uri_sequence_string = "";
-    for (const auto bsa : blocked_sa_uri_sequence) {
+    for (const auto& bsa : blocked_sa_uri_sequence) {
         concatenate_bsa_uri_sequence_string += bsa.second;
     }
     return std::make_pair(blocked_sa_uri_sequence, concatenate_bsa_uri_sequence_string);

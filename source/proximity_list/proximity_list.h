@@ -56,7 +56,7 @@ struct NotFound : public recoverable_exception {
     NotFound() = default;
     NotFound(const NotFound&) = default;
     NotFound& operator=(const NotFound&) = default;
-    virtual ~NotFound() noexcept;
+    ~NotFound() noexcept override;
 };
 
 // find_within Dispatch Tag
@@ -69,17 +69,17 @@ struct ReturnTypeTrait;
 
 template <typename T>
 struct ReturnTypeTrait<T, IndexOnly> {
-    typedef T ValueType;
+    using ValueType = T;
 };
 
 template <typename T>
 struct ReturnTypeTrait<T, IndexCoord> {
-    typedef std::pair<T, GeographicalCoord> ValueType;
+    using ValueType = std::pair<T, GeographicalCoord>;
 };
 
 template <typename T>
 struct ReturnTypeTrait<T, IndexCoordDistance> {
-    typedef std::tuple<T, GeographicalCoord, float> ValueType;
+    using ValueType = std::tuple<T, GeographicalCoord, float>;
 };
 /* A structure allows to find K Nearest Neighbours with a given radius.
  *
@@ -96,7 +96,7 @@ struct ProximityList {
     struct Item {
         GeographicalCoord coord;
         T element;
-        Item() {}
+        Item() = default;
         Item(GeographicalCoord coord, T element) : coord(coord), element(element) {}
         template <class Archive>
         void serialize(Archive& ar, const unsigned int) {

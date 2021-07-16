@@ -102,7 +102,7 @@ int main(int argc, const char* const argv[]) {
     b.data->pt_data->codes.add(b.sps.at("A"), "source", "Ain");
     b.data->pt_data->codes.add(b.sps.at("A"), "source", "Aisne");
 
-    navitia::type::Dataset* ds = new navitia::type::Dataset();
+    auto* ds = new navitia::type::Dataset();
     ds->idx = b.data->pt_data->datasets.size();
     ds->uri = "base_dataset";
     ds->name = "base dataset";
@@ -110,7 +110,7 @@ int main(int argc, const char* const argv[]) {
     ds->vehiclejourney_list.insert(vj);
     vj->dataset = ds;
 
-    navitia::type::Contributor* cr = new navitia::type::Contributor();
+    auto* cr = new navitia::type::Contributor();
     cr->idx = b.data->pt_data->contributors.size();
     cr->uri = "base_contributor";
     cr->name = "base contributor";

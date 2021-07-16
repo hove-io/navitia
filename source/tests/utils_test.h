@@ -8,6 +8,8 @@
 #include <boost/date_time/gregorian/gregorian.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <set>
+#include <utility>
+
 #include <vector>
 #include <map>
 #include <boost/range/algorithm/transform.hpp>
@@ -58,9 +60,9 @@ struct RTStopTime {
     bool _is_added = false;
     bool _deleted_for_detour = false;
     bool _added_for_detour = false;
-    RTStopTime(const std::string& n, int arrival_time, int departure_time)
-        : _stop_name(n), _arrival_time(arrival_time), _departure_time(departure_time) {}
-    RTStopTime(const std::string& n, int time) : _stop_name(n), _arrival_time(time), _departure_time(time) {}
+    RTStopTime(std::string n, int arrival_time, int departure_time)
+        : _stop_name(std::move(n)), _arrival_time(arrival_time), _departure_time(departure_time) {}
+    RTStopTime(std::string n, int time) : _stop_name(std::move(n)), _arrival_time(time), _departure_time(time) {}
 
     RTStopTime& arrival_delay(navitia::time_duration delay) {
         _arrival_delay = delay;

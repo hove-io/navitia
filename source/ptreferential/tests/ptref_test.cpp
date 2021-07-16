@@ -101,13 +101,13 @@ BOOST_AUTO_TEST_CASE(physical_modes) {
         b.connection("stop2", "stop3", 10 * 60);
         b.connection("stop3", "stop2", 10 * 60);
 
-        navitia::type::Contributor* contributor = new navitia::type::Contributor();
+        auto* contributor = new navitia::type::Contributor();
         contributor->idx = b.data->pt_data->contributors.size();
         contributor->uri = "c1";
         contributor->name = "name-c1";
         b.data->pt_data->contributors.push_back(contributor);
 
-        navitia::type::Dataset* dataset = new navitia::type::Dataset();
+        auto* dataset = new navitia::type::Dataset();
         dataset->idx = b.data->pt_data->datasets.size();
         dataset->uri = "f1";
         dataset->name = "name-f1";

@@ -102,6 +102,12 @@ class MockVehicleOccupancyProvider(VehicleOccupancyProvider):
             }
         if stop_id == "stopP2" and vehicle_journey_id == 'vehicle_journey:vjP:1:modified:0:bib':
             json = {"vehicle_occupancies": []}
+        if stop_id == "stopQ2":
+            return MagicMock(return_value=None)
+        if stop_id == "stopf1":
+            resp.status_code = 503
+            resp.text = '{"error":"No data loaded"}'
+            return resp
 
         resp.json = MagicMock(return_value=json)
         return resp
@@ -148,6 +154,25 @@ class TestFreeFloating(AbstractTestFixture):
             sp='stopP2', dt='20160103T100000', data_freshness='&data_freshness=realtime'
         )
         response = self.query_region(query)
-        stop_schedules = response['stop_schedules'][0]['date_times']
-        assert len(stop_schedules) == 1
-        assert "occupancy" not in stop_schedules[0]
+        date_times = response['stop_schedules'][0]['date_times']
+        assert len(date_times) == 1
+        assert "occupancy" not in date_times[0]
+
+    def test_occupancy_empty_list_occupancies_on_error(self):
+        # Test on response = None
+        query = self.query_template_scs.format(
+            sp='stopQ2', dt='20160103T100000', data_freshness='&data_freshness=realtime'
+        )
+        response = self.query_region(query)
+        date_times = response['stop_schedules'][0]['date_times']
+        assert len(date_times) == 1
+        assert "occupancy" not in date_times[0]
+
+        # Test on response.status_code = 503
+        query = self.query_template_scs.format(
+            sp='stopf1', dt='20160103T100000', data_freshness='&data_freshness=realtime'
+        )
+        response = self.query_region(query)
+        date_times = response['stop_schedules'][0]['date_times']
+        assert len(date_times) == 3
+        assert "occupancy" not in date_times[0]

@@ -29,6 +29,8 @@ www.navitia.io
 */
 
 #pragma once
+#include <utility>
+
 #include "type/type_interfaces.h"
 #include "type/time_duration.h"
 
@@ -48,8 +50,8 @@ struct Edge {
     void serialize(Archive& ar, const unsigned int) {
         ar& way_idx& geom_idx& duration;
     }
-    Edge(nt::idx_t wid, navitia::time_duration dur) : way_idx(wid), duration(dur) {}
-    Edge() {}
+    Edge(nt::idx_t wid, navitia::time_duration dur) : way_idx(wid), duration(std::move(dur)) {}
+    Edge() = default;
 };
 
 }  // namespace georef

@@ -68,10 +68,14 @@ class Sytral(RealtimeProxy):
         self.object_id_tag = object_id_tag
         self.destination_id_tag = destination_id_tag
         self.instance = instance
-        self.breaker = pybreaker.CircuitBreaker(
-            fail_max=app.config.get('CIRCUIT_BREAKER_MAX_SYTRAL_FAIL', 5),
-            reset_timeout=app.config.get('CIRCUIT_BREAKER_SYTRAL_TIMEOUT_S', 60),
+
+        fail_max = kwargs.get(
+            'circuit_breaker_max_fail', app.config.get(str('CIRCUIT_BREAKER_MAX_SYTRAL_FAIL'), 5)
         )
+        reset_timeout = kwargs.get(
+            'circuit_breaker_reset_timeout', app.config.get(str('CIRCUIT_BREAKER_SYTRAL_TIMEOUT_S'), 60)
+        )
+        self.breaker = pybreaker.CircuitBreaker(fail_max=fail_max, reset_timeout=reset_timeout)
 
     def __repr__(self):
         """

@@ -99,7 +99,7 @@ const ProjectionData build_data(GraphBuilder& b, type::Data& data) {
         }
     }
 
-    type::StopPoint* sp = new type::StopPoint();
+    auto* sp = new type::StopPoint();
     sp->coord.set_xy(8., 8.);
     sp->idx = 0;
     data.pt_data->stop_points.push_back(sp);

@@ -108,10 +108,14 @@ class Synthese(RealtimeProxy):
         self.object_id_tag = object_id_tag if object_id_tag else id
         self.destination_id_tag = destination_id_tag
         self.instance = instance
-        self.breaker = pybreaker.CircuitBreaker(
-            fail_max=app.config['CIRCUIT_BREAKER_MAX_SYNTHESE_FAIL'],
-            reset_timeout=app.config['CIRCUIT_BREAKER_SYNTHESE_TIMEOUT_S'],
+
+        fail_max = kwargs.get(
+            'circuit_breaker_max_fail', app.config.get(str('CIRCUIT_BREAKER_MAX_SYNTHESE_FAIL'), 5)
         )
+        reset_timeout = kwargs.get(
+            'circuit_breaker_reset_timeout', app.config.get(str('CIRCUIT_BREAKER_SYNTHESE_TIMEOUT_S'), 60)
+        )
+        self.breaker = pybreaker.CircuitBreaker(fail_max=fail_max, reset_timeout=reset_timeout)
         self.timezone = pytz.timezone(timezone)
         if not redis_host:
             self.rate_limiter = FakeRateLimiter()

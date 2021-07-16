@@ -42,7 +42,7 @@ struct GeopalParserException : public navitia::exception {
     GeopalParserException(const std::string& message) : navitia::exception(message) {}
     GeopalParserException(const GeopalParserException&) = default;
     GeopalParserException& operator=(const GeopalParserException&) = default;
-    virtual ~GeopalParserException() noexcept;
+    ~GeopalParserException() noexcept override;
 };
 
 class GeopalParser {

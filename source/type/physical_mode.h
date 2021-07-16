@@ -45,7 +45,7 @@ struct PhysicalMode : public Header, Nameable {
     void serialize(Archive& ar, const unsigned int);
     Indexes get(Type_e type, const PT_Data& data) const;
 
-    PhysicalMode() {}
+    PhysicalMode() = default;
     bool operator<(const PhysicalMode& other) const { return this->uri < other.uri; }
 };
 

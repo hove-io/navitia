@@ -59,13 +59,13 @@ BOOST_AUTO_TEST_CASE(route_main_destination) {
     auto* vp1 = new navitia::type::ValidityPattern(data.meta.production_date.begin(), "0001");
     data.validity_patterns.push_back(vp1);
 
-    ed::types::VehicleJourney* vj1 = new ed::types::VehicleJourney();
+    auto* vj1 = new ed::types::VehicleJourney();
     vj1->validity_pattern = vp1;
     data.vehicle_journeys.push_back(vj1);
-    ed::types::VehicleJourney* vj2 = new ed::types::VehicleJourney();
+    auto* vj2 = new ed::types::VehicleJourney();
     vj2->validity_pattern = vp1;
     data.vehicle_journeys.push_back(vj2);
-    ed::types::VehicleJourney* vj3 = new ed::types::VehicleJourney();
+    auto* vj3 = new ed::types::VehicleJourney();
     vj3->validity_pattern = vp1;
     data.vehicle_journeys.push_back(vj3);
 
@@ -147,7 +147,7 @@ BOOST_AUTO_TEST_CASE(route_main_destination) {
                     A4
     */
     // Already destination
-    ed::types::StopArea* ready = new ed::types::StopArea();
+    auto* ready = new ed::types::StopArea();
     ready->name = "READY_DESTINATION";
     data.stop_areas.push_back(ready);
     route->destination = ready;

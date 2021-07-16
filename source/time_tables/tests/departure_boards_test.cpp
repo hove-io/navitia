@@ -1026,7 +1026,7 @@ BOOST_FIXTURE_TEST_CASE(test_calendar_with_exception, calendar_fixture) {
     // we add a new calendar that nearly match a vj
     auto nearly_cal = new navitia::type::Calendar(b.data->meta->production_date.begin());
     nearly_cal->uri = "nearly_cal";
-    nearly_cal->active_periods.push_back({beg, end_of_year});
+    nearly_cal->active_periods.emplace_back(beg, end_of_year);
     nearly_cal->week_pattern = std::bitset<7>{"1111100"};
     // we add 2 exceptions (2 add), one by week
     navitia::type::ExceptionDate exception_date;
@@ -1041,7 +1041,7 @@ BOOST_FIXTURE_TEST_CASE(test_calendar_with_exception, calendar_fixture) {
     b.lines["line:A"]->calendar_list.push_back(nearly_cal);
 
     // load metavj calendar association from database (association is tested in ed/tests/associated_calendar_test.cpp)
-    navitia::type::AssociatedCalendar* associated_nearly_calendar = new navitia::type::AssociatedCalendar();
+    auto* associated_nearly_calendar = new navitia::type::AssociatedCalendar();
     associated_nearly_calendar->calendar = nearly_cal;
     exception_date.date = date("20120618");
     exception_date.type = navitia::type::ExceptionDate::ExceptionType::sub;
@@ -1152,7 +1152,7 @@ struct small_cal_fixture {
               b.lines["line:A"]->calendar_list.push_back(empty_cal);
 
               // load metavj calendar association from database
-              navitia::type::AssociatedCalendar* associated_calendar = new navitia::type::AssociatedCalendar();
+              auto* associated_calendar = new navitia::type::AssociatedCalendar();
               associated_calendar->calendar = cal;
               b.data->pt_data->associated_calendars.push_back(associated_calendar);
               b.data->pt_data->meta_vjs.get_mut("vj1")->associated_calendars[cal->uri] = associated_calendar;
@@ -1497,7 +1497,7 @@ BOOST_AUTO_TEST_CASE(route_schedule_with_boarding_time_frequency_and_calendar) {
     boost::gregorian::date begin = boost::gregorian::date_from_iso_string("20170101");
     boost::gregorian::date end = boost::gregorian::date_from_iso_string("20180101");
 
-    navitia::type::Calendar* c = new navitia::type::Calendar(begin);
+    auto* c = new navitia::type::Calendar(begin);
     ed::builder b("20170101", [&](ed::builder& b) {
         b.vj("L1").name("vj:0")("stop1", "8:00"_t, "8:00"_t, std::numeric_limits<uint16_t>::max(), false, true, 0, 300)(
             "stop2", "8:05"_t, "8:05"_t, std::numeric_limits<uint16_t>::max(), true, true, 900, 900)(
@@ -1513,7 +1513,7 @@ BOOST_AUTO_TEST_CASE(route_schedule_with_boarding_time_frequency_and_calendar) {
                 "stop3", "18:10"_t, "18:10"_t, std::numeric_limits<uint16_t>::max(), true, false, 300, 0);
 
         c->uri = "C1";
-        c->active_periods.push_back({begin, end});
+        c->active_periods.emplace_back(begin, end);
         c->week_pattern = std::bitset<7>("1111111");
         b.data->pt_data->calendars.push_back(c);
         b.data->pt_data->calendars_map[c->uri] = c;

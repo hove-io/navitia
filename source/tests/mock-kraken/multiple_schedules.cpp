@@ -71,6 +71,7 @@ int main(int argc, const char* const argv[]) {
     b.get<nt::Line>("C")->properties["realtime_system"] = "Kisio数字";
 
     b.data->pt_data->codes.add(b.get<nt::StopPoint>("SP_1"), "Kisio数字", "syn_stoppoint1");
+    b.data->pt_data->codes.add(b.get<nt::StopPoint>("SP_2"), "Kisio数字", "SP_2");
     b.data->pt_data->codes.add(b.get<nt::StopPoint>("SP_11"), "Kisio数字", "syn_stoppoint11");
     b.data->pt_data->codes.add(b.get<nt::StopPoint>("SP_20"), "Kisio数字", "syn_stoppoint20");
     b.data->pt_data->codes.add(b.get<nt::StopPoint>("SP_21"), "Kisio数字", "syn_stoppoint21");

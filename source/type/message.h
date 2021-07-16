@@ -41,12 +41,14 @@ www.navitia.io
 
 #include <atomic>
 #include <map>
+#include <utility>
+
 #include <vector>
 #include <string>
 #include <set>
 
-typedef std::map<int, std::string> BlockedSAList;
-typedef std::string ConcatenateBlockedSASequence;
+using BlockedSAList = std::map<int, std::string>;
+using ConcatenateBlockedSASequence = std::string;
 
 namespace navitia {
 namespace type {
@@ -223,9 +225,15 @@ struct RailSection {
 
 std::set<StopPoint*> get_stop_points_section(const RailSection& rs);
 
-typedef boost::
-    variant<UnknownPtObj, Network*, StopArea*, StopPoint*, LineSection, RailSection, Line*, Route*, MetaVehicleJourney*>
-        PtObj;
+using PtObj = boost::variant<UnknownPtObj,
+                             Network*,
+                             StopArea*,
+                             StopPoint*,
+                             LineSection,
+                             RailSection,
+                             Line*,
+                             Route*,
+                             MetaVehicleJourney*>;
 
 PtObj make_pt_obj(Type_e type, const std::string& uri, PT_Data& pt_data);
 
@@ -258,9 +266,9 @@ struct StopTimeUpdate {
     };
     Status departure_status{Status::UNCHANGED};
     Status arrival_status{Status::UNCHANGED};
-    StopTimeUpdate() {}
-    StopTimeUpdate(const StopTime& st, const std::string& c, Status dep_status, Status arr_status)
-        : stop_time(st), cause(c), departure_status(dep_status), arrival_status(arr_status) {}
+    StopTimeUpdate() = default;
+    StopTimeUpdate(StopTime st, std::string c, Status dep_status, Status arr_status)
+        : stop_time(std::move(st)), cause(std::move(c)), departure_status(dep_status), arrival_status(arr_status) {}
 
     template <class Archive>
     void serialize(Archive& ar, const unsigned int);
@@ -379,7 +387,7 @@ struct Tag {
 class DisruptionHolder;
 
 struct Disruption {
-    Disruption() {}
+    Disruption() = default;
     Disruption(const std::string u, RTLevel lvl) : uri(u), rt_level(lvl) {}
     Disruption& operator=(const Disruption&) = delete;
     Disruption(const Disruption&) = delete;
@@ -458,8 +466,8 @@ struct ImpactedVJ {
     std::string vj_uri;  // uri of the impacted vj
     ValidityPattern new_vp;
     std::set<RankStopTime> impacted_ranks;
-    ImpactedVJ(const std::string& vj_uri, ValidityPattern vp, std::set<RankStopTime> r)
-        : vj_uri(vj_uri), new_vp(vp), impacted_ranks(std::move(r)) {}
+    ImpactedVJ(std::string vj_uri, ValidityPattern vp, std::set<RankStopTime> r)
+        : vj_uri(std::move(vj_uri)), new_vp(std::move(vp)), impacted_ranks(std::move(r)) {}
 };
 /*
  * return the list of vehicle journey that are impacted by the linesection

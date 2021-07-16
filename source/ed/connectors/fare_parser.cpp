@@ -102,13 +102,13 @@ void fare_parser::load_transitions() {
             is_valid(condition);
         }
 
-        data.transitions.push_back(std::make_tuple(start, end, transition));
+        data.transitions.emplace_back(start, end, transition);
 
         if (symetric) {
             fa::Transition sym_transition = transition;
             sym_transition.start_conditions = transition.end_conditions;
             sym_transition.end_conditions = transition.start_conditions;
-            data.transitions.push_back(std::make_tuple(start, end, sym_transition));
+            data.transitions.emplace_back(start, end, sym_transition);
         }
     }
 }

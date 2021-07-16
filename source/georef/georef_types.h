@@ -17,16 +17,16 @@ struct Vertex;
  * les arcs sont orientés
  * les propriétés des nœuds et arcs sont les classes définies précédemment
  */
-typedef boost::adjacency_list<boost::vecS, boost::vecS, boost::directedS, Vertex, Edge> Graph;
+using Graph = boost::adjacency_list<boost::vecS, boost::vecS, boost::directedS, Vertex, Edge>;
 
 /// Représentation d'un nœud dans le g,raphe
-typedef boost::graph_traits<Graph>::vertex_descriptor vertex_t;
+using vertex_t = boost::graph_traits<Graph>::vertex_descriptor;
 
 /// Représentation d'un arc dans le graphe
-typedef boost::graph_traits<Graph>::edge_descriptor edge_t;
+using edge_t = boost::graph_traits<Graph>::edge_descriptor;
 
 /// Pour parcourir les segements du graphe
-typedef boost::graph_traits<Graph>::edge_iterator edge_iterator;
+using edge_iterator = boost::graph_traits<Graph>::edge_iterator;
 
 }  // namespace georef
 }  // namespace navitia

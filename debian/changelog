@@ -1,3 +1,21 @@
+navitia2 (12.1.0) unstable; urgency=low
+
+  * [Jormun] Ignore realtime without conforme terminus in /terminus_schedules: realtime  <https://github.com/CanalTP/navitia/pull/3488>
+  * [Jormun] Call timeo with StopSAECode, LineSAECode and NextStopTimeNumber  <https://github.com/CanalTP/navitia/pull/3485>
+  * [Kraken] move deadline into dispatch to avoid crash  <https://github.com/CanalTP/navitia/pull/3490>
+  * [Jormun] change timeout value for metadata API   <https://github.com/CanalTP/navitia/pull/3491>
+  * [Kraken] Logs added: SIGXCPU and SIGXFSZ  <https://github.com/CanalTP/navitia/pull/3489>
+  * [Jormun] Manage error present in external service response.  <https://github.com/CanalTP/navitia/pull/3484>
+  * [Jormun] read params from database  <https://github.com/CanalTP/navitia/pull/3486>
+  * [Jormun] Notes terminus schedules  <https://github.com/CanalTP/navitia/pull/3483>
+  * [Jormun] Remove terminus_schedules without stop_times  <https://github.com/CanalTP/navitia/pull/3481>
+  * [Kraken] Read chaos bdd for rail section  <https://github.com/CanalTP/navitia/pull/3479>
+  * [Kraken] Fix bug rail_section  <https://github.com/CanalTP/navitia/pull/3482>
+  * [Jormun] Fix bug bypass_disruption link  <https://github.com/CanalTP/navitia/pull/3480>
+  * [Jormun] Add bypass_disruptions Link   <https://github.com/CanalTP/navitia/pull/3477>
+
+ -- Hicham Azimani <hicham.azimani@kisio.com>  Fri, 16 Jul 2021 16:07:12 +0100
+
 navitia2 (12.0.0) unstable; urgency=low
 
   * [Jormungandr]Group by destination in Terminus_schedules API RT timeo  <https://github.com/CanalTP/navitia/pull/3470>

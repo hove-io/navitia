@@ -29,6 +29,8 @@ www.navitia.io
 */
 
 #pragma once
+#include <utility>
+
 #include "data.h"
 #include "type/type.pb.h"
 #include "type/response.pb.h"
@@ -121,7 +123,7 @@ struct StopTimeCalendar {
     StopTimeCalendar(const nt::StopTime* stop_time,
                      const navitia::DateTime& date_time,
                      boost::optional<const std::string> calendar_id)
-        : stop_time(stop_time), date_time(date_time), calendar_id(calendar_id) {}
+        : stop_time(stop_time), date_time(date_time), calendar_id(std::move(calendar_id)) {}
 };
 
 /**

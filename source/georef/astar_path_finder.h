@@ -60,7 +60,7 @@ public:
 
     AstarPathFinder(const GeoRef& geo_ref) : PathFinder(geo_ref) {}
     AstarPathFinder(const AstarPathFinder& o) = default;
-    virtual ~AstarPathFinder();
+    ~AstarPathFinder() override;
 
     void init(const type::GeographicalCoord& start_coord,
               const type::GeographicalCoord& dest_projected_coord,

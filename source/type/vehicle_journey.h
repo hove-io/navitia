@@ -179,7 +179,7 @@ private:
 };
 
 struct DiscreteVehicleJourney : public VehicleJourney {
-    virtual ~DiscreteVehicleJourney();
+    ~DiscreteVehicleJourney() override;
     template <class Archive>
     void serialize(Archive& ar, const unsigned int);
 };
@@ -188,7 +188,7 @@ struct FrequencyVehicleJourney : public VehicleJourney {
     uint32_t start_time = std::numeric_limits<uint32_t>::max();    // first departure hour
     uint32_t end_time = std::numeric_limits<uint32_t>::max();      // last departure hour
     uint32_t headway_secs = std::numeric_limits<uint32_t>::max();  // Seconds between each departure.
-    virtual ~FrequencyVehicleJourney();
+    ~FrequencyVehicleJourney() override;
 
     bool is_valid(int day, const RTLevel rt_level) const;
     template <class Archive>

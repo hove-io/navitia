@@ -44,9 +44,9 @@ namespace nt = navitia::type;
 namespace navitia {
 
 namespace georef {
-typedef boost::geometry::model::polygon<navitia::type::GeographicalCoord> polygon_type;
-typedef boost::geometry::model::multi_polygon<polygon_type> multi_polygon_type;
-typedef boost::geometry::model::box<navitia::type::GeographicalCoord> Box;
+using polygon_type = boost::geometry::model::polygon<navitia::type::GeographicalCoord>;
+using multi_polygon_type = boost::geometry::model::multi_polygon<polygon_type>;
+using Box = boost::geometry::model::box<navitia::type::GeographicalCoord>;
 
 struct Admin : nt::Header, nt::Nameable {
     const static type::Type_e type = type::Type_e::Admin;

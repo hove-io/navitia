@@ -168,7 +168,7 @@ ed::types::Company* GtfsData::get_or_create_default_company(Data& data) {
 }
 
 int time_to_int(const std::string& time) {
-    typedef boost::tokenizer<boost::char_separator<char> > tokenizer;
+    using tokenizer = boost::tokenizer<boost::char_separator<char> >;
     boost::char_separator<char> sep(":");
     tokenizer tokens(time, sep);
     std::vector<std::string> elts(tokens.begin(), tokens.end());
@@ -222,7 +222,7 @@ ed::types::Network* AgencyGtfsHandler::handle_line(Data& data, const csv_row& ro
             logger, "Error while reading " + csv.filename + +" file has more than one agency and no agency_id column");
         throw InvalidHeaders(csv.filename);
     }
-    nm::Network* network = new nm::Network();
+    auto* network = new nm::Network();
 
     if (has_col(id_c, row)) {
         network->uri = row[id_c];
@@ -264,7 +264,7 @@ ed::types::Network* AgencyGtfsHandler::handle_line(Data& data, const csv_row& ro
 }
 
 void DefaultContributorHandler::init(Data& data) {
-    nm::Contributor* contributor = new nm::Contributor();
+    auto* contributor = new nm::Contributor();
     contributor->uri = "default_contributor";
     contributor->name = "default_contributor";
     contributor->idx = data.contributors.size() + 1;
@@ -392,7 +392,7 @@ bool StopsGtfsHandler::parse_common_data(const csv_row& row, T* stop) {
 }
 
 nm::StopArea* StopsGtfsHandler::build_stop_area(Data& data, const csv_row& row) {
-    nm::StopArea* sa = new nm::StopArea();
+    auto* sa = new nm::StopArea();
     if (!parse_common_data(row, sa)) {
         delete sa;  // don't forget to free the data
         return nullptr;
@@ -422,7 +422,7 @@ nm::StopArea* StopsGtfsHandler::build_stop_area(Data& data, const csv_row& row) 
 }
 
 nm::StopPoint* StopsGtfsHandler::build_stop_point(Data& data, const csv_row& row) {
-    nm::StopPoint* sp = new nm::StopPoint();
+    auto* sp = new nm::StopPoint();
     if (!parse_common_data(row, sp)) {
         delete sp;
         return nullptr;
@@ -525,7 +525,7 @@ nm::Line* RouteGtfsHandler::handle_line(Data& data, const csv_row& row, bool) {
         return nullptr;
     }
 
-    nm::Line* line = new nm::Line();
+    auto* line = new nm::Line();
     line->uri = row[id_c];
     line->name = row[long_name_c];
     line->code = row[short_name_c];
@@ -649,7 +649,7 @@ void TransfersGtfsHandler::handle_line(Data& data, const csv_row& row, bool) {
 
     for (auto from_sp : departures) {
         for (auto to_sp : arrivals) {
-            nm::StopPointConnection* connection = new nm::StopPointConnection();
+            auto* connection = new nm::StopPointConnection();
             connection->departure = from_sp;
             connection->destination = to_sp;
             connection->uri = from_sp->uri + "=>" + to_sp->uri;
@@ -744,8 +744,7 @@ static boost::gregorian::date_period compute_smallest_active_period(const nt::Va
         return boost::gregorian::date_period(vp.beginning_date, vp.beginning_date);  // return null period
     }
 
-    return boost::gregorian::date_period(vp.beginning_date + boost::gregorian::days(beg),
-                                         vp.beginning_date + boost::gregorian::days(end + 1));
+    return {vp.beginning_date + boost::gregorian::days(beg), vp.beginning_date + boost::gregorian::days(end + 1)};
 }
 
 /*
@@ -771,7 +770,7 @@ void split_validity_pattern_over_dst(Data& data, GtfsData& gtfs_data) {
 
         size_t cpt(1);
         for (const auto& utc_shit_and_periods : split_periods) {
-            nt::ValidityPattern* vp = new nt::ValidityPattern(data.meta.production_date.begin());
+            auto* vp = new nt::ValidityPattern(data.meta.production_date.begin());
 
             for (const auto& period : utc_shit_and_periods.second) {
                 for (boost::gregorian::day_iterator it(period.begin()); it < period.end(); ++it) {
@@ -885,7 +884,7 @@ types::Route* TripsGtfsHandler::get_or_create_route(Data& data, const RouteId& r
     if (it != std::end(routes)) {
         return it->second;
     } else {
-        types::Route* route = new types::Route();
+        auto* route = new types::Route();
         route->line = route_id.first;
         // uri is {line}:{direction}
         route->uri = route->line->uri + ":" + route_id.second;
@@ -943,7 +942,7 @@ void TripsGtfsHandler::handle_line(Data& data, const csv_row& row, bool) {
     for (auto vp_it = vp_range.first; vp_it != vp_range.second; ++vp_it, cpt_vj++) {
         nt::ValidityPattern* vp_xx = vp_it->second;
 
-        nm::VehicleJourney* vj = new nm::VehicleJourney();
+        auto* vj = new nm::VehicleJourney();
         const std::string original_uri = row[trip_c];
         std::string vj_uri = original_uri;
         if (has_been_split) {
@@ -1073,7 +1072,7 @@ std::vector<nm::StopTime*> StopTimeGtfsHandler::handle_line(Data& data, const cs
 
     // the validity pattern may have been split because of DST, so we need to create one vj for each
     for (auto vj_end_it = gtfs_data.tz.vj_by_name.upper_bound(row[trip_c]); vj_it != vj_end_it; ++vj_it) {
-        nm::StopTime* stop_time = new nm::StopTime();
+        auto* stop_time = new nm::StopTime();
 
         // we need to convert the stop times in UTC
         int utc_offset = data.tz_wrapper.tz_handler.get_utc_offset(*vj_it->second->validity_pattern);
@@ -1155,7 +1154,7 @@ void FrequenciesGtfsHandler::handle_line(Data& data, const csv_row& row, bool) {
 GenericGtfsParser::GenericGtfsParser(std::string path) : path(std::move(path)) {
     logger = log4cplus::Logger::getInstance("log");
 }
-GenericGtfsParser::~GenericGtfsParser() {}
+GenericGtfsParser::~GenericGtfsParser() = default;
 
 void GenericGtfsParser::fill(Data& data, const std::string& beginning_date) {
     parse_files(data, beginning_date);
@@ -1167,13 +1166,13 @@ void GenericGtfsParser::fill_default_modes(Data& data) {
     // default commercial_mode and physical_modes
     // all modes are represented by a number in GTFS
     // see route_type in https://developers.google.com/transit/gtfs/reference?hl=fr-FR#routestxt
-    ed::types::PhysicalMode* physical_mode = new ed::types::PhysicalMode();
+    auto* physical_mode = new ed::types::PhysicalMode();
     physical_mode->uri = "Tramway";
     physical_mode->name = "Tramway";
     data.physical_modes.push_back(physical_mode);
     // NOTE: physical mode don't need to be indexed by the GTFS code, since they don't exist in GTFS
     gtfs_data.physical_mode_map[physical_mode->uri] = physical_mode;
-    ed::types::CommercialMode* commercial_mode = new ed::types::CommercialMode();
+    auto* commercial_mode = new ed::types::CommercialMode();
     commercial_mode->uri = physical_mode->uri;
     commercial_mode->name = "Tram, Streetcar, Light rail";
     data.commercial_modes.push_back(commercial_mode);
@@ -1270,7 +1269,7 @@ boost::gregorian::date_period GenericGtfsParser::basic_production_date(const std
         boost::gregorian::date b_date(boost::gregorian::from_undelimited_string(beginning_date)),
             e_date(b_date + boost::gregorian::days(365 + 1));
 
-        return boost::gregorian::date_period(b_date, e_date);
+        return {b_date, e_date};
     }
 }
 
@@ -1441,7 +1440,7 @@ boost::gregorian::date_period GenericGtfsParser::complete_production_date(const 
                                + boost::gregorian::to_simple_string(end));
     // the end of a boost::gregorian::date_period is not in the period
     // since end_date is the last day is the data, we want the end to be the next day
-    return boost::gregorian::date_period(beginning, end + boost::gregorian::days(1));
+    return {beginning, end + boost::gregorian::days(1)};
 }
 
 void GtfsParser::parse_files(Data& data, const std::string& beginning_date) {
