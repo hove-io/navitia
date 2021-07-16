@@ -209,13 +209,8 @@ class FilterTooShortHeavyJourneys(SingleJourneyFilter):
         Heavy fallback modes are Bike and Car, BSS is not considered as one.
         """
 
-        def _exceed_min_duration(current_section, journey, min_duration, orig_modes=None, dest_modes=None):
-            orig_modes = [] if orig_modes is None else orig_modes
-            dest_modes = [] if dest_modes is None else dest_modes
-
-            if current_section == journey.sections[0]:
-                return 'walking' in orig_modes and current_section.duration < min_duration
-            return 'walking' in dest_modes and current_section.duration < min_duration
+        def _exceed_min_duration(min_duration, total_duration):
+            return total_duration < min_duration
 
         on_bss = False
         for s in journey.sections:
@@ -227,33 +222,26 @@ class FilterTooShortHeavyJourneys(SingleJourneyFilter):
                 continue
 
             min_mode = None
+            total_duration = 0
             if s.street_network.mode == response_pb2.Car:
                 min_mode = self.min_car
+                total_duration = journey.durations.car
             elif s.street_network.mode == response_pb2.Taxi:
                 min_mode = self.min_taxi
+                total_duration = journey.durations.taxi
             elif s.street_network.mode == response_pb2.Ridesharing:
                 min_mode = self.min_ridesharing
-
-            if (
-                s.street_network.mode in (response_pb2.Car, response_pb2.Taxi, response_pb2.Ridesharing)
-                and min_mode is not None
-                and _exceed_min_duration(
-                    s, journey, min_duration=min_mode, orig_modes=self.orig_modes, dest_modes=self.dest_modes
-                )
-            ):
-                return False
+                total_duration = journey.durations.ridesharing
+            elif s.street_network.mode == response_pb2.Bike:
+                min_mode = self.min_bike
+                total_duration = journey.durations.bike
+            else:
+                continue
 
             if (
                 not on_bss
-                and s.street_network.mode == response_pb2.Bike
-                and self.min_bike is not None
-                and _exceed_min_duration(
-                    s,
-                    journey,
-                    min_duration=self.min_bike,
-                    orig_modes=self.orig_modes,
-                    dest_modes=self.dest_modes,
-                )
+                and min_mode is not None
+                and _exceed_min_duration(min_duration=min_mode, total_duration=total_duration)
             ):
                 return False
 
