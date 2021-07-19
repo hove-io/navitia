@@ -741,7 +741,7 @@ static boost::gregorian::date_period compute_smallest_active_period(const nt::Va
         assert(end == std::numeric_limits<size_t>::min());  // if we did not find beg, end cannot be found too
         LOG4CPLUS_INFO(log4cplus::Logger::getInstance("log"),
                        "the calendar " << vp.uri << " has an empty validity period, we will ignore it");
-        return boost::gregorian::date_period(vp.beginning_date, vp.beginning_date);  // return null period
+        return {vp.beginning_date, vp.beginning_date};  // return null period
     }
 
     return {vp.beginning_date + boost::gregorian::days(beg), vp.beginning_date + boost::gregorian::days(end + 1)};
