@@ -207,10 +207,18 @@ class FilterTooShortHeavyJourneys(SingleJourneyFilter):
         We filter the journeys that use an "heavy" mode as fallback for a short time.
         Typically you don't take your car for only 2 minutes.
         Heavy fallback modes are Bike and Car, BSS is not considered as one.
+        We also filter too short direct path except for Bike
         """
 
         def _exceed_min_duration(min_duration, total_duration):
             return total_duration < min_duration
+
+        def _is_bike_direct_path(journey):
+            return len(journey.sections) == 1 and journey.sections[0].street_network.mode == response_pb2.Bike
+
+        # We do not filter direct_path bike journeys
+        if _is_bike_direct_path(journey=journey):
+            return True
 
         on_bss = False
         for s in journey.sections:
