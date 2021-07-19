@@ -109,7 +109,7 @@ class TestKaros(NewDefaultScenarioAbstractTestFixture):
         """
         q = (
             "journeys?from=0.0000898312;0.0000898312&to=0.00188646;0.00071865&datetime=20120614T075500&"
-            "first_section_mode[]={first}&last_section_mode[]={last}&forbidden_uris[]=PM".format(
+            "first_section_mode[]={first}&last_section_mode[]={last}&forbidden_uris[]=PM&_min_ridesharing=0".format(
                 first='ridesharing', last='walking'
             )
         )

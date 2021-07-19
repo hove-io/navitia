@@ -112,11 +112,11 @@ class TestJourneysDistributedWithMock(JourneyMinBikeMinCar, NewDefaultScenarioAb
         # journey count = 18 / direct_path_call_count = 26 / routing_matrix_call_count = 20
         # get_directpath_count_by_mode(response, 'walking') == 5
         # get_directpath_count_by_mode(response, 'bike') == 5
-        assert len(response["journeys"]) == 5
+        assert len(response["journeys"]) == 6
         assert sn_service.direct_path_call_count == 4
         assert sn_service.routing_matrix_call_count == 4
         assert get_directpath_count_by_mode(response, 'walking') == 1
-        assert get_directpath_count_by_mode(response, 'bike') == 0
+        assert get_directpath_count_by_mode(response, 'bike') == 1
 
         # This will call jormun so we check our counter before
         self.is_valid_journey_response(response, query)
@@ -418,6 +418,9 @@ def _make_function_distance_over_upper_limit(from_coord, to_coord, mode, op):
             '&first_section_mode[]={mode}'
             '&last_section_mode[]={mode}'
             '&max_duration=0'
+            '&_min_bike=0'
+            '&_min_car=0'
+            '&_min_taxi=0'
         ).format(from_coord=from_coord, to_coord=to_coord, datetime="20120614T080000", mode=mode)
 
         response = self.query_region(query)
@@ -472,6 +475,9 @@ def _make_function_distance_under_lower_limit(from_coord, to_coord, mode):
             '&last_section_mode[]={mode}'
             '&max_duration=0'
             '&max_{mode}_direct_path_distance={max_dp_distance}'
+            '&_min_bike=0'
+            '&_min_car=0'
+            '&_min_taxi=0'
         ).format(
             from_coord=from_coord,
             to_coord=to_coord,
@@ -532,6 +538,9 @@ def _make_function_duration_over_upper_limit(from_coord, to_coord, mode, op):
             '&first_section_mode[]={mode}'
             '&last_section_mode[]={mode}'
             '&max_duration=0'
+            '&_min_bike=0'
+            '&_min_car=0'
+            '&_min_taxi=0'
         ).format(from_coord=from_coord, to_coord=to_coord, datetime="20120614T080000", mode=mode)
 
         response = self.query_region(query)
@@ -587,6 +596,9 @@ def _make_function_duration_under_upper_limit(from_coord, to_coord, mode):
             '&max_duration=0'
             '&{mode}_speed=1'
             '&max_{mode}_direct_path_duration={max_dp_duration}'
+            '&_min_bike=0'
+            '&_min_car=0'
+            '&_min_taxi=0'
         ).format(
             from_coord=from_coord, to_coord=to_coord, datetime="20120614T080000", mode=mode, max_dp_duration=3600
         )
@@ -786,7 +798,7 @@ class TestTaxiDistributed(NewDefaultScenarioAbstractTestFixture):
         assert len(response['journeys']) == 1
 
     def test_last_section_mode_taxi(self):
-        query = journey_basic_query + "&walking_speed=0.5" + "&last_section_mode[]=taxi"
+        query = journey_basic_query + "&walking_speed=0.5" + "&last_section_mode[]=taxi&_min_taxi=0"
 
         response = self.query_region(query)
         check_best(response)
@@ -999,7 +1011,13 @@ class TestCarNoParkDistributed(NewDefaultScenarioAbstractTestFixture):
 class TestCarDistributed(NewDefaultScenarioAbstractTestFixture):
     def test_stop_points_nearby_duration_park_n_ride(self):
         # we begin with a normal request to get the fallback duration in taxi
-        query = sub_query + "&datetime=20120614T080000" + "&first_section_mode[]=car" + "&car_speed=1"
+        query = (
+            sub_query
+            + "&datetime=20120614T080000"
+            + "&_min_car=0"
+            + "&first_section_mode[]=car"
+            + "&car_speed=1"
+        )
 
         response = self.query_region(query)
         check_best(response)
@@ -1019,6 +1037,7 @@ class TestCarDistributed(NewDefaultScenarioAbstractTestFixture):
             + "&datetime=20120614T080000"
             + "&first_section_mode[]=car"
             + "&car_speed=1"
+            + "&_min_car=0"
             # now we set _stop_points_nearby_duration
             + "&_stop_points_nearby_duration={}".format(int(park_to_stop_point_duration / math.sqrt(2)) - 1)
         )
