@@ -23,14 +23,21 @@
     :target: https://app.element.io/#/room/#navitia:matrix.org
     :alt: chat
 
-.. |Code Coverage| image:: https://codecov.io/gh/CanalTP/navitia/branch/dev/graph/badge.svg?token=hTcQmLu5t7
-    :target: https://codecov.io/gh/CanalTP/navitia/
+.. |Code Coverage| image:: https://sonarcloud.io/api/project_badges/measure?project=CanalTP_navitia&metric=coverage
+    :alt: SonarCloud Coverage
 
-+----------------+----------------+-----------+--------+-----------------+
-| Version        | Build status   | License   | Chat   | Code Coverage   |
-+----------------+----------------+-----------+--------+-----------------+
-| |Version Logo| | |Build Status| | |License| | |Chat| | |Code Coverage| |
-+----------------+----------------+-----------+--------+-----------------+
+.. |Vulnerabilities| image:: https://sonarcloud.io/api/project_badges/measure?project=CanalTP_navitia&metric=vulnerabilities
+    :alt: SonarCloud Vulnerabilities
+
+.. |Security Rating| image:: https://sonarcloud.io/api/project_badges/measure?project=CanalTP_navitia&metric=security_rating
+    :alt: SonarCloud Security Rating
+
++----------------+----------------+-----------+--------+-----------------+-------------------+-------------------+
+| Version        | Build status   | License   | Chat   | Code Coverage   | Vulnerabilities   | Security Rating   |
++----------------+----------------+-----------+--------+-----------------+-------------------+-------------------+
+| |Version Logo| | |Build Status| | |License| | |Chat| | |Code Coverage| | |Vulnerabilities| | |Security Rating| |
++----------------+----------------+-----------+--------+-----------------+-------------------+-------------------+
+
 
 Presentation
 ============
