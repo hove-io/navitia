@@ -288,7 +288,7 @@ class TestJourneysNewDefault(
         query = (
             "journeys?from={from_coord}&to={to_coord}&datetime={datetime}&"
             "first_section_mode[]=bss&first_section_mode[]=walking&"
-            "last_section_mode[]=walking&last_section_mode[]=bss&".format(
+            "last_section_mode[]=walking&last_section_mode[]=bss".format(
                 from_coord=s_coord, to_coord=r_coord, datetime="20120614T075500"
             )
         )

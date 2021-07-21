@@ -141,12 +141,7 @@ def filter_journeys(responses, instance, request):
 
     filters = [
         FilterTooShortHeavyJourneys(
-            min_bike=min_bike,
-            min_car=min_car,
-            min_taxi=min_taxi,
-            min_ridesharing=min_ridesharing,
-            orig_modes=orig_modes,
-            dest_modes=dest_modes,
+            min_bike=min_bike, min_car=min_car, min_taxi=min_taxi, min_ridesharing=min_ridesharing
         ),
         FilterTooLongWaiting(max_waiting_duration=max_waiting_duration),
         FilterMinTransfers(min_nb_transfers=min_nb_transfers),
@@ -192,15 +187,11 @@ class FilterTooShortHeavyJourneys(SingleJourneyFilter):
 
     message = 'too_short_heavy_mode_fallback'
 
-    def __init__(
-        self, min_bike=None, min_car=None, min_taxi=None, min_ridesharing=None, orig_modes=None, dest_modes=None
-    ):
+    def __init__(self, min_bike=None, min_car=None, min_taxi=None, min_ridesharing=None):
         self.min_bike = min_bike
         self.min_car = min_car
         self.min_taxi = min_taxi
         self.min_ridesharing = min_ridesharing
-        self.orig_modes = [] if orig_modes is None else orig_modes
-        self.dest_modes = [] if dest_modes is None else dest_modes
 
     def filter_func(self, journey):
         """
@@ -658,12 +649,7 @@ def filter_detailed_journeys(responses, request):
     dest_modes = request.get('destination_mode', [])
 
     too_heavy_journey_filter = FilterTooShortHeavyJourneys(
-        min_bike=min_bike,
-        min_car=min_car,
-        min_taxi=min_taxi,
-        min_ridesharing=min_ridesharing,
-        orig_modes=orig_modes,
-        dest_modes=dest_modes,
+        min_bike=min_bike, min_car=min_car, min_taxi=min_taxi, min_ridesharing=min_ridesharing
     )
     f_wrapped = filter_wrapper(is_debug=request.get('debug', False), filter_obj=too_heavy_journey_filter)
 
