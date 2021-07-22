@@ -30,6 +30,7 @@
 
 from __future__ import absolute_import, print_function, unicode_literals, division
 import jmespath
+import logging
 
 from jormungandr.parking_space_availability.car.common_car_park_provider import CommonCarParkProvider
 from jormungandr.parking_space_availability.car.parking_places import ParkingPlaces
@@ -40,6 +41,7 @@ DEFAULT_STAR_FEED_PUBLISHER = None
 class StarProvider(CommonCarParkProvider):
     def __init__(self, url, operators, dataset, timeout=1, feed_publisher=DEFAULT_STAR_FEED_PUBLISHER, **kwargs):
         self.provider_name = 'STAR'
+        self.log = logging.LoggerAdapter(logging.getLogger(__name__), extra={'PROVIDER': self.provider_name})
 
         super(StarProvider, self).__init__(url, operators, dataset, timeout, feed_publisher, **kwargs)
 
@@ -48,9 +50,43 @@ class StarProvider(CommonCarParkProvider):
         if not park:
             return None
 
+        dataset_id = jmespath.search('records[0].datasetid', data)
+        if 'new-etat' in dataset_id:  # new version of api star
+            return self.get_new_items(park)
+        else:
+            return self.get_old_items(park)
+
+    def get_old_items(self, park):
         available = jmespath.search('fields.nombreplacesdisponibles', park)
         occupied = jmespath.search('fields.nombreplacesoccupees', park)
         # Person with reduced mobility
         available_PRM = jmespath.search('fields.nombreplacesdisponiblespmr', park)
         occupied_PRM = jmespath.search('fields.nombreplacesoccupeespmr', park)
         return ParkingPlaces(available, occupied, available_PRM, occupied_PRM)
+
+    def get_new_items(self, park):
+        occupied = None
+        occupied_PRM = None
+        occupied_ridesharing = None
+        occupied_electric_vehicle = None
+
+        available = jmespath.search('fields.jrdinfosoliste', park)
+        total_places = jmespath.search('fields.capaciteSoliste', park)
+        if any(n is not None for n in [available, total_places]):
+            occupied = total_places - (available or 0)
+        # Person with reduced mobility
+        available_PRM = jmespath.search('fields.jrdinfopmr', park)
+        total_places_PRM = jmespath.search('fields.capacitepmr', park)
+        if any(n is not None for n in [available_PRM, total_places_PRM]):
+            occupied_PRM = total_places_PRM - (available_PRM or 0)
+        available_ridesharing = jmespath.search('fields.jrdinfocovoiturage', park)
+        total_places_ridesharing = jmespath.search('fields.capacitecovoiturage', park)
+        if any(n is not None for n in [available_ridesharing, total_places_ridesharing]):
+            occupied_ridesharing = total_places_ridesharing - (available_ridesharing or 0)
+        available_electric_vehicle = jmespath.search('fields.jrdinfoelectrique', park)
+        total_places_electric_vehicle = jmespath.search('fields.capaciteve', park)
+        if any(n is not None for n in [available_electric_vehicle, total_places_electric_vehicle]):
+            occupied_electric_vehicle = total_places_electric_vehicle - (available_electric_vehicle or 0)
+        state = jmespath.search('fields.etatOuverture', park)
+        return ParkingPlaces(available, occupied, available_PRM, occupied_PRM, total_places, available_ridesharing,
+                             occupied_ridesharing, available_electric_vehicle, occupied_electric_vehicle, state)
