@@ -206,6 +206,9 @@ max_taxi_direct_path_distance = 200000  # 200 Km
 # Proximity radius for autocomplete used in /places endpoint
 places_proximity_radius = 20000  # 20 Km
 
+# Asgard language by default
+asgard_language = "english_us"
+
 
 def get_value_or_default(attr, instance, instance_name):
     if not instance or getattr(instance, attr, None) == None:
