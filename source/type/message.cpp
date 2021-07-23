@@ -317,8 +317,15 @@ bool blocked_sa_sequence_matching(const ConcatenateBlockedSASequence& concatenat
                                   const std::set<RankStopTime>& st_rank_list) {
     if (!concatenate_bsa_uri_sequence_string.empty() || !st_rank_list.empty()) {
         std::string st_meta_string = "";
-        for (const auto sp : st_rank_list) {
-            st_meta_string += vj.stop_time_list[sp.val].stop_point->stop_area->uri;
+        for (const auto st : st_rank_list) {
+            if (st.val >= vj.stop_time_list.size()) {
+                return false;
+            }
+            const auto sp = vj.stop_time_list[st.val].stop_point;
+            if (sp == nullptr || sp->stop_area == nullptr) {
+                return false;
+            }
+            st_meta_string += sp->stop_area->uri;
         }
         if (st_meta_string == concatenate_bsa_uri_sequence_string) {
             return true;
