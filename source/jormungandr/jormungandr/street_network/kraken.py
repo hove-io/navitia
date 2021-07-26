@@ -142,12 +142,7 @@ class Kraken(AbstractStreetNetworkService):
                 return response_pb2.Response()
 
         req = self._create_direct_path_request(
-            mode,
-            pt_object_origin,
-            pt_object_destination,
-            fallback_extremity,
-            direct_path_request,
-            instance.asgard_language,
+            mode, pt_object_origin, pt_object_destination, fallback_extremity, direct_path_request
         )
 
         response = instance.send_and_receive(req, request_id=request_id)
@@ -185,7 +180,7 @@ class Kraken(AbstractStreetNetworkService):
         return mode
 
     def _create_direct_path_request(
-        self, mode, pt_object_origin, pt_object_destination, fallback_extremity, request, language
+        self, mode, pt_object_origin, pt_object_destination, fallback_extremity, request, language="en-US"
     ):
         req = request_pb2.Request()
         req.requested_api = type_pb2.direct_path
