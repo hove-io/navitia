@@ -388,7 +388,7 @@ def _build_crowfly(pt_journey, entry_point, mode, places_free_access, fallback_d
 
 
 def _is_pure_walking(dp):
-    if dp.journyes and len(dp.journeys[0].sections) == 1:
+    if dp.journeys and len(dp.journeys[0].sections) == 1:
         section = dp.journeys[0].sections[0]
         if section.type == response_pb2.STREET_NETWORK and section.street_network.mode == response_pb2.Walking:
             return True
