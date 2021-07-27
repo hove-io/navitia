@@ -69,6 +69,7 @@ void MaintenanceWorker::load_data() {
     }
     auto duration = pt::microsec_clock::universal_time() - start;
     this->metrics.observe_data_loading(duration.total_seconds());
+    LOG4CPLUS_INFO(logger, "*** Loading database duration: " << duration << " seconds");
 }
 
 void MaintenanceWorker::load_realtime() {
@@ -190,7 +191,7 @@ void MaintenanceWorker::handle_rt_in_batch(const std::vector<AmqpClient::Envelop
                 data = data_manager.get_data_clone();
                 auto duration = pt::microsec_clock::universal_time() - copy_begin;
                 this->metrics.observe_data_cloning(duration.total_seconds());
-                LOG4CPLUS_INFO(logger, "data copied in " << duration);
+                LOG4CPLUS_INFO(logger, "*** data copied (cloned) in " << duration << " seconds");
             }
             if (entity.is_deleted()) {
                 LOG4CPLUS_DEBUG(logger, "deletion of disruption " << entity.id());
@@ -226,7 +227,8 @@ void MaintenanceWorker::handle_rt_in_batch(const std::vector<AmqpClient::Envelop
         data_manager.set_data(std::move(data));
         auto duration = pt::microsec_clock::universal_time() - begin;
         this->metrics.observe_handle_rt(duration.total_seconds());
-        LOG4CPLUS_INFO(logger, "data updated " << envelopes.size() << " disruption applied in " << duration);
+        LOG4CPLUS_INFO(logger, "*** data updated with realtime" << envelopes.size() << " disruption applied in "
+                                                                << duration << " seconds");
     } else if (!envelopes.empty()) {
         // we didn't had to update Data because there is no change but we want to track that realtime data
         // is being processed as it should because "nothing has changed" isn't the same thing

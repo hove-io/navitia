@@ -118,7 +118,7 @@ Metrics::Metrics(const boost::optional<std::string>& endpoint, const std::string
 
     this->data_loading_histogram = &prometheus::BuildHistogram()
                                         .Name("kraken_data_loading_duration_seconds")
-                                        .Help("duration of loading data")
+                                        .Help("duration of loading data with or without realtime")
                                         .Labels({{"coverage", coverage}})
                                         .Register(*registry)
                                         .Add({}, create_exponential_buckets(1, 2, 10));
