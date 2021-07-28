@@ -40,6 +40,7 @@ from jormungandr.utils import (
 from jormungandr.street_network.utils import crowfly_distance_between
 from jormungandr.fallback_modes import FallbackModes, all_fallback_modes
 from .helper_exceptions import *
+from navitiacommon import response_pb2
 import copy
 import logging
 import six
@@ -386,6 +387,14 @@ def _build_crowfly(pt_journey, entry_point, mode, places_free_access, fallback_d
     return _create_crowfly(pt_journey, crowfly_origin, crowfly_destination, begin, end, mode)
 
 
+def _is_pure_walking(dp):
+    if dp.journeys and len(dp.journeys[0].sections) == 1:
+        section = dp.journeys[0].sections[0]
+        if section.type == response_pb2.STREET_NETWORK and section.street_network.mode == response_pb2.Walking:
+            return True
+    return False
+
+
 def _build_fallback(
     requested_obj,
     pt_journey,
@@ -421,6 +430,12 @@ def _build_fallback(
             fallback_dp = streetnetwork_path_pool.wait_and_get(
                 orig, dest, real_mode, fallback_period_extremity, fallback_type, request=request
             )
+            if real_mode == 'bss' and _is_pure_walking(fallback_dp):
+                walking_dp = streetnetwork_path_pool.wait_and_get(
+                    orig, dest, "walking", fallback_period_extremity, fallback_type, request=request
+                )
+                # walking_dp may be None
+                fallback_dp = walking_dp or fallback_dp
 
             if not _is_crowfly_needed(
                 pt_obj.uri, fallback_durations, accessibles_by_crowfly.crowfly, fallback_dp
