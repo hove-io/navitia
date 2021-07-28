@@ -65,13 +65,13 @@ class StarProvider(CommonCarParkProvider):
         return ParkingPlaces(available, occupied, available_PRM, occupied_PRM)
 
     def get_new_items(self, park):
-        occupied = None
-        occupied_PRM = None
-        occupied_ridesharing = None
-        occupied_electric_vehicle = None
+        occupied = 0
+        occupied_PRM = 0
+        occupied_ridesharing = 0
+        occupied_electric_vehicle = 0
 
         available = jmespath.search('fields.jrdinfosoliste', park)
-        total_places = jmespath.search('fields.capaciteSoliste', park)
+        total_places = jmespath.search('fields.capacitesoliste', park)
         if any(n is not None for n in [available, total_places]):
             occupied = total_places - (available or 0)
         # Person with reduced mobility
@@ -87,6 +87,6 @@ class StarProvider(CommonCarParkProvider):
         total_places_electric_vehicle = jmespath.search('fields.capaciteve', park)
         if any(n is not None for n in [available_electric_vehicle, total_places_electric_vehicle]):
             occupied_electric_vehicle = total_places_electric_vehicle - (available_electric_vehicle or 0)
-        state = jmespath.search('fields.etatOuverture', park)
+        state = jmespath.search('fields.etatouverture', park)
         return ParkingPlaces(available, occupied, available_PRM, occupied_PRM, total_places, available_ridesharing,
                              occupied_ridesharing, available_electric_vehicle, occupied_electric_vehicle, state)
