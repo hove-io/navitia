@@ -217,7 +217,6 @@ instance_fields = {
     'external_services': fields.List(fields.Nested(external_service_fields)),
     'max_waiting_duration': fields.Raw,
     'places_proximity_radius': fields.Raw,
-    'asgard_language': fields.Raw,
 }
 
 api_fields = {'id': fields.Raw, 'name': fields.Raw}

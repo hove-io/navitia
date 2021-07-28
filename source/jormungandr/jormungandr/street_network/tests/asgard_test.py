@@ -35,7 +35,6 @@ class FakeInstance(object):
 
     name = 'fake_instance'
     context = None
-    asgard_language = "en-US"
 
 
 def status_test():
@@ -50,7 +49,7 @@ def status_test():
     )
 
     status = asgard.status()
-    assert len(status) == 7
+    assert len(status) == 6
     assert status['id'] == u'tata-é$~#@"*!\'`§èû'
     assert status['class'] == "Asgard"
     assert status['modes'] == ["walking", "bike", "car"]
@@ -59,4 +58,3 @@ def status_test():
     assert status['circuit_breaker']['fail_counter'] == 0
     assert status['circuit_breaker']['reset_timeout'] == 60
     assert status['zmq_socket_ttl'] == 60
-    assert status['language'] == 'en-US'
