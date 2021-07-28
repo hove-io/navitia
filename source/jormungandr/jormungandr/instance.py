@@ -664,7 +664,6 @@ class Instance(object):
     bss_rent_penalty = _make_property_getter('bss_rent_penalty')
     bss_return_duration = _make_property_getter('bss_return_duration')
     bss_return_penalty = _make_property_getter('bss_rent_penalty')
-    asgard_language = _make_property_getter('asgard_language')
 
     @property
     def places_proximity_radius(self):

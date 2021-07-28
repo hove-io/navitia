@@ -619,13 +619,6 @@ class Instance(db.Model):  # type: ignore
         default=default_values.street_network_taxi,
     )
 
-    asgard_language = db.Column(
-        db.Text,
-        db.ForeignKey('streetnetwork_backend.id'),
-        nullable=False,
-        default=default_values.asgard_language,
-    )
-
     poi_dataset = db.Column(db.Text, default=None, nullable=True)
 
     stop_points_nearby_duration = db.Column(
