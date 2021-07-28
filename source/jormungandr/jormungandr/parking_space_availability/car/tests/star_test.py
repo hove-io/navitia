@@ -45,7 +45,7 @@ def car_park_space_availability_start_support_poi_test():
     """
     STAR car provider support
     """
-    provider = StarProvider("fake.url", {'Keolis Rennes'}, 'toto', 42)
+    provider = StarProvider("fake.url", {'Keolis Rennes'}, 'toto', 42, username=None)
     assert provider.support_poi(poi)
 
 
@@ -66,7 +66,7 @@ def car_park_space_get_information_ok_test():
         ]
     }
 
-    provider = StarProvider("http://fake.url", {'Keolis Rennes'}, 'toto', 42)
+    provider = StarProvider("http://fake.url", {'Keolis Rennes'}, 'toto', 42, username=None)
     with requests_mock.Mocker() as m:
         m.get('http://fake.url?dataset=toto', json=star_response)
         assert provider.get_informations(poi) == parking_places
@@ -74,7 +74,7 @@ def car_park_space_get_information_ok_test():
 
 
 def car_park_space_get_information_invalid_poi_test():
-    provider = StarProvider("http://fake.url", {'Keolis Rennes'}, 'toto', 42)
+    provider = StarProvider("http://fake.url", {'Keolis Rennes'}, 'toto', 42, username=None)
     invalid_poi = {}
     with requests_mock.Mocker() as m:
         assert provider.get_informations(invalid_poi) is None
@@ -82,7 +82,7 @@ def car_park_space_get_information_invalid_poi_test():
 
 
 def car_park_space_get_information_none_response_test():
-    provider = StarProvider("http://fake.url", {'Keolis Rennes'}, 'toto', 42)
+    provider = StarProvider("http://fake.url", {'Keolis Rennes'}, 'toto', 42, username=None)
     with requests_mock.Mocker() as m:
         m.get('http://fake.url?dataset=toto', json=None)
         assert provider.get_informations(poi) is None
@@ -91,7 +91,7 @@ def car_park_space_get_information_none_response_test():
 
 def car_park_space_get_information_no_data_test():
     star_response = {"records": [{"datasetid": "tco-parcsrelais-etat-tr", "fields": {"idparc": "42"}}]}
-    provider = StarProvider("http://fake.url", {'Keolis Rennes'}, 'toto', 42)
+    provider = StarProvider("http://fake.url", {'Keolis Rennes'}, 'toto', 42, username=None)
     empty_parking = ParkingPlaces(available=None, occupied=None, available_PRM=None, occupied_PRM=None)
     with requests_mock.Mocker() as m:
         m.get('http://fake.url?dataset=toto', json=star_response)
@@ -101,7 +101,7 @@ def car_park_space_get_information_no_data_test():
 
 def car_park_space_get_information_no_parking_test():
     star_response = {"records": []}
-    provider = StarProvider("http://fake.url", {'Keolis Rennes'}, 'toto', 42)
+    provider = StarProvider("http://fake.url", {'Keolis Rennes'}, 'toto', 42, username=None)
     with requests_mock.Mocker() as m:
         m.get('http://fake.url?dataset=toto', json=star_response)
         assert provider.get_informations(poi) is None
@@ -111,7 +111,7 @@ def car_park_space_get_information_no_parking_test():
 def car_park_space_get_information_ok_without_PMR_test():
     # Information of PRM is not provided
     parking_places = ParkingPlaces(available=4, occupied=3)
-    provider = StarProvider("http://fake.url", {'Keolis Rennes'}, 'toto', 42)
+    provider = StarProvider("http://fake.url", {'Keolis Rennes'}, 'toto', 42, username=None)
     star_response = {
         "records": [{"datasetid": "tco-parcsrelais-etat-tr",
                      "fields": {"nombreplacesdisponibles": 4, "nombreplacesoccupees": 3, "idparc": "42"}}]
@@ -152,7 +152,7 @@ def car_park_space_get_new_information_ok_test():
         ]
     }
 
-    provider = StarProvider("http://fake.url", {'Keolis Rennes'}, 'test', 42)
+    provider = StarProvider("http://fake.url", {'Keolis Rennes'}, 'test', 42, username=None)
     with requests_mock.Mocker() as m:
         m.get('http://fake.url?dataset=test', json=star_response)
         assert provider.get_informations(poi) == parking_places
@@ -161,7 +161,7 @@ def car_park_space_get_new_information_ok_test():
 
 def car_park_space_get_new_information_no_data_test():
     star_response = {"records": [{"datasetid": "tco-parcsrelais-new-etat-tr", "fields": {"idparc": "42"}}]}
-    provider = StarProvider("http://fake.url", {'Keolis Rennes'}, 'test', 42)
+    provider = StarProvider("http://fake.url", {'Keolis Rennes'}, 'test', 42, username=None)
     empty_parking = ParkingPlaces(available=None, occupied=None, available_PRM=None, occupied_PRM=None)
     with requests_mock.Mocker() as m:
         m.get('http://fake.url?dataset=test', json=star_response)
@@ -174,7 +174,7 @@ def car_park_space_get_new_information_ok_without_PMR_test():
     parking_places = ParkingPlaces(available=4, occupied=6, total_places=10, available_ridesharing=10,
                                    occupied_ridesharing=20, available_electric_vehicle=5, occupied_electric_vehicle=10,
                                    state="OUVERT")
-    provider = StarProvider("http://fake.url", {'Keolis Rennes'}, 'test', 42)
+    provider = StarProvider("http://fake.url", {'Keolis Rennes'}, 'test', 42, username=None)
     star_response = {
         "records": [
             {
