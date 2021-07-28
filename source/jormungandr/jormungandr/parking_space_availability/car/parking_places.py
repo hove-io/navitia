@@ -28,11 +28,18 @@
 # www.navitia.io
 from __future__ import absolute_import, print_function, unicode_literals, division
 
+import logging
+
 
 class ParkingPlaces(object):
     def __init__(self, available=None, occupied=None, available_PRM=None, occupied_PRM=None, total_places=None,
                  available_ridesharing=None, occupied_ridesharing=None, available_electric_vehicle=None,
                  occupied_electric_vehicle=None, state=None):
+        self.log = logging.LoggerAdapter(logging.getLogger(__name__), None)
+        self.log.warning("**************** {}, {}, {}, {}, {}, {}, {}, {}, {}, {}"
+                         .format(available, occupied, available_PRM, occupied_PRM, total_places,
+                                 available_ridesharing, occupied_ridesharing, available_electric_vehicle,
+                                 occupied_electric_vehicle, state))
         if available is not None:
             self.available = available
         if occupied is not None:
