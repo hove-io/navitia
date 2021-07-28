@@ -138,14 +138,14 @@ def car_park_space_get_new_information_ok_test():
                 "datasetid": "tco-parcsrelais-new-etat-tr",
                 "fields": {
                     "jrdinfosoliste": 4,
-                    "capaciteSoliste": 10,
+                    "capacitesoliste": 10,
                     "jrdinfopmr": 2,
                     "capacitepmr": 2,
                     "jrdinfocovoiturage": 10,
                     "capacitecovoiturage": 30,
                     "jrdinfoelectrique": 5,
                     "capaciteve": 15,
-                    "etatOuverture": "OUVERT",
+                    "etatouverture": "OUVERT",
                     "idparc": "42",
                 }
             }
@@ -181,12 +181,12 @@ def car_park_space_get_new_information_ok_without_PMR_test():
                 "datasetid": "tco-parcsrelais-new-etat-tr",
                 "fields": {
                     "jrdinfosoliste": 4,
-                    "capaciteSoliste": 10,
+                    "capacitesoliste": 10,
                     "jrdinfocovoiturage": 10,
                     "capacitecovoiturage": 30,
                     "jrdinfoelectrique": 5,
                     "capaciteve": 15,
-                    "etatOuverture": "OUVERT",
+                    "etatouverture": "OUVERT",
                     "idparc": "42",
                 }
             }

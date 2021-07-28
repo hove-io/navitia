@@ -58,8 +58,6 @@ def output_jsonp(data, code, headers=None):
 @rest_api.representation("text/json")
 @rest_api.representation("application/json")
 def output_json(data, code, headers=None):
-    logger = logging.getLogger(__name__)
-    logger.info("************* {}".format(data))
     resp = make_response(ujson.dumps(data), code)
     resp.headers.extend(headers or {})
     return resp
