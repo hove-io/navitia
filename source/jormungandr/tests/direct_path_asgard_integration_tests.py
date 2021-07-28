@@ -210,6 +210,49 @@ def valid_response(request):
         return response_pb2.Response()
 
 
+def valid_request(request):
+    if request.requested_api == type_pb2.direct_path:
+        assert request.direct_path.streetnetwork_params.origin_mode
+        assert request.direct_path.streetnetwork_params.destination_mode
+        assert request.direct_path.streetnetwork_params.walking_speed == 1.12
+        assert request.direct_path.streetnetwork_params.max_walking_duration_to_pt == 1800
+        assert request.direct_path.streetnetwork_params.bike_speed == 4.1
+        assert request.direct_path.streetnetwork_params.max_bike_duration_to_pt == 1800
+        assert request.direct_path.streetnetwork_params.bss_speed == 4.1
+        assert request.direct_path.streetnetwork_params.max_bss_duration_to_pt == 1800
+        assert request.direct_path.streetnetwork_params.car_speed == 11.11
+        assert request.direct_path.streetnetwork_params.max_car_duration_to_pt == 1800
+        assert request.direct_path.streetnetwork_params.language == "en-US"
+        assert request.direct_path.streetnetwork_params.car_no_park_speed == (
+            11.11 if request.direct_path.streetnetwork_params.origin_mode in ("car", "car_no_park") else 0
+        )
+        assert request.direct_path.streetnetwork_params.max_car_no_park_duration_to_pt == (
+            1800 if request.direct_path.streetnetwork_params.origin_mode in ("car", "car_no_park") else 0
+        )
+        assert request.direct_path.streetnetwork_params.bss_rent_duration == (
+            42 if request.direct_path.streetnetwork_params.origin_mode == "bss" else 120
+        )
+        assert request.direct_path.streetnetwork_params.bss_rent_penalty == 0
+        assert request.direct_path.streetnetwork_params.bss_return_duration == (
+            24 if request.direct_path.streetnetwork_params.origin_mode == "bss" else 120
+        )
+        assert request.direct_path.streetnetwork_params.bss_return_penalty == 0
+        assert request.direct_path.streetnetwork_params.enable_instructions == True
+
+    if request.requested_api == type_pb2.street_network_routing_matrix:
+        assert request.sn_routing_matrix.max_duration == 1800
+        assert request.sn_routing_matrix.streetnetwork_params.origin_mode
+        assert request.sn_routing_matrix.streetnetwork_params.walking_speed == 1.12
+        assert request.sn_routing_matrix.streetnetwork_params.bike_speed == 4.1
+        assert request.sn_routing_matrix.streetnetwork_params.bss_speed == 4.1
+        assert request.sn_routing_matrix.streetnetwork_params.car_speed == 11.11
+        assert request.sn_routing_matrix.streetnetwork_params.car_no_park_speed == 11.11
+        assert request.direct_path.streetnetwork_params.bss_rent_duration == 120
+        assert request.direct_path.streetnetwork_params.bss_rent_penalty == 0
+        assert request.direct_path.streetnetwork_params.bss_return_duration == 120
+        assert request.direct_path.streetnetwork_params.bss_return_penalty == 0
+
+
 def bad_response(request):
     return response_pb2.Response()
 
@@ -227,6 +270,7 @@ class MockAsgard(Asgard):
         )
 
     def _call_asgard(self, request):
+        valid_request(request)
         return valid_response(request)
 
 
