@@ -325,6 +325,12 @@ class CarParkSerializer(PbNestedSerializer):
     available_PRM = jsonschema.IntField()
     occupied_PRM = jsonschema.IntField()
     total_places = jsonschema.IntField()
+    # items for new api star
+    available_ridesharing = jsonschema.IntField()
+    occupied_ridesharing = jsonschema.IntField()
+    available_electric_vehicle = jsonschema.IntField()
+    occupied_electric_vehicle = jsonschema.IntField()
+    state = jsonschema.Field(schema_type=str)
 
 
 class AdminSerializer(SortedGenericSerializer, PbGenericSerializer):
