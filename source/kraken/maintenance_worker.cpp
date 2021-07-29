@@ -192,7 +192,7 @@ void MaintenanceWorker::handle_rt_in_batch(const std::vector<AmqpClient::Envelop
                 data = data_manager.get_data_clone();
                 auto duration = pt::microsec_clock::universal_time() - copy_begin;
                 this->metrics.observe_data_cloning(duration.total_seconds());
-                LOG4CPLUS_INFO(logger, "data copied (cloned) in " << duration << " seconds");
+                LOG4CPLUS_INFO(logger, "data copied (cloned) in " << duration);
             }
             if (entity.is_deleted()) {
                 LOG4CPLUS_DEBUG(logger, "deletion of disruption " << entity.id());
