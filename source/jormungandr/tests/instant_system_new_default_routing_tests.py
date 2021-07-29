@@ -121,7 +121,7 @@ class TestInstantSystem(NewDefaultScenarioAbstractTestFixture):
         """
         q = (
             "journeys?from=0.0000898312;0.0000698312&to=0.00188646;0.00071865&datetime=20120614T075500&"
-            "first_section_mode[]={first}&last_section_mode[]={last}&forbidden_uris[]=PM".format(
+            "first_section_mode[]={first}&last_section_mode[]={last}&forbidden_uris[]=PM&_min_ridesharing=0".format(
                 first='ridesharing', last='walking'
             )
         )
@@ -218,6 +218,7 @@ class TestInstantSystem(NewDefaultScenarioAbstractTestFixture):
             + "&first_section_mode[]=ridesharing"
             + "&last_section_mode[]=walking"
             + "&ridesharing_speed=2.5"
+            + "&_min_ridesharing=0"
         )
         response = self.query_region(q)
         self.is_valid_journey_response(response, q, check_journey_links=False)
@@ -275,6 +276,7 @@ class TestInstantSystem(NewDefaultScenarioAbstractTestFixture):
             + "&last_section_mode[]=walking"
             + "&ridesharing_speed=2.5"
             + "&max_ridesharing_duration_to_pt=0"
+            + "&_min_ridesharing=0"
         )
         response = self.query_region(q)
         self.is_valid_journey_response(response, q, check_journey_links=False)
@@ -289,6 +291,8 @@ class TestInstantSystem(NewDefaultScenarioAbstractTestFixture):
             "&last_section_mode[]=walking"
             "&ridesharing_speed=2.5"
             "&car_speed=2.5"
+            "&_min_ridesharing=0"
+            "&_min_car=0"
         )
         response = self.query_region(q)
         self.is_valid_journey_response(response, q, check_journey_links=False)
@@ -347,7 +351,7 @@ class TestInstantSystem(NewDefaultScenarioAbstractTestFixture):
         """
         q = (
             "journeys?from=0.00188646;0.00071865&to=0.0000898312;0.0000898312&datetime=20120614T080000&"
-            "ridesharing_speed=2.5&first_section_mode[]={first}&last_section_mode[]={last}".format(
+            "ridesharing_speed=2.5&first_section_mode[]={first}&last_section_mode[]={last}&_min_ridesharing=0".format(
                 first='walking', last='ridesharing'
             )
         )

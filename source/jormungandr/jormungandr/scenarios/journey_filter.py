@@ -141,12 +141,7 @@ def filter_journeys(responses, instance, request):
 
     filters = [
         FilterTooShortHeavyJourneys(
-            min_bike=min_bike,
-            min_car=min_car,
-            min_taxi=min_taxi,
-            min_ridesharing=min_ridesharing,
-            orig_modes=orig_modes,
-            dest_modes=dest_modes,
+            min_bike=min_bike, min_car=min_car, min_taxi=min_taxi, min_ridesharing=min_ridesharing
         ),
         FilterTooLongWaiting(max_waiting_duration=max_waiting_duration),
         FilterMinTransfers(min_nb_transfers=min_nb_transfers),
@@ -192,30 +187,29 @@ class FilterTooShortHeavyJourneys(SingleJourneyFilter):
 
     message = 'too_short_heavy_mode_fallback'
 
-    def __init__(
-        self, min_bike=None, min_car=None, min_taxi=None, min_ridesharing=None, orig_modes=None, dest_modes=None
-    ):
+    def __init__(self, min_bike=None, min_car=None, min_taxi=None, min_ridesharing=None):
         self.min_bike = min_bike
         self.min_car = min_car
         self.min_taxi = min_taxi
         self.min_ridesharing = min_ridesharing
-        self.orig_modes = [] if orig_modes is None else orig_modes
-        self.dest_modes = [] if dest_modes is None else dest_modes
 
     def filter_func(self, journey):
         """
         We filter the journeys that use an "heavy" mode as fallback for a short time.
         Typically you don't take your car for only 2 minutes.
         Heavy fallback modes are Bike and Car, BSS is not considered as one.
+        We also filter too short direct path except for Bike
         """
 
-        def _exceed_min_duration(current_section, journey, min_duration, orig_modes=None, dest_modes=None):
-            orig_modes = [] if orig_modes is None else orig_modes
-            dest_modes = [] if dest_modes is None else dest_modes
+        def _exceed_min_duration(min_duration, total_duration):
+            return total_duration < min_duration
 
-            if current_section == journey.sections[0]:
-                return 'walking' in orig_modes and current_section.duration < min_duration
-            return 'walking' in dest_modes and current_section.duration < min_duration
+        def _is_bike_direct_path(journey):
+            return len(journey.sections) == 1 and journey.sections[0].street_network.mode == response_pb2.Bike
+
+        # We do not filter direct_path bike journeys
+        if _is_bike_direct_path(journey=journey):
+            return True
 
         on_bss = False
         for s in journey.sections:
@@ -227,33 +221,26 @@ class FilterTooShortHeavyJourneys(SingleJourneyFilter):
                 continue
 
             min_mode = None
+            total_duration = 0
             if s.street_network.mode == response_pb2.Car:
                 min_mode = self.min_car
+                total_duration = journey.durations.car
             elif s.street_network.mode == response_pb2.Taxi:
                 min_mode = self.min_taxi
+                total_duration = journey.durations.taxi
             elif s.street_network.mode == response_pb2.Ridesharing:
                 min_mode = self.min_ridesharing
-
-            if (
-                s.street_network.mode in (response_pb2.Car, response_pb2.Taxi, response_pb2.Ridesharing)
-                and min_mode is not None
-                and _exceed_min_duration(
-                    s, journey, min_duration=min_mode, orig_modes=self.orig_modes, dest_modes=self.dest_modes
-                )
-            ):
-                return False
+                total_duration = journey.durations.ridesharing
+            elif s.street_network.mode == response_pb2.Bike:
+                min_mode = self.min_bike
+                total_duration = journey.durations.bike
+            else:
+                continue
 
             if (
                 not on_bss
-                and s.street_network.mode == response_pb2.Bike
-                and self.min_bike is not None
-                and _exceed_min_duration(
-                    s,
-                    journey,
-                    min_duration=self.min_bike,
-                    orig_modes=self.orig_modes,
-                    dest_modes=self.dest_modes,
-                )
+                and min_mode is not None
+                and _exceed_min_duration(min_duration=min_mode, total_duration=total_duration)
             ):
                 return False
 
@@ -647,6 +634,20 @@ def apply_final_journey_filters(response_list, instance, request):
     _filter_too_much_connections(journeys, instance, request)
 
 
+def replace_bss_tag(journeys):
+    """
+    replace the bss tag by walking, if there's no bss section in the journey
+    """
+    for j in journeys:
+        if not j.tags or "bss" not in j.tags:
+            continue
+        has_bss = any((s.type == response_pb2.BSS_RENT for s in j.sections))
+        if has_bss:
+            continue
+        j.tags.remove("bss")
+        j.tags.append("walking")
+
+
 def filter_detailed_journeys(responses, request):
     journey_generator = get_qualified_journeys
     if request.get('debug', False):
@@ -662,16 +663,17 @@ def filter_detailed_journeys(responses, request):
     dest_modes = request.get('destination_mode', [])
 
     too_heavy_journey_filter = FilterTooShortHeavyJourneys(
-        min_bike=min_bike,
-        min_car=min_car,
-        min_taxi=min_taxi,
-        min_ridesharing=min_ridesharing,
-        orig_modes=orig_modes,
-        dest_modes=dest_modes,
+        min_bike=min_bike, min_car=min_car, min_taxi=min_taxi, min_ridesharing=min_ridesharing
     )
     f_wrapped = filter_wrapper(is_debug=request.get('debug', False), filter_obj=too_heavy_journey_filter)
 
     [f_wrapped(j) for j in journeys]
+
+    it1, it2 = itertools.tee(journey_generator(responses))
+    journey_pairs_pool = itertools.product(it1, it2)
+    filter_similar_vj_journeys(journey_pairs_pool, request)
+
+    replace_bss_tag(journey_generator(responses))
 
 
 def _get_worst_similar(j1, j2, request):
@@ -776,6 +778,9 @@ def _filter_similar_journeys(journey_pairs_pool, request, *similar_journey_gener
     logger = logging.getLogger(__name__)
     is_debug = request.get('debug', False)
     for j1, j2 in journey_pairs_pool:
+        if j1 is j2:
+            continue
+
         if to_be_deleted(j1) or to_be_deleted(j2):
             continue
 

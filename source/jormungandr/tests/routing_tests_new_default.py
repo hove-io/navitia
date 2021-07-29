@@ -255,20 +255,51 @@ class TestJourneysNewDefault(
         query = (
             "journeys?from={from_coord}&to={to_coord}&datetime={datetime}&"
             "first_section_mode[]=car&first_section_mode[]=walking&"
-            "first_section_mode[]=bike&first_section_mode[]=bss&"
-            "last_section_mode[]=walking&last_section_mode[]=bss&"
+            "last_section_mode[]=walking&"
             "_min_car=0".format(from_coord=s_coord, to_coord=r_coord, datetime="20120614T075500")
         )
         response = self.query_region(query)
         check_best(response)
         self.is_valid_journey_response(response, query)
-        assert len(response["journeys"]) == 4
+        assert len(response["journeys"]) == 3
         assert 'car' in response["journeys"][0]["tags"]
-        assert 'bss' in response["journeys"][1]["tags"]
-        assert not 'walking' in response["journeys"][1]["tags"]
+        assert not 'walking' in response["journeys"][0]["tags"]
+        assert not 'bike' in response["journeys"][0]["tags"]
+        assert 'walking' in response["journeys"][1]["tags"]
         assert not 'bike' in response["journeys"][1]["tags"]
         assert 'walking' in response["journeys"][2]["tags"]
-        assert 'walking' in response["journeys"][3]["tags"]
+        assert not 'bike' in response["journeys"][2]["tags"]
+
+        query = (
+            "journeys?from={from_coord}&to={to_coord}&datetime={datetime}&"
+            "first_section_mode[]=bike&first_section_mode[]=walking&"
+            "last_section_mode[]=walking&"
+            "_min_bike=0".format(from_coord=s_coord, to_coord=r_coord, datetime="20120614T075500")
+        )
+        response = self.query_region(query)
+        check_best(response)
+        self.is_valid_journey_response(response, query)
+        assert len(response["journeys"]) == 3
+        assert 'bike' in response["journeys"][0]["tags"]
+        assert not 'walking' in response["journeys"][0]["tags"]
+        assert 'walking' in response["journeys"][1]["tags"]
+        assert 'walking' in response["journeys"][2]["tags"]
+
+        query = (
+            "journeys?from={from_coord}&to={to_coord}&datetime={datetime}&"
+            "first_section_mode[]=bss&first_section_mode[]=walking&"
+            "last_section_mode[]=walking&last_section_mode[]=bss".format(
+                from_coord=s_coord, to_coord=r_coord, datetime="20120614T075500"
+            )
+        )
+        response = self.query_region(query)
+        check_best(response)
+        self.is_valid_journey_response(response, query)
+        assert len(response["journeys"]) == 3
+        assert 'bss' in response["journeys"][0]["tags"]
+        assert not 'walking' in response["journeys"][0]["tags"]
+        assert 'walking' in response["journeys"][1]["tags"]
+        assert 'walking' in response["journeys"][2]["tags"]
 
     def test_first_ridesharing_no_config(self):
         query = (

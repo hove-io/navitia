@@ -147,30 +147,24 @@ struct FindAdminWithCities {
 
     result_type get_admins_from_cities(const navitia::type::GeographicalCoord& c, georef::AdminRtree& admin_tree) {
         /*
-            For all admins that contain the coordinate in their boundary shape,
-            we want to search in db for their own inner admins as well.
+            We only fetch admins containings the coordinate in their boundary shape
+            because a left join between above result and another query using boundary shape
+            is very very slow.
 
-            +-----------------------------+
-            |A                            |
-            |   +-------+      +-------+  |
-            |   |B      |      |C      |  |
-            |   |       |      |   X   |  |
-            |   |       |      +-------+  |
-            |   |   Y   |  +------+       |
-            |   |       |  |D     |       |
-            |   +-------+  |      |       |
-            |              +------+       |
-            +-----------------------------+
+            +--------------------+
+            |A                   |
+            |                    |
+            |                    |
+            |                  +-|-------------+
+            |                  |X|             |
+            +------------------|+       B      |
+                               |               |
+                               |               |
+                               +---------------+
 
             For instance, when looking at 'X', we want:
-                - admins {A, C} to be returned
-                - BUT admins {A, B, C, D} added in the cache
+                - admins {A, B} to be returned and will be added in the cache
 
-            This is so that when looking at 'Y':
-                - admins {A, B} to be returned by the cache
-
-            If we don't search for all inner admins, looking for 'Y' would result in:
-                - admin {A} to be only returned by the cache
         */
         const auto sql_req = boost::format(R"sql(
             SELECT
@@ -183,18 +177,12 @@ struct FindAdminWithCities {
                 ST_Y(coord::geometry) as lat,
                 ST_ASTEXT(boundary) as boundary
             FROM
-                administrative_regions,
-                (
-                    SELECT boundary as within_bound
-                    FROM administrative_regions
+                administrative_regions
                     WHERE ST_DWithin(
                     ST_GeographyFromText('POINT(%.16f %.16f)'),
                     boundary, 0.001
-                    )
-                ) AS within
-            WHERE
-                ST_DWithin(within_bound, boundary, 0.001)
-            )sql") % c.lon() % c.lat();
+                    ))sql") % c.lon()
+                             % c.lat();
         pqxx::result db_result = work->exec(sql_req.str());
 
         auto not_in_insee_admins_map = [&](const pqxx_row& row) {

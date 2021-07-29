@@ -43,15 +43,15 @@ jobs:
           echo '{"text":":warning: Navitia Github Actions: build_navitia_${{matrix.distribution}}_packages_for_dev failed (https://github.com/CanalTP/navitia/actions?query=workflow%3A%22Build+Navitia+Packages+For+Dev+Multi+Distributions%22)"}' | http --json POST ${{secrets.SLACK_NAVITIA_CORE_TEAM_URL}}
   artemis:
     runs-on: ubuntu-latest
-    container:
-      image: navitia/debian10_dev
     needs: build
     steps:
     - name: install dependency
-      run: apt update && apt install -y httpie
+      run: sudo apt update && sudo apt install -y httpie
     - name: run artemis NG on push
       if: ${{ github.event_name == 'push' }}
-      run: http --ignore-stdin -v -f POST https://${{secrets.JENKINS_NG_TOKEN}}@jenkins-core.canaltp.fr/job/artemis_ng/buildWithParameters event=push navitia_branch=dev commit_id=${{ github.event.head_commit.id }} commit_message="${{ github.event.head_commit.message }}" commit_timestamp=${{ github.event.head_commit.timestamp }} commit_url=${{ github.event.repository.html_url }} commit_username="${{ github.event.head_commit.author.name }}"
+      run: |
+        printf -v MSG "%q" '${{ github.event.head_commit.message }}'
+        http --ignore-stdin -v -f POST https://${{secrets.JENKINS_NG_TOKEN}}@jenkins-core.canaltp.fr/job/artemis_ng/buildWithParameters event=push navitia_branch=dev commit_id=${{ github.event.head_commit.id }} commit_message="$MSG" commit_timestamp=${{ github.event.head_commit.timestamp }} commit_url=${{ github.event.repository.html_url }} commit_username="${{ github.event.head_commit.author.name }}"
     - name: run deploy on artemis machine https://jenkins-core.canaltp.fr/job/deploy-navitia
       if: ${{ github.event_name == 'push' }}
       run: http --ignore-stdin -v -f POST https://${{secrets.JENKINS_NG_TOKEN}}@jenkins-core.canaltp.fr/job/deploy-navitia/buildWithParameters PLATFORM=artemis_debian8

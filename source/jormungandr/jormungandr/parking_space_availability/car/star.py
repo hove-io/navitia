@@ -48,9 +48,53 @@ class StarProvider(CommonCarParkProvider):
         if not park:
             return None
 
+        dataset_id = jmespath.search('records[0].datasetid', data)
+        if 'new-etat' in dataset_id:  # new version of api star
+            return self.get_new_items(park)
+        else:
+            return self.get_old_items(park)
+
+    def get_old_items(self, park):
         available = jmespath.search('fields.nombreplacesdisponibles', park)
         occupied = jmespath.search('fields.nombreplacesoccupees', park)
         # Person with reduced mobility
         available_PRM = jmespath.search('fields.nombreplacesdisponiblespmr', park)
         occupied_PRM = jmespath.search('fields.nombreplacesoccupeespmr', park)
         return ParkingPlaces(available, occupied, available_PRM, occupied_PRM)
+
+    def get_new_items(self, park):
+        occupied = 0
+        occupied_PRM = 0
+        occupied_ridesharing = 0
+        occupied_electric_vehicle = 0
+
+        available = jmespath.search('fields.jrdinfosoliste', park)
+        total_places = jmespath.search('fields.capacitesoliste', park)
+        if any(n is not None for n in [available, total_places]):
+            occupied = total_places - (available or 0)
+        # Person with reduced mobility
+        available_PRM = jmespath.search('fields.jrdinfopmr', park)
+        total_places_PRM = jmespath.search('fields.capacitepmr', park)
+        if any(n is not None for n in [available_PRM, total_places_PRM]):
+            occupied_PRM = total_places_PRM - (available_PRM or 0)
+        available_ridesharing = jmespath.search('fields.jrdinfocovoiturage', park)
+        total_places_ridesharing = jmespath.search('fields.capacitecovoiturage', park)
+        if any(n is not None for n in [available_ridesharing, total_places_ridesharing]):
+            occupied_ridesharing = total_places_ridesharing - (available_ridesharing or 0)
+        available_electric_vehicle = jmespath.search('fields.jrdinfoelectrique', park)
+        total_places_electric_vehicle = jmespath.search('fields.capaciteve', park)
+        if any(n is not None for n in [available_electric_vehicle, total_places_electric_vehicle]):
+            occupied_electric_vehicle = total_places_electric_vehicle - (available_electric_vehicle or 0)
+        state = jmespath.search('fields.etatouverture', park)
+        return ParkingPlaces(
+            available,
+            occupied,
+            available_PRM,
+            occupied_PRM,
+            total_places,
+            available_ridesharing,
+            occupied_ridesharing,
+            available_electric_vehicle,
+            occupied_electric_vehicle,
+            state,
+        )

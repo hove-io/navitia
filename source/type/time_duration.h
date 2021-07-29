@@ -196,7 +196,7 @@ public:
                 return {boost::date_time::pos_infin};
             }
             if (d.is_neg_infinity()) {
-                return time_duration(boost::date_time::neg_infin);
+                return {boost::date_time::neg_infin};
             }
             if (d.is_not_a_date_time()) {
                 return time_duration(boost::date_time::not_a_date_time);
