@@ -46,7 +46,7 @@ jobs:
     needs: build
     steps:
     - name: install dependency
-      run: apt update && apt install -y httpie
+      run: sudo apt update && sudo apt install -y httpie
     - name: run artemis NG on push
       if: ${{ github.event_name == 'push' }}
       run: |
