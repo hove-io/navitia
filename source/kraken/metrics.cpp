@@ -75,8 +75,8 @@ static prometheus::Histogram::BucketBoundaries create_exponential_buckets(double
 
 static prometheus::Histogram::BucketBoundaries create_fixed_duration_buckets() {
     // boundaries need to be sorted!
-    auto bucket_boundaries =
-        prometheus::Histogram::BucketBoundaries{0.01, 0.02, 0.05, 0.1, 0.2, 0.3, 0.4, 0.5, 0.7, 1, 1.5, 2, 5, 10};
+    auto bucket_boundaries = prometheus::Histogram::BucketBoundaries{0.005, 0.01, 0.02, 0.05, 0.1, 0.2, 0.3, 0.4,
+                                                                     0.5,   0.7,  1,    1.5,  2,   5,   10};
     return bucket_boundaries;
 }
 
@@ -116,26 +116,41 @@ Metrics::Metrics(const boost::optional<std::string>& endpoint, const std::string
     ;
     next_st_cache_miss = &cache_miss_family.Add({});
 
+    // For the followings with bucket boundaries = {0.5, 1, 2, 4, 8, 16, 32, 64, 128} in seconds
     this->data_loading_histogram = &prometheus::BuildHistogram()
                                         .Name("kraken_data_loading_duration_seconds")
                                         .Help("duration of loading data with or without realtime")
                                         .Labels({{"coverage", coverage}})
                                         .Register(*registry)
-                                        .Add({}, create_exponential_buckets(1, 2, 10));
+                                        .Add({}, create_exponential_buckets(0.5, 2, 10));
 
     this->data_cloning_histogram = &prometheus::BuildHistogram()
                                         .Name("kraken_data_cloning_duration_seconds")
                                         .Help("duration of cloning data")
                                         .Labels({{"coverage", coverage}})
                                         .Register(*registry)
-                                        .Add({}, create_exponential_buckets(1, 2, 10));
+                                        .Add({}, create_exponential_buckets(0.5, 2, 10));
 
     this->handle_rt_histogram = &prometheus::BuildHistogram()
                                      .Name("kraken_handle_rt_duration_seconds")
-                                     .Help("duration for handling disruptions and realtime")
+                                     .Help("duration for handling realtime")
                                      .Labels({{"coverage", coverage}})
                                      .Register(*registry)
-                                     .Add({}, create_exponential_buckets(1, 2, 10));
+                                     .Add({}, create_exponential_buckets(0.5, 2, 10));
+
+    this->handle_disruption_histogram = &prometheus::BuildHistogram()
+                                             .Name("kraken_handle_disruption_duration_seconds")
+                                             .Help("duration for handling disruption")
+                                             .Labels({{"coverage", coverage}})
+                                             .Register(*registry)
+                                             .Add({}, create_exponential_buckets(0.5, 2, 10));
+
+    this->delete_disruption_histogram = &prometheus::BuildHistogram()
+                                             .Name("kraken_delete_disruption_duration_seconds")
+                                             .Help("duration for deleting a disruption")
+                                             .Labels({{"coverage", coverage}})
+                                             .Register(*registry)
+                                             .Add({}, create_exponential_buckets(0.5, 2, 10));
 }
 
 InFlightGuard Metrics::start_in_flight() const {
@@ -177,6 +192,20 @@ void Metrics::observe_handle_rt(double duration) const {
         return;
     }
     this->handle_rt_histogram->Observe(duration);
+}
+
+void Metrics::observe_handle_disruption(double duration) const {
+    if (!registry) {
+        return;
+    }
+    this->handle_disruption_histogram->Observe(duration);
+}
+
+void Metrics::observe_delete_disruption(double duration) const {
+    if (!registry) {
+        return;
+    }
+    this->delete_disruption_histogram->Observe(duration);
 }
 
 void Metrics::set_raptor_cache_miss(size_t nb_cache_miss) const {
