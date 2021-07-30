@@ -304,7 +304,15 @@ void Data::complete() {
         }
     }
 
+    if (!stop_point_connections.empty()) {
+        LOG4CPLUS_INFO(log4cplus::Logger::getInstance("log"),
+                       "Some connections exists in the input data. I'll not generate any new connections.");
+        return;
+    }
     // generates default connections inside each stop area
+    LOG4CPLUS_INFO(
+        log4cplus::Logger::getInstance("log"),
+        "No connection exists in the input data. I'll generate connections between all stop points in a stop area.");
     auto connections = make_departure_destinations_map(stop_point_connections);
     const auto sa_sps = make_stop_area_stop_points_map(stop_points);
     const auto connections_size = stop_point_connections.size();
@@ -318,7 +326,10 @@ void Data::complete() {
                 }
 
                 const int conn_dur_itself = 0;
-                const int conn_dur_other = 120;
+
+                const double distance = sp1->coord.distance_to(sp2->coord) * 1.414;  // distance * sqrt(2), in meters
+                const double duration_double = distance / 1.1;  // meters / (meters/seconds) = seconds
+                const int conn_dur_other = static_cast<int>(duration_double);
                 const int min_waiting_dur = 120;
                 stop_point_connections.push_back(new types::StopPointConnection());
                 auto new_conn = stop_point_connections.back();
