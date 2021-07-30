@@ -199,7 +199,7 @@ public:
                 return {boost::date_time::neg_infin};
             }
             if (d.is_not_a_date_time()) {
-                return time_duration(boost::date_time::not_a_date_time);
+                return {boost::date_time::not_a_date_time};
             }
             throw navitia::exception("unhandled case for duration construction");
         }
