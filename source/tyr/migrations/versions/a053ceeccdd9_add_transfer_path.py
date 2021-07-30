@@ -21,7 +21,9 @@ from navitiacommon import default_values
 def upgrade():
     op.add_column(
         'instance',
-        sa.Column('transfer_path', sa.Boolean(), server_default=default_values.transfer_path, nullable=False),
+        sa.Column(
+            'transfer_path', sa.Boolean(), server_default=str(default_values.transfer_path), nullable=False
+        ),
     )
 
 

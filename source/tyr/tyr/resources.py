@@ -827,7 +827,7 @@ class Instance(flask_restful.Resource):
 
         parser.add_argument(
             'transfer_path',
-            type=bool,
+            type=inputs.boolean,
             help='Enable compute pathways using the street_network engine for transfers between surface physical modes',
             location=('json', 'values'),
             default=instance.places_proximity_radius,
