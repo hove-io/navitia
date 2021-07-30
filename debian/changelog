@@ -1,3 +1,9 @@
+navitia2 (12.2.1) unstable; urgency=low
+
+  * [Ed] Do not generate connections when transfer.txt is not empty  <https://github.com/CanalTP/navitia/pull/3510>
+
+ -- xlqian <patrick.qian@kisio.com>  Fri, 30 Jul 2021 10:07:56 +0100
+
 navitia2 (12.2.0) unstable; urgency=low
 
   * [Jormungandr] Add new items in Star connector  <https://github.com/CanalTP/navitia/pull/3509>
