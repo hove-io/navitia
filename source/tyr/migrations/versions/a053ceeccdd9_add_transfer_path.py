@@ -1,6 +1,6 @@
 """
 
-Add transfer_path to enable omputing pathways using the street_network engine for transfers between surface physical modes
+Add transfer_path to enable computing pathways using the street_network engine for transfers between surface physical modes
 
 Revision ID: a053ceeccdd9
 Revises: 7f757939ace8
