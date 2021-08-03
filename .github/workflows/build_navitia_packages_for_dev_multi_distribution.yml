@@ -46,12 +46,45 @@ jobs:
     needs: build
     steps:
     - name: install dependency
-      run: sudo apt update && sudo apt install -y httpie
+      run: |
+        sudo apt update && sudo apt install -y httpie
+        pip3 install requests
     - name: run artemis NG on push
+      shell: python3 {0}
       if: ${{ github.event_name == 'push' }}
       run: |
-        printf -v MSG "%q" '${{ github.event.head_commit.message }}'
-        http --ignore-stdin -v -f POST https://${{secrets.JENKINS_NG_TOKEN}}@jenkins-core.canaltp.fr/job/artemis_ng/buildWithParameters event=push navitia_branch=dev commit_id=${{ github.event.head_commit.id }} commit_message="$MSG" commit_timestamp=${{ github.event.head_commit.timestamp }} commit_url=${{ github.event.repository.html_url }} commit_username="${{ github.event.head_commit.author.name }}"
+        import json
+        import shlex
+        import requests
+
+        # replace \n, simple quotes and double quotes by spaces
+        translation_table = str.maketrans({ '\n' : ' ', "'" : ' ', '"': ' ' })
+        def sanitize_and_quote(my_string):
+          sanitized = my_string.translate(translation_table)
+          quoted = shlex.quote(sanitized)
+          return quoted
+
+        with open('${{ github.event_path }}') as file:
+
+          github_dict = json.load(file)
+
+          params = {}
+          params["event"] = "push"
+          params["navitia_branch"] = "dev"
+          params["commit_message"] = sanitize_and_quote(github_dict['head_commit']['message'])
+          params["commit_timestamp"] = github_dict['head_commit']['timestamp']
+          params["commit_url"] = github_dict['head_commit']['url']
+          params["commit_id"] = github_dict['head_commit']['id']
+          params["commit_username"] = github_dict['head_commit']['author']['name']
+
+          secret = "${{secrets.JENKINS_NG_TOKEN}}"
+
+          url = "https://{}@jenkins-core.canaltp.fr/job/artemis_ng/buildWithParameters".format(secret)
+
+          request = requests.post(url, data = params )
+          print("Response status code : {}".format(request.status_code) )
+          print(request.text)
+
     - name: run deploy on artemis machine https://jenkins-core.canaltp.fr/job/deploy-navitia
       if: ${{ github.event_name == 'push' }}
       run: http --ignore-stdin -v -f POST https://${{secrets.JENKINS_NG_TOKEN}}@jenkins-core.canaltp.fr/job/deploy-navitia/buildWithParameters PLATFORM=artemis_debian8
