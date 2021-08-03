@@ -34,6 +34,8 @@ from jormungandr.interfaces.v1.serializer import jsonschema
 from jormungandr.interfaces.v1.serializer.base import EnumField, PbNestedSerializer, DoubleToStringField
 from jormungandr.interfaces.v1.serializer.jsonschema import IntField
 from jormungandr.interfaces.v1.serializer.jsonschema.fields import StrField, BoolField, Field, DateTimeType
+from jormungandr.utils import get_pt_object_coord
+from jormungandr.exceptions import UnableToParse
 from navitiacommon import response_pb2
 
 point_2D_schema = {'type': 'array', 'items': {'type': 'array', 'items': {'type': 'number', 'format': 'float'}}}
@@ -192,8 +194,15 @@ class SectionGeoJsonField(jsonschema.Field):
         coords = []
         if value.type == response_pb2.STREET_NETWORK:
             coords = value.street_network.coordinates
-        elif value.type == response_pb2.CROW_FLY and len(value.shape) != 0:
-            coords = value.shape
+        elif value.type == response_pb2.CROW_FLY:
+            if len(value.shape) != 0:
+                coords = value.shape
+            else:
+                try:
+                    coords.append(get_pt_object_coord(value.origin))
+                    coords.append(get_pt_object_coord(value.destination))
+                except UnableToParse:
+                    return
         elif value.type == response_pb2.RIDESHARING and len(value.shape) != 0:
             coords = value.shape
         elif value.type == response_pb2.PUBLIC_TRANSPORT:

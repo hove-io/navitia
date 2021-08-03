@@ -855,6 +855,10 @@ class JourneyCommon(object):
         assert section_0['duration'] == 0
         assert section_0['from']['id'] == 'stopA'
         assert section_0['to']['id'] == 'stop_point:stopA'
+        assert section_0['geojson']
+        assert section_0['geojson']['type'] == 'LineString'
+        assert section_0['geojson']['coordinates'][0] == [0.0010779744, 0.0007186496]
+        assert section_0['geojson']['coordinates'][1] == [0.0010779744, 0.0007186496]
 
         section_2 = jrnys[0]['sections'][2]
         assert section_2['type'] == 'crow_fly'
@@ -862,6 +866,10 @@ class JourneyCommon(object):
         assert section_2['duration'] == 0
         assert section_2['from']['id'] == 'stop_point:stopB'
         assert section_2['to']['id'] == 'stopB'
+        assert section_2['geojson']
+        assert section_2['geojson']['type'] == 'LineString'
+        assert section_2['geojson']['coordinates'][0] == [8.98312e-05, 0.0002694936]
+        assert section_2['geojson']['coordinates'][1] == [8.98312e-05, 0.0002694936]
 
     def test_no_origin_point(self):
         """
