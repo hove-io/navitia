@@ -54,15 +54,13 @@ jobs:
       if: ${{ github.event_name == 'push' }}
       run: |
         import json
-        import shlex
         import requests
 
         # replace \n, simple quotes and double quotes by spaces
         translation_table = str.maketrans({ '\n' : ' ', "'" : ' ', '"': ' ' })
-        def sanitize_and_quote(my_string):
+        def sanitize(my_string):
           sanitized = my_string.translate(translation_table)
-          quoted = shlex.quote(sanitized)
-          return quoted
+          return sanitized
 
         with open('${{ github.event_path }}') as file:
 
@@ -71,9 +69,9 @@ jobs:
           params = {}
           params["event"] = "push"
           params["navitia_branch"] = "dev"
-          params["commit_message"] = sanitize_and_quote(github_dict['head_commit']['message'])
+          params["commit_message"] = sanitize(github_dict['head_commit']['message'])
           params["commit_timestamp"] = github_dict['head_commit']['timestamp']
-          params["commit_url"] = github_dict['head_commit']['url']
+          params["commit_url"] = github_dict['repository']['html_url']
           params["commit_id"] = github_dict['head_commit']['id']
           params["commit_username"] = github_dict['head_commit']['author']['name']
 
