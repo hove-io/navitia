@@ -232,6 +232,25 @@ class PlacesNearbySerializer(PTReferentialSerializer):
     places_nearby = pt.PlaceNearbySerializer(many=True)
 
 
+class CoverageUTCDateTimeField(DateTimeDictField):
+    """
+    UTC date time field for coverage
+    """
+
+    def __init__(self, field_name=None, **kwargs):
+        super(CoverageUTCDateTimeField, self).__init__(**kwargs)
+        self.field_name = field_name
+
+    def to_value(self, coverage):
+        field_value = coverage.get(self.field_name)
+        if field_value is None:
+            return None
+        dt = navitia_utcfromtimestamp(field_value)
+        if not dt:
+            return NOT_A_DATE_TIME
+        return dt.strftime("%Y%m%dT%H%M%S")
+
+
 class CoverageDateTimeField(DateTimeDictField):
     """
     custom date time field for coverage, uses the coverage's timezone to format the date
@@ -268,7 +287,7 @@ class CoverageSerializer(NullableDictSerializer):
         description='End of the production period. ' 'We only have data on this production period',
     )
     last_load_at = LambdaField(
-        method=lambda _, o: CoverageDateTimeField('last_load_at').to_value(o),
+        method=lambda _, o: CoverageUTCDateTimeField('last_load_at').to_value(o),
         description='Datetime of the last data loading',
         schema_type=str,
     )
