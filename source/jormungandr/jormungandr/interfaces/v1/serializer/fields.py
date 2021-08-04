@@ -35,7 +35,7 @@ from jormungandr.interfaces.v1.serializer.base import EnumField, PbNestedSeriali
 from jormungandr.interfaces.v1.serializer.jsonschema import IntField
 from jormungandr.interfaces.v1.serializer.jsonschema.fields import StrField, BoolField, Field, DateTimeType
 from jormungandr.utils import get_pt_object_coord
-from jormungandr.exceptions import UnableToParse
+from jormungandr.exceptions import UnableToParse, InvalidArguments
 from navitiacommon import response_pb2
 
 point_2D_schema = {'type': 'array', 'items': {'type': 'array', 'items': {'type': 'number', 'format': 'float'}}}
@@ -192,28 +192,31 @@ class SectionGeoJsonField(jsonschema.Field):
             return None
 
         coords = []
-        if value.type == response_pb2.STREET_NETWORK:
-            coords = value.street_network.coordinates
-        elif value.type == response_pb2.CROW_FLY:
-            if len(value.shape) != 0:
-                coords = value.shape
-            else:
-                try:
+
+        try:
+            if value.type == response_pb2.STREET_NETWORK:
+                coords = value.street_network.coordinates
+            elif value.type == response_pb2.CROW_FLY:
+                if len(value.shape) != 0:
+                    coords = value.shape
+                else:
                     coords.append(get_pt_object_coord(value.origin))
                     coords.append(get_pt_object_coord(value.destination))
-                except UnableToParse:
-                    return
-        elif value.type == response_pb2.RIDESHARING and len(value.shape) != 0:
-            coords = value.shape
-        elif value.type == response_pb2.PUBLIC_TRANSPORT:
-            coords = value.shape
-        elif value.type == response_pb2.TRANSFER:
-            if value.street_network and value.street_network.coordinates:
-                coords = value.street_network.coordinates
+            elif value.type == response_pb2.RIDESHARING and len(value.shape) != 0:
+                coords = value.shape
+            elif value.type == response_pb2.PUBLIC_TRANSPORT:
+                coords = value.shape
+            elif value.type == response_pb2.TRANSFER:
+                if value.street_network and value.street_network.coordinates:
+                    coords = value.street_network.coordinates
+                else:
+                    coords.append(value.origin.stop_point.coord)
+                    coords.append(value.destination.stop_point.coord)
             else:
-                coords.append(value.origin.stop_point.coord)
-                coords.append(value.destination.stop_point.coord)
-        else:
+                return
+        except UnableToParse:
+            return
+        except InvalidArguments:
             return
 
         response = {
