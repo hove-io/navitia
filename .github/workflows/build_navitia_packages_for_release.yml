@@ -29,7 +29,7 @@ jobs:
         DEB_BUILD_OPTIONS=nocheck dpkg-buildpackage -b
     - name: create navitia_${{matrix.distribution}}_packages.zip
       run: |
-        zip navitia_${{matrix.distribution}}_packages.zip ../navitia-*
+        zip navitia_${{matrix.distribution}}_packages.zip ../navitia-* ../mock-kraken*
     - name: upload ${{matrix.distribution}} packages
       uses: actions/upload-artifact@v1
       with:
