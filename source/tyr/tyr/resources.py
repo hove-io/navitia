@@ -95,7 +95,7 @@ class Index(flask_restful.Resource):
             try:
                 response[endpoint] = {'href': url_for(endpoint, _external=True)}
             except werkzeug.routing.BuildError:
-                logging.warning('Could not build url for endpoint \'{}\' '.format(endpoint))
+                logging.debug('Could not build url for endpoint \'{}\' '.format(endpoint))
         return response
 
 
