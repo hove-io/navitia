@@ -10,11 +10,13 @@ set(ALL_LIBS
 # every tests will produce an executable used in jormungandr integration tests
 
 add_executable(main_routing_test main_routing_test.cpp)
+install(TARGETS main_routing_test DESTINATION ${CMAKE_INSTALL_PREFIX}/bin)
 add_executable(main_ptref_test main_ptref_test.cpp)
 add_executable(min_nb_journeys_test min_nb_journeys_test.cpp)
 add_executable(basic_routing_test basic_routing_test.cpp)
 add_executable(basic_schedule_test basic_schedule_test.cpp)
 add_executable(departure_board_test departure_board_test.cpp)
+install(TARGETS departure_board_test DESTINATION ${CMAKE_INSTALL_PREFIX}/bin)
 add_executable(empty_routing_test empty_routing_test.cpp)
 add_executable(main_autocomplete_test main_autocomplete_test.cpp)
 add_executable(main_stif_test main_stif_test.cpp)
