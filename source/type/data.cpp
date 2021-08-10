@@ -833,15 +833,16 @@ Type_e Data::get_type_of_id(const std::string& id) const {
 
 namespace {
 struct Pipe {
-    threadbuf sbuf;
-    std::ostream out;
-    std::istream in;
+    pipebuf sbuf;
+    opipestream out;
+    ipipestream in;
+    void close() { sbuf.close(); }
     Pipe() : out(&sbuf), in(&sbuf) {}
     Pipe(const Pipe&) = delete;
     Pipe& operator=(const Pipe&) = delete;
     Pipe(const Pipe&&) = delete;
     Pipe& operator=(const Pipe&&) = delete;
-    ~Pipe() { sbuf.close(); }
+    ~Pipe() { close(); }
 };
 }  // anonymous namespace
 
@@ -860,12 +861,15 @@ void Data::clone_from(const Data& from) {
     std::thread write([&]() {
         boost::archive::binary_oarchive oa(p.out);
         oa << from;
+        p.out.close();
     });
-    {
+    std::thread read([&]() {
         boost::archive::binary_iarchive ia(p.in);
         ia >> *this;
-    }
+        p.in.close();
+    });
     write.join();
+    read.join();
 }
 
 void Data::set_last_rt_data_loaded(const boost::posix_time::ptime& p) const {
