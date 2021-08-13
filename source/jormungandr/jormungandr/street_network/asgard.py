@@ -135,9 +135,6 @@ class Asgard(TransientSocket, Kraken):
             place="", access_duration=0, lon=round(coord.lon, 5), lat=round(coord.lat, 5)
         )
 
-    def _get_language(self, language):
-        return Languages.get(language, Languages.english_us)
-
     def get_language_parameter(self, request):
         return request.get('_asgard_language', Languages.english_us).lower()
 
