@@ -136,11 +136,7 @@ class Asgard(TransientSocket, Kraken):
         )
 
     def _get_language(self, language):
-        try:
-            return Languages[language]
-        except KeyError:
-            # self.log.error('Asgard parameters language={} not exist - force to english_us'.format(language))
-            return Languages.english_us
+ return Languages.get(language, Languages.english_us)
 
     def get_language_parameter(self, request):
         _language = request.get('_asgard_language', None)
