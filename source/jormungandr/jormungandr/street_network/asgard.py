@@ -136,18 +136,10 @@ class Asgard(TransientSocket, Kraken):
         )
 
     def _get_language(self, language):
-        try:
-            return Languages[language]
-        except KeyError:
-            # self.log.error('Asgard parameters language={} not exist - force to english_us'.format(language))
-            return Languages.english_us
+        return Languages.get(language, Languages.english_us)
 
     def get_language_parameter(self, request):
-        _language = request.get('_asgard_language', None)
-        if _language == None:
-            return Languages.english_us
-        else:
-            return self._get_language(_language.lower())
+        return request.get('_asgard_language', Languages.english_us).lower()
 
     def _get_street_network_routing_matrix(
         self, instance, origins, destinations, mode, max_duration, request, request_id, **kwargs
