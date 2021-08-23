@@ -1158,6 +1158,22 @@ class JourneyCommon(object):
         assert r['journeys'][0]['sections'][-1]['duration'] == 0
         assert r['journeys'][0]['sections'][-2]['type'] == 'public_transport'
 
+    def test_free_radius_bss(self):
+        r = self.query(
+            '/v1/coverage/main_routing_test/journeys?'
+            'from=stopA&to=coord%3A8.98311981954709e-05%3A8.98311981954709e-05&'
+            'datetime=20120614080000&'
+            'free_radius_from=20&'
+            'free_radius_to=20&'
+            'first_section_mode[]=bss&'
+            'last_section_mode[]=bss'
+        )
+        assert r['journeys'][0]['sections'][0]['type'] == 'crow_fly'
+        assert r['journeys'][0]['sections'][0]['duration'] == 0
+        # Verify distances and durations in a journey with crow_fly
+        assert r['journeys'][0]['distances']['walking'] == 0
+        assert r['journeys'][0]['durations']['walking'] == 0
+
     def test_shared_section(self):
         # Query a journey from stopB to stopA
         r = self.query(
