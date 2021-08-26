@@ -64,6 +64,7 @@ from datetime import datetime, timedelta
 from navitiacommon import default_values
 from jormungandr.equipments import EquipmentProviderManager
 from jormungandr.external_services import ExternalServiceManager
+from jormungandr.utils import can_connect_to_database
 
 type_to_pttype = {
     "stop_area": request_pb2.PlaceCodeRequest.StopArea,  # type: ignore
@@ -252,6 +253,8 @@ class Instance(object):
     @cache.memoize(app.config[str('CACHE_CONFIGURATION')].get(str('TIMEOUT_PARAMS'), 300))
     def _get_models(self):
         if app.config['DISABLE_DATABASE']:
+            return None
+        if not can_connect_to_database():
             return None
         return models.Instance.get_by_name(self.name)
 

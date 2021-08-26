@@ -34,7 +34,7 @@ from datetime import datetime
 from google.protobuf.descriptor import FieldDescriptor
 import pytz
 from jormungandr.timezone import get_timezone
-from navitiacommon import response_pb2, type_pb2
+from navitiacommon import response_pb2, type_pb2, models
 from navitiacommon.parser_args_type import DateTimeFormat
 from importlib import import_module
 import logging
@@ -43,7 +43,7 @@ from six.moves.urllib.parse import urlparse
 from jormungandr import new_relic
 from six.moves import zip, range
 from jormungandr.exceptions import TechnicalError
-from flask import request
+from flask import request, g
 import re
 import flask
 from contextlib import contextmanager
@@ -671,3 +671,20 @@ def has_invalid_reponse_code(objects):
 
 def journeys_absent(objects):
     return 'journeys' not in objects[0]
+
+
+def can_connect_to_database():
+    if hasattr(g, 'can_connect_to_database'):
+        return g.can_connect_to_database
+    try:
+        engine = models.db.engine
+        connection = engine.connect()
+        connection.close()
+        g.can_connect_to_database = True
+        print('++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++')
+    except Exception:
+        g.can_connect_to_database = False
+        print('--------------------------------------------------------------------------------------------')
+        return False
+
+    return True

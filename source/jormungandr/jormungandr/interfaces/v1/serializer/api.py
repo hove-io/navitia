@@ -444,6 +444,7 @@ class TechnicalStatusSerializer(NullableDictSerializer):
     context = MethodField(schema_type=ContextSerializer(), display_none=False)
     warnings = base.BetaEndpointsSerializer()
     redis = status.RedisStatusSerializer(display_none=False)
+    database_connection = Field(schema_type=str, display_none=False)
 
     def get_context(self, obj):
         return ContextSerializer(obj, is_utc=True, display_none=False).data

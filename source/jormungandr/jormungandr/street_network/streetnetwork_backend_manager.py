@@ -32,6 +32,7 @@ from jormungandr import fallback_modes as fm
 from jormungandr.exceptions import TechnicalError
 from jormungandr.instance import Instance
 from jormungandr.street_network.street_network import AbstractStreetNetworkService
+from jormungandr.utils import can_connect_to_database
 from navitiacommon.models.streetnetwork_backend import StreetNetworkBackend
 from collections import defaultdict
 import logging, itertools, copy, datetime
@@ -129,6 +130,8 @@ class StreetNetworkBackendManager(object):
 
     def _update_config(self, instance):
         # type: (Instance) -> None
+        if not can_connect_to_database():
+            return
         """
         Update list of streetnetwork backends from db
         """

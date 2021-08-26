@@ -41,6 +41,7 @@ from jormungandr.protobuf_to_dict import protobuf_to_dict
 from jormungandr.exceptions import ApiNotFound, RegionNotFound, DeadSocketException, InvalidArguments
 from jormungandr import authentication, cache, app
 from jormungandr.instance import Instance
+from jormungandr.utils import can_connect_to_database
 import gevent
 import os
 
@@ -266,6 +267,8 @@ class InstanceManager(object):
             self.thread_event.set()
 
     def _filter_authorized_instances(self, instances, api):
+        if not can_connect_to_database():
+            return instances
         if not instances:
             return None
         user = authentication.get_user(token=authentication.get_token())
@@ -341,7 +344,6 @@ class InstanceManager(object):
             ]
         else:
             available_instances = list(self.instances.values())
-
         valid_instances = self._filter_authorized_instances(available_instances, api)
         if available_instances and not valid_instances:
             # user doesn't have access to any of the instances
