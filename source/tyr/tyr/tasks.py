@@ -134,7 +134,7 @@ def import_data(
 
         if dataset.type in task:
             if backup_file:
-                filename = move_to_backupdirectory(_file, instance_config.backup_directory)
+                filename = move_to_backupdirectory(_file, instance_config.backup_directory, manage_sp_char=True)
             else:
                 filename = _file
             actions.append(task[dataset.type].si(instance_config, filename, dataset_uid=dataset.uid))
@@ -320,7 +320,9 @@ def import_autocomplete(files, autocomplete_instance, asynchronous=True, backup_
         dataset.family_type = 'autocomplete_{}'.format(dataset.type)
         if dataset.type in task:
             if backup_file:
-                filename = move_to_backupdirectory(f, autocomplete_instance.backup_dir(autocomplete_dir))
+                filename = move_to_backupdirectory(
+                    f, autocomplete_instance.backup_dir(autocomplete_dir), manage_sp_char=True
+                )
             else:
                 filename = f
             actions.append(
