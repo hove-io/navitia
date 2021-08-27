@@ -138,7 +138,6 @@ class Asgard(TransientSocket, Kraken):
     def get_language_parameter(self, request):
         language = request.get('_asgard_language', "english_us")
         language_tag = getattr(Languages, language, Languages.english_us).value
-        print(language_tag)
         return language_tag
 
     def _get_street_network_routing_matrix(
