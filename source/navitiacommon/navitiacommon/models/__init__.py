@@ -656,6 +656,13 @@ class Instance(db.Model):  # type: ignore
         server_default=str(default_values.places_proximity_radius),
     )
 
+    transfer_path = db.Column(
+        db.Boolean,
+        default=default_values.transfer_path,
+        nullable=False,
+        server_default=str(default_values.transfer_path),
+    )
+
     def __init__(self, name=None, is_free=False, authorizations=None, jobs=None):
         self.name = name
         self.is_free = is_free

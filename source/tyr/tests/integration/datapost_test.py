@@ -106,6 +106,29 @@ def test_post_pbf_autocomplete(create_instance_fr):
             job = json_response['job']
             assert 'id' in job
             assert type(job['id']) == int
+            assert len(job['data_sets']) == 1
+            assert 'empty_pbf.osm.pbf' in job['data_sets'][0]['name']
+
+            job = get_jobs_from_db(id=job['id'])
+            assert job
+
+
+def test_post_pbf_autocomplete_with_parenthesis(create_instance_fr):
+    with app.app_context():
+        filename = 'empty_pbf.osm(1).pbf'
+        path = os.path.join(
+            os.path.dirname(os.path.dirname(os.path.dirname(__file__))), 'tests/fixtures/', filename
+        )
+        with open(path, 'rb') as f:
+            files = {'file': (f, filename)}
+            json_response = api_post('/v0/autocomplete_parameters/fr/update_data', data=files)
+            assert 'job' in json_response
+            job = json_response['job']
+            assert 'id' in job
+            assert type(job['id']) == int
+            assert len(job['data_sets']) == 1
+            assert 'empty_pbf.osm(1).pbf' not in job['data_sets'][0]['name']
+            assert 'empty_pbf.osm_' in job['data_sets'][0]['name']
 
             job = get_jobs_from_db(id=job['id'])
             assert job

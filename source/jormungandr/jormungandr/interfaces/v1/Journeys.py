@@ -624,7 +624,6 @@ class Journeys(JourneyCommon):
         parser_get.add_argument(
             "_transfer_path",
             type=BooleanType(),
-            default=False,
             hidden=True,
             help="Compute pathways using the street_network engine for transfers between surface physical modes",
         )
@@ -725,6 +724,9 @@ class Journeys(JourneyCommon):
                 tmp = 'max_{}_direct_path_distance'.format(mode)
                 if args.get(tmp) is None:
                     args[tmp] = getattr(mod, tmp)
+
+            if args.get('_transfer_path') is None:
+                args['_transfer_path'] = mod.transfer_path
 
         # When computing 'same_journey_schedules'(is_journey_schedules=True), some parameters need to be overridden
         # because they are contradictory to the request

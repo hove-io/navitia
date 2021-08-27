@@ -855,6 +855,10 @@ class JourneyCommon(object):
         assert section_0['duration'] == 0
         assert section_0['from']['id'] == 'stopA'
         assert section_0['to']['id'] == 'stop_point:stopA'
+        assert section_0['geojson']
+        assert section_0['geojson']['type'] == 'LineString'
+        assert section_0['geojson']['coordinates'][0] == [0.0010779744, 0.0007186496]
+        assert section_0['geojson']['coordinates'][1] == [0.0010779744, 0.0007186496]
 
         section_2 = jrnys[0]['sections'][2]
         assert section_2['type'] == 'crow_fly'
@@ -862,6 +866,10 @@ class JourneyCommon(object):
         assert section_2['duration'] == 0
         assert section_2['from']['id'] == 'stop_point:stopB'
         assert section_2['to']['id'] == 'stopB'
+        assert section_2['geojson']
+        assert section_2['geojson']['type'] == 'LineString'
+        assert section_2['geojson']['coordinates'][0] == [8.98312e-05, 0.0002694936]
+        assert section_2['geojson']['coordinates'][1] == [8.98312e-05, 0.0002694936]
 
     def test_no_origin_point(self):
         """
@@ -1149,6 +1157,22 @@ class JourneyCommon(object):
         assert r['journeys'][0]['sections'][-1]['type'] == 'crow_fly'
         assert r['journeys'][0]['sections'][-1]['duration'] == 0
         assert r['journeys'][0]['sections'][-2]['type'] == 'public_transport'
+
+    def test_free_radius_bss(self):
+        r = self.query(
+            '/v1/coverage/main_routing_test/journeys?'
+            'from=stopA&to=coord%3A8.98311981954709e-05%3A8.98311981954709e-05&'
+            'datetime=20120614080000&'
+            'free_radius_from=20&'
+            'free_radius_to=20&'
+            'first_section_mode[]=bss&'
+            'last_section_mode[]=bss'
+        )
+        assert r['journeys'][0]['sections'][0]['type'] == 'crow_fly'
+        assert r['journeys'][0]['sections'][0]['duration'] == 0
+        # Verify distances and durations in a journey with crow_fly
+        assert r['journeys'][0]['distances']['walking'] == 0
+        assert r['journeys'][0]['durations']['walking'] == 0
 
     def test_shared_section(self):
         # Query a journey from stopB to stopA

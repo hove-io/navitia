@@ -653,6 +653,13 @@ def is_valid_section(section, query):
 
         assert abs(total_duration - section['duration']) <= 0.5 * len(section['path']) + 1
 
+    if section['type'] in ('crow_fly', 'street_network', 'transfer', 'public_transport'):
+        assert section['geojson']
+        geojson = section['geojson']
+        assert geojson['type'] == 'LineString'
+        assert len(geojson['coordinates']) >= 2
+        assert geojson['properties']
+
     # TODO check geojson
     # TODO check stop_date_times
     # TODO check from/to

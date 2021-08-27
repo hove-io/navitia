@@ -95,7 +95,7 @@ class Index(flask_restful.Resource):
             try:
                 response[endpoint] = {'href': url_for(endpoint, _external=True)}
             except werkzeug.routing.BuildError:
-                logging.warning('Could not build url for endpoint \'{}\' '.format(endpoint))
+                logging.debug('Could not build url for endpoint \'{}\' '.format(endpoint))
         return response
 
 
@@ -825,6 +825,14 @@ class Instance(flask_restful.Resource):
             default=instance.places_proximity_radius,
         )
 
+        parser.add_argument(
+            'transfer_path',
+            type=inputs.boolean,
+            help='Enable computing pathways using the street_network engine for transfers between surface physical modes',
+            location=('json', 'values'),
+            default=instance.transfer_path,
+        )
+
         args = parser.parse_args()
 
         try:
@@ -911,6 +919,7 @@ class Instance(flask_restful.Resource):
                         'ridesharing_greenlet_pool_size',
                         'max_waiting_duration',
                         'places_proximity_radius',
+                        'transfer_path',
                     ],
                 ),
                 maxlen=0,

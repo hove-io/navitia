@@ -665,6 +665,8 @@ class Instance(object):
     bss_return_duration = _make_property_getter('bss_return_duration')
     bss_return_penalty = _make_property_getter('bss_rent_penalty')
 
+    transfer_path = _make_property_getter('transfer_path')
+
     @property
     def places_proximity_radius(self):
         # type: () -> int

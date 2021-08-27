@@ -22,6 +22,23 @@ Priority: optional
 Description: Navitia Kraken
 
 
+Package: mock-kraken
+Architecture: amd64
+Maintainer: Vincent Lara <vincent.lara@canaltp.fr>
+Build-Depends: cmake, liblog4cplus-dev, doxygen, libprotobuf-dev,
+               protobuf-compiler, libboost-test-dev, libboost-chrono-dev,
+               libboost-regex-dev, libboost-system-dev,
+               libboost-serialization-dev, libboost-date-time-dev,
+               libboost-thread-dev, libboost-filesystem-dev,
+               libboost-iostreams-dev, libboost-program-options-dev,
+               libpopt-dev, xmlto, libpqxx3-dev, libzmq-dev,
+               libgoogle-perftools-dev, libproj-dev
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Section: devel
+Priority: optional
+Description: Mock Kraken
+
+
 Package: navitia-ed
 Architecture: amd64
 Maintainer: Vincent Lara <vincent.lara@canaltp.fr>

@@ -1,3 +1,21 @@
+navitia2 (12.3.0) unstable; urgency=low
+
+  * [navitia] Update rabbitmq  <https://github.com/CanalTP/navitia/pull/3524>
+  * [Tyr] Rename dataset file name if paranthesis is present  <https://github.com/CanalTP/navitia/pull/3530>
+  * [Tyr] Added transfer_path in tyr and /status  <https://github.com/CanalTP/navitia/pull/3516>
+  * [Jormungandr] Fix missing parameters in /status  <https://github.com/CanalTP/navitia/pull/3517>
+  * [Jormungandr] fix free radius with bss  <https://github.com/CanalTP/navitia/pull/3529>
+  * [KRAKEN]: Add info in metrics  <https://github.com/CanalTP/navitia/pull/3506>
+  * [Kraken] Fix clone_data   <https://github.com/CanalTP/navitia/pull/3526>
+  * [Kraken] Generate mok-kraken package  <https://github.com/CanalTP/navitia/pull/3523>
+  * [Tyr] Trace modified during build links for / API  <https://github.com/CanalTP/navitia/pull/3525>
+  * [Jormun] Add Geojson in crow_fly sections  <https://github.com/CanalTP/navitia/pull/3518>
+  * [Jormun] last_load_at as UTC datetime  <https://github.com/CanalTP/navitia/pull/3519>
+  * [CI] Artemis NG launch : do not quote commit_msg, and commit_url =  the repo url  <https://github.com/CanalTP/navitia/pull/3522>
+  * [jormun] take bss into consideration for asgard  <https://github.com/CanalTP/navitia/pull/3501>
+
+ -- krishna <krishna.adhikari@kisio.com>  Fri, 27 Aug 2021 10:08:45 +0100
+
 navitia2 (12.2.1) unstable; urgency=low
 
   * [Ed] Do not generate connections when transfer.txt is not empty  <https://github.com/CanalTP/navitia/pull/3510>

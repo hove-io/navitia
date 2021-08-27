@@ -48,6 +48,8 @@ class ParametersSerializer(serpy.Serializer):
     max_bss_duration_to_pt = Field(schema_type=int)
     max_car_duration_to_pt = Field(schema_type=int)
     max_car_no_park_duration_to_pt = Field(schema_type=int)
+    max_ridesharing_duration_to_pt = Field(schema_type=int)
+    max_taxi_duration_to_pt = Field(schema_type=int)
     max_duration = Field(schema_type=int)
     max_nb_transfers = Field(schema_type=int)
     max_walking_duration_to_pt = Field(schema_type=int)
@@ -87,6 +89,7 @@ class ParametersSerializer(serpy.Serializer):
     max_ridesharing_direct_path_duration = Field(schema_type=int)
     max_nb_crowfly_by_mode = Field(schema_type=dict)
     places_proximity_radius = Field(schema_type=int)
+    transfer_path = Field(schema_type=bool)
 
 
 class TravelerProfilesSerializer(serpy.Serializer):
