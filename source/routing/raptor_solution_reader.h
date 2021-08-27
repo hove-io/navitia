@@ -86,7 +86,7 @@ typedef ParetoFront<Journey, Dominates, ParetoFrontLogger> Solutions;
 
 #else
 
-typedef ParetoFront<Journey, Dominates> Solutions;
+using Solutions = ParetoFront<Journey, Dominates>;
 
 #endif
 
