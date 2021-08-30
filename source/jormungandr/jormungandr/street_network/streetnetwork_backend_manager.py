@@ -128,9 +128,12 @@ class StreetNetworkBackendManager(object):
         except Exception:
             self.logger.exception('impossible to initialize streetnetwork backend')
 
+    def _can_connect_to_database(self):
+        return can_connect_to_database()
+
     def _update_config(self, instance):
         # type: (Instance) -> None
-        if not can_connect_to_database():
+        if not self._can_connect_to_database():
             return
         """
         Update list of streetnetwork backends from db
