@@ -173,10 +173,10 @@ class Job(flask_restful.Resource):
         logger.info('received data files: %s', str(files))
 
         job = self.create_new_job(instance)
-
-        for f in files:
-            self.validate_data_files(job, f)
-            self.rename_and_save_data_files(instance_config, job, f)
+        # we have to validate all received files before any processing
+        [self.validate_data_files(job, f) for f in files]
+        # once all files are checked fine, we are about to rename them with job_id and save
+        [self.rename_and_save_data_files(instance_config, job, f) for f in files]
 
         return {'message': 'OK, received data files are: {}'.format(files), "job_id": job.id}, 200
 
