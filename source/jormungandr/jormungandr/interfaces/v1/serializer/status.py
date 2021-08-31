@@ -247,7 +247,7 @@ class CommonStatusSerializer(NullableDictSerializer):
     last_rt_data_loaded = Field(schema_type=str, display_none=False)
     kraken_version = MethodField(schema_type=str, display_none=False)
     region_id = Field(schema_type=str, display_none=False, description='Identifier of the coverage')
-    database_connection = Field(schema_type=str, display_none=False)
+    configuration_database = Field(schema_type=str, display_none=False)
     error = CoverageErrorSerializer(display_none=False)
 
     def get_kraken_version(self, obj):

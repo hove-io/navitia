@@ -56,8 +56,8 @@ class Status(StatedResource):
         )
         logging.getLogger(__name__).info("status reponse: %s", response)
         if can_connect_to_database():
-            response['status']['database_connection'] = 'connected'
+            response['status']['configuration_database'] = 'connected'
         else:
-            response['status']['database_connection'] = 'no_SQL_connection'
+            response['status']['configuration_database'] = 'no_SQL_connection'
 
         return response, 200

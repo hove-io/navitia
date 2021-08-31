@@ -111,8 +111,8 @@ class TechnicalStatus(ModuleResource):
             response['redis'] = cache_status_op()
 
         if can_connect_to_database():
-            response['database_connection'] = 'connected'
+            response['configuration_database'] = 'connected'
         else:
-            response['database_connection'] = 'no_SQL_connection'
+            response['configuration_database'] = 'no_SQL_connection'
 
         return response
