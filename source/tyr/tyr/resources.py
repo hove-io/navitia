@@ -68,13 +68,14 @@ from tyr.tasks import (
     cities,
     COSMOGONY_REGEXP,
 )
-from tyr import api
+from tyr import api, JOB_ID_DELIMITER
 from tyr.helper import get_instance_logger, save_in_tmp
 from tyr.fields import *
 from werkzeug.exceptions import BadRequest
 import werkzeug
 import six
 from collections import deque
+import re
 
 
 class Api(flask_restful.Resource):
@@ -113,42 +114,71 @@ class Status(flask_restful.Resource):
 
 class Job(flask_restful.Resource):
     @marshal_with(jobs_fields)
-    def get(self, instance_name=None):
+    def get(self, instance_name=None, id=None):
         query = models.Job.query
         if instance_name:
             query = query.join(models.Instance)
             query = query.filter(models.Instance.name == instance_name)
+        elif id:
+            query = query.filter(models.Job.id == id)
+
         return {'jobs': query.order_by(models.Job.created_at.desc()).limit(30)}
+
+    @staticmethod
+    def rename_and_save_data_files(instance_config, job, f):
+        # if a job id can be found in the uploaded file's name, we remove that old job_id
+        filename = re.sub('{delimiter}.*?{delimiter}'.format(delimiter=JOB_ID_DELIMITER), '', f.filename)
+        append_job_id = "{job_id_delimiter}{job_id}{job_id_delimiter}{filename}".format(
+            job_id_delimiter=JOB_ID_DELIMITER, job_id=job.id, filename=filename
+        )
+        full_file_name = os.path.join(os.path.realpath(instance_config.source_directory), append_job_id)
+        tmp_file_name = full_file_name + ".tmp"
+        f.save(tmp_file_name)
+        shutil.move(tmp_file_name, full_file_name)
+
+    @staticmethod
+    def validate_data_files(job, f):
+        if not utils.filename_has_valid_extension(f.filename):
+            job.state = "failed"
+            models.db.session.commit()
+            e = BadRequest('My custom message')
+            e.data = {
+                'message': "Filename has invalid extension :'{}'".format(f.filename),
+                'valid_extensions': utils.get_valid_extensions(),
+            }
+            raise e
+
+    @staticmethod
+    def create_new_job(instance):
+        job = models.Job()
+        job.state = 'pending'
+        job.instance = instance
+        models.db.session.add(job)
+        models.db.session.commit()
+        return job
 
     def post(self, instance_name):
         instance = models.Instance.query_existing().filter_by(name=instance_name).first_or_404()
-
-        if not request.files:
-            return {'message': 'the Data file is missing'}, 400
-
-        content = request.files['file']
         logger = get_instance_logger(instance)
-        logger.info('content received: %s', content)
 
-        instance = load_instance_config(instance_name)
-        if not os.path.exists(instance.source_directory):
+        instance_config = load_instance_config(instance_name)
+        if not os.path.exists(instance_config.source_directory):
             return {'error': 'input folder unavailable'}, 500
 
-        if utils.filename_has_valid_extension(content.filename) == False:
-            return (
-                {
-                    'message': "Filename has invalid extension :'{}'".format(content.filename),
-                    'valid_extensions': utils.get_valid_extensions(),
-                },
-                400,
-            )
+        # handle multiple uploaded files
+        files = request.files.getlist("file")
+        if not files:
+            return {'message': 'the Data file is missing'}, 400
 
-        full_file_name = os.path.join(os.path.realpath(instance.source_directory), content.filename)
-        tmp_file_name = full_file_name + ".tmp"
-        content.save(tmp_file_name)
-        shutil.move(tmp_file_name, full_file_name)
+        logger.info('received data files: %s', str(files))
 
-        return {'message': 'OK'}, 200
+        job = self.create_new_job(instance)
+
+        for f in files:
+            self.validate_data_files(job, f)
+            self.rename_and_save_data_files(instance_config, job, f)
+
+        return {'message': 'OK, received data files are: {}'.format(files), "job_id": job.id}, 200
 
     def delete(self, id=None, instance_name=None):
         parser = reqparse.RequestParser()

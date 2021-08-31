@@ -59,22 +59,33 @@ from tyr.binarisation import (
     poi2mimir,
 )
 from tyr.binarisation import reload_data, move_to_backupdirectory
-from tyr import celery
+from tyr import celery, JOB_ID_DELIMITER
 from navitiacommon import models, task_pb2, utils
 from tyr.helper import load_instance_config, get_instance_logger
 from navitiacommon.launch_exec import launch_exec
 from datetime import datetime, timedelta
+import re
+import itertools
 
 
 @celery.task()
-def finish_job(job_id):
+def finish_job(job_ids):
     """
     use for mark a job as done after all the required task has been executed
     """
-    job = models.Job.query.get(job_id)
-    if job.state != 'failed':
-        job.state = 'done'
+    for job_id in job_ids:
+        job = models.Job.query.get(job_id)
+        if job.state != 'failed':
+            job.state = 'done'
     models.db.session.commit()
+
+
+def retrive_job_id(filename):
+    job_id_pattern = re.compile(
+        '{job_id_delimiter}(.*){job_id_delimiter}'.format(job_id_delimiter=JOB_ID_DELIMITER)
+    )
+    job_ids = job_id_pattern.findall(filename)
+    return job_ids[0] if job_ids else None
 
 
 def import_data(
@@ -100,10 +111,8 @@ def import_data(
     - reload the krakens
     """
     actions = []
-    job = models.Job()
+    jobs = []
     instance_config = load_instance_config(instance.name)
-    job.instance = instance
-    job.state = 'running'
     task = {
         'gtfs': gtfs2ed,
         'fusio': fusio2ed,
@@ -115,8 +124,26 @@ def import_data(
         'shape': shape2ed,
     }
 
+    new_job = None
     for _file in files:
-        filename = None
+        # we check if there's a job_id in file's name, there's no job id is found, we have to create a new_job
+        job_id = retrive_job_id(_file)
+        if not job_id:
+            new_job = models.Job()
+            new_job.instance = instance
+            new_job.state = 'running'
+
+    for _file in files:
+        # we check if there's a job_id in file's name
+        current_job = None
+        job_id = retrive_job_id(_file)
+        if job_id:
+            # if job_id is not None, we retrive the job from the db
+            current_job = models.Job.query.get(job_id)
+            current_job.state = 'running'
+        elif new_job:
+            # no job_id is associated with the file and a new_job has been already created
+            current_job = new_job
 
         dataset = models.DataSet()
         # NOTE: for the moment we do not use the path to load the data here
@@ -130,6 +157,9 @@ def import_data(
             current_app.logger.debug(
                 "Corrupted source file : {} moved to {}".format(_file, instance_config.backup_directory)
             )
+            if job_id:
+                current_job.state = "failed"
+                models.db.session.commit()
             continue
 
         if dataset.type in task:
@@ -137,7 +167,13 @@ def import_data(
                 filename = move_to_backupdirectory(_file, instance_config.backup_directory, manage_sp_char=True)
             else:
                 filename = _file
-            actions.append(task[dataset.type].si(instance_config, filename, dataset_uid=dataset.uid))
+
+            args = [instance_config, filename]
+            kwargs = {"dataset_uid": dataset.uid}
+            if job_id:
+                kwargs.update({"job_id": job_id})
+            actions.append(task[dataset.type].si(*args, **kwargs))
+
         else:
             # unknown type, we skip it
             current_app.logger.debug("unknown file type: {} for file {}".format(dataset.type, _file))
@@ -147,28 +183,36 @@ def import_data(
         dataset.name = filename
         dataset.state = "pending"
         models.db.session.add(dataset)
-        job.data_sets.append(dataset)
+        current_job.data_sets.append(dataset)
+        if job_id:
+            jobs.append(current_job)
+        models.db.session.commit()
 
     if actions:
-        models.db.session.add(job)
-        models.db.session.commit()
+        if new_job:
+            models.db.session.add(new_job)
+            models.db.session.commit()
+            jobs.append(new_job)
         # We pass the job id to each tasks, but job need to be commited for having an id
         for action in actions:
-            action.kwargs['job_id'] = job.id
+            if action.kwargs.get('job_id') is None:
+                action.kwargs['job_id'] = new_job.id
+
+        job_ids = list(set([job.id for job in jobs]))
         # Create binary file (New .nav.lz4)
-        binarisation = [ed2nav.si(instance_config, job.id, custom_output_dir)]
+        binarisation = [ed2nav.si(instance_config, job_ids, custom_output_dir)]
         actions.append(chain(*binarisation))
         # Reload kraken with new data after binarisation (New .nav.lz4)
         if reload:
-            actions.append(reload_data.si(instance_config, job.id))
+            actions.append(reload_data.si(instance_config, job_ids))
 
         if not skip_mimir:
-            for dataset in job.data_sets:
+            for dataset in itertools.chain.from_iterable(job.data_sets for job in jobs):
                 actions.extend(send_to_mimir(instance, dataset.name, dataset.family_type))
         else:
             current_app.logger.info("skipping mimir import")
 
-        actions.append(finish_job.si(job.id))
+        actions.append(finish_job.si(job_ids))
 
         # We should delete old backup directories related to this instance
         actions.append(purge_instance.si(instance.id, current_app.config['DATASET_MAX_BACKUPS_TO_KEEP']))

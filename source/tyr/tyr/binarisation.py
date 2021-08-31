@@ -144,10 +144,14 @@ class Lock(object):
     def __call__(self, func):
         @wraps(func)
         def wrapper(*args, **kwargs):
+            job_ids = get_named_arg('job_ids', func, args, kwargs) or []
             job_id = get_named_arg('job_id', func, args, kwargs)
+            if job_id:
+                job_ids.append(job_id)
+
             logging.debug('args: %s -- kwargs: %s', args, kwargs)
-            job = models.Job.query.get(job_id)
-            logger = get_instance_logger(job.instance, task_id=job_id)
+            job = models.Job.query.get(job_ids[0])
+            logger = get_instance_logger(job.instance, jobs_ids=job_ids)
             task = args[func.func_code.co_varnames.index('self')]
             try:
                 lock = redis.lock('tyr.lock|' + job.instance.name, timeout=self.timeout)
@@ -180,22 +184,23 @@ class Lock(object):
 
 
 @contextmanager
-def collect_metric(task_type, job, dataset_uid):
+def collect_metric(task_type, jobs, dataset_uid):
     begin = datetime.datetime.utcnow()
     yield
     end = datetime.datetime.utcnow()
-    try:
-        dataset = models.DataSet.find_by_uid(dataset_uid)
-        metric = models.Metric()
-        metric.job = job
-        metric.dataset = dataset
-        metric.type = task_type
-        metric.duration = end - begin
-        models.db.session.add(metric)
-        models.db.session.commit()
-    except:
-        logger = logging.getLogger(__name__)
-        logger.exception('unable to persist Metrics data: ')
+    for job in jobs:
+        try:
+            dataset = models.DataSet.find_by_uid(dataset_uid)
+            metric = models.Metric()
+            metric.job = job
+            metric.dataset = dataset
+            metric.type = task_type
+            metric.duration = end - begin
+            models.db.session.add(metric)
+            models.db.session.commit()
+        except:
+            logger = logging.getLogger(__name__)
+            logger.exception('unable to persist Metrics data: ')
 
 
 def _retrieve_dataset_and_set_state(dataset_type, job_id):
@@ -215,7 +220,7 @@ def fusio2ed(self, instance_config, filename, job_id, dataset_uid):
     dataset = _retrieve_dataset_and_set_state("fusio", job.id)
     instance = job.instance
 
-    logger = get_instance_logger(instance, task_id=job_id)
+    logger = get_instance_logger(instance, jobs_ids=[job_id])
     try:
         working_directory = unzip_if_needed(filename)
 
@@ -235,7 +240,7 @@ def fusio2ed(self, instance_config, filename, job_id, dataset_uid):
         params.append("--log_comment")
         params.append(instance_config.name)
         res = None
-        with collect_metric("fusio2ed", job, dataset_uid):
+        with collect_metric("fusio2ed", [job], dataset_uid):
             res = launch_exec("fusio2ed", params, logger)
         if res != 0:
             raise ValueError("fusio2ed failed")
@@ -258,7 +263,7 @@ def gtfs2ed(self, instance_config, gtfs_filename, job_id, dataset_uid):
     dataset = _retrieve_dataset_and_set_state("gtfs", job.id)
     instance = job.instance
 
-    logger = get_instance_logger(instance, task_id=job_id)
+    logger = get_instance_logger(instance, jobs_ids=[job_id])
     try:
         working_directory = unzip_if_needed(gtfs_filename)
 
@@ -278,7 +283,7 @@ def gtfs2ed(self, instance_config, gtfs_filename, job_id, dataset_uid):
         params.append("--log_comment")
         params.append(instance_config.name)
         res = None
-        with collect_metric("gtfs2ed", job, dataset_uid):
+        with collect_metric("gtfs2ed", [job], dataset_uid):
             res = launch_exec("gtfs2ed", params, logger)
         if res != 0:
             raise ValueError("gtfs2ed failed")
@@ -307,7 +312,7 @@ def osm2ed(self, instance_config, osm_filename, job_id, dataset_uid):
     if os.path.isdir(osm_filename):
         osm_filename = glob.glob('{}/*.pbf'.format(osm_filename))[0]
 
-    logger = get_instance_logger(instance, task_id=job_id)
+    logger = get_instance_logger(instance, jobs_ids=[job_id])
     try:
         connection_string = make_connection_string(instance_config)
         res = None
@@ -327,7 +332,7 @@ def osm2ed(self, instance_config, osm_filename, job_id, dataset_uid):
                     "impossible to use osm2ed with cities db since no cities database configuration has been set"
                 )
             args.extend(["--cities-connection-string", cities_db])
-        with collect_metric("osm2ed", job, dataset_uid):
+        with collect_metric("osm2ed", [job], dataset_uid):
             res = launch_exec("osm2ed", args, logger)
         if res != 0:
             # @TODO: exception
@@ -350,7 +355,7 @@ def geopal2ed(self, instance_config, filename, job_id, dataset_uid):
     job = models.Job.query.get(job_id)
     dataset = _retrieve_dataset_and_set_state("geopal", job.id)
     instance = job.instance
-    logger = get_instance_logger(instance, task_id=job_id)
+    logger = get_instance_logger(instance, jobs_ids=[job_id])
     try:
         working_directory = unzip_if_needed(filename)
 
@@ -362,7 +367,7 @@ def geopal2ed(self, instance_config, filename, job_id, dataset_uid):
         params.append("--local_syslog")
         params.append("--log_comment")
         params.append(instance_config.name)
-        with collect_metric('geopal2ed', job, dataset_uid):
+        with collect_metric('geopal2ed', [job], dataset_uid):
             res = launch_exec('geopal2ed', params, logger)
         if res != 0:
             # @TODO: exception
@@ -385,7 +390,7 @@ def poi2ed(self, instance_config, filename, job_id, dataset_uid):
     job = models.Job.query.get(job_id)
     dataset = _retrieve_dataset_and_set_state("poi", job.id)
     instance = job.instance
-    logger = get_instance_logger(instance, task_id=job_id)
+    logger = get_instance_logger(instance, jobs_ids=[job_id])
     try:
         working_directory = unzip_if_needed(filename)
 
@@ -397,7 +402,7 @@ def poi2ed(self, instance_config, filename, job_id, dataset_uid):
         params.append("--local_syslog")
         params.append("--log_comment")
         params.append(instance_config.name)
-        with collect_metric("poi2ed", job, dataset_uid):
+        with collect_metric("poi2ed", [job], dataset_uid):
             res = launch_exec("poi2ed", params, logger)
         if res != 0:
             # @TODO: exception
@@ -421,7 +426,7 @@ def synonym2ed(self, instance_config, filename, job_id, dataset_uid):
     dataset = _retrieve_dataset_and_set_state("synonym", job.id)
     instance = job.instance
 
-    logger = get_instance_logger(instance, task_id=job_id)
+    logger = get_instance_logger(instance, jobs_ids=[job_id])
     try:
         connection_string = make_connection_string(instance_config)
         res = None
@@ -431,7 +436,7 @@ def synonym2ed(self, instance_config, filename, job_id, dataset_uid):
         params.append("--local_syslog")
         params.append("--log_comment")
         params.append(instance_config.name)
-        with collect_metric('synonym2ed', job, dataset_uid):
+        with collect_metric('synonym2ed', [job], dataset_uid):
             res = launch_exec('synonym2ed', params, logger)
         if res != 0:
             # @TODO: exception
@@ -560,12 +565,19 @@ def shape2ed(self, instance_config, filename, job_id, dataset_uid):
 
 
 @celery.task(bind=True)
-def reload_data(self, instance_config, job_id):
+def reload_data(self, instance_config, job_ids):
     """ reload data on all kraken of this instance"""
-    job = models.Job.query.get(job_id)
-    instance = job.instance
-    logging.info("Unqueuing job {}, reload data of instance {}".format(job.id, instance.name))
-    logger = get_instance_logger(instance, task_id=job_id)
+    jobs = [models.Job.query.get(job_id) for job_id in job_ids]
+    assert jobs
+    instance = jobs[0].instance
+
+    logging.info(
+        "Unqueuing jobs {}, reload data of instance {}".format(
+            " ".join(str(job_id) for job_id in job_ids), instance.name
+        )
+    )
+
+    logger = get_instance_logger(instance, jobs_ids=job_ids)
     try:
         task = navitiacommon.task_pb2.Task()
         task.action = navitiacommon.task_pb2.RELOAD
@@ -578,19 +590,25 @@ def reload_data(self, instance_config, job_id):
         rabbit_mq_handler.publish(task.SerializeToString(), instance.name + '.task.reload')
     except:
         logger.exception('')
-        job.state = 'failed'
+        for job in jobs:
+            job.state = 'failed'
         models.db.session.commit()
         raise
 
 
 @celery.task(bind=True)
 @Lock(10 * 60)
-def ed2nav(self, instance_config, job_id, custom_output_dir):
+def ed2nav(self, instance_config, job_ids, custom_output_dir):
     """ Launch ed2nav"""
-    job = models.Job.query.get(job_id)
-    instance = job.instance
+    jobs = []
+    for job_id in job_ids:
+        job = models.Job.query.get(job_id)
+        jobs.append(job)
 
-    logger = get_instance_logger(instance, task_id=job_id)
+    assert jobs
+    instance = jobs[0].instance
+
+    logger = get_instance_logger(instance, jobs_ids=job_ids)
     try:
         output_file = instance_config.target_file
 
@@ -612,14 +630,15 @@ def ed2nav(self, instance_config, job_id, custom_output_dir):
         argv.extend(["--log_comment", instance_config.name])
 
         res = None
-        with collect_metric('ed2nav', job, None):
+        with collect_metric('ed2nav', jobs, None):
             res = launch_exec('ed2nav', argv, logger)
             os.system('sync')  # we sync to be safe
         if res != 0:
             raise ValueError('ed2nav failed')
     except:
         logger.exception('')
-        job.state = 'failed'
+        for job in jobs:
+            job.state = 'failed'
         models.db.session.commit()
         raise
 
@@ -632,7 +651,7 @@ def fare2ed(self, instance_config, filename, job_id, dataset_uid):
     job = models.Job.query.get(job_id)
     instance = job.instance
 
-    logger = get_instance_logger(instance, task_id=job_id)
+    logger = get_instance_logger(instance, jobs_ids=[job_id])
     try:
 
         working_directory = unzip_if_needed(filename)
@@ -785,7 +804,7 @@ def stops2mimir(self, instance_name, input, job_id=None, dataset_uid=None):
     if job_id:
         job = models.Job.query.get(job_id)
         instance = job.instance
-        logger = get_instance_logger(instance, task_id=job_id)
+        logger = get_instance_logger(instance, jobs_ids=[job_id])
     else:
         logger = get_task_logger(logging.getLogger("autocomplete"))
     cnx_string = current_app.config['MIMIR_URL']
@@ -825,7 +844,7 @@ def ntfs2mimir(self, instance_name, input, job_id=None, dataset_uid=None):
     if job_id:
         job = models.Job.query.get(job_id)
         instance = job.instance
-        logger = get_instance_logger(instance, task_id=job_id)
+        logger = get_instance_logger(instance, jobs_ids=[job_id])
     else:
         logger = get_task_logger(logging.getLogger("autocomplete"))
     cnx_string = current_app.config['MIMIR_URL']
@@ -894,7 +913,7 @@ def poi2mimir(self, instance_name, input, job_id=None, dataset_uid=None):
     if job_id:
         job = models.Job.query.get(job_id)
         instance = job.instance
-        logger = get_instance_logger(instance, task_id=job_id)
+        logger = get_instance_logger(instance, jobs_ids=[job_id])
     else:
         logger = get_task_logger(logging.getLogger("autocomplete"))
         instance = models.Instance.query_existing().filter_by(name=instance_name).first()
@@ -908,7 +927,7 @@ def poi2mimir(self, instance_name, input, job_id=None, dataset_uid=None):
 
     try:
         if job:
-            with collect_metric('poi2mimir', job, dataset_uid):
+            with collect_metric('poi2mimir', [job], dataset_uid):
                 res = launch_exec('poi2mimir', argv, logger)
         else:
             res = launch_exec('poi2mimir', argv, logger)
