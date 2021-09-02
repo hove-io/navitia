@@ -43,8 +43,10 @@ from jormungandr.interfaces.v1.serializer.base import (
     BetaEndpointsSerializer,
     DictGenericSerializer,
 )
+from jormungandr.interfaces.v1.serializer.api import ContextSerializer
 from jormungandr.utils import get_house_number
 from jormungandr.autocomplete.geocodejson import create_address_field, get_lon_lat
+from jormungandr.interfaces.v1.serializer.jsonschema.fields import MethodField
 
 
 class CoordField(jsonschema.Field):
@@ -269,6 +271,10 @@ class GeocodePlacesSerializer(serpy.DictSerializer):
     places = jsonschema.MethodField(display_none=True)
     warnings = BetaEndpointsSerializer()
     feed_publishers = jsonschema.MethodField()
+    context = MethodField(schema_type=ContextSerializer(), display_none=False)
+
+    def get_context(self, obj):
+        return ContextSerializer(obj, display_none=False).data
 
     def get_places(self, obj):
         map_serializer = {
