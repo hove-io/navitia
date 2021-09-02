@@ -79,20 +79,17 @@ class FreeFloatingProvider(AbstractExternalService):
 
     @classmethod
     def build_pagination(cls, resp, args):
-        if resp.get('pagination') is not None:
-            items_on_page = resp.get('pagination').get('items_on_page', len(resp.get('free_floatings', [])))
-            items_per_page = resp.get('pagination').get('items_per_page', args.get('count'))
-            start_page = resp.get('pagination').get('start_page', args.get('start_page'))
-            total_result = resp.get('pagination').get('total_result', len(resp.get('free_floatings', [])))
-        else:
-            items_on_page = len(resp.get('free_floatings', []))
-            items_per_page = args.get('count')
-            start_page = args.get('start_page')
-            total_result = items_on_page
-
-        resp['pagination'] = {}
-        resp['pagination']['items_on_page'] = items_on_page
-        resp['pagination']['items_per_page'] = items_per_page
-        resp['pagination']['start_page'] = start_page
-        resp['pagination']['total_result'] = total_result
+        # Update elements in the pagination if present in the response forseti else create
+        if resp.get('pagination') is None:
+            resp['pagination'] = {}
+        resp['pagination']['items_on_page'] = resp.get('pagination', {}).get(
+            'items_on_page', len(resp.get('free_floatings', []))
+        )
+        resp['pagination']['items_per_page'] = resp.get('pagination', {}).get(
+            'items_per_page', args.get('count')
+        )
+        resp['pagination']['start_page'] = resp.get('pagination', {}).get('start_page', args.get('start_page'))
+        resp['pagination']['total_result'] = resp.get('pagination', {}).get(
+            'total_result', len(resp.get('free_floatings', []))
+        )
         return resp

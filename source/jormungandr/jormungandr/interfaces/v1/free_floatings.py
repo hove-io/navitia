@@ -49,14 +49,6 @@ def build_instance_shape(instance):
     return None
 
 
-def build_pagination(args, resp):
-    resp['pagination']['items_on_page'] = 2
-    resp['pagination']['items_per_page'] = 3
-    resp['pagination']['start_page'] = 0
-    resp['pagination']['total_result'] = 2
-    return resp
-
-
 class FreeFloatingsNearby(ResourceUri):
     def __init__(self, *args, **kwargs):
         ResourceUri.__init__(self, output_type_serializer=FreeFloatingsSerializer, *args, **kwargs)

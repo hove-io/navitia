@@ -112,7 +112,7 @@ class TestFreeFloating(AbstractTestFixture):
         simple freefloatings_nearby call
         """
         response, status = self.query_no_assert(
-            'v1/coverage/main_routing_test/coord/2.37715%3B48.846781/freefloatings_nearby?count=5'
+            'v1/coverage/main_routing_test/coord/2.37715%3B48.846781/freefloatings_nearby?count=5&start_page=1'
         )
 
         warnings = get_not_null(response, 'warnings')
