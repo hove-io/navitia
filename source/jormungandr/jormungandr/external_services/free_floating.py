@@ -57,10 +57,10 @@ class FreeFloatingProvider(AbstractExternalService):
         """
         raw_response = self._call_webservice(arguments)
 
-        return self.response_marshaller(raw_response)
+        return self.response_marshaller(raw_response, arguments)
 
     @classmethod
-    def response_marshaller(cls, response):
+    def response_marshaller(cls, response, args):
         try:
             cls._check_response(response)
         except ExternalServiceError as e:
@@ -69,9 +69,30 @@ class FreeFloatingProvider(AbstractExternalService):
 
         try:
             json_response = response.json()
+            json_response = cls.build_pagination(json_response, args)
         except ValueError:
             logging.getLogger(__name__).error(
                 "impossible to get json for response %s with body: %s", response.status_code, response.text
             )
             return None
         return FreeFloatingsSerializer(json_response).data
+
+    @classmethod
+    def build_pagination(cls, resp, args):
+        if resp.get('pagination') is not None:
+            items_on_page = resp.get('pagination').get('items_on_page', len(resp.get('free_floatings', [])))
+            items_per_page = resp.get('pagination').get('items_per_page', args.get('count'))
+            start_page = resp.get('pagination').get('start_page', args.get('start_page'))
+            total_result = resp.get('pagination').get('total_result', len(resp.get('free_floatings', [])))
+        else:
+            items_on_page = len(resp.get('free_floatings', []))
+            items_per_page = args.get('count')
+            start_page = args.get('start_page')
+            total_result = items_on_page
+
+        resp['pagination'] = {}
+        resp['pagination']['items_on_page'] = items_on_page
+        resp['pagination']['items_per_page'] = items_per_page
+        resp['pagination']['start_page'] = start_page
+        resp['pagination']['total_result'] = total_result
+        return resp

@@ -49,6 +49,14 @@ def build_instance_shape(instance):
     return None
 
 
+def build_pagination(args, resp):
+    resp['pagination']['items_on_page'] = 2
+    resp['pagination']['items_per_page'] = 3
+    resp['pagination']['start_page'] = 0
+    resp['pagination']['total_result'] = 2
+    return resp
+
+
 class FreeFloatingsNearby(ResourceUri):
     def __init__(self, *args, **kwargs):
         ResourceUri.__init__(self, output_type_serializer=FreeFloatingsSerializer, *args, **kwargs)
@@ -66,6 +74,7 @@ class FreeFloatingsNearby(ResourceUri):
             type=CoordFormat(nullable=True),
             help="Coordinates longitude;latitude used to search " "the objects around this coordinate",
         )
+        parser_get.add_argument("start_page", type=int, default=0, help="The current page")
 
     def options(self, **kwargs):
         return self.api_description(**kwargs)
