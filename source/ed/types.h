@@ -201,6 +201,13 @@ struct Company : public Header, Nameable {
     bool operator<(const Company& other) const { return this->name < other.name; }
 };
 
+struct Address {
+    const static nt::Type_e type = nt::Type_e::Address;
+    std::string id;
+    std::string street_name;
+    std::string house_number;
+};
+
 struct CommercialMode : public Header, Nameable {
     const static nt::Type_e type = nt::Type_e::CommercialMode;
 
@@ -305,6 +312,7 @@ struct StopPoint : public Header, Nameable, hasProperties {
     const static nt::Type_e type = nt::Type_e::StopPoint;
     nt::GeographicalCoord coord;
     std::string fare_zone;
+    std::string address_id = "";
     bool is_zonal = false;
     boost::optional<nt::MultiPolygon> area;
 

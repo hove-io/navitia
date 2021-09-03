@@ -150,6 +150,8 @@ public:
 
     std::vector<types::AssociatedCalendar*> associated_calendars;
 
+    std::vector<types::Address*> addresses_from_ntfs;
+
     navitia::type::MetaData meta;
 
     std::set<types::VehicleJourney*> vj_to_erase;  // badly formated vj, to erase
