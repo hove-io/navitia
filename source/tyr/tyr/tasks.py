@@ -75,7 +75,7 @@ def finish_job(job_ids):
     """
     for job_id in job_ids:
         job = models.Job.query.get(job_id)
-        if job.state != 'failed':
+        if job.state != 'failed' and all(dataset.state == 'done' for dataset in job.data_sets):
             job.state = 'done'
     models.db.session.commit()
 
@@ -86,6 +86,24 @@ def retrive_job_id(filename):
     )
     job_ids = job_id_pattern.findall(filename)
     return job_ids[0] if job_ids else None
+
+
+def retrieve_dataset_and_set_state(dataset_type, job_id, state):
+    dataset = models.DataSet.find_by_type_and_job_id(dataset_type, job_id)
+    logging.getLogger(__name__).debug("Retrieved dataset: {}".format(dataset.id))
+    dataset.state = state
+    models.db.session.commit()
+    return dataset
+
+
+def backup_file_and_set_job_state(backup_file, _file, instance_config, job):
+    if backup_file:
+        move_to_backupdirectory(_file, instance_config.backup_directory)
+    current_app.logger.debug(
+        "Corrupted source file : {} moved to {}".format(_file, instance_config.backup_directory)
+    )
+    job.state = "failed"
+    models.db.session.commit()
 
 
 def import_data(
@@ -136,54 +154,57 @@ def import_data(
     for _file in files:
         # we check if there's a job_id in file's name
         current_job = None
+        current_dataset = None
         job_id = retrive_job_id(_file)
         if job_id:
             # if job_id is not None, we retrive the job from the db
             current_job = models.Job.query.get(job_id)
             current_job.state = 'running'
+
+            try:
+                dataset_type, _ = utils.type_of_data(_file)
+                current_dataset = retrieve_dataset_and_set_state(dataset_type, job_id, "running")
+            except Exception:
+                backup_file_and_set_job_state(backup_file, _file, instance_config, current_job)
+                continue
+
         elif new_job:
             # no job_id is associated with the file and a new_job has been already created
             current_job = new_job
+            # we have to create a new dataset in db
+            current_dataset = models.DataSet()
+            # NOTE: for the moment we do not use the path to load the data here
+            # but we'll need to refactor this to take it into account
+            try:
+                current_dataset.type, _ = utils.type_of_data(_file)
+                current_dataset.family_type = utils.family_of_data(current_dataset.type)
+                models.db.session.add(current_dataset)
+                current_job.data_sets.append(current_dataset)
+            except Exception:
+                current_app.logger.exception("")
+                backup_file_and_set_job_state(backup_file, _file, instance_config, current_job)
+                continue
 
-        dataset = models.DataSet()
-        # NOTE: for the moment we do not use the path to load the data here
-        # but we'll need to refactor this to take it into account
-        try:
-            dataset.type, _ = utils.type_of_data(_file)
-            dataset.family_type = utils.family_of_data(dataset.type)
-        except Exception:
-            if backup_file:
-                move_to_backupdirectory(_file, instance_config.backup_directory)
-            current_app.logger.debug(
-                "Corrupted source file : {} moved to {}".format(_file, instance_config.backup_directory)
-            )
-            if job_id:
-                current_job.state = "failed"
-                models.db.session.commit()
-            continue
-
-        if dataset.type in task:
+        if current_dataset.type in task:
             if backup_file:
                 filename = move_to_backupdirectory(_file, instance_config.backup_directory, manage_sp_char=True)
             else:
                 filename = _file
 
             args = [instance_config, filename]
-            kwargs = {"dataset_uid": dataset.uid}
+            kwargs = {"dataset_uid": current_dataset.uid}
             if job_id:
                 kwargs.update({"job_id": job_id})
-            actions.append(task[dataset.type].si(*args, **kwargs))
+            actions.append(task[current_dataset.type].si(*args, **kwargs))
+            # currently the name of a dataset is the path to it
+            current_dataset.name = filename
+            current_dataset.state = "pending"
 
         else:
             # unknown type, we skip it
-            current_app.logger.debug("unknown file type: {} for file {}".format(dataset.type, _file))
+            current_app.logger.debug("unknown file type: {} for file {}".format(current_dataset.type, _file))
             continue
 
-        # currently the name of a dataset is the path to it
-        dataset.name = filename
-        dataset.state = "pending"
-        models.db.session.add(dataset)
-        current_job.data_sets.append(dataset)
         if job_id:
             jobs.append(current_job)
         models.db.session.commit()

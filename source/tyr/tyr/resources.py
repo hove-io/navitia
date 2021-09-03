@@ -135,13 +135,14 @@ class Job(flask_restful.Resource):
         tmp_file_name = full_file_name + ".tmp"
         f.save(tmp_file_name)
         shutil.move(tmp_file_name, full_file_name)
+        return full_file_name
 
     @staticmethod
     def validate_data_files(job, f):
         if not utils.filename_has_valid_extension(f.filename):
             job.state = "failed"
             models.db.session.commit()
-            e = BadRequest('My custom message')
+            e = BadRequest('')
             e.data = {
                 'message': "Filename has invalid extension :'{}'".format(f.filename),
                 'valid_extensions': utils.get_valid_extensions(),
@@ -176,7 +177,36 @@ class Job(flask_restful.Resource):
         # we have to validate all received files before any processing
         [self.validate_data_files(job, f) for f in files]
         # once all files are checked fine, we are about to rename them with job_id and save
-        [self.rename_and_save_data_files(instance_config, job, f) for f in files]
+        saved_files = [self.rename_and_save_data_files(instance_config, job, f) for f in files]
+
+        for f in saved_files:
+            dataset = models.DataSet()
+
+            try:
+                dataset.type, _ = utils.type_of_data(f)
+                dataset.family_type = utils.family_of_data(dataset.type)
+                dataset.name = f
+                dataset.state = "pending"
+                logger.info('adding dataset files: %s', str(dataset))
+
+                models.db.session.add(dataset)
+                job.data_sets.append(dataset)
+
+            except Exception:
+                current_app.logger.debug(
+                    "Corrupted source file : {} moved to {}".format(f, instance_config.backup_directory)
+                )
+                db.session.delete(dataset)
+                db.session.delete(job)
+                models.db.session.commit()
+                e = BadRequest('')
+                e.data = {
+                    'message': "Filename has invalid type of data :'{}'".format(f),
+                    'valid_extensions': utils.get_valid_extensions(),
+                }
+                raise e
+
+        models.db.session.commit()
 
         return {'message': 'OK, received data files are: {}'.format(files), "job_id": job.id}, 200
 

@@ -603,7 +603,9 @@ def ed2nav(self, instance_config, job_ids, custom_output_dir):
     jobs = []
     for job_id in job_ids:
         job = models.Job.query.get(job_id)
+        job.state = 'running ed2nav'
         jobs.append(job)
+    models.db.session.commit()
 
     assert jobs
     instance = jobs[0].instance
@@ -638,7 +640,7 @@ def ed2nav(self, instance_config, job_ids, custom_output_dir):
     except:
         logger.exception('')
         for job in jobs:
-            job.state = 'failed'
+            job.state = 'ed2nav failed'
         models.db.session.commit()
         raise
 
