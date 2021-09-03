@@ -267,10 +267,12 @@ class InstanceManager(object):
             self.thread_event.set()
 
     def _filter_authorized_instances(self, instances, api):
-        if not can_connect_to_database():
-            return instances
         if not instances:
             return None
+        # During the period database is not accessible, all the instances are valid for the user.
+        if not can_connect_to_database():
+            return instances
+
         user = authentication.get_user(token=authentication.get_token())
         valid_instances = [
             i for i in instances if authentication.has_access(i.name, abort=False, user=user, api=api)

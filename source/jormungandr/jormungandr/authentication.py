@@ -128,7 +128,7 @@ def has_access(region, api, abort, user):
     if current_app.config.get('PUBLIC', False):
         # if jormungandr is on public mode we skip the authentification process
         return True
-    if not can_connect_to_database:
+    if not can_connect_to_database():
         return True
 
     if not user:

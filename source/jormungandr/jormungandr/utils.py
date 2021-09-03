@@ -681,10 +681,8 @@ def can_connect_to_database():
         connection = engine.connect()
         connection.close()
         g.can_connect_to_database = True
-        print('++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++')
     except Exception:
         g.can_connect_to_database = False
-        print('--------------------------------------------------------------------------------------------')
         return False
 
     return True
