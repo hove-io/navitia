@@ -831,21 +831,6 @@ Type_e Data::get_type_of_id(const std::string& id) const {
     return Type_e::Unknown;
 }
 
-namespace {
-struct Pipe {
-    pipebuf sbuf;
-    opipestream out;
-    ipipestream in;
-    void close() { sbuf.close(); }
-    Pipe() : out(&sbuf), in(&sbuf) {}
-    Pipe(const Pipe&) = delete;
-    Pipe& operator=(const Pipe&) = delete;
-    Pipe(const Pipe&&) = delete;
-    Pipe& operator=(const Pipe&&) = delete;
-    ~Pipe() { close(); }
-};
-}  // anonymous namespace
-
 // We want to do a deep clone of a Data.  The problem is that there is a
 // lot of pointers that point to each other, and thus writing a copy
 // assignment operator is really tricky.
@@ -857,19 +842,8 @@ struct Pipe {
 // in our object.  To avoid having the whole binary_oarchive in
 // memory, we construct a pipe between 2 threads.
 void Data::clone_from(const Data& from) {
-    Pipe p;
-    std::thread write([&]() {
-        boost::archive::binary_oarchive oa(p.out);
-        oa << from;
-        p.out.close();
-    });
-    std::thread read([&]() {
-        boost::archive::binary_iarchive ia(p.in);
-        ia >> *this;
-        p.in.close();
-    });
-    write.join();
-    read.join();
+    CloneHelper cloner;
+    cloner(from, *this);
 }
 
 void Data::set_last_rt_data_loaded(const boost::posix_time::ptime& p) const {
