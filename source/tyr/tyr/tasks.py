@@ -150,6 +150,7 @@ def import_data(
             new_job = models.Job()
             new_job.instance = instance
             new_job.state = 'running'
+            break
 
     for _file in files:
         # we check if there's a job_id in file's name
