@@ -48,11 +48,11 @@ class StarProvider(CommonCarParkProvider):
         if not park:
             return None
 
-        dataset_id = jmespath.search('records[0].datasetid', data)
-        if 'new-etat' in dataset_id:  # new version of api star
-            return self.get_new_items(park)
-        else:
+        item = jmespath.search('fields.jrdinfosoliste', park)
+        if item is None:
             return self.get_old_items(park)
+        else:
+            return self.get_new_items(park)
 
     def get_old_items(self, park):
         available = jmespath.search('fields.nombreplacesdisponibles', park)

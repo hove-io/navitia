@@ -1,3 +1,13 @@
+navitia2 (12.4.0) unstable; urgency=low
+
+  * Changing the test to detect the type of dataset  <https://github.com/CanalTP/navitia/pull/3539>
+  * [Kraken] Fix clone with boost::serialization  <https://github.com/CanalTP/navitia/pull/3538>
+  * [Jormungandr] Context added in bragi response  <https://github.com/CanalTP/navitia/pull/3536>
+  * Bump /utils  <https://github.com/CanalTP/navitia/pull/3528>
+  * [Jormugandr] add params to adjust asgard matrix search range  <https://github.com/CanalTP/navitia/pull/3521>
+
+ -- Hicham Azimani <hicham.azimani@kisio.com>  Mon, 06 Sep 2021 17:09:53 +0100
+
 navitia2 (12.3.0) unstable; urgency=low
 
   * [navitia] Update rabbitmq  <https://github.com/CanalTP/navitia/pull/3524>

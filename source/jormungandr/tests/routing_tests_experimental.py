@@ -246,6 +246,10 @@ class TestJourneysDistributed(
             "bss_rent_penalty": instance.bss_rent_penalty,
             "bss_return_duration": instance.bss_return_duration,
             "bss_return_penalty": instance.bss_return_penalty,
+            "_asgard_max_walking_duration_coeff": 1,
+            "_asgard_max_bike_duration_coeff": 1,
+            "_asgard_max_bss_duration_coeff": 1,
+            "_asgard_max_car_duration_coeff": 1,
         }
         service = instance.get_street_network(mode, request)
         request_id = None
