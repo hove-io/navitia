@@ -215,7 +215,7 @@ class Instance(object):
         """
         :return: a callable query of external services associated to the current instance in db
         """
-        result = self._get_models().external_services
+        result = self._get_models().external_services or None
         return [res for res in result if res.navitia_service in ['free_floatings', 'vehicle_occupancies']]
 
     def get_realtime_proxies_from_db(self):
@@ -252,9 +252,7 @@ class Instance(object):
     @memory_cache.memoize(app.config[str('MEMORY_CACHE_CONFIGURATION')].get(str('TIMEOUT_PARAMS'), 30))
     @cache.memoize(app.config[str('CACHE_CONFIGURATION')].get(str('TIMEOUT_PARAMS'), 300))
     def _get_models(self):
-        if app.config['DISABLE_DATABASE']:
-            return None
-        if not can_connect_to_database():
+        if app.config['DISABLE_DATABASE'] or not can_connect_to_database():
             return None
         return models.Instance.get_by_name(self.name)
 

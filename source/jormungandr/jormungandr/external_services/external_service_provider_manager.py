@@ -33,11 +33,12 @@ import logging
 import datetime
 from jormungandr import utils
 from jormungandr.exceptions import ConfigException
+from jormungandr.utils import can_connect_to_database
 
 
 class ExternalServiceManager(object):
     def __init__(
-        self, instance, external_service_configuration, external_service_getter=None, update_interval=600
+        self, instance, external_service_configuration, external_service_getter=None, update_interval=10
     ):
         self.logger = logging.getLogger(__name__)
         self._external_service_configuration = external_service_configuration
@@ -105,7 +106,7 @@ class ExternalServiceManager(object):
         if (
             self._last_update + datetime.timedelta(seconds=self._update_interval) > datetime.datetime.utcnow()
             or not self._external_service_getter
-        ):
+        ) or not can_connect_to_database():
             return
 
         self.logger.debug('Updating external services from db')

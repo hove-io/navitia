@@ -33,6 +33,7 @@ from jormungandr.street_network.kraken import Kraken
 from jormungandr.equipments import EquipmentProviderManager
 from jormungandr.street_network.streetnetwork_backend_manager import StreetNetworkBackendManager
 from jormungandr.tests.utils_test import compare_list_of_dicts
+from jormungandr import app
 
 from collections import OrderedDict
 
@@ -190,14 +191,15 @@ def add_common_status_test():
 
 
 def call_add_common_status(disable_database):
-    instance = FakeInstance(
-        disable_database,
-        ridesharing_configurations=instant_system_ridesharing_config,
-        equipment_details_config=sytral_equipment_details_config,
-        instance_equipment_providers=["sytral"],
-    )
-    response = {'status': {}}
-    add_common_status(response, instance)
+    with app.app_context():
+        instance = FakeInstance(
+            disable_database,
+            ridesharing_configurations=instant_system_ridesharing_config,
+            equipment_details_config=sytral_equipment_details_config,
+            instance_equipment_providers=["sytral"],
+        )
+        response = {'status': {}}
+        add_common_status(response, instance)
 
     assert response['status']["is_open_data"] is False
     assert response['status']["is_open_service"] is False
@@ -226,14 +228,15 @@ def call_add_common_status(disable_database):
 
 
 def call_add_common_status_with_Karos(disable_database):
-    instance = FakeInstance(
-        disable_database,
-        ridesharing_configurations=karos_system_ridesharing_config,
-        equipment_details_config=sytral_equipment_details_config,
-        instance_equipment_providers=["sytral"],
-    )
-    response = {'status': {}}
-    add_common_status(response, instance)
+    with app.app_context():
+        instance = FakeInstance(
+            disable_database,
+            ridesharing_configurations=karos_system_ridesharing_config,
+            equipment_details_config=sytral_equipment_details_config,
+            instance_equipment_providers=["sytral"],
+        )
+        response = {'status': {}}
+        add_common_status(response, instance)
 
     # We sort this list because the order is not important
     # And it is easier to compare

@@ -43,6 +43,7 @@ from jormungandr.utils import PeriodExtremity
 from jormungandr.scenarios.journey_filter import to_be_deleted
 from jormungandr.scenarios.helper_classes.helper_future import FutureManager
 from importlib import import_module
+from jormungandr.utils import can_connect_to_database
 
 
 class RidesharingServiceManager(object):
@@ -135,7 +136,7 @@ class RidesharingServiceManager(object):
         if (
             self._last_update + datetime.timedelta(seconds=self._update_interval) > datetime.datetime.utcnow()
             or not self._rs_services_getter
-        ):
+        ) or not can_connect_to_database():
             return
 
         self.logger.debug('Updating ridesharing services from db')

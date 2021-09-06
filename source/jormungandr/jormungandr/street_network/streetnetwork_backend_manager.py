@@ -133,15 +133,13 @@ class StreetNetworkBackendManager(object):
 
     def _update_config(self, instance):
         # type: (Instance) -> None
-        if not self._can_connect_to_database():
-            return
         """
         Update list of streetnetwork backends from db
         """
         if (
             self._last_update + datetime.timedelta(seconds=self._update_interval) > datetime.datetime.utcnow()
             or not self._sn_backends_getter
-        ):
+        ) or not self._can_connect_to_database():
             return
 
         self.logger.debug('Updating streetnetwork backends from db')

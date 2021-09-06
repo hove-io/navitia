@@ -32,7 +32,7 @@ from __future__ import absolute_import, print_function, unicode_literals, divisi
 from importlib import import_module
 import logging
 import datetime
-from copy import deepcopy
+from jormungandr.utils import can_connect_to_database
 
 
 class RealtimeProxyManager(object):
@@ -110,7 +110,7 @@ class RealtimeProxyManager(object):
         if (
             self._last_update + datetime.timedelta(seconds=self._update_interval) > datetime.datetime.utcnow()
             or not self._realtime_proxies_getter
-        ):
+        ) or not can_connect_to_database():
             return
 
         self.logger.debug('Updating realtime proxies from db')

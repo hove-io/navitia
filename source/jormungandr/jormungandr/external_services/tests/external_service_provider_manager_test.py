@@ -32,6 +32,7 @@ from jormungandr.external_services.external_service_provider_manager import Exte
 from navitiacommon.models import ExternalService
 import datetime
 import pytest
+from jormungandr import app
 
 free_floating_valid_configuration = [
     {
@@ -211,7 +212,9 @@ def external_service_provider_manager_db_test():
     # one with navitia_service=free_floatings where as another with navitia_service=vehicle_occupancies
     # For api /free_floatings the service associated to navitia_service=free_floatings will be used
     # For api /vehicle_occupancies the service associated to navitia_service=vehicle_occupancies will be used
-    manager.update_config()
+    with app.app_context():
+        manager.update_config()
+
     assert len(manager._external_services_legacy) == 2
     service = manager._external_services_legacy.get('free_floatings', [])[0]
     assert service.service_url == "http://config_from_db/free_floatings"
@@ -227,7 +230,8 @@ def external_service_provider_manager_db_test():
 
     # services are re-initialized from the new configurations in the db (free_floating_services_getter_update)
     manager._external_service_getter = free_floating_services_getter_update
-    manager.update_config()
+    with app.app_context():
+        manager.update_config()
 
     assert manager._last_update > manager_update
     assert len(manager._external_services_legacy) == 1
@@ -240,7 +244,8 @@ def external_service_provider_manager_db_test():
     # services are re-initialized from the new configurations in the db (vehicle_occcupancy_services_getter_update)
     manager_update = manager._last_update
     manager._external_service_getter = vehicle_occcupancy_services_getter_update
-    manager.update_config()
+    with app.app_context():
+        manager.update_config()
 
     assert manager._last_update > manager_update
     assert len(manager._external_services_legacy) == 1
@@ -253,7 +258,9 @@ def external_service_provider_manager_db_test():
     # No service is re-initialized from the new configurations in the db as the class is wrong one
     manager_update = manager._last_update
     manager._external_service_getter = services_getter_update_with_wrong_class
-    manager.update_config()
+    with app.app_context():
+        manager.update_config()
+
     assert len(manager._external_services_legacy) == 0
 
 
@@ -277,7 +284,9 @@ def external_service_provider_manager_config_from_file_and_db_test():
     # For api /free_floatings the service associated to navitia_service=free_floatings will be used
     # For api /vehicle_occupancies the service associated to navitia_service=vehicle_occupancies will be used
     # All the services from configuration file are all removed.
-    manager.update_config()
+    with app.app_context():
+        manager.update_config()
+
     assert len(manager._external_services_legacy) == 2
     service = manager._external_services_legacy.get('free_floatings', [])[0]
     assert service.service_url == "http://config_from_db/free_floatings"
