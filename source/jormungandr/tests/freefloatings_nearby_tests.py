@@ -85,7 +85,8 @@ FREE_FLOATINGS_RESPONSE = {
             "attributes": ["ELECTRIC"],
             "deeplink": "https://cityscoot.onelink.me/8GT9?pid=FLUCTUO&c=CS-API-FLUCTUO&af_dp=cityscoot%3A%2F%2Fcities%2F4%2Fscooters%2F20840&af_web_dp=https%3A%2F%2Fwww.cityscoot.eu%2F&af_force_deeplink=true",
         },
-    ]
+    ],
+    "pagination": {"items_on_page": 3, "items_per_page": 5, "start_page": 1, "total_result": 8},
 }
 
 
@@ -111,7 +112,7 @@ class TestFreeFloating(AbstractTestFixture):
         simple freefloatings_nearby call
         """
         response, status = self.query_no_assert(
-            'v1/coverage/main_routing_test/coord/2.37715%3B48.846781/freefloatings_nearby'
+            'v1/coverage/main_routing_test/coord/2.37715%3B48.846781/freefloatings_nearby?count=5&start_page=1'
         )
 
         warnings = get_not_null(response, 'warnings')
@@ -143,3 +144,8 @@ class TestFreeFloating(AbstractTestFixture):
         assert free_floatings[1]['battery'] == 91
         assert free_floatings[1]['propulsion'] == 'ELECTRIC'
         assert free_floatings[1]['attributes'] == ['ELECTRIC']
+        assert 'pagination' in response
+        assert response['pagination']['start_page'] == 1
+        assert response['pagination']['items_on_page'] == 3
+        assert response['pagination']['items_per_page'] == 5
+        assert response['pagination']['total_result'] == 8
