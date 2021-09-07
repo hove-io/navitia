@@ -88,4 +88,6 @@ redis = Redis(
 
 tyr_rabbit_mq_handler = RabbitMqHandler(app.config['CELERY_BROKER_URL'], "tyr_event_exchange")
 
+JOB_ID_DELIMITER = "<JOB_ID_DELIMITER>"
+
 import tyr.api

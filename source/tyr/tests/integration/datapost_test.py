@@ -63,22 +63,33 @@ def get_jobs_from_db(id=None):
 
 
 def test_post_pbf(create_instance_fr):
-    assert not os.path.isfile('/tmp/empty_pbf.osm.pbf')
+    assert not os.path.isfile('/tmp/_JOB_ID_DELIMITER_1_JOB_ID_DELIMITER_empty_pbf.osm.pbf')
+    assert not os.path.isfile('/tmp/_JOB_ID_DELIMITER_1_JOB_ID_DELIMITER_fusio.zip')
 
-    filename = 'empty_pbf.osm.pbf'
-    path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), 'tests/fixtures/', filename)
-    f = open(path, 'rb')
+    filenames = ['empty_pbf.osm.pbf', 'fusio.zip']
+    files = []
+    for filename in filenames:
+        path = os.path.join(
+            os.path.dirname(os.path.dirname(os.path.dirname(__file__))), 'tests/fixtures/', filename
+        )
+        files.append((open(path, 'rb'), filename))
+
     try:
-        files = {'file': (f, filename)}
         tester = app.test_client()
-        resp = tester.post('/v0/jobs/fr', data=files)
+        resp = tester.post('/v0/jobs/fr', data={'file': files})
     finally:
-        f.close()
+        for f in files:
+            f[0].close()
     assert resp.status_code == 200
-    assert os.path.isfile('/tmp/empty_pbf.osm.pbf')
 
-    os.remove('/tmp/empty_pbf.osm.pbf')
-    assert not os.path.isfile('/tmp/empty_pbf.osm.pbf')
+    assert os.path.isfile('/tmp/<JOB_ID_DELIMITER>1<JOB_ID_DELIMITER>empty_pbf.osm.pbf')
+    assert os.path.isfile('/tmp/<JOB_ID_DELIMITER>1<JOB_ID_DELIMITER>fusio.zip')
+
+    os.remove('/tmp/<JOB_ID_DELIMITER>1<JOB_ID_DELIMITER>empty_pbf.osm.pbf')
+    os.remove('/tmp/<JOB_ID_DELIMITER>1<JOB_ID_DELIMITER>fusio.zip')
+
+    assert not os.path.isfile('/tmp/<JOB_ID_DELIMITER>1<JOB_ID_DELIMITER>empty_pbf.osm.pbf')
+    assert not os.path.isfile('/tmp/<JOB_ID_DELIMITER>1<JOB_ID_DELIMITER>fusio.zip')
 
 
 def test_post_no_file(create_instance_fr):
