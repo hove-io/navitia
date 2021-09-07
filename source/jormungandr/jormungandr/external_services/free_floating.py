@@ -82,14 +82,11 @@ class FreeFloatingProvider(AbstractExternalService):
         # Update elements in the pagination if present in the response forseti else create
         if resp.get('pagination') is None:
             resp['pagination'] = {}
-        resp['pagination']['items_on_page'] = resp.get('pagination', {}).get(
+        pagination = resp['pagination']
+        resp['pagination']['items_on_page'] = pagination.get(
             'items_on_page', len(resp.get('free_floatings', []))
         )
-        resp['pagination']['items_per_page'] = resp.get('pagination', {}).get(
-            'items_per_page', args.get('count')
-        )
-        resp['pagination']['start_page'] = resp.get('pagination', {}).get('start_page', args.get('start_page'))
-        resp['pagination']['total_result'] = resp.get('pagination', {}).get(
-            'total_result', len(resp.get('free_floatings', []))
-        )
+        resp['pagination']['items_per_page'] = pagination.get('items_per_page', args.get('count'))
+        resp['pagination']['start_page'] = pagination.get('start_page', args.get('start_page'))
+        resp['pagination']['total_result'] = pagination.get('total_result', len(resp.get('free_floatings', [])))
         return resp
