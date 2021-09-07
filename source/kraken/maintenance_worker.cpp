@@ -103,6 +103,9 @@ void MaintenanceWorker::load_realtime() {
     std::string stream;
     task.SerializeToString(&stream);
     auto message = AmqpClient::BasicMessage::Create(stream);
+    // Add expiration timeout (in ms) to the message (TTL)
+    message->Expiration(std::to_string(conf.kirin_timeout()));
+
     // we ask for realtime data
     channel->BasicPublish(conf.broker_exchange(), "task.load_realtime.INSTANCE", message);
 
