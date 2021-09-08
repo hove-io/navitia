@@ -674,6 +674,10 @@ def journeys_absent(objects):
 
 
 def can_connect_to_database():
+    # If g is not initialized we are out of app_context. This never happens for any service jormungandr
+    # in this case we return true to have retro-compatibility.
+    if not g:
+        return True
     if hasattr(g, 'can_connect_to_database'):
         return g.can_connect_to_database
     try:

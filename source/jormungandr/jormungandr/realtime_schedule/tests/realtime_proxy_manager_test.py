@@ -253,8 +253,7 @@ def multi_proxy_conf_file_and_database_test():
     for rt_proxy in ["clever_age_TBC", "SytralRT", "Timeo_Amelys", "Siri_TAO", "siri_stif"]:
         assert rt_proxy in manager._realtime_proxies_legacy
 
-    with app.app_context():
-        manager.update_config()
+    manager.update_config()
 
     assert len(manager._realtime_proxies) == 5
     for rt_proxy in ["clever_age_TBC", "SytralRT", "Timeo_Amelys", "Siri_TAO", "siri_stif"]:
@@ -285,8 +284,7 @@ def proxy_conf_file_and_database_same_id_test():
     assert len(manager._realtime_proxies_legacy) == 1
     assert 'SytralRT' in manager._realtime_proxies_legacy
 
-    with app.app_context():
-        manager.update_config()
+    manager.update_config()
 
     assert len(manager._realtime_proxies) == 1
     assert 'SytralRT' in manager._realtime_proxies
@@ -318,8 +316,7 @@ def one_proxy_conf_file_and_database_different_id_test():
     assert 'SytralRT' in manager._realtime_proxies_legacy
     assert len(manager.get_all_realtime_proxies()) == 1
 
-    with app.app_context():
-        manager.update_config()
+    manager.update_config()
 
     assert len(manager._realtime_proxies_legacy) == 1
     assert 'SytralRT' in manager._realtime_proxies_legacy
@@ -344,8 +341,7 @@ def proxy_only_database_test():
     assert len(manager._realtime_proxies_legacy) == 0
     assert len(manager.get_all_realtime_proxies()) == 0
 
-    with app.app_context():
-        manager.update_config()
+    manager.update_config()
 
     assert len(manager._realtime_proxies_legacy) == 0
 
@@ -370,8 +366,7 @@ def update_proxy_database_test():
     assert len(manager._realtime_proxies_legacy) == 0
     assert len(manager.get_all_realtime_proxies()) == 0
 
-    with app.app_context():
-        manager.update_config()
+    manager.update_config()
 
     assert len(manager._realtime_proxies_legacy) == 0
 
@@ -393,8 +388,7 @@ def update_proxy_database_test():
         return [external_service]
 
     manager._realtime_proxies_getter = update_provider
-    with app.app_context():
-        manager.update_config()
+    manager.update_config()
 
     assert len(manager._realtime_proxies_legacy) == 0
 
