@@ -133,6 +133,8 @@ private:
     void insert_prices(const ed::Data& data);
     void insert_origin_destination(const ed::Data& data);
 
+    void insert_addresses_from_ntfs(const std::vector<types::Address*>& addresses);
+
     /// suppression de l'ensemble des objets chargés par gtfs déja present en base
     void clean_db();
 

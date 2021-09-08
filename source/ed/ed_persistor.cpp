@@ -338,6 +338,9 @@ void EdPersistor::persist(const ed::Data& data) {
     LOG4CPLUS_INFO(logger, "Begin: insert stop points");
     this->insert_stop_points(data.stop_points);
     LOG4CPLUS_INFO(logger, "End: insert stop points");
+    LOG4CPLUS_INFO(logger, "Begin: insert addresses from ntfs");
+    this->insert_addresses_from_ntfs(data.addresses_from_ntfs);
+    LOG4CPLUS_INFO(logger, "End: insert addresses from ntfs");
     LOG4CPLUS_INFO(logger, "Begin: insert lines");
     this->insert_lines(data.lines);
     LOG4CPLUS_INFO(logger, "End: insert lines");
@@ -710,8 +713,9 @@ void EdPersistor::insert_stop_areas(const std::vector<types::StopArea*>& stop_ar
 }
 
 void EdPersistor::insert_stop_points(const std::vector<types::StopPoint*>& stop_points) {
-    this->lotus.prepare_bulk_insert("navitia.stop_point", {"id", "uri", "name", "coord", "fare_zone", "stop_area_id",
-                                                           "properties_id", "platform_code", "is_zonal", "area"});
+    this->lotus.prepare_bulk_insert("navitia.stop_point",
+                                    {"id", "uri", "name", "coord", "fare_zone", "stop_area_id", "properties_id",
+                                     "platform_code", "is_zonal", "area", "address_id"});
 
     for (types::StopPoint* sp : stop_points) {
         std::vector<std::string> values;
@@ -735,11 +739,26 @@ void EdPersistor::insert_stop_points(const std::vector<types::StopPoint*>& stop_
             area << lotus.null_value;
         }
         values.push_back(area.str());
+        values.push_back(sp->address_id);
         this->lotus.insert(values);
     }
 
     this->lotus.finish_bulk_insert();
 }
+
+void EdPersistor::insert_addresses_from_ntfs(const std::vector<types::Address*>& addresses) {
+    this->lotus.prepare_bulk_insert("navitia.address", {"id", "house_number", "street_name"});
+
+    for (types::Address* addr : addresses) {
+        std::vector<std::string> values;
+        values.push_back(addr->id);
+        values.push_back(addr->house_number);
+        values.push_back(addr->street_name);
+        this->lotus.insert(values);
+    }
+    this->lotus.finish_bulk_insert();
+}
+
 void EdPersistor::insert_lines(const std::vector<types::Line*>& lines) {
     this->lotus.prepare_bulk_insert(
         "navitia.line", {"id", "uri", "name", "color", "code", "commercial_mode_id", "network_id", "sort", "shape",
