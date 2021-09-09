@@ -38,7 +38,7 @@ from jormungandr.utils import can_connect_to_database
 
 class ExternalServiceManager(object):
     def __init__(
-        self, instance, external_service_configuration, external_service_getter=None, update_interval=10
+        self, instance, external_service_configuration, external_service_getter=None, update_interval=600
     ):
         self.logger = logging.getLogger(__name__)
         self._external_service_configuration = external_service_configuration

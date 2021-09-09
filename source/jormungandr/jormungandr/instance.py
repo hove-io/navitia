@@ -203,26 +203,30 @@ class Instance(object):
         """
         :return: a callable query of equipment providers associated to the current instance in db
         """
-        return self._get_models().equipment_details_providers
+        models = self._get_models()
+        return models.equipment_details_providers if models else None
 
     def get_ridesharing_services_from_db(self):
         """
         :return: a callable query of ridesharing services associated to the current instance in db
         """
-        return self._get_models().ridesharing_services
+        models = self._get_models()
+        return models.ridesharing_services if models else None
 
     def get_external_service_providers_from_db(self):
         """
         :return: a callable query of external services associated to the current instance in db
         """
-        result = self._get_models().external_services or None
+        models = self._get_models()
+        result = models.external_services if models else None
         return [res for res in result if res.navitia_service in ['free_floatings', 'vehicle_occupancies']]
 
     def get_realtime_proxies_from_db(self):
         """
         :return: a callable query of external services associated to the current instance in db
         """
-        result = self._get_models().external_services
+        models = self._get_models()
+        result = models.external_services if models else None
         return [res for res in result if res.navitia_service == 'realtime_proxies']
 
     @property
@@ -893,7 +897,7 @@ class Instance(object):
         )
 
     def get_all_street_networks(self):
-        if app.config[str('DISABLE_DATABASE')]:
+        if app.config[str('DISABLE_DATABASE')] or not can_connect_to_database():
             return self._streetnetwork_backend_manager.get_all_street_networks_legacy(self)
         else:
             return self._streetnetwork_backend_manager.get_all_street_networks_db(self)
