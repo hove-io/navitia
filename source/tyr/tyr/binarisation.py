@@ -636,11 +636,11 @@ def ed2nav(self, instance_config, job_ids, custom_output_dir):
             res = launch_exec('ed2nav', argv, logger)
             os.system('sync')  # we sync to be safe
         if res != 0:
-            raise ValueError('ed2nav failed')
+            raise ValueError('ed2nav')
     except:
         logger.exception('')
         for job in jobs:
-            job.state = 'ed2nav failed'
+            job.state = 'ed2nav'
         models.db.session.commit()
         raise
 
