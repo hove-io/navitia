@@ -136,7 +136,13 @@ class RidesharingServiceManager(object):
         if (
             self._last_update + datetime.timedelta(seconds=self._update_interval) > datetime.datetime.utcnow()
             or not self._rs_services_getter
-        ) or not can_connect_to_database():
+        ):
+            return
+
+        # If database is not accessible we update the value of self._last_update and exit
+        if not can_connect_to_database():
+            self.logger.debug('Database is not accessible')
+            self._last_update = datetime.datetime.utcnow()
             return
 
         self.logger.debug('Updating ridesharing services from db')
