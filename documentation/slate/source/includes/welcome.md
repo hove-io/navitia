@@ -143,9 +143,10 @@ Want to know if your city is in Navitia? Know if a special contributor is used? 
 Getting help
 ------------
 
-All available functions are documented in [integration part](#interface) . If you want to go further, there is an OpenAPI/swagger documentation > https://api.navitia.io/v1/schema
-
 >[Try openAPI / swagger](https://api.navitia.io/v1/schema)
+
+All available functions are documented in [integration part](#interface).
+If you want to go further, there is an Swagger-openAPI documentation at [https://api.navitia.io/v1/schema](https://api.navitia.io/v1/schema)
 
 A mailing list is available to ask questions or request [new data](#about_data) integrations: <a href="mailto:navitia@googlegroups.com">navitia@googlegroups.com</a>
 
