@@ -11,7 +11,7 @@ for a specific mode of public transport (bus, tram, metro, train) at your select
 
 >[Try it on Navitia playground (click on "EXT" buttons to see times)](http://canaltp.github.io/navitia-playground/play.html?request=https%3A%2F%2Fapi.navitia.io%2Fv1%2Fcoverage%2Fsandbox%2Fstop_areas%2Fstop_area%253ARAT%253ASA%253AGDLYO%2Fstop_schedules%3Fitems_per_schedule%3D2%26&token=3b036afe-0110-4202-b9ed-99718476c2e0)
 
-* use `stop_schedules` if you want to display departures grouped by route (2 next departures for each route for example). Counter to "terminus_schedules", Routes are managed by the GTFS providers.
+* use `stop_schedules` if you want to display departures grouped by route (2 next departures for each route for example). Compared to "terminus_schedules", routes are managed by the GTFS providers.
 ![stop_vs_terminus_schedules](/images/stop_vs_terminus_schedules.png)
 
 >[Try it on Navitia playground](http://canaltp.github.io/navitia-playground/play.html?request=https%3A%2F%2Fapi.navitia.io%2Fv1%2Fcoverage%2Fsandbox%2Fstop_areas%2Fstop_area%253ARAT%253ASA%253AGDLYO%2Fstop_schedules%3Fitems_per_schedule%3D2%26&token=3b036afe-0110-4202-b9ed-99718476c2e0)
