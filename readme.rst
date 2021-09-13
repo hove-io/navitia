@@ -31,9 +31,9 @@
 
 .. |Security Rating| image:: https://sonarcloud.io/api/project_badges/measure?project=CanalTP_navitia&metric=security_rating
     :alt: SonarCloud Security Rating
-    
 
-    
+
+
 
 +----------------+----------------+-----------+--------+-----------------+-------------------+-------------------+
 | Version        | Build status   | License   | Chat   | Code Coverage   | Vulnerabilities   | Security Rating   |
@@ -44,26 +44,26 @@
 
 .. |Maintainability Rating| image:: https://sonarcloud.io/api/project_badges/measure?project=CanalTP_navitia&metric=sqale_rating
     :alt: SonarCloud Maintainability Rating
-    
+
 .. |Quality Gate Status| image:: https://sonarcloud.io/api/project_badges/measure?project=CanalTP_navitia&metric=alert_status
     :alt: SonarCloud Quality Gate Status
-    
+
 .. |Duplicated Lines (%)| image:: https://sonarcloud.io/api/project_badges/measure?project=CanalTP_navitia&metric=duplicated_lines_density
     :alt: SonarCloud Duplicated Lines (%)
-    
+
 .. |Reliability Rating| image:: https://sonarcloud.io/api/project_badges/measure?project=CanalTP_navitia&metric=reliability_rating
     :alt: SonarCloud Reliability Rating
-        
+
 .. |Bugs| image:: https://sonarcloud.io/api/project_badges/measure?project=CanalTP_navitia&metric=bugs
     :alt: SonarCloud Bugs
-        
+
 .. |Lines of Code| image:: https://sonarcloud.io/api/project_badges/measure?project=CanalTP_navitia&metric=ncloc
     :alt: SonarCloud Lines of Code
-    
+
 +--------------------------+-----------------------+------------------------+----------------------+--------+-------------------+
-| Maintainability          | Quality Gate          | Duplicated Lines (%)   | Reliability          |  Bugs  |   Lines of Code   | 
+| Maintainability          | Quality Gate          | Duplicated Lines (%)   | Reliability          |  Bugs  |   Lines of Code   |
 +--------------------------+-----------------------+------------------------+----------------------+--------+-------------------+
-| |Maintainability Rating| | |Quality Gate Status| | |Duplicated Lines (%)| | |Reliability Rating| | |Bugs| |  |Lines of Code|  | 
+| |Maintainability Rating| | |Quality Gate Status| | |Duplicated Lines (%)| | |Reliability Rating| | |Bugs| |  |Lines of Code|  |
 +--------------------------+-----------------------+------------------------+----------------------+--------+-------------------+
 
 
