@@ -228,8 +228,8 @@ public:
     void build_grid_validity_pattern();
 
     void complete();
-    void fill_stop_point_address(
-        const std::unordered_map<std::string, navitia::type::Address*>& address_by_address_id = {});
+    void fill_stop_point_address(const std::unordered_map<std::string, navitia::type::Address*>& address_by_address_id =
+                                     std::unordered_map<std::string, navitia::type::Address*>());
     /** For some pt object we compute the label */
     void compute_labels();
 
