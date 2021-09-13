@@ -30,6 +30,7 @@ www.navitia.io
 
 #pragma once
 #include "type/validity_pattern.h"
+#include "type/address_from_ntfs.h"
 #include "data_exceptions.h"
 #include "utils/obj_factory.h"
 #include "utils/ptime.h"
@@ -227,7 +228,8 @@ public:
     void build_grid_validity_pattern();
 
     void complete();
-    void fill_stop_point_address();
+    void fill_stop_point_address(
+        const std::unordered_map<std::string, navitia::type::Address*>& address_by_address_id = {});
     /** For some pt object we compute the label */
     void compute_labels();
 

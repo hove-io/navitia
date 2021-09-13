@@ -79,6 +79,7 @@ void EdReader::fill(navitia::type::Data& data,
 
     this->fill_stop_areas(data, work);
     this->fill_stop_points(data, work);
+    this->fill_ntfs_addresses(work);
 
     this->fill_lines(data, work);
     this->fill_line_groups(data, work);
@@ -555,6 +556,7 @@ void EdReader::fill_stop_points(nt::Data& data, pqxx::work& work) {
         "sp.fare_zone as fare_zone, sp.stop_area_id as stop_area_id,"
         "sp.platform_code as platform_code,"
         "sp.is_zonal as is_zonal,"
+        "sp.address_id as address_id,"
         "ST_AsText(sp.area) as area,"
         "pr.wheelchair_boarding as wheelchair_boarding,"
         "pr.sheltered as sheltered, pr.elevator as elevator,"
@@ -614,9 +616,21 @@ void EdReader::fill_stop_points(nt::Data& data, pqxx::work& work) {
             boost::geometry::read_wkt(const_it["area"].as<std::string>(), area);
             data.pt_data->add_stop_point_area(area, sp);
         }
-
+        this->sp_by_address_id[const_it["address_id"].as<std::string>()] = sp;
         data.pt_data->stop_points.push_back(sp);
         this->stop_point_map[const_it["id"].as<idx_t>()] = sp;
+    }
+}
+
+void EdReader::fill_ntfs_addresses(pqxx::work& work) {
+    std::string request = "SELECT id, house_number, street_name FROM navitia.adress";
+    const pqxx::result result = work.exec(request);
+    for (auto const_it = result.begin(); const_it != result.end(); ++const_it) {
+        auto* addr = new navitia::type::Address();
+        const_it["id"].to(addr->id);
+        const_it["house_number"].to(addr->house_number);
+        const_it["street_name"].to(addr->street_name);
+        this->address_by_address_id[const_it["id"].as<std::string>()] = addr;
     }
 }
 

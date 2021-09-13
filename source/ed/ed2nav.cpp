@@ -372,6 +372,13 @@ int ed2nav(int argc, const char* argv[]) {
 
     read = (pt::microsec_clock::local_time() - start).total_milliseconds();
     data.complete();
+
+    // fill addresses for stop points
+    start = pt::microsec_clock::local_time();
+    data.fill_stop_point_address(reader.address_by_address_id);
+    int address = (pt::microsec_clock::local_time() - start).total_milliseconds();
+    LOG4CPLUS_INFO(logger, "\t Building address " << address << "ms");
+
     data.meta->publication_date = pt::microsec_clock::universal_time();
 
     LOG4CPLUS_INFO(logger, "line: " << data.pt_data->lines.size());
