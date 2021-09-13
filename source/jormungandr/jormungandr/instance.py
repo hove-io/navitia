@@ -119,6 +119,7 @@ class Instance(object):
         streetnetwork_backend_manager,
         external_service_provider_configurations,
         pt_zmq_socket=None,  # type: Text
+        instance_db=None,
     ):
         self.geom = None
         self.geojson = None
@@ -198,6 +199,7 @@ class Instance(object):
                 self, external_service_provider_configurations, self.get_external_service_providers_from_db
             )
         self.external_service_provider_manager.init_external_services()
+        self.instance_db = instance_db
 
     def get_providers_from_db(self):
         """
@@ -256,9 +258,12 @@ class Instance(object):
     @memory_cache.memoize(app.config[str('MEMORY_CACHE_CONFIGURATION')].get(str('TIMEOUT_PARAMS'), 30))
     @cache.memoize(app.config[str('CACHE_CONFIGURATION')].get(str('TIMEOUT_PARAMS'), 300))
     def _get_models(self):
-        if app.config['DISABLE_DATABASE'] or not can_connect_to_database():
+        if app.config['DISABLE_DATABASE']:
             return None
-        return models.Instance.get_by_name(self.name)
+        if not can_connect_to_database():
+            return self.instance_db
+        self.instance_db = models.Instance.get_by_name(self.name)
+        return self.instance_db
 
     def scenario(self, override_scenario=None):
         """
