@@ -32,6 +32,7 @@ from jormungandr.external_services.external_service_provider_manager import Exte
 from navitiacommon.models import ExternalService
 import datetime
 import pytest
+from jormungandr import app
 
 free_floating_valid_configuration = [
     {
@@ -241,7 +242,6 @@ def external_service_provider_manager_db_test():
     manager_update = manager._last_update
     manager._external_service_getter = vehicle_occcupancy_services_getter_update
     manager.update_config()
-
     assert manager._last_update > manager_update
     assert len(manager._external_services_legacy) == 1
     service = manager._external_services_legacy.get('vehicle_occupancies', [])[0]
@@ -278,6 +278,7 @@ def external_service_provider_manager_config_from_file_and_db_test():
     # For api /vehicle_occupancies the service associated to navitia_service=vehicle_occupancies will be used
     # All the services from configuration file are all removed.
     manager.update_config()
+
     assert len(manager._external_services_legacy) == 2
     service = manager._external_services_legacy.get('free_floatings', [])[0]
     assert service.service_url == "http://config_from_db/free_floatings"

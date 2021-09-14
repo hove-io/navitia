@@ -28,6 +28,7 @@
 # www.navitia.io
 from __future__ import absolute_import, print_function, unicode_literals, division
 from jormungandr.parking_space_availability.abstract_provider_manager import AbstractProviderManager
+from jormungandr.utils import can_connect_to_database
 import logging
 import datetime
 
@@ -52,6 +53,12 @@ class BssProviderManager(AbstractProviderManager):
             self._last_update + datetime.timedelta(seconds=self._update_interval) > datetime.datetime.utcnow()
             or not self._providers_getter
         ):
+            return
+
+        # If database is not accessible we update the value of self._last_update and exit
+        if not can_connect_to_database():
+            self.logger.debug('Database is not accessible')
+            self._last_update = datetime.datetime.utcnow()
             return
 
         logger = logging.getLogger(__name__)

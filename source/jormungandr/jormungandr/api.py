@@ -42,6 +42,7 @@ import logging
 from jormungandr.new_relic import record_custom_parameter
 from jormungandr.authentication import get_user, get_token, get_app_name, get_used_coverages
 from jormungandr._version import __version__
+from jormungandr.utils import can_connect_to_database
 import six
 
 
@@ -88,12 +89,15 @@ def add_request_id(response, *args, **kwargs):
 def add_info_newrelic(response, *args, **kwargs):
     try:
         record_custom_parameter('navitia-request-id', request.id)
-        token = get_token()
-        user = get_user(token=token, abort_if_no_token=False)
-        app_name = get_app_name(token)
-        if user:
-            record_custom_parameter('user_id', str(user.id))
-        record_custom_parameter('token_name', app_name)
+
+        if can_connect_to_database():
+            token = get_token()
+            user = get_user(token=token, abort_if_no_token=False)
+            app_name = get_app_name(token)
+            if user:
+                record_custom_parameter('user_id', str(user.id))
+            record_custom_parameter('token_name', app_name)
+
         record_custom_parameter('version', __version__)
         coverages = get_used_coverages()
         if coverages:

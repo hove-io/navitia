@@ -36,6 +36,7 @@ from jormungandr.street_network.kraken import Kraken
 from jormungandr.street_network.valhalla import Valhalla
 from jormungandr.exceptions import ConfigException, TechnicalError
 from jormungandr.tests.utils_test import compare_list_of_dicts
+from mock import MagicMock
 
 import datetime
 
@@ -208,6 +209,7 @@ def streetnetwork_backend_manager_db_test():
 
     # 2 sn_backends defined in db are associated to the coverage
     # -> 2 sn_backends created
+    manager._can_connect_to_database = MagicMock(return_value=True)
     manager._update_config("instance")
 
     assert not manager._streetnetwork_backends_by_instance_legacy
@@ -223,6 +225,7 @@ def streetnetwork_backend_manager_db_test():
 
     # Sn_backend already existing is updated
     manager._sn_backends_getter = sn_backends_getter_update
+    manager._can_connect_to_database = MagicMock(return_value=True)
     manager._update_config("instance")
     assert manager._last_update > manager_update
     assert not manager._streetnetwork_backends_by_instance_legacy
@@ -234,6 +237,7 @@ def streetnetwork_backend_manager_db_test():
 
     # Long update interval so sn_backend shouldn't be updated
     manager = StreetNetworkBackendManager(sn_backends_getter_ok, 600)
+    manager._can_connect_to_database = MagicMock(return_value=True)
     manager._update_config("instance")
     assert not manager._streetnetwork_backends_by_instance_legacy
     assert len(manager._streetnetwork_backends) == 2
@@ -257,6 +261,7 @@ def wrong_streetnetwork_backend_test():
 
     # Sn_backend has a class wrongly formatted
     manager = StreetNetworkBackendManager(sn_backends_getter_wrong_class, -1)
+    manager._can_connect_to_database = MagicMock(return_value=True)
     manager._update_config("instance")
     assert not manager._streetnetwork_backends_by_instance_legacy
     assert not manager._streetnetwork_backends
@@ -382,6 +387,7 @@ def append_default_street_network_to_config_test():
 def get_street_network_db_test():
     manager = StreetNetworkBackendManager(sn_backends_getter_ok, -1)
 
+    manager._can_connect_to_database = MagicMock(return_value=True)
     sn = manager.get_street_network_db("instance", "kraken")
     assert sn is not None
     assert sn.timeout == 2
@@ -430,6 +436,7 @@ def get_all_street_networks_db_test():
     manager = StreetNetworkBackendManager(sn_backends_getter_ok, -1)
     instance = FakeInstance()
 
+    manager._can_connect_to_database = MagicMock(return_value=True)
     all_sn = manager.get_all_street_networks_db(instance)
     assert len(all_sn) == 2
 
