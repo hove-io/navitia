@@ -488,9 +488,11 @@ void Data::aggregate_odt() {
 void Data::fill_stop_point_address(
     const std::unordered_map<std::string, navitia::type::Address*>& address_by_address_id) {
     idx_t without_address = 0;
-    bool ntfs_addresses_alowed = false;
+    size_t addresses_from_ntfs_counter = 0;
+    bool ntfs_addresses_allowed = false;
     if (!address_by_address_id.empty()) {
-        ntfs_addresses_alowed = true;
+        ntfs_addresses_allowed = true;
+        LOG4CPLUS_INFO(log4cplus::Logger::getInstance("logger"), "addresses from ntfs are present");
     }
     for (auto sp : pt_data->stop_points) {
         if (!sp->coord.is_initialized()) {
@@ -498,7 +500,7 @@ void Data::fill_stop_point_address(
             continue;
         }
         // parse address from ntfs files
-        if (ntfs_addresses_alowed && !sp->address_id.empty()) {
+        if (ntfs_addresses_allowed && !sp->address_id.empty()) {
             auto it = address_by_address_id.find(sp->address_id);
             if (it != address_by_address_id.end()) {
                 // convert house number string into an int.
@@ -515,6 +517,7 @@ void Data::fill_stop_point_address(
                 way->name = it->second->street_name;
                 way->admin_list = sp->admin_list;
                 sp->address = new navitia::georef::Address(way, sp->coord, hn_int);
+                addresses_from_ntfs_counter++;
             }
         } else {
             try {
@@ -527,6 +530,10 @@ void Data::fill_stop_point_address(
                 ++without_address;
             }
         }
+    }
+    if (ntfs_addresses_allowed) {
+        LOG4CPLUS_INFO(log4cplus::Logger::getInstance("logger"),
+                       "addresses from ntfs - " << addresses_from_ntfs_counter << " nb match with stop point");
     }
     if (without_address) {
         LOG4CPLUS_WARN(log4cplus::Logger::getInstance("logger"), without_address << " StopPoints without address");
