@@ -623,7 +623,7 @@ void EdReader::fill_stop_points(nt::Data& data, pqxx::work& work) {
 }
 
 void EdReader::fill_ntfs_addresses(pqxx::work& work) {
-    std::string request = "SELECT id, house_number, street_name FROM navitia.adress";
+    std::string request = "SELECT id, house_number, street_name FROM navitia.address";
     const pqxx::result result = work.exec(request);
     for (auto const_it = result.begin(); const_it != result.end(); ++const_it) {
         auto* addr = new navitia::type::Address();
