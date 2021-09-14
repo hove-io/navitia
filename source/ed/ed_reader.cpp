@@ -577,6 +577,7 @@ void EdReader::fill_stop_points(nt::Data& data, pqxx::work& work) {
         const_it["fare_zone"].to(sp->fare_zone);
         const_it["platform_code"].to(sp->platform_code);
         const_it["is_zonal"].to(sp->is_zonal);
+        const_it["address_id"].to(sp->address_id);
         sp->coord.set_lon(const_it["lon"].as<double>());
         sp->coord.set_lat(const_it["lat"].as<double>());
         if (const_it["wheelchair_boarding"].as<bool>()) {
@@ -616,7 +617,6 @@ void EdReader::fill_stop_points(nt::Data& data, pqxx::work& work) {
             boost::geometry::read_wkt(const_it["area"].as<std::string>(), area);
             data.pt_data->add_stop_point_area(area, sp);
         }
-        this->sp_by_address_id[const_it["address_id"].as<std::string>()] = sp;
         data.pt_data->stop_points.push_back(sp);
         this->stop_point_map[const_it["id"].as<idx_t>()] = sp;
     }

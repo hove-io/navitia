@@ -63,7 +63,6 @@ struct EdReader {
     // for admin main stop areas, we need this temporary map
     //(we can't use an index since the link is between georef and navitia, and those modules are loaded separatly)
     std::unordered_map<std::string, navitia::georef::Admin*> admin_by_insee_code;
-    std::unordered_map<std::string, navitia::type::StopPoint*> sp_by_address_id;
     std::unordered_map<std::string, navitia::type::Address*> address_by_address_id;
 
 private:
