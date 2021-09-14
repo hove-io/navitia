@@ -492,7 +492,8 @@ void Data::fill_stop_point_address(
     bool ntfs_addresses_allowed = false;
     if (!address_by_address_id.empty()) {
         ntfs_addresses_allowed = true;
-        LOG4CPLUS_INFO(log4cplus::Logger::getInstance("logger"), "addresses from ntfs are present");
+        LOG4CPLUS_INFO(log4cplus::Logger::getInstance("logger"),
+                       "addresses from ntfs are present: " << address_by_address_id.size() << " nb addresses");
     }
     for (auto sp : pt_data->stop_points) {
         if (!sp->coord.is_initialized()) {
