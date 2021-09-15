@@ -691,7 +691,7 @@ BOOST_AUTO_TEST_CASE(adresses_tests) {
         ed::connectors::FusioParser parser(ntfs_path + "_v5");
         parser.fill(data);
 
-        BOOST_REQUIRE_EQUAL(data.addresses_from_ntfs.size(), 5);
+        BOOST_REQUIRE_EQUAL(data.addresses_from_ntfs.size(), 9);
         BOOST_CHECK_EQUAL(data.addresses_from_ntfs[0]->id, "SA:A:ADD_ID");
         BOOST_CHECK_EQUAL(data.addresses_from_ntfs[0]->street_name, "SA:A STREET_NAME");
         BOOST_CHECK_EQUAL(data.addresses_from_ntfs[0]->house_number, "9");
