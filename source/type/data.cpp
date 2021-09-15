@@ -504,18 +504,25 @@ void Data::fill_stop_point_address(
         if (ntfs_addresses_allowed && !sp->address_id.empty()) {
             auto it = address_by_address_id.find(sp->address_id);
             if (it != address_by_address_id.end()) {
-                // convert house number string into an int.
-                // We need to clean the field, because it is possible
-                // to have "FACE AU 12"
-                std::string hn_without_information =
-                    std::regex_replace(it->second->house_number, std::regex("[^0-9]*([0-9]+).*"), std::string("$1"));
-                int hn_int = std::stoi(hn_without_information);
+                auto* way = new navitia::georef::Way;
+                int hn_int = std::stoi(it->second->house_number);
+                // if the house number is more than a number, we add house number to the name
+                if (hn_int == 0) {
+                    way->name = it->second->house_number + " " + it->second->street_name;
+
+                    // convert house number string into an int.
+                    // We need to clean the field, because it is possible
+                    // to have "FACE AU 12"
+                    std::string hn_without_information = std::regex_replace(
+                        it->second->house_number, std::regex("[^0-9]*([0-9]+).*"), std::string("$1"));
+                    hn_int = std::stoi(it->second->house_number);
+                } else {
+                    way->name = it->second->street_name;
+                }
 
                 // create address with way and house number
-                auto* way = new navitia::georef::Way;
                 navitia::georef::HouseNumber hn(sp->coord.lon(), sp->coord.lat(), hn_int);
                 way->add_house_number(hn);
-                way->name = it->second->street_name;
                 way->admin_list = sp->admin_list;
                 sp->address = new navitia::georef::Address(way, sp->coord, hn_int);
                 addresses_from_ntfs_counter++;
