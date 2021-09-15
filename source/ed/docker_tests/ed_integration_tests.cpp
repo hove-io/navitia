@@ -425,8 +425,13 @@ BOOST_FIXTURE_TEST_CASE(ntfs_v5_test, ArgsFixture) {
     BOOST_REQUIRE_EQUAL(data.pt_data->stop_points.size(), 8);
     BOOST_CHECK_EQUAL(data.pt_data->codes.get_codes(data.pt_data->stop_points_map["stop_point:SP:A"]),
                       (nt::CodeContainer::Codes{{"external_code", {"A"}}, {"source", {"A", "Ahah", "Aïe"}}}));
-    BOOST_REQUIRE_EQUAL(data.pt_data->stop_points_map["SA:A,1"]->address_id, "SA:A:ADD_ID");
-    BOOST_REQUIRE_EQUAL(data.pt_data->stop_points_map["SA:A,1"]->address->number, 9);
+
+    // SP E
+    BOOST_REQUIRE_EQUAL(data.pt_data->stop_points_map["stop_point:SP:E"]->address_id, "SP:E:ADD_ID");
+    BOOST_REQUIRE_EQUAL(data.pt_data->stop_points_map["stop_point:SP:E"]->coord.lon(), 45.0379);
+    BOOST_REQUIRE_EQUAL(data.pt_data->stop_points_map["stop_point:SP:E"]->coord.lat(), 0.6040);
+    BOOST_REQUIRE_EQUAL(data.pt_data->stop_points_map["stop_point:SP:E"]->address->number, 0);
+    BOOST_REQUIRE_EQUAL(data.pt_data->stop_points_map["stop_point:SP:E"]->address->way->name, "SP:E STREET_NAME");
 
     check_ntfs(data);
 }
