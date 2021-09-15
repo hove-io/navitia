@@ -428,10 +428,14 @@ BOOST_FIXTURE_TEST_CASE(ntfs_v5_test, ArgsFixture) {
 
     // SP E
     BOOST_REQUIRE_EQUAL(data.pt_data->stop_points_map["stop_point:SP:E"]->address_id, "SP:E:ADD_ID");
-    // BOOST_REQUIRE_EQUAL(data.pt_data->stop_points_map["stop_point:SP:E"]->coord.lon(), 45.0379);
-    // BOOST_REQUIRE_EQUAL(data.pt_data->stop_points_map["stop_point:SP:E"]->coord.lat(), 0.6040);
+    BOOST_REQUIRE_EQUAL(data.pt_data->stop_points_map["stop_point:SP:E"]->coord.lat(), 45.0379);
+    BOOST_REQUIRE_EQUAL(data.pt_data->stop_points_map["stop_point:SP:E"]->coord.lon(), 0.6040);
     BOOST_REQUIRE_EQUAL(data.pt_data->stop_points_map["stop_point:SP:E"]->address->number, 0);
     BOOST_REQUIRE_EQUAL(data.pt_data->stop_points_map["stop_point:SP:E"]->address->way->name, "SP:E STREET_NAME");
+
+    // SP A
+    BOOST_REQUIRE_EQUAL(data.pt_data->stop_points_map["stop_point:SP:A"]->address->number, 0);
+    BOOST_REQUIRE_EQUAL(data.pt_data->stop_points_map["stop_point:SP:A"]->address->way->name, "");
 
     check_ntfs(data);
 }
