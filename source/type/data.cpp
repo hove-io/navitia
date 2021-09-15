@@ -508,7 +508,11 @@ void Data::fill_stop_point_address(
                 int hn_int = std::stoi(it->second->house_number);
                 // if the house number is more than a number, we add house number to the name
                 if (hn_int == 0) {
-                    way->name = it->second->house_number + " " + it->second->street_name;
+                    if (it->second->street_name.empty()) {
+                        way->name = "";
+                    } else {
+                        way->name = it->second->house_number + " " + it->second->street_name;
+                    }
 
                     // convert house number string into an int.
                     // We need to clean the field, because it is possible
