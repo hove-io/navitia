@@ -435,6 +435,19 @@ BOOST_FIXTURE_TEST_CASE(ntfs_v5_test, ArgsFixture) {
     BOOST_REQUIRE_EQUAL(data.pt_data->stop_points_map["stop_point:SP:A"]->address->number, 0);
     BOOST_REQUIRE_EQUAL(data.pt_data->stop_points_map["stop_point:SP:A"]->address->way->name, "");
 
+    // SP D - the classical case
+    BOOST_REQUIRE_EQUAL(data.pt_data->stop_points_map["stop_point:SP:D"]->address->number, 25);
+    BOOST_REQUIRE_EQUAL(data.pt_data->stop_points_map["stop_point:SP:D"]->address->way->name, "SP:D STREET_NAME");
+
+    // SP F - without the number
+    BOOST_REQUIRE_EQUAL(data.pt_data->stop_points_map["stop_point:SP:F"]->address->number, 0);
+    BOOST_REQUIRE_EQUAL(data.pt_data->stop_points_map["stop_point:SP:F"]->address->way->name, "SP:F STREET_NAME");
+
+    // SP J - without the number
+    BOOST_REQUIRE_EQUAL(data.pt_data->stop_points_map["stop_point:SP:F"]->address->number, 23);
+    BOOST_REQUIRE_EQUAL(data.pt_data->stop_points_map["stop_point:SP:F"]->address->way->name,
+                        "FACE AU 23 SP:J STREET_NAME");
+
     check_ntfs(data);
 }
 

@@ -509,7 +509,7 @@ void Data::fill_stop_point_address(
                 try {
                     hn_int = boost::lexical_cast<int>(it->second->house_number);
                     way->name = it->second->street_name;
-                } catch (boost::bad_lexical_cast) {
+                } catch (const boost::bad_lexical_cast&) {
                     if (it->second->street_name.empty()) {
                         way->name = "";
                     } else if (it->second->house_number.empty()) {
@@ -526,7 +526,7 @@ void Data::fill_stop_point_address(
                     // convert house number string into an int with a clean string
                     try {
                         hn_int = boost::lexical_cast<int>(hn_without_information);
-                    } catch (boost::bad_lexical_cast) {
+                    } catch (const boost::bad_lexical_cast&) {
                         LOG4CPLUS_WARN(log4cplus::Logger::getInstance("logger"),
                                        "something wrong happen with the ntfs house number conversion");
                     }
