@@ -179,32 +179,31 @@ class Job(flask_restful.Resource):
         # once all files are checked fine, we are about to rename them with job_id and save
         saved_files = [self.rename_and_save_data_files(instance_config, job, f) for f in files]
 
-        for f in saved_files:
-            dataset = models.DataSet()
-
-            try:
+        try:
+            for f in saved_files:
+                dataset = models.DataSet()
                 dataset.type, _ = utils.type_of_data(f)
                 dataset.family_type = utils.family_of_data(dataset.type)
+                if not dataset.type or not dataset.family_type:
+                    raise Exception("File: {} type or family_type is unknown".format(f))
                 dataset.name = f
                 dataset.state = "pending"
                 logger.info('adding dataset files: %s', str(dataset))
 
                 models.db.session.add(dataset)
                 job.data_sets.append(dataset)
-
-            except Exception:
-                current_app.logger.debug(
-                    "Corrupted source file : {} moved to {}".format(f, instance_config.backup_directory)
-                )
-                db.session.delete(dataset)
-                db.session.delete(job)
-                models.db.session.commit()
-                e = BadRequest('')
-                e.data = {
-                    'message': "Filename has invalid type of data :'{}'".format(f),
-                    'valid_extensions': utils.get_valid_extensions(),
-                }
-                raise e
+        except Exception as e:
+            current_app.logger.debug("Corrupted source file : {}".format(str(e)))
+            db.session.delete(job)
+            models.db.session.commit()
+            for saved_file in saved_files:
+                os.remove(saved_file)
+            br = BadRequest('')
+            br.data = {
+                'message': "Error occurred: {}".format(e),
+                'valid_extensions': utils.get_valid_extensions(),
+            }
+            raise br
 
         models.db.session.commit()
 

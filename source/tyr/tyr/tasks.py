@@ -179,6 +179,8 @@ def import_data(
             try:
                 current_dataset.type, _ = utils.type_of_data(_file)
                 current_dataset.family_type = utils.family_of_data(current_dataset.type)
+                if not current_dataset.type or not current_dataset.family_type:
+                    raise Exception("cannot determine dataset type or family type of file: %s", _file)
                 models.db.session.add(current_dataset)
                 current_job.data_sets.append(current_dataset)
             except Exception:
@@ -299,7 +301,7 @@ def send_to_mimir(instance, filename, family_type):
     else:  # assume family_type == 'poi':
         actions.append(poi2mimir.si(instance.name, filename, job.id, dataset_uid=dataset.uid))
 
-    actions.append(finish_job.si(job.id))
+    actions.append(finish_job.si([job.id]))
     return actions
 
 
@@ -412,7 +414,7 @@ def import_autocomplete(files, autocomplete_instance, asynchronous=True, backup_
     models.db.session.commit()
     for action in actions:
         action.kwargs['job_id'] = job.id
-    actions.append(finish_job.si(job.id))
+    actions.append(finish_job.si([job.id]))
     if asynchronous:
         return chain(*actions).delay(), job
     else:
@@ -595,7 +597,7 @@ def reload_kraken(instance_id):
     instance_config = load_instance_config(instance.name)
     models.db.session.add(job)
     models.db.session.commit()
-    chain(reload_data.si(instance_config, job.id), finish_job.si(job.id)).delay()
+    chain(reload_data.si(instance_config, job.id), finish_job.si([job.id])).delay()
     logging.info("Task reload kraken for instance {} queued".format(instance.name))
 
 
@@ -613,14 +615,13 @@ def build_data(instance):
     instance_config = load_instance_config(instance.name)
     models.db.session.add(job)
     models.db.session.commit()
-    chain(ed2nav.si(instance_config, job.id, None), finish_job.si(job.id)).delay()
+    chain(ed2nav.si(instance_config, job.id, None), finish_job.si([job.id])).delay()
     current_app.logger.info("Job build data of : %s queued" % instance.name)
 
 
 @celery.task()
 def load_data(instance_id, data_dirs):
     instance = models.Instance.query.get(instance_id)
-
     import_data(data_dirs, instance, backup_file=False, asynchronous=False)
 
 
