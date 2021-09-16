@@ -431,7 +431,7 @@ BOOST_FIXTURE_TEST_CASE(ntfs_v5_test, ArgsFixture) {
     BOOST_REQUIRE_EQUAL(data.pt_data->stop_points_map["stop_point:SP:E"]->address->number, 0);
     BOOST_REQUIRE_EQUAL(data.pt_data->stop_points_map["stop_point:SP:E"]->address->way->name, "SP:E STREET_NAME");
 
-    // SP A
+    // SP A - This is a edge case, address number is empty and street name too, within the data
     BOOST_REQUIRE_EQUAL(data.pt_data->stop_points_map["stop_point:SP:A"]->address->number, 0);
     BOOST_REQUIRE_EQUAL(data.pt_data->stop_points_map["stop_point:SP:A"]->address->way->name, "");
 

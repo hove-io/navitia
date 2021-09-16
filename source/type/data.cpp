@@ -505,23 +505,31 @@ void Data::fill_stop_point_address(
             auto it = address_by_address_id.find(sp->address_id);
             if (it != address_by_address_id.end()) {
                 auto* way = new navitia::georef::Way;
-                int hn_int = std::stoi(it->second->house_number);
-                // if the house number is more than a number, we add house number to the name
-                if (hn_int == 0) {
+                size_t hn_int = 0;
+                try {
+                    hn_int = boost::lexical_cast<int>(it->second->house_number);
+                    way->name = it->second->street_name;
+                } catch (boost::bad_lexical_cast) {
                     if (it->second->street_name.empty()) {
                         way->name = "";
+                    } else if (it->second->house_number.empty()) {
+                        way->name = it->second->street_name;
                     } else {
+                        // if the house number is more than a number, we add house number to the name
                         way->name = it->second->house_number + " " + it->second->street_name;
                     }
 
-                    // convert house number string into an int.
                     // We need to clean the field, because it is possible
-                    // to have "FACE AU 12"
+                    // to have "FACE AU 12" into a integer
                     std::string hn_without_information = std::regex_replace(
                         it->second->house_number, std::regex("[^0-9]*([0-9]+).*"), std::string("$1"));
-                    hn_int = std::stoi(it->second->house_number);
-                } else {
-                    way->name = it->second->street_name;
+                    // convert house number string into an int with a clean string
+                    try {
+                        hn_int = boost::lexical_cast<int>(hn_without_information);
+                    } catch (boost::bad_lexical_cast) {
+                        LOG4CPLUS_WARN(log4cplus::Logger::getInstance("logger"),
+                                       "something wrong happen with the ntfs house number conversion");
+                    }
                 }
 
                 // create address with way and house number
