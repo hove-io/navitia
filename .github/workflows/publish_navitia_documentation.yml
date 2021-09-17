@@ -39,6 +39,7 @@ jobs:
         if [ -n "$(git status --porcelain)" ]; then
           git config --global user.email "action@github.com"
           git config --global user.name "Action"
+          git add -A
           git commit -m "Add changes" -a
         else
           echo "The documentation has not been updated"
