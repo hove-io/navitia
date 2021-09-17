@@ -12,6 +12,7 @@ target_link_libraries(workers
     rt_handling
     SimpleAmqpClient
     equipment_api
+    position_api
     disruption_api
     calendar_api
     time_tables

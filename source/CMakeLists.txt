@@ -80,6 +80,7 @@ add_subdirectory(scripts)
 add_subdirectory(cities)
 add_subdirectory(tools)
 add_subdirectory(equipment)
+add_subdirectory(position)
 
 # Add tests
 if(NOT SKIP_TESTS)

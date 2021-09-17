@@ -2234,6 +2234,10 @@ pbnavitia::EquipmentReport* PbCreator::add_equipment_reports() {
     return response.add_equipment_reports();
 }
 
+pbnavitia::VehiclePosition* PbCreator::add_vehicle_positions() {
+    return response.add_vehicle_positions();
+}
+
 bool PbCreator::has_error() {
     return response.has_error();
 }
@@ -2287,6 +2291,10 @@ int PbCreator::calendars_size() {
 
 int PbCreator::equipment_reports_size() {
     return response.equipment_reports_size();
+}
+
+int PbCreator::vehicle_positions_size() {
+    return response.vehicle_positions_size();
 }
 
 void PbCreator::sort_journeys() {
