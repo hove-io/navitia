@@ -518,18 +518,6 @@ void Data::fill_stop_point_address(
                         // if the house number is more than a number, we add house number to the name
                         way->name = it->second->house_number + " " + it->second->street_name;
                     }
-
-                    // We need to clean the field, because it is possible
-                    // to have "FACE AU 12" into a integer
-                    std::string hn_without_information = std::regex_replace(
-                        it->second->house_number, std::regex("[^0-9]*([0-9]+).*"), std::string("$1"));
-                    // convert house number string into an int with a clean string
-                    try {
-                        hn_int = boost::lexical_cast<int>(hn_without_information);
-                    } catch (const boost::bad_lexical_cast&) {
-                        LOG4CPLUS_WARN(log4cplus::Logger::getInstance("logger"),
-                                       "something wrong happen with the ntfs house number conversion");
-                    }
                 }
 
                 // create address with way and house number
