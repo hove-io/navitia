@@ -603,7 +603,7 @@ def ed2nav(self, instance_config, job_ids, custom_output_dir):
     jobs = []
     for job_id in job_ids:
         job = models.Job.query.get(job_id)
-        job.state = 'running'
+        job.state = 'running ed2nav'
         jobs.append(job)
     models.db.session.commit()
 
