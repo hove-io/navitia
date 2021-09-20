@@ -15,7 +15,7 @@ amqp==2.1.1
 aniso8601==0.82
 argparse==1.2.1
 billiard==3.5.0.5
-celery==4.0.0
+celery==4.1.1
 configobj==5.0.6
 itsdangerous==1.1.0
 kombu==4.0.0
