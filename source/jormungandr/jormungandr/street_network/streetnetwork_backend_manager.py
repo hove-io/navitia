@@ -139,7 +139,13 @@ class StreetNetworkBackendManager(object):
         if (
             self._last_update + datetime.timedelta(seconds=self._update_interval) > datetime.datetime.utcnow()
             or not self._sn_backends_getter
-        ) or not self._can_connect_to_database():
+        ):
+            return
+
+        # If database is not accessible we update the value of self._last_update and exit
+        if not self._can_connect_to_database():
+            self.logger.debug('Database is not accessible')
+            self._last_update = datetime.datetime.utcnow()
             return
 
         self.logger.debug('Updating streetnetwork backends from db')

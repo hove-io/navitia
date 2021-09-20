@@ -55,13 +55,14 @@ class BssProviderManager(AbstractProviderManager):
         ):
             return
 
+        logger = logging.getLogger(__name__)
+
         # If database is not accessible we update the value of self._last_update and exit
         if not can_connect_to_database():
-            self.logger.debug('Database is not accessible')
+            logger.debug('Database is not accessible')
             self._last_update = datetime.datetime.utcnow()
             return
 
-        logger = logging.getLogger(__name__)
         logger.debug('updating bss providers')
         self._last_update = datetime.datetime.utcnow()
 
