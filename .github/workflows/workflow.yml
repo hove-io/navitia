@@ -67,6 +67,8 @@ jobs:
       run: |
         pip install -r source/tyr/requirements_dev.txt
         pip install -r source/sql/requirements.txt
+    - name: install redis-server
+      run: apt update && apt install -y redis-server
     - name: docker_test for python2
       run: |
         python -V

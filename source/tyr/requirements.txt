@@ -20,7 +20,7 @@ configobj==5.0.6
 itsdangerous==1.1.0
 kombu==4.0.2
 setuptools==44.1.0 ; python_version == "2.7"
-protobuf
+protobuf==3.15
 psycopg2
 pytz==2013.9
 redis==2.10.6
