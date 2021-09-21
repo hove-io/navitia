@@ -36,7 +36,7 @@ jobs:
 
     strategy:
         matrix:
-            docker_image: [navitia/debian8_dev, navitia/debian9_dev, navitia/debian10_dev]
+            docker_image: [navitia/debian8_dev]
 
     container:
         image: ${{matrix.docker_image}}
@@ -57,22 +57,7 @@ jobs:
       run: cmake -DSTRIP_SYMBOLS=ON source
     - name: run
       run: make -j $(nproc)
-    - name: Tests python2
-      run: |
-        export JORMUNGANDR_BROKER_URL='amqp://guest:guest@rabbitmq:5672//'
-        export KRAKEN_RABBITMQ_HOST='rabbitmq'
-        ctest --output-on-failure
-    - name: Tests python3
-      run: |
-        pip install virtualenv -U
-        virtualenv -p /usr/local/bin/python3.6 navitia_py3
-        . navitia_py3/bin/activate
-        python -V
-        pip install -r source/jormungandr/requirements_dev.txt
-        export JORMUNGANDR_BROKER_URL='amqp://guest:guest@rabbitmq:5672//'
-        export KRAKEN_RABBITMQ_HOST='rabbitmq'
-        ctest --output-on-failure
-        deactivate
+
     - name: remove useless tests
       run: |
         rm -rf tests/mock_kraken kraken/tests ed/tests fare/tests routing/tests calendar/tests
