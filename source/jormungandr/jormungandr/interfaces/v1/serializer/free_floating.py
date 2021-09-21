@@ -45,14 +45,14 @@ coord_schema = {
 free_floating_schema = {
     "type": "object",
     "properties": {
-        "public_id": {"type": ["string"]},
-        "provider_name": {"type": ["string"]},
-        "id": {"type": ["string"]},
+        "public_id": {"type": "string"},
+        "provider_name": {"type": "string"},
+        "id": {"type": "string"},
         "type": {"enum": free_floatings_type},
-        "propulsion": {"type": ["string"]},
-        "battery": {"type": ["integer"]},
-        "distance": {"type": ["integer"]},
-        "deeplink": {"type": ["string"]},
+        "propulsion": {"type": "string"},
+        "battery": {"type": "integer"},
+        "distance": {"type": "integer"},
+        "deeplink": {"type": "string"},
         "coord": coord_schema,
     },
 }
