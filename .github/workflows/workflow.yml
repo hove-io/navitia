@@ -36,7 +36,7 @@ jobs:
 
     strategy:
         matrix:
-            docker_image: [navitia/debian8_dev]
+            docker_image: [navitia/debian9_dev]
 
     container:
         image: ${{matrix.docker_image}}
@@ -47,6 +47,10 @@ jobs:
         ports:
           - 5672:5672
 
+      redis:
+        image: redis:6-alpine
+        ports:
+          - 6379:6379
     steps:
     - uses: actions/checkout@v2
       with:
@@ -67,8 +71,6 @@ jobs:
       run: |
         pip install -r source/tyr/requirements_dev.txt
         pip install -r source/sql/requirements.txt
-    - name: install redis-server
-      run: apt update && apt install -y redis-server
     - name: docker_test for python2
       run: |
         python -V
@@ -78,6 +80,8 @@ jobs:
       env:
         NAVITIA_DOCKER_NETWORK: ${{ job.container.network }}
         TYR_CELERY_BROKER_URL: 'amqp://guest:guest@rabbitmq:5672//'
+        TYR_REDIS_HOST: 'redis'
+
     - name: docker_test for python3
       run: |
         . navitia_py3/bin/activate
@@ -90,6 +94,7 @@ jobs:
       env:
         NAVITIA_DOCKER_NETWORK: ${{ job.container.network }}
         TYR_CELERY_BROKER_URL: 'amqp://guest:guest@rabbitmq:5672//'
+        TYR_REDIS_HOST: 'redis'
 
   precommit:
     runs-on: ubuntu-latest
