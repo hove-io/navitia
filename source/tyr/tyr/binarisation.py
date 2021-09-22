@@ -640,7 +640,7 @@ def ed2nav(self, instance_config, job_ids, custom_output_dir):
     except:
         logger.exception('')
         for job in jobs:
-            job.state = 'ed2nav'
+            job.state = 'ed2nav failed'
         models.db.session.commit()
         raise
 
