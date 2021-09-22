@@ -70,7 +70,7 @@ LOGGER = {
     },
 }
 
-REDIS_HOST = '127.0.0.1'
+REDIS_HOST = os.getenv('TYR_REDIS_HOST', '127.0.0.1')
 
 REDIS_PORT = 6379
 
