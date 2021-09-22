@@ -59,50 +59,21 @@ from tyr.binarisation import (
     poi2mimir,
 )
 from tyr.binarisation import reload_data, move_to_backupdirectory
-from tyr import celery, JOB_ID_DELIMITER
+from tyr import celery
 from navitiacommon import models, task_pb2, utils
 from tyr.helper import load_instance_config, get_instance_logger
 from navitiacommon.launch_exec import launch_exec
 from datetime import datetime, timedelta
-import re
-import itertools
 
 
 @celery.task()
-def finish_job(job_ids):
+def finish_job(job_id):
     """
     use for mark a job as done after all the required task has been executed
     """
-    for job_id in job_ids:
-        job = models.Job.query.get(job_id)
-        if job.state != 'failed' and all(dataset.state == 'done' for dataset in job.data_sets):
-            job.state = 'done'
-    models.db.session.commit()
-
-
-def retrive_job_id(filename):
-    job_id_pattern = re.compile(
-        '{job_id_delimiter}(.*){job_id_delimiter}'.format(job_id_delimiter=JOB_ID_DELIMITER)
-    )
-    job_ids = job_id_pattern.findall(filename)
-    return job_ids[0] if job_ids else None
-
-
-def retrieve_dataset_and_set_state(dataset_type, job_id, state):
-    dataset = models.DataSet.find_by_type_and_job_id(dataset_type, job_id)
-    logging.getLogger(__name__).debug("Retrieved dataset: {}".format(dataset.id))
-    dataset.state = state
-    models.db.session.commit()
-    return dataset
-
-
-def backup_file_and_set_job_state(backup_file, _file, instance_config, job):
-    if backup_file:
-        move_to_backupdirectory(_file, instance_config.backup_directory)
-    current_app.logger.debug(
-        "Corrupted source file : {} moved to {}".format(_file, instance_config.backup_directory)
-    )
-    job.state = "failed"
+    job = models.Job.query.get(job_id)
+    if job.state != 'failed':
+        job.state = 'done'
     models.db.session.commit()
 
 
@@ -129,8 +100,10 @@ def import_data(
     - reload the krakens
     """
     actions = []
-    jobs = []
+    job = models.Job()
     instance_config = load_instance_config(instance.name)
+    job.instance = instance
+    job.state = 'running'
     task = {
         'gtfs': gtfs2ed,
         'fusio': fusio2ed,
@@ -142,99 +115,60 @@ def import_data(
         'shape': shape2ed,
     }
 
-    new_job = None
     for _file in files:
-        # we check if there's a job_id in file's name, there's no job id is found, we have to create a new_job
-        job_id = retrive_job_id(_file)
-        if not job_id:
-            new_job = models.Job()
-            new_job.instance = instance
-            new_job.state = 'running'
-            break
+        filename = None
 
-    for _file in files:
-        # we check if there's a job_id in file's name
-        current_job = None
-        current_dataset = None
-        job_id = retrive_job_id(_file)
-        if job_id:
-            # if job_id is not None, we retrive the job from the db
-            current_job = models.Job.query.get(job_id)
-            current_job.state = 'running'
+        dataset = models.DataSet()
+        # NOTE: for the moment we do not use the path to load the data here
+        # but we'll need to refactor this to take it into account
+        try:
+            dataset.type, _ = utils.type_of_data(_file)
+            dataset.family_type = utils.family_of_data(dataset.type)
+        except Exception:
+            if backup_file:
+                move_to_backupdirectory(_file, instance_config.backup_directory)
+            current_app.logger.debug(
+                "Corrupted source file : {} moved to {}".format(_file, instance_config.backup_directory)
+            )
+            continue
 
-            try:
-                dataset_type, _ = utils.type_of_data(_file)
-                current_dataset = retrieve_dataset_and_set_state(dataset_type, job_id, "running")
-            except Exception:
-                backup_file_and_set_job_state(backup_file, _file, instance_config, current_job)
-                continue
-
-        elif new_job:
-            # no job_id is associated with the file and a new_job has been already created
-            current_job = new_job
-            # we have to create a new dataset in db
-            current_dataset = models.DataSet()
-            # NOTE: for the moment we do not use the path to load the data here
-            # but we'll need to refactor this to take it into account
-            try:
-                current_dataset.type, _ = utils.type_of_data(_file)
-                current_dataset.family_type = utils.family_of_data(current_dataset.type)
-                models.db.session.add(current_dataset)
-                current_job.data_sets.append(current_dataset)
-            except Exception:
-                current_app.logger.exception("")
-                backup_file_and_set_job_state(backup_file, _file, instance_config, current_job)
-                continue
-
-        if current_dataset.type in task:
+        if dataset.type in task:
             if backup_file:
                 filename = move_to_backupdirectory(_file, instance_config.backup_directory, manage_sp_char=True)
             else:
                 filename = _file
-
-            args = [instance_config, filename]
-            kwargs = {"dataset_uid": current_dataset.uid}
-            if job_id:
-                kwargs.update({"job_id": job_id})
-            actions.append(task[current_dataset.type].si(*args, **kwargs))
-            # currently the name of a dataset is the path to it
-            current_dataset.name = filename
-            current_dataset.state = "pending"
-
+            actions.append(task[dataset.type].si(instance_config, filename, dataset_uid=dataset.uid))
         else:
             # unknown type, we skip it
-            current_app.logger.debug("unknown file type: {} for file {}".format(current_dataset.type, _file))
+            current_app.logger.debug("unknown file type: {} for file {}".format(dataset.type, _file))
             continue
 
-        if job_id:
-            jobs.append(current_job)
-        models.db.session.commit()
+        # currently the name of a dataset is the path to it
+        dataset.name = filename
+        dataset.state = "pending"
+        models.db.session.add(dataset)
+        job.data_sets.append(dataset)
 
     if actions:
-        if new_job:
-            models.db.session.add(new_job)
-            models.db.session.commit()
-            jobs.append(new_job)
+        models.db.session.add(job)
+        models.db.session.commit()
         # We pass the job id to each tasks, but job need to be commited for having an id
         for action in actions:
-            if action.kwargs.get('job_id') is None:
-                action.kwargs['job_id'] = new_job.id
-
-        job_ids = list(set([job.id for job in jobs]))
+            action.kwargs['job_id'] = job.id
         # Create binary file (New .nav.lz4)
-        binarisation = [ed2nav.si(instance_config, job_ids, custom_output_dir)]
+        binarisation = [ed2nav.si(instance_config, job.id, custom_output_dir)]
         actions.append(chain(*binarisation))
         # Reload kraken with new data after binarisation (New .nav.lz4)
         if reload:
-            actions.append(reload_data.si(instance_config, job_ids))
+            actions.append(reload_data.si(instance_config, job.id))
 
         if not skip_mimir:
-            for dataset in itertools.chain.from_iterable(job.data_sets for job in jobs):
+            for dataset in job.data_sets:
                 actions.extend(send_to_mimir(instance, dataset.name, dataset.family_type))
         else:
             current_app.logger.info("skipping mimir import")
 
-        actions.append(finish_job.si(job_ids))
+        actions.append(finish_job.si(job.id))
 
         # We should delete old backup directories related to this instance
         actions.append(purge_instance.si(instance.id, current_app.config['DATASET_MAX_BACKUPS_TO_KEEP']))
