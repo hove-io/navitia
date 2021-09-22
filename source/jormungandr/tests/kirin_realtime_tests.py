@@ -298,6 +298,7 @@ class TestKirinOnVJDelay(MockKirinDisruptionsFixture):
         )
 
         # A new vj is created, which the vj with the impact of the disruption
+        # Here:
         pt_response = self.query_region('vehicle_journeys')
         assert len(pt_response['vehicle_journeys']) == (initial_nb_vehicle_journeys + 1)
 
