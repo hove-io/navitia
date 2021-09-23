@@ -111,9 +111,21 @@ class TravelerProfilesSerializer(serpy.Serializer):
 class AutocompleteSerializer(serpy.DictSerializer):
     class_ = Field(schema_type=str, label='class', attr='class')
     timeout = MethodField(schema_type=float, display_none=False)
+    timeout_bragi_es = MethodField(schema_type=float, display_none=False)
+    fast_timeout = MethodField(schema_type=float, display_none=False)
+    fast_timeout_bragi_es = MethodField(schema_type=float, display_none=False)
 
     def get_timeout(self, obj):
         return obj.get('timeout', None)
+
+    def get_timeout_bragi_es(self, obj):
+        return obj.get('timeout_bragi_es', None)
+
+    def get_fast_timeout(self, obj):
+        return obj.get('fast_timeout', None)
+
+    def get_fast_timeout_bragi_es(self, obj):
+        return obj.get('fast_timeout_bragi_es', None)
 
 
 class CircuitBreakerSerializer(serpy.DictSerializer):

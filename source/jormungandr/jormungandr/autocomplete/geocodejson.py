@@ -186,6 +186,8 @@ class GeocodeJson(AbstractAutocomplete):
             reset_timeout=app.config['CIRCUIT_BREAKER_BRAGI_TIMEOUT_S'],
         )
         self.session = requests
+        self.timeout_bragi_es = kwargs.get('timeout_bragi_es', self.timeout)
+        self.fast_timeout_bragi_es = kwargs.get('fast_timeout_bragi_es', self.fast_timeout)
 
     def call_bragi(self, url, method, **kwargs):
         try:
@@ -293,7 +295,7 @@ class GeocodeJson(AbstractAutocomplete):
         params.extend([('poi_dataset[]', i.poi_dataset) for i in instances if i.poi_dataset])
         return params
 
-    def make_params(self, request, instances, timeout):
+    def make_params(self, request, instances):
         '''
         These are the parameters used specifically for the autocomplete endpoint.
         '''
@@ -332,14 +334,14 @@ class GeocodeJson(AbstractAutocomplete):
         if request.get("from"):
             lon, lat = self.get_coords(request["from"])
             params.extend([('lon', lon), ('lat', lat)])
-        if timeout:
+        if self.timeout_bragi_es:
             # bragi timeout is in ms
-            params.append(("timeout", int(timeout * 1000)))
+            params.append(("timeout", int(self.timeout_bragi_es * 1000)))
         params.append(("request_id", request["request_id"]))
         return params
 
     def get(self, request, instances):
-        params = self.make_params(request, instances, self.timeout)
+        params = self.make_params(request, instances)
 
         shape = request.get('shape')
 
@@ -378,14 +380,20 @@ class GeocodeJson(AbstractAutocomplete):
         else:
             url = self.make_url('features', uri)
 
-        params.append(("timeout", int(self.fast_timeout * 1000)))
+        params.append(("timeout", int(self.fast_timeout_bragi_es * 1000)))
         params.append(("request_id", request_id))
 
         raw_response = self.call_bragi(url, self.session.get, timeout=self.fast_timeout, params=params)
         return self.response_marshaller(raw_response, uri)
 
     def status(self):
-        return {'class': self.__class__.__name__, 'timeout': self.timeout, 'fast_timeout': self.fast_timeout}
+        return {
+            'class': self.__class__.__name__,
+            'timeout': self.timeout,
+            'fast_timeout': self.fast_timeout,
+            "fast_timeout_bragi_es": self.fast_timeout_bragi_es,
+            "timeout_bragi_es": self.timeout_bragi_es,
+        }
 
     def is_handling_stop_points(self):
         return False
