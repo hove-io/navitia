@@ -902,7 +902,7 @@ class Instance(object):
         )
 
     def get_all_street_networks(self):
-        if app.config[str('DISABLE_DATABASE')] or not can_connect_to_database():
+        if app.config[str('DISABLE_DATABASE')]:
             return self._streetnetwork_backend_manager.get_all_street_networks_legacy(self)
         else:
             return self._streetnetwork_backend_manager.get_all_street_networks_db(self)
