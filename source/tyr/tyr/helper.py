@@ -179,10 +179,8 @@ def build_error(config, validate_result):
     return result
 
 
-def get_instance_logger(instance, jobs_ids=None):
-    jobs_ids = jobs_ids or []
-    str_job_ids = " job_id: ".join(str(job_id) for job_id in jobs_ids)
-    return _get_individual_logger('instance.{}'.format(instance.name), instance.name, str_job_ids)
+def get_instance_logger(instance, task_id=None):
+    return _get_individual_logger('instance.{}'.format(instance.name), instance.name, task_id)
 
 
 def get_autocomplete_instance_logger(a_instance, task_id=None):
@@ -234,13 +232,10 @@ def get_named_arg(arg_name, func, args, kwargs):
     if kwargs and arg_name in kwargs:
         return kwargs[arg_name]
     else:
-        try:
-            idx = func.func_code.co_varnames.index(arg_name)
-            if args and idx < len(args):
-                return args[idx]
-            else:
-                return None
-        except (ValueError, IndexError):
+        idx = func.func_code.co_varnames.index(arg_name)
+        if args and idx < len(args):
+            return args[idx]
+        else:
             return None
 
 
