@@ -201,13 +201,6 @@ struct Company : public Header, Nameable {
     bool operator<(const Company& other) const { return this->name < other.name; }
 };
 
-struct Address {
-    const static nt::Type_e type = nt::Type_e::Address;
-    std::string id;
-    std::string street_name;
-    std::string house_number;
-};
-
 struct CommercialMode : public Header, Nameable {
     const static nt::Type_e type = nt::Type_e::CommercialMode;
 

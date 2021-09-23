@@ -1,4 +1,4 @@
-/* Copyright © 2001-2019, Canal TP and/or its affiliates. All rights reserved.
+/* Copyright © 2001-2014, Canal TP and/or its affiliates. All rights reserved.
 
 This file is part of Navitia,
     the software to build cool stuff with public transport.
@@ -31,41 +31,15 @@ www.navitia.io
 #pragma once
 
 #include "type/type_interfaces.h"
-#include "type/geographical_coord.h"
-#include "type/fwd_type.h"
-
-#include <boost/container/flat_set.hpp>
-
-#include <vector>
-#include <set>
 
 namespace navitia {
 namespace type {
 
-struct StopPoint : public Header, Nameable, hasProperties, HasMessages {
-    const static Type_e type = Type_e::StopPoint;
-    GeographicalCoord coord;
-    std::string fare_zone;
-    bool is_zonal = false;
-    std::string platform_code;
-    std::string label;
-    std::string address_id;
-
-    StopArea* stop_area;
-    std::vector<navitia::georef::Admin*> admin_list;
-    Network* network;
-    std::vector<StopPointConnection*> stop_point_connection_list;
-    std::set<Dataset*> dataset_list;
-    boost::container::flat_set<Route*> route_list;
-    navitia::georef::Address* address = nullptr;
-
-    template <class Archive>
-    void serialize(Archive& ar, const unsigned int);
-
-    StopPoint() : fare_zone(), stop_area(nullptr), network(nullptr) {}
-
-    Indexes get(Type_e type, const PT_Data& data) const;
-    bool operator<(const StopPoint& other) const;
+struct Address {
+    const static navitia::type::Type_e type = navitia::type::Type_e::Address;
+    std::string id;
+    std::string street_name;
+    std::string house_number;
 };
 
 }  // namespace type

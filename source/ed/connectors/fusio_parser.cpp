@@ -29,6 +29,7 @@ www.navitia.io
 */
 
 #include "fusio_parser.h"
+#include "type/address_from_ntfs.h"
 
 #include <boost/geometry.hpp>
 #include <boost/filesystem.hpp>
@@ -1906,7 +1907,7 @@ void AddressesFusioHandler::handle_line(Data& data, const csv_row& row, bool is_
         LOG4CPLUS_FATAL(logger, "Error while reading " + csv.filename + "  impossible to find all needed fields");
         throw InvalidHeaders(csv.filename);
     }
-    auto address = new ed::types::Address();
+    auto address = new navitia::type::Address();
     address->id = row[address_id_c];
     address->street_name = row[street_name_c];
     address->house_number = row[house_number_c];

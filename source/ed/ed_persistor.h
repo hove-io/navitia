@@ -34,6 +34,7 @@ www.navitia.io
 #include "utils/base64_encode.h"
 #include "data.h"
 #include "type/meta_data.h"
+#include "type/address_from_ntfs.h"
 #include "utils/functions.h"
 
 #include <pqxx/pqxx>
@@ -133,7 +134,7 @@ private:
     void insert_prices(const ed::Data& data);
     void insert_origin_destination(const ed::Data& data);
 
-    void insert_addresses_from_ntfs(const std::vector<types::Address*>& addresses);
+    void insert_addresses_from_ntfs(const std::vector<navitia::type::Address*>& addresses);
 
     /// suppression de l'ensemble des objets chargés par gtfs déja present en base
     void clean_db();

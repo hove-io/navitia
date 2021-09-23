@@ -746,10 +746,10 @@ void EdPersistor::insert_stop_points(const std::vector<types::StopPoint*>& stop_
     this->lotus.finish_bulk_insert();
 }
 
-void EdPersistor::insert_addresses_from_ntfs(const std::vector<types::Address*>& addresses) {
+void EdPersistor::insert_addresses_from_ntfs(const std::vector<navitia::type::Address*>& addresses) {
     this->lotus.prepare_bulk_insert("navitia.address", {"id", "house_number", "street_name"});
 
-    for (types::Address* addr : addresses) {
+    for (navitia::type::Address* addr : addresses) {
         std::vector<std::string> values;
         values.push_back(addr->id);
         values.push_back(addr->house_number);

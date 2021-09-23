@@ -48,8 +48,8 @@ void StopPoint::serialize(Archive& ar, const unsigned int /*unused*/) {
     // during serialization and deserialization.
     //
     // stop_point_connection_list is managed by StopPointConnection
-    ar& uri& label& name& stop_area& coord& fare_zone& is_zonal& idx& platform_code& admin_list& _properties& impacts&
-        dataset_list& address;
+    ar& uri& label& name& stop_area& coord& fare_zone& is_zonal& address_id& idx& platform_code& admin_list&
+        _properties& impacts& dataset_list& address;
 }
 SERIALIZABLE(StopPoint)
 
