@@ -346,6 +346,15 @@ struct Eval : boost::static_visitor<Indexes> {
             indexes = get_indexes_from_name(type, f.args.at(0), data);
         } else if (f.method == "has_code" && f.args.size() == 2) {
             indexes = get_indexes_from_code(type, f.args.at(0), f.args.at(1), data);
+            // For each vehicle_journey get  all realtime and add in the list
+            if (type == Type_e::VehicleJourney) {
+                const auto vjs = data.get_data<type::VehicleJourney>(indexes);
+                for (type::VehicleJourney* vj : vjs) {
+                    for (const auto& rt_vj : vj->meta_vj->get_rt_vj()) {
+                        indexes.insert(rt_vj->idx);
+                    }
+                }
+            }
         } else if (f.method == "has_code_type") {
             indexes = get_indexes_from_code_type(type, f.args, data);
         } else if ((type == Type_e::Route) && (f.method == "has_direction_type")) {
