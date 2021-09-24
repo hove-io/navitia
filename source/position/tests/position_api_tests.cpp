@@ -30,7 +30,6 @@ www.navitia.io
 
 #define BOOST_TEST_DYN_LINK
 #define BOOST_TEST_MODULE position_test
-
 #include <boost/test/unit_test.hpp>
 
 #include "ed/build_helper.h"
@@ -61,6 +60,13 @@ public:
         b.vj_with_network("network:R", "line:S", "1111111", "", true, "")("stop_area:stop5", "14:00"_t, "14:00"_t)(
             "stop_area:stop6", "15:00"_t, "15:00"_t);
 
+        b.vj_with_network("network:K", "line:KA", "1111111", "", true, "KA")(
+            "stop_area:stop_k_0", "14:00"_t, "14:00"_t)("stop_area:stop_k_1", "15:00"_t, "15:00"_t)(
+            "stop_area:stop_k_2", "16:00"_t, "16:00"_t);
+
+        b.vj_with_network("network:K", "line:KA", "1111111", "", true, "KB")(
+            "stop_area:stop_k_0", "15:00"_t, "15:00"_t)("stop_area:stop_k_1", "16:00"_t, "16:00"_t);
+
         auto& vj = data.pt_data->vehicle_journeys_map.at("vehicle_journey:line:S:1");
         data.pt_data->codes.add(vj, "source", "network:R-line:S");
 
@@ -77,7 +83,7 @@ BOOST_FIXTURE_TEST_CASE(test_one_vehicle_position_by_network, positionTestFixtur
     const ptime until = current_datetime + boost::posix_time::minutes(10);
     navitia::PbCreator pb_creator;
     pb_creator.init(&data, current_datetime, null_time_period);
-    navitia::position::vehicle_positions(pb_creator, "network.uri=\"network:R\"", 10, 0, 0, {}, since, until);
+    navitia::position::vehicle_positions(pb_creator, R"(network.uri="network:R")", 10, 0, 0, {}, since, until);
     pbnavitia::Response resp = pb_creator.get_response();
     BOOST_REQUIRE_EQUAL(resp.vehicle_positions().size(), 1);
 
@@ -99,7 +105,7 @@ BOOST_FIXTURE_TEST_CASE(test_many_vehicle_position_by_network, positionTestFixtu
     const ptime until = current_datetime + boost::posix_time::minutes(4 * 60);
     navitia::PbCreator pb_creator;
     pb_creator.init(&data, current_datetime, null_time_period);
-    navitia::position::vehicle_positions(pb_creator, "network.uri=\"network:R\"", 10, 0, 0, {}, since, until);
+    navitia::position::vehicle_positions(pb_creator, R"(network.uri="network:R")", 10, 0, 0, {}, since, until);
     pbnavitia::Response resp = pb_creator.get_response();
     BOOST_REQUIRE_EQUAL(resp.vehicle_positions().size(), 2);
 
@@ -132,7 +138,7 @@ BOOST_FIXTURE_TEST_CASE(test_vehicle_position_by_network_and_line, positionTestF
     const ptime until = current_datetime + boost::posix_time::minutes(4 * 60);
     navitia::PbCreator pb_creator;
     pb_creator.init(&data, current_datetime, null_time_period);
-    navitia::position::vehicle_positions(pb_creator, "network.uri=\"network:R\" and line.uri=\"line:A\"", 10, 0, 0, {},
+    navitia::position::vehicle_positions(pb_creator, R"(network.uri="network:R" and line.uri="line:A")", 10, 0, 0, {},
                                          since, until);
     pbnavitia::Response resp = pb_creator.get_response();
     BOOST_REQUIRE_EQUAL(resp.vehicle_positions().size(), 1);
@@ -155,7 +161,7 @@ BOOST_FIXTURE_TEST_CASE(test_vehicle_position_by_network_and_stop_area, position
     const ptime until = current_datetime + boost::posix_time::minutes(4 * 60);
     navitia::PbCreator pb_creator;
     pb_creator.init(&data, current_datetime, null_time_period);
-    navitia::position::vehicle_positions(pb_creator, "network.uri=\"network:R\" and stop_area.uri=\"stop_area:stop1\"",
+    navitia::position::vehicle_positions(pb_creator, R"(network.uri="network:R" and stop_area.uri="stop_area:stop1")",
                                          10, 0, 0, {}, since, until);
     pbnavitia::Response resp = pb_creator.get_response();
     BOOST_REQUIRE_EQUAL(resp.vehicle_positions().size(), 1);
@@ -170,6 +176,27 @@ BOOST_FIXTURE_TEST_CASE(test_vehicle_position_by_network_and_stop_area, position
     BOOST_REQUIRE_EQUAL(vehicle_position.vehicle_journey_positions(0).vehicle_journey().codes(0).type(), "source");
     BOOST_REQUIRE_EQUAL(vehicle_position.vehicle_journey_positions(0).vehicle_journey().codes(0).value(),
                         "network:R-line:A");
+}
+
+BOOST_FIXTURE_TEST_CASE(test_one_vehicle_position_by_network_many_position_by_line, positionTestFixture) {
+    const ptime current_datetime = "20210913T131000"_dt;
+    const ptime since = current_datetime;
+    const ptime until = current_datetime + boost::posix_time::hours(2);
+    navitia::PbCreator pb_creator;
+    pb_creator.init(&data, current_datetime, null_time_period);
+    navitia::position::vehicle_positions(pb_creator, R"(network.uri="network:K")", 10, 0, 0, {}, since, until);
+    pbnavitia::Response resp = pb_creator.get_response();
+    BOOST_REQUIRE_EQUAL(resp.vehicle_positions().size(), 1);
+
+    auto vehicle_position = resp.vehicle_positions(0);
+    BOOST_REQUIRE_EQUAL(vehicle_position.line().uri(), "line:KA");
+    BOOST_REQUIRE_EQUAL(vehicle_position.vehicle_journey_positions().size(), 2);
+
+    BOOST_REQUIRE_EQUAL(vehicle_position.vehicle_journey_positions(0).vehicle_journey().uri(), "vehicle_journey:KB");
+    BOOST_REQUIRE_EQUAL(vehicle_position.vehicle_journey_positions(0).vehicle_journey().codes().size(), 0);
+
+    BOOST_REQUIRE_EQUAL(vehicle_position.vehicle_journey_positions(1).vehicle_journey().uri(), "vehicle_journey:KA");
+    BOOST_REQUIRE_EQUAL(vehicle_position.vehicle_journey_positions(1).vehicle_journey().codes().size(), 0);
 }
 
 }  // namespace
