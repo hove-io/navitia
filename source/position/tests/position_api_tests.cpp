@@ -83,7 +83,7 @@ BOOST_FIXTURE_TEST_CASE(test_one_vehicle_position_by_network, positionTestFixtur
     const ptime until = current_datetime + boost::posix_time::minutes(10);
     navitia::PbCreator pb_creator;
     pb_creator.init(&data, current_datetime, null_time_period);
-    navitia::position::vehicle_positions(pb_creator, R"(network.uri="network:R")", 10, 0, 0, {}, since, until);
+    navitia::position::vehicle_positions(pb_creator, R"#(network.uri="network:R")#", 10, 0, 0, {}, since, until);
     pbnavitia::Response resp = pb_creator.get_response();
     BOOST_REQUIRE_EQUAL(resp.vehicle_positions().size(), 1);
 
@@ -105,7 +105,7 @@ BOOST_FIXTURE_TEST_CASE(test_many_vehicle_position_by_network, positionTestFixtu
     const ptime until = current_datetime + boost::posix_time::minutes(4 * 60);
     navitia::PbCreator pb_creator;
     pb_creator.init(&data, current_datetime, null_time_period);
-    navitia::position::vehicle_positions(pb_creator, R"(network.uri="network:R")", 10, 0, 0, {}, since, until);
+    navitia::position::vehicle_positions(pb_creator, R"#(network.uri="network:R")#", 10, 0, 0, {}, since, until);
     pbnavitia::Response resp = pb_creator.get_response();
     BOOST_REQUIRE_EQUAL(resp.vehicle_positions().size(), 2);
 
@@ -138,7 +138,7 @@ BOOST_FIXTURE_TEST_CASE(test_vehicle_position_by_network_and_line, positionTestF
     const ptime until = current_datetime + boost::posix_time::minutes(4 * 60);
     navitia::PbCreator pb_creator;
     pb_creator.init(&data, current_datetime, null_time_period);
-    navitia::position::vehicle_positions(pb_creator, R"(network.uri="network:R" and line.uri="line:A")", 10, 0, 0, {},
+    navitia::position::vehicle_positions(pb_creator, R"#(network.uri="network:R" and line.uri="line:A")#", 10, 0, 0, {},
                                          since, until);
     pbnavitia::Response resp = pb_creator.get_response();
     BOOST_REQUIRE_EQUAL(resp.vehicle_positions().size(), 1);
@@ -161,7 +161,7 @@ BOOST_FIXTURE_TEST_CASE(test_vehicle_position_by_network_and_stop_area, position
     const ptime until = current_datetime + boost::posix_time::minutes(4 * 60);
     navitia::PbCreator pb_creator;
     pb_creator.init(&data, current_datetime, null_time_period);
-    navitia::position::vehicle_positions(pb_creator, R"(network.uri="network:R" and stop_area.uri="stop_area:stop1")",
+    navitia::position::vehicle_positions(pb_creator, R"#(network.uri="network:R" and stop_area.uri="stop_area:stop1")#",
                                          10, 0, 0, {}, since, until);
     pbnavitia::Response resp = pb_creator.get_response();
     BOOST_REQUIRE_EQUAL(resp.vehicle_positions().size(), 1);
@@ -184,7 +184,7 @@ BOOST_FIXTURE_TEST_CASE(test_one_vehicle_position_by_network_many_position_by_li
     const ptime until = current_datetime + boost::posix_time::hours(2);
     navitia::PbCreator pb_creator;
     pb_creator.init(&data, current_datetime, null_time_period);
-    navitia::position::vehicle_positions(pb_creator, R"(network.uri="network:K")", 10, 0, 0, {}, since, until);
+    navitia::position::vehicle_positions(pb_creator, R"#(network.uri="network:K")#", 10, 0, 0, {}, since, until);
     pbnavitia::Response resp = pb_creator.get_response();
     BOOST_REQUIRE_EQUAL(resp.vehicle_positions().size(), 1);
 
