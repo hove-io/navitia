@@ -269,6 +269,22 @@ class TestKirinOnVJDelay(MockKirinDisruptionsFixture):
         initial_nb_vehicle_journeys = len(pt_response['vehicle_journeys'])
         assert initial_nb_vehicle_journeys == 9
 
+        # Search with code on vehicle_journey returns only one element having the code.
+        pt_response = self.query_region(
+            'vehicle_journeys?filter=vehicle_journey.has_code(source, source_code_vjA)'
+        )
+        vjs = pt_response['vehicle_journeys']
+        assert len(vjs) == 1
+        assert len(vjs[0]['codes']) == 2
+        assert vjs[0]['id'] == 'vehicle_journey:vjA'
+
+        # Test that vehicle_journey vehicle_journey:vjB doesn't have any code
+        pt_response = self.query_region('trips/vjB/vehicle_journeys')
+        vjs = pt_response['vehicle_journeys']
+        assert len(vjs) == 1
+        assert len(vjs[0]['codes']) == 0
+        assert vjs[0]['id'] == 'vehicle_journey:vjB'
+
         # no disruption yet
         pt_response = self.query_region('vehicle_journeys/vehicle_journey:vjA?_current_datetime=20120614T1337')
         assert len(pt_response['disruptions']) == 0
@@ -298,9 +314,20 @@ class TestKirinOnVJDelay(MockKirinDisruptionsFixture):
         )
 
         # A new vj is created, which the vj with the impact of the disruption
-        # Here:
         pt_response = self.query_region('vehicle_journeys')
         assert len(pt_response['vehicle_journeys']) == (initial_nb_vehicle_journeys + 1)
+
+        # Search with code on vehicle_journey returns two elements.
+        # Here the realtime vehicle_journey takes the code of it's base vehicle_journey(vehicle_journey:vjA)
+        pt_response = self.query_region(
+            'vehicle_journeys?filter=vehicle_journey.has_code(source, source_code_vjA)'
+        )
+        vjs = pt_response['vehicle_journeys']
+        assert len(vjs) == 2
+        assert len(vjs[0]['codes']) == 2
+        assert len(vjs[1]['codes']) == 2
+        assert vjs[0]['id'] == 'vehicle_journey:vjA'
+        assert vjs[1]['id'] == 'vehicle_journey:vjA:modified:0:vjA_delayed'
 
         vj_ids = [vj['id'] for vj in pt_response['vehicle_journeys']]
         assert 'vehicle_journey:vjA:modified:0:vjA_delayed' in vj_ids
@@ -439,6 +466,17 @@ class TestKirinOnVJDelay(MockKirinDisruptionsFixture):
         pt_response = self.query_region('vehicle_journeys')
         assert len(pt_response['vehicle_journeys']) == (initial_nb_vehicle_journeys + 1)
 
+        # Search with code on vehicle_journey returns two elements.
+        pt_response = self.query_region(
+            'vehicle_journeys?filter=vehicle_journey.has_code(source, source_code_vjA)'
+        )
+        vjs = pt_response['vehicle_journeys']
+        assert len(vjs) == 2
+        assert len(vjs[0]['codes']) == 2
+        assert len(vjs[1]['codes']) == 2
+        assert vjs[0]['id'] == 'vehicle_journey:vjA'
+        assert vjs[1]['id'] == 'vehicle_journey:vjA:modified:0:vjA_delayed'
+
         pt_response = self.query_region('vehicle_journeys/vehicle_journey:vjA?_current_datetime=20120614T1337')
         assert len(pt_response['disruptions']) == 1
         _check_train_delay_disruption(pt_response['disruptions'][0])
@@ -516,6 +554,15 @@ class TestKirinOnVJDelay(MockKirinDisruptionsFixture):
         # A new vj is created
         vjs = self.query_region('vehicle_journeys?_current_datetime=20120614T1337')
         assert len(vjs['vehicle_journeys']) == (initial_nb_vehicle_journeys + 2)
+
+        # The realtime vehicle_journey on a base vehicle_journey without any code also should not have any code
+        pt_response = self.query_region('trips/vjB/vehicle_journeys')
+        vjs = pt_response['vehicle_journeys']
+        assert len(vjs) == 2
+        assert len(vjs[0]['codes']) == 0
+        assert len(vjs[1]['codes']) == 0
+        assert vjs[0]['id'] == 'vehicle_journey:vjB'
+        assert 'vehicle_journey:vjB:modified' in vjs[1]['id']
 
         vjA = self.query_region('vehicle_journeys/vehicle_journey:vjA?_current_datetime=20120614T1337')
         # we now have 2 disruption on vjA
