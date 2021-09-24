@@ -834,14 +834,19 @@ Enum from
 |Field|Type|Description|
 |-----|----|-----------|
 |network|String|The name of the network|
-|direction|String|A direction|
-|commercial_mode|String|The commercial mode|
-|physical_mode|String|The physical mode|
-|label|String|The label of the object|
-|color|String|The hexadecimal code of the line|
+|physical_mode|String|The [physical_mode](#physical-mode). Physical mode are standardized|
+|commercial_mode|String|The [commercial_mode](#commercial-mode). Commercial mode are not standardized|
 |code|String|The code of the line|
-|description|String|A description|
+|color|String|Hexadecimal color code for the line logo|
+|text_color|String|Hexadecimal color code of the text for the line logo|
+|direction|String|Direction of the trip used in a "journey" section|
+|headsign|String|Text that appears on vehicle signage identifying the trip's destination for example|
+|label|String|The label of the object|
+|name|String|Full name of the line|
+|trip_short_name|String|Short name of the route|
 |equipments|Array of String|list of [equipment](#equipment) of the object|
+|description|String|An optionnal description|
+
 
 ### link
 
