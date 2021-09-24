@@ -1,4 +1,4 @@
-navitia2 (12.5.0) unstable; urgency=low
+navitia2 (13.0.0) unstable; urgency=low
 
   * [documentation] Upgrading display informations  <https://github.com/CanalTP/navitia/pull/3564>
   * [Ed] read addresses from ntfs  <https://github.com/CanalTP/navitia/pull/3551>
@@ -18,7 +18,7 @@ navitia2 (12.5.0) unstable; urgency=low
   * [ed] add adresses from ntfs to ed  <https://github.com/CanalTP/navitia/pull/3537>
   * [Jormungandr] Pagination added in the response  <https://github.com/CanalTP/navitia/pull/3535>
 
- -- xlqian <patrick.qian@kisio.com>  Fri, 24 Sep 2021 10:09:26 +0100
+ -- xlqian <patrick.qian@kisio.com>  Fri, 24 Sep 2021 11:09:18 +0100
 
 navitia2 (12.4.0) unstable; urgency=low
 
