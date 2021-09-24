@@ -151,6 +151,7 @@ def user_set(app, fake_user_type, user_name):
 
     def handler(sender, **kwargs):
         g.user = fake_user_type.get_from_token(user_name, valid_until=None)
+        g.can_connect_to_database = True
 
     with appcontext_pushed.connected_to(handler, app):
         yield

@@ -32,6 +32,7 @@ from jormungandr import app
 from jormungandr.street_network.streetnetwork_backend_manager import StreetNetworkBackendManager
 from navitiacommon.models.streetnetwork_backend import StreetNetworkBackend
 from .tests_mechanism import config, NewDefaultScenarioAbstractTestFixture
+from mock import MagicMock
 from .journey_common_tests import *
 import operator
 import datetime
@@ -951,6 +952,7 @@ class TestKrakenDistributedWithDatabase(NewDefaultScenarioAbstractTestFixture):
         There is no error when multiples krakens are up and we call one of them after an other
         """
         manager = StreetNetworkBackendManager(self.sn_backends_getter)
+        manager._can_connect_to_database = MagicMock(return_value=True)
 
         i_manager.instances["main_routing_test"]._streetnetwork_backend_manager = manager
         i_manager.instances["min_nb_journeys_test"]._streetnetwork_backend_manager = manager

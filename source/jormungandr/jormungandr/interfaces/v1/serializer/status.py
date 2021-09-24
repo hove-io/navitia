@@ -111,9 +111,21 @@ class TravelerProfilesSerializer(serpy.Serializer):
 class AutocompleteSerializer(serpy.DictSerializer):
     class_ = Field(schema_type=str, label='class', attr='class')
     timeout = MethodField(schema_type=float, display_none=False)
+    timeout_bragi_es = MethodField(schema_type=float, display_none=False)
+    fast_timeout = MethodField(schema_type=float, display_none=False)
+    fast_timeout_bragi_es = MethodField(schema_type=float, display_none=False)
 
     def get_timeout(self, obj):
         return obj.get('timeout', None)
+
+    def get_timeout_bragi_es(self, obj):
+        return obj.get('timeout_bragi_es', None)
+
+    def get_fast_timeout(self, obj):
+        return obj.get('fast_timeout', None)
+
+    def get_fast_timeout_bragi_es(self, obj):
+        return obj.get('fast_timeout_bragi_es', None)
 
 
 class CircuitBreakerSerializer(serpy.DictSerializer):
@@ -213,7 +225,7 @@ class EquipmentProvidersServicesSerializer(NullableDictSerializer):
 
 
 class ExternalServiceProvidersServicesSerializer(NullableDictSerializer):
-    external_service_providers_keys = MethodField(schema_type=str, many=True, display_none=True)
+    external_service_providers_keys = MethodField(schema_type=str, many=True, display_none=False)
 
     def get_external_service_providers_keys(self, obj):
         return obj.get('external_service_providers_keys', [])
@@ -239,14 +251,15 @@ class CommonStatusSerializer(NullableDictSerializer):
     publication_date = Field(schema_type=str, display_none=False)
     street_networks = StreetNetworkSerializer(many=True, display_none=False)
     ridesharing_services = RidesharingServicesSerializer(many=True, display_none=False)
-    equipment_providers_services = EquipmentProvidersServicesSerializer()
-    external_providers_services = ExternalServiceProvidersServicesSerializer()
+    equipment_providers_services = EquipmentProvidersServicesSerializer(display_none=False)
+    external_providers_services = ExternalServiceProvidersServicesSerializer(display_none=False)
     start_production_date = Field(schema_type=str, display_none=False)
     last_load_status = Field(schema_type=bool, display_none=False)
     is_open_data = Field(schema_type=bool, display_none=False)
     last_rt_data_loaded = Field(schema_type=str, display_none=False)
     kraken_version = MethodField(schema_type=str, display_none=False)
     region_id = Field(schema_type=str, display_none=False, description='Identifier of the coverage')
+    configuration_database = Field(schema_type=str, display_none=False)
     error = CoverageErrorSerializer(display_none=False)
 
     def get_kraken_version(self, obj):

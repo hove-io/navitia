@@ -1,3 +1,25 @@
+navitia2 (12.5.0) unstable; urgency=low
+
+  * [documentation] Upgrading display informations  <https://github.com/CanalTP/navitia/pull/3564>
+  * [Ed] read addresses from ntfs  <https://github.com/CanalTP/navitia/pull/3551>
+  * [Tyr] Corrections for BSS provider and StreetNetwork on database resilience  <https://github.com/CanalTP/navitia/pull/3556>
+  * [Jormungandr] Timeout separation for Bragi and Elasticsearch  <https://github.com/CanalTP/navitia/pull/3560>
+  * Update publish_navitia_documentation.yml  <https://github.com/CanalTP/navitia/pull/3555>
+  * [Jormung] Upgrade "kombu" and "amqp"  <https://github.com/CanalTP/navitia/pull/3559>
+  * [Jormun] Handle geo_status for bragi properly  <https://github.com/CanalTP/navitia/pull/3544>
+  * [Jormun & Tyr]Manage database resilience and add configuration_database in /status  <https://github.com/CanalTP/navitia/pull/3533>
+  * [Documentation] readme.rst  <https://github.com/CanalTP/navitia/pull/3550>
+  * [documentation] improve swagger  <https://github.com/CanalTP/navitia/pull/3548>
+  * [documentation] Compared to...  <https://github.com/CanalTP/navitia/pull/3549>
+  * [Documentation] http > https link  <https://github.com/CanalTP/navitia/pull/3547>
+  * [Documentation] Update departures.md  <https://github.com/CanalTP/navitia/pull/3545>
+  * [documentation] Add pic file terminus_schedules   <https://github.com/CanalTP/navitia/pull/3546>
+  * [Kraken] Expire rabbitmq message sent to Kirin (task.load_realtime)  <https://github.com/CanalTP/navitia/pull/3540>
+  * [ed] add adresses from ntfs to ed  <https://github.com/CanalTP/navitia/pull/3537>
+  * [Jormungandr] Pagination added in the response  <https://github.com/CanalTP/navitia/pull/3535>
+
+ -- xlqian <patrick.qian@kisio.com>  Fri, 24 Sep 2021 10:09:26 +0100
+
 navitia2 (12.4.0) unstable; urgency=low
 
   * Changing the test to detect the type of dataset  <https://github.com/CanalTP/navitia/pull/3539>

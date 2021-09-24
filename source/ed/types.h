@@ -305,6 +305,7 @@ struct StopPoint : public Header, Nameable, hasProperties {
     const static nt::Type_e type = nt::Type_e::StopPoint;
     nt::GeographicalCoord coord;
     std::string fare_zone;
+    std::string address_id = "";
     bool is_zonal = false;
     boost::optional<nt::MultiPolygon> area;
 

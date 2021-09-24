@@ -684,3 +684,40 @@ BOOST_AUTO_TEST_CASE(gtfs_hlp_pickup_and_drop_off_from_data) {
         BOOST_CHECK_EQUAL(end_vehicle_last->drop_off_allowed, true);
     }
 }
+
+BOOST_AUTO_TEST_CASE(adresses_tests) {
+    {
+        ed::Data data;
+        ed::connectors::FusioParser parser(ntfs_path + "_v5");
+        parser.fill(data);
+
+        BOOST_REQUIRE_EQUAL(data.addresses_from_ntfs.size(), 9);
+        BOOST_CHECK_EQUAL(data.addresses_from_ntfs[0]->id, "SA:A:ADD_ID");
+        BOOST_CHECK_EQUAL(data.addresses_from_ntfs[0]->street_name, "SA:A STREET_NAME");
+        BOOST_CHECK_EQUAL(data.addresses_from_ntfs[0]->house_number, "9");
+        BOOST_CHECK_EQUAL(data.addresses_from_ntfs[1]->id, "SA:B:ADD_ID");
+        BOOST_CHECK_EQUAL(data.addresses_from_ntfs[1]->street_name, "SA:B STREET_NAME");
+        BOOST_CHECK_EQUAL(data.addresses_from_ntfs[1]->house_number, "99999999");
+        BOOST_CHECK_EQUAL(data.addresses_from_ntfs[2]->id, "SA:C:ADD_ID");
+        BOOST_CHECK_EQUAL(data.addresses_from_ntfs[2]->street_name, "");
+        BOOST_CHECK_EQUAL(data.addresses_from_ntfs[2]->house_number, "");
+        BOOST_CHECK_EQUAL(data.addresses_from_ntfs[3]->id, "SA:D:ADD_ID");
+        BOOST_CHECK_EQUAL(data.addresses_from_ntfs[3]->street_name, "SA:D STREET_NAME");
+        BOOST_CHECK_EQUAL(data.addresses_from_ntfs[3]->house_number, "");
+        BOOST_CHECK_EQUAL(data.addresses_from_ntfs[4]->id, "SP:A:ADD_ID");
+        BOOST_CHECK_EQUAL(data.addresses_from_ntfs[4]->street_name, "");
+        BOOST_CHECK_EQUAL(data.addresses_from_ntfs[4]->house_number, "");
+        BOOST_CHECK_EQUAL(data.addresses_from_ntfs[5]->id, "SP:D:ADD_ID");
+        BOOST_CHECK_EQUAL(data.addresses_from_ntfs[5]->street_name, "SP:D STREET_NAME");
+        BOOST_CHECK_EQUAL(data.addresses_from_ntfs[5]->house_number, "25");
+        BOOST_CHECK_EQUAL(data.addresses_from_ntfs[6]->id, "SP:E:ADD_ID");
+        BOOST_CHECK_EQUAL(data.addresses_from_ntfs[6]->street_name, "SP:E STREET_NAME");
+        BOOST_CHECK_EQUAL(data.addresses_from_ntfs[6]->house_number, "0");
+        BOOST_CHECK_EQUAL(data.addresses_from_ntfs[7]->id, "SP:F:ADD_ID");
+        BOOST_CHECK_EQUAL(data.addresses_from_ntfs[7]->street_name, "SP:F STREET_NAME");
+        BOOST_CHECK_EQUAL(data.addresses_from_ntfs[7]->house_number, "");
+        BOOST_CHECK_EQUAL(data.addresses_from_ntfs[8]->id, "SP:J:ADD_ID");
+        BOOST_CHECK_EQUAL(data.addresses_from_ntfs[8]->street_name, "SP:J STREET_NAME");
+        BOOST_CHECK_EQUAL(data.addresses_from_ntfs[8]->house_number, "FACE AU 23");
+    }
+}

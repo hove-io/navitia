@@ -42,6 +42,7 @@ from jormungandr.interfaces.v1.decorators import get_serializer
 from jormungandr.interfaces.v1.serializer.api import TechnicalStatusSerializer
 from jormungandr.interfaces.v1.serializer.status import CommonStatusSerializer
 from jormungandr.interfaces.v1 import add_common_status
+from jormungandr.utils import can_connect_to_database
 
 
 class Index(ModuleResource):
@@ -108,5 +109,7 @@ class TechnicalStatus(ModuleResource):
         cache_status_op = getattr(cache.cache, "status", None)
         if callable(cache_status_op):
             response['redis'] = cache_status_op()
+
+        response['configuration_database'] = 'connected' if can_connect_to_database() else 'no_SQL_connection'
 
         return response

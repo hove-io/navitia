@@ -66,6 +66,7 @@ class FreeFloatingsNearby(ResourceUri):
             type=CoordFormat(nullable=True),
             help="Coordinates longitude;latitude used to search " "the objects around this coordinate",
         )
+        parser_get.add_argument("start_page", type=int, default=0, help="The current page")
 
     def options(self, **kwargs):
         return self.api_description(**kwargs)

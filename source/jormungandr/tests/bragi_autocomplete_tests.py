@@ -1667,6 +1667,19 @@ class AbstractAutocompleteAndRouting:
             assert address['id'] == '3.282103;49.847586'
             assert len(address['administrative_regions']) == 1
 
+    def test_geo_status(self):
+        """
+        geo_status is still not implemented for bragi
+        we test the return code and error message
+        """
+        url = 'https://host_of_bragi/v1/coverage/main_routing_test/_geo_status'
+
+        with requests_mock.Mocker() as m:
+            m.get(url, json=BRAGI_MOCK_REVERSE_RESPONSE_NEW_ID_FMT)
+            response, status_code = self.query_no_assert("/v1/coverage/main_routing_test/_geo_status")
+            assert status_code == 404
+            assert response == {'message': 'geo_status not implemented'}
+
 
 @config({'scenario': 'new_default'})
 class TestNewDefaultAutocompleteAndRouting(

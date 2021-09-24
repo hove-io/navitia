@@ -33,6 +33,7 @@ import logging
 import datetime
 from jormungandr import utils
 from jormungandr.exceptions import ConfigException
+from jormungandr.utils import can_connect_to_database
 
 
 class ExternalServiceManager(object):
@@ -106,6 +107,12 @@ class ExternalServiceManager(object):
             self._last_update + datetime.timedelta(seconds=self._update_interval) > datetime.datetime.utcnow()
             or not self._external_service_getter
         ):
+            return
+
+        # If database is not accessible we update the value of self._last_update and exit
+        if not can_connect_to_database():
+            self.logger.debug('Database is not accessible')
+            self._last_update = datetime.datetime.utcnow()
             return
 
         self.logger.debug('Updating external services from db')

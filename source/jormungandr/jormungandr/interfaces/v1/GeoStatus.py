@@ -32,6 +32,7 @@ from jormungandr import i_manager
 from jormungandr.interfaces.v1.serializer.api import GeoStatusSerializer
 from jormungandr.interfaces.v1.decorators import get_serializer
 from jormungandr.interfaces.v1.StatedResource import StatedResource
+from flask_restful import abort
 
 
 class GeoStatus(StatedResource):
@@ -42,7 +43,11 @@ class GeoStatus(StatedResource):
     def get(self, region=None, lon=None, lat=None):
         region_str = i_manager.get_region(region, lon, lat)
         instance = i_manager.instances[region_str]
-        return {'geo_status': instance.autocomplete.geo_status(instance)}, 200
+        try:
+            geo_status = instance.autocomplete.geo_status(instance)
+            return {'geo_status': geo_status}, 200
+        except NotImplementedError:
+            abort(404, message="geo_status not implemented")
 
     def options(self, **kwargs):
         return self.api_description(**kwargs)

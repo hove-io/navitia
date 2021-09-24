@@ -32,6 +32,7 @@ from jormungandr import fallback_modes as fm
 from jormungandr.exceptions import TechnicalError
 from jormungandr.instance import Instance
 from jormungandr.street_network.street_network import AbstractStreetNetworkService
+from jormungandr.utils import can_connect_to_database
 from navitiacommon.models.streetnetwork_backend import StreetNetworkBackend
 from collections import defaultdict
 import logging, itertools, copy, datetime
@@ -127,6 +128,9 @@ class StreetNetworkBackendManager(object):
         except Exception:
             self.logger.exception('impossible to initialize streetnetwork backend')
 
+    def _can_connect_to_database(self):
+        return can_connect_to_database()
+
     def _update_config(self, instance):
         # type: (Instance) -> None
         """
@@ -136,6 +140,12 @@ class StreetNetworkBackendManager(object):
             self._last_update + datetime.timedelta(seconds=self._update_interval) > datetime.datetime.utcnow()
             or not self._sn_backends_getter
         ):
+            return
+
+        # If database is not accessible we update the value of self._last_update and exit
+        if not self._can_connect_to_database():
+            self.logger.debug('Database is not accessible')
+            self._last_update = datetime.datetime.utcnow()
             return
 
         self.logger.debug('Updating streetnetwork backends from db')

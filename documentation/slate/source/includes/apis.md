@@ -1996,7 +1996,7 @@ HTTP/1.1 200 OK
 }
 ```
 
-Also known as `/traffic_reports` service. We recommand to use line_reports in place of traffic_reports.
+Also known as `/traffic_reports` service.
 
 This service provides the state of public transport traffic, grouped by network.<br>It can be called for an overall coverage or for a specific object.<br>Can be accessed via: <https://api.navitia.io/v1/{a_path_to_a_resource}/traffic_reports>
 

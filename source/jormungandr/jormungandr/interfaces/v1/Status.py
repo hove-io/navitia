@@ -34,6 +34,7 @@ from jormungandr.interfaces.v1.serializer.api import StatusSerializer
 from jormungandr.interfaces.v1.decorators import get_serializer
 from jormungandr.interfaces.v1.StatedResource import StatedResource
 from jormungandr.interfaces.v1 import add_common_status
+from jormungandr.utils import can_connect_to_database
 import logging
 
 
@@ -54,4 +55,8 @@ class Status(StatedResource):
             region_str
         )
         logging.getLogger(__name__).info("status reponse: %s", response)
+        response['status']['configuration_database'] = (
+            'connected' if can_connect_to_database() else 'no_SQL_connection'
+        )
+
         return response, 200

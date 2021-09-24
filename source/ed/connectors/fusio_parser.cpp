@@ -29,6 +29,7 @@ www.navitia.io
 */
 
 #include "fusio_parser.h"
+#include "type/address_from_ntfs.h"
 
 #include <boost/geometry.hpp>
 #include <boost/filesystem.hpp>
@@ -215,6 +216,7 @@ void StopsFusioHandler::init(Data& data) {
     if (zone_c == UNKNOWN_COLUMN) {
         zone_c = csv.get_pos_col("zone_id");
     }
+    address_id_c = csv.get_pos_col("address_id");
 }
 
 // in fusio we want to delete all stop points without stop area
@@ -287,6 +289,9 @@ nm::StopPoint* StopsFusioHandler::build_stop_point(Data& data, const csv_row& ro
         if (it_comment != data.comment_by_id.end()) {
             data.add_pt_object_comment(sp, row[comment_id_c]);
         }
+    }
+    if (is_valid(address_id_c, row)) {
+        sp->address_id = row[address_id_c];
     }
 
     if (has_col(type_c, row) && row[type_c] == "2") {
@@ -1891,6 +1896,24 @@ ed::types::PhysicalMode* GtfsData::get_or_create_default_physical_mode(Data& dat
     return default_physical_mode;
 }
 
+void AddressesFusioHandler::init(Data&) {
+    address_id_c = csv.get_pos_col("address_id");
+    street_name_c = csv.get_pos_col("street_name");
+    house_number_c = csv.get_pos_col("house_number");
+}
+
+void AddressesFusioHandler::handle_line(Data& data, const csv_row& row, bool is_first_line) {
+    if (!is_first_line && !has_col(address_id_c, row) && !has_col(street_name_c, row)) {
+        LOG4CPLUS_FATAL(logger, "Error while reading " + csv.filename + "  impossible to find all needed fields");
+        throw InvalidHeaders(csv.filename);
+    }
+    auto address = new navitia::type::Address();
+    address->id = row[address_id_c];
+    address->street_name = row[street_name_c];
+    address->house_number = row[house_number_c];
+    data.addresses_from_ntfs.push_back(address);
+}
+
 void FusioParser::parse_files(Data& data, const std::string& beginning_date) {
     parse<FeedInfoFusioHandler>(data, "feed_infos.txt", true);
 
@@ -1930,6 +1953,9 @@ void FusioParser::parse_files(Data& data, const std::string& beginning_date) {
         parse<StopPropertiesFusioHandler>(data, "stop_properties.txt");
     }
     parse<StopsFusioHandler>(data, "stops.txt", true);
+    if (boost::filesystem::exists(this->path + "/addresses.txt")) {
+        parse<AddressesFusioHandler>(data, "addresses.txt");
+    }
     parse<RouteFusioHandler>(data, "routes.txt", true);
     parse<TransfersFusioHandler>(data, "transfers.txt");
 

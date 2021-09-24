@@ -40,6 +40,7 @@ import datetime
 import base64
 from navitiacommon.models import User, Instance, Key
 from jormungandr import cache, memory_cache, app as current_app
+from jormungandr.utils import can_connect_to_database
 import six
 
 
@@ -127,6 +128,8 @@ def has_access(region, api, abort, user):
     if current_app.config.get('PUBLIC', False):
         # if jormungandr is on public mode we skip the authentification process
         return True
+    if not can_connect_to_database():
+        return True
 
     if not user:
         # no user --> no need to continue, we can abort, a user is mandatory even for free region
@@ -159,6 +162,8 @@ def cache_get_user(token):
     We allow this method to be cached even if it depends on the current time
     because we assume the cache time is small and the error can be tolerated.
     """
+    if not can_connect_to_database():
+        return None
     return User.get_from_token(token, datetime.datetime.now())
 
 

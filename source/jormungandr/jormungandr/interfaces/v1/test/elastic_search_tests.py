@@ -573,11 +573,11 @@ def bragi_make_params_with_instance_test():
     instance = mock.MagicMock()
     instance.name = 'bib'
     instance.poi_dataset = None
-    bragi = GeocodeJson(host='http://bob.com/autocomplete')
+    bragi = GeocodeJson(host='http://bob.com/autocomplete', timeout=1)
 
     request = {"q": "aa", "count": 20, "request_id": "1234"}
 
-    params = bragi.make_params(request=request, instances=[instance], timeout=1)
+    params = bragi.make_params(request=request, instances=[instance])
     rsp = [
         ('q', 'aa'),
         ('limit', 20),
@@ -601,11 +601,11 @@ def bragi_make_params_with_places_proximity_radius_test():
     instance = mock.MagicMock()
     instance.name = 'bib'
     instance.poi_dataset = None
-    bragi = GeocodeJson(host='http://bob.com/autocomplete')
+    bragi = GeocodeJson(host='http://bob.com/autocomplete', timeout=1)
 
     request = {"q": "aa", "count": 20, "request_id": "1234", "places_proximity_radius": 5000}
 
-    params = bragi.make_params(request=request, instances=[instance], timeout=1)
+    params = bragi.make_params(request=request, instances=[instance])
     rsp = [
         ('q', 'aa'),
         ('limit', 20),
@@ -635,11 +635,11 @@ def bragi_make_params_with_multiple_instances_test():
     instance2 = mock.MagicMock()
     instance2.name = 'bob'
     instance2.poi_dataset = None
-    bragi = GeocodeJson(host='http://bob.com/autocomplete')
+    bragi = GeocodeJson(host='http://bob.com/autocomplete', timeout=1)
 
     request = {"q": "aa", "count": 20, "request_id": "1234"}
 
-    params = bragi.make_params(request=request, instances=[instance1, instance2], timeout=1)
+    params = bragi.make_params(request=request, instances=[instance1, instance2])
     rsp = [
         ('q', 'aa'),
         ('limit', 20),
@@ -662,11 +662,11 @@ def bragi_make_params_without_instance_test():
     """
     test of generate params without instance
     """
-    bragi = GeocodeJson(host='http://bob.com/autocomplete')
+    bragi = GeocodeJson(host='http://bob.com/autocomplete', timeout=0.1)
 
     request = {"q": "aa", "count": 20, "request_id": "1234"}
 
-    params = bragi.make_params(request=request, instances=[], timeout=0.1)
+    params = bragi.make_params(request=request, instances=[])
     rsp = [
         ('q', 'aa'),
         ('limit', 20),
@@ -689,11 +689,11 @@ def bragi_make_params_with_instance_and_poi_test():
     instance = mock.MagicMock()
     instance.name = 'bob'
     instance.poi_dataset = 'priv.bob'
-    bragi = GeocodeJson(host='http://bob.com/autocomplete')
+    bragi = GeocodeJson(host='http://bob.com/autocomplete', timeout=1)
 
     request = {"q": "aa", "count": 20, "request_id": "1234"}
 
-    params = bragi.make_params(request=request, instances=[instance], timeout=1)
+    params = bragi.make_params(request=request, instances=[instance])
     rsp = [
         ('q', 'aa'),
         ('limit', 20),
@@ -718,11 +718,11 @@ def bragi_make_params_with_shape_scope_test():
     instance = mock.MagicMock()
     instance.name = 'bob'
     instance.poi_dataset = 'priv.bob'
-    bragi = GeocodeJson(host='http://bob.com/autocomplete')
+    bragi = GeocodeJson(host='http://bob.com/autocomplete', timeout=1)
 
     request = {"q": "aa", "count": 20, "request_id": "1234", "shape_scope[]": ["poi", "street"]}
 
-    params = bragi.make_params(request=request, instances=[instance], timeout=1)
+    params = bragi.make_params(request=request, instances=[instance])
     rsp = [
         ('q', 'aa'),
         ('limit', 20),

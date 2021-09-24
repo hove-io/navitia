@@ -32,6 +32,7 @@ from jormungandr.scenarios.ridesharing.ridesharing_service_manager import Ridesh
 from jormungandr.scenarios.ridesharing.blablalines import Blablalines
 from jormungandr.scenarios.ridesharing.instant_system import InstantSystem
 from navitiacommon.models.ridesharing_service import RidesharingService
+from jormungandr import app
 
 
 class MockInstance:
@@ -130,6 +131,7 @@ def two_ridesharing_service_manager_config_from_file_and_db_test():
     )
     ridesharing_manager.init_ridesharing_services()
     ridesharing_manager.update_config()
+
     assert len(ridesharing_manager.ridesharing_services_configuration) == 1
     assert len(list(ridesharing_manager._ridesharing_services.values())) == 1
     assert ridesharing_manager._ridesharing_services["InstantSystem"].system_id == "instant_system"
@@ -153,6 +155,7 @@ def two_same_ridesharing_service_manager_config_from_file_and_db_test():
     )
     ridesharing_manager.init_ridesharing_services()
     ridesharing_manager.update_config()
+
     assert len(ridesharing_manager.ridesharing_services_configuration) == 1
     assert len(list(ridesharing_manager._ridesharing_services.values())) == 1
     assert ridesharing_manager._ridesharing_services["InstantSystem"].system_id == "instant_system"
@@ -176,6 +179,7 @@ def ridesharing_service_manager_config_from_file_and_db_test():
     )
     ridesharing_manager.init_ridesharing_services()
     ridesharing_manager.update_config()
+
     assert len(ridesharing_manager.ridesharing_services_configuration) == 0
     assert len(list(ridesharing_manager._ridesharing_services.values())) == 2
     assert ridesharing_manager._ridesharing_services["InstantSystem"].system_id == "instant_system"
