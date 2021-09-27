@@ -53,6 +53,7 @@ free_floating_schema = {
             "type": "string",
             "required": True,
             "description": "Type of free floating vehicle.",
+            "name": "type",
         },
         "propulsion": {"type": "string"},
         "battery": {"type": "integer"},
