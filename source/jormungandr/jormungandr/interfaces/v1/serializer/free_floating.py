@@ -48,7 +48,12 @@ free_floating_schema = {
         "public_id": {"type": "string"},
         "provider_name": {"type": "string"},
         "id": {"type": "string"},
-        "type": {"enum": free_floatings_type},
+        "type": {
+            "enum": free_floatings_type,
+            "type": "string",
+            "required": True,
+            "description": "Type of free floating vehicle.",
+        },
         "propulsion": {"type": "string"},
         "battery": {"type": "integer"},
         "distance": {"type": "integer"},
