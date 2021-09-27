@@ -36,7 +36,7 @@ www.navitia.io
 namespace navitia {
 namespace position {
 
-using VehiclePositionList = std::map<type::Line*, std::set<type::VehicleJourney*>, Less>;
+using VehiclePositionList = std::map<type::Line*, std::set<type::VehicleJourney*, Less>, Less>;
 
 void vehicle_positions(PbCreator& pb_creator,
                        const std::string& filter,
