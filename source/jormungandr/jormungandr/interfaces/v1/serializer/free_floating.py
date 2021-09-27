@@ -38,7 +38,7 @@ from jormungandr.scenarios.utils import free_floatings_type
 
 coord_schema = {
     "type": "object",
-    "properties": {"lat": {"type": ["string", "null"]}, "lon": {"type": ["string", "null"]}},
+    "properties": {"lat": {"type": "string"}, "lon": {"type": "string"}},
     "required": ["lat", "lon"],
 }
 
