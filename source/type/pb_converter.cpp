@@ -921,6 +921,11 @@ void PbCreator::Filler::fill_pb_object(const nt::VehicleJourney* vj, pbnavitia::
     }
     fill_messages(vj->meta_vj, vehicle_journey);
 
+    // For a realtime vj, we should get de base vj to fill codes
+    if (vj->realtime_level == nt::RTLevel::RealTime && !vj->meta_vj->get_base_vj().empty()) {
+        const auto& base_vjs = vj->meta_vj->get_base_vj();
+        vj = base_vjs.front().get();
+    }
     fill_codes(vj, vehicle_journey);
 }
 
