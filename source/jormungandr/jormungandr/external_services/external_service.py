@@ -92,3 +92,20 @@ class AbstractExternalService(object):
             if response.text:
                 error_msg += ' ({})'.format(response.text)
             raise ExternalServiceError(error_msg)
+
+    @classmethod
+    def response_marshaller(cls, response):
+        try:
+            cls._check_response(response)
+        except ExternalServiceError as e:
+            logging.getLogger(__name__).exception('Forseti service error: {}'.format(e))
+            return None
+
+        try:
+            json_response = response.json()
+        except ValueError:
+            logging.getLogger(__name__).error(
+                "impossible to get json for response %s with body: %s", response.status_code, response.text
+            )
+            return None
+        return json_response
