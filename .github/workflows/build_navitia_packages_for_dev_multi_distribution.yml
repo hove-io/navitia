@@ -83,7 +83,3 @@ jobs:
           print("Response status code : {}".format(request.status_code) )
           print(request.text)
 
-    - name: run deploy on artemis machine https://jenkins-core.canaltp.fr/job/deploy-navitia
-      if: ${{ github.event_name == 'push' }}
-      run: http --ignore-stdin -v -f POST https://${{secrets.JENKINS_NG_TOKEN}}@jenkins-core.canaltp.fr/job/deploy-navitia/buildWithParameters PLATFORM=artemis_debian8
-
