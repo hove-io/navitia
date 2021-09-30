@@ -30,7 +30,7 @@
 
 from __future__ import absolute_import, print_function, unicode_literals, division
 from .tests_mechanism import AbstractTestFixture, dataset
-from jormungandr.external_services.vehicle_position import VehcilePosition
+from jormungandr.external_services.vehicle_position import VehiclePosition
 from mock import MagicMock
 
 MOCKED_INSTANCE_CONF = {
@@ -56,9 +56,9 @@ class MockObj:
     pass
 
 
-class MockVehiclePosition(VehcilePosition):
+class MockVehiclePosition(VehiclePosition):
     def __init__(self, service_url, timeout=2, **kwargs):
-        VehcilePosition.__init__(self, service_url, timeout, **kwargs)
+        VehiclePosition.__init__(self, service_url, timeout, **kwargs)
 
     def _call_webservice(self, arguments):
         resp = MockObj()

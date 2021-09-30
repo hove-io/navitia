@@ -39,7 +39,7 @@ from jormungandr import cache, app
 from navitiacommon import type_pb2
 
 
-class VehcilePosition(AbstractExternalService):
+class VehiclePosition(AbstractExternalService):
     def __init__(self, service_url, timeout=2, **kwargs):
         self.logger = logging.getLogger(__name__)
         self.service_url = service_url
