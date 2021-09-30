@@ -171,6 +171,23 @@ BOOST_AUTO_TEST_CASE(make_request_odt_level) {
     assert_odt_level(Type_e::Line, "all or all", OdtLevel_e::zonal, "((all OR all) AND line.odt_level(\"zonal\"))");
 }
 
+static void assert_is_active_vj(const Type_e requested_type,
+                                const std::string& request,
+                                const RTLevel rt_level,
+                                const std::string& now,
+                                const std::string& expected) {
+    boost::optional<boost::posix_time::ptime> current_datetime = boost::posix_time::from_iso_string(now);
+    const auto req = make_request(requested_type, request, {}, {}, {}, {}, rt_level, {}, current_datetime);
+    assert_expr(req, expected);
+}
+
+BOOST_AUTO_TEST_CASE(make_request_is_active_vj) {
+    assert_is_active_vj(Type_e::VehicleJourney, "", navitia::type::RTLevel::Base, "20210910T151500",
+                        R"((all AND vehicle_journey.is_active("20210910T151500Z", "base_schedule")))");
+    assert_is_active_vj(Type_e::VehicleJourney, "", navitia::type::RTLevel::RealTime, "20210910T151500",
+                        R"((all AND vehicle_journey.is_active("20210910T151500Z", "realtime")))");
+}
+
 static void assert_since_until(const Type_e requested_type,
                                const std::string& request,
                                const std::string& since_str,
