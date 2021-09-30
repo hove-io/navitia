@@ -263,12 +263,11 @@ struct Eval : boost::static_visitor<Indexes> {
             }
         } else if (type == Type_e::VehicleJourney && f.method == "has_disruption" && f.args.empty()) {
             indexes = get_indexes_by_impacts(type::Type_e::VehicleJourney, data);
-        } else if (type == Type_e::VehicleJourney && f.method == "has_active") {
+        } else if (type == Type_e::VehicleJourney && f.method == "is_active") {
             // useful only for VJ for vehicle_positions api
             const auto rt_level =
-                (type == Type_e::VehicleJourney) ? rt_level_from_string(f.args.back()) : type::RTLevel::Base;
+                (type == Type_e::VehicleJourney) ? rt_level_from_string(f.args.at(1)) : type::RTLevel::Base;
             boost::posix_time::ptime current_datetime = from_datetime(f.args.at(0));
-            ;
             indexes = filter_vj_active(data.get_all_index(type), current_datetime, rt_level, data);
         } else if (type == Type_e::Line && f.method == "code" && f.args.size() == 1) {
             for (auto l : data.pt_data->lines) {
@@ -446,7 +445,7 @@ std::string make_request(const Type_e requested_type,
         case Type_e::VehicleJourney:
             if (current_datetime != boost::none) {
                 res = "(" + res + ") AND " + navitia::type::static_data::get()->captionByType(requested_type);
-                res = res + ".has_active(" + to_iso_string(*current_datetime) + "Z";
+                res = res + ".is_active(" + to_iso_string(*current_datetime) + "Z";
                 res = res + ", " + rt_level_to_string(rt_level);
                 res = res + ")";
                 break;
