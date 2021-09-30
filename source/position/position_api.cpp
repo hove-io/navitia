@@ -39,19 +39,13 @@ void vehicle_positions(PbCreator& pb_creator,
                        size_t count,
                        int depth,
                        size_t start_page,
-                       const std::vector<std::string>& forbidden_uris,
-                       const boost::optional<boost::posix_time::ptime>& since,
-                       const boost::optional<boost::posix_time::ptime>& until) {
+                       const std::vector<std::string>& forbidden_uris) {
     const type::Data& data = *pb_creator.data;
-
-    const auto start = get_optional_value_or(since, pb_creator.now);
-    const auto end = get_optional_value_or(until, pb_creator.now + boost::posix_time::minutes(2 * 10));
-    pb_creator.action_period = boost::posix_time::time_period(start, end);
 
     type::Indexes idx_vjs;
     try {
-        idx_vjs = ptref::make_query(type::Type_e::VehicleJourney, filter, forbidden_uris, type::OdtLevel_e::all, start,
-                                    end, data);
+        idx_vjs = ptref::make_query(type::Type_e::VehicleJourney, filter, forbidden_uris, type::OdtLevel_e::all,
+                                    boost::none, boost::none, data, pb_creator.now);
     } catch (const ptref::parsing_error& parse_error) {
         pb_creator.fill_pb_error(pbnavitia::Error::unable_to_parse, "Unable to parse filter" + parse_error.more);
         return;

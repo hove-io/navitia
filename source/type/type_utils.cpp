@@ -69,6 +69,14 @@ const nt::StopTime& earliest_stop_time(const std::vector<nt::StopTime>& sts) {
     return *min_st;
 }
 
+const nt::StopTime& last_stop_time(const std::vector<nt::StopTime>& sts) {
+    assert(!sts.empty());
+    const auto& max_st = std::max_element(sts.begin(), sts.end(), [](const nt::StopTime& st1, const nt::StopTime& st2) {
+        return std::max(st1.boarding_time, st1.arrival_time) < std::max(st2.boarding_time, st2.arrival_time);
+    });
+    return *max_st;
+}
+
 pbnavitia::RTLevel to_pb_realtime_level(const navitia::type::RTLevel realtime_level) {
     switch (realtime_level) {
         case nt::RTLevel::Base:

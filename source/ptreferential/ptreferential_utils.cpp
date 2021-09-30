@@ -152,6 +152,22 @@ Indexes get_impacts_by_tags(const std::vector<std::string>& tag_name, const Data
 
     return result;
 }
+static bool is_active_vj(const type::VehicleJourney* vj,
+                         const bt::ptime current_datetime,
+                         const type::RTLevel rt_level) {
+    if (vj->stop_time_list.empty()) {
+        return false;
+    }
+    if ((vj->validity_patterns[rt_level] != nullptr)
+        && !vj->validity_patterns[rt_level]->check(current_datetime.date())) {
+        return false;
+    }
+    const auto& first_departure_dt = vj->earliest_time();
+    const auto& last_arrival_dt = vj->last_time();
+    bt::time_period period = {bt::ptime(current_datetime.date(), bt::seconds(first_departure_dt)),
+                              bt::ptime(current_datetime.date(), bt::seconds(last_arrival_dt))};
+    return period.contains(current_datetime);
+}
 
 static bool keep_vj(const type::VehicleJourney* vj, const bt::time_period& period, const type::RTLevel rt_level) {
     if (vj->stop_time_list.empty()) {
@@ -212,7 +228,20 @@ static Indexes filter_impact_on_period(const Indexes& indexes, const bt::time_pe
     }
     return res;
 }
-
+type::Indexes filter_vj_active(const Indexes& indexes,
+                               const bt::ptime current_datetime,
+                               const type::RTLevel rt_level,
+                               const type::Data& data) {
+    Indexes res;
+    for (const idx_t idx : indexes) {
+        const auto* vj = data.pt_data->vehicle_journeys[idx];
+        if (!is_active_vj(vj, current_datetime, rt_level)) {
+            continue;
+        }
+        res.insert(idx);
+    }
+    return res;
+}
 Indexes filter_on_period(const Indexes& indexes,
                          const navitia::type::Type_e requested_type,
                          const boost::optional<bt::ptime>& since,

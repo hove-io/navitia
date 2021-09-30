@@ -47,7 +47,7 @@ boost::posix_time::ptime get_date_time(const routing::StopEvent stop_event,
                                        bool is_departure);
 
 const type::StopTime& earliest_stop_time(const std::vector<type::StopTime>& sts);
-
+const type::StopTime& last_stop_time(const std::vector<type::StopTime>& sts);
 pbnavitia::RTLevel to_pb_realtime_level(const navitia::type::RTLevel realtime_level);
 
 pbnavitia::ActiveStatus to_pb_active_status(navitia::type::disruption::ActiveStatus active_status);

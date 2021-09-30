@@ -107,6 +107,7 @@ struct VehicleJourney : public Header, Nameable, hasVehicleProperties {
 
     // Return the smallest time within its stop_times
     uint32_t earliest_time() const;
+    uint32_t last_time() const;
 
     /*
      *
