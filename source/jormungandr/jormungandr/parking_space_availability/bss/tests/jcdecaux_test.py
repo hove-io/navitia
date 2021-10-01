@@ -67,6 +67,7 @@ def parking_space_availability_jcdecaux_get_informations_test():
     provider = JcdecauxProvider(u"vélib'", 'Paris', 'api_key', {'jcdecaux'})
     provider._call_webservice = MagicMock(return_value=webservice_response)
     assert provider.get_informations(poi) == Stands(4, 8, StandsStatus.open)
+    provider._data = {}
     provider._call_webservice = MagicMock(return_value=None)
     assert provider.get_informations(poi) == Stands(0, 0, StandsStatus.unavailable)
     invalid_poi = {}
@@ -83,13 +84,14 @@ def parking_space_availability_jcdecaux_get_informations_unauthorized_test():
     assert provider.get_informations(poi) == Stands(0, 0, StandsStatus.unavailable)
 
 
-def parking_space_availability_jcdecaux_get_informations_with_status_Closed_test():
+def parking_space_availability_jcdecaux_get_informations_with_status_closed_test():
 
     webservice_response = {'2': {'available_bike_stands': 4, 'available_bikes': 8, 'status': 'CLOSED'}}
     provider = JcdecauxProvider(u"vélib'", 'Paris', 'api_key', {'jcdecaux'})
     provider._call_webservice = MagicMock(return_value=webservice_response)
     assert provider.get_informations(poi) == Stands(0, 0, StandsStatus.closed)
     provider._call_webservice = MagicMock(return_value=None)
+    provider._data = {}
     assert provider.get_informations(poi) == Stands(0, 0, StandsStatus.unavailable)
     invalid_poi = {}
     assert provider.get_informations(invalid_poi) == Stands(0, 0, StandsStatus.unavailable)
