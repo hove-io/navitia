@@ -48,3 +48,8 @@ class TrafficReportSerializer(PbNestedSerializer):
     lines = pt.LineSerializer(many=True)
     stop_areas = pt.StopAreaSerializer(many=True)
     vehicle_journeys = pt.VehicleJourneySerializer(many=True)
+
+
+class VehiclePositionsSerializer(PbNestedSerializer):
+    line = pt.LineSerializer()
+    vehicle_journey_positions = pt.VehicleJourneyPositionsSerializer(many=True)

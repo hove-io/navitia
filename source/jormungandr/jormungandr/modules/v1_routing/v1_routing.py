@@ -47,6 +47,7 @@ from jormungandr.interfaces.v1 import (
     JSONSchema,
     LineReports,
     EquipmentReports,
+    VehiclePositions,
     free_floatings,
     users,
 )
@@ -280,6 +281,17 @@ class V1Routing(AModule):
             '/coord/' + lon_lat + 'equipment_reports',
             '/coords/' + lon_lat + 'equipment_reports',
             endpoint='equipment_reports',
+        )
+
+        self.add_resource(
+            VehiclePositions.VehiclePositions,
+            region + 'vehicle_positions',
+            coord + 'vehicle_positions',
+            region + '<uri:uri>/vehicle_positions',
+            coord + '<uri:uri>/vehicle_positions',
+            '/coord/' + lon_lat + 'vehicle_positions',
+            '/coords/' + lon_lat + 'vehicle_positions',
+            endpoint='vehicle_positions',
         )
 
         self.add_resource(Status.Status, region + 'status', coord + 'status', endpoint='status')

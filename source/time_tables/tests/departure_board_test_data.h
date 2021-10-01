@@ -193,6 +193,13 @@ struct departure_board_fixture {
                 it_rt = b.data->pt_data->routes_map.find("TS_Route1");
                 it_rt->second->direction_type = "forward";
 
+                auto& vj = b.data->pt_data->vehicle_journeys_map.at("vehicle_journey:L:11");
+                b.data->pt_data->codes.add(vj, "source", "vj:l:11");
+                vj = b.data->pt_data->vehicle_journeys_map.at("vehicle_journey:L:12");
+                b.data->pt_data->codes.add(vj, "source", "vj:l:12");
+                vj = b.data->pt_data->vehicle_journeys_map.at("vehicle_journey:L:13");
+                b.data->pt_data->codes.add(vj, "source", "vj:l:13");
+
                 auto* ad = new navitia::georef::Admin();
                 ad->name = "Quimper";
                 ad->uri = "Quimper";

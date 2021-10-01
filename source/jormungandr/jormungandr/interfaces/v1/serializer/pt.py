@@ -589,6 +589,23 @@ class VehicleJourneySerializer(PbGenericSerializer):
             return None
 
 
+class VehicleJourneyPositionsSerializer(PbNestedSerializer):
+    vehicle_journey = VehicleJourneySerializer(display_none=False, required=False)
+    coord = jsonschema.MethodField(schema_type=lambda: CoordSerializer(), display_none=False)
+    bearing = jsonschema.MethodField(schema_type=int, display_none=False)
+    speed = jsonschema.MethodField(schema_type=int, display_none=False)
+    data_freshness = EnumField(attr="data_freshness", display_none=False)
+
+    def get_bearing(self, obj):
+        return obj.bearing if obj.HasField(str('bearing')) else None
+
+    def get_speed(self, obj):
+        return obj.speed if obj.HasField(str('speed')) else None
+
+    def get_coord(self, obj):
+        return CoordSerializer(obj.coord).data if obj.HasField(str('coord')) else None
+
+
 class ConnectionSerializer(PbNestedSerializer):
     origin = StopPointSerializer()
     destination = StopPointSerializer()

@@ -154,6 +154,22 @@ class Scenario(object):
         resp = instance.send_and_receive(req)
         return resp
 
+    def vehicle_positions(self, request, instance):
+        req = request_pb2.Request()
+        req.requested_api = type_pb2.vehicle_positions
+        req.vehicle_positions.depth = request['depth']
+        req.vehicle_positions.filter = request['filter']
+        req.vehicle_positions.count = request['count']
+        req.vehicle_positions.start_page = request['start_page']
+        req._current_datetime = date_to_timestamp(request['_current_datetime'])
+
+        if request["forbidden_uris[]"]:
+            for forbidden_uri in request["forbidden_uris[]"]:
+                req.vehicle_positions.forbidden_uris.append(forbidden_uri)
+
+        resp = instance.send_and_receive(req)
+        return resp
+
     def places(self, request, instance):
         request["request_id"] = request.get('request_id', flask.request.id)
         return instance.get_autocomplete(request.get('_autocomplete')).get(request, instances=[instance])
