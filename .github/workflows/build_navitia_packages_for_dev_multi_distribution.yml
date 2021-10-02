@@ -12,15 +12,20 @@ jobs:
 
     strategy:
         matrix:
-            distribution: [debian8, debian9, debian10]
+            distribution: [debian8, debian9, debian10, debian11]
 
     container:
       image: navitia/${{matrix.distribution}}_dev
+      volumes:
+          - /usr/share/dotnet:/usr/share/dotnet
+        # Mount /dotnet so we can delete files from docker and free up space (>20GB)
 
     steps:
+    - name: Free up space
+      run: rm -rf /usr/share/dotnet/*
     - uses: actions/checkout@v1
     - name: install zip dependency
-      run: apt update && apt install -y zip httpie
+      run: apt update && apt install -y zip httpie dh-python
     - name: dkpg-buildpackage
       run: |
         sed -i 's,git\@github.com:\([^/]*\)/\(.*\).git,https://github.com/\1/\2,' .gitmodules
