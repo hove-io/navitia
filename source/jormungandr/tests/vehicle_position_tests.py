@@ -79,7 +79,7 @@ class MockVehiclePosition(VehiclePosition):
 class TestVehiclePosition(AbstractTestFixture):
     def test_vehicle_position(self):
 
-        query = 'lines/L/vehicle_positions?_current_datetime=20160101T090000'
+        query = 'lines/L/vehicle_positions?_current_datetime=20160101T101500'
         response = self.query_region(query)
         vehicle_positions = response['vehicle_positions']
         assert len(vehicle_positions) == 1
