@@ -41,6 +41,8 @@ www.navitia.io
 
 using namespace navitia;
 using boost::posix_time::time_period;
+namespace ntest = navitia::test;
+using ntest::RTStopTime;
 
 struct logger_initialized {
     logger_initialized() { navitia::init_logger(); }
@@ -338,4 +340,111 @@ BOOST_FIXTURE_TEST_CASE(test_one_vehicle_position_is_active_4, positionTestFixtu
     BOOST_REQUIRE_EQUAL(vehicle_position.vehicle_journey_positions(0).vehicle_journey().uri(), "vehicle_journey:BB");
     BOOST_REQUIRE_EQUAL(vehicle_position.vehicle_journey_positions(0).vehicle_journey().codes().size(), 0);
 }
+
+BOOST_FIXTURE_TEST_CASE(test_one_vehicle_position_is_active_realtime_delay, positionTestFixture) {
+    /*
+    current_datetime            *
+                    15:00               15:10           15:30           15:40         15:45      15:50
+        VJ: AA        |****************************************************|
+        VJ: BB                          |**********************************************************|
+        VJ: BB modified    |--------------------------------------------------------------|
+        VJ: CC                                            |****************************|
+
+     */
+    transit_realtime::TripUpdate trip_update =
+        ntest::make_trip_update_message("BB", "20210913",
+                                        {RTStopTime("stop_area:stop01", "20210913T1503"_pts).delay(7_min),
+                                         RTStopTime("stop_area:stop02", "20210913T1543"_pts).delay(7_min)},
+                                        transit_realtime::Alert_Effect::Alert_Effect_SIGNIFICANT_DELAYS);
+
+    navitia::handle_realtime("bob", "20210913T1500"_dt, trip_update, *b.data, true, true);
+    const ptime current_datetime = "20210913T150400"_dt;
+    navitia::PbCreator pb_creator;
+    pb_creator.init(&data, current_datetime, null_time_period);
+    navitia::position::vehicle_positions(pb_creator, R"(network.uri="network:AA")", 10, 0, 0, {});
+    pbnavitia::Response resp = pb_creator.get_response();
+    BOOST_REQUIRE_EQUAL(resp.vehicle_positions().size(), 1);
+
+    auto vehicle_position = resp.vehicle_positions(0);
+    BOOST_REQUIRE_EQUAL(vehicle_position.line().uri(), "line:AA");
+    BOOST_REQUIRE_EQUAL(vehicle_position.vehicle_journey_positions().size(), 2);
+
+    BOOST_REQUIRE_EQUAL(vehicle_position.vehicle_journey_positions(0).vehicle_journey().uri(), "vehicle_journey:AA");
+    BOOST_REQUIRE_EQUAL(vehicle_position.vehicle_journey_positions(0).vehicle_journey().codes().size(), 0);
+
+    BOOST_REQUIRE_EQUAL(vehicle_position.vehicle_journey_positions(1).vehicle_journey().uri(),
+                        "vehicle_journey:BB:modified:0:bob");
+    BOOST_REQUIRE_EQUAL(vehicle_position.vehicle_journey_positions(1).vehicle_journey().codes().size(), 0);
+}
+
+BOOST_FIXTURE_TEST_CASE(test_one_vehicle_position_is_active_realtime_add_vj, positionTestFixture) {
+    /*
+    current_datetime            *
+                    15:00               15:10           15:30           15:40         15:45      15:50
+        VJ: AA        |****************************************************|
+        VJ: BB                          |**********************************************************|
+        new vj added         |--------------------------------------------------------------|
+        VJ: CC                                            |****************************|
+
+     */
+    transit_realtime::TripUpdate new_trip = ntest::make_trip_update_message(
+        "vj_new_trip", "20210913",
+        {
+            RTStopTime("stop_area:stop01", "20210913T1507"_pts).added(),
+            RTStopTime("stop_area:stop02", "20210913T1547"_pts).added(),
+        },
+        transit_realtime::Alert_Effect::Alert_Effect_ADDITIONAL_SERVICE, "", "", "", "", "trip_headsign");
+
+    navitia::handle_realtime("bob", "20210913T1500"_dt, new_trip, *b.data, true, true);
+
+    const ptime current_datetime = "20210913T150800"_dt;
+    navitia::PbCreator pb_creator;
+    pb_creator.init(&data, current_datetime, null_time_period);
+    navitia::position::vehicle_positions(pb_creator, "", 10, 0, 0, {});
+    pbnavitia::Response resp = pb_creator.get_response();
+    BOOST_REQUIRE_EQUAL(resp.vehicle_positions().size(), 3);
+
+    auto vehicle_position = resp.vehicle_positions(0);
+    BOOST_REQUIRE_EQUAL(vehicle_position.line().uri(), "line:stop_area:stop01_stop_area:stop02");
+    BOOST_REQUIRE_EQUAL(vehicle_position.vehicle_journey_positions().size(), 1);
+    BOOST_REQUIRE_EQUAL(vehicle_position.vehicle_journey_positions(0).vehicle_journey().uri(),
+                        "vehicle_journey:vj_new_trip:modified:0:bob");
+
+    vehicle_position = resp.vehicle_positions(1);
+    BOOST_REQUIRE_EQUAL(vehicle_position.line().uri(), "line:AA");
+    BOOST_REQUIRE_EQUAL(vehicle_position.vehicle_journey_positions().size(), 1);
+    BOOST_REQUIRE_EQUAL(vehicle_position.vehicle_journey_positions(0).vehicle_journey().uri(), "vehicle_journey:AA");
+
+    vehicle_position = resp.vehicle_positions(2);
+    BOOST_REQUIRE_EQUAL(vehicle_position.line().uri(), "line:KA");
+    BOOST_REQUIRE_EQUAL(vehicle_position.vehicle_journey_positions().size(), 2);
+    BOOST_REQUIRE_EQUAL(vehicle_position.vehicle_journey_positions(0).vehicle_journey().uri(), "vehicle_journey:KA");
+    BOOST_REQUIRE_EQUAL(vehicle_position.vehicle_journey_positions(1).vehicle_journey().uri(), "vehicle_journey:KB");
+}
+
+BOOST_FIXTURE_TEST_CASE(test_one_vehicle_position_is_active_realtime_del_vj, positionTestFixture) {
+    /*
+    current_datetime                              *
+                    15:00               15:10           15:30           15:40         15:45      15:50
+        VJ: AA        |****************************************************|
+        VJ: BB: To del                    |**********************************************************|
+        VJ: CC                                            |****************************|
+
+     */
+    transit_realtime::TripUpdate trip_update = ntest::make_trip_update_message(
+        "BB", "20210913", {}, transit_realtime::Alert_Effect::Alert_Effect_NO_SERVICE, "", "", "", "");
+    navitia::handle_realtime("bob", "20210913T1500"_dt, trip_update, *b.data, true, true);
+    const ptime current_datetime = "20210913T151200"_dt;
+    navitia::PbCreator pb_creator;
+    pb_creator.init(&data, current_datetime, null_time_period);
+    navitia::position::vehicle_positions(pb_creator, R"(network.uri="network:AA")", 10, 0, 0, {});
+    pbnavitia::Response resp = pb_creator.get_response();
+    BOOST_REQUIRE_EQUAL(resp.vehicle_positions().size(), 1);
+
+    auto vehicle_position = resp.vehicle_positions(0);
+    BOOST_REQUIRE_EQUAL(vehicle_position.line().uri(), "line:AA");
+    BOOST_REQUIRE_EQUAL(vehicle_position.vehicle_journey_positions().size(), 1);
+    BOOST_REQUIRE_EQUAL(vehicle_position.vehicle_journey_positions(0).vehicle_journey().uri(), "vehicle_journey:AA");
+}
+
 }  // namespace
