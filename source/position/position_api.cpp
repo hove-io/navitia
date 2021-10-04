@@ -45,7 +45,7 @@ void vehicle_positions(PbCreator& pb_creator,
     type::Indexes idx_vjs;
     try {
         idx_vjs = ptref::make_query(type::Type_e::VehicleJourney, filter, forbidden_uris, type::OdtLevel_e::all,
-                                    boost::none, boost::none, data, pb_creator.now);
+                                    boost::none, boost::none, type::RTLevel::RealTime, data, pb_creator.now);
     } catch (const ptref::parsing_error& parse_error) {
         pb_creator.fill_pb_error(pbnavitia::Error::unable_to_parse, "Unable to parse filter" + parse_error.more);
         return;
