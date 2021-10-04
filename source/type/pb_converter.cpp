@@ -1625,7 +1625,16 @@ void PbCreator::Filler::fill_pb_object(const StopTimeCalendar* stop_time_calenda
             fill_with_creator(&stop_time_calendar->stop_time->vehicle_journey->odt_message,
                               [&]() { return hn->add_notes(); });
         }
-        rs_date_time->mutable_properties()->set_vehicle_journey_id(stop_time_calendar->stop_time->vehicle_journey->uri);
+        auto* properties = rs_date_time->mutable_properties();
+        properties->set_vehicle_journey_id(stop_time_calendar->stop_time->vehicle_journey->uri);
+        for (const auto& code :
+             pb_creator.data->pt_data->codes.get_codes(stop_time_calendar->stop_time->vehicle_journey)) {
+            for (const auto& value : code.second) {
+                auto* pb_code = properties->add_vehicle_journey_codes();
+                pb_code->set_type(code.first);
+                pb_code->set_value(value);
+            }
+        }
     }
 
     if ((stop_time_calendar->calendar_id) && (stop_time_calendar->stop_time->vehicle_journey != nullptr)) {
