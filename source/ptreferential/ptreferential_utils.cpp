@@ -152,20 +152,19 @@ Indexes get_impacts_by_tags(const std::vector<std::string>& tag_name, const Data
 
     return result;
 }
-static bool is_active_vj(const type::VehicleJourney* vj,
+static bool vj_active_at(const type::VehicleJourney* vj,
                          const bt::ptime current_datetime,
                          const type::RTLevel rt_level) {
     if (vj->stop_time_list.empty()) {
         return false;
     }
+
     if ((vj->validity_patterns[rt_level] != nullptr)
         && !vj->validity_patterns[rt_level]->check(current_datetime.date())) {
         return false;
     }
-    const auto& first_departure_dt = vj->earliest_time();
-    const auto& last_arrival_dt = vj->last_time();
-    bt::time_period period = {bt::ptime(current_datetime.date(), bt::seconds(first_departure_dt)),
-                              bt::ptime(current_datetime.date(), bt::seconds(last_arrival_dt))};
+
+    bt::time_period period = vj->execution_period(current_datetime.date());
     return period.contains(current_datetime);
 }
 
@@ -235,7 +234,7 @@ type::Indexes filter_vj_active_at(const Indexes& indexes,
     Indexes res;
     for (const idx_t idx : indexes) {
         const auto* vj = data.pt_data->vehicle_journeys[idx];
-        if (!is_active_vj(vj, current_datetime, rt_level)) {
+        if (!vj_active_at(vj, current_datetime, rt_level)) {
             continue;
         }
         res.insert(idx);

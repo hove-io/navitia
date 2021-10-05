@@ -162,11 +162,6 @@ uint32_t VehicleJourney::earliest_time() const {
     return std::min(st.arrival_time, st.boarding_time);
 }
 
-uint32_t VehicleJourney::last_time() const {
-    const auto& st = navitia::last_stop_time(stop_time_list);
-    return std::max(st.arrival_time, st.boarding_time);
-}
-
 Indexes MetaVehicleJourney::get(Type_e type, const PT_Data& data) const {
     Indexes result;
     switch (type) {
