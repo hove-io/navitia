@@ -114,7 +114,7 @@ class MockVehicleOccupancyProvider(VehicleOccupancyProvider):
 
 
 @dataset({'basic_schedule_test': MOCKED_INSTANCE_CONF})
-class TestFreeFloating(AbstractTestFixture):
+class TestOccupancy(AbstractTestFixture):
     """
     Test occupancy in each date_time feed by external api /vehicle_occupancies
     """

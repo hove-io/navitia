@@ -200,6 +200,9 @@ struct departure_board_fixture {
                 vj = b.data->pt_data->vehicle_journeys_map.at("vehicle_journey:L:13");
                 b.data->pt_data->codes.add(vj, "source", "vj:l:13");
 
+                auto& stop_point = b.data->pt_data->stop_points_map.at("C:S0");
+                b.data->pt_data->codes.add(stop_point, "source", "C:S0");
+
                 auto* ad = new navitia::georef::Admin();
                 ad->name = "Quimper";
                 ad->uri = "Quimper";
