@@ -188,7 +188,7 @@ class TestSwaggerSchema(AbstractTestFixture, SchemaChecker):
 
         assert response, "response for url {} is null".format(url)
         assert response.status_code == 200
-        data = json.loads(response.data, encoding='utf-8')
+        data = json.loads(response.data)
 
         # the schema should not be empty and should be valid
         assert 'get' in data

@@ -142,6 +142,9 @@ class StatManager(object):
         connection to rabbitmq and initialize queues
         """
         self.connection = kombu.Connection(self.broker_url, connect_timeout=self.connection_timeout)
+        retry_policy = {'interval_start': 0, 'interval_step': 1, 'interval_max': 5, 'max_retries': 5}
+
+        self.connection.ensure_connection(**retry_policy)
         self.exchange = kombu.Exchange(self.exchange_name, type="topic", auto_delete=auto_delete)
         self.producer = self.connection.Producer(exchange=self.exchange)
 

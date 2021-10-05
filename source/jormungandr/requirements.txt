@@ -15,7 +15,8 @@ blinker==1.3
 itsdangerous==1.1.0
 protobuf==3.15.0
 psycopg2
-pyzmq==15.4.0
+pyzmq==15.4.0 ; python_version < "3.9"
+pyzmq==22.3.0 ; python_version >= "3.9"
 six==1.10.0
 python-dateutil==2.5.3
 pytz==2013.9
@@ -23,24 +24,30 @@ retrying==1.3.3
 aniso8601==0.82
 git+https://github.com/esnme/ultrajson.git@ac4637fbc4e72bd59f221d9bba19127820d21023
 urllib3==1.26.5
-numpy==1.9.0
+numpy==1.9.0 ; python_version < "3.9"
+numpy==1.21.2 ; python_version >= "3.9"
 pybreaker==0.2.3
 requests==2.25.1
 future==0.15.2
 zeep==1.1.0
-gevent==1.3.7
+gevent==1.3.7 ; python_version < "3.9"
+gevent==21.8.0 ; python_version >= "3.9"
 Flask-Caching==1.7.2
 serpy-ctp==0.2.1
 python-json-logger==0.1.7
 jmespath==0.9.3
 shortuuid==0.5.0
-click==6.7
+click==6.7 ; python_version < "3.9"
+click==7.1.2 ; python_version >= "3.9"
 typing==3.7.4
 coloredlogs==10.0
 sortedcontainers==2.1.0
-vine==1.3.0
+dramatiq ; python_version >= "3.9"
+vine==1.3.0 ; python_version < "3.9"
+vine==5.0.0 ; python_version >= "3.9"
 # don't update these packages' versions unless you're very sure
-amqp==2.5.2
-kombu==4.0.2
+amqp==2.5.2 ; python_version < "3.9"
+amqp==2.6.1 ; python_version >= "3.9"
+kombu==4.0.2  ; python_version < "3.9"
+kombu==5.0.2  ; python_version >= "3.9"
 redis==2.10.6
-

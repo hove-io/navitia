@@ -198,7 +198,7 @@ class TestRabbitMqPublication(unittest.TestCase):
 
         on_message_mock.assert_called_once_with("test", mock.ANY)
 
-    @pytest.mark.timeout(5)
+    @pytest.mark.timeout(10)
     def test_StatManager_can_publish_rabbit_down(self):
         app.config['SAVE_STAT'] = True
         app.config['EXCHANGE_NAME'] = 'test_rabbitmq'
@@ -208,7 +208,14 @@ class TestRabbitMqPublication(unittest.TestCase):
         stat_mngr = StatManager(auto_delete=True)
         import socket
 
-        with pytest.raises(socket.error):
+        expected_exceptions = [socket.error]
+        try:
+            # kombu >= 4.0.0
+            # https://github.com/celery/kombu/blob/54261a7a10dc89e5fb1e4b19ba79e5c62e18d2c1/Changelog.rst#40
+            expected_exceptions.append(kombu.exceptions.OperationalError)
+        except:
+            pass
+        with pytest.raises(expected_exceptions):
             stat_mngr.publish_request('bla', 'test')
             assert False, 'something looking like rabbitmq is listening on 127.0.0.42:5673'
 
