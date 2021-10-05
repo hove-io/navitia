@@ -215,7 +215,7 @@ class TestRabbitMqPublication(unittest.TestCase):
             expected_exceptions.append(kombu.exceptions.OperationalError)
         except:
             pass
-        with pytest.raises(expected_exceptions):
+        with pytest.raises(tuple(expected_exceptions)):
             stat_mngr.publish_request('bla', 'test')
             assert False, 'something looking like rabbitmq is listening on 127.0.0.42:5673'
 
