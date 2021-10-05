@@ -85,7 +85,7 @@ jobs:
       working-directory: ./build
       if: matrix.docker_image == 'navitia/debian11_dev'
       run: |
-        virtualenv -p /usr/local/bin/python3.9 navitia_py3.9
+        virtualenv -p /usr/bin/python3.9 navitia_py3.9
         . navitia_py3.9/bin/activate
         pip install -r ../source/jormungandr/requirements_dev.txt
         export JORMUNGANDR_BROKER_URL='amqp://guest:guest@rabbitmq:5672//'
