@@ -38,6 +38,7 @@ www.navitia.io
 #include "utils/logger.h"
 #include "type/pt_data.h"
 #include "tests/utils_test.h"
+#include "kraken/apply_disruption.h"
 
 using namespace navitia;
 using boost::posix_time::time_period;
@@ -449,4 +450,39 @@ BOOST_FIXTURE_TEST_CASE(test_one_vehicle_position_is_active_realtime_del_vj, pos
     BOOST_REQUIRE_EQUAL(vehicle_position.vehicle_journey_positions(0).vehicle_journey().uri(), "vehicle_journey:AA");
 }
 
+BOOST_FIXTURE_TEST_CASE(test_one_vehicle_position_is_active_disruption_chaos, positionTestFixture) {
+    /*
+    current_datetime                              *
+         14:00      15:00               15:10           15:30           15:40         15:45      15:50         16:00
+VJ: AA                |****************************************************|
+VJ: BB                                    |**********************************************************|
+VJ: CC                                                    |****************************|
+VJ: KA:   |******************************************************************************************************|
+VJ: KB:         |******************************************************************************************|
+
+     */
+    auto period = time_period("20210913T060000"_dt, "20210913T180000"_dt);
+    navitia::apply_disruption(b.disrupt(nt::RTLevel::Adapted, "network")
+                                  .tag("network")
+                                  .impact()
+                                  .severity(nt::disruption::Effect::NO_SERVICE)
+                                  .application_periods(period)
+                                  .publish(period)
+                                  .on(nt::Type_e::Network, "network:K", *b.data->pt_data)
+                                  .get_disruption(),
+                              *b.data->pt_data, *b.data->meta);
+    const ptime current_datetime = "20210913T151200"_dt;
+    navitia::PbCreator pb_creator;
+    pb_creator.init(&data, current_datetime, null_time_period);
+    navitia::position::vehicle_positions(pb_creator, "", 10, 0, 0, {});
+    pbnavitia::Response resp = pb_creator.get_response();
+    BOOST_REQUIRE_EQUAL(resp.vehicle_positions().size(), 1);
+
+    auto vehicle_position = resp.vehicle_positions(0);
+
+    BOOST_REQUIRE_EQUAL(vehicle_position.line().uri(), "line:AA");
+    BOOST_REQUIRE_EQUAL(vehicle_position.vehicle_journey_positions().size(), 2);
+    BOOST_REQUIRE_EQUAL(vehicle_position.vehicle_journey_positions(0).vehicle_journey().uri(), "vehicle_journey:AA");
+    BOOST_REQUIRE_EQUAL(vehicle_position.vehicle_journey_positions(1).vehicle_journey().uri(), "vehicle_journey:BB");
+}
 }  // namespace
