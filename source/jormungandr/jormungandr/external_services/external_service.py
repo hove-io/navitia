@@ -68,6 +68,9 @@ class AbstractExternalService(object):
             self.record_call(url=url, status='failure', reason=str(e))
         return result
 
+    def get_codes(self, pt_object, codes):
+        return [('{}_code[]'.format(pt_object), code.value) for code in codes if code.type == 'source']
+
     def record_call(self, url, status, **kwargs):
         """
         status can be in: ok, failure
