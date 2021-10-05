@@ -183,9 +183,9 @@ static void assert_is_active_vj(const Type_e requested_type,
 
 BOOST_AUTO_TEST_CASE(make_request_is_active_vj) {
     assert_is_active_vj(Type_e::VehicleJourney, "", navitia::type::RTLevel::Base, "20210910T151500",
-                        R"((all AND vehicle_journey.is_active("20210910T151500Z", "base_schedule")))");
+                        R"((all AND vehicle_journey.active_at("20210910T151500Z", "base_schedule")))");
     assert_is_active_vj(Type_e::VehicleJourney, "", navitia::type::RTLevel::RealTime, "20210910T151500",
-                        R"((all AND vehicle_journey.is_active("20210910T151500Z", "realtime")))");
+                        R"((all AND vehicle_journey.active_at("20210910T151500Z", "realtime")))");
 }
 
 static void assert_since_until(const Type_e requested_type,

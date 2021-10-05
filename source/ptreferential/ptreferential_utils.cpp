@@ -228,10 +228,10 @@ static Indexes filter_impact_on_period(const Indexes& indexes, const bt::time_pe
     }
     return res;
 }
-type::Indexes filter_vj_active(const Indexes& indexes,
-                               const bt::ptime current_datetime,
-                               const type::RTLevel rt_level,
-                               const type::Data& data) {
+type::Indexes filter_vj_active_at(const Indexes& indexes,
+                                  const bt::ptime current_datetime,
+                                  const type::RTLevel rt_level,
+                                  const type::Data& data) {
     Indexes res;
     for (const idx_t idx : indexes) {
         const auto* vj = data.pt_data->vehicle_journeys[idx];

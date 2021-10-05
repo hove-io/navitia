@@ -72,7 +72,8 @@ const nt::StopTime& earliest_stop_time(const std::vector<nt::StopTime>& sts) {
 const nt::StopTime& last_stop_time(const std::vector<nt::StopTime>& sts) {
     assert(!sts.empty());
     const auto& max_st = std::max_element(sts.begin(), sts.end(), [](const nt::StopTime& st1, const nt::StopTime& st2) {
-        return std::max(st1.boarding_time, st1.arrival_time) < std::max(st2.boarding_time, st2.arrival_time);
+        return std::max({st1.alighting_time, st1.arrival_time, st1.departure_time})
+               < std::max({st2.alighting_time, st2.arrival_time, st2.departure_time});
     });
     return *max_st;
 }
