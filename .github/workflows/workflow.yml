@@ -70,12 +70,23 @@ jobs:
         export JORMUNGANDR_BROKER_URL='amqp://guest:guest@rabbitmq:5672//'
         export KRAKEN_RABBITMQ_HOST='rabbitmq'
         ctest --output-on-failure
-    - name: Tests python3
+    - name: Tests python3.6
       working-directory: ./build
       if: matrix.docker_image != 'navitia/debian11_dev'
       run: |
-        virtualenv -p /usr/local/bin/python3.6 navitia_py3
-        . navitia_py3/bin/activate
+        virtualenv -p /usr/local/bin/python3.6 navitia_py3.6
+        . navitia_py3.6/bin/activate
+        pip install -r ../source/jormungandr/requirements_dev.txt
+        export JORMUNGANDR_BROKER_URL='amqp://guest:guest@rabbitmq:5672//'
+        export KRAKEN_RABBITMQ_HOST='rabbitmq'
+        ctest --output-on-failure
+        deactivate
+    - name: Tests python3.9
+      working-directory: ./build
+      if: matrix.docker_image == 'navitia/debian11_dev'
+      run: |
+        virtualenv -p /usr/bin/python3.9 navitia_py3.9
+        . navitia_py3.9/bin/activate
         pip install -r ../source/jormungandr/requirements_dev.txt
         export JORMUNGANDR_BROKER_URL='amqp://guest:guest@rabbitmq:5672//'
         export KRAKEN_RABBITMQ_HOST='rabbitmq'
@@ -94,11 +105,25 @@ jobs:
         NAVITIA_DOCKER_NETWORK: ${{ job.container.network }}
         TYR_CELERY_BROKER_URL: 'amqp://guest:guest@rabbitmq:5672//'
         TYR_REDIS_HOST: 'redis'
-    - name: docker_test for python3
+    - name: docker_test for python3.6
       working-directory: ./build
       if: matrix.docker_image != 'navitia/debian11_dev'
       run: |
-        . navitia_py3/bin/activate
+        . navitia_py3.6/bin/activate
+        pip install -r ../source/tyr/requirements_dev.txt
+        pip install -r ../source/sql/requirements.txt
+        export NAVITIA_CHAOS_DUMP_PATH=$(echo $GITHUB_WORKSPACE/source/tests/chaos/chaos_loading.sql.gz | sed -e 's#__w#home/runner/work#')
+        echo $NAVITIA_CHAOS_DUMP_PATH
+        make docker_test
+      env:
+        NAVITIA_DOCKER_NETWORK: ${{ job.container.network }}
+        TYR_CELERY_BROKER_URL: 'amqp://guest:guest@rabbitmq:5672//'
+        TYR_REDIS_HOST: 'redis'
+    - name: docker_test for python3.9
+      working-directory: ./build
+      if: matrix.docker_image == 'navitia/debian11_dev'
+      run: |
+        . navitia_py3.9/bin/activate
         pip install -r ../source/tyr/requirements_dev.txt
         pip install -r ../source/sql/requirements.txt
         export NAVITIA_CHAOS_DUMP_PATH=$(echo $GITHUB_WORKSPACE/source/tests/chaos/chaos_loading.sql.gz | sed -e 's#__w#home/runner/work#')
