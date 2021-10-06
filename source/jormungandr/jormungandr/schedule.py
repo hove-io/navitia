@@ -396,7 +396,7 @@ class MixedSchedule(object):
                 )
                 if not vehicle_journey_codes:
                     logging.getLogger(__name__).warning(
-                        "Vehicle journey without source code {}".format(date_time.properties.vehicle_journey_uri)
+                        "Vehicle journey without source code {}".format(date_time.properties.vehicle_journey_id)
                     )
                     continue
                 args = vehicle_journey_codes + stop_point_codes

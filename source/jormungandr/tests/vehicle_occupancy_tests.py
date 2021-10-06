@@ -76,9 +76,13 @@ class MockVehicleOccupancyProvider(VehicleOccupancyProvider):
         resp = MockObj()
         resp.status_code = 200
         json = {}
-        vehicle_journey_id = arguments.get("vehiclejourney_id")
-        stop_id = arguments.get("stop_id")
-        if stop_id == "C:S0" and vehicle_journey_id == 'vehicle_journey:C:vj1':
+        vehicle_journey_code = next(
+            (param[1] for param in arguments if param[0] == 'vehicle_journey_code[]'), None
+        )
+        stop_point_code = next((param[1] for param in arguments if param[0] == 'stop_point_code[]'), None)
+        assert vehicle_journey_code
+        assert stop_point_code
+        if stop_point_code == "C:S0" and vehicle_journey_code == 'vehicle_journey:C:vj1':
             json = {
                 "vehicle_occupancies": [
                     {
@@ -89,7 +93,7 @@ class MockVehicleOccupancyProvider(VehicleOccupancyProvider):
                     }
                 ]
             }
-        if stop_id == "S11" and vehicle_journey_id == 'vehicle_journey:M:14':
+        if stop_point_code == "S11" and vehicle_journey_code == 'vehicle_journey:M:14':
             json = {
                 "vehicle_occupancies": [
                     {
@@ -100,11 +104,11 @@ class MockVehicleOccupancyProvider(VehicleOccupancyProvider):
                     }
                 ]
             }
-        if stop_id == "stopP2" and vehicle_journey_id == 'vehicle_journey:vjP:1:modified:0:bib':
+        if stop_point_code == "stopP2" and vehicle_journey_code == 'vehicle_journey:vjP:1:modified:0:bib':
             json = {"vehicle_occupancies": []}
-        if stop_id == "stopQ2":
+        if stop_point_code == "stopQ2" and vehicle_journey_code == 'vehicle_journey:vjQ:1:modified:0:Q':
             return MagicMock(return_value=None)
-        if stop_id == "stopf1":
+        if stop_point_code == "stopf1" and vehicle_journey_code == 'vehicle_journey:vj:freq':
             resp.status_code = 503
             resp.text = '{"error":"No data loaded"}'
             return resp
