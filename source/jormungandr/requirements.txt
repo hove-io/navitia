@@ -47,7 +47,7 @@ vine==1.3.0 ; python_version < "3.9"
 vine==5.0.0 ; python_version >= "3.9"
 # don't update these packages' versions unless you're very sure
 amqp==2.5.2 ; python_version < "3.9"
-amqp==2.6.1 ; python_version >= "3.9"
+amqp==5.0.6 ; python_version >= "3.9"
 kombu==4.0.2  ; python_version < "3.9"
 kombu==5.0.2  ; python_version >= "3.9"
 redis==2.10.6

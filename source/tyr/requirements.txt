@@ -30,7 +30,9 @@ python-dateutil==2.5.3
 typing==3.7.4
 coloredlogs==10.0
 # don't update these packages' versions unless you're very sure
-amqp==2.5.2
-kombu==4.0.2
+amqp==2.5.2 ; python_version < "3.9"
+amqp==5.0.6 ; python_version >= "3.9"
+kombu==4.0.2  ; python_version < "3.9"
+kombu==5.0.2  ; python_version >= "3.9"
 redis==2.10.6
 celery==4.1.0
