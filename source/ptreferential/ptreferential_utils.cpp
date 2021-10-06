@@ -154,18 +154,31 @@ Indexes get_impacts_by_tags(const std::vector<std::string>& tag_name, const Data
 }
 static bool vj_active_at(const type::VehicleJourney* vj,
                          const bt::ptime current_datetime,
-                         const type::RTLevel rt_level) {
+                         const type::RTLevel rt_level,
+                         const type::Data& data) {
     if (vj->stop_time_list.empty()) {
         return false;
     }
 
-    if ((vj->validity_patterns[rt_level] != nullptr)
-        && !vj->validity_patterns[rt_level]->check(current_datetime.date())) {
+    const auto* vp = vj->validity_patterns[rt_level];
+    if (vp == nullptr) {
         return false;
     }
 
-    bt::time_period period = vj->execution_period(current_datetime.date());
-    return period.contains(current_datetime);
+    if (data.meta->production_date.contains(current_datetime.date()) && vp->check(current_datetime.date())) {
+        bt::time_period period = vj->execution_period(current_datetime.date());
+        if (period.contains(current_datetime)) {
+            return true;
+        }
+    }
+    const auto yesterday_datetime = current_datetime - boost::gregorian::days(1);
+    if (data.meta->production_date.contains(yesterday_datetime.date()) && vp->check(yesterday_datetime.date())) {
+        bt::time_period period = vj->execution_period(yesterday_datetime.date());
+        if (period.contains(current_datetime)) {
+            return true;
+        }
+    }
+    return false;
 }
 
 static bool keep_vj(const type::VehicleJourney* vj, const bt::time_period& period, const type::RTLevel rt_level) {
@@ -234,7 +247,7 @@ type::Indexes filter_vj_active_at(const Indexes& indexes,
     Indexes res;
     for (const idx_t idx : indexes) {
         const auto* vj = data.pt_data->vehicle_journeys[idx];
-        if (!vj_active_at(vj, current_datetime, rt_level)) {
+        if (!vj_active_at(vj, current_datetime, rt_level, data)) {
             continue;
         }
         res.insert(idx);
