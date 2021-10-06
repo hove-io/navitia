@@ -413,6 +413,7 @@ class MixedSchedule(object):
         if request['data_freshness'] != RT_PROXY_DATA_FRESHNESS:
             return resp
         self._manage_realtime(request, resp.terminus_schedules, groub_by_dest=True)
+        self._manage_occupancies(resp.terminus_schedules)
         return resp
 
     def departure_boards(self, request):
