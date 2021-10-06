@@ -57,7 +57,7 @@ public:
     ed::builder b;
     const type::Data& data;
 
-    positionTestFixture() : b("20210913"), data(*b.data) {
+    positionTestFixture() : b("20210912"), data(*b.data) {
         b.vj_with_network("network:R", "line:A", "1111111", "", true, "")("stop_area:stop1", "10:00"_t, "10:00"_t)(
             "stop_area:stop2", "11:00"_t, "11:00"_t);
         b.vj_with_network("network:R", "line:S", "1111111", "", true, "")("stop_area:stop5", "10:30"_t, "10:30"_t)(
@@ -83,6 +83,9 @@ public:
             "stop_area:stop02", "15:50"_t, "15:50"_t);
         b.vj_with_network("network:AA", "line:AA", "1111111", "", true, "CC")("stop_area:stop01", "15:30"_t, "15:30"_t)(
             "stop_area:stop02", "15:45"_t, "15:45"_t);
+
+        b.vj_with_network("midnight:AA", "midnight:AA", "0000011", "", true, "midnight")(
+            "midnight:stop01", "23:45"_t, "23:45"_t)("midnight:stop02", "24:30"_t, "24:30"_t);
 
         auto& vj = data.pt_data->vehicle_journeys_map.at("vehicle_journey:line:S:1");
         data.pt_data->codes.add(vj, "source", "network:R-line:S");
@@ -342,6 +345,17 @@ BOOST_FIXTURE_TEST_CASE(test_one_vehicle_position_is_active_4, positionTestFixtu
     BOOST_REQUIRE_EQUAL(vehicle_position.vehicle_journey_positions(0).vehicle_journey().codes().size(), 0);
 }
 
+BOOST_FIXTURE_TEST_CASE(test_one_vehicle_position_current_date_not_in_production_period, positionTestFixture) {
+    // Start production date 20210912
+
+    const ptime current_datetime = "20210910T154700"_dt;
+    navitia::PbCreator pb_creator;
+    pb_creator.init(&data, current_datetime, null_time_period);
+    navitia::position::vehicle_positions(pb_creator, R"(network.uri="network:AA")", 10, 0, 0, {});
+    pbnavitia::Response resp = pb_creator.get_response();
+    BOOST_REQUIRE_EQUAL(resp.vehicle_positions().size(), 0);
+}
+
 BOOST_FIXTURE_TEST_CASE(test_one_vehicle_position_is_active_realtime_delay, positionTestFixture) {
     /*
     current_datetime            *
@@ -486,5 +500,51 @@ VJ: KB:         |***************************************************************
     BOOST_REQUIRE_EQUAL(vehicle_position.vehicle_journey_positions().size(), 2);
     BOOST_REQUIRE_EQUAL(vehicle_position.vehicle_journey_positions(0).vehicle_journey().uri(), "vehicle_journey:AA");
     BOOST_REQUIRE_EQUAL(vehicle_position.vehicle_journey_positions(1).vehicle_journey().uri(), "vehicle_journey:BB");
+}
+
+BOOST_FIXTURE_TEST_CASE(test_one_vehicle_position_is_active_midnight_0, positionTestFixture) {
+    /*
+    current_datetime                              *
+                              23:45                    24:00                        24:30
+    VJ: midnight                |************************|****************************|
+
+
+     */
+    const ptime current_datetime = "20210913T234800"_dt;
+    navitia::PbCreator pb_creator;
+    pb_creator.init(&data, current_datetime, null_time_period);
+    navitia::position::vehicle_positions(pb_creator, R"(network.uri="midnight:AA")", 10, 0, 0, {});
+    pbnavitia::Response resp = pb_creator.get_response();
+    BOOST_REQUIRE_EQUAL(resp.vehicle_positions().size(), 1);
+
+    auto vehicle_position = resp.vehicle_positions(0);
+
+    BOOST_REQUIRE_EQUAL(vehicle_position.line().uri(), "midnight:AA");
+    BOOST_REQUIRE_EQUAL(vehicle_position.vehicle_journey_positions().size(), 1);
+    BOOST_REQUIRE_EQUAL(vehicle_position.vehicle_journey_positions(0).vehicle_journey().uri(),
+                        "vehicle_journey:midnight");
+}
+
+BOOST_FIXTURE_TEST_CASE(test_one_vehicle_position_is_active_midnight_1, positionTestFixture) {
+    /*
+    current_datetime                                             *
+                              23:45                    24:00                        24:30
+    VJ: midnight                |************************|****************************|
+
+
+     */
+    const ptime current_datetime = "20210914T001000"_dt;
+    navitia::PbCreator pb_creator;
+    pb_creator.init(&data, current_datetime, null_time_period);
+    navitia::position::vehicle_positions(pb_creator, R"(network.uri="midnight:AA")", 10, 0, 0, {});
+    pbnavitia::Response resp = pb_creator.get_response();
+    BOOST_REQUIRE_EQUAL(resp.vehicle_positions().size(), 1);
+
+    auto vehicle_position = resp.vehicle_positions(0);
+
+    BOOST_REQUIRE_EQUAL(vehicle_position.line().uri(), "midnight:AA");
+    BOOST_REQUIRE_EQUAL(vehicle_position.vehicle_journey_positions().size(), 1);
+    BOOST_REQUIRE_EQUAL(vehicle_position.vehicle_journey_positions(0).vehicle_journey().uri(),
+                        "vehicle_journey:midnight");
 }
 }  // namespace
