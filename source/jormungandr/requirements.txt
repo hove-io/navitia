@@ -37,8 +37,8 @@ serpy-ctp==0.2.1
 python-json-logger==0.1.7
 jmespath==0.9.3
 shortuuid==0.5.0
-click==6.7 ; python_version < "3.9"
-click==7.1.2 ; python_version >= "3.9"
+click==6.7 ; python_version < "3.6"
+click==7.1.2 ; python_version >= "3.6"
 typing==3.7.4
 coloredlogs==10.0
 sortedcontainers==2.1.0
