@@ -43,9 +43,7 @@ void vehicle_positions(PbCreator& pb_creator,
                        size_t count,
                        int depth = 0,
                        size_t start_page = 0,
-                       const std::vector<std::string>& forbidden_uris = {},
-                       const boost::optional<boost::posix_time::ptime>& since = boost::none,
-                       const boost::optional<boost::posix_time::ptime>& until = boost::none);
+                       const std::vector<std::string>& forbidden_uris = {});
 
 }  // namespace position
 }  // namespace navitia

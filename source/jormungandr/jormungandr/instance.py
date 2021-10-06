@@ -221,7 +221,11 @@ class Instance(object):
         """
         models = self._get_models()
         result = models.external_services if models else None
-        return [res for res in result if res.navitia_service in ['free_floatings', 'vehicle_occupancies']]
+        return [
+            res
+            for res in result
+            if res.navitia_service in ['free_floatings', 'vehicle_occupancies', "vehicle_positions"]
+        ]
 
     def get_realtime_proxies_from_db(self):
         """

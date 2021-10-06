@@ -32,7 +32,6 @@
 from __future__ import absolute_import, print_function, unicode_literals, division
 
 from navitiacommon.parser_args_type import DepthArgument, DateTimeFormat
-from flask_restful import abort
 from jormungandr import i_manager, timezone
 from jormungandr.interfaces.parsers import default_count_arg_type
 from jormungandr.interfaces.v1.decorators import get_obj_serializer
