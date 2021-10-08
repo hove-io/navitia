@@ -90,7 +90,7 @@ def read_async(fd):
 def hide_args(whole_args, args_to_be_hidden):
     """ hide the given args' contents.
 
-    >>> hide_args(["--toto", "12345", "--titi", "my almighty password", "--tati", "hid args"], ["--titi", "--toto"])
+    >>> hide_args(["--toto", "12345", "--titi", "my almighty password", "--tati", "hid args"], ["--titi", "--tati"])
     ['--toto', '12345', '--titi', 'xxxxxxxxx', '--tati', 'xxxxxxxxx']
     """
     args_copy = list(whole_args)
