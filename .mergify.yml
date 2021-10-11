@@ -1,24 +1,4 @@
 pull_request_rules:
-  - name: automatic merge when CI passes and 2 reviews
-    conditions:
-      - "#approved-reviews-by>=2"
-      - "#changes-requested-reviews-by=0"
-      - status-success=build (navitia/debian8_dev)
-      - status-success=build (navitia/debian9_dev)
-      - status-success=build (navitia/debian10_dev)
-      - status-success=checks
-      - status-success=precommit
-      - base=dev
-      - label!=do_not_merge
-      - label!=wip
-      - label!=waiting
-      - label!=merge_after_release
-      - author=@coreteam
-    actions:
-      merge:
-        method: merge
-        strict: smart   # To avoid multiple builds at once on the CI
-        strict_method: rebase # We want Dev rebased onto the PR
   - name: delete head branch on merged pull requests
     conditions:
       - merged
