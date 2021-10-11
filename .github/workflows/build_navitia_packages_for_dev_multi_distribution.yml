@@ -12,7 +12,7 @@ jobs:
 
     strategy:
         matrix:
-            distribution: [debian8, debian9, debian10, debian11]
+            distribution: [debian8, debian10, debian11]
 
     container:
       image: navitia/${{matrix.distribution}}_dev
