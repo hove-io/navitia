@@ -51,7 +51,7 @@ class VehiclePosition(AbstractExternalService):
             ),
         )
 
-    @cache.memoize(app.config.get(str('CACHE_CONFIGURATION'), {}).get(str('TIMEOUT_FORSETI'), 60 * 60))
+    @cache.memoize(app.config.get(str('CACHE_CONFIGURATION'), {}).get(str('TIMEOUT_FORSETI'), 10))
     def get_response(self, arguments):
         """
         Get vehicle_position information from Forseti webservice
