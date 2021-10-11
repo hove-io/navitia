@@ -35,6 +35,7 @@ www.navitia.io
 #include "disruption/line_reports_api.h"
 #include "disruption/traffic_reports_api.h"
 #include "equipment/equipment_api.h"
+#include "position/position_api.h"
 #include "proximity_list/proximitylist_api.h"
 #include "ptreferential/ptreferential.h"
 #include "ptreferential/ptreferential_api.h"
@@ -1175,6 +1176,9 @@ void Worker::dispatch(const pbnavitia::Request& request,
         case pbnavitia::equipment_reports:
             equipment_reports(request.equipment_reports());
             break;
+        case pbnavitia::vehicle_positions:
+            vehicle_positions(request.vehicle_positions());
+            break;
         default:
             LOG4CPLUS_WARN(logger, "Unknown API : " + API_Name(request.requested_api()));
             this->pb_creator.fill_pb_error(pbnavitia::Error::unknown_api, "Unknown API");
@@ -1248,6 +1252,13 @@ void Worker::equipment_reports(const pbnavitia::EquipmentReportsRequest& equipme
 
     equipment::equipment_reports(this->pb_creator, equipment_reports.filter(), equipment_reports.count(),
                                  equipment_reports.depth(), equipment_reports.start_page(), forbidden_uris);
+}
+void Worker::vehicle_positions(const pbnavitia::VehiclePositionsRequest& vehcile_positions) {
+    const auto& proto_uris = vehcile_positions.forbidden_uris();
+    std::vector<std::string> forbidden_uris(proto_uris.begin(), proto_uris.end());
+
+    position::vehicle_positions(this->pb_creator, vehcile_positions.filter(), vehcile_positions.count(),
+                                vehcile_positions.depth(), vehcile_positions.start_page(), forbidden_uris);
 }
 
 }  // namespace navitia

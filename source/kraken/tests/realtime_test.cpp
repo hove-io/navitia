@@ -1356,6 +1356,10 @@ BOOST_AUTO_TEST_CASE(get_impacts_on_vj) {
     ed::builder b("20150928", [](ed::builder& b) {
         b.vj("A", "000111", "", true, "vj:1")("stop1", "08:01"_t)("stop2", "09:01"_t);
     });
+    // Add code on vj:1
+    auto* vj_1 = b.get<navitia::type::VehicleJourney>("vehicle_journey:vj:1");
+    b.data->pt_data->codes.add(vj_1, "source", "source_vj:1");
+    b.data->pt_data->codes.add(vj_1, "gtfs", "gtfs_vj:1");
 
     transit_realtime::TripUpdate first_trip_update = ntest::make_trip_update_message(
         "vj:1", "20150928",
@@ -1370,6 +1374,11 @@ BOOST_AUTO_TEST_CASE(get_impacts_on_vj) {
     BOOST_REQUIRE_EQUAL(pt_data->vehicle_journeys.size(), 1);
     BOOST_CHECK_EQUAL(vj->get_impacts().size(), 0);
 
+    // Search by code should also find the only vehicle_journey vj:1
+    auto indexes = navitia::ptref::make_query(nt::Type_e::VehicleJourney,
+                                              R"(vehicle_journey.has_code(source, source_vj:1))", *(b.data));
+    BOOST_CHECK_EQUAL(indexes.size(), 1);
+
     navitia::handle_realtime("delay1hourD0", timestamp, first_trip_update, *b.data, true, true);
 
     // get vj realtime for d0 and check it's on day 0
@@ -1377,6 +1386,11 @@ BOOST_AUTO_TEST_CASE(get_impacts_on_vj) {
     BOOST_REQUIRE_EQUAL(vj->meta_vj->get_rt_vj().size(), 1);
     const auto vj_rt_d0 = vj->meta_vj->get_rt_vj()[0].get();
     BOOST_CHECK(vj_rt_d0->get_validity_pattern_at(vj_rt_d0->realtime_level)->check(0));
+
+    // Search by code should also find two vehicle_journeys
+    indexes = navitia::ptref::make_query(nt::Type_e::VehicleJourney,
+                                         R"(vehicle_journey.has_code(source, source_vj:1))", *(b.data));
+    BOOST_CHECK_EQUAL(indexes.size(), 2);
 
     BOOST_REQUIRE_EQUAL(vj->get_impacts().size(), 1);
     BOOST_CHECK_EQUAL(vj->get_impacts()[0]->uri, "delay1hourD0");
@@ -1391,6 +1405,11 @@ BOOST_AUTO_TEST_CASE(get_impacts_on_vj) {
     const auto vj_rt_d1 = vj->meta_vj->get_rt_vj()[1].get();
     BOOST_CHECK(vj_rt_d1->get_validity_pattern_at(vj_rt_d1->realtime_level)->check(1));
 
+    // Search by code should also find three vehicle_journeys
+    indexes = navitia::ptref::make_query(nt::Type_e::VehicleJourney,
+                                         R"(vehicle_journey.has_code(source, source_vj:1))", *(b.data));
+    BOOST_CHECK_EQUAL(indexes.size(), 3);
+
     BOOST_REQUIRE_EQUAL(vj->get_impacts().size(), 2);
     BOOST_CHECK_EQUAL(vj->get_impacts()[0]->uri, "delay1hourD0");
     BOOST_CHECK_EQUAL(vj->get_impacts()[1]->uri, "delay2hourD1");
@@ -1402,6 +1421,10 @@ BOOST_AUTO_TEST_CASE(get_impacts_on_vj) {
     navitia::handle_realtime("cancelD3", timestamp, third_trip_update, *b.data, true, true);
 
     BOOST_REQUIRE_EQUAL(pt_data->vehicle_journeys.size(), 3);
+    // Search by code should also find three vehicle_journeys
+    indexes = navitia::ptref::make_query(nt::Type_e::VehicleJourney,
+                                         R"(vehicle_journey.has_code(source, source_vj:1))", *(b.data));
+    BOOST_CHECK_EQUAL(indexes.size(), 3);
     BOOST_REQUIRE_EQUAL(vj->get_impacts().size(), 3);
     BOOST_CHECK_EQUAL(vj->get_impacts()[0]->uri, "delay1hourD0");
     BOOST_CHECK_EQUAL(vj->get_impacts()[1]->uri, "delay2hourD1");

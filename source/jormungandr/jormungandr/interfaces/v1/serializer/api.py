@@ -378,6 +378,10 @@ class EquipmentReportsSerializer(PTReferentialSerializer):
     warnings = base.BetaEndpointsSerializer()
 
 
+class VehiclePositionsSerializer(PTReferentialSerializer):
+    vehicle_positions = report.VehiclePositionsSerializer(many=True, display_none=True)
+
+
 class TrafficReportsSerializer(PTReferentialSerializer):
     traffic_reports = report.TrafficReportSerializer(many=True, display_none=True)
 

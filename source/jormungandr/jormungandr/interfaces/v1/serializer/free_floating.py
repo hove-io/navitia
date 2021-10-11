@@ -38,21 +38,21 @@ from jormungandr.scenarios.utils import free_floatings_type
 
 coord_schema = {
     "type": "object",
-    "properties": {"lat": {"type": ["string", "null"]}, "lon": {"type": ["string", "null"]}},
+    "properties": {"lat": {"type": "string"}, "lon": {"type": "string"}},
     "required": ["lat", "lon"],
 }
 
 free_floating_schema = {
     "type": "object",
     "properties": {
-        "public_id": {"type": ["string"]},
-        "provider_name": {"type": ["string"]},
-        "id": {"type": ["string"]},
-        "type": {"enum": free_floatings_type},
-        "propulsion": {"type": ["string"]},
-        "battery": {"type": ["integer"]},
-        "distance": {"type": ["integer"]},
-        "deeplink": {"type": ["string"]},
+        "public_id": {"type": "string"},
+        "provider_name": {"type": "string"},
+        "id": {"type": "string"},
+        "type": {"enum": free_floatings_type, "type": "string"},
+        "propulsion": {"type": "string"},
+        "battery": {"type": "integer"},
+        "distance": {"type": "integer"},
+        "deeplink": {"type": "string"},
         "coord": coord_schema,
     },
 }

@@ -67,17 +67,26 @@ def default_external_service_config():
             "destination_id_tag": "",
             "service_args": {'serviceID': "10", 'EntityID': "658", 'Media': "spec_navit_comp"},
         }
+        external_service_4 = models.ExternalService('gtfs_rt_sch')
+        external_service_4.klass = "bob"
+        external_service_4.navitia_service = "vehicle_positions"
+        external_service_4.args = {"service_url": "http://vehicle_positions.com", "timeout": 5, "timezone": "aa"}
+
         models.db.session.add(external_service_1)
         models.db.session.add(external_service_2)
         models.db.session.add(external_service_3)
+        models.db.session.add(external_service_4)
         models.db.session.commit()
         # refresh and detach the objets from the db before returning them
         models.db.session.refresh(external_service_1)
         models.db.session.refresh(external_service_2)
         models.db.session.refresh(external_service_3)
+        models.db.session.refresh(external_service_4)
+
         models.db.session.expunge(external_service_1)
         models.db.session.expunge(external_service_2)
         models.db.session.expunge(external_service_3)
+        models.db.session.expunge(external_service_4)
         # Create instance
         instance = models.Instance('default')
         models.db.session.add(instance)
@@ -85,12 +94,13 @@ def default_external_service_config():
         models.db.session.refresh(instance)
         models.db.session.expunge(instance)
 
-        yield instance, external_service_1, external_service_2, external_service_3
+        yield instance, external_service_1, external_service_2, external_service_3, external_service_4
 
         models.db.session.delete(instance)
         models.db.session.delete(external_service_1)
         models.db.session.delete(external_service_2)
         models.db.session.delete(external_service_3)
+        models.db.session.delete(external_service_4)
         models.db.session.commit()
 
 
@@ -105,10 +115,12 @@ def test_external_service_get(default_external_service_config):
     """
     Test that the list of services with their info is correctly returned when queried
     """
-    _, external_service_1, external_service_2, external_service_3 = default_external_service_config
+    _, external_service_1, external_service_2, external_service_3, external_service_4 = (
+        default_external_service_config
+    )
     resp = api_get('/v0/external_services')
     assert "external_services" in resp
-    assert len(resp['external_services']) == 3
+    assert len(resp['external_services']) == 4
 
     resp = api_get('/v0/external_services/forseti_free_floatings')
     assert "external_services" in resp
@@ -127,6 +139,15 @@ def test_external_service_get(default_external_service_config):
     assert resp['external_services'][0]['navitia_service'] == external_service_3.navitia_service
     assert resp['external_services'][0]['klass'] == external_service_3.klass
     assert resp['external_services'][0]['args'] == external_service_3.args
+    assert not resp['external_services'][0]['discarded']
+
+    resp = api_get('/v0/external_services/gtfs_rt_sch')
+    assert "external_services" in resp
+    assert len(resp['external_services']) == 1
+    assert resp['external_services'][0]['id'] == external_service_4.id
+    assert resp['external_services'][0]['navitia_service'] == external_service_4.navitia_service
+    assert resp['external_services'][0]['klass'] == external_service_4.klass
+    assert resp['external_services'][0]['args'] == external_service_4.args
     assert not resp['external_services'][0]['discarded']
 
 
@@ -159,7 +180,7 @@ def test_external_service_put(default_external_service_config):
 
     resp = api_get('/v0/external_services')
     assert 'external_services' in resp
-    assert len(resp['external_services']) == 4
+    assert len(resp['external_services']) == 5
 
     # Update existing service
     service['args']['service_url'] = "http://my_external_service_free_floating_update.com"
@@ -247,14 +268,14 @@ def test_external_service_delete(default_external_service_config):
     """
     resp = api_get('/v0/external_services')
     assert 'external_services' in resp
-    assert len(resp['external_services']) == 3
+    assert len(resp['external_services']) == 4
 
     _, status_code = api_delete('v0/external_services/forseti_free_floatings', check=False, no_json=True)
     assert status_code == 204
 
     resp = api_get('/v0/external_services')
     assert 'external_services' in resp
-    assert len(resp['external_services']) == 2
+    assert len(resp['external_services']) == 3
 
     resp = api_get('/v0/external_services/forseti_free_floatings')
     assert 'external_services' in resp
@@ -268,7 +289,9 @@ def test_external_service_delete(default_external_service_config):
 
 
 def test_associate_instance_external_service(default_external_service_config):
-    instance, external_service_1, external_service_2, external_service_3 = default_external_service_config
+    instance, external_service_1, external_service_2, external_service_3, external_service_4 = (
+        default_external_service_config
+    )
 
     # Associate one external service
     resp = api_put('/v1/instances/{}?external_services={}'.format(instance.name, external_service_1.id))

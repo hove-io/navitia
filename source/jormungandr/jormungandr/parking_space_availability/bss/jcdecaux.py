@@ -1,3 +1,5 @@
+# encoding: utf-8
+
 # Copyright (c) 2001-2014, Canal TP and/or its affiliates. All rights reserved.
 #
 # This file is part of Navitia,
@@ -36,6 +38,7 @@ from jormungandr import cache, app
 from jormungandr.parking_space_availability.bss.common_bss_provider import CommonBssProvider, BssProxyError
 from jormungandr.parking_space_availability.bss.stands import Stands, StandsStatus
 from jormungandr.ptref import FeedPublisher
+import datetime
 
 DEFAULT_JCDECAUX_FEED_PUBLISHER = {
     'id': 'jcdecaux',
@@ -70,6 +73,9 @@ class JcdecauxProvider(CommonBssProvider):
         )
         self.breaker = pybreaker.CircuitBreaker(fail_max=fail_max, reset_timeout=reset_timeout)
         self._feed_publisher = FeedPublisher(**feed_publisher) if feed_publisher else None
+        self._data = {}
+        self._last_update = datetime.datetime(1970, 1, 1)
+        self._update_interval = 30
 
     def support_poi(self, poi):
         properties = poi.get('properties', {})
@@ -101,7 +107,18 @@ class JcdecauxProvider(CommonBssProvider):
     def _get_informations(self, poi):
         # Possible status values of the station: OPEN and CLOSED
         ref = poi.get('properties', {}).get('ref')
-        data = self._call_webservice()
+        service_key = self.WS_URL_TEMPLATE.format(self.contract, self.api_key) + self.network
+        data = self._data.get(service_key)
+        if data is None:
+            self._data[service_key] = self._call_webservice()
+            self._last_update = datetime.datetime.utcnow()
+
+        if self._last_update + datetime.timedelta(seconds=self._update_interval) < datetime.datetime.utcnow():
+            service_url = self.WS_URL_TEMPLATE.format(self.contract, self.api_key)
+            self._data[service_url] = self._call_webservice()
+            self._last_update = datetime.datetime.utcnow()
+
+        data = self._data.get(service_key)
         if data and 'status' in data.get(ref, {}):
             if data[ref]['status'] == 'OPEN':
                 return Stands(

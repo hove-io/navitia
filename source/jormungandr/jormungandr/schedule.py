@@ -372,17 +372,40 @@ class MixedSchedule(object):
         vo_service = self.instance.external_service_provider_manager.get_vehicle_occupancy_service()
         if not vo_service:
             return
+        futures = []
+        # TODO define new parameter forseti_pool_size ?
+        pool = gevent.pool.Pool(self.instance.realtime_pool_size)
+        # Copy the current request context to be used in greenlet
+        reqctx = utils.copy_flask_request_context()
+
+        def worker(vo_service, date_time, args):
+            # Use the copied request context in greenlet
+            with utils.copy_context_in_greenlet_stack(reqctx):
+                return (date_time, vo_service.get_response(args))
+
         for schedule in schedules:
-            sp_id = schedule.stop_point.uri
+            stop_point_codes = vo_service.get_codes('stop_point', schedule.stop_point.codes)
+            if not stop_point_codes:
+                logging.getLogger(__name__).warning(
+                    "Stop point without source code {}".format(schedule.stop_point.uri)
+                )
+                continue
             for date_time in schedule.date_times:
-                vj_id = date_time.properties.vehicle_journey_id
-                args = {"stop_id": sp_id, "vehiclejourney_id": vj_id}
-                # TODO: this call may be parallelized with gevent
-                # Not done now as it's only a POC and our WS Forseti/vehicle_occupancies will only have fewer
-                # elements (less than 5000 for line 40 and 45). The Cache with 1 hour duration works well
-                occupancy = vo_service.get_response(args)
-                if occupancy is not None:
-                    date_time.occupancy = occupancy
+                vehicle_journey_codes = vo_service.get_codes(
+                    'vehicle_journey', date_time.properties.vehicle_journey_codes
+                )
+                if not vehicle_journey_codes:
+                    logging.getLogger(__name__).warning(
+                        "Vehicle journey without source code {}".format(date_time.properties.vehicle_journey_id)
+                    )
+                    continue
+                args = vehicle_journey_codes + stop_point_codes
+                futures.append(pool.spawn(worker, vo_service, date_time, args))
+
+        for future in gevent.iwait(futures):
+            date_time, occupancy = future.get()
+            if occupancy is not None:
+                date_time.occupancy = occupancy
 
     def terminus_schedules(self, request):
         resp = self.__stop_times(request, api=type_pb2.terminus_schedules, departure_filter=request["filter"])
@@ -390,6 +413,7 @@ class MixedSchedule(object):
         if request['data_freshness'] != RT_PROXY_DATA_FRESHNESS:
             return resp
         self._manage_realtime(request, resp.terminus_schedules, groub_by_dest=True)
+        self._manage_occupancies(resp.terminus_schedules)
         return resp
 
     def departure_boards(self, request):

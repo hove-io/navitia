@@ -12,15 +12,20 @@ jobs:
 
     strategy:
         matrix:
-            distribution: [debian8, debian9, debian10]
+            distribution: [debian8, debian9, debian10, debian11]
 
     container:
       image: navitia/${{matrix.distribution}}_dev
+      volumes:
+          - /usr/share/dotnet:/usr/share/dotnet
+        # Mount /dotnet so we can delete files from docker and free up space (>20GB)
 
     steps:
+    - name: Free up space
+      run: rm -rf /usr/share/dotnet/*
     - uses: actions/checkout@v1
     - name: install zip dependency
-      run: apt update && apt install -y zip httpie
+      run: apt update && apt install -y zip httpie dh-python
     - name: dkpg-buildpackage
       run: |
         sed -i 's,git\@github.com:\([^/]*\)/\(.*\).git,https://github.com/\1/\2,' .gitmodules
@@ -82,8 +87,4 @@ jobs:
           request = requests.post(url, data = params )
           print("Response status code : {}".format(request.status_code) )
           print(request.text)
-
-    - name: run deploy on artemis machine https://jenkins-core.canaltp.fr/job/deploy-navitia
-      if: ${{ github.event_name == 'push' }}
-      run: http --ignore-stdin -v -f POST https://${{secrets.JENKINS_NG_TOKEN}}@jenkins-core.canaltp.fr/job/deploy-navitia/buildWithParameters PLATFORM=artemis_debian8
 

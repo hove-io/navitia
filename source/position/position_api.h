@@ -1,4 +1,4 @@
-/* Copyright © 2001-2014, Canal TP and/or its affiliates. All rights reserved.
+/* Copyright © 2001-2019, Canal TP and/or its affiliates. All rights reserved.
 
 This file is part of Navitia,
     the software to build cool stuff with public transport.
@@ -28,27 +28,22 @@ https://groups.google.com/d/forum/navitia
 www.navitia.io
 */
 
-#include "type/fwd_type.h"
-#include "type/rt_level.h"
-#include "type/type.pb.h"
-#include "routing/stop_event.h"
+#pragma once
 
-#include <boost/date_time/posix_time/posix_time.hpp>
+#include "type/pb_converter.h"
+#include "utils/functions.h"
 
 namespace navitia {
+namespace position {
 
-/**
- * Compute base passage from amended passage, knowing amended and base stop-times
- */
-boost::posix_time::ptime get_date_time(const routing::StopEvent stop_event,
-                                       const type::StopTime* st_orig,
-                                       const type::StopTime* st_base,
-                                       const boost::posix_time::ptime& dt_orig,
-                                       bool is_departure);
+using VehiclePositionList = std::map<type::Line*, std::set<type::VehicleJourney*, Less>, Less>;
 
-const type::StopTime& earliest_stop_time(const std::vector<type::StopTime>& sts);
-pbnavitia::RTLevel to_pb_realtime_level(const navitia::type::RTLevel realtime_level);
+void vehicle_positions(PbCreator& pb_creator,
+                       const std::string& filter,
+                       size_t count,
+                       int depth = 0,
+                       size_t start_page = 0,
+                       const std::vector<std::string>& forbidden_uris = {});
 
-pbnavitia::ActiveStatus to_pb_active_status(navitia::type::disruption::ActiveStatus active_status);
-
+}  // namespace position
 }  // namespace navitia

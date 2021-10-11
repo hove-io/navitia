@@ -921,6 +921,11 @@ void PbCreator::Filler::fill_pb_object(const nt::VehicleJourney* vj, pbnavitia::
     }
     fill_messages(vj->meta_vj, vehicle_journey);
 
+    // For a realtime vj, we should get de base vj to fill codes
+    if (vj->realtime_level == nt::RTLevel::RealTime && !vj->meta_vj->get_base_vj().empty()) {
+        const auto& base_vjs = vj->meta_vj->get_base_vj();
+        vj = base_vjs.front().get();
+    }
     fill_codes(vj, vehicle_journey);
 }
 
@@ -1620,7 +1625,16 @@ void PbCreator::Filler::fill_pb_object(const StopTimeCalendar* stop_time_calenda
             fill_with_creator(&stop_time_calendar->stop_time->vehicle_journey->odt_message,
                               [&]() { return hn->add_notes(); });
         }
-        rs_date_time->mutable_properties()->set_vehicle_journey_id(stop_time_calendar->stop_time->vehicle_journey->uri);
+        auto* properties = rs_date_time->mutable_properties();
+        properties->set_vehicle_journey_id(stop_time_calendar->stop_time->vehicle_journey->uri);
+        for (const auto& code :
+             pb_creator.data->pt_data->codes.get_codes(stop_time_calendar->stop_time->vehicle_journey)) {
+            for (const auto& value : code.second) {
+                auto* pb_code = properties->add_vehicle_journey_codes();
+                pb_code->set_type(code.first);
+                pb_code->set_value(value);
+            }
+        }
     }
 
     if ((stop_time_calendar->calendar_id) && (stop_time_calendar->stop_time->vehicle_journey != nullptr)) {
@@ -2234,6 +2248,10 @@ pbnavitia::EquipmentReport* PbCreator::add_equipment_reports() {
     return response.add_equipment_reports();
 }
 
+pbnavitia::VehiclePosition* PbCreator::add_vehicle_positions() {
+    return response.add_vehicle_positions();
+}
+
 bool PbCreator::has_error() {
     return response.has_error();
 }
@@ -2287,6 +2305,10 @@ int PbCreator::calendars_size() {
 
 int PbCreator::equipment_reports_size() {
     return response.equipment_reports_size();
+}
+
+int PbCreator::vehicle_positions_size() {
+    return response.vehicle_positions_size();
 }
 
 void PbCreator::sort_journeys() {

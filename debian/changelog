@@ -1,3 +1,24 @@
+navitia2 (13.1.0) unstable; urgency=low
+
+  * [docker] build docker on release only & with  tag latest  <https://github.com/CanalTP/navitia/pull/3581>
+  * [python] update ujson dependency repo/commit  <https://github.com/CanalTP/navitia/pull/3580>
+  * [python] bump python dependencies  <https://github.com/CanalTP/navitia/pull/3574>
+  * [CI] Adding debian 11 support  <https://github.com/CanalTP/navitia/pull/3573>
+  * [CI] remove artemis_old  <https://github.com/CanalTP/navitia/pull/3567>
+  * [Kraken] add new param (is_active): select only active vehicle journey at current_datetime  <https://github.com/CanalTP/navitia/pull/3569>
+  * [Kraken] add vehicle_journey_codes in kraken response  <https://github.com/CanalTP/navitia/pull/3572>
+  * [kraken] add codes in new vjs  <https://github.com/CanalTP/navitia/pull/3565>
+  * [Kraken] Fix midnight vehicle position  <https://github.com/CanalTP/navitia/pull/3576>
+  * [Kraken] add vehicule positions  <https://github.com/CanalTP/navitia/pull/3561>
+  * [jormun] Use manual cache for jcdecaux in addition to redis cache  <https://github.com/CanalTP/navitia/pull/3571>
+  * [Jormun] Change default value of forseti cache (10s)  <https://github.com/CanalTP/navitia/pull/3578>
+  * [Jormun] Format url forseti  for vehicle_occupancies api  <https://github.com/CanalTP/navitia/pull/3575>
+  * [Jormun] vehicle positions  <https://github.com/CanalTP/navitia/pull/3568>
+  * [jormun] fix free floatings schema  <https://github.com/CanalTP/navitia/pull/3566>
+  * [Tyr] Upgrade database with vehicle positions  <https://github.com/CanalTP/navitia/pull/3552>
+
+ -- Benoit Brisset <benoit.brisset@gmail.com>  Mon, 11 Oct 2021 19:10:00 +0100
+
 navitia2 (13.0.0) unstable; urgency=low
 
   * [documentation] Upgrading display informations  <https://github.com/CanalTP/navitia/pull/3564>

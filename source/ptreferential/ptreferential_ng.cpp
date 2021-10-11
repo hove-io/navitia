@@ -263,6 +263,12 @@ struct Eval : boost::static_visitor<Indexes> {
             }
         } else if (type == Type_e::VehicleJourney && f.method == "has_disruption" && f.args.empty()) {
             indexes = get_indexes_by_impacts(type::Type_e::VehicleJourney, data);
+        } else if (type == Type_e::VehicleJourney && f.method == "active_at" && f.args.size() == 2) {
+            // useful only for VJ for vehicle_positions api
+            const auto rt_level =
+                (type == Type_e::VehicleJourney) ? rt_level_from_string(f.args.at(1)) : type::RTLevel::Base;
+            boost::posix_time::ptime current_datetime = from_datetime(f.args.at(0));
+            indexes = filter_vj_active_at(data.get_all_index(type), current_datetime, rt_level, data);
         } else if (type == Type_e::Line && f.method == "code" && f.args.size() == 1) {
             for (auto l : data.pt_data->lines) {
                 if (l->code != f.args[0]) {
@@ -346,6 +352,15 @@ struct Eval : boost::static_visitor<Indexes> {
             indexes = get_indexes_from_name(type, f.args.at(0), data);
         } else if (f.method == "has_code" && f.args.size() == 2) {
             indexes = get_indexes_from_code(type, f.args.at(0), f.args.at(1), data);
+            // For each vehicle_journey get  all realtime and add in the list
+            if (type == Type_e::VehicleJourney) {
+                const auto vjs = data.get_data<type::VehicleJourney>(indexes);
+                for (type::VehicleJourney* vj : vjs) {
+                    for (const auto& rt_vj : vj->meta_vj->get_rt_vj()) {
+                        indexes.insert(rt_vj->idx);
+                    }
+                }
+            }
         } else if (f.method == "has_code_type") {
             indexes = get_indexes_from_code_type(type, f.args, data);
         } else if ((type == Type_e::Route) && (f.method == "has_direction_type")) {
@@ -417,7 +432,8 @@ std::string make_request(const Type_e requested_type,
                          const boost::optional<boost::posix_time::ptime>& since,
                          const boost::optional<boost::posix_time::ptime>& until,
                          const type::RTLevel rt_level,
-                         const type::Data& data) {
+                         const type::Data& data,
+                         const boost::optional<boost::posix_time::ptime>& current_datetime) {
     std::string res = request.empty() ? std::string("all") : request;
 
     switch (requested_type) {
@@ -427,6 +443,13 @@ std::string make_request(const Type_e requested_type,
             }
             break;
         case Type_e::VehicleJourney:
+            if (current_datetime != boost::none) {
+                res = "(" + res + ") AND " + navitia::type::static_data::get()->captionByType(requested_type);
+                res = res + ".active_at(" + to_iso_string(*current_datetime) + "Z";
+                res = res + ", " + rt_level_to_string(rt_level);
+                res = res + ")";
+                break;
+            }
         case Type_e::Impact:
             if (since || until) {
                 res = "(" + res + ") AND " + navitia::type::static_data::get()->captionByType(requested_type);
@@ -485,10 +508,11 @@ Indexes make_query_ng(const Type_e requested_type,
                       const boost::optional<boost::posix_time::ptime>& since,
                       const boost::optional<boost::posix_time::ptime>& until,
                       const type::RTLevel rt_level,
-                      const type::Data& data) {
+                      const type::Data& data,
+                      const boost::optional<boost::posix_time::ptime>& current_datetime) {
     auto logger = log4cplus::Logger::getInstance("ptref");
-    const auto request_ng =
-        make_request(requested_type, request, forbidden_uris, odt_level, since, until, rt_level, data);
+    const auto request_ng = make_request(requested_type, request, forbidden_uris, odt_level, since, until, rt_level,
+                                         data, current_datetime);
     const auto expr = parse(request_ng);
     LOG4CPLUS_TRACE(logger, "ptref_ng parsed: " << expr << " [requesting: "
                                                 << navitia::type::static_data::get()->captionByType(requested_type)
