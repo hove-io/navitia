@@ -69,6 +69,24 @@ Indexes get_intersection(const Indexes& idxs1, const Indexes& idxs2) {
 }
 
 Indexes get_corresponding(Indexes indexes, Type_e from, const Type_e to, const Data& data) {
+    // Exceptional case: if from = PhysicalMode and to = Impact
+    // 1. Get all vehicle_journeys impacted
+    // 2. Keep only vehicle_journeys with physical_mode in the parameter
+
+    if (from == Type_e::PhysicalMode && to == Type_e::Impact) {
+        auto vj_idxs = get_indexes_by_impacts(Type_e::VehicleJourney, data, false);
+        const auto vjs = data.get_data<type::VehicleJourney>(vj_idxs);
+        Indexes vj_indexes, temp;
+        for (type::VehicleJourney* vj : vjs) {
+            if (indexes.find(vj->physical_mode->idx) != indexes.cend()) {
+                // Add Impact on vj
+                temp = vj->get(Type_e::Impact, *(data.pt_data.get()));
+                vj_indexes.insert(temp.begin(), temp.end());
+            }
+        }
+        return vj_indexes;
+    }
+
     const std::map<Type_e, Type_e> path = find_path(to);
     std::set<idx_t> set_idx{indexes.begin(), indexes.end()};
     while (path.at(from) != from) {
@@ -113,7 +131,7 @@ struct VariantVisitor : boost::static_visitor<pair_indexes> {
     }
 };
 
-Indexes get_indexes_by_impacts(const type::Type_e& type_e, const Data& d) {
+Indexes get_indexes_by_impacts(const type::Type_e& type_e, const Data& d, bool only_no_service) {
     Indexes result;
     VariantVisitor visit(d);
     const auto& impacts = d.pt_data->disruption_holder.get_weak_impacts();
@@ -122,7 +140,7 @@ Indexes get_indexes_by_impacts(const type::Type_e& type_e, const Data& d) {
         if (!imp) {
             continue;
         }
-        if (imp->severity->effect != type::disruption::Effect::NO_SERVICE) {
+        if (only_no_service && imp->severity->effect != type::disruption::Effect::NO_SERVICE) {
             continue;
         }
         for (const auto& entitie : imp->informed_entities()) {
