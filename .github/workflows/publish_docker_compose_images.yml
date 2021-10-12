@@ -1,6 +1,7 @@
 name: Publish Docker Compose Images
 
 on:
+  workflow_dispatch:
   workflow_run:
     workflows: ["Build Navitia Packages For Release"]
     branches: [release]
