@@ -37,7 +37,7 @@ jobs:
     strategy:
         fail-fast: false
         matrix:
-            docker_image: [navitia/debian8_dev, navitia/debian9_dev, navitia/debian10_dev, navitia/debian11_dev]
+            docker_image: [navitia/debian8_dev, navitia/debian10_dev, navitia/debian11_dev]
 
     container:
         image: ${{matrix.docker_image}}
