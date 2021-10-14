@@ -452,13 +452,23 @@ def similar_pt_section_line(section):
 
 
 def similar_journeys_generator(journey, pt_functor, sn_functor=lambda s: 'sn:{}'.format(s.street_network.mode)):
-    for idx, s in enumerate(journey.sections):
-        if s.type == response_pb2.PUBLIC_TRANSPORT:
-            yield pt_functor(s)
-        elif s.type == response_pb2.STREET_NETWORK and is_walk_after_parking(journey, idx):
-            continue
-        elif s.type in (response_pb2.STREET_NETWORK, response_pb2.CROW_FLY):
-            yield sn_functor(s)
+    def _similar_non_pt():
+        for s in journey.sections:
+            yield "sn:{} type:{}".format(s.street_network.mode, s.type)
+
+    def _similar_pt():
+        for idx, s in enumerate(journey.sections):
+            if s.type == response_pb2.PUBLIC_TRANSPORT:
+                yield pt_functor(s)
+            elif s.type == response_pb2.STREET_NETWORK and is_walk_after_parking(journey, idx):
+                continue
+            elif s.type in (response_pb2.STREET_NETWORK, response_pb2.CROW_FLY):
+                yield sn_functor(s)
+
+    if 'non_pt' in journey.tags:
+        return _similar_non_pt()
+
+    return _similar_pt()
 
 
 def detailed_pt_section_vj(section):
@@ -484,6 +494,7 @@ def similar_bss_walking_vj_generator(journey):
 
 def similar_journeys_vj_generator(journey):
     for v in similar_journeys_generator(journey, similar_pt_section_vj):
+        print(v)
         yield v
 
 
