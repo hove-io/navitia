@@ -494,7 +494,6 @@ def similar_bss_walking_vj_generator(journey):
 
 def similar_journeys_vj_generator(journey):
     for v in similar_journeys_generator(journey, similar_pt_section_vj):
-        print(v)
         yield v
 
 

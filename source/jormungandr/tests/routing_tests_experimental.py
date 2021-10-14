@@ -376,6 +376,20 @@ class TestJourneysDistributed(
         r = self.query(query)
         assert sum(int('non_pt' not in j['tags']) for j in r['journeys']) == 1
 
+    def test_direct_path_bss_bike(self):
+        query = (
+            journey_basic_query
+            + "&direct_path_mode[]=bike"
+            + "&direct_path_mode[]=bss"
+            + "&max_duration_to_pt=0"
+        )
+        response = self.query_region(query)
+        assert len(response['journeys']) == 2
+
+        # we should find two journeys: one is bike and another is bss
+        assert any('bss' in j['tags'] for j in response['journeys'])
+        assert any('bike' in j['tags'] for j in response['journeys'])
+
 
 @config({"scenario": "distributed"})
 class TestDistributedJourneysWithPtref(JourneysWithPtref, NewDefaultScenarioAbstractTestFixture):
