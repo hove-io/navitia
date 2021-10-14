@@ -72,19 +72,18 @@ Indexes get_corresponding(Indexes indexes, Type_e from, const Type_e to, const D
     // Exceptional case: if from = PhysicalMode and to = Impact
     // 1. Get all vehicle_journeys impacted
     // 2. Keep only vehicle_journeys with physical_mode in the parameter
-
     if (from == Type_e::PhysicalMode && to == Type_e::Impact) {
         auto vj_idxs = get_indexes_by_impacts(Type_e::VehicleJourney, data, false);
         const auto vjs = data.get_data<type::VehicleJourney>(vj_idxs);
-        Indexes vj_indexes, temp;
+        Indexes impact_indexes, temp;
         for (type::VehicleJourney* vj : vjs) {
             if (indexes.find(vj->physical_mode->idx) != indexes.cend()) {
-                // Add Impact on vj
+                // Add Impact on vehicle_journeys having PhysicalMode
                 temp = vj->get(Type_e::Impact, *(data.pt_data.get()));
-                vj_indexes.insert(temp.begin(), temp.end());
+                impact_indexes.insert(temp.begin(), temp.end());
             }
         }
-        return vj_indexes;
+        return impact_indexes;
     }
 
     const std::map<Type_e, Type_e> path = find_path(to);
