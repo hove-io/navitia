@@ -34,8 +34,8 @@ Some datasets do not contain any stop area.
 Connection
 ----------
 
-This object links two stop points together (named origin and
-destination). It is the walkable part of a journey.
+This object links two stop points together (named origin and destination).
+It is the walkable part in a transfer between 2 public transport vehicles.
 
 
 Journey Pattern
