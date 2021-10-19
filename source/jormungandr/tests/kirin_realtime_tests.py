@@ -2446,6 +2446,10 @@ class TestKirinUpdateTripWithPhysicalMode(MockKirinDisruptionsFixture):
         assert len(pt_response['physical_modes']) == 1
         assert pt_response['physical_modes'][0]['name'] == 'Tramway'
 
+        # Check disruptions with physical_modes
+        disruptions_from_mode = self.query_region('physical_modes/physical_mode:0x0/disruptions')
+        assert len(disruptions_from_mode['disruptions']) == 1
+
 
 @dataset(MAIN_ROUTING_TEST_SETTING)
 class TestKirinAddTripWithHeadSign(MockKirinDisruptionsFixture):

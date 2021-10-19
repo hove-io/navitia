@@ -52,7 +52,7 @@ type::Indexes get_corresponding(type::Indexes indexes,
                                 const type::Type_e to,
                                 const type::Data& data);
 type::Type_e type_by_caption(const std::string& type);
-type::Indexes get_indexes_by_impacts(const type::Type_e& type_e, const type::Data& d);
+type::Indexes get_indexes_by_impacts(const type::Type_e& type_e, const type::Data& d, bool only_no_service = true);
 type::Indexes get_impacts_by_tags(const std::vector<std::string>& tag_name, const type::Data& d);
 type::Indexes filter_vj_active_at(const type::Indexes& indexes,
                                   const boost::posix_time::ptime current_datetime,
