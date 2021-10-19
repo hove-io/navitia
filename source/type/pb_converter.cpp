@@ -1140,6 +1140,9 @@ void PbCreator::Filler::fill_pb_object(const nt::StopTime* stop_time, pbnavitia:
     if (stop_time->date_time_estimated()) {
         properties->add_additional_informations(pbnavitia::Properties::date_time_estimated);
     }
+    if (stop_time->skipped_stop()) {
+        properties->add_additional_informations(pbnavitia::Properties::skipped_stop);
+    }
 }
 
 void PbCreator::Filler::fill_informed_entity(const nd::PtObj& ptobj,

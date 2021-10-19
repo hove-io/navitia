@@ -408,6 +408,7 @@ struct add_impacts_visitor : public apply_impacts_visitor {
                 if (first_sa == true) {
                     new_st.set_pick_up_allowed(false);
                 }
+                // A stop_time created by realtime should be initialized with skipped_stop = false
                 new_st.set_skipped_stop(false);
                 new_st.arrival_time = st.arrival_time + ndtu::SECONDS_PER_DAY * vj->shift;
                 new_st.departure_time = st.departure_time + ndtu::SECONDS_PER_DAY * vj->shift;
