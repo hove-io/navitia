@@ -3333,16 +3333,19 @@ void check_rail_section_impact(const ed::builder& b) {
     BOOST_REQUIRE_EQUAL(vj->stop_time_list[0].stop_point->uri, "stopA");
     BOOST_REQUIRE_EQUAL(vj->stop_time_list[0].pick_up_allowed(), true);
     BOOST_REQUIRE_EQUAL(vj->stop_time_list[0].drop_off_allowed(), false);
+    BOOST_REQUIRE_EQUAL(vj->stop_time_list[0].skipped_stop(), false);
     BOOST_REQUIRE_EQUAL(vj->stop_time_list[0].departure_time, "08:00"_t);
     // stopB
     BOOST_REQUIRE_EQUAL(vj->stop_time_list[1].stop_point->uri, "stopB");
     BOOST_REQUIRE_EQUAL(vj->stop_time_list[1].pick_up_allowed(), true);
     BOOST_REQUIRE_EQUAL(vj->stop_time_list[1].drop_off_allowed(), true);
+    BOOST_REQUIRE_EQUAL(vj->stop_time_list[1].skipped_stop(), false);
     BOOST_REQUIRE_EQUAL(vj->stop_time_list[1].departure_time, "08:10"_t);
     // stopC
     BOOST_REQUIRE_EQUAL(vj->stop_time_list[2].stop_point->uri, "stopC");
     BOOST_REQUIRE_EQUAL(vj->stop_time_list[2].pick_up_allowed(), false);  // pick-up is forbidden now
     BOOST_REQUIRE_EQUAL(vj->stop_time_list[2].drop_off_allowed(), true);
+    BOOST_REQUIRE_EQUAL(vj->stop_time_list[2].skipped_stop(), false);
     BOOST_REQUIRE_EQUAL(vj->stop_time_list[2].departure_time, "08:20"_t);
 
     // disruption
