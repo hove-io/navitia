@@ -1076,6 +1076,7 @@ void EdReader::fill_stop_times(nt::Data& /*unused*/, pqxx::work& work) {
         "st.odt as odt,"
         "st.pick_up_allowed as pick_up_allowed,"
         "st.drop_off_allowed as drop_off_allowed,"
+        "st.skipped_stop as skipped_stop,"
         "st.is_frequency as is_frequency,"
         "st.date_time_estimated as date_time_estimated,"
         "st.id as id,"
@@ -1103,6 +1104,7 @@ void EdReader::fill_stop_times(nt::Data& /*unused*/, pqxx::work& work) {
         const int odt_c = result.column_number("odt");
         const int pick_up_allowed_c = result.column_number("pick_up_allowed");
         const int drop_off_allowed_c = result.column_number("drop_off_allowed");
+        const int skipped_stop_c = result.column_number("skipped_stop");
         const int is_frequency_c = result.column_number("is_frequency");
         const int stop_point_id_c = result.column_number("stop_point_id");
         const int shape_from_prev_id_c = result.column_number("shape_from_prev_id");
@@ -1127,6 +1129,7 @@ void EdReader::fill_stop_times(nt::Data& /*unused*/, pqxx::work& work) {
             stop.set_odt(const_it[odt_c].as<bool>());
             stop.set_pick_up_allowed(const_it[pick_up_allowed_c].as<bool>());
             stop.set_drop_off_allowed(const_it[drop_off_allowed_c].as<bool>());
+            stop.set_skipped_stop(const_it[skipped_stop_c].as<bool>());
             stop.set_is_frequency(const_it[is_frequency_c].as<bool>());
 
             stop.stop_point = stop_point_map[const_it[stop_point_id_c].as<idx_t>()];

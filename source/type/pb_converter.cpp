@@ -1045,6 +1045,7 @@ void PbCreator::Filler::fill_pb_object(const nt::StopTime* st, pbnavitia::StopTi
 
     stop_time->set_pickup_allowed(st->pick_up_allowed());
     stop_time->set_drop_off_allowed(st->drop_off_allowed());
+    stop_time->set_skipped_stop(st->skipped_stop());
 
     // TODO V2: the dump of the JPP is deprecated, but we keep it for retrocompatibility
     if (depth > 0) {
