@@ -35,6 +35,7 @@ jobs:
     runs-on: ubuntu-latest
 
     strategy:
+        fail-fast: false
         matrix:
             docker_image: [navitia/debian8_dev, navitia/debian10_dev, navitia/debian11_dev]
 
@@ -64,35 +65,23 @@ jobs:
       working-directory: ./build
       run: |
         pip install virtualenv==20.4.7 -U
-        virtualenv -p /usr/bin/python navitia_py2
+        virtualenv -p python2.7 navitia_py2
         . navitia_py2/bin/activate
         pip install -r ../source/jormungandr/requirements_dev.txt
         export JORMUNGANDR_BROKER_URL='amqp://guest:guest@rabbitmq:5672//'
         export KRAKEN_RABBITMQ_HOST='rabbitmq'
         ctest --output-on-failure
-    - name: Tests python3.6
-      working-directory: ./build
-      if: matrix.docker_image != 'navitia/debian11_dev'
-      run: |
-        virtualenv -p /usr/local/bin/python3.6 navitia_py3.6
-        . navitia_py3.6/bin/activate
-        pip install -r ../source/jormungandr/requirements_dev.txt
-        export JORMUNGANDR_BROKER_URL='amqp://guest:guest@rabbitmq:5672//'
-        export KRAKEN_RABBITMQ_HOST='rabbitmq'
-        ctest --output-on-failure
-        deactivate
     - name: Tests python3.9
       working-directory: ./build
-      if: matrix.docker_image == 'navitia/debian11_dev'
       run: |
-        virtualenv -p /usr/bin/python3.9 navitia_py3.9
-        . navitia_py3.9/bin/activate
+        virtualenv -p python3.9 navitia_py3
+        . navitia_py3/bin/activate
         pip install -r ../source/jormungandr/requirements_dev.txt
         export JORMUNGANDR_BROKER_URL='amqp://guest:guest@rabbitmq:5672//'
         export KRAKEN_RABBITMQ_HOST='rabbitmq'
         ctest --output-on-failure
         deactivate
-    - name: docker_test for python2
+    - name: docker_test python2
       working-directory: ./build
       run: |
         . navitia_py2/bin/activate
@@ -105,11 +94,10 @@ jobs:
         NAVITIA_DOCKER_NETWORK: ${{ job.container.network }}
         TYR_CELERY_BROKER_URL: 'amqp://guest:guest@rabbitmq:5672//'
         TYR_REDIS_HOST: 'redis'
-    - name: docker_test for python3.6
+    - name: docker_test python3.9
       working-directory: ./build
-      if: matrix.docker_image != 'navitia/debian11_dev'
       run: |
-        . navitia_py3.6/bin/activate
+        . navitia_py3/bin/activate
         pip install -r ../source/tyr/requirements_dev.txt
         pip install -r ../source/sql/requirements.txt
         export NAVITIA_CHAOS_DUMP_PATH=$(echo $GITHUB_WORKSPACE/source/tests/chaos/chaos_loading.sql.gz | sed -e 's#__w#home/runner/work#')
@@ -119,21 +107,6 @@ jobs:
         NAVITIA_DOCKER_NETWORK: ${{ job.container.network }}
         TYR_CELERY_BROKER_URL: 'amqp://guest:guest@rabbitmq:5672//'
         TYR_REDIS_HOST: 'redis'
-    - name: docker_test for python3.9
-      working-directory: ./build
-      if: matrix.docker_image == 'navitia/debian11_dev'
-      run: |
-        . navitia_py3.9/bin/activate
-        pip install -r ../source/tyr/requirements_dev.txt
-        pip install -r ../source/sql/requirements.txt
-        export NAVITIA_CHAOS_DUMP_PATH=$(echo $GITHUB_WORKSPACE/source/tests/chaos/chaos_loading.sql.gz | sed -e 's#__w#home/runner/work#')
-        echo $NAVITIA_CHAOS_DUMP_PATH
-        make docker_test
-      env:
-        NAVITIA_DOCKER_NETWORK: ${{ job.container.network }}
-        TYR_CELERY_BROKER_URL: 'amqp://guest:guest@rabbitmq:5672//'
-        TYR_REDIS_HOST: 'redis'
-
   precommit:
     runs-on: ubuntu-latest
     container:
@@ -160,6 +133,7 @@ jobs:
       run: |
         pre-commit install --install-hooks
         pre-commit run --all --show-diff-on-failure
+
   release_script_tests:
     runs-on: ubuntu-latest
     steps:
