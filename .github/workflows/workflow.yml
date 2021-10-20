@@ -37,10 +37,10 @@ jobs:
     strategy:
         fail-fast: false
         matrix:
-            docker_image: [navitia/debian8_dev, navitia/debian10_dev, navitia/debian11_dev]
+            os: [{docker_image: navitia/debian8_dev, python_version: python3.6}, {docker_image: navitia/debian10_dev, python_version: python3.9}, {docker_image: navitia/debian11_dev, python_version: python3.9}]
 
     container:
-        image: ${{matrix.docker_image}}
+        image: ${{matrix.os.docker_image}}
 
     services:
       rabbitmq:
@@ -71,10 +71,10 @@ jobs:
         export JORMUNGANDR_BROKER_URL='amqp://guest:guest@rabbitmq:5672//'
         export KRAKEN_RABBITMQ_HOST='rabbitmq'
         ctest --output-on-failure
-    - name: Tests python3.9
+    - name: Tests python3
       working-directory: ./build
       run: |
-        virtualenv -p python3.9 navitia_py3
+        virtualenv -p ${{matrix.os.python_version}} navitia_py3
         . navitia_py3/bin/activate
         pip install -r ../source/jormungandr/requirements_dev.txt
         export JORMUNGANDR_BROKER_URL='amqp://guest:guest@rabbitmq:5672//'
@@ -94,7 +94,7 @@ jobs:
         NAVITIA_DOCKER_NETWORK: ${{ job.container.network }}
         TYR_CELERY_BROKER_URL: 'amqp://guest:guest@rabbitmq:5672//'
         TYR_REDIS_HOST: 'redis'
-    - name: docker_test python3.9
+    - name: docker_test python3
       working-directory: ./build
       run: |
         . navitia_py3/bin/activate
