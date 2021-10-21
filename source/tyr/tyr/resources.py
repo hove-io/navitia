@@ -1280,7 +1280,7 @@ class User(flask_restful.Resource):
         except Exception:
             logging.exception("fail")
             raise
-        logging.warning("Delete user, email {}".format(user.email))
+        logging.warning("Delete user, email {}".format(hide_domain(user.email)))
         return {}, 204
 
 
