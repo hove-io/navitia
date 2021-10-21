@@ -248,3 +248,11 @@ def save_in_tmp(file_storage):
     tmp_file = os.path.join(tempfile.gettempdir(), file_storage.filename)
     file_storage.save(tmp_file)
     return tmp_file
+
+
+def hide_domain(email):
+    if not email:
+        return email
+    if "@" not in email:
+        return email
+    return "{}******".format(email.split('@')[0])

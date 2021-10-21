@@ -39,7 +39,7 @@ from validate_email import validate_email
 from datetime import datetime
 from tyr.tyr_user_event import TyrUserEvent
 from tyr.tyr_end_point_event import EndPointEventMessage, TyrEventsRabbitMq
-from tyr.helper import load_instance_config
+from tyr.helper import load_instance_config, hide_domain
 import logging
 import os
 import shutil
@@ -1086,32 +1086,42 @@ class User(flask_restful.Resource):
             location=('json', 'values'),
         )
         args = parser.parse_args()
-
+        email = args['email']
         if not validate_email(
-            args['email'],
-            check_mx=current_app.config['EMAIL_CHECK_MX'],
-            verify=current_app.config['EMAIL_CHECK_SMTP'],
+            email, check_mx=current_app.config['EMAIL_CHECK_MX'], verify=current_app.config['EMAIL_CHECK_SMTP']
         ):
-            return {'error': 'email invalid'}, 400
+            msg = 'email invalid, you give "{}"'.format(hide_domain(email))
+            logging.error(msg)
+            return {'error': msg}, 400
 
-        if args['end_point_id']:
-            end_point = models.EndPoint.query.get(args['end_point_id'])
+        end_point_id = args['end_point_id']
+        if end_point_id:
+            end_point = models.EndPoint.query.get(end_point_id)
         else:
             end_point = models.EndPoint.get_default()
 
         if not end_point:
-            return {'error': 'end_point doesn\'t exist'}, 400
+            msg = 'end_point doesn\'t exist'
+            if args['end_point_id']:
+                msg = '{} for user email {}, you give "{}"'.format(msg, hide_domain(email), end_point_id)
+            logging.error(msg)
+            return {'error': msg}, 400
 
-        if args['billing_plan_id']:
-            billing_plan = models.BillingPlan.query.get(args['billing_plan_id'])
+        billing_plan_id = args['billing_plan_id']
+        if billing_plan_id:
+            billing_plan = models.BillingPlan.query.get(billing_plan_id)
         else:
             billing_plan = models.BillingPlan.get_default(end_point)
 
         if not billing_plan:
-            return {'error': 'billing plan doesn\'t exist'}, 400
+            msg = 'billing plan doesn\'t exist'
+            if args['billing_plan_id']:
+                msg = '{} for user email {}, you give "{}"'.format(msg, hide_domain(email), billing_plan_id)
+            logging.error(msg)
+            return {'error': msg}, 400
 
         try:
-            user = models.User(login=args['login'], email=args['email'], block_until=args['block_until'])
+            user = models.User(login=args['login'], email=email, block_until=args['block_until'])
             user.type = args['type']
             user.end_point = end_point
             user.billing_plan = billing_plan
@@ -1200,20 +1210,32 @@ class User(flask_restful.Resource):
         )
         args = parser.parse_args()
 
+        email = args['email']
         if not validate_email(
-            args['email'],
-            check_mx=current_app.config['EMAIL_CHECK_MX'],
-            verify=current_app.config['EMAIL_CHECK_SMTP'],
+            email, check_mx=current_app.config['EMAIL_CHECK_MX'], verify=current_app.config['EMAIL_CHECK_SMTP']
         ):
-            return {'error': 'email invalid'}, 400
+            msg = 'email invalid, you give "{}"'.format(hide_domain(email))
+            logging.error(msg)
+            return {'error': msg}, 400
 
-        end_point = models.EndPoint.query.get(args['end_point_id'])
+        end_point_id = args['end_point_id']
+        end_point = models.EndPoint.query.get(end_point_id)
+
         if not end_point:
-            return {'error': 'end_point doesn\'t exist'}, 400
+            msg = 'end_point doesn\'t exist'
+            if args['end_point_id']:
+                msg = '{} for user email {}, you give "{}"'.format(msg, hide_domain(email), end_point_id)
+            logging.error(msg)
+            return {'error': msg}, 400
 
-        billing_plan = models.BillingPlan.query.get_or_404(args['billing_plan_id'])
+        billing_plan_id = args['billing_plan_id']
+        billing_plan = models.BillingPlan.query.get_or_404(billing_plan_id)
         if not billing_plan:
-            return {'error': 'billing_plan doesn\'t exist'}, 400
+            msg = 'billing plan doesn\'t exist'
+            if args['billing_plan_id']:
+                msg = '{} for user email {}, you give "{}"'.format(msg, hide_domain(email), billing_plan_id)
+            logging.error(msg)
+            return {'error': msg}, 400
 
         # If the user gives the empty object, we don't change the
         # shape. This is because the empty object can be outputed by
@@ -1225,7 +1247,7 @@ class User(flask_restful.Resource):
 
         try:
             last_login = user.login
-            user.email = args['email']
+            user.email = email
             user.login = args['login']
             user.type = args['type']
             user.block_until = args['block_until']
@@ -1258,6 +1280,7 @@ class User(flask_restful.Resource):
         except Exception:
             logging.exception("fail")
             raise
+        logging.warning("Delete user, email {}".format(user.email))
         return {}, 204
 
 
