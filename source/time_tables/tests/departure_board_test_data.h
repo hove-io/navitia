@@ -432,7 +432,8 @@ struct calendar_fixture {
                                                                                                  "11:30"_t);
 
                 b.vj("D", "110000001111", "", true, "vj_D", "")("stop1_D", "00:10"_t, "00:10"_t)(
-                    "stop2_D", "01:40"_t, "01:40"_t)("stop3_D", "02:50"_t, "02:50"_t);
+                    "stop2_D", "01:40"_t, "01:40"_t, std::numeric_limits<uint16_t>::max(), false, false, 0, 0, true)(
+                    "stop3_D", "02:50"_t, "02:50"_t);
                 /*
                                                            StopR3                            StopR4
                                                     ------------------------------------------

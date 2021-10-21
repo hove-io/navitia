@@ -744,6 +744,20 @@ class TestDepartureBoard(AbstractTestFixture):
         assert "date_time_estimated" in section['stop_date_times'][0]['additional_informations']
         assert len(section['stop_date_times'][1]['additional_informations']) == 0
 
+    def test_journey_with_skipped_stop_as_intermediate_stop(self):
+        """
+        Verify stop_date_times in a journey, an intermediate skipped_stop is also displayed.
+        """
+        response = self.query_region("journeys?from=stop1_D&to=stop3_D&datetime=20120615T080000")
+
+        assert len(response['journeys']) == 1
+        stop_date_times = response['journeys'][0]['sections'][0]['stop_date_times']
+        assert len(stop_date_times) == 3
+        assert len(stop_date_times[0]['additional_informations']) == 0
+        assert len(stop_date_times[1]['additional_informations']) == 1
+        assert stop_date_times[1]['additional_informations'][0] == 'skipped_stop'
+        assert len(stop_date_times[2]['additional_informations']) == 0
+
 
 StopSchedule = namedtuple('StopSchedule', ['sp', 'route', 'date_times'])
 SchedDT = namedtuple('SchedDT', ['dt', 'vj'])

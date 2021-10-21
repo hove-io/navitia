@@ -341,6 +341,7 @@ struct StopTime {
     bool ODT = false;
     bool pick_up_allowed = false;
     bool drop_off_allowed = false;
+    bool skipped_stop = false;
     bool is_frequency = false;
     bool wheelchair_boarding = false;
     bool date_time_estimated = false;
@@ -364,6 +365,7 @@ struct StopTime {
              bool freq,
              bool wheel,
              bool estim,
+             bool skipped,
              std::string&& headsign)
         : idx(idx),
           arrival_time(arr),
@@ -380,6 +382,7 @@ struct StopTime {
           is_frequency(freq),
           wheelchair_boarding(wheel),
           date_time_estimated(estim),
+          skipped_stop(skipped),
           headsign(std::move(headsign)) {}
     bool operator<(const StopTime& other) const;
     void shift_times(int n_days) {

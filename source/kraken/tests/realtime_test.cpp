@@ -1874,16 +1874,19 @@ BOOST_AUTO_TEST_CASE(simple_skipped_stop) {
     BOOST_CHECK_EQUAL(vj->stop_time_list.front().boarding_time, "08:10"_t);
     BOOST_CHECK_EQUAL(vj->stop_time_list.front().pick_up_allowed(), true);
     BOOST_CHECK_EQUAL(vj->stop_time_list.front().drop_off_allowed(), true);
+    BOOST_CHECK_EQUAL(vj->stop_time_list.front().skipped_stop(), false);
     BOOST_CHECK_EQUAL(vj->stop_time_list.at(1).stop_point->uri, "B");
     BOOST_CHECK_EQUAL(vj->stop_time_list.at(1).departure_time, "08:20"_t);
     BOOST_CHECK_EQUAL(vj->stop_time_list.at(1).boarding_time, "08:20"_t);
     BOOST_CHECK_EQUAL(vj->stop_time_list.at(1).pick_up_allowed(), false);  // disabled
     BOOST_CHECK_EQUAL(vj->stop_time_list.at(1).drop_off_allowed(), false);
+    BOOST_CHECK_EQUAL(vj->stop_time_list.at(1).skipped_stop(), false);
     BOOST_CHECK_EQUAL(vj->stop_time_list.at(2).stop_point->uri, "C");
     BOOST_CHECK_EQUAL(vj->stop_time_list.at(2).arrival_time, "08:30"_t);
     BOOST_CHECK_EQUAL(vj->stop_time_list.at(2).alighting_time, "08:30"_t);
     BOOST_CHECK_EQUAL(vj->stop_time_list.at(2).pick_up_allowed(), true);
     BOOST_CHECK_EQUAL(vj->stop_time_list.at(2).drop_off_allowed(), true);
+    BOOST_CHECK_EQUAL(vj->stop_time_list.at(2).skipped_stop(), false);
 
     auto get_journeys = [&](nt::RTLevel level, const std::string& from, const std::string& to) {
         return raptor.compute(b.get<nt::StopArea>(from), b.get<nt::StopArea>(to), "08:00"_t, 0,
@@ -1950,21 +1953,25 @@ BOOST_AUTO_TEST_CASE(skipped_stop_then_delay) {
     BOOST_CHECK_EQUAL(vj->stop_time_list.front().boarding_time, "08:10"_t);
     BOOST_CHECK_EQUAL(vj->stop_time_list.front().pick_up_allowed(), true);
     BOOST_CHECK_EQUAL(vj->stop_time_list.front().drop_off_allowed(), true);
+    BOOST_CHECK_EQUAL(vj->stop_time_list.front().skipped_stop(), false);
     BOOST_CHECK_EQUAL(vj->stop_time_list.at(1).stop_point->uri, "B");
     BOOST_CHECK_EQUAL(vj->stop_time_list.at(1).departure_time, "08:20"_t);
     BOOST_CHECK_EQUAL(vj->stop_time_list.at(1).boarding_time, "08:20"_t);
     BOOST_CHECK_EQUAL(vj->stop_time_list.at(1).pick_up_allowed(), false);  // disabled
     BOOST_CHECK_EQUAL(vj->stop_time_list.at(1).drop_off_allowed(), true);
+    BOOST_CHECK_EQUAL(vj->stop_time_list.at(1).skipped_stop(), false);
     BOOST_CHECK_EQUAL(vj->stop_time_list.at(2).stop_point->uri, "C");
     BOOST_CHECK_EQUAL(vj->stop_time_list.at(2).arrival_time, "08:35"_t);
     BOOST_CHECK_EQUAL(vj->stop_time_list.at(2).alighting_time, "08:35"_t);
     BOOST_CHECK_EQUAL(vj->stop_time_list.at(2).pick_up_allowed(), true);
     BOOST_CHECK_EQUAL(vj->stop_time_list.at(2).drop_off_allowed(), true);
+    BOOST_CHECK_EQUAL(vj->stop_time_list.at(2).skipped_stop(), false);
     BOOST_CHECK_EQUAL(vj->stop_time_list.at(3).stop_point->uri, "D");
     BOOST_CHECK_EQUAL(vj->stop_time_list.at(3).arrival_time, "08:40"_t);
     BOOST_CHECK_EQUAL(vj->stop_time_list.at(3).alighting_time, "08:40"_t);
     BOOST_CHECK_EQUAL(vj->stop_time_list.at(3).pick_up_allowed(), true);
     BOOST_CHECK_EQUAL(vj->stop_time_list.at(3).drop_off_allowed(), true);
+    BOOST_CHECK_EQUAL(vj->stop_time_list.at(3).skipped_stop(), false);
 
     auto get_journeys = [&](nt::RTLevel level, const std::string& from, const std::string& to) {
         return raptor.compute(b.get<nt::StopArea>(from), b.get<nt::StopArea>(to), "08:00"_t, 0,
@@ -2324,9 +2331,11 @@ BOOST_AUTO_TEST_CASE(add_modify_and_delete_new_stop_time_in_the_trip) {
     BOOST_REQUIRE_EQUAL(vj->stop_time_list.size(), 3);
 
     // Check the realtime vj with a newly added stop_time
+    // Il should be initialize with skipped_stop = false
     vj = b.get<nt::VehicleJourney>("vehicle_journey:vj:1:modified:0:feed-1");
     BOOST_REQUIRE_EQUAL(vj->stop_time_list[2].pick_up_allowed(), true);
     BOOST_REQUIRE_EQUAL(vj->stop_time_list[2].drop_off_allowed(), true);
+    BOOST_REQUIRE_EQUAL(vj->stop_time_list[2].skipped_stop(), false);
     BOOST_REQUIRE_EQUAL(vj->stop_time_list.size(), 4);
 
     // The new stop_time added should be in stop_date_times
@@ -2364,6 +2373,7 @@ BOOST_AUTO_TEST_CASE(add_modify_and_delete_new_stop_time_in_the_trip) {
     vj = b.get<nt::VehicleJourney>("vehicle_journey:vj:1:modified:1:feed-2");
     BOOST_REQUIRE_EQUAL(vj->stop_time_list[2].pick_up_allowed(), false);
     BOOST_REQUIRE_EQUAL(vj->stop_time_list[2].drop_off_allowed(), false);
+    BOOST_REQUIRE_EQUAL(vj->stop_time_list[2].skipped_stop(), false);
     BOOST_REQUIRE_EQUAL(vj->stop_time_list.size(), 4);
 
     // The new stop_time added should be in stop_date_times
@@ -2406,6 +2416,7 @@ BOOST_AUTO_TEST_CASE(add_modify_and_delete_new_stop_time_in_the_trip) {
     BOOST_REQUIRE_EQUAL(vj->stop_time_list.size(), 4);
     BOOST_REQUIRE_EQUAL(vj->stop_time_list[2].pick_up_allowed(), false);
     BOOST_REQUIRE_EQUAL(vj->stop_time_list[2].drop_off_allowed(), false);
+    BOOST_REQUIRE_EQUAL(vj->stop_time_list[2].skipped_stop(), false);
 
     res = compute("20171101T073000", "stop_point:A", "stop_point:C");
     BOOST_CHECK_EQUAL(res.impacts_size(), 3);

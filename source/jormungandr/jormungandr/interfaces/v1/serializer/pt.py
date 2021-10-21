@@ -565,6 +565,7 @@ class StopTimeSerializer(PbNestedSerializer):
     stop_point = StopPointSerializer()
     pickup_allowed = BoolField()
     drop_off_allowed = BoolField()
+    skipped_stop = BoolField()
 
 
 class VehicleJourneySerializer(PbGenericSerializer):
