@@ -81,7 +81,7 @@ class TestPtRef(AbstractTestFixture):
         for vj in vjs:
             is_valid_vehicle_journey(vj, depth_check=1)
 
-        assert len(vjs) == 4
+        assert len(vjs) == 5
         vj = vjs[0]
         assert vj['id'] == 'vehicle_journey:vj1'
         assert vj['name'] == 'vj1'
@@ -292,7 +292,7 @@ class TestPtRef(AbstractTestFixture):
 
         lines = get_not_null(response, 'lines')
 
-        assert len(lines) == 4
+        assert len(lines) == 5
 
         l = lines[0]
 
@@ -329,7 +329,7 @@ class TestPtRef(AbstractTestFixture):
         response = self.query_region("lines?disable_geojson=true")
         lines = get_not_null(response, 'lines')
 
-        assert len(lines) == 4
+        assert len(lines) == 5
         l = lines[0]
         is_valid_line(l, depth_check=1)
         # we don't want a geojson since we have desactivate them
@@ -338,7 +338,7 @@ class TestPtRef(AbstractTestFixture):
         response = self.query_region("lines")
         lines = get_not_null(response, 'lines')
 
-        assert len(lines) == 4
+        assert len(lines) == 5
         l = lines[0]
         is_valid_line(l, depth_check=1)
 
@@ -353,7 +353,7 @@ class TestPtRef(AbstractTestFixture):
 
         lines = get_not_null(response, 'lines')
 
-        assert len(lines) == 4
+        assert len(lines) == 5
 
         l = lines[0]
 
@@ -427,7 +427,7 @@ class TestPtRef(AbstractTestFixture):
         response = self.query_region("routes")
 
         routes = get_not_null(response, 'routes')
-        assert len(routes) == 4
+        assert len(routes) == 5
 
         r = [r for r in routes if r['id'] == 'line:A:0']
         assert len(r) == 1
@@ -451,7 +451,7 @@ class TestPtRef(AbstractTestFixture):
 
         stops = get_not_null(response, 'stop_areas')
 
-        assert len(stops) == 3
+        assert len(stops) == 4
 
         s = next((s for s in stops if s['name'] == 'stop_area:stop1'))
         is_valid_stop_area(s, depth_check=1)
@@ -485,7 +485,7 @@ class TestPtRef(AbstractTestFixture):
 
         stops = get_not_null(response, 'stop_points')
 
-        assert len(stops) == 3
+        assert len(stops) == 4
 
         s = next((s for s in stops if s['name'] == 'stop_area:stop2'))  # yes, that's a stop_point
         is_valid_stop_point(s, depth_check=2)
@@ -516,7 +516,7 @@ class TestPtRef(AbstractTestFixture):
         response = self.query_region("lines")
 
         lines = get_not_null(response, 'lines')
-        assert len(lines) == 4
+        assert len(lines) == 5
 
         assert len(lines[0]['physical_modes']) == 1
         assert lines[0]['physical_modes'][0]['id'] == 'physical_mode:Car'
@@ -725,7 +725,7 @@ class TestPtRef(AbstractTestFixture):
 
         i = i_manager.instances['main_ptref_test']
 
-        assert len([r for r in i.ptref.get_objs(type_pb2.ROUTE)]) == 4
+        assert len([r for r in i.ptref.get_objs(type_pb2.ROUTE)]) == 5
 
     def test_ptref_on_stop_areas_with_disable_disruption(self):
         """
@@ -784,11 +784,12 @@ class TestPtRef(AbstractTestFixture):
         """test networks with external_code parameter"""
         response = self.query_region("networks")
         networks = get_not_null(response, 'networks')
-        assert len(networks) == 4
+        assert len(networks) == 5
         assert networks[0]['id'] == 'network:A'
         assert networks[1]['id'] == 'network:B'
-        assert networks[2]['id'] == 'network:CaRoule'
-        assert networks[3]['id'] == 'network:freq'
+        assert networks[2]['id'] == 'network:C'
+        assert networks[3]['id'] == 'network:CaRoule'
+        assert networks[4]['id'] == 'network:freq'
 
         response = self.query_region("networks?external_code=A")
         networks = get_not_null(response, 'networks')
@@ -827,11 +828,12 @@ class TestPtRef(AbstractTestFixture):
         """test lines with external_code parameter"""
         response = self.query_region("lines")
         lines = get_not_null(response, 'lines')
-        assert len(lines) == 4
+        assert len(lines) == 5
         assert lines[0]['id'] == 'line:A'
         assert lines[1]['id'] == 'line:B'
-        assert lines[2]['id'] == 'line:Ça roule'
-        assert lines[3]['id'] == 'line:freq'
+        assert lines[2]['id'] == 'line:C'
+        assert lines[3]['id'] == 'line:Ça roule'
+        assert lines[4]['id'] == 'line:freq'
 
         response = self.query_region("lines?external_code=A")
         lines = get_not_null(response, 'lines')
@@ -865,10 +867,11 @@ class TestPtRef(AbstractTestFixture):
         """test stop_points with external_code parameter"""
         response = self.query_region("stop_points")
         stop_points = get_not_null(response, 'stop_points')
-        assert len(stop_points) == 3
+        assert len(stop_points) == 4
         assert stop_points[0]['id'] == 'stop_area:stop1'
         assert stop_points[1]['id'] == 'stop_area:stop2'
-        assert stop_points[2]['id'] == 'stop_point:stop_with name bob " , é'
+        assert stop_points[2]['id'] == 'stop_area:stop3'
+        assert stop_points[3]['id'] == 'stop_point:stop_with name bob " , é'
 
         response = self.query_region("stop_points?external_code=stop1_code")
         stop_points = get_not_null(response, 'stop_points')
@@ -897,6 +900,41 @@ class TestPtRef(AbstractTestFixture):
         assert code == 400
         message = get_not_null(response, 'message')
         assert 'parameter \"external_code\" invalid: Missing required parameter' in message
+
+    def test_stop_times_properties(self):
+        response = self.query_region("vehicle_journeys")
+        vjs = get_not_null(response, 'vehicle_journeys')
+        for vj in vjs:
+            is_valid_vehicle_journey(vj, depth_check=1)
+
+        assert len(vjs) == 5
+
+        # Vehicle_journey with two stop_times
+        vj = vjs[0]
+        assert len(vj['stop_times']) == 2
+        assert vj['stop_times'][0]
+        assert vj['stop_times'][0]['pickup_allowed'] is True
+        assert vj['stop_times'][0]['drop_off_allowed'] is False
+        assert vj['stop_times'][0]['skipped_stop'] is False
+
+        assert vj['stop_times'][1]['pickup_allowed'] is False
+        assert vj['stop_times'][1]['drop_off_allowed'] is True
+        assert vj['stop_times'][1]['skipped_stop'] is False
+
+        # Vehicle_journey with three stop_times having an intermediate skipped_stop
+        vj = vjs[2]
+        assert len(vj['stop_times']) == 3
+        assert vj['stop_times'][0]['pickup_allowed'] is True
+        assert vj['stop_times'][0]['drop_off_allowed'] is False
+        assert vj['stop_times'][0]['skipped_stop'] is False
+
+        assert vj['stop_times'][1]['pickup_allowed'] is False
+        assert vj['stop_times'][1]['drop_off_allowed'] is False
+        assert vj['stop_times'][1]['skipped_stop'] is True
+
+        assert vj['stop_times'][2]['pickup_allowed'] is False
+        assert vj['stop_times'][2]['drop_off_allowed'] is True
+        assert vj['stop_times'][2]['skipped_stop'] is False
 
 
 @dataset({"main_ptref_test": {}, "main_routing_test": {}})

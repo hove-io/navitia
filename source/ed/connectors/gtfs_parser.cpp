@@ -1088,16 +1088,19 @@ std::vector<nm::StopTime*> StopTimeGtfsHandler::handle_line(Data& data, const cs
         stop_time->order = boost::lexical_cast<unsigned int>(row[stop_seq_c]);
         stop_time->vehicle_journey = vj_it->second;
 
-        if (has_col(pickup_c, row) && has_col(drop_off_c, row))
+        if (has_col(pickup_c, row) && has_col(drop_off_c, row)) {
             stop_time->ODT = (row[pickup_c] == "2" || row[drop_off_c] == "2");
-        else
+            stop_time->skipped_stop = (row[pickup_c] == "3" && row[drop_off_c] == "3");
+        } else {
             stop_time->ODT = false;
+            stop_time->skipped_stop = false;
+        }
         if (has_col(pickup_c, row))
-            stop_time->pick_up_allowed = row[pickup_c] != "1";
+            stop_time->pick_up_allowed = (row[pickup_c] != "1" && row[pickup_c] != "3");
         else
             stop_time->pick_up_allowed = true;
         if (has_col(drop_off_c, row))
-            stop_time->drop_off_allowed = row[drop_off_c] != "1";
+            stop_time->drop_off_allowed = (row[drop_off_c] != "1" && row[drop_off_c] != "3");
         else
             stop_time->drop_off_allowed = true;
 

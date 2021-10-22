@@ -569,6 +569,7 @@ static const type::disruption::Disruption* create_disruption(const std::string& 
                 } else {
                     stop_time.set_pick_up_allowed(st.departure().has_time());
                 }
+                stop_time.set_skipped_stop(false);
                 // we update the trip status if the stoptime status is the most important status
                 // the most important status is DELAYED then DELETED
                 most_important_stoptime_status =

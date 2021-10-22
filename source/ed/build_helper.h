@@ -123,7 +123,8 @@ struct VJ {
                    bool drop_off_allowed = true,
                    bool pick_up_allowed = true,
                    int alighting_duration = 0,
-                   int boarding_duration = 0);
+                   int boarding_duration = 0,
+                   bool skipped_stop = false);
 
     VJ& operator()(const std::string& stopPoint,
                    const std::string& arrival,
@@ -132,7 +133,8 @@ struct VJ {
                    bool drop_off_allowed = true,
                    bool pick_up_allowed = true,
                    int alighting_duration = 0,
-                   int boarding_duration = 0);
+                   int boarding_duration = 0,
+                   bool skipped_stop = false);
 
     VJ& block_id(const std::string& b) {
         _block_id = b;

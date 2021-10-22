@@ -565,8 +565,11 @@ static bt::ptime handle_pt_sections(pbnavitia::Journey* pb_journey,
                     continue;
                 }
 
-                // skipping stop_time having a 'deleted' or 'deleted for detour' stop_point
-                if (!item.stop_times[i]->pick_up_allowed() && !item.stop_times[i]->drop_off_allowed()) {
+                // do not add a stop_time with pick_up_allowed = false and drop_off_allowed = false
+                // unless skipped_stop = true
+                // Make sure that a realtime deleted stop_time has skipped_stop = false
+                if (!item.stop_times[i]->pick_up_allowed() && !item.stop_times[i]->drop_off_allowed()
+                    && !item.stop_times[i]->skipped_stop()) {
                     continue;
                 }
 

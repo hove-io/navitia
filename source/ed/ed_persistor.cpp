@@ -926,6 +926,7 @@ void EdPersistor::insert_stop_times(const std::vector<types::StopTime*>& stop_ti
                                         "odt",
                                         "pick_up_allowed",
                                         "drop_off_allowed",
+                                        "skipped_stop",
                                         "is_frequency",
                                         "\"order\"",
                                         "stop_point_id",
@@ -953,6 +954,7 @@ void EdPersistor::insert_stop_times(const std::vector<types::StopTime*>& stop_ti
         values.push_back(std::to_string(stop->ODT));
         values.push_back(std::to_string(stop->pick_up_allowed));
         values.push_back(std::to_string(stop->drop_off_allowed));
+        values.push_back(std::to_string(stop->skipped_stop));
         values.push_back(std::to_string(stop->is_frequency));
 
         values.push_back(std::to_string(stop->order));

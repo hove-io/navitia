@@ -202,6 +202,7 @@ class PathSerializer(PbNestedSerializer):
 class ElevationSerializer(PbNestedSerializer):
     distance_from_start = RoundedField(display_none=True)
     elevation = RoundedField(display_none=True)
+    geojson_index = RoundedField(display_none=True)
 
 
 class SectionTypeEnum(EnumField):

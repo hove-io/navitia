@@ -396,7 +396,7 @@ class TestSwaggerSchemaDepartureBoard(AbstractTestFixture, SchemaChecker):
         )
 
         # we have some errors, but only on additional_informations
-        assert len(errors) == 10
+        assert len(errors) == 9
         for k, e in errors.items():
             assert k.endswith('additional_informations[0].type[0]')
             assert "Got value `None` of type `null`. Value must be of type(s):" in e
