@@ -1103,7 +1103,7 @@ class User(flask_restful.Resource):
         if not end_point:
             msg = 'end_point doesn\'t exist'
             if args['end_point_id']:
-                msg = '{} for user email {}, you give "{}"'.format(msg, hide_domain(email), end_point_id)
+                msg += ' for user email {}, you give "{}"'.format(hide_domain(email), end_point_id)
             logging.error(msg)
             return {'error': msg}, 400
 
@@ -1116,7 +1116,7 @@ class User(flask_restful.Resource):
         if not billing_plan:
             msg = 'billing plan doesn\'t exist'
             if args['billing_plan_id']:
-                msg = '{} for user email {}, you give "{}"'.format(msg, hide_domain(email), billing_plan_id)
+                msg += ' for user email {}, you give "{}"'.format(hide_domain(email), billing_plan_id)
             logging.error(msg)
             return {'error': msg}, 400
 
@@ -1224,7 +1224,7 @@ class User(flask_restful.Resource):
         if not end_point:
             msg = 'end_point doesn\'t exist'
             if args['end_point_id']:
-                msg = '{} for user email {}, you give "{}"'.format(msg, hide_domain(email), end_point_id)
+                msg += ' for user email {}, you give "{}"'.format(hide_domain(email), end_point_id)
             logging.error(msg)
             return {'error': msg}, 400
 
@@ -1233,7 +1233,7 @@ class User(flask_restful.Resource):
         if not billing_plan:
             msg = 'billing plan doesn\'t exist'
             if args['billing_plan_id']:
-                msg = '{} for user email {}, you give "{}"'.format(msg, hide_domain(email), billing_plan_id)
+                msg += ' for user email {}, you give "{}"'.format(hide_domain(email), billing_plan_id)
             logging.error(msg)
             return {'error': msg}, 400
 
