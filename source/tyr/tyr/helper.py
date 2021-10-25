@@ -41,6 +41,16 @@ import os
 import sys
 import tempfile
 
+END_POINT_NOT_EXIST_MSG = 'end_point doesn\'t exist'
+BILLING_PLAN_NOT_EXIST_MSG = 'billing plan doesn\'t exist'
+
+
+def get_message(key, email, args):
+    msg = END_POINT_NOT_EXIST_MSG if key == "end_point_id" else BILLING_PLAN_NOT_EXIST_MSG
+    if args[key]:
+        return '{} for user email {}, you give "{}"'.format(msg, hide_domain(email), key)
+    return msg
+
 
 def wait_or_raise(async_result):
     """

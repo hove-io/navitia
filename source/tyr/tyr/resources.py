@@ -69,7 +69,7 @@ from tyr.tasks import (
     COSMOGONY_REGEXP,
 )
 from tyr import api
-from tyr.helper import get_instance_logger, save_in_tmp
+from tyr.helper import get_instance_logger, save_in_tmp, get_message, END_POINT_NOT_EXIST_MSG
 from tyr.fields import *
 from werkzeug.exceptions import BadRequest
 import werkzeug
@@ -1101,10 +1101,7 @@ class User(flask_restful.Resource):
             end_point = models.EndPoint.get_default()
 
         if not end_point:
-            msg = 'end_point doesn\'t exist'
-            if args['end_point_id']:
-                msg += ' for user email {}, you give "{}"'.format(hide_domain(email), end_point_id)
-            logging.error(msg)
+            msg = get_message('end_point_id', email, args)
             return {'error': msg}, 400
 
         billing_plan_id = args['billing_plan_id']
@@ -1114,9 +1111,7 @@ class User(flask_restful.Resource):
             billing_plan = models.BillingPlan.get_default(end_point)
 
         if not billing_plan:
-            msg = 'billing plan doesn\'t exist'
-            if args['billing_plan_id']:
-                msg += ' for user email {}, you give "{}"'.format(hide_domain(email), billing_plan_id)
+            msg = get_message('billing_plan_id', email, args)
             logging.error(msg)
             return {'error': msg}, 400
 
@@ -1222,18 +1217,14 @@ class User(flask_restful.Resource):
         end_point = models.EndPoint.query.get(end_point_id)
 
         if not end_point:
-            msg = 'end_point doesn\'t exist'
-            if args['end_point_id']:
-                msg += ' for user email {}, you give "{}"'.format(hide_domain(email), end_point_id)
+            msg = get_message('end_point_id', email, args)
             logging.error(msg)
             return {'error': msg}, 400
 
         billing_plan_id = args['billing_plan_id']
         billing_plan = models.BillingPlan.query.get_or_404(billing_plan_id)
         if not billing_plan:
-            msg = 'billing plan doesn\'t exist'
-            if args['billing_plan_id']:
-                msg += ' for user email {}, you give "{}"'.format(hide_domain(email), billing_plan_id)
+            msg = get_message('billing_plan_id', email, args)
             logging.error(msg)
             return {'error': msg}, 400
 
@@ -1800,7 +1791,7 @@ class BillingPlan(flask_restful.Resource):
             end_point = models.EndPoint.get_default()
 
         if not end_point:
-            return {'error': 'end_point doesn\'t exist'}, 400
+            return {'error': END_POINT_NOT_EXIST_MSG}, 400
 
         try:
             billing_plan = models.BillingPlan(
@@ -1869,7 +1860,7 @@ class BillingPlan(flask_restful.Resource):
 
         end_point = models.EndPoint.query.get(args['end_point_id'])
         if not end_point:
-            return {'error': 'end_point doesn\'t exist'}, 400
+            return {'error': END_POINT_NOT_EXIST_MSG}, 400
 
         try:
             billing_plan.name = args['name']
