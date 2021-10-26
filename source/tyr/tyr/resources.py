@@ -30,37 +30,49 @@
 # www.navitia.io
 
 from __future__ import absolute_import, print_function, division, unicode_literals
-from flask import current_app, request
-import flask_restful
-from flask_restful import marshal_with, marshal, reqparse, inputs, abort
 
-import sqlalchemy
-from validate_email import validate_email
-from datetime import datetime
-from tyr.tyr_user_event import TyrUserEvent
-from tyr.tyr_end_point_event import EndPointEventMessage, TyrEventsRabbitMq
-from tyr.helper import load_instance_config, hide_domain
+import json
 import logging
 import os
 import shutil
-import json
+from collections import deque
+from datetime import datetime
+from functools import wraps
+
+import flask_restful
+import six
+import sqlalchemy
+import werkzeug
+from flask import current_app, request
+from flask_restful import marshal_with, marshal, reqparse, inputs, abort
 from jsonschema import validate, ValidationError
+from navitiacommon import models, utils
+from navitiacommon.constants import DEFAULT_SHAPE_SCOPE, ENUM_SHAPE_SCOPE
+from navitiacommon.default_traveler_profile_params import (
+    default_traveler_profile_params,
+    acceptable_traveler_types,
+)
+from navitiacommon.models import db
+from navitiacommon.parser_args_type import CoordFormat, PositiveFloat, BooleanType, OptionValue, geojson_argument
+from validate_email import validate_email
+from werkzeug.exceptions import BadRequest
+
+from tyr import api
+from tyr.fields import *
 from tyr.formats import (
     poi_type_conf_format,
     parse_error,
     equipments_provider_format,
     streetnetwork_backend_format,
 )
-from navitiacommon.default_traveler_profile_params import (
-    default_traveler_profile_params,
-    acceptable_traveler_types,
+from tyr.helper import (
+    get_instance_logger,
+    save_in_tmp,
+    get_message,
+    END_POINT_NOT_EXIST_MSG,
+    load_instance_config,
+    hide_domain,
 )
-from navitiacommon.constants import DEFAULT_SHAPE_SCOPE, ENUM_SHAPE_SCOPE
-from navitiacommon import models, utils
-from navitiacommon.models import db
-from navitiacommon.parser_args_type import CoordFormat, PositiveFloat, BooleanType, OptionValue, geojson_argument
-from functools import wraps
-from tyr.validations import datetime_format, InputJsonValidator
 from tyr.tasks import (
     create_autocomplete_depot,
     remove_autocomplete_depot,
@@ -68,13 +80,9 @@ from tyr.tasks import (
     cities,
     COSMOGONY_REGEXP,
 )
-from tyr import api
-from tyr.helper import get_instance_logger, save_in_tmp, get_message, END_POINT_NOT_EXIST_MSG
-from tyr.fields import *
-from werkzeug.exceptions import BadRequest
-import werkzeug
-import six
-from collections import deque
+from tyr.tyr_end_point_event import EndPointEventMessage, TyrEventsRabbitMq
+from tyr.tyr_user_event import TyrUserEvent
+from tyr.validations import datetime_format, InputJsonValidator
 
 
 class Api(flask_restful.Resource):
