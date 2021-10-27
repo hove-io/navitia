@@ -176,12 +176,12 @@ struct routing_api_data {
             auto& builder_vj_FE =
                 b.vj("FE")("stop_point:stopF", "10:01:01"_t)("stop_point:stopE", "10:01:02"_t).st_shape({F, E});
             b.lines["FE"]->code = "1FE";
-            builder_vj_FE.vj->physical_mode = b.data->pt_data->physical_modes[0];  // Tramway
+            builder_vj_FE.vj->physical_mode = b.data->pt_data->physical_modes[4];  // Bus
 
             auto& builder_vj_BA =
                 b.vj("BA")("stop_point:stopB", "10:10:01"_t)("stop_point:stopA", "10:11:02"_t).st_shape({B, A});
             b.lines["BA"]->code = "1BA";
-            builder_vj_BA.vj->physical_mode = b.data->pt_data->physical_modes[4];  // Bus
+            builder_vj_BA.vj->physical_mode = b.data->pt_data->physical_modes[6];  // Coach
 
             auto& builder_vj_BAbis =
                 b.vj("BAbis")("stop_point:stopB", "10:10:00"_t)("stop_point:stopA", "10:11:03"_t).st_shape({B, A});

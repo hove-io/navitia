@@ -50,7 +50,13 @@ import time
 
 
 CAR_PARK_DURATION = 300  # secs
-allowed_physical_mode_for_transfert_path = ('Bus', 'Tramway', 'BusRapidTransit', 'Coach', 'Shuttle')
+allowed_physical_mode_for_transfert_path = (
+    'physical_mode:Bus',
+    'physical_mode:Tramway',
+    'physical_mode:BusRapidTransit',
+    'physical_mode:Coach',
+    'physical_mode:Shuttle',
+)
 
 
 def _create_crowfly(pt_journey, crowfly_origin, crowfly_destination, begin, end, mode):
@@ -672,18 +678,30 @@ def timed_logger(logger, task_name, request_id):
 def filter_transfer_path(journey_sections):
     logger = logging.getLogger(__name__)
 
+    def hasfield(section, field):
+        try:
+            return section.HasField(field)
+        except ValueError:
+            return False
+
+    def get_physical_mode(section):
+        if (
+            hasfield(section, 'pt_display_informations')
+            and hasfield(section.pt_display_informations, 'uris')
+            and hasfield(section.pt_display_informations.uris, 'physical_mode')
+        ):
+            return section.pt_display_informations.uris.physical_mode
+        else:
+            return None
+
     transfer_sections = []
     for index in range(1, len(journey_sections) - 2):
         if journey_sections[index].type != response_pb2.TRANSFER:
             continue
 
         prev_section = journey_sections[index - 1]
-        if not (
-            prev_section.HasField('pt_display_informations')
-            and prev_section.pt_display_informations.HasField('physical_mode')
-            and prev_section.pt_display_informations.physical_mode in allowed_physical_mode_for_transfert_path
-        ):
-            logger.debug("pt_display_informations or physical_mode not found in section")
+        if not (get_physical_mode(prev_section) in allowed_physical_mode_for_transfert_path):
+            logger.debug("physical_mode not found or not allowed for transfer_path")
             continue
 
         next_section = (
@@ -691,12 +709,8 @@ def filter_transfer_path(journey_sections):
             if journey_sections[index + 1].type == response_pb2.WAITING
             else journey_sections[index + 1]
         )
-        if not (
-            next_section.HasField('pt_display_informations')
-            and next_section.pt_display_informations.HasField('physical_mode')
-            and next_section.pt_display_informations.physical_mode in allowed_physical_mode_for_transfert_path
-        ):
-            logger.debug("pt_display_informations or physical_mode not found in section")
+        if not (get_physical_mode(next_section) in allowed_physical_mode_for_transfert_path):
+            logger.debug("physical_mode not found or not allowed for transfer_path")
             continue
 
         transfer_sections.append(journey_sections[index])
