@@ -42,11 +42,11 @@ You have to use yours to get real services on real data (your token has no acces
 
 First step
 ---------------
-> Your token is available on your [navitia.io account page](https://www.navitia.io/profile).
+> Your token is available on your [navitia.io account page](https://espace-client.navitia.io/).
 
 > It sounds like "3b036afe-0110-4202-b9ed-99718476c2e0"
 
-Get a token here <https://navitia.io/register/>. We need your mail to stay in touch when Navitia changes.
+Get a token here <https://navitia.io/inscription/>. We need your mail to stay in touch when Navitia changes.
 
 <aside class="notice">
 The token obtained is private, you should avoid sharing it publicly (beware if you share code examples, url or screenshot).</br>
