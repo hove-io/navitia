@@ -98,6 +98,7 @@ The only arguments are the ones of [paging](#paging).
 
 <a name="coord"></a>Inverted geocoding
 --------------------------------------
+
 ``` shell
 #request
 $ curl 'https://api.navitia.io/v1/coords/2.37705;48.84675' -H 'Authorization: 3b036afe-0110-4202-b9ed-99718476c2e0'
@@ -156,7 +157,6 @@ HTTP/1.1 200 OK
         {"href": "https://api.navitia.io/v1/coverage/sandbox/"}
     ]
 }
-
 ```
 
 Also known as `/coords` service.
@@ -179,7 +179,7 @@ Very simple service: you give Navitia some coordinates, it answers you
 | `coverage/{region_id}/places/{id}`           | Information about places                                             |
 
 
-You can also combine `/coords` with other filter as :
+You can also combine `/coords` with other filter as:
 
 -   get [POIs](#poi) near a coordinate
 	- <https://api.navitia.io/v1/coverage/fr-idf/coords/2.377310;48.847002/pois?distance=1000>
@@ -233,9 +233,7 @@ HTTP/1.1 200 OK
 }
 ```
 
-
 Also known as `/networks`, `/lines`, `/stop_areas`... services.
-
 
 Once you have selected a region, you can explore the public
 transportation objects easily with these APIs. You just need to add at
@@ -306,11 +304,11 @@ the [odt](#odt) section. "odt_level" can take one of these values:
 
 -   all (default value): no filter, provide all public transport lines,
     whatever its type
--   scheduled : provide only regular lines (see the [odt](#odt) section)
--   with_stops : to get regular, "odt_with_stop_time" and "odt_with_stop_point" lines.
+-   scheduled: provide only regular lines (see the [odt](#odt) section)
+-   with_stops: to get regular, "odt_with_stop_time" and "odt_with_stop_point" lines.
     -   You can easily request route_schedule and stop_schedule with these kind of lines.
     -   Be aware of "estimated" stop times
--   zonal : to get "odt_with_zone" lines with non-detailed journeys
+-   zonal: to get "odt_with_zone" lines with non-detailed journeys
 
 For example
 
@@ -381,7 +379,7 @@ remove them, it's useful when searching lines that you don't want to display on 
     It's almost mandatory on mobile devices since most cellular networks are still relatively slow.
 </aside>
 
-Examples :
+Examples:
 
 -   <https://api.navitia.io/v1/coverage/fr-idf/lines?disable_geojson=true>
 
@@ -395,7 +393,7 @@ This parameter allows you to remove them, reducing the response size.
     This parameter is mostly here to be able to search objects without disruptions in the response.
 </aside>
 
-Examples :
+Examples:
 
 -   <https://api.navitia.io/v1/coverage/fr-idf/lines?disable_disruption=true>
 
@@ -450,7 +448,7 @@ You may have to request an object by one of these ids, in order to call an exter
 
 The filter format is `filter={collection_name}.has_code({code_type},{code_value})`
 
-Examples :
+Examples:
 
 -   <https://api.navitia.io/v1/coverage/fr-sw/stop_points?filter=stop_point.has_code(source,5852)>
 -   <https://api.navitia.io/v1/coverage/fr-sw/stop_areas?filter=stop_area.has_code(gtfs_stop_code,1303)>
@@ -466,7 +464,7 @@ Examples :
 It allows you to request navitia objects referencing a line whose code
 is the one provided, especially lines themselves and routes.
 
-Examples :
+Examples:
 
 -   <https://api.navitia.io/v1/coverage/fr-idf/lines?filter=line.code=4>
 -   <https://api.navitia.io/v1/coverage/fr-idf/routes?filter=line.code=\"métro\ 347\">
@@ -552,7 +550,7 @@ It returns a collection of [pt_object](#pt-object).
 
 ### How does it works
 
-Differents kind of objects can be returned (sorted as):
+Different kinds of objects can be returned (sorted as):
 
 -   network
 -   commercial_mode
@@ -624,7 +622,6 @@ HTTP/1.1 200 OK
 |-------------------------------------------------------|-------------------------------------|
 | `/coverage/{region_id}/{resource_path}/pt_objects`    | List of public transport objects    |
 
-
 ### Parameters
 
 
@@ -640,9 +637,9 @@ HTTP/1.1 200 OK
 There is no pagination for this api
 </aside>
 
-
 <a name="places"></a>Autocomplete on geographical objects
 ---------------------------------------------------------
+
 ``` shell
 #request
 $ curl 'https://api.navitia.io/v1/coverage/sandbox/places?q=rue' -H 'Authorization: 3b036afe-0110-4202-b9ed-99718476c2e0'
@@ -742,7 +739,6 @@ HTTP/1.1 200 OK
 }
 ```
 
-
 Also known as `/places_nearby` service.
 
 This endpoint allows you to search for public transport objects that are near another object, or nearby
@@ -756,7 +752,6 @@ coordinates, returning a [places](#place) collection.
 | `/coord/{lon;lat}/places_nearby`                       | List of objects near the resource without any region id (same result as above) |
 | `/coverage/{region_id}/coords/{lon;lat}/places_nearby` | List of objects near a coordinate                                              |
 | `/coverage/{region_id}/{resource_path}/places_nearby`  | List of objects near the resource                                              |
-
 
 ### Parameters
 
@@ -890,10 +885,9 @@ HTTP/1.1 200 OK
 }
 ```
 
-
 Also known as `/journeys` service. This api computes journeys or isochrone tables.
 
-There are two ways to access to this service : journeys from point to point, or isochrones from a single point to every point.
+There are two ways to access to this service: journeys from point to point, or isochrones from a single point to every point.
 
 <aside class="success">
     Neither the 'from' nor the 'to' parameter of the journey are required,
@@ -925,7 +919,7 @@ There are two ways to access to this service : journeys from point to point, or 
     system).
 </aside>
 
-####Requesting a single journey
+#### Requesting a single journey
 
 The most used way to access to this service is to get the `/journeys` api endpoint.
 Here is the structure of a standard journey request:
@@ -960,7 +954,7 @@ The list of regions covered by navitia is available through [coverage](#coverage
     data set: https://api.navitia.io/v1/coverage/{your_dataset}/journeys
 </aside>
 
-####Requesting an isochrone
+#### Requesting an isochrone
 
 If you want to retreive every possible journey from a single point at a time, you can request as follow:
 
@@ -978,6 +972,7 @@ It will retrieve all the journeys from the resource (in order to make *[isochron
 The [isochrones](#isochrones) service exposes another response structure, which is simpler, for the same data.
 
 ### <a name="journeys-disruptions"></a> Disruptions
+
 By default, Navitia only computes journeys without their associated disruption(s), meaning that the journeys in the response will be based on the theoritical schedules. The disruption present in the response is for information only.
 If you want to provide journeys without blocking disruptions, you need to make an other request with the parameter `data_freshness=realtime`.
 
@@ -1021,7 +1016,7 @@ See how disruptions affect a journey in the [real time](#realtime) section.
 | nop     | count                | int     | Fixed number of different journeys<br>More in multiple_journeys  |             |
 | nop     | max_nb_transfers      | int     | Maximum number of transfers in each journey  | 10          |
 | nop     | min_nb_transfers     | int     | Minimum number of transfers in each journey  | 0           |
-| nop     | max_duration         | int     | If `datetime` represents the departure of the journeys requested, then the last public transport section of all journeys will end before `datetime` + `max_duration` .<br>If `datetime` represents the arrival of the journeys requested, then the first public transport section of all journeys will start after `datetime` - `max_duration` <br>More useful when computing an isochrone (only `from` or `to` is provided)<br>Unit is seconds    | 86400       |
+| nop     | max_duration         | int     | If `datetime` represents the departure of the journeys requested, then the last public transport section of all journeys will end before `datetime` + `max_duration`.<br>If `datetime` represents the arrival of the journeys requested, then the first public transport section of all journeys will start after `datetime` - `max_duration`.<br>More useful when computing an isochrone (only `from` or `to` is provided)<br>Unit is seconds    | 86400       |
 | nop     | wheelchair           | boolean | If true the traveler is considered to be using a wheelchair, thus only accessible public transport are used<br>be warned: many data are currently too faint to provide acceptable answers with this parameter on       | False       |
 | nop     | direct_path          | enum    | Specify if Navitia should suggest direct paths (= only fallback modes are used).<br>Possible values: <ul><li>`indifferent`</li><li>`none` for only journeys using some PT</li><li>`only` for only journeys without PT</li></ul>      | indifferent |
 | nop     | direct_path_mode[]	     | array of strings     | Force direct-path modes. If this list is not empty, we only compute direct_path for modes in this list and filter all the direct_paths of modes in first_section_mode[]. It can take the following values: `walking`, `car`, `bike`, `bss`, `ridesharing`, `taxi`. It's an array, you can give multiple modes. If this list is empty, we will compute direct_path for modes of the first_section_modes.  | first_section_modes[]           |
@@ -1239,9 +1234,8 @@ Also known as `/isochrones` service.
 <aside class="warning">
     This service is under development. So it is accessible as a <b>"Beta" service</b>.
     <br>
-    Every feed back is welcome on <a href="https://groups.google.com/forum/#!forum/navitia">https://groups.google.com/forum/#!forum/navitia</a> !
+    Every feed back is welcome on <a href="https://groups.google.com/forum/#!forum/navitia">https://groups.google.com/forum/#!forum/navitia</a>!
 </aside>
-
 
 This service gives you a multi-polygon response which
 represents a same duration travel zone at a given time: https://en.wikipedia.org/wiki/Isochrone_map
@@ -1272,7 +1266,6 @@ You just have to verify that the coordinates of the geocoded object are inside t
     'datetime' parameter is therefore important: The result is not the same when computing
     an isochrone at 3am (few transports) or at 6pm (rush hour).
 </aside>
-
 
 | Required  | Name                    | Type          | Description                                                                               | Default value |
 |-----------|-------------------------|---------------|-------------------------------------------------------------------------------------------|---------------|
@@ -1422,7 +1415,6 @@ HTTP/1.1 200 OK
 }
 ```
 
-
 Also known as `/route_schedules` service.
 
 This endpoint gives you access to schedules of routes (so a kind of time table), with a response made
@@ -1480,14 +1472,12 @@ Field      | Type                             | Description
 date_times | Array of [pt-date-time](#pt-date-time) | Array of public transport formated date time
 stop_point | [stop_point](#stop-point)              | The stop point of the row
 
-
 <a name="stop-schedules"></a>Stop Schedules
 -------------------------------------------
 
 >[Try it on Navitia playground (click on "EXT" buttons to see times)](https://canaltp.github.io/navitia-playground/play.html?request=https%3A%2F%2Fapi.navitia.io%2Fv1%2Fcoverage%2Fsandbox%2Fstop_areas%2Fstop_area%253ARAT%253ASA%253AGDLYO%2Fstop_schedules%3Fitems_per_schedule%3D2%26&token=3b036afe-0110-4202-b9ed-99718476c2e0)
 
 ``` shell
-
 #request
 $ curl 'https://api.navitia.io/v1/coverage/sandbox/lines/line:RAT:M1/stop_schedules' -H 'Authorization: 3b036afe-0110-4202-b9ed-99718476c2e0'
 
@@ -1548,7 +1538,6 @@ HTTP/1.1 200 OK
     "feed_publishers": [...],
     "exceptions": []
 }
-
 ```
 
 Also known as `/stop_schedules` service.
@@ -1568,7 +1557,6 @@ See how disruptions affect stop schedules in the [real time](#realtime) section.
 | `/coverage/{region_id}/{resource_path}/stop_schedules` | List of the stop schedules grouped by ``stop_point/route`` for a given resource   |
 | `/coverage/{lon;lat}/coords/{lon;lat}/stop_schedules`  | List of the stop schedules grouped by ``stop_point/route`` for coordinates, navitia guesses the region from coordinates |
 
-
 ### Parameters
 
 Required | Name               | Type                            | Description                                                                                                                | Default Value
@@ -1582,7 +1570,6 @@ nop      | data_freshness     | enum                            | Define the fre
 nop      | disable_geojson    | boolean                         | remove geojson fields from the response                                                                                    | False
 nop      | direction_type     | enum                            | Allow to filter the response with the route direction type property <ul><li>all</li><li>forward</li><li>backward</li></ul>Note: forward is equivalent to clockwise and inbound. When you select forward, you filter with: [forward, clockwise, inbound].<br>backward is equivalent to anticlockwise and outbound. When you select backward, you filter with: [backward, anticlockwise, outbound] | all
 
-
 ### <a name="stop-schedule"></a>Stop_schedule object
 
 |Field|Type|Description|
@@ -1592,7 +1579,6 @@ nop      | direction_type     | enum                            | Allow to filte
 |date_times|Array of [pt-date-time](#pt-date-time)|When does a bus stops at the stop point|
 |stop_point|[stop_point](#stop-point)|The stop point of the schedule|
 |additional_informations|[additional_informations](#additional-informations)|Other informations, when no departures<br> enum values:<ul><li>date_out_of_bounds</li><li>terminus</li><li>partial_terminus</li><li>active_disruption</li><li>no_departures_known</li></ul>|
-
 
 <a name="terminus-schedules"></a>Terminus Schedules
 ---------------------------------------------------
@@ -1637,8 +1623,8 @@ The response is made of an array of [terminus_schedule](#terminus-schedule), and
 Same as stop_schedule parametres
 
 ### <a name="terminus-schedule"></a>Terminus_schedule object
-Same as stop_schedule object
 
+Same as stop_schedule object
 
 <a name="departures"></a>Departures
 -----------------------------------
@@ -1708,7 +1694,6 @@ Departures are ordered chronologically in ascending order as:
 
 See how disruptions affect the next departures in the [real time](#realtime) section.
 
-
 ### Accesses
 
 | url | Result |
@@ -1728,7 +1713,6 @@ nop      | forbidden_uris[] | id                              | If you want to a
 nop      | data_freshness   | enum                            | Define the freshness of data to use to compute journeys <ul><li>realtime</li><li>base_schedule</li></ul>                              | realtime
 nop      | disable_geojson  | boolean                         | remove geojson fields from the response                                                                                               | false
 nop      | direction_type   | enum                            | Allow to filter the response with the route direction type property <ul><li>all</li><li>forward</li><li>backward</li></ul>Note: forward is equivalent to clockwise and inbound. When you select forward, you filter with: [forward, clockwise, inbound].<br>backward is equivalent to anticlockwise and outbound. When you select backward, you filter with: [backward, anticlockwise, outbound] | all
-
 
 ### Departure objects
 
@@ -1801,6 +1785,7 @@ they are exactly the same as [departures](#departures)
 
 <a name="line-reports"></a>Line reports
 ---------------------------------------
+
 ``` shell
 #request
 $ curl 'https://api.navitia.io/v1/coverage/sandbox/line_reports' -H 'Authorization: 3b036afe-0110-4202-b9ed-99718476c2e0'
@@ -1826,7 +1811,6 @@ HTTP/1.1 200 OK
     }
 ]
 }
-
 ```
 
 This service provides the state of public transport traffic, grouped by lines and all their stops.<br>It can be called for an overall coverage or for a specific object.<br>Can be accessed via: <https://api.navitia.io/v1/{a_path_to_a_resource}/line_reports>
@@ -1839,9 +1823,9 @@ For example:
 
 -   overall public transport line report on Ile de France coverage
     -   <https://api.navitia.io/v1/coverage/fr-idf/line_reports>
--   Is there any perturbations on the RER network ?
+-   Is there any perturbations on the RER network?
     -   <https://api.navitia.io/v1/coverage/fr-idf/networks/network:RER/line_reports>
--   Is there any perturbations on the "RER A" line ?
+-   Is there any perturbations on the "RER A" line?
     -   <https://api.navitia.io/v1/coverage/fr-idf/networks/network:RER/lines/line:TRN:DUA810801043/line_reports>
 
 Required | Name             | Type                            | Description                                       | Default Value
@@ -1860,6 +1844,7 @@ There are inner links between this 2 arrays:
 see the [inner-reference](#inner-references) section to use them.
 
 ### Line report object
+
 ``` shell
 #links between objects in a line_reports response
 {
@@ -1955,7 +1940,7 @@ of [pt_objects](#pt-objects) linked (for example stop_areas, stop_point or netwo
     -   disruption "yellow"
     -   Each disruption contains the messages to show.
 
-Details for disruption objects : [disruptions](#disruptions)
+Details for disruption objects: [disruptions](#disruptions)
 
 #### What a line_report object **contains**
 
@@ -1966,6 +1951,7 @@ Details for disruption objects : [disruptions](#disruptions)
 
 <a name="traffic-reports"></a>Traffic reports
 ---------------------------------------------
+
 ``` shell
 #request
 $ curl 'https://api.navitia.io/v1/coverage/sandbox/traffic_reports' -H 'Authorization: 3b036afe-0110-4202-b9ed-99718476c2e0'
@@ -1999,14 +1985,13 @@ This service provides the state of public transport traffic, grouped by network.
 
 ### Parameters
 
-
 For example:
 
 -   overall public transport traffic report on Ile de France coverage
     -   <https://api.navitia.io/v1/coverage/fr-idf/traffic_reports>
--   Is there any perturbations on the RER network ?
+-   Is there any perturbations on the RER network?
     -   <https://api.navitia.io/v1/coverage/fr-idf/networks/network:RER/traffic_reports>
--   Is there any perturbations on the "RER A" line ?
+-   Is there any perturbations on the "RER A" line?
     -   <https://api.navitia.io/v1/coverage/fr-idf/networks/network:RER/lines/line:OIF:810:AOIF741/line_reports?>
 
 Required | Name             | Type                            | Description                                         | Default Value
@@ -2026,6 +2011,7 @@ see the [inner-reference](#inner-references) section to use them.
 
 
 ### Traffic report object
+
 ``` shell
 #links between objects in a traffic_reports response
 {
@@ -2177,7 +2163,7 @@ of lines and an array of stop_areas.
     -   disruption "yellow"
     -   Each disruption contains the messages to show.
 
-Details for disruption objects : [disruptions](#disruptions)
+Details for disruption objects: [disruptions](#disruptions)
 
 #### What a traffic_report object **contains**
 
@@ -2191,6 +2177,7 @@ Details for disruption objects : [disruptions](#disruptions)
 
 Equipment_Reports
 ---------------------------------------------
+
 ``` shell
 #request
 $ curl 'https://api.navitia.io/v1/coverage/<my_coverage>/equipment_reports'
@@ -2247,7 +2234,6 @@ This service provides the state of equipments such as lifts or elevators that ar
 </aside>
 
 ### Parameters
-
 
 Required | Name             | Type   | Description                                         | Default Value
 ---------|------------------|--------|-----------------------------------------------------|--------------

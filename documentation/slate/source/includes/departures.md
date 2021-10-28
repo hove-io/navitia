@@ -21,9 +21,9 @@ for a specific mode of public transport (bus, tram, metro, train) at your select
 
 In order to display departures, you may have to use these APIs (click on them for details):
 
--   **[Public transportation objects](#pt-ref)** : List of the public transport
+-   **[Public transportation objects](#pt-ref)**: List of the public transport
     objects of a region
--   **[Stop Schedules](#stop-schedules)**, **[Terminus Schedules](#terminus-schedules)**, **[Departures](#departures)** and **[Arrivals](#arrivals)** :
+-   **[Stop Schedules](#stop-schedules)**, **[Terminus Schedules](#terminus-schedules)**, **[Departures](#departures)** and **[Arrivals](#arrivals)**:
 Compute time tables for a given resource
 
 See how disruptions affect the next departures in the [real time](#realtime) section.

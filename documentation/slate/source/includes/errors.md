@@ -20,7 +20,7 @@ HTTP/1.1 404 OK
 }
 ```
 
-The are two possible 40x http codes :
+The are two possible 40x http codes:
 
 -   Code 404: unable to find an object
 
@@ -64,4 +64,3 @@ Ouch. Technical issue :/
 | service_unavailable	| Navitia isn't responding								|
 | dead_socket		| The requested region isn't responding							|
 | technical_error	| An external service (street network back-end or autocomplete)	isn't responding	|
-

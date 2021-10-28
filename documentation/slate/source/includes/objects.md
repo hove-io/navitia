@@ -1,4 +1,4 @@
-﻿Objects
+Objects
 =======
 
 Standard Objects
@@ -6,7 +6,7 @@ Standard Objects
 
 ### Coord
 
-Lots of object are geographically localized :
+Lots of object are geographically localized:
 
 |Field|Type|Description|
 |-----|----|-----------|
@@ -24,7 +24,6 @@ Navitia
 
 [Context](#context) object provides the Timezone, useful to interpret datetimes of the response.
 
-
 For example:
 
 - <https://api.navitia.io/v1/journeys?from=bob&to=bobette&datetime=20140425T1337>
@@ -36,7 +35,6 @@ There are lots of ISO 8601 libraries in every kind of language that you should u
 ### Iso-date
 
 The date are represented in ISO 8601 "YYYYMMDD" string.
-
 
 Public transport objects
 ------------------------
@@ -243,7 +241,7 @@ Here is the valid id list:
 -   physical_mode:Tramway
 
 You can use these ids in the forbidden_uris[] parameter from
-[journeys parameters](#journeys-parameters) for exemple.
+[journeys parameters](#journeys-parameters) for example.
 
 ### <a name="company"></a>Company
 
@@ -288,12 +286,11 @@ A container containing either a [admin](#admin), [poi](#poi), [address](#address
 |address|[address](#address)|Embedded address|
 |stop_point|[stop_point](#stop-point)|Embedded Stop point|
 
-
 ### Trip
 
 A trip corresponds to a scheduled vehicle circulation (and all its linked real-time and disrupted routes).
 
-An example : a train, routing a Paris to Lyon itinerary every day at 06h29, is the "Trip" named "6641".
+Example: a train, routing a Paris to Lyon itinerary every day at 06h29, is the "Trip" named "6641".
 
 ``` json
 {
@@ -309,7 +306,6 @@ An example : a train, routing a Paris to Lyon itinerary every day at 06h29, is t
 
 It encapsulates many instances of vehicle_journey.
 
-
 ### Vehicle-journey
 
 A vehicle-journey describes a scheduled vehicle circulation, the days on which it circulates according to base-schedule,
@@ -323,7 +319,6 @@ The collection is accessible with the url:
 `https://api.navitia.io/v1/coverage/sandbox/trips/{trip.id}/vehicle_journeys`.
 
 Note: this collection is mostly used for debug and technical purposes.
-
 
 ### <a name="pt-object"></a>Pt_object
 
@@ -407,7 +402,6 @@ Real time and disruption objects
 |contributor         |string                   |The source from which Navitia received the disruption
 |uri                 |string                   |deprecated
 |disruption_uri      |string                   |deprecated
-
 
 ### Impacted_object
 
@@ -523,7 +517,7 @@ Severity object can be used to make visual grouping.
 | Field         | Type         | Description                                    |
 |---------------|--------------|------------------------------------------------|
 | color         | string     | HTML color for classification                  |
-| priority      | integer    | given by the agency : 0 is strongest priority. it can be null |
+| priority      | integer    | given by the agency: 0 is strongest priority. it can be null |
 | name          | string     | name of severity                               |
 | effect        | Enum       | Normalized value of the effect on the public transport object. See the GTFS RT documentation at <https://gtfs.org/reference/realtime/v2/#enum-effect>. See also [realtime](#realtime) section. |
 
@@ -566,6 +560,7 @@ Street network objects
 ----------------------
 
 ### Poi Type
+
 ``` shell
 #request
 $ curl 'https://api.navitia.io/v1/coverage/sandbox/poi_types' -H 'Authorization: 3b036afe-0110-4202-b9ed-99718476c2e0'
@@ -591,6 +586,7 @@ A description of the number of stands/places and vehicles available at a bike sh
 |status          |enum|Information about the station itself:<ul><li>`unavailable`: Navitia is not able to obtain information about the station</li><li>`open`: The station is open</li><li>`closed`: The station is closed</li></ul>|
 
 ### <a name="poi"></a>Poi
+
 ``` shell
 #useless request, with huge response
 $ curl 'https://api.navitia.io/v1/coverage/sandbox/pois' -H 'Authorization: 3b036afe-0110-4202-b9ed-99718476c2e0'
@@ -659,7 +655,6 @@ A list of objects that maps each line with its associated stop area equipments.
 |line|[line](#line)|The line to which equipments are associated |
 |stop_area_equipments|[stop area equipments](#stop-area-equipments)|A list of objects that describes equipments for each stop area |
 
-
 ### <a name="stop-area-equipments"></a>Stop area equipments
 
 ```json
@@ -678,7 +673,6 @@ A list of objects that maps equipments details for each stop area.
 |equipment_details|[Equipment details](#equipment-details)|The equipment details associated with the stop area|
 |stop_area|[Stop Area](#stop-area)|The stop area to which the `equipment_details` is associated |
 
-
 ### <a name="equipment-details"></a>Equipment details
 ```json
 "equipment_details": [
@@ -691,13 +685,13 @@ A list of objects that maps equipments details for each stop area.
     ...
 ]
 ```
+
 |Field|Type|Occurrence|Description|
 |-----|----|--------|-----------|
 current_availability|[Equipment availability](#equipment-availability)|always| Describes equipments information like: status, name, id etc...
 embedded_type|string|always|Define the equipment type: `escalator`, `elevator`
 id|string|always|The equipment's unique identifier
 name|string|optional|the equipment's name/description
-
 
 ### <a name="equipment-availability"></a>Equipment availability
 
@@ -785,7 +779,6 @@ pt-date-time (pt stands for "public transport") is a complex date time object to
 Enum used to identify what kind of objects *[/places](#places)* and *[/places_nearby](#places-nearby-api)* services are managing.
 It's also used inside different responses (journeys, ...).
 
-
 | Value                                             | Description                                                   |
 |---------------------------------------------------|---------------------------------------------------------------|
 | [administrative_region](#administrative-region)   | a city, a district, a neighborhood                            |
@@ -799,7 +792,6 @@ It's also used inside different responses (journeys, ...).
 Enum used to identify what kind of objects *[/pt_objects](#pt-objects)* service is managing.
 It's also used inside different responses (disruptions, ...).
 
-
 | Value                                             | Description                                                   |
 |---------------------------------------------------|---------------------------------------------------------------|
 | [network](#network)                               | a public transport network                                    |
@@ -809,7 +801,6 @@ It's also used inside different responses (disruptions, ...).
 | [stop_area](#stop-area)                           | a nameable zone, where there are some stop points             |
 | [stop_point](#stop-point)                         | a location where vehicles can pickup or drop off passengers   |
 | [trip](#trip)                                     | a trip                                                        |
-
 
 ### equipment
 
@@ -847,7 +838,6 @@ Enum from
 |equipments|Array of String|list of [equipment](#equipment) of the object|
 |description|String|An optionnal description|
 
-
 ### link
 
 See [interface](#interface) section.
@@ -862,5 +852,3 @@ A date time with the format YYYYMMDDThhmmss, considered local to the coverage be
 #### depth
 
 This tiny parameter can expand Navitia power by making it more wordy. As it is valuable on every API, take a look at [depth](#depth)
-
-

@@ -1,7 +1,7 @@
 Interface
 =========
 
-The base URL for **navitia.io** is :
+The base URL for **navitia.io** is:
 <https://api.navitia.io/v1/>
 
 We aim to implement [HATEOAS](http://en.wikipedia.org/wiki/HATEOAS)
@@ -38,7 +38,6 @@ You can navigate through a response using 2 parameters
     The number of objects returned for a request can <b>not be superior than 1000 (except 200 for api /places)</b>.
     If you request for more, Navitia will return the first 1000, and you will have to paginate to get next 1000.
 </aside>
-
 
 Templated URL
 -------------
@@ -88,7 +87,6 @@ $ curl 'https://api.navitia.io/v1/coverage/sandbox/lines/line:RAT:M1/stop_schedu
 
 #here is a smarter request for a line AND a stop_area
 $ curl 'https://api.navitia.io/v1/coverage/sandbox/lines/line:RAT:M1/stop_areas/stop_area:RAT:SA:PLROY/stop_schedules' -H 'Authorization: 3b036afe-0110-4202-b9ed-99718476c2e0'
-
 ```
 
 Under some link sections, you will find a "templated" property.
@@ -98,8 +96,6 @@ In order to do that, you will have to
 
 * take the id from the object you want to get the linked service
 * replace {lines.id} in the url as the example
-
-
 
 Inner references
 ----------------
@@ -115,17 +111,14 @@ Inner references
 }
 ```
 
-
 Some link sections holds disruption links. These links are templated.
 
-That means :
+That means:
 
-* inside the self stream ( **"internal": true** )
-* you will find a **disruptions** section ( **"rel": "disruptions"** )
-* containing some [disruptions](#disruption) objects ( **"type": "disruption"** )
-* where you can find the details of your object ( **"id": "edc46f3a-ad3d-11e4-a5e1-005056a44da2"** ).
-
-
+* inside the self stream (**"internal": true**)
+* you will find a **disruptions** section (**"rel": "disruptions"**)
+* containing some [disruptions](#disruption) objects (**"type": "disruption"**)
+* where you can find the details of your object (**"id": "edc46f3a-ad3d-11e4-a5e1-005056a44da2"**).
 
 Objects order
 -------------
@@ -147,16 +140,12 @@ Examples of unsorted responses:
 * stop_points in `/lines/{line_id}/stop_points`
 * pretty much everything else...
 
-
-
 Objects attributes
 ------------------
 
 Like almost any API, objects are subject to adaptations.<br>Please be warned that we allow Navitia to add new attributes to objects, and it will never be considered a breaking change.
 
 We also allow Navitia to add values to enum, so be prepared to that. For example [section's](#section) type of journeys are regularly evolving.
-
-
 
 Lifetime of id
 --------------

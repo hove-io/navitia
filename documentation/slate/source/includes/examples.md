@@ -7,9 +7,9 @@ This chapter shows some usages with the minimal required arguments. However, thi
 You will have to use your own token with the examples below (if you switch to another coverage than "sandbox").
 </aside>
 
-
 Basics on the API request
 -------------------------
+
 ``` shell
 # Web is too shiny: JSON, urlencode and curl forever!
 $ curl 'https://api.navitia.io/v1/coverage/sandbox/stop_areas/stop_area%3ARAT%3ASA%3ABASTI/lines/line%3ARAT%3AM5/departures?count=4&depth=2&' -H 'Authorization: 3b036afe-0110-4202-b9ed-99718476c2e0'
@@ -30,7 +30,6 @@ Here `/departures?` means we are requesting _"next departures"_.
     </br>
     We get the next 4 departures for the metro 5 at Bastille in the great "sandbox" region, and with a middle level of details.
 </aside>
-
 
 A quick exploration
 -------------------
@@ -64,7 +63,6 @@ This request will give you:
 
 * in the ``regions`` section the list of covered regions
 * in the ``links`` section the list of possible interactions with them
-
 
 ``` shell
 $ curl 'https://api.navitia.io/v1/coverage/sandbox/lines' -H 'Authorization: 3b036afe-0110-4202-b9ed-99718476c2e0'
@@ -118,9 +116,7 @@ HTTP/1.1 200 OK
 }
 ```
 
-
 In the ``links`` section there is for example this link: ``"href": "https://api.navitia.io/v1/coverage/{regions.id}/lines"``
-
 
 This link is about lines (according to its ``rel`` attribute) and is templated which means that it needs additional parameters.<br>
 The parameters are identified with the ``{`` ``}`` syntax.
@@ -128,9 +124,7 @@ In this case it needs a region id. This id can be found in the ``regions`` secti
 
 To query for the public transport lines of New York we thus have to call: <https://api.navitia.io/v1/coverage/us-ny/lines>
 
-
 Easy isn't it?
-
 
 <a
     href="https://jsfiddle.net/kisiodigital/vLugkLgw/"
@@ -138,7 +132,6 @@ Easy isn't it?
     class="button button-blue">
     Code it yourself on JSFiddle
 </a>
-
 
 We could push the exploration further and:
 
@@ -174,16 +167,13 @@ Seek and search
 
 ### What places have a name that start with 'eiff'
 
-
 The [/places](#places) API finds any object whose name matches the first letters of the query.
 
 To find the objects that start with "tran" the request should be: <https://api.navitia.io/v1/coverage/fr-idf/places?q=eiff>
 
 This API is fast enough to use it for autocompleting a user request.
 
-
 ### What places are within 1000 meters
-
 
 The [/places_nearby](#places-nearby) API finds any object within a certain radius as a crow flies.
 This API is not accessible from the main endpoint but has to be applied on a stop point, an address, some coordinates,...
@@ -202,12 +192,10 @@ About itinerary
 Let's find out how to get from the view point of the Golden Gate bridge to the Transamerica Pyramid in San Francisco.
 We need to use the ``journeys`` API.
 
-
 The coordinates of the view point are ``longitude = -122.4752``, ``latitude = 37.80826`` and the coordinates of the Transamercia Pyramid are ``longitude = -122.402770``, ``latitude = 37.794682``.
 The coordinates are always in decimal degrees as WGS84 (also known as GPS coordinates). The coordinates are given to the API with the following format: ``longitute;latitude``.
 
 The arguments are the following:
-
 
 * ``from=-122.4752;37.80826``
 * ``to=-122.402770;37.794682``
@@ -231,17 +219,17 @@ This API has more options explained in the reference as:
 
 * You can also change the [traveler profile](#traveler-type) (to adapt the walking/biking/driving parts and comfort of journeys)
 
-* Forbid certain lines, routes or modes :
+* Forbid certain lines, routes or modes:
   for example you can forbid the line 5 and all lines using cable car mode. See [/journeys](#journeys) section.
 
->[Using your token ! You can try "real life" personalizations on Paris area)](http://canaltp.github.io/navitia-playground/play.html?request=https%3A%2F%2Fapi.navitia.io%2Fv1%2Fjourneys%3Ffrom%3D2.37715%253B48.846781%26to%3D2.380464%253B48.861081%26first_section_mode%255B%255D%3Dbss%26first_section_mode%255B%255D%3Dwalking%26first_section_mode%255B%255D%3Dbike%26)
+>[Using your token! You can try "real life" personalizations on Paris area)](http://canaltp.github.io/navitia-playground/play.html?request=https%3A%2F%2Fapi.navitia.io%2Fv1%2Fjourneys%3Ffrom%3D2.37715%253B48.846781%26to%3D2.380464%253B48.861081%26first_section_mode%255B%255D%3Dbss%26first_section_mode%255B%255D%3Dwalking%26first_section_mode%255B%255D%3Dbike%26)
 
 * You can override traveler_type parameters by enabling biking, driving or bike sharing system (bss) in your area. For instance, you can allow bss (and walking since it's implicit with it) at the departure from Paris area
 
 ### What stations can be reached in the next 20 minutes
 
 The API can computes *all* the reachable stop points from an origin within a given maximum travel duration.
-That's what we call an `isochron` (see [journeys section](#journeys) )
+That's what we call an `isochrone` (see [journeys section](#journeys))
 
 All the stop points that can be reached from the Transamerica Pyramid can be fetched with the following request:
 <https://api.navitia.io/v1/coverage/us-ca/coords/-122.402770;37.794682/journeys?max_duration=1200>

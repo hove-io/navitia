@@ -9,8 +9,7 @@ accessibility informations, vehicle informations, etc.
 
 In order to display line schedules, you may have to use these APIs (click on them for details):
 
--   **[Public transportation objects](#pt-ref)** : List of the public transport
+-   **[Public transportation objects](#pt-ref)**: List of the public transport
     objects of a region
--   **[Route Schedules](#route-schedules)** and **[Stop Schedules](#stop-schedules)** :
+-   **[Route Schedules](#route-schedules)** and **[Stop Schedules](#stop-schedules)**:
 Compute time tables for a given resource
-
