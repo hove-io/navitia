@@ -939,7 +939,7 @@ Here is the structure of a standard journey request:
 <a
     href="https://jsfiddle.net/kisiodigital/0oj74vnz/"
     target="_blank"
-    class="button button-blue">
+    class="button-jsfiddle">
     Code it yourself on JSFiddle
 </a>
 
@@ -965,7 +965,7 @@ It will retrieve all the journeys from the resource (in order to make *[isochron
 <a
     href="https://jsfiddle.net/kisiodigital/x6207t6f/"
     target="_blank"
-    class="button button-blue">
+    class="button-jsfiddle">
     Code it yourself on JSFiddle
 </a>
 

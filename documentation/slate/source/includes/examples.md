@@ -129,7 +129,7 @@ Easy isn't it?
 <a
     href="https://jsfiddle.net/kisiodigital/vLugkLgw/"
     target="_blank"
-    class="button button-blue">
+    class="button-jsfiddle">
     Code it yourself on JSFiddle
 </a>
 

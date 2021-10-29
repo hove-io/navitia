@@ -18,7 +18,7 @@ with their respective arrival times, travel times and number of matches. Here is
 <a
     href="https://jsfiddle.net/kisiodigital/x6207t6f/"
     target="_blank"
-    class="button button-blue">
+    class="button-jsfiddle">
     Code it yourself on JSFiddle
 </a>
 
@@ -28,7 +28,7 @@ or to filter geocoded objects inside the polygon. Here is a fiddle example:
 <a
     href="https://jsfiddle.net/kisiodigital/u22zsg9y/"
     target="_blank"
-    class="button button-blue">
+    class="button-jsfiddle">
     Code it yourself on JSFiddle
 </a>
 
