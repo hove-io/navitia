@@ -131,7 +131,7 @@ Want to test the API ?
 ----------------------
 
 | The easiest way to do this is a to go to `navitia.io <https://www.navitia.io/>`_.
-| `Signup <https://www.navitia.io/register/>`_, grab a token, read the `doc <https://doc.navitia.io>`_
+| `Signup <https://navitia.io/inscription>`_, grab a token, read the `doc <https://doc.navitia.io>`_
   and start using the API!
 
 For a more friendly interface you can use the API through
