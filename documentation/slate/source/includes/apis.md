@@ -42,7 +42,7 @@ The only arguments are the ones of [paging](#paging).
 |start_production_date |[iso-date](#iso-date)       | Beginning of the production period. We only have data on this production period |
 |end_production_date   |[iso-date](#iso-date)       | End of the production period. We only have data on this production period |
 
-#### Production period
+### Production period
 
 The production period is the validity period of the coverage's data.
 
@@ -63,7 +63,7 @@ Those datasets (typically from transport authority in GTFS format), each provide
 unique [contributor](#contributors) are forming a [coverage](#coverage).
 
 Contributor providing the dataset is also provided in the response.
-Very usefull to know all the datas that form a coverage.
+Very useful to know all the datas that form a coverage.
 
 The only arguments are the ones of [paging](#paging).
 
@@ -71,8 +71,8 @@ The only arguments are the ones of [paging](#paging).
 
 | url | Result |
 |----------------------------------------------|-------------------------------------------|
-| `coverage/{region_id}/datasets               | List of the datasets of a specific region |
-| `coverage/{region_id}/datasets/{dataset_id}  | Information about a specific dataset      |
+| `coverage/{region_id}/datasets`              | List of the datasets of a specific region |
+| `coverage/{region_id}/datasets/{dataset_id}` | Information about a specific dataset      |
 
 
 <a name="contributors"></a>Contributors
@@ -92,8 +92,8 @@ The only arguments are the ones of [paging](#paging).
 
 | url | Result |
 |--------------------------------------------------|-----------------------------------------------|
-| `coverage/{region_id}/contributors               | List of the contributors of a specific region |
-| `coverage/{region_id}/contributors/{dataset_id}  | Information about a specific contributor      |
+| `coverage/{region_id}/contributors`              | List of the contributors of a specific region |
+| `coverage/{region_id}/contributors/{dataset_id}` | Information about a specific contributor      |
 
 
 <a name="coord"></a>Inverted geocoding
@@ -360,8 +360,6 @@ Example:
 -   Getting every active (according to realtime information) New Jersey vehicles between 12h00 and 12h01, on a specific date <https://api.navitia.io/v1/coverage/us-ny/networks/network:newjersey/vehicle_journeys?since=20170407T120000&until=20170407T120100&data_freshness=realtime>
 -   Getting every active disruption on "Bretagne" for a specific date <https://api.navitia.io/v1/coverage/fr-bre/disruptions?since=20170206000000&until=20170206235959>
 
-
-
 <aside class="warning">
     On vehicle_journey this filter is applied using only the first stop time.
     On disruption this filter must intersect with one application period.
@@ -457,7 +455,6 @@ Examples:
 <aside class="warning">
     these ids (which are not Navitia ids) may not be unique. you will have to manage a tuple in response.
 </aside>
-
 
 #### line.code
 
@@ -594,7 +591,6 @@ User could type one of the following without any filters:
 -  route : "bobby metro 11 to Marcus"
 -  route : "bobby metro 11 to Steven"
 
-
 ### Access
 
 ``` shell
@@ -698,7 +694,6 @@ Differents kind of objects can be returned (sorted as):
     If you like to play, you can test the "beta" `/places`, without any coverage:
     it will soon be able to request entire Earth on addresses, POIs, stop areas... with geographical sort.
 </aside>
-
 
 ### Parameters
 
@@ -1546,7 +1541,7 @@ This endpoint gives you access to time tables going through a stop
 point as:
 ![stop_schedules](https://upload.wikimedia.org/wikipedia/commons/thumb/7/7d/Panneau_SIEL_couleurs_Paris-Op%C3%A9ra.jpg/640px-Panneau_SIEL_couleurs_Paris-Op%C3%A9ra.jpg)
 
-The response is made of an array of [stop_schedule](#stop-schedule), and another one of [note](#note).<br>[Context](#context) object provides the `current_datetime`, useful to compute waiting time when requesting Navitia without a `from_datetime`.<br>Can be accessed via: <https://api.navitia.io/v1/{a_path_to_a_resource}/stop_schedules>
+The response is made of an array of [stop_schedule](#stop-schedule), and another one of [note](#note).<br>[Context](#context) object provides the `current_datetime`, useful to compute waiting time when requesting Navitia without a `from_datetime`.<br>Can be accessed via: <https://api.navitia.io/v1/{a_path_to_a_resource}/stop_schedules>.
 
 See how disruptions affect stop schedules in the [real time](#realtime) section.
 
@@ -1554,8 +1549,8 @@ See how disruptions affect stop schedules in the [real time](#realtime) section.
 
 | url | Result |
 |--------------------------------------------------------|-----------------------------------------------------------------------------------|
-| `/coverage/{region_id}/{resource_path}/stop_schedules` | List of the stop schedules grouped by ``stop_point/route`` for a given resource   |
-| `/coverage/{lon;lat}/coords/{lon;lat}/stop_schedules`  | List of the stop schedules grouped by ``stop_point/route`` for coordinates, navitia guesses the region from coordinates |
+| `/coverage/{region_id}/{resource_path}/stop_schedules` | List of the stop schedules grouped by `stop_point/route` for a given resource   |
+| `/coverage/{lon;lat}/coords/{lon;lat}/stop_schedules`  | List of the stop schedules grouped by `stop_point/route` for coordinates, navitia guesses the region from coordinates |
 
 ### Parameters
 
@@ -1620,11 +1615,11 @@ The response is made of an array of [terminus_schedule](#terminus-schedule), and
 | `/coverage/{lon;lat}/coords/{lon;lat}/terminus_schedules`  | List of the schedules grouped by observing all served stations after considered stop_point for coordinates, navitia guesses the region from coordinates |
 
 ### Parameters
-Same as stop_schedule parametres
+Same as stop_schedule parameters.
 
 ### <a name="terminus-schedule"></a>Terminus_schedule object
 
-Same as stop_schedule object
+Same as stop_schedule object.
 
 <a name="departures"></a>Departures
 -----------------------------------
@@ -1698,8 +1693,8 @@ See how disruptions affect the next departures in the [real time](#realtime) sec
 
 | url | Result |
 |----------------------------------------------------|---------------------------------------------------------------------------------------------------------------|
-| `/coverage/{region_id}/{resource_path}/departures` | List of the next departures, multi-route oriented, only time sorted (no grouped by ``stop_point/route`` here) |
-| `/coverage/{lon;lat}/coords/{lon;lat}/departures`  | List of the next departures, multi-route oriented, only time sorted (no grouped by ``stop_point/route`` here), navitia guesses the region from coordinates |
+| `/coverage/{region_id}/{resource_path}/departures` | List of the next departures, multi-route oriented, only time sorted (no grouped by `stop_point/route` here) |
+| `/coverage/{lon;lat}/coords/{lon;lat}/departures`  | List of the next departures, multi-route oriented, only time sorted (no grouped by `stop_point/route` here), navitia guesses the region from coordinates |
 
 ### Parameters
 
@@ -1776,12 +1771,12 @@ object. Arrivals are ordered chronologically in ascending order.
 
 | url | Result |
 |--------------------------------------------------|---------------------------------------------------------------------------------------------------------------|
-| `/coverage/{region_id}/{resource_path}/arrivals` | List of the arrivals, multi-route oriented, only time sorted (no grouped by ``stop_point/route`` here)        |
-| `/coverage/{lon;lat}/coords/{lon;lat}/arrivals`  | List of the arrivals, multi-route oriented, only time sorted (no grouped by ``stop_point/route`` here), navitia guesses the region from coordinates  |
+| `/coverage/{region_id}/{resource_path}/arrivals` | List of the arrivals, multi-route oriented, only time sorted (no grouped by `stop_point/route` here)        |
+| `/coverage/{lon;lat}/coords/{lon;lat}/arrivals`  | List of the arrivals, multi-route oriented, only time sorted (no grouped by `stop_point/route` here), navitia guesses the region from coordinates  |
 
 ### Parameters
 
-they are exactly the same as [departures](#departures)
+they are exactly the same as [departures](#departures).
 
 <a name="line-reports"></a>Line reports
 ---------------------------------------
@@ -1813,7 +1808,7 @@ HTTP/1.1 200 OK
 }
 ```
 
-This service provides the state of public transport traffic, grouped by lines and all their stops.<br>It can be called for an overall coverage or for a specific object.<br>Can be accessed via: <https://api.navitia.io/v1/{a_path_to_a_resource}/line_reports>
+This service provides the state of public transport traffic, grouped by lines and all their stops.<br>It can be called for an overall coverage or for a specific object.<br>Can be accessed via: <https://api.navitia.io/v1/{a_path_to_a_resource}/line_reports>.
 
 <img src="./images/traffic_reports.png" alt="Traffic reports" width="300"/>
 

@@ -18,6 +18,7 @@ The effect of a disruption can be among the following:
     <li>[DETOUR](#MODIFIED_SERVICE)</li>
     <li>[OTHER_EFFECT](#OTHER_EFFECT)</li>
 </ul>
+
 This list follows the GTFS RT values documented at <https://gtfs.org/reference/realtime/v2/#enum-effect>.
 
 For each one of these effects, here's how the Navitia responses will be affected over the different endpoints.

@@ -52,17 +52,17 @@ HTTP/1.1 200 OK
 
 To better understand how the API works let's ask the API the different main possibilities by simply querying the API endpoint: <https://api.navitia.io/v1/>
 
-The ``links`` section of the answer contains the different possible interactions with the API.
+The `links` section of the answer contains the different possible interactions with the API.
 
 As you can see there are several possibilities like for example [coverage](#coverage) to navigate through the covered regions data or [journeys](#journeys) to compute a journey.
 
 
-Now let's see what interactions are possible with ``coverage``:
+Now let's see what interactions are possible with `coverage`:
 
 This request will give you:
 
-* in the ``regions`` section the list of covered regions
-* in the ``links`` section the list of possible interactions with them
+* in the `regions` section the list of covered regions
+* in the `links` section the list of possible interactions with them
 
 ``` shell
 $ curl 'https://api.navitia.io/v1/coverage/sandbox/lines' -H 'Authorization: 3b036afe-0110-4202-b9ed-99718476c2e0'
@@ -116,11 +116,11 @@ HTTP/1.1 200 OK
 }
 ```
 
-In the ``links`` section there is for example this link: ``"href": "https://api.navitia.io/v1/coverage/{regions.id}/lines"``
+In the `links` section there is for example this link: `"href": "https://api.navitia.io/v1/coverage/{regions.id}/lines"`
 
-This link is about lines (according to its ``rel`` attribute) and is templated which means that it needs additional parameters.<br>
-The parameters are identified with the ``{`` ``}`` syntax.
-In this case it needs a region id. This id can be found in the ``regions`` section.
+This link is about lines (according to its `rel` attribute) and is templated which means that it needs additional parameters.<br>
+The parameters are identified with the `{` `}` syntax.
+In this case it needs a region id. This id can be found in the `regions` section.
 
 To query for the public transport lines of New York we thus have to call: <https://api.navitia.io/v1/coverage/us-ny/lines>
 
@@ -180,7 +180,7 @@ This API is not accessible from the main endpoint but has to be applied on a sto
 
 All objects around the coordinates of the Transamerica Pyramid can be fetched with the following request: <https://api.navitia.io/v1/coverage/us-ca/coords/-122.402770;37.794682/places_nearby>
 
-We could, in the same fashion, ask for the objects around a particuliar stop area (``stop_area:OSF:SA:CTP4025`` for example): <https://api.navitia.io/v1/coverage/us-ca/stop_areas/stop_area:OSF:SA:CTP4025/places_nearby>
+We could, in the same fashion, ask for the objects around a particuliar stop area (`stop_area:OSF:SA:CTP4025` for example): <https://api.navitia.io/v1/coverage/us-ca/stop_areas/stop_area:OSF:SA:CTP4025/places_nearby>
 
 Optionally you can select what object types to return and change the radius.
 
@@ -190,19 +190,19 @@ About itinerary
 ### A simple route computation
 
 Let's find out how to get from the view point of the Golden Gate bridge to the Transamerica Pyramid in San Francisco.
-We need to use the ``journeys`` API.
+We need to use the `journeys` API.
 
-The coordinates of the view point are ``longitude = -122.4752``, ``latitude = 37.80826`` and the coordinates of the Transamercia Pyramid are ``longitude = -122.402770``, ``latitude = 37.794682``.
-The coordinates are always in decimal degrees as WGS84 (also known as GPS coordinates). The coordinates are given to the API with the following format: ``longitute;latitude``.
+The coordinates of the view point are `longitude = -122.4752`, `latitude = 37.80826` and the coordinates of the Transamercia Pyramid are `longitude = -122.402770`, `latitude = 37.794682`.
+The coordinates are always in decimal degrees as WGS84 (also known as GPS coordinates). The coordinates are given to the API with the following format: `longitute;latitude`.
 
 The arguments are the following:
 
-* ``from=-122.4752;37.80826``
-* ``to=-122.402770;37.794682``
+* `from=-122.4752;37.80826`
+* `to=-122.402770;37.794682`
 Hence, the complete URL: <https://api.navitia.io/v1/journeys?from=-122.4752;37.80826&to=-122.402770;37.794682>.
 
 <aside class="success">
-A ``journeys`` request might return multiple journeys. Those journeys are said to be equivalent. For instance
+A `journeys` request might return multiple journeys. Those journeys are said to be equivalent. For instance
 a journey can be faster than an other but requires more changes or more walking.
 </aside>
 
@@ -210,10 +210,10 @@ This API has more options explained in the reference as:
 
 >[Try it on Navitia playground using "datetime" and "datetime_represents" parameters)](https://canaltp.github.io/navitia-playground/play.html?request=https%3A%2F%2Fapi.navitia.io%2Fv1%2Fcoverage%2Fsandbox%2Fjourneys%3Ffrom%3D2.380465%253B48.861081%26to%3D2.37715%253B48.846781%26datetime%3D20200901T120000%26datetime_represents%3Darrival%26&token=3b036afe-0110-4202-b9ed-99718476c2e0)
 
-* The dates are given in the basic form of the ISO 8601 datetime format: ``YYYYMMDDTHHMM``.
-  For example, if you want to compute a journey on friday, April 07 use ``datetime=20170407T120000``
+* The dates are given in the basic form of the ISO 8601 datetime format: `YYYYMMDDTHHMM`.
+  For example, if you want to compute a journey on friday, April 07 use `datetime=20170407T120000`.
 
-* To get the latest departure, you can query for journeys arriving before the end of the service using the ``datetime_represents`` parameter
+* To get the latest departure, you can query for journeys arriving before the end of the service using the `datetime_represents` parameter
 
 >[Try personalization capacities on Navitia playground)](https://canaltp.github.io/navitia-playground/play.html?request=https%3A%2F%2Fapi.navitia.io%2Fv1%2Fcoverage%2Fsandbox%2Fjourneys%3Ffrom%3D2.380465%253B48.861081%26to%3D2.37715%253B48.846781%26traveler_type%3Dstandard%26forbidden_uris%255B%255D%3Dline%253ARAT%253AM5%26&token=3b036afe-0110-4202-b9ed-99718476c2e0)
 

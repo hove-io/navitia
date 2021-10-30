@@ -33,7 +33,7 @@ or
 
 `curl https://api.navitia.io/v1/coverage -u 3b036afe-0110-4202-b9ed-99718476c2e0:`
 
-(don't forget ``:`` after the key)
+(don't forget `:` after the key)
 
 or
 

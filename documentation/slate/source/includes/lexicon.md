@@ -66,4 +66,3 @@ Stop Time
 
 A stop time represents the time when a bus is planned to arrive and to leave a
 stop point.
-
