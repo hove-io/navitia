@@ -128,8 +128,7 @@ Easy isn't it?
 
 <a
     href="https://jsfiddle.net/kisiodigital/vLugkLgw/"
-    target="_blank"
-    class="button-jsfiddle">
+    target="_blank">
     Code it yourself on JSFiddle
 </a>
 
