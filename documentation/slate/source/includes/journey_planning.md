@@ -1,5 +1,4 @@
-<a name="journey_planning"></a>![Journey planning](/images/journeys.png)Journey planning
-===============================================
+<h1 id="journey_planning">Journey planning</h1>
 
 >[Try it on Navitia playground](http://canaltp.github.io/navitia-playground/play.html?request=https%3A%2F%2Fapi.navitia.io%2Fv1%2Fcoverage%2Fsandbox%2Fjourneys%3Ffrom%3D2.3749036%3B48.8467927%26to%3D2.2922926%3B48.8583736&token=3b036afe-0110-4202-b9ed-99718476c2e0)
 

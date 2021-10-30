@@ -1,8 +1,7 @@
 API catalog
 ===========
 
-<a name="coverage"></a>Coverage
--------------------------------
+<h2 id="coverage">Coverage</h2>
 
 Also known as `/coverage` service.
 
@@ -54,8 +53,7 @@ This production period cannot exceed one year.
 Navitia need transportation data to work and those are very date dependant. To check that a coverage has some data for a given date, you need to check the production period of the coverage.
 </aside>
 
-<a name="datasets"></a>Datasets
--------------------------------
+<h2 id="datasets">Datasets</h2>
 
 Very simple endpoint providing the sets of data that are used in the given coverage.
 
@@ -75,8 +73,7 @@ The only arguments are the ones of [paging](#paging).
 | `coverage/{region_id}/datasets/{dataset_id}` | Information about a specific dataset      |
 
 
-<a name="contributors"></a>Contributors
--------------------------------
+<h2 id="contributors">Contributors</h2>
 
 Very simple endpoint providing the contributors of data for the given coverage.
 
@@ -96,8 +93,7 @@ The only arguments are the ones of [paging](#paging).
 | `coverage/{region_id}/contributors/{dataset_id}` | Information about a specific contributor      |
 
 
-<a name="coord"></a>Inverted geocoding
---------------------------------------
+<h2 id="coord">Inverted geocoding</h2>
 
 ``` shell
 #request
@@ -186,10 +182,7 @@ You can also combine `/coords` with other filter as:
 -   get specific POIs near a coordinate
 	- <https://api.navitia.io/v1/coverage/fr-idf/poi_types/poi_type:amenity:bicycle_rental/coords/2.377310;48.847002/pois?distance=1000>
 
-
-
-<a name="pt-ref"></a>Public Transportation Objects exploration
---------------------------------------------------------------
+<h2 id="pt-ref">Public Transportation Objects exploration</h2>
 
 >[Try it on Navitia playground](https://canaltp.github.io/navitia-playground/play.html?request=https%3A%2F%2Fapi.navitia.io%2Fv1%2Fcoverage%2Fsandbox%2Fpt_objects%3Fq%3Dmetro%25201)
 
@@ -510,8 +503,7 @@ Other examples
 You will find lots of more advanced example in [a quick exploration](#a-quick-exploration)
 chapter
 
-<a name="pt-objects"></a>Autocomplete on Public Transport objects
------------------------------------------------------------------
+<h2 id="pt-objects">Autocomplete on Public Transport objects</h2>
 
 >[Try it on Navitia playground](https://canaltp.github.io/navitia-playground/play.html?request=https%3A%2F%2Fapi.navitia.io%2Fv1%2Fcoverage%2Fsandbox%2Fpt_objects%3Fq%3Dmetro%25204%26type%5B%5D%3Dline%26type%5B%5D%3Droute)
 
@@ -633,8 +625,7 @@ HTTP/1.1 200 OK
 There is no pagination for this api
 </aside>
 
-<a name="places"></a>Autocomplete on geographical objects
----------------------------------------------------------
+<h2 id="places">Autocomplete on geographical objects</h2>
 
 ``` shell
 #request
@@ -707,9 +698,7 @@ Differents kind of objects can be returned (sorted as):
   nop      | from | string | Coordinates longitude;latitude used to prioritize the objects around this coordinate. Note this parameter will be taken into account only if the autocomplete's backend can handle it |
 
 
-
-<a name="places-nearby-api"></a>Places nearby
------------------------------------------
+<h2 id="places-nearby-api">Places nearby</h2>
 
 >[Try it on Navitia playground (click on "MAP" buttons to see places)](https://canaltp.github.io/navitia-playground/play.html?request=https%3A%2F%2Fapi.navitia.io%2Fv1%2Fcoverage%2Fsandbox%2Fstop_areas%2Fstop_area%3ARAT%3ASA%3ACAMPO%2Fplaces_nearby)
 
@@ -778,8 +767,7 @@ Filters can be added:
 
 The results are sorted by distance.
 
-<a name="journeys"></a>Journeys
--------------------------------
+<h2 id="journeys">Journeys</h2>
 
 >[Try it on Navitia playground](https://canaltp.github.io/navitia-playground/play.html?request=https%3A%2F%2Fapi.navitia.io%2Fv1%2Fcoverage%2Fsandbox%2Fjourneys%3Ffrom%3D2.3749036%3B48.8467927%26to%3D2.2922926%3B48.8583736)
 
@@ -964,7 +952,7 @@ It will retrieve all the journeys from the resource (in order to make *[isochron
 
 The [isochrones](#isochrones) service exposes another response structure, which is simpler, for the same data.
 
-### <a name="journeys-disruptions"></a> Disruptions
+<h3 id="journeys-disruptions">Disruptions</h3>
 
 By default, Navitia only computes journeys without their associated disruption(s), meaning that the journeys in the response will be based on the theoritical schedules. The disruption present in the response is for information only.
 If you want to provide journeys without blocking disruptions, you need to make an other request with the parameter `data_freshness=realtime`.
@@ -979,7 +967,7 @@ These disruptions won't be on the `display_informations` of the sections or used
 
 See how disruptions affect a journey in the [real time](#realtime) section.
 
-### <a name="journeys-parameters"></a>Main parameters
+<h3 id="journeys-parameters">Main parameters</h3>
 
 | Required  | Name                    | Type          | Description                                                                            | Default value |
 |-----------|-------------------------|---------------|----------------------------------------------------------------------------------------|---------------|
@@ -1082,7 +1070,7 @@ Example:
 
 In this example, the stop points within the circle (SP1, SP2 et SP3) can be reached via a crowfly of 0 second. The other stop points, outside the circle, will be reached by walking.
 
-### Objects
+<h3 id="journeys-objects">Objects</h3>
 
 Here is a typical journey, all sections are detailed below
 
@@ -1133,7 +1121,7 @@ additional_informations  | *enum* string                                 | Other
 geojson                  | [GeoJson](https://www.geojson.org)             |
 path                     | Array of [path](#path)                        | The path of this section
 transfer_type            | *enum* string                                 | The type of this transfer it can be: `walking`, `stay_in`
-stop_date_times          | Array of [stop_date_time](#stop_date_time)    | List of the stop times of this section
+stop_date_times          | Array of [stop_date_time](#stop-date-time)    | List of the stop times of this section
 departure_date_time      | [iso-date-time](#iso-date-time)               | Date and time of departure
 arrival_date_time        | [iso-date-time](#iso-date-time)               | Date and time of arrival
 
@@ -1176,8 +1164,7 @@ direction       | int                    | Angle (in degree) between the previou
 |cost|[cost](#cost)|Cost of the ticket|
 |links|array of [link](#link)|Link to the [section](#section) using this ticket|
 
-<a name="isochrones_api"></a>Isochrones (currently in Beta)
----------------------------------------
+<h2 id="isochrones-api">Isochrones (currently in Beta)</h2>
 
 >[Try a simple example on Navitia playground (click on "MAP" buttons for "wow effect")](https://canaltp.github.io/navitia-playground/play.html?request=https%3A%2F%2Fapi.navitia.io%2Fv1%2Fcoverage%2Fsandbox%2Fisochrones%3Ffrom%3D2.377097%3B48.846905%26max_duration%3D2000%26min_duration%3D1000&token=3b036afe-0110-4202-b9ed-99718476c2e0)
 
@@ -1304,9 +1291,7 @@ You will only get circles.
 
 Using car in Navitia isochrones is not recommended.<br>It is only handled for compatibility with `/journeys` but tends to squash every other result.
 
-
-<a name="route-schedules"></a>Route Schedules
--------------------------------------------------------------
+<h2 id="route-schedules">Route Schedules</h2>
 
 ``` shell
 #request
@@ -1434,9 +1419,9 @@ nop      | data_freshness     | enum      | Define the freshness of data to use<
 nop      | disable_geojson    | boolean   | remove geojson fields from the response                                                                                    | False
 nop      | direction_type     | enum      | Allow to filter the response with the route direction type property <ul><li>all</li><li>forward</li><li>backward</li></ul>Note: forward is equivalent to clockwise and inbound. When you select forward, you filter with: [forward, clockwise, inbound].<br>backward is equivalent to anticlockwise and outbound. when you select backward, you filter with: [backward, anticlockwise, outbound] | all
 
-### Objects
+<h3>Objects</h3>
 
-#### <a name="route-schedule">route_schedule object
+<h4 id="route-schedule">route_schedule object</h4>
 
 |Field|Type|Description|
 |-----|----|-----------|
@@ -1465,8 +1450,7 @@ Field      | Type                             | Description
 date_times | Array of [pt-date-time](#pt-date-time) | Array of public transport formated date time
 stop_point | [stop_point](#stop-point)              | The stop point of the row
 
-<a name="stop-schedules"></a>Stop Schedules
--------------------------------------------
+<h2 id="stop-schedules">Stop Schedules</h2>
 
 >[Try it on Navitia playground (click on "EXT" buttons to see times)](https://canaltp.github.io/navitia-playground/play.html?request=https%3A%2F%2Fapi.navitia.io%2Fv1%2Fcoverage%2Fsandbox%2Fstop_areas%2Fstop_area%253ARAT%253ASA%253AGDLYO%2Fstop_schedules%3Fitems_per_schedule%3D2%26&token=3b036afe-0110-4202-b9ed-99718476c2e0)
 
@@ -1573,8 +1557,7 @@ nop      | direction_type     | enum                            | Allow to filte
 |stop_point|[stop_point](#stop-point)|The stop point of the schedule|
 |additional_informations|[additional_informations](#additional-informations)|Other informations, when no departures<br> enum values:<ul><li>date_out_of_bounds</li><li>terminus</li><li>partial_terminus</li><li>active_disruption</li><li>no_departures_known</li></ul>|
 
-<a name="terminus-schedules"></a>Terminus Schedules
----------------------------------------------------
+<h2 id="terminus-schedules">Terminus Schedules</h2>
 
 >[Try it on Navitia playground (click on "EXT" buttons to see times)](https://canaltp.github.io/navitia-playground/play.html?request=https%3A%2F%2Fapi.navitia.io%2Fv1%2Fcoverage%2Fsandbox%2Fstop_areas%2Fstop_area%253ARAT%253ASA%253AGDLYO%2Fterminus_schedules%3Fitems_per_schedule%3D2%26&token=3b036afe-0110-4202-b9ed-99718476c2e0)
 
@@ -1619,8 +1602,7 @@ Same as stop_schedule parameters.
 
 Same as stop_schedule object.
 
-<a name="departures"></a>Departures
------------------------------------
+<h2 id="departures">Departures</h2>
 
 >[Try it on Navitia playground](https://canaltp.github.io/navitia-playground/play.html?request=https%3A%2F%2Fapi.navitia.io%2Fv1%2Fcoverage%2Fsandbox%2Fstop_areas%2Fstop_area%253ARAT%253ASA%253AGDLYO%2Fdepartures%3F&token=3b036afe-0110-4202-b9ed-99718476c2e0)
 
@@ -1712,11 +1694,10 @@ nop      | direction_type   | enum                            | Allow to filter 
 |Field|Type|Description|
 |-----|----|-----------|
 |route|[route](#route)|The route of the schedule|
-|stop_date_time|Array of [stop_date_time](#stop_date_time)|Occurs when a bus does a stopover at the stop point|
+|stop_date_time|Array of [stop_date_time](#stop-date-time)|Occurs when a bus does a stopover at the stop point|
 |stop_point|[stop_point](#stop-point)|The stop point of the schedule|
 
-<a name="arrivals"></a>Arrivals
--------------------------------
+<h2 id="arrivals">Arrivals</h2>
 
 >[Try it on Navitia playground](https://canaltp.github.io/navitia-playground/play.html?request=https%3A%2F%2Fapi.navitia.io%2Fv1%2Fcoverage%2Fsandbox%2Fstop_areas%2Fstop_area%253ARAT%253ASA%253AGDLYO%2Farrivals%3F&token=3b036afe-0110-4202-b9ed-99718476c2e0)
 
@@ -1776,8 +1757,7 @@ object. Arrivals are ordered chronologically in ascending order.
 
 they are exactly the same as [departures](#departures).
 
-<a name="line-reports"></a>Line reports
----------------------------------------
+<h2 id="line-reports">Line reports</h2>
 
 ``` shell
 #request
@@ -1942,8 +1922,7 @@ Details for disruption objects: [disruptions](#disruptions)
 -   1..n pt_objects
     -   each one contains at least a link to its disruptions.
 
-<a name="traffic-reports"></a>Traffic reports
----------------------------------------------
+<h2 id="traffic-reports">Traffic reports</h2>
 
 ``` shell
 #request

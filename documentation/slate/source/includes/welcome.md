@@ -15,7 +15,7 @@ It provides the following services:
 * search & autocomplete on places
 * and sexy things such as isochrones
 
-Have a look at the [examples below](#some_examples) to learn what services we provide and how to use them.
+Have a look at the [examples below](#some-examples) to learn what services we provide and how to use them.
 
 ### Approach
 
@@ -85,7 +85,8 @@ Or, in a simplier way, you can add your token in the address bar like:
 See [authentication](#authentication) section to find out more details on **how to use your token** when coding.
 
 #### Then,
-use the API! The easiest is probably to jump to [Examples](#some_examples) below.
+
+use the API! The easiest is probably to jump to [Examples](#some-examples) below.
 
 At some point you will want to read:
 
@@ -117,8 +118,7 @@ To help you in the building of your project, there are some wrappers implemented
 |Python               |<https://github.com/leonardbinet/navitia_client>    |
 |Python               |<https://github.com/CanalTP/navitia_python_wrapper> |
 
-<a name="about_data"></a>About the data
---------------
+<h2 id="about-data">About the data</h2>
 
 The street network is extracted from [OpenStreetMap](https://www.openstreetmap.org). The public transport data are provided by networks that provide their timetables as open data. Some data improvements are achieved by Kisio Digital and are published back there <https://navitia.opendatasoft.com>.
 
@@ -145,7 +145,7 @@ Getting help
 All available functions are documented in [integration part](#interface).
 If you want to go further, there is an Swagger-openAPI documentation at [https://api.navitia.io/v1/schema](https://api.navitia.io/v1/schema)
 
-A mailing list is available to ask questions or request [new data](#about_data) integrations: <a href="mailto:navitia@googlegroups.com">navitia@googlegroups.com</a>
+A mailing list is available to ask questions or request [new data](#about-data) integrations: <a href="mailto:navitia@googlegroups.com">navitia@googlegroups.com</a>
 
 In order to report bug and make feature requests please use our github navitia project
 <https://github.com/CanalTP/navitia/issues>.

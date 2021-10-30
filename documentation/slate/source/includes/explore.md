@@ -1,5 +1,5 @@
-<a name="explore"></a>![Explore transport](/images/search_places.png)Explore transport
-=======================================
+Explore transport
+=================
 
 >[Try it on Navitia playground](http://canaltp.github.io/navitia-playground/play.html?request=https%3A%2F%2Fapi.navitia.io%2Fv1%2Fcoverage%2Fsandbox%2Flines&token=3b036afe-0110-4202-b9ed-99718476c2e0)
 

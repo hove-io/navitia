@@ -1,5 +1,4 @@
-<a name="timetables"></a>![Timetables](/images/line_schedules.png)Timetables
-=================================
+<h1 id="timetables">Timetables</h1>
 
 The Timetables features gives you access to line schedules on public transport,
 allowing you to find the times public transport is expected at specific stops.

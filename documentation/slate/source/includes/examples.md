@@ -1,5 +1,4 @@
-<a name="some_examples"></a>Some examples
-=========================================
+<h1 id="some-examples">Some examples</h1>
 
 This chapter shows some usages with the minimal required arguments. However, this is not a reference and not all APIs nor arguments are shown.
 

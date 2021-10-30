@@ -39,7 +39,7 @@ The date are represented in ISO 8601 "YYYYMMDD" string.
 Public transport objects
 ------------------------
 
-### Network
+### <a name="network"></a>Network
 
 ``` json
 {
@@ -55,7 +55,7 @@ Networks are fed by agencies in GTFS format.
 |id|string|Identifier of the network|
 |name|string|Name of the network|
 
-### Line
+### <a name="line"></a>Line
 
 ``` json
 {
@@ -93,7 +93,7 @@ Networks are fed by agencies in GTFS format.
 |commercial_mode|[commercial_mode](#commercial-mode)|Commercial mode of the line|
 |physical_modes|array of [physical_mode](#physical-mode)|Physical modes of the line|
 
-### Route
+### <a name="route"></a>Route
 
 ``` json
 {
@@ -257,7 +257,7 @@ You can use these ids in the forbidden_uris[] parameter from
 |id|string|Identifier of the company|
 |name|string|Name of the company|
 
-### Place
+### <a name="place"></a>Place
 
 A container containing either a [admin](#admin), [poi](#poi), [address](#address), [stop_area](#stop-area),
 [stop_point](#stop-point)
@@ -286,7 +286,7 @@ A container containing either a [admin](#admin), [poi](#poi), [address](#address
 |address|[address](#address)|Embedded address|
 |stop_point|[stop_point](#stop-point)|Embedded Stop point|
 
-### Trip
+### <a name="trip"></a>Trip
 
 A trip corresponds to a scheduled vehicle circulation (and all its linked real-time and disrupted routes).
 
@@ -306,7 +306,7 @@ Example: a train, routing a Paris to Lyon itinerary every day at 06h29, is the "
 
 It encapsulates many instances of vehicle_journey.
 
-### Vehicle-journey
+### <a name="vehicle-journey"></a>Vehicle-journey
 
 A vehicle-journey describes a scheduled vehicle circulation, the days on which it circulates according to base-schedule,
 the days it circulates according to realtime information.
@@ -323,7 +323,7 @@ Note: this collection is mostly used for debug and technical purposes.
 ### <a name="pt-object"></a>Pt_object
 
 A container containing either a [network](#network), [commercial_mode](#commercial-mode), [line](#line), [route](#route),
-[stop_area](#stop_point), [stop_area](#stop_point), [trip](#trip)
+[stop_point](#stop-point), [stop_area](#stop-area), [trip](#trip)
 
 ``` json
 {
@@ -396,14 +396,14 @@ Real time and disruption objects
 |application_periods |array of [period](#period)      |dates where the current disruption is active
 |messages            |array of [message](#message)    |texts to provide to the traveler
 |updated_at          |[iso-date-time](#iso-date-time) |date_time of last modifications
-|impacted_objects    |array of [impacted_object](#impacted_object) |The list of public transport objects which are affected by the disruption
+|impacted_objects    |array of [impacted_object](#impacted-object) |The list of public transport objects which are affected by the disruption
 |cause               |string                   |why is there such a disruption?
 |category            |string                   |The category of the disruption, such as "construction works" or "incident"
 |contributor         |string                   |The source from which Navitia received the disruption
 |uri                 |string                   |deprecated
 |disruption_uri      |string                   |deprecated
 
-### Impacted_object
+### <a name="impacted-object"></a>Impacted_object
 
 ``` json
 {
@@ -423,11 +423,11 @@ Real time and disruption objects
 
 |Field|Type|Description|
 |-----|----|-----------|
-|pt_object|[pt_object](#pt_object)|The impacted public transport object|
-|impacted_section|[impacted_section](#impacted_section)|Only for line section impact, the impacted section|
-|impacted_stops|array of [impacted_stop](#impacted_stop)|Only for [trip](#trip) delay, the list of delays, stop by stop
+|pt_object|[pt_object](#pt-object)|The impacted public transport object|
+|impacted_section|[impacted_section](#impacted-section)|Only for line section impact, the impacted section|
+|impacted_stops|array of [impacted_stop](#impacted-stop)|Only for [trip](#trip) delay, the list of delays, stop by stop
 
-### Impacted_section
+### <a name="impacted-section"></a>Impacted_section
 
 ``` json
 {
@@ -452,11 +452,11 @@ Real time and disruption objects
 
 |Field|Type|Description|
 |-----|----|-----------|
-|from|[pt_object](#pt_object)|The beginning of the section|
-|to|[pt_object](#pt_object)|The end of the section. This can be the same as `from` when only one point is impacted|
+|from|[pt_object](#pt-object)|The beginning of the section|
+|to|[pt_object](#pt-object)|The end of the section. This can be the same as `from` when only one point is impacted|
 |routes|[route](#route)| The list of impacted routes by the impacted_section|
 
-### Impacted_stop
+### <a name="impacted-stop"></a>Impacted_stop
 
 ```json
 {
@@ -621,7 +621,7 @@ Poi = Point Of Interest
 |house_number|int|House number of the address|
 |administrative_regions|array of [admin](#admin)|Administrative regions of the address in which is the stop area|
 
-### Administrative region
+### <a name="admin"></a>Administrative region
 
 |Field|Type|Description|
 |-----|----|-----------|
@@ -749,7 +749,7 @@ It serves several goals:
 -   `current_datetime` provides the time the call was made.<br>It is precious to compute the waiting time until next passages (journeys, departures, etc.), as when no datetime is provided at call, Navitia uses that "current_datetime" as reference time.
 -   `car_direct_path` can also be provided in journeys to help compare ecological footprint of transport.
 
-### pt-date-time
+### <a name="pt-date-time"></a>pt-date-time
 
 pt-date-time (pt stands for "public transport") is a complex date time object to manage the difference between stop and leaving times at a stop.
 
@@ -767,7 +767,7 @@ pt-date-time (pt stands for "public transport") is a complex date time object to
 |id|String|id of the note|
 |value|String|The content of the note|
 
-### stop_date_time
+### <a name="stop-date-time"></a>stop_date_time
 
 |Field|Type|Description|
 |-----|----|-----------|

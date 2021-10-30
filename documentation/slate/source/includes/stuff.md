@@ -53,8 +53,7 @@ The different journey types are:
 |non_pt_bike|A journey without public transport, only biking|
 |non_pt_bss|A journey without public transport, only bike sharing|
 
-<a name=Service-translation></a>Service Translation
--------------------------------------------
+<h2 id=Service-translation>Service Translation</h2>
 
 When specifying a service in the data through `calendar.txt` and `calendar_dates.txt`, you might get surprised to see a different result from Navitia's response.
 
@@ -107,8 +106,7 @@ This means that Navitia will re-organise the input data, to produce a smaller an
 
 For more information about the algorithm (in French): [https://github.com/TeXitoi/pinot2015presenter/blob/master/pres/pinot2015presenter-pres.pdf](https://github.com/TeXitoi/pinot2015presenter/blob/master/pres/pinot2015presenter-pres.pdf)
 
-<a name="ridesharing-stuff"></a>Ridesharing
--------------------------------------------
+<h2 id="ridesharing-stuff">Ridesharing</h2>
 
 ``` shell
 simplified output
@@ -190,8 +188,7 @@ Inside this section an attribute ridesharing_journeys contains one or multiple j
 depicting specifically the ridesharing ads that could match the above section
 and that could be proposed to the user.
 
-<a name="taxi-stuff"></a>Taxi
--------------------------------------------
+<h2 id="taxi-stuff">Taxi</h2>
 
 <aside class="warning">
     This feature is not available on all coverages, as it is dependent on other parameters of the coverage (how journeys are computed).
@@ -199,8 +196,7 @@ and that could be proposed to the user.
 
 With this mode, your journey may contain taxi sections(fallback or direct path). The journey you will obtain is basically the same as a journey by car. The only difference is that with taxi as fallback mode, a buffer time (section "waiting", defaulted to 5 min) will appear into the journey. The buffer time won't appear if the journey is a direct path. Depending on the calculator, the journey may pick up ways that are reserved for taxis on not.
 
-On demand transportation
-------------------------
+<h2 id="odt">On demand transportation</h2>
 
 Some transit agencies force travelers to call them to arrange a pickup at a particular place or stop point.
 
@@ -231,8 +227,7 @@ So public transport lines can mix different methods to pickup travelers:
     -   And you will have to call to take it
     -   well, not really a public transport line, more a cab...
 
-Disruptions
------------------
+<h2 id="disruptions">Disruptions</h2>
 
 In this paragraph, we will explain how the disruptions are displayed in the different APIs.
 

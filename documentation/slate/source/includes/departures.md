@@ -1,5 +1,4 @@
-<a name="next_departures_and_arrivals"></a>![Departures](/images/departures.png)Next departures and arrivals
-=======================================================================
+<h1 id="next_departures_and_arrivals">Next departures and arrivals</h1>
 
 The "Next Departures" feature provides the next scheduled departures or arrivals
 for a specific mode of public transport (bus, tram, metro, train) at your selected stop, near coordinates, etc.
