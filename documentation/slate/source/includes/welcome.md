@@ -88,10 +88,7 @@ See [authentication](#authentication) section to find out more details on **how 
 
 use the API! The easiest is probably to jump to [Examples](#some-examples) below.
 
-At some point you will want to read:
-
-- [transport public lexicon](#lexicon)
-- [Resources overview](#resources)
+At some point you will want to read [transport public lexicon](#lexicon).
 
 Navitia for humans
 ------------------
