@@ -61,7 +61,7 @@ Those datasets (typically from transport authority in GTFS format), each provide
 unique [contributor](#contributors) are forming a [coverage](#coverage).
 
 Contributor providing the dataset is also provided in the response.
-Very useful to know all the datas that form a coverage.
+Very useful to know all the data that form a coverage.
 
 The only arguments are the ones of [paging](#paging).
 
