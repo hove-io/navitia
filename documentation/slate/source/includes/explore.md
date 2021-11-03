@@ -1,5 +1,5 @@
-<a name="explore"></a>![Explore transport](/images/search_places.png)Explore transport
-=======================================
+Explore transport
+=================
 
 >[Try it on Navitia playground](http://canaltp.github.io/navitia-playground/play.html?request=https%3A%2F%2Fapi.navitia.io%2Fv1%2Fcoverage%2Fsandbox%2Flines&token=3b036afe-0110-4202-b9ed-99718476c2e0)
 
@@ -12,8 +12,7 @@ If you want to play with Navitia at a hardcore gamer level, you may want to buil
 
 You can use these APIs (click on them for details):
 
--   **[Coverage](#coverage)** : List of the region covered by navitia
--   **[Public transportation objects](#pt-ref)** : List of the public transport
+-   **[Coverage](#coverage)**: List of the region covered by navitia
+-   **[Public transportation objects](#pt-ref)**: List of the public transport
     objects of a region
--   **[Places](#places)** and **[PT_objects](#pt-objects)** : Search for data using autocomplete input.
-
+-   **[Places](#places)** and **[PT_objects](#pt-objects)**: Search for data using autocomplete input.

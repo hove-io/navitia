@@ -6,51 +6,32 @@ on:
       - dev
       - release
 
-
 jobs:
   build:
     runs-on: ubuntu-latest
-
     steps:
-    - uses: actions/checkout@v1
-    - name: install bundle
-      run:  sudo apt install -y bundler httpie
-    - name: git checkout on dev
-      run: git checkout dev
-    - name: generate documentation on dev
-      working-directory: documentation/slate
-      run: |
-        rm -f Gemfile.lock
-        gem install --user-install bundler:1.17.3 # Because of middleman 3.3 dependency
-        bundler _1.17.3_ install # Force usage of bundler 1.17.3
-        bundler _1.17.3_ exec middleman build
-        rm -fr /tmp/job_documentation_publish_slate
-        mkdir -p /tmp/job_documentation_publish_slate
-        mv build /tmp/job_documentation_publish_slate
-    - name: move new documentation on gh-pages
-      run: |
-        rm -f documentation/slate/Gemfile.lock
-        git fetch origin gh-pages:gh-pages
-        git checkout gh-pages
-        rm -fr *
-        mv /tmp/job_documentation_publish_slate/build/* .
-    - name: update action user and commit changes
-      run: |
-        if [ -n "$(git status --porcelain)" ]; then
-          git config --global user.email "action@github.com"
-          git config --global user.name "Action"
-          git add -A
-          git commit -m "Add changes" -a
-        else
-          echo "The documentation has not been updated"
-        fi
-    - name: push changes
-      uses: ad-m/github-push-action@master
+    - name: Checkout
+      uses: actions/checkout@v2
+    - name: Build website in Slate format
+      uses: addnab/docker-run-action@v3
       with:
-        github_token: ${{secrets.GITHUB_TOKEN}}
-        branch: 'gh-pages'
+        image: slatedocs/slate:latest
+        options: -v ${{ github.workspace }}:/work
+        run: |
+          cp -r /work/documentation/slate/source /srv/slate
+          ./slate.sh build
+          # copy website to workspace
+          rm -rf /work/documentation/slate/build
+          cp -r /srv/slate/build /work/documentation/slate
+    - name: Deploy to GitHub Pages
+      if: success()
+      uses: crazy-max/ghaction-github-pages@v2
+      with:
+        target_branch: gh-pages
+        build_dir: documentation/slate/build
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     - name: slack notification (the job has failed)
       if: failure()
       run: |
           echo '{"text":":warning: Navitia Github Actions: publish_navitia_documentation failed ! (https://github.com/CanalTP/navitia/actions?query=workflow%3A%22Publish+Navitia+Documentation%22)"}' | http --json POST ${{secrets.SLACK_NAVITIA_CORE_TEAM_URL}}
-
