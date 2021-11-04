@@ -83,3 +83,14 @@ def enable_mimir():
     app.config['MIMIR_URL'] = 'http://example.com'
     yield
     app.config['MIMIR_URL'] = previous_value
+
+
+@pytest.fixture
+def enable_mimir_and_mimir7():
+    previous_mimir_value = app.config['MIMIR_URL']
+    previous_mimir7_value = app.config.get('MIMIR7_URL', None)
+    app.config['MIMIR_URL'] = 'http://example.com'
+    app.config['MIMIR7_URL'] = 'http://example.com'
+    yield
+    app.config['MIMIR_URL'] = previous_mimir_value
+    app.config['MIMIR7_URL'] = previous_mimir7_value
