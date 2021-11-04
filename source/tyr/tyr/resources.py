@@ -1942,6 +1942,14 @@ class AutocompleteParameter(flask_restful.Resource):
             location=('json', 'values'),
         )
 
+        parser.add_argument(
+            'config_es7_toml',
+            type=str,
+            required=False,
+            help='Config toml for osm2mimir7',
+            location=('json', 'values'),
+        )
+
         args = parser.parse_args()
 
         try:
@@ -1953,6 +1961,7 @@ class AutocompleteParameter(flask_restful.Resource):
             autocomplete_parameter.admin = args['admin']
             autocomplete_parameter.admin_level = args['admin_level']
             autocomplete_parameter.config_toml = args['config_toml']
+            autocomplete_parameter.config_es7_toml = args['config_es7_toml']
             db.session.add(autocomplete_parameter)
             db.session.commit()
             create_autocomplete_depot.delay(autocomplete_parameter.name)
@@ -2023,6 +2032,15 @@ class AutocompleteParameter(flask_restful.Resource):
             help='Config toml for osm2mimir',
             location=('json', 'values'),
         )
+
+        parser.add_argument(
+            'config_es7_toml',
+            type=str,
+            required=False,
+            help='Config toml for osm2mimir7',
+            location=('json', 'values'),
+        )
+
         args = parser.parse_args()
         try:
             autocomplete_param.street = args['street']
@@ -2031,6 +2049,7 @@ class AutocompleteParameter(flask_restful.Resource):
             autocomplete_param.admin = args['admin']
             autocomplete_param.admin_level = args['admin_level']
             autocomplete_param.config_toml = args['config_toml']
+            autocomplete_param.config_es7_toml = args['config_es7_toml']
             db.session.commit()
             create_autocomplete_depot.delay(autocomplete_param.name)
 

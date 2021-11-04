@@ -286,6 +286,7 @@ autocomplete_parameter_fields = {
     'poi': fields.Raw,
     'admin': fields.Raw,
     'config_toml': fields.Raw,
+    'config_es7_toml': fields.Raw,
     'admin_level': fields.List(fields.Integer),
 }
 
