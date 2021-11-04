@@ -36,14 +36,6 @@ from tyr import tasks
 
 
 @pytest.fixture
-def enable_mimir():
-    previous_value = app.config['MIMIR_URL']
-    app.config['MIMIR_URL'] = 'http://example.com'
-    yield
-    app.config['MIMIR_URL'] = previous_value
-
-
-@pytest.fixture
 def create_instance():
     with app.app_context():
         instance = models.Instance('fr')

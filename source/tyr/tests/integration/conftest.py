@@ -75,3 +75,11 @@ def clean_db():
         ]
         db.session.execute('TRUNCATE {} CASCADE;'.format(', '.join(tables)))
         db.session.commit()
+
+
+@pytest.fixture
+def enable_mimir():
+    previous_value = app.config['MIMIR_URL']
+    app.config['MIMIR_URL'] = 'http://example.com'
+    yield
+    app.config['MIMIR_URL'] = previous_value
