@@ -36,7 +36,13 @@ from tyr.helper import get_instance_logger, wait_or_raise
 
 @manager.command
 def import_last_dataset(
-    instance_name, background=False, reload_kraken=False, custom_output_dir=None, nowait=False, allow_mimir=False
+    instance_name,
+    background=False,
+    reload_kraken=False,
+    custom_output_dir=None,
+    nowait=False,
+    allow_mimir=False,
+    skip_2ed=False,
 ):
     """
     reimport the last dataset of a instance
@@ -67,6 +73,7 @@ def import_last_dataset(
         reload=reload_kraken,
         custom_output_dir=custom_output_dir,
         skip_mimir=skip_mimir,
+        skip_2ed=skip_2ed,
     )
     if not nowait and future:
         wait_or_raise(future)
