@@ -51,17 +51,21 @@ from tyr.binarisation import (
     shape2ed,
     load_bounding_shape,
     bano2mimir,
+    bano2mimir7,
     openaddresses2mimir,
+    openaddresses2mimir7,
     osm2mimir,
+    osm2mimir7,
     stops2mimir,
     ntfs2mimir,
     cosmogony2mimir,
+    cosmogony2mimir7,
     poi2mimir,
 )
 from tyr.binarisation import reload_data, move_to_backupdirectory
 from tyr import celery
 from navitiacommon import models, task_pb2, utils
-from tyr.helper import load_instance_config, get_instance_logger
+from tyr.helper import load_instance_config, get_instance_logger, is_activate_autocomplete_version
 from navitiacommon.launch_exec import launch_exec
 from datetime import datetime, timedelta
 
@@ -305,8 +309,12 @@ def import_autocomplete(files, autocomplete_instance, asynchronous=True, backup_
     """
     job = models.Job()
     actions = []
-
-    task = {'bano': bano2mimir, 'oa': openaddresses2mimir, 'osm': osm2mimir, 'cosmogony': cosmogony2mimir}
+    task = {
+        'bano': {2: bano2mimir, 7: bano2mimir7},
+        'oa': {2: openaddresses2mimir, 7: openaddresses2mimir7},
+        'osm': {2: osm2mimir, 7: osm2mimir7},
+        'cosmogony': {2: cosmogony2mimir, 7: cosmogony2mimir7},
+    }
     autocomplete_dir = current_app.config['TYR_AUTOCOMPLETE_DIR']
 
     # it's important for the admin to be loaded first, then addresses, then street, then poi
@@ -315,29 +323,29 @@ def import_autocomplete(files, autocomplete_instance, asynchronous=True, backup_
     files_and_types = sorted(files_and_types, key=lambda f_t: import_order.index(f_t[1]))
 
     for f, ftype in files_and_types:
-        dataset = models.DataSet()
-        dataset.type = ftype
-        dataset.family_type = 'autocomplete_{}'.format(dataset.type)
-        if dataset.type in task:
-            if backup_file:
-                filename = move_to_backupdirectory(
-                    f, autocomplete_instance.backup_dir(autocomplete_dir), manage_sp_char=True
-                )
-            else:
-                filename = f
-            actions.append(
-                task[dataset.type].si(autocomplete_instance, filename=filename, dataset_uid=dataset.uid)
-            )
-        else:
+        if ftype not in task:
             # unknown type, we skip it
-            current_app.logger.debug("unknown file type: {} for file {}".format(dataset.type, f))
+            current_app.logger.debug("unknown file type: {} for file {}".format(ftype, f))
             continue
+        filename = f
+        if backup_file:
+            filename = move_to_backupdirectory(
+                f, autocomplete_instance.backup_dir(autocomplete_dir), manage_sp_char=True
+            )
 
-        # currently the name of a dataset is the path to it
-        dataset.name = filename
-        models.db.session.add(dataset)
-        job.data_sets.append(dataset)
-        job.autocomplete_params_id = autocomplete_instance.id
+        for version, executable in task[ftype].iteritems():
+            if not is_activate_autocomplete_version(version):
+                current_app.logger.debug("Autocomplete version {} is disableed".format(version))
+                continue
+            dataset = models.DataSet()
+            dataset.type = ftype
+            dataset.family_type = 'autocomplete_{}'.format(dataset.type)
+            actions.append(executable.si(autocomplete_instance, filename=filename, dataset_uid=dataset.uid))
+            # currently the name of a dataset is the path to it
+            dataset.name = filename
+            models.db.session.add(dataset)
+            job.data_sets.append(dataset)
+            job.autocomplete_params_id = autocomplete_instance.id
 
     if not actions:
         return
