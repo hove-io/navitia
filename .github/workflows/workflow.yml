@@ -141,11 +141,12 @@ jobs:
       with:
         python-version: '2.7'
     - uses: actions/checkout@v2
+    - uses: dschep/install-pipenv-action@v1
     - name: Setup Pipenv and Run tests
       working-directory: release
       env:
         GIT_PYTHON_REFRESH: quiet
       run: |
-        pipenv install --dev --verbose --skip-lock
+        pipenv install --dev --verbose
         pipenv run pytest
         pipenv --rm
