@@ -451,7 +451,15 @@ def similar_pt_section_line(section):
     return "pt:{}".format(section.pt_display_informations.uris.line)
 
 
-def similar_journeys_generator(journey, pt_functor, sn_functor=lambda s: 'sn:{}'.format(s.street_network.mode)):
+def _sn_functor(s):
+    return 'sn:{}'.format(s.street_network.mode)
+
+
+def _crow_fly_sn_functor(s):
+    return "o: {} d:{}".format(s.origin.uri, s.destination.uri)
+
+
+def similar_journeys_generator(journey, pt_functor, sn_functor=_sn_functor, crow_fly_functor=_sn_functor):
     def _similar_non_pt():
         for s in journey.sections:
             yield "sn:{} type:{}".format(s.street_network.mode, s.type)
@@ -462,8 +470,10 @@ def similar_journeys_generator(journey, pt_functor, sn_functor=lambda s: 'sn:{}'
                 yield pt_functor(s)
             elif s.type == response_pb2.STREET_NETWORK and is_walk_after_parking(journey, idx):
                 continue
-            elif s.type in (response_pb2.STREET_NETWORK, response_pb2.CROW_FLY):
+            elif s.type is response_pb2.STREET_NETWORK:
                 yield sn_functor(s)
+            elif s.type is response_pb2.CROW_FLY:
+                yield crow_fly_functor(s)
 
     if 'non_pt' in journey.tags:
         return _similar_non_pt()
@@ -489,6 +499,11 @@ def bss_walking_sn_functor(s):
 
 def similar_bss_walking_vj_generator(journey):
     for v in similar_journeys_generator(journey, detailed_pt_section_vj, bss_walking_sn_functor):
+        yield v
+
+
+def similar_journey_crow_fly_generator(journey):
+    for v in similar_journeys_generator(journey, similar_pt_section_vj, crow_fly_functor=_crow_fly_sn_functor):
         yield v
 
 
@@ -632,6 +647,11 @@ def apply_final_journey_filters(response_list, instance, request):
         journey_pairs_pool = itertools.combinations(journeys, 2)
         _filter_similar_line_journeys(journey_pairs_pool, request)
 
+    # We remove similar journey with different crow_fly fallback
+    journeys = journey_generator(response_list)
+    journey_pairs_pool = itertools.combinations(journeys, 2)
+    filter_similar_crow_fly_journeys(journey_pairs_pool, request)
+
     # we filter journeys having "shared sections" (same succession of stop_points + custom rules)
     no_shared_section = get_or_default(request, 'no_shared_section', False)
     if no_shared_section:
@@ -700,6 +720,7 @@ def _get_worst_similar(j1, j2, request):
             it's better to know that you can do it by bike for 'bike_in_pt' tag
             (and traveler presumes he can do it walking too, as the practical case is 0s fallback)
     """
+
     if request.get('clockwise', True):
 
         # we dont want to arrive a few seconds earlier if it means walking more
@@ -764,9 +785,49 @@ def _get_worst_similar(j1, j2, request):
     return j2
 
 
+def _get_worst_similar_crow_fly(j1, j2, request):
+    """
+    Decide which is the worst journey between 2 similar journeys containing similar crow_fly sections
+
+    The choice is made on:
+     - crow_fly mode
+    """
+
+    def get_mode_rank(section):
+        mode_rank = {
+            response_pb2.Car: 0,
+            response_pb2.Taxi: 1,
+            response_pb2.Bike: 2,
+            response_pb2.Bss: 3,
+            response_pb2.Walking: 4,
+        }
+        return mode_rank.get(section.street_network.mode)
+
+    def is_fallback(section):
+        return section.type == response_pb2.CROW_FLY
+
+    s1 = j1.sections[0]
+    s2 = j2.sections[0]
+    if is_fallback(s1) and is_fallback(s2) and s1.street_network.mode != s2.street_network.mode:
+        return j1 if get_mode_rank(s1) < get_mode_rank(s2) else j2
+
+    s1 = j1.sections[-1]
+    s2 = j2.sections[-1]
+    if is_fallback(s1) and is_fallback(s2) and s1.street_network.mode != s2.street_network.mode:
+        return j1 if get_mode_rank(s1) < get_mode_rank(s2) else j2
+
+    return j2
+
+
 def filter_similar_vj_journeys(journey_pairs_pool, request):
     _filter_similar_journeys(
         journey_pairs_pool, request, similar_journeys_vj_generator, similar_bss_walking_vj_generator
+    )
+
+
+def filter_similar_crow_fly_journeys(journey_pairs_pool, request):
+    _filter_similar_journeys_with_same_crow_fly(
+        journey_pairs_pool, request, similar_journeys_line_generator, similar_journey_crow_fly_generator
     )
 
 
@@ -808,6 +869,41 @@ def _filter_similar_journeys(journey_pairs_pool, request, *similar_journey_gener
                 is_debug,
                 'duplicate_journey',
                 'similar_to_{other}'.format(other=j1.internal_id if worst == j2 else j2.internal_id),
+            )
+
+
+def _filter_similar_journeys_with_same_crow_fly(journey_pairs_pool, request, *similar_journey_generators):
+    """
+    Compare journeys 2 by 2.
+    The given generator tells which part of journeys are compared.
+    In case of similar journeys, the function '_get_worst_similar_crow_fly' decides which one to delete.
+    """
+    logger = logging.getLogger(__name__)
+    is_debug = request.get('debug', False)
+    for j1, j2 in journey_pairs_pool:
+        if j1 is j2:
+            continue
+
+        if to_be_deleted(j1) or to_be_deleted(j2):
+            continue
+
+        if any(compare(j1, j2, generator) for generator in similar_journey_generators):
+            # After comparison, if the 2 journeys are similar and their crow_fly sections too,
+            # We keep in priority walking crow_fly, then bss crow_fly and so on
+            worst = _get_worst_similar_crow_fly(j1, j2, request)
+            logger.debug(
+                "the journeys {}, {} are similar, we delete {}".format(
+                    j1.internal_id, j2.internal_id, worst.internal_id
+                )
+            )
+
+            mark_as_dead(
+                worst,
+                is_debug,
+                'duplicate_journey_crow_fly',
+                'similar_journey_crow_fly_to_{other}'.format(
+                    other=j1.internal_id if worst == j2 else j2.internal_id
+                ),
             )
 
 
