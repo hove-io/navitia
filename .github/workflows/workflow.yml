@@ -147,6 +147,6 @@ jobs:
       env:
         GIT_PYTHON_REFRESH: quiet
       run: |
-        pipenv install --dev
+        pipenv install --dev --verbose --skip-lock
         pipenv run pytest
         pipenv --rm
