@@ -146,7 +146,7 @@ jobs:
       env:
         GIT_PYTHON_REFRESH: quiet
       run: |
-        pip install pipenv
+        sudo apt install pipenv
         pipenv install --dev --verbose
         pipenv run pytest
         pipenv --rm
