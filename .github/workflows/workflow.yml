@@ -146,7 +146,8 @@ jobs:
       env:
         GIT_PYTHON_REFRESH: quiet
       run: |
-        sudo apt install pipenv
-        pipenv install --dev --verbose --skip-lock
-        pipenv run pytest
-        pipenv --rm
+        pip install virtualenv==20.4.7 -U
+        virtualenv -p python2.7 navitia_py2
+        . navitia_py2/bin/activate
+        pip install -r requirements_release.txt
+        pytest
