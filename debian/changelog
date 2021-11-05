@@ -1,3 +1,13 @@
+navitia2 (13.3.0) unstable; urgency=low
+
+  * [documentation] use the latest slate image  <https://github.com/CanalTP/navitia/pull/3598>
+  * [Jormungandr] Fix bss bike concurrence  <https://github.com/CanalTP/navitia/pull/3589>
+  * [documentation] links corrections  <https://github.com/CanalTP/navitia/pull/3597>
+  * [Jormun] Fix transfer_path  <https://github.com/CanalTP/navitia/pull/3596>
+  * [documentation] Change logo  <https://github.com/CanalTP/navitia/pull/3595>
+
+ -- Pascal Benchimol <pascal.benchimol@kisio.com>  Fri, 05 Nov 2021 13:11:31 +0100
+
 navitia2 (13.2.0) unstable; urgency=low
 
   * [CI] Run Sonarcloud on Pull Request  <https://github.com/CanalTP/navitia/pull/3592>

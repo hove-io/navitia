@@ -376,6 +376,20 @@ class TestJourneysDistributed(
         r = self.query(query)
         assert sum(int('non_pt' not in j['tags']) for j in r['journeys']) == 1
 
+    def test_direct_path_bss_bike(self):
+        query = (
+            journey_basic_query
+            + "&direct_path_mode[]=bike"
+            + "&direct_path_mode[]=bss"
+            + "&max_duration_to_pt=0"
+        )
+        response = self.query_region(query)
+        assert len(response['journeys']) == 2
+
+        # we should find two journeys: one is bike and another is bss
+        assert any('bss' in j['tags'] for j in response['journeys'])
+        assert any('bike' in j['tags'] for j in response['journeys'])
+
 
 @config({"scenario": "distributed"})
 class TestDistributedJourneysWithPtref(JourneysWithPtref, NewDefaultScenarioAbstractTestFixture):
@@ -1065,7 +1079,7 @@ class TesDistributedJourneyNoCoverageParams(NoCoverageParams, NewDefaultScenario
 
 @dataset({"routing_with_transfer_test": {"scenario": "distributed"}})
 class TestRoutingWithTransfer(NewDefaultScenarioAbstractTestFixture):
-    def test_complete_transfer_path_bus_tramway(self):
+    def test_complete_transfer_path_bus_coach(self):
         """
             We first query without requesting walking _transfer_path and then with _transfer_path
             With _transfer_path enabled we expect in transfer section :
@@ -1085,11 +1099,11 @@ class TestRoutingWithTransfer(NewDefaultScenarioAbstractTestFixture):
 
         assert len(journeys) == 1
         assert len(journeys[0]['sections']) == 6
-        assert journeys[0]['sections'][1]['display_informations']['physical_mode'] == 'Tramway'
+        assert journeys[0]['sections'][1]['display_informations']['physical_mode'] == 'Bus'
         assert journeys[0]['sections'][2]['type'] == 'transfer'
         assert journeys[0]['sections'][2]['transfer_type'] == 'walking'
         assert journeys[0]['sections'][3]['type'] == 'waiting'
-        assert journeys[0]['sections'][4]['display_informations']['physical_mode'] == 'Bus'
+        assert journeys[0]['sections'][4]['display_informations']['physical_mode'] == 'Autocar'
         assert 'path' not in journeys[0]['sections'][2]
         assert 'geojson' in journeys[0]['sections'][2]
         assert 'coordinates' in journeys[0]['sections'][2]['geojson']
@@ -1108,11 +1122,12 @@ class TestRoutingWithTransfer(NewDefaultScenarioAbstractTestFixture):
 
         assert len(journeys) == 1
         assert len(journeys[0]['sections']) == 6
-        assert journeys[0]['sections'][1]['display_informations']['physical_mode'] == 'Tramway'
+        assert journeys[0]['sections'][1]['display_informations']['physical_mode'] == 'Bus'
         assert journeys[0]['sections'][2]['type'] == 'transfer'
         assert journeys[0]['sections'][2]['transfer_type'] == 'walking'
         assert journeys[0]['sections'][3]['type'] == 'waiting'
-        assert journeys[0]['sections'][4]['display_informations']['physical_mode'] == 'Bus'
+        assert journeys[0]['sections'][4]['display_informations']['physical_mode'] == 'Autocar'
+        assert 'path' in journeys[0]['sections'][2]
         assert 'path' in journeys[0]['sections'][2]
         assert len(journeys[0]['sections'][2]['path']) == 3
         assert journeys[0]['sections'][2]['path'][0]['name'] == 'rue de'
@@ -1122,14 +1137,14 @@ class TestRoutingWithTransfer(NewDefaultScenarioAbstractTestFixture):
         assert 'coordinates' in journeys[0]['sections'][2]['geojson']
         assert len(journeys[0]['sections'][2]['geojson']['coordinates']) == 4
 
-    def test_complete_transfer_path_metro_tramway(self):
+    def test_complete_transfer_path_metro_coach(self):
         """
             We first query without requesting walking _transfer_path and then with _transfer_path
             In this case : transfer tramway <-> Metro, we expect to receive the same response
         """
         query = (
             '/v1/coverage/routing_with_transfer_test/journeys?'
-            'from={}&to={}&forbidden_uris[]=physical_mode:Bus&'
+            'from={}&to={}&forbidden_uris[]=physical_mode:Coach&'
             'datetime=20120614T100000&_override_scenario=distributed'
         ).format("stopF", "stopA")
 
@@ -1140,7 +1155,7 @@ class TestRoutingWithTransfer(NewDefaultScenarioAbstractTestFixture):
 
         assert len(journeys) == 1
         assert len(journeys[0]['sections']) == 6
-        assert journeys[0]['sections'][1]['display_informations']['physical_mode'] == 'Tramway'
+        assert journeys[0]['sections'][1]['display_informations']['physical_mode'] == 'Bus'
         assert journeys[0]['sections'][2]['type'] == 'transfer'
         assert journeys[0]['sections'][2]['transfer_type'] == 'walking'
         assert journeys[0]['sections'][3]['type'] == 'waiting'
@@ -1152,7 +1167,7 @@ class TestRoutingWithTransfer(NewDefaultScenarioAbstractTestFixture):
 
         query = (
             '/v1/coverage/routing_with_transfer_test/journeys?'
-            'from={}&to={}&_transfer_path=true&forbidden_uris[]=physical_mode:Bus&'
+            'from={}&to={}&_transfer_path=true&forbidden_uris[]=physical_mode:Coach&'
             'datetime=20120614T100000&_override_scenario=distributed'
         ).format("stopF", "stopA")
 
@@ -1163,7 +1178,7 @@ class TestRoutingWithTransfer(NewDefaultScenarioAbstractTestFixture):
 
         assert len(journeys) == 1
         assert len(journeys[0]['sections']) == 6
-        assert journeys[0]['sections'][1]['display_informations']['physical_mode'] == 'Tramway'
+        assert journeys[0]['sections'][1]['display_informations']['physical_mode'] == 'Bus'
         assert journeys[0]['sections'][2]['type'] == 'transfer'
         assert journeys[0]['sections'][2]['transfer_type'] == 'walking'
         assert journeys[0]['sections'][3]['type'] == 'waiting'
