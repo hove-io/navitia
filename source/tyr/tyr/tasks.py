@@ -50,16 +50,16 @@ from tyr.binarisation import (
     synonym2ed,
     shape2ed,
     load_bounding_shape,
+    bano2mimir2,
     bano2mimir,
-    bano2mimir7,
     openaddresses2mimir,
-    openaddresses2mimir7,
+    openaddresses2mimir2,
     osm2mimir,
-    osm2mimir7,
+    osm2mimir2,
     stops2mimir,
     ntfs2mimir,
     cosmogony2mimir,
-    cosmogony2mimir7,
+    cosmogony2mimir2,
     poi2mimir,
 )
 from tyr.binarisation import reload_data, move_to_backupdirectory
@@ -196,7 +196,7 @@ def send_to_mimir(instance, filename, family_type):
     """
 
     # if mimir isn't setup do not try to import data for the autocompletion
-    if not current_app.config.get('MIMIR_URL'):
+    if not current_app.config.get('MIMIR2_URL'):
         return []
 
     # Bail out if the family type is not one that mimir deals with.
@@ -310,10 +310,10 @@ def import_autocomplete(files, autocomplete_instance, asynchronous=True, backup_
     job = models.Job()
     actions = []
     task = {
-        'bano': {2: bano2mimir, 7: bano2mimir7},
-        'oa': {2: openaddresses2mimir, 7: openaddresses2mimir7},
-        'osm': {2: osm2mimir, 7: osm2mimir7},
-        'cosmogony': {2: cosmogony2mimir, 7: cosmogony2mimir7},
+        'bano': {2: bano2mimir2, 7: bano2mimir},
+        'oa': {2: openaddresses2mimir2, 7: openaddresses2mimir},
+        'osm': {2: osm2mimir2, 7: osm2mimir},
+        'cosmogony': {2: cosmogony2mimir2, 7: cosmogony2mimir},
     }
     autocomplete_dir = current_app.config['TYR_AUTOCOMPLETE_DIR']
 

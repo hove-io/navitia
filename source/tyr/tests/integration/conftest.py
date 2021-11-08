@@ -78,19 +78,19 @@ def clean_db():
 
 
 @pytest.fixture
-def enable_mimir():
-    previous_value = app.config['MIMIR_URL']
-    app.config['MIMIR_URL'] = 'http://example.com'
+def enable_mimir2():
+    previous_value = app.config['MIMIR2_URL']
+    app.config['MIMIR2_URL'] = 'http://example.com'
     yield
-    app.config['MIMIR_URL'] = previous_value
+    app.config['MIMIR2_URL'] = previous_value
 
 
 @pytest.fixture
-def enable_mimir_and_mimir7():
-    previous_mimir_value = app.config['MIMIR_URL']
-    previous_mimir7_value = app.config.get('MIMIR7_URL', None)
-    app.config['MIMIR_URL'] = 'http://example.com'
-    app.config['MIMIR7_URL'] = 'http://example.com'
+def enable_mimir2_and_mimir():
+    previous_mimir2_value = app.config['MIMIR2_URL']
+    previous_mimir_value = app.config.get('MIMIR_URL', None)
+    app.config['MIMIR2_URL'] = 'aa.com'
+    app.config['MIMIR_URL'] = 'bb.com'
     yield
+    app.config['MIMIR2_URL'] = previous_mimir2_value
     app.config['MIMIR_URL'] = previous_mimir_value
-    app.config['MIMIR7_URL'] = previous_mimir7_value

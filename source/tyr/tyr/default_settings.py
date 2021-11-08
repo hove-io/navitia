@@ -134,7 +134,7 @@ CELERYBEAT_SCHEDULE_FILENAME = '/tmp/celerybeat-schedule'
 
 CELERYD_HIJACK_ROOT_LOGGER = False
 
-MIMIR_URL = os.getenv('TYR_MIMIR_URL', None)
+MIMIR2_URL = os.getenv('TYR_MIMIR2_URL', None)
 
 # we don't enable serpy for now
 USE_SERPY = False

@@ -45,7 +45,7 @@ def create_instance():
         return instance.id
 
 
-def test_mimir_family_type_not_applicable(create_instance, enable_mimir):
+def test_mimir_family_type_not_applicable(create_instance, enable_mimir2):
     with app.app_context():
         instance = models.Instance.query.get(create_instance)
         actions = []
@@ -53,7 +53,7 @@ def test_mimir_family_type_not_applicable(create_instance, enable_mimir):
         assert actions == []
 
 
-def test_mimir_family_type_poi(create_instance, enable_mimir):
+def test_mimir_family_type_poi(create_instance, enable_mimir2):
     with app.app_context():
         instance = models.Instance.query.get(create_instance)
         actions = []
@@ -63,7 +63,7 @@ def test_mimir_family_type_poi(create_instance, enable_mimir):
         assert len(actions) == 2  # poi2mimir + finish
 
 
-def test_mimir_ntfs_false(create_instance, enable_mimir):
+def test_mimir_ntfs_false(create_instance, enable_mimir2):
     with app.app_context():
         instance = models.Instance.query.get(create_instance)
         instance.import_ntfs_in_mimir = False

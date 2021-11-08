@@ -62,7 +62,7 @@ def get_jobs_from_db(id=None):
         return models.Job.get(id=id)
 
 
-def test_post_pbf(create_instance_fr, enable_mimir):
+def test_post_pbf(create_instance_fr, enable_mimir2):
     assert not os.path.isfile('/tmp/empty_pbf.osm.pbf')
 
     filename = 'empty_pbf.osm.pbf'
@@ -81,19 +81,19 @@ def test_post_pbf(create_instance_fr, enable_mimir):
     assert not os.path.isfile('/tmp/empty_pbf.osm.pbf')
 
 
-def test_post_no_file(create_instance_fr, enable_mimir):
+def test_post_no_file(create_instance_fr, enable_mimir2):
     tester = app.test_client()
     resp = tester.post('/v0/jobs/fr')
     assert resp.status_code == 400
 
 
-def test_post_bad_instance(create_instance_fr, enable_mimir):
+def test_post_bad_instance(create_instance_fr, enable_mimir2):
     tester = app.test_client()
     resp = tester.post('/v0/jobs/fr_ko')
     assert resp.status_code == 404
 
 
-def test_post_pbf_autocomplete(create_instance_fr, enable_mimir):
+def test_post_pbf_autocomplete(create_instance_fr, enable_mimir2):
     with app.app_context():
         filename = 'empty_pbf.osm.pbf'
         path = os.path.join(
@@ -113,7 +113,7 @@ def test_post_pbf_autocomplete(create_instance_fr, enable_mimir):
             assert job
 
 
-def test_post_pbf_autocomplete_es2_and_es7(create_instance_fr, enable_mimir_and_mimir7):
+def test_post_pbf_autocomplete_es2_and_es7(create_instance_fr, enable_mimir2_and_mimir):
     with app.app_context():
         filename = 'empty_pbf.osm.pbf'
         path = os.path.join(
@@ -134,7 +134,7 @@ def test_post_pbf_autocomplete_es2_and_es7(create_instance_fr, enable_mimir_and_
             assert job
 
 
-def test_post_pbf_autocomplete_with_parenthesis(create_instance_fr, enable_mimir):
+def test_post_pbf_autocomplete_with_parenthesis(create_instance_fr, enable_mimir2):
     with app.app_context():
         filename = 'empty_pbf.osm(1).pbf'
         path = os.path.join(
@@ -155,7 +155,7 @@ def test_post_pbf_autocomplete_with_parenthesis(create_instance_fr, enable_mimir
             assert job
 
 
-def test_post_bano_autocomplete(create_instance_fr, enable_mimir):
+def test_post_bano_autocomplete(create_instance_fr, enable_mimir2):
     with app.app_context():
         filename = 'sample-bano.csv'
         path = os.path.join(
@@ -176,7 +176,7 @@ def test_post_bano_autocomplete(create_instance_fr, enable_mimir):
             assert job
 
 
-def test_post_bano_autocomplete_es2_and_es7(create_instance_fr, enable_mimir_and_mimir7):
+def test_post_bano_autocomplete_es2_and_es7(create_instance_fr, enable_mimir2_and_mimir):
     with app.app_context():
         filename = 'sample-bano.csv'
         path = os.path.join(
@@ -198,7 +198,7 @@ def test_post_bano_autocomplete_es2_and_es7(create_instance_fr, enable_mimir_and
             assert job
 
 
-def test_post_pbf_autocomplete_without_files(create_instance_fr, enable_mimir):
+def test_post_pbf_autocomplete_without_files(create_instance_fr, enable_mimir2):
     with app.app_context():
         filename = 'empty_pbf.osm.pbf'
         path = os.path.join(
@@ -209,7 +209,7 @@ def test_post_pbf_autocomplete_without_files(create_instance_fr, enable_mimir):
             assert status == 400
 
 
-def test_post_pbf_autocomplete_instance_not_exist(create_instance_fr, enable_mimir):
+def test_post_pbf_autocomplete_instance_not_exist(create_instance_fr, enable_mimir2):
     with app.app_context():
         filename = 'empty_pbf.osm.pbf'
         path = os.path.join(
@@ -220,7 +220,7 @@ def test_post_pbf_autocomplete_instance_not_exist(create_instance_fr, enable_mim
             assert status == 404
 
 
-def test_post_zip_file_on_job_should_succeed(create_instance_fr, enable_mimir):
+def test_post_zip_file_on_job_should_succeed(create_instance_fr, enable_mimir2):
     with app.app_context():
         filename = 'fusio.zip'
         path = os.path.join(
@@ -232,7 +232,7 @@ def test_post_zip_file_on_job_should_succeed(create_instance_fr, enable_mimir):
             assert status == 200
 
 
-def test_post_zip_file_on_job_with_wrong_extension(create_instance_fr, enable_mimir):
+def test_post_zip_file_on_job_with_wrong_extension(create_instance_fr, enable_mimir2):
     with app.app_context():
         filename = 'empty_file_without_extension'
         path = os.path.join(
