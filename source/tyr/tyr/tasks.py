@@ -50,16 +50,12 @@ from tyr.binarisation import (
     synonym2ed,
     shape2ed,
     load_bounding_shape,
-    bano2mimir2,
     bano2mimir,
     openaddresses2mimir,
-    openaddresses2mimir2,
     osm2mimir,
-    osm2mimir2,
     stops2mimir,
     ntfs2mimir,
     cosmogony2mimir,
-    cosmogony2mimir2,
     poi2mimir,
 )
 from tyr.binarisation import reload_data, move_to_backupdirectory
@@ -310,10 +306,10 @@ def import_autocomplete(files, autocomplete_instance, asynchronous=True, backup_
     job = models.Job()
     actions = []
     task = {
-        'bano': {2: bano2mimir2, 7: bano2mimir},
-        'oa': {2: openaddresses2mimir2, 7: openaddresses2mimir},
-        'osm': {2: osm2mimir2, 7: osm2mimir},
-        'cosmogony': {2: cosmogony2mimir2, 7: cosmogony2mimir},
+        'bano': {2: bano2mimir, 7: bano2mimir},
+        'oa': {2: openaddresses2mimir, 7: openaddresses2mimir},
+        'osm': {2: osm2mimir, 7: osm2mimir},
+        'cosmogony': {2: cosmogony2mimir, 7: cosmogony2mimir},
     }
     autocomplete_dir = current_app.config['TYR_AUTOCOMPLETE_DIR']
 
@@ -340,7 +336,14 @@ def import_autocomplete(files, autocomplete_instance, asynchronous=True, backup_
             dataset = models.DataSet()
             dataset.type = ftype
             dataset.family_type = 'autocomplete_{}'.format(dataset.type)
-            actions.append(executable.si(autocomplete_instance, filename=filename, dataset_uid=dataset.uid))
+            actions.append(
+                executable.si(
+                    autocomplete_instance,
+                    filename=filename,
+                    dataset_uid=dataset.uid,
+                    autocomplete_version=version,
+                )
+            )
             # currently the name of a dataset is the path to it
             dataset.name = filename
             models.db.session.add(dataset)

@@ -678,7 +678,9 @@ def get_bano2mimir_params(working_directory, autocomplete_instance, autocomplete
     ]
 
 
-def func_bano2mimir(autocomplete_instance, filename, job_id, autocomplete_version=2):
+@celery.task(bind=True)
+def bano2mimir(self, autocomplete_instance, filename, job_id, dataset_uid, autocomplete_version):
+    """ launch bano2mimir """
     executable = "bano2mimir2" if autocomplete_version == 2 else "bano2mimir"
     autocomplete_instance = models.db.session.merge(autocomplete_instance)  # reatache the object
     logger = get_autocomplete_instance_logger(autocomplete_instance, task_id=job_id)
@@ -704,18 +706,6 @@ def func_bano2mimir(autocomplete_instance, filename, job_id, autocomplete_versio
         raise
 
 
-@celery.task(bind=True)
-def bano2mimir2(self, autocomplete_instance, filename, job_id, dataset_uid):
-    """ launch bano2mimir """
-    func_bano2mimir(autocomplete_instance, filename, job_id)
-
-
-@celery.task(bind=True)
-def bano2mimir(self, autocomplete_instance, filename, job_id, dataset_uid):
-    """ launch bano2mimir """
-    func_bano2mimir(autocomplete_instance, filename, job_id, autocomplete_version=7)
-
-
 def get_openaddresses2mimir_params(autocomplete_instance, working_directory, autocomplete_version=2):
     if autocomplete_version == 2:
         return [
@@ -737,7 +727,9 @@ def get_openaddresses2mimir_params(autocomplete_instance, working_directory, aut
     ]
 
 
-def func_openaddresses2mimir(autocomplete_instance, filename, job_id, autocomplete_version=2):
+@celery.task(bind=True)
+def openaddresses2mimir(self, autocomplete_instance, filename, job_id, dataset_uid, autocomplete_version):
+    """ launch openaddresses2mimir """
     executable = "openaddresses2mimir2" if autocomplete_version == 2 else "openaddresses2mimir"
     autocomplete_instance = models.db.session.merge(autocomplete_instance)  # reatache the object
     logger = get_autocomplete_instance_logger(autocomplete_instance, task_id=job_id)
@@ -762,18 +754,6 @@ def func_openaddresses2mimir(autocomplete_instance, filename, job_id, autocomple
         job.state = 'failed'
         models.db.session.commit()
         raise
-
-
-@celery.task(bind=True)
-def openaddresses2mimir2(self, autocomplete_instance, filename, job_id, dataset_uid):
-    """ launch openaddresses2mimir """
-    func_openaddresses2mimir(autocomplete_instance, filename, job_id)
-
-
-@celery.task(bind=True)
-def openaddresses2mimir(self, autocomplete_instance, filename, job_id, dataset_uid):
-    """ launch openaddresses2mimir """
-    func_openaddresses2mimir(autocomplete_instance, filename, job_id, autocomplete_version=7)
 
 
 def get_osm2mimir_params(
@@ -803,8 +783,10 @@ def get_osm2mimir_params(
     ]
 
 
-def func_osm2mimir(autocomplete_instance, filename, job_id, autocomplete_version=2):
-    executable = "osm2mimir" if autocomplete_version == 2 else "osm2mimir7"
+@celery.task(bind=True)
+def osm2mimir(self, autocomplete_instance, filename, job_id, dataset_uid, autocomplete_version):
+    """ launch osm2mimir """
+    executable = "osm2mimir2" if autocomplete_version == 2 else "osm2mimir"
     autocomplete_instance = models.db.session.merge(autocomplete_instance)  # reatache the object
     logger = get_autocomplete_instance_logger(autocomplete_instance, task_id=job_id)
     logger.debug('running {} for {}'.format(executable, job_id))
@@ -833,18 +815,6 @@ def func_osm2mimir(autocomplete_instance, filename, job_id, autocomplete_version
         job.state = 'failed'
         models.db.session.commit()
         raise
-
-
-@celery.task(bind=True)
-def osm2mimir2(self, autocomplete_instance, filename, job_id, dataset_uid):
-    """ launch osm2mimir """
-    func_osm2mimir(autocomplete_instance, filename, job_id)
-
-
-@celery.task(bind=True)
-def osm2mimir(self, autocomplete_instance, filename, job_id, dataset_uid):
-    """ launch osm2mimir """
-    func_osm2mimir(autocomplete_instance, filename, job_id, autocomplete_version=7)
 
 
 @celery.task(bind=True)
@@ -946,7 +916,8 @@ def get_cosmogony2mimir_params(cosmo_file, autocomplete_instance, autocomplete_v
     ]
 
 
-def func_cosmogony2mimir(autocomplete_instance, filename, job_id, autocomplete_version=2):
+@celery.task(bind=True)
+def cosmogony2mimir(self, autocomplete_instance, filename, job_id, dataset_uid, autocomplete_version):
     executable = "cosmogony2mimir2" if autocomplete_version == 2 else "cosmogony2mimir"
     autocomplete_instance = models.db.session.merge(autocomplete_instance)  # reattach the object
     logger = get_autocomplete_instance_logger(autocomplete_instance, task_id=job_id)
@@ -964,16 +935,6 @@ def func_cosmogony2mimir(autocomplete_instance, filename, job_id, autocomplete_v
         job.state = 'failed'
         models.db.session.commit()
         raise
-
-
-@celery.task(bind=True)
-def cosmogony2mimir2(self, autocomplete_instance, filename, job_id, dataset_uid):
-    func_cosmogony2mimir(autocomplete_instance, filename, job_id)
-
-
-@celery.task(bind=True)
-def cosmogony2mimir(self, autocomplete_instance, filename, job_id, dataset_uid):
-    func_cosmogony2mimir(autocomplete_instance, filename, job_id, autocomplete_version=7)
 
 
 @celery.task(bind=True)
