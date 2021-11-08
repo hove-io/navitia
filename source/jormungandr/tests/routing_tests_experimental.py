@@ -376,6 +376,45 @@ class TestJourneysDistributed(
         r = self.query(query)
         assert sum(int('non_pt' not in j['tags']) for j in r['journeys']) == 1
 
+    def test_duplicate_journey_crow_fly_walking_bss(self):
+        query = (
+            '/v1/coverage/main_routing_test/journeys?'
+            'from=0.0000898312;0.0000898312&to=0.00188646;0.00071865&'
+            'datetime=20120614T080000&'
+            'first_section_mode[]=walking&first_section_mode[]=bss&'
+            'last_section_mode[]=walking&last_section_mode[]=bss&'
+            'bss_speed=1&walking_speed=0.2735&debug=true'
+        )
+        # for the first request, the walking duration to the stop_point is equal to the bss duration
+        r = self.query(query)
+        assert sum(int('non_pt' not in j['tags']) for j in r['journeys']) == 2
+
+        debug = "true"
+
+        query = (
+            '/v1/coverage/main_routing_test/journeys?'
+            'from=0.0000898312;0.0000898312&to=0.00188646;0.00071865&'
+            'datetime=20120614T080000&'
+            'first_section_mode[]=walking&first_section_mode[]=bss&'
+            'last_section_mode[]=walking&last_section_mode[]=bss&'
+            'bss_speed=1&walking_speed=1&debug={debug}'.format(debug=debug)
+        )
+        r = self.query(query)
+        assert sum(int('non_pt' not in j['tags']) for j in r['journeys']) == 2
+
+        debug = "false"
+
+        query = (
+            '/v1/coverage/main_routing_test/journeys?'
+            'from=0.0000898312;0.0000898312&to=0.00188646;0.00071865&'
+            'datetime=20120614T080000&'
+            'first_section_mode[]=walking&first_section_mode[]=bss&'
+            'last_section_mode[]=walking&last_section_mode[]=bss&'
+            'bss_speed=1&walking_speed=1&debug={debug}'.format(debug=debug)
+        )
+        r = self.query(query)
+        assert sum(int('non_pt' not in j['tags']) for j in r['journeys']) == 1
+
     def test_direct_path_bss_bike(self):
         query = (
             journey_basic_query
