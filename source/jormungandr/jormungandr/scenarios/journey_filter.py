@@ -502,11 +502,6 @@ def similar_bss_walking_vj_generator(journey):
         yield v
 
 
-def similar_journey_crow_fly_generator(journey):
-    for v in similar_journeys_generator(journey, detailed_pt_section_vj, crow_fly_functor=_crow_fly_sn_functor):
-        yield v
-
-
 def similar_journeys_vj_generator(journey):
     for v in similar_journeys_generator(journey, similar_pt_section_vj):
         yield v
@@ -808,40 +803,6 @@ def _get_worst_similar(j1, j2, request):
     s2 = j2.sections[-1]
     if is_fallback(s1) and is_fallback(s2) and s1.street_network.mode != s2.street_network.mode:
         return j1 if get_mode_rank(s1) > get_mode_rank(s2) else j2
-
-    return j2
-
-
-def _get_worst_similar_crow_fly(j1, j2, request):
-    """
-    Decide which is the worst journey between 2 similar journeys containing similar crow_fly sections
-
-    The choice is made on:
-     - crow_fly mode
-    """
-
-    def get_mode_rank(section):
-        mode_rank = {
-            response_pb2.Car: 0,
-            response_pb2.Taxi: 1,
-            response_pb2.Bike: 2,
-            response_pb2.Bss: 3,
-            response_pb2.Walking: 4,
-        }
-        return mode_rank.get(section.street_network.mode)
-
-    def is_fallback(section):
-        return section.type == response_pb2.CROW_FLY
-
-    s1 = j1.sections[0]
-    s2 = j2.sections[0]
-    if is_fallback(s1) and is_fallback(s2) and s1.street_network.mode != s2.street_network.mode:
-        return j1 if get_mode_rank(s1) < get_mode_rank(s2) else j2
-
-    s1 = j1.sections[-1]
-    s2 = j2.sections[-1]
-    if is_fallback(s1) and is_fallback(s2) and s1.street_network.mode != s2.street_network.mode:
-        return j1 if get_mode_rank(s1) < get_mode_rank(s2) else j2
 
     return j2
 
