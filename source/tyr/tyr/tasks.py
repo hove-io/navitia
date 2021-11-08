@@ -122,8 +122,39 @@ def import_data(
         'shape': shape2ed,
     }
 
-    # For skip_2ed, skip inserting last_load_dataset files into ed database
-    if not skip_2ed:
+    def process_ed2nav():
+        models.db.session.add(job)
+        models.db.session.commit()
+        # We pass the job id to each tasks, but job need to be commited for having an id
+        for action in actions:
+            action.kwargs['job_id'] = job.id
+        # Create binary file (New .nav.lz4)
+        binarisation = [ed2nav.si(instance_config, job.id, custom_output_dir)]
+        actions.append(chain(*binarisation))
+        # Reload kraken with new data after binarisation (New .nav.lz4)
+        if reload:
+            actions.append(reload_data.si(instance_config, job.id))
+
+        if not skip_mimir:
+            for dataset in job.data_sets:
+                actions.extend(send_to_mimir(instance, dataset.name, dataset.family_type))
+        else:
+            current_app.logger.info("skipping mimir import")
+
+        actions.append(finish_job.si(job.id))
+
+        # We should delete old backup directories related to this instance
+        actions.append(purge_instance.si(instance.id, current_app.config['DATASET_MAX_BACKUPS_TO_KEEP']))
+        if asynchronous:
+            return chain(*actions).delay()
+        else:
+            # all job are run in sequence and import_data will only return when all the jobs are finish
+            return chain(*actions).apply()
+
+    if skip_2ed:
+        # For skip_2ed, skip inserting last_load_dataset files into ed database
+        process_ed2nav()
+    else:
         for _file in files:
             filename = None
 
@@ -160,34 +191,8 @@ def import_data(
             models.db.session.add(dataset)
             job.data_sets.append(dataset)
 
-    if actions or skip_2ed:
-        models.db.session.add(job)
-        models.db.session.commit()
-        # We pass the job id to each tasks, but job need to be commited for having an id
-        for action in actions:
-            action.kwargs['job_id'] = job.id
-        # Create binary file (New .nav.lz4)
-        binarisation = [ed2nav.si(instance_config, job.id, custom_output_dir)]
-        actions.append(chain(*binarisation))
-        # Reload kraken with new data after binarisation (New .nav.lz4)
-        if reload:
-            actions.append(reload_data.si(instance_config, job.id))
-
-        if not skip_mimir:
-            for dataset in job.data_sets:
-                actions.extend(send_to_mimir(instance, dataset.name, dataset.family_type))
-        else:
-            current_app.logger.info("skipping mimir import")
-
-        actions.append(finish_job.si(job.id))
-
-        # We should delete old backup directories related to this instance
-        actions.append(purge_instance.si(instance.id, current_app.config['DATASET_MAX_BACKUPS_TO_KEEP']))
-        if asynchronous:
-            return chain(*actions).delay()
-        else:
-            # all job are run in sequence and import_data will only return when all the jobs are finish
-            return chain(*actions).apply()
+        if actions:
+            process_ed2nav()
 
 
 def send_to_mimir(instance, filename, family_type):
