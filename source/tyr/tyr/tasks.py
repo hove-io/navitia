@@ -153,46 +153,43 @@ def import_data(
 
     if skip_2ed:
         # For skip_2ed, skip inserting last_load_dataset files into ed database
-        process_ed2nav()
-    else:
-        for _file in files:
-            filename = None
+        return process_ed2nav()
+    for _file in files:
+        filename = None
 
-            dataset = models.DataSet()
-            # NOTE: for the moment we do not use the path to load the data here
-            # but we'll need to refactor this to take it into account
-            try:
-                dataset.type, _ = utils.type_of_data(_file)
-                dataset.family_type = utils.family_of_data(dataset.type)
-            except Exception:
-                if backup_file:
-                    move_to_backupdirectory(_file, instance_config.backup_directory)
-                current_app.logger.debug(
-                    "Corrupted source file : {} moved to {}".format(_file, instance_config.backup_directory)
-                )
-                continue
+        dataset = models.DataSet()
+        # NOTE: for the moment we do not use the path to load the data here
+        # but we'll need to refactor this to take it into account
+        try:
+            dataset.type, _ = utils.type_of_data(_file)
+            dataset.family_type = utils.family_of_data(dataset.type)
+        except Exception:
+            if backup_file:
+                move_to_backupdirectory(_file, instance_config.backup_directory)
+            current_app.logger.debug(
+                "Corrupted source file : {} moved to {}".format(_file, instance_config.backup_directory)
+            )
+            continue
 
-            if dataset.type in task:
-                if backup_file:
-                    filename = move_to_backupdirectory(
-                        _file, instance_config.backup_directory, manage_sp_char=True
-                    )
-                else:
-                    filename = _file
-                actions.append(task[dataset.type].si(instance_config, filename, dataset_uid=dataset.uid))
+        if dataset.type in task:
+            if backup_file:
+                filename = move_to_backupdirectory(_file, instance_config.backup_directory, manage_sp_char=True)
             else:
-                # unknown type, we skip it
-                current_app.logger.debug("unknown file type: {} for file {}".format(dataset.type, _file))
-                continue
+                filename = _file
+            actions.append(task[dataset.type].si(instance_config, filename, dataset_uid=dataset.uid))
+        else:
+            # unknown type, we skip it
+            current_app.logger.debug("unknown file type: {} for file {}".format(dataset.type, _file))
+            continue
 
-            # currently the name of a dataset is the path to it
-            dataset.name = filename
-            dataset.state = "pending"
-            models.db.session.add(dataset)
-            job.data_sets.append(dataset)
+        # currently the name of a dataset is the path to it
+        dataset.name = filename
+        dataset.state = "pending"
+        models.db.session.add(dataset)
+        job.data_sets.append(dataset)
 
-        if actions:
-            process_ed2nav()
+    if actions:
+        return process_ed2nav()
 
 
 def send_to_mimir(instance, filename, family_type):
