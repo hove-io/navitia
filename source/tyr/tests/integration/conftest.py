@@ -86,6 +86,22 @@ def enable_mimir2():
 
 
 @pytest.fixture
+def enable_mimir7():
+    previous_value = app.config['MIMIR_URL']
+    app.config['MIMIR_URL'] = 'cc.com'
+    yield
+    app.config['MIMIR_URL'] = previous_value
+
+
+@pytest.fixture
+def disable_mimir():
+    previous_value = app.config['MIMIR_URL']
+    app.config['MIMIR_URL'] = None
+    yield
+    app.config['MIMIR_URL'] = previous_value
+
+
+@pytest.fixture
 def enable_mimir2_and_mimir():
     previous_mimir2_value = app.config['MIMIR2_URL']
     previous_mimir_value = app.config.get('MIMIR_URL', None)
