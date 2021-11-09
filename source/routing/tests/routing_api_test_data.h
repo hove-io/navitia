@@ -505,6 +505,11 @@ struct routing_api_data {
             b.vj("K", "0000000", "", false, "vjkA", "vjkA_hs")("stop_point:stopA", "17:01"_t)("stop_point:stopB",
                                                                                               "18:02"_t);
             b.lines["K"]->code = "1K";
+
+            // Add codes on vj
+            const auto* vj = b.get<nt::VehicleJourney>("vehicle_journey:vjA");
+            b.data->pt_data->codes.add(vj, "source", "source_code_vjA");
+            b.data->pt_data->codes.add(vj, "external_source", "external_code_vjA");
         }
 
         b.data->complete();

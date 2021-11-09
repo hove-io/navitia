@@ -1356,6 +1356,10 @@ BOOST_AUTO_TEST_CASE(get_impacts_on_vj) {
     ed::builder b("20150928", [](ed::builder& b) {
         b.vj("A", "000111", "", true, "vj:1")("stop1", "08:01"_t)("stop2", "09:01"_t);
     });
+    // Add code on vj:1
+    auto* vj_1 = b.get<navitia::type::VehicleJourney>("vehicle_journey:vj:1");
+    b.data->pt_data->codes.add(vj_1, "source", "source_vj:1");
+    b.data->pt_data->codes.add(vj_1, "gtfs", "gtfs_vj:1");
 
     transit_realtime::TripUpdate first_trip_update = ntest::make_trip_update_message(
         "vj:1", "20150928",
@@ -1370,6 +1374,11 @@ BOOST_AUTO_TEST_CASE(get_impacts_on_vj) {
     BOOST_REQUIRE_EQUAL(pt_data->vehicle_journeys.size(), 1);
     BOOST_CHECK_EQUAL(vj->get_impacts().size(), 0);
 
+    // Search by code should also find the only vehicle_journey vj:1
+    auto indexes = navitia::ptref::make_query(nt::Type_e::VehicleJourney,
+                                              R"(vehicle_journey.has_code(source, source_vj:1))", *(b.data));
+    BOOST_CHECK_EQUAL(indexes.size(), 1);
+
     navitia::handle_realtime("delay1hourD0", timestamp, first_trip_update, *b.data, true, true);
 
     // get vj realtime for d0 and check it's on day 0
@@ -1377,6 +1386,11 @@ BOOST_AUTO_TEST_CASE(get_impacts_on_vj) {
     BOOST_REQUIRE_EQUAL(vj->meta_vj->get_rt_vj().size(), 1);
     const auto vj_rt_d0 = vj->meta_vj->get_rt_vj()[0].get();
     BOOST_CHECK(vj_rt_d0->get_validity_pattern_at(vj_rt_d0->realtime_level)->check(0));
+
+    // Search by code should also find two vehicle_journeys
+    indexes = navitia::ptref::make_query(nt::Type_e::VehicleJourney,
+                                         R"(vehicle_journey.has_code(source, source_vj:1))", *(b.data));
+    BOOST_CHECK_EQUAL(indexes.size(), 2);
 
     BOOST_REQUIRE_EQUAL(vj->get_impacts().size(), 1);
     BOOST_CHECK_EQUAL(vj->get_impacts()[0]->uri, "delay1hourD0");
@@ -1391,6 +1405,11 @@ BOOST_AUTO_TEST_CASE(get_impacts_on_vj) {
     const auto vj_rt_d1 = vj->meta_vj->get_rt_vj()[1].get();
     BOOST_CHECK(vj_rt_d1->get_validity_pattern_at(vj_rt_d1->realtime_level)->check(1));
 
+    // Search by code should also find three vehicle_journeys
+    indexes = navitia::ptref::make_query(nt::Type_e::VehicleJourney,
+                                         R"(vehicle_journey.has_code(source, source_vj:1))", *(b.data));
+    BOOST_CHECK_EQUAL(indexes.size(), 3);
+
     BOOST_REQUIRE_EQUAL(vj->get_impacts().size(), 2);
     BOOST_CHECK_EQUAL(vj->get_impacts()[0]->uri, "delay1hourD0");
     BOOST_CHECK_EQUAL(vj->get_impacts()[1]->uri, "delay2hourD1");
@@ -1402,6 +1421,10 @@ BOOST_AUTO_TEST_CASE(get_impacts_on_vj) {
     navitia::handle_realtime("cancelD3", timestamp, third_trip_update, *b.data, true, true);
 
     BOOST_REQUIRE_EQUAL(pt_data->vehicle_journeys.size(), 3);
+    // Search by code should also find three vehicle_journeys
+    indexes = navitia::ptref::make_query(nt::Type_e::VehicleJourney,
+                                         R"(vehicle_journey.has_code(source, source_vj:1))", *(b.data));
+    BOOST_CHECK_EQUAL(indexes.size(), 3);
     BOOST_REQUIRE_EQUAL(vj->get_impacts().size(), 3);
     BOOST_CHECK_EQUAL(vj->get_impacts()[0]->uri, "delay1hourD0");
     BOOST_CHECK_EQUAL(vj->get_impacts()[1]->uri, "delay2hourD1");
@@ -1851,16 +1874,19 @@ BOOST_AUTO_TEST_CASE(simple_skipped_stop) {
     BOOST_CHECK_EQUAL(vj->stop_time_list.front().boarding_time, "08:10"_t);
     BOOST_CHECK_EQUAL(vj->stop_time_list.front().pick_up_allowed(), true);
     BOOST_CHECK_EQUAL(vj->stop_time_list.front().drop_off_allowed(), true);
+    BOOST_CHECK_EQUAL(vj->stop_time_list.front().skipped_stop(), false);
     BOOST_CHECK_EQUAL(vj->stop_time_list.at(1).stop_point->uri, "B");
     BOOST_CHECK_EQUAL(vj->stop_time_list.at(1).departure_time, "08:20"_t);
     BOOST_CHECK_EQUAL(vj->stop_time_list.at(1).boarding_time, "08:20"_t);
     BOOST_CHECK_EQUAL(vj->stop_time_list.at(1).pick_up_allowed(), false);  // disabled
     BOOST_CHECK_EQUAL(vj->stop_time_list.at(1).drop_off_allowed(), false);
+    BOOST_CHECK_EQUAL(vj->stop_time_list.at(1).skipped_stop(), false);
     BOOST_CHECK_EQUAL(vj->stop_time_list.at(2).stop_point->uri, "C");
     BOOST_CHECK_EQUAL(vj->stop_time_list.at(2).arrival_time, "08:30"_t);
     BOOST_CHECK_EQUAL(vj->stop_time_list.at(2).alighting_time, "08:30"_t);
     BOOST_CHECK_EQUAL(vj->stop_time_list.at(2).pick_up_allowed(), true);
     BOOST_CHECK_EQUAL(vj->stop_time_list.at(2).drop_off_allowed(), true);
+    BOOST_CHECK_EQUAL(vj->stop_time_list.at(2).skipped_stop(), false);
 
     auto get_journeys = [&](nt::RTLevel level, const std::string& from, const std::string& to) {
         return raptor.compute(b.get<nt::StopArea>(from), b.get<nt::StopArea>(to), "08:00"_t, 0,
@@ -1927,21 +1953,25 @@ BOOST_AUTO_TEST_CASE(skipped_stop_then_delay) {
     BOOST_CHECK_EQUAL(vj->stop_time_list.front().boarding_time, "08:10"_t);
     BOOST_CHECK_EQUAL(vj->stop_time_list.front().pick_up_allowed(), true);
     BOOST_CHECK_EQUAL(vj->stop_time_list.front().drop_off_allowed(), true);
+    BOOST_CHECK_EQUAL(vj->stop_time_list.front().skipped_stop(), false);
     BOOST_CHECK_EQUAL(vj->stop_time_list.at(1).stop_point->uri, "B");
     BOOST_CHECK_EQUAL(vj->stop_time_list.at(1).departure_time, "08:20"_t);
     BOOST_CHECK_EQUAL(vj->stop_time_list.at(1).boarding_time, "08:20"_t);
     BOOST_CHECK_EQUAL(vj->stop_time_list.at(1).pick_up_allowed(), false);  // disabled
     BOOST_CHECK_EQUAL(vj->stop_time_list.at(1).drop_off_allowed(), true);
+    BOOST_CHECK_EQUAL(vj->stop_time_list.at(1).skipped_stop(), false);
     BOOST_CHECK_EQUAL(vj->stop_time_list.at(2).stop_point->uri, "C");
     BOOST_CHECK_EQUAL(vj->stop_time_list.at(2).arrival_time, "08:35"_t);
     BOOST_CHECK_EQUAL(vj->stop_time_list.at(2).alighting_time, "08:35"_t);
     BOOST_CHECK_EQUAL(vj->stop_time_list.at(2).pick_up_allowed(), true);
     BOOST_CHECK_EQUAL(vj->stop_time_list.at(2).drop_off_allowed(), true);
+    BOOST_CHECK_EQUAL(vj->stop_time_list.at(2).skipped_stop(), false);
     BOOST_CHECK_EQUAL(vj->stop_time_list.at(3).stop_point->uri, "D");
     BOOST_CHECK_EQUAL(vj->stop_time_list.at(3).arrival_time, "08:40"_t);
     BOOST_CHECK_EQUAL(vj->stop_time_list.at(3).alighting_time, "08:40"_t);
     BOOST_CHECK_EQUAL(vj->stop_time_list.at(3).pick_up_allowed(), true);
     BOOST_CHECK_EQUAL(vj->stop_time_list.at(3).drop_off_allowed(), true);
+    BOOST_CHECK_EQUAL(vj->stop_time_list.at(3).skipped_stop(), false);
 
     auto get_journeys = [&](nt::RTLevel level, const std::string& from, const std::string& to) {
         return raptor.compute(b.get<nt::StopArea>(from), b.get<nt::StopArea>(to), "08:00"_t, 0,
@@ -2301,9 +2331,11 @@ BOOST_AUTO_TEST_CASE(add_modify_and_delete_new_stop_time_in_the_trip) {
     BOOST_REQUIRE_EQUAL(vj->stop_time_list.size(), 3);
 
     // Check the realtime vj with a newly added stop_time
+    // Il should be initialize with skipped_stop = false
     vj = b.get<nt::VehicleJourney>("vehicle_journey:vj:1:modified:0:feed-1");
     BOOST_REQUIRE_EQUAL(vj->stop_time_list[2].pick_up_allowed(), true);
     BOOST_REQUIRE_EQUAL(vj->stop_time_list[2].drop_off_allowed(), true);
+    BOOST_REQUIRE_EQUAL(vj->stop_time_list[2].skipped_stop(), false);
     BOOST_REQUIRE_EQUAL(vj->stop_time_list.size(), 4);
 
     // The new stop_time added should be in stop_date_times
@@ -2341,6 +2373,7 @@ BOOST_AUTO_TEST_CASE(add_modify_and_delete_new_stop_time_in_the_trip) {
     vj = b.get<nt::VehicleJourney>("vehicle_journey:vj:1:modified:1:feed-2");
     BOOST_REQUIRE_EQUAL(vj->stop_time_list[2].pick_up_allowed(), false);
     BOOST_REQUIRE_EQUAL(vj->stop_time_list[2].drop_off_allowed(), false);
+    BOOST_REQUIRE_EQUAL(vj->stop_time_list[2].skipped_stop(), false);
     BOOST_REQUIRE_EQUAL(vj->stop_time_list.size(), 4);
 
     // The new stop_time added should be in stop_date_times
@@ -2383,6 +2416,7 @@ BOOST_AUTO_TEST_CASE(add_modify_and_delete_new_stop_time_in_the_trip) {
     BOOST_REQUIRE_EQUAL(vj->stop_time_list.size(), 4);
     BOOST_REQUIRE_EQUAL(vj->stop_time_list[2].pick_up_allowed(), false);
     BOOST_REQUIRE_EQUAL(vj->stop_time_list[2].drop_off_allowed(), false);
+    BOOST_REQUIRE_EQUAL(vj->stop_time_list[2].skipped_stop(), false);
 
     res = compute("20171101T073000", "stop_point:A", "stop_point:C");
     BOOST_CHECK_EQUAL(res.impacts_size(), 3);

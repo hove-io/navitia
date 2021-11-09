@@ -2,6 +2,7 @@ name: Build Navitia Packages For Dev Multi Distributions
 
 on:
   pull_request:
+    types: [labeled, opened, synchronize, reopened]
   push:
     branches:
       - dev
@@ -12,15 +13,20 @@ jobs:
 
     strategy:
         matrix:
-            distribution: [debian8, debian9, debian10]
+            distribution: [debian8, debian10, debian11]
 
     container:
       image: navitia/${{matrix.distribution}}_dev
+      volumes:
+          - /usr/share/dotnet:/usr/share/dotnet
+        # Mount /dotnet so we can delete files from docker and free up space (>20GB)
 
     steps:
+    - name: Free up space
+      run: rm -rf /usr/share/dotnet/*
     - uses: actions/checkout@v1
     - name: install zip dependency
-      run: apt update && apt install -y zip httpie
+      run: apt update && apt install -y zip httpie dh-python
     - name: dkpg-buildpackage
       run: |
         sed -i 's,git\@github.com:\([^/]*\)/\(.*\).git,https://github.com/\1/\2,' .gitmodules
@@ -82,8 +88,37 @@ jobs:
           request = requests.post(url, data = params )
           print("Response status code : {}".format(request.status_code) )
           print(request.text)
+    - name: run artemis NG on pull_request
+      shell: python3 {0}
+      if: ${{ github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'run_artemis') }}
+      run: |
+        import json
+        import requests
 
-    - name: run deploy on artemis machine https://jenkins-core.canaltp.fr/job/deploy-navitia
-      if: ${{ github.event_name == 'push' }}
-      run: http --ignore-stdin -v -f POST https://${{secrets.JENKINS_NG_TOKEN}}@jenkins-core.canaltp.fr/job/deploy-navitia/buildWithParameters PLATFORM=artemis_debian8
+        # replace \n, simple quotes and double quotes by spaces
+        translation_table = str.maketrans({ '\n' : ' ', "'" : ' ', '"': ' ' })
+        def sanitize(my_string):
+          sanitized = my_string.translate(translation_table)
+          return sanitized
+
+        with open('${{ github.event_path }}') as file:
+
+          github_dict = json.load(file)
+          params = {}
+          params["event"] = "pull_request"
+          params["navitia_branch"] = github_dict['pull_request']['head']['ref']
+          params["commit_message"] = sanitize(github_dict['pull_request']['title'])
+          params["commit_timestamp"] = github_dict['pull_request']['updated_at']
+          params["commit_url"] = github_dict['pull_request']['html_url']
+          params["commit_id"] = github_dict['pull_request']['head']['sha']
+          params["commit_username"] = github_dict['pull_request']['user']['login']
+          print(params)
+
+          secret = "${{secrets.JENKINS_NG_TOKEN}}"
+
+          url = "https://{}@jenkins-core.canaltp.fr/job/artemis_ng/buildWithParameters".format(secret)
+
+          request = requests.post(url, data = params )
+          print("Response status code : {}".format(request.status_code) )
+          print(request.text)
 

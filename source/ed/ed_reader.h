@@ -63,6 +63,7 @@ struct EdReader {
     // for admin main stop areas, we need this temporary map
     //(we can't use an index since the link is between georef and navitia, and those modules are loaded separatly)
     std::unordered_map<std::string, navitia::georef::Admin*> admin_by_insee_code;
+    std::unordered_map<std::string, navitia::type::Address*> address_by_address_id;
 
 private:
     // map d'id en base vers le poiteur de l'objet instancié
@@ -120,6 +121,7 @@ private:
 
     void fill_stop_areas(navitia::type::Data& data, pqxx::work& work);
     void fill_stop_points(navitia::type::Data& data, pqxx::work& work);
+    void fill_ntfs_addresses(pqxx::work& work);
     void fill_lines(navitia::type::Data& data, pqxx::work& work);
     void fill_line_groups(navitia::type::Data& data, pqxx::work& work);
 

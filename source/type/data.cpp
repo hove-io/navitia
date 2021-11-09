@@ -66,13 +66,14 @@ www.navitia.io
 
 #include <fstream>
 #include <thread>
+#include <regex>
 
 namespace pt = boost::posix_time;
 
 namespace navitia {
 namespace type {
 
-const unsigned int Data::data_version = 12;  //< *INCREMENT* every time serialized data are modified
+const unsigned int Data::data_version = 13;  //< *INCREMENT* every time serialized data are modified
 
 Data::Data(size_t data_identifier)
     : _last_rt_data_loaded(boost::posix_time::not_a_date_time),
@@ -354,7 +355,7 @@ ValidityPattern* Data::get_similar_validity_pattern(ValidityPattern* vp) const {
 void Data::complete() {
     auto logger = log4cplus::Logger::getInstance("log");
     pt::ptime start;
-    int admin, sort, autocomplete, address;
+    int admin, sort, autocomplete;
 
     build_grid_validity_pattern();
 
@@ -366,10 +367,6 @@ void Data::complete() {
     aggregate_odt();
 
     build_relations();
-
-    start = pt::microsec_clock::local_time();
-    fill_stop_point_address();
-    address = (pt::microsec_clock::local_time() - start).total_milliseconds();
 
     compute_labels();
 
@@ -389,7 +386,6 @@ void Data::complete() {
     LOG4CPLUS_INFO(logger, "\t Building admins: " << admin << "ms");
     LOG4CPLUS_INFO(logger, "\t Sorting data: " << sort << "ms");
     LOG4CPLUS_INFO(logger, "\t Building autocomplete " << autocomplete << "ms");
-    LOG4CPLUS_INFO(logger, "\t Building address " << address << "ms");
 }
 
 /*
@@ -489,26 +485,69 @@ void Data::aggregate_odt() {
     }
 }
 
-void Data::fill_stop_point_address() {
+void Data::fill_stop_point_address(
+    const std::unordered_map<std::string, navitia::type::Address*>& address_by_address_id) {
     idx_t without_address = 0;
+    size_t addresses_from_ntfs_counter = 0;
+    bool ntfs_addresses_allowed = false;
+    if (!address_by_address_id.empty()) {
+        ntfs_addresses_allowed = true;
+        LOG4CPLUS_INFO(log4cplus::Logger::getInstance("logger"),
+                       "addresses from ntfs are present: " << address_by_address_id.size() << " nb addresses");
+    }
     for (auto sp : pt_data->stop_points) {
         if (!sp->coord.is_initialized()) {
             ++without_address;
             continue;
         }
-        try {
-            auto nb_way = geo_ref->nearest_addr(sp->coord);
-            sp->address = new navitia::georef::Address(nb_way.second, sp->coord, nb_way.first);
-        } catch (const navitia::proximitylist::NotFound&) {
-            LOG4CPLUS_DEBUG(log4cplus::Logger::getInstance("logger"),
-                            "unable to find a way from coord [" << sp->coord.lon() << "-" << sp->coord.lat() << "]");
-            ++without_address;
+        // parse address from ntfs files
+        if (ntfs_addresses_allowed && !sp->address_id.empty()) {
+            auto it = address_by_address_id.find(sp->address_id);
+            if (it != address_by_address_id.end()) {
+                auto* way = new navitia::georef::Way;
+                size_t hn_int = 0;
+                try {
+                    hn_int = boost::lexical_cast<int>(it->second->house_number);
+                    way->name = it->second->street_name;
+                } catch (const boost::bad_lexical_cast&) {
+                    if (it->second->street_name.empty()) {
+                        way->name = "";
+                    } else if (it->second->house_number.empty()) {
+                        way->name = it->second->street_name;
+                    } else {
+                        // if the house number is more than a number, we add house number to the name
+                        way->name = it->second->house_number + " " + it->second->street_name;
+                    }
+                }
+
+                // create address with way and house number
+                navitia::georef::HouseNumber hn(sp->coord.lon(), sp->coord.lat(), hn_int);
+                way->add_house_number(hn);
+                way->admin_list = sp->admin_list;
+                sp->address = new navitia::georef::Address(way, sp->coord, hn_int);
+                addresses_from_ntfs_counter++;
+            }
+        } else {
+            try {
+                auto addr = geo_ref->nearest_addr(sp->coord);
+                sp->address = new navitia::georef::Address(addr.second, sp->coord, addr.first);
+            } catch (const navitia::proximitylist::NotFound&) {
+                LOG4CPLUS_DEBUG(log4cplus::Logger::getInstance("logger"), "unable to find a way from coord ["
+                                                                              << sp->coord.lon() << "-"
+                                                                              << sp->coord.lat() << "]");
+                ++without_address;
+            }
         }
+    }
+    if (ntfs_addresses_allowed) {
+        LOG4CPLUS_INFO(log4cplus::Logger::getInstance("logger"),
+                       "addresses from ntfs - " << addresses_from_ntfs_counter << " nb match with stop point");
     }
     if (without_address) {
         LOG4CPLUS_WARN(log4cplus::Logger::getInstance("logger"), without_address << " StopPoints without address");
     }
 }
+
 void Data::build_grid_validity_pattern() {
     for (Calendar* cal : this->pt_data->calendars) {
         cal->build_validity_pattern(meta->production_date);
@@ -831,20 +870,6 @@ Type_e Data::get_type_of_id(const std::string& id) const {
     return Type_e::Unknown;
 }
 
-namespace {
-struct Pipe {
-    threadbuf sbuf;
-    std::ostream out;
-    std::istream in;
-    Pipe() : out(&sbuf), in(&sbuf) {}
-    Pipe(const Pipe&) = delete;
-    Pipe& operator=(const Pipe&) = delete;
-    Pipe(const Pipe&&) = delete;
-    Pipe& operator=(const Pipe&&) = delete;
-    ~Pipe() { sbuf.close(); }
-};
-}  // anonymous namespace
-
 // We want to do a deep clone of a Data.  The problem is that there is a
 // lot of pointers that point to each other, and thus writing a copy
 // assignment operator is really tricky.
@@ -856,16 +881,8 @@ struct Pipe {
 // in our object.  To avoid having the whole binary_oarchive in
 // memory, we construct a pipe between 2 threads.
 void Data::clone_from(const Data& from) {
-    Pipe p;
-    std::thread write([&]() {
-        boost::archive::binary_oarchive oa(p.out);
-        oa << from;
-    });
-    {
-        boost::archive::binary_iarchive ia(p.in);
-        ia >> *this;
-    }
-    write.join();
+    CloneHelper cloner;
+    cloner(from, *this);
 }
 
 void Data::set_last_rt_data_loaded(const boost::posix_time::ptime& p) const {

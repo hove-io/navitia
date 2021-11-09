@@ -231,7 +231,8 @@ VJ& VJ::operator()(const std::string& stopPoint,
                    bool drop_off_allowed,
                    bool pick_up_allowed,
                    int alighting_duration,
-                   int boarding_duration) {
+                   int boarding_duration,
+                   bool skipped_stop) {
     auto _departure = departure;
     if (_departure.empty()) {
         _departure = arrival;
@@ -239,7 +240,7 @@ VJ& VJ::operator()(const std::string& stopPoint,
 
     return (*this)(stopPoint, pt::duration_from_string(arrival).total_seconds(),
                    pt::duration_from_string(_departure).total_seconds(), local_traffic_zone, drop_off_allowed,
-                   pick_up_allowed, alighting_duration, boarding_duration);
+                   pick_up_allowed, alighting_duration, boarding_duration, skipped_stop);
 }
 
 VJ& VJ::operator()(const std::string& sp_name,
@@ -249,7 +250,8 @@ VJ& VJ::operator()(const std::string& sp_name,
                    bool drop_off_allowed,
                    bool pick_up_allowed,
                    int alighting_duration,
-                   int boarding_duration) {
+                   int boarding_duration,
+                   bool skipped_stop) {
     auto it = b.sps.find(sp_name);
     navitia::type::StopPoint* sp = nullptr;
     if (it == b.sps.end()) {
@@ -295,6 +297,7 @@ VJ& VJ::operator()(const std::string& sp_name,
     stop_time.local_traffic_zone = local_trafic_zone;
     stop_time.set_drop_off_allowed(drop_off_allowed);
     stop_time.set_pick_up_allowed(pick_up_allowed);
+    stop_time.set_skipped_stop(skipped_stop);
 
     ST st(stop_time);
     if (departure == -1) {
@@ -736,6 +739,7 @@ void builder::generate_dummy_basis() {
     this->data->pt_data->get_or_create_commercial_mode("Bike", "Bike");
     this->data->pt_data->get_or_create_commercial_mode("Bus", "Bus");
     this->data->pt_data->get_or_create_commercial_mode("Car", "Car");
+    this->data->pt_data->get_or_create_commercial_mode("Coach", "Autocar");
 
     for (navitia::type::CommercialMode* mt : this->data->pt_data->commercial_modes) {
         data->pt_data->get_or_create_physical_mode("physical_mode:" + mt->uri, mt->name, get_co2_emission(mt->uri));

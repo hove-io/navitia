@@ -664,15 +664,22 @@ BOOST_AUTO_TEST_CASE(gtfs_hlp_pickup_and_drop_off_from_data) {
     {
         /*
          * If 'pickup_type' and 'drop_off_type' are stated in the data, we want to honour it.
+         * The vehicle skips certain stops
          */
         auto start_stay_in_vehicle = find_vj_by_heasign(data, "start_stayin_same_sp_with_data");
         auto start_vehicle_first = *start_stay_in_vehicle->stop_time_list.begin();
         BOOST_CHECK_EQUAL(start_vehicle_first->pick_up_allowed, true);
         BOOST_CHECK_EQUAL(start_vehicle_first->drop_off_allowed, false);
+        BOOST_CHECK_EQUAL(start_vehicle_first->skipped_stop, false);
 
         auto start_vehicle_last = *start_stay_in_vehicle->stop_time_list.rbegin();
         BOOST_CHECK_EQUAL(start_vehicle_last->pick_up_allowed, false);  // forbidden in the data
         BOOST_CHECK_EQUAL(start_vehicle_last->drop_off_allowed, true);
+        BOOST_CHECK_EQUAL(start_vehicle_first->skipped_stop, false);
+
+        BOOST_CHECK_EQUAL(start_stay_in_vehicle->stop_time_list[2]->skipped_stop, false);
+        BOOST_CHECK_EQUAL(start_stay_in_vehicle->stop_time_list[2]->pick_up_allowed, false);
+        BOOST_CHECK_EQUAL(start_stay_in_vehicle->stop_time_list[2]->drop_off_allowed, true);
 
         auto end_stay_in_vehicle = find_vj_by_heasign(data, "end_stayin_same_sp_with_data");
         auto end_vehicle_start = *end_stay_in_vehicle->stop_time_list.begin();
@@ -682,5 +689,46 @@ BOOST_AUTO_TEST_CASE(gtfs_hlp_pickup_and_drop_off_from_data) {
         auto end_vehicle_last = *end_stay_in_vehicle->stop_time_list.rbegin();
         BOOST_CHECK_EQUAL(end_vehicle_last->pick_up_allowed, false);
         BOOST_CHECK_EQUAL(end_vehicle_last->drop_off_allowed, true);
+
+        BOOST_CHECK_EQUAL(end_stay_in_vehicle->stop_time_list[2]->skipped_stop, true);
+        BOOST_CHECK_EQUAL(end_stay_in_vehicle->stop_time_list[2]->pick_up_allowed, false);
+        BOOST_CHECK_EQUAL(end_stay_in_vehicle->stop_time_list[2]->drop_off_allowed, false);
+    }
+}
+
+BOOST_AUTO_TEST_CASE(adresses_tests) {
+    {
+        ed::Data data;
+        ed::connectors::FusioParser parser(ntfs_path + "_v5");
+        parser.fill(data);
+
+        BOOST_REQUIRE_EQUAL(data.addresses_from_ntfs.size(), 9);
+        BOOST_CHECK_EQUAL(data.addresses_from_ntfs[0]->id, "SA:A:ADD_ID");
+        BOOST_CHECK_EQUAL(data.addresses_from_ntfs[0]->street_name, "SA:A STREET_NAME");
+        BOOST_CHECK_EQUAL(data.addresses_from_ntfs[0]->house_number, "9");
+        BOOST_CHECK_EQUAL(data.addresses_from_ntfs[1]->id, "SA:B:ADD_ID");
+        BOOST_CHECK_EQUAL(data.addresses_from_ntfs[1]->street_name, "SA:B STREET_NAME");
+        BOOST_CHECK_EQUAL(data.addresses_from_ntfs[1]->house_number, "99999999");
+        BOOST_CHECK_EQUAL(data.addresses_from_ntfs[2]->id, "SA:C:ADD_ID");
+        BOOST_CHECK_EQUAL(data.addresses_from_ntfs[2]->street_name, "");
+        BOOST_CHECK_EQUAL(data.addresses_from_ntfs[2]->house_number, "");
+        BOOST_CHECK_EQUAL(data.addresses_from_ntfs[3]->id, "SA:D:ADD_ID");
+        BOOST_CHECK_EQUAL(data.addresses_from_ntfs[3]->street_name, "SA:D STREET_NAME");
+        BOOST_CHECK_EQUAL(data.addresses_from_ntfs[3]->house_number, "");
+        BOOST_CHECK_EQUAL(data.addresses_from_ntfs[4]->id, "SP:A:ADD_ID");
+        BOOST_CHECK_EQUAL(data.addresses_from_ntfs[4]->street_name, "");
+        BOOST_CHECK_EQUAL(data.addresses_from_ntfs[4]->house_number, "");
+        BOOST_CHECK_EQUAL(data.addresses_from_ntfs[5]->id, "SP:D:ADD_ID");
+        BOOST_CHECK_EQUAL(data.addresses_from_ntfs[5]->street_name, "SP:D STREET_NAME");
+        BOOST_CHECK_EQUAL(data.addresses_from_ntfs[5]->house_number, "25");
+        BOOST_CHECK_EQUAL(data.addresses_from_ntfs[6]->id, "SP:E:ADD_ID");
+        BOOST_CHECK_EQUAL(data.addresses_from_ntfs[6]->street_name, "SP:E STREET_NAME");
+        BOOST_CHECK_EQUAL(data.addresses_from_ntfs[6]->house_number, "0");
+        BOOST_CHECK_EQUAL(data.addresses_from_ntfs[7]->id, "SP:F:ADD_ID");
+        BOOST_CHECK_EQUAL(data.addresses_from_ntfs[7]->street_name, "SP:F STREET_NAME");
+        BOOST_CHECK_EQUAL(data.addresses_from_ntfs[7]->house_number, "");
+        BOOST_CHECK_EQUAL(data.addresses_from_ntfs[8]->id, "SP:J:ADD_ID");
+        BOOST_CHECK_EQUAL(data.addresses_from_ntfs[8]->street_name, "SP:J STREET_NAME");
+        BOOST_CHECK_EQUAL(data.addresses_from_ntfs[8]->house_number, "FACE AU 23");
     }
 }

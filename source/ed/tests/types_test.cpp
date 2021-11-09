@@ -84,19 +84,19 @@ struct TestEdData {
         std::vector<types::StopTime*> sts {
             //                  idx,arr,dep,boa,ali,vj,     sp,     shape,   order, ODT,   pick, drop, freq,  wheel, estim, headsign
             // Stay-in on same stop point (sp1)
-            new types::StopTime( 0, 00, 01, 00, 01, vjs[0], sps[0], nullptr, 0,     false, true, true, false, false, false, "" ),
-            new types::StopTime( 1, 10, 21, 10, 11, vjs[0], sps[1], nullptr, 1,     false, true, true, false, false, false, "" ),
-            new types::StopTime( 2, 10, 21, 10, 21, vjs[1], sps[1], nullptr, 2,     false, true, true, false, false, false, "" ),
-            new types::StopTime( 3, 30, 31, 30, 31, vjs[1], sps[2], nullptr, 3,     false, true, true, false, false, false, "" ),
+            new types::StopTime( 0, 00, 01, 00, 01, vjs[0], sps[0], nullptr, 0,     false, true, true, false, false, false, false, "" ),
+            new types::StopTime( 1, 10, 21, 10, 11, vjs[0], sps[1], nullptr, 1,     false, true, true, false, false, false, false, "" ),
+            new types::StopTime( 2, 10, 21, 10, 21, vjs[1], sps[1], nullptr, 2,     false, true, true, false, false, false, false, "" ),
+            new types::StopTime( 3, 30, 31, 30, 31, vjs[1], sps[2], nullptr, 3,     false, true, true, false, false, false, false, "" ),
 
             // Stay-in on different stop points (sp4->sp5)
-            new types::StopTime( 4, 00, 01, 00, 01, vjs[2], sps[3], nullptr, 0,     false, true, true, false, false, false, "" ),
-            new types::StopTime( 5, 10, 11, 10, 11, vjs[2], sps[4], nullptr, 1,     false, true, true, false, false, false, "" ),
-            new types::StopTime( 6, 20, 21, 20, 21, vjs[3], sps[5], nullptr, 2,     false, true, true, false, false, false, "" ),
-            new types::StopTime( 7, 30, 31, 30, 31, vjs[3], sps[6], nullptr, 3,     false, true, true, false, false, false, "" ),
+            new types::StopTime( 4, 00, 01, 00, 01, vjs[2], sps[3], nullptr, 0,     false, true, true, false, false, false, false, "" ),
+            new types::StopTime( 5, 10, 11, 10, 11, vjs[2], sps[4], nullptr, 1,     false, true, true, false, false, false, false, "" ),
+            new types::StopTime( 6, 20, 21, 20, 21, vjs[3], sps[5], nullptr, 2,     false, true, true, false, false, false, false, "" ),
+            new types::StopTime( 7, 30, 31, 30, 31, vjs[3], sps[6], nullptr, 3,     false, true, true, false, false, false, false, "" ),
 
             // Classical VJ with no stay-in
-            new types::StopTime( 8, 30, 31, 30, 31, vjs[4], sps[7], nullptr, 0,     false, false,false,false, false, false, "" ),
+            new types::StopTime( 8, 30, 31, 30, 31, vjs[4], sps[7], nullptr, 0,     false, false,false,false, false, false, false, "" ),
         };
         // clang-format on
 

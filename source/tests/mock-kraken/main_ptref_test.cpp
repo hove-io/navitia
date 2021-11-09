@@ -79,6 +79,7 @@ struct data_set {
                 // add lines
                 b.sa("stop_area:stop1", 9, 9, false, true)("stop_area:stop1", 9, 9);
                 b.sa("stop_area:stop2", 10, 10, false, true)("stop_area:stop2", 10, 10);
+                b.sa("stop_area:stop3", 11, 11, false, true)("stop_area:stop3", 11, 11);
                 b.vj_with_network("network:A", "line:A", "", "", true, "vj1", "", "", "physical_mode:Car")(
                     "stop_area:stop1", 10 * 3600 + 15 * 60, 10 * 3600 + 15 * 60)("stop_area:stop2", 11 * 3600 + 10 * 60,
                                                                                  11 * 3600 + 10 * 60);
@@ -96,6 +97,13 @@ struct data_set {
                     .name("vj_b")("stop_area:stop2", 10 * 3600 + 15 * 60, 10 * 3600 + 15 * 60)(
                         "stop_area:stop1", 11 * 3600 + 10 * 60, 11 * 3600 + 10 * 60);
                 b.lines["line:Ça roule"]->commercial_mode = nullptr;  // remove commercial_mode to allow label testing
+
+                // add a line with a vehicle_journey having a middle stop with skipped_stop
+                b.vj_with_network("network:C", "line:C")
+                    .physical_mode("physical_mode:Car")("stop_area:stop1", 10 * 3600 + 15 * 60, 10 * 3600 + 15 * 60)(
+                        "stop_area:stop2", 11 * 3600 + 15 * 60, 11 * 3600 + 15 * 60,
+                        std::numeric_limits<uint16_t>::max(), false, false, 0, 0,
+                        true)("stop_area:stop2", 12 * 3600 + 15 * 60, 12 * 3600 + 15 * 60);
 
                 // add a mock shape
                 b.lines["line:A"]->shape = {{{1, 2}, {2, 2}, {4, 5}}, {{10, 20}, {20, 20}, {40, 50}}};

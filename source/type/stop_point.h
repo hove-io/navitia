@@ -49,6 +49,7 @@ struct StopPoint : public Header, Nameable, hasProperties, HasMessages {
     bool is_zonal = false;
     std::string platform_code;
     std::string label;
+    std::string address_id;
 
     StopArea* stop_area;
     std::vector<navitia::georef::Admin*> admin_list;

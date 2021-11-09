@@ -1,4 +1,4 @@
-﻿Objects
+Objects
 =======
 
 Standard Objects
@@ -6,7 +6,7 @@ Standard Objects
 
 ### Coord
 
-Lots of object are geographically localized :
+Lots of object are geographically localized:
 
 |Field|Type|Description|
 |-----|----|-----------|
@@ -24,7 +24,6 @@ Navitia
 
 [Context](#context) object provides the Timezone, useful to interpret datetimes of the response.
 
-
 For example:
 
 - <https://api.navitia.io/v1/journeys?from=bob&to=bobette&datetime=20140425T1337>
@@ -37,11 +36,10 @@ There are lots of ISO 8601 libraries in every kind of language that you should u
 
 The date are represented in ISO 8601 "YYYYMMDD" string.
 
-
 Public transport objects
 ------------------------
 
-### Network
+### <a name="network"></a>Network
 
 ``` json
 {
@@ -57,7 +55,7 @@ Networks are fed by agencies in GTFS format.
 |id|string|Identifier of the network|
 |name|string|Name of the network|
 
-### Line
+### <a name="line"></a>Line
 
 ``` json
 {
@@ -95,7 +93,7 @@ Networks are fed by agencies in GTFS format.
 |commercial_mode|[commercial_mode](#commercial-mode)|Commercial mode of the line|
 |physical_modes|array of [physical_mode](#physical-mode)|Physical modes of the line|
 
-### Route
+### <a name="route"></a>Route
 
 ``` json
 {
@@ -243,7 +241,7 @@ Here is the valid id list:
 -   physical_mode:Tramway
 
 You can use these ids in the forbidden_uris[] parameter from
-[journeys parameters](#journeys-parameters) for exemple.
+[journeys parameters](#journeys-parameters) for example.
 
 ### <a name="company"></a>Company
 
@@ -259,7 +257,7 @@ You can use these ids in the forbidden_uris[] parameter from
 |id|string|Identifier of the company|
 |name|string|Name of the company|
 
-### Place
+### <a name="place"></a>Place
 
 A container containing either a [admin](#admin), [poi](#poi), [address](#address), [stop_area](#stop-area),
 [stop_point](#stop-point)
@@ -288,12 +286,11 @@ A container containing either a [admin](#admin), [poi](#poi), [address](#address
 |address|[address](#address)|Embedded address|
 |stop_point|[stop_point](#stop-point)|Embedded Stop point|
 
-
-### Trip
+### <a name="trip"></a>Trip
 
 A trip corresponds to a scheduled vehicle circulation (and all its linked real-time and disrupted routes).
 
-An example : a train, routing a Paris to Lyon itinerary every day at 06h29, is the "Trip" named "6641".
+Example: a train, routing a Paris to Lyon itinerary every day at 06h29, is the "Trip" named "6641".
 
 ``` json
 {
@@ -309,8 +306,7 @@ An example : a train, routing a Paris to Lyon itinerary every day at 06h29, is t
 
 It encapsulates many instances of vehicle_journey.
 
-
-### Vehicle-journey
+### <a name="vehicle-journey"></a>Vehicle-journey
 
 A vehicle-journey describes a scheduled vehicle circulation, the days on which it circulates according to base-schedule,
 the days it circulates according to realtime information.
@@ -324,11 +320,10 @@ The collection is accessible with the url:
 
 Note: this collection is mostly used for debug and technical purposes.
 
-
 ### <a name="pt-object"></a>Pt_object
 
 A container containing either a [network](#network), [commercial_mode](#commercial-mode), [line](#line), [route](#route),
-[stop_area](#stop_point), [stop_area](#stop_point), [trip](#trip)
+[stop_point](#stop-point), [stop_area](#stop-area), [trip](#trip)
 
 ``` json
 {
@@ -401,15 +396,14 @@ Real time and disruption objects
 |application_periods |array of [period](#period)      |dates where the current disruption is active
 |messages            |array of [message](#message)    |texts to provide to the traveler
 |updated_at          |[iso-date-time](#iso-date-time) |date_time of last modifications
-|impacted_objects    |array of [impacted_object](#impacted_object) |The list of public transport objects which are affected by the disruption
+|impacted_objects    |array of [impacted_object](#impacted-object) |The list of public transport objects which are affected by the disruption
 |cause               |string                   |why is there such a disruption?
 |category            |string                   |The category of the disruption, such as "construction works" or "incident"
 |contributor         |string                   |The source from which Navitia received the disruption
 |uri                 |string                   |deprecated
 |disruption_uri      |string                   |deprecated
 
-
-### Impacted_object
+### <a name="impacted-object"></a>Impacted_object
 
 ``` json
 {
@@ -429,11 +423,11 @@ Real time and disruption objects
 
 |Field|Type|Description|
 |-----|----|-----------|
-|pt_object|[pt_object](#pt_object)|The impacted public transport object|
-|impacted_section|[impacted_section](#impacted_section)|Only for line section impact, the impacted section|
-|impacted_stops|array of [impacted_stop](#impacted_stop)|Only for [trip](#trip) delay, the list of delays, stop by stop
+|pt_object|[pt_object](#pt-object)|The impacted public transport object|
+|impacted_section|[impacted_section](#impacted-section)|Only for line section impact, the impacted section|
+|impacted_stops|array of [impacted_stop](#impacted-stop)|Only for [trip](#trip) delay, the list of delays, stop by stop
 
-### Impacted_section
+### <a name="impacted-section"></a>Impacted_section
 
 ``` json
 {
@@ -458,11 +452,11 @@ Real time and disruption objects
 
 |Field|Type|Description|
 |-----|----|-----------|
-|from|[pt_object](#pt_object)|The beginning of the section|
-|to|[pt_object](#pt_object)|The end of the section. This can be the same as `from` when only one point is impacted|
+|from|[pt_object](#pt-object)|The beginning of the section|
+|to|[pt_object](#pt-object)|The end of the section. This can be the same as `from` when only one point is impacted|
 |routes|[route](#route)| The list of impacted routes by the impacted_section|
 
-### Impacted_stop
+### <a name="impacted-stop"></a>Impacted_stop
 
 ```json
 {
@@ -523,7 +517,7 @@ Severity object can be used to make visual grouping.
 | Field         | Type         | Description                                    |
 |---------------|--------------|------------------------------------------------|
 | color         | string     | HTML color for classification                  |
-| priority      | integer    | given by the agency : 0 is strongest priority. it can be null |
+| priority      | integer    | given by the agency: 0 is strongest priority. it can be null |
 | name          | string     | name of severity                               |
 | effect        | Enum       | Normalized value of the effect on the public transport object. See the GTFS RT documentation at <https://gtfs.org/reference/realtime/v2/#enum-effect>. See also [realtime](#realtime) section. |
 
@@ -566,6 +560,7 @@ Street network objects
 ----------------------
 
 ### Poi Type
+
 ``` shell
 #request
 $ curl 'https://api.navitia.io/v1/coverage/sandbox/poi_types' -H 'Authorization: 3b036afe-0110-4202-b9ed-99718476c2e0'
@@ -591,6 +586,7 @@ A description of the number of stands/places and vehicles available at a bike sh
 |status          |enum|Information about the station itself:<ul><li>`unavailable`: Navitia is not able to obtain information about the station</li><li>`open`: The station is open</li><li>`closed`: The station is closed</li></ul>|
 
 ### <a name="poi"></a>Poi
+
 ``` shell
 #useless request, with huge response
 $ curl 'https://api.navitia.io/v1/coverage/sandbox/pois' -H 'Authorization: 3b036afe-0110-4202-b9ed-99718476c2e0'
@@ -625,7 +621,7 @@ Poi = Point Of Interest
 |house_number|int|House number of the address|
 |administrative_regions|array of [admin](#admin)|Administrative regions of the address in which is the stop area|
 
-### Administrative region
+### <a name="admin"></a>Administrative region
 
 |Field|Type|Description|
 |-----|----|-----------|
@@ -659,7 +655,6 @@ A list of objects that maps each line with its associated stop area equipments.
 |line|[line](#line)|The line to which equipments are associated |
 |stop_area_equipments|[stop area equipments](#stop-area-equipments)|A list of objects that describes equipments for each stop area |
 
-
 ### <a name="stop-area-equipments"></a>Stop area equipments
 
 ```json
@@ -678,7 +673,6 @@ A list of objects that maps equipments details for each stop area.
 |equipment_details|[Equipment details](#equipment-details)|The equipment details associated with the stop area|
 |stop_area|[Stop Area](#stop-area)|The stop area to which the `equipment_details` is associated |
 
-
 ### <a name="equipment-details"></a>Equipment details
 ```json
 "equipment_details": [
@@ -691,13 +685,13 @@ A list of objects that maps equipments details for each stop area.
     ...
 ]
 ```
+
 |Field|Type|Occurrence|Description|
 |-----|----|--------|-----------|
 current_availability|[Equipment availability](#equipment-availability)|always| Describes equipments information like: status, name, id etc...
 embedded_type|string|always|Define the equipment type: `escalator`, `elevator`
 id|string|always|The equipment's unique identifier
 name|string|optional|the equipment's name/description
-
 
 ### <a name="equipment-availability"></a>Equipment availability
 
@@ -755,7 +749,7 @@ It serves several goals:
 -   `current_datetime` provides the time the call was made.<br>It is precious to compute the waiting time until next passages (journeys, departures, etc.), as when no datetime is provided at call, Navitia uses that "current_datetime" as reference time.
 -   `car_direct_path` can also be provided in journeys to help compare ecological footprint of transport.
 
-### pt-date-time
+### <a name="pt-date-time"></a>pt-date-time
 
 pt-date-time (pt stands for "public transport") is a complex date time object to manage the difference between stop and leaving times at a stop.
 
@@ -773,7 +767,7 @@ pt-date-time (pt stands for "public transport") is a complex date time object to
 |id|String|id of the note|
 |value|String|The content of the note|
 
-### stop_date_time
+### <a name="stop-date-time"></a>stop_date_time
 
 |Field|Type|Description|
 |-----|----|-----------|
@@ -784,7 +778,6 @@ pt-date-time (pt stands for "public transport") is a complex date time object to
 
 Enum used to identify what kind of objects *[/places](#places)* and *[/places_nearby](#places-nearby-api)* services are managing.
 It's also used inside different responses (journeys, ...).
-
 
 | Value                                             | Description                                                   |
 |---------------------------------------------------|---------------------------------------------------------------|
@@ -799,7 +792,6 @@ It's also used inside different responses (journeys, ...).
 Enum used to identify what kind of objects *[/pt_objects](#pt-objects)* service is managing.
 It's also used inside different responses (disruptions, ...).
 
-
 | Value                                             | Description                                                   |
 |---------------------------------------------------|---------------------------------------------------------------|
 | [network](#network)                               | a public transport network                                    |
@@ -809,7 +801,6 @@ It's also used inside different responses (disruptions, ...).
 | [stop_area](#stop-area)                           | a nameable zone, where there are some stop points             |
 | [stop_point](#stop-point)                         | a location where vehicles can pickup or drop off passengers   |
 | [trip](#trip)                                     | a trip                                                        |
-
 
 ### equipment
 
@@ -834,14 +825,18 @@ Enum from
 |Field|Type|Description|
 |-----|----|-----------|
 |network|String|The name of the network|
-|direction|String|A direction|
-|commercial_mode|String|The commercial mode|
-|physical_mode|String|The physical mode|
-|label|String|The label of the object|
-|color|String|The hexadecimal code of the line|
+|physical_mode|String|The [physical_mode](#physical-mode). Physical mode are standardized|
+|commercial_mode|String|The [commercial_mode](#commercial-mode). Commercial mode are not standardized|
 |code|String|The code of the line|
-|description|String|A description|
+|color|String|Hexadecimal color code for the line logo|
+|text_color|String|Hexadecimal color code of the text for the line logo|
+|direction|String|Direction of the trip used in a "journey" section|
+|headsign|String|Text that appears on vehicle signage identifying the trip's destination for example|
+|label|String|The label of the object|
+|name|String|Full name of the line|
+|trip_short_name|String|Short name of the route|
 |equipments|Array of String|list of [equipment](#equipment) of the object|
+|description|String|An optionnal description|
 
 ### link
 
@@ -857,5 +852,3 @@ A date time with the format YYYYMMDDThhmmss, considered local to the coverage be
 #### depth
 
 This tiny parameter can expand Navitia power by making it more wordy. As it is valuable on every API, take a look at [depth](#depth)
-
-

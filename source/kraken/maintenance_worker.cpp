@@ -69,6 +69,7 @@ void MaintenanceWorker::load_data() {
     }
     auto duration = pt::microsec_clock::universal_time() - start;
     this->metrics.observe_data_loading(duration.total_seconds());
+    LOG4CPLUS_INFO(logger, "Loading database duration: " << duration);
 }
 
 void MaintenanceWorker::load_realtime() {
@@ -102,6 +103,9 @@ void MaintenanceWorker::load_realtime() {
     std::string stream;
     task.SerializeToString(&stream);
     auto message = AmqpClient::BasicMessage::Create(stream);
+    // Add expiration timeout (in ms) to the message (TTL)
+    message->Expiration(std::to_string(conf.kirin_timeout()));
+
     // we ask for realtime data
     channel->BasicPublish(conf.broker_exchange(), "task.load_realtime.INSTANCE", message);
 
@@ -174,6 +178,7 @@ void MaintenanceWorker::handle_rt_in_batch(const std::vector<AmqpClient::Envelop
     boost::shared_ptr<nt::Data> data{};
     pt::ptime begin = pt::microsec_clock::universal_time();
     bool autocomplete_rebuilding_activated = false;
+    auto rt_action = RTAction::chaos;
     for (auto& envelope : envelopes) {
         const auto routing_key = envelope->RoutingKey();
         LOG4CPLUS_DEBUG(logger, "realtime info received from " << routing_key);
@@ -190,16 +195,19 @@ void MaintenanceWorker::handle_rt_in_batch(const std::vector<AmqpClient::Envelop
                 data = data_manager.get_data_clone();
                 auto duration = pt::microsec_clock::universal_time() - copy_begin;
                 this->metrics.observe_data_cloning(duration.total_seconds());
-                LOG4CPLUS_INFO(logger, "data copied in " << duration);
+                LOG4CPLUS_INFO(logger, "data copied (cloned) in " << duration);
             }
             if (entity.is_deleted()) {
                 LOG4CPLUS_DEBUG(logger, "deletion of disruption " << entity.id());
+                rt_action = RTAction::deletion;
                 delete_disruption(entity.id(), *data->pt_data, *data->meta);
             } else if (entity.HasExtension(chaos::disruption)) {
                 LOG4CPLUS_DEBUG(logger, "add/update of disruption " << entity.id());
+                rt_action = RTAction::chaos;
                 make_and_apply_disruption(entity.GetExtension(chaos::disruption), *data->pt_data, *data->meta);
             } else if (entity.has_trip_update()) {
                 LOG4CPLUS_DEBUG(logger, "RT trip update" << entity.id());
+                rt_action = RTAction::kirin;
                 handle_realtime(entity.id(), navitia::from_posix_timestamp(feed_message.header().timestamp()),
                                 entity.trip_update(), *data, conf.is_realtime_add_enabled(),
                                 conf.is_realtime_add_trip_enabled());
@@ -224,9 +232,22 @@ void MaintenanceWorker::handle_rt_in_batch(const std::vector<AmqpClient::Envelop
         data->warmup(*data_manager.get_data());
         data->set_last_rt_data_loaded(pt::microsec_clock::universal_time());
         data_manager.set_data(std::move(data));
+
+        // Feed metrics
         auto duration = pt::microsec_clock::universal_time() - begin;
-        this->metrics.observe_handle_rt(duration.total_seconds());
-        LOG4CPLUS_INFO(logger, "data updated " << envelopes.size() << " disruption applied in " << duration);
+        if (rt_action == RTAction::deletion) {
+            this->metrics.observe_delete_disruption(duration.total_milliseconds() / 1000.0);
+            LOG4CPLUS_INFO(logger, "Data updated after deleting disruption, "
+                                       << envelopes.size() << " disruption(s) applied in " << duration);
+        } else if (rt_action == RTAction::chaos) {
+            this->metrics.observe_handle_disruption(duration.total_milliseconds() / 1000.0);
+            LOG4CPLUS_INFO(logger, "Data updated with disruptions from chaos, "
+                                       << envelopes.size() << " disruption(s) applied in " << duration);
+        } else if (rt_action == RTAction::kirin) {
+            this->metrics.observe_handle_rt(duration.total_milliseconds() / 1000.0);
+            LOG4CPLUS_INFO(logger, "Data updated with realtime from kirin, "
+                                       << envelopes.size() << " disruption(s) applied in " << duration);
+        }
     } else if (!envelopes.empty()) {
         // we didn't had to update Data because there is no change but we want to track that realtime data
         // is being processed as it should because "nothing has changed" isn't the same thing

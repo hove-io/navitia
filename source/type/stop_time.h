@@ -47,6 +47,7 @@ struct StopTime {
     static const uint8_t IS_FREQUENCY = 3;
     static const uint8_t WHEELCHAIR_BOARDING = 4;
     static const uint8_t DATE_TIME_ESTIMATED = 5;
+    static const uint8_t SKIPPED_STOP = 6;
 
     std::bitset<8> properties;
     uint16_t local_traffic_zone = std::numeric_limits<uint16_t>::max();
@@ -69,12 +70,14 @@ struct StopTime {
         : arrival_time{arr_time}, departure_time{dep_time}, stop_point{stop_point} {}
     bool pick_up_allowed() const { return properties[PICK_UP]; }
     bool drop_off_allowed() const { return properties[DROP_OFF]; }
+    bool skipped_stop() const { return properties[SKIPPED_STOP]; }
     bool odt() const { return properties[ODT]; }
     bool is_frequency() const { return properties[IS_FREQUENCY]; }
     bool date_time_estimated() const { return properties[DATE_TIME_ESTIMATED]; }
 
     inline void set_pick_up_allowed(bool value) { properties[PICK_UP] = value; }
     inline void set_drop_off_allowed(bool value) { properties[DROP_OFF] = value; }
+    inline void set_skipped_stop(bool value) { properties[SKIPPED_STOP] = value; }
     inline void set_odt(bool value) { properties[ODT] = value; }
     inline void set_is_frequency(bool value) { properties[IS_FREQUENCY] = value; }
     inline void set_date_time_estimated(bool value) { properties[DATE_TIME_ESTIMATED] = value; }

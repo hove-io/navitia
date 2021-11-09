@@ -64,6 +64,7 @@ from datetime import datetime, timedelta
 from navitiacommon import default_values
 from jormungandr.equipments import EquipmentProviderManager
 from jormungandr.external_services import ExternalServiceManager
+from jormungandr.utils import can_connect_to_database
 
 type_to_pttype = {
     "stop_area": request_pb2.PlaceCodeRequest.StopArea,  # type: ignore
@@ -118,6 +119,7 @@ class Instance(object):
         streetnetwork_backend_manager,
         external_service_provider_configurations,
         pt_zmq_socket=None,  # type: Text
+        instance_db=None,
     ):
         self.geom = None
         self.geojson = None
@@ -197,31 +199,40 @@ class Instance(object):
                 self, external_service_provider_configurations, self.get_external_service_providers_from_db
             )
         self.external_service_provider_manager.init_external_services()
+        self.instance_db = instance_db
 
     def get_providers_from_db(self):
         """
         :return: a callable query of equipment providers associated to the current instance in db
         """
-        return self._get_models().equipment_details_providers
+        models = self._get_models()
+        return models.equipment_details_providers if models else None
 
     def get_ridesharing_services_from_db(self):
         """
         :return: a callable query of ridesharing services associated to the current instance in db
         """
-        return self._get_models().ridesharing_services
+        models = self._get_models()
+        return models.ridesharing_services if models else None
 
     def get_external_service_providers_from_db(self):
         """
         :return: a callable query of external services associated to the current instance in db
         """
-        result = self._get_models().external_services
-        return [res for res in result if res.navitia_service in ['free_floatings', 'vehicle_occupancies']]
+        models = self._get_models()
+        result = models.external_services if models else None
+        return [
+            res
+            for res in result
+            if res.navitia_service in ['free_floatings', 'vehicle_occupancies', "vehicle_positions"]
+        ]
 
     def get_realtime_proxies_from_db(self):
         """
         :return: a callable query of external services associated to the current instance in db
         """
-        result = self._get_models().external_services
+        models = self._get_models()
+        result = models.external_services if models else None
         return [res for res in result if res.navitia_service == 'realtime_proxies']
 
     @property
@@ -253,7 +264,10 @@ class Instance(object):
     def _get_models(self):
         if app.config['DISABLE_DATABASE']:
             return None
-        return models.Instance.get_by_name(self.name)
+        if not can_connect_to_database():
+            return self.instance_db
+        self.instance_db = models.Instance.get_by_name(self.name)
+        return self.instance_db
 
     def scenario(self, override_scenario=None):
         """

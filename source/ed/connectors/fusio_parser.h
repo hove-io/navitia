@@ -66,7 +66,7 @@ struct AgencyFusioHandler : public AgencyGtfsHandler {
 
 struct StopsFusioHandler : public StopsGtfsHandler {
     StopsFusioHandler(GtfsData& gdata, CsvReader& reader) : StopsGtfsHandler(gdata, reader) {}
-    int property_id_c, comment_id_c, visible_c, geometry_id_c;
+    int property_id_c, comment_id_c, visible_c, geometry_id_c, address_id_c;
 
     void init(Data& data);
     stop_point_and_area handle_line(Data& data, const csv_row& line, bool is_first_line);
@@ -348,6 +348,15 @@ struct ObjectCodesFusioHandler : public GenericHandler {
         return {"object_id", "object_type", "object_code", "object_system"};
     }
 };
+
+struct AddressesFusioHandler : public GenericHandler {
+    AddressesFusioHandler(GtfsData& gdata, CsvReader& reader) : GenericHandler(gdata, reader) {}
+    int address_id_c, street_name_c, house_number_c;
+    void init(Data&);
+    void handle_line(Data& data, const csv_row& line, bool is_first_line);
+    const std::vector<std::string> required_headers() const { return {"address_id", "street_name"}; }
+};
+
 /**
  * custom parser
  * simply define the list of elemental parsers to use

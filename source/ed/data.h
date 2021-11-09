@@ -43,6 +43,7 @@ www.navitia.io
 #include "type/meta_data.h"
 #include "fare/fare.h"
 #include "type/datetime.h"
+#include "type/address_from_ntfs.h"
 
 namespace nt = navitia::type;
 /** Ce namespace contient toutes les structures de données \b temporaires, à remplir par le connecteur */
@@ -149,6 +150,8 @@ public:
     std::map<std::string, types::MetaVehicleJourney> meta_vj_map;  // meta vj by original vj name
 
     std::vector<types::AssociatedCalendar*> associated_calendars;
+
+    std::vector<navitia::type::Address*> addresses_from_ntfs;
 
     navitia::type::MetaData meta;
 

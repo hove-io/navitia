@@ -33,6 +33,7 @@ from jormungandr.street_network.kraken import Kraken
 from jormungandr.equipments import EquipmentProviderManager
 from jormungandr.street_network.streetnetwork_backend_manager import StreetNetworkBackendManager
 from jormungandr.tests.utils_test import compare_list_of_dicts
+from jormungandr import app
 
 from collections import OrderedDict
 

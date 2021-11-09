@@ -143,6 +143,7 @@ private:
 
     void get_matching_routes(const pbnavitia::MatchingRoute&);
     void equipment_reports(const pbnavitia::EquipmentReportsRequest& equipment_reports);
+    void vehicle_positions(const pbnavitia::VehiclePositionsRequest& vehcile_positions);
 };
 
 type::EntryPoint make_sn_entry_point(const std::string& place,

@@ -69,6 +69,23 @@ Indexes get_intersection(const Indexes& idxs1, const Indexes& idxs2) {
 }
 
 Indexes get_corresponding(Indexes indexes, Type_e from, const Type_e to, const Data& data) {
+    // Exceptional case: if from = PhysicalMode and to = Impact
+    // 1. Get all vehicle_journeys impacted
+    // 2. Keep only vehicle_journeys with physical_mode in the parameter
+    if (from == Type_e::PhysicalMode && to == Type_e::Impact) {
+        auto vj_idxs = get_indexes_by_impacts(Type_e::VehicleJourney, data, false);
+        const auto vjs = data.get_data<type::VehicleJourney>(vj_idxs);
+        Indexes impact_indexes, temp;
+        for (type::VehicleJourney* vj : vjs) {
+            if (indexes.find(vj->physical_mode->idx) != indexes.cend()) {
+                // Add Impact on vehicle_journeys having PhysicalMode
+                temp = vj->get(Type_e::Impact, *(data.pt_data.get()));
+                impact_indexes.insert(temp.begin(), temp.end());
+            }
+        }
+        return impact_indexes;
+    }
+
     const std::map<Type_e, Type_e> path = find_path(to);
     std::set<idx_t> set_idx{indexes.begin(), indexes.end()};
     while (path.at(from) != from) {
@@ -113,7 +130,7 @@ struct VariantVisitor : boost::static_visitor<pair_indexes> {
     }
 };
 
-Indexes get_indexes_by_impacts(const type::Type_e& type_e, const Data& d) {
+Indexes get_indexes_by_impacts(const type::Type_e& type_e, const Data& d, bool only_no_service) {
     Indexes result;
     VariantVisitor visit(d);
     const auto& impacts = d.pt_data->disruption_holder.get_weak_impacts();
@@ -122,7 +139,7 @@ Indexes get_indexes_by_impacts(const type::Type_e& type_e, const Data& d) {
         if (!imp) {
             continue;
         }
-        if (imp->severity->effect != type::disruption::Effect::NO_SERVICE) {
+        if (only_no_service && imp->severity->effect != type::disruption::Effect::NO_SERVICE) {
             continue;
         }
         for (const auto& entitie : imp->informed_entities()) {
@@ -151,6 +168,34 @@ Indexes get_impacts_by_tags(const std::vector<std::string>& tag_name, const Data
     }
 
     return result;
+}
+static bool vj_active_at(const type::VehicleJourney* vj,
+                         const bt::ptime current_datetime,
+                         const type::RTLevel rt_level,
+                         const type::Data& data) {
+    if (vj->stop_time_list.empty()) {
+        return false;
+    }
+
+    const auto* vp = vj->validity_patterns[rt_level];
+    if (vp == nullptr) {
+        return false;
+    }
+
+    if (data.meta->production_date.contains(current_datetime.date()) && vp->check(current_datetime.date())) {
+        bt::time_period period = vj->execution_period(current_datetime.date());
+        if (period.contains(current_datetime)) {
+            return true;
+        }
+    }
+    const auto yesterday_datetime = current_datetime - boost::gregorian::days(1);
+    if (data.meta->production_date.contains(yesterday_datetime.date()) && vp->check(yesterday_datetime.date())) {
+        bt::time_period period = vj->execution_period(yesterday_datetime.date());
+        if (period.contains(current_datetime)) {
+            return true;
+        }
+    }
+    return false;
 }
 
 static bool keep_vj(const type::VehicleJourney* vj, const bt::time_period& period, const type::RTLevel rt_level) {
@@ -212,7 +257,20 @@ static Indexes filter_impact_on_period(const Indexes& indexes, const bt::time_pe
     }
     return res;
 }
-
+type::Indexes filter_vj_active_at(const Indexes& indexes,
+                                  const bt::ptime current_datetime,
+                                  const type::RTLevel rt_level,
+                                  const type::Data& data) {
+    Indexes res;
+    for (const idx_t idx : indexes) {
+        const auto* vj = data.pt_data->vehicle_journeys[idx];
+        if (!vj_active_at(vj, current_datetime, rt_level, data)) {
+            continue;
+        }
+        res.insert(idx);
+    }
+    return res;
+}
 Indexes filter_on_period(const Indexes& indexes,
                          const navitia::type::Type_e requested_type,
                          const boost::optional<bt::ptime>& since,

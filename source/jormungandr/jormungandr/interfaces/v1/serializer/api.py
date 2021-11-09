@@ -378,6 +378,10 @@ class EquipmentReportsSerializer(PTReferentialSerializer):
     warnings = base.BetaEndpointsSerializer()
 
 
+class VehiclePositionsSerializer(PTReferentialSerializer):
+    vehicle_positions = report.VehiclePositionsSerializer(many=True, display_none=True)
+
+
 class TrafficReportsSerializer(PTReferentialSerializer):
     traffic_reports = report.TrafficReportSerializer(many=True, display_none=True)
 
@@ -444,6 +448,7 @@ class TechnicalStatusSerializer(NullableDictSerializer):
     context = MethodField(schema_type=ContextSerializer(), display_none=False)
     warnings = base.BetaEndpointsSerializer()
     redis = status.RedisStatusSerializer(display_none=False)
+    configuration_database = Field(schema_type=str, display_none=False)
 
     def get_context(self, obj):
         return ContextSerializer(obj, is_utc=True, display_none=False).data

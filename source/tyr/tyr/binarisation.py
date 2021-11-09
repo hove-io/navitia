@@ -71,17 +71,42 @@ def unzip_if_needed(filename):
     return working_directory
 
 
-def move_to_backupdirectory(filename, working_directory):
+def manage_file_with_unwanted_char(file_basename, sub_string):
+    """
+    Returns a treated base file name if unwanted characters like '(', ')' are present
+    :param file_basename: filename without full path
+    :param sub_string: formatted string from datetime
+    :return: treated base file name
+    """
+    unwanted_chars = ['(', ')', '{', '}']
+    char_index = -1
+    for char in unwanted_chars:
+        char_index = file_basename.find(char)
+        if char_index > -1:
+            break
+    if char_index > -1:
+        file_ext = os.path.splitext(file_basename)[1]
+        file_basename = '{}_{}{}'.format(file_basename[:char_index], sub_string, file_ext)
+    return file_basename
+
+
+def move_to_backupdirectory(filename, working_directory, manage_sp_char=False):
     """ If there is no backup directory it creates one in
         {instance_directory}/backup/{name}
         The name of the backup directory is the time when it's created
         formatted as %Y%m%d-%H%M%S
     """
     now = datetime.datetime.now()
-    working_directory += "/" + now.strftime("%Y%m%d-%H%M%S%f")
+    sub_string = now.strftime("%Y%m%d-%H%M%S%f")
+    working_directory += "/" + sub_string
     # this works even if the intermediate 'backup' dir does not exists
     os.makedirs(working_directory, 0o755)
-    destination = working_directory + '/' + os.path.basename(filename)
+    file_basename = os.path.basename(filename)
+    # Rename destination filename as base_file_name + date_time if special characters are present
+    if manage_sp_char:
+        file_basename = manage_file_with_unwanted_char(file_basename, sub_string)
+
+    destination = working_directory + '/' + file_basename
     shutil.move(filename, destination)
     return destination
 

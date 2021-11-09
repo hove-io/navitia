@@ -46,9 +46,10 @@ type::Indexes make_query(const type::Type_e requested_type,
                          const boost::optional<boost::posix_time::ptime>& since,
                          const boost::optional<boost::posix_time::ptime>& until,
                          const type::RTLevel rt_level,
-                         const type::Data& data) {
-    const auto indexes =
-        make_query_ng(requested_type, request, forbidden_uris, odt_level, since, until, rt_level, data);
+                         const type::Data& data,
+                         const boost::optional<boost::posix_time::ptime>& current_datetime) {
+    const auto indexes = make_query_ng(requested_type, request, forbidden_uris, odt_level, since, until, rt_level, data,
+                                       current_datetime);
     if (indexes.empty()) {
         throw ptref_error("Filters: Unable to find object");
     }
@@ -61,15 +62,18 @@ type::Indexes make_query(const type::Type_e requested_type,
                          const type::OdtLevel_e odt_level,
                          const boost::optional<boost::posix_time::ptime>& since,
                          const boost::optional<boost::posix_time::ptime>& until,
-                         const type::Data& data) {
-    return make_query(requested_type, request, forbidden_uris, odt_level, since, until, type::RTLevel::Base, data);
+                         const type::Data& data,
+                         const boost::optional<boost::posix_time::ptime>& current_datetime) {
+    return make_query(requested_type, request, forbidden_uris, odt_level, since, until, type::RTLevel::Base, data,
+                      current_datetime);
 }
 
 type::Indexes make_query(const type::Type_e requested_type,
                          const std::string& request,
                          const std::vector<std::string>& forbidden_uris,
                          const type::Data& data) {
-    return make_query(requested_type, request, forbidden_uris, type::OdtLevel_e::all, boost::none, boost::none, data);
+    return make_query(requested_type, request, forbidden_uris, type::OdtLevel_e::all, boost::none, boost::none, data,
+                      boost::none);
 }
 
 type::Indexes make_query(const type::Type_e requested_type, const std::string& request, const type::Data& data) {

@@ -678,6 +678,8 @@ BOOST_AUTO_TEST_CASE(terminus_schedules_on_terminus_multiple_route) {
         b.vj("bob")("A", "10:00"_t)("B", "11:00"_t)("C", "12:00"_t);
         b.vj("bobette")("C", "10:00"_t)("B", "11:00"_t)("A", "12:00"_t);
     });
+    auto& vj = b.data->pt_data->vehicle_journeys_map.at("vehicle_journey:bob:0");
+    b.data->pt_data->codes.add(vj, "source", "bob");
     auto* data_ptr = b.data.get();
     navitia::PbCreator pb_creator(data_ptr, bt::second_clock::universal_time(), null_time_period);
     terminus_schedules(pb_creator, "stop_point.uri=A", {}, {}, d("20160802T090000"), 86400, 0, 10, 0, nt::RTLevel::Base,
@@ -686,6 +688,10 @@ BOOST_AUTO_TEST_CASE(terminus_schedules_on_terminus_multiple_route) {
     pbnavitia::Response resp = pb_creator.get_response();
     BOOST_REQUIRE_EQUAL(resp.terminus_schedules_size(), 1);
     BOOST_CHECK_EQUAL(resp.terminus_schedules(0).route().name(), "bob");
+    BOOST_CHECK_EQUAL(resp.terminus_schedules(0).date_times().size(), 1);
+    BOOST_CHECK_EQUAL(resp.terminus_schedules(0).date_times(0).properties().vehicle_journey_codes().size(), 1);
+    BOOST_CHECK_EQUAL(resp.terminus_schedules(0).date_times(0).properties().vehicle_journey_codes(0).type(), "source");
+    BOOST_CHECK_EQUAL(resp.terminus_schedules(0).date_times(0).properties().vehicle_journey_codes(0).value(), "bob");
 }
 
 // Test that departure_board manage to output departures even if there is no service for multiple days
@@ -693,6 +699,8 @@ BOOST_AUTO_TEST_CASE(departure_board_multiple_days) {
     ed::builder b("20180101", [](ed::builder& b) {
         b.vj("A", "10000001")("stop1", "10:00:00"_t, "10:00:00"_t)("stop2", "10:30:00"_t, "10:30:00"_t);
     });
+    auto& vj = b.data->pt_data->vehicle_journeys_map.at("vehicle_journey:A:0");
+    b.data->pt_data->codes.add(vj, "source", "bob");
     auto* data_ptr = b.data.get();
 
     // We look for a departure on the first and try to reach the departure next sunday too
@@ -704,6 +712,9 @@ BOOST_AUTO_TEST_CASE(departure_board_multiple_days) {
         pbnavitia::Response resp = pb_creator.get_response();
         BOOST_REQUIRE_EQUAL(resp.stop_schedules_size(), 1);
         BOOST_REQUIRE_EQUAL(resp.stop_schedules(0).date_times_size(), 1);
+        BOOST_CHECK_EQUAL(resp.stop_schedules(0).date_times(0).properties().vehicle_journey_codes().size(), 1);
+        BOOST_CHECK_EQUAL(resp.stop_schedules(0).date_times(0).properties().vehicle_journey_codes(0).type(), "source");
+        BOOST_CHECK_EQUAL(resp.stop_schedules(0).date_times(0).properties().vehicle_journey_codes(0).value(), "bob");
     }
     {
         navitia::PbCreator pb_creator(data_ptr, bt::second_clock::universal_time(), null_time_period);

@@ -29,6 +29,7 @@
 
 from __future__ import absolute_import, print_function, unicode_literals, division
 from jormungandr import app, cache, memory_cache
+from jormungandr.utils import can_connect_to_database
 from navitiacommon import models
 from navitiacommon.default_traveler_profile_params import (
     default_traveler_profile_params,
@@ -122,7 +123,7 @@ class TravelerProfile(object):
         travelers_profile factory method,
         Return a traveler_profile constructed with default params or params retrieved from db
         """
-        if app.config[str('DISABLE_DATABASE')]:
+        if app.config[str('DISABLE_DATABASE')] or not can_connect_to_database():
             return default_traveler_profiles[traveler_type]
 
         # retrieve TravelerProfile from db with coverage and traveler_type

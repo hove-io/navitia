@@ -68,6 +68,7 @@ from navitiacommon.parser_args_type import (
     UnsignedInteger,
     PositiveInteger,
     DepthArgument,
+    PositiveFloat,
 )
 from jormungandr.interfaces.common import add_poi_infos_types, handle_poi_infos
 from jormungandr.fallback_modes import FallbackModes
@@ -694,6 +695,35 @@ class Journeys(JourneyCommon):
             type=BooleanType(),
             hidden=True,
             help="Compute pathways using the street_network engine for transfers between surface physical modes",
+        )
+
+        parser_get.add_argument(
+            "_asgard_max_walking_duration_coeff",
+            type=PositiveFloat(),
+            default=1,
+            hidden=True,
+            help="used to adjust the search range in Asgard when computing matrix",
+        )
+        parser_get.add_argument(
+            "_asgard_max_bike_duration_coeff",
+            type=PositiveFloat(),
+            default=1,
+            hidden=True,
+            help="used to adjust the search range in Asgard when computing matrix",
+        )
+        parser_get.add_argument(
+            "_asgard_max_bss_duration_coeff",
+            type=PositiveFloat(),
+            default=1,
+            hidden=True,
+            help="used to adjust the search range in Asgard when computing matrix",
+        )
+        parser_get.add_argument(
+            "_asgard_max_car_duration_coeff",
+            type=PositiveFloat(),
+            default=1,
+            hidden=True,
+            help="used to adjust the search range in Asgard when computing matrix",
         )
 
     @add_tad_links()

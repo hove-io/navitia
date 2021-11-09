@@ -32,6 +32,7 @@ from __future__ import absolute_import, print_function, unicode_literals, divisi
 from importlib import import_module
 from itertools import chain
 from navitiacommon import type_pb2
+from jormungandr.utils import can_connect_to_database
 
 import logging
 import datetime
@@ -103,6 +104,12 @@ class EquipmentProviderManager(object):
             self._last_update + datetime.timedelta(seconds=self._update_interval) > datetime.datetime.utcnow()
             or not self._providers_getter
         ):
+            return
+
+        # If database is not accessible we update the value of self._last_update and exit
+        if not can_connect_to_database():
+            self.logger.debug('Database is not accessible')
+            self._last_update = datetime.datetime.utcnow()
             return
 
         self.logger.debug('Updating equipment providers from db')

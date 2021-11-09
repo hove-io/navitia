@@ -35,6 +35,7 @@ from jormungandr.autocomplete.geocodejson import GeocodeJson
 from jormungandr.interfaces.v1.serializer.geocode_json import GeocodePlacesSerializer
 from jormungandr.interfaces.v1.decorators import get_serializer
 import requests_mock
+from jormungandr import app
 
 
 def bragi_house_jaures_feature():
@@ -84,6 +85,13 @@ def get_response(bragi_response):
     return bragi_response
 
 
+def context_response_check(response):
+    assert "context" in response
+    context = response["context"]
+    assert "timezone" in context
+    assert "current_datetime" in context
+
+
 def bragi_house_jaures_response_check(feature_response):
     assert feature_response.get('embedded_type') == "address"
     assert feature_response.get('id') == "3.282103;49.847586"
@@ -102,11 +110,13 @@ def bragi_house_jaures_response_check(feature_response):
 
 def bragi_house_reading_test():
     bragi_response = {"features": [bragi_house_jaures_feature()]}
-    response = get_response(bragi_response)
-    assert len(response['warnings']) == 1
-    assert response['warnings'][0]['id'] == 'beta_endpoint'
-    navitia_response = response.get('places', {})
-    bragi_house_jaures_response_check(navitia_response[0])
+    with app.test_request_context():
+        response = get_response(bragi_response)
+        context_response_check(response)
+        assert len(response['warnings']) == 1
+        assert response['warnings'][0]['id'] == 'beta_endpoint'
+        navitia_response = response.get('places', {})
+        bragi_house_jaures_response_check(navitia_response[0])
 
 
 def bragi_street_feature():
@@ -169,16 +179,20 @@ def bragi_street_response_check(feature_response):
 
 def bragi_street_reading_test():
     bragi_response = {"features": [bragi_street_feature()]}
-
-    navitia_response = get_response(bragi_response).get('places', {})
-    bragi_street_response_check(navitia_response[0])
+    with app.test_request_context():
+        response = get_response(bragi_response)
+        context_response_check(response)
+        navitia_response = response.get('places', {})
+        bragi_street_response_check(navitia_response[0])
 
 
 def bragi_street_reading_without_autocomplete_attribute_test():
     bragi_response = {"features": [bragi_street_feature()]}
-
-    navitia_response = get_response(bragi_response).get('places', {})
-    bragi_street_response_check(navitia_response[0])
+    with app.test_request_context():
+        response = get_response(bragi_response)
+        context_response_check(response)
+        navitia_response = response.get('places', {})
+        bragi_street_response_check(navitia_response[0])
 
 
 def bragi_admin_feature():
@@ -244,9 +258,11 @@ def bragi_admin_response_check(feature_response):
 
 def bragi_admin_reading_test():
     bragi_response = {"features": [bragi_admin_feature()]}
-
-    navitia_response = get_response(bragi_response).get('places', {})
-    bragi_admin_response_check(navitia_response[0])
+    with app.test_request_context():
+        response = get_response(bragi_response)
+        context_response_check(response)
+        navitia_response = response.get('places', {})
+        bragi_admin_response_check(navitia_response[0])
 
 
 def bragi_house_lefebvre_feature():
@@ -317,13 +333,15 @@ def bragi_good_geocodejson_response_test():
             bragi_admin_feature(),
         ]
     }
-
-    navitia_response = get_response(bragi_response).get('places', {})
-    assert len(navitia_response) == 4
-    bragi_house_jaures_response_check(navitia_response[0])
-    bragi_house_lefebvre_response_check(navitia_response[1])
-    bragi_street_response_check(navitia_response[2])
-    bragi_admin_response_check(navitia_response[3])
+    with app.test_request_context():
+        response = get_response(bragi_response)
+        context_response_check(response)
+        navitia_response = response.get('places', {})
+        assert len(navitia_response) == 4
+        bragi_house_jaures_response_check(navitia_response[0])
+        bragi_house_lefebvre_response_check(navitia_response[1])
+        bragi_street_response_check(navitia_response[2])
+        bragi_admin_response_check(navitia_response[3])
 
 
 def bragi_good_geocodejson_response_without_autocomplete_attribute_test():
@@ -335,13 +353,15 @@ def bragi_good_geocodejson_response_without_autocomplete_attribute_test():
             bragi_admin_feature(),
         ]
     }
-
-    navitia_response = get_response(bragi_response).get('places', {})
-    assert len(navitia_response) == 4
-    bragi_house_jaures_response_check(navitia_response[0])
-    bragi_house_lefebvre_response_check(navitia_response[1])
-    bragi_street_response_check(navitia_response[2])
-    bragi_admin_response_check(navitia_response[3])
+    with app.test_request_context():
+        response = get_response(bragi_response)
+        context_response_check(response)
+        navitia_response = response.get('places', {})
+        assert len(navitia_response) == 4
+        bragi_house_jaures_response_check(navitia_response[0])
+        bragi_house_lefebvre_response_check(navitia_response[1])
+        bragi_street_response_check(navitia_response[2])
+        bragi_admin_response_check(navitia_response[3])
 
 
 def bragi_geocodejson_spec_feature():
@@ -372,16 +392,19 @@ def bragi_geocodejson_spec_feature():
 
 def bragi_geocodejson_compatibility_test():
     bragi_response = {"features": [bragi_geocodejson_spec_feature()]}
-    navitia_response = get_response(bragi_response).get('places', {})[0]
-    assert navitia_response.get('embedded_type') == "address"
-    assert navitia_response.get('id') == '3.282103;49.847586'
-    assert navitia_response.get('name') == '20 Rue Jean Jaures (Saint-Quentin)'
-    address = navitia_response.get('address', {})
-    assert len(address.get('administrative_regions')) == 5
-    region_list = {region['level']: region['name'] for region in address.get('administrative_regions')}
-    assert region_list.get(2) == 'France'
-    assert region_list.get(4) == 'Nord-Pas-de-Calais-Picardie'
-    assert region_list.get(7) == 'Saint-Quentin'
+    with app.test_request_context():
+        response = get_response(bragi_response)
+        context_response_check(response)
+        navitia_response = response.get('places', {})[0]
+        assert navitia_response.get('embedded_type') == "address"
+        assert navitia_response.get('id') == '3.282103;49.847586'
+        assert navitia_response.get('name') == '20 Rue Jean Jaures (Saint-Quentin)'
+        address = navitia_response.get('address', {})
+        assert len(address.get('administrative_regions')) == 5
+        region_list = {region['level']: region['name'] for region in address.get('administrative_regions')}
+        assert region_list.get(2) == 'France'
+        assert region_list.get(4) == 'Nord-Pas-de-Calais-Picardie'
+        assert region_list.get(7) == 'Saint-Quentin'
 
 
 def bragi_poi_feature():
@@ -418,29 +441,32 @@ def bragi_poi_feature():
 
 def bragi_poi_reading_test():
     bragi_response = {"features": [bragi_poi_feature()]}
-    navitia_response = get_response(bragi_response).get('places', {})[0]
-    assert navitia_response.get('embedded_type') == "poi"
-    assert navitia_response.get('id') == 'poi:osm:3224270910'
-    assert navitia_response.get('name') == 'Mairie de Pigna (Pigna)'
-    assert navitia_response.get('quality') == 0
-    poi = navitia_response.get('poi', {})
-    assert poi.get('label') == 'Mairie de Pigna (Pigna)'
-    assert poi.get('name') == 'Mairie de Pigna'
-    assert poi.get('id') == 'poi:osm:3224270910'
-    assert poi.get('poi_type').get('id') == 'poi_type:amenity:townhall'
-    assert poi.get('poi_type').get('name') == 'Mairie'
-    assert poi.get('coord').get('lat') == str(42.599235500000009)
-    assert poi.get('coord').get('lon') == "8.9028068"
-    assert len(poi.get('administrative_regions')) == 1
-    administrative_region = poi.get('administrative_regions')[0]
-    assert administrative_region.get('insee') == '2B231'
-    assert administrative_region.get('name') == 'Pigna'
-    assert administrative_region.get('label') == 'Pigna (20220)'
-    assert administrative_region.get('level') == 8
-    assert administrative_region.get('id') == 'admin:fr:2B231'
-    assert administrative_region.get('coord').get('lat') == "42.5996043"
-    assert administrative_region.get('coord').get('lon') == "8.9027334"
-    assert administrative_region.get('zip_code') == "20220-20222"
+    with app.test_request_context():
+        response = get_response(bragi_response)
+        context_response_check(response)
+        navitia_response = response.get('places', {})[0]
+        assert navitia_response.get('embedded_type') == "poi"
+        assert navitia_response.get('id') == 'poi:osm:3224270910'
+        assert navitia_response.get('name') == 'Mairie de Pigna (Pigna)'
+        assert navitia_response.get('quality') == 0
+        poi = navitia_response.get('poi', {})
+        assert poi.get('label') == 'Mairie de Pigna (Pigna)'
+        assert poi.get('name') == 'Mairie de Pigna'
+        assert poi.get('id') == 'poi:osm:3224270910'
+        assert poi.get('poi_type').get('id') == 'poi_type:amenity:townhall'
+        assert poi.get('poi_type').get('name') == 'Mairie'
+        assert poi.get('coord').get('lat') == str(42.599235500000009)
+        assert poi.get('coord').get('lon') == "8.9028068"
+        assert len(poi.get('administrative_regions')) == 1
+        administrative_region = poi.get('administrative_regions')[0]
+        assert administrative_region.get('insee') == '2B231'
+        assert administrative_region.get('name') == 'Pigna'
+        assert administrative_region.get('label') == 'Pigna (20220)'
+        assert administrative_region.get('level') == 8
+        assert administrative_region.get('id') == 'admin:fr:2B231'
+        assert administrative_region.get('coord').get('lat') == "42.5996043"
+        assert administrative_region.get('coord').get('lon') == "8.9027334"
+        assert administrative_region.get('zip_code') == "20220-20222"
 
 
 def bragi_stop_area_feature():
@@ -464,19 +490,22 @@ def bragi_stop_area_feature():
 
 def bragi_stop_area_reading_test():
     bragi_response = {"features": [bragi_stop_area_feature()]}
-    navitia_response = get_response(bragi_response).get('places', {})[0]
-    assert navitia_response.get('embedded_type') == "stop_area"
-    assert navitia_response.get('id') == 'stop_area:OIF:SA:59332'
-    assert navitia_response.get('name') == 'BOTZARIS (Paris)'
-    assert navitia_response.get('quality') == 0
-    sa = navitia_response.get('stop_area', {})
-    assert sa.get('label') == 'BOTZARIS (Paris)'
-    assert sa.get('name') == 'BOTZARIS'
-    assert sa.get('id') == 'stop_area:OIF:SA:59332'
-    assert sa.get('timezone') == 'Europe/Paris'
-    assert sa.get('coord').get('lat') == "48.87958"
-    assert sa.get('coord').get('lon') == "2.389462"
-    assert 'administrative_regions' not in sa
+    with app.test_request_context():
+        response = get_response(bragi_response)
+        context_response_check(response)
+        navitia_response = response.get('places', {})[0]
+        assert navitia_response.get('embedded_type') == "stop_area"
+        assert navitia_response.get('id') == 'stop_area:OIF:SA:59332'
+        assert navitia_response.get('name') == 'BOTZARIS (Paris)'
+        assert navitia_response.get('quality') == 0
+        sa = navitia_response.get('stop_area', {})
+        assert sa.get('label') == 'BOTZARIS (Paris)'
+        assert sa.get('name') == 'BOTZARIS'
+        assert sa.get('id') == 'stop_area:OIF:SA:59332'
+        assert sa.get('timezone') == 'Europe/Paris'
+        assert sa.get('coord').get('lat') == "48.87958"
+        assert sa.get('coord').get('lon') == "2.389462"
+        assert 'administrative_regions' not in sa
 
 
 def geojson():
@@ -501,9 +530,8 @@ def bragi_call_test():
             bragi_admin_feature(),
         ]
     }
-    from jormungandr import app
 
-    with app.app_context():
+    with app.test_request_context():
         # we mock the http call to return the hard coded mock_response
         with requests_mock.Mocker() as m:
             m.get(
@@ -513,6 +541,7 @@ def bragi_call_test():
             raw_response = bragi.get({'q': 'rue bobette', 'count': 10, 'request_id': '123'}, instances=[])
             places = raw_response.get('places')
             assert len(places) == 4
+            context_response_check(raw_response)
             bragi_house_jaures_response_check(places[0])
             bragi_house_lefebvre_response_check(places[1])
             bragi_street_response_check(places[2])
@@ -527,6 +556,7 @@ def bragi_call_test():
             raw_response = bragi.get(
                 {'q': 'rue bobette', 'count': 10, "request_id": "123", 'shape': geojson()}, instances=[]
             )
+            context_response_check(raw_response)
             places = raw_response.get('places')
             assert len(places) == 4
             bragi_house_jaures_response_check(places[0])
@@ -543,11 +573,11 @@ def bragi_make_params_with_instance_test():
     instance = mock.MagicMock()
     instance.name = 'bib'
     instance.poi_dataset = None
-    bragi = GeocodeJson(host='http://bob.com/autocomplete')
+    bragi = GeocodeJson(host='http://bob.com/autocomplete', timeout=1)
 
     request = {"q": "aa", "count": 20, "request_id": "1234"}
 
-    params = bragi.make_params(request=request, instances=[instance], timeout=1)
+    params = bragi.make_params(request=request, instances=[instance])
     rsp = [
         ('q', 'aa'),
         ('limit', 20),
@@ -571,11 +601,11 @@ def bragi_make_params_with_places_proximity_radius_test():
     instance = mock.MagicMock()
     instance.name = 'bib'
     instance.poi_dataset = None
-    bragi = GeocodeJson(host='http://bob.com/autocomplete')
+    bragi = GeocodeJson(host='http://bob.com/autocomplete', timeout=1)
 
     request = {"q": "aa", "count": 20, "request_id": "1234", "places_proximity_radius": 5000}
 
-    params = bragi.make_params(request=request, instances=[instance], timeout=1)
+    params = bragi.make_params(request=request, instances=[instance])
     rsp = [
         ('q', 'aa'),
         ('limit', 20),
@@ -605,11 +635,11 @@ def bragi_make_params_with_multiple_instances_test():
     instance2 = mock.MagicMock()
     instance2.name = 'bob'
     instance2.poi_dataset = None
-    bragi = GeocodeJson(host='http://bob.com/autocomplete')
+    bragi = GeocodeJson(host='http://bob.com/autocomplete', timeout=1)
 
     request = {"q": "aa", "count": 20, "request_id": "1234"}
 
-    params = bragi.make_params(request=request, instances=[instance1, instance2], timeout=1)
+    params = bragi.make_params(request=request, instances=[instance1, instance2])
     rsp = [
         ('q', 'aa'),
         ('limit', 20),
@@ -632,11 +662,11 @@ def bragi_make_params_without_instance_test():
     """
     test of generate params without instance
     """
-    bragi = GeocodeJson(host='http://bob.com/autocomplete')
+    bragi = GeocodeJson(host='http://bob.com/autocomplete', timeout=0.1)
 
     request = {"q": "aa", "count": 20, "request_id": "1234"}
 
-    params = bragi.make_params(request=request, instances=[], timeout=0.1)
+    params = bragi.make_params(request=request, instances=[])
     rsp = [
         ('q', 'aa'),
         ('limit', 20),
@@ -659,11 +689,11 @@ def bragi_make_params_with_instance_and_poi_test():
     instance = mock.MagicMock()
     instance.name = 'bob'
     instance.poi_dataset = 'priv.bob'
-    bragi = GeocodeJson(host='http://bob.com/autocomplete')
+    bragi = GeocodeJson(host='http://bob.com/autocomplete', timeout=1)
 
     request = {"q": "aa", "count": 20, "request_id": "1234"}
 
-    params = bragi.make_params(request=request, instances=[instance], timeout=1)
+    params = bragi.make_params(request=request, instances=[instance])
     rsp = [
         ('q', 'aa'),
         ('limit', 20),
@@ -688,11 +718,11 @@ def bragi_make_params_with_shape_scope_test():
     instance = mock.MagicMock()
     instance.name = 'bob'
     instance.poi_dataset = 'priv.bob'
-    bragi = GeocodeJson(host='http://bob.com/autocomplete')
+    bragi = GeocodeJson(host='http://bob.com/autocomplete', timeout=1)
 
     request = {"q": "aa", "count": 20, "request_id": "1234", "shape_scope[]": ["poi", "street"]}
 
-    params = bragi.make_params(request=request, instances=[instance], timeout=1)
+    params = bragi.make_params(request=request, instances=[instance])
     rsp = [
         ('q', 'aa'),
         ('limit', 20),

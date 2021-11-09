@@ -79,6 +79,7 @@ void EdReader::fill(navitia::type::Data& data,
 
     this->fill_stop_areas(data, work);
     this->fill_stop_points(data, work);
+    this->fill_ntfs_addresses(work);
 
     this->fill_lines(data, work);
     this->fill_line_groups(data, work);
@@ -555,6 +556,7 @@ void EdReader::fill_stop_points(nt::Data& data, pqxx::work& work) {
         "sp.fare_zone as fare_zone, sp.stop_area_id as stop_area_id,"
         "sp.platform_code as platform_code,"
         "sp.is_zonal as is_zonal,"
+        "sp.address_id as address_id,"
         "ST_AsText(sp.area) as area,"
         "pr.wheelchair_boarding as wheelchair_boarding,"
         "pr.sheltered as sheltered, pr.elevator as elevator,"
@@ -575,6 +577,7 @@ void EdReader::fill_stop_points(nt::Data& data, pqxx::work& work) {
         const_it["fare_zone"].to(sp->fare_zone);
         const_it["platform_code"].to(sp->platform_code);
         const_it["is_zonal"].to(sp->is_zonal);
+        const_it["address_id"].to(sp->address_id);
         sp->coord.set_lon(const_it["lon"].as<double>());
         sp->coord.set_lat(const_it["lat"].as<double>());
         if (const_it["wheelchair_boarding"].as<bool>()) {
@@ -614,9 +617,20 @@ void EdReader::fill_stop_points(nt::Data& data, pqxx::work& work) {
             boost::geometry::read_wkt(const_it["area"].as<std::string>(), area);
             data.pt_data->add_stop_point_area(area, sp);
         }
-
         data.pt_data->stop_points.push_back(sp);
         this->stop_point_map[const_it["id"].as<idx_t>()] = sp;
+    }
+}
+
+void EdReader::fill_ntfs_addresses(pqxx::work& work) {
+    std::string request = "SELECT id, house_number, street_name FROM navitia.address";
+    const pqxx::result result = work.exec(request);
+    for (auto const_it = result.begin(); const_it != result.end(); ++const_it) {
+        auto* addr = new navitia::type::Address();
+        const_it["id"].to(addr->id);
+        const_it["house_number"].to(addr->house_number);
+        const_it["street_name"].to(addr->street_name);
+        this->address_by_address_id[const_it["id"].as<std::string>()] = addr;
     }
 }
 
@@ -1062,6 +1076,7 @@ void EdReader::fill_stop_times(nt::Data& /*unused*/, pqxx::work& work) {
         "st.odt as odt,"
         "st.pick_up_allowed as pick_up_allowed,"
         "st.drop_off_allowed as drop_off_allowed,"
+        "st.skipped_stop as skipped_stop,"
         "st.is_frequency as is_frequency,"
         "st.date_time_estimated as date_time_estimated,"
         "st.id as id,"
@@ -1089,6 +1104,7 @@ void EdReader::fill_stop_times(nt::Data& /*unused*/, pqxx::work& work) {
         const int odt_c = result.column_number("odt");
         const int pick_up_allowed_c = result.column_number("pick_up_allowed");
         const int drop_off_allowed_c = result.column_number("drop_off_allowed");
+        const int skipped_stop_c = result.column_number("skipped_stop");
         const int is_frequency_c = result.column_number("is_frequency");
         const int stop_point_id_c = result.column_number("stop_point_id");
         const int shape_from_prev_id_c = result.column_number("shape_from_prev_id");
@@ -1113,6 +1129,7 @@ void EdReader::fill_stop_times(nt::Data& /*unused*/, pqxx::work& work) {
             stop.set_odt(const_it[odt_c].as<bool>());
             stop.set_pick_up_allowed(const_it[pick_up_allowed_c].as<bool>());
             stop.set_drop_off_allowed(const_it[drop_off_allowed_c].as<bool>());
+            stop.set_skipped_stop(const_it[skipped_stop_c].as<bool>());
             stop.set_is_frequency(const_it[is_frequency_c].as<bool>());
 
             stop.stop_point = stop_point_map[const_it[stop_point_id_c].as<idx_t>()];

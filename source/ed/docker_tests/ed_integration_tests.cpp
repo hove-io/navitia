@@ -426,6 +426,28 @@ BOOST_FIXTURE_TEST_CASE(ntfs_v5_test, ArgsFixture) {
     BOOST_CHECK_EQUAL(data.pt_data->codes.get_codes(data.pt_data->stop_points_map["stop_point:SP:A"]),
                       (nt::CodeContainer::Codes{{"external_code", {"A"}}, {"source", {"A", "Ahah", "Aïe"}}}));
 
+    // SP E
+    BOOST_REQUIRE_EQUAL(data.pt_data->stop_points_map["stop_point:SP:E"]->address_id, "SP:E:ADD_ID");
+    BOOST_REQUIRE_EQUAL(data.pt_data->stop_points_map["stop_point:SP:E"]->address->number, 0);
+    BOOST_REQUIRE_EQUAL(data.pt_data->stop_points_map["stop_point:SP:E"]->address->way->name, "SP:E STREET_NAME");
+
+    // SP A - This is a edge case, address number is empty and street name too, within the data
+    BOOST_REQUIRE_EQUAL(data.pt_data->stop_points_map["stop_point:SP:A"]->address->number, 0);
+    BOOST_REQUIRE_EQUAL(data.pt_data->stop_points_map["stop_point:SP:A"]->address->way->name, "");
+
+    // SP D - the classical case
+    BOOST_REQUIRE_EQUAL(data.pt_data->stop_points_map["stop_point:SP:D"]->address->number, 25);
+    BOOST_REQUIRE_EQUAL(data.pt_data->stop_points_map["stop_point:SP:D"]->address->way->name, "SP:D STREET_NAME");
+
+    //// SP F - without the number
+    BOOST_REQUIRE_EQUAL(data.pt_data->stop_points_map["stop_point:SP:F"]->address->number, 0);
+    BOOST_REQUIRE_EQUAL(data.pt_data->stop_points_map["stop_point:SP:F"]->address->way->name, "SP:F STREET_NAME");
+
+    // SP J - without the number
+    BOOST_REQUIRE_EQUAL(data.pt_data->stop_points_map["stop_point:SP:J"]->address->number, 0);
+    BOOST_REQUIRE_EQUAL(data.pt_data->stop_points_map["stop_point:SP:J"]->address->way->name,
+                        "FACE AU 23 SP:J STREET_NAME");
+
     check_ntfs(data);
 }
 

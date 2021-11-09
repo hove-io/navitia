@@ -33,6 +33,7 @@ import logging
 import datetime
 from jormungandr import utils
 from jormungandr.exceptions import ConfigException
+from jormungandr.utils import can_connect_to_database
 
 
 class ExternalServiceManager(object):
@@ -108,6 +109,12 @@ class ExternalServiceManager(object):
         ):
             return
 
+        # If database is not accessible we update the value of self._last_update and exit
+        if not can_connect_to_database():
+            self.logger.debug('Database is not accessible')
+            self._last_update = datetime.datetime.utcnow()
+            return
+
         self.logger.debug('Updating external services from db')
         self._last_update = datetime.datetime.utcnow()
 
@@ -162,6 +169,15 @@ class ExternalServiceManager(object):
         service = self._get_external_service(navitia_service)
         # Return empty object instead of None if error occurs while calling external service.
         return service.get_response(arguments) if service else {'free_floatings': []}
+
+    # Here comes the function to call forseti/vehicle_positions
+    def manage_vehicle_positions(self, instance, response, **kwargs):
+
+        service = self._get_external_service("vehicle_positions")
+        if not service:
+            return
+        # Return empty object instead of None if error occurs while calling external service.
+        return service.update_response(instance, response, **kwargs)
 
     def _get_external_service(self, navitia_service):
         # Make sure we update the external services list from the database before returning them

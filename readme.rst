@@ -32,6 +32,9 @@
 .. |Security Rating| image:: https://sonarcloud.io/api/project_badges/measure?project=CanalTP_navitia&metric=security_rating
     :alt: SonarCloud Security Rating
 
+
+
+
 +----------------+----------------+-----------+--------+-----------------+-------------------+-------------------+
 | Version        | Build status   | License   | Chat   | Code Coverage   | Vulnerabilities   | Security Rating   |
 +----------------+----------------+-----------+--------+-----------------+-------------------+-------------------+
@@ -39,9 +42,34 @@
 +----------------+----------------+-----------+--------+-----------------+-------------------+-------------------+
 
 
+.. |Maintainability Rating| image:: https://sonarcloud.io/api/project_badges/measure?project=CanalTP_navitia&metric=sqale_rating
+    :alt: SonarCloud Maintainability Rating
+
+.. |Quality Gate Status| image:: https://sonarcloud.io/api/project_badges/measure?project=CanalTP_navitia&metric=alert_status
+    :alt: SonarCloud Quality Gate Status
+
+.. |Duplicated Lines (%)| image:: https://sonarcloud.io/api/project_badges/measure?project=CanalTP_navitia&metric=duplicated_lines_density
+    :alt: SonarCloud Duplicated Lines (%)
+
+.. |Reliability Rating| image:: https://sonarcloud.io/api/project_badges/measure?project=CanalTP_navitia&metric=reliability_rating
+    :alt: SonarCloud Reliability Rating
+
+.. |Bugs| image:: https://sonarcloud.io/api/project_badges/measure?project=CanalTP_navitia&metric=bugs
+    :alt: SonarCloud Bugs
+
+.. |Lines of Code| image:: https://sonarcloud.io/api/project_badges/measure?project=CanalTP_navitia&metric=ncloc
+    :alt: SonarCloud Lines of Code
+
++--------------------------+-----------------------+------------------------+----------------------+--------+-------------------+
+| Maintainability          | Quality Gate          | Duplicated Lines (%)   | Reliability          |  Bugs  |   Lines of Code   |
++--------------------------+-----------------------+------------------------+----------------------+--------+-------------------+
+| |Maintainability Rating| | |Quality Gate Status| | |Duplicated Lines (%)| | |Reliability Rating| | |Bugs| |  |Lines of Code|  |
++--------------------------+-----------------------+------------------------+----------------------+--------+-------------------+
+
+
 Presentation
 ============
-Welcome to the Navitia repository !
+Welcome to the Navitia repository!
 
 Navitia is a webservice providing:
 
@@ -99,17 +127,17 @@ More information
 Getting started
 ===============
 
-Want to test the API ?
+Want to test the API?
 ----------------------
 
 | The easiest way to do this is a to go to `navitia.io <https://www.navitia.io/>`_.
-| `Signup <https://www.navitia.io/register/>`_, grab a token, read the `doc <https://doc.navitia.io>`_
+| `Signup <https://navitia.io/inscription>`_, grab a token, read the `doc <https://doc.navitia.io>`_
   and start using the API!
 
 For a more friendly interface you can use the API through
 `navitia playground <https://canaltp.github.io/navitia-playground/>`_ (no matter the server used).
 
-Want to use you own datasets or infrastructure ?
+Want to use your own datasets or infrastructure?
 ------------------------------------------------
 
 docker
@@ -127,7 +155,7 @@ fabric
   generic and are designed for our own servers architecture.
 | Use this only if the docker does not suit your needs and if you are an experienced user :wink:
 
-Want to dev and contribute to navitia ?
+Want to dev and contribute to navitia?
 ---------------------------------------
 
 If you want to build navitia, develop in it or read more about technical details please refer to
@@ -145,7 +173,7 @@ Navitia is made of 3 main modules:
 
 #. *Ed* is the postgres database (Used for preliminary binarization)
 
-*Kraken* and *Jörmungandr* communicate with each other through protocol buffer messages send by ZMQ.
+*Kraken* and *Jörmungandr* communicate with each other through protocol buffer messages sent by ZMQ.
 
 | Transportation data (in the `NTFS <https://github.com/CanalTP/ntfs-specification/blob/master/readme.md>`_,
   or `GTFS <https://developers.google.com/transit/gtfs/>`_ format) or routing data
@@ -164,4 +192,4 @@ Navitia is written in C++ / python, here are some alternatives:
   | More information here https://github.com/CanalTP/navitia/wiki/OpenTripPlanner-and-Navitia-comparison.
 * `rrrr <https://github.com/bliksemlabs/rrrr>`_ : the lightest one, written in python/c
 * `Synthese <https://github.com/Open-Transport/synthese>`_ : full stack, with CMS, written all in C++
-* `Mumoro <https://github.com/Tristramg/mumoro>`_ : a R&D MUltiModal MUltiObjective ROuting algorithm
+* `Mumoro <https://github.com/Tristramg/mumoro>`_ : an R&D MUltiModal MUltiObjective ROuting algorithm

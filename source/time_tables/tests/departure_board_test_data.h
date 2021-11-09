@@ -193,6 +193,19 @@ struct departure_board_fixture {
                 it_rt = b.data->pt_data->routes_map.find("TS_Route1");
                 it_rt->second->direction_type = "forward";
 
+                auto& vj = b.data->pt_data->vehicle_journeys_map.at("vehicle_journey:L:11");
+                b.data->pt_data->codes.add(vj, "source", "vj:l:11");
+                vj = b.data->pt_data->vehicle_journeys_map.at("vehicle_journey:L:12");
+                b.data->pt_data->codes.add(vj, "source", "vj:l:12");
+                vj = b.data->pt_data->vehicle_journeys_map.at("vehicle_journey:L:13");
+                b.data->pt_data->codes.add(vj, "source", "vj:l:13");
+                vj = b.data->pt_data->vehicle_journeys_map.at("vehicle_journey:M:14");
+                b.data->pt_data->codes.add(vj, "source", "vehicle_journey:M:14");
+                vj = b.data->pt_data->vehicle_journeys_map.at("vehicle_journey:C:vj1");
+                b.data->pt_data->codes.add(vj, "source", "vehicle_journey:C:vj1");
+                vj = b.data->pt_data->vehicle_journeys_map.at("vehicle_journey:vj:freq");
+                b.data->pt_data->codes.add(vj, "source", "vehicle_journey:vj:freq");
+
                 auto* ad = new navitia::georef::Admin();
                 ad->name = "Quimper";
                 ad->uri = "Quimper";
@@ -209,6 +222,7 @@ struct departure_board_fixture {
                 b.data->complete();
                 b.data->compute_labels();
                 b.make();
+
                 // Disruption NO_SERVICE on StopArea
                 using btp = boost::posix_time::time_period;
 
@@ -252,6 +266,23 @@ struct departure_board_fixture {
         b.data->pt_data->codes.add(sp_ptr, "Kisio数字", "TS_D:sp");
         sp_ptr = b.data->pt_data->stop_points_map["C:S2"];
         b.data->pt_data->codes.add(sp_ptr, "Kisio数字", "Kisio数字_C:S2");
+
+        sp_ptr = b.data->pt_data->stop_points_map.at("C:S0");
+        b.data->pt_data->codes.add(sp_ptr, "source", "C:S0");
+
+        sp_ptr = b.data->pt_data->stop_points_map.at("S11");
+        b.data->pt_data->codes.add(sp_ptr, "source", "S11");
+
+        sp_ptr = b.data->pt_data->stop_points_map.at("stopP2");
+        b.data->pt_data->codes.add(sp_ptr, "source", "stopP2");
+
+        sp_ptr = b.data->pt_data->stop_points_map.at("stopQ2");
+        b.data->pt_data->codes.add(sp_ptr, "source", "stopQ2");
+
+        sp_ptr = b.data->pt_data->stop_points_map.at("stopf1");
+        b.data->pt_data->codes.add(sp_ptr, "source", "stopf1");
+        b.data->pt_data->codes.add(sp_ptr, "source", "C:S0");
+
         using ntest::RTStopTime;
         // we delay all A's vjs by 7mn (to be able to test whether it's base schedule or realtime data)
         auto trip_update1 = ntest::make_trip_update_message("A:vj1", "20160101",
@@ -306,6 +337,9 @@ struct departure_board_fixture {
             });
         navitia::handle_realtime("bib", "20160101T1337"_dt, trip_update, *b.data, true, true);
 
+        auto* vj = b.data->pt_data->vehicle_journeys_map.at("vehicle_journey:vjP:1:modified:0:bib");
+        b.data->pt_data->codes.add(vj, "source", "vehicle_journey:vjP:1:modified:0:bib");
+
         //
         //      20160103                    |    20160104
         //                                  |
@@ -331,6 +365,9 @@ struct departure_board_fixture {
                 RTStopTime("stopQ3", "20160104T0016"_pts).delay(21_min),
             });
         navitia::handle_realtime("Q", "20160101T1337"_dt, trip_update_q, *b.data, true, true);
+        vj = b.data->pt_data->vehicle_journeys_map.at("vehicle_journey:vjQ:1:modified:0:Q");
+        b.data->pt_data->codes.add(vj, "source", "vehicle_journey:vjQ:1:modified:0:Q");
+
         b.data->build_raptor();
     }
 };
@@ -395,7 +432,8 @@ struct calendar_fixture {
                                                                                                  "11:30"_t);
 
                 b.vj("D", "110000001111", "", true, "vj_D", "")("stop1_D", "00:10"_t, "00:10"_t)(
-                    "stop2_D", "01:40"_t, "01:40"_t)("stop3_D", "02:50"_t, "02:50"_t);
+                    "stop2_D", "01:40"_t, "01:40"_t, std::numeric_limits<uint16_t>::max(), false, false, 0, 0, true)(
+                    "stop3_D", "02:50"_t, "02:50"_t);
                 /*
                                                            StopR3                            StopR4
                                                     ------------------------------------------

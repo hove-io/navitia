@@ -78,7 +78,14 @@ def finish_job(job_id):
 
 
 def import_data(
-    files, instance, backup_file, asynchronous=True, reload=True, custom_output_dir=None, skip_mimir=False
+    files,
+    instance,
+    backup_file,
+    asynchronous=True,
+    reload=True,
+    custom_output_dir=None,
+    skip_mimir=False,
+    skip_2ed=False,
 ):
     """
     import the data contains in the list of 'files' in the 'instance'
@@ -91,7 +98,7 @@ def import_data(
     :param reload: If True kraken would be reload at the end of the treatment
     :param custom_output_dir: subdirectory for the nav file created. If not given, the instance default one is taken
     :param skip_mimir: skip importing data into mimir
-
+    :param skip_2ed: skip inserting last_load_dataset files into ed database
     run the whole data import process:
 
     - data import in bdd (fusio2ed, gtfs2ed, poi2ed, ...)
@@ -115,41 +122,7 @@ def import_data(
         'shape': shape2ed,
     }
 
-    for _file in files:
-        filename = None
-
-        dataset = models.DataSet()
-        # NOTE: for the moment we do not use the path to load the data here
-        # but we'll need to refactor this to take it into account
-        try:
-            dataset.type, _ = utils.type_of_data(_file)
-            dataset.family_type = utils.family_of_data(dataset.type)
-        except Exception:
-            if backup_file:
-                move_to_backupdirectory(_file, instance_config.backup_directory)
-            current_app.logger.debug(
-                "Corrupted source file : {} moved to {}".format(_file, instance_config.backup_directory)
-            )
-            continue
-
-        if dataset.type in task:
-            if backup_file:
-                filename = move_to_backupdirectory(_file, instance_config.backup_directory)
-            else:
-                filename = _file
-            actions.append(task[dataset.type].si(instance_config, filename, dataset_uid=dataset.uid))
-        else:
-            # unknown type, we skip it
-            current_app.logger.debug("unknown file type: {} for file {}".format(dataset.type, _file))
-            continue
-
-        # currently the name of a dataset is the path to it
-        dataset.name = filename
-        dataset.state = "pending"
-        models.db.session.add(dataset)
-        job.data_sets.append(dataset)
-
-    if actions:
+    def process_ed2nav():
         models.db.session.add(job)
         models.db.session.commit()
         # We pass the job id to each tasks, but job need to be commited for having an id
@@ -177,6 +150,46 @@ def import_data(
         else:
             # all job are run in sequence and import_data will only return when all the jobs are finish
             return chain(*actions).apply()
+
+    if skip_2ed:
+        # For skip_2ed, skip inserting last_load_dataset files into ed database
+        return process_ed2nav()
+    for _file in files:
+        filename = None
+
+        dataset = models.DataSet()
+        # NOTE: for the moment we do not use the path to load the data here
+        # but we'll need to refactor this to take it into account
+        try:
+            dataset.type, _ = utils.type_of_data(_file)
+            dataset.family_type = utils.family_of_data(dataset.type)
+        except Exception:
+            if backup_file:
+                move_to_backupdirectory(_file, instance_config.backup_directory)
+            current_app.logger.debug(
+                "Corrupted source file : {} moved to {}".format(_file, instance_config.backup_directory)
+            )
+            continue
+
+        if dataset.type in task:
+            if backup_file:
+                filename = move_to_backupdirectory(_file, instance_config.backup_directory, manage_sp_char=True)
+            else:
+                filename = _file
+            actions.append(task[dataset.type].si(instance_config, filename, dataset_uid=dataset.uid))
+        else:
+            # unknown type, we skip it
+            current_app.logger.debug("unknown file type: {} for file {}".format(dataset.type, _file))
+            continue
+
+        # currently the name of a dataset is the path to it
+        dataset.name = filename
+        dataset.state = "pending"
+        models.db.session.add(dataset)
+        job.data_sets.append(dataset)
+
+    if actions:
+        return process_ed2nav()
 
 
 def send_to_mimir(instance, filename, family_type):
@@ -320,7 +333,9 @@ def import_autocomplete(files, autocomplete_instance, asynchronous=True, backup_
         dataset.family_type = 'autocomplete_{}'.format(dataset.type)
         if dataset.type in task:
             if backup_file:
-                filename = move_to_backupdirectory(f, autocomplete_instance.backup_dir(autocomplete_dir))
+                filename = move_to_backupdirectory(
+                    f, autocomplete_instance.backup_dir(autocomplete_dir), manage_sp_char=True
+                )
             else:
                 filename = f
             actions.append(

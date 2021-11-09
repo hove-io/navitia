@@ -38,22 +38,32 @@ from jormungandr.scenarios.utils import free_floatings_type
 
 coord_schema = {
     "type": "object",
-    "properties": {"lat": {"type": ["string", "null"]}, "lon": {"type": ["string", "null"]}},
+    "properties": {"lat": {"type": "string"}, "lon": {"type": "string"}},
     "required": ["lat", "lon"],
 }
 
 free_floating_schema = {
     "type": "object",
     "properties": {
-        "public_id": {"type": ["string"]},
-        "provider_name": {"type": ["string"]},
-        "id": {"type": ["string"]},
-        "type": {"enum": free_floatings_type},
-        "propulsion": {"type": ["string"]},
-        "battery": {"type": ["integer"]},
-        "distance": {"type": ["integer"]},
-        "deeplink": {"type": ["string"]},
+        "public_id": {"type": "string"},
+        "provider_name": {"type": "string"},
+        "id": {"type": "string"},
+        "type": {"enum": free_floatings_type, "type": "string"},
+        "propulsion": {"type": "string"},
+        "battery": {"type": "integer"},
+        "distance": {"type": "integer"},
+        "deeplink": {"type": "string"},
         "coord": coord_schema,
+    },
+}
+
+pagination_schema = {
+    "type": "object",
+    "properties": {
+        "items_on_page": {"type": ["integer"]},
+        "items_per_page": {"type": ["integer"]},
+        "start_page": {"type": ["integer"]},
+        "total_result": {"type": ["integer"]},
     },
 }
 
@@ -78,9 +88,20 @@ class FreeFloatingSerializer(serpy.DictSerializer):
     distance = NestedPropertyField(attr='distance')
 
 
+class PaginationSerializer(serpy.DictSerializer):
+    start_page = NestedPropertyField(attr='start_page')
+    items_on_page = NestedPropertyField(attr='items_on_page')
+    items_per_page = NestedPropertyField(attr='items_per_page')
+    total_result = NestedPropertyField(attr='total_result')
+
+
 class FreeFloatingsSerializer(serpy.DictSerializer):
     free_floatings = jsonschema.MethodField(schema_metadata=free_floatings_schema, display_none=True)
+    pagination = jsonschema.MethodField(schema_metadata=pagination_schema, display_none=True)
     warnings = BetaEndpointsSerializer()
 
     def get_free_floatings(self, obj):
         return [FreeFloatingSerializer(ff).data for ff in obj.get('free_floatings', [])]
+
+    def get_pagination(self, obj):
+        return PaginationSerializer(obj.get('pagination')).data

@@ -2,8 +2,9 @@ name: SonarCloud
 
 on:
   push:
-    branches:
-      - dev
+    branches: [ dev ]
+  pull_request:
+    branches: [ dev ]
 
 jobs:
   static_analysis:
@@ -17,7 +18,7 @@ jobs:
 
     services:
       rabbitmq:
-        image: rabbitmq:3.8-alpine
+        image: rabbitmq:3-alpine
         ports:
           - 5672:5672
 

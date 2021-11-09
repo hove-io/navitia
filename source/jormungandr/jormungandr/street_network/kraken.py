@@ -270,6 +270,12 @@ class Kraken(AbstractStreetNetworkService):
         req.sn_routing_matrix.streetnetwork_params.car_no_park_speed = speed_switcher.get(
             "car_no_park", kwargs.get("car_no_park")
         )
+        req.sn_routing_matrix.asgard_max_walking_duration_coeff = request.get(
+            "_asgard_max_walking_duration_coeff"
+        )
+        req.sn_routing_matrix.asgard_max_bike_duration_coeff = request.get("_asgard_max_bike_duration_coeff")
+        req.sn_routing_matrix.asgard_max_bss_duration_coeff = request.get("_asgard_max_bss_duration_coeff")
+        req.sn_routing_matrix.asgard_max_car_duration_coeff = request.get("_asgard_max_car_duration_coeff")
 
         for attr in ("bss_rent_duration", "bss_rent_penalty", "bss_return_duration", "bss_return_penalty"):
             setattr(req.sn_routing_matrix.streetnetwork_params, attr, request[attr])
