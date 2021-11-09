@@ -135,6 +135,13 @@ def get_kraken_calls(request):
     for dep_mode, arr_mode in combination_mode:
         res.add((dep_mode, arr_mode, direct_path_type))
 
+    if direct_path_type != "none":
+        for mode in direct_path_mode:
+            # We force add tuple for direct_path_mode, in case we previously
+            # didn't because of allowed_combinations
+            if mode in direct_path_mode and mode not in [dep for dep, _, _ in res]:
+                res.add((mode, mode, "only"))
+
     return res
 
 
