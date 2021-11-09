@@ -817,8 +817,29 @@ def osm2mimir(self, autocomplete_instance, filename, job_id, dataset_uid, autoco
         raise
 
 
+def get_stops2mimir_params(instance_name, working_directory, autocomplete_version=2):
+    if autocomplete_version == 2:
+        return [
+            '--input',
+            os.path.join(working_directory, 'stops.txt'),
+            '--connection-string',
+            current_app.config['MIMIR2_URL'],
+            '--dataset',
+            instance_name,
+        ]
+    return [
+        '-i',
+        os.path.join(working_directory, 'stops.txt'),
+        '-s',
+        'elasticsearch.url={}'.format(current_app.config['MIMIR_URL']),
+        '-s',
+        'container.dataset={}'.format(instance_name),
+        'run',
+    ]
+
+
 @celery.task(bind=True)
-def stops2mimir(self, instance_name, input, job_id=None, dataset_uid=None):
+def stops2mimir(self, instance_name, input, autocomplete_version, job_id=None, dataset_uid=None):
     """
     launch stops2mimir
 
@@ -831,22 +852,18 @@ def stops2mimir(self, instance_name, input, job_id=None, dataset_uid=None):
         logger = get_instance_logger(instance, task_id=job_id)
     else:
         logger = get_task_logger(logging.getLogger("autocomplete"))
-    cnx_string = current_app.config['MIMIR_URL']
+    executable = "stops2mimir2" if autocomplete_version == 2 else "stops2mimir"
+    logger.debug('running {} for Es{}'.format(executable, autocomplete_version))
 
-    working_directory = os.path.dirname(input)
-
-    stops_file = os.path.join(working_directory, 'stops.txt')
-
-    # Note: the dataset is for the moment the instance name, we'll need to change this when we'll aggregate
-    argv = ['--input', stops_file, '--connection-string', cnx_string, '--dataset', instance_name]
+    argv = get_stops2mimir_params(instance_name, os.path.dirname(input), autocomplete_version)
 
     try:
-        res = launch_exec('stops2mimir', argv, logger)
+        res = launch_exec(executable, argv, logger)
         if res != 0:
             # Do not raise error because it breaks celery tasks chain.
             # stops2mimir has to be non-blocking.
             # @TODO : Find a way to raise error without breaking celery tasks chain
-            logger.error('stops2mimir failed')
+            logger.error('{} failed'.format(executable))
             if job_id:
                 job.state = 'failed'
                 models.db.session.commit()
@@ -859,8 +876,29 @@ def stops2mimir(self, instance_name, input, job_id=None, dataset_uid=None):
         raise
 
 
+def get_ntfs2mimir_params(instance_name, working_directory, autocomplete_version=2):
+    if autocomplete_version == 2:
+        return [
+            '--input',
+            working_directory,
+            '--connection-string',
+            current_app.config['MIMIR2_URL'],
+            '--dataset',
+            instance_name,
+        ]
+    return [
+        '-i',
+        working_directory,
+        '-s',
+        'elasticsearch.url={}'.format(current_app.config['MIMIR_URL']),
+        '-s',
+        'container.dataset={}'.format(instance_name),
+        'run',
+    ]
+
+
 @celery.task(bind=True)
-def ntfs2mimir(self, instance_name, input, job_id=None, dataset_uid=None):
+def ntfs2mimir(self, instance_name, input, autocomplete_version, job_id=None, dataset_uid=None):
     """
     launch ntfs2mimir
     """
@@ -871,18 +909,18 @@ def ntfs2mimir(self, instance_name, input, job_id=None, dataset_uid=None):
         logger = get_instance_logger(instance, task_id=job_id)
     else:
         logger = get_task_logger(logging.getLogger("autocomplete"))
-    cnx_string = current_app.config['MIMIR_URL']
+    executable = "ntfs2mimir2" if autocomplete_version == 2 else "ntfs2mimir"
+    logger.debug('running {} for Es{}'.format(executable, autocomplete_version))
 
     working_directory = unzip_if_needed(input)
-
-    argv = ['--input', working_directory, '--connection-string', cnx_string, '--dataset', instance_name]
+    argv = get_ntfs2mimir_params(instance_name, working_directory, autocomplete_version)
     try:
-        res = launch_exec('ntfs2mimir', argv, logger)
+        res = launch_exec(executable, argv, logger)
         if res != 0:
             # Do not raise error because it breaks celery tasks chain.
             # ntfs2mimir have to be non-blocking.
             # @TODO : Find a way to raise error without breaking celery tasks chain
-            logger.error('ntfs2mimir failed')
+            logger.error('{} failed'.format(executable))
             if job_id:
                 job.state = 'failed'
                 models.db.session.commit()
@@ -937,8 +975,29 @@ def cosmogony2mimir(self, autocomplete_instance, filename, job_id, dataset_uid, 
         raise
 
 
+def get_poi2mimir_params(poi_file, dataset_name, autocomplete_version=2):
+    if autocomplete_version == 2:
+        return [
+            '--input',
+            poi_file,
+            '--connection-string',
+            current_app.config['MIMIR2_URL'],
+            '--dataset',
+            dataset_name,
+            '--private',
+        ]
+    return [
+        "-s",
+        'elasticsearch.url={}'.format(current_app.config['MIMIR_URL']),
+        "container.dataset={}".format(dataset_name),
+        "-i",
+        poi_file,
+        "run",
+    ]
+
+
 @celery.task(bind=True)
-def poi2mimir(self, instance_name, input, job_id=None, dataset_uid=None):
+def poi2mimir(self, instance_name, input, autocomplete_version, job_id=None, dataset_uid=None):
     """ launch poi2mimir """
     dataset_name = 'priv.{}'.format(instance_name)  # We give the dataset a prefix to prevent
     #   collision with other datasets.
@@ -951,24 +1010,20 @@ def poi2mimir(self, instance_name, input, job_id=None, dataset_uid=None):
     else:
         logger = get_task_logger(logging.getLogger("autocomplete"))
         instance = models.Instance.query_existing().filter_by(name=instance_name).first()
+    executable = "poi2mimir2" if autocomplete_version == 2 else "poi2mimir"
+    logger.debug('running {} version autocomplete {}'.format(executable, autocomplete_version))
 
-    cnx_string = current_app.config['MIMIR_URL']
-
-    poi_file = input
-
-    # Note: the dataset is for the moment the instance name, we'll need to change this when we'll aggregate
-    argv = ['--input', poi_file, '--connection-string', cnx_string, '--dataset', dataset_name, '--private']
-
+    argv = get_poi2mimir_params(input, dataset_name, autocomplete_version)
     try:
         if job:
-            with collect_metric('poi2mimir', job, dataset_uid):
-                res = launch_exec('poi2mimir', argv, logger)
+            with collect_metric(executable, job, dataset_uid):
+                res = launch_exec(executable, argv, logger)
         else:
-            res = launch_exec('poi2mimir', argv, logger)
+            res = launch_exec(executable, argv, logger)
 
         if res != 0:
             # Do not raise error because it breaks celery tasks chain.
-            logger.error('poi2mimir failed')
+            logger.error('{} failed'.format(executable))
             if job_id:
                 job.state = 'failed'
                 models.db.session.commit()
