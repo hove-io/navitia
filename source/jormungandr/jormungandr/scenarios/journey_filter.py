@@ -455,8 +455,8 @@ def _sn_functor(s):
     return 'sn:{}'.format(s.street_network.mode)
 
 
-def _crow_fly_sn_functor(s):
-    return "o: {} d:{}".format(s.origin.uri, s.destination.uri)
+def _crow_fly_sn_functor(_s):
+    return "crow_fly"
 
 
 def similar_journeys_generator(journey, pt_functor, sn_functor=_sn_functor, crow_fly_functor=_sn_functor):
