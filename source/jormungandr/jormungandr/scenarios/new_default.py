@@ -1117,6 +1117,11 @@ class Scenario(simple.Scenario):
             api_request, responses, distributed_context, instance, api_request['debug'], request_id
         )
 
+        # We need to reapply some filter after 'finalise_journeys' because
+        # journeys with crow_fly bss and crow_fly walking couldn't be compared
+        # but can results in street_network walking in both case
+        journey_filter.apply_final_journey_filters_post_finalize(responses, api_request)
+
         pb_resp = merge_responses(responses, api_request['debug'])
 
         sort_journeys(pb_resp, instance.journey_order, api_request['clockwise'])
