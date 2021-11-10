@@ -451,7 +451,15 @@ def similar_pt_section_line(section):
     return "pt:{}".format(section.pt_display_informations.uris.line)
 
 
-def similar_journeys_generator(journey, pt_functor, sn_functor=lambda s: 'sn:{}'.format(s.street_network.mode)):
+def _sn_functor(s):
+    return 'sn:{}'.format(s.street_network.mode)
+
+
+def _crow_fly_sn_functor(_s):
+    return "crow_fly"
+
+
+def similar_journeys_generator(journey, pt_functor, sn_functor=_sn_functor, crow_fly_functor=_sn_functor):
     def _similar_non_pt():
         for s in journey.sections:
             yield "sn:{} type:{}".format(s.street_network.mode, s.type)
@@ -462,8 +470,10 @@ def similar_journeys_generator(journey, pt_functor, sn_functor=lambda s: 'sn:{}'
                 yield pt_functor(s)
             elif s.type == response_pb2.STREET_NETWORK and is_walk_after_parking(journey, idx):
                 continue
-            elif s.type in (response_pb2.STREET_NETWORK, response_pb2.CROW_FLY):
+            elif s.type is response_pb2.STREET_NETWORK:
                 yield sn_functor(s)
+            elif s.type is response_pb2.CROW_FLY:
+                yield crow_fly_functor(s)
 
     if 'non_pt' in journey.tags:
         return _similar_non_pt()
@@ -499,6 +509,11 @@ def similar_journeys_vj_generator(journey):
 
 def similar_journeys_line_generator(journey):
     for v in similar_journeys_generator(journey, similar_pt_section_line):
+        yield v
+
+
+def similar_journeys_line_and_crowfly_generator(journey):
+    for v in similar_journeys_generator(journey, similar_pt_section_line, crow_fly_functor=_crow_fly_sn_functor):
         yield v
 
 
@@ -658,7 +673,7 @@ def apply_final_journey_filters_post_finalize(response_list, request):
     if final_line_filter:
         journeys = journey_generator(response_list)
         journey_pairs_pool = itertools.combinations(journeys, 2)
-        _filter_similar_line_journeys(journey_pairs_pool, request)
+        _filter_similar_line_and_crowfly_journeys(journey_pairs_pool, request)
 
 
 def replace_bss_tag(journeys):
@@ -708,6 +723,7 @@ def _get_worst_similar(j1, j2, request):
     Decide which is the worst journey between 2 similar journeys.
 
     The choice is made on:
+     - crow_fly fallback
      - asap
      - duration
      - more fallback
@@ -717,6 +733,30 @@ def _get_worst_similar(j1, j2, request):
             it's better to know that you can do it by bike for 'bike_in_pt' tag
             (and traveler presumes he can do it walking too, as the practical case is 0s fallback)
     """
+
+    def get_mode_rank_crow_fly(section):
+        mode_rank = {
+            response_pb2.Car: 0,
+            response_pb2.Taxi: 1,
+            response_pb2.Bike: 2,
+            response_pb2.Bss: 3,
+            response_pb2.Walking: 4,
+        }
+        return mode_rank.get(section.street_network.mode)
+
+    def is_fallback_crow_fly(section):
+        return section.type == response_pb2.CROW_FLY
+
+    for idx in [0, -1]:
+        s1 = j1.sections[idx]
+        s2 = j2.sections[idx]
+        if (
+            is_fallback_crow_fly(s1)
+            and is_fallback_crow_fly(s2)
+            and s1.street_network.mode != s2.street_network.mode
+        ):
+            return j1 if get_mode_rank_crow_fly(s1) < get_mode_rank_crow_fly(s2) else j2
+
     if request.get('clockwise', True):
 
         # we dont want to arrive a few seconds earlier if it means walking more
@@ -789,6 +829,10 @@ def filter_similar_vj_journeys(journey_pairs_pool, request):
 
 def _filter_similar_line_journeys(journey_pairs_pool, request):
     _filter_similar_journeys(journey_pairs_pool, request, similar_journeys_line_generator)
+
+
+def _filter_similar_line_and_crowfly_journeys(journey_pairs_pool, request):
+    _filter_similar_journeys(journey_pairs_pool, request, similar_journeys_line_and_crowfly_generator)
 
 
 def filter_shared_sections_journeys(journey_pairs_pool, request):

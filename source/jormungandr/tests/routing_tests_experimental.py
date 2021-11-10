@@ -376,6 +376,32 @@ class TestJourneysDistributed(
         r = self.query(query)
         assert sum(int('non_pt' not in j['tags']) for j in r['journeys']) == 1
 
+    def test_duplicate_journey_crow_fly_walking_bss(self):
+        query_template = (
+            '/v1/coverage/main_routing_test/journeys?'
+            'from=0.000898311981954709;0.0008084807837592382&to=0.00898311981954709;0.0001796623963909418&'
+            'datetime=20120614T080000&'
+            'first_section_mode[]=walking&first_section_mode[]=bss&'
+            'last_section_mode[]=walking&last_section_mode[]=bss&'
+            'bss_speed=1.5&walking_speed=1&_final_line_filter=true&debug=true'
+        )
+        r = self.query(query_template.format(debug='false'))
+        # should be two journeys in the response
+        assert len(r['journeys']) == 2
+
+        # first journey should finish with a crow_fly bss (fallback)
+        # So it should be also tagged 'to_delete' & 'deleted_because_duplicate_journey'
+        assert r['journeys'][0]['sections'][-1]['type'] == 'crow_fly'
+        assert r['journeys'][0]['sections'][-1]['mode'] == 'bss'
+        assert 'deleted_because_duplicate_journey' in r['journeys'][0]['tags']
+        assert 'to_delete' in r['journeys'][0]['tags']
+
+        # second journey should finish with a crow_fly walking (fallback), so we keep it
+        assert r['journeys'][1]['sections'][-1]['type'] == 'crow_fly'
+        assert r['journeys'][1]['sections'][-1]['mode'] == 'walking'
+        assert 'deleted_because_duplicate_journey' not in r['journeys'][1]['tags']
+        assert 'to_delete' not in r['journeys'][1]['tags']
+
     def test_direct_path_bss_bike(self):
         query = (
             journey_basic_query
