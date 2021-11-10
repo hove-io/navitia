@@ -390,6 +390,26 @@ class TestJourneysDistributed(
         assert any('bss' in j['tags'] for j in response['journeys'])
         assert any('bike' in j['tags'] for j in response['journeys'])
 
+    def test_direct_path_bss_walking(self):
+        # In case we ask for :
+        # - direct_path_mode=walking
+        # - first_section_mode=walking&bss
+        # - last_section_mode=bss
+        # We expect to have a walking direct_path journey
+        query = (
+            journey_basic_query
+            + "&direct_path_mode[]=walking"
+            + "&first_section_mode[]=walking&first_section_mode[]=bss"
+            + "&last_section_mode[]=bss"
+        )
+        response = self.query_region(query)
+        assert len(response['journeys']) == 2
+
+        # we should find at least a walking direct_path journey
+        assert any('non_pt_walking' in j['tags'] for j in response['journeys'])
+        assert any('walking' in j['tags'] for j in response['journeys'])
+        assert len(response['journeys'][1]['sections']) == 1
+
 
 @config({"scenario": "distributed"})
 class TestDistributedJourneysWithPtref(JourneysWithPtref, NewDefaultScenarioAbstractTestFixture):
