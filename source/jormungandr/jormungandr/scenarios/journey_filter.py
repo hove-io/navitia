@@ -508,6 +508,11 @@ def similar_journeys_vj_generator(journey):
 
 
 def similar_journeys_line_generator(journey):
+    for v in similar_journeys_generator(journey, similar_pt_section_line):
+        yield v
+
+
+def similar_journeys_line_and_crowfly_generator(journey):
     for v in similar_journeys_generator(journey, similar_pt_section_line, crow_fly_functor=_crow_fly_sn_functor):
         yield v
 
@@ -668,7 +673,7 @@ def apply_final_journey_filters_post_finalize(response_list, request):
     if final_line_filter:
         journeys = journey_generator(response_list)
         journey_pairs_pool = itertools.combinations(journeys, 2)
-        _filter_similar_line_journeys(journey_pairs_pool, request)
+        _filter_similar_line_and_crowfly_journeys(journey_pairs_pool, request)
 
 
 def replace_bss_tag(journeys):
@@ -742,23 +747,15 @@ def _get_worst_similar(j1, j2, request):
     def is_fallback_crow_fly(section):
         return section.type == response_pb2.CROW_FLY
 
-    s1 = j1.sections[0]
-    s2 = j2.sections[0]
-    if (
-        is_fallback_crow_fly(s1)
-        and is_fallback_crow_fly(s2)
-        and s1.street_network.mode != s2.street_network.mode
-    ):
-        return j1 if get_mode_rank_crow_fly(s1) < get_mode_rank_crow_fly(s2) else j2
-
-    s1 = j1.sections[-1]
-    s2 = j2.sections[-1]
-    if (
-        is_fallback_crow_fly(s1)
-        and is_fallback_crow_fly(s2)
-        and s1.street_network.mode != s2.street_network.mode
-    ):
-        return j1 if get_mode_rank_crow_fly(s1) < get_mode_rank_crow_fly(s2) else j2
+    for idx in [0, -1]:
+        s1 = j1.sections[idx]
+        s2 = j2.sections[idx]
+        if (
+            is_fallback_crow_fly(s1)
+            and is_fallback_crow_fly(s2)
+            and s1.street_network.mode != s2.street_network.mode
+        ):
+            return j1 if get_mode_rank_crow_fly(s1) < get_mode_rank_crow_fly(s2) else j2
 
     if request.get('clockwise', True):
 
@@ -832,6 +829,10 @@ def filter_similar_vj_journeys(journey_pairs_pool, request):
 
 def _filter_similar_line_journeys(journey_pairs_pool, request):
     _filter_similar_journeys(journey_pairs_pool, request, similar_journeys_line_generator)
+
+
+def _filter_similar_line_and_crowfly_journeys(journey_pairs_pool, request):
+    _filter_similar_journeys(journey_pairs_pool, request, similar_journeys_line_and_crowfly_generator)
 
 
 def filter_shared_sections_journeys(journey_pairs_pool, request):
