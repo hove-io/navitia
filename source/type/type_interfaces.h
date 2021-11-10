@@ -93,7 +93,8 @@ enum class Type_e {
     MetaVehicleJourney = 26,
     Impact = 27,
     Dataset = 28,
-    size = 29
+    size = 29,
+    InputOutput = 30
 };
 
 using WeekPattern = std::bitset<7>;

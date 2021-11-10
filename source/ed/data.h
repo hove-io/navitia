@@ -128,6 +128,9 @@ public:
     std::vector<std::shared_ptr<types::Shape>> shapes_from_prev;
     std::vector<types::StopPointConnection*> stop_point_connections;
 
+    // Input Ouput
+    std::vector<types::InputOutput*> io;
+
     // fare:
     std::vector<std::tuple<navitia::fare::State, navitia::fare::State, navitia::fare::Transition>>
         transitions;  // transition with state before and after
@@ -319,6 +322,13 @@ void Data::add_object_code(const T& obj, const std::string& value, const std::st
     auto& codes = object_codes[pt_object];
     codes[key].push_back(value);
 }
+
+//template <>
+//void Data::add_object_code(const ed::types::InputOutput& obj, const std::string& value, const std::string& key) {
+    //const auto pt_object = ed::types::make_pt_object(obj);
+    //auto& codes = object_codes[pt_object];
+    //codes[key].push_back(value);
+//}
 
 template <typename T>
 bool Data::if_object_code_exist(const T& obj, const std::string& value, const std::string& key) {

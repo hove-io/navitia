@@ -88,6 +88,7 @@ struct GtfsData {
     std::unordered_map<std::string, ed::types::CommercialMode*> commercial_mode_map;
     std::unordered_map<std::string, ed::types::StopPoint*> stop_point_map;
     std::unordered_map<std::string, ed::types::StopArea*> stop_area_map;
+    std::unordered_map<std::string, ed::types::InputOutput*> io_map;
     std::unordered_map<std::string, ed::types::Line*> line_map;
     std::unordered_map<std::string, ed::types::Line*> line_map_by_external_code;
     std::unordered_map<std::string, ed::types::LineGroup*> line_group_map;
@@ -107,6 +108,8 @@ struct GtfsData {
 
     typedef std::vector<ed::types::StopPoint*> vector_sp;
     std::unordered_map<std::string, vector_sp> sa_spmap;
+    typedef std::vector<ed::types::InputOutput*> vector_io;
+    std::unordered_map<std::string, vector_io> sa_iomap;
     std::set<std::string> vj_uri;  // we store all vj_uri not to give twice the same uri (since we split some)
 
     // for gtfs we group the comments together, so the key is the comment and the value is the id of the comment
@@ -240,6 +243,7 @@ struct StopsGtfsHandler : public GenericHandler {
 
     ed::types::StopPoint* build_stop_point(Data& data, const csv_row& line);
     ed::types::StopArea* build_stop_area(Data& data, const csv_row& line);
+    ed::types::InputOutput* build_input_output(Data& data, const csv_row& row);
     bool is_duplicate(const csv_row& row);
 };
 

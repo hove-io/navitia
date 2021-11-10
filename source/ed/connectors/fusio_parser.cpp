@@ -309,6 +309,10 @@ nm::StopPoint* StopsFusioHandler::build_stop_point(Data& data, const csv_row& ro
     return sp;
 }
 
+nm::InputOutput* StopsFusioHandler::build_input_output(Data& data, const csv_row& row) {
+    return StopsGtfsHandler::build_input_output(data, row);
+}
+
 StopsGtfsHandler::stop_point_and_area StopsFusioHandler::handle_line(Data& data, const csv_row& row, bool) {
     stop_point_and_area return_wrapper{};
 

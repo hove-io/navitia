@@ -163,6 +163,20 @@ struct Contributor : public Header, Nameable {
     bool operator<(const Contributor& other) const { return this->name < other.name; }
 };
 
+struct InputOutput : public Header, Nameable {
+    const static nt::Type_e type = nt::Type_e::InputOutput;
+    nt::GeographicalCoord coord;
+
+    StopArea* stop_area;
+
+    InputOutput() : stop_area(nullptr) {}
+    InputOutput(int idx, std::string uri, StopArea* sa = nullptr)
+        : Header(idx, uri), Nameable(uri), stop_area(sa) {}
+
+    bool operator<(const StopPoint& other) const;
+    bool operator!=(const StopPoint& sp) const;
+};
+
 struct Dataset : public Header {
     const static nt::Type_e type = nt::Type_e::Dataset;
     Contributor* contributor = nullptr;

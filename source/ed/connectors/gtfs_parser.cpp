@@ -391,6 +391,30 @@ bool StopsGtfsHandler::parse_common_data(const csv_row& row, T* stop) {
     return true;
 }
 
+nm::InputOutput* StopsGtfsHandler::build_input_output(Data& data, const csv_row& row) {
+    auto* io = new nm::InputOutput();
+    if (!parse_common_data(row, io)) {
+        delete io;
+        return nullptr;
+    }
+
+    gtfs_data.io_map[io->uri] = io;
+    data.io.push_back(io);
+    //if (stop_code_is_present) {
+        //add_gtfs_stop_code(data, io, row[code_c]);
+    //}
+
+    if (has_col(parent_c, row) && row[parent_c] != "") {  // we save the reference to the stop area
+        auto it = gtfs_data.sa_iomap.find(row[parent_c]);
+        if (it == gtfs_data.sa_iomap.end()) {
+            it = gtfs_data.sa_iomap.insert(std::make_pair(row[parent_c], GtfsData::vector_io())).first;
+        }
+        it->second.push_back(io);
+    }
+
+    return io;
+}
+
 nm::StopArea* StopsGtfsHandler::build_stop_area(Data& data, const csv_row& row) {
     auto* sa = new nm::StopArea();
     if (!parse_common_data(row, sa)) {
@@ -499,6 +523,13 @@ StopsGtfsHandler::stop_point_and_area StopsGtfsHandler::handle_line(Data& data, 
         auto* sp = build_stop_point(data, row);
         if (sp) {
             return_wrapper.first = sp;
+        }
+        return return_wrapper;
+    // Handle I/O case
+    } else if (has_col(type_c, row) && row[type_c] == "3") {
+        auto* io = build_input_output(data, row);
+        if (io) {
+            return {};
         }
         return return_wrapper;
     } else {
