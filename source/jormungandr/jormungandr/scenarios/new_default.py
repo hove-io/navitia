@@ -135,6 +135,13 @@ def get_kraken_calls(request):
     for dep_mode, arr_mode in combination_mode:
         res.add((dep_mode, arr_mode, direct_path_type))
 
+    if direct_path_type != "none":
+        for mode in direct_path_mode:
+            # We force add tuple for direct_path_mode, in case we previously
+            # didn't because of allowed_combinations
+            if mode in direct_path_mode and mode not in [dep for dep, _, type_ in res if type_ != 'none']:
+                res.add((mode, mode, "only"))
+
     return res
 
 
@@ -1109,6 +1116,11 @@ class Scenario(simple.Scenario):
         self.finalise_journeys(
             api_request, responses, distributed_context, instance, api_request['debug'], request_id
         )
+
+        # We need to reapply some filter after 'finalise_journeys' because
+        # journeys with crow_fly bss and crow_fly walking couldn't be compared
+        # but can results in street_network walking in both case
+        journey_filter.apply_final_journey_filters_post_finalize(responses, api_request)
 
         pb_resp = merge_responses(responses, api_request['debug'])
 

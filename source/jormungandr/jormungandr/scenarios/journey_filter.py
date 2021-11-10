@@ -654,6 +654,23 @@ def apply_final_journey_filters(response_list, instance, request):
     _filter_too_much_connections(journeys, instance, request)
 
 
+def apply_final_journey_filters_post_finalize(response_list, request):
+    """
+    Final pass: Filter by side effect the list of pb responses's journeys
+    """
+    is_debug = request.get('debug', False)
+    journey_generator = get_qualified_journeys
+    if is_debug:
+        journey_generator = get_all_journeys
+
+    # we remove similar journeys (same lines and same succession of stop_points)
+    final_line_filter = get_or_default(request, '_final_line_filter', False)
+    if final_line_filter:
+        journeys = journey_generator(response_list)
+        journey_pairs_pool = itertools.combinations(journeys, 2)
+        _filter_similar_line_journeys(journey_pairs_pool, request)
+
+
 def replace_bss_tag(journeys):
     """
     replace the bss tag by walking, if there's no bss section in the journey
