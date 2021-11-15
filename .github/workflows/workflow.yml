@@ -141,12 +141,13 @@ jobs:
       with:
         python-version: '2.7'
     - uses: actions/checkout@v2
-    - uses: dschep/install-pipenv-action@v1
     - name: Setup Pipenv and Run tests
       working-directory: release
       env:
         GIT_PYTHON_REFRESH: quiet
       run: |
-        pipenv install --dev
-        pipenv run pytest
-        pipenv --rm
+        pip install virtualenv==20.4.7 -U
+        virtualenv -p python2.7 navitia_py2
+        . navitia_py2/bin/activate
+        pip install -r requirements_release.txt
+        pytest

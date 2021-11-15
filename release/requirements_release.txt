@@ -1,2 +1,4 @@
 gitpython
 requests
+pytest
+mock
