@@ -748,8 +748,15 @@ class Instance(object):
         logger = logging.getLogger(__name__)
         deadline = datetime.utcnow() + timedelta(milliseconds=timeout)
         request.deadline = deadline.strftime('%Y%m%dT%H%M%S,%f')
-        pt_socket = request.requested_api == type_pb2.pt_planner
-        with self.socket(self.context, pt_socket) as socket:
+        # we use the pt_socket if :
+        #  - we are asking for the pt_planner api
+        #  - _use_pt_socket is set to True in the request's parameters
+        use_pt_socket = (
+            request.requested_api == type_pb2.pt_planner
+            and 'use_pt_socket' in kwargs
+            and kwargs['use_pt_socket']
+        )
+        with self.socket(self.context, use_pt_socket) as socket:
             if 'request_id' in kwargs and kwargs['request_id']:
                 request.request_id = kwargs['request_id']
             else:
