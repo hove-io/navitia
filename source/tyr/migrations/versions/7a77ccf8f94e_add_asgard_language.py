@@ -1,14 +1,14 @@
 """Add language column for Asgard
 
-Revision ID: c2ae8e936eae
-Revises: a053ceeccdd9
-Create Date: 2021-08-12 12:18:40.516198
+Revision ID: 7a77ccf8f94e
+Revises: 9c9e9706c049
+Create Date: 2021-11-15 16:45:46.699720
 
 """
 
 # revision identifiers, used by Alembic.
-revision = 'c2ae8e936eae'
-down_revision = 'a053ceeccdd9'
+revision = '7a77ccf8f94e'
+down_revision = '9c9e9706c049'
 
 from alembic import op
 import sqlalchemy as sa
