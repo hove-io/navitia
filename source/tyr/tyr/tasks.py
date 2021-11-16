@@ -319,6 +319,7 @@ def import_autocomplete(files, autocomplete_instance, asynchronous=True, backup_
     Import the autocomplete'instance data files
     """
     job = models.Job()
+    job.state = 'running'
     actions = []
     task = {
         'bano': {2: bano2mimir, 7: bano2mimir},
@@ -355,6 +356,7 @@ def import_autocomplete(files, autocomplete_instance, asynchronous=True, backup_
                 executable.si(
                     autocomplete_instance,
                     filename=filename,
+                    job_id=job.id,
                     dataset_uid=dataset.uid,
                     autocomplete_version=version,
                 )

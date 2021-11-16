@@ -668,12 +668,14 @@ def get_bano2mimir_params(working_directory, autocomplete_instance, autocomplete
             autocomplete_instance.name,
         ]
     return [
+        '-s',
+        'elasticsearch.url=\'{}\''.format(current_app.config['MIMIR_URL']),
+        '-s',
+        'container.dataset=\'{}\''.format(autocomplete_instance.name),
+        "-c",
+        current_app.config['MIMIR_CONFIG_DIR'],
         '-i',
         working_directory,
-        '-s',
-        'elasticsearch.url={}'.format(current_app.config['MIMIR_URL']),
-        '-s',
-        'container.dataset={}'.format(autocomplete_instance.name),
         'run',
     ]
 
@@ -717,12 +719,14 @@ def get_openaddresses2mimir_params(autocomplete_instance, working_directory, aut
             autocomplete_instance.name,
         ]
     return [
+        '-s',
+        'elasticsearch.url=\'{}\''.format(current_app.config['MIMIR_URL']),
+        '-s',
+        'container.dataset=\'{}\''.format(autocomplete_instance.name),
+        "-c",
+        current_app.config['MIMIR_CONFIG_DIR'],
         '-i',
         working_directory,
-        '-s',
-        'elasticsearch.url={}'.format(current_app.config['MIMIR_URL']),
-        '-s',
-        'container.dataset={}'.format(autocomplete_instance.name),
         'run',
     ]
 
@@ -771,14 +775,14 @@ def get_osm2mimir_params(
             custom_config,
         ]
     return [
-        '-i',
-        working_directory,
-        '-c',
-        working_directory,
-        '-m',
-        'prod',
         '-s',
-        'elasticsearch.url={}'.format(current_app.config['MIMIR_URL']),
+        'elasticsearch.url=\'{}\''.format(current_app.config['MIMIR_URL']),
+        '-i',
+        data_filename,
+        '-c',
+        current_app.config['MIMIR_CONFIG_DIR'],
+        '-m',
+        autocomplete_instance.name,
         'run',
     ]
 
@@ -793,13 +797,9 @@ def osm2mimir(self, autocomplete_instance, filename, job_id, dataset_uid, autoco
     job = models.Job.query.get(job_id)
     data_filename = unzip_if_needed(filename)
     custom_config = "custom_config"
-    if autocomplete_version == 7:
-        custom_config = "prod"
     working_directory = os.path.dirname(data_filename)
     custom_config_config_toml = '{}/{}.toml'.format(working_directory, custom_config)
     data = autocomplete_instance.config_toml.encode("utf-8")
-    if autocomplete_version == 7:
-        data = autocomplete_instance.config_es7_toml.encode("utf-8")
     with open(custom_config_config_toml, 'w') as f:
         f.write(data)
     params = get_osm2mimir_params(
@@ -828,12 +828,14 @@ def get_stops2mimir_params(instance_name, working_directory, autocomplete_versio
             instance_name,
         ]
     return [
+        '-s',
+        'elasticsearch.url=\'{}\''.format(current_app.config['MIMIR_URL']),
+        '-s',
+        'container.dataset=\'{}\''.format(instance_name),
         '-i',
         os.path.join(working_directory, 'stops.txt'),
-        '-s',
-        'elasticsearch.url={}'.format(current_app.config['MIMIR_URL']),
-        '-s',
-        'container.dataset={}'.format(instance_name),
+        '-c',
+        current_app.config['MIMIR_CONFIG_DIR'],
         'run',
     ]
 
@@ -887,12 +889,14 @@ def get_ntfs2mimir_params(instance_name, working_directory, autocomplete_version
             instance_name,
         ]
     return [
+        '-s',
+        'elasticsearch.url=\'{}\''.format(current_app.config['MIMIR_URL']),
+        '-s',
+        'container.dataset=\'{}\''.format(instance_name),
         '-i',
         working_directory,
-        '-s',
-        'elasticsearch.url={}'.format(current_app.config['MIMIR_URL']),
-        '-s',
-        'container.dataset={}'.format(instance_name),
+        '-c',
+        current_app.config['MIMIR_CONFIG_DIR'],
         'run',
     ]
 
@@ -946,8 +950,11 @@ def get_cosmogony2mimir_params(cosmo_file, autocomplete_instance, autocomplete_v
         ]
     return [
         "-s",
-        'elasticsearch.url={}'.format(current_app.config['MIMIR_URL']),
-        "container.dataset={}".format(autocomplete_instance.name),
+        'elasticsearch.url=\'{}\''.format(current_app.config['MIMIR_URL']),
+        "-s",
+        'container.dataset=\'{}\''.format(autocomplete_instance.name),
+        "-c",
+        current_app.config['MIMIR_CONFIG_DIR'],
         "-i",
         cosmo_file,
         "run",
@@ -988,8 +995,11 @@ def get_poi2mimir_params(poi_file, dataset_name, autocomplete_version=2):
         ]
     return [
         "-s",
-        'elasticsearch.url={}'.format(current_app.config['MIMIR_URL']),
-        "container.dataset={}".format(dataset_name),
+        'elasticsearch.url=\'{}\''.format(current_app.config['MIMIR_URL']),
+        "-s",
+        'container.dataset=\'{}\''.format(dataset_name),
+        "-c",
+        current_app.config['MIMIR_CONFIG_DIR'],
         "-i",
         poi_file,
         "run",
@@ -1012,8 +1022,8 @@ def poi2mimir(self, instance_name, input, autocomplete_version, job_id=None, dat
         instance = models.Instance.query_existing().filter_by(name=instance_name).first()
     executable = "poi2mimir2" if autocomplete_version == 2 else "poi2mimir"
     logger.debug('running {} version autocomplete {}'.format(executable, autocomplete_version))
-
-    argv = get_poi2mimir_params(input, dataset_name, autocomplete_version)
+    working_directory = unzip_if_needed(input)
+    argv = get_poi2mimir_params(working_directory, dataset_name, autocomplete_version)
     try:
         if job:
             with collect_metric(executable, job, dataset_uid):

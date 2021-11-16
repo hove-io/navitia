@@ -134,7 +134,10 @@ CELERYBEAT_SCHEDULE_FILENAME = '/tmp/celerybeat-schedule'
 
 CELERYD_HIJACK_ROOT_LOGGER = False
 
-MIMIR2_URL = os.getenv('TYR_MIMIR2_URL', None)
+MIMIR_URL = os.getenv('TYR_MIMIR_URL', "http://127.0.0.1:9300")
+# MIMIR2_URL = os.getenv('TYR_MIMIR2_URL', "http://127.0.0.1:9200")
+
+MIMIR_CONFIG_DIR = os.getenv('MIMIR_CONFIG_DIR', "/etc/mimir/")
 
 # we don't enable serpy for now
 USE_SERPY = False
