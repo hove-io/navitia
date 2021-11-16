@@ -663,13 +663,13 @@ def get_bano2mimir_params(working_directory, autocomplete_instance, autocomplete
             '-i',
             working_directory,
             '--connection-string',
-            current_app.config['MIMIR2_URL'],
+            current_app.config['MIMIR_URL'],
             '--dataset',
             autocomplete_instance.name,
         ]
     return [
         '-s',
-        'elasticsearch.url=\'{}\''.format(current_app.config['MIMIR_URL']),
+        'elasticsearch.url=\'{}\''.format(current_app.config['MIMIR7_URL']),
         '-s',
         'container.dataset=\'{}\''.format(autocomplete_instance.name),
         "-c",
@@ -683,7 +683,7 @@ def get_bano2mimir_params(working_directory, autocomplete_instance, autocomplete
 @celery.task(bind=True)
 def bano2mimir(self, autocomplete_instance, filename, job_id, dataset_uid, autocomplete_version):
     """ launch bano2mimir """
-    executable = "bano2mimir2" if autocomplete_version == 2 else "bano2mimir"
+    executable = "bano2mimir" if autocomplete_version == 2 else "bano2mimir7"
     autocomplete_instance = models.db.session.merge(autocomplete_instance)  # reatache the object
     logger = get_autocomplete_instance_logger(autocomplete_instance, task_id=job_id)
     if autocomplete_instance.address != 'BANO':
@@ -714,13 +714,13 @@ def get_openaddresses2mimir_params(autocomplete_instance, working_directory, aut
             '-i',
             working_directory,
             '--connection-string',
-            current_app.config['MIMIR2_URL'],
+            current_app.config['MIMIR_URL'],
             '--dataset',
             autocomplete_instance.name,
         ]
     return [
         '-s',
-        'elasticsearch.url=\'{}\''.format(current_app.config['MIMIR_URL']),
+        'elasticsearch.url=\'{}\''.format(current_app.config['MIMIR7_URL']),
         '-s',
         'container.dataset=\'{}\''.format(autocomplete_instance.name),
         "-c",
@@ -734,7 +734,7 @@ def get_openaddresses2mimir_params(autocomplete_instance, working_directory, aut
 @celery.task(bind=True)
 def openaddresses2mimir(self, autocomplete_instance, filename, job_id, dataset_uid, autocomplete_version):
     """ launch openaddresses2mimir """
-    executable = "openaddresses2mimir2" if autocomplete_version == 2 else "openaddresses2mimir"
+    executable = "openaddresses2mimir" if autocomplete_version == 2 else "openaddresses2mimir7"
     autocomplete_instance = models.db.session.merge(autocomplete_instance)  # reatache the object
     logger = get_autocomplete_instance_logger(autocomplete_instance, task_id=job_id)
     if autocomplete_instance.address != 'OA':
@@ -768,7 +768,7 @@ def get_osm2mimir_params(
             '-i',
             data_filename,
             '--connection-string',
-            current_app.config['MIMIR2_URL'],
+            current_app.config['MIMIR_URL'],
             '-D',
             "{}/".format(working_directory),
             '-s',
@@ -776,7 +776,7 @@ def get_osm2mimir_params(
         ]
     return [
         '-s',
-        'elasticsearch.url=\'{}\''.format(current_app.config['MIMIR_URL']),
+        'elasticsearch.url=\'{}\''.format(current_app.config['MIMIR7_URL']),
         '-i',
         data_filename,
         '-c',
@@ -790,7 +790,7 @@ def get_osm2mimir_params(
 @celery.task(bind=True)
 def osm2mimir(self, autocomplete_instance, filename, job_id, dataset_uid, autocomplete_version):
     """ launch osm2mimir """
-    executable = "osm2mimir2" if autocomplete_version == 2 else "osm2mimir"
+    executable = "osm2mimir" if autocomplete_version == 2 else "osm2mimir7"
     autocomplete_instance = models.db.session.merge(autocomplete_instance)  # reatache the object
     logger = get_autocomplete_instance_logger(autocomplete_instance, task_id=job_id)
     logger.debug('running {} for {}'.format(executable, job_id))
@@ -823,13 +823,13 @@ def get_stops2mimir_params(instance_name, working_directory, autocomplete_versio
             '--input',
             os.path.join(working_directory, 'stops.txt'),
             '--connection-string',
-            current_app.config['MIMIR2_URL'],
+            current_app.config['MIMIR_URL'],
             '--dataset',
             instance_name,
         ]
     return [
         '-s',
-        'elasticsearch.url=\'{}\''.format(current_app.config['MIMIR_URL']),
+        'elasticsearch.url=\'{}\''.format(current_app.config['MIMIR7_URL']),
         '-s',
         'container.dataset=\'{}\''.format(instance_name),
         '-i',
@@ -854,7 +854,8 @@ def stops2mimir(self, instance_name, input, autocomplete_version, job_id=None, d
         logger = get_instance_logger(instance, task_id=job_id)
     else:
         logger = get_task_logger(logging.getLogger("autocomplete"))
-    executable = "stops2mimir2" if autocomplete_version == 2 else "stops2mimir"
+    executable = "stops2mimir" if autocomplete_version == 2 else "stops2mimir7"
+
     logger.debug('running {} for Es{}'.format(executable, autocomplete_version))
 
     argv = get_stops2mimir_params(instance_name, os.path.dirname(input), autocomplete_version)
@@ -884,13 +885,13 @@ def get_ntfs2mimir_params(instance_name, working_directory, autocomplete_version
             '--input',
             working_directory,
             '--connection-string',
-            current_app.config['MIMIR2_URL'],
+            current_app.config['MIMIR_URL'],
             '--dataset',
             instance_name,
         ]
     return [
         '-s',
-        'elasticsearch.url=\'{}\''.format(current_app.config['MIMIR_URL']),
+        'elasticsearch.url=\'{}\''.format(current_app.config['MIMIR7_URL']),
         '-s',
         'container.dataset=\'{}\''.format(instance_name),
         '-i',
@@ -913,7 +914,7 @@ def ntfs2mimir(self, instance_name, input, autocomplete_version, job_id=None, da
         logger = get_instance_logger(instance, task_id=job_id)
     else:
         logger = get_task_logger(logging.getLogger("autocomplete"))
-    executable = "ntfs2mimir2" if autocomplete_version == 2 else "ntfs2mimir"
+    executable = "ntfs2mimir" if autocomplete_version == 2 else "ntfs2mimir7"
     logger.debug('running {} for Es{}'.format(executable, autocomplete_version))
 
     working_directory = unzip_if_needed(input)
@@ -943,14 +944,14 @@ def get_cosmogony2mimir_params(cosmo_file, autocomplete_instance, autocomplete_v
             '--input',
             cosmo_file,
             '--connection-string',
-            current_app.config['MIMIR2_URL'],
+            current_app.config['MIMIR_URL'],
             '--dataset',
             autocomplete_instance.name,
             '--french-id-retrocompatibility',
         ]
     return [
         "-s",
-        'elasticsearch.url=\'{}\''.format(current_app.config['MIMIR_URL']),
+        'elasticsearch.url=\'{}\''.format(current_app.config['MIMIR7_URL']),
         "-s",
         'container.dataset=\'{}\''.format(autocomplete_instance.name),
         "-c",
@@ -963,7 +964,7 @@ def get_cosmogony2mimir_params(cosmo_file, autocomplete_instance, autocomplete_v
 
 @celery.task(bind=True)
 def cosmogony2mimir(self, autocomplete_instance, filename, job_id, dataset_uid, autocomplete_version):
-    executable = "cosmogony2mimir2" if autocomplete_version == 2 else "cosmogony2mimir"
+    executable = "cosmogony2mimir" if autocomplete_version == 2 else "cosmogony2mimir7"
     autocomplete_instance = models.db.session.merge(autocomplete_instance)  # reattach the object
     logger = get_autocomplete_instance_logger(autocomplete_instance, task_id=job_id)
     logger.debug('running {} for {}, version autocomplete {}'.format(executable, job_id, autocomplete_version))
@@ -988,14 +989,14 @@ def get_poi2mimir_params(poi_file, dataset_name, autocomplete_version=2):
             '--input',
             poi_file,
             '--connection-string',
-            current_app.config['MIMIR2_URL'],
+            current_app.config['MIMIR_URL'],
             '--dataset',
             dataset_name,
             '--private',
         ]
     return [
         "-s",
-        'elasticsearch.url=\'{}\''.format(current_app.config['MIMIR_URL']),
+        'elasticsearch.url=\'{}\''.format(current_app.config['MIMIR7_URL']),
         "-s",
         'container.dataset=\'{}\''.format(dataset_name),
         "-c",
@@ -1020,7 +1021,7 @@ def poi2mimir(self, instance_name, input, autocomplete_version, job_id=None, dat
     else:
         logger = get_task_logger(logging.getLogger("autocomplete"))
         instance = models.Instance.query_existing().filter_by(name=instance_name).first()
-    executable = "poi2mimir2" if autocomplete_version == 2 else "poi2mimir"
+    executable = "poi2mimir" if autocomplete_version == 2 else "poi2mimir7"
     logger.debug('running {} version autocomplete {}'.format(executable, autocomplete_version))
     working_directory = unzip_if_needed(input)
     argv = get_poi2mimir_params(working_directory, dataset_name, autocomplete_version)
