@@ -134,8 +134,8 @@ CELERYBEAT_SCHEDULE_FILENAME = '/tmp/celerybeat-schedule'
 
 CELERYD_HIJACK_ROOT_LOGGER = False
 
-MIMIR_URL = os.getenv('TYR_MIMIR_URL', "http://127.0.0.1:9300")
-# MIMIR2_URL = os.getenv('TYR_MIMIR2_URL', "http://127.0.0.1:9200")
+MIMIR_URL = os.getenv('TYR_MIMIR_URL', None)
+MIMIR2_URL = os.getenv('TYR_MIMIR2_URL', None)
 
 MIMIR_CONFIG_DIR = os.getenv('MIMIR_CONFIG_DIR', "/etc/mimir/")
 
