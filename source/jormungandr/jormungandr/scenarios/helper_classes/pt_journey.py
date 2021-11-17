@@ -92,6 +92,7 @@ class PtJourney:
                 self._journey_params,
                 self._bike_in_pt,
                 self._request_id,
+                self._request.get('_use_pt_socket', False),
             )
 
     def _do_journeys_request(self):
