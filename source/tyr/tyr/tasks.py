@@ -345,7 +345,7 @@ def import_autocomplete(files, autocomplete_instance, asynchronous=True, backup_
                 f, autocomplete_instance.backup_dir(autocomplete_dir), manage_sp_char=True
             )
 
-        for version, executable in task[ftype].iteritems():
+        for version, executable in task[ftype].items():
             if not is_activate_autocomplete_version(version):
                 current_app.logger.debug("Autocomplete version {} is disableed".format(version))
                 continue
