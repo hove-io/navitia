@@ -639,14 +639,14 @@ class Journeys(JourneyCommon):
         parser_get.add_argument(
             "_asgard_max_walking_duration_coeff",
             type=PositiveFloat(),
-            default=1,
+            default=1.12,
             hidden=True,
             help="used to adjust the search range in Asgard when computing matrix",
         )
         parser_get.add_argument(
             "_asgard_max_bike_duration_coeff",
             type=PositiveFloat(),
-            default=1,
+            default=2.8,
             hidden=True,
             help="used to adjust the search range in Asgard when computing matrix",
         )
