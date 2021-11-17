@@ -391,7 +391,8 @@ class Journeys(JourneyCommon):
         )
         parser_get.add_argument(
             "_use_pt_socket",
-            type=six.text_type,
+            type=BooleanType(),
+            default=False,
             hidden=True,
             help="Use the 'pt_zmq_socket' instead of 'zmq_socket' for pt_planner sub-requests. This has no effect if 'pt_zmq_socket' is not set in the instance configuration",
         )
