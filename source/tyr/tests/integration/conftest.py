@@ -80,7 +80,7 @@ def clean_db():
 @pytest.fixture
 def enable_mimir2():
     previous_value = app.config['MIMIR_URL']
-    app.config['MIMIR_URL'] = 'http://example.com'
+    app.config['MIMIR_URL'] = 'test_url'
     yield
     app.config['MIMIR_URL'] = previous_value
 
