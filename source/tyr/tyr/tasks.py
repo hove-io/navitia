@@ -209,12 +209,12 @@ def send_to_mimir(instance, filename, family_type):
     job.state = 'running'
 
     if is_activate_autocomplete_version(7):
-        dataset = create_and_get_dataset(ds_type="fusio", family_type="mimir", filename=filename)
-        models.db.session.add(dataset)
-        job.data_sets.append(dataset)
+        dataset_es7 = create_and_get_dataset(ds_type="fusio", family_type="mimir7", filename=filename)
+        models.db.session.add(dataset_es7)
+        job.data_sets.append(dataset_es7)
 
     if is_activate_autocomplete_version(2):
-        dataset_es2 = create_and_get_dataset(ds_type="fusio", family_type="mimir2", filename=filename)
+        dataset_es2 = create_and_get_dataset(ds_type="fusio", family_type="mimir", filename=filename)
         models.db.session.add(dataset_es2)
         job.data_sets.append(dataset_es2)
 
@@ -225,7 +225,7 @@ def send_to_mimir(instance, filename, family_type):
         if not is_activate_autocomplete_version(version):
             logging.getLogger(__name__).info("Disable import mimir version {}".format(version))
             continue
-        ds = dataset if version == 7 else dataset_es2
+        ds = dataset_es7 if version == 7 else dataset_es2
         if family_type == 'pt':
             # Import ntfs in Mimir
             if instance.import_ntfs_in_mimir:
