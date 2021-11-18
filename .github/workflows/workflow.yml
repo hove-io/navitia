@@ -60,7 +60,7 @@ jobs:
       uses: hendrikmuhs/ccache-action@v1
       with:
         key: ${{matrix.os.docker_image}}-ci
-        max-size: 700M
+        max-size: 2000M
     - name: configure for Release
       run: mkdir build && cd ./build && cmake -DSTRIP_SYMBOLS=ON ../source
     - name: run
