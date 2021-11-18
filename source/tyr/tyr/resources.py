@@ -1102,9 +1102,8 @@ class User(flask_restful.Resource):
             logging.error(msg)
             return {'error': msg}, 400
 
-        end_point_id = args['end_point_id']
-        if end_point_id:
-            end_point = models.EndPoint.query.get(end_point_id)
+        if args['end_point_id']:
+            end_point = models.EndPoint.query.get(args['end_point_id'])
         else:
             end_point = models.EndPoint.get_default()
 
@@ -1112,9 +1111,8 @@ class User(flask_restful.Resource):
             msg = get_message('end_point_id', email, args)
             return {'error': msg}, 400
 
-        billing_plan_id = args['billing_plan_id']
-        if billing_plan_id:
-            billing_plan = models.BillingPlan.query.get(billing_plan_id)
+        if args['billing_plan_id']:
+            billing_plan = models.BillingPlan.query.get(args['billing_plan_id'])
         else:
             billing_plan = models.BillingPlan.get_default(end_point)
 
@@ -1221,16 +1219,13 @@ class User(flask_restful.Resource):
             logging.error(msg)
             return {'error': msg}, 400
 
-        end_point_id = args['end_point_id']
-        end_point = models.EndPoint.query.get(end_point_id)
-
+        end_point = models.EndPoint.query.get(args['end_point_id'])
         if not end_point:
             msg = get_message('end_point_id', email, args)
             logging.error(msg)
             return {'error': msg}, 400
 
-        billing_plan_id = args['billing_plan_id']
-        billing_plan = models.BillingPlan.query.get_or_404(billing_plan_id)
+        billing_plan = models.BillingPlan.query.get_or_404(args['billing_plan_id'])
         if not billing_plan:
             msg = get_message('billing_plan_id', email, args)
             logging.error(msg)
