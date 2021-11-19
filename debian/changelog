@@ -1,3 +1,18 @@
+navitia2 (13.4.0) unstable; urgency=low
+
+  * [CI] Use Ccache to improve build time  <https://github.com/CanalTP/navitia/pull/3610>
+  * [Jormun] Change default Asgard duration_coeff  <https://github.com/CanalTP/navitia/pull/3609>
+  * [loki] Add _use_pt_socket parameter  <https://github.com/CanalTP/navitia/pull/3608>
+  * [Doc] Diagram for ptref_grammar updated  <https://github.com/CanalTP/navitia/pull/3607>
+  * [CI] Fix test of release script  <https://github.com/CanalTP/navitia/pull/3602>
+  * [Jormun] Add filter for similar crow_fly   <https://github.com/CanalTP/navitia/pull/3604>
+  * [Jormun] Filter duplicate journey  <https://github.com/CanalTP/navitia/pull/3606>
+  * [Jormun] Fix for direct_path walking/bss  <https://github.com/CanalTP/navitia/pull/3605>
+  * [Tyr] Skip inserting last_dataset files into ed database  <https://github.com/CanalTP/navitia/pull/3601>
+  * [CI] Run Artemis on labeled PR  <https://github.com/CanalTP/navitia/pull/3603>
+
+ -- xlqian <patrick.qian@kisio.com>  Fri, 19 Nov 2021 10:11:22 +0100
+
 navitia2 (13.3.0) unstable; urgency=low
 
   * [documentation] use the latest slate image  <https://github.com/CanalTP/navitia/pull/3598>

@@ -198,11 +198,21 @@ class Kraken(object):
         req.isochrone.journeys_request.CopyFrom(req.journeys)
         return req
 
-    def journeys(self, origins, destinations, datetime, clockwise, journey_parameters, bike_in_pt, request_id):
+    def journeys(
+        self,
+        origins,
+        destinations,
+        datetime,
+        clockwise,
+        journey_parameters,
+        bike_in_pt,
+        request_id,
+        use_pt_socket,
+    ):
         req = self._create_journeys_request(
             origins, destinations, datetime, clockwise, journey_parameters, bike_in_pt
         )
-        return self.instance.send_and_receive(req, request_id=request_id)
+        return self.instance.send_and_receive(req, request_id=request_id, use_pt_socket=use_pt_socket)
 
     def graphical_isochrones(
         self, origins, destinations, datetime, clockwise, graphical_isochrones_parameters, bike_in_pt
