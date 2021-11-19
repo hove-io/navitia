@@ -228,8 +228,12 @@ void Data::shift_stop_times() {
                 case -1:
                     vp.days <<= 1;
                     break;
-                default:
-                    throw navitia::exception("Ed: You have to shift more than one day, that's weird");
+                default: {
+                    std::string err_msg = "Ed: You have shift vj " + vj->name + " by " + std::to_string(shift) + " days,"
+                               " that's more than one day";
+                    LOG4CPLUS_FATAL(log4cplus::Logger::getInstance("log"), err_msg);
+                    throw navitia::exception(err_msg);
+                }
             }
             vj->validity_pattern = get_or_create_validity_pattern(vp);
             for (auto st : vj->stop_time_list) {
@@ -754,7 +758,7 @@ void Data::build_associated_calendar() {
         }
 
         if (calendar_list.empty()) {
-            LOG4CPLUS_TRACE(log, "the line of the vj " << first_vj->uri << " is associated to no calendar");
+            LOG4CPLUS_TRACE(log, "the line of the vj " << first_vj->uri << " is associated to no grid_calendar");
             nb_not_matched_vj++;
             continue;
         }
@@ -772,7 +776,7 @@ void Data::build_associated_calendar() {
         auto close_cal = find_matching_calendar(meta_vj_pair.first, meta_vj_validity_pattern, calendar_list);
 
         if (close_cal.empty()) {
-            LOG4CPLUS_TRACE(log, "the meta vj " << meta_vj_pair.first << " has been attached to no calendar");
+            LOG4CPLUS_TRACE(log, "the meta vj " << meta_vj_pair.first << " has been attached to no grid_calendar");
             nb_not_matched_vj++;
             continue;
         }
@@ -806,9 +810,9 @@ void Data::build_associated_calendar() {
         LOG4CPLUS_DEBUG(log, "the meta vj " << meta_vj_pair.first << " has been attached to " << cal_uri.str());
     }
 
-    LOG4CPLUS_INFO(log, nb_matched << " vehicle journeys have been matched to at least one calendar");
+    LOG4CPLUS_INFO(log, nb_matched << " vehicle journeys have been matched to at least one grid_calendar");
     if (nb_not_matched_vj) {
-        LOG4CPLUS_WARN(log, "no calendar found for " << nb_not_matched_vj << " vehicle journey");
+        LOG4CPLUS_WARN(log, "no grid_calendar found for " << nb_not_matched_vj << " vehicle journey");
     }
     if (nb_ignored) {
         LOG4CPLUS_INFO(log, nb_ignored << " vehicle journey were already linked and therefore ignored");
