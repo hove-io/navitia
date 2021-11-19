@@ -129,7 +129,7 @@ public:
     std::vector<types::StopPointConnection*> stop_point_connections;
 
     // Input Ouput
-    std::vector<types::InputOutput*> io;
+    std::vector<types::InputOutput*> inputs_outputs;
     // Path way
     std::vector<types::PathWay*> pathways;
 
@@ -166,8 +166,6 @@ public:
 
     std::map<ed::types::pt_object_header, std::map<std::string, std::vector<std::string>>> object_codes;
 
-    std::map<std::string, std::vector<std::string>> object_codes_for_io;
-
     // list of comment ids for pt_objects
     std::map<ed::types::pt_object_header, std::vector<std::string>> comments;
     std::map<std::string, nt::Comment> comment_by_id;
@@ -188,17 +186,12 @@ public:
     template <typename T>
     void add_object_code(const T& obj, const std::string& value, const std::string& key = "external_code");
     template <typename T>
-    void add_object_code(const ed::types::InputOutput& obj, const std::string& value, const std::string& key = "external_code");
-    template <typename T>
     bool if_object_code_exist(const T& obj, const std::string& value, const std::string& key);
-    template <typename T>
-    bool if_object_code_exist(const ed::types::InputOutput& obj, const std::string& value, const std::string& key);
     bool if_object_code_exist(const std::string& value, const std::string& key);
 
     template <typename T>
     void add_pt_object_comment(const T* obj, const std::string& comment);
     void add_pt_object_comment(const ed::types::StopTime* st, const std::string& comment);
-    void add_pt_object_comment(const ed::types::InputOutput* st, const std::string& comment);
 
     void add_feed_info(const std::string&, const std::string&);
 
@@ -332,12 +325,6 @@ void Data::add_object_code(const T& obj, const std::string& value, const std::st
     codes[key].push_back(value);
 }
 
-// specialization for InputOuput object
-template <typename T>
-void Data::add_object_code(const ed::types::InputOutput& obj, const std::string& value, const std::string& key) {
-    object_codes_for_io[key].push_back(value);
-}
-
 template <typename T>
 bool Data::if_object_code_exist(const T& obj, const std::string& value, const std::string& key) {
     const auto pt_object = ed::types::make_pt_object<T>(obj);
@@ -350,19 +337,6 @@ bool Data::if_object_code_exist(const T& obj, const std::string& value, const st
             if (std::find(values.begin(), values.end(), value) != values.end()) {
                 return true;
             }
-        }
-    }
-    return false;
-}
-
-// specialization for InputOuput object
-template <typename T>
-bool Data::if_object_code_exist(const ed::types::InputOutput& obj, const std::string& value, const std::string& key) {
-    const auto& codes_it = object_codes_for_io.find(key);
-    if (codes_it != object_codes_for_io.end()) {
-        const auto& values = codes_it->second;
-        if (std::find(values.begin(), values.end(), value) != values.end()) {
-            return true;
         }
     }
     return false;
@@ -389,9 +363,5 @@ void Data::add_pt_object_comment(const T* obj, const std::string& comment) {
 inline void Data::add_pt_object_comment(const ed::types::StopTime* st, const std::string& comment) {
     stoptime_comments[st].push_back(comment);
 }
-// specialization for InputOuput object
-//inline void Data::add_pt_object_comment(const ed::types::InputOutput* st, const std::string& comment) {
-    //stoptime_comments[st].push_back(comment);
-//}
 
 }  // namespace ed

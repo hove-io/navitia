@@ -401,11 +401,8 @@ nm::InputOutput* StopsGtfsHandler::build_input_output(Data& data, const csv_row&
     if (has_col(parent_c, row) && row[parent_c] != "") {
         io->parent_station = row[parent_c];
     }
-    gtfs_data.io_map[io->uri] = io;
-    data.io.push_back(io);
-    if (stop_code_is_present) {
-        add_gtfs_stop_code(data, io, row[code_c]);
-    }
+    gtfs_data.input_output_map[io->uri] = io;
+    data.inputs_outputs.push_back(io);
 
     return io;
 }

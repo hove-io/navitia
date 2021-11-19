@@ -739,19 +739,17 @@ BOOST_AUTO_TEST_CASE(input_output_tests) {
         ed::connectors::FusioParser parser(ntfs_path + "_v5");
         parser.fill(data);
 
-        BOOST_REQUIRE_EQUAL(data.io.size(), 2);
-        BOOST_CHECK_EQUAL(data.io[0]->uri, "IO:1");
-        BOOST_CHECK_EQUAL(data.io[0]->name, "IO 1");
-        BOOST_CHECK_EQUAL(data.io[0]->stop_code, "stop_code_io_1");
-        BOOST_CHECK_EQUAL(data.io[0]->parent_station, "SA:A");
-        BOOST_CHECK_EQUAL(data.io[0]->visible, 1);
-        BOOST_CHECK_EQUAL(data.io[1]->uri, "IO:2");
-        BOOST_CHECK_EQUAL(data.io[1]->name, "IO 2");
-        BOOST_CHECK_EQUAL(data.io[1]->stop_code, "stop_code_io_2");
-        BOOST_CHECK_EQUAL(data.io[1]->parent_station, "SA:B");
-        BOOST_CHECK_EQUAL(data.io[1]->visible, 1);
-        BOOST_CHECK_EQUAL(data.object_codes_for_io.size(), 2);
-        //BOOST_CHECK_EQUAL(data.object_codes_for_io[0]->parent_station, "SA:B");
+        BOOST_REQUIRE_EQUAL(data.inputs_outputs.size(), 2);
+        BOOST_CHECK_EQUAL(data.inputs_outputs[0]->uri, "IO:1");
+        BOOST_CHECK_EQUAL(data.inputs_outputs[0]->name, "IO 1");
+        BOOST_CHECK_EQUAL(data.inputs_outputs[0]->stop_code, "stop_code_io_1");
+        BOOST_CHECK_EQUAL(data.inputs_outputs[0]->parent_station, "SA:A");
+        BOOST_CHECK_EQUAL(data.inputs_outputs[0]->visible, 1);
+        BOOST_CHECK_EQUAL(data.inputs_outputs[1]->uri, "IO:2");
+        BOOST_CHECK_EQUAL(data.inputs_outputs[1]->name, "IO 2");
+        BOOST_CHECK_EQUAL(data.inputs_outputs[1]->stop_code, "stop_code_io_2");
+        BOOST_CHECK_EQUAL(data.inputs_outputs[1]->parent_station, "SA:B");
+        BOOST_CHECK_EQUAL(data.inputs_outputs[1]->visible, 1);
     }
 }
 

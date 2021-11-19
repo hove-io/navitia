@@ -88,7 +88,7 @@ struct GtfsData {
     std::unordered_map<std::string, ed::types::CommercialMode*> commercial_mode_map;
     std::unordered_map<std::string, ed::types::StopPoint*> stop_point_map;
     std::unordered_map<std::string, ed::types::StopArea*> stop_area_map;
-    std::unordered_map<std::string, ed::types::InputOutput*> io_map;
+    std::unordered_map<std::string, ed::types::InputOutput*> input_output_map;
     std::unordered_map<std::string, ed::types::PathWay*> pathway_map;
     std::unordered_map<std::string, ed::types::Line*> line_map;
     std::unordered_map<std::string, ed::types::Line*> line_map_by_external_code;
