@@ -365,7 +365,7 @@ class Scenario(object):
 
     def _add_bypass_disruptions_link(self, resp, params):
         # find first impact with a NO_SERVICE severity
-        if 'data_freshness' in params and 'realtime' in params['data_freshness']:
+        if 'realtime' in params.get('data_freshness', []):
             return
         found = next((True for impact in resp.impacts if impact.severity.effect == Severity.NO_SERVICE), False)
         if found:
