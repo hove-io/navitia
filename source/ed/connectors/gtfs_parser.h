@@ -89,6 +89,7 @@ struct GtfsData {
     std::unordered_map<std::string, ed::types::StopPoint*> stop_point_map;
     std::unordered_map<std::string, ed::types::StopArea*> stop_area_map;
     std::unordered_map<std::string, ed::types::InputOutput*> io_map;
+    std::unordered_map<std::string, ed::types::PathWay*> pathway_map;
     std::unordered_map<std::string, ed::types::Line*> line_map;
     std::unordered_map<std::string, ed::types::Line*> line_map_by_external_code;
     std::unordered_map<std::string, ed::types::LineGroup*> line_group_map;
@@ -265,6 +266,17 @@ struct RouteGtfsHandler : public GenericHandler {
     ed::types::Line* handle_line(Data& data, const csv_row& line, bool is_first_line);
     const std::vector<std::string> required_headers() const {
         return {"route_id", "route_short_name", "route_long_name", "route_type"};
+    }
+};
+
+struct PathWayGtfsHandler : public GenericHandler {
+    PathWayGtfsHandler(GtfsData& gdata, CsvReader& reader) : GenericHandler(gdata, reader) {}
+    int pathway_id_c, from_stop_id_c, to_stop_id_c, pathway_mode_c, is_bidirectional_c, length_c, traversal_time_c, stair_count_c, max_slope_c, min_width_c, signposted_as_c, reversed_signposted_as_c;
+    void init(Data&);
+    void finish(Data& data);
+    ed::types::PathWay* handle_line(Data& data, const csv_row& line, bool is_first_line);
+    const std::vector<std::string> required_headers() const {
+        return {"pathway_id", "from_stop_id", "to_stop_id", "pathway_mode", "is_bidirectional"};
     }
 };
 

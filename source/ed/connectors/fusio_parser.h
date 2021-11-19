@@ -80,6 +80,14 @@ struct StopsFusioHandler : public StopsGtfsHandler {
     ed::types::InputOutput* build_input_output(Data& data, const csv_row& row);
 };
 
+struct PathWayFusioHandler : public PathWayGtfsHandler {
+    PathWayFusioHandler(GtfsData& gdata, CsvReader& reader) : PathWayGtfsHandler(gdata, reader) {}
+    int ext_code_c, sort_c, agency_url_c;
+    void init(Data& data);
+    void handle_line(Data& data, const csv_row& line, bool is_first_line);
+    const std::vector<std::string> required_headers() const { return {}; }
+};
+
 struct RouteFusioHandler : public GenericHandler {
     RouteFusioHandler(GtfsData& gdata, CsvReader& reader) : GenericHandler(gdata, reader) {}
     int route_id_c, ext_code_c, route_name_c, direction_type_c, line_id_c, comment_id_c, commercial_mode_id_c,

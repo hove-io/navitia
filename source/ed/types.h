@@ -167,14 +167,15 @@ struct InputOutput : public Header, Nameable {
     const static nt::Type_e type = nt::Type_e::InputOutput;
     nt::GeographicalCoord coord;
 
-    StopArea* stop_area;
+    std::string parent_station;
+    std::string stop_code;
 
-    InputOutput() : stop_area(nullptr) {}
-    InputOutput(int idx, std::string uri, StopArea* sa = nullptr)
-        : Header(idx, uri), Nameable(uri), stop_area(sa) {}
+    InputOutput() {}
+    InputOutput(int idx, std::string uri)
+        : Header(idx, uri), Nameable(uri) {}
 
-    bool operator<(const StopPoint& other) const;
-    bool operator!=(const StopPoint& sp) const;
+    bool operator<(const InputOutput& other) const;
+    bool operator!=(const InputOutput& sp) const;
 };
 
 struct Dataset : public Header {
@@ -198,6 +199,24 @@ struct Network : public Header, Nameable {
     std::string website;
     std::string fax;
     int sort = std::numeric_limits<int>::max();
+
+    bool operator<(const Network& other) const { return this->name < other.name; }
+};
+
+struct PathWay : public Header, Nameable {
+    const static nt::Type_e type = nt::Type_e::PathWay;
+    std::string pathway_id;
+    std::string from_stop_id;
+    std::string to_stop_id;
+    std::string pathway_mode;
+    std::string is_bidirectional;
+    std::string length;
+    std::string traversal_time;
+    std::string stair_count;
+    std::string max_slope;
+    std::string min_width;
+    std::string signposted_as;
+    std::string reversed_signposted_as;
 
     bool operator<(const Network& other) const { return this->name < other.name; }
 };
@@ -529,6 +548,12 @@ inline nt::Type_e get_associated_enum(const ed::types::StopTime&) {
 }
 inline nt::Type_e get_associated_enum(const ed::types::StopTime*) {
     return nt::Type_e::StopTime;
+}
+inline nt::Type_e get_associated_enum(const ed::types::InputOutput&) {
+    return nt::Type_e::InputOutput;
+}
+inline nt::Type_e get_associated_enum(const ed::types::InputOutput*) {
+    return nt::Type_e::InputOutput;
 }
 
 template <typename T>

@@ -94,7 +94,8 @@ enum class Type_e {
     Impact = 27,
     Dataset = 28,
     size = 29,
-    InputOutput = 30
+    InputOutput = 30,
+    PathWay = 31
 };
 
 using WeekPattern = std::bitset<7>;

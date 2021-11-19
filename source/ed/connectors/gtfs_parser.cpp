@@ -40,6 +40,7 @@ www.navitia.io
 #include <iostream>
 #include <set>
 #include <utility>
+#include <boost/filesystem.hpp>
 
 namespace nm = ed::types;
 typedef boost::tokenizer<boost::escaped_list_separator<char> > Tokenizer;
@@ -397,19 +398,13 @@ nm::InputOutput* StopsGtfsHandler::build_input_output(Data& data, const csv_row&
         delete io;
         return nullptr;
     }
-
+    if (has_col(parent_c, row) && row[parent_c] != "") {
+        io->parent_station = row[parent_c];
+    }
     gtfs_data.io_map[io->uri] = io;
     data.io.push_back(io);
-    //if (stop_code_is_present) {
-        //add_gtfs_stop_code(data, io, row[code_c]);
-    //}
-
-    if (has_col(parent_c, row) && row[parent_c] != "") {  // we save the reference to the stop area
-        auto it = gtfs_data.sa_iomap.find(row[parent_c]);
-        if (it == gtfs_data.sa_iomap.end()) {
-            it = gtfs_data.sa_iomap.insert(std::make_pair(row[parent_c], GtfsData::vector_io())).first;
-        }
-        it->second.push_back(io);
+    if (stop_code_is_present) {
+        add_gtfs_stop_code(data, io, row[code_c]);
     }
 
     return io;
@@ -536,6 +531,76 @@ StopsGtfsHandler::stop_point_and_area StopsGtfsHandler::handle_line(Data& data, 
         // we ignore pathways nodes
         return {};
     }
+}
+
+void PathWayGtfsHandler::init(Data&) {
+    pathway_id_c = csv.get_pos_col("pathway_id");
+    from_stop_id_c = csv.get_pos_col("from_stop_id");
+    to_stop_id_c = csv.get_pos_col("to_stop_id");
+    pathway_mode_c = csv.get_pos_col("pathway_mode");
+    is_bidirectional_c = csv.get_pos_col("is_bidirectional");
+    length_c = csv.get_pos_col("length");
+    traversal_time_c = csv.get_pos_col("traversal_time");
+    stair_count_c = csv.get_pos_col("stair_count");
+    max_slope_c = csv.get_pos_col("max_slope");
+    min_width_c = csv.get_pos_col("min_width");
+    signposted_as_c = csv.get_pos_col("signposted_as");
+    reversed_signposted_as_c = csv.get_pos_col("reversed_signposted_as");
+}
+
+ed::types::PathWay* PathWayGtfsHandler::handle_line(Data& data, const csv_row& row, bool) {
+
+    auto* pw = new ed::types::PathWay();
+
+    std::cout << "LOLOL"<< std::endl;
+    // Mandatory fields
+    pw->pathway_id = row[pathway_id_c];
+    pw->from_stop_id = row[from_stop_id_c];
+    pw->to_stop_id = row[to_stop_id_c];
+    pw->pathway_mode = row[pathway_mode_c];
+    pw->is_bidirectional = row[is_bidirectional_c];
+
+    // Optionnal fields
+
+    // length
+    if (has_col(length_c, row) && row[length_c] != "") {
+        pw->length = row[length_c];
+    }
+    // traversal_time
+    if (has_col(traversal_time_c, row) && row[traversal_time_c] != "") {
+        pw->traversal_time = row[traversal_time_c];
+    }
+    // stair_count
+    if (has_col(stair_count_c, row) && row[stair_count_c] != "") {
+        pw->stair_count= row[stair_count_c];
+    }
+    // max_slope
+    if (has_col(max_slope_c, row) && row[max_slope_c] != "") {
+        pw->max_slope = row[max_slope_c];
+    }
+    // min_width
+    if (has_col(min_width_c, row) && row[min_width_c] != "") {
+        pw->min_width = row[min_width_c];
+    }
+    // signposted_as
+    if (has_col(signposted_as_c, row) && row[signposted_as_c] != "") {
+        pw->signposted_as = row[signposted_as_c];
+    }
+    // reversed_signposted_as
+    if (has_col(reversed_signposted_as_c, row) && row[reversed_signposted_as_c] != "") {
+        pw->reversed_signposted_as = row[reversed_signposted_as_c];
+    }
+
+    // add new data
+    gtfs_data.pathway_map[row[pathway_id_c]] = pw;
+    data.pathways.push_back(pw);
+
+    return pw;
+}
+
+void PathWayGtfsHandler::finish(Data& data) {
+    BOOST_ASSERT(data.pathways.size() == gtfs_data.pathway_map.size());
+    LOG4CPLUS_TRACE(logger, "Nb pathways: " << data.pathways.size());
 }
 
 void RouteGtfsHandler::init(Data&) {
@@ -1488,6 +1553,9 @@ void GtfsParser::parse_files(Data& data, const std::string& beginning_date) {
     parse<AgencyGtfsHandler>(data, "agency.txt", true);
     parse<DefaultContributorHandler>(data);
     parse<StopsGtfsHandler>(data, "stops.txt", true);
+    if (boost::filesystem::exists(this->path + "/pathways.txt")) {
+        parse<PathWayGtfsHandler>(data, "pathways.txt", true);
+    }
     parse<RouteGtfsHandler>(data, "routes.txt", true);
     parse<TransfersGtfsHandler>(data, "transfers.txt");
 
