@@ -760,7 +760,8 @@ BOOST_AUTO_TEST_CASE(pathway_tests) {
         parser.fill(data);
 
         BOOST_REQUIRE_EQUAL(data.pathways.size(), 2);
-        BOOST_CHECK_EQUAL(data.pathways[0]->pathway_id, "SP:A:IO:1");
+        BOOST_CHECK_EQUAL(data.pathways[0]->uri, "SP:A:IO:1");
+        BOOST_CHECK_EQUAL(data.pathways[0]->name, "SP:A:IO:1");
         BOOST_CHECK_EQUAL(data.pathways[0]->from_stop_id, "SP:A");
         BOOST_CHECK_EQUAL(data.pathways[0]->to_stop_id, "IO:1");
         BOOST_CHECK_EQUAL(data.pathways[0]->pathway_mode, "3");
@@ -772,7 +773,8 @@ BOOST_AUTO_TEST_CASE(pathway_tests) {
         BOOST_CHECK_EQUAL(data.pathways[0]->min_width, "");
         BOOST_CHECK_EQUAL(data.pathways[0]->signposted_as, "");
         BOOST_CHECK_EQUAL(data.pathways[0]->reversed_signposted_as, "");
-        BOOST_CHECK_EQUAL(data.pathways[1]->pathway_id, "SP:B:IO:2");
+        BOOST_CHECK_EQUAL(data.pathways[1]->uri, "SP:B:IO:2");
+        BOOST_CHECK_EQUAL(data.pathways[1]->name, "SP:B:IO:2");
         BOOST_CHECK_EQUAL(data.pathways[1]->from_stop_id, "SP:B");
         BOOST_CHECK_EQUAL(data.pathways[1]->to_stop_id, "IO:2");
         BOOST_CHECK_EQUAL(data.pathways[1]->pathway_mode, "3");

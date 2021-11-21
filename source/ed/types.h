@@ -205,7 +205,6 @@ struct Network : public Header, Nameable {
 
 struct PathWay : public Header, Nameable {
     const static nt::Type_e type = nt::Type_e::PathWay;
-    std::string pathway_id;
     std::string from_stop_id;
     std::string to_stop_id;
     std::string pathway_mode;

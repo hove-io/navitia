@@ -549,9 +549,9 @@ ed::types::PathWay* PathWayGtfsHandler::handle_line(Data& data, const csv_row& r
 
     auto* pw = new ed::types::PathWay();
 
-    std::cout << "LOLOL"<< std::endl;
     // Mandatory fields
-    pw->pathway_id = row[pathway_id_c];
+    pw->uri = row[pathway_id_c];
+    pw->name = row[pathway_id_c];
     pw->from_stop_id = row[from_stop_id_c];
     pw->to_stop_id = row[to_stop_id_c];
     pw->pathway_mode = row[pathway_mode_c];

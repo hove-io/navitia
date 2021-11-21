@@ -96,6 +96,8 @@ private:
     void insert_datasets(const std::vector<types::Dataset*>& datasets);
 
     void insert_stop_points(const std::vector<types::StopPoint*>& stop_points);
+    void insert_inputs_outputs(const std::vector<types::InputOutput*>& inputs_outputs);
+    void insert_pathways(const std::vector<types::PathWay*>& pathways);
     void insert_lines(const std::vector<types::Line*>& lines);
     void insert_line_groups(const std::vector<types::LineGroup*>& groups,
                             const std::vector<types::LineGroupLink>& group_links);

@@ -338,6 +338,12 @@ void EdPersistor::persist(const ed::Data& data) {
     LOG4CPLUS_INFO(logger, "Begin: insert stop points");
     this->insert_stop_points(data.stop_points);
     LOG4CPLUS_INFO(logger, "End: insert stop points");
+    LOG4CPLUS_INFO(logger, "Begin: insert inputs outputs");
+    this->insert_inputs_outputs(data.inputs_outputs);
+    LOG4CPLUS_INFO(logger, "End: insert inputs outputs");
+    LOG4CPLUS_INFO(logger, "Begin: insert pathways");
+    this->insert_pathways(data.pathways);
+    LOG4CPLUS_INFO(logger, "End: insert pathways");
     LOG4CPLUS_INFO(logger, "Begin: insert addresses from ntfs");
     this->insert_addresses_from_ntfs(data.addresses_from_ntfs);
     LOG4CPLUS_INFO(logger, "End: insert addresses from ntfs");
@@ -740,6 +746,50 @@ void EdPersistor::insert_stop_points(const std::vector<types::StopPoint*>& stop_
         }
         values.push_back(area.str());
         values.push_back(sp->address_id);
+        this->lotus.insert(values);
+    }
+
+    this->lotus.finish_bulk_insert();
+}
+
+void EdPersistor::insert_inputs_outputs(const std::vector<types::InputOutput*>& inputs_outputs) {
+    this->lotus.prepare_bulk_insert("navitia.input_output",
+                                    {"id", "uri", "name", "coord", "stop_code", "parent_station"});
+
+    for (auto* io : inputs_outputs) {
+        std::vector<std::string> values;
+        values.push_back(std::to_string(io->idx));
+        values.push_back(navitia::encode_uri(io->uri));
+        values.push_back(io->name);
+        values.push_back("POINT(" + std::to_string(io->coord.lon()) + " " + std::to_string(io->coord.lat()) + ")");
+        values.push_back(io->stop_code);
+        values.push_back(io->parent_station);
+        this->lotus.insert(values);
+    }
+
+    this->lotus.finish_bulk_insert();
+}
+
+void EdPersistor::insert_pathways(const std::vector<types::PathWay*>& pathways) {
+    this->lotus.prepare_bulk_insert("navitia.pathway",
+                                    {"id", "uri", "name", "from_stop_id", "to_stop_id", "pathway_mode", "is_bidirectional", "length", "traversal_time", "stair_count", "max_slope", "min_width", "signposted_as", "reversed_signposted_as"});
+
+    for (auto* io : pathways) {
+        std::vector<std::string> values;
+        values.push_back(std::to_string(io->idx));
+        values.push_back(navitia::encode_uri(io->uri));
+        values.push_back(io->name);
+        values.push_back(io->from_stop_id);
+        values.push_back(io->to_stop_id);
+        values.push_back(io->pathway_mode);
+        values.push_back(io->is_bidirectional);
+        values.push_back(io->length);
+        values.push_back(io->traversal_time);
+        values.push_back(io->stair_count);
+        values.push_back(io->max_slope);
+        values.push_back(io->min_width);
+        values.push_back(io->signposted_as);
+        values.push_back(io->reversed_signposted_as);
         this->lotus.insert(values);
     }
 
