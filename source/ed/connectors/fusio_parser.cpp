@@ -360,7 +360,6 @@ void PathWayFusioHandler::init(Data& data) {
 }
 
 void PathWayFusioHandler::handle_line(Data& data, const csv_row& row, bool is_first_line) {
-    std::cout << "LOLOL 1" << std::endl;
     PathWayGtfsHandler::handle_line(data, row, is_first_line);
 }
 
@@ -1985,7 +1984,6 @@ void FusioParser::parse_files(Data& data, const std::string& beginning_date) {
         parse<AddressesFusioHandler>(data, "addresses.txt");
     }
     if (boost::filesystem::exists(this->path + "/pathways.txt")) {
-        std::cout << "LOLOL 1" << std::endl;
         parse<PathWayFusioHandler>(data, "pathways.txt", true);
     }
     parse<RouteFusioHandler>(data, "routes.txt", true);

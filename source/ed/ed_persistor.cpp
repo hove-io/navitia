@@ -756,15 +756,17 @@ void EdPersistor::insert_inputs_outputs(const std::vector<types::InputOutput*>& 
     this->lotus.prepare_bulk_insert("navitia.input_output",
                                     {"id", "uri", "name", "coord", "stop_code", "parent_station"});
 
+    uint idx = 0;
     for (auto* io : inputs_outputs) {
         std::vector<std::string> values;
-        values.push_back(std::to_string(io->idx));
+        values.push_back(std::to_string(idx));
         values.push_back(navitia::encode_uri(io->uri));
         values.push_back(io->name);
         values.push_back("POINT(" + std::to_string(io->coord.lon()) + " " + std::to_string(io->coord.lat()) + ")");
         values.push_back(io->stop_code);
         values.push_back(io->parent_station);
         this->lotus.insert(values);
+        idx++;
     }
 
     this->lotus.finish_bulk_insert();
@@ -776,23 +778,25 @@ void EdPersistor::insert_pathways(const std::vector<types::PathWay*>& pathways) 
         {"id", "uri", "name", "from_stop_id", "to_stop_id", "pathway_mode", "is_bidirectional", "length",
          "traversal_time", "stair_count", "max_slope", "min_width", "signposted_as", "reversed_signposted_as"});
 
-    for (auto* io : pathways) {
+    uint idx = 0;
+    for (auto* pw : pathways) {
         std::vector<std::string> values;
-        values.push_back(std::to_string(io->idx));
+        values.push_back(std::to_string(idx));
         values.push_back(navitia::encode_uri(io->uri));
-        values.push_back(io->name);
-        values.push_back(io->from_stop_id);
-        values.push_back(io->to_stop_id);
-        values.push_back(io->pathway_mode);
-        values.push_back(io->is_bidirectional);
-        values.push_back(io->length);
-        values.push_back(io->traversal_time);
-        values.push_back(io->stair_count);
-        values.push_back(io->max_slope);
-        values.push_back(io->min_width);
-        values.push_back(io->signposted_as);
-        values.push_back(io->reversed_signposted_as);
+        values.push_back(pw->name);
+        values.push_back(pw->from_stop_id);
+        values.push_back(pw->to_stop_id);
+        values.push_back(pw->pathway_mode);
+        values.push_back(pw->is_bidirectional);
+        values.push_back(pw->length);
+        values.push_back(pw->traversal_time);
+        values.push_back(pw->stair_count);
+        values.push_back(pw->max_slope);
+        values.push_back(pw->min_width);
+        values.push_back(pw->signposted_as);
+        values.push_back(pw->reversed_signposted_as);
         this->lotus.insert(values);
+        idx++;
     }
 
     this->lotus.finish_bulk_insert();
