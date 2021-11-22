@@ -782,7 +782,7 @@ void EdPersistor::insert_pathways(const std::vector<types::PathWay*>& pathways) 
     for (auto* pw : pathways) {
         std::vector<std::string> values;
         values.push_back(std::to_string(idx));
-        values.push_back(navitia::encode_uri(io->uri));
+        values.push_back(navitia::encode_uri(pw->uri));
         values.push_back(pw->name);
         values.push_back(pw->from_stop_id);
         values.push_back(pw->to_stop_id);
