@@ -171,8 +171,7 @@ struct InputOutput : public Header, Nameable {
     std::string stop_code;
 
     InputOutput() {}
-    InputOutput(int idx, std::string uri)
-        : Header(idx, uri), Nameable(uri) {}
+    InputOutput(int idx, std::string uri) : Header(idx, uri), Nameable(uri) {}
 
     bool operator<(const InputOutput& other) const;
     bool operator!=(const InputOutput& sp) const;

@@ -517,7 +517,7 @@ StopsGtfsHandler::stop_point_and_area StopsGtfsHandler::handle_line(Data& data, 
             return_wrapper.first = sp;
         }
         return return_wrapper;
-    // Handle I/O case
+        // Handle I/O case
     } else if (has_col(type_c, row) && row[type_c] == "3") {
         auto* io = build_input_output(data, row);
         if (io) {
@@ -546,7 +546,6 @@ void PathWayGtfsHandler::init(Data&) {
 }
 
 ed::types::PathWay* PathWayGtfsHandler::handle_line(Data& data, const csv_row& row, bool) {
-
     auto* pw = new ed::types::PathWay();
 
     // Mandatory fields
@@ -569,7 +568,7 @@ ed::types::PathWay* PathWayGtfsHandler::handle_line(Data& data, const csv_row& r
     }
     // stair_count
     if (has_col(stair_count_c, row) && row[stair_count_c] != "") {
-        pw->stair_count= row[stair_count_c];
+        pw->stair_count = row[stair_count_c];
     }
     // max_slope
     if (has_col(max_slope_c, row) && row[max_slope_c] != "") {

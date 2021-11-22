@@ -271,7 +271,8 @@ struct RouteGtfsHandler : public GenericHandler {
 
 struct PathWayGtfsHandler : public GenericHandler {
     PathWayGtfsHandler(GtfsData& gdata, CsvReader& reader) : GenericHandler(gdata, reader) {}
-    int pathway_id_c, from_stop_id_c, to_stop_id_c, pathway_mode_c, is_bidirectional_c, length_c, traversal_time_c, stair_count_c, max_slope_c, min_width_c, signposted_as_c, reversed_signposted_as_c;
+    int pathway_id_c, from_stop_id_c, to_stop_id_c, pathway_mode_c, is_bidirectional_c, length_c, traversal_time_c,
+        stair_count_c, max_slope_c, min_width_c, signposted_as_c, reversed_signposted_as_c;
     void init(Data&);
     void finish(Data& data);
     ed::types::PathWay* handle_line(Data& data, const csv_row& line, bool is_first_line);

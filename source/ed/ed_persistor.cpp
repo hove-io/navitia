@@ -771,8 +771,10 @@ void EdPersistor::insert_inputs_outputs(const std::vector<types::InputOutput*>& 
 }
 
 void EdPersistor::insert_pathways(const std::vector<types::PathWay*>& pathways) {
-    this->lotus.prepare_bulk_insert("navitia.pathway",
-                                    {"id", "uri", "name", "from_stop_id", "to_stop_id", "pathway_mode", "is_bidirectional", "length", "traversal_time", "stair_count", "max_slope", "min_width", "signposted_as", "reversed_signposted_as"});
+    this->lotus.prepare_bulk_insert(
+        "navitia.pathway",
+        {"id", "uri", "name", "from_stop_id", "to_stop_id", "pathway_mode", "is_bidirectional", "length",
+         "traversal_time", "stair_count", "max_slope", "min_width", "signposted_as", "reversed_signposted_as"});
 
     for (auto* io : pathways) {
         std::vector<std::string> values;
