@@ -206,13 +206,13 @@ struct PathWay : public Header, Nameable {
     const static nt::Type_e type = nt::Type_e::PathWay;
     std::string from_stop_id;
     std::string to_stop_id;
-    std::string pathway_mode;
-    std::string is_bidirectional;
-    std::string length;
-    std::string traversal_time;
-    std::string stair_count;
-    std::string max_slope;
-    std::string min_width;
+    int pathway_mode;
+    bool is_bidirectional;
+    int length;
+    int traversal_time;
+    int stair_count;
+    int max_slope;
+    int min_width;
     std::string signposted_as;
     std::string reversed_signposted_as;
 

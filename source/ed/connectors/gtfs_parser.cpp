@@ -545,6 +545,18 @@ void PathWayGtfsHandler::init(Data&) {
     reversed_signposted_as_c = csv.get_pos_col("reversed_signposted_as");
 }
 
+int PathWayGtfsHandler::fill_pathway_field(const csv_row& row, const int key, const std::string type) {
+    int pw_value = UNKNOWN_COLUMN;
+    if (has_col(key, row) && row[key] != "") {
+        try {
+            return (int)boost::lexical_cast<float>(row[key]);
+        } catch (boost::bad_lexical_cast const& e) {
+            LOG4CPLUS_ERROR(log4cplus::Logger::getInstance("log"), "impossible to parse " << type << ": " << row[key]);
+        }
+    }
+    return pw_value;
+}
+
 ed::types::PathWay* PathWayGtfsHandler::handle_line(Data& data, const csv_row& row, bool) {
     auto* pw = new ed::types::PathWay();
 
@@ -553,31 +565,22 @@ ed::types::PathWay* PathWayGtfsHandler::handle_line(Data& data, const csv_row& r
     pw->name = row[pathway_id_c];
     pw->from_stop_id = row[from_stop_id_c];
     pw->to_stop_id = row[to_stop_id_c];
-    pw->pathway_mode = row[pathway_mode_c];
-    pw->is_bidirectional = row[is_bidirectional_c];
+    pw->pathway_mode = fill_pathway_field(row, pathway_mode_c, "pathway.pathway_mode");
+    pw->is_bidirectional = fill_pathway_field(row, is_bidirectional_c, "pathway.is_bidirectional");
+    ;
 
     // Optionnal fields
 
     // length
-    if (has_col(length_c, row) && row[length_c] != "") {
-        pw->length = row[length_c];
-    }
+    pw->length = fill_pathway_field(row, length_c, "pathway.length");
     // traversal_time
-    if (has_col(traversal_time_c, row) && row[traversal_time_c] != "") {
-        pw->traversal_time = row[traversal_time_c];
-    }
+    pw->traversal_time = fill_pathway_field(row, traversal_time_c, "pathway.traversal_time");
     // stair_count
-    if (has_col(stair_count_c, row) && row[stair_count_c] != "") {
-        pw->stair_count = row[stair_count_c];
-    }
+    pw->stair_count = fill_pathway_field(row, stair_count_c, "pathway.stair_count");
     // max_slope
-    if (has_col(max_slope_c, row) && row[max_slope_c] != "") {
-        pw->max_slope = row[max_slope_c];
-    }
+    pw->max_slope = fill_pathway_field(row, max_slope_c, "pathway.max_slope");
     // min_width
-    if (has_col(min_width_c, row) && row[min_width_c] != "") {
-        pw->min_width = row[min_width_c];
-    }
+    pw->min_width = fill_pathway_field(row, min_width_c, "pathway.min_width");
     // signposted_as
     if (has_col(signposted_as_c, row) && row[signposted_as_c] != "") {
         pw->signposted_as = row[signposted_as_c];

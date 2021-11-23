@@ -41,6 +41,8 @@ www.navitia.io
 
 namespace ed {
 
+static const int unknown_field = -1;
+
 struct EdPersistor {
     Lotus lotus;
     log4cplus::Logger logger;

@@ -787,15 +787,43 @@ void EdPersistor::insert_pathways(const std::vector<types::PathWay*>& pathways) 
         values.push_back(pw->name);
         values.push_back(pw->from_stop_id);
         values.push_back(pw->to_stop_id);
-        values.push_back(pw->pathway_mode);
-        values.push_back(pw->is_bidirectional);
-        values.push_back(pw->length);
-        values.push_back(pw->traversal_time);
-        values.push_back(pw->stair_count);
-        values.push_back(pw->max_slope);
-        values.push_back(pw->min_width);
-        values.push_back(pw->signposted_as);
-        values.push_back(pw->reversed_signposted_as);
+        values.push_back(std::to_string(pw->pathway_mode));
+        values.push_back(std::to_string(pw->is_bidirectional));
+        if (pw->length != unknown_field) {
+            values.push_back(std::to_string(pw->length));
+        } else {
+            values.push_back(lotus.null_value);
+        }
+        if (pw->traversal_time != unknown_field) {
+            values.push_back(std::to_string(pw->traversal_time));
+        } else {
+            values.push_back(lotus.null_value);
+        }
+        if (pw->stair_count != unknown_field) {
+            values.push_back(std::to_string(pw->stair_count));
+        } else {
+            values.push_back(lotus.null_value);
+        }
+        if (pw->max_slope != unknown_field) {
+            values.push_back(std::to_string(pw->max_slope));
+        } else {
+            values.push_back(lotus.null_value);
+        }
+        if (pw->min_width != unknown_field) {
+            values.push_back(std::to_string(pw->min_width));
+        } else {
+            values.push_back(lotus.null_value);
+        }
+        if (pw->signposted_as != "") {
+            values.push_back(pw->signposted_as);
+        } else {
+            values.push_back(lotus.null_value);
+        }
+        if (pw->reversed_signposted_as != "") {
+            values.push_back(pw->reversed_signposted_as);
+        } else {
+            values.push_back(lotus.null_value);
+        }
         this->lotus.insert(values);
         idx++;
     }

@@ -276,6 +276,7 @@ struct PathWayGtfsHandler : public GenericHandler {
     void init(Data&);
     void finish(Data& data);
     ed::types::PathWay* handle_line(Data& data, const csv_row& line, bool is_first_line);
+    int fill_pathway_field(const csv_row& row, const int key, const std::string type);
     const std::vector<std::string> required_headers() const {
         return {"pathway_id", "from_stop_id", "to_stop_id", "pathway_mode", "is_bidirectional"};
     }
