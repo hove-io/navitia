@@ -497,7 +497,8 @@ void EdPersistor::clean_db() {
         "navitia.week_pattern, "
         "navitia.meta_vj, navitia.object_properties, navitia.object_code, "
         "navitia.comments, navitia.ptobject_comments, navitia.feed_info, "
-        "navitia.line_group, navitia.line_group_link, navitia.shape"
+        "navitia.line_group, navitia.line_group_link, navitia.shape, navitia.input_output,"
+        "navitia.pathway"
         " CASCADE");
     // we remove the parameters (but we do not truncate the table since the shape might have been updated with fusio2ed)
     this->lotus.exec(
@@ -757,7 +758,7 @@ void EdPersistor::insert_inputs_outputs(const std::vector<types::InputOutput*>& 
                                     {"id", "uri", "name", "coord", "stop_code", "parent_station"});
 
     uint idx = 0;
-    for (auto* io : inputs_outputs) {
+    for (const auto* io : inputs_outputs) {
         std::vector<std::string> values;
         values.push_back(std::to_string(idx));
         values.push_back(navitia::encode_uri(io->uri));
@@ -779,7 +780,7 @@ void EdPersistor::insert_pathways(const std::vector<types::PathWay*>& pathways) 
          "traversal_time", "stair_count", "max_slope", "min_width", "signposted_as", "reversed_signposted_as"});
 
     uint idx = 0;
-    for (auto* pw : pathways) {
+    for (const auto* pw : pathways) {
         std::vector<std::string> values;
         values.push_back(std::to_string(idx));
         values.push_back(navitia::encode_uri(pw->uri));

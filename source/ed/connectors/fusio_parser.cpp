@@ -309,7 +309,7 @@ nm::StopPoint* StopsFusioHandler::build_stop_point(Data& data, const csv_row& ro
     return sp;
 }
 
-nm::InputOutput* StopsFusioHandler::build_input_output(Data& data, const csv_row& row) {
+nm::InputOutput* StopsFusioHandler::build_inputs_outputs(Data& data, const csv_row& row) {
     auto* io = StopsGtfsHandler::build_input_output(data, row);
     if (is_valid(visible_c, row)) {
         io->visible = (row[visible_c] == "1");
@@ -342,11 +342,8 @@ StopsGtfsHandler::stop_point_and_area StopsFusioHandler::handle_line(Data& data,
         }
         // Handle I/O case
     } else if (has_col(type_c, row) && row[type_c] == "3") {
-        auto* io = build_input_output(data, row);
-        if (io) {
-            return {};
-        }
-        return return_wrapper;
+        build_inputs_outputs(data, row);
+        return {};
     } else {
         // we ignore pathways nodes
         return {};
