@@ -338,9 +338,9 @@ void EdPersistor::persist(const ed::Data& data) {
     LOG4CPLUS_INFO(logger, "Begin: insert stop points");
     this->insert_stop_points(data.stop_points);
     LOG4CPLUS_INFO(logger, "End: insert stop points");
-    LOG4CPLUS_INFO(logger, "Begin: insert inputs outputs");
-    this->insert_inputs_outputs(data.inputs_outputs);
-    LOG4CPLUS_INFO(logger, "End: insert inputs outputs");
+    LOG4CPLUS_INFO(logger, "Begin: insert entrances exits");
+    this->insert_entrances_exits(data.entrances_exits);
+    LOG4CPLUS_INFO(logger, "End: insert entrances exits");
     LOG4CPLUS_INFO(logger, "Begin: insert pathways");
     this->insert_pathways(data.pathways);
     LOG4CPLUS_INFO(logger, "End: insert pathways");
@@ -497,7 +497,7 @@ void EdPersistor::clean_db() {
         "navitia.week_pattern, "
         "navitia.meta_vj, navitia.object_properties, navitia.object_code, "
         "navitia.comments, navitia.ptobject_comments, navitia.feed_info, "
-        "navitia.line_group, navitia.line_group_link, navitia.shape, navitia.input_output,"
+        "navitia.line_group, navitia.line_group_link, navitia.shape, navitia.entrance_exit,"
         "navitia.pathway"
         " CASCADE");
     // we remove the parameters (but we do not truncate the table since the shape might have been updated with fusio2ed)
@@ -753,19 +753,19 @@ void EdPersistor::insert_stop_points(const std::vector<types::StopPoint*>& stop_
     this->lotus.finish_bulk_insert();
 }
 
-void EdPersistor::insert_inputs_outputs(const std::vector<types::InputOutput*>& inputs_outputs) {
-    this->lotus.prepare_bulk_insert("navitia.input_output",
+void EdPersistor::insert_entrances_exits(const std::vector<types::EntranceExit*>& entrances_exits) {
+    this->lotus.prepare_bulk_insert("navitia.entrance_exit",
                                     {"id", "uri", "name", "coord", "stop_code", "parent_station"});
 
     uint idx = 0;
-    for (const auto* io : inputs_outputs) {
+    for (const auto* ee : entrances_exits) {
         std::vector<std::string> values;
         values.push_back(std::to_string(idx));
-        values.push_back(navitia::encode_uri(io->uri));
-        values.push_back(io->name);
-        values.push_back("POINT(" + std::to_string(io->coord.lon()) + " " + std::to_string(io->coord.lat()) + ")");
-        values.push_back(io->stop_code);
-        values.push_back(io->parent_station);
+        values.push_back(navitia::encode_uri(ee->uri));
+        values.push_back(ee->name);
+        values.push_back("POINT(" + std::to_string(ee->coord.lon()) + " " + std::to_string(ee->coord.lat()) + ")");
+        values.push_back(ee->stop_code);
+        values.push_back(ee->parent_station);
         this->lotus.insert(values);
         idx++;
     }

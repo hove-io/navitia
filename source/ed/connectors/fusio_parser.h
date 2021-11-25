@@ -77,7 +77,7 @@ struct StopsFusioHandler : public StopsGtfsHandler {
 
     ed::types::StopPoint* build_stop_point(Data& data, const csv_row& line);
     ed::types::StopArea* build_stop_area(Data& data, const csv_row& line);
-    ed::types::InputOutput* build_inputs_outputs(Data& data, const csv_row& row);
+    ed::types::EntranceExit* build_entrances_exits(Data& data, const csv_row& row);
 };
 
 struct PathWayFusioHandler : public PathWayGtfsHandler {

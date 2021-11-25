@@ -17,7 +17,7 @@ import geoalchemy2 as ga
 
 def upgrade():
     op.create_table(
-        'input_output',
+        'entrance_exit',
         sa.Column('id', sa.BIGINT(), nullable=False),
         sa.Column('uri', sa.TEXT(), nullable=False),
         sa.Column('name', sa.TEXT(), nullable=False),
@@ -49,5 +49,5 @@ def upgrade():
 
 
 def downgrade():
-    op.drop_table('input_output', schema='navitia')
+    op.drop_table('entrance_exit', schema='navitia')
     op.drop_table('pathway', schema='navitia')

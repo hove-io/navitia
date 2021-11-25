@@ -163,18 +163,18 @@ struct Contributor : public Header, Nameable {
     bool operator<(const Contributor& other) const { return this->name < other.name; }
 };
 
-struct InputOutput : public Header, Nameable {
-    const static nt::Type_e type = nt::Type_e::InputOutput;
+struct EntranceExit : public Header, Nameable {
+    const static nt::Type_e type = nt::Type_e::EntranceExit;
     nt::GeographicalCoord coord;
 
     std::string parent_station;
     std::string stop_code;
 
-    InputOutput() {}
-    InputOutput(int idx, std::string uri) : Header(idx, uri), Nameable(uri) {}
+    EntranceExit() {}
+    EntranceExit(int idx, std::string uri) : Header(idx, uri), Nameable(uri) {}
 
-    bool operator<(const InputOutput& other) const;
-    bool operator!=(const InputOutput& sp) const;
+    bool operator<(const EntranceExit& other) const;
+    bool operator!=(const EntranceExit& sp) const;
 };
 
 struct Dataset : public Header {
@@ -547,11 +547,11 @@ inline nt::Type_e get_associated_enum(const ed::types::StopTime&) {
 inline nt::Type_e get_associated_enum(const ed::types::StopTime*) {
     return nt::Type_e::StopTime;
 }
-inline nt::Type_e get_associated_enum(const ed::types::InputOutput&) {
-    return nt::Type_e::InputOutput;
+inline nt::Type_e get_associated_enum(const ed::types::EntranceExit&) {
+    return nt::Type_e::EntranceExit;
 }
-inline nt::Type_e get_associated_enum(const ed::types::InputOutput*) {
-    return nt::Type_e::InputOutput;
+inline nt::Type_e get_associated_enum(const ed::types::EntranceExit*) {
+    return nt::Type_e::EntranceExit;
 }
 
 template <typename T>

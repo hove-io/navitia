@@ -26,7 +26,7 @@ twitter @navitia
 https://groups.google.com/d/forum/navitia
 www.navitia.io
 */
-#include "type/input_output.h"
+#include "type/entrance_exit.h"
 
 #include "type/connection.h"
 #include "type/dataset.h"
@@ -42,12 +42,12 @@ www.navitia.io
 namespace navitia {
 namespace type {
 template <class Archive>
-void InputOutput::serialize(Archive& ar, const unsigned int /*unused*/) {
+void EntranceExit::serialize(Archive& ar, const unsigned int /*unused*/) {
     ar& uri& name& stop_area& coord& idx;
 }
-SERIALIZABLE(InputOutput)
+SERIALIZABLE(EntranceExit)
 
-bool InputOutput::operator<(const InputOutput& other) const {
+bool EntranceExit::operator<(const EntranceExit& other) const {
     if (this->stop_area != other.stop_area) {
         return *this->stop_area < *other.stop_area;
     }

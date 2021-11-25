@@ -80,7 +80,7 @@ struct StopPointConnection;
 struct StopTime;
 struct ValidityPattern;
 struct VehicleJourney;
-struct InputOutput;
+struct EntranceExit;
 using RankStopTime = Rank<StopTime>;
 template <class T>
 struct MultiPolygonMap;

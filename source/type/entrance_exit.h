@@ -41,8 +41,8 @@ www.navitia.io
 namespace navitia {
 namespace type {
 
-struct InputOutput : public Header, Nameable, hasProperties, HasMessages {
-    const static Type_e type = Type_e::InputOutput;
+struct EntranceExit : public Header, Nameable, hasProperties, HasMessages {
+    const static Type_e type = Type_e::EntranceExit;
     GeographicalCoord coord;
 
     StopArea* stop_area;
@@ -50,9 +50,9 @@ struct InputOutput : public Header, Nameable, hasProperties, HasMessages {
     template <class Archive>
     void serialize(Archive& ar, const unsigned int);
 
-    InputOutput() : stop_area(nullptr) {}
+    EntranceExit() : stop_area(nullptr) {}
 
-    bool operator<(const InputOutput& other) const;
+    bool operator<(const EntranceExit& other) const;
 };
 
 }  // namespace type

@@ -309,8 +309,8 @@ nm::StopPoint* StopsFusioHandler::build_stop_point(Data& data, const csv_row& ro
     return sp;
 }
 
-nm::InputOutput* StopsFusioHandler::build_inputs_outputs(Data& data, const csv_row& row) {
-    auto* io = StopsGtfsHandler::build_input_output(data, row);
+nm::EntranceExit* StopsFusioHandler::build_entrances_exits(Data& data, const csv_row& row) {
+    auto* io = StopsGtfsHandler::build_entrance_exit(data, row);
     if (is_valid(visible_c, row)) {
         io->visible = (row[visible_c] == "1");
     }
@@ -342,7 +342,7 @@ StopsGtfsHandler::stop_point_and_area StopsFusioHandler::handle_line(Data& data,
         }
         // Handle I/O case
     } else if (has_col(type_c, row) && row[type_c] == "3") {
-        build_inputs_outputs(data, row);
+        build_entrances_exits(data, row);
         return {};
     } else {
         // we ignore pathways nodes
