@@ -51,6 +51,7 @@ namespace ed {
 namespace connectors {
 
 static const int UNKNOWN_COLUMN = -1;
+static const int DEFAULT_PATHWAYS_VALUE = -1;
 
 /** Return the type enum corresponding to the string*/
 nt::Type_e get_type_enum(const std::string&);

@@ -545,13 +545,14 @@ void PathWayGtfsHandler::init(Data&) {
     reversed_signposted_as_c = csv.get_pos_col("reversed_signposted_as");
 }
 
-int PathWayGtfsHandler::fill_pathway_field(const csv_row& row, const int key, const std::string type) {
-    int pw_value = UNKNOWN_COLUMN;
+int PathWayGtfsHandler::fill_pathway_field(const csv_row& row, const int key, const std::string column_name) {
+    int pw_value = DEFAULT_PATHWAYS_VALUE;
     if (has_col(key, row) && row[key] != "") {
         try {
             return (int)boost::lexical_cast<float>(row[key]);
         } catch (boost::bad_lexical_cast const& e) {
-            LOG4CPLUS_ERROR(log4cplus::Logger::getInstance("log"), "impossible to parse " << type << ": " << row[key]);
+            LOG4CPLUS_ERROR(log4cplus::Logger::getInstance("log"),
+                            "impossible to parse " << column_name << ": " << row[key]);
         }
     }
     return pw_value;
