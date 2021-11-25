@@ -2093,6 +2093,7 @@ class AutocompleteParameter(flask_restful.Resource):
             help='Config toml for osm2mimir',
             location=('json', 'values'),
         )
+
         args = parser.parse_args()
         try:
             autocomplete_param.street = args['street']

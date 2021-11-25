@@ -105,6 +105,14 @@ class InstanceConfig(object):
         self.name = None
 
 
+def is_activate_autocomplete_version(version=2):
+    if version not in [2, 7]:
+        return False
+    if version == 2:
+        return current_app.config.get('MIMIR_URL', None) != None
+    return current_app.config.get('MIMIR7_URL', None) != None
+
+
 def load_instance_config(instance_name):
     def b(unicode):
         """
@@ -113,7 +121,6 @@ def load_instance_config(instance_name):
         return unicode.encode('utf-8')
 
     confspec = []
-
     confspec.append(b(u'[instance]'))
     confspec.append(b(u'source-directory = string()'))
     confspec.append(b(u'backup-directory = string()'))

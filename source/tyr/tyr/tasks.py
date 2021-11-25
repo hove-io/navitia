@@ -61,7 +61,7 @@ from tyr.binarisation import (
 from tyr.binarisation import reload_data, move_to_backupdirectory
 from tyr import celery
 from navitiacommon import models, task_pb2, utils
-from tyr.helper import load_instance_config, get_instance_logger
+from tyr.helper import load_instance_config, get_instance_logger, is_activate_autocomplete_version
 from navitiacommon.launch_exec import launch_exec
 from datetime import datetime, timedelta
 
@@ -205,7 +205,7 @@ def send_to_mimir(instance, filename, family_type):
     """
 
     # if mimir isn't setup do not try to import data for the autocompletion
-    if not current_app.config.get('MIMIR_URL'):
+    if not any([is_activate_autocomplete_version(2) or is_activate_autocomplete_version(7)]):
         return []
 
     # Bail out if the family type is not one that mimir deals with.
@@ -221,30 +221,35 @@ def send_to_mimir(instance, filename, family_type):
     job.instance = instance
     job.state = 'running'
 
-    dataset = models.DataSet()
-    dataset.family_type = 'mimir'
-    dataset.type = 'fusio'
+    if is_activate_autocomplete_version(7):
+        dataset_es7 = create_and_get_dataset(ds_type="fusio", family_type="mimir7", filename=filename)
+        models.db.session.add(dataset_es7)
+        job.data_sets.append(dataset_es7)
 
-    # currently the name of a dataset is the path to it
-    dataset.name = filename
-    models.db.session.add(dataset)
-    job.data_sets.append(dataset)
+    if is_activate_autocomplete_version(2):
+        dataset_es2 = create_and_get_dataset(ds_type="fusio", family_type="mimir", filename=filename)
+        models.db.session.add(dataset_es2)
+        job.data_sets.append(dataset_es2)
 
     models.db.session.add(job)
     models.db.session.commit()
 
-    if family_type == 'pt':
-        # Import ntfs in Mimir
-        if instance.import_ntfs_in_mimir:
-            actions.append(ntfs2mimir.si(instance.name, filename, job.id, dataset_uid=dataset.uid))
-
-        # Import stops in Mimir.
-        # if we are loading pt data we might want to load the stops to autocomplete
-        # This action is deprecated: https://github.com/CanalTP/mimirsbrunn/blob/4430eed1d81247fffa7cf32ba675a9c5ad8b1cbe/documentation/components.md#stops2mimir
-        if instance.import_stops_in_mimir and not instance.import_ntfs_in_mimir:
-            actions.append(stops2mimir.si(instance.name, filename, job.id, dataset_uid=dataset.uid))
-    else:  # assume family_type == 'poi':
-        actions.append(poi2mimir.si(instance.name, filename, job.id, dataset_uid=dataset.uid))
+    for version in (2, 7):
+        if not is_activate_autocomplete_version(version):
+            logging.getLogger(__name__).info("Disable import mimir version {}".format(version))
+            continue
+        ds = dataset_es7 if version == 7 else dataset_es2
+        if family_type == 'pt':
+            # Import ntfs in Mimir
+            if instance.import_ntfs_in_mimir:
+                actions.append(ntfs2mimir.si(instance.name, filename, version, job.id, dataset_uid=ds.uid))
+            # Import stops in Mimir.
+            # if we are loading pt data we might want to load the stops to autocomplete
+            # This action is deprecated: https://github.com/CanalTP/mimirsbrunn/blob/4430eed1d81247fffa7cf32ba675a9c5ad8b1cbe/documentation/components.md#stops2mimir
+            if instance.import_stops_in_mimir and not instance.import_ntfs_in_mimir:
+                actions.append(stops2mimir.si(instance.name, filename, version, job.id, dataset_uid=ds.uid))
+        else:  # assume family_type == 'poi':
+            actions.append(poi2mimir.si(instance.name, filename, version, job.id, dataset_uid=ds.uid))
 
     actions.append(finish_job.si(job.id))
     return actions
@@ -269,6 +274,16 @@ def update_data():
 BANO_REGEXP = re.compile('.*bano.*')
 COSMOGONY_REGEXP = re.compile('.*cosmogony.*')
 OPEN_ADDRESSES_REGEXP = re.compile('.*csv')
+
+
+def create_and_get_dataset(ds_type, family_type, filename):
+    dataset = models.DataSet()
+    dataset.family_type = family_type
+    dataset.type = ds_type
+
+    # currently the name of a dataset is the path to it
+    dataset.name = filename
+    return dataset
 
 
 def type_of_autocomplete_data(filename):
@@ -317,9 +332,14 @@ def import_autocomplete(files, autocomplete_instance, asynchronous=True, backup_
     Import the autocomplete'instance data files
     """
     job = models.Job()
+    job.state = 'running'
     actions = []
-
-    task = {'bano': bano2mimir, 'oa': openaddresses2mimir, 'osm': osm2mimir, 'cosmogony': cosmogony2mimir}
+    task = {
+        'bano': {2: bano2mimir, 7: bano2mimir},
+        'oa': {2: openaddresses2mimir, 7: openaddresses2mimir},
+        'osm': {2: osm2mimir, 7: osm2mimir},
+        'cosmogony': {2: cosmogony2mimir, 7: cosmogony2mimir},
+    }
     autocomplete_dir = current_app.config['TYR_AUTOCOMPLETE_DIR']
 
     # it's important for the admin to be loaded first, then addresses, then street, then poi
@@ -328,29 +348,35 @@ def import_autocomplete(files, autocomplete_instance, asynchronous=True, backup_
     files_and_types = sorted(files_and_types, key=lambda f_t: import_order.index(f_t[1]))
 
     for f, ftype in files_and_types:
-        dataset = models.DataSet()
-        dataset.type = ftype
-        dataset.family_type = 'autocomplete_{}'.format(dataset.type)
-        if dataset.type in task:
-            if backup_file:
-                filename = move_to_backupdirectory(
-                    f, autocomplete_instance.backup_dir(autocomplete_dir), manage_sp_char=True
-                )
-            else:
-                filename = f
-            actions.append(
-                task[dataset.type].si(autocomplete_instance, filename=filename, dataset_uid=dataset.uid)
-            )
-        else:
+        if ftype not in task:
             # unknown type, we skip it
-            current_app.logger.debug("unknown file type: {} for file {}".format(dataset.type, f))
+            current_app.logger.debug("unknown file type: {} for file {}".format(ftype, f))
             continue
+        filename = f
+        if backup_file:
+            filename = move_to_backupdirectory(
+                f, autocomplete_instance.backup_dir(autocomplete_dir), manage_sp_char=True
+            )
 
-        # currently the name of a dataset is the path to it
-        dataset.name = filename
-        models.db.session.add(dataset)
-        job.data_sets.append(dataset)
-        job.autocomplete_params_id = autocomplete_instance.id
+        for version, executable in task[ftype].items():
+            if not is_activate_autocomplete_version(version):
+                current_app.logger.debug("Autocomplete version {} is disableed".format(version))
+                continue
+            dataset = create_and_get_dataset(
+                ds_type=ftype, family_type='autocomplete_{}'.format(ftype), filename=filename
+            )
+            actions.append(
+                executable.si(
+                    autocomplete_instance,
+                    filename=filename,
+                    job_id=job.id,
+                    dataset_uid=dataset.uid,
+                    autocomplete_version=version,
+                )
+            )
+            models.db.session.add(dataset)
+            job.data_sets.append(dataset)
+            job.autocomplete_params_id = autocomplete_instance.id
 
     if not actions:
         return
@@ -374,27 +400,30 @@ def import_in_mimir(_file, instance, asynchronous=True):
     """
     datatype, _ = utils.type_of_data(_file)
     family_type = utils.family_of_data(datatype)
-
     current_app.logger.debug("Import {} data to mimir".format(family_type))
 
-    action = None
+    actions = []
 
-    if family_type == 'pt':
-        if instance.import_ntfs_in_mimir:
-            action = ntfs2mimir.si(instance.name, _file)
-        # Deprecated: https://github.com/CanalTP/mimirsbrunn/blob/4430eed1d81247fffa7cf32ba675a9c5ad8b1cbe/documentation/components.md#stops2mimir
-        if instance.import_stops_in_mimir and not instance.import_ntfs_in_mimir:
-            action = stops2mimir.si(instance.name, _file)
-    elif family_type == 'poi':
-        action = poi2mimir.si(instance.name, _file)
-    else:
-        current_app.logger.warning("Unsupported family_type {}".format(family_type))
+    for version in (2, 7):
+        if not is_activate_autocomplete_version(version):
+            logging.getLogger(__name__).info("Disable import mimir version {}".format(version))
+            continue
+        if family_type == 'pt':
+            if instance.import_ntfs_in_mimir:
+                actions.append(ntfs2mimir.si(instance.name, _file, version))
+            # Deprecated: https://github.com/CanalTP/mimirsbrunn/blob/4430eed1d81247fffa7cf32ba675a9c5ad8b1cbe/documentation/components.md#stops2mimir
+            if instance.import_stops_in_mimir and not instance.import_ntfs_in_mimir:
+                actions.append(stops2mimir.si(instance.name, _file, version))
+        elif family_type == 'poi':
+            actions.append(poi2mimir.si(instance.name, _file, version))
+        else:
+            current_app.logger.warning("Unsupported family_type {}".format(family_type))
 
     if asynchronous:
-        return action.delay()
+        return chain(*actions).delay()
     else:
         # all job are run in sequence and import_in_mimir will only return when all the jobs are finish
-        return action.apply()
+        return chain(*actions).apply()
 
 
 @celery.task()
