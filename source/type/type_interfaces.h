@@ -94,7 +94,7 @@ enum class Type_e {
     Impact = 27,
     Dataset = 28,
     size = 29,
-    EntranceExit = 30,
+    AccessPoint = 30,
     PathWay = 31
 };
 
@@ -337,8 +337,8 @@ inline Type_e get_type_e<Line>() {
     return Type_e::Line;
 }
 template <>
-inline Type_e get_type_e<EntranceExit>() {
-    return Type_e::EntranceExit;
+inline Type_e get_type_e<AccessPoint>() {
+    return Type_e::AccessPoint;
 }
 
 }  // namespace type

@@ -101,7 +101,7 @@ add_library(pb_converter pb_converter.cpp)
 target_link_libraries(pb_converter thermometer vptranslator pthread pb_lib)
 
 add_library(types message.cpp datetime.cpp geographical_coord.cpp timezone_manager.cpp
-    validity_pattern.cpp type_utils.cpp stop_point.cpp entrance_exit.cpp connection.cpp calendar.cpp stop_area.cpp network.cpp
+    validity_pattern.cpp type_utils.cpp stop_point.cpp access_point.cpp connection.cpp calendar.cpp stop_area.cpp network.cpp
     contributor.cpp dataset.cpp company.cpp commercial_mode.cpp physical_mode.cpp line.cpp route.cpp
     vehicle_journey.cpp meta_vehicle_journey.cpp stop_time.cpp type_interfaces.cpp comment_container.cpp
     odt_properties.cpp comment.cpp static_data.cpp entry_point.cpp)
