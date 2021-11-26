@@ -309,16 +309,16 @@ nm::StopPoint* StopsFusioHandler::build_stop_point(Data& data, const csv_row& ro
     return sp;
 }
 
-nm::EntranceExit* StopsFusioHandler::build_entrances_exits(Data& data, const csv_row& row) {
-    auto* io = StopsGtfsHandler::build_entrance_exit(data, row);
+nm::AccessPoint* StopsFusioHandler::build_access_points(Data& data, const csv_row& row) {
+    auto* ap = StopsGtfsHandler::build_access_point(data, row);
     if (is_valid(visible_c, row)) {
-        io->visible = (row[visible_c] == "1");
+        ap->visible = (row[visible_c] == "1");
     }
     // length
     if (has_col(code_c, row) && row[code_c] != "") {
-        io->stop_code = row[code_c];
+        ap->stop_code = row[code_c];
     }
-    return io;
+    return ap;
 }
 
 StopsGtfsHandler::stop_point_and_area StopsFusioHandler::handle_line(Data& data, const csv_row& row, bool) {
@@ -342,7 +342,7 @@ StopsGtfsHandler::stop_point_and_area StopsFusioHandler::handle_line(Data& data,
         }
         // Handle I/O case
     } else if (has_col(type_c, row) && row[type_c] == "3") {
-        build_entrances_exits(data, row);
+        build_access_points(data, row);
         return {};
     } else {
         // we ignore pathways nodes

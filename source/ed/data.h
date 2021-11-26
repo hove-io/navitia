@@ -128,8 +128,8 @@ public:
     std::vector<std::shared_ptr<types::Shape>> shapes_from_prev;
     std::vector<types::StopPointConnection*> stop_point_connections;
 
-    // Entrance Exit
-    std::vector<types::EntranceExit*> entrances_exits;
+    // Access Point
+    std::vector<types::AccessPoint*> access_points;
     // Path way
     std::vector<types::PathWay*> pathways;
 

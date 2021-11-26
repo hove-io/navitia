@@ -392,19 +392,19 @@ bool StopsGtfsHandler::parse_common_data(const csv_row& row, T* stop) {
     return true;
 }
 
-nm::EntranceExit* StopsGtfsHandler::build_entrance_exit(Data& data, const csv_row& row) {
-    auto* ee = new nm::EntranceExit();
-    if (!parse_common_data(row, ee)) {
-        delete ee;
+nm::AccessPoint* StopsGtfsHandler::build_access_point(Data& data, const csv_row& row) {
+    auto* ap = new nm::AccessPoint();
+    if (!parse_common_data(row, ap)) {
+        delete ap;
         return nullptr;
     }
     if (has_col(parent_c, row) && row[parent_c] != "") {
-        ee->parent_station = row[parent_c];
+        ap->parent_station = row[parent_c];
     }
-    gtfs_data.entrance_exit_map[ee->uri] = ee;
-    data.entrances_exits.push_back(ee);
+    gtfs_data.access_point_map[ap->uri] = ap;
+    data.access_points.push_back(ap);
 
-    return ee;
+    return ap;
 }
 
 nm::StopArea* StopsGtfsHandler::build_stop_area(Data& data, const csv_row& row) {
@@ -519,8 +519,8 @@ StopsGtfsHandler::stop_point_and_area StopsGtfsHandler::handle_line(Data& data, 
         return return_wrapper;
         // Handle I/O case
     } else if (has_col(type_c, row) && row[type_c] == "3") {
-        auto* io = build_entrance_exit(data, row);
-        if (io) {
+        auto* sp = build_access_point(data, row);
+        if (sp) {
             return {};
         }
         return return_wrapper;

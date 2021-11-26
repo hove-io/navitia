@@ -89,7 +89,7 @@ struct GtfsData {
     std::unordered_map<std::string, ed::types::CommercialMode*> commercial_mode_map;
     std::unordered_map<std::string, ed::types::StopPoint*> stop_point_map;
     std::unordered_map<std::string, ed::types::StopArea*> stop_area_map;
-    std::unordered_map<std::string, ed::types::EntranceExit*> entrance_exit_map;
+    std::unordered_map<std::string, ed::types::AccessPoint*> access_point_map;
     std::unordered_map<std::string, ed::types::PathWay*> pathway_map;
     std::unordered_map<std::string, ed::types::Line*> line_map;
     std::unordered_map<std::string, ed::types::Line*> line_map_by_external_code;
@@ -244,7 +244,7 @@ struct StopsGtfsHandler : public GenericHandler {
 
     ed::types::StopPoint* build_stop_point(Data& data, const csv_row& line);
     ed::types::StopArea* build_stop_area(Data& data, const csv_row& line);
-    ed::types::EntranceExit* build_entrance_exit(Data& data, const csv_row& row);
+    ed::types::AccessPoint* build_access_point(Data& data, const csv_row& row);
     bool is_duplicate(const csv_row& row);
 };
 
