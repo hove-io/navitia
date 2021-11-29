@@ -128,6 +128,11 @@ public:
     std::vector<std::shared_ptr<types::Shape>> shapes_from_prev;
     std::vector<types::StopPointConnection*> stop_point_connections;
 
+    // Access Point
+    std::vector<types::AccessPoint*> access_points;
+    // Path way
+    std::vector<types::PathWay*> pathways;
+
     // fare:
     std::vector<std::tuple<navitia::fare::State, navitia::fare::State, navitia::fare::Transition>>
         transitions;  // transition with state before and after
@@ -336,6 +341,7 @@ bool Data::if_object_code_exist(const T& obj, const std::string& value, const st
     }
     return false;
 }
+
 inline bool Data::if_object_code_exist(const std::string& value, const std::string& key) {
     for (const auto& pt_object : object_codes) {
         const auto& codes_it = pt_object.second.find(key);

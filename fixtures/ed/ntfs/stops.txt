@@ -14,6 +14,6 @@ SA:J,1,"Arrêt J",45.0614,0.6155,,1,,,,,,
 SP:E,1,"Arrêt E",45.0379,0.6040,,0,,,,,,stop_code_for_sp
 SP:F,1,"Arrêt F",45.0534,0.5962,,0,,,,,,
 SP:J,1,"Arrêt J",45.0614,0.6155,,0,,,,,,
-SP:J:IO,1,"Arrêt J input gate",,,,3,,,,,,
+SP:J:IO,1,"Arrêt J input gate",45.0614,0.6155,,3,,,,,,
 SP:J:g,1,"Arrêt J inside node",,,,4,,,,,,
 SP:J:q,1,"Arrêt J quay",,,,5,,,,,

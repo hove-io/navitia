@@ -93,7 +93,9 @@ enum class Type_e {
     MetaVehicleJourney = 26,
     Impact = 27,
     Dataset = 28,
-    size = 29
+    size = 29,
+    AccessPoint = 30,
+    PathWay = 31
 };
 
 using WeekPattern = std::bitset<7>;
@@ -333,6 +335,10 @@ inline Type_e get_type_e<StopPoint>() {
 template <>
 inline Type_e get_type_e<Line>() {
     return Type_e::Line;
+}
+template <>
+inline Type_e get_type_e<AccessPoint>() {
+    return Type_e::AccessPoint;
 }
 
 }  // namespace type
