@@ -684,10 +684,10 @@ void EdReader::fill_access_point_field(navitia::type::AccessPoint* access_point,
 void EdReader::fill_access_points(nt::Data& data, pqxx::work& work) {
     // access_point
     std::string request =
-        "SELECT ap.id as id, ap.name as name, ar.uri as uri, "
-        "ST_X(ap.coord::geometry) as lon, ST_Y(ap.coord::geometry) as lat,"
-        "ap.stop_code as stop_code,"
-        "ap.parent_station as parent_station"
+        "SELECT id, name, uri, "
+        "ST_X(coord::geometry) as lon, ST_Y(coord::geometry) as lat, "
+        "stop_code, "
+        "parent_station "
         "FROM navitia.access_point";
 
     pqxx::result result = work.exec(request);
@@ -716,18 +716,18 @@ void EdReader::fill_access_points(nt::Data& data, pqxx::work& work) {
 
     // Pathway
     request =
-        "SELECT pw.id as id, pw.name as name, pw.uri as uri, "
-        "pw.from_stop_id as from_stop_id,"
-        "pw.to_stop_id as to_stop_id,"
-        "pw.pathway_mode as pathway_mode"
-        "pw.is_bidirectional as is_bidirectional"
-        "pw.length as length"
-        "pw.traversal_time as traversal_time"
-        "pw.stair_count as stair_count"
-        "pw.max_slope as max_slope"
-        "pw.min_width as min_width"
-        "pw.signposted_as as signposted_as"
-        "pw.reverse_signposted_as as reverse_signposted_as"
+        "SELECT id, name, uri, "
+        "from_stop_id, "
+        "to_stop_id, "
+        "pathway_mode, "
+        "is_bidirectional, "
+        "length, "
+        "traversal_time, "
+        "stair_count, "
+        "max_slope, "
+        "min_width, "
+        "signposted_as, "
+        "reverse_signposted_as "
         "FROM navitia.pathway";
 
     result = work.exec(request);
