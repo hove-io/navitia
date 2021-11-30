@@ -670,7 +670,7 @@ void EdReader::fill_access_point_field(navitia::type::AccessPoint* access_point,
         const_it["reversed_signposted_as"].to(access_point->reversed_signposted_as);
     }
     // link with SP
-    auto sp_key = uri_to_idx_stop_point.find(sp_id);
+    auto sp_key = uri_to_idx_stop_point.find("stop_point:" + sp_id);
     if (sp_key != uri_to_idx_stop_point.end()) {
         auto sp = stop_point_map.find(sp_key->second);
         if (sp != stop_point_map.end()) {
@@ -699,7 +699,7 @@ void EdReader::fill_access_points(nt::Data& data, pqxx::work& work) {
         ap->coord.set_lon(const_it["lon"].as<double>());
         ap->coord.set_lat(const_it["lat"].as<double>());
         // parent station is Stop Area
-        auto sa_key = uri_to_idx_stop_area.find(const_it["parent_station"].as<std::string>());
+        auto sa_key = uri_to_idx_stop_area.find("stop_area:" + const_it["parent_station"].as<std::string>());
         if (sa_key != uri_to_idx_stop_area.end()) {
             auto sa = stop_area_map.find(sa_key->second);
             if (sa != stop_area_map.end()) {
