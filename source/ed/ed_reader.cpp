@@ -687,7 +687,7 @@ void EdReader::fill_access_points(nt::Data& data, pqxx::work& work) {
         "SELECT ap.id as id, ap.name as name, ar.uri as uri, "
         "ST_X(ap.coord::geometry) as lon, ST_Y(ap.coord::geometry) as lat,"
         "ap.stop_code as stop_code,"
-        "ap.parent_station as prent_station"
+        "ap.parent_station as parent_station"
         "FROM navitia.access_point";
 
     pqxx::result result = work.exec(request);

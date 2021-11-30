@@ -43,12 +43,12 @@ struct AccessPoint : public Header, Nameable, hasProperties, HasMessages {
     std::string stop_code = "";
     bool is_entrance = false;
     bool is_exit = false;
-    uint pathway_mode = 0;
-    uint length = 0;
-    uint traversal_time = 0;
-    uint stair_count = 0;
-    uint max_slope = 0;
-    uint min_width = 0;
+    uint pathway_mode = -1;
+    uint length = -1;
+    uint traversal_time = -1;
+    uint stair_count = -1;
+    uint max_slope = -1;
+    uint min_width = -1;
     std::string signposted_as = "";
     std::string reversed_signposted_as = "";
 
