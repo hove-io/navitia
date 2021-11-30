@@ -36,6 +36,7 @@ www.navitia.io
 #include "type/route.h"
 #include "type/serialization.h"
 #include "type/stop_area.h"
+#include "type/access_point.h"
 #include "georef/georef.h"
 
 #include <boost/serialization/weak_ptr.hpp>
@@ -49,7 +50,7 @@ void StopPoint::serialize(Archive& ar, const unsigned int /*unused*/) {
     //
     // stop_point_connection_list is managed by StopPointConnection
     ar& uri& label& name& stop_area& coord& fare_zone& is_zonal& address_id& idx& platform_code& admin_list&
-        _properties& impacts& dataset_list& address;
+        access_points& _properties& impacts& dataset_list& address;
 }
 SERIALIZABLE(StopPoint)
 
