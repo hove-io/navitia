@@ -473,7 +473,7 @@ BOOST_FIXTURE_TEST_CASE(ntfs_v5_test, ArgsFixture) {
         BOOST_REQUIRE_EQUAL(ap->stop_code, "stop_code_io_2");
         BOOST_REQUIRE_EQUAL(ap->length, 68);
         BOOST_REQUIRE_EQUAL(ap->traversal_time, 87);
-        BOOST_REQUIRE_EQUAL(ap->is_entrance, exit);
+        BOOST_REQUIRE_EQUAL(ap->is_entrance, false);
         BOOST_REQUIRE_EQUAL(ap->is_exit, true);
         BOOST_REQUIRE_EQUAL(ap->stair_count, 3);
         BOOST_REQUIRE_EQUAL(ap->max_slope, 30);
