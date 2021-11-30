@@ -458,9 +458,11 @@ BOOST_FIXTURE_TEST_CASE(ntfs_v5_test, ArgsFixture) {
         BOOST_REQUIRE_EQUAL(ap->traversal_time, 87);
         BOOST_REQUIRE_EQUAL(ap->is_entrance, true);
         BOOST_REQUIRE_EQUAL(ap->is_exit, true);
-        BOOST_REQUIRE_EQUAL(ap->stair_count, -1);  // no value
-        BOOST_REQUIRE_EQUAL(ap->max_slope, -1);    // no value
-        BOOST_REQUIRE_EQUAL(ap->min_width, -1);    // no value
+        BOOST_REQUIRE_EQUAL(ap->stair_count, -1);             // no value
+        BOOST_REQUIRE_EQUAL(ap->max_slope, -1);               // no value
+        BOOST_REQUIRE_EQUAL(ap->min_width, -1);               // no value
+        BOOST_REQUIRE_EQUAL(ap->signposted_as, "");           // no value
+        BOOST_REQUIRE_EQUAL(ap->reversed_signposted_as, "");  // no value
         BOOST_CHECK_CLOSE(ap->coord.lat(), 45.0614, 0.001);
         BOOST_CHECK_CLOSE(ap->coord.lon(), 0.6155, 0.001);
     }
@@ -473,9 +475,11 @@ BOOST_FIXTURE_TEST_CASE(ntfs_v5_test, ArgsFixture) {
         BOOST_REQUIRE_EQUAL(ap->traversal_time, 87);
         BOOST_REQUIRE_EQUAL(ap->is_entrance, exit);
         BOOST_REQUIRE_EQUAL(ap->is_exit, true);
-        BOOST_REQUIRE_EQUAL(ap->stair_count, 3);  // no value
-        BOOST_REQUIRE_EQUAL(ap->max_slope, 30);   // no value
-        BOOST_REQUIRE_EQUAL(ap->min_width, 2);    // no value
+        BOOST_REQUIRE_EQUAL(ap->stair_count, 3);
+        BOOST_REQUIRE_EQUAL(ap->max_slope, 30);
+        BOOST_REQUIRE_EQUAL(ap->min_width, 2);
+        BOOST_REQUIRE_EQUAL(ap->signposted_as, "");           // no value
+        BOOST_REQUIRE_EQUAL(ap->reversed_signposted_as, "");  // no value
         BOOST_CHECK_CLOSE(ap->coord.lat(), 45.0614, 0.001);
         BOOST_CHECK_CLOSE(ap->coord.lon(), 0.6155, 0.001);
     }

@@ -666,8 +666,8 @@ void EdReader::fill_access_point_field(navitia::type::AccessPoint* access_point,
     if (!const_it["signposted_as"].is_null()) {
         const_it["signposted_as"].to(access_point->signposted_as);
     }
-    if (!const_it["reverse_signposted_as"].is_null()) {
-        const_it["reverse_signposted_as"].to(access_point->reversed_signposted_as);
+    if (!const_it["reversed_signposted_as"].is_null()) {
+        const_it["reversed_signposted_as"].to(access_point->reversed_signposted_as);
     }
     // link with SP
     auto sp_key = uri_to_idx_stop_point.find(sp_id);
@@ -727,7 +727,7 @@ void EdReader::fill_access_points(nt::Data& data, pqxx::work& work) {
         "max_slope, "
         "min_width, "
         "signposted_as, "
-        "reverse_signposted_as "
+        "reversed_signposted_as "
         "FROM navitia.pathway";
 
     result = work.exec(request);
