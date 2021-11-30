@@ -40,26 +40,26 @@ struct AccessPoint : public Header, Nameable, hasProperties, HasMessages {
     const static Type_e type = Type_e::AccessPoint;
 
     // parameters
-    std::string stop_code;
-    bool is_entrance;
-    bool is_exit;
-    uint pathway_mode;
-    uint length;
-    uint traversal_time;
-    uint stair_count;
-    uint max_slope;
-    uint min_width;
-    std::string signposted_as;
-    std::string reversed_signposted_as;
+    std::string stop_code = "";
+    bool is_entrance = false;
+    bool is_exit = false;
+    uint pathway_mode = 0;
+    uint length = 0;
+    uint traversal_time = 0;
+    uint stair_count = 0;
+    uint max_slope = 0;
+    uint min_width = 0;
+    std::string signposted_as = "";
+    std::string reversed_signposted_as = "";
 
     GeographicalCoord coord;
 
-    StopArea* parent_station;
+    StopArea* parent_station = nullptr;
 
     template <class Archive>
     void serialize(Archive& ar, const unsigned int);
 
-    AccessPoint() : parent_station(nullptr) {}
+    AccessPoint() = default;
 
     bool operator<(const AccessPoint& other) const;
 };
