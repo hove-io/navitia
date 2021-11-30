@@ -758,6 +758,54 @@ class TestDepartureBoard(AbstractTestFixture):
         assert stop_date_times[1]['additional_informations'][0] == 'skipped_stop'
         assert len(stop_date_times[2]['additional_informations']) == 0
 
+        # There is no modification for stop_date_times in a journey
+        assert stop_date_times[0]['departure_date_time'] == "20120616T001000"
+        assert stop_date_times[0]['arrival_date_time'] == "20120616T001000"
+        assert stop_date_times[1]['departure_date_time'] == "20120616T014000"
+        assert stop_date_times[1]['arrival_date_time'] == "20120616T014000"
+        assert stop_date_times[2]['departure_date_time'] == "20120616T025000"
+        assert stop_date_times[2]['arrival_date_time'] == "20120616T025000"
+
+    def test_route_schedules_with_skipped_stop(self):
+        """
+        Verify stop date_times in a route_schedules, with and without skipped_stop
+        Node date_time with skipped_stop will have:
+        1. date_time empty
+        2. additional_informations contains skipped_stop
+        3. data_freshness none
+        4. links size = 2 as other normal nodes
+        """
+        response = self.query_region("routes/D:4/route_schedules?from_datetime=20120615T080000")
+        route_schedule = response['route_schedules']
+        assert len(route_schedule[0]['table']['rows']) == 3
+        nodes = route_schedule[0]['table']['rows']
+        assert len(nodes) == 3
+        assert len(nodes[0]['date_times']) == 1
+        date_time = nodes[0]['date_times'][0]
+        assert date_time['base_date_time'] == "20120616T001000"
+        assert date_time['date_time'] == "20120616T001000"
+        assert len(date_time['additional_informations']) == 0
+        assert date_time['data_freshness'] == "base_schedule"
+        assert len(date_time['links']) == 2
+
+        # Node with skipped_stop
+        assert len(nodes[1]['date_times']) == 1
+        date_time = nodes[1]['date_times'][0]
+        assert 'base_date_time' not in date_time
+        assert date_time['date_time'] == ""
+        assert len(date_time['additional_informations']) == 1
+        assert date_time['additional_informations'][0] == "skipped_stop"
+        assert date_time['data_freshness'] is None
+        assert len(date_time['links']) == 2
+
+        assert len(nodes[2]['date_times']) == 1
+        date_time = nodes[2]['date_times'][0]
+        assert date_time['base_date_time'] == "20120616T025000"
+        assert date_time['date_time'] == "20120616T025000"
+        assert len(date_time['additional_informations']) == 0
+        assert date_time['data_freshness'] == "base_schedule"
+        assert len(date_time['links']) == 2
+
 
 StopSchedule = namedtuple('StopSchedule', ['sp', 'route', 'date_times'])
 SchedDT = namedtuple('SchedDT', ['dt', 'vj'])
