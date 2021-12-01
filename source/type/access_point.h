@@ -36,6 +36,8 @@ www.navitia.io
 namespace navitia {
 namespace type {
 
+const static int ap_default_value = -1;
+
 struct AccessPoint : public Header, Nameable, hasProperties, HasMessages {
     const static Type_e type = Type_e::AccessPoint;
 
@@ -43,12 +45,12 @@ struct AccessPoint : public Header, Nameable, hasProperties, HasMessages {
     std::string stop_code = "";
     bool is_entrance = false;
     bool is_exit = false;
-    uint pathway_mode = -1;
-    uint length = -1;
-    uint traversal_time = -1;
-    uint stair_count = -1;
-    uint max_slope = -1;
-    uint min_width = -1;
+    int pathway_mode = ap_default_value;
+    int length = ap_default_value;
+    int traversal_time = ap_default_value;
+    int stair_count = ap_default_value;
+    int max_slope = ap_default_value;
+    int min_width = ap_default_value;
     std::string signposted_as = "";
     std::string reversed_signposted_as = "";
 

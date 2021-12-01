@@ -45,10 +45,9 @@ namespace navitia {
 namespace type {
 template <class Archive>
 void StopPoint::serialize(Archive& ar, const unsigned int /*unused*/) {
-    // The *_list are not serialized here to avoid stack abuse
-    // during serialization and deserialization.
-    //
-    // stop_point_connection_list is managed by StopPointConnection
+    // stop_point_connection_list is managed by StopPointConnection because
+    // we want to save seria/deseria to perform some optimizations.
+    // Handle inside connection.cpp
     ar& uri& label& name& stop_area& coord& fare_zone& is_zonal& address_id& idx& platform_code& admin_list&
         access_points& _properties& impacts& dataset_list& address;
 }

@@ -751,6 +751,9 @@ void EdReader::fill_access_points(nt::Data& data, pqxx::work& work) {
             fill_access_point_field(to_access_p->second, const_it, false, from_stop_id);
             continue;
         }
+
+        // An other case exists: StopPoint <=> StopPoint connection.
+        // In the future, it will be handled like AccessPoint <=> SP
     }
 }
 
