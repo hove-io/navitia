@@ -1023,8 +1023,7 @@ def poi2mimir(self, instance_name, input, autocomplete_version, job_id=None, dat
         instance = models.Instance.query_existing().filter_by(name=instance_name).first()
     executable = "poi2mimir" if autocomplete_version == 2 else "poi2mimir7"
     logger.debug('running {} version autocomplete {}'.format(executable, autocomplete_version))
-    working_directory = unzip_if_needed(input)
-    argv = get_poi2mimir_params(working_directory, dataset_name, autocomplete_version)
+    argv = get_poi2mimir_params(input, dataset_name, autocomplete_version)
     try:
         if job:
             with collect_metric(executable, job, dataset_uid):
