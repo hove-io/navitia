@@ -28,11 +28,6 @@ www.navitia.io
 */
 #include "type/access_point.h"
 
-#include "type/connection.h"
-#include "type/dataset.h"
-#include "type/indexes.h"
-#include "type/pt_data.h"
-#include "type/route.h"
 #include "type/stop_area.h"
 #include "type/serialization.h"
 #include "georef/georef.h"

@@ -629,12 +629,12 @@ void EdReader::fill_stop_points(nt::Data& data, pqxx::work& work) {
 void EdReader::fill_access_point_field(navitia::type::AccessPoint* access_point,
                                        const pqxx::result::iterator const_it,
                                        const bool from_access_point,
-                                       std::string& sp_id) {
+                                       const std::string& sp_id) {
     if (!const_it["pathway_mode"].is_null()) {
         access_point->pathway_mode = const_it["pathway_mode"].as<unsigned int>();
     }
     if (!const_it["is_bidirectional"].is_null()) {
-        bool is_bidirectional = const_it["is_bidirectional"].as<bool>();
+        const bool is_bidirectional = const_it["is_bidirectional"].as<bool>();
         if (is_bidirectional) {
             access_point->is_entrance = true;
             access_point->is_exit = true;
@@ -710,7 +710,7 @@ void EdReader::fill_access_points(nt::Data& data, pqxx::work& work) {
                                      << const_it["parent_station"].as<std::string>());
         }
 
-        // store access_point temporary before finishing in a SP link
+        // store access_point temporarily before finishing in a SP link
         access_point_map[const_it["uri"].as<std::string>()] = ap;
     }
 
@@ -738,12 +738,14 @@ void EdReader::fill_access_points(nt::Data& data, pqxx::work& work) {
         const_it["to_stop_id"].to(to_stop_id);
 
         // Access Point URI match for from_stop_id
+        // so, to_stop_id have to be a StopPoint
         auto from_access_p = access_point_map.find(from_stop_id);
         if (from_access_p != access_point_map.end()) {
             fill_access_point_field(from_access_p->second, const_it, true, to_stop_id);
             continue;
         }
         // Access Point URI match for to_stop_id
+        // so, from_stop_id have to be a StopPoint
         auto to_access_p = access_point_map.find(to_stop_id);
         if (to_access_p != access_point_map.end()) {
             fill_access_point_field(to_access_p->second, const_it, false, from_stop_id);

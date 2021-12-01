@@ -127,7 +127,7 @@ private:
     void fill_access_point_field(navitia::type::AccessPoint* access_point,
                                  const pqxx::result::iterator const_it,
                                  const bool from_access_point,
-                                 std::string& sp_id);
+                                 const std::string& sp_id);
     void fill_access_points(navitia::type::Data& data, pqxx::work& work);
     void fill_ntfs_addresses(pqxx::work& work);
     void fill_lines(navitia::type::Data& data, pqxx::work& work);
