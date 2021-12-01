@@ -746,25 +746,19 @@ class TestDepartureBoard(AbstractTestFixture):
 
     def test_journey_with_skipped_stop_as_intermediate_stop(self):
         """
-        Verify stop_date_times in a journey, an intermediate skipped_stop is also displayed.
+        Verify stop_date_times in a journey, an intermediate skipped_stop is not displayed.
         """
         response = self.query_region("journeys?from=stop1_D&to=stop3_D&datetime=20120615T080000")
 
         assert len(response['journeys']) == 1
         stop_date_times = response['journeys'][0]['sections'][0]['stop_date_times']
-        assert len(stop_date_times) == 3
+        assert len(stop_date_times) == 2
         assert len(stop_date_times[0]['additional_informations']) == 0
-        assert len(stop_date_times[1]['additional_informations']) == 1
-        assert stop_date_times[1]['additional_informations'][0] == 'skipped_stop'
-        assert len(stop_date_times[2]['additional_informations']) == 0
-
-        # There is no modification for stop_date_times in a journey
         assert stop_date_times[0]['departure_date_time'] == "20120616T001000"
         assert stop_date_times[0]['arrival_date_time'] == "20120616T001000"
-        assert stop_date_times[1]['departure_date_time'] == "20120616T014000"
-        assert stop_date_times[1]['arrival_date_time'] == "20120616T014000"
-        assert stop_date_times[2]['departure_date_time'] == "20120616T025000"
-        assert stop_date_times[2]['arrival_date_time'] == "20120616T025000"
+        assert len(stop_date_times[0]['additional_informations']) == 0
+        assert stop_date_times[1]['departure_date_time'] == "20120616T025000"
+        assert stop_date_times[1]['arrival_date_time'] == "20120616T025000"
 
     def test_route_schedules_with_skipped_stop(self):
         """
