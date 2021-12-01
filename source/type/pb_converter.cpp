@@ -1648,6 +1648,14 @@ void PbCreator::Filler::fill_pb_object(const StopTimeCalendar* stop_time_calenda
             fill(asso_cal_it->second->exceptions, hn->mutable_exceptions());
         }
     }
+
+    // For a skipped_stop we re-init time, base_date_time and realtime_level to have empty object data_time
+    // with additional_informations and links filled in navitia
+    if (stop_time_calendar->stop_time->skipped_stop()) {
+        rs_date_time->set_time(std::numeric_limits<u_int64_t>::max());
+        rs_date_time->clear_base_date_time();
+        rs_date_time->clear_realtime_level();
+    }
 }
 
 void PbCreator::Filler::fill_pb_object(const nt::EntryPoint* point, pbnavitia::PtObject* place) {
