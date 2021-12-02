@@ -392,6 +392,11 @@ struct calendar_fixture {
     calendar_fixture()
         : b("20120614",
             [&](ed::builder& b) {
+                // Stop areas
+                b.sa("SA1", 0., 1.)("stop1_D", 0., 1.);
+                b.sa("SA2", 0., 2.)("stop2_D", 0., 2.);
+                b.sa("SA3", 0., 3.)("stop3_D", 0., 3.);
+
                 // 2 vj during the week
                 b.vj("line:A", "1", "", true, "week")("stop1", "10:00"_t, "10:10"_t)("stop2", "12:00"_t, "12:10"_t);
                 b.vj("line:A", "101", "", true, "week_bis")("stop1", "11:00"_t, "11:10"_t)("stop2", "14:00"_t,

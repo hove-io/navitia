@@ -747,6 +747,7 @@ class TestDepartureBoard(AbstractTestFixture):
     def test_journey_with_skipped_stop_as_intermediate_stop(self):
         """
         Verify stop_date_times in a journey, an intermediate skipped_stop is not displayed.
+        But geojson contains coordinates of three stops including skipped_stop
         """
         response = self.query_region("journeys?from=stop1_D&to=stop3_D&datetime=20120615T080000")
 
@@ -759,6 +760,8 @@ class TestDepartureBoard(AbstractTestFixture):
         assert len(stop_date_times[0]['additional_informations']) == 0
         assert stop_date_times[1]['departure_date_time'] == "20120616T025000"
         assert stop_date_times[1]['arrival_date_time'] == "20120616T025000"
+        geojson = response['journeys'][0]['sections'][0]['geojson']
+        assert len(geojson['coordinates']) == 3
 
     def test_route_schedules_with_skipped_stop(self):
         """
