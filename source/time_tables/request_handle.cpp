@@ -45,14 +45,26 @@ RequestHandle::RequestHandle(PbCreator& pb_creator,
     if (!calendar_id) {
         // we only have to check the production period if we do not have a calendar,
         // since if we have one we are only interested in the time, not the date
-        if (!pb_creator.data->meta->production_date.contains(datetime.date())) {
+        // Because of UTC and local date_time problem, we allow one more day before production_date.begin()
+        if (!pb_creator.data->meta->production_date.contains(datetime.date())
+            && !pb_creator.data->meta->production_date.contains(
+                   (datetime + boost::posix_time::seconds(86399)).date())) {
             pb_creator.fill_pb_error(pbnavitia::Error::date_out_of_bounds, "date is out of bound");
         }
     }
 
     if (!pb_creator.has_error()) {
-        date_time = DateTimeUtils::set((datetime.date() - pb_creator.data->meta->production_date.begin()).days(),
-                                       datetime.time_of_day().total_seconds());
+        // Because of UTC and local date_time problem, we allow one more day before production_date.begin()
+        auto diff = (datetime.date() - pb_creator.data->meta->production_date.begin()).days();
+        if (diff == -1) {
+            date_time = DateTimeUtils::set(0, 0);
+            duration = (duration > datetime.time_of_day().total_seconds())
+                           ? duration - datetime.time_of_day().total_seconds()
+                           : 0;
+        } else {
+            date_time = DateTimeUtils::set((datetime.date() - pb_creator.data->meta->production_date.begin()).days(),
+                                           datetime.time_of_day().total_seconds());
+        }
         if (clockwise) {
             // in clockwise set max_dt to the end_date at midnight if dt + duration is bigger
             auto max_prod_dt = DateTimeUtils::set(pb_creator.data->meta->production_date.length().days(), 0);
