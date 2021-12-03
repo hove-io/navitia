@@ -338,6 +338,12 @@ void EdPersistor::persist(const ed::Data& data) {
     LOG4CPLUS_INFO(logger, "Begin: insert stop points");
     this->insert_stop_points(data.stop_points);
     LOG4CPLUS_INFO(logger, "End: insert stop points");
+    LOG4CPLUS_INFO(logger, "Begin: access points exits");
+    this->insert_access_points(data.access_points);
+    LOG4CPLUS_INFO(logger, "End: insert access points");
+    LOG4CPLUS_INFO(logger, "Begin: insert pathways");
+    this->insert_pathways(data.pathways);
+    LOG4CPLUS_INFO(logger, "End: insert pathways");
     LOG4CPLUS_INFO(logger, "Begin: insert addresses from ntfs");
     this->insert_addresses_from_ntfs(data.addresses_from_ntfs);
     LOG4CPLUS_INFO(logger, "End: insert addresses from ntfs");
@@ -491,7 +497,8 @@ void EdPersistor::clean_db() {
         "navitia.week_pattern, "
         "navitia.meta_vj, navitia.object_properties, navitia.object_code, "
         "navitia.comments, navitia.ptobject_comments, navitia.feed_info, "
-        "navitia.line_group, navitia.line_group_link, navitia.shape"
+        "navitia.line_group, navitia.line_group_link, navitia.shape, navitia.access_point,"
+        "navitia.pathway"
         " CASCADE");
     // we remove the parameters (but we do not truncate the table since the shape might have been updated with fusio2ed)
     this->lotus.exec(
@@ -741,6 +748,84 @@ void EdPersistor::insert_stop_points(const std::vector<types::StopPoint*>& stop_
         values.push_back(area.str());
         values.push_back(sp->address_id);
         this->lotus.insert(values);
+    }
+
+    this->lotus.finish_bulk_insert();
+}
+
+void EdPersistor::insert_access_points(const std::vector<types::AccessPoint*>& access_points) {
+    this->lotus.prepare_bulk_insert("navitia.access_point",
+                                    {"id", "uri", "name", "coord", "stop_code", "parent_station"});
+
+    uint idx = 0;
+    for (const auto* ap : access_points) {
+        std::vector<std::string> values;
+        values.push_back(std::to_string(idx));
+        values.push_back(navitia::encode_uri(ap->uri));
+        values.push_back(ap->name);
+        values.push_back("POINT(" + std::to_string(ap->coord.lon()) + " " + std::to_string(ap->coord.lat()) + ")");
+        values.push_back(ap->stop_code);
+        values.push_back(ap->parent_station);
+        this->lotus.insert(values);
+        idx++;
+    }
+
+    this->lotus.finish_bulk_insert();
+}
+
+void EdPersistor::insert_pathways(const std::vector<types::PathWay*>& pathways) {
+    this->lotus.prepare_bulk_insert(
+        "navitia.pathway",
+        {"id", "uri", "name", "from_stop_id", "to_stop_id", "pathway_mode", "is_bidirectional", "length",
+         "traversal_time", "stair_count", "max_slope", "min_width", "signposted_as", "reversed_signposted_as"});
+
+    uint idx = 0;
+    for (const auto* pw : pathways) {
+        std::vector<std::string> values;
+        values.push_back(std::to_string(idx));
+        values.push_back(navitia::encode_uri(pw->uri));
+        values.push_back(pw->name);
+        values.push_back(pw->from_stop_id);
+        values.push_back(pw->to_stop_id);
+        values.push_back(std::to_string(pw->pathway_mode));
+        values.push_back(std::to_string(pw->is_bidirectional));
+        if (pw->length != unknown_field) {
+            values.push_back(std::to_string(pw->length));
+        } else {
+            values.push_back(lotus.null_value);
+        }
+        if (pw->traversal_time != unknown_field) {
+            values.push_back(std::to_string(pw->traversal_time));
+        } else {
+            values.push_back(lotus.null_value);
+        }
+        if (pw->stair_count != unknown_field) {
+            values.push_back(std::to_string(pw->stair_count));
+        } else {
+            values.push_back(lotus.null_value);
+        }
+        if (pw->max_slope != unknown_field) {
+            values.push_back(std::to_string(pw->max_slope));
+        } else {
+            values.push_back(lotus.null_value);
+        }
+        if (pw->min_width != unknown_field) {
+            values.push_back(std::to_string(pw->min_width));
+        } else {
+            values.push_back(lotus.null_value);
+        }
+        if (pw->signposted_as != "") {
+            values.push_back(pw->signposted_as);
+        } else {
+            values.push_back(lotus.null_value);
+        }
+        if (pw->reversed_signposted_as != "") {
+            values.push_back(pw->reversed_signposted_as);
+        } else {
+            values.push_back(lotus.null_value);
+        }
+        this->lotus.insert(values);
+        idx++;
     }
 
     this->lotus.finish_bulk_insert();

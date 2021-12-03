@@ -163,6 +163,20 @@ struct Contributor : public Header, Nameable {
     bool operator<(const Contributor& other) const { return this->name < other.name; }
 };
 
+struct AccessPoint : public Header, Nameable {
+    const static nt::Type_e type = nt::Type_e::AccessPoint;
+    nt::GeographicalCoord coord;
+
+    std::string parent_station;
+    std::string stop_code;
+
+    AccessPoint() {}
+    AccessPoint(int idx, std::string uri) : Header(idx, uri), Nameable(uri) {}
+
+    bool operator<(const AccessPoint& other) const;
+    bool operator!=(const AccessPoint& sp) const;
+};
+
 struct Dataset : public Header {
     const static nt::Type_e type = nt::Type_e::Dataset;
     Contributor* contributor = nullptr;
@@ -184,6 +198,23 @@ struct Network : public Header, Nameable {
     std::string website;
     std::string fax;
     int sort = std::numeric_limits<int>::max();
+
+    bool operator<(const Network& other) const { return this->name < other.name; }
+};
+
+struct PathWay : public Header, Nameable {
+    const static nt::Type_e type = nt::Type_e::PathWay;
+    std::string from_stop_id;
+    std::string to_stop_id;
+    int pathway_mode;
+    bool is_bidirectional;
+    int length;
+    int traversal_time;
+    int stair_count;
+    int max_slope;
+    int min_width;
+    std::string signposted_as;
+    std::string reversed_signposted_as;
 
     bool operator<(const Network& other) const { return this->name < other.name; }
 };
@@ -515,6 +546,12 @@ inline nt::Type_e get_associated_enum(const ed::types::StopTime&) {
 }
 inline nt::Type_e get_associated_enum(const ed::types::StopTime*) {
     return nt::Type_e::StopTime;
+}
+inline nt::Type_e get_associated_enum(const ed::types::AccessPoint&) {
+    return nt::Type_e::AccessPoint;
+}
+inline nt::Type_e get_associated_enum(const ed::types::AccessPoint*) {
+    return nt::Type_e::AccessPoint;
 }
 
 template <typename T>

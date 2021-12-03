@@ -826,6 +826,75 @@ class Instance(flask_restful.Resource):
         )
 
         parser.add_argument(
+            "asgard_language",
+            type=OptionValue(
+                [
+                    'bulgarian',
+                    'catalan',
+                    'czech',
+                    'danish',
+                    'german',
+                    'greek',
+                    'english_gb',
+                    'english_pirate',
+                    'english_us',
+                    'spanish',
+                    'estonian',
+                    'finnish',
+                    'french',
+                    'hindi',
+                    'hungarian',
+                    'italian',
+                    'japanese',
+                    'bokmal',
+                    'dutch',
+                    'polish',
+                    'portuguese_br',
+                    'portuguese_pt',
+                    'romanian',
+                    'russian',
+                    'slovak',
+                    'slovenian',
+                    'swedish',
+                    'turkish',
+                    'ukrainian',
+                ]
+            ),
+            help='Select a specific language for Asgard guidance instruction.\n'
+            'list available:\n'
+            '- bulgarian = bg-BG\n'
+            '- catalan = ca-ES\n'
+            '- czech = cs-CZ\n'
+            '- danish = da-DK\n'
+            '- german = de-DE\n'
+            '- greek = el-GR\n'
+            '- english_gb = en-GB\n'
+            '- english_pirate = en-US-x-pirate\n'
+            '- english_us = en-US\n'
+            '- spanish = es-ES\n'
+            '- estonian = et-EE\n'
+            '- finnish = fi-FI\n'
+            '- french = fr-FR\n'
+            '- hindi = hi-IN\n'
+            '- hungarian = hu-HU\n'
+            '- italian = it-IT\n'
+            '- japanese = ja-JP\n'
+            '- bokmal = nb-NO\n'
+            '- dutch = nl-NL\n'
+            '- polish = pl-PL\n'
+            '- portuguese_br = pt-BR\n'
+            '- portuguese_pt = pt-PT\n'
+            '- romanian = ro-RO\n'
+            '- russian = ru-RU\n'
+            '- slovak = sk-SK\n'
+            '- slovenian = sl-SI\n'
+            '- swedish = sv-SE\n'
+            '- turkish = tr-TR\n'
+            '- ukrainian = uk-UA\n',
+            default=instance.asgard_language,
+        )
+
+        parser.add_argument(
             'transfer_path',
             type=inputs.boolean,
             help='Enable computing pathways using the street_network engine for transfers between surface physical modes',
@@ -919,6 +988,7 @@ class Instance(flask_restful.Resource):
                         'ridesharing_greenlet_pool_size',
                         'max_waiting_duration',
                         'places_proximity_radius',
+                        'asgard_language',
                         'transfer_path',
                     ],
                 ),
@@ -2023,6 +2093,7 @@ class AutocompleteParameter(flask_restful.Resource):
             help='Config toml for osm2mimir',
             location=('json', 'values'),
         )
+
         args = parser.parse_args()
         try:
             autocomplete_param.street = args['street']

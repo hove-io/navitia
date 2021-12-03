@@ -51,6 +51,7 @@ namespace ed {
 namespace connectors {
 
 static const int UNKNOWN_COLUMN = -1;
+static const int DEFAULT_PATHWAYS_VALUE = -1;
 
 /** Return the type enum corresponding to the string*/
 nt::Type_e get_type_enum(const std::string&);
@@ -88,6 +89,8 @@ struct GtfsData {
     std::unordered_map<std::string, ed::types::CommercialMode*> commercial_mode_map;
     std::unordered_map<std::string, ed::types::StopPoint*> stop_point_map;
     std::unordered_map<std::string, ed::types::StopArea*> stop_area_map;
+    std::unordered_map<std::string, ed::types::AccessPoint*> access_point_map;
+    std::unordered_map<std::string, ed::types::PathWay*> pathway_map;
     std::unordered_map<std::string, ed::types::Line*> line_map;
     std::unordered_map<std::string, ed::types::Line*> line_map_by_external_code;
     std::unordered_map<std::string, ed::types::LineGroup*> line_group_map;
@@ -107,6 +110,7 @@ struct GtfsData {
 
     typedef std::vector<ed::types::StopPoint*> vector_sp;
     std::unordered_map<std::string, vector_sp> sa_spmap;
+
     std::set<std::string> vj_uri;  // we store all vj_uri not to give twice the same uri (since we split some)
 
     // for gtfs we group the comments together, so the key is the comment and the value is the id of the comment
@@ -240,6 +244,7 @@ struct StopsGtfsHandler : public GenericHandler {
 
     ed::types::StopPoint* build_stop_point(Data& data, const csv_row& line);
     ed::types::StopArea* build_stop_area(Data& data, const csv_row& line);
+    ed::types::AccessPoint* build_access_point(Data& data, const csv_row& row);
     bool is_duplicate(const csv_row& row);
 };
 
@@ -261,6 +266,19 @@ struct RouteGtfsHandler : public GenericHandler {
     ed::types::Line* handle_line(Data& data, const csv_row& line, bool is_first_line);
     const std::vector<std::string> required_headers() const {
         return {"route_id", "route_short_name", "route_long_name", "route_type"};
+    }
+};
+
+struct PathWayGtfsHandler : public GenericHandler {
+    PathWayGtfsHandler(GtfsData& gdata, CsvReader& reader) : GenericHandler(gdata, reader) {}
+    int pathway_id_c, from_stop_id_c, to_stop_id_c, pathway_mode_c, is_bidirectional_c, length_c, traversal_time_c,
+        stair_count_c, max_slope_c, min_width_c, signposted_as_c, reversed_signposted_as_c;
+    void init(Data&);
+    void finish(Data& data);
+    ed::types::PathWay* handle_line(Data& data, const csv_row& line, bool is_first_line);
+    int fill_pathway_field(const csv_row& row, const int key, const std::string type);
+    const std::vector<std::string> required_headers() const {
+        return {"pathway_id", "from_stop_id", "to_stop_id", "pathway_mode", "is_bidirectional"};
     }
 };
 

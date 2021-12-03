@@ -136,6 +136,10 @@ CELERYD_HIJACK_ROOT_LOGGER = False
 
 MIMIR_URL = os.getenv('TYR_MIMIR_URL', None)
 
+MIMIR7_URL = os.getenv('TYR_MIMIR7_URL', None)
+
+MIMIR_CONFIG_DIR = os.getenv('MIMIR_CONFIG_DIR', "/etc/mimir/")
+
 # we don't enable serpy for now
 USE_SERPY = False
 

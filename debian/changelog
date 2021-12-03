@@ -1,3 +1,17 @@
+navitia2 (13.5.0) unstable; urgency=low
+
+  * [Tyr] Indexing data for Elasticsearch2 en Elasticsearch7 while doing Import_data depending on configuration.  <https://github.com/CanalTP/navitia/pull/3600>
+  * [Kraken] Do not add stop_date_time with skipped_stop in pt section but geojson must contain coordinate of this point.  <https://github.com/CanalTP/navitia/pull/3619>
+  * [Kraken] Empty skipped stop date time in route schedule  <https://github.com/CanalTP/navitia/pull/3617>
+  * [Kraken] For request datetime before production_date we allow 24 hours in the request  <https://github.com/CanalTP/navitia/pull/3615>
+  * [Ed]: add inputs, outputs and pathways inside ed db  <https://github.com/CanalTP/navitia/pull/3614>
+  * [Kraken] Improve log fusio2ed  <https://github.com/CanalTP/navitia/pull/3613>
+  * [Tyr] Fix poi2mimir  <https://github.com/CanalTP/navitia/pull/3618>
+  * [Jormun/Tyr] Add instructions language  <https://github.com/CanalTP/navitia/pull/3612>
+  * Revert : Revert : [Jormun/Tyr] Add instructions language  <https://github.com/CanalTP/navitia/pull/3527>
+
+ -- krishna <krishna.adhikari@kisio.com>  Fri, 03 Dec 2021 10:12:44 +0100
+
 navitia2 (13.4.0) unstable; urgency=low
 
   * [CI] Use Ccache to improve build time  <https://github.com/CanalTP/navitia/pull/3610>

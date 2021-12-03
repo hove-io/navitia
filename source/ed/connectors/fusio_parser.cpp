@@ -309,6 +309,18 @@ nm::StopPoint* StopsFusioHandler::build_stop_point(Data& data, const csv_row& ro
     return sp;
 }
 
+nm::AccessPoint* StopsFusioHandler::build_access_points(Data& data, const csv_row& row) {
+    auto* ap = StopsGtfsHandler::build_access_point(data, row);
+    if (is_valid(visible_c, row)) {
+        ap->visible = (row[visible_c] == "1");
+    }
+    // length
+    if (has_col(code_c, row) && row[code_c] != "") {
+        ap->stop_code = row[code_c];
+    }
+    return ap;
+}
+
 StopsGtfsHandler::stop_point_and_area StopsFusioHandler::handle_line(Data& data, const csv_row& row, bool) {
     stop_point_and_area return_wrapper{};
 
@@ -328,12 +340,24 @@ StopsGtfsHandler::stop_point_and_area StopsFusioHandler::handle_line(Data& data,
         if (sp) {
             return_wrapper.first = sp;
         }
+        // Handle I/O case
+    } else if (has_col(type_c, row) && row[type_c] == "3") {
+        build_access_points(data, row);
+        return {};
     } else {
         // we ignore pathways nodes
         return {};
     }
 
     return return_wrapper;
+}
+
+void PathWayFusioHandler::init(Data& data) {
+    PathWayGtfsHandler::init(data);
+}
+
+void PathWayFusioHandler::handle_line(Data& data, const csv_row& row, bool is_first_line) {
+    PathWayGtfsHandler::handle_line(data, row, is_first_line);
 }
 
 void RouteFusioHandler::init(Data&) {
@@ -1955,6 +1979,9 @@ void FusioParser::parse_files(Data& data, const std::string& beginning_date) {
     parse<StopsFusioHandler>(data, "stops.txt", true);
     if (boost::filesystem::exists(this->path + "/addresses.txt")) {
         parse<AddressesFusioHandler>(data, "addresses.txt");
+    }
+    if (boost::filesystem::exists(this->path + "/pathways.txt")) {
+        parse<PathWayFusioHandler>(data, "pathways.txt", true);
     }
     parse<RouteFusioHandler>(data, "routes.txt", true);
     parse<TransfersFusioHandler>(data, "transfers.txt");

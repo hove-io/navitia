@@ -1,10 +1,9 @@
-# coding=utf-8
-#  Copyright (c) 2001-2017, Canal TP and/or its affiliates. All rights reserved.
+# coding: utf-8
+# Copyright (c) 2001-2018, Canal TP and/or its affiliates. All rights reserved.
 #
 # This file is part of Navitia,
 #     the software to build cool stuff with public transport.
 #
-# Hope you'll enjoy and contribute to this project,
 #     powered by Canal TP (www.canaltp.fr).
 # Help us simplify mobility and open public transport:
 #     a non ending quest to the responsive locomotion way of traveling!
@@ -28,35 +27,30 @@
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 
-from jormungandr.street_network.asgard import Asgard
+from __future__ import absolute_import, print_function, division
+from tyr.helper import is_activate_autocomplete_version
+from tyr import app
 
 
-class FakeInstance(object):
+def test_is_activate_autocomplete_version_with_mimir2(enable_mimir2):
+    with app.app_context():
+        assert is_activate_autocomplete_version(2)
+        assert not is_activate_autocomplete_version(7)
 
-    name = 'fake_instance'
-    context = None
-    asgard_language = "en-US"
+
+def test_is_activate_autocomplete_version_with_mimir2_mimir7(enable_mimir2_and_mimir):
+    with app.app_context():
+        assert is_activate_autocomplete_version(2)
+        assert is_activate_autocomplete_version(7)
 
 
-def status_test():
-    asgard = Asgard(
-        instance=FakeInstance(),
-        service_url=None,
-        asgard_socket="asgard_socket",
-        id=u"tata-é$~#@\"*!'`§èû",
-        modes=["walking", "bike", "car"],
-        timeout=77,
-        socket_ttl=60,
-    )
+def test_is_activate_autocomplete_version_with_mimir7(enable_mimir7):
+    with app.app_context():
+        assert not is_activate_autocomplete_version(2)
+        assert is_activate_autocomplete_version(7)
 
-    status = asgard.status()
-    assert len(status) == 7
-    assert status['id'] == u'tata-é$~#@"*!\'`§èû'
-    assert status['class'] == "Asgard"
-    assert status['modes'] == ["walking", "bike", "car"]
-    assert status['timeout'] == 77
-    assert status['circuit_breaker']['current_state'] == 'closed'
-    assert status['circuit_breaker']['fail_counter'] == 0
-    assert status['circuit_breaker']['reset_timeout'] == 60
-    assert status['zmq_socket_ttl'] == 60
-    assert status['language'] == 'en-US'
+
+def test_is_activate_autocomplete_version_without_mimir(disable_mimir):
+    with app.app_context():
+        assert not is_activate_autocomplete_version(2)
+        assert not is_activate_autocomplete_version(7)

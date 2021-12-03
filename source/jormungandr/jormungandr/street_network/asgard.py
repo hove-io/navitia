@@ -40,7 +40,42 @@ from jormungandr.street_network.utils import make_speed_switcher, crowfly_distan
 from navitiacommon import response_pb2, type_pb2
 from zmq import green as zmq
 import six
+from enum import Enum
 import pybreaker
+
+# Possible values implemented. Full languages within the doc:
+# https://valhalla.readthedocs.io/en/latest/api/turn-by-turn/api-reference/#supported-language-tags
+# Be careful, the syntax has to be exact
+class Languages(Enum):
+    bulgarian = "bg-BG"
+    catalan = "ca-ES"
+    czech = "cs-CZ"
+    danish = "da-DK"
+    german = "de-DE"
+    greek = "el-GR"
+    english_gb = "en-GB"
+    english_pirate = "en-US-x-pirate"
+    english_us = "en-US"
+    spanish = "es-ES"
+    estonian = "et-EE"
+    finnish = "fi-FI"
+    french = "fr-FR"
+    hindi = "hi-IN"
+    hungarian = "hu-HU"
+    italian = "it-IT"
+    japanese = "ja-JP"
+    bokmal = "nb-NO"
+    dutch = "nl-NL"
+    polish = "pl-PL"
+    portuguese_br = "pt-BR"
+    portuguese_pt = "pt-PT"
+    romanian = "ro-RO"
+    russian = "ru-RU"
+    slovak = "sk-SK"
+    slovenian = "sl-SI"
+    swedish = "sv-SE"
+    turkish = "tr-TR"
+    ukrainian = "uk-UA"
 
 
 class Asgard(TransientSocket, Kraken):
@@ -91,6 +126,7 @@ class Asgard(TransientSocket, Kraken):
                 'reset_timeout': self.breaker.reset_timeout,
             },
             'zmq_socket_ttl': self.socket_ttl,
+            'language': self.instance.asgard_language,
         }
 
     def make_location(self, obj):
@@ -98,6 +134,11 @@ class Asgard(TransientSocket, Kraken):
         return type_pb2.LocationContext(
             place="", access_duration=0, lon=round(coord.lon, 5), lat=round(coord.lat, 5)
         )
+
+    def get_language_parameter(self, request):
+        language = request.get('_asgard_language', "english_us")
+        language_tag = getattr(Languages, language, Languages.english_us).value
+        return language_tag
 
     def _get_street_network_routing_matrix(
         self, instance, origins, destinations, mode, max_duration, request, request_id, **kwargs
@@ -164,8 +205,10 @@ class Asgard(TransientSocket, Kraken):
         ):
             return response_pb2.Response()
 
+        language = self.get_language_parameter(request)
+
         req = self._create_direct_path_request(
-            mode, pt_object_origin, pt_object_destination, fallback_extremity, request
+            mode, pt_object_origin, pt_object_destination, fallback_extremity, request, language
         )
 
         response = self._call_asgard(req)

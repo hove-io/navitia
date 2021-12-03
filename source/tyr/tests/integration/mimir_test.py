@@ -28,19 +28,10 @@
 # www.navitia.io
 
 from __future__ import absolute_import, print_function, division
-from tests.check_utils import api_get, api_post, api_delete, api_put, _dt
 import pytest
 from navitiacommon import models
 from tyr import app
 from tyr import tasks
-
-
-@pytest.fixture
-def enable_mimir():
-    previous_value = app.config['MIMIR_URL']
-    app.config['MIMIR_URL'] = 'http://example.com'
-    yield
-    app.config['MIMIR_URL'] = previous_value
 
 
 @pytest.fixture
@@ -53,7 +44,7 @@ def create_instance():
         return instance.id
 
 
-def test_mimir_family_type_not_applicable(create_instance, enable_mimir):
+def test_mimir_family_type_not_applicable(create_instance, enable_mimir2):
     with app.app_context():
         instance = models.Instance.query.get(create_instance)
         actions = []
@@ -61,7 +52,7 @@ def test_mimir_family_type_not_applicable(create_instance, enable_mimir):
         assert actions == []
 
 
-def test_mimir_family_type_poi(create_instance, enable_mimir):
+def test_mimir_family_type_poi(create_instance, enable_mimir2):
     with app.app_context():
         instance = models.Instance.query.get(create_instance)
         actions = []
@@ -71,7 +62,21 @@ def test_mimir_family_type_poi(create_instance, enable_mimir):
         assert len(actions) == 2  # poi2mimir + finish
 
 
-def test_mimir_ntfs_false(create_instance, enable_mimir):
+def test_mimir2_and_mimir_family_type_poi(create_instance, enable_mimir2_and_mimir):
+    with app.app_context():
+        instance = models.Instance.query.get(create_instance)
+        actions = []
+        actions.extend(tasks.send_to_mimir(instance, 'test.poi', 'poi'))
+        assert actions[0].task == 'tyr.binarisation.poi2mimir'
+        assert actions[0].args[1] == 'test.poi'
+        assert actions[1].args[1] == 'test.poi'
+        # Mimir version 2
+        assert actions[0].args[2] == 2
+        assert actions[1].args[2] == 7
+        assert len(actions) == 3  # poi2mimir + finish
+
+
+def test_mimir_ntfs_false(create_instance, enable_mimir2):
     with app.app_context():
         instance = models.Instance.query.get(create_instance)
         instance.import_ntfs_in_mimir = False
@@ -80,7 +85,7 @@ def test_mimir_ntfs_false(create_instance, enable_mimir):
         assert actions == []
 
 
-def test_mimir_family_type_poi_mimir_disabled(create_instance):
+def test_mimir_family_type_poi_mimir_disabled(create_instance, disable_mimir):
     with app.app_context():
         instance = models.Instance.query.get(create_instance)
         actions = []

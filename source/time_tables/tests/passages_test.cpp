@@ -97,4 +97,16 @@ BOOST_AUTO_TEST_CASE(next_passages_on_last_production_day) {
     BOOST_REQUIRE_EQUAL(resp.next_departures().size(), 2);
     BOOST_REQUIRE_EQUAL(resp.next_departures(0).stop_date_time().departure_date_time(), "20170107T080600"_pts);
     BOOST_REQUIRE_EQUAL(resp.next_departures(1).stop_date_time().departure_date_time(), "20170107T090600"_pts);
+
+    // Production_date.begin = 20170101, request_datetime = 20161231T080000 and request_datetime is not included
+    // in production_date period. The request_datetime is well within 24 hours before production_date.begin
+    // In such cas instead of raising date out of bound, we init request dates as
+    // date_time = 0, max_datetime = 86400 - 57600(=24 - 8 * 60 * 60)
+    navitia::PbCreator pb_creator_pdep_1(data_ptr, bt::second_clock::universal_time(), null_time_period);
+    passages(pb_creator_pdep_1, "stop_point.uri=stop2", {}, "20161231T080000"_dt, 86400, 10, 3,
+             navitia::type::AccessibiliteParams(), nt::RTLevel::Base, pbnavitia::NEXT_DEPARTURES, 10, 0);
+    resp = pb_creator_pdep_1.get_response();
+    BOOST_REQUIRE_EQUAL(resp.next_departures().size(), 2);
+    BOOST_REQUIRE_EQUAL(resp.next_departures(0).stop_date_time().departure_date_time(), "20170101T080600"_pts);
+    BOOST_REQUIRE_EQUAL(resp.next_departures(1).stop_date_time().departure_date_time(), "20170101T090600"_pts);
 }
