@@ -186,6 +186,8 @@ static std::vector<Path> call_raptor(navitia::PbCreator& pb_creator,
                                           night_bus_filter_base_factor};
             filter_late_journeys(raptor_journeys, params);
 
+            filter_twisted_journeys(raptor_journeys, clockwise);
+
             LOG4CPLUS_DEBUG(logger, "after filtering late journeys: " << raptor_journeys.size() << " solution(s) left");
 
             if (raptor_journeys.empty()) {
@@ -1361,6 +1363,65 @@ void filter_late_journeys(RAPTOR::Journeys& journeys, const NightBusFilter::Para
             continue;
         }
 
+        ++it;
+    }
+}
+
+void filter_twisted_journeys(RAPTOR::Journeys& journeys, const bool clockwise) {
+    if (journeys.size() == 1) {
+        return;
+    }
+
+    auto it = journeys.begin();
+    while (it != journeys.end()) {
+        const auto& journey = *it;
+
+        if (!journey.is_pt()) {
+            ++it;
+            continue;
+        }
+        if (journey.sections.size() < 2) {
+            ++it;
+            continue;
+        }
+
+        bool found = false;
+
+        if (clockwise) {
+            auto section_it = journey.sections.rbegin();
+            const auto& last_stop_area_uri = section_it->get_out_st->stop_point->stop_area->uri;
+            for (++section_it; section_it != journey.sections.rend(); ++section_it) {
+                assert(section_it->get_in_st < section_it->get_out_st);
+                for (const auto* st = section_it->get_in_st; st <= section_it->get_out_st; st++) {
+                    if (st->stop_point->stop_area->uri == last_stop_area_uri) {
+                        found = true;
+                        break;
+                    }
+                }
+                if (found) {
+                    break;
+                }
+            }
+        } else {
+            auto section_it = journey.sections.begin();
+            const auto& first_stop_area_uri = section_it->get_in_st->stop_point->stop_area->uri;
+            for (++section_it; section_it != journey.sections.end(); ++section_it) {
+                assert(section_it->get_in_st < section_it->get_out_st);
+                for (const auto* st = section_it->get_in_st; st <= section_it->get_out_st; st++) {
+                    if (st->stop_point->stop_area->uri == first_stop_area_uri) {
+                        found = true;
+                        break;
+                    }
+                }
+                if (found) {
+                    break;
+                }
+            }
+        }
+        if (found) {
+            it = journeys.erase(it);
+            continue;
+        }
         ++it;
     }
 }

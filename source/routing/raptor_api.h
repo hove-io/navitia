@@ -189,6 +189,15 @@ bool is_way_later(const Journey& j1, const Journey& j2, const NightBusFilter::Pa
 void filter_late_journeys(RAPTOR::Journeys& journeys, const NightBusFilter::Params& params);
 
 /**
+ * @brief filter "twisted" journeys, a journeys is considered "twisted" if its last/first stop_point's
+ * stop_area has been served in the previous/following sections
+ *
+ * @param journeys A container of Journeys
+ * @param clockwise depart after or arrive before
+ */
+void filter_twisted_journeys(RAPTOR::Journeys& journeys, const bool clockwise);
+
+/**
  * @brief Prepare the horizon for the next Raptor call
  *
  * @param journeys A container of journeys.
