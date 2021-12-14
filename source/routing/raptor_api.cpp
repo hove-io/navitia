@@ -1370,7 +1370,6 @@ void filter_late_journeys(RAPTOR::Journeys& journeys, const NightBusFilter::Para
 void filter_backtracking_journeys(RAPTOR::Journeys& journeys, const bool clockwise) {
     log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
 
-    std::cout << "???" << std::endl;
     if (journeys.size() == 1) {
         return;
     }
