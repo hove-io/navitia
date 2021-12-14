@@ -1370,7 +1370,6 @@ void filter_late_journeys(RAPTOR::Journeys& journeys, const NightBusFilter::Para
 void filter_backtracking_journeys(RAPTOR::Journeys& journeys, const bool clockwise) {
     log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
 
-    std::cout << "???" << std::endl;
     if (journeys.size() == 1) {
         return;
     }
@@ -1396,6 +1395,7 @@ void filter_backtracking_journeys(RAPTOR::Journeys& journeys, const bool clockwi
                 assert(section_it->get_in_st < section_it->get_out_st);
                 if (section_it->get_in_st > section_it->get_out_st) {
                     LOG4CPLUS_WARN(logger, "get_in_st is larger than get_out_st");
+                    return ;
                 }
 
                 for (const auto* st = section_it->get_in_st; st <= section_it->get_out_st; st++) {
@@ -1415,6 +1415,7 @@ void filter_backtracking_journeys(RAPTOR::Journeys& journeys, const bool clockwi
                 assert(section_it->get_in_st < section_it->get_out_st);
                 if (section_it->get_in_st > section_it->get_out_st) {
                     LOG4CPLUS_WARN(logger, "get_in_st is larger than get_out_st");
+                    return;
                 }
                 for (const auto* st = section_it->get_in_st; st <= section_it->get_out_st; st++) {
                     if (st->stop_point->stop_area->uri == first_stop_area_uri) {
