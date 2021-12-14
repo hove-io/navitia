@@ -186,7 +186,7 @@ static std::vector<Path> call_raptor(navitia::PbCreator& pb_creator,
                                           night_bus_filter_base_factor};
             filter_late_journeys(raptor_journeys, params);
 
-            filter_twisted_journeys(raptor_journeys, clockwise);
+            filter_backtracking_journeys(raptor_journeys, clockwise);
 
             LOG4CPLUS_DEBUG(logger, "after filtering late journeys: " << raptor_journeys.size() << " solution(s) left");
 
@@ -1367,11 +1367,13 @@ void filter_late_journeys(RAPTOR::Journeys& journeys, const NightBusFilter::Para
     }
 }
 
-void filter_twisted_journeys(RAPTOR::Journeys& journeys, const bool clockwise) {
+void filter_backtracking_journeys(RAPTOR::Journeys& journeys, const bool clockwise) {
+    log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
+
+    std::cout << "???" << std::endl;
     if (journeys.size() == 1) {
         return;
     }
-
     auto it = journeys.begin();
     while (it != journeys.end()) {
         const auto& journey = *it;
@@ -1392,6 +1394,10 @@ void filter_twisted_journeys(RAPTOR::Journeys& journeys, const bool clockwise) {
             const auto& last_stop_area_uri = section_it->get_out_st->stop_point->stop_area->uri;
             for (++section_it; section_it != journey.sections.rend(); ++section_it) {
                 assert(section_it->get_in_st < section_it->get_out_st);
+                if (section_it->get_in_st > section_it->get_out_st) {
+                    LOG4CPLUS_WARN(logger, "get_in_st is larger than get_out_st");
+                }
+
                 for (const auto* st = section_it->get_in_st; st <= section_it->get_out_st; st++) {
                     if (st->stop_point->stop_area->uri == last_stop_area_uri) {
                         found = true;
@@ -1407,6 +1413,9 @@ void filter_twisted_journeys(RAPTOR::Journeys& journeys, const bool clockwise) {
             const auto& first_stop_area_uri = section_it->get_in_st->stop_point->stop_area->uri;
             for (++section_it; section_it != journey.sections.end(); ++section_it) {
                 assert(section_it->get_in_st < section_it->get_out_st);
+                if (section_it->get_in_st > section_it->get_out_st) {
+                    LOG4CPLUS_WARN(logger, "get_in_st is larger than get_out_st");
+                }
                 for (const auto* st = section_it->get_in_st; st <= section_it->get_out_st; st++) {
                     if (st->stop_point->stop_area->uri == first_stop_area_uri) {
                         found = true;

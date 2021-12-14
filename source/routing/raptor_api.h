@@ -189,13 +189,15 @@ bool is_way_later(const Journey& j1, const Journey& j2, const NightBusFilter::Pa
 void filter_late_journeys(RAPTOR::Journeys& journeys, const NightBusFilter::Params& params);
 
 /**
- * @brief filter "twisted" journeys, a journeys is considered "twisted" if its last/first stop_point's
- * stop_area has been served in the previous/following sections
+ * @brief remove "backtracking" journeys.
+ * A "depart after' journey is considered "backtracking" if its last stop_point's stop_area has been visited in the
+ * previous sections. An "arrive before' journey is considered "backtracking" if its first stop_point's stop_area has
+ * been visited in the subsequent sections
  *
  * @param journeys A container of Journeys
  * @param clockwise depart after or arrive before
  */
-void filter_twisted_journeys(RAPTOR::Journeys& journeys, const bool clockwise);
+void filter_backtracking_journeys(RAPTOR::Journeys& journeys, const bool clockwise);
 
 /**
  * @brief Prepare the horizon for the next Raptor call
