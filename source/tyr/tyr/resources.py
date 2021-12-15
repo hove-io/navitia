@@ -113,12 +113,15 @@ class Status(flask_restful.Resource):
 
 class Job(flask_restful.Resource):
     @marshal_with(jobs_fields)
-    def get(self, instance_name=None):
+    def get(self, instance_name=None, id=None):
         query = models.Job.query
         if instance_name:
             query = query.join(models.Instance)
             query = query.filter(models.Instance.name == instance_name)
-        return {'jobs': query.order_by(models.Job.created_at.desc()).limit(30)}
+        if id:
+            query = query.filter(models.Job.id == id)
+        jobs = query.order_by(models.Job.created_at.desc()).limit(30)
+        return {'jobs': jobs}
 
     def post(self, instance_name):
         instance = models.Instance.query_existing().filter_by(name=instance_name).first_or_404()

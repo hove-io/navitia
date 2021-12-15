@@ -261,6 +261,7 @@ user_fields_full["authorizations"] = fields.List(
 )
 
 dataset_field = {'type': fields.Raw, 'name': fields.Raw, 'family_type': fields.Raw, 'state': fields.Raw}
+metric_field = {'type': fields.Raw, 'duration': FieldTimedelta}
 
 job_fields = {
     'id': fields.Raw,
@@ -268,6 +269,7 @@ job_fields = {
     'created_at': FieldDate,
     'updated_at': FieldDate,
     'data_sets': fields.List(fields.Nested(dataset_field)),
+    'metrics': fields.List(fields.Nested(metric_field)),
     'instance': fields.Nested(instance_fields),
 }
 
