@@ -1185,6 +1185,8 @@ class User(flask_restful.Resource):
             user.type = args['type']
             user.end_point = end_point
             user.billing_plan = billing_plan
+            if user.block_until:
+                user.blocked_at = datetime.utcnow()
             user.shape = ujson.dumps(args['shape'])
             user.default_coord = args['default_coord']
             user.shape_scope = args.get("shape_scope")
@@ -1299,6 +1301,8 @@ class User(flask_restful.Resource):
             user.login = args['login']
             user.type = args['type']
             user.block_until = args['block_until']
+            if user.block_until:
+                user.blocked_at = datetime.utcnow()
             user.end_point = end_point
             user.billing_plan = billing_plan
             user.shape = ujson.dumps(args['shape'])

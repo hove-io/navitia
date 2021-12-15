@@ -75,7 +75,14 @@ end_point_fields = {
     'hostnames': fields.List(fields.String),
 }
 
-key_fields = {'id': fields.Raw, 'app_name': fields.Raw, 'token': fields.Raw, 'valid_until': FieldDate}
+key_fields = {
+    'id': fields.Raw,
+    'app_name': fields.Raw,
+    'token': fields.Raw,
+    'valid_until': FieldDate,
+    'created_at': FieldDate,
+    'updated_at': FieldDate,
+}
 
 generic_field = {
     'id': fields.Raw,
@@ -229,6 +236,8 @@ billing_plan_fields = {
     'max_request_count': fields.Raw,
     'max_object_count': fields.Raw,
     'default': fields.Raw,
+    'created_at': FieldDate,
+    'updated_at': FieldDate,
 }
 
 billing_plan_fields_full = {
@@ -237,6 +246,8 @@ billing_plan_fields_full = {
     'max_request_count': fields.Raw,
     'max_object_count': fields.Raw,
     'default': fields.Raw,
+    'created_at': FieldDate,
+    'updated_at': FieldDate,
     'end_point': fields.Nested(end_point_fields),
 }
 
@@ -246,6 +257,9 @@ user_fields = {
     'email': fields.Raw,
     'block_until': FieldDate,
     'type': fields.Raw(),
+    'blocked_at': FieldDate,
+    'created_at': FieldDate,
+    'updated_at': FieldDate,
     'end_point': fields.Nested(end_point_fields),
     'billing_plan': fields.Nested(billing_plan_fields),
     'has_shape': HasShape,
