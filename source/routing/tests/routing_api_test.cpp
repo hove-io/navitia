@@ -3634,9 +3634,7 @@ BOOST_AUTO_TEST_CASE(test_filter_backtrack) {
         b.vj("1")("A", "0:30"_t)("B", "1:00"_t)("C", "2:00");
         b.vj("2")("C", "2:10"_t)("B", "3:01"_t);
     });
-    for (auto j : b.data->pt_data->vehicle_journeys_map) {
-        std::cout << j.first << std::endl;
-    }
+
     auto vj1 = b.data->pt_data->vehicle_journeys_map["vehicle_journey:1:0"];
     auto vj2 = b.data->pt_data->vehicle_journeys_map["vehicle_journey:2:1"];
 

@@ -1392,7 +1392,7 @@ void filter_backtracking_journeys(RAPTOR::Journeys& journeys, const bool clockwi
             auto section_it = journey.sections.rbegin();
             const auto& last_stop_area_uri = section_it->get_out_st->stop_point->stop_area->uri;
             for (++section_it; section_it != journey.sections.rend(); ++section_it) {
-                assert(section_it->get_in_st < section_it->get_out_st);
+                assert(section_it->get_in_st <= section_it->get_out_st);
                 if (section_it->get_in_st > section_it->get_out_st) {
                     LOG4CPLUS_WARN(logger, "get_in_st is larger than get_out_st");
                     return;
@@ -1412,7 +1412,7 @@ void filter_backtracking_journeys(RAPTOR::Journeys& journeys, const bool clockwi
             auto section_it = journey.sections.begin();
             const auto& first_stop_area_uri = section_it->get_in_st->stop_point->stop_area->uri;
             for (++section_it; section_it != journey.sections.end(); ++section_it) {
-                assert(section_it->get_in_st < section_it->get_out_st);
+                assert(section_it->get_in_st <= section_it->get_out_st);
                 if (section_it->get_in_st > section_it->get_out_st) {
                     LOG4CPLUS_WARN(logger, "get_in_st is larger than get_out_st");
                     return;
