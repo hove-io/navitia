@@ -3642,8 +3642,9 @@ BOOST_AUTO_TEST_CASE(test_filter_backtrack) {
     const auto& st_1B = vj1->get_stop_time(navitia::type::RankStopTime(1));
     const auto& st_1C = vj1->get_stop_time(navitia::type::RankStopTime(2));
 
-    auto st_2C = vj2->get_stop_time(navitia::type::RankStopTime(0));
-    auto st_2B = vj2->get_stop_time(navitia::type::RankStopTime(1));
+    const auto& st_2C = vj2->get_stop_time(navitia::type::RankStopTime(0));
+    const auto& st_2B = vj2->get_stop_time(navitia::type::RankStopTime(1));
+
     Journey journey_1;
     {
         auto s_1 = Journey::Section{st_1A, "0:30"_t, st_1B, "1:00"_t};
