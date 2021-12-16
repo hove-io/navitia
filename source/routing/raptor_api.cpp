@@ -1391,10 +1391,11 @@ void filter_backtracking_journeys(RAPTOR::Journeys& journeys, const bool clockwi
         if (clockwise) {
             auto section_it = journey.sections.rbegin();
             const auto& last_stop_area_uri = section_it->get_out_st->stop_point->stop_area->uri;
-            for (++section_it; section_it != journey.sections.rend(); ++section_it) {
-                const auto* vj = section_it->get_in_st->vehicle_journey;
-                auto in_order = section_it->get_in_st->order();
-                auto out_order = section_it->get_out_st->order();
+            ++section_it;
+            for (const auto& section : boost::make_iterator_range(section_it, journey.sections.rend())) {
+                const auto* vj = section.get_in_st->vehicle_journey;
+                auto in_order = section.get_in_st->order();
+                auto out_order = section.get_out_st->order();
 
                 if (in_order.val >= out_order.val) {
                     LOG4CPLUS_WARN(logger, "in_order.val >= out_order.val");
@@ -1417,10 +1418,11 @@ void filter_backtracking_journeys(RAPTOR::Journeys& journeys, const bool clockwi
         } else {
             auto section_it = journey.sections.begin();
             const auto& first_stop_area_uri = section_it->get_in_st->stop_point->stop_area->uri;
-            for (++section_it; section_it != journey.sections.end(); ++section_it) {
-                const auto* vj = section_it->get_in_st->vehicle_journey;
-                auto in_order = section_it->get_in_st->order();
-                auto out_order = section_it->get_out_st->order();
+            ++section_it;
+            for (const auto& section : boost::make_iterator_range(section_it, journey.sections.end())) {
+                const auto* vj = section.get_in_st->vehicle_journey;
+                auto in_order = section.get_in_st->order();
+                auto out_order = section.get_out_st->order();
 
                 if (in_order.val >= out_order.val) {
                     LOG4CPLUS_WARN(logger, "in_order.val >= out_order.val");
