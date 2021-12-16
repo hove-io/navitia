@@ -3638,9 +3638,9 @@ BOOST_AUTO_TEST_CASE(test_filter_backtrack) {
     auto vj1 = b.data->pt_data->vehicle_journeys_map["vehicle_journey:1:0"];
     auto vj2 = b.data->pt_data->vehicle_journeys_map["vehicle_journey:2:1"];
 
-    auto st_1A = vj1->get_stop_time(navitia::type::RankStopTime(0));
-    auto st_1B = vj1->get_stop_time(navitia::type::RankStopTime(1));
-    auto st_1C = vj1->get_stop_time(navitia::type::RankStopTime(2));
+    const auto& st_1A = vj1->get_stop_time(navitia::type::RankStopTime(0));
+    const auto& st_1B = vj1->get_stop_time(navitia::type::RankStopTime(1));
+    const auto& st_1C = vj1->get_stop_time(navitia::type::RankStopTime(2));
 
     auto st_2C = vj2->get_stop_time(navitia::type::RankStopTime(0));
     auto st_2B = vj2->get_stop_time(navitia::type::RankStopTime(1));

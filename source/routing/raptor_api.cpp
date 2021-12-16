@@ -1392,12 +1392,20 @@ void filter_backtracking_journeys(RAPTOR::Journeys& journeys, const bool clockwi
             auto section_it = journey.sections.rbegin();
             const auto& last_stop_area_uri = section_it->get_out_st->stop_point->stop_area->uri;
             for (++section_it; section_it != journey.sections.rend(); ++section_it) {
-                std::cout << long(section_it->get_in_st) << std::endl;
-                std::cout << long(section_it->get_out_st) << std::endl;
+                const auto* vj = section_it->get_in_st->vehicle_journey;
+                auto in_order = section_it->get_in_st->order();
+                auto out_order = section_it->get_out_st->order();
 
-                for (const auto* st = section_it->get_in_st; st <= section_it->get_out_st; st++) {
-                    std::cout << "int the loop" << std::endl;
-                    if (st->stop_point->stop_area->uri == last_stop_area_uri) {
+                if (in_order.val >= out_order.val) {
+                    LOG4CPLUS_WARN(logger, "in_order.val >= out_order.val");
+                    return;
+                }
+
+                auto st_begin = vj->stop_time_list.begin() + in_order.val;
+                auto st_end = std::min(vj->stop_time_list.begin() + out_order.val + 1, vj->stop_time_list.end());
+
+                for (const auto& st : boost::make_iterator_range(st_begin, st_end)) {
+                    if (st.stop_point->stop_area->uri == last_stop_area_uri) {
                         found = true;
                         break;
                     }
@@ -1410,13 +1418,19 @@ void filter_backtracking_journeys(RAPTOR::Journeys& journeys, const bool clockwi
             auto section_it = journey.sections.begin();
             const auto& first_stop_area_uri = section_it->get_in_st->stop_point->stop_area->uri;
             for (++section_it; section_it != journey.sections.end(); ++section_it) {
-                assert(section_it->get_in_st <= section_it->get_out_st);
-                if (section_it->get_in_st > section_it->get_out_st) {
-                    LOG4CPLUS_WARN(logger, "get_in_st is larger than get_out_st");
+                const auto* vj = section_it->get_in_st->vehicle_journey;
+                auto in_order = section_it->get_in_st->order();
+                auto out_order = section_it->get_out_st->order();
+
+                if (in_order.val >= out_order.val) {
+                    LOG4CPLUS_WARN(logger, "in_order.val >= out_order.val");
                     return;
                 }
-                for (const auto* st = section_it->get_in_st; st <= section_it->get_out_st; st++) {
-                    if (st->stop_point->stop_area->uri == first_stop_area_uri) {
+                auto st_begin = vj->stop_time_list.begin() + in_order.val;
+                auto st_end = std::max(vj->stop_time_list.begin() + out_order.val + 1, vj->stop_time_list.end());
+
+                for (const auto& st : boost::make_iterator_range(st_begin, st_end)) {
+                    if (st.stop_point->stop_area->uri == first_stop_area_uri) {
                         found = true;
                         break;
                     }
