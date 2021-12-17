@@ -1368,6 +1368,35 @@ void filter_late_journeys(RAPTOR::Journeys& journeys, const NightBusFilter::Para
     }
 }
 
+bool find_stop_area_of_interest_through_journey(const navitia::routing::Journey& journey,
+                                                const std::string& stop_area_uri,
+                                                const navitia::type::VehicleJourney* vj_to_skip) {
+    bool found = false;
+
+    for (const auto& section : journey.sections) {
+        auto order = section.get_in_st->order();
+        bool reach_end = false;
+        for (const auto* vj = section.get_in_st->vehicle_journey; vj;
+             (vj = vj->next_vj, order = type::RankStopTime(0))) {
+            // we don't have to test stop_times on the first/last vj
+            for (const auto& st :
+                 boost::make_iterator_range(vj->stop_time_list.begin() + order.val, vj->stop_time_list.end())) {
+                if (st.stop_point->stop_area->uri == stop_area_uri && vj != vj_to_skip) {
+                    return true;
+                }
+                if (section.get_out_st == &st) {
+                    reach_end = true;
+                    break;
+                }
+            }
+            if (reach_end) {
+                break;
+            }
+        }
+    }
+    return false;
+}
+
 void filter_backtracking_journeys(RAPTOR::Journeys& journeys, const bool clockwise) {
     log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
 
@@ -1390,61 +1419,14 @@ void filter_backtracking_journeys(RAPTOR::Journeys& journeys, const bool clockwi
             const auto& last_stop_area_uri = last_section->get_out_st->stop_point->stop_area->uri;
             const auto* last_vj = last_section->get_out_st->vehicle_journey;
 
-            for (const auto& section : journey.sections) {
-                found = [&]() -> bool {
-                    auto order = section.get_in_st->order();
-                    for (const auto* vj = section.get_in_st->vehicle_journey; vj;
-                         (vj = vj->next_vj, order = type::RankStopTime(0))) {
-                        // we don't have to test stop_times on the last vj
-                        if (vj == last_vj) {
-                            return false;
-                        }
-                        for (const auto& st : boost::make_iterator_range(vj->stop_time_list.begin() + order.val,
-                                                                         vj->stop_time_list.end())) {
-                            if (st.stop_point->stop_area->uri == last_stop_area_uri) {
-                                return true;
-                            }
-                            if (section.get_out_st == &st) {
-                                return false;
-                            }
-                        }
-                    }
-                    return false;
-                }();
-                if (found) {
-                    break;
-                }
-            }
+            found = find_stop_area_of_interest_through_journey(journey, last_stop_area_uri, last_vj);
+
         } else {
             auto first_section = journey.sections.begin();
             const auto& first_stop_area_uri = first_section->get_in_st->stop_point->stop_area->uri;
             const auto* first_vj = first_section->get_out_st->vehicle_journey;
 
-            for (const auto& section : journey.sections) {
-                found = [&]() -> bool {
-                    auto order = section.get_in_st->order();
-                    for (const auto* vj = section.get_in_st->vehicle_journey; vj;
-                         (vj = vj->next_vj, order = type::RankStopTime(0))) {
-                        // we don't have to test stop_times on the first vj
-                        if (vj == first_vj) {
-                            return false;
-                        }
-                        for (const auto& st : boost::make_iterator_range(vj->stop_time_list.begin() + order.val,
-                                                                         vj->stop_time_list.end())) {
-                            if (st.stop_point->stop_area->uri == first_stop_area_uri) {
-                                return true;
-                            }
-                            if (section.get_out_st == &st) {
-                                return false;
-                            }
-                        }
-                    }
-                    return false;
-                }();
-                if (found) {
-                    break;
-                }
-            }
+            found = find_stop_area_of_interest_through_journey(journey, first_stop_area_uri, first_vj);
         }
         if (found) {
             it = journeys.erase(it);
