@@ -1368,7 +1368,6 @@ void filter_late_journeys(RAPTOR::Journeys& journeys, const NightBusFilter::Para
     }
 }
 
-// https://canaltp.github.io/navitia-playground/play.html?request=http%3A%2F%2F127.0.0.1%3A5000%2Fv1%2Fcoverage%2Ffr-sw-bordeaux%2Fjourneys%3Ffrom%3D-0.577399%253B44.811524%26to%3D-0.53223%253B44.85585%26car_speed%3D4.17%26datetime%3D20211214T092439%26datetime_represents%3Ddeparture%26first_section_mode%255B%255D%3Dbss%26first_section_mode%255B%255D%3Dwalking%26last_section_mode%255B%255D%3Dbss%26last_section_mode%255B%255D%3Dwalking%26direct_path_mode%255B%255D%3Dwalking%26direct_path_mode%255B%255D%3Dbss%26direct_path_mode%255B%255D%3Dbike%26add_poi_infos%255B%255D%3Dbss_stands%26_min_journeys_calls%3D1%26_walking_transfer_penalty%3D60%26max_duration_to_pt%3D900%26walking_speed%3D1%26
 void filter_backtracking_journeys(RAPTOR::Journeys& journeys, const bool clockwise) {
     log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
 
@@ -1428,7 +1427,6 @@ void filter_backtracking_journeys(RAPTOR::Journeys& journeys, const bool clockwi
                     for (; vj; (vj = vj->next_vj, order = type::RankStopTime(0))) {
                         // we don't have to test stop_times on the last vj
                         if (vj == first_vj) {
-                            order = type::RankStopTime(0);
                             continue;
                         }
                         for (const auto& st : boost::make_iterator_range(vj->stop_time_list.begin() + order.val,
