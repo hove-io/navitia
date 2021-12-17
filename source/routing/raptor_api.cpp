@@ -186,6 +186,8 @@ static std::vector<Path> call_raptor(navitia::PbCreator& pb_creator,
                                           night_bus_filter_base_factor};
             filter_late_journeys(raptor_journeys, params);
 
+            filter_backtracking_journeys(raptor_journeys, clockwise);
+
             LOG4CPLUS_DEBUG(logger, "after filtering late journeys: " << raptor_journeys.size() << " solution(s) left");
 
             if (raptor_journeys.empty()) {
@@ -213,6 +215,7 @@ static std::vector<Path> call_raptor(navitia::PbCreator& pb_creator,
         }
 
         auto tmp_pathes = raptor.from_journeys_to_path(journeys);
+
         LOG4CPLUS_DEBUG(logger, "raptor made " << tmp_pathes.size() << " Path(es)");
 
         // For one date time
@@ -1361,6 +1364,76 @@ void filter_late_journeys(RAPTOR::Journeys& journeys, const NightBusFilter::Para
             continue;
         }
 
+        ++it;
+    }
+}
+
+bool find_stop_area_of_interest_through_journey(const navitia::routing::Journey& journey,
+                                                const std::string& stop_area_uri,
+                                                const navitia::type::VehicleJourney* vj_to_skip) {
+    bool found = false;
+
+    for (const auto& section : journey.sections) {
+        auto order = section.get_in_st->order();
+        bool reach_end = false;
+        // because of stay-ins, we may have several vj in one section, we have to scan the stop times
+        // of all vjs
+        for (const auto* vj = section.get_in_st->vehicle_journey; vj;
+             (vj = vj->next_vj, order = type::RankStopTime(0))) {
+            for (const auto& st :
+                 boost::make_iterator_range(vj->stop_time_list.begin() + order.val, vj->stop_time_list.end())) {
+                if (st.stop_point->stop_area->uri == stop_area_uri && vj != vj_to_skip) {
+                    return true;
+                }
+                if (section.get_out_st == &st) {
+                    reach_end = true;
+                    break;
+                }
+            }
+            if (reach_end) {
+                break;
+            }
+        }
+    }
+    return false;
+}
+
+void filter_backtracking_journeys(RAPTOR::Journeys& journeys, const bool clockwise) {
+    log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
+
+    if (journeys.size() == 1) {
+        return;
+    }
+    auto it = journeys.begin();
+    while (it != journeys.end()) {
+        const auto& journey = *it;
+
+        if (!journey.is_pt()) {
+            ++it;
+            continue;
+        }
+
+        bool found = false;
+
+        if (clockwise) {
+            auto last_section = journey.sections.rbegin();
+            const auto& last_stop_area_uri = last_section->get_out_st->stop_point->stop_area->uri;
+            const auto* last_vj = last_section->get_out_st->vehicle_journey;
+
+            found = find_stop_area_of_interest_through_journey(journey, last_stop_area_uri, last_vj);
+
+        } else {
+            auto first_section = journey.sections.begin();
+            const auto& first_stop_area_uri = first_section->get_in_st->stop_point->stop_area->uri;
+            const auto* first_vj = first_section->get_in_st->vehicle_journey;
+
+            found = find_stop_area_of_interest_through_journey(journey, first_stop_area_uri, first_vj);
+        }
+
+        if (found) {
+            it = journeys.erase(it);
+            continue;
+        }
         ++it;
     }
 }

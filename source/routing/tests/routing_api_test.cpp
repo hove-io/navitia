@@ -42,6 +42,7 @@ www.navitia.io
 #include "type/rt_level.h"
 #include <boost/range/algorithm/count.hpp>
 #include "type/pb_converter.h"
+#include "utils/rank.h"
 
 struct logger_initialized {
     logger_initialized() {
@@ -3624,4 +3625,43 @@ BOOST_AUTO_TEST_CASE(keep_going_tests_timeframe_and_min_nb_journey) {
                                                    navitia::DateTimeUtils::set(1, 900),  // timeframe_limit
                                                    0),                                   // max_transfers
                       false);
+}
+
+BOOST_AUTO_TEST_CASE(test_filter_backtrack) {
+    using namespace navitia::routing;
+
+    ed::builder b("20150101", [](ed::builder& b) {
+        b.vj("1")("A", "0:30"_t)("B", "1:00"_t)("C", "2:00");
+        b.vj("2")("C", "2:10"_t)("B", "3:01"_t);
+    });
+
+    auto vj1 = b.data->pt_data->vehicle_journeys_map["vehicle_journey:1:0"];
+    auto vj2 = b.data->pt_data->vehicle_journeys_map["vehicle_journey:2:1"];
+
+    const auto& st_1A = vj1->get_stop_time(navitia::type::RankStopTime(0));
+    const auto& st_1B = vj1->get_stop_time(navitia::type::RankStopTime(1));
+    const auto& st_1C = vj1->get_stop_time(navitia::type::RankStopTime(2));
+
+    const auto& st_2C = vj2->get_stop_time(navitia::type::RankStopTime(0));
+    const auto& st_2B = vj2->get_stop_time(navitia::type::RankStopTime(1));
+
+    Journey journey_1;
+    {
+        auto s_1 = Journey::Section{st_1A, "0:30"_t, st_1B, "1:00"_t};
+        auto s_2 = Journey::Section{st_1B, "1:00"_t, st_1C, "2:00"_t};
+        auto s_3 = Journey::Section{st_2C, "2:10"_t, st_2B, "3:01"_t};
+
+        journey_1.sections.push_back(s_1);
+        journey_1.sections.push_back(s_2);
+        journey_1.sections.push_back(s_3);
+    }
+    Journey journey_2;
+    {
+        auto s_1 = Journey::Section{st_1A, "0:30"_t, st_1B, "1:00"_t};
+        journey_2.sections.push_back(s_1);
+    }
+
+    auto solution = std::list<Journey>{journey_1, journey_2};
+    filter_backtracking_journeys(solution, true);
+    BOOST_CHECK_EQUAL(solution.size(), 1);
 }
