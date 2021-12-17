@@ -1421,13 +1421,13 @@ void filter_backtracking_journeys(RAPTOR::Journeys& journeys, const bool clockwi
             const auto* first_vj = first_section->get_out_st->vehicle_journey;
 
             for (const auto& section : journey.sections) {
-                const auto* vj = section.get_in_st->vehicle_journey;
-                auto order = section.get_in_st->order();
                 found = [&]() -> bool {
-                    for (; vj; (vj = vj->next_vj, order = type::RankStopTime(0))) {
-                        // we don't have to test stop_times on the last vj
+                    auto order = section.get_in_st->order();
+                    for (const auto* vj = section.get_in_st->vehicle_journey; vj;
+                         (vj = vj->next_vj, order = type::RankStopTime(0))) {
+                        // we don't have to test stop_times on the first vj
                         if (vj == first_vj) {
-                            continue;
+                            return false;
                         }
                         for (const auto& st : boost::make_iterator_range(vj->stop_time_list.begin() + order.val,
                                                                          vj->stop_time_list.end())) {
