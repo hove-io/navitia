@@ -191,8 +191,8 @@ void filter_late_journeys(RAPTOR::Journeys& journeys, const NightBusFilter::Para
 /**
  * @brief remove "backtracking" journeys.
  * A "depart after' journey is considered "backtracking" if its last stop_point's stop_area has been visited in the
- * previous sections. An "arrive before' journey is considered "backtracking" if its first stop_point's stop_area has
- * been visited in the subsequent sections
+ * previous vehicle journeys. An "arrive before' journey is considered "backtracking" if its first stop_point's
+ * stop_area has been visited in the subsequent vehicle journeys
  *
  * @param journeys A container of Journeys
  * @param clockwise depart after or arrive before

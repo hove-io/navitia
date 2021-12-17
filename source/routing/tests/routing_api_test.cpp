@@ -3663,6 +3663,5 @@ BOOST_AUTO_TEST_CASE(test_filter_backtrack) {
 
     auto solution = std::list<Journey>{journey_1, journey_2};
     filter_backtracking_journeys(solution, true);
-
     BOOST_CHECK_EQUAL(solution.size(), 1);
 }
