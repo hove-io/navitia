@@ -1424,10 +1424,11 @@ void filter_backtracking_journeys(RAPTOR::Journeys& journeys, const bool clockwi
         } else {
             auto first_section = journey.sections.begin();
             const auto& first_stop_area_uri = first_section->get_in_st->stop_point->stop_area->uri;
-            const auto* first_vj = first_section->get_out_st->vehicle_journey;
+            const auto* first_vj = first_section->get_in_st->vehicle_journey;
 
             found = find_stop_area_of_interest_through_journey(journey, first_stop_area_uri, first_vj);
         }
+
         if (found) {
             it = journeys.erase(it);
             continue;
