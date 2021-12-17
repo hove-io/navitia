@@ -1376,9 +1376,10 @@ bool find_stop_area_of_interest_through_journey(const navitia::routing::Journey&
     for (const auto& section : journey.sections) {
         auto order = section.get_in_st->order();
         bool reach_end = false;
+        // because of stay-ins, we may have several vj in one section, we have to scan the stop times
+        // of all vjs
         for (const auto* vj = section.get_in_st->vehicle_journey; vj;
              (vj = vj->next_vj, order = type::RankStopTime(0))) {
-            // we don't have to test stop_times on the first/last vj
             for (const auto& st :
                  boost::make_iterator_range(vj->stop_time_list.begin() + order.val, vj->stop_time_list.end())) {
                 if (st.stop_point->stop_area->uri == stop_area_uri && vj != vj_to_skip) {
