@@ -1373,43 +1373,10 @@ std::pair<bool, size_t> get_and_update_visited_section(navitia::routing::Journey
                                                        const std::string& stop_area_uri,
                                                        const navitia::type::VehicleJourney* vj_to_skip,
                                                        const bool clockwise) {
-    for (const auto& section_idx : (journey.sections | boost::adaptors::indexed(0))) {
-        auto& section = section_idx.value();
-        auto order = section.get_in_st->order();
-        // because of stay-ins, we may have several vj in one section, we have to scan the stop times
-        // of all vjs
-        for (const auto* vj = section.get_in_st->vehicle_journey; vj;
-             (vj = vj->next_vj, order = type::RankStopTime(0))) {
-            for (const auto& st :
-                 boost::make_iterator_range(vj->stop_time_list.begin() + order.val, vj->stop_time_list.end())) {
-                if (st.stop_point->stop_area->uri == stop_area_uri && vj != vj_to_skip) {
-                    if (clockwise) {
-                        section.get_out_st = &st;
-                        section.get_out_dt = st.departure_time;
-                    } else {
-                        section.get_in_st = &st;
-                        section.get_in_dt = st.arrival_time;
-                    }
-                    return {true, section_idx.index()};
-                }
-                if (section.get_out_st == &st) {
-                    return {false, section_idx.index()};
-                }
-            }
-        }
-    }
-    throw navitia::recoverable_exception("impossible to rebuild path");
-}
-
-bool find_stop_area_of_interest_through_journey(navitia::routing::Journey& journey,
-                                                const std::string& stop_area_uri,
-                                                const navitia::type::VehicleJourney* vj_to_skip,
-                                                const bool clockwise) {
     bool found = false;
-
+    // TODO: use range adaptor index once boost>=1.75
     auto section_idx_to_remove = 0;
-    for (const auto& section_idx : (journey.sections | boost::adaptors::indexed(0))) {
-        auto& section = section_idx.value();
+    for (auto& section : journey.sections) {
         auto order = section.get_in_st->order();
         bool reach_end = false;
         // because of stay-ins, we may have several vj in one section, we have to scan the stop times
@@ -1426,7 +1393,6 @@ bool find_stop_area_of_interest_through_journey(navitia::routing::Journey& journ
                         section.get_in_st = &st;
                         section.get_in_dt = st.arrival_time;
                     }
-                    section_idx_to_remove = section_idx.index();
                     std::cout << "section_idx_to_remove  " << section_idx_to_remove << std::endl;
                     found = true;
                     break;
@@ -1443,12 +1409,21 @@ bool find_stop_area_of_interest_through_journey(navitia::routing::Journey& journ
         if (found) {
             break;
         }
+        ++section_idx_to_remove;
     }
-    if (found) {
+    return {found, section_idx_to_remove};
+}
+
+bool find_stop_area_of_interest_through_journey(navitia::routing::Journey& journey,
+                                                const std::string& stop_area_uri,
+                                                const navitia::type::VehicleJourney* vj_to_skip,
+                                                const bool clockwise) {
+    auto res = get_and_update_visited_section(journey, stop_area_uri, vj_to_skip, clockwise);
+    if (res.first) {
         if (clockwise) {
-            journey.sections.erase(journey.sections.begin() + section_idx_to_remove + 1, journey.sections.end());
+            journey.sections.erase(journey.sections.begin() + res.second + 1, journey.sections.end());
         } else {
-            journey.sections.erase(journey.sections.begin(), journey.sections.begin() + section_idx_to_remove + 1);
+            journey.sections.erase(journey.sections.begin(), journey.sections.begin() + res.second - 1);
         }
     }
     return false;
@@ -1465,8 +1440,6 @@ void filter_backtracking_journeys(RAPTOR::Journeys& journeys, const bool clockwi
             ++it;
             continue;
         }
-
-        bool found = false;
 
         if (clockwise) {
             auto last_section = journey.sections.rbegin();
