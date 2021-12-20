@@ -42,6 +42,7 @@ www.navitia.io
 
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/range/algorithm/count.hpp>
+#include <boost/range/adaptor/indexed.hpp>
 
 #include <chrono>
 #include <string>
@@ -1368,12 +1369,12 @@ void filter_late_journeys(RAPTOR::Journeys& journeys, const NightBusFilter::Para
     }
 }
 
-bool find_stop_area_of_interest_through_journey(const navitia::routing::Journey& journey,
-                                                const std::string& stop_area_uri,
-                                                const navitia::type::VehicleJourney* vj_to_skip) {
-    bool found = false;
-
-    for (const auto& section : journey.sections) {
+size_t get_and_update_visited_section(navitia::routing::Journey& journey,
+                                      const std::string& stop_area_uri,
+                                      const navitia::type::VehicleJourney* vj_to_skip,
+                                      const bool clockwise) {
+    for (const auto& section_idx : journey.sections | boost::adaptors::indexed(0)) {
+        auto& section = section_idx.value();
         auto order = section.get_in_st->order();
         bool reach_end = false;
         // because of stay-ins, we may have several vj in one section, we have to scan the stop times
@@ -1383,16 +1384,70 @@ bool find_stop_area_of_interest_through_journey(const navitia::routing::Journey&
             for (const auto& st :
                  boost::make_iterator_range(vj->stop_time_list.begin() + order.val, vj->stop_time_list.end())) {
                 if (st.stop_point->stop_area->uri == stop_area_uri && vj != vj_to_skip) {
-                    return true;
+                    if (clockwise) {
+                        section.get_out_st = &st;
+                        section.get_out_dt = st.departure_time;
+                    } else {
+                        section.get_in_st = &st;
+                        section.get_in_dt = st.arrival_time;
+                    }
+                    return section_idx.index();
+                }
+                if (section.get_out_st == &st) {
+                    return section_idx.index();
+                }
+            }
+        }
+    }
+    throw navitia::recoverable_exception("impossible to rebuild path");
+}
+
+bool find_stop_area_of_interest_through_journey(navitia::routing::Journey& journey,
+                                                const std::string& stop_area_uri,
+                                                const navitia::type::VehicleJourney* vj_to_skip,
+                                                const bool clockwise) {
+    bool found = false;
+
+    auto section_idx = 0;
+    for (auto& section : journey.sections) {
+        auto order = section.get_in_st->order();
+        bool reach_end = false;
+        // because of stay-ins, we may have several vj in one section, we have to scan the stop times
+        // of all vjs
+        for (const auto* vj = section.get_in_st->vehicle_journey; vj;
+             (vj = vj->next_vj, order = type::RankStopTime(0))) {
+            for (const auto& st :
+                 boost::make_iterator_range(vj->stop_time_list.begin() + order.val, vj->stop_time_list.end())) {
+                if (st.stop_point->stop_area->uri == stop_area_uri && vj != vj_to_skip) {
+                    if (clockwise) {
+                        section.get_out_st = &st;
+                        section.get_out_dt = st.departure_time;
+                    } else {
+                        section.get_in_st = &st;
+                        section.get_in_dt = st.arrival_time;
+                    }
+                    found = true;
+                    break;
                 }
                 if (section.get_out_st == &st) {
                     reach_end = true;
                     break;
                 }
             }
-            if (reach_end) {
+            if (reach_end || found) {
                 break;
             }
+        }
+        if (found) {
+            break;
+        }
+        ++section_idx;
+    }
+    if (found) {
+        if (clockwise) {
+            journey.sections.erase(journey.sections.begin() + section_idx + 1, journey.sections.end());
+        } else {
+            journey.sections.erase(journey.sections.begin(), journey.sections.begin() + section_idx + 1);
         }
     }
     return false;
@@ -1406,7 +1461,7 @@ void filter_backtracking_journeys(RAPTOR::Journeys& journeys, const bool clockwi
     }
     auto it = journeys.begin();
     while (it != journeys.end()) {
-        const auto& journey = *it;
+        auto& journey = *it;
 
         if (!journey.is_pt()) {
             ++it;
@@ -1419,21 +1474,16 @@ void filter_backtracking_journeys(RAPTOR::Journeys& journeys, const bool clockwi
             auto last_section = journey.sections.rbegin();
             const auto& last_stop_area_uri = last_section->get_out_st->stop_point->stop_area->uri;
             const auto* last_vj = last_section->get_out_st->vehicle_journey;
-
-            found = find_stop_area_of_interest_through_journey(journey, last_stop_area_uri, last_vj);
+            find_stop_area_of_interest_through_journey(journey, last_stop_area_uri, last_vj, clockwise);
 
         } else {
             auto first_section = journey.sections.begin();
             const auto& first_stop_area_uri = first_section->get_in_st->stop_point->stop_area->uri;
             const auto* first_vj = first_section->get_in_st->vehicle_journey;
 
-            found = find_stop_area_of_interest_through_journey(journey, first_stop_area_uri, first_vj);
+            find_stop_area_of_interest_through_journey(journey, first_stop_area_uri, first_vj, clockwise);
         }
 
-        if (found) {
-            it = journeys.erase(it);
-            continue;
-        }
         ++it;
     }
 }
