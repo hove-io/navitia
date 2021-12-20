@@ -1369,49 +1369,50 @@ void filter_late_journeys(RAPTOR::Journeys& journeys, const NightBusFilter::Para
     }
 }
 
+bool update_visited_section(navitia::routing::Journey::Section& section,
+                            const std::string& stop_area_uri,
+                            const navitia::type::VehicleJourney* vj_to_skip,
+                            const bool clockwise) {
+    log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
+
+    bool go_next_section = false;
+    auto order = section.get_in_st->order();
+    // because of stay-ins, we may have several vj in one section, we have to scan the stop times
+    // of all vjs
+    for (const auto* vj = section.get_in_st->vehicle_journey; vj; (vj = vj->next_vj, order = type::RankStopTime(0))) {
+        for (const auto& st :
+             boost::make_iterator_range(vj->stop_time_list.begin() + order.val, vj->stop_time_list.end())) {
+            if (st.stop_point->stop_area->uri == stop_area_uri && vj != vj_to_skip) {
+                if (clockwise) {
+                    section.get_out_st = &st;
+                    section.get_out_dt = st.departure_time;
+                } else {
+                    section.get_in_st = &st;
+                    section.get_in_dt = st.arrival_time;
+                }
+                return true;
+            }
+            if (section.get_out_st == &st) {
+                return false;
+            }
+        }
+    }
+    LOG4CPLUS_WARN(logger, "Error occurred when modifying backtracking journeys");
+    return false;
+}
+
 std::pair<bool, size_t> get_and_update_visited_section(navitia::routing::Journey& journey,
                                                        const std::string& stop_area_uri,
                                                        const navitia::type::VehicleJourney* vj_to_skip,
                                                        const bool clockwise) {
-    bool found = false;
     // TODO: use range adaptor index once boost>=1.75
-    auto section_idx_to_remove = 0;
-    for (auto& section : journey.sections) {
-        auto order = section.get_in_st->order();
-        bool reach_end = false;
-        // because of stay-ins, we may have several vj in one section, we have to scan the stop times
-        // of all vjs
-        for (const auto* vj = section.get_in_st->vehicle_journey; vj;
-             (vj = vj->next_vj, order = type::RankStopTime(0))) {
-            for (const auto& st :
-                 boost::make_iterator_range(vj->stop_time_list.begin() + order.val, vj->stop_time_list.end())) {
-                if (st.stop_point->stop_area->uri == stop_area_uri && vj != vj_to_skip) {
-                    if (clockwise) {
-                        section.get_out_st = &st;
-                        section.get_out_dt = st.departure_time;
-                    } else {
-                        section.get_in_st = &st;
-                        section.get_in_dt = st.arrival_time;
-                    }
-                    std::cout << "section_idx_to_remove  " << section_idx_to_remove << std::endl;
-                    found = true;
-                    break;
-                }
-                if (section.get_out_st == &st) {
-                    reach_end = true;
-                    break;
-                }
-            }
-            if (reach_end || found) {
-                break;
-            }
+    for (const auto& section_idx : (journey.sections | boost::adaptors::indexed(0))) {
+        auto& section = section_idx.value();
+        if (update_visited_section(section, stop_area_uri, vj_to_skip, clockwise)) {
+            return {true, section_idx.index()};
         }
-        if (found) {
-            break;
-        }
-        ++section_idx_to_remove;
     }
-    return {found, section_idx_to_remove};
+    return {false, 0};
 }
 
 bool find_stop_area_of_interest_through_journey(navitia::routing::Journey& journey,
@@ -1430,32 +1431,18 @@ bool find_stop_area_of_interest_through_journey(navitia::routing::Journey& journ
 }
 
 void filter_backtracking_journeys(RAPTOR::Journeys& journeys, const bool clockwise) {
-    log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
-
-    auto it = journeys.begin();
-    while (it != journeys.end()) {
-        auto& journey = *it;
-
-        if (!journey.is_pt()) {
-            ++it;
-            continue;
-        }
-
+    for (auto& journey : journeys) {
         if (clockwise) {
             auto last_section = journey.sections.rbegin();
             const auto& last_stop_area_uri = last_section->get_out_st->stop_point->stop_area->uri;
             const auto* last_vj = last_section->get_out_st->vehicle_journey;
             find_stop_area_of_interest_through_journey(journey, last_stop_area_uri, last_vj, clockwise);
-
         } else {
             auto first_section = journey.sections.begin();
             const auto& first_stop_area_uri = first_section->get_in_st->stop_point->stop_area->uri;
             const auto* first_vj = first_section->get_in_st->vehicle_journey;
-
             find_stop_area_of_interest_through_journey(journey, first_stop_area_uri, first_vj, clockwise);
         }
-
-        ++it;
     }
 }
 
