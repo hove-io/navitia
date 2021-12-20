@@ -1376,7 +1376,6 @@ std::pair<bool, size_t> get_and_update_visited_section(navitia::routing::Journey
     for (const auto& section_idx : journey.sections | boost::adaptors::indexed(0)) {
         auto& section = section_idx.value();
         auto order = section.get_in_st->order();
-        bool reach_end = false;
         // because of stay-ins, we may have several vj in one section, we have to scan the stop times
         // of all vjs
         for (const auto* vj = section.get_in_st->vehicle_journey; vj;
@@ -1406,12 +1405,50 @@ bool find_stop_area_of_interest_through_journey(navitia::routing::Journey& journ
                                                 const std::string& stop_area_uri,
                                                 const navitia::type::VehicleJourney* vj_to_skip,
                                                 const bool clockwise) {
-    const auto p = get_and_update_visited_section(journey, stop_area_uri, vj_to_skip, clockwise);
-    if (p.first) {
+    bool found = false;
+
+    auto section_idx_to_remove = 0;
+    for (const auto& section_idx : (journey.sections | boost::adaptors::indexed(0))) {
+        auto& section = section_idx.value();
+        auto order = section.get_in_st->order();
+        bool reach_end = false;
+        // because of stay-ins, we may have several vj in one section, we have to scan the stop times
+        // of all vjs
+        for (const auto* vj = section.get_in_st->vehicle_journey; vj;
+             (vj = vj->next_vj, order = type::RankStopTime(0))) {
+            for (const auto& st :
+                 boost::make_iterator_range(vj->stop_time_list.begin() + order.val, vj->stop_time_list.end())) {
+                if (st.stop_point->stop_area->uri == stop_area_uri && vj != vj_to_skip) {
+                    if (clockwise) {
+                        section.get_out_st = &st;
+                        section.get_out_dt = st.departure_time;
+                    } else {
+                        section.get_in_st = &st;
+                        section.get_in_dt = st.arrival_time;
+                    }
+                    section_idx_to_remove = section_idx.index();
+                    std::cout << "section_idx_to_remove  " << section_idx_to_remove << std::endl;
+                    found = true;
+                    break;
+                }
+                if (section.get_out_st == &st) {
+                    reach_end = true;
+                    break;
+                }
+            }
+            if (reach_end || found) {
+                break;
+            }
+        }
+        if (found) {
+            break;
+        }
+    }
+    if (found) {
         if (clockwise) {
-            journey.sections.erase(journey.sections.begin() + p.second + 1, journey.sections.end());
+            journey.sections.erase(journey.sections.begin() + section_idx_to_remove + 1, journey.sections.end());
         } else {
-            journey.sections.erase(journey.sections.begin(), journey.sections.begin() + p.second + 1);
+            journey.sections.erase(journey.sections.begin(), journey.sections.begin() + section_idx_to_remove + 1);
         }
     }
     return false;
