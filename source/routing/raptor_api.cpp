@@ -1373,7 +1373,7 @@ std::pair<bool, size_t> get_and_update_visited_section(navitia::routing::Journey
                                                        const std::string& stop_area_uri,
                                                        const navitia::type::VehicleJourney* vj_to_skip,
                                                        const bool clockwise) {
-    for (const auto& section_idx : journey.sections | boost::adaptors::indexed(0)) {
+    for (const auto& section_idx : (journey.sections | boost::adaptors::indexed(0))) {
         auto& section = section_idx.value();
         auto order = section.get_in_st->order();
         // because of stay-ins, we may have several vj in one section, we have to scan the stop times
