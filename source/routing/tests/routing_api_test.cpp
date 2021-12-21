@@ -3684,15 +3684,11 @@ BOOST_AUTO_TEST_CASE(backtracking_journey_stay_in) {
         b.vj("Stay1", "1111111", "block1", true)("A", "0:30"_t)("B", "1:00"_t)("C", "2:00"_t);
         b.vj("Stay2", "1111111", "block1", true)("C", "2:00"_t)("D", "2:10"_t)("B", "3:01"_t);
     });
-    for (auto p : b.data->pt_data->vehicle_journeys_map) {
-        std::cout << p.first << std::endl;
-    }
+
     auto vj1 = b.data->pt_data->vehicle_journeys_map["vehicle_journey:Stay1:0"];
     auto vj2 = b.data->pt_data->vehicle_journeys_map["vehicle_journey:Stay2:1"];
 
     const auto& st_1A = vj1->get_stop_time(navitia::type::RankStopTime(0));
-    const auto& st_1B = vj1->get_stop_time(navitia::type::RankStopTime(1));
-
     const auto& st_2B = vj2->get_stop_time(navitia::type::RankStopTime(1));
 
     auto solution = std::list<Journey>{};
@@ -3711,4 +3707,43 @@ BOOST_AUTO_TEST_CASE(backtracking_journey_stay_in) {
     const auto& j = solution.front();
     BOOST_ASSERT(j.sections.front().get_in_st == &st_1A);
     BOOST_ASSERT(j.sections.front().get_out_st == &st_2B);
+}
+
+BOOST_AUTO_TEST_CASE(backtracking_journey_arrival_before) {
+    using namespace navitia::routing;
+
+    ed::builder b("20150101", [](ed::builder& b) {
+        b.vj("1")("A", "0:30"_t)("B", "1:00"_t)("C", "2:00"_t);
+        b.vj("2")("C", "2:10"_t)("A", "3:01"_t)("E", "3:01"_t);
+    });
+
+    auto vj1 = b.data->pt_data->vehicle_journeys_map["vehicle_journey:1:0"];
+    auto vj2 = b.data->pt_data->vehicle_journeys_map["vehicle_journey:2:1"];
+
+    const auto& st_1A = vj1->get_stop_time(navitia::type::RankStopTime(0));
+    const auto& st_1C = vj1->get_stop_time(navitia::type::RankStopTime(2));
+
+    const auto& st_2C = vj2->get_stop_time(navitia::type::RankStopTime(0));
+    const auto& st_2A = vj2->get_stop_time(navitia::type::RankStopTime(1));
+    const auto& st_2E = vj2->get_stop_time(navitia::type::RankStopTime(2));
+
+    auto solution = std::list<Journey>{};
+
+    {
+        Journey journey_1;
+
+        auto s_1 = Journey::Section{st_1A, "0:30"_t, st_1C, "2:00"_t};
+        auto s_2 = Journey::Section{st_2C, "2:10"_t, st_2E, "3:01"_t};
+
+        journey_1.sections.push_back(s_1);
+        journey_1.sections.push_back(s_2);
+
+        solution.push_back(journey_1);
+    }
+
+    modify_backtracking_journeys(solution, false);
+
+    const auto& j = solution.front();
+    BOOST_ASSERT(j.sections.front().get_in_st == &st_2A);
+    BOOST_ASSERT(j.sections.front().get_out_st == &st_2E);
 }
