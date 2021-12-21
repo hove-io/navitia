@@ -187,7 +187,7 @@ static std::vector<Path> call_raptor(navitia::PbCreator& pb_creator,
                                           night_bus_filter_base_factor};
             filter_late_journeys(raptor_journeys, params);
 
-            filter_backtracking_journeys(raptor_journeys, clockwise);
+            modify_backtracking_journeys(raptor_journeys, clockwise);
 
             LOG4CPLUS_DEBUG(logger, "after filtering late journeys: " << raptor_journeys.size() << " solution(s) left");
 
@@ -1374,8 +1374,6 @@ bool update_visited_section(navitia::routing::Journey::Section& section,
                             const navitia::type::VehicleJourney* vj_to_skip,
                             const bool clockwise) {
     log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
-
-    bool go_next_section = false;
     auto order = section.get_in_st->order();
     // because of stay-ins, we may have several vj in one section, we have to scan the stop times
     // of all vjs
@@ -1405,12 +1403,13 @@ std::pair<bool, size_t> get_and_update_visited_section(navitia::routing::Journey
                                                        const std::string& stop_area_uri,
                                                        const navitia::type::VehicleJourney* vj_to_skip,
                                                        const bool clockwise) {
-    // TODO: use range adaptor index once boost>=1.75
-    for (const auto& section_idx : (journey.sections | boost::adaptors::indexed(0))) {
-        auto& section = section_idx.value();
+    // TODO: use boost::adaptors::indexed(0), index() and value() once boost>1.55 is available, sigh...
+    size_t section_idx = 0;
+    for (auto& section : journey.sections) {
         if (update_visited_section(section, stop_area_uri, vj_to_skip, clockwise)) {
-            return {true, section_idx.index()};
+            return {true, section_idx};
         }
+        ++section_idx;
     }
     return {false, 0};
 }
@@ -1430,7 +1429,7 @@ bool find_stop_area_of_interest_through_journey(navitia::routing::Journey& journ
     return false;
 }
 
-void filter_backtracking_journeys(RAPTOR::Journeys& journeys, const bool clockwise) {
+void modify_backtracking_journeys(RAPTOR::Journeys& journeys, const bool clockwise) {
     for (auto& journey : journeys) {
         if (clockwise) {
             auto last_section = journey.sections.rbegin();

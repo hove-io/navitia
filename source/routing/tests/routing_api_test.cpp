@@ -3631,7 +3631,7 @@ BOOST_AUTO_TEST_CASE(test_filter_backtrack) {
     using namespace navitia::routing;
 
     ed::builder b("20150101", [](ed::builder& b) {
-        b.vj("1")("A", "0:30"_t)("B", "1:00"_t)("C", "2:00");
+        b.vj("1")("A", "0:30"_t)("B", "1:00"_t)("C", "2:00"_t);
         b.vj("2")("C", "2:10"_t)("B", "3:01"_t);
     });
 
@@ -3645,8 +3645,11 @@ BOOST_AUTO_TEST_CASE(test_filter_backtrack) {
     const auto& st_2C = vj2->get_stop_time(navitia::type::RankStopTime(0));
     const auto& st_2B = vj2->get_stop_time(navitia::type::RankStopTime(1));
 
-    Journey journey_1;
+    auto solution = std::list<Journey>{};
+
     {
+        Journey journey_1;
+
         auto s_1 = Journey::Section{st_1A, "0:30"_t, st_1B, "1:00"_t};
         auto s_2 = Journey::Section{st_1B, "1:00"_t, st_1C, "2:00"_t};
         auto s_3 = Journey::Section{st_2C, "2:10"_t, st_2B, "3:01"_t};
@@ -3654,14 +3657,58 @@ BOOST_AUTO_TEST_CASE(test_filter_backtrack) {
         journey_1.sections.push_back(s_1);
         journey_1.sections.push_back(s_2);
         journey_1.sections.push_back(s_3);
+
+        solution.push_back(journey_1);
     }
-    Journey journey_2;
     {
+        Journey journey_2;
+
         auto s_1 = Journey::Section{st_1A, "0:30"_t, st_1B, "1:00"_t};
         journey_2.sections.push_back(s_1);
+        solution.push_back(journey_2);
     }
 
-    auto solution = std::list<Journey>{journey_1, journey_2};
-    filter_backtracking_journeys(solution, true);
-    BOOST_CHECK_EQUAL(solution.size(), 1);
+    modify_backtracking_journeys(solution, true);
+    BOOST_CHECK_EQUAL(solution.size(), 2);
+
+    const auto& j1 = solution.front();
+    BOOST_CHECK_EQUAL(j1.sections.size(), 1);
+
+    BOOST_ASSERT(j1.sections.front().get_out_st == &st_1B);
+}
+
+BOOST_AUTO_TEST_CASE(backtracking_journey_stay_in) {
+    using namespace navitia::routing;
+
+    ed::builder b("20150101", [](ed::builder& b) {
+        b.vj("Stay1", "1111111", "block1", true)("A", "0:30"_t)("B", "1:00"_t)("C", "2:00"_t);
+        b.vj("Stay2", "1111111", "block1", true)("C", "2:00"_t)("D", "2:10"_t)("B", "3:01"_t);
+    });
+    for (auto p : b.data->pt_data->vehicle_journeys_map) {
+        std::cout << p.first << std::endl;
+    }
+    auto vj1 = b.data->pt_data->vehicle_journeys_map["vehicle_journey:Stay1:0"];
+    auto vj2 = b.data->pt_data->vehicle_journeys_map["vehicle_journey:Stay2:1"];
+
+    const auto& st_1A = vj1->get_stop_time(navitia::type::RankStopTime(0));
+    const auto& st_1B = vj1->get_stop_time(navitia::type::RankStopTime(1));
+
+    const auto& st_2B = vj2->get_stop_time(navitia::type::RankStopTime(1));
+
+    auto solution = std::list<Journey>{};
+
+    {
+        Journey journey_stay_in;
+
+        auto s_1 = Journey::Section{st_1A, "0:30"_t, st_2B, "3:01"_t};
+
+        journey_stay_in.sections.push_back(s_1);
+
+        solution.push_back(journey_stay_in);
+    }
+
+    modify_backtracking_journeys(solution, true);
+    const auto& j = solution.front();
+    BOOST_ASSERT(j.sections.front().get_in_st == &st_1A);
+    BOOST_ASSERT(j.sections.front().get_out_st == &st_2B);
 }
