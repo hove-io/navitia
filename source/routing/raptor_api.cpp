@@ -1423,7 +1423,7 @@ bool find_stop_area_of_interest_through_journey(navitia::routing::Journey& journ
         if (clockwise) {
             journey.sections.erase(journey.sections.begin() + res.second + 1, journey.sections.end());
         } else {
-            journey.sections.erase(journey.sections.begin(), journey.sections.begin() + res.second - 1);
+            journey.sections.erase(journey.sections.begin(), journey.sections.begin() + res.second);
         }
     }
     return false;

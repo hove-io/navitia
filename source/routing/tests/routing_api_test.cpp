@@ -3687,7 +3687,6 @@ BOOST_AUTO_TEST_CASE(test_filter_backtrack) {
     }
 }
 
-/*
 BOOST_AUTO_TEST_CASE(backtracking_journey_stay_in) {
     using namespace navitia::routing;
 
@@ -3700,7 +3699,7 @@ BOOST_AUTO_TEST_CASE(backtracking_journey_stay_in) {
     auto vj2 = b.data->pt_data->vehicle_journeys_map["vehicle_journey:Stay2:1"];
 
     const auto& st_1A = vj1->get_stop_time(navitia::type::RankStopTime(0));
-    const auto& st_2B = vj2->get_stop_time(navitia::type::RankStopTime(1));
+    const auto& st_2B = vj2->get_stop_time(navitia::type::RankStopTime(2));
 
     auto solution = std::list<Journey>{};
 
@@ -3716,8 +3715,16 @@ BOOST_AUTO_TEST_CASE(backtracking_journey_stay_in) {
 
     modify_backtracking_journeys(solution, true);
     const auto& j = solution.front();
-    BOOST_ASSERT(j.sections.front().get_in_st == &st_1A);
-    BOOST_ASSERT(j.sections.front().get_out_st == &st_2B);
+    {
+        const auto* vj = j.sections.front().get_in_st->vehicle_journey;
+        BOOST_CHECK_EQUAL(vj->uri, vj1->uri);
+        BOOST_CHECK_EQUAL(j.sections.front().get_in_st->order().val, 0);
+    }
+    {
+        const auto* vj = j.sections.front().get_out_st->vehicle_journey;
+        BOOST_CHECK_EQUAL(vj->uri, vj1->uri);
+        BOOST_CHECK_EQUAL(j.sections.front().get_out_st->order().val, 1);
+    }
 }
 
 BOOST_AUTO_TEST_CASE(backtracking_journey_arrival_before) {
@@ -3755,6 +3762,14 @@ BOOST_AUTO_TEST_CASE(backtracking_journey_arrival_before) {
     modify_backtracking_journeys(solution, false);
 
     const auto& j = solution.front();
-    BOOST_ASSERT(j.sections.front().get_in_st == &st_2A);
-    BOOST_ASSERT(j.sections.front().get_out_st == &st_2E);
-}*/
+    {
+        const auto* vj = j.sections.front().get_in_st->vehicle_journey;
+        BOOST_CHECK_EQUAL(vj->uri, vj2->uri);
+        BOOST_CHECK_EQUAL(j.sections.front().get_in_st->order().val, 1);
+    }
+    {
+        const auto* vj = j.sections.front().get_out_st->vehicle_journey;
+        BOOST_CHECK_EQUAL(vj->uri, vj2->uri);
+        BOOST_CHECK_EQUAL(j.sections.front().get_out_st->order().val, 2);
+    }
+}
