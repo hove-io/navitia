@@ -3758,9 +3758,7 @@ BOOST_AUTO_TEST_CASE(backtracking_journey_arrival_before) {
 
         solution.push_back(journey_1);
     }
-
     modify_backtracking_journeys(solution, false);
-
     const auto& j = solution.front();
     {
         const auto* vj = j.sections.front().get_in_st->vehicle_journey;
