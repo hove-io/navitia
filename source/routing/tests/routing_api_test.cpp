@@ -3742,7 +3742,6 @@ BOOST_AUTO_TEST_CASE(backtracking_journey_arrival_before) {
     const auto& st_1C = vj1->get_stop_time(navitia::type::RankStopTime(2));
 
     const auto& st_2C = vj2->get_stop_time(navitia::type::RankStopTime(0));
-    const auto& st_2A = vj2->get_stop_time(navitia::type::RankStopTime(1));
     const auto& st_2E = vj2->get_stop_time(navitia::type::RankStopTime(2));
 
     auto solution = std::list<Journey>{};
