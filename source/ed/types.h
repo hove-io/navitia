@@ -170,7 +170,7 @@ struct AccessPoint : public Header, Nameable {
     std::string parent_station;
     std::string stop_code;
 
-    AccessPoint() {}
+    AccessPoint() = default;
     AccessPoint(int idx, std::string uri) : Header(idx, uri), Nameable(uri) {}
 
     bool operator<(const AccessPoint& other) const;
