@@ -53,6 +53,7 @@ struct StopPoint : public Header, Nameable, hasProperties, HasMessages {
 
     StopArea* stop_area;
     std::vector<navitia::georef::Admin*> admin_list;
+    std::set<navitia::type::AccessPoint*> access_points;
     Network* network;
     std::vector<StopPointConnection*> stop_point_connection_list;
     std::set<Dataset*> dataset_list;

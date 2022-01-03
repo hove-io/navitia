@@ -28,13 +28,8 @@ www.navitia.io
 */
 #include "type/access_point.h"
 
-#include "type/connection.h"
-#include "type/dataset.h"
-#include "type/indexes.h"
-#include "type/pt_data.h"
-#include "type/route.h"
-#include "type/serialization.h"
 #include "type/stop_area.h"
+#include "type/serialization.h"
 #include "georef/georef.h"
 
 #include <boost/serialization/weak_ptr.hpp>
@@ -43,13 +38,14 @@ namespace navitia {
 namespace type {
 template <class Archive>
 void AccessPoint::serialize(Archive& ar, const unsigned int /*unused*/) {
-    ar& uri& name& stop_area& coord& idx;
+    ar& uri& name& stop_code& is_entrance& is_exit& pathway_mode& length& traversal_time& stair_count& max_slope&
+        min_width& signposted_as& reversed_signposted_as& parent_station& coord& idx;
 }
 SERIALIZABLE(AccessPoint)
 
 bool AccessPoint::operator<(const AccessPoint& other) const {
-    if (this->stop_area != other.stop_area) {
-        return *this->stop_area < *other.stop_area;
+    if (this->parent_station != other.parent_station) {
+        return *this->parent_station < *other.parent_station;
     }
     std::string lower_name = strip_accents_and_lower(this->name);
     std::string lower_other_name = strip_accents_and_lower(other.name);

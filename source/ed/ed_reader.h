@@ -74,7 +74,10 @@ private:
     std::unordered_map<idx_t, navitia::type::Contributor*> contributor_map;
     std::unordered_map<idx_t, navitia::type::Dataset*> dataset_map;
     std::unordered_map<idx_t, navitia::type::StopArea*> stop_area_map;
+    std::unordered_map<std::string, idx_t> uri_to_idx_stop_area;
     std::unordered_map<idx_t, navitia::type::StopPoint*> stop_point_map;
+    std::unordered_map<std::string, idx_t> uri_to_idx_stop_point;
+    std::unordered_map<std::string, navitia::type::AccessPoint*> access_point_map;
     std::unordered_map<idx_t, navitia::type::Line*> line_map;
     std::unordered_map<idx_t, navitia::type::LineGroup*> line_group_map;
     std::unordered_map<idx_t, navitia::type::Route*> route_map;
@@ -121,6 +124,11 @@ private:
 
     void fill_stop_areas(navitia::type::Data& data, pqxx::work& work);
     void fill_stop_points(navitia::type::Data& data, pqxx::work& work);
+    void fill_access_point_field(navitia::type::AccessPoint* access_point,
+                                 const pqxx::result::iterator const_it,
+                                 const bool from_access_point,
+                                 const std::string& sp_id);
+    void fill_access_points(navitia::type::Data& data, pqxx::work& work);
     void fill_ntfs_addresses(pqxx::work& work);
     void fill_lines(navitia::type::Data& data, pqxx::work& work);
     void fill_line_groups(navitia::type::Data& data, pqxx::work& work);
