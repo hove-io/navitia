@@ -1369,7 +1369,11 @@ void filter_late_journeys(RAPTOR::Journeys& journeys, const NightBusFilter::Para
     }
 }
 
-bool update_visited_section(navitia::routing::Journey::Section& section,
+// - if `clockwise` : remove everything in the section *after* the *first* occurence of `stop_area_uri`, unless this stop is served by `vj_to_skip`
+// - if `! clockwise` : remove everything in the section *before* the *last* occurence of `stop_area_uri`, unless this stop is served by `vj_to_skip`
+//
+// returns `true` if the section has been modified
+bool shorten_section(navitia::routing::Journey::Section& section
                             const std::string& stop_area_uri,
                             const navitia::type::VehicleJourney* vj_to_skip,
                             const bool clockwise) {
@@ -1414,7 +1418,11 @@ std::pair<bool, size_t> get_and_update_visited_section(navitia::routing::Journey
     return {false, 0};
 }
 
-bool find_stop_area_of_interest_through_journey(navitia::routing::Journey& journey,
+// - if `clockwise` : remove everything in the journey *after* the *first* occurence of `stop_area_uri`, unless this stop is served by `vj_to_skip`
+// - if `! clockwise` : remove everything in the journey *before* the *last* occurence of `stop_area_uri`, unless this stop is served by `vj_to_skip`
+//
+// returns `true` if the journey has been modified
+bool shorten_journey(navitia::routing::Journey& journey,
                                                 const std::string& stop_area_uri,
                                                 const navitia::type::VehicleJourney* vj_to_skip,
                                                 const bool clockwise) {
