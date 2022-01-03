@@ -3631,7 +3631,7 @@ BOOST_AUTO_TEST_CASE(test_filter_backtrack) {
     using namespace navitia::routing;
 
     ed::builder b("20150101", [](ed::builder& b) {
-        b.vj("1")("A", "0:30"_t)("B", "1:00"_t)("C", "2:00"_t);
+        b.vj("1")("A", "0:30"_t)("B", "1:00"_t, "1:01"_t)("C", "2:00"_t);
         b.vj("2")("C", "2:10"_t)("B", "3:01"_t);
     });
 
@@ -3678,12 +3678,14 @@ BOOST_AUTO_TEST_CASE(test_filter_backtrack) {
         const auto* vj = j1.sections.front().get_in_st->vehicle_journey;
         BOOST_CHECK_EQUAL(vj->uri, vj1->uri);
         BOOST_CHECK_EQUAL(j1.sections.front().get_in_st->order().val, 0);
+        BOOST_CHECK_EQUAL(j1.sections.front().get_in_dt, "0:30"_t);
     }
 
     {
         const auto* vj = j1.sections.front().get_out_st->vehicle_journey;
         BOOST_CHECK_EQUAL(vj->uri, vj1->uri);
         BOOST_CHECK_EQUAL(j1.sections.front().get_out_st->order().val, 1);
+        BOOST_CHECK_EQUAL(j1.sections.front().get_out_dt, "1:00"_t);
     }
 }
 
@@ -3691,7 +3693,7 @@ BOOST_AUTO_TEST_CASE(backtracking_journey_stay_in) {
     using namespace navitia::routing;
 
     ed::builder b("20150101", [](ed::builder& b) {
-        b.vj("Stay1", "1111111", "block1", true)("A", "0:30"_t)("B", "1:00"_t)("C", "2:00"_t);
+        b.vj("Stay1", "1111111", "block1", true)("A", "0:30"_t, "0:31"_t)("B", "1:00"_t, "1:01"_t)("C", "2:00"_t);
         b.vj("Stay2", "1111111", "block1", true)("C", "2:00"_t)("D", "2:10"_t)("B", "3:01"_t);
     });
 
@@ -3719,11 +3721,13 @@ BOOST_AUTO_TEST_CASE(backtracking_journey_stay_in) {
         const auto* vj = j.sections.front().get_in_st->vehicle_journey;
         BOOST_CHECK_EQUAL(vj->uri, vj1->uri);
         BOOST_CHECK_EQUAL(j.sections.front().get_in_st->order().val, 0);
+        BOOST_CHECK_EQUAL(j.sections.front().get_in_dt, "0:30"_t);
     }
     {
         const auto* vj = j.sections.front().get_out_st->vehicle_journey;
         BOOST_CHECK_EQUAL(vj->uri, vj1->uri);
         BOOST_CHECK_EQUAL(j.sections.front().get_out_st->order().val, 1);
+        BOOST_CHECK_EQUAL(j.sections.front().get_out_dt, "1:00"_t);
     }
 }
 
@@ -3732,7 +3736,7 @@ BOOST_AUTO_TEST_CASE(backtracking_journey_arrival_before) {
 
     ed::builder b("20150101", [](ed::builder& b) {
         b.vj("1")("A", "0:30"_t)("B", "1:00"_t)("C", "2:00"_t);
-        b.vj("2")("C", "2:10"_t)("A", "3:01"_t)("E", "3:01"_t);
+        b.vj("2")("C", "2:10"_t)("A", "3:00"_t, "3:01"_t)("E", "4:01"_t);
     });
 
     auto vj1 = b.data->pt_data->vehicle_journeys_map["vehicle_journey:1:0"];
@@ -3750,7 +3754,7 @@ BOOST_AUTO_TEST_CASE(backtracking_journey_arrival_before) {
         Journey journey_1;
 
         auto s_1 = Journey::Section{st_1A, "0:30"_t, st_1C, "2:00"_t};
-        auto s_2 = Journey::Section{st_2C, "2:10"_t, st_2E, "3:01"_t};
+        auto s_2 = Journey::Section{st_2C, "2:10"_t, st_2E, "4:01"_t};
 
         journey_1.sections.push_back(s_1);
         journey_1.sections.push_back(s_2);
@@ -3763,10 +3767,12 @@ BOOST_AUTO_TEST_CASE(backtracking_journey_arrival_before) {
         const auto* vj = j.sections.front().get_in_st->vehicle_journey;
         BOOST_CHECK_EQUAL(vj->uri, vj2->uri);
         BOOST_CHECK_EQUAL(j.sections.front().get_in_st->order().val, 1);
+        BOOST_CHECK_EQUAL(j.sections.front().get_in_dt, "3:01"_t);
     }
     {
         const auto* vj = j.sections.front().get_out_st->vehicle_journey;
         BOOST_CHECK_EQUAL(vj->uri, vj2->uri);
         BOOST_CHECK_EQUAL(j.sections.front().get_out_st->order().val, 2);
+        BOOST_CHECK_EQUAL(j.sections.front().get_out_dt, "4:01"_t);
     }
 }

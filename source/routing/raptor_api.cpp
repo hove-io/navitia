@@ -1369,14 +1369,16 @@ void filter_late_journeys(RAPTOR::Journeys& journeys, const NightBusFilter::Para
     }
 }
 
-// - if `clockwise` : remove everything in the section *after* the *first* occurence of `stop_area_uri`, unless this stop is served by `vj_to_skip`
-// - if `! clockwise` : remove everything in the section *before* the *last* occurence of `stop_area_uri`, unless this stop is served by `vj_to_skip`
+// - if `clockwise` : remove everything in the section *after* the *first* occurence of `stop_area_uri`, unless this
+// stop is served by `vj_to_skip`
+// - if `! clockwise` : remove everything in the section *before* the *last* occurence of `stop_area_uri`, unless this
+// stop is served by `vj_to_skip`
 //
 // returns `true` if the section has been modified
-bool shorten_section(navitia::routing::Journey::Section& section
-                            const std::string& stop_area_uri,
-                            const navitia::type::VehicleJourney* vj_to_skip,
-                            const bool clockwise) {
+bool shorten_section(navitia::routing::Journey::Section& section,
+                     const std::string& stop_area_uri,
+                     const navitia::type::VehicleJourney* vj_to_skip,
+                     const bool clockwise) {
     log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
     auto order = section.get_in_st->order();
     // because of stay-ins, we may have several vj in one section, we have to scan the stop times
@@ -1387,10 +1389,10 @@ bool shorten_section(navitia::routing::Journey::Section& section
             if (st.stop_point->stop_area->uri == stop_area_uri && vj != vj_to_skip) {
                 if (clockwise) {
                     section.get_out_st = &st;
-                    section.get_out_dt = st.departure_time;
+                    section.get_out_dt = st.arrival_time;
                 } else {
                     section.get_in_st = &st;
-                    section.get_in_dt = st.arrival_time;
+                    section.get_in_dt = st.departure_time;
                 }
                 return true;
             }
@@ -1410,7 +1412,7 @@ std::pair<bool, size_t> get_and_update_visited_section(navitia::routing::Journey
     // TODO: use boost::adaptors::indexed(0), index() and value() once boost>1.55 is available, sigh...
     size_t section_idx = 0;
     for (auto& section : journey.sections) {
-        if (update_visited_section(section, stop_area_uri, vj_to_skip, clockwise)) {
+        if (shorten_section(section, stop_area_uri, vj_to_skip, clockwise)) {
             return {true, section_idx};
         }
         ++section_idx;
@@ -1418,14 +1420,16 @@ std::pair<bool, size_t> get_and_update_visited_section(navitia::routing::Journey
     return {false, 0};
 }
 
-// - if `clockwise` : remove everything in the journey *after* the *first* occurence of `stop_area_uri`, unless this stop is served by `vj_to_skip`
-// - if `! clockwise` : remove everything in the journey *before* the *last* occurence of `stop_area_uri`, unless this stop is served by `vj_to_skip`
+// - if `clockwise` : remove everything in the journey *after* the *first* occurence of `stop_area_uri`, unless this
+// stop is served by `vj_to_skip`
+// - if `! clockwise` : remove everything in the journey *before* the *last* occurence of `stop_area_uri`, unless this
+// stop is served by `vj_to_skip`
 //
 // returns `true` if the journey has been modified
 bool shorten_journey(navitia::routing::Journey& journey,
-                                                const std::string& stop_area_uri,
-                                                const navitia::type::VehicleJourney* vj_to_skip,
-                                                const bool clockwise) {
+                     const std::string& stop_area_uri,
+                     const navitia::type::VehicleJourney* vj_to_skip,
+                     const bool clockwise) {
     auto res = get_and_update_visited_section(journey, stop_area_uri, vj_to_skip, clockwise);
     if (res.first) {
         if (clockwise) {
@@ -1443,12 +1447,12 @@ void modify_backtracking_journeys(RAPTOR::Journeys& journeys, const bool clockwi
             auto last_section = journey.sections.rbegin();
             const auto& last_stop_area_uri = last_section->get_out_st->stop_point->stop_area->uri;
             const auto* last_vj = last_section->get_out_st->vehicle_journey;
-            find_stop_area_of_interest_through_journey(journey, last_stop_area_uri, last_vj, clockwise);
+            shorten_journey(journey, last_stop_area_uri, last_vj, clockwise);
         } else {
             auto first_section = journey.sections.begin();
             const auto& first_stop_area_uri = first_section->get_in_st->stop_point->stop_area->uri;
             const auto* first_vj = first_section->get_in_st->vehicle_journey;
-            find_stop_area_of_interest_through_journey(journey, first_stop_area_uri, first_vj, clockwise);
+            shorten_journey(journey, first_stop_area_uri, first_vj, clockwise);
         }
     }
 }
