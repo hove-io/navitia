@@ -436,6 +436,25 @@ class TestJourneysDistributed(
         assert any('walking' in j['tags'] for j in response['journeys'])
         assert len(response['journeys'][1]['sections']) == 1
 
+    def test_matrix_margin(self):
+        query = (
+            journey_basic_query + "&max_duration_to_pt=59" + "&walking_speed=1.5" + "&_walking_matrix_margin=0"
+        )
+        response = self.query_region(query)
+        print(len(response['journeys']))
+        assert len(response['journeys']) == 1
+
+        query = (
+            journey_basic_query
+            + "&max_duration_to_pt=59"
+            + "&walking_speed=1.5"
+            # enlarge the search radius
+            + "&_walking_matrix_margin=100"
+        )
+        response = self.query_region(query)
+        print(len(response['journeys']))
+        assert len(response['journeys']) == 2
+
 
 @config({"scenario": "distributed"})
 class TestDistributedJourneysWithPtref(JourneysWithPtref, NewDefaultScenarioAbstractTestFixture):

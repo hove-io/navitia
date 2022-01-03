@@ -733,6 +733,49 @@ class Journeys(JourneyCommon):
             help="used to adjust the search range in Asgard when computing matrix",
         )
 
+        parser_get.add_argument(
+            "_walking_matrix_margin",
+            type=int,
+            default=300,
+            hidden=True,
+            help="add an extra search range when computing matrix",
+        )
+        parser_get.add_argument(
+            "_bike_matrix_margin",
+            type=int,
+            default=300,
+            hidden=True,
+            help="add an extra search range when computing matrix",
+        )
+        parser_get.add_argument(
+            "_bss_matrix_margin",
+            type=int,
+            default=300,
+            hidden=True,
+            help="add an extra search range when computing matrix",
+        )
+        parser_get.add_argument(
+            "_car_matrix_margin",
+            type=int,
+            default=300,
+            hidden=True,
+            help="add an extra search range when computing matrix",
+        )
+        parser_get.add_argument(
+            "_car_no_park_matrix_margin",
+            type=int,
+            default=300,
+            hidden=True,
+            help="add an extra search range when computing matrix",
+        )
+        parser_get.add_argument(
+            "_taxi_matrix_margin",
+            type=int,
+            default=300,
+            hidden=True,
+            help="add an extra search range when computing matrix",
+        )
+
     @add_tad_links()
     @add_debug_info()
     @add_fare_links()
