@@ -59,7 +59,7 @@ jobs:
         export KRAKEN_RABBITMQ_HOST='rabbitmq'
         ctest --output-on-failure
     - name: Coverage
-      run: gcovr -k -r . -f source -e source/third_party --exclude-directories 'source/*/tests/' --sonarqube cov.xml
+      run: gcovr -k -r . -f source -e source/third_party --sonarqube cov.xml
     - name: SonarCloud Scan
       # We only want 1 scan as it would bloat sonarcube otherwise
       # And only on an internal merge (to dev/master) as SonarCloud's token uses Secrets that not available from a fork :( (eg. https://docs.github.com/en/actions/reference/encrypted-secrets#using-encrypted-secrets-in-a-workflow)
