@@ -667,7 +667,7 @@ class Instance(flask_restful.Resource):
             type=str,
             case_sensitive=False,
             help='the name of the backend used by jormungandr for the autocompletion',
-            choices=['kraken', 'bragi'],
+            choices=['kraken', 'bragi', 'bragi7'],
             location=('json', 'values'),
             default=instance.autocomplete_backend,
         )
