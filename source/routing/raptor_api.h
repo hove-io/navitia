@@ -212,7 +212,10 @@ void filter_late_journeys(RAPTOR::Journeys& journeys, const NightBusFilter::Para
  * @param journeys A container of Journeys
  * @param clockwise depart after or arrive before
  */
-void modify_backtracking_journeys(RAPTOR::Journeys& journeys, const bool clockwise);
+void modify_backtracking_journeys(RAPTOR::Journeys& journeys,
+                                  const map_stop_point_duration& departures,
+                                  const map_stop_point_duration& destinations,
+                                  const bool clockwise);
 
 /**
  * @brief Prepare the horizon for the next Raptor call
