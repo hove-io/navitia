@@ -52,7 +52,7 @@ def test_basic_billing_plans():
     # block able and notify only once for sncf with max_request_count > 0
     assert bp is not None
     assert bp['name'] == 'sncf_dev'
-    assert bp['block_able'] is True
+    assert bp['lockable'] is True
     assert bp['max_request_count'] == 3000
     assert bp['max_object_count'] == 60000
     assert bp['notify_threshold_list'] == [100]
@@ -65,19 +65,19 @@ def test_basic_billing_plans():
     # neither block able nor notify for all end_points with max_request_count 0
     bp = get_by_name(resp, 'sncf_ent')
     assert bp['name'] == 'sncf_ent'
-    assert bp['block_able'] is False
+    assert bp['lockable'] is False
     assert bp['notify_threshold_list'] == []
     assert bp['max_request_count'] == 0
     assert bp['end_point']['name'] == 'sncf'
     bp = get_by_name(resp, 'nav_ctp')
     assert bp['name'] == 'nav_ctp'
-    assert bp['block_able'] is False
+    assert bp['lockable'] is False
     assert bp['notify_threshold_list'] == []
     assert bp['max_request_count'] == 0
     assert bp['end_point']['name'] == 'navitia.io'
     bp = get_by_name(resp, 'nav_ent')
     assert bp['name'] == 'nav_ent'
-    assert bp['block_able'] is False
+    assert bp['lockable'] is False
     assert bp['notify_threshold_list'] == []
     assert bp['max_request_count'] == 0
     assert bp['end_point']['name'] == 'navitia.io'
@@ -85,7 +85,7 @@ def test_basic_billing_plans():
     # not block able but notify two times for navitia.io with max_request_count > 0
     bp = get_by_name(resp, 'nav_dev')
     assert bp['name'] == 'nav_dev'
-    assert bp['block_able'] is False
+    assert bp['lockable'] is False
     assert bp['notify_threshold_list'] == [75, 100]
     assert bp['max_request_count'] == 3000
     assert bp['end_point']['name'] == 'navitia.io'
@@ -100,7 +100,7 @@ def test_actions_on_billing_plans():
         'max_request_count': 100,
         'max_object_count': 1000,
         'default': False,
-        'block_able': True,
+        'lockable': True,
         'notify_threshold_list': [55, 77, 100],
     }
     data = json.dumps(billing_plan)
@@ -108,7 +108,7 @@ def test_actions_on_billing_plans():
     assert resp['name'] == 'bp_test_1'
     assert resp['max_request_count'] == 100
     assert resp['end_point']['name'] == 'navitia.io'
-    assert resp['block_able'] is True
+    assert resp['lockable'] is True
     assert resp['default'] is False
     assert resp['notify_threshold_list'] == [55, 77, 100]
     # since end_point is absent in the post data, default end_point is used.
@@ -118,7 +118,7 @@ def test_actions_on_billing_plans():
 
     # Modify certain attributes of the existing billing_plan
     # Will update only modified attributes.
-    billing_plan = {'max_request_count': 101, 'block_able': False, 'notify_threshold_list': [75, 100]}
+    billing_plan = {'max_request_count': 101, 'lockable': False, 'notify_threshold_list': [75, 100]}
     data = json.dumps(billing_plan)
 
     # Put without id
@@ -140,7 +140,7 @@ def test_actions_on_billing_plans():
     assert resp['name'] == 'bp_test_1'
     assert resp['max_request_count'] == 101
     assert resp['end_point']['name'] == 'navitia.io'
-    assert resp['block_able'] is False
+    assert resp['lockable'] is False
     assert resp['default'] is False
     assert resp['notify_threshold_list'] == [75, 100]
     assert resp['end_point']['name'] == 'navitia.io'

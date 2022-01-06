@@ -1844,7 +1844,7 @@ class BillingPlan(flask_restful.Resource):
             location=('json', 'values'),
         )
         parser.add_argument(
-            'block_able',
+            'lockable',
             type=bool,
             required=False,
             default=False,
@@ -1878,7 +1878,7 @@ class BillingPlan(flask_restful.Resource):
                 max_request_count=args['max_request_count'],
                 max_object_count=args['max_object_count'],
                 default=args['default'],
-                block_able=args['block_able'],
+                lockable=args['lockable'],
                 notify_threshold_list=args['notify_threshold_list'],
             )
             billing_plan.end_point = end_point
@@ -1931,7 +1931,7 @@ class BillingPlan(flask_restful.Resource):
             location=('json', 'values'),
         )
         parser.add_argument(
-            'block_able',
+            'lockable',
             type=bool,
             required=False,
             default=False,
@@ -1964,7 +1964,7 @@ class BillingPlan(flask_restful.Resource):
             billing_plan.max_request_count = args['max_request_count']
             billing_plan.max_object_count = args['max_object_count']
             billing_plan.default = args['default']
-            billing_plan.block_able = args['block_able']
+            billing_plan.lockable = args['lockable']
             billing_plan.notify_threshold_list = args['notify_threshold_list']
             billing_plan.end_point = end_point
             db.session.commit()

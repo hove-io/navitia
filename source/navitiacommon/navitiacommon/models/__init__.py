@@ -970,7 +970,7 @@ class BillingPlan(db.Model, TimestampMixin):  # type: ignore
     max_request_count = db.Column(db.Integer, default=0)
     max_object_count = db.Column(db.Integer, default=0)
     default = db.Column(db.Boolean, nullable=False, default=False)
-    block_able = db.Column(db.Boolean, nullable=False, default=False)
+    lockable = db.Column(db.Boolean, nullable=False, default=False)
     notify_threshold_list = db.Column(ARRAY(db.Integer), nullable=True, server_default="{}")
 
     end_point_id = db.Column(db.Integer, db.ForeignKey('end_point.id'), nullable=False)
