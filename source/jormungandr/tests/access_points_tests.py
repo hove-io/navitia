@@ -41,29 +41,31 @@ class TestAccessPoints(AbstractTestFixture):
             # spA
             if sp['name'] == 'spA':
                 assert len(get_not_null(sp, 'access_points')) == 2
-                assert sp['access_points'][0]['name'] == 'AP2'
-                assert sp['access_points'][0]['is_entrance'] == True
-                assert sp['access_points'][0]['is_exit'] == False
-                assert sp['access_points'][0]['length'] == 13
-                assert sp['access_points'][0]['traversal_time'] == 26
-                assert sp['access_points'][1]['name'] == 'AP1'
-                assert sp['access_points'][1]['is_entrance'] == True
-                assert sp['access_points'][1]['is_exit'] == True
-                assert sp['access_points'][1]['length'] == 10
-                assert sp['access_points'][1]['traversal_time'] == 23
-            # spB
+                for ap in sp['access_points']:
+                    if ap['name'] == 'AP2':
+                        assert ap['is_entrance'] == True
+                        assert ap['is_exit'] == False
+                        assert ap['length'] == 13
+                        assert ap['traversal_time'] == 26
+                    if ap['name'] == 'AP1':
+                        assert ap['is_entrance'] == True
+                        assert ap['is_exit'] == True
+                        assert ap['length'] == 10
+                        assert ap['traversal_time'] == 23
+            # spC
             if sp['name'] == 'spC':
                 assert len(get_not_null(sp, 'access_points')) == 2
-                assert sp['access_points'][0]['name'] == 'AP3'
-                assert sp['access_points'][0]['is_entrance'] == True
-                assert sp['access_points'][0]['is_exit'] == False
-                assert sp['access_points'][0]['length'] == 12
-                assert sp['access_points'][0]['traversal_time'] == 36
-                assert sp['access_points'][1]['name'] == 'AP2'
-                assert sp['access_points'][1]['is_entrance'] == True
-                assert sp['access_points'][1]['is_exit'] == False
-                assert sp['access_points'][1]['length'] == 13
-                assert sp['access_points'][1]['traversal_time'] == 26
+                for ap in sp['access_points']:
+                    if ap['name'] == 'AP3':
+                        assert ap['is_entrance'] == True
+                        assert ap['is_exit'] == False
+                        assert ap['length'] == 12
+                        assert ap['traversal_time'] == 36
+                    if ap['name'] == 'AP1':
+                        assert ap['is_entrance'] == True
+                        assert ap['is_exit'] == False
+                        assert ap['length'] == 13
+                        assert ap['traversal_time'] == 26
 
         # without depth=3
         r = self.query_region('stop_points')
