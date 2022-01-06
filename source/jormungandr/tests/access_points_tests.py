@@ -88,13 +88,14 @@ class TestAccessPoints(AbstractTestFixture):
             # spA
             if pn['embedded_type'] == 'stop_point' and pn['name'] == 'spA':
                 assert len(get_not_null(pn['stop_point'], 'access_points')) == 2
-                assert pn['stop_point']['access_points'][0]['name'] == 'AP2'
-                assert pn['stop_point']['access_points'][0]['is_entrance'] == True
-                assert pn['stop_point']['access_points'][0]['is_exit'] == False
-                assert pn['stop_point']['access_points'][0]['length'] == 13
-                assert pn['stop_point']['access_points'][0]['traversal_time'] == 26
-                assert pn['stop_point']['access_points'][1]['name'] == 'AP1'
-                assert pn['stop_point']['access_points'][1]['is_entrance'] == True
-                assert pn['stop_point']['access_points'][1]['is_exit'] == True
-                assert pn['stop_point']['access_points'][1]['length'] == 10
-                assert pn['stop_point']['access_points'][1]['traversal_time'] == 23
+                for ap in pn['stop_point']['access_points']:
+                    if ap['name'] == 'AP2':
+                        assert ap['is_entrance'] == True
+                        assert ap['is_exit'] == False
+                        assert ap['length'] == 13
+                        assert ap['traversal_time'] == 26
+                    if ap['name'] == 'AP1':
+                        assert ap['is_entrance'] == True
+                        assert ap['is_exit'] == True
+                        assert ap['length'] == 10
+                        assert ap['traversal_time'] == 23
