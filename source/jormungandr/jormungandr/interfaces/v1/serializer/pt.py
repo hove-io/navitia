@@ -418,6 +418,9 @@ class StopPointSerializer(PbGenericSerializer):
     fare_zone = jsonschema.MethodField(schema_type=lambda: FareZoneSerializer(), display_none=False)
     equipment_details = EquipmentDetailsSerializer(many=True)
     lines = jsonschema.MethodField(schema_type=lambda: LineSerializer(many=True), display_none=False)
+    access_points = jsonschema.MethodField(
+        schema_type=lambda: AccessPointSerializer(many=True), display_none=False
+    )
 
     def get_fare_zone(self, obj):
         if obj.HasField(str('fare_zone')):
@@ -433,6 +436,60 @@ class StopPointSerializer(PbGenericSerializer):
 
     def get_lines(self, obj):
         return LineSerializer(obj.lines, many=True, display_none=False).data
+
+    def get_access_points(self, obj):
+        return AccessPointSerializer(obj.access_points, many=True, display_none=False).data
+
+
+class AccessPointSerializer(PbGenericSerializer):
+    coord = CoordSerializer(required=False)
+    is_entrance = jsonschema.MethodField(schema_type=bool, display_none=False)
+    is_exit = jsonschema.MethodField(schema_type=bool, display_none=False)
+    pathway_mode = jsonschema.MethodField(schema_type=int, display_none=False)
+    length = jsonschema.MethodField(schema_type=int, display_none=False)
+    traversal_time = jsonschema.MethodField(schema_type=int, display_none=False)
+    stair_count = jsonschema.MethodField(schema_type=int, display_none=False)
+    max_slope = jsonschema.MethodField(schema_type=int, display_none=False)
+    min_width = jsonschema.MethodField(schema_type=int, display_none=False)
+    signposted_as = jsonschema.MethodField(schema_type=str, display_none=False)
+    reversed_signposted_as = jsonschema.MethodField(schema_type=str, display_none=False)
+    parent_station = jsonschema.MethodField(schema_type=lambda: StopAreaSerializer(), display_none=False)
+
+    def get_is_entrance(self, obj):
+        return obj.is_entrance if obj.HasField(str('is_entrance')) else None
+
+    def get_is_exit(self, obj):
+        return obj.is_exit if obj.HasField(str('is_exit')) else None
+
+    def get_pathway_mode(self, obj):
+        return obj.pathway_mode if obj.HasField(str('pathway_mode')) else None
+
+    def get_length(self, obj):
+        return obj.length if obj.HasField(str('length')) else None
+
+    def get_traversal_time(self, obj):
+        return obj.traversal_time if obj.HasField(str('traversal_time')) else None
+
+    def get_stair_count(self, obj):
+        return obj.stair_count if obj.HasField(str('stair_count')) else None
+
+    def get_max_slope(self, obj):
+        return obj.max_slope if obj.HasField(str('max_slope')) else None
+
+    def get_min_width(self, obj):
+        return obj.min_width if obj.HasField(str('min_width')) else None
+
+    def get_signposted_as(self, obj):
+        return obj.signposted_as if obj.HasField(str('signposted_as')) else None
+
+    def get_reversed_signposted_as(self, obj):
+        return obj.reversed_signposted_as if obj.HasField(str('reversed_signposted_as')) else None
+
+    def get_parent_station(self, obj):
+        if obj.HasField(str('parent_station')):
+            return StopAreaSerializer(obj.parent_station, display_none=False).data
+        else:
+            return None
 
 
 class StopAreaSerializer(PbGenericSerializer):

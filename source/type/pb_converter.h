@@ -528,6 +528,8 @@ private:
         void fill_pb_object(const ng::Address*, pbnavitia::Address*);
         void fill_pb_object(const nt::Comment*, pbnavitia::Note*);
 
+        void fill_access_points(const std::set<nt::AccessPoint*> access_points, pbnavitia::StopPoint* stop_point);
+
         // Used for place
         template <typename T>
         void fill_pb_object(const T* value, pbnavitia::PtObject* pt_object);
