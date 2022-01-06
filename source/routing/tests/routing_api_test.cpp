@@ -3779,8 +3779,8 @@ BOOST_AUTO_TEST_CASE(backtracking_journey_arrival_before) {
 
         solution.push_back(journey_1);
     }
-    auto departures = init_dummy_map_stop_point_duration(10);
-    auto destinations = init_dummy_map_stop_point_duration(10);
+    auto departures = init_dummy_map_stop_point_duration(b.data->pt_data->stop_points.size());
+    auto destinations = init_dummy_map_stop_point_duration(b.data->pt_data->stop_points.size());
     modify_backtracking_journeys(solution, departures, destinations, false);
 
     const auto& j = solution.front();
