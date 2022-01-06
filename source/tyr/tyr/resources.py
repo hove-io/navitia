@@ -1844,6 +1844,22 @@ class BillingPlan(flask_restful.Resource):
             location=('json', 'values'),
         )
         parser.add_argument(
+            'block_able',
+            type=bool,
+            required=False,
+            default=False,
+            help='block access to navitia when request count > max_request_count ',
+            location=('json', 'values'),
+        )
+        parser.add_argument(
+            'notify_threshold_list',
+            type=int,
+            action='append',
+            required=False,
+            help='Request threshold list to send notifications',
+            location=('json', 'values'),
+        )
+        parser.add_argument(
             'end_point_id', type=int, required=False, help='id of the end_point', location=('json', 'values')
         )
         args = parser.parse_args()
@@ -1862,6 +1878,8 @@ class BillingPlan(flask_restful.Resource):
                 max_request_count=args['max_request_count'],
                 max_object_count=args['max_object_count'],
                 default=args['default'],
+                block_able=args['block_able'],
+                notify_threshold_list=args['notify_threshold_list'],
             )
             billing_plan.end_point = end_point
             db.session.add(billing_plan)
@@ -1875,7 +1893,7 @@ class BillingPlan(flask_restful.Resource):
             raise
 
     def put(self, version=0, billing_plan_id=None):
-        if not id:
+        if not billing_plan_id:
             abort(400, status="error", message='billing_plan_id is required')
 
         billing_plan = models.BillingPlan.query.get_or_404(billing_plan_id)
@@ -1913,6 +1931,22 @@ class BillingPlan(flask_restful.Resource):
             location=('json', 'values'),
         )
         parser.add_argument(
+            'block_able',
+            type=bool,
+            required=False,
+            default=False,
+            help='block access to navitia when request count > max_request_count ',
+            location=('json', 'values'),
+        )
+        parser.add_argument(
+            'notify_threshold_list',
+            type=int,
+            action='append',
+            required=False,
+            help='Request threshold list to send notifications',
+            location=('json', 'values'),
+        )
+        parser.add_argument(
             'end_point_id',
             type=int,
             default=billing_plan.end_point_id,
@@ -1930,6 +1964,8 @@ class BillingPlan(flask_restful.Resource):
             billing_plan.max_request_count = args['max_request_count']
             billing_plan.max_object_count = args['max_object_count']
             billing_plan.default = args['default']
+            billing_plan.block_able = args['block_able']
+            billing_plan.notify_threshold_list = args['notify_threshold_list']
             billing_plan.end_point = end_point
             db.session.commit()
             resp = marshal(billing_plan, billing_plan_fields_full)
