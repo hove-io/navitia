@@ -398,3 +398,7 @@ class NestedPropertiesField(NestedPropertyField):
         if not value:
             return {}
         return {p.get('key'): p.get('value') for p in value}
+
+
+def get_proto_attr_or_default(obj, attr_name, default=None):
+    return getattr(obj, attr_name) if obj.HasField(str(attr_name)) else default

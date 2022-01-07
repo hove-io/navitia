@@ -594,9 +594,9 @@ void PbCreator::Filler::fill_pb_object(const ng::Admin* adm, pbnavitia::Administ
     }
 }
 
-void PbCreator::Filler::fill_access_points(const std::set<nt::AccessPoint*> access_points,
+void PbCreator::Filler::fill_access_points(const std::set<nt::AccessPoint*>& access_points,
                                            pbnavitia::StopPoint* stop_point) {
-    for (auto access_point : access_points) {
+    for (const auto& access_point : access_points) {
         pbnavitia::AccessPoint* ap = stop_point->add_access_points();
         ap->set_name(access_point->name);
         ap->set_uri(access_point->uri);

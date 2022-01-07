@@ -34,6 +34,7 @@ from jormungandr.interfaces.v1.serializer.base import (
     EnumListField,
     LiteralField,
     SortedGenericSerializer,
+    get_proto_attr_or_default,
 )
 from jormungandr.interfaces.v1.serializer.jsonschema.fields import Field, DateType
 from jormungandr.interfaces.v1.serializer.time import (
@@ -456,34 +457,34 @@ class AccessPointSerializer(PbGenericSerializer):
     parent_station = jsonschema.MethodField(schema_type=lambda: StopAreaSerializer(), display_none=False)
 
     def get_is_entrance(self, obj):
-        return obj.is_entrance if obj.HasField(str('is_entrance')) else None
+        return get_proto_attr_or_default(obj, 'is_entrance')
 
     def get_is_exit(self, obj):
-        return obj.is_exit if obj.HasField(str('is_exit')) else None
+        return get_proto_attr_or_default(obj, 'is_exit')
 
     def get_pathway_mode(self, obj):
-        return obj.pathway_mode if obj.HasField(str('pathway_mode')) else None
+        return get_proto_attr_or_default(obj, 'pathway_mode')
 
     def get_length(self, obj):
-        return obj.length if obj.HasField(str('length')) else None
+        return get_proto_attr_or_default(obj, 'length')
 
     def get_traversal_time(self, obj):
-        return obj.traversal_time if obj.HasField(str('traversal_time')) else None
+        return get_proto_attr_or_default(obj, 'traversal_time')
 
     def get_stair_count(self, obj):
-        return obj.stair_count if obj.HasField(str('stair_count')) else None
+        return get_proto_attr_or_default(obj, 'stair_count')
 
     def get_max_slope(self, obj):
-        return obj.max_slope if obj.HasField(str('max_slope')) else None
+        return get_proto_attr_or_default(obj, 'max_slope')
 
     def get_min_width(self, obj):
-        return obj.min_width if obj.HasField(str('min_width')) else None
+        return get_proto_attr_or_default(obj, 'min_width')
 
     def get_signposted_as(self, obj):
-        return obj.signposted_as if obj.HasField(str('signposted_as')) else None
+        return get_proto_attr_or_default(obj, 'signposted_as')
 
     def get_reversed_signposted_as(self, obj):
-        return obj.reversed_signposted_as if obj.HasField(str('reversed_signposted_as')) else None
+        return get_proto_attr_or_default(obj, 'reversed_signposted_as')
 
     def get_parent_station(self, obj):
         if obj.HasField(str('parent_station')):
