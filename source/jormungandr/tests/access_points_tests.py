@@ -99,6 +99,8 @@ class TestAccessPoints(AbstractTestFixture):
             # spA
             if pn['embedded_type'] == 'stop_point' and pn['name'] == 'spA':
                 assert len(get_not_null(pn['stop_point'], 'access_points')) == 2
+                assert access_point_is_present(pn['stop_point']['access_points'], 'AP1')
+                assert access_point_is_present(pn['stop_point']['access_points'], 'AP2')
                 for ap in pn['stop_point']['access_points']:
                     if ap['name'] == 'AP2':
                         assert ap['is_entrance'] == True
