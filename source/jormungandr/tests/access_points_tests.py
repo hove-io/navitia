@@ -31,6 +31,13 @@ from .tests_mechanism import AbstractTestFixture, dataset
 from .check_utils import get_not_null, is_valid_places
 
 
+def access_point_is_present(access_point_list, access_point_name):
+    for ap in access_point_list:
+        if ap['name'] == access_point_name:
+            return True
+    return False
+
+
 @dataset({"access_points_test": {}})
 class TestAccessPoints(AbstractTestFixture):
     def test_access_points_with_stop_points(self):
@@ -41,6 +48,8 @@ class TestAccessPoints(AbstractTestFixture):
             # spA
             if sp['name'] == 'spA':
                 assert len(get_not_null(sp, 'access_points')) == 2
+                assert access_point_is_present(sp['access_points'], 'AP1')
+                assert access_point_is_present(sp['access_points'], 'AP2')
                 for ap in sp['access_points']:
                     if ap['name'] == 'AP2':
                         assert ap['is_entrance'] == True
@@ -55,13 +64,15 @@ class TestAccessPoints(AbstractTestFixture):
             # spC
             if sp['name'] == 'spC':
                 assert len(get_not_null(sp, 'access_points')) == 2
+                assert access_point_is_present(sp['access_points'], 'AP2')
+                assert access_point_is_present(sp['access_points'], 'AP3')
                 for ap in sp['access_points']:
                     if ap['name'] == 'AP3':
                         assert ap['is_entrance'] == True
                         assert ap['is_exit'] == False
                         assert ap['length'] == 12
                         assert ap['traversal_time'] == 36
-                    if ap['name'] == 'AP1':
+                    if ap['name'] == 'AP2':
                         assert ap['is_entrance'] == True
                         assert ap['is_exit'] == False
                         assert ap['length'] == 13
