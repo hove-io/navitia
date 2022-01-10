@@ -688,6 +688,27 @@ void builder::connection(const std::string& name1, const std::string& name2, flo
     connexion->destination->stop_point_connection_list.push_back(connexion);
 }
 
+void builder::add_access_point(const std::string& stop_point,
+                               const std::string& access_point_name,
+                               const bool is_entrance,
+                               const bool is_exit,
+                               const int length,
+                               const int traversal_time,
+                               const double x,
+                               const double y) {
+    auto sp = data->pt_data->stop_points_map[stop_point];
+    auto* ap = new navitia::type::AccessPoint();
+    ap->name = access_point_name;
+    ap->uri = access_point_name;
+    ap->is_entrance = is_entrance;
+    ap->is_exit = is_exit;
+    ap->length = length;
+    ap->traversal_time = traversal_time;
+    ap->coord.set_lat(x);
+    ap->coord.set_lon(y);
+    sp->access_points.insert(ap);
+}
+
 void builder::add_ticket(const std::string& ticket_id,
                          const std::string& line,
                          const int cost,

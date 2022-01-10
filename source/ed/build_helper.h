@@ -38,6 +38,7 @@ www.navitia.io
 #include "type/message.h"
 #include "type/rt_level.h"
 #include "type/company.h"
+#include "type/access_point.h"
 #include "type/dataset.h"
 #include "type/contributor.h"
 #include "type/commercial_mode.h"
@@ -366,6 +367,15 @@ struct builder {
         collection.push_back(obj);
         return obj;
     }
+
+    void add_access_point(const std::string& stop_point,
+                          const std::string& access_point_name,
+                          const bool is_entrance = true,
+                          const bool is_exit = true,
+                          const int length = 0,
+                          const int traversal_time = 0,
+                          const double x = 0,
+                          const double y = 0);
 
     void add_ticket(const std::string& ticket_id,
                     const std::string& line,
