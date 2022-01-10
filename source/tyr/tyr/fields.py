@@ -238,6 +238,8 @@ billing_plan_fields = {
     'default': fields.Raw,
     'created_at': FieldDate,
     'updated_at': FieldDate,
+    'lockable': fields.Boolean,
+    'notify_threshold_list': fields.List(fields.Integer),
 }
 
 billing_plan_fields_full = {
@@ -248,6 +250,8 @@ billing_plan_fields_full = {
     'default': fields.Raw,
     'created_at': FieldDate,
     'updated_at': FieldDate,
+    'lockable': fields.Boolean,
+    'notify_threshold_list': fields.List(fields.Integer),
     'end_point': fields.Nested(end_point_fields),
 }
 
