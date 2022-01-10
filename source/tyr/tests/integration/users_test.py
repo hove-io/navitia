@@ -338,8 +338,9 @@ def test_add_user_with_plus_in_query(mock_rabbit):
     creation of a user with a "+" in the email
     """
     user = {'email': 'user1+test@example.com', 'login': 'user1+test@example.com'}
-    _, status = api_post('/v0/users/?login={email}&email={email}'.format(email=user['email']), check=False)
+    resp, status = api_post('/v0/users/?login={email}&email={email}'.format(email=user['email']), check=False)
     assert status == 400
+    assert resp["error"] == 'email invalid, you give "user1 test******"'
 
     resp = api_post('/v0/users/?login={email}&email={email}'.format(email=quote(user['email'])))
     _check_user_resp(user, resp)
@@ -373,6 +374,7 @@ def test_add_user_invalid_email(mock_rabbit):
     user = {'login': 'user1', 'email': 'user1'}
     resp, status = api_post('/v0/users/', check=False, data=json.dumps(user), content_type='application/json')
     assert status == 400
+    assert resp["error"] == 'email invalid, you give "user1"'
     assert mock_rabbit.call_count == 0
 
 
@@ -383,6 +385,7 @@ def test_add_user_invalid_endpoint(mock_rabbit):
     user = {'login': 'user1', 'email': 'user1@example.com', 'end_point_id': 100}
     resp, status = api_post('/v0/users/', check=False, data=json.dumps(user), content_type='application/json')
     assert status == 400
+    assert resp["error"] == 'end_point doesn\'t exist for user email user1******, you give "100"'
     assert mock_rabbit.call_count == 0
 
 
@@ -393,6 +396,7 @@ def test_add_user_invalid_billingplan(mock_rabbit):
     user = {'login': 'user1', 'email': 'user1@example.com', 'billing_plan_id': 100}
     resp, status = api_post('/v0/users/', check=False, data=json.dumps(user), content_type='application/json')
     assert status == 400
+    assert resp["error"] == 'billing plan doesn\'t exist for user email user1******, you give "100"'
     assert mock_rabbit.call_count == 0
 
 

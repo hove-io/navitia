@@ -41,6 +41,18 @@ import os
 import sys
 import tempfile
 
+END_POINT_NOT_EXIST_MSG = 'end_point doesn\'t exist'
+BILLING_PLAN_NOT_EXIST_MSG = 'billing plan doesn\'t exist'
+
+
+def get_message(key, email, args):
+    if key not in ["end_point_id", "billing_plan_id"]:
+        raise AttributeError
+    msg = END_POINT_NOT_EXIST_MSG if key == "end_point_id" else BILLING_PLAN_NOT_EXIST_MSG
+    if args[key]:
+        return '{} for user email {}, you give "{}"'.format(msg, hide_domain(email), args[key])
+    return msg
+
 
 def wait_or_raise(async_result):
     """
@@ -255,3 +267,11 @@ def save_in_tmp(file_storage):
     tmp_file = os.path.join(tempfile.gettempdir(), file_storage.filename)
     file_storage.save(tmp_file)
     return tmp_file
+
+
+def hide_domain(email):
+    if not email:
+        return email
+    if "@" not in email:
+        return email
+    return "{}******".format(email.split('@')[0])
