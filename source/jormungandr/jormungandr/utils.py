@@ -386,19 +386,22 @@ def get_pt_object_coord(pt_object):
     >>> coord.lat
     41.41
     """
-    if not isinstance(pt_object, type_pb2.PtObject):
+    if not (isinstance(pt_object, type_pb2.PtObject) or isinstance(pt_object, type_pb2.AccessPoint)):
         logging.getLogger(__name__).error('Invalid pt_object')
         raise InvalidArguments('Invalid pt_object')
 
-    map_coord = {
-        type_pb2.STOP_POINT: "stop_point",
-        type_pb2.STOP_AREA: "stop_area",
-        type_pb2.ADDRESS: "address",
-        type_pb2.ADMINISTRATIVE_REGION: "administrative_region",
-        type_pb2.POI: "poi",
-    }
-    attr = getattr(pt_object, map_coord.get(pt_object.embedded_type, ""), None)
-    coord = getattr(attr, "coord", None)
+    if isinstance(pt_object, type_pb2.AccessPoint):
+        coord = getattr(pt_object, "coord", None)
+    else:
+        map_coord = {
+            type_pb2.STOP_POINT: "stop_point",
+            type_pb2.STOP_AREA: "stop_area",
+            type_pb2.ADDRESS: "address",
+            type_pb2.ADMINISTRATIVE_REGION: "administrative_region",
+            type_pb2.POI: "poi",
+        }
+        attr = getattr(pt_object, map_coord.get(pt_object.embedded_type, ""), None)
+        coord = getattr(attr, "coord", None)
 
     if not coord:
         logging.getLogger(__name__).error('Invalid coord for ptobject type: {}'.format(pt_object.embedded_type))

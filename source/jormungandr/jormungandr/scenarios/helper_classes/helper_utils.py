@@ -550,8 +550,11 @@ def compute_fallback(
             # here, if the mode is car, we have to find from which car park the stop_point is accessed
             if dep_mode == 'car':
                 orig_obj = orig_fallback_durations_pool.wait_and_get(dep_mode)[pt_orig.uri].car_park
+                real_mode = orig_fallback_durations_pool.get_real_mode(dep_mode, orig_obj.uri)
+            else:
+                orig_obj = orig_fallback_durations_pool.wait_and_get(dep_mode)[pt_orig.uri].via_access_point
+                real_mode = orig_fallback_durations_pool.get_real_mode(dep_mode, pt_orig.uri)
 
-            real_mode = orig_fallback_durations_pool.get_real_mode(dep_mode, orig_obj.uri)
             streetnetwork_path_pool.add_async_request(
                 from_obj,
                 orig_obj,
@@ -573,8 +576,12 @@ def compute_fallback(
             dest_obj = pt_dest
             if arr_mode == 'car':
                 dest_obj = dest_fallback_durations_pool.wait_and_get(arr_mode)[pt_dest.uri].car_park
+                real_mode = dest_fallback_durations_pool.get_real_mode(arr_mode, dest_obj.uri)
 
-            real_mode = dest_fallback_durations_pool.get_real_mode(arr_mode, dest_obj.uri)
+            else:
+                dest_obj = dest_fallback_durations_pool.wait_and_get(dep_mode)[pt_dest.uri].via_access_point
+                real_mode = dest_fallback_durations_pool.get_real_mode(arr_mode, pt_dest.uri)
+
             streetnetwork_path_pool.add_async_request(
                 dest_obj, to_obj, real_mode, fallback_extremity_arr, request, direct_path_type, to_sub_request_id
             )

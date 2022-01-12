@@ -43,7 +43,9 @@ from .helper_utils import timed_logger
 import six
 
 # use dataclass when python3.7 is available
-DurationElement = namedtuple('DurationElement', ['duration', 'status', 'car_park', 'car_park_crowfly_duration'])
+DurationElement = namedtuple(
+    'DurationElement', ['duration', 'status', 'car_park', 'car_park_crowfly_duration', 'via_access_point']
+)
 
 
 class FallbackDurations:
@@ -157,12 +159,41 @@ class FallbackDurations:
 
         all_free_access = free_access.crowfly | free_access.odt | free_access.free_radius
 
-        # if a place is freely accessible, there is no need to compute it's access duration in isochrone
-        places_isochrone = [p for p in proximities_by_crowfly if p.uri not in all_free_access]
+        access_points_map = defaultdict(list)
 
-        result = {}
+        if self._mode == FallbackModes.car.name or self._request['_access_points'] is False:
+            # if a place is freely accessible, there is no need to compute it's access duration in isochrone
+            places_isochrone = [p for p in proximities_by_crowfly if p.uri not in all_free_access]
+        else:
+            places_isochrone = []
+            for p in proximities_by_crowfly:
+                # if a place is freely accessible, there is no need to compute it's access duration in isochrone
+
+                if p.uri in all_free_access:
+                    continue
+                # what we are looking to compute, is not the stop_point, but the entrance and exit of a stop_point
+                # if any of them are existent
+                if not p.stop_point.access_points:
+                    places_isochrone.append(p)
+
+                if self._direct_path_type == StreetNetworkPathType.BEGINNING_FALLBACK:
+                    for ap in (ap for ap in p.stop_point.access_points if ap.is_entrance):
+                        if ap.uri not in access_points_map:
+                            places_isochrone.append(ap)
+                        access_points_map[ap.uri].append((p.stop_point.uri, ap.length, ap.traversal_time))
+
+                if self._direct_path_type == StreetNetworkPathType.ENDING_FALLBACK:
+                    for ap in (ap for ap in p.stop_point.access_points if ap.is_exit):
+                        if ap.uri not in access_points_map:
+                            places_isochrone.append(ap)
+                        access_points_map[ap.uri].append((p.stop_point.uri, ap.length, ap.traversal_time))
+
+        result = defaultdict(lambda: DurationElement(float('inf'), None, None, 0, None))
         # Since we have already places that have free access, we add them into the result
-        [result.update({uri: DurationElement(0, response_pb2.reached, None, 0)}) for uri in all_free_access]
+        [
+            result.update({uri: DurationElement(0, response_pb2.reached, None, 0, None)})
+            for uri in all_free_access
+        ]
 
         # There are two cases that places_isochrone maybe empty:
         # 1. The duration of direct_path is very small that we cannot find any proximities by crowfly
@@ -204,6 +235,7 @@ class FallbackDurations:
                     response_pb2.reached,
                     None,
                     0,
+                    None,
                 )
             return result
 
@@ -222,19 +254,38 @@ class FallbackDurations:
 
                         if durations_sum < min(
                             self._max_duration_to_pt,
-                            result.get(sp_nearby.uri, DurationElement(float('inf'), None, None, None)).duration,
+                            result.get(
+                                sp_nearby.uri, DurationElement(float('inf'), None, None, None, None)
+                            ).duration,
                         ):
                             result[sp_nearby.uri] = DurationElement(
                                 durations_sum,
                                 response_pb2.reached,
                                 places_isochrone[pos],
                                 duration_to_stop_point,
+                                None,
                             )
                 else:
-                    if duration < self._max_duration_to_pt:
-                        result.update(
-                            {places_isochrone[pos].uri: DurationElement(duration, r.routing_status, None, 0)}
-                        )
+                    from navitiacommon import type_pb2
+
+                    stop_point = places_isochrone[pos]
+                    if (
+                        isinstance(stop_point, type_pb2.PtObject)
+                        and stop_point.embedded_type == type_pb2.STOP_POINT
+                    ):
+                        if duration < self._max_duration_to_pt:
+                            result[stop_point.uri] = DurationElement(
+                                duration, r.routing_status, None, 0, stop_point
+                            )
+
+                    if isinstance(places_isochrone[pos], type_pb2.AccessPoint):
+                        access_point = places_isochrone[pos]
+                        for sp_uri, length, traveral_time in access_points_map[access_point.uri]:
+                            current_duration = result[sp_uri].duration if sp_uri in result else float('inf')
+                            if (duration + traveral_time) < min(current_duration, self._max_duration_to_pt):
+                                result[sp_uri] = DurationElement(
+                                    duration + traveral_time, r.routing_status, None, 0, access_point
+                                )
 
         # We update the fallback duration matrix if the requested origin/destination is also
         # present in the fallback duration matrix, which means from stop_point_1 to itself, it takes 0 second
@@ -242,7 +293,7 @@ class FallbackDurations:
         #                stop_point1   stop_point2  stop_point3
         # stop_point_1         0(s)       ...          ...
         if center_isochrone.uri in result:
-            result[center_isochrone.uri] = DurationElement(0, response_pb2.reached, None, 0)
+            result[center_isochrone.uri] = DurationElement(0, response_pb2.reached, None, 0, None)
 
         logger.debug("finish fallback durations from %s by %s", self._requested_place_obj.uri, self._mode)
 

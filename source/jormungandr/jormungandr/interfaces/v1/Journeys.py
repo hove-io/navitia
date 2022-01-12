@@ -732,6 +732,13 @@ class Journeys(JourneyCommon):
             hidden=True,
             help="used to adjust the search range in Asgard when computing matrix",
         )
+        parser_get.add_argument(
+            "_access_points",
+            type=BooleanType(),
+            default=False,
+            hidden=True,
+            help="used to adjust the search range in Asgard when computing matrix",
+        )
 
     @add_tad_links()
     @add_debug_info()
