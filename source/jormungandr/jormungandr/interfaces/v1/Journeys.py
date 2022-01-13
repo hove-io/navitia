@@ -737,7 +737,7 @@ class Journeys(JourneyCommon):
             type=BooleanType(),
             default=False,
             hidden=True,
-            help="used to adjust the search range in Asgard when computing matrix",
+            help="use/disuse the entrance/exit in journeys computation",
         )
 
     @add_tad_links()
