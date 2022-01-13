@@ -386,7 +386,7 @@ def get_pt_object_coord(pt_object):
     >>> coord.lat
     41.41
     """
-    if not (isinstance(pt_object, type_pb2.PtObject)):
+    if not isinstance(pt_object, type_pb2.PtObject):
         logging.getLogger(__name__).error('Invalid pt_object')
         raise InvalidArguments('Invalid pt_object')
 
