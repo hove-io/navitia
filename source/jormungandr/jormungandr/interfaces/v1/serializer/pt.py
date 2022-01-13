@@ -403,6 +403,27 @@ class EquipmentDetailsSerializer(PbNestedSerializer):
     current_availability = CurrentAvailabilitySerializer(display_none=False, required=False)
 
 
+class AccessPointSerializer(PbGenericSerializer):
+    coord = CoordSerializer(required=False)
+    is_entrance = jsonschema.Field(schema_type=bool, display_none=False)
+    is_exit = jsonschema.Field(schema_type=bool, display_none=False)
+    pathway_mode = jsonschema.Field(schema_type=int, display_none=False)
+    length = jsonschema.Field(schema_type=int, display_none=False)
+    traversal_time = jsonschema.Field(schema_type=int, display_none=False)
+    stair_count = jsonschema.Field(schema_type=int, display_none=False)
+    max_slope = jsonschema.Field(schema_type=int, display_none=False)
+    min_width = jsonschema.Field(schema_type=int, display_none=False)
+    signposted_as = jsonschema.Field(schema_type=str, display_none=False)
+    reversed_signposted_as = jsonschema.Field(schema_type=str, display_none=False)
+    parent_station = jsonschema.MethodField(schema_type=lambda: StopAreaSerializer(), display_none=False)
+
+    def get_parent_station(self, obj):
+        if obj.HasField(str('parent_station')):
+            return StopAreaSerializer(obj.parent_station, display_none=False).data
+        else:
+            return None
+
+
 class StopPointSerializer(PbGenericSerializer):
     comments = CommentSerializer(many=True, display_none=False)
     comment = FirstCommentField(attr='comments', display_none=False)
@@ -419,9 +440,7 @@ class StopPointSerializer(PbGenericSerializer):
     fare_zone = jsonschema.MethodField(schema_type=lambda: FareZoneSerializer(), display_none=False)
     equipment_details = EquipmentDetailsSerializer(many=True)
     lines = jsonschema.MethodField(schema_type=lambda: LineSerializer(many=True), display_none=False)
-    access_points = jsonschema.MethodField(
-        schema_type=lambda: AccessPointSerializer(many=True), display_none=False
-    )
+    access_points = AccessPointSerializer(many=True, display_none=False)
 
     def get_fare_zone(self, obj):
         if obj.HasField(str('fare_zone')):
@@ -437,60 +456,6 @@ class StopPointSerializer(PbGenericSerializer):
 
     def get_lines(self, obj):
         return LineSerializer(obj.lines, many=True, display_none=False).data
-
-    def get_access_points(self, obj):
-        return AccessPointSerializer(obj.access_points, many=True, display_none=False).data
-
-
-class AccessPointSerializer(PbGenericSerializer):
-    coord = CoordSerializer(required=False)
-    is_entrance = jsonschema.MethodField(schema_type=bool, display_none=False)
-    is_exit = jsonschema.MethodField(schema_type=bool, display_none=False)
-    pathway_mode = jsonschema.MethodField(schema_type=int, display_none=False)
-    length = jsonschema.MethodField(schema_type=int, display_none=False)
-    traversal_time = jsonschema.MethodField(schema_type=int, display_none=False)
-    stair_count = jsonschema.MethodField(schema_type=int, display_none=False)
-    max_slope = jsonschema.MethodField(schema_type=int, display_none=False)
-    min_width = jsonschema.MethodField(schema_type=int, display_none=False)
-    signposted_as = jsonschema.MethodField(schema_type=str, display_none=False)
-    reversed_signposted_as = jsonschema.MethodField(schema_type=str, display_none=False)
-    parent_station = jsonschema.MethodField(schema_type=lambda: StopAreaSerializer(), display_none=False)
-
-    def get_is_entrance(self, obj):
-        return get_proto_attr_or_default(obj, 'is_entrance')
-
-    def get_is_exit(self, obj):
-        return get_proto_attr_or_default(obj, 'is_exit')
-
-    def get_pathway_mode(self, obj):
-        return get_proto_attr_or_default(obj, 'pathway_mode')
-
-    def get_length(self, obj):
-        return get_proto_attr_or_default(obj, 'length')
-
-    def get_traversal_time(self, obj):
-        return get_proto_attr_or_default(obj, 'traversal_time')
-
-    def get_stair_count(self, obj):
-        return get_proto_attr_or_default(obj, 'stair_count')
-
-    def get_max_slope(self, obj):
-        return get_proto_attr_or_default(obj, 'max_slope')
-
-    def get_min_width(self, obj):
-        return get_proto_attr_or_default(obj, 'min_width')
-
-    def get_signposted_as(self, obj):
-        return get_proto_attr_or_default(obj, 'signposted_as')
-
-    def get_reversed_signposted_as(self, obj):
-        return get_proto_attr_or_default(obj, 'reversed_signposted_as')
-
-    def get_parent_station(self, obj):
-        if obj.HasField(str('parent_station')):
-            return StopAreaSerializer(obj.parent_station, display_none=False).data
-        else:
-            return None
 
 
 class StopAreaSerializer(PbGenericSerializer):
@@ -531,6 +496,8 @@ class PlaceSerializer(PbGenericSerializer):
     embedded_type = EnumField(attr='embedded_type', pb_type=NavitiaType, display_none=True)
     address = AddressSerializer(display_none=False)
     poi = PoiSerializer(display_none=False)
+    access_point = AccessPointSerializer(display_none=False)
+
     distance = base.PbStrField(
         required=False, display_none=False, description='Distance to the object in meters'
     )

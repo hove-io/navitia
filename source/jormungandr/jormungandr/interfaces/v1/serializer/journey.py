@@ -346,6 +346,7 @@ class SectionSerializer(PbNestedSerializer):
 
     cycle_lane_length = PbIntField(display_none=False)
     elevations = ElevationSerializer(attr="street_network.elevations", many=True, display_none=False)
+    via = PlaceSerializer(display_none=False)
 
 
 class JourneySerializer(PbNestedSerializer):

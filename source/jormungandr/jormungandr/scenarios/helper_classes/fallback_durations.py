@@ -41,6 +41,7 @@ from jormungandr.fallback_modes import FallbackModes
 import logging
 from .helper_utils import timed_logger
 import six
+from navitiacommon import type_pb2
 
 # use dataclass when python3.7 is available
 DurationElement = namedtuple(
@@ -179,13 +180,27 @@ class FallbackDurations:
                 if self._direct_path_type == StreetNetworkPathType.BEGINNING_FALLBACK:
                     for ap in (ap for ap in p.stop_point.access_points if ap.is_entrance):
                         if ap.uri not in access_points_map:
-                            places_isochrone.append(ap)
+                            places_isochrone.append(
+                                type_pb2.PtObject(
+                                    name=ap.name,
+                                    uri=ap.uri,
+                                    embedded_type=type_pb2.ACCESS_POINT,
+                                    access_point=ap,
+                                )
+                            )
                         access_points_map[ap.uri].append((p.stop_point.uri, ap.length, ap.traversal_time))
 
                 if self._direct_path_type == StreetNetworkPathType.ENDING_FALLBACK:
                     for ap in (ap for ap in p.stop_point.access_points if ap.is_exit):
                         if ap.uri not in access_points_map:
-                            places_isochrone.append(ap)
+                            places_isochrone.append(
+                                type_pb2.PtObject(
+                                    name=ap.name,
+                                    uri=ap.uri,
+                                    embedded_type=type_pb2.ACCESS_POINT,
+                                    access_point=ap,
+                                )
+                            )
                         access_points_map[ap.uri].append((p.stop_point.uri, ap.length, ap.traversal_time))
 
         result = defaultdict(lambda: DurationElement(float('inf'), None, None, 0, None))
@@ -206,7 +221,7 @@ class FallbackDurations:
 
             # When max_duration_to_pt is 0, we can get on the public transport ONLY if the place is a stop_point
             if self._instance.georef.get_stop_points_from_uri(center_isochrone.uri, self._request_id):
-                return {center_isochrone.uri: DurationElement(0, response_pb2.reached, None, 0)}
+                return {center_isochrone.uri: DurationElement(0, response_pb2.reached, None, 0, None)}
             else:
                 return result
 
@@ -266,25 +281,25 @@ class FallbackDurations:
                                 None,
                             )
                 else:
-                    from navitiacommon import type_pb2
-
-                    stop_point = places_isochrone[pos]
+                    pt_object = places_isochrone[pos]
                     if (
-                        isinstance(stop_point, type_pb2.PtObject)
-                        and stop_point.embedded_type == type_pb2.STOP_POINT
+                        isinstance(pt_object, type_pb2.PtObject)
+                        and pt_object.embedded_type == type_pb2.STOP_POINT
                     ):
                         if duration < self._max_duration_to_pt:
-                            result[stop_point.uri] = DurationElement(
-                                duration, r.routing_status, None, 0, stop_point
+                            result[pt_object.uri] = DurationElement(
+                                duration, r.routing_status, None, 0, pt_object
                             )
 
-                    if isinstance(places_isochrone[pos], type_pb2.AccessPoint):
-                        access_point = places_isochrone[pos]
-                        for sp_uri, length, traveral_time in access_points_map[access_point.uri]:
+                    if (
+                        isinstance(pt_object, type_pb2.PtObject)
+                        and pt_object.embedded_type == type_pb2.ACCESS_POINT
+                    ):
+                        for sp_uri, length, traveral_time in access_points_map[pt_object.uri]:
                             current_duration = result[sp_uri].duration if sp_uri in result else float('inf')
                             if (duration + traveral_time) < min(current_duration, self._max_duration_to_pt):
                                 result[sp_uri] = DurationElement(
-                                    duration + traveral_time, r.routing_status, None, 0, access_point
+                                    duration + traveral_time, r.routing_status, None, 0, pt_object
                                 )
 
         # We update the fallback duration matrix if the requested origin/destination is also
