@@ -756,30 +756,32 @@ BOOST_AUTO_TEST_CASE(pathway_tests) {
     ed::connectors::FusioParser parser(ntfs_path + "_v5");
     parser.fill(data);
 
-    BOOST_REQUIRE_EQUAL(data.pathways.size(), 2);
-    BOOST_CHECK_EQUAL(data.pathways[0]->uri, "SP:A:IO:1");
-    BOOST_CHECK_EQUAL(data.pathways[0]->name, "SP:A:IO:1");
-    BOOST_CHECK_EQUAL(data.pathways[0]->from_stop_id, "SP:A");
-    BOOST_CHECK_EQUAL(data.pathways[0]->to_stop_id, "IO:1");
-    BOOST_CHECK_EQUAL(data.pathways[0]->pathway_mode, 3);
-    BOOST_CHECK_EQUAL(data.pathways[0]->is_bidirectional, 1);
-    BOOST_CHECK_EQUAL(data.pathways[0]->length, 68);
-    BOOST_CHECK_EQUAL(data.pathways[0]->traversal_time, 87);
-    BOOST_CHECK_EQUAL(data.pathways[0]->stair_count, -1);
-    BOOST_CHECK_EQUAL(data.pathways[0]->max_slope, -1);
-    BOOST_CHECK_EQUAL(data.pathways[0]->min_width, -1);
-    BOOST_CHECK_EQUAL(data.pathways[0]->signposted_as, "");
-    BOOST_CHECK_EQUAL(data.pathways[0]->reversed_signposted_as, "");
-    BOOST_CHECK_EQUAL(data.pathways[1]->uri, "SP:B:IO:2");
-    BOOST_CHECK_EQUAL(data.pathways[1]->name, "SP:B:IO:2");
-    BOOST_CHECK_EQUAL(data.pathways[1]->from_stop_id, "SP:B");
-    BOOST_CHECK_EQUAL(data.pathways[1]->to_stop_id, "IO:2");
-    BOOST_CHECK_EQUAL(data.pathways[1]->pathway_mode, 3);
-    BOOST_CHECK_EQUAL(data.pathways[1]->is_bidirectional, 0);
-    BOOST_CHECK_EQUAL(data.pathways[1]->length, 68);
-    BOOST_CHECK_EQUAL(data.pathways[1]->traversal_time, 87);
-    BOOST_CHECK_EQUAL(data.pathways[1]->stair_count, 3);
-    BOOST_CHECK_EQUAL(data.pathways[1]->max_slope, 30);
-    BOOST_CHECK_EQUAL(data.pathways[1]->min_width, 2);
-    BOOST_CHECK_EQUAL(data.pathways[1]->signposted_as, "");
+    BOOST_REQUIRE_EQUAL(data.pathways.size(), 3);
+
+    auto test = [](const ed::types::PathWay& pathway, const std::string& expected_uri, const std::string& expected_name,
+                   const std::string& expected_from_stop_id, const std::string& expected_to_stop_id,
+                   const int expected_pathway_mode, const bool expected_is_bidirectional, const int expected_length,
+                   const int expected_traversal_time, const int expected_stair_count, const int expected_max_slope,
+                   const int expected_min_width, const std::string& expected_signposted_as,
+                   const std::string& expected_reversed_signposted_as) {
+        BOOST_CHECK_EQUAL(pathway.uri, expected_uri);
+        BOOST_CHECK_EQUAL(pathway.name, expected_name);
+        BOOST_CHECK_EQUAL(pathway.from_stop_id, expected_from_stop_id);
+        BOOST_CHECK_EQUAL(pathway.to_stop_id, expected_to_stop_id);
+        BOOST_CHECK_EQUAL(pathway.pathway_mode, expected_pathway_mode);
+        BOOST_CHECK_EQUAL(pathway.is_bidirectional, expected_is_bidirectional);
+        BOOST_CHECK_EQUAL(pathway.length, expected_length);
+        BOOST_CHECK_EQUAL(pathway.traversal_time, expected_traversal_time);
+        BOOST_CHECK_EQUAL(pathway.stair_count, expected_stair_count);
+        BOOST_CHECK_EQUAL(pathway.max_slope, expected_max_slope);
+        BOOST_CHECK_EQUAL(pathway.min_width, expected_min_width);
+        BOOST_CHECK_EQUAL(pathway.signposted_as, expected_signposted_as);
+        BOOST_CHECK_EQUAL(pathway.reversed_signposted_as, expected_reversed_signposted_as);
+    };
+
+    test(*data.pathways[0], "SP:A:IO:1", "SP:A:IO:1", "SP:A", "IO:1", 3, true, 68, 87, -1, -1, -1, "", "");
+
+    test(*data.pathways[1], "SP:B:IO:2", "SP:B:IO:2", "SP:B", "IO:2", 3, false, 68, 87, 3, 30, 2, "", "");
+
+    test(*data.pathways[2], "SP:B:IO:1", "SP:B:IO:1", "SP:B", "IO:1", 3, true, 42, 60, 40, 30, 2, "", "");
 }
