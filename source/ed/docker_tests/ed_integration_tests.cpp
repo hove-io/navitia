@@ -452,7 +452,7 @@ BOOST_FIXTURE_TEST_CASE(ntfs_v5_test, ArgsFixture) {
     // Access Point
     BOOST_REQUIRE_EQUAL(data.pt_data->stop_points_map["stop_point:SP:A"]->access_points.size(), 1);
     for (const auto& ap : data.pt_data->stop_points_map["stop_point:SP:A"]->access_points) {
-        BOOST_REQUIRE_EQUAL(ap->uri, "IO:1");
+        BOOST_REQUIRE_EQUAL(ap->uri, "access_point:IO:1");
         BOOST_REQUIRE_EQUAL(ap->stop_code, "stop_code_io_1");
         BOOST_REQUIRE_EQUAL(ap->length, 68);
         BOOST_REQUIRE_EQUAL(ap->traversal_time, 87);
@@ -469,7 +469,7 @@ BOOST_FIXTURE_TEST_CASE(ntfs_v5_test, ArgsFixture) {
 
     BOOST_REQUIRE_EQUAL(data.pt_data->stop_points_map["stop_point:SP:B"]->access_points.size(), 1);
     for (const auto& ap : data.pt_data->stop_points_map["stop_point:SP:B"]->access_points) {
-        BOOST_REQUIRE_EQUAL(ap->uri, "IO:2");
+        BOOST_REQUIRE_EQUAL(ap->uri, "access_point:IO:2");
         BOOST_REQUIRE_EQUAL(ap->stop_code, "stop_code_io_2");
         BOOST_REQUIRE_EQUAL(ap->length, 68);
         BOOST_REQUIRE_EQUAL(ap->traversal_time, 87);

@@ -50,7 +50,7 @@ static_data* static_data::get() {
             Type_e::JourneyPatternPoint, "journey_pattern_point")(Type_e::Company, "company")(Type_e::Route, "route")(
             Type_e::POI, "poi")(Type_e::POIType, "poi_type")(Type_e::Contributor, "contributor")(
             Type_e::Calendar, "calendar")(Type_e::MetaVehicleJourney, "trip")(Type_e::Impact, "disruption")(
-            Type_e::Dataset, "dataset");
+            Type_e::Dataset, "dataset")(Type_e::AccessPoint, "access_point");
 
         boost::assign::insert(temp->modes_string)(Mode_e::Walking, "walking")(Mode_e::Bike, "bike")(Mode_e::Car, "car")(
             Mode_e::Bss, "bss")(Mode_e::CarNoPark, "ridesharing")(Mode_e::CarNoPark, "car_no_park")(Mode_e::CarNoPark,

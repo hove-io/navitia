@@ -737,16 +737,17 @@ void EdReader::fill_access_points(nt::Data& data, pqxx::work& work) {
         std::string to_stop_id;
         const_it["to_stop_id"].to(to_stop_id);
 
+        auto ap_prefix = navitia::type::static_data::get()->captionByType(navitia::type::Type_e::AccessPoint);
         // Access Point URI match for from_stop_id
         // so, to_stop_id have to be a StopPoint
-        auto from_access_p = access_point_map.find(from_stop_id);
+        auto from_access_p = access_point_map.find(ap_prefix + ":" + from_stop_id);
         if (from_access_p != access_point_map.end()) {
             fill_access_point_field(from_access_p->second, const_it, true, to_stop_id);
             continue;
         }
         // Access Point URI match for to_stop_id
         // so, from_stop_id have to be a StopPoint
-        auto to_access_p = access_point_map.find(to_stop_id);
+        auto to_access_p = access_point_map.find(ap_prefix + ":" + to_stop_id);
         if (to_access_p != access_point_map.end()) {
             fill_access_point_field(to_access_p->second, const_it, false, from_stop_id);
             continue;
