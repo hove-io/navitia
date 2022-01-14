@@ -626,55 +626,57 @@ void EdReader::fill_stop_points(nt::Data& data, pqxx::work& work) {
     }
 }
 
-void EdReader::fill_access_point_field(navitia::type::AccessPoint* access_point,
+void EdReader::fill_access_point_field(const navitia::type::AccessPoint& access_point,
                                        const pqxx::result::iterator const_it,
                                        const bool from_access_point,
                                        const std::string& sp_id) {
+    auto new_access_point = navitia::type::AccessPoint(access_point);
+
     if (!const_it["pathway_mode"].is_null()) {
-        access_point->pathway_mode = const_it["pathway_mode"].as<unsigned int>();
+        new_access_point.pathway_mode = const_it["pathway_mode"].as<unsigned int>();
     }
     if (!const_it["is_bidirectional"].is_null()) {
         const bool is_bidirectional = const_it["is_bidirectional"].as<bool>();
         if (is_bidirectional) {
-            access_point->is_entrance = true;
-            access_point->is_exit = true;
+            new_access_point.is_entrance = true;
+            new_access_point.is_exit = true;
         } else {
             if (from_access_point) {
-                access_point->is_entrance = true;
-                access_point->is_exit = false;
+                new_access_point.is_entrance = true;
+                new_access_point.is_exit = false;
             } else {
-                access_point->is_entrance = false;
-                access_point->is_exit = true;
+                new_access_point.is_entrance = false;
+                new_access_point.is_exit = true;
             }
         }
     }
     if (!const_it["length"].is_null()) {
-        access_point->length = const_it["length"].as<unsigned int>();
+        new_access_point.length = const_it["length"].as<unsigned int>();
     }
     if (!const_it["traversal_time"].is_null()) {
-        access_point->traversal_time = const_it["traversal_time"].as<unsigned int>();
+        new_access_point.traversal_time = const_it["traversal_time"].as<unsigned int>();
     }
     if (!const_it["stair_count"].is_null()) {
-        access_point->stair_count = const_it["stair_count"].as<unsigned int>();
+        new_access_point.stair_count = const_it["stair_count"].as<unsigned int>();
     }
     if (!const_it["max_slope"].is_null()) {
-        access_point->max_slope = const_it["max_slope"].as<unsigned int>();
+        new_access_point.max_slope = const_it["max_slope"].as<unsigned int>();
     }
     if (!const_it["min_width"].is_null()) {
-        access_point->min_width = const_it["min_width"].as<unsigned int>();
+        new_access_point.min_width = const_it["min_width"].as<unsigned int>();
     }
     if (!const_it["signposted_as"].is_null()) {
-        const_it["signposted_as"].to(access_point->signposted_as);
+        const_it["signposted_as"].to(new_access_point.signposted_as);
     }
     if (!const_it["reversed_signposted_as"].is_null()) {
-        const_it["reversed_signposted_as"].to(access_point->reversed_signposted_as);
+        const_it["reversed_signposted_as"].to(new_access_point.reversed_signposted_as);
     }
     // link with SP
     auto sp_key = uri_to_idx_stop_point.find("stop_point:" + sp_id);
     if (sp_key != uri_to_idx_stop_point.end()) {
         auto sp = stop_point_map.find(sp_key->second);
         if (sp != stop_point_map.end()) {
-            sp->second->access_points.insert(access_point);
+            sp->second->access_points.insert(new_access_point);
         }
     } else {
         LOG4CPLUS_ERROR(log, "pathway.to_stop_id not match with a stop point uri " << sp_id);
@@ -692,18 +694,19 @@ void EdReader::fill_access_points(nt::Data& data, pqxx::work& work) {
 
     pqxx::result result = work.exec(request);
     for (auto const_it = result.begin(); const_it != result.end(); ++const_it) {
-        auto* ap = new nt::AccessPoint();
-        const_it["uri"].to(ap->uri);
-        const_it["name"].to(ap->name);
-        const_it["stop_code"].to(ap->stop_code);
-        ap->coord.set_lon(const_it["lon"].as<double>());
-        ap->coord.set_lat(const_it["lat"].as<double>());
+        auto ap = nt::AccessPoint{};
+
+        const_it["uri"].to(ap.uri);
+        const_it["name"].to(ap.name);
+        const_it["stop_code"].to(ap.stop_code);
+        ap.coord.set_lon(const_it["lon"].as<double>());
+        ap.coord.set_lat(const_it["lat"].as<double>());
         // parent station is Stop Area
         auto sa_key = uri_to_idx_stop_area.find("stop_area:" + const_it["parent_station"].as<std::string>());
         if (sa_key != uri_to_idx_stop_area.end()) {
             auto sa = stop_area_map.find(sa_key->second);
             if (sa != stop_area_map.end()) {
-                ap->parent_station = sa->second;
+                ap.parent_station = sa->second;
             }
         } else {
             LOG4CPLUS_ERROR(log, "access_point.parent_station not match with a stop area uri "
