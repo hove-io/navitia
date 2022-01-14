@@ -85,7 +85,7 @@ struct PathWayFusioHandler : public PathWayGtfsHandler {
     int ext_code_c, sort_c, agency_url_c;
     void init(Data& data);
     void handle_line(Data& data, const csv_row& line, bool is_first_line);
-    const std::vector<std::string> required_headers() const { return PathWayGtfsHandler::required_headers(); }
+    const std::vector<std::string> required_headers() const { return {}; }
 };
 
 struct RouteFusioHandler : public GenericHandler {
