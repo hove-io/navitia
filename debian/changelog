@@ -3,7 +3,7 @@ navitia2 (14.0.1) unstable; urgency=low
 
   * [CI] Free more disk space in github Action <https://github.com/CanalTP/navitia/pull/3638>
 
-  -- xlqian <patrick.qian@kisio.com>  Fri, 14 Jan 2022 16:01:13 +0100
+ -- xlqian <patrick.qian@kisio.com>  Fri, 14 Jan 2022 16:01:13 +0100
 
 navitia2 (14.0.0) unstable; urgency=low
 
