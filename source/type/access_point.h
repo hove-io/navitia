@@ -33,24 +33,35 @@ www.navitia.io
 #include "type/type_interfaces.h"
 #include "type/geographical_coord.h"
 
-#include <boost/container/flat_set.hpp>
-
-#include <vector>
-#include <set>
-
 namespace navitia {
 namespace type {
 
+const static int ap_default_value = -1;
+
 struct AccessPoint : public Header, Nameable, hasProperties, HasMessages {
     const static Type_e type = Type_e::AccessPoint;
+
+    // parameters
+    std::string stop_code = "";
+    bool is_entrance = false;
+    bool is_exit = false;
+    int pathway_mode = ap_default_value;
+    int length = ap_default_value;
+    int traversal_time = ap_default_value;
+    int stair_count = ap_default_value;
+    int max_slope = ap_default_value;
+    int min_width = ap_default_value;
+    std::string signposted_as = "";
+    std::string reversed_signposted_as = "";
+
     GeographicalCoord coord;
 
-    StopArea* stop_area;
+    StopArea* parent_station = nullptr;
 
     template <class Archive>
     void serialize(Archive& ar, const unsigned int);
 
-    AccessPoint() : stop_area(nullptr) {}
+    AccessPoint() = default;
 
     bool operator<(const AccessPoint& other) const;
 };

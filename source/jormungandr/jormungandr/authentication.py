@@ -172,6 +172,8 @@ def cache_get_user(token):
 )
 @cache.memoize(current_app.config[str('CACHE_CONFIGURATION')].get(str('TIMEOUT_AUTHENTICATION'), 300))
 def cache_get_key(token):
+    if not can_connect_to_database():
+        return None
     return Key.get_by_token(token)
 
 

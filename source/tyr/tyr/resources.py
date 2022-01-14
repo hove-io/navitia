@@ -30,37 +30,49 @@
 # www.navitia.io
 
 from __future__ import absolute_import, print_function, division, unicode_literals
-from flask import current_app, request
-import flask_restful
-from flask_restful import marshal_with, marshal, reqparse, inputs, abort
 
-import sqlalchemy
-from validate_email import validate_email
-from datetime import datetime
-from tyr.tyr_user_event import TyrUserEvent
-from tyr.tyr_end_point_event import EndPointEventMessage, TyrEventsRabbitMq
-from tyr.helper import load_instance_config
+import json
 import logging
 import os
 import shutil
-import json
+from collections import deque
+from datetime import datetime
+from functools import wraps
+
+import flask_restful
+import six
+import sqlalchemy
+import werkzeug
+from flask import current_app, request
+from flask_restful import marshal_with, marshal, reqparse, inputs, abort
 from jsonschema import validate, ValidationError
+from navitiacommon import models, utils
+from navitiacommon.constants import DEFAULT_SHAPE_SCOPE, ENUM_SHAPE_SCOPE
+from navitiacommon.default_traveler_profile_params import (
+    default_traveler_profile_params,
+    acceptable_traveler_types,
+)
+from navitiacommon.models import db
+from navitiacommon.parser_args_type import CoordFormat, PositiveFloat, BooleanType, OptionValue, geojson_argument
+from validate_email import validate_email
+from werkzeug.exceptions import BadRequest
+
+from tyr import api
+from tyr.fields import *
 from tyr.formats import (
     poi_type_conf_format,
     parse_error,
     equipments_provider_format,
     streetnetwork_backend_format,
 )
-from navitiacommon.default_traveler_profile_params import (
-    default_traveler_profile_params,
-    acceptable_traveler_types,
+from tyr.helper import (
+    get_instance_logger,
+    save_in_tmp,
+    get_message,
+    END_POINT_NOT_EXIST_MSG,
+    load_instance_config,
+    hide_domain,
 )
-from navitiacommon.constants import DEFAULT_SHAPE_SCOPE, ENUM_SHAPE_SCOPE
-from navitiacommon import models, utils
-from navitiacommon.models import db
-from navitiacommon.parser_args_type import CoordFormat, PositiveFloat, BooleanType, OptionValue, geojson_argument
-from functools import wraps
-from tyr.validations import datetime_format, InputJsonValidator
 from tyr.tasks import (
     create_autocomplete_depot,
     remove_autocomplete_depot,
@@ -68,13 +80,9 @@ from tyr.tasks import (
     cities,
     COSMOGONY_REGEXP,
 )
-from tyr import api
-from tyr.helper import get_instance_logger, save_in_tmp
-from tyr.fields import *
-from werkzeug.exceptions import BadRequest
-import werkzeug
-import six
-from collections import deque
+from tyr.tyr_end_point_event import EndPointEventMessage, TyrEventsRabbitMq
+from tyr.tyr_user_event import TyrUserEvent
+from tyr.validations import datetime_format, InputJsonValidator
 
 
 class Api(flask_restful.Resource):
@@ -113,12 +121,15 @@ class Status(flask_restful.Resource):
 
 class Job(flask_restful.Resource):
     @marshal_with(jobs_fields)
-    def get(self, instance_name=None):
+    def get(self, instance_name=None, id=None):
         query = models.Job.query
         if instance_name:
             query = query.join(models.Instance)
             query = query.filter(models.Instance.name == instance_name)
-        return {'jobs': query.order_by(models.Job.created_at.desc()).limit(30)}
+        if id:
+            query = query.filter(models.Job.id == id)
+        jobs = query.order_by(models.Job.created_at.desc()).limit(30)
+        return {'jobs': jobs}
 
     def post(self, instance_name):
         instance = models.Instance.query_existing().filter_by(name=instance_name).first_or_404()
@@ -664,7 +675,7 @@ class Instance(flask_restful.Resource):
             type=str,
             case_sensitive=False,
             help='the name of the backend used by jormungandr for the autocompletion',
-            choices=['kraken', 'bragi'],
+            choices=['kraken', 'bragi', 'bragi7'],
             location=('json', 'values'),
             default=instance.autocomplete_backend,
         )
@@ -1156,13 +1167,13 @@ class User(flask_restful.Resource):
             location=('json', 'values'),
         )
         args = parser.parse_args()
-
+        email = args['email']
         if not validate_email(
-            args['email'],
-            check_mx=current_app.config['EMAIL_CHECK_MX'],
-            verify=current_app.config['EMAIL_CHECK_SMTP'],
+            email, check_mx=current_app.config['EMAIL_CHECK_MX'], verify=current_app.config['EMAIL_CHECK_SMTP']
         ):
-            return {'error': 'email invalid'}, 400
+            msg = 'email invalid, you give "{}"'.format(hide_domain(email))
+            logging.error(msg)
+            return {'error': msg}, 400
 
         if args['end_point_id']:
             end_point = models.EndPoint.query.get(args['end_point_id'])
@@ -1170,7 +1181,8 @@ class User(flask_restful.Resource):
             end_point = models.EndPoint.get_default()
 
         if not end_point:
-            return {'error': 'end_point doesn\'t exist'}, 400
+            msg = get_message('end_point_id', email, args)
+            return {'error': msg}, 400
 
         if args['billing_plan_id']:
             billing_plan = models.BillingPlan.query.get(args['billing_plan_id'])
@@ -1178,13 +1190,17 @@ class User(flask_restful.Resource):
             billing_plan = models.BillingPlan.get_default(end_point)
 
         if not billing_plan:
-            return {'error': 'billing plan doesn\'t exist'}, 400
+            msg = get_message('billing_plan_id', email, args)
+            logging.error(msg)
+            return {'error': msg}, 400
 
         try:
-            user = models.User(login=args['login'], email=args['email'], block_until=args['block_until'])
+            user = models.User(login=args['login'], email=email, block_until=args['block_until'])
             user.type = args['type']
             user.end_point = end_point
             user.billing_plan = billing_plan
+            if user.block_until:
+                user.blocked_at = datetime.utcnow()
             user.shape = ujson.dumps(args['shape'])
             user.default_coord = args['default_coord']
             user.shape_scope = args.get("shape_scope")
@@ -1270,20 +1286,25 @@ class User(flask_restful.Resource):
         )
         args = parser.parse_args()
 
+        email = args['email']
         if not validate_email(
-            args['email'],
-            check_mx=current_app.config['EMAIL_CHECK_MX'],
-            verify=current_app.config['EMAIL_CHECK_SMTP'],
+            email, check_mx=current_app.config['EMAIL_CHECK_MX'], verify=current_app.config['EMAIL_CHECK_SMTP']
         ):
-            return {'error': 'email invalid'}, 400
+            msg = 'email invalid, you give "{}"'.format(hide_domain(email))
+            logging.error(msg)
+            return {'error': msg}, 400
 
         end_point = models.EndPoint.query.get(args['end_point_id'])
         if not end_point:
-            return {'error': 'end_point doesn\'t exist'}, 400
+            msg = get_message('end_point_id', email, args)
+            logging.error(msg)
+            return {'error': msg}, 400
 
         billing_plan = models.BillingPlan.query.get_or_404(args['billing_plan_id'])
         if not billing_plan:
-            return {'error': 'billing_plan doesn\'t exist'}, 400
+            msg = get_message('billing_plan_id', email, args)
+            logging.error(msg)
+            return {'error': msg}, 400
 
         # If the user gives the empty object, we don't change the
         # shape. This is because the empty object can be outputed by
@@ -1295,10 +1316,12 @@ class User(flask_restful.Resource):
 
         try:
             last_login = user.login
-            user.email = args['email']
+            user.email = email
             user.login = args['login']
             user.type = args['type']
             user.block_until = args['block_until']
+            if user.block_until:
+                user.blocked_at = datetime.utcnow()
             user.end_point = end_point
             user.billing_plan = billing_plan
             user.shape = ujson.dumps(args['shape'])
@@ -1328,6 +1351,7 @@ class User(flask_restful.Resource):
         except Exception:
             logging.exception("fail")
             raise
+        logging.warning("Delete user, email {}".format(hide_domain(user.email)))
         return {}, 204
 
 
@@ -1837,6 +1861,22 @@ class BillingPlan(flask_restful.Resource):
             location=('json', 'values'),
         )
         parser.add_argument(
+            'lockable',
+            type=bool,
+            required=False,
+            default=False,
+            help='block access to navitia when request count > max_request_count ',
+            location=('json', 'values'),
+        )
+        parser.add_argument(
+            'notify_threshold_list',
+            type=int,
+            action='append',
+            required=False,
+            help='Request threshold list to send notifications',
+            location=('json', 'values'),
+        )
+        parser.add_argument(
             'end_point_id', type=int, required=False, help='id of the end_point', location=('json', 'values')
         )
         args = parser.parse_args()
@@ -1847,7 +1887,7 @@ class BillingPlan(flask_restful.Resource):
             end_point = models.EndPoint.get_default()
 
         if not end_point:
-            return {'error': 'end_point doesn\'t exist'}, 400
+            return {'error': END_POINT_NOT_EXIST_MSG}, 400
 
         try:
             billing_plan = models.BillingPlan(
@@ -1855,6 +1895,8 @@ class BillingPlan(flask_restful.Resource):
                 max_request_count=args['max_request_count'],
                 max_object_count=args['max_object_count'],
                 default=args['default'],
+                lockable=args['lockable'],
+                notify_threshold_list=args['notify_threshold_list'],
             )
             billing_plan.end_point = end_point
             db.session.add(billing_plan)
@@ -1868,7 +1910,7 @@ class BillingPlan(flask_restful.Resource):
             raise
 
     def put(self, version=0, billing_plan_id=None):
-        if not id:
+        if not billing_plan_id:
             abort(400, status="error", message='billing_plan_id is required')
 
         billing_plan = models.BillingPlan.query.get_or_404(billing_plan_id)
@@ -1906,6 +1948,22 @@ class BillingPlan(flask_restful.Resource):
             location=('json', 'values'),
         )
         parser.add_argument(
+            'lockable',
+            type=bool,
+            required=False,
+            default=False,
+            help='block access to navitia when request count > max_request_count ',
+            location=('json', 'values'),
+        )
+        parser.add_argument(
+            'notify_threshold_list',
+            type=int,
+            action='append',
+            required=False,
+            help='Request threshold list to send notifications',
+            location=('json', 'values'),
+        )
+        parser.add_argument(
             'end_point_id',
             type=int,
             default=billing_plan.end_point_id,
@@ -1916,13 +1974,15 @@ class BillingPlan(flask_restful.Resource):
 
         end_point = models.EndPoint.query.get(args['end_point_id'])
         if not end_point:
-            return {'error': 'end_point doesn\'t exist'}, 400
+            return {'error': END_POINT_NOT_EXIST_MSG}, 400
 
         try:
             billing_plan.name = args['name']
             billing_plan.max_request_count = args['max_request_count']
             billing_plan.max_object_count = args['max_object_count']
             billing_plan.default = args['default']
+            billing_plan.lockable = args['lockable']
+            billing_plan.notify_threshold_list = args['notify_threshold_list']
             billing_plan.end_point = end_point
             db.session.commit()
             resp = marshal(billing_plan, billing_plan_fields_full)

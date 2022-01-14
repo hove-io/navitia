@@ -58,9 +58,9 @@ RequestHandle::RequestHandle(PbCreator& pb_creator,
         auto diff = (datetime.date() - pb_creator.data->meta->production_date.begin()).days();
         if (diff == -1) {
             date_time = DateTimeUtils::set(0, 0);
-            duration = (duration > datetime.time_of_day().total_seconds())
-                           ? duration - datetime.time_of_day().total_seconds()
-                           : 0;
+            duration = duration + datetime.time_of_day().total_seconds();
+            uint32_t one_day = 24 * 60 * 60;
+            duration = (duration > one_day) ? duration - one_day : 0;
         } else {
             date_time = DateTimeUtils::set((datetime.date() - pb_creator.data->meta->production_date.begin()).days(),
                                            datetime.time_of_day().total_seconds());

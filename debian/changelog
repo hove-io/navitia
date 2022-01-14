@@ -1,3 +1,23 @@
+navitia2 (14.0.0) unstable; urgency=low
+
+  * [TYR]: add attributes in the table billing_plan and update api  <https://github.com/CanalTP/navitia/pull/3633>
+  * Access Point: Expose access_point inside stop_point output api  <https://github.com/CanalTP/navitia/pull/3634>
+  * Tyr add logs  <https://github.com/CanalTP/navitia/pull/3594>
+  * kraken: inc version following the access point work  <https://github.com/CanalTP/navitia/pull/3632>
+  * [Raptor] handle inaccessible stop_point in backtrack journey  <https://github.com/CanalTP/navitia/pull/3631>
+  * [jormun]: Add brahi7 in autocomplete  <https://github.com/CanalTP/navitia/pull/3630>
+  * [Raptor] Modify back tracking journeys  <https://github.com/CanalTP/navitia/pull/3627>
+  * ed: read access_point and pathway table then aggregate it  <https://github.com/CanalTP/navitia/pull/3616>
+  * [TYR]: Get job by id and display metrics in a job.  <https://github.com/CanalTP/navitia/pull/3626>
+  * [Sonar] exclue test files for coverage test  <https://github.com/CanalTP/navitia/pull/3628>
+  * [TYR]: Add some attributs in the table linked to user  <https://github.com/CanalTP/navitia/pull/3625>
+  * [Raptor] Filter twisted journeys  <https://github.com/CanalTP/navitia/pull/3624>
+  * [Jormun] Fix link by_pass_disruption  <https://github.com/CanalTP/navitia/pull/3611>
+  * Fix: date_time and duration values for request date before production date  <https://github.com/CanalTP/navitia/pull/3622>
+  * Manage database resilience while accessing database for stat  <https://github.com/CanalTP/navitia/pull/3621>
+
+ -- Pascal Benchimol <pascal.benchimol@kisio.com>  Fri, 14 Jan 2022 10:01:59 +0100
+
 navitia2 (13.5.0) unstable; urgency=low
 
   * [Tyr] Indexing data for Elasticsearch2 en Elasticsearch7 while doing Import_data depending on configuration.  <https://github.com/CanalTP/navitia/pull/3600>

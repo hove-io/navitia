@@ -31,6 +31,7 @@ from tests.check_utils import api_get, api_delete
 import pytest
 from navitiacommon import models
 from tyr import app
+import datetime
 
 
 def create_dataset(dataset_type):
@@ -42,6 +43,7 @@ def create_dataset(dataset_type):
 
     metric = models.Metric()
     metric.type = '{}2ed'.format(dataset_type)
+    metric.duration = datetime.timedelta(seconds=9.0001)
     metric.dataset = dataset
     models.db.session.add(metric)
 
@@ -97,6 +99,18 @@ def test_jobs_deletion(create_instances):
     for instance in instances:
         resp = api_get("/v0/jobs/{}".format(instance))
         assert len(resp["jobs"]) == 3
+
+    # get a job and verify attributes
+    resp = api_get("/v0/jobs/1")
+    assert len(resp["jobs"]) == 1
+    job = resp["jobs"][0]
+    assert job["created_at"] is not None
+    assert job["updated_at"] is not None
+    assert len(job["metrics"]) == 1
+    assert job["metrics"][0]["type"] == "fusio2ed"
+    assert job["metrics"][0]["duration"] == 9.0001
+    assert job["instance"]["name"] == "Instance_1"
+    assert len(job["data_sets"]) == 1
 
     # ---1--- DELETE WITH FILTER BY INSTANCE AND BY STATE
     # delete "running" job for 'Instance_1'

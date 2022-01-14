@@ -138,6 +138,7 @@ class Places(ResourceUri):
             "_autocomplete",
             type=six.text_type,
             hidden=True,
+            choices=['kraken', 'bragi', 'bragi7'],
             help="name of the autocomplete service, used under the hood",
         )
         self.parsers['get'].add_argument(
@@ -198,7 +199,10 @@ class Places(ResourceUri):
             response = i_manager.dispatch(args, "places", instance_name=self.region)
         else:
             available_instances = get_all_available_instances(user)
-            autocomplete = global_autocomplete.get('bragi')
+            # If parameter '_autocomplete' is absent use 'bragi' as default value
+            if args["_autocomplete"] is None:
+                args["_autocomplete"] = 'bragi'
+            autocomplete = global_autocomplete.get(args["_autocomplete"])
             if not autocomplete:
                 raise TechnicalError('world wide autocompletion service not available')
             response = autocomplete.get(args, instances=available_instances)
@@ -247,6 +251,7 @@ class PlaceUri(ResourceUri):
             "_autocomplete",
             type=six.text_type,
             hidden=True,
+            choices=['kraken', 'bragi', 'bragi7'],
             help="name of the autocomplete service, used under the hood",
         )
 
@@ -263,7 +268,11 @@ class PlaceUri(ResourceUri):
         else:
             user = authentication.get_user(token=authentication.get_token(), abort_if_no_token=False)
             available_instances = get_all_available_instances(user)
-            autocomplete = global_autocomplete.get('bragi')
+
+            # If parameter '_autocomplete' is absent use 'bragi' as default value
+            if args["_autocomplete"] is None:
+                args["_autocomplete"] = 'bragi'
+            autocomplete = global_autocomplete.get(args["_autocomplete"])
             if not autocomplete:
                 raise TechnicalError('world wide autocompletion service not available')
             response = autocomplete.get_by_uri(args["uri"], request_id=request_id, instances=available_instances)

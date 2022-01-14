@@ -193,6 +193,10 @@ def test_add_user_without_shape(mock_rabbit):
         assert u['end_point']['name'] == 'navitia.io'
         assert u['type'] == 'with_free_instances'
         assert u['block_until'] is None
+        # User created but not modified yet
+        assert u['created_at'] is not None
+        assert u['updated_at'] is None
+        assert u['blocked_at'] is None
 
     check(resp)
     assert resp['shape'] is None
@@ -334,8 +338,9 @@ def test_add_user_with_plus_in_query(mock_rabbit):
     creation of a user with a "+" in the email
     """
     user = {'email': 'user1+test@example.com', 'login': 'user1+test@example.com'}
-    _, status = api_post('/v0/users/?login={email}&email={email}'.format(email=user['email']), check=False)
+    resp, status = api_post('/v0/users/?login={email}&email={email}'.format(email=user['email']), check=False)
     assert status == 400
+    assert resp["error"] == 'email invalid, you give "user1 test******"'
 
     resp = api_post('/v0/users/?login={email}&email={email}'.format(email=quote(user['email'])))
     _check_user_resp(user, resp)
@@ -369,6 +374,7 @@ def test_add_user_invalid_email(mock_rabbit):
     user = {'login': 'user1', 'email': 'user1'}
     resp, status = api_post('/v0/users/', check=False, data=json.dumps(user), content_type='application/json')
     assert status == 400
+    assert resp["error"] == 'email invalid, you give "user1"'
     assert mock_rabbit.call_count == 0
 
 
@@ -379,6 +385,7 @@ def test_add_user_invalid_endpoint(mock_rabbit):
     user = {'login': 'user1', 'email': 'user1@example.com', 'end_point_id': 100}
     resp, status = api_post('/v0/users/', check=False, data=json.dumps(user), content_type='application/json')
     assert status == 400
+    assert resp["error"] == 'end_point doesn\'t exist for user email user1******, you give "100"'
     assert mock_rabbit.call_count == 0
 
 
@@ -389,6 +396,7 @@ def test_add_user_invalid_billingplan(mock_rabbit):
     user = {'login': 'user1', 'email': 'user1@example.com', 'billing_plan_id': 100}
     resp, status = api_post('/v0/users/', check=False, data=json.dumps(user), content_type='application/json')
     assert status == 400
+    assert resp["error"] == 'billing plan doesn\'t exist for user email user1******, you give "100"'
     assert mock_rabbit.call_count == 0
 
 
@@ -438,8 +446,18 @@ def test_update_user_valid_shape_scope(create_multiple_users):
     """
     Update of a user with valid shape_scope
     """
+
+    def check(u):
+        for usr in u:
+            # User created but not modified yet
+            assert usr['created_at'] is not None
+            assert usr['block_until'] is None
+            assert usr['updated_at'] is None
+            assert usr['blocked_at'] is None
+
     resp = api_get('/v0/users/')
     assert len(resp) == 2
+    check(resp)
 
     for user in resp:
         assert_default_scop_shape(user)
@@ -454,6 +472,11 @@ def test_update_user_valid_shape_scope(create_multiple_users):
     assert len(resp["shape_scope"]) == len(user["shape_scope"])
     for ss in resp["shape_scope"]:
         assert ss in user["shape_scope"]
+    # User modified but not blocked
+    assert resp['created_at'] is not None
+    assert resp['updated_at'] is not None
+    assert resp['block_until'] is None
+    assert resp['blocked_at'] is None
 
 
 def test_update_user_invalid_shape_scope(create_multiple_users, mock_rabbit):
@@ -498,6 +521,9 @@ def test_multiple_users(create_multiple_users, mock_rabbit):
             assert u['email'] == 'foo@example.com'
             assert u['end_point']['name'] == 'myEndPoint'
             assert u['billing_plan']['name'] == 'free'
+            # Billing plan created but not modified yet
+            assert u['billing_plan']['created_at'] is not None
+            assert u['billing_plan']['updated_at'] is None
 
         if u['id'] == create_multiple_users['user2']:
             user2_found = True
@@ -505,6 +531,9 @@ def test_multiple_users(create_multiple_users, mock_rabbit):
             assert u['email'] == 'foo@example.com'
             assert u['end_point']['name'] == 'navitia.io'
             assert u['billing_plan']['name'] == 'nav_ctp'
+            # Billing plan created but not modified yet
+            assert u['billing_plan']['created_at'] is not None
+            assert u['billing_plan']['updated_at'] is None
 
     assert user1_found
     assert user2_found
@@ -529,6 +558,9 @@ def test_delete_user(create_multiple_users, mock_rabbit):
     assert u['email'] == 'foo@example.com'
     assert u['end_point']['name'] == 'navitia.io'
     assert u['billing_plan']['name'] == 'nav_ctp'
+    # Billing plan created but not modified yet
+    assert u['billing_plan']['created_at'] is not None
+    assert u['billing_plan']['updated_at'] is None
     assert mock_rabbit.call_count == 1
     assert_default_scop_shape(u)
 
@@ -575,6 +607,11 @@ def test_update_user(create_multiple_users, mock_rabbit, geojson_polygon):
         assert resp['id'] == create_multiple_users['user1']
         assert resp['login'] == user['login']
         assert resp['email'] == user['email']
+        # user modified but not blocked
+        assert resp['created_at'] is not None
+        assert resp['updated_at'] is not None
+        assert resp['block_until'] is None
+        assert resp['blocked_at'] is None
 
     check(resp)
     assert mock_rabbit.called
@@ -592,6 +629,10 @@ def test_update_block_until(create_multiple_users, mock_rabbit, geojson_polygon)
     )
     assert resp['id'] == create_multiple_users['user1']
     assert resp['block_until'] == '2016-01-28T11:12:00'
+    # user modified and blocked
+    assert resp['created_at'] is not None
+    assert resp['updated_at'] is not None
+    assert resp['blocked_at'] is not None
     assert resp['shape'] == geojson_polygon
     assert mock_rabbit.called
 
@@ -704,7 +745,10 @@ def test_deletion_keys_and_auth(create_instance, mock_rabbit):
         content_type='application/json',
     )
     resp = api_get('/v0/users/{}'.format(resp_user['id']))
-
+    assert len(resp['keys']) == 1
+    # key created but not modified yet
+    assert resp['keys'][0]['created_at'] is not None
+    assert resp['keys'][0]['updated_at'] is None
     resp_key = api_delete(
         '/v0/users/{user_id}/keys/{key_id}'.format(user_id=resp['id'], key_id=resp['keys'][0]['id'])
     )

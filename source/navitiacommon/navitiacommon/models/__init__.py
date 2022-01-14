@@ -105,7 +105,7 @@ class Host(db.Model):  # type: ignore
         return self.value
 
 
-class User(db.Model):  # type: ignore
+class User(db.Model, TimestampMixin):  # type: ignore
     __table_args__ = (
         UniqueConstraint('login', 'end_point_id', name='user_login_end_point_idx'),
         UniqueConstraint('email', 'end_point_id', name='user_email_end_point_idx'),
@@ -114,6 +114,7 @@ class User(db.Model):  # type: ignore
     login = db.Column(db.Text, nullable=False)
     email = db.Column(db.Text, nullable=False)
     block_until = db.Column(db.Date, nullable=True)
+    blocked_at = db.Column(db.Date, nullable=True)
 
     end_point_id = db.Column(db.Integer, db.ForeignKey('end_point.id'), nullable=False)
     end_point = db.relationship('EndPoint', lazy='joined', cascade='save-update, merge')
@@ -226,7 +227,7 @@ class User(db.Model):  # type: ignore
         return instances
 
 
-class Key(db.Model):  # type: ignore
+class Key(db.Model, TimestampMixin):  # type: ignore
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     token = db.Column(db.Text, unique=True, nullable=False)
@@ -963,12 +964,14 @@ class DataSet(db.Model):  # type: ignore
         return '<DataSet %r>' % self.id
 
 
-class BillingPlan(db.Model):  # type: ignore
+class BillingPlan(db.Model, TimestampMixin):  # type: ignore
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.Text, nullable=False)
     max_request_count = db.Column(db.Integer, default=0)
     max_object_count = db.Column(db.Integer, default=0)
     default = db.Column(db.Boolean, nullable=False, default=False)
+    lockable = db.Column(db.Boolean, nullable=False, default=False)
+    notify_threshold_list = db.Column(ARRAY(db.Integer), nullable=True, server_default="{}")
 
     end_point_id = db.Column(db.Integer, db.ForeignKey('end_point.id'), nullable=False)
     end_point = db.relationship('EndPoint', lazy='joined', cascade='save-update, merge')

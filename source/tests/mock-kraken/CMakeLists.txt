@@ -14,6 +14,7 @@ install(TARGETS main_routing_test DESTINATION ${CMAKE_INSTALL_PREFIX}/bin)
 add_executable(main_ptref_test main_ptref_test.cpp)
 add_executable(min_nb_journeys_test min_nb_journeys_test.cpp)
 add_executable(basic_routing_test basic_routing_test.cpp)
+add_executable(access_points_test access_points_test.cpp)
 add_executable(basic_schedule_test basic_schedule_test.cpp)
 add_executable(departure_board_test departure_board_test.cpp)
 install(TARGETS departure_board_test DESTINATION ${CMAKE_INSTALL_PREFIX}/bin)
@@ -34,6 +35,7 @@ add_custom_target(integration_tests_bin DEPENDS main_routing_test
                                                 main_ptref_test
                                                 min_nb_journeys_test
                                                 basic_routing_test
+                                                access_points_test
                                                 basic_schedule_test
                                                 departure_board_test
                                                 empty_routing_test
@@ -53,6 +55,7 @@ target_link_libraries(main_routing_test ${ALL_LIBS})
 target_link_libraries(main_ptref_test ${ALL_LIBS})
 target_link_libraries(min_nb_journeys_test ${ALL_LIBS})
 target_link_libraries(basic_routing_test ${ALL_LIBS})
+target_link_libraries(access_points_test ${ALL_LIBS})
 target_link_libraries(basic_schedule_test ${ALL_LIBS})
 target_link_libraries(departure_board_test ${ALL_LIBS})
 target_link_libraries(empty_routing_test ${ALL_LIBS})

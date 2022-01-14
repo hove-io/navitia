@@ -75,7 +75,14 @@ end_point_fields = {
     'hostnames': fields.List(fields.String),
 }
 
-key_fields = {'id': fields.Raw, 'app_name': fields.Raw, 'token': fields.Raw, 'valid_until': FieldDate}
+key_fields = {
+    'id': fields.Raw,
+    'app_name': fields.Raw,
+    'token': fields.Raw,
+    'valid_until': FieldDate,
+    'created_at': FieldDate,
+    'updated_at': FieldDate,
+}
 
 generic_field = {
     'id': fields.Raw,
@@ -229,6 +236,10 @@ billing_plan_fields = {
     'max_request_count': fields.Raw,
     'max_object_count': fields.Raw,
     'default': fields.Raw,
+    'created_at': FieldDate,
+    'updated_at': FieldDate,
+    'lockable': fields.Boolean,
+    'notify_threshold_list': fields.List(fields.Integer),
 }
 
 billing_plan_fields_full = {
@@ -237,6 +248,10 @@ billing_plan_fields_full = {
     'max_request_count': fields.Raw,
     'max_object_count': fields.Raw,
     'default': fields.Raw,
+    'created_at': FieldDate,
+    'updated_at': FieldDate,
+    'lockable': fields.Boolean,
+    'notify_threshold_list': fields.List(fields.Integer),
     'end_point': fields.Nested(end_point_fields),
 }
 
@@ -246,6 +261,9 @@ user_fields = {
     'email': fields.Raw,
     'block_until': FieldDate,
     'type': fields.Raw(),
+    'blocked_at': FieldDate,
+    'created_at': FieldDate,
+    'updated_at': FieldDate,
     'end_point': fields.Nested(end_point_fields),
     'billing_plan': fields.Nested(billing_plan_fields),
     'has_shape': HasShape,
@@ -261,6 +279,7 @@ user_fields_full["authorizations"] = fields.List(
 )
 
 dataset_field = {'type': fields.Raw, 'name': fields.Raw, 'family_type': fields.Raw, 'state': fields.Raw}
+metric_field = {'type': fields.Raw, 'duration': FieldTimedelta}
 
 job_fields = {
     'id': fields.Raw,
@@ -268,6 +287,7 @@ job_fields = {
     'created_at': FieldDate,
     'updated_at': FieldDate,
     'data_sets': fields.List(fields.Nested(dataset_field)),
+    'metrics': fields.List(fields.Nested(metric_field)),
     'instance': fields.Nested(instance_fields),
 }
 

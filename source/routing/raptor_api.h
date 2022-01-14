@@ -189,6 +189,35 @@ bool is_way_later(const Journey& j1, const Journey& j2, const NightBusFilter::Pa
 void filter_late_journeys(RAPTOR::Journeys& journeys, const NightBusFilter::Params& params);
 
 /**
+ * @brief modify "backtracking" journeys.
+ * A "depart after' journey is considered "backtracking" if its last stop_point's stop_area has been visited in the
+ * previous vehicle journeys. An "arrive before' journey is considered "backtracking" if its first stop_point's
+ * stop_area has been visited in the subsequent vehicle journeys
+ *
+ * For a "depart after' journey, if journey's last stop_time's stop_area(instead of stop point) has been visited
+ * in the middle of the journey, we trim the rest of journey as soon as the first appearance of that stop_area
+ *
+ * Ex:
+ *
+ * Sp1 (Sa1) -> Sp 2(Sa2) -> Sp 3(Sa3) -> Sp 4(Sa4) -> Sp 5(Sa5) -> Sp 6(Sa4)
+ *
+ * Sa4 appeared twice, so the journey becomes:
+ *
+ * Sp1 (Sa1) -> Sp 2(Sa2) -> Sp 3(Sa3) -> Sp 4(Sa4)
+ *
+ * For a "arrive before' journey, if journey's first stop_time's stop_area(instead of stop point) will be visited
+ * in the middle of the journey, we trim from the very first of the journeys util the first appearance of that stop_area
+ *
+ *
+ * @param journeys A container of Journeys
+ * @param clockwise depart after or arrive before
+ */
+void modify_backtracking_journeys(RAPTOR::Journeys& journeys,
+                                  const map_stop_point_duration& departures,
+                                  const map_stop_point_duration& destinations,
+                                  const bool clockwise);
+
+/**
  * @brief Prepare the horizon for the next Raptor call
  *
  * @param journeys A container of journeys.
