@@ -739,14 +739,14 @@ void EdReader::fill_access_points(nt::Data& data, pqxx::work& work) {
 
         // Access Point URI match for from_stop_id
         // so, to_stop_id have to be a StopPoint
-        auto from_access_p = access_point_map.find(from_stop_id);
+        auto from_access_p = access_point_map.find("access_point:" + from_stop_id);
         if (from_access_p != access_point_map.end()) {
             fill_access_point_field(from_access_p->second, const_it, true, to_stop_id);
             continue;
         }
         // Access Point URI match for to_stop_id
         // so, from_stop_id have to be a StopPoint
-        auto to_access_p = access_point_map.find(to_stop_id);
+        auto to_access_p = access_point_map.find("access_point:" + to_stop_id);
         if (to_access_p != access_point_map.end()) {
             fill_access_point_field(to_access_p->second, const_it, false, from_stop_id);
             continue;
