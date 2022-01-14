@@ -19,11 +19,16 @@ jobs:
       image: navitia/${{matrix.distribution}}_dev
       volumes:
           - /usr/share/dotnet:/usr/share/dotnet
+          - /usr/local/lib/android:/usr/local/lib/android
         # Mount /dotnet so we can delete files from docker and free up space (>20GB)
 
     steps:
     - name: Free up space
-      run: rm -rf /usr/share/dotnet/*
+      run: |
+        rm -rf /usr/share/dotnet/*
+        rm -rf /usr/local/lib/android/*
+        echo "Free space:"
+        df -h
     - uses: actions/checkout@v1
     - name: install zip dependency
       run: apt update && apt install -y zip httpie dh-python
