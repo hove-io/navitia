@@ -452,38 +452,65 @@ BOOST_FIXTURE_TEST_CASE(ntfs_v5_test, ArgsFixture) {
     // Access Point
     BOOST_REQUIRE_EQUAL(data.pt_data->stop_points_map["stop_point:SP:A"]->access_points.size(), 1);
     for (const auto& ap : data.pt_data->stop_points_map["stop_point:SP:A"]->access_points) {
-        BOOST_REQUIRE_EQUAL(ap->uri, "access_point:IO:1");
-        BOOST_REQUIRE_EQUAL(ap->stop_code, "stop_code_io_1");
-        BOOST_REQUIRE_EQUAL(ap->length, 68);
-        BOOST_REQUIRE_EQUAL(ap->traversal_time, 87);
-        BOOST_REQUIRE_EQUAL(ap->is_entrance, true);
-        BOOST_REQUIRE_EQUAL(ap->is_exit, true);
-        BOOST_REQUIRE_EQUAL(ap->stair_count, -1);             // no value
-        BOOST_REQUIRE_EQUAL(ap->max_slope, -1);               // no value
-        BOOST_REQUIRE_EQUAL(ap->min_width, -1);               // no value
-        BOOST_REQUIRE_EQUAL(ap->signposted_as, "");           // no value
-        BOOST_REQUIRE_EQUAL(ap->reversed_signposted_as, "");  // no value
-        BOOST_CHECK_CLOSE(ap->coord.lat(), 45.0614, 0.001);
-        BOOST_CHECK_CLOSE(ap->coord.lon(), 0.6155, 0.001);
+        BOOST_REQUIRE_EQUAL(ap.uri, "access_point:IO:1");
+        BOOST_REQUIRE_EQUAL(ap.stop_code, "stop_code_io_1");
+        BOOST_REQUIRE_EQUAL(ap.length, 68);
+        BOOST_REQUIRE_EQUAL(ap.traversal_time, 87);
+        BOOST_REQUIRE_EQUAL(ap.is_entrance, true);
+        BOOST_REQUIRE_EQUAL(ap.is_exit, true);
+        BOOST_REQUIRE_EQUAL(ap.stair_count, -1);             // no value
+        BOOST_REQUIRE_EQUAL(ap.max_slope, -1);               // no value
+        BOOST_REQUIRE_EQUAL(ap.min_width, -1);               // no value
+        BOOST_REQUIRE_EQUAL(ap.signposted_as, "");           // no value
+        BOOST_REQUIRE_EQUAL(ap.reversed_signposted_as, "");  // no value
+        BOOST_CHECK_CLOSE(ap.coord.lat(), 45.0614, 0.001);
+        BOOST_CHECK_CLOSE(ap.coord.lon(), 0.6155, 0.001);
     }
 
-    BOOST_REQUIRE_EQUAL(data.pt_data->stop_points_map["stop_point:SP:B"]->access_points.size(), 1);
+    BOOST_REQUIRE_EQUAL(data.pt_data->stop_points_map["stop_point:SP:B"]->access_points.size(), 2);
+
+    auto checked_ap = 0;
+
+    auto test_ap_from_sp_B = [&checked_ap](const navitia::type::AccessPoint& ap) {
+        if (ap.uri == "access_point:IO:2") {
+            BOOST_REQUIRE_EQUAL(ap.stop_code, "stop_code_io_2");
+            BOOST_REQUIRE_EQUAL(ap.length, 68);
+            BOOST_REQUIRE_EQUAL(ap.traversal_time, 87);
+            BOOST_REQUIRE_EQUAL(ap.is_entrance, false);
+            BOOST_REQUIRE_EQUAL(ap.is_exit, true);
+            BOOST_REQUIRE_EQUAL(ap.stair_count, 3);
+            BOOST_REQUIRE_EQUAL(ap.max_slope, 30);
+            BOOST_REQUIRE_EQUAL(ap.min_width, 2);
+            BOOST_REQUIRE_EQUAL(ap.signposted_as, "");           // no value
+            BOOST_REQUIRE_EQUAL(ap.reversed_signposted_as, "");  // no value
+            BOOST_CHECK_CLOSE(ap.coord.lat(), 45.0614, 0.001);
+            BOOST_CHECK_CLOSE(ap.coord.lon(), 0.6155, 0.001);
+            checked_ap++;
+            return;
+        }
+        if (ap.uri == "access_point:IO:1") {
+            BOOST_REQUIRE_EQUAL(ap.stop_code, "stop_code_io_1");
+            BOOST_REQUIRE_EQUAL(ap.length, 42);
+            BOOST_REQUIRE_EQUAL(ap.traversal_time, 60);
+            BOOST_REQUIRE_EQUAL(ap.is_entrance, true);
+            BOOST_REQUIRE_EQUAL(ap.is_exit, true);
+            BOOST_REQUIRE_EQUAL(ap.stair_count, 40);
+            BOOST_REQUIRE_EQUAL(ap.max_slope, 30);
+            BOOST_REQUIRE_EQUAL(ap.min_width, 2);
+            BOOST_REQUIRE_EQUAL(ap.signposted_as, "");           // no value
+            BOOST_REQUIRE_EQUAL(ap.reversed_signposted_as, "");  // no value
+            BOOST_CHECK_CLOSE(ap.coord.lat(), 45.0614, 0.001);
+            BOOST_CHECK_CLOSE(ap.coord.lon(), 0.6155, 0.001);
+            checked_ap++;
+            return;
+        }
+        // Should never go here...
+        BOOST_CHECK(false);
+    };
     for (const auto& ap : data.pt_data->stop_points_map["stop_point:SP:B"]->access_points) {
-        BOOST_REQUIRE_EQUAL(ap->uri, "access_point:IO:2");
-        BOOST_REQUIRE_EQUAL(ap->stop_code, "stop_code_io_2");
-        BOOST_REQUIRE_EQUAL(ap->length, 68);
-        BOOST_REQUIRE_EQUAL(ap->traversal_time, 87);
-        BOOST_REQUIRE_EQUAL(ap->is_entrance, false);
-        BOOST_REQUIRE_EQUAL(ap->is_exit, true);
-        BOOST_REQUIRE_EQUAL(ap->stair_count, 3);
-        BOOST_REQUIRE_EQUAL(ap->max_slope, 30);
-        BOOST_REQUIRE_EQUAL(ap->min_width, 2);
-        BOOST_REQUIRE_EQUAL(ap->signposted_as, "");           // no value
-        BOOST_REQUIRE_EQUAL(ap->reversed_signposted_as, "");  // no value
-        BOOST_CHECK_CLOSE(ap->coord.lat(), 45.0614, 0.001);
-        BOOST_CHECK_CLOSE(ap->coord.lon(), 0.6155, 0.001);
+        test_ap_from_sp_B(ap);
     }
-
+    BOOST_CHECK_EQUAL(checked_ap, 2);
     check_ntfs(data);
 }
 

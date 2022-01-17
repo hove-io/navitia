@@ -33,6 +33,7 @@ www.navitia.io
 #include "type/type_interfaces.h"
 #include "type/geographical_coord.h"
 #include "type/fwd_type.h"
+#include "type/access_point.h"
 
 #include <boost/container/flat_set.hpp>
 
@@ -53,7 +54,7 @@ struct StopPoint : public Header, Nameable, hasProperties, HasMessages {
 
     StopArea* stop_area;
     std::vector<navitia::georef::Admin*> admin_list;
-    std::set<navitia::type::AccessPoint*> access_points;
+    std::set<navitia::type::AccessPoint> access_points;
     Network* network;
     std::vector<StopPointConnection*> stop_point_connection_list;
     std::set<Dataset*> dataset_list;
