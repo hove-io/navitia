@@ -272,15 +272,19 @@ def _extend_with_via_access_point(fallback_dp, pt_object, fallback_type, via_acc
         via.name = via_access_point.name
         # Use label in stead of name???
         via.instruction = "Enter {} via {}.".format(pt_object.stop_point.label, via_access_point.name)
+        via.via_entrance_uri = via_access_point.uri
+
     elif fallback_type == StreetNetworkPathType.ENDING_FALLBACK:
         path_items = dp_journey.sections[0].street_network.path_items
 
-        dp_journey.sections[0].street_network.path_items.add(
-            duration=traversal_time,
-            length=length,
-            name=via_access_point.name,
-            instruction="Exit {} via {}.".format(pt_object.stop_point.label, via_access_point.name),
-        )
+        via = dp_journey.sections[0].street_network.path_items.add()
+        via.duration = traversal_time
+        via.length = length
+        via.name = via_access_point.name
+        # Use label in stead of name???
+        via.instruction = "Exit {} via {}.".format(pt_object.stop_point.label, via_access_point.name)
+        via.via_exit_uri = via_access_point.uri
+
         # we cannot insert an element at the beginning of a list :(
         # a little algo to move the last element to the beginning
         tmp_item = response_pb2.PathItem()
@@ -635,7 +639,7 @@ def compute_fallback(
                 real_mode = dest_fallback_durations_pool.get_real_mode(arr_mode, dest_obj.uri)
 
             else:
-                dest_obj = dest_fallback_durations_pool.wait_and_get(dep_mode)[pt_dest.uri].via_access_point
+                dest_obj = dest_fallback_durations_pool.wait_and_get(arr_mode)[pt_dest.uri].via_access_point
                 real_mode = dest_fallback_durations_pool.get_real_mode(arr_mode, pt_dest.uri)
 
             streetnetwork_path_pool.add_async_request(

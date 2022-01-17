@@ -32,6 +32,7 @@ www.navitia.io
 
 #include "type/stop_area.h"
 #include "type/stop_point.h"
+#include "type/access_point.h"
 #include "utils/configuration.h"
 #include "utils/csv.h"
 #include "utils/functions.h"
@@ -561,16 +562,44 @@ void GeoRef::project_stop_points(const std::vector<type::StopPoint*>& stop_point
         other,
         size
     };
-    navitia::flat_enum_map<error, int> messages{{{}}};
+    navitia::flat_enum_map<error, int> stop_point_messages{{{}}};
+    navitia::flat_enum_map<error, int> access_point_messages{{{}}};
 
     this->projected_stop_points.clear();
-    this->projected_stop_points.reserve(stop_points.size());
+    this->projected_stop_points.reserve(stop_points.size() * 2);
 
     this->projected_coords.clear();
-    this->projected_coords.reserve(stop_points.size());
+    this->projected_coords.reserve(stop_points.size() * 2);
 
+    auto update_message = [](navitia::flat_enum_map<error, int>& messages,
+                             const std::pair<GeoRef::ProjectionByMode, bool>& p,
+                             const navitia::type::GeographicalCoord& coord) {
+        if (p.second) {
+            messages[error::matched] += 1;
+        } else {
+            // verify if coordinate is not valid:
+            if (!coord.is_initialized()) {
+                messages[error::not_initialized] += 1;
+            } else if (!coord.is_valid()) {
+                messages[error::not_valid] += 1;
+            } else {
+                messages[error::other] += 1;
+            }
+        }
+        if (p.first[nt::Mode_e::Walking].found) {
+            messages[error::matched_walking] += 1;
+        }
+        if (p.first[nt::Mode_e::Bike].found) {
+            messages[error::matched_bike] += 1;
+        }
+        if (p.first[nt::Mode_e::Car].found) {
+            messages[error::matched_car] += 1;
+        }
+    };
+
+    int access_points_num = 0;
     for (const type::StopPoint* stop_point : stop_points) {
-        std::pair<GeoRef::ProjectionByMode, bool> pair = project_stop_point(stop_point);
+        std::pair<GeoRef::ProjectionByMode, bool> pair = project_coord(stop_point->coord);
 
         /*
          * We build 2 different caches :
@@ -584,49 +613,46 @@ void GeoRef::project_stop_points(const std::vector<type::StopPoint*>& stop_point
         this->projected_stop_points.push_back(pair.first);
         this->projected_coords[stop_point->coord] = pair.first;
 
-        if (pair.second) {
-            messages[error::matched] += 1;
-        } else {
-            // verify if coordinate is not valid:
-            if (!stop_point->coord.is_initialized()) {
-                messages[error::not_initialized] += 1;
-            } else if (!stop_point->coord.is_valid()) {
-                messages[error::not_valid] += 1;
-            } else {
-                messages[error::other] += 1;
+        update_message(stop_point_messages, pair, stop_point->coord);
+
+        for (const auto* ap : stop_point->access_points) {
+            auto it = projected_coords.find(ap->coord);
+            if (it != projected_coords.end()) {
+                continue;
             }
-        }
-        if (pair.first[nt::Mode_e::Walking].found) {
-            messages[error::matched_walking] += 1;
-        }
-        if (pair.first[nt::Mode_e::Bike].found) {
-            messages[error::matched_bike] += 1;
-        }
-        if (pair.first[nt::Mode_e::Car].found) {
-            messages[error::matched_car] += 1;
-        }
+            std::pair<GeoRef::ProjectionByMode, bool> ap_pair = project_coord(ap->coord);
+            this->projected_coords[ap->coord] = ap_pair.first;
+            ++access_points_num;
+
+            update_message(access_point_messages, ap_pair, ap->coord);
+        };
     }
 
     auto log = log4cplus::Logger::getInstance("kraken::type::Data::project_stop_point");
-    LOG4CPLUS_DEBUG(log, "Number of stop point projected on the georef network : "
-                             << messages[error::matched] << " (on " << stop_points.size() << ")");
 
-    LOG4CPLUS_DEBUG(log, "Number of stop point projected on the walking georef network : "
-                             << messages[error::matched_walking] << " (on " << stop_points.size() << ")");
-    LOG4CPLUS_DEBUG(log, "Number of stop point projected on the biking georef network : "
-                             << messages[error::matched_bike] << " (on " << stop_points.size() << ")");
-    LOG4CPLUS_DEBUG(log, "Number of stop point projected on the car georef network : "
-                             << messages[error::matched_car] << " (on " << stop_points.size() << ")");
+    auto log_messages = [&log](const navitia::flat_enum_map<error, int>& messages, std::string type, size_t total) {
+        LOG4CPLUS_DEBUG(log, "Number of " + type + " projected on the georef network : " << messages[error::matched]
+                                                                                         << " (on " << total << ")");
 
-    if (messages[error::not_initialized]) {
-        LOG4CPLUS_DEBUG(log, "Number of stop point rejected (X=0 or Y=0)" << messages[error::not_initialized]);
-    }
-    if (messages[error::not_valid]) {
-        LOG4CPLUS_DEBUG(log, "Number of stop point rejected (not valid)" << messages[error::not_valid]);
-    }
-    if (messages[error::other]) {
-        LOG4CPLUS_DEBUG(log, "Number of stop point rejected (other issues)" << messages[error::other]);
-    }
+        LOG4CPLUS_DEBUG(log, "Number of " + type + " projected on the walking georef network : "
+                                 << messages[error::matched_walking] << " (on " << total << ")");
+        LOG4CPLUS_DEBUG(log, "Number of " + type + " projected on the biking georef network : "
+                                 << messages[error::matched_bike] << " (on " << total << ")");
+        LOG4CPLUS_DEBUG(log, "Number of " + type + " projected on the car georef network : "
+                                 << messages[error::matched_car] << " (on " << total << ")");
+
+        if (messages[error::not_initialized]) {
+            LOG4CPLUS_DEBUG(log, "Number of " + type + " rejected (X=0 or Y=0)" << messages[error::not_initialized]);
+        }
+        if (messages[error::not_valid]) {
+            LOG4CPLUS_DEBUG(log, "Number of " + type + " rejected (not valid)" << messages[error::not_valid]);
+        }
+        if (messages[error::other]) {
+            LOG4CPLUS_DEBUG(log, "Number of " + type + " rejected (other issues)" << messages[error::other]);
+        }
+    };
+    log_messages(stop_point_messages, "stop points", stop_points.size());
+    log_messages(access_point_messages, "access points", access_points_num);
 }
 
 std::vector<Admin*> GeoRef::find_admins(const type::GeographicalCoord& coord) const {
@@ -665,7 +691,7 @@ std::vector<Admin*> GeoRef::find_admins(const type::GeographicalCoord& coord, Ad
     return result;
 }
 
-std::pair<GeoRef::ProjectionByMode, bool> GeoRef::project_stop_point(const type::StopPoint* stop_point) const {
+std::pair<GeoRef::ProjectionByMode, bool> GeoRef::project_coord(const type::GeographicalCoord& coord) const {
     bool one_proj_found = false;
     ProjectionByMode projections;
 
@@ -680,7 +706,7 @@ std::pair<GeoRef::ProjectionByMode, bool> GeoRef::project_stop_point(const type:
 
     for (auto const mode_layer : mode_to_layer) {
         nt::Mode_e mode = mode_layer.first;
-        ProjectionData proj(stop_point->coord, *this, mode_layer.second);
+        ProjectionData proj(coord, *this, mode_layer.second);
         projections[mode] = proj;
         if (proj.found) {
             one_proj_found = true;

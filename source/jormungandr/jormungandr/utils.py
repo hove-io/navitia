@@ -63,6 +63,8 @@ def get_uri_pt_object(pt_object):
     if pt_object.embedded_type == type_pb2.ADDRESS:
         coords = pt_object.uri.split(';')
         return "coord:{}:{}".format(coords[0], coords[1])
+    if pt_object.embedded_type == type_pb2.ACCESS_POINT:
+        return "coord:{}:{}".format(pt_object.access_point.coord.lon, pt_object.access_point.coord.lat)
     return pt_object.uri
 
 

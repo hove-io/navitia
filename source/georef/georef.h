@@ -287,12 +287,12 @@ struct GeoRef {
      */
     void project_stop_points(const std::vector<type::StopPoint*>& stop_points);
 
-    /** project the stop point on all transportation mode
+    /** project the a coordinate on all transportation mode
      * return a pair with :
      * - the projected array
      * - a boolean corresponding to the fact that at least one projection has been found
      */
-    std::pair<ProjectionByMode, bool> project_stop_point(const type::StopPoint* stop_point) const;
+    std::pair<ProjectionByMode, bool> project_coord(const type::GeographicalCoord& coord) const;
 
     /** Retourne l'arc (segment) le plus proche
      *
