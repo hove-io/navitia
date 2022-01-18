@@ -615,16 +615,16 @@ void GeoRef::project_stop_points(const std::vector<type::StopPoint*>& stop_point
 
         update_message(stop_point_messages, pair, stop_point->coord);
 
-        for (const auto* ap : stop_point->access_points) {
-            auto it = projected_coords.find(ap->coord);
+        for (const auto& ap : stop_point->access_points) {
+            auto it = projected_coords.find(ap.coord);
             if (it != projected_coords.end()) {
                 continue;
             }
-            std::pair<GeoRef::ProjectionByMode, bool> ap_pair = project_coord(ap->coord);
-            this->projected_coords[ap->coord] = ap_pair.first;
+            std::pair<GeoRef::ProjectionByMode, bool> ap_pair = project_coord(ap.coord);
+            this->projected_coords[ap.coord] = ap_pair.first;
             ++access_points_num;
 
-            update_message(access_point_messages, ap_pair, ap->coord);
+            update_message(access_point_messages, ap_pair, ap.coord);
         };
     }
 

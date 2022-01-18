@@ -1233,3 +1233,18 @@ class TestRoutingWithTransfer(NewDefaultScenarioAbstractTestFixture):
         assert 'geojson' in journeys[0]['sections'][2]
         assert 'coordinates' in journeys[0]['sections'][2]['geojson']
         assert len(journeys[0]['sections'][2]['geojson']['coordinates']) == 2
+
+
+@dataset({"main_routing_test": {"scenario": "distributed"}})
+class TestJourneyWithAcessPoints(NewDefaultScenarioAbstractTestFixture):
+    def test_journey_with_access_points(self):
+        # we begin with a normal request to get the fallback duration in taxi
+        query = sub_query + "&datetime=20120614080000"
+
+        response = self.query(query)
+        journeys = response['journeys']
+
+        assert len(journeys) == 2
+
+        pt_journey = next((j for j in journeys if "non_pt" not in j.tags), None)
+        assert pt_journey

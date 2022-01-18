@@ -276,6 +276,7 @@ class FallbackDurations:
                             result[sp_nearby.uri] = DurationElement(
                                 durations_sum,
                                 response_pb2.reached,
+                                # car park
                                 places_isochrone[pos],
                                 duration_to_stop_point,
                                 None,
@@ -287,9 +288,7 @@ class FallbackDurations:
                         and pt_object.embedded_type == type_pb2.STOP_POINT
                     ):
                         if duration < self._max_duration_to_pt:
-                            result[pt_object.uri] = DurationElement(
-                                duration, r.routing_status, None, 0, pt_object
-                            )
+                            result[pt_object.uri] = DurationElement(duration, r.routing_status, None, 0, None)
 
                     if (
                         isinstance(pt_object, type_pb2.PtObject)
@@ -304,6 +303,7 @@ class FallbackDurations:
 
         # We update the fallback duration matrix if the requested origin/destination is also
         # present in the fallback duration matrix, which means from stop_point_1 to itself, it takes 0 second
+        # Note that we consider, in this case, the via access_point is the stop_point itself.
         # Ex:
         #                stop_point1   stop_point2  stop_point3
         # stop_point_1         0(s)       ...          ...

@@ -252,10 +252,7 @@ def _extend_with_car_park(
 
 
 def _extend_with_via_access_point(fallback_dp, pt_object, fallback_type, via_access_point):
-    if (
-        isinstance(via_access_point, type_pb2.PtObject)
-        and via_access_point.embedded_type != type_pb2.ACCESS_POINT
-    ):
+    if via_access_point is None:
         return
 
     traversal_time = via_access_point.access_point.traversal_time
@@ -271,8 +268,8 @@ def _extend_with_via_access_point(fallback_dp, pt_object, fallback_type, via_acc
         via.length = length
         via.name = via_access_point.name
         # Use label in stead of name???
-        via.instruction = "Enter {} via {}.".format(pt_object.stop_point.label, via_access_point.name)
-        via.via_entrance_uri = via_access_point.uri
+        via.instruction = "Then Enter {} via {}.".format(pt_object.stop_point.label, via_access_point.name)
+        via.via_uri = via_access_point.uri
 
     elif fallback_type == StreetNetworkPathType.ENDING_FALLBACK:
         path_items = dp_journey.sections[0].street_network.path_items
@@ -283,7 +280,7 @@ def _extend_with_via_access_point(fallback_dp, pt_object, fallback_type, via_acc
         via.name = via_access_point.name
         # Use label in stead of name???
         via.instruction = "Exit {} via {}.".format(pt_object.stop_point.label, via_access_point.name)
-        via.via_exit_uri = via_access_point.uri
+        via.via_uri = via_access_point.uri
 
         # we cannot insert an element at the beginning of a list :(
         # a little algo to move the last element to the beginning
@@ -324,9 +321,9 @@ def _update_fallback_sections(journey, fallback_dp, fallback_period_extremity, f
         and via_access_point.embedded_type == type_pb2.ACCESS_POINT
     ):
         if fallback_type == StreetNetworkPathType.BEGINNING_FALLBACK:
-            fallback_sections[-1].via_entrance.CopyFrom(via_access_point)
+            fallback_sections[-1].vias.append(via_access_point)
         else:
-            fallback_sections[0].via_exit.CopyFrom(via_access_point)
+            fallback_sections[0].vias.append(via_access_point)
 
     journey.sections.extend(fallback_sections)
     journey.sections.sort(key=cmp_to_key(SectionSorter()))
@@ -488,7 +485,7 @@ def _build_fallback(
             is_after_pt_sections = fallback_logic.is_after_pt_sections()
             pt_datetime = fallback_logic.get_pt_section_datetime(pt_journey)
             fallback_period_extremity = PeriodExtremity(pt_datetime, is_after_pt_sections)
-            orig, dest = fallback_logic.route_params(requested_obj, car_park or via_access_point)
+            orig, dest = fallback_logic.route_params(requested_obj, car_park or via_access_point or pt_obj)
 
             real_mode = fallback_durations_pool.get_real_mode(mode, pt_obj.uri)
             fallback_dp = streetnetwork_path_pool.wait_and_get(
@@ -607,13 +604,14 @@ def compute_fallback(
         fallback_extremity_dep = PeriodExtremity(pt_departure, False)
         from_sub_request_id = "{}_{}_from".format(request_id, i)
         if from_obj.uri != pt_orig.uri and pt_orig.uri not in orig_all_free_access:
-            orig_obj = pt_orig
             # here, if the mode is car, we have to find from which car park the stop_point is accessed
             if dep_mode == 'car':
                 orig_obj = orig_fallback_durations_pool.wait_and_get(dep_mode)[pt_orig.uri].car_park
                 real_mode = orig_fallback_durations_pool.get_real_mode(dep_mode, orig_obj.uri)
             else:
-                orig_obj = orig_fallback_durations_pool.wait_and_get(dep_mode)[pt_orig.uri].via_access_point
+                orig_obj = (
+                    orig_fallback_durations_pool.wait_and_get(dep_mode)[pt_orig.uri].via_access_point or pt_orig
+                )
                 real_mode = orig_fallback_durations_pool.get_real_mode(dep_mode, pt_orig.uri)
 
             streetnetwork_path_pool.add_async_request(
@@ -639,7 +637,9 @@ def compute_fallback(
                 real_mode = dest_fallback_durations_pool.get_real_mode(arr_mode, dest_obj.uri)
 
             else:
-                dest_obj = dest_fallback_durations_pool.wait_and_get(arr_mode)[pt_dest.uri].via_access_point
+                dest_obj = (
+                    dest_fallback_durations_pool.wait_and_get(arr_mode)[pt_dest.uri].via_access_point or pt_dest
+                )
                 real_mode = dest_fallback_durations_pool.get_real_mode(arr_mode, pt_dest.uri)
 
             streetnetwork_path_pool.add_async_request(
