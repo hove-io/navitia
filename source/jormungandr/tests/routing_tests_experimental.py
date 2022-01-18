@@ -436,6 +436,41 @@ class TestJourneysDistributed(
         assert any('walking' in j['tags'] for j in response['journeys'])
         assert len(response['journeys'][1]['sections']) == 1
 
+    def test_journey_with_access_points(self):
+        query = journey_basic_query + "&_access_points=true"
+        response = self.query_region(query)
+        assert len(response['journeys']) == 2
+
+        pt_journey = next((j for j in response['journeys'] if 'non_pt' not in j['tags']), None)
+        assert pt_journey
+        assert len(pt_journey['sections'][0]['vias']) == 1
+
+        access_point = pt_journey['sections'][0]['vias'][0]['access_point']
+        assert access_point["id"] == "access_point:B1"
+        assert access_point["is_entrance"]
+        assert not access_point["is_exit"]
+        assert access_point["traversal_time"] == 2
+        assert access_point["length"] == 1
+
+        path = pt_journey['sections'][0]['path'][-1]
+        assert path['duration'] == 2
+        assert path['length'] == 1
+        assert path['via_uri'] == "access_point:B1"
+        assert path['instruction'] == "Then Enter stop_point:stopB (Condom) via access_point:B1."
+
+        access_point = pt_journey['sections'][2]['vias'][0]['access_point']
+        assert access_point["id"] == "access_point:A2"
+        assert not access_point["is_entrance"]
+        assert access_point["is_exit"]
+        assert access_point["traversal_time"] == 4
+        assert access_point["length"] == 3
+
+        path = pt_journey['sections'][2]['path'][0]
+        assert path['duration'] == 4
+        assert path['length'] == 3
+        assert path['via_uri'] == "access_point:A2"
+        assert path['instruction'] == "Exit stop_point:stopA (Condom) via access_point:A2."
+
 
 @config({"scenario": "distributed"})
 class TestDistributedJourneysWithPtref(JourneysWithPtref, NewDefaultScenarioAbstractTestFixture):
@@ -1233,18 +1268,3 @@ class TestRoutingWithTransfer(NewDefaultScenarioAbstractTestFixture):
         assert 'geojson' in journeys[0]['sections'][2]
         assert 'coordinates' in journeys[0]['sections'][2]['geojson']
         assert len(journeys[0]['sections'][2]['geojson']['coordinates']) == 2
-
-
-@dataset({"main_routing_test": {"scenario": "distributed"}})
-class TestJourneyWithAcessPoints(NewDefaultScenarioAbstractTestFixture):
-    def test_journey_with_access_points(self):
-        # we begin with a normal request to get the fallback duration in taxi
-        query = sub_query + "&datetime=20120614080000"
-
-        response = self.query(query)
-        journeys = response['journeys']
-
-        assert len(journeys) == 2
-
-        pt_journey = next((j for j in journeys if "non_pt" not in j.tags), None)
-        assert pt_journey
