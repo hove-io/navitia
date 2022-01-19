@@ -405,16 +405,16 @@ class EquipmentDetailsSerializer(PbNestedSerializer):
 
 class AccessPointSerializer(PbGenericSerializer):
     coord = CoordSerializer(required=False)
-    is_entrance = jsonschema.Field(schema_type=bool, display_none=False)
-    is_exit = jsonschema.Field(schema_type=bool, display_none=False)
-    pathway_mode = jsonschema.Field(schema_type=int, display_none=False)
-    length = jsonschema.Field(schema_type=int, display_none=False)
-    traversal_time = jsonschema.Field(schema_type=int, display_none=False)
-    stair_count = jsonschema.Field(schema_type=int, display_none=False)
-    max_slope = jsonschema.Field(schema_type=int, display_none=False)
-    min_width = jsonschema.Field(schema_type=int, display_none=False)
-    signposted_as = jsonschema.Field(schema_type=str, display_none=False)
-    reversed_signposted_as = jsonschema.Field(schema_type=str, display_none=False)
+    is_entrance = jsonschema.MethodField(schema_type=bool, display_none=False)
+    is_exit = jsonschema.MethodField(schema_type=bool, display_none=False)
+    pathway_mode = jsonschema.MethodField(schema_type=int, display_none=False)
+    length = jsonschema.MethodField(schema_type=int, display_none=False)
+    traversal_time = jsonschema.MethodField(schema_type=int, display_none=False)
+    stair_count = jsonschema.MethodField(schema_type=int, display_none=False)
+    max_slope = jsonschema.MethodField(schema_type=int, display_none=False)
+    min_width = jsonschema.MethodField(schema_type=int, display_none=False)
+    signposted_as = jsonschema.MethodField(schema_type=str, display_none=False)
+    reversed_signposted_as = jsonschema.MethodField(schema_type=str, display_none=False)
     parent_station = jsonschema.MethodField(schema_type=lambda: StopAreaSerializer(), display_none=False)
 
     def get_is_entrance(self, obj):

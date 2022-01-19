@@ -551,7 +551,7 @@ std::vector<nf::Autocomplete<nt::idx_t>::fl_quality> GeoRef::find_ways(
     return to_return;
 }
 
-void GeoRef::project_stop_points(const std::vector<type::StopPoint*>& stop_points) {
+void GeoRef::project_stop_points_and_access_points(const std::vector<type::StopPoint*>& stop_points) {
     enum class error {
         matched = 0,
         matched_walking,
@@ -566,9 +566,13 @@ void GeoRef::project_stop_points(const std::vector<type::StopPoint*>& stop_point
     navitia::flat_enum_map<error, int> access_point_messages{{{}}};
 
     this->projected_stop_points.clear();
-    this->projected_stop_points.reserve(stop_points.size() * 2);
+
+    this->projected_stop_points.reserve(stop_points.size());
 
     this->projected_coords.clear();
+    // This projection cache is used by distributed scenari. It contains projections for
+    // both stop points and access points. Since we cannot know the exact number of access points
+    // ahead of time, we just suppose every stop point has at least one access point. Thus the factor is 2.
     this->projected_coords.reserve(stop_points.size() * 2);
 
     auto update_message = [](navitia::flat_enum_map<error, int>& messages,
