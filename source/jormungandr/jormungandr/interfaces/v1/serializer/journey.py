@@ -351,7 +351,7 @@ class SectionSerializer(PbNestedSerializer):
 
     cycle_lane_length = PbIntField(display_none=False)
     elevations = ElevationSerializer(attr="street_network.elevations", many=True, display_none=False)
-    vias = jsonschema.MethodField(many=True, display_none=False)
+    vias = jsonschema.MethodField(schema_type=PlaceSerializer(), many=True, display_none=False)
 
     def get_vias(self, obj):
         if not hasattr(obj, 'vias'):
