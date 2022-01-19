@@ -155,11 +155,11 @@ class FallbackDurations:
     def _update_fb_durations_from_access_point(
         self, fb_durations, access_point, duration, resp, access_points_map
     ):
-        for sp_uri, length, traveral_time in access_points_map[access_point.uri]:
+        for sp_uri, length, traversal_time in access_points_map[access_point.uri]:
             current_duration = fb_durations[sp_uri].duration if sp_uri in fb_durations else float('inf')
-            if (duration + traveral_time) < min(current_duration, self._max_duration_to_pt):
+            if (duration + traversal_time) < min(current_duration, self._max_duration_to_pt):
                 fb_durations[sp_uri] = DurationElement(
-                    duration + traveral_time, resp.routing_status, None, 0, access_point
+                    duration + traversal_time, resp.routing_status, None, 0, access_point
                 )
 
     def _do_request(self):
@@ -206,7 +206,8 @@ class FallbackDurations:
                 # if any of them are existent
                 if not p.stop_point.access_points:
                     places_isochrone.append(p)
-                self._retrieve_access_points(p.stop_point, access_points_map, places_isochrone)
+                else:
+                    self._retrieve_access_points(p.stop_point, access_points_map, places_isochrone)
 
         result = defaultdict(lambda: DurationElement(float('inf'), None, None, 0, None))
         # Since we have already places that have free access, we add them into the result
@@ -259,6 +260,7 @@ class FallbackDurations:
                 )
             return result
 
+        # the element in routing_response are ranged in the same order of element in places_isochrones
         for pos, r in enumerate(sn_routing_matrix.rows[0].routing_response):
             if r.routing_status == response_pb2.unreached:
                 continue

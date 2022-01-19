@@ -351,7 +351,18 @@ class SectionSerializer(PbNestedSerializer):
 
     cycle_lane_length = PbIntField(display_none=False)
     elevations = ElevationSerializer(attr="street_network.elevations", many=True, display_none=False)
-    vias = PlaceSerializer(many=True, display_none=False)
+    vias = jsonschema.MethodField(many=True, display_none=False)
+
+    def get_vias(self, obj):
+        if not hasattr(obj, 'vias'):
+            return None
+        from navitiacommon import type_pb2
+
+        pt_obejcts = [
+            type_pb2.PtObject(name=ap.name, uri=ap.uri, embedded_type=type_pb2.ACCESS_POINT, access_point=ap)
+            for ap in obj.vias
+        ]
+        return PlaceSerializer(pt_obejcts, display_none=False, many=True).data
 
 
 class JourneySerializer(PbNestedSerializer):

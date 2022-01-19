@@ -321,9 +321,9 @@ def _update_fallback_sections(journey, fallback_dp, fallback_period_extremity, f
         and via_access_point.embedded_type == type_pb2.ACCESS_POINT
     ):
         if fallback_type == StreetNetworkPathType.BEGINNING_FALLBACK:
-            fallback_sections[-1].vias.append(via_access_point)
+            fallback_sections[-1].vias.append(via_access_point.access_point)
         else:
-            fallback_sections[0].vias.append(via_access_point)
+            fallback_sections[0].vias.append(via_access_point.access_point)
 
     journey.sections.extend(fallback_sections)
     journey.sections.sort(key=cmp_to_key(SectionSorter()))
