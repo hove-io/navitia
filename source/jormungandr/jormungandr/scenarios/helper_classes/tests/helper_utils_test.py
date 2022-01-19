@@ -255,13 +255,15 @@ def test_update_fallback_sections_beginning_fallback():
     fallback_dp = create_car_journey_with_parking("20180618T050500", origin, destination)
     fallback_period_extremity = PeriodExtremity(str_to_time_stamp('20180618T050500'), False)
     fallback_type = StreetNetworkPathType.BEGINNING_FALLBACK
+    access_point = make_pt_object(type_pb2.ACCESS_POINT, 9.0, 9.0, "access_point_toto")
 
-    _update_fallback_sections(journey, fallback_dp, fallback_period_extremity, fallback_type)
+    _update_fallback_sections(journey, fallback_dp, fallback_period_extremity, fallback_type, access_point)
 
     # Car + Park + 4 PT
     assert len(journey.sections) == 6
     assert journey.sections[1].destination.uri == "stop_point_1"
     assert journey.sections[1].destination == journey.sections[2].origin
+    assert journey.sections[1].vias[0].uri == "access_point_toto"
 
 
 # Tests the insertion of a car section with leave parking at the end of a journey
@@ -273,9 +275,11 @@ def test_update_fallback_sections_ending_fallback():
     fallback_dp = create_car_journey_with_leave_parking("20180618T080500", origin, destination)
     fallback_period_extremity = PeriodExtremity(str_to_time_stamp('20180618T080500'), True)
     fallback_type = StreetNetworkPathType.ENDING_FALLBACK
+    access_point = make_pt_object(type_pb2.ACCESS_POINT, 9.0, 9.0, "access_point_toto")
 
-    _update_fallback_sections(journey, fallback_dp, fallback_period_extremity, fallback_type)
+    _update_fallback_sections(journey, fallback_dp, fallback_period_extremity, fallback_type, access_point)
 
     assert len(journey.sections) == 6
     assert journey.sections[4].origin.uri == "stop_point_4"
     assert journey.sections[4].origin == journey.sections[3].destination
+    assert journey.sections[4].vias[0].uri == "access_point_toto"

@@ -51,6 +51,9 @@ def make_pt_object(embedded_type, lon, lat, uri=None):
     elif embedded_type == type_pb2.POI:
         pt_object.poi.coord.lat = lat
         pt_object.poi.coord.lon = lon
+    elif embedded_type == type_pb2.ACCESS_POINT:
+        pt_object.access_point.coord.lat = lat
+        pt_object.access_point.coord.lon = lon
     return pt_object
 
 
