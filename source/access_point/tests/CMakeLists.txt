@@ -1,0 +1,3 @@
+add_executable(access_point_test access_point_api_tests.cpp)
+target_link_libraries(access_point_test access_point_api ed ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY} ${Boost_PROGRAM_OPTIONS_LIBRARY})
+ADD_BOOST_TEST(access_point_test)

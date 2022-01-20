@@ -180,6 +180,7 @@ class add_coverage_link(generate_links):
             "traffic_reports",
             "line_reports",
             "equipment_reports",
+            "access_points",
         ]
 
         if app.config['GRAPHICAL_ISOCHRONE']:
