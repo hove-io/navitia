@@ -304,13 +304,14 @@ class FallbackDurations:
 
         all_free_access = self._get_all_free_access(proximities_by_crowfly)
 
-        # places_isochrone: a list of pt_objects selected from proximities_by_crowfly that will be sent to street network service
-        # to compute the routing matrix
-        # access_points_map: a map of access_point.uri vs a list of tuple whose elements are stop_point.uri, length and traversal_time
+        # places_isochrone: a list of pt_objects selected from proximities_by_crowfly that will be sent to street
+        # network service to compute the routing matrix
+        # access_points_map: a map of access_point.uri vs a list of tuple whose elements are stop_point.uri, length and
+        # traversal_time
         # ex:
         # access_points_map["access_point:toto"] = [("stop_point:1", 42 , 41), ("stop_point:2", 43 , 44)]
-        # which means, via access point "access_point:toto", on can reach two stop points "stop_point:1" and "stop_point:2", by walking
-        # (42 meters, 41 sec) and (43 meters, 44sec) respectively
+        # which means, via access point "access_point:toto", on can reach two stop points "stop_point:1" and
+        # "stop_point:2", by walking (42 meters, 41 sec) and (43 meters, 44sec) respectively
         # it is a temporary storage that will be used later to update fallback_durations
         places_isochrone, access_points_map = self._build_places_isochrone(
             proximities_by_crowfly, all_free_access
@@ -335,14 +336,16 @@ class FallbackDurations:
         origins, destinations = self._determine_origins_and_destinations(center_isochrone, places_isochrone)
 
         # Launch the computation of fall back durations
-        # sn_routing_matrix: a list of response_pb2.RoutingElement, which is arranged in the same order of requested places
-        # every response_pb2.RoutingElement contains the duration and routing_status
+        # sn_routing_matrix: a list of response_pb2.RoutingElement, which is arranged in the same order of requested
+        # places
+        # Each response_pb2.RoutingElement contains the duration and routing_status
         sn_routing_matrix = self._get_street_network_routing_matrix(
             self._streetnetwork_service, origins, destinations
         )
 
         # In case where none of places in isochrone are reachable, we consider that something went awry in the
-        # computation, thus we fill the fallback_duration with manhattan distance for every requested place and return it
+        # computation, thus we fill the fallback_duration with manhattan distance for every requested place and
+        # return it
         if (
             not sn_routing_matrix
             or not len(sn_routing_matrix.rows)
