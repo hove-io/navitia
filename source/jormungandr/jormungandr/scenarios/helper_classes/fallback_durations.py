@@ -242,7 +242,7 @@ class FallbackDurations:
 
         return origins, destinations
 
-    def _update_fallback_durations_for_car(self, sn_routing_matrix, places_isochrone, fallback_durations):
+    def _update_fallback_durations_for_car_park(self, sn_routing_matrix, places_isochrone, fallback_durations):
         routing_response = (
             r for r in sn_routing_matrix.rows[0].routing_response if r.routing_status != response_pb2.unreached
         )
@@ -285,7 +285,6 @@ class FallbackDurations:
             # in this case, the pt_object can be either a stop point or an access point
             if is_stop_point(pt_object):
                 self._update_fb_durations(fallback_durations, pt_object, duration, r)
-
             elif is_access_point(pt_object):
                 self._update_fb_durations_from_access_point(
                     fallback_durations, pt_object, duration, r, access_points_map
@@ -295,16 +294,29 @@ class FallbackDurations:
         logger = logging.getLogger(__name__)
         logger.debug("requesting fallback durations from %s by %s", self._requested_place_obj.uri, self._mode)
 
-        # When max_duration_to_pt is 0, there is no need to compute the fallback to pt, except if place is a
-        # stop_point or a stop_area
         center_isochrone = self._requested_place_obj
+        # we collect all pt_objects (based on the requested mode, the object may be a car park or a stop point) whose
+        # beeline to the center_isochrone are smaller than the max duration to pt. aka: max_{mode}_duration_to_pt in
+        # "/journeys" parameters
+        # these pt_objects are potential candidates that will be sent to street network service for computing
+        # the routing matrix
         proximities_by_crowfly = self._proximities_by_crowfly_pool.wait_and_get(self._mode)
+
         all_free_access = self._get_all_free_access(proximities_by_crowfly)
+
+        # places_isochrone: a list of pt_objects selected from proximities_by_crowfly that will be sent to street network service
+        # to compute the routing matrix
+        # access_points_map: a map of access_point.uri vs a list of tuple whose elements are stop_point.uri, length and traversal_time
+        # ex:
+        # access_points_map["access_point:toto"] = [("stop_point:1", 42 , 41), ("stop_point:2", 43 , 44)]
+        # which means, via access point "access_point:toto", on can reach two stop points "stop_point:1" and "stop_point:2", by walking
+        # (42 meters, 41 sec) and (43 meters, 44sec) respectively
+        # it is a temporary storage that will be used later to update fallback_durations
         places_isochrone, access_points_map = self._build_places_isochrone(
             proximities_by_crowfly, all_free_access
         )
 
-        # the result to be returned, which is a map of stop_points.uri vs DurationElement
+        # the final result to be returned, which is a map of stop_points.uri vs DurationElement
         fallback_durations = defaultdict(lambda: DurationElement(float('inf'), None, None, 0, None))
 
         # Since we have already places that have free access, we add them into the fallback_durations
@@ -313,17 +325,9 @@ class FallbackDurations:
         # There are two cases that places_isochrone maybe empty:
         # 1. The duration of direct_path is very small that we cannot find any proximities by crowfly
         # 2. All proximities by crowfly are free access
-        if not places_isochrone:
+        # 3. max_duration_to_pt == 0, which means no fallback durations to be computed
+        if not places_isochrone or self._max_duration_to_pt == 0:
             return fallback_durations
-
-        if self._max_duration_to_pt == 0:
-            logger.debug("max_duration_to_pt equals to 0")
-
-            # When max_duration_to_pt is 0, we can get on the public transport ONLY if the place is a stop_point
-            if self._instance.georef.get_stop_points_from_uri(center_isochrone.uri, self._request_id):
-                return {center_isochrone.uri: DurationElement(0, response_pb2.reached, None, 0, None)}
-            else:
-                return fallback_durations
 
         # based on the fallback type, we choose the origins and destinations
         # if fallback type is beginning, then the street network service should compute a matrix of "one to many"
@@ -331,12 +335,14 @@ class FallbackDurations:
         origins, destinations = self._determine_origins_and_destinations(center_isochrone, places_isochrone)
 
         # Launch the computation of fall back durations
+        # sn_routing_matrix: a list of response_pb2.RoutingElement, which is arranged in the same order of requested places
+        # every response_pb2.RoutingElement contains the duration and routing_status
         sn_routing_matrix = self._get_street_network_routing_matrix(
             self._streetnetwork_service, origins, destinations
         )
 
-        # In case where none of places in isochrone are reachable, we consider that something goes awry in the
-        # computation we fill the fallback_duration with manhattan distance for every requested place and return it
+        # In case where none of places in isochrone are reachable, we consider that something went awry in the
+        # computation, thus we fill the fallback_duration with manhattan distance for every requested place and return it
         if (
             not sn_routing_matrix
             or not len(sn_routing_matrix.rows)
@@ -346,11 +352,12 @@ class FallbackDurations:
             self._fill_fallback_durations_with_manhattan(fallback_durations, places_isochrone)
             return fallback_durations
 
+        # sn_routing_matrix is not None
         if self._mode == FallbackModes.car.name:
-            # note that when requested mode is car, the place in the isochrone is a car park
-            self._update_fallback_durations_for_car(sn_routing_matrix, places_isochrone, fallback_durations)
+            # note that when requested mode is car, places in the isochrone are car parks
+            self._update_fallback_durations_for_car_park(sn_routing_matrix, places_isochrone, fallback_durations)
         else:
-            # otherwise, the place in the isochrone may be either stop_point or access_point
+            # otherwise, places in the isochrone may be either stop_points or access_points
             self._update_fallback_durations_for_stop_points_and_access_points(
                 sn_routing_matrix, places_isochrone, access_points_map, fallback_durations
             )
