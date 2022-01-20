@@ -694,8 +694,8 @@ void builder::add_access_point(const std::string& stop_point,
                                const bool is_exit,
                                const int length,
                                const int traversal_time,
-                               const double x,
-                               const double y) {
+                               const double lat,
+                               const double lon) {
     auto sp = data->pt_data->stop_points_map[stop_point];
     auto ap = navitia::type::AccessPoint();
     ap.name = access_point_name;
@@ -704,8 +704,8 @@ void builder::add_access_point(const std::string& stop_point,
     ap.is_exit = is_exit;
     ap.length = length;
     ap.traversal_time = traversal_time;
-    ap.coord.set_lat(x);
-    ap.coord.set_lon(y);
+    ap.coord.set_lat(lat);
+    ap.coord.set_lon(lon);
     sp->access_points.insert(ap);
 }
 

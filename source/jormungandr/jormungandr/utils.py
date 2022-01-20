@@ -63,6 +63,8 @@ def get_uri_pt_object(pt_object):
     if pt_object.embedded_type == type_pb2.ADDRESS:
         coords = pt_object.uri.split(';')
         return "coord:{}:{}".format(coords[0], coords[1])
+    if pt_object.embedded_type == type_pb2.ACCESS_POINT:
+        return "coord:{}:{}".format(pt_object.access_point.coord.lon, pt_object.access_point.coord.lat)
     return pt_object.uri
 
 
@@ -396,6 +398,7 @@ def get_pt_object_coord(pt_object):
         type_pb2.ADDRESS: "address",
         type_pb2.ADMINISTRATIVE_REGION: "administrative_region",
         type_pb2.POI: "poi",
+        type_pb2.ACCESS_POINT: "access_point",
     }
     attr = getattr(pt_object, map_coord.get(pt_object.embedded_type, ""), None)
     coord = getattr(attr, "coord", None)

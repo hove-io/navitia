@@ -477,6 +477,13 @@ class JourneyCommon(ResourceUri, ResourceUtc):
             hidden=True,
             help="active the asynchronous mode for the ridesharing services",
         )
+        parser_get.add_argument(
+            "_access_points",
+            type=BooleanType(),
+            default=False,
+            hidden=True,
+            help="use/disuse the entrance/exit in journeys computation",
+        )
 
     def parse_args(self, region=None, uri=None):
         args = self.parsers['get'].parse_args()

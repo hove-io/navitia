@@ -274,7 +274,7 @@ void Data::build_uri() {
 void Data::build_proximity_list() {
     this->pt_data->build_proximity_list();
     this->geo_ref->build_proximity_list();
-    this->geo_ref->project_stop_points(this->pt_data->stop_points);
+    this->geo_ref->project_stop_points_and_access_points(this->pt_data->stop_points);
 }
 
 void Data::build_administrative_regions() {

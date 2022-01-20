@@ -374,8 +374,8 @@ struct builder {
                           const bool is_exit = true,
                           const int length = 0,
                           const int traversal_time = 0,
-                          const double x = 0,
-                          const double y = 0);
+                          const double lat = 0,
+                          const double lon = 0);
 
     void add_ticket(const std::string& ticket_id,
                     const std::string& line,
