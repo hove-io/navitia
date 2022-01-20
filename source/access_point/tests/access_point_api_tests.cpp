@@ -35,9 +35,7 @@ www.navitia.io
 
 #include "ed/build_helper.h"
 #include "access_point/access_point_api.h"
-#include "ptreferential/ptreferential.h"
 #include "utils/logger.h"
-#include "type/pt_data.h"
 #include "tests/utils_test.h"
 
 #include <string>
@@ -47,10 +45,6 @@ www.navitia.io
 
 using namespace navitia;
 using boost::posix_time::time_period;
-using std::map;
-using std::multiset;
-using std::pair;
-using std::set;
 using std::string;
 using std::vector;
 

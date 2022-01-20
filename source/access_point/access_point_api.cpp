@@ -35,13 +35,6 @@ www.navitia.io
 
 #include <boost/range/algorithm.hpp>
 
-#include <algorithm>
-#include <map>
-#include <string>
-#include <tuple>
-#include <utility>
-#include <vector>
-
 namespace navitia {
 namespace access_point {
 
