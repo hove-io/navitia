@@ -268,7 +268,7 @@ def _extend_with_via_access_point(fallback_dp, pt_object, fallback_type, via_acc
         via.length = length
         via.name = via_access_point.name
         # Use label in stead of name???
-        via.instruction = "Then Enter {} via {}.".format(pt_object.stop_point.label, via_access_point.name)
+        via.instruction = u"Then Enter {} via {}.".format(pt_object.stop_point.label, via_access_point.name)
         via.via_uri = via_access_point.uri
 
     elif fallback_type == StreetNetworkPathType.ENDING_FALLBACK:
@@ -279,7 +279,7 @@ def _extend_with_via_access_point(fallback_dp, pt_object, fallback_type, via_acc
         via.length = length
         via.name = via_access_point.name
         # Use label in stead of name???
-        via.instruction = "Exit {} via {}.".format(pt_object.stop_point.label, via_access_point.name)
+        via.instruction = u"Exit {} via {}.".format(pt_object.stop_point.label, via_access_point.name)
         via.via_uri = via_access_point.uri
 
         # we cannot insert an element at the beginning of a list :(
@@ -321,9 +321,9 @@ def _update_fallback_sections(journey, fallback_dp, fallback_period_extremity, f
         and via_access_point.embedded_type == type_pb2.ACCESS_POINT
     ):
         if fallback_type == StreetNetworkPathType.BEGINNING_FALLBACK:
-            fallback_sections[-1].vias.append(via_access_point.access_point)
+            fallback_sections[-1].vias.add().CopyFrom(via_access_point.access_point)
         else:
-            fallback_sections[0].vias.append(via_access_point.access_point)
+            fallback_sections[0].vias.add().CopyFrom(via_access_point.access_point)
 
     journey.sections.extend(fallback_sections)
     journey.sections.sort(key=cmp_to_key(SectionSorter()))
