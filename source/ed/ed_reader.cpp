@@ -633,7 +633,7 @@ void EdReader::fill_access_point_field(const navitia::type::AccessPoint& access_
     auto new_access_point = navitia::type::AccessPoint(access_point);
 
     if (!const_it["pathway_mode"].is_null()) {
-        new_access_point.pathway_mode = const_it["pathway_mode"].as<unsigned int>();
+        new_access_point.pathway_mode = const_it["pathway_mode"].as<int>();
     }
     if (!const_it["is_bidirectional"].is_null()) {
         const bool is_bidirectional = const_it["is_bidirectional"].as<bool>();
@@ -651,19 +651,19 @@ void EdReader::fill_access_point_field(const navitia::type::AccessPoint& access_
         }
     }
     if (!const_it["length"].is_null()) {
-        new_access_point.length = const_it["length"].as<unsigned int>();
+        new_access_point.length = const_it["length"].as<int>();
     }
     if (!const_it["traversal_time"].is_null()) {
-        new_access_point.traversal_time = const_it["traversal_time"].as<unsigned int>();
+        new_access_point.traversal_time = const_it["traversal_time"].as<int>();
     }
     if (!const_it["stair_count"].is_null()) {
-        new_access_point.stair_count = const_it["stair_count"].as<unsigned int>();
+        new_access_point.stair_count = const_it["stair_count"].as<int>();
     }
     if (!const_it["max_slope"].is_null()) {
-        new_access_point.max_slope = const_it["max_slope"].as<unsigned int>();
+        new_access_point.max_slope = const_it["max_slope"].as<int>();
     }
     if (!const_it["min_width"].is_null()) {
-        new_access_point.min_width = const_it["min_width"].as<unsigned int>();
+        new_access_point.min_width = const_it["min_width"].as<int>();
     }
     if (!const_it["signposted_as"].is_null()) {
         const_it["signposted_as"].to(new_access_point.signposted_as);
