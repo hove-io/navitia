@@ -61,6 +61,8 @@ void access_points(PbCreator& pb_creator,
         const type::Indexes stop_point_indexes =
             ptref::make_query(type::Type_e::StopPoint, filter, forbidden_uris, data);
         const auto stop_points = data.get_data<type::StopPoint>(stop_point_indexes);
+
+        // make Acess Point unique in to the response
         for (auto& _sp : stop_points) {
             for (auto& ap : _sp->access_points) {
                 auto it = ap_list.find(ap.name);
