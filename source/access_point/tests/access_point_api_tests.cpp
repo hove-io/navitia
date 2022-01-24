@@ -43,6 +43,7 @@ www.navitia.io
 #include <map>
 #include <set>
 
+using namespace std;
 using namespace navitia;
 using boost::posix_time::time_period;
 using std::string;
