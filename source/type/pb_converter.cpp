@@ -627,6 +627,9 @@ void PbCreator::Filler::create_access_point(const nt::AccessPoint& access_point,
     if (!access_point.reversed_signposted_as.empty()) {
         ap->set_reversed_signposted_as(access_point.reversed_signposted_as);
     }
+    if (!access_point.stop_code.empty()) {
+        ap->set_stop_code(access_point.stop_code);
+    }
     if (access_point.parent_station != nullptr) {
         pbnavitia::StopArea* sa = ap->mutable_parent_station();
         fill_pb_object(access_point.parent_station, sa);
