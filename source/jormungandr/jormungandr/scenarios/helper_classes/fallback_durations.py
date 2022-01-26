@@ -243,11 +243,11 @@ class FallbackDurations:
         return origins, destinations
 
     def _update_fallback_durations_for_car_park(self, sn_routing_matrix, places_isochrone, fallback_durations):
-        routing_response = (
-            r for r in sn_routing_matrix.rows[0].routing_response if r.routing_status != response_pb2.unreached
-        )
+
         # the element in routing_response are ranged in the same order of element in places_isochrones
-        for pos, r in enumerate(routing_response):
+        for pos, r in enumerate(sn_routing_matrix.rows[0].routing_response):
+            if r.routing_status == response_pb2.unreached:
+                continue
             car_park = places_isochrone[pos]
             duration = self._get_duration(r, car_park)
             # if the mode is car, we need to find where to park the car :)
