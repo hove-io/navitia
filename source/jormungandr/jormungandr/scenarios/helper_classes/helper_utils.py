@@ -270,7 +270,7 @@ def _extend_with_via_access_point(fallback_dp, pt_object, fallback_type, via_acc
         dp_journey.sections[0].street_network.duration += traversal_time
         dp_journey.sections[0].street_network.length += length
 
-        via = dp_journey.sections[-1].street_network.path_items[-1]
+        via = dp_journey.sections[-1].street_network.path_items.add()
         via.duration = traversal_time
         via.length = length
         via.name = via_access_point.name
