@@ -269,17 +269,16 @@ class FallbackDurations:
     def _update_fallback_durations_for_stop_points_and_access_points(
         self, sn_routing_matrix, places_isochrone, access_points_map, fallback_durations
     ):
-        routing_response = (
-            r for r in sn_routing_matrix.rows[0].routing_response if r.routing_status != response_pb2.unreached
-        )
-
         def is_stop_point(pt_object):
             return isinstance(pt_object, type_pb2.PtObject) and pt_object.embedded_type == type_pb2.STOP_POINT
 
         def is_access_point(pt_object):
             return isinstance(pt_object, type_pb2.PtObject) and pt_object.embedded_type == type_pb2.ACCESS_POINT
 
-        for pos, r in enumerate(routing_response):
+        for pos, r in enumerate(sn_routing_matrix.rows[0].routing_response):
+            if r.routing_status == response_pb2.unreached:
+                continue
+
             duration = self._get_duration(r, places_isochrone[pos])
             pt_object = places_isochrone[pos]
             # in this case, the pt_object can be either a stop point or an access point
@@ -364,15 +363,6 @@ class FallbackDurations:
             self._update_fallback_durations_for_stop_points_and_access_points(
                 sn_routing_matrix, places_isochrone, access_points_map, fallback_durations
             )
-
-        # We update the fallback duration matrix if the requested origin/destination is also
-        # present in the fallback duration matrix, which means from stop_point_1 to itself, it takes 0 second
-        # Note that we consider, in this case, the via access_point is the stop_point itself.
-        # Ex:
-        #                stop_point1   stop_point2  stop_point3
-        # stop_point_1         0(s)       ...          ...
-        if center_isochrone.uri in fallback_durations:
-            fallback_durations[center_isochrone.uri] = DurationElement(0, response_pb2.reached, None, 0, None)
 
         logger.debug("finish fallback durations from %s by %s", self._requested_place_obj.uri, self._mode)
 
