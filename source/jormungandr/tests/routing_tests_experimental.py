@@ -458,6 +458,9 @@ class TestJourneysDistributed(
         assert path['via_uri'] == "access_point:B1"
         assert path['instruction'] == "Then Enter stop_point:stopB (Condom) via access_point:B1."
 
+        path_sum = sum(p['duration'] for p in pt_journey['sections'][0]['path'])
+        assert pt_journey['sections'][0]['duration'] == pytest.approx(path_sum, 1.0)
+
         access_point = pt_journey['sections'][2]['vias'][0]['access_point']
         assert access_point["id"] == "access_point:A2"
         assert not access_point["is_entrance"]
@@ -470,6 +473,9 @@ class TestJourneysDistributed(
         assert path['length'] == 3
         assert path['via_uri'] == "access_point:A2"
         assert path['instruction'] == "Exit stop_point:stopA (Condom) via access_point:A2."
+
+        path_sum = sum(p['duration'] for p in pt_journey['sections'][2]['path'])
+        assert pt_journey['sections'][2]['duration'] == pytest.approx(path_sum, 1.0)
 
 
 @config({"scenario": "distributed"})
