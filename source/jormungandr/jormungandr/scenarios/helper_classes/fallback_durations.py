@@ -242,13 +242,23 @@ class FallbackDurations:
 
         return origins, destinations
 
-    def _update_fallback_durations_for_car_park(self, sn_routing_matrix, places_isochrone, fallback_durations):
+    @staticmethod
+    def _get_reached_routing_response(sn_routing_matrix):
+        """
+        Get a list of (pos ,r) only if the place is not unreached...
+        pos is the position of the response in the isochrone array
+        """
+        return (
+            (idx, r)
+            for idx, r in enumerate(sn_routing_matrix.rows[0].routing_response)
+            if r.routing_status != response_pb2.unreached
+        )
 
+    def _update_fallback_durations_for_car_park(self, sn_routing_matrix, places_isochrone, fallback_durations):
+        routing_response = self._get_reached_routing_response(sn_routing_matrix)
         # the element in routing_response are ranged in the same order of element in places_isochrones
-        for pos, r in enumerate(sn_routing_matrix.rows[0].routing_response):
-            if r.routing_status == response_pb2.unreached:
-                continue
-            car_park = places_isochrone[pos]
+        for idx, r in routing_response:
+            car_park = places_isochrone[idx]
             duration = self._get_duration(r, car_park)
             # if the mode is car, we need to find where to park the car :)
             for sp_nearby in car_park.stop_points_nearby:
@@ -275,12 +285,10 @@ class FallbackDurations:
         def is_access_point(pt_object):
             return isinstance(pt_object, type_pb2.PtObject) and pt_object.embedded_type == type_pb2.ACCESS_POINT
 
-        for pos, r in enumerate(sn_routing_matrix.rows[0].routing_response):
-            if r.routing_status == response_pb2.unreached:
-                continue
-
-            duration = self._get_duration(r, places_isochrone[pos])
-            pt_object = places_isochrone[pos]
+        routing_response = self._get_reached_routing_response(sn_routing_matrix)
+        for idx, r in routing_response:
+            pt_object = places_isochrone[idx]
+            duration = self._get_duration(r, pt_object)
             # in this case, the pt_object can be either a stop point or an access point
             if is_stop_point(pt_object):
                 self._update_fb_durations(fallback_durations, pt_object, duration, r)
