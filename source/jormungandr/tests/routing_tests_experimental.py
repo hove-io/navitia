@@ -1021,6 +1021,30 @@ class TestTaxiDistributed(NewDefaultScenarioAbstractTestFixture):
         # the pt journey is gone....
         assert 'non_pt_taxi' in journeys[0]['tags']
 
+    def test_additional_time(self):
+        # we begin with a normal request to get the fallback duration in taxi
+        first_additional_time = 42
+        last_additional_time = 20
+        query = (
+            sub_query
+            + "&datetime=20120614T075000"
+            + "&first_section_mode[]=taxi"
+            + "&last_section_mode[]=taxi"
+            + "&taxi_speed=0.05"
+            + "&additional_time_after_first_section_taxi={}".format(first_additional_time)
+            + "&additional_time_before_last_section_taxi={}".format(last_additional_time)
+        )
+
+        response = self.query_region(query)
+        self.is_valid_journey_response(response, query)
+        pt_with_taxi = next((j for j in response['journeys'] if 'non_pt' not in j['tags']), None)
+        assert len(pt_with_taxi['sections']) == 5
+        assert pt_with_taxi['sections'][1]['type'] == 'waiting'
+        assert pt_with_taxi['sections'][1]['duration'] == first_additional_time
+
+        assert pt_with_taxi['sections'][3]['type'] == 'waiting'
+        assert pt_with_taxi['sections'][3]['duration'] == last_additional_time
+
 
 @dataset({'main_routing_test': {"scenario": "distributed"}, 'min_nb_journeys_test': {"scenario": "distributed"}})
 class TestKrakenDistributedWithDatabase(NewDefaultScenarioAbstractTestFixture):
