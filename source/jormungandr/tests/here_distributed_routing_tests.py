@@ -298,11 +298,13 @@ class TestHere(NewDefaultScenarioAbstractTestFixture):
 
         car_direct = journeys[0]
 
+        assert 'car_no_park' in car_direct.get('tags')
+
         assert car_direct.get('departure_date_time') == '20120614T070000'
         assert car_direct.get('arrival_date_time') == '20120614T070500'
         sections = car_direct.get('sections')
         assert len(sections) == 1
-        assert sections[0].get('mode') == 'car'
+        assert sections[0].get('mode') == 'carnopark'
         assert sections[0].get('departure_date_time') == '20120614T070000'
         assert sections[0].get('arrival_date_time') == '20120614T070500'
         assert sections[0].get('duration') == 300
@@ -333,7 +335,7 @@ class TestHere(NewDefaultScenarioAbstractTestFixture):
 
         sections = car_fallback.get('sections')
         assert len(sections) == 3
-        assert sections[0].get('mode') == 'car'
+        assert sections[0].get('mode') == 'carnopark'
         assert sections[0].get('type') == 'street_network'
         assert sections[0].get('departure_date_time') == '20120614T080045'
         assert sections[0].get('arrival_date_time') == '20120614T080100'
@@ -358,7 +360,7 @@ class TestHere(NewDefaultScenarioAbstractTestFixture):
         assert sections[2].get('arrival_date_time') == u'20120614T080202'
         assert sections[2].get('duration') == 60
         assert sections[2].get('type') == 'street_network'
-        assert sections[2].get('mode') == 'car'
+        assert sections[2].get('mode') == 'carnopark'
         # check path
         path = sections[2].get('path')
         assert path[0].get('id') == 1
