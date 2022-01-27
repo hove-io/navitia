@@ -260,10 +260,17 @@ def _extend_with_via_access_point(fallback_dp, pt_object, fallback_type, via_acc
 
     dp_journey = fallback_dp.journeys[0]
     dp_journey.duration += traversal_time
+    dp_journey.durations.total += traversal_time
+    dp_journey.durations.walking += traversal_time
     dp_journey.distances.walking += length
 
     if fallback_type == StreetNetworkPathType.BEGINNING_FALLBACK:
-        via = dp_journey.sections[-1].street_network.path_items[-1]
+        dp_journey.sections[0].begin_date_time -= traversal_time
+        dp_journey.sections[0].duration += traversal_time
+        dp_journey.sections[0].street_network.duration += traversal_time
+        dp_journey.sections[0].street_network.length += length
+
+        via = dp_journey.sections[-1].street_network.path_items.add()
         via.duration = traversal_time
         via.length = length
         via.name = via_access_point.name
@@ -272,6 +279,11 @@ def _extend_with_via_access_point(fallback_dp, pt_object, fallback_type, via_acc
         via.via_uri = via_access_point.uri
 
     elif fallback_type == StreetNetworkPathType.ENDING_FALLBACK:
+        dp_journey.sections[-1].end_date_time += traversal_time
+        dp_journey.sections[-1].duration += traversal_time
+        dp_journey.sections[-1].street_network.duration += traversal_time
+        dp_journey.sections[-1].street_network.length += length
+
         path_items = dp_journey.sections[0].street_network.path_items
 
         via = dp_journey.sections[0].street_network.path_items.add()
