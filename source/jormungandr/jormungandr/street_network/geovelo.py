@@ -328,11 +328,11 @@ class Geovelo(AbstractStreetNetworkService):
                 section.street_network.coordinates.add(lon=sh[0], lat=sh[1])
 
             elevations = geovelo_section.get('details', {}).get('elevations', [])
-            if elevations:
-                for geovelo_elevation in itertools.islice(elevations, 1, sys.maxsize):
-                    elevation = section.street_network.elevations.add()
-                    elevation.distance_from_start = geovelo_elevation[0]
-                    elevation.elevation = geovelo_elevation[1]
+            for geovelo_elevation in itertools.islice(elevations, 1, sys.maxsize):
+                elevation = section.street_network.elevations.add()
+                elevation.distance_from_start = geovelo_elevation[0]
+                elevation.elevation = geovelo_elevation[1]
+                elevation.geojson_index = geovelo_elevation[2]
 
         return resp
 
