@@ -487,13 +487,11 @@ class JourneyCommon(ResourceUri, ResourceUtc):
         parser_get.add_argument(
             "additional_time_after_first_section_taxi",
             type=int,
-            hidden=True,
             help="the additional time added to the taxi section, right after riding the taxi but before hopping on the public transit",
         )
         parser_get.add_argument(
             "additional_time_before_last_section_taxi",
             type=int,
-            hidden=True,
             help="the additional time added to the taxi section, right before riding the taxi but after hopping off the public transit",
         )
 
