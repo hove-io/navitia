@@ -5,6 +5,8 @@ import os
 import json
 from flask_restful.inputs import boolean
 
+DEFAULT_SQLALCHEMY_ENGINE_OPTIONS = {'connect_args': {"options": "-c statement_timeout=1000"}}  # 1000ms
+
 # path of the configuration file for each instances
 INSTANCES_DIR = os.getenv('JORMUNGANDR_INSTANCES_DIR', '/etc/jormungandr.d')
 
@@ -211,6 +213,11 @@ if boolean(os.getenv('JORMUNGANDR_DISABLE_SQLPOOLING', False)):
     from sqlalchemy.pool import NullPool
 
     SQLALCHEMY_POOLCLASS = NullPool
+
+
+SQLALCHEMY_ENGINE_OPTIONS = (
+    json.loads(os.getenv('JORMUNGANDR_SQLALCHEMY_ENGINE_OPTIONS', '{}')) or DEFAULT_SQLALCHEMY_ENGINE_OPTIONS
+)
 
 MAX_JOURNEYS_CALLS = int(os.getenv('JORMUNGANDR_MAX_JOURNEYS_CALLS', 20))
 
