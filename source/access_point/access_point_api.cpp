@@ -63,8 +63,8 @@ void access_points(PbCreator& pb_creator,
         const auto stop_points = data.get_data<type::StopPoint>(stop_point_indexes);
 
         // make Acess Point unique in to the response
-        for (auto& _sp : stop_points) {
-            for (auto& ap : _sp->access_points) {
+        for (const auto& _sp : stop_points) {
+            for (const auto& ap : _sp->access_points) {
                 auto it = ap_list.find(ap.name);
                 if (it == ap_list.end()) {
                     ap_list[ap.name] = ap;
