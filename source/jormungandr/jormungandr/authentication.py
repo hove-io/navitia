@@ -116,7 +116,7 @@ def get_token():
 
 def can_read_user():
     try:
-        User.can_read()
+        User.query.first()
     except Exception as e:
         logging.getLogger(__name__).error('No access to table User (error: {})'.format(e))
         g.can_connect_to_database = False
@@ -135,10 +135,8 @@ def has_access(region, api, abort, user):
     Warning: Please this function is cached therefore it should not be
     dependent of the request context, so keep it as a pure function.
     """
-    if current_app.config.get('PUBLIC', False):
-        # if jormungandr is on public mode we skip the authentification process
-        return True
-    if not can_connect_to_database():
+    # if jormungandr is on public mode or database is not accessible, we skip the authentication process
+    if current_app.config.get('PUBLIC', False) or (not can_connect_to_database()):
         return True
 
     if not user:
@@ -147,8 +145,7 @@ def has_access(region, api, abort, user):
         # Can connect to database but at least one table/attribute is not accessible due to transaction problem
         if can_read_user():
             abort_request(user=user)
-
-        if not can_connect_to_database():
+        else:
             return True
     try:
         model_instance = Instance.get_by_name(region)
@@ -233,8 +230,7 @@ def get_all_available_instances(user):
         # Can connect to database but at least one table/attribute is not accessible due to transaction problem
         if can_read_user():
             abort_request(user=user)
-
-        if not can_connect_to_database():
+        else:
             return None
 
     if not user.have_access_to_free_instances:

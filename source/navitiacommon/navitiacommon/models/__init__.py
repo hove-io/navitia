@@ -201,10 +201,6 @@ class User(db.Model, TimestampMixin):  # type: ignore
 
         return False
 
-    @classmethod
-    def can_read(cls):
-        return cls.query.first()
-
     def has_shape(self):
         return self.shape is not None and self.shape != 'null'
 
