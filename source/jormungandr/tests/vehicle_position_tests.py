@@ -68,9 +68,31 @@ class MockVehiclePosition(VehiclePosition):
         if vehicle_journey_code == 'vj:l:11':
             json = {"vehicle_positions": [{"latitude": 46.0, "longitude": -71.0, "bearing": 214, "speed": 11}]}
         if vehicle_journey_code == 'vj:l:12':
-            json = {"vehicle_positions": [{"latitude": 45.0, "longitude": -72.0, "bearing": 215, "speed": 12}]}
+            json = {
+                "vehicle_positions": [
+                    {
+                        "latitude": 45.0,
+                        "longitude": -72.0,
+                        "bearing": 215,
+                        "speed": 12,
+                        "occupancy": "EMPTY",
+                        "feed_created_at": "2022-01-28T11:51:52Z",
+                    }
+                ]
+            }
         if vehicle_journey_code == 'vj:l:13':
-            json = {"vehicle_positions": [{"latitude": 43.0, "longitude": -69.0, "bearing": 218, "speed": 18}]}
+            json = {
+                "vehicle_positions": [
+                    {
+                        "latitude": 43.0,
+                        "longitude": -69.0,
+                        "bearing": 218,
+                        "speed": 18,
+                        "occupancy": "MANY_SEATS_AVAILABLE",
+                        "feed_created_at": "2022-01-28T02:38:27Z",
+                    }
+                ]
+            }
         resp.json = MagicMock(return_value=json)
         return resp
 
@@ -92,15 +114,21 @@ class TestVehiclePosition(AbstractTestFixture):
         assert vehicle_journey_positions[0]["speed"] == 11
         assert vehicle_journey_positions[0]["coord"]["lat"] == "46"
         assert vehicle_journey_positions[0]["coord"]["lon"] == "-71"
+        assert "occupancy" not in vehicle_journey_positions[0]
+        assert "feed_created_at" not in vehicle_journey_positions[0]
 
         assert vehicle_journey_positions[1]["vehicle_journey"]["id"] == "vehicle_journey:L:12"
         assert vehicle_journey_positions[1]["bearing"] == 215
         assert vehicle_journey_positions[1]["speed"] == 12
         assert vehicle_journey_positions[1]["coord"]["lat"] == "45"
         assert vehicle_journey_positions[1]["coord"]["lon"] == "-72"
+        assert vehicle_journey_positions[1]["occupancy"] == "EMPTY"
+        assert vehicle_journey_positions[1]["feed_created_at"] == "20220128T115152"
 
         assert vehicle_journey_positions[2]["vehicle_journey"]["id"] == "vehicle_journey:L:13"
         assert vehicle_journey_positions[2]["bearing"] == 218
         assert vehicle_journey_positions[2]["speed"] == 18
         assert vehicle_journey_positions[2]["coord"]["lat"] == "43"
         assert vehicle_journey_positions[2]["coord"]["lon"] == "-69"
+        assert vehicle_journey_positions[2]["occupancy"] == "MANY_SEATS_AVAILABLE"
+        assert vehicle_journey_positions[2]["feed_created_at"] == "20220128T023827"

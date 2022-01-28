@@ -87,6 +87,12 @@ class VehiclePosition(AbstractExternalService):
             vehicle_journey_position.bearing = first_vehicle_position.get("bearing")
             vehicle_journey_position.speed = first_vehicle_position.get("speed")
             vehicle_journey_position.data_freshness = type_pb2.REALTIME
+            occupancy = first_vehicle_position.get("occupancy", None)
+            if occupancy:
+                vehicle_journey_position.occupancy = occupancy
+            feed_created_at = first_vehicle_position.get("feed_created_at", None)
+            if feed_created_at:
+                vehicle_journey_position.feed_created_at = utils.make_timestamp_from_str(feed_created_at)
 
     def update_response(self, instance, vehicle_positions, **kwargs):
         futures = []
@@ -99,7 +105,7 @@ class VehiclePosition(AbstractExternalService):
         def worker(vehicle_journey_position, args):
             # Use the copied request context in greenlet
             with utils.copy_context_in_greenlet_stack(reqctx):
-                return (vehicle_journey_position, self.get_response(args))
+                return vehicle_journey_position, self.get_response(args)
 
         for vehicle_position in vehicle_positions:
             for vehicle_journey_position in vehicle_position.vehicle_journey_positions:
