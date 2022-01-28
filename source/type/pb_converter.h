@@ -318,6 +318,7 @@ struct PbCreator {
     pbnavitia::RoutePoint* add_route_points();
     pbnavitia::EquipmentReport* add_equipment_reports();
     pbnavitia::VehiclePosition* add_vehicle_positions();
+    pbnavitia::AccessPoint* add_access_points();
 
     ::google::protobuf::RepeatedPtrField<pbnavitia::PtObject>* get_mutable_places();
     bool has_error();
@@ -527,8 +528,10 @@ private:
         void fill_pb_object(const ng::Address*, pbnavitia::PtObject*);
         void fill_pb_object(const ng::Address*, pbnavitia::Address*);
         void fill_pb_object(const nt::Comment*, pbnavitia::Note*);
+        void fill_pb_object(const nt::AccessPoint&, pbnavitia::AccessPoint*);
 
-        void fill_access_points(const std::set<nt::AccessPoint*>& access_points, pbnavitia::StopPoint* stop_point);
+        void create_access_point(const nt::AccessPoint& access_point, pbnavitia::AccessPoint* ap);
+        void fill_access_points(const std::set<nt::AccessPoint>& access_points, pbnavitia::StopPoint* stop_point);
 
         // Used for place
         template <typename T>

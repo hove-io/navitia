@@ -72,6 +72,7 @@ class CarWithPark(AbstractStreetNetworkService):
             filter,
             0,
             request_id,
+            2,
             get_poi_params(request['forbidden_uris[]']),
             get_poi_params(request['allowed_id[]']),
             **speed_switcher

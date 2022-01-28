@@ -81,6 +81,7 @@ add_subdirectory(cities)
 add_subdirectory(tools)
 add_subdirectory(equipment)
 add_subdirectory(position)
+add_subdirectory(access_point)
 
 # Add tests
 if(NOT SKIP_TESTS)

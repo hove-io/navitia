@@ -36,6 +36,7 @@ from jormungandr.interfaces.v1.serializer.pt import (
     VJDisplayInformationSerializer,
     StopDateTimeSerializer,
     StringListField,
+    AccessPointSerializer,
 )
 from jormungandr.interfaces.v1.serializer.time import DateTimeField
 from jormungandr.interfaces.v1.serializer.fields import (
@@ -179,6 +180,7 @@ class PathSerializer(PbNestedSerializer):
     direction = jsonschema.Field(schema_type=int, display_none=True)
     instruction = jsonschema.MethodField(schema_type=str, display_none=False)
     instruction_start_coordinate = jsonschema.MethodField(schema_type=lambda: CoordSerializer())
+    via_uri = jsonschema.MethodField(schema_type=str, display_none=False)
 
     def get_id(self, obj):
         if obj.HasField(str('id')):
@@ -198,11 +200,14 @@ class PathSerializer(PbNestedSerializer):
         else:
             return None
 
+    def get_via_uri(self, obj):
+        return obj.via_uri if obj.HasField(str('via_uri')) else None
+
 
 class ElevationSerializer(PbNestedSerializer):
     distance_from_start = RoundedField(display_none=True)
     elevation = RoundedField(display_none=True)
-    geojson_index = RoundedField(display_none=True)
+    geojson_offset = RoundedField(attr="geojson_index", display_none=False)
 
 
 class SectionTypeEnum(EnumField):
@@ -346,6 +351,18 @@ class SectionSerializer(PbNestedSerializer):
 
     cycle_lane_length = PbIntField(display_none=False)
     elevations = ElevationSerializer(attr="street_network.elevations", many=True, display_none=False)
+    vias = jsonschema.MethodField(schema_type=PlaceSerializer(), many=True, display_none=False)
+
+    def get_vias(self, obj):
+        if not hasattr(obj, 'vias'):
+            return None
+        from navitiacommon import type_pb2
+
+        pt_obejcts = [
+            type_pb2.PtObject(name=ap.name, uri=ap.uri, embedded_type=type_pb2.ACCESS_POINT, access_point=ap)
+            for ap in obj.vias
+        ]
+        return PlaceSerializer(pt_obejcts, display_none=False, many=True).data
 
 
 class JourneySerializer(PbNestedSerializer):

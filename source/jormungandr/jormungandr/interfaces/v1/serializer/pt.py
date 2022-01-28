@@ -403,45 +403,6 @@ class EquipmentDetailsSerializer(PbNestedSerializer):
     current_availability = CurrentAvailabilitySerializer(display_none=False, required=False)
 
 
-class StopPointSerializer(PbGenericSerializer):
-    comments = CommentSerializer(many=True, display_none=False)
-    comment = FirstCommentField(attr='comments', display_none=False)
-    codes = CodeSerializer(many=True, display_none=False)
-    label = jsonschema.Field(schema_type=str)
-    coord = CoordSerializer(required=False)
-    links = DisruptionLinkSerializer(attr='impact_uris', display_none=True)
-    commercial_modes = CommercialModeSerializer(many=True, display_none=False)
-    physical_modes = PhysicalModeSerializer(many=True, display_none=False)
-    administrative_regions = AdminSerializer(many=True, display_none=False)
-    stop_area = jsonschema.MethodField(schema_type=lambda: StopAreaSerializer(), display_none=False)
-    equipments = Equipments(attr='has_equipments', display_none=True)
-    address = AddressSerializer(display_none=False)
-    fare_zone = jsonschema.MethodField(schema_type=lambda: FareZoneSerializer(), display_none=False)
-    equipment_details = EquipmentDetailsSerializer(many=True)
-    lines = jsonschema.MethodField(schema_type=lambda: LineSerializer(many=True), display_none=False)
-    access_points = jsonschema.MethodField(
-        schema_type=lambda: AccessPointSerializer(many=True), display_none=False
-    )
-
-    def get_fare_zone(self, obj):
-        if obj.HasField(str('fare_zone')):
-            return FareZoneSerializer(obj.fare_zone, display_none=False).data
-        else:
-            return None
-
-    def get_stop_area(self, obj):
-        if obj.HasField(str('stop_area')):
-            return StopAreaSerializer(obj.stop_area, display_none=False).data
-        else:
-            return None
-
-    def get_lines(self, obj):
-        return LineSerializer(obj.lines, many=True, display_none=False).data
-
-    def get_access_points(self, obj):
-        return AccessPointSerializer(obj.access_points, many=True, display_none=False).data
-
-
 class AccessPointSerializer(PbGenericSerializer):
     coord = CoordSerializer(required=False)
     is_entrance = jsonschema.MethodField(schema_type=bool, display_none=False)
@@ -454,6 +415,7 @@ class AccessPointSerializer(PbGenericSerializer):
     min_width = jsonschema.MethodField(schema_type=int, display_none=False)
     signposted_as = jsonschema.MethodField(schema_type=str, display_none=False)
     reversed_signposted_as = jsonschema.MethodField(schema_type=str, display_none=False)
+    stop_code = jsonschema.MethodField(schema_type=str, display_none=False)
     parent_station = jsonschema.MethodField(schema_type=lambda: StopAreaSerializer(), display_none=False)
 
     def get_is_entrance(self, obj):
@@ -486,11 +448,48 @@ class AccessPointSerializer(PbGenericSerializer):
     def get_reversed_signposted_as(self, obj):
         return get_proto_attr_or_default(obj, 'reversed_signposted_as')
 
+    def get_stop_code(self, obj):
+        return get_proto_attr_or_default(obj, 'stop_code')
+
     def get_parent_station(self, obj):
         if obj.HasField(str('parent_station')):
             return StopAreaSerializer(obj.parent_station, display_none=False).data
         else:
             return None
+
+
+class StopPointSerializer(PbGenericSerializer):
+    comments = CommentSerializer(many=True, display_none=False)
+    comment = FirstCommentField(attr='comments', display_none=False)
+    codes = CodeSerializer(many=True, display_none=False)
+    label = jsonschema.Field(schema_type=str)
+    coord = CoordSerializer(required=False)
+    links = DisruptionLinkSerializer(attr='impact_uris', display_none=True)
+    commercial_modes = CommercialModeSerializer(many=True, display_none=False)
+    physical_modes = PhysicalModeSerializer(many=True, display_none=False)
+    administrative_regions = AdminSerializer(many=True, display_none=False)
+    stop_area = jsonschema.MethodField(schema_type=lambda: StopAreaSerializer(), display_none=False)
+    equipments = Equipments(attr='has_equipments', display_none=True)
+    address = AddressSerializer(display_none=False)
+    fare_zone = jsonschema.MethodField(schema_type=lambda: FareZoneSerializer(), display_none=False)
+    equipment_details = EquipmentDetailsSerializer(many=True)
+    lines = jsonschema.MethodField(schema_type=lambda: LineSerializer(many=True), display_none=False)
+    access_points = AccessPointSerializer(many=True, display_none=False)
+
+    def get_fare_zone(self, obj):
+        if obj.HasField(str('fare_zone')):
+            return FareZoneSerializer(obj.fare_zone, display_none=False).data
+        else:
+            return None
+
+    def get_stop_area(self, obj):
+        if obj.HasField(str('stop_area')):
+            return StopAreaSerializer(obj.stop_area, display_none=False).data
+        else:
+            return None
+
+    def get_lines(self, obj):
+        return LineSerializer(obj.lines, many=True, display_none=False).data
 
 
 class StopAreaSerializer(PbGenericSerializer):
@@ -531,6 +530,8 @@ class PlaceSerializer(PbGenericSerializer):
     embedded_type = EnumField(attr='embedded_type', pb_type=NavitiaType, display_none=True)
     address = AddressSerializer(display_none=False)
     poi = PoiSerializer(display_none=False)
+    access_point = AccessPointSerializer(display_none=False)
+
     distance = base.PbStrField(
         required=False, display_none=False, description='Distance to the object in meters'
     )

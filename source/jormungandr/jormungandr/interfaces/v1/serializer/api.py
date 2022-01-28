@@ -68,7 +68,7 @@ from jormungandr.utils import (
     NOT_A_DATE_TIME,
     navitia_utcfromtimestamp,
 )
-from jormungandr.interfaces.v1.serializer.pt import AddressSerializer
+from jormungandr.interfaces.v1.serializer.pt import AddressSerializer, AccessPointSerializer
 from jormungandr.interfaces.v1.serializer import jsonschema
 from jormungandr.interfaces.v1.serializer.status import CoverageErrorSerializer
 
@@ -375,6 +375,11 @@ class LineReportsSerializer(PTReferentialSerializer):
 
 class EquipmentReportsSerializer(PTReferentialSerializer):
     equipment_reports = report.EquipmentReportSerializer(many=True, display_none=True)
+    warnings = base.BetaEndpointsSerializer()
+
+
+class AccessPointsSerializer(PTReferentialSerializer):
+    access_points = AccessPointSerializer(many=True, display_none=True)
     warnings = base.BetaEndpointsSerializer()
 
 

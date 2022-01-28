@@ -104,7 +104,7 @@ const ProjectionData build_data(GraphBuilder& b, type::Data& data) {
     sp->idx = 0;
     data.pt_data->stop_points.push_back(sp);
     b.init();
-    b.geo_ref.project_stop_points(data.pt_data->stop_points);
+    b.geo_ref.project_stop_points_and_access_points(data.pt_data->stop_points);
 
     const GeoRef::ProjectionByMode& projections = b.geo_ref.projected_stop_points[sp->idx];
     const ProjectionData proj = projections[type::Mode_e::Walking];

@@ -154,6 +154,21 @@ class Scenario(object):
         resp = instance.send_and_receive(req)
         return resp
 
+    def access_points(self, request, instance):
+        req = request_pb2.Request()
+        req.requested_api = type_pb2.access_points
+        req.access_points.depth = request['depth']
+        req.access_points.filter = request['filter']
+        req.access_points.count = request['count']
+        req.access_points.start_page = request['start_page']
+
+        if request["forbidden_uris[]"]:
+            for forbidden_uri in request["forbidden_uris[]"]:
+                req.access_points.forbidden_uris.append(forbidden_uri)
+
+        resp = instance.send_and_receive(req)
+        return resp
+
     def vehicle_positions(self, request, instance):
         req = request_pb2.Request()
         req.requested_api = type_pb2.vehicle_positions

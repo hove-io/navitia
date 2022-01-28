@@ -844,7 +844,7 @@ BOOST_AUTO_TEST_CASE(compute_nearest) {
     std::vector<StopPoint*> stop_points;
     stop_points.push_back(sp1);
     stop_points.push_back(sp2);
-    b.geo_ref.project_stop_points(stop_points);
+    b.geo_ref.project_stop_points_and_access_points(stop_points);
 
     GeographicalCoord o(0, 0);
 
@@ -1228,7 +1228,7 @@ BOOST_AUTO_TEST_CASE(two_scc) {
     std::vector<StopPoint*> stop_points;
     stop_points.push_back(sp1);
     stop_points.push_back(sp2);
-    b.geo_ref.project_stop_points(stop_points);
+    b.geo_ref.project_stop_points_and_access_points(stop_points);
 
     StreetNetwork w(b.geo_ref);
 
@@ -1496,7 +1496,7 @@ BOOST_AUTO_TEST_CASE(find_nearest_on_same_edge) {
     stop_points.push_back(sp1);
     stop_points.push_back(sp2);
     stop_points.push_back(sp3);
-    b.geo_ref.project_stop_points(stop_points);
+    b.geo_ref.project_stop_points_and_access_points(stop_points);
 
     StreetNetwork w(b.geo_ref);
     EntryPoint starting_point;

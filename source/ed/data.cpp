@@ -77,6 +77,7 @@ void Data::normalize_uri() {
     ::ed::normalize_uri(vehicle_journeys);
     ::ed::normalize_uri(validity_patterns);
     ::ed::normalize_uri(calendars);
+    ::ed::normalize_uri(access_points);
 }
 
 void Data::build_block_id() {

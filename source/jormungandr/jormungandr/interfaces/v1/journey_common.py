@@ -477,6 +477,23 @@ class JourneyCommon(ResourceUri, ResourceUtc):
             hidden=True,
             help="active the asynchronous mode for the ridesharing services",
         )
+        parser_get.add_argument(
+            "_access_points",
+            type=BooleanType(),
+            default=False,
+            hidden=True,
+            help="use/disuse the entrance/exit in journeys computation",
+        )
+        parser_get.add_argument(
+            "additional_time_after_first_section_taxi",
+            type=int,
+            help="the additional time added to the taxi section, right after riding the taxi but before hopping on the public transit",
+        )
+        parser_get.add_argument(
+            "additional_time_before_last_section_taxi",
+            type=int,
+            help="the additional time added to the taxi section, right before riding the taxi but after hopping off the public transit",
+        )
 
     def parse_args(self, region=None, uri=None):
         args = self.parsers['get'].parse_args()

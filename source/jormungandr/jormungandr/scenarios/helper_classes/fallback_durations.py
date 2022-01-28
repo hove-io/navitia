@@ -35,15 +35,25 @@ from collections import namedtuple, defaultdict
 from math import sqrt
 from .helper_utils import get_max_fallback_duration
 from jormungandr.street_network.street_network import StreetNetworkPathType
-from jormungandr.street_network.utils import pick_up_park_ride_car_park
 from jormungandr import new_relic
 from jormungandr.fallback_modes import FallbackModes
 import logging
 from .helper_utils import timed_logger
 import six
+from navitiacommon import type_pb2
+
+# The basic element stored in fallback_durations.
+# in DurationElement. can be found:
+#  - duration(int): time needed to get to the underlying stop point
+#  - status(response_pb2.RoutingStatus): is the stop point reached? unreached?
+#  - car_park(PtObject): the stop point reached via a car park
+#  - car_park_crowfly_duration(int): how long it would take to get to the stop point from the car park
+#  - via_access_point(PtObject):  the stop point reached via an access point
 
 # use dataclass when python3.7 is available
-DurationElement = namedtuple('DurationElement', ['duration', 'status', 'car_park', 'car_park_crowfly_duration'])
+DurationElement = namedtuple(
+    'DurationElement', ['duration', 'status', 'car_park', 'car_park_crowfly_duration', 'via_access_point']
+)
 
 
 class FallbackDurations:
@@ -129,58 +139,100 @@ class FallbackDurations:
                 self._logger.exception("Exception':{}".format(str(e)))
                 return None
 
-    def _do_request(self):
-        logger = logging.getLogger(__name__)
-        logger.debug("requesting fallback durations from %s by %s", self._requested_place_obj.uri, self._mode)
+    def _retrieve_access_points(self, stop_point, access_points_map, places_isochrone):
+        if self._direct_path_type == StreetNetworkPathType.BEGINNING_FALLBACK:
+            access_points = (ap for ap in stop_point.access_points if ap.is_entrance)
+        else:
+            access_points = (ap for ap in stop_point.access_points if ap.is_exit)
 
-        # When max_duration_to_pt is 0, there is no need to compute the fallback to pt, except if place is a
-        # stop_point or a stop_area
-        center_isochrone = self._requested_place_obj
-        proximities_by_crowfly = self._proximities_by_crowfly_pool.wait_and_get(self._mode)
+        for ap in access_points:
+            if ap.uri not in access_points_map:
+                # every object in place_isochrone has a type of PtObject. We convert the AccessPoint into PtObject
+                places_isochrone.append(
+                    type_pb2.PtObject(
+                        name=ap.name, uri=ap.uri, embedded_type=type_pb2.ACCESS_POINT, access_point=ap
+                    )
+                )
+            access_points_map[ap.uri].append((stop_point.uri, ap.length, ap.traversal_time))
 
-        if self._mode == FallbackModes.car.name:
-            # pick up only parkings with park_ride = yes
-            proximities_by_crowfly = pick_up_park_ride_car_park(proximities_by_crowfly)
+    def _update_fb_durations(self, fb_durations, stop_point, duration, resp):
+        if duration < self._max_duration_to_pt:
+            fb_durations[stop_point.uri] = DurationElement(duration, resp.routing_status, None, 0, None)
 
-        free_access = self._places_free_access.wait_and_get()
+    def _update_fb_durations_from_access_point(
+        self, fb_durations, access_point, duration, resp, access_points_map
+    ):
+        for sp_uri, length, traversal_time in access_points_map[access_point.uri]:
+            current_duration = fb_durations[sp_uri].duration if sp_uri in fb_durations else float('inf')
+            if (duration + traversal_time) < min(current_duration, self._max_duration_to_pt):
+                fb_durations[sp_uri] = DurationElement(
+                    duration + traversal_time, resp.routing_status, None, 0, access_point
+                )
 
+    def _update_free_access_with_free_radius(self, free_access, proximities_by_crowfly):
         free_radius_distance = None
         if self._direct_path_type == StreetNetworkPathType.BEGINNING_FALLBACK:
             free_radius_distance = self._request.free_radius_from
         elif self._direct_path_type == StreetNetworkPathType.ENDING_FALLBACK:
             free_radius_distance = self._request.free_radius_to
-
         if free_radius_distance is not None:
             free_access.free_radius.update(
                 p.uri for p in proximities_by_crowfly if p.distance < free_radius_distance
             )
 
+    def _get_all_free_access(self, proximities_by_crowfly):
+        free_access = self._places_free_access.wait_and_get()
+        self._update_free_access_with_free_radius(free_access, proximities_by_crowfly)
         all_free_access = free_access.crowfly | free_access.odt | free_access.free_radius
+        return all_free_access
 
-        # if a place is freely accessible, there is no need to compute it's access duration in isochrone
-        places_isochrone = [p for p in proximities_by_crowfly if p.uri not in all_free_access]
+    def _build_places_isochrone(self, proximities_by_crowfly, all_free_access):
+        places_isochrone = []
+        access_points_map = defaultdict(list)
+        if self._mode == FallbackModes.car.name or self._request['_access_points'] is False:
+            # if a place is freely accessible, there is no need to compute it's access duration in isochrone
+            places_isochrone.extend(p for p in proximities_by_crowfly if p.uri not in all_free_access)
+        else:
+            access_points_map = defaultdict(list)
+            for p in proximities_by_crowfly:
+                # if a place is freely accessible, there is no need to compute it's access duration in isochrone
 
-        result = {}
-        # Since we have already places that have free access, we add them into the result
-        [result.update({uri: DurationElement(0, response_pb2.reached, None, 0)}) for uri in all_free_access]
-
-        # There are two cases that places_isochrone maybe empty:
-        # 1. The duration of direct_path is very small that we cannot find any proximities by crowfly
-        # 2. All proximities by crowfly are free access
-        if not places_isochrone:
-            return result
-
-        if self._max_duration_to_pt == 0:
-            logger.debug("max_duration_to_pt equals to 0")
-
-            # When max_duration_to_pt is 0, we can get on the public transport ONLY if the place is a stop_point
-            if self._instance.georef.get_stop_points_from_uri(center_isochrone.uri, self._request_id):
-                return {center_isochrone.uri: DurationElement(0, response_pb2.reached, None, 0)}
-            else:
-                return result
-
+                if p.uri in all_free_access:
+                    continue
+                # what we are looking to compute, is not the stop_point, but the entrance and exit of a stop_point
+                # if any of them are existent
+                if not p.stop_point.access_points:
+                    places_isochrone.append(p)
+                else:
+                    self._retrieve_access_points(p.stop_point, access_points_map, places_isochrone)
+        # places isochrone are filtered according to different connector. ex. In geovelo, we select solely stop_points
+        # are more significant.
         places_isochrone = self._streetnetwork_service.filter_places_isochrone(places_isochrone)
+        return places_isochrone, access_points_map
 
+    def _fill_fallback_durations_with_free_access(self, fallback_durations, all_free_access):
+        # Since we have already places that have free access, we add them into the result
+        from collections import deque
+
+        deque(
+            (
+                fallback_durations.update({uri: DurationElement(0, response_pb2.reached, None, 0, None)})
+                for uri in all_free_access
+            ),
+            maxlen=1,
+        )
+
+    def _fill_fallback_durations_with_manhattan(self, fallback_durations, places_isochrone):
+        for sp in places_isochrone:
+            fallback_durations[sp.uri] = DurationElement(
+                self._get_manhattan_duration(sp.distance, self._speed_switcher.get(self._mode)),
+                response_pb2.reached,
+                None,
+                0,
+                None,
+            )
+
+    def _determine_origins_and_destinations(self, center_isochrone, places_isochrone):
         if self._direct_path_type == StreetNetworkPathType.BEGINNING_FALLBACK:
             origins = [center_isochrone]
             destinations = places_isochrone
@@ -188,65 +240,141 @@ class FallbackDurations:
             origins = places_isochrone
             destinations = [center_isochrone]
 
+        return origins, destinations
+
+    @staticmethod
+    def _get_reached_routing_response(sn_routing_matrix):
+        """
+        Get a list of (pos ,r) only if the place is not unreached...
+        pos is the position of the response in the isochrone array
+        """
+        return (
+            (idx, r)
+            for idx, r in enumerate(sn_routing_matrix.rows[0].routing_response)
+            if r.routing_status != response_pb2.unreached
+        )
+
+    def _update_fallback_durations_for_car_park(self, sn_routing_matrix, places_isochrone, fallback_durations):
+        routing_response = self._get_reached_routing_response(sn_routing_matrix)
+        # the element in routing_response are ranged in the same order of element in places_isochrones
+        for idx, r in routing_response:
+            car_park = places_isochrone[idx]
+            duration = self._get_duration(r, car_park)
+            # if the mode is car, we need to find where to park the car :)
+            for sp_nearby in car_park.stop_points_nearby:
+                duration_to_stop_point = self._get_manhattan_duration(
+                    sp_nearby.distance, self._speed_switcher.get('walking')
+                )
+                durations_sum = duration + duration_to_stop_point + self._request.get('_car_park_duration')
+                if durations_sum < min(
+                    self._max_duration_to_pt,
+                    fallback_durations.get(
+                        sp_nearby.uri, DurationElement(float('inf'), None, None, None, None)
+                    ).duration,
+                ):
+                    fallback_durations[sp_nearby.uri] = DurationElement(
+                        durations_sum, response_pb2.reached, car_park, duration_to_stop_point, None
+                    )
+
+    def _update_fallback_durations_for_stop_points_and_access_points(
+        self, sn_routing_matrix, places_isochrone, access_points_map, fallback_durations
+    ):
+        def is_stop_point(pt_object):
+            return isinstance(pt_object, type_pb2.PtObject) and pt_object.embedded_type == type_pb2.STOP_POINT
+
+        def is_access_point(pt_object):
+            return isinstance(pt_object, type_pb2.PtObject) and pt_object.embedded_type == type_pb2.ACCESS_POINT
+
+        routing_response = self._get_reached_routing_response(sn_routing_matrix)
+        for idx, r in routing_response:
+            pt_object = places_isochrone[idx]
+            duration = self._get_duration(r, pt_object)
+            # in this case, the pt_object can be either a stop point or an access point
+            if is_stop_point(pt_object):
+                self._update_fb_durations(fallback_durations, pt_object, duration, r)
+            elif is_access_point(pt_object):
+                self._update_fb_durations_from_access_point(
+                    fallback_durations, pt_object, duration, r, access_points_map
+                )
+
+    def _do_request(self):
+        logger = logging.getLogger(__name__)
+        logger.debug("requesting fallback durations from %s by %s", self._requested_place_obj.uri, self._mode)
+
+        center_isochrone = self._requested_place_obj
+        # we collect all pt_objects (based on the requested mode, the object may be a car park or a stop point) whose
+        # beeline to the center_isochrone are smaller than the max duration to pt. aka: max_{mode}_duration_to_pt in
+        # "/journeys" parameters
+        # these pt_objects are potential candidates that will be sent to street network service for computing
+        # the routing matrix
+        proximities_by_crowfly = self._proximities_by_crowfly_pool.wait_and_get(self._mode)
+
+        all_free_access = self._get_all_free_access(proximities_by_crowfly)
+
+        # places_isochrone: a list of pt_objects selected from proximities_by_crowfly that will be sent to street
+        # network service to compute the routing matrix
+        # access_points_map: a map of access_point.uri vs a list of tuple whose elements are stop_point.uri, length and
+        # traversal_time
+        # ex:
+        # access_points_map["access_point:toto"] = [("stop_point:1", 42 , 41), ("stop_point:2", 43 , 44)]
+        # which means, via access point "access_point:toto", on can reach two stop points "stop_point:1" and
+        # "stop_point:2", by walking (42 meters, 41 sec) and (43 meters, 44sec) respectively
+        # it is a temporary storage that will be used later to update fallback_durations
+        places_isochrone, access_points_map = self._build_places_isochrone(
+            proximities_by_crowfly, all_free_access
+        )
+
+        # the final result to be returned, which is a map of stop_points.uri vs DurationElement
+        fallback_durations = defaultdict(lambda: DurationElement(float('inf'), None, None, 0, None))
+
+        # Since we have already places that have free access, we add them into the fallback_durations
+        self._fill_fallback_durations_with_free_access(fallback_durations, all_free_access)
+
+        # There are two cases that places_isochrone maybe empty:
+        # 1. The duration of direct_path is very small that we cannot find any proximities by crowfly
+        # 2. All proximities by crowfly are free access
+        # 3. max_duration_to_pt == 0, which means no fallback durations to be computed
+        if not places_isochrone or self._max_duration_to_pt == 0:
+            return fallback_durations
+
+        # based on the fallback type, we choose the origins and destinations
+        # if fallback type is beginning, then the street network service should compute a matrix of "one to many"
+        # otherwise, the street network service should compute a matrix of "many to one"
+        origins, destinations = self._determine_origins_and_destinations(center_isochrone, places_isochrone)
+
+        # Launch the computation of fall back durations
+        # sn_routing_matrix: a list of response_pb2.RoutingElement, which is arranged in the same order of requested
+        # places
+        # Each response_pb2.RoutingElement contains the duration and routing_status
         sn_routing_matrix = self._get_street_network_routing_matrix(
             self._streetnetwork_service, origins, destinations
         )
 
+        # In case where none of places in isochrone are reachable, we consider that something went awry in the
+        # computation, thus we fill the fallback_duration with manhattan distance for every requested place and
+        # return it
         if (
             not sn_routing_matrix
             or not len(sn_routing_matrix.rows)
             or not len(sn_routing_matrix.rows[0].routing_response)
         ):
             logger.debug("no fallback durations found from %s by %s", self._requested_place_obj.uri, self._mode)
-            for sp in places_isochrone:
-                result[sp.uri] = DurationElement(
-                    self._get_manhattan_duration(sp.distance, self._speed_switcher.get(self._mode)),
-                    response_pb2.reached,
-                    None,
-                    0,
-                )
-            return result
+            self._fill_fallback_durations_with_manhattan(fallback_durations, places_isochrone)
+            return fallback_durations
 
-        for pos, r in enumerate(sn_routing_matrix.rows[0].routing_response):
-            if r.routing_status != response_pb2.unreached:
-                duration = self._get_duration(r, places_isochrone[pos])
-                # if the mode is car, we need to find where to park the car :)
-                if self._mode == FallbackModes.car.name:
-                    for sp_nearby in places_isochrone[pos].stop_points_nearby:
-                        duration_to_stop_point = self._get_manhattan_duration(
-                            sp_nearby.distance, self._speed_switcher.get('walking')
-                        )
-                        durations_sum = (
-                            duration + duration_to_stop_point + self._request.get('_car_park_duration')
-                        )
-
-                        if durations_sum < min(
-                            self._max_duration_to_pt,
-                            result.get(sp_nearby.uri, DurationElement(float('inf'), None, None, None)).duration,
-                        ):
-                            result[sp_nearby.uri] = DurationElement(
-                                durations_sum,
-                                response_pb2.reached,
-                                places_isochrone[pos],
-                                duration_to_stop_point,
-                            )
-                else:
-                    if duration < self._max_duration_to_pt:
-                        result.update(
-                            {places_isochrone[pos].uri: DurationElement(duration, r.routing_status, None, 0)}
-                        )
-
-        # We update the fallback duration matrix if the requested origin/destination is also
-        # present in the fallback duration matrix, which means from stop_point_1 to itself, it takes 0 second
-        # Ex:
-        #                stop_point1   stop_point2  stop_point3
-        # stop_point_1         0(s)       ...          ...
-        if center_isochrone.uri in result:
-            result[center_isochrone.uri] = DurationElement(0, response_pb2.reached, None, 0)
+        # sn_routing_matrix is not None
+        if self._mode == FallbackModes.car.name:
+            # note that when requested mode is car, places in the isochrone are car parks
+            self._update_fallback_durations_for_car_park(sn_routing_matrix, places_isochrone, fallback_durations)
+        else:
+            # otherwise, places in the isochrone may be either stop_points or access_points
+            self._update_fallback_durations_for_stop_points_and_access_points(
+                sn_routing_matrix, places_isochrone, access_points_map, fallback_durations
+            )
 
         logger.debug("finish fallback durations from %s by %s", self._requested_place_obj.uri, self._mode)
 
-        return result
+        return fallback_durations
 
     def _async_request(self):
         self._value = self._future_manager.create_future(self._do_request)

@@ -324,7 +324,7 @@ class Here(AbstractStreetNetworkService):
             fm.walking.name: response_pb2.Walking,
             fm.car.name: response_pb2.Car,
             fm.bike.name: response_pb2.Bike,
-            fm.car_no_park.name: response_pb2.Car,
+            fm.car_no_park.name: response_pb2.CarNoPark,
         }
         section.street_network.mode = map_mode[mode]
 

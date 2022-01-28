@@ -53,6 +53,7 @@ class ProximitiesByCrowfly:
         stop_points_nearby_duration,
         request,
         request_id,
+        depth,
     ):
         self._future_manager = future_manager
         self._instance = instance
@@ -67,6 +68,7 @@ class ProximitiesByCrowfly:
         self._value = None
         self._logger = logging.getLogger(__name__)
         self._request_id = request_id
+        self._depth = depth
         self._forbidden_uris = utils.get_poi_params(request['forbidden_uris[]'])
         self._allowed_id = utils.get_poi_params(request['allowed_id[]'])
         self._async_request()
@@ -83,6 +85,7 @@ class ProximitiesByCrowfly:
                 self._filter,
                 self._stop_points_nearby_duration,
                 self._request_id,
+                self._depth,
                 self._forbidden_uris,
                 self._allowed_id,
                 **self._speed_switcher
@@ -106,6 +109,10 @@ class ProximitiesByCrowfly:
         coord = utils.get_pt_object_coord(self._requested_place_obj)
         if coord.lat and coord.lon:
             crow_fly = self._get_crow_fly(self._instance.georef)
+
+            if self._mode == fm.FallbackModes.car.name:
+                # pick up only parkings with park_ride = yes
+                crow_fly = jormungandr.street_network.utils.pick_up_park_ride_car_park(crow_fly)
 
             logger.debug(
                 "finish proximities by crowfly from %s in %s", self._requested_place_obj.uri, self._mode
@@ -173,7 +180,10 @@ class ProximitiesByCrowflyPool:
         for mode in self._modes:
             object_type = type_pb2.STOP_POINT
             filter = None
+            # if access_point is true, access points are filled in stop points
+            depth = 3 if self._request["_access_points"] else 2
             if mode == fm.FallbackModes.car.name:
+                depth = 2
                 object_type = type_pb2.POI
                 filter = "poi_type.uri=\"poi_type:amenity:parking\""
 
@@ -200,6 +210,7 @@ class ProximitiesByCrowflyPool:
                 stop_points_nearby_duration=self._request['_stop_points_nearby_duration'],
                 request=self._request,
                 request_id=self._request_id,
+                depth=depth,
             )
 
             self._value[mode] = p

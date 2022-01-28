@@ -436,6 +436,47 @@ class TestJourneysDistributed(
         assert any('walking' in j['tags'] for j in response['journeys'])
         assert len(response['journeys'][1]['sections']) == 1
 
+    def test_journey_with_access_points(self):
+        query = journey_basic_query + "&_access_points=true"
+        response = self.query_region(query)
+        assert len(response['journeys']) == 2
+
+        pt_journey = next((j for j in response['journeys'] if 'non_pt' not in j['tags']), None)
+        assert pt_journey
+        assert len(pt_journey['sections'][0]['vias']) == 1
+
+        access_point = pt_journey['sections'][0]['vias'][0]['access_point']
+        assert access_point["id"] == "access_point:B1"
+        assert access_point["is_entrance"]
+        assert not access_point["is_exit"]
+        assert access_point["traversal_time"] == 2
+        assert access_point["length"] == 1
+
+        path = pt_journey['sections'][0]['path'][-1]
+        assert path['duration'] == 2
+        assert path['length'] == 1
+        assert path['via_uri'] == "access_point:B1"
+        assert path['instruction'] == "Then Enter stop_point:stopB (Condom) via access_point:B1."
+
+        path_sum = sum(p['duration'] for p in pt_journey['sections'][0]['path'])
+        assert pt_journey['sections'][0]['duration'] == pytest.approx(path_sum, 1.0)
+
+        access_point = pt_journey['sections'][2]['vias'][0]['access_point']
+        assert access_point["id"] == "access_point:A2"
+        assert not access_point["is_entrance"]
+        assert access_point["is_exit"]
+        assert access_point["traversal_time"] == 4
+        assert access_point["length"] == 3
+
+        path = pt_journey['sections'][2]['path'][0]
+        assert path['duration'] == 4
+        assert path['length'] == 3
+        assert path['via_uri'] == "access_point:A2"
+        assert path['instruction'] == "Exit stop_point:stopA (Condom) via access_point:A2."
+
+        path_sum = sum(p['duration'] for p in pt_journey['sections'][2]['path'])
+        assert pt_journey['sections'][2]['duration'] == pytest.approx(path_sum, 1.0)
+
 
 @config({"scenario": "distributed"})
 class TestDistributedJourneysWithPtref(JourneysWithPtref, NewDefaultScenarioAbstractTestFixture):
@@ -979,6 +1020,30 @@ class TestTaxiDistributed(NewDefaultScenarioAbstractTestFixture):
         assert len(journeys) == 1
         # the pt journey is gone....
         assert 'non_pt_taxi' in journeys[0]['tags']
+
+    def test_additional_time(self):
+        # we begin with a normal request to get the fallback duration in taxi
+        first_additional_time = 42
+        last_additional_time = 20
+        query = (
+            sub_query
+            + "&datetime=20120614T075000"
+            + "&first_section_mode[]=taxi"
+            + "&last_section_mode[]=taxi"
+            + "&taxi_speed=0.05"
+            + "&additional_time_after_first_section_taxi={}".format(first_additional_time)
+            + "&additional_time_before_last_section_taxi={}".format(last_additional_time)
+        )
+
+        response = self.query_region(query)
+        self.is_valid_journey_response(response, query)
+        pt_with_taxi = next((j for j in response['journeys'] if 'non_pt' not in j['tags']), None)
+        assert len(pt_with_taxi['sections']) == 5
+        assert pt_with_taxi['sections'][1]['type'] == 'waiting'
+        assert pt_with_taxi['sections'][1]['duration'] == first_additional_time
+
+        assert pt_with_taxi['sections'][3]['type'] == 'waiting'
+        assert pt_with_taxi['sections'][3]['duration'] == last_additional_time
 
 
 @dataset({'main_routing_test': {"scenario": "distributed"}, 'min_nb_journeys_test': {"scenario": "distributed"}})

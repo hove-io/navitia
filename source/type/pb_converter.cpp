@@ -594,46 +594,57 @@ void PbCreator::Filler::fill_pb_object(const ng::Admin* adm, pbnavitia::Administ
     }
 }
 
-void PbCreator::Filler::fill_access_points(const std::set<nt::AccessPoint*>& access_points,
+void PbCreator::Filler::create_access_point(const nt::AccessPoint& access_point, pbnavitia::AccessPoint* ap) {
+    ap->set_name(access_point.name);
+    ap->set_uri(access_point.uri);
+    if (access_point.coord.is_initialized()) {
+        ap->mutable_coord()->set_lon(access_point.coord.lon());
+        ap->mutable_coord()->set_lat(access_point.coord.lat());
+    }
+    ap->set_is_entrance(access_point.is_entrance);
+    ap->set_is_exit(access_point.is_exit);
+    if (access_point.pathway_mode != nt::ap_default_value) {
+        ap->set_pathway_mode(access_point.pathway_mode);
+    }
+    if (access_point.length != nt::ap_default_value) {
+        ap->set_length(access_point.length);
+    }
+    if (access_point.traversal_time != nt::ap_default_value) {
+        ap->set_traversal_time(access_point.traversal_time);
+    }
+    if (access_point.stair_count != nt::ap_default_value) {
+        ap->set_stair_count(access_point.stair_count);
+    }
+    if (access_point.max_slope != nt::ap_default_value) {
+        ap->set_max_slope(access_point.max_slope);
+    }
+    if (access_point.min_width != nt::ap_default_value) {
+        ap->set_min_width(access_point.min_width);
+    }
+    if (!access_point.signposted_as.empty()) {
+        ap->set_signposted_as(access_point.signposted_as);
+    }
+    if (!access_point.reversed_signposted_as.empty()) {
+        ap->set_reversed_signposted_as(access_point.reversed_signposted_as);
+    }
+    if (!access_point.stop_code.empty()) {
+        ap->set_stop_code(access_point.stop_code);
+    }
+    if (access_point.parent_station != nullptr) {
+        pbnavitia::StopArea* sa = ap->mutable_parent_station();
+        fill_pb_object(access_point.parent_station, sa);
+    }
+}
+
+void PbCreator::Filler::fill_pb_object(const nt::AccessPoint& ap, pbnavitia::AccessPoint* pb_ap) {
+    create_access_point(ap, pb_ap);
+}
+
+void PbCreator::Filler::fill_access_points(const std::set<nt::AccessPoint>& access_points,
                                            pbnavitia::StopPoint* stop_point) {
     for (const auto& access_point : access_points) {
         pbnavitia::AccessPoint* ap = stop_point->add_access_points();
-        ap->set_name(access_point->name);
-        ap->set_uri(access_point->uri);
-        if (access_point->coord.is_initialized()) {
-            ap->mutable_coord()->set_lon(access_point->coord.lon());
-            ap->mutable_coord()->set_lat(access_point->coord.lat());
-        }
-        ap->set_is_entrance(access_point->is_entrance);
-        ap->set_is_exit(access_point->is_exit);
-        if (access_point->pathway_mode != nt::ap_default_value) {
-            ap->set_pathway_mode(access_point->pathway_mode);
-        }
-        if (access_point->length != nt::ap_default_value) {
-            ap->set_length(access_point->length);
-        }
-        if (access_point->traversal_time != nt::ap_default_value) {
-            ap->set_traversal_time(access_point->traversal_time);
-        }
-        if (access_point->stair_count != nt::ap_default_value) {
-            ap->set_stair_count(access_point->stair_count);
-        }
-        if (access_point->max_slope != nt::ap_default_value) {
-            ap->set_max_slope(access_point->max_slope);
-        }
-        if (access_point->min_width != nt::ap_default_value) {
-            ap->set_min_width(access_point->min_width);
-        }
-        if (!access_point->signposted_as.empty()) {
-            ap->set_signposted_as(access_point->signposted_as);
-        }
-        if (!access_point->reversed_signposted_as.empty()) {
-            ap->set_reversed_signposted_as(access_point->reversed_signposted_as);
-        }
-        if (access_point->parent_station != nullptr) {
-            pbnavitia::StopArea* sa = ap->mutable_parent_station();
-            fill_pb_object(access_point->parent_station, sa);
-        }
+        create_access_point(access_point, ap);
     }
 }
 
@@ -2310,6 +2321,10 @@ pbnavitia::EquipmentReport* PbCreator::add_equipment_reports() {
 
 pbnavitia::VehiclePosition* PbCreator::add_vehicle_positions() {
     return response.add_vehicle_positions();
+}
+
+pbnavitia::AccessPoint* PbCreator::add_access_points() {
+    return response.add_access_points();
 }
 
 bool PbCreator::has_error() {

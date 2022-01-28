@@ -526,11 +526,23 @@ struct routing_api_data {
         // Add a fare_zone in stop point A
         sp->fare_zone = "2";
 
+        // add access_point
+        b.add_access_point("stop_point:stopA", "access_point:A1", true, false, 1, 2, 0.000718649585563767,
+                           0.0010779743);
+        b.add_access_point("stop_point:stopA", "access_point:A2", false, true, 3, 4, 0.000718649585563767,
+                           0.0010779743);
+
         sp = b.get<nt::StopPoint>("stop_point:stopB");
         b.data->pt_data->codes.add(sp, "TCL_ASCENSEUR", "6");
         b.data->pt_data->codes.add(sp, "TCL_ASCENSEUR", "7");
         b.data->pt_data->codes.add(sp, "TCL_ASCENSEUR", "8");
         b.data->pt_data->codes.add(sp, "TCL_ASCENSEUR", "9");
+
+        // add access_point
+        b.add_access_point("stop_point:stopB", "access_point:B1", true, false, 1, 2, 0.0002694935945864127,
+                           8.98311981954709e-05);
+        b.add_access_point("stop_point:stopB", "access_point:B2", false, true, 3, 4, 0.0002694935945864127,
+                           8.98311981954709e-05);
 
         // Add codes on stop_area
         const auto* sa = b.get<nt::StopArea>("stopA");

@@ -30,45 +30,24 @@ www.navitia.io
 
 #pragma once
 
-#include "type/type_interfaces.h"
-#include "type/geographical_coord.h"
-#include "type/fwd_type.h"
-#include "type/access_point.h"
+#include "type/pb_converter.h"
 
-#include <boost/container/flat_set.hpp>
-
+#include <string>
 #include <vector>
-#include <set>
+#include <unordered_set>
 
 namespace navitia {
-namespace type {
+namespace access_point {
 
-struct StopPoint : public Header, Nameable, hasProperties, HasMessages {
-    const static Type_e type = Type_e::StopPoint;
-    GeographicalCoord coord;
-    std::string fare_zone;
-    bool is_zonal = false;
-    std::string platform_code;
-    std::string label;
-    std::string address_id;
+using ForbiddenUris = std::vector<std::string>;
+using AccessPointList = std::unordered_map<std::string, type::AccessPoint>;
 
-    StopArea* stop_area;
-    std::vector<navitia::georef::Admin*> admin_list;
-    std::set<navitia::type::AccessPoint> access_points;
-    Network* network;
-    std::vector<StopPointConnection*> stop_point_connection_list;
-    std::set<Dataset*> dataset_list;
-    boost::container::flat_set<Route*> route_list;
-    navitia::georef::Address* address = nullptr;
+void access_points(PbCreator& pb_creator,
+                   const std::string& filter,
+                   int count,
+                   int depth = 0,
+                   int start_page = 0,
+                   const ForbiddenUris& forbidden_uris = {});
 
-    template <class Archive>
-    void serialize(Archive& ar, const unsigned int);
-
-    StopPoint() : fare_zone(), stop_area(nullptr), network(nullptr) {}
-
-    Indexes get(Type_e type, const PT_Data& data) const;
-    bool operator<(const StopPoint& other) const;
-};
-
-}  // namespace type
+}  // namespace access_point
 }  // namespace navitia

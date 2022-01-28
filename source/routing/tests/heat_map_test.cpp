@@ -173,7 +173,7 @@ BOOST_AUTO_TEST_CASE(heat_map_test) {
     const double speed = 0.8;
     const uint resolution = 100;
     auto stop_points = raptor.data.pt_data->stop_points;
-    (*b.data->geo_ref).project_stop_points(stop_points);
+    (*b.data->geo_ref).project_stop_points_and_access_points(stop_points);
     const auto max_duration = 36000;
     size_t step = 3;
     auto box = BoundBox();
