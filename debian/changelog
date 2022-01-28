@@ -1,3 +1,23 @@
+navitia2 (15.0.0) unstable; urgency=low
+
+  * [Geovelo] fix geovelo when elevation is none  <https://github.com/CanalTP/navitia/pull/3653>
+  * [Jormungandr] Expose additional time for taxi  <https://github.com/CanalTP/navitia/pull/3649>
+  * [Jormungandr] Fix section duration consistence with access point  <https://github.com/CanalTP/navitia/pull/3648>
+  * [Jormungandr] fix here car_no_park mode  <https://github.com/CanalTP/navitia/pull/3647>
+  * [Geovelo] add geojson offset for geovelo  <https://github.com/CanalTP/navitia/pull/3651>
+  * [Jormungandr] Rename geojson_index to geojson_offset  <https://github.com/CanalTP/navitia/pull/3650>
+  * [Kraken] Access points entry point  <https://github.com/CanalTP/navitia/pull/3646>
+  * [Distributed] fallback duration refacto  <https://github.com/CanalTP/navitia/pull/3643>
+  * [Jormungandr] use unicode  <https://github.com/CanalTP/navitia/pull/3645>
+  * [Kraken]access point: fix negatif stair count  <https://github.com/CanalTP/navitia/pull/3644>
+  * [Jormun] Integrate access point into journeys  <https://github.com/CanalTP/navitia/pull/3636>
+  * [Kraken] Two stop points, one access point  <https://github.com/CanalTP/navitia/pull/3639>
+  * Bump numpy from 1.18.3 to 1.21.0 in /source/benchmark  <https://github.com/CanalTP/navitia/pull/3641>
+  * [Kraken] add acess_point prefix  <https://github.com/CanalTP/navitia/pull/3637>
+  * [CI] Free more disk space in github Action  <https://github.com/CanalTP/navitia/pull/3638>
+
+ -- xlqian <patrick.qian@kisio.com>  Fri, 28 Jan 2022 11:01:53 +0100
+
 
 navitia2 (14.0.1) unstable; urgency=low
 
