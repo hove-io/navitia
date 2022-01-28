@@ -93,6 +93,8 @@ else ()
     add_executable(main_routing_test tests/mock-kraken/main_routing_test.cpp)
     add_executable(departure_board_test tests/mock-kraken/departure_board_test.cpp)
 
+    set_target_properties(main_routing_test departure_board_test PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests/mock-kraken")
+
     target_link_libraries(main_routing_test ${ALL_LIBS})
     target_link_libraries(departure_board_test ${ALL_LIBS})
 endif(NOT SKIP_TESTS)
