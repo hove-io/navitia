@@ -474,9 +474,13 @@ class TestChaosDisruptions2(ChaosDisruptionsFixture):
             for s in j['sections']
             if s['type'] == 'public_transport'
         ]
-        links = [link for di in display_infos for link in di['links'] if link['rel'] == 'disruptions']
+        links = [link for di in display_infos for link in di['links'] if link['type'] == 'disruption']
         assert len(links) == 1
         assert links[0]['id'] == 'impact_bob_the_disruption_1'
+
+        links = [link for di in display_infos for link in di['links'] if link['type'] == 'stop_area']
+        assert len(links) == 1
+        assert links[0]["id"] == "stopA"
 
         # we create a disruption on line
         self.send_mock("bob_the_disruption_on_line", "A", "line")
@@ -493,7 +497,7 @@ class TestChaosDisruptions2(ChaosDisruptionsFixture):
             for s in j['sections']
             if s['type'] == 'public_transport'
         ]
-        links = [link for di in display_infos for link in di['links'] if link['rel'] == 'disruptions']
+        links = [link for di in display_infos for link in di['links'] if link['type'] == 'disruption']
         assert len(links) == 2
         assert any(link['id'] == 'impact_bob_the_disruption_1' for link in links)
         assert any(link['id'] == 'impact_bob_the_disruption_on_line_1' for link in links)
@@ -513,11 +517,15 @@ class TestChaosDisruptions2(ChaosDisruptionsFixture):
             for s in j['sections']
             if s['type'] == 'public_transport'
         ]
-        links = [link for di in display_infos for link in di['links'] if link['rel'] == 'disruptions']
+        links = [link for di in display_infos for link in di['links'] if link['type'] == 'disruption']
         assert len(links) == 3
         assert any(link['id'] == 'impact_bob_the_disruption_1' for link in links)
         assert any(link['id'] == 'impact_bob_the_disruption_on_line_1' for link in links)
         assert any(link['id'] == 'impact_bob_the_disruption_on_stop_point_1' for link in links)
+
+        links = [link for di in display_infos for link in di['links'] if link['type'] == 'stop_area']
+        assert len(links) == 1
+        assert links[0]["id"] == "stopA"
 
     def test_disruption_on_journey_with_blocking_disruption(self):
         """
