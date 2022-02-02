@@ -49,6 +49,7 @@ public:
     std::string instance_name() const;
     boost::optional<std::string> chaos_database() const;
     int nb_threads() const;
+    int chaos_batch_size() const;
 
     std::string broker_host() const;
     int broker_port() const;

@@ -81,7 +81,7 @@ BOOST_AUTO_TEST_CASE(load_disruptions_fail) {
     // load disruptions
     bool failed = false;
     try {
-        data.load_disruptions(fake_disruption_path);
+        data.load_disruptions(fake_disruption_path, 1000);
     } catch (const navitia::data::disruptions_broken_connection&) {
         failed = true;
     }

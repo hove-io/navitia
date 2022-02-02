@@ -75,7 +75,7 @@ BOOST_AUTO_TEST_CASE(chaos_fill_disruptions_tests) {
     try {
         navitia::fill_disruption_from_database(
             connection_string,  // "host=172.17.0.2 user=postgres dbname=chaos_loading",
-            metadata.production_date, reader, {"shortterm.tr_sytral"});
+            metadata.production_date, reader, {"shortterm.tr_sytral"}, 1000000);
     } catch (std::exception& e) {
         std::cerr << e.what() << std::endl;
     }

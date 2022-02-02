@@ -97,7 +97,8 @@ po::options_description get_options_description(const boost::optional<std::strin
         ("BROKER.queue", po::value<std::string>(), "rabbitmq's queue name to be bound")
         ("BROKER.queue_auto_delete", po::value<bool>()->default_value(false), "auto delete rabbitmq's queue when unbind")
 
-        ("CHAOS.database", po::value<std::string>(), "Chaos database connection string");
+        ("CHAOS.database", po::value<std::string>(), "Chaos database connection string")
+        ("CHAOS.batch_size", po::value<int>()->default_value(1000000), "Chaos database row batch size");
 
     // clang-format on
     return desc;
@@ -160,6 +161,13 @@ boost::optional<std::string> Configuration::chaos_database() const {
         result = this->vm["CHAOS.database"].as<std::string>();
     }
     return result;
+}
+int Configuration::chaos_batch_size() const {
+    int batch_size = vm["CHAOS.batch_size"].as<int>();
+    if (batch_size < 0) {
+        throw std::invalid_argument("chaos.batch_size cannot be negative");
+    }
+    return batch_size;
 }
 int Configuration::nb_threads() const {
     int nb_threads = vm["GENERAL.nb_threads"].as<int>();
