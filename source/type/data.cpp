@@ -168,7 +168,9 @@ void Data::load(std::istream& ifs) {
  * @param database Database connection string
  * @param contributors Disruptions contributors name list
  */
-void Data::load_disruptions(const std::string& database, int chaos_batch_size, const std::vector<std::string>& contributors) {
+void Data::load_disruptions(const std::string& database,
+                            int chaos_batch_size,
+                            const std::vector<std::string>& contributors) {
     // Add logger
     log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
     LOG4CPLUS_DEBUG(logger, "Start to load disruptions");
