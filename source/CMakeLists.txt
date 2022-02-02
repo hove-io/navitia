@@ -29,7 +29,7 @@ set(CMAKE_INSTALL_PREFIX "/usr")
 # project version,
 # get git revision as the version number
 include(GetGitRevisionDescription)
-git_describe(GIT_REVISION)
+git_describe("13.5.1")
 
 # Detect Os version
 include(DetectOsVersion)

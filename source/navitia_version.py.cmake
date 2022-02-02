@@ -28,4 +28,4 @@
 # www.navitia.io
 
 # navitia version number
-__version__ = '${GIT_REVISION}'
+__version__ = '13.5.1'
