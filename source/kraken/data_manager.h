@@ -107,7 +107,8 @@ public:
     bool load(const std::string& filename,
               const boost::optional<std::string>& chaos_database = boost::none,
               const std::vector<std::string>& contributors = {},
-              const size_t raptor_cache_size = 10) {
+              const size_t raptor_cache_size = 10,
+              const size_t chaos_batch_size = 1000000) {
         // Add logger
         log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
 
@@ -130,7 +131,7 @@ public:
             // because data is still clean, unlike other cases where we have
             // to reload the data
             try {
-                data->load_disruptions(*chaos_database, contributors);
+                data->load_disruptions(*chaos_database, chaos_batch_size, contributors);
                 data->build_autocomplete_partial();
             } catch (const navitia::data::disruptions_broken_connection&) {
                 LOG4CPLUS_WARN(logger, "Load data without disruptions");

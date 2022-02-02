@@ -489,6 +489,7 @@ struct DisruptionDatabaseReader {
 void fill_disruption_from_database(const std::string& connection_string,
                                    const boost::gregorian::date_period& production_date,
                                    DisruptionDatabaseReader& reader,
-                                   const std::vector<std::string>& contributors);
+                                   const std::vector<std::string>& contributors,
+                                   int batch_size);
 
 }  // namespace navitia
