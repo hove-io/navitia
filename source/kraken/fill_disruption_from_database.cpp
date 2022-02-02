@@ -43,12 +43,13 @@ namespace navitia {
 void fill_disruption_from_database(const std::string& connection_string,
                                    const boost::gregorian::date_period& production_date,
                                    DisruptionDatabaseReader& reader,
-                                   const std::vector<std::string>& contributors) {
+                                   const std::vector<std::string>& contributors,
+                                   int batch_size) {
     auto conn = std::make_unique<pqxx::connection>(connection_string);
 
     pqxx::work work(*conn, "loading disruptions");
 
-    size_t offset = 0, items_per_request = 1000;
+    size_t offset = 0, items_per_request = batch_size;
     pqxx::result result;
     std::string contributors_array = boost::algorithm::join(contributors, ", ");
     LOG4CPLUS_INFO(log4cplus::Logger::getInstance("Logger"), "Reading disruptions from database");

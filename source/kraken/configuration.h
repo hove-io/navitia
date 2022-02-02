@@ -48,6 +48,7 @@ public:
     std::string zmq_socket_path() const;
     std::string instance_name() const;
     boost::optional<std::string> chaos_database() const;
+    int chaos_batch_size() const;
     int nb_threads() const;
 
     std::string broker_host() const;
