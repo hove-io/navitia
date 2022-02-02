@@ -169,6 +169,7 @@ int Configuration::chaos_batch_size() const {
     }
     return batch_size;
 }
+
 int Configuration::nb_threads() const {
     int nb_threads = vm["GENERAL.nb_threads"].as<int>();
     if (nb_threads < 0) {
