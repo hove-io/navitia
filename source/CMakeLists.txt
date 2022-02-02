@@ -97,6 +97,10 @@ else ()
 
     target_link_libraries(main_routing_test ${ALL_LIBS})
     target_link_libraries(departure_board_test ${ALL_LIBS})
+
+    install(TARGETS main_routing_test DESTINATION ${CMAKE_INSTALL_PREFIX}/bin)
+    install(TARGETS departure_board_test DESTINATION ${CMAKE_INSTALL_PREFIX}/bin)
+
 endif(NOT SKIP_TESTS)
 
 include(CheckIncludeFiles)
