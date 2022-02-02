@@ -59,10 +59,11 @@ namespace navitia {
 void MaintenanceWorker::load_data() {
     const std::string database = conf.databases_path();
     auto chaos_database = conf.chaos_database();
+    auto chaos_batch_size = conf.chaos_batch_size();
     auto contributors = conf.rt_topics();
     LOG4CPLUS_INFO(logger, "Loading database from file: " + database);
     auto start = pt::microsec_clock::universal_time();
-    if (this->data_manager.load(database, chaos_database, contributors, conf.raptor_cache_size())) {
+    if (this->data_manager.load(database, chaos_database, contributors, conf.raptor_cache_size(), chaos_batch_size)) {
         auto data = data_manager.get_data();
         data->is_realtime_loaded = false;
         data->meta->instance_name = conf.instance_name();
