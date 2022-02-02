@@ -1,3 +1,9 @@
+navitia2 (13.5.1) unstable; urgency=low
+
+  * [Kraken] Add chaos_batch_size parameter.  <https://github.com/CanalTP/navitia/pull/3660>
+
+ -- abderrahim <azime.abderrahim@kisio.com>  Fri, 02 Feb 2022 10:12:44 +0100
+
 navitia2 (13.5.0) unstable; urgency=low
 
   * [Tyr] Indexing data for Elasticsearch2 en Elasticsearch7 while doing Import_data depending on configuration.  <https://github.com/CanalTP/navitia/pull/3600>
