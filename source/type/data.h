@@ -202,7 +202,7 @@ public:
 
     // Loading methods
     void load_nav(const std::string& filename);
-    void load_disruptions(const std::string& database, const std::vector<std::string>& contributors = {});
+    void load_disruptions(const std::string& database, int chaos_batch_size, const std::vector<std::string>& contributors = {});
     void build_raptor(size_t cache_size = 10);
 
     void warmup(const Data& other);

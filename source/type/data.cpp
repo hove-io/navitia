@@ -168,14 +168,14 @@ void Data::load(std::istream& ifs) {
  * @param database Database connection string
  * @param contributors Disruptions contributors name list
  */
-void Data::load_disruptions(const std::string& database, const std::vector<std::string>& contributors) {
+void Data::load_disruptions(const std::string& database, int chaos_batch_size, const std::vector<std::string>& contributors) {
     // Add logger
     log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
     LOG4CPLUS_DEBUG(logger, "Start to load disruptions");
 
     try {
         DisruptionDatabaseReader reader(*pt_data, *meta);
-        fill_disruption_from_database(database, meta->production_date, reader, contributors);
+        fill_disruption_from_database(database, meta->production_date, reader, contributors, chaos_batch_size);
         disruption_error = false;
     } catch (const pqxx::broken_connection& ex) {
         LOG4CPLUS_WARN(logger, "Unable to connect to disruptions database: " << std::string(ex.what()));
