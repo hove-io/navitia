@@ -257,7 +257,7 @@ class InstantSystem(AbstractRidesharingService):
         if limit is not None:
             params.update({'limit', limit})
 
-        headers = {'Authorization': 'apiKey {}'.format(self.api_key)}
+        headers = {'apikey': '{}'.format(self.api_key)}
         resp = self._call_service(params=params, headers=headers)
 
         if not resp or resp.status_code != 200:
