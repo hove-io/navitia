@@ -148,11 +148,12 @@ class RidesharingServiceManager(object):
         self.logger.debug('Updating ridesharing services from db')
         self._last_update = datetime.datetime.utcnow()
 
-        services = []
         try:
             services = self._rs_services_getter()
-        except Exception:
-            self.logger.exception('Failure to retrieve ridesharing services configuration')
+        except Exception as e:
+            self.logger.exception('Failure to retrieve ridesharing services configuration (error: {})'.format(e))
+            return
+
         if not services:
             self.logger.debug('No ridesharing services available in db')
             self._ridesharing_services = {}

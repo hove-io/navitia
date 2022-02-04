@@ -151,16 +151,16 @@ class StreetNetworkBackendManager(object):
         self.logger.debug('Updating streetnetwork backends from db')
         self._last_update = datetime.datetime.utcnow()
 
-        sn_backends = []  # type: List[StreetNetworkBackend]
         try:
             sn_backends = self._sn_backends_getter()
-        except Exception:
-            self.logger.exception('Failure to retrieve streetnetwork backends configuration')
+        except Exception as e:
+            self.logger.error('No access to table streetnetwork_backend (error: {})'.format(e))
+            return
+
         if not sn_backends:
             self.logger.debug('No streetnetwork backends/All streetnetwork backends disabled in db')
             self._streetnetwork_backends = {}
             self._streetnetwork_backends_last_update = {}
-
             return
 
         for sn_backend in sn_backends:

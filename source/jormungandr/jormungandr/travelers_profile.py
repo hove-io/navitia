@@ -38,6 +38,7 @@ from navitiacommon.default_traveler_profile_params import (
 from six.moves import map
 from six import text_type
 from typing import Dict, Text, List, Optional
+import logging
 
 
 class TravelerProfile(object):
@@ -128,7 +129,13 @@ class TravelerProfile(object):
 
         # retrieve TravelerProfile from db with coverage and traveler_type
         # if the record doesn't exist, we use pre-defined default traveler profile
-        model = models.TravelerProfile.get_by_coverage_and_type(coverage, traveler_type)
+        try:
+            model = models.TravelerProfile.get_by_coverage_and_type(coverage, traveler_type)
+        except Exception as e:
+            logging.getLogger(__name__).error('No access to table traveler_profile (error: {})'.format(e))
+            # If the table is not accessible return the default traveler profile for given traveler type
+            return default_traveler_profiles[traveler_type]
+
         if model is None:
             return default_traveler_profiles[traveler_type]
 

@@ -266,7 +266,14 @@ class Instance(object):
             return None
         if not can_connect_to_database():
             return self.instance_db
-        self.instance_db = models.Instance.get_by_name(self.name)
+        try:
+            instance_db = models.Instance.get_by_name(self.name)
+        except Exception as e:
+            logging.getLogger(__name__).error('No access to table instance (error: {})'.format(e))
+            g.can_connect_to_database = False
+            return self.instance_db
+
+        self.instance_db = instance_db
         return self.instance_db
 
     def scenario(self, override_scenario=None):
