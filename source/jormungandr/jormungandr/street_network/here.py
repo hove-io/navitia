@@ -36,7 +36,8 @@ import pybreaker
 import requests as requests
 from jormungandr import app
 from jormungandr.exceptions import TechnicalError
-from jormungandr.utils import get_pt_object_coord, PeriodExtremity
+from jormungandr.utils import get_pt_object_coord, PeriodExtremity, decode_polyline
+import flexpolyline as fp
 from jormungandr.street_network.street_network import AbstractStreetNetworkService, StreetNetworkPathKey
 from jormungandr.ptref import FeedPublisher
 from jormungandr.fallback_modes import FallbackModes as fm
@@ -44,6 +45,8 @@ from jormungandr.utils import is_coord, get_lon_lat
 from six import text_type
 from enum import Enum
 import itertools
+import json
+import time
 
 # this limit is fixed by Here Api. See avoidAreas parameter
 # https://developer.here.com/documentation/routing/dev_guide/topics/resource-calculate-route.html
@@ -123,7 +126,15 @@ DEFAULT_HERE_FEED_PUBLISHER = {
 
 def _get_coord(pt_object):
     coord = get_pt_object_coord(pt_object)
-    return 'geo!{lat},{lon}'.format(lat=coord.lat, lon=coord.lon)
+    return '{lat},{lon}'.format(lat=coord.lat, lon=coord.lon)
+
+
+def _get_coord_for_matrix(pt_object):
+    coord = get_pt_object_coord(pt_object)
+    coord_for_matrix = {}
+    coord_for_matrix['lat'] = coord.lat
+    coord_for_matrix['lng'] = coord.lon
+    return coord_for_matrix
 
 
 def get_here_mode(mode):
@@ -169,10 +180,8 @@ class Here(AbstractStreetNetworkService):
         if not service_base_url:
             raise ValueError('service_url {} is not a valid HERE url'.format(service_base_url))
         service_base_url = service_base_url.rstrip('/')
-        self.routing_service_url = 'https://{base_url}/calculateroute.json'.format(base_url=service_base_url)
-        self.matrix_service_url = 'https://matrix.{base_url}/calculatematrix.json'.format(
-            base_url=service_base_url
-        )
+        self.routing_service_url = 'https://{base_url}/routes'.format(base_url=service_base_url)
+        self.matrix_service_url = 'https://matrix.{base_url}/matrix'.format(base_url=service_base_url)
         self.log = logging.LoggerAdapter(logging.getLogger(__name__), extra={'streetnetwork_id': text_type(id)})
         self.apiKey = apiKey
         self.modes = modes
@@ -219,10 +228,10 @@ class Here(AbstractStreetNetworkService):
             },
         }
 
-    def _call_here(self, url, params):
+    def _call_here(self, url, params={}, mode=requests.get, data={}, headers={}):
         self.log.debug('Here routing service, url: {}'.format(url))
         try:
-            r = self.breaker.call(requests.get, url, timeout=self.timeout, params=params)
+            r = self.breaker.call(mode, url, timeout=self.timeout, params=params, data=data, headers=headers)
             self.record_call('ok')
             return r
         except pybreaker.CircuitBreakerError as e:
@@ -242,23 +251,33 @@ class Here(AbstractStreetNetworkService):
     def _read_response(response, origin, destination, mode, fallback_extremity, request):
         resp = response_pb2.Response()
         resp.status_code = 200
-        routes = response.get('response', {}).get('route', [])
+
+        # routes
+        routes = response.get('routes', [])
         if not routes:
             resp.response_type = response_pb2.NO_SOLUTION
             return resp
+        route = routes[0]
+
+        # sections
+        here_sections = route.get('sections', [])
+        if not here_sections:
+            resp.response_type = response_pb2.NO_SOLUTION
+            return resp
+        here_section = here_sections[0]
 
         resp.response_type = response_pb2.ITINERARY_FOUND
-        route = routes[0]
 
         journey = resp.journeys.add()
 
         # co2 emission "kEC"
-        co2_emission = float(route.get('summary', {}).get('co2Emission', 0)) * 1000
-        journey.co2_emission.unit = 'gEC'
-        journey.co2_emission.value = co2_emission
+        co2_emission = 0
+        # co2_emission = float(route.get('summary', {}).get('co2Emission', 0)) * 1000
+        # journey.co2_emission.unit = 'gEC'
+        # journey.co2_emission.value = co2_emission
 
         # durations
-        travel_time = route.get('summary', {}).get('travelTime', 0)
+        travel_time = here_section.get('summary', {}).get('duration', 0)
         journey.duration = travel_time
         journey.durations.total = travel_time
         if mode == 'walking':
@@ -280,14 +299,8 @@ class Here(AbstractStreetNetworkService):
 
         journey.requested_date_time = request['datetime']
 
-        legs = route.get('leg')
-        if not legs:
-            return journey
-
-        leg = legs[0]
-
         # distances
-        length = int(leg.get('length', 0))
+        length = here_section.get('summary', {}).get('length', 0)
         if mode == 'walking':
             journey.distances.walking = length
         elif mode == 'bike':
@@ -300,14 +313,14 @@ class Here(AbstractStreetNetworkService):
         section = journey.sections.add()
         section.type = response_pb2.STREET_NETWORK
 
-        section.duration = leg.get('travelTime', 0)
+        section.duration = travel_time
         section.begin_date_time = journey.departure_date_time
         section.end_date_time = section.begin_date_time + section.duration
 
         # since HERE can give us the base time, we display it.
         # we do not try to do clever stuff (like taking the 'clockwise' into account) here
         section.base_begin_date_time = section.begin_date_time
-        section.base_end_date_time = section.base_begin_date_time + leg.get('baseTime', section.duration)
+        section.base_end_date_time = section.base_begin_date_time + travel_time
 
         section.id = 'section_0'
         section.length = length
@@ -328,6 +341,14 @@ class Here(AbstractStreetNetworkService):
         }
         section.street_network.mode = map_mode[mode]
 
+        # shape
+        shape = fp.decode(here_section.get('polyline', ''))
+        shape_len = len(shape)
+        for sh in shape:
+            coord = section.street_network.coordinates.add()
+            coord.lon = sh[1]
+            coord.lat = sh[0]
+
         # handle maneuvers to fill Path field
         def _convert_direction(direction):
             sentence = direction.lower()
@@ -338,27 +359,21 @@ class Here(AbstractStreetNetworkService):
             else:
                 return 0
 
-        for maneuver in leg.get('maneuver', []):
+        # instruction
+        i = 0
+        for maneuver in here_section.get('actions', []):
             path_item = section.street_network.path_items.add()
-            path_item.id = int(maneuver.get('id', -1).replace('M', ''))
+            path_item.id = i
             path_item.length = maneuver.get('length', 0)
-            path_item.duration = maneuver.get('travelTime', 0)
+            path_item.duration = maneuver.get('duration', 0)
             path_item.instruction = maneuver.get('instruction', '')
-            path_item.name = maneuver.get('roadName', '')
+            path_item.name = ''
             path_item.direction = _convert_direction(maneuver.get('direction', ''))
-            path_item.instruction_start_coordinate.lat = float(
-                maneuver.get('position', 0.0).get('latitude', 0.0)
-            )
-            path_item.instruction_start_coordinate.lon = float(
-                maneuver.get('position', 0.0).get('longitude', 0.0)
-            )
-
-        shape = route.get('shape', [])
-        for sh in shape:
-            coord = section.street_network.coordinates.add()
-            lat, lon = sh.split(',')
-            coord.lon = float(lon)
-            coord.lat = float(lat)
+            offset = maneuver.get('offset', 0)
+            if offset < shape_len:
+                path_item.instruction_start_coordinate.lat = float(shape[offset][0])
+                path_item.instruction_start_coordinate.lon = float(shape[offset][1])
+            i = i + 1
 
         return resp
 
@@ -494,24 +509,16 @@ class Here(AbstractStreetNetworkService):
         datetime, clockwise = fallback_extremity
         params = {
             'apiKey': self.apiKey,
-            'waypoint0': _get_coord(origin),
-            'waypoint1': _get_coord(destination),
-            # for more information about Attributes
-            # https://developer.here.com/documentation/routing/dev_guide/topics/resource-param-type-route-representation-options.html
-            'routeAttributes': 'sh',
-            'summaryAttributes': 'traveltime',
-            'legAttributes': 'bt,tt,mn',
-            'maneuverAttributes': 'di,rn,le,tt,po',
-            'language': '{language}'.format(language=language.value),
-            'vehicletype': '{engine_type},{engine_average_consumption}'.format(
-                engine_type=engine_type.value, engine_average_consumption=engine_average_consumption
-            ),
-            # street network mode + realtime activation
-            'mode': 'fastest;{mode};traffic:{realtime_traffic}'.format(
-                mode=get_here_mode(mode), realtime_traffic=realtime_traffic.value
-            ),
-            # With HERE, it's only possible to constraint the departure
-            'departure': _str_to_dt(datetime),
+            'origin': _get_coord(origin),
+            'destination': _get_coord(destination),
+            'return': 'summary,polyline,instructions,actions',
+            'spans': 'dynamicSpeedInfo',
+            'transportMode': 'car',
+            'lang': '{language}'.format(language=language.value),
+            # 'vehicletype': '{engine_type},{engine_average_consumption}'.format(
+            # engine_type=engine_type.value, engine_average_consumption=engine_average_consumption
+            # ),
+            'departureTime': _str_to_dt(datetime),
         }
         exclusion_areas = self.get_exclusion_areas(request)
         if exclusion_areas != None:
@@ -565,19 +572,19 @@ class Here(AbstractStreetNetworkService):
         )
 
     def _create_matrix_response(self, json_response, origins, destinations):
+        travel_times = json_response.get('matrix', {}).get('travelTimes')
+
         sn_routing_matrix = response_pb2.StreetNetworkRoutingMatrix()
-        # by convenience we create a temporary structure. If it's a bottleneck, refactor this
-        entries = {
-            (e.get('startIndex'), e.get('destinationIndex')): e.get('summary', {}).get('travelTime')
-            for e in json_response.get('response', {}).get('matrixEntry', [])
-        }
         row = sn_routing_matrix.rows.add()
-        for i_o, o in enumerate(origins):
-            for i_d, d in enumerate(destinations):
+        num_destinations = len(destinations)
+        for i_o, _ in enumerate(origins):
+            for i_d, _ in enumerate(destinations):
                 routing = row.routing_response.add()
-                travel_time = entries.get((i_o, i_d))
-                if travel_time:
-                    routing.duration = travel_time
+                # the idx algorithm is describe inside the doc
+                # https://developer.here.com/documentation/matrix-routing-api/api-reference-swagger.html
+                idx = num_destinations * i_o + i_d
+                if idx < self.max_matrix_points:
+                    routing.duration = travel_times[idx]
                     routing.routing_status = response_pb2.reached
                 else:
                     # since we limit the number of points given to HERE, we say that all the others cannot be
@@ -598,55 +605,74 @@ class Here(AbstractStreetNetworkService):
             routing.duration = travel_time
             routing.routing_status = response_pb2.reached
         else:
-            # reached (and not response_pb2.unkown since we don't want a crow fly section)
             routing.duration = -1
             routing.routing_status = response_pb2.unreached
 
         return row
 
-    def get_matrix_params(
+    def get_post_matrix_payload(
         self, origins, destinations, mode, max_duration, request, realtime_traffic, max_matrix_points
     ):
-        params = {
-            'apiKey': self.apiKey,
-            # used to get the travel time in the response
-            'summaryAttributes': 'traveltime',
-            # used to get the fasted journeys using the given mode and with traffic data
-            'mode': 'fastest;{mode};traffic:{realtime_traffic}'.format(
-                mode=get_here_mode(mode), realtime_traffic=realtime_traffic.value
-            ),
+        here_origins = []
+        for i, o in enumerate(itertools.islice(origins, int(max_matrix_points))):
+            here_origins.append(_get_coord_for_matrix(o))
+
+        here_destinations = []
+        for i, o in enumerate(itertools.islice(destinations, int(max_matrix_points))):
+            here_destinations.append(_get_coord_for_matrix(o))
+
+        payload = {
+            'routingMode': 'fast',
+            'regionDefinition': {'type': 'world'},
+            'origins': here_origins,
+            'destinations': here_destinations,
         }
+
         exclusion_areas = self.get_exclusion_areas(request)
         if exclusion_areas != None:
-            params.update(exclusion_areas)
+            payload.update(exclusion_areas)
 
         # for the ending fallback matrix (or the beginning of non clockwise query), we do not know the
         # precise departure/arrival (as it depend on the public transport taken)
-        # for the moment we only give the departure time of the matrix as the requested departure
-        # (so it's a mistake in 50% of the cases).
-        # TODO: do better :D
         datetime = request['datetime']
-        params['departure'] = _str_to_dt(datetime)
+        payload['departureTime'] = _str_to_dt(datetime)
 
-        for i, o in enumerate(itertools.islice(origins, int(max_matrix_points))):
-            params['start{}'.format(i)] = _get_coord(o)
-
-        for i, o in enumerate(itertools.islice(destinations, int(max_matrix_points))):
-            params['destination{}'.format(i)] = _get_coord(o)
-
-        # TODO handle max_duration (but the API can only handle a max distance (searchRange)
-
-        return params
+        return json.dumps(payload)
 
     def _get_sn_routing_matrix_with_simple_matrix(
         self, origins, destinations, mode, max_duration, request, realtime_traffic, max_matrix_points
     ):
-        params = self.get_matrix_params(
+
+        # Post the resquest
+        post_data = self.get_post_matrix_payload(
             origins, destinations, mode, max_duration, request, realtime_traffic, max_matrix_points
         )
-        r = self._call_here(self.matrix_service_url, params=params)
-        r.raise_for_status()
-        return self._create_matrix_response(r.json(), origins, destinations)
+        params = {'apiKey': self.apiKey}
+        headers = {'Content-Type': 'application/json'}
+        post_resp = self._call_here(
+            self.matrix_service_url, params=params, mode=requests.post, data=post_data, headers=headers
+        )
+        post_resp.raise_for_status()
+
+        if post_resp.status_code != 202:
+            return None
+
+        t = 0
+        lapse_time_to_retry = 0.1
+        step_time = self.timeout / lapse_time_to_retry
+        while t < self.timeout * 1000:
+            self.log.debug('Here, try to fetch matrix data with a get')
+            matrix_id = post_resp.json().get('matrixId', None)
+            if matrix_id == None:
+                raise TechnicalError('Here, invalid matrixId inside matrix POST response')
+            time.sleep(lapse_time_to_retry)
+            get_url = self.matrix_service_url + '/' + str(matrix_id) + '?apiKey=' + str(self.apiKey)
+            matrix_resp = requests.request("GET", get_url, headers=headers)
+            if matrix_resp.status_code == 200:
+                return self._create_matrix_response(matrix_resp.json(), origins, destinations)
+            t = t + step_time
+
+        raise TechnicalError('Here, impossible to retreive matrix data, timeout')
 
     def _get_sn_routing_matrix_with_multi_direct_path(
         self, origins, destinations, mode, max_duration, request, realtime_traffic, max_matrix_points
@@ -667,7 +693,7 @@ class Here(AbstractStreetNetworkService):
                     self.engine_type,
                     self.engine_average_consumption,
                 )
-                r = self._call_here(self.routing_service_url, params=params)
+                r = self._call_here(self.routing_service_url, params=params, mode=requests.get)
                 r.raise_for_status()
                 self._create_matrix_response_with_direct_path(r.json(), row)
         return sn_routing_matrix
