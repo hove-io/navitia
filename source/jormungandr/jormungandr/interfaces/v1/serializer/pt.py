@@ -655,6 +655,8 @@ class VehicleJourneyPositionsSerializer(PbNestedSerializer):
     bearing = jsonschema.MethodField(schema_type=int, display_none=False)
     speed = jsonschema.MethodField(schema_type=int, display_none=False)
     data_freshness = EnumField(attr="data_freshness", display_none=False)
+    occupancy = jsonschema.MethodField(schema_type=str, display_none=False)
+    feed_created_at = DateTimeField()
 
     def get_bearing(self, obj):
         return obj.bearing if obj.HasField(str('bearing')) else None
@@ -664,6 +666,9 @@ class VehicleJourneyPositionsSerializer(PbNestedSerializer):
 
     def get_coord(self, obj):
         return CoordSerializer(obj.coord).data if obj.HasField(str('coord')) else None
+
+    def get_occupancy(self, obj):
+        return get_proto_attr_or_default(obj, 'occupancy')
 
 
 class ConnectionSerializer(PbNestedSerializer):
