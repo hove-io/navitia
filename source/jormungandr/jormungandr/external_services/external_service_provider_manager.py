@@ -122,6 +122,7 @@ class ExternalServiceManager(object):
             services = self._external_service_getter()
         except Exception as e:
             self.logger.error('No access to table external_service (error: {})'.format(e))
+            # database is not accessible, so let's use the values already present in self._external_services_legacy
             return
 
         if not services:

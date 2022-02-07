@@ -119,6 +119,8 @@ class EquipmentProviderManager(object):
             providers = self._providers_getter()
         except Exception as e:
             self.logger.exception('No access to table equipments_provider (error: {})'.format(e))
+            # database is not accessible, so let's use the values already present in self._equipment_providers and
+            # self._equipment_providers_legacy
             return
 
         if not providers:

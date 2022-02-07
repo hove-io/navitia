@@ -152,6 +152,7 @@ class RidesharingServiceManager(object):
             services = self._rs_services_getter()
         except Exception as e:
             self.logger.exception('Failure to retrieve ridesharing services configuration (error: {})'.format(e))
+            # database is not accessible, so let's use the values already present in self._ridesharing_services_legacy
             return
 
         if not services:

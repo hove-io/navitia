@@ -5,6 +5,7 @@ import os
 import json
 from flask_restful.inputs import boolean
 
+# sql queries will return an exception if the query did not succeed before `statement_timeout`
 DEFAULT_SQLALCHEMY_ENGINE_OPTIONS = {'connect_args': {"options": "-c statement_timeout=1000"}}  # 1000ms
 
 # path of the configuration file for each instances
