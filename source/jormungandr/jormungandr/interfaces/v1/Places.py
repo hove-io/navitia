@@ -199,6 +199,11 @@ class Places(ResourceUri):
             response = i_manager.dispatch(args, "places", instance_name=self.region)
         else:
             available_instances = get_all_available_instances(user)
+
+            # If no instance available most probably due to database error
+            if (not user) and (not available_instances):
+                raise TechnicalError('world wide autocompletion service not available temporarily')
+
             # If parameter '_autocomplete' is absent use 'bragi' as default value
             if args["_autocomplete"] is None:
                 args["_autocomplete"] = 'bragi'
@@ -268,6 +273,10 @@ class PlaceUri(ResourceUri):
         else:
             user = authentication.get_user(token=authentication.get_token(), abort_if_no_token=False)
             available_instances = get_all_available_instances(user)
+
+            # If no instance available most probably due to database error
+            if (not user) and (not available_instances):
+                raise TechnicalError('world wide autocompletion service not available temporarily')
 
             # If parameter '_autocomplete' is absent use 'bragi' as default value
             if args["_autocomplete"] is None:

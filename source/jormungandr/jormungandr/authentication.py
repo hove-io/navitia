@@ -114,6 +114,16 @@ def get_token():
         return auth
 
 
+def can_read_user():
+    try:
+        User.query.first()
+    except Exception as e:
+        logging.getLogger(__name__).error('No access to table User (error: {})'.format(e))
+        g.can_connect_to_database = False
+        return False
+    return True
+
+
 @memory_cache.memoize(
     current_app.config[str('MEMORY_CACHE_CONFIGURATION')].get(str('TIMEOUT_AUTHENTICATION'), 30)
 )
@@ -125,17 +135,24 @@ def has_access(region, api, abort, user):
     Warning: Please this function is cached therefore it should not be
     dependent of the request context, so keep it as a pure function.
     """
-    if current_app.config.get('PUBLIC', False):
-        # if jormungandr is on public mode we skip the authentification process
-        return True
-    if not can_connect_to_database():
+    # if jormungandr is on public mode or database is not accessible, we skip the authentication process
+    if current_app.config.get('PUBLIC', False) or (not can_connect_to_database()):
         return True
 
     if not user:
         # no user --> no need to continue, we can abort, a user is mandatory even for free region
-        abort_request(user=user)
-
-    model_instance = Instance.get_by_name(region)
+        # To manage database error of the following type we should fetch one more time from database
+        # Can connect to database but at least one table/attribute is not accessible due to transaction problem
+        if can_read_user():
+            abort_request(user=user)
+        else:
+            return True
+    try:
+        model_instance = Instance.get_by_name(region)
+    except Exception as e:
+        logging.getLogger(__name__).error('No access to table Instance (error: {})'.format(e))
+        g.can_connect_to_database = False
+        return True
 
     if not model_instance:
         if abort:
@@ -164,7 +181,14 @@ def cache_get_user(token):
     """
     if not can_connect_to_database():
         return None
-    return User.get_from_token(token, datetime.datetime.now())
+    try:
+        user = User.get_from_token(token, datetime.datetime.now())
+    except Exception as e:
+        logging.getLogger(__name__).error('No access to table User (error: {})'.format(e))
+        g.can_connect_to_database = False
+        return None
+
+    return user
 
 
 @memory_cache.memoize(
@@ -174,7 +198,13 @@ def cache_get_user(token):
 def cache_get_key(token):
     if not can_connect_to_database():
         return None
-    return Key.get_by_token(token)
+    try:
+        key = Key.get_by_token(token)
+    except Exception as e:
+        logging.getLogger(__name__).error('No access to table key (error: {})'.format(e))
+        g.can_connect_to_database = False
+        return None
+    return key
 
 
 @memory_cache.memoize(
@@ -196,7 +226,13 @@ def get_all_available_instances(user):
 
     if not user:
         # for not-public navitia a user is mandatory
-        abort_request(user=user)
+        # To manage database error of the following type we should fetch one more time from database
+        # Can connect to database but at least one table/attribute is not accessible due to transaction problem
+        if can_read_user():
+            abort_request(user=user)
+        else:
+            return None
+
     if not user.have_access_to_free_instances:
         # only users with access to opendata can use the global /places
         abort_request(user=user)

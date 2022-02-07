@@ -122,11 +122,13 @@ class RealtimeProxyManager(object):
         self.logger.debug('Updating realtime proxies from db')
         self._last_update = datetime.datetime.utcnow()
 
-        realtime_proxies = []
         try:
             realtime_proxies = self._realtime_proxies_getter()
-        except Exception:
-            self.logger.exception('Failure to retrieve realtime proxies configuration')
+        except Exception as e:
+            self.logger.exception('Failure to retrieve realtime proxies configuration (error: {})'.format(e))
+            # database is not accessible, so let's use the values already present in self._realtime_proxies
+            return
+
         if not realtime_proxies:
             self.logger.debug('No realtime proxies available in db')
             self._realtime_proxies = {}
