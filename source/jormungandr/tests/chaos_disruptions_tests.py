@@ -482,6 +482,9 @@ class TestChaosDisruptions2(ChaosDisruptionsFixture):
         assert len(links) == 1
         assert links[0]["id"] == "stopA"
 
+        assert len(response["terminus"]) == 1
+        assert response["terminus"][0]["id"] == "stopA"
+
         # we create a disruption on line
         self.send_mock("bob_the_disruption_on_line", "A", "line")
         query = journey_basic_query + '&_current_datetime=20160314T144100'
@@ -526,6 +529,9 @@ class TestChaosDisruptions2(ChaosDisruptionsFixture):
         links = [link for di in display_infos for link in di['links'] if link['type'] == 'stop_area']
         assert len(links) == 1
         assert links[0]["id"] == "stopA"
+
+        assert len(response["terminus"]) == 1
+        assert response["terminus"][0]["id"] == "stopA"
 
     def test_disruption_on_journey_with_blocking_disruption(self):
         """

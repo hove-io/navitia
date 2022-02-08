@@ -167,7 +167,6 @@ BOOST_AUTO_TEST_CASE(simple_journey) {
                   navitia::type::AccessibiliteParams() /*false*/, forbidden, {}, sn_worker, nt::RTLevel::Base, 2_min,
                   2_min);
     pbnavitia::Response resp = pb_creator.get_response();
-
     BOOST_REQUIRE_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
     BOOST_REQUIRE_EQUAL(resp.journeys_size(), 1);
     pbnavitia::Journey journey = resp.journeys(0);
@@ -184,6 +183,10 @@ BOOST_AUTO_TEST_CASE(simple_journey) {
     BOOST_CHECK_EQUAL(st1.departure_date_time(), ntest::to_posix_timestamp("20120614T081100"));
     BOOST_CHECK_EQUAL(st2.arrival_date_time(), ntest::to_posix_timestamp("20120614T082000"));
     BOOST_CHECK_EQUAL(resp.has_next_request_date_time(), true);
+
+    BOOST_CHECK_EQUAL(resp.terminus().size(), 1);
+    BOOST_CHECK_EQUAL(resp.terminus(0).uri(), "stop_area:stop2");
+    BOOST_CHECK_EQUAL(section.pt_display_informations().uris().stop_area(), "stop_area:stop2");
 }
 
 /*
