@@ -841,6 +841,12 @@ def merge_responses(responses, debug):
                 continue
             merged_response.impacts.extend([i])
 
+        # Handle terminus
+        for i in r.terminus:
+            if any(other.uri == i.uri for other in merged_response.terminus):
+                continue
+            merged_response.terminus.extend([i])
+
     if not merged_response.journeys:
         # we aggregate the errors found
         errors = {r.error.id: r.error for r in responses if r.HasField(str('error'))}

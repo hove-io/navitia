@@ -1384,6 +1384,8 @@ void PbCreator::Filler::fill_pb_object(const nt::Route* r, pbnavitia::PtDisplayI
     fill_messages(r, pt_display_info);
 
     if (r->destination != nullptr) {
+        this->pb_creator.terminus.insert(r->destination);
+        // we always dump the stop point (with the same depth)
         // Here we format display_informations.direction for stop_schedules.
         pt_display_info->set_direction(r->destination->name);
         uris->set_stop_area(r->destination->uri);
@@ -2226,6 +2228,8 @@ const pbnavitia::Response& PbCreator::get_response() {
     contributors.clear();
     Filler(0, {DumpMessage::No}, *this).fill_pb_object(impacts, response.mutable_impacts());
     impacts.clear();
+    Filler(0, {DumpMessage::No}, *this).fill_pb_object(terminus, response.mutable_terminus());
+    terminus.clear();
     return response;
 }
 

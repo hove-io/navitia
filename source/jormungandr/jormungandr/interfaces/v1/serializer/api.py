@@ -336,6 +336,7 @@ class JourneysSerializer(JourneysCommon):
     journeys = JourneySerializer(many=True)
     tickets = TicketSerializer(many=True, display_none=True)
     disruptions = pt.DisruptionSerializer(attr='impacts', many=True, display_none=True)
+    terminus = pt.StopAreaSerializer(many=True, display_none=True)
     context = MethodField(schema_type=ContextSerializer(), display_none=False)
     notes = DescribedField(schema_type=NoteSerializer(many=True))
     exceptions = DescribedField(schema_type=ExceptionSerializer(many=True))

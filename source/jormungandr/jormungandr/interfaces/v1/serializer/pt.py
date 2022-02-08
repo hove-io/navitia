@@ -739,7 +739,7 @@ class RouteDisplayInformationSerializer(PbNestedSerializer):
         if obj.HasField(str("uris")):
             for type_, value in obj.uris.ListFields():
                 if type_.name == "stop_area":
-                    response.append({"type": type_.name, "id": value})
+                    response.append(create_internal_link(_type="stop_area", rel="terminus", id=value))
         return response
 
 
