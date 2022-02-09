@@ -51,3 +51,4 @@ amqp==5.0.6 ; python_version >= "3.9"
 kombu==4.0.2  ; python_version < "3.9"
 kombu==5.0.2  ; python_version >= "3.9"
 redis==2.10.6
+flexpolyline

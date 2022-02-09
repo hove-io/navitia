@@ -32,7 +32,6 @@ Insert into **Jormun** configuration:
 
 Available optional parameters list:
 * timeout: circuit breaker timeout. By default 10 secs
-* realtime_traffic: activation of realtime traffic informations - true/false. By default, true
 * language: the selected language for guidance instruction - list available bellow. By default, english
     * afrikaans
     * arabic
@@ -49,18 +48,14 @@ Available optional parameters list:
     * portuguese
     * russian
     * spanish
-* matrix_type: the matrix method - simple_matrix/multi_direct_path. By default simple_matrix
 * max_matrix_points: the max number of allowed matrix points. By default 100 (the maximum)
-* engine_type: Vehicle engine type, usefull for co2 emission calculation - diesel/gasoline/electric. By default diesel
-* engine_average_consumption: The average fuel consumption, measured in liters per 100km. usefull for co2 emission calculation. By default 7
+* lapse_time_matrix_to_retry: The waiting time between to get request to retreive the matrix response
 
 ### How to debug
 
 You can easily override parameters for tests inside requests.<br>
 List of available API parameters:
-* _here_realtime_traffic: true/false
 * _here_language: "english" or "french" or "dutch" ...
-* _here_matrix_type: simple_matrix/multi_direct_path
 * _here_max_matrix_points: int value [1-100]
 
 Example:
@@ -75,7 +70,7 @@ An option is available in order to exclude areas. With it, a journeys is forbidd
 
 Option:
 
-* _here_exclusion_area[]: coord1;coord2 with coord=latitude;longitude
+* _here_exclusion_area[]: coord1!coord2 with coord=latitude;longitude
 
 Example:
 

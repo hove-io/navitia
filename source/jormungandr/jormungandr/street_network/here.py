@@ -329,14 +329,14 @@ class Here(AbstractStreetNetworkService):
     def get_exclusion_areas(self, request):
         """
         Retreive and adapt exclusion parameters for Here API.
-        See the Here doc for avoidAreas option
-        https://developer.here.com/documentation/routing/dev_guide/topics/resource-calculate-matrix.html
+        See the Here doc for avoid option
+        https://developer.here.com/documentation/matrix-routing-api/api-reference-swagger.html
         """
         _exclusion_areas = request.get('_here_exclusion_area[]', None)
         if _exclusion_areas == None:
             return None
         else:
-            boxes = ""
+            boxes = 'bbox:'
             if len(_exclusion_areas) > HERE_MAX_LIMIT_AVOID_AREAS:
                 self.log.error(
                     'Here parameters _here_exclusion_area[] is limited to 20 exclusion areas. truncate list !'
@@ -347,14 +347,13 @@ class Here(AbstractStreetNetworkService):
                     if is_coord(coord_1) and is_coord(coord_2):
                         lon_1, lat_1 = get_lon_lat(coord_1)
                         lon_2, lat_2 = get_lon_lat(coord_2)
-                        # The superior latitude has to be the first coord for Here API
-                        # https://developer.here.com/documentation/routing/dev_guide/topics/resource-param-type-bounding-box.html
-                        if lat_1 > lat_2:
-                            boxes += "{},{};{},{}".format(lat_1, lon_1, lat_2, lon_2)
+                        # The superior latitude has to be the second coord for Here API
+                        if lat_1 < lat_2:
+                            boxes += "{},{},{},{}".format(lon_1, lat_1, lon_2, lat_2)
                         else:
-                            boxes += "{},{};{},{}".format(lat_2, lon_2, lat_1, lon_1)
+                            boxes += "{},{},{},{}".format(lon_2, lat_2, lon_1, lat_1)
                         if idx < (len(_exclusion_areas) - 1):
-                            boxes += "!"
+                            boxes += "|"
                     else:
                         self.log.error(
                             'Here parameters _here_exclusion_area[]={} is badly formated. Exclusion box is skipped'.format(
@@ -367,7 +366,7 @@ class Here(AbstractStreetNetworkService):
                             exclusion_area
                         )
                     )
-            return {"avoid": boxes}
+            return {'avoid': boxes}
 
     def _get_language(self, language):
         try:
@@ -402,17 +401,13 @@ class Here(AbstractStreetNetworkService):
         return lapse_time_matrix_to_retry
 
     def get_matrix_parameters(self, request):
-        # max_matrix_ppints
-        print("RES ", request)
+        # max_matrix_points
         _max_matrix_points = request.get('_here_max_matrix_points', None)
         if _max_matrix_points == None:
-            print("11 ", self.max_matrix_points)
             max_matrix_points = self.max_matrix_points
         else:
-            print("12 ", _max_matrix_points)
             max_matrix_points = self._get_max_matrix_points(_max_matrix_points)
 
-        print("ZAZA ", max_matrix_points)
         return max_matrix_points
 
     def get_direct_path_params(self, origin, destination, fallback_extremity, request, language):
@@ -425,9 +420,6 @@ class Here(AbstractStreetNetworkService):
             'spans': 'dynamicSpeedInfo',
             'transportMode': 'car',
             'lang': '{language}'.format(language=language.value),
-            # 'vehicletype': '{engine_type},{engine_average_consumption}'.format(
-            # engine_type=engine_type.value, engine_average_consumption=engine_average_consumption
-            # ),
             'departureTime': _str_to_dt(datetime),
         }
         exclusion_areas = self.get_exclusion_areas(request)
@@ -474,9 +466,6 @@ class Here(AbstractStreetNetworkService):
 
     def _create_matrix_response(self, json_response, origins, destinations):
         travel_times = json_response.get('matrix', {}).get('travelTimes')
-        print("LOL 1 ", len(travel_times))
-        print("LOL 1 ", len(origins))
-        print("LOL 1 ", len(destinations))
 
         sn_routing_matrix = response_pb2.StreetNetworkRoutingMatrix()
         row = sn_routing_matrix.rows.add()
@@ -553,12 +542,12 @@ class Here(AbstractStreetNetworkService):
         if post_resp.status_code != 202:
             raise TechnicalError('Here, post return status code != 202')
 
-        return post_resp
+        return post_resp.json()
 
     def get_matrix_response(self, origins, destinations, post_resp):
 
         headers = {'Content-Type': 'application/json'}
-        matrix_id = post_resp.json().get('matrixId', None)
+        matrix_id = post_resp.get('matrixId', None)
         if matrix_id == None:
             raise TechnicalError('Here, invalid matrixId inside matrix POST response')
 
