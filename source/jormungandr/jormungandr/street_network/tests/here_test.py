@@ -128,7 +128,7 @@ def valid_here_routing_response():
                                 'originalLocation': {'lat': 50.5883469, 'lng': 3.0081329},
                             },
                         },
-                        'travelSummary': {
+                        'summary': {
                             'duration': 1468,
                             'length': 21919,
                             'baseDuration': 1344,
