@@ -58,6 +58,10 @@ DEFAULT_LAPSE_TIME_MATRIX_TO_RETRY = 0.1  # in secs
 # max nb points for matrix request
 MAX_MATRIX_POINTS_VALUES = 100
 
+# CO2 coeff
+CO2_ESTIMATION_COEFF_1 = 1.35
+CO2_ESTIMATION_COEFF_2 = 184
+
 # Possible values implemented. Full languages within the doc:
 # https://developer.here.com/documentation/routing/dev_guide/topics/resource-param-type-languages.html#languages
 # Be careful, the syntax has to be exact
@@ -219,12 +223,6 @@ class Here(AbstractStreetNetworkService):
 
         journey = resp.journeys.add()
 
-        # co2 emission "kEC"
-        co2_emission = 0
-        # co2_emission = float(route.get('summary', {}).get('co2Emission', 0)) * 1000
-        # journey.co2_emission.unit = 'gEC'
-        # journey.co2_emission.value = co2_emission
-
         # durations
         travel_time = here_section.get('summary', {}).get('duration', 0)
         journey.duration = travel_time
@@ -259,6 +257,10 @@ class Here(AbstractStreetNetworkService):
         else:
             journey.distances.taxi = length
 
+        # co2 emission
+        journey.co2_emission.unit = 'gEC'
+        journey.co2_emission.value = CO2_ESTIMATION_COEFF_1 * length / 1000.0 * CO2_ESTIMATION_COEFF_2
+
         section = journey.sections.add()
         section.type = response_pb2.STREET_NETWORK
 
@@ -275,7 +277,7 @@ class Here(AbstractStreetNetworkService):
         section.length = length
 
         section.co2_emission.unit = 'gEC'
-        section.co2_emission.value = co2_emission
+        section.co2_emission.value = journey.co2_emission.value
 
         section.origin.CopyFrom(origin)
         section.destination.CopyFrom(destination)
