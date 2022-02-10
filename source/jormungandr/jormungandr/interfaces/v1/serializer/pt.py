@@ -731,8 +731,16 @@ class RouteDisplayInformationSerializer(PbNestedSerializer):
     color = jsonschema.Field(schema_type=str)
     code = jsonschema.Field(schema_type=str)
     name = jsonschema.Field(schema_type=str)
-    links = DisruptionLinkSerializer(attr='impact_uris', display_none=True)
+    links = jsonschema.MethodField(display_none=True, schema_type=LinkSchema(many=True))
     text_color = jsonschema.Field(schema_type=str)
+
+    def get_links(self, obj):
+        response = DisruptionLinkSerializer().to_value(obj.impact_uris)
+        if obj.HasField(str("uris")):
+            for type_, value in obj.uris.ListFields():
+                if type_.name == "stop_area":
+                    response.append(create_internal_link(_type="stop_area", rel="terminus", id=value))
+        return response
 
 
 class VJDisplayInformationSerializer(RouteDisplayInformationSerializer):
