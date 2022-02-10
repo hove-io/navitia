@@ -552,9 +552,13 @@ struct add_impacts_visitor : public apply_impacts_visitor {
 
             LOG4CPLUS_TRACE(log, "VJ: " << vj->uri << " may be impacted");
 
-            bool stop_point_found = boost::range::find_if(vj->stop_time_list, [](const auto& stop_time) {
-                return stop_time.stop_point->uri == stop_point->uri; 
-            } );
+            bool stop_point_found = false;
+            for (const nt::StopTime& stop_time : vj->stop_time_list) {
+                if (stop_time.stop_point->uri == stop_point->uri) {
+                    stop_point_found = true;
+                    break;
+                }
+            }
             if (!stop_point_found) {
                 continue;
             }
