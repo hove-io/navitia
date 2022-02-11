@@ -115,11 +115,14 @@ class EquipmentProviderManager(object):
         self.logger.debug('Updating equipment providers from db')
         self._last_update = datetime.datetime.utcnow()
 
-        providers = []
         try:
             providers = self._providers_getter()
-        except Exception:
-            self.logger.exception('Failure to retrieve equipments providers configuration')
+        except Exception as e:
+            self.logger.exception('No access to table equipments_provider (error: {})'.format(e))
+            # database is not accessible, so let's use the values already present in self._equipment_providers and
+            # self._equipment_providers_legacy
+            return
+
         if not providers:
             self.logger.debug('No providers/All providers disabled in db')
             self._equipment_providers = {}

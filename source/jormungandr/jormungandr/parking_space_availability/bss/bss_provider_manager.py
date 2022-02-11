@@ -66,11 +66,14 @@ class BssProviderManager(AbstractProviderManager):
         logger.debug('updating bss providers')
         self._last_update = datetime.datetime.utcnow()
 
-        providers = None
         try:
             providers = self._providers_getter()
-        except Exception:
-            logger.exception('failure to retrieve bss configuration')
+        except Exception as e:
+            logger.exception('No access to table bss_provider (error: {})'.format(e))
+            # database is not accessible, so let's use the values already present in self._bss_providers and
+            # self._bss_providers_legacy
+            return
+
         if not providers:
             logger.debug('all providers have be disabled')
             self._bss_providers = {}

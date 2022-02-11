@@ -83,9 +83,24 @@ add_subdirectory(equipment)
 add_subdirectory(position)
 add_subdirectory(access_point)
 
-# Add tests
 if(NOT SKIP_TESTS)
+    # Add tests
     add_subdirectory(tests)
+else ()
+    # we still need these two mock binairies for testing purpose.
+    set(ALL_LIBS workers ed ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY} ${NAVITIA_ALLOCATOR})
+
+    add_executable(main_routing_test tests/mock-kraken/main_routing_test.cpp)
+    add_executable(departure_board_test tests/mock-kraken/departure_board_test.cpp)
+
+    set_target_properties(main_routing_test departure_board_test PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/tests/mock-kraken")
+
+    target_link_libraries(main_routing_test ${ALL_LIBS})
+    target_link_libraries(departure_board_test ${ALL_LIBS})
+
+    install(TARGETS main_routing_test DESTINATION ${CMAKE_INSTALL_PREFIX}/bin)
+    install(TARGETS departure_board_test DESTINATION ${CMAKE_INSTALL_PREFIX}/bin)
+
 endif(NOT SKIP_TESTS)
 
 include(CheckIncludeFiles)

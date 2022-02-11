@@ -118,11 +118,13 @@ class ExternalServiceManager(object):
         self.logger.debug('Updating external services from db')
         self._last_update = datetime.datetime.utcnow()
 
-        services = []
         try:
             services = self._external_service_getter()
-        except Exception:
-            self.logger.exception('Failure to retrieve external service configuration')
+        except Exception as e:
+            self.logger.error('No access to table external_service (error: {})'.format(e))
+            # database is not accessible, so let's use the values already present in self._external_services_legacy
+            return
+
         if not services:
             self.logger.debug('No external service/All external services disabled in db')
             self._external_services_last_update = {}
