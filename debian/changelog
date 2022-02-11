@@ -1,3 +1,14 @@
+navitia2 (15.1.0) unstable; urgency=low
+
+  * [Kraken] Early filtering of vj for stop point disruption  <https://github.com/CanalTP/navitia/pull/3663>
+  * [Kraken] Add direction uri in display informations  <https://github.com/CanalTP/navitia/pull/3657>
+  * [Jormungandr] Manage database resilience if at least one table is not accessible  <https://github.com/CanalTP/navitia/pull/3652>
+  * [Jormungandr] Add occupancy and feed_created_at in vehicle_position  <https://github.com/CanalTP/navitia/pull/3656>
+  * [Jormungandr] Fix Authentication for ride-sharing instant system   <https://github.com/CanalTP/navitia/pull/3658>
+  * [Kraken] Make chaos sql query batch_size configurable  <https://github.com/CanalTP/navitia/pull/3659>
+
+ -- Abderrahim AZIME <azime_1@yahoo.fr>  Fri, 11 Feb 2022 10:02:35 +0100
+
 navitia2 (15.0.1) unstable; urgency=low
 
   * [Kraken] Make chaos sql query batch_size configurable  <https://github.com/CanalTP/navitia/pull/3659>
