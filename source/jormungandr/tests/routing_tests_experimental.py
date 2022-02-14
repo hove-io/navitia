@@ -318,7 +318,7 @@ class TestJourneysDistributed(
         assert pt_journey['sections'][0]['mode'] == 'walking'
         assert pt_journey['sections'][-1]['mode'] == 'walking'
         assert len(r["terminus"]) == 1
-        assert r["terminus"][0]["id"] == "StopA"
+        assert r["terminus"][0]["id"] == "stopA"
 
         r = self.query(query + "&debug=true")
         # find all pt_journeys
