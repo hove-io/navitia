@@ -575,6 +575,10 @@ class TestDepartureBoard(AbstractTestFixture):
         assert response["departures"][1]["stop_date_time"]["additional_informations"][0] == "on_demand_transport"
         assert response["departures"][1]["stop_date_time"]["data_freshness"] == "base_schedule"
 
+        assert "terminus" not in response
+        assert not response["departures"][0]["display_informations"]["links"]
+        assert not response["departures"][1]["display_informations"]["links"]
+
     def test_departures_arrivals_without_filters(self):
         """
         departure, arrivals api without filters
