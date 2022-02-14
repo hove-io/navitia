@@ -115,6 +115,7 @@ def is_valid_route_schedule(schedule, only_time=False):
                 get_valid_datetime(dt)
 
         is_valid_stop_point(get_not_null(row, 'stop_point'), depth_check=1)
+    assert not d["links"]
 
 
 def is_valid_departures(departures):

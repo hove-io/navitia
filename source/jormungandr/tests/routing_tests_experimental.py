@@ -156,6 +156,7 @@ class TestJourneysDistributed(
         context = response['context']
         assert 'car_direct_path' in context
         assert 'co2_emission' in context['car_direct_path']
+        assert len(response["terminus"]) == 1
 
     def test_journey_with_limited_nb_crowfly(self):
         """
@@ -316,6 +317,8 @@ class TestJourneysDistributed(
         pt_journey = next((j for j in r['journeys'] if 'non_pt' not in j['tags']), None)
         assert pt_journey['sections'][0]['mode'] == 'walking'
         assert pt_journey['sections'][-1]['mode'] == 'walking'
+        assert len(r["terminus"]) == 1
+        assert r["terminus"][0]["id"] == "StopA"
 
         r = self.query(query + "&debug=true")
         # find all pt_journeys
