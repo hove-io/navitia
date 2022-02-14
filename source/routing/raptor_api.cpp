@@ -1369,14 +1369,22 @@ void filter_late_journeys(RAPTOR::Journeys& journeys, const NightBusFilter::Para
     }
 }
 
-// if the stop_point is not present in the map(previously computed street network matrix), it's not accessible
-bool stop_point_is_accessible(const map_stop_point_duration& departures,
-                              const map_stop_point_duration& destinations,
-                              const idx_t idx,
-                              const bool clockwise) {
+bool can_shorten_at(const map_stop_point_duration& departures,
+                    const map_stop_point_duration& destinations,
+                    const navitia::type::StopTime& stop_time,
+                    const bool clockwise) {
     const auto& map = clockwise ? destinations : departures;
-    auto it = map.find(routing::SpIdx{idx});
-    return it != map.end();
+    auto it = map.find(routing::SpIdx{stop_time.stop_point->idx});
+    // if the stop_point is not one of the allowed fallback stop_points, we cannot shorten the journey there
+    if (it == map.end()) {
+        return false;
+    }
+
+    if (clockwise) {
+        return stop_time.drop_off_allowed();
+    } else {
+        return stop_time.pick_up_allowed();
+    }
 }
 
 // - if `clockwise` : remove everything in the section *after* the *first* occurence of `stop_area_uri`, unless this
@@ -1398,7 +1406,7 @@ bool shorten_section(navitia::routing::Journey::Section& section,
     for (const auto* vj = section.get_in_st->vehicle_journey; vj; (vj = vj->next_vj, order = type::RankStopTime(0))) {
         for (const auto& st :
              boost::make_iterator_range(vj->stop_time_list.begin() + order.val, vj->stop_time_list.end())) {
-            if (stop_point_is_accessible(departures, destinations, st.stop_point->idx, clockwise)
+            if (can_shorten_at(departures, destinations, st, clockwise)
                 && st.stop_point->stop_area->uri == stop_area_uri && vj != vj_to_skip) {
                 (clockwise ? section.get_out_st : section.get_in_st) = &st;
                 (clockwise ? section.get_out_dt : section.get_in_dt) = clockwise ? st.arrival_time : st.departure_time;

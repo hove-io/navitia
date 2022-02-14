@@ -1,3 +1,9 @@
+navitia2 (15.1.1) unstable; urgency=low
+
+  * [Kraken] Respect pick_up/drop_off while shortening of backtracking journey <https://github.com/CanalTP/navitia/pull/3664>
+
+ -- xlqian <patrick.qian@kisio.com>  Mon, 14 Feb 2022 16:02:40 +0100
+
 navitia2 (15.1.0) unstable; urgency=low
 
   * [Kraken] Early filtering of vj for stop point disruption  <https://github.com/CanalTP/navitia/pull/3663>
