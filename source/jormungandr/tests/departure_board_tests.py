@@ -115,6 +115,7 @@ def is_valid_route_schedule(schedule, only_time=False):
                 get_valid_datetime(dt)
 
         is_valid_stop_point(get_not_null(row, 'stop_point'), depth_check=1)
+    assert not d["links"]
 
 
 def is_valid_departures(departures):
@@ -573,6 +574,10 @@ class TestDepartureBoard(AbstractTestFixture):
         assert len(response["departures"][1]["stop_date_time"]["additional_informations"]) == 1
         assert response["departures"][1]["stop_date_time"]["additional_informations"][0] == "on_demand_transport"
         assert response["departures"][1]["stop_date_time"]["data_freshness"] == "base_schedule"
+
+        assert "terminus" not in response
+        assert not response["departures"][0]["display_informations"]["links"]
+        assert not response["departures"][1]["display_informations"]["links"]
 
     def test_departures_arrivals_without_filters(self):
         """

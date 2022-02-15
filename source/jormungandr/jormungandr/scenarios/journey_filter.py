@@ -914,3 +914,17 @@ def remove_excess_tickets(response):
         if not t.id in fare_ticket_id_list:
             logger.debug('remove excess ticket id %s', t.id)
             response.tickets.remove(t)
+
+
+def remove_excess_terminus(response):
+    logger = logging.getLogger(__name__)
+    terminus_section_ids = set()
+    for j in response.journeys:
+        for section in j.sections:
+            for type_, value in section.pt_display_informations.uris.ListFields():
+                if type_.name == "stop_area":
+                    terminus_section_ids.add(value)
+    for terminus in reversed(response.terminus):
+        if not terminus.uri in terminus_section_ids:
+            logger.debug('remove excess terminus uri %s', terminus.uri)
+            response.terminus.remove(terminus)
