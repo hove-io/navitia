@@ -297,6 +297,17 @@ def here_basic_routing_test(valid_here_routing_response):
     assert section.origin == origin
     assert section.begin_date_time == str_to_time_stamp('20161010T152000')
     assert section.end_date_time == section.begin_date_time + section.duration
+    # dynamic_speed
+    dynamic_speeds = section.street_network.dynamic_speeds
+    assert len(dynamic_speeds) == 6
+    first_ds = dynamic_speeds[0]
+    assert first_ds.base_speed == 13
+    assert first_ds.traffic_speed == 11
+    assert first_ds.geojson_offset == 0
+    last_ds = dynamic_speeds[5]
+    assert last_ds.base_speed == 13
+    assert last_ds.traffic_speed == 13
+    assert last_ds.geojson_offset == 769
 
 
 def status_test():
