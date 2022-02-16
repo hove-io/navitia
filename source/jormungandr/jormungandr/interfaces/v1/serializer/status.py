@@ -152,9 +152,8 @@ class StreetNetworkSerializer(OutsideServiceCommon):
     modes = StringListField(display_none=True)
     timeout = MethodField(schema_type=float, display_none=False)
     backend_class = MethodField(schema_type=str, display_none=False)
-    matrix_type = MethodField(schema_type=str, display_none=False)
+    lapse_time_matrix_to_retry = MethodField(schema_type=str, display_none=False)
     max_matrix_points = MethodField(schema_type=int, display_none=False)
-    realtime_traffic = MethodField(schema_type=str, display_none=False)
     language = MethodField(schema_type=str, display_none=False)
 
     def get_timeout(self, obj):
@@ -163,14 +162,11 @@ class StreetNetworkSerializer(OutsideServiceCommon):
     def get_backend_class(self, obj):
         return obj.get('backend_class', None)
 
-    def get_matrix_type(self, obj):
-        return obj.get('matrix_type', None)
+    def get_lapse_time_matrix_to_retry(self, obj):
+        return obj.get('lapse_time_matrix_to_retry', None)
 
     def get_max_matrix_points(self, obj):
         return obj.get('max_matrix_points', None)
-
-    def get_realtime_traffic(self, obj):
-        return obj.get('realtime_traffic', None)
 
     def get_language(self, obj):
         return obj.get('language', None)

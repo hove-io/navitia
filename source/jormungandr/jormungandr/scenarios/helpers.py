@@ -38,8 +38,11 @@ def is_car_direct_path(journey):
             return False
         if section.type != response_pb2.STREET_NETWORK:
             continue
-        if section.street_network.mode not in [response_pb2.Walking, response_pb2.Car]:
+        if section.street_network.mode not in [response_pb2.Walking, response_pb2.Car, response_pb2.CarNoPark]:
             return False
-        if section.street_network.mode == response_pb2.Car:
+        if (
+            section.street_network.mode == response_pb2.Car
+            or section.street_network.mode == response_pb2.CarNoPark
+        ):
             car_seen = True
     return car_seen
