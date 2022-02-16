@@ -30,13 +30,13 @@ from __future__ import absolute_import, print_function, unicode_literals, divisi
 
 import datetime
 
-from navitiacommon import response_pb2, default_values
+from navitiacommon import response_pb2
 import logging
 import pybreaker
 import requests as requests
 from jormungandr import app
 from jormungandr.exceptions import TechnicalError
-from jormungandr.utils import get_pt_object_coord, PeriodExtremity, decode_polyline
+from jormungandr.utils import get_pt_object_coord
 import flexpolyline as fp
 from jormungandr.street_network.street_network import AbstractStreetNetworkService, StreetNetworkPathKey
 from jormungandr.ptref import FeedPublisher
@@ -44,9 +44,9 @@ from jormungandr.fallback_modes import FallbackModes as fm
 from jormungandr.utils import is_coord, get_lon_lat
 from six import text_type
 from enum import Enum
+from retrying import retry
 import itertools
-import json
-import time
+import ujson
 
 # this limit is fixed by Here Api. See avoidAreas parameter
 # https://developer.here.com/documentation/routing/dev_guide/topics/resource-calculate-route.html
@@ -98,10 +98,7 @@ def _get_coord(pt_object):
 
 def _get_coord_for_matrix(pt_object):
     coord = get_pt_object_coord(pt_object)
-    coord_for_matrix = {}
-    coord_for_matrix['lat'] = coord.lat
-    coord_for_matrix['lng'] = coord.lon
-    return coord_for_matrix
+    return {"lat": coord.lat, "lng": coord.lon}
 
 
 def get_here_mode(mode):
@@ -181,10 +178,12 @@ class Here(AbstractStreetNetworkService):
             },
         }
 
-    def _call_here(self, url, params={}, mode=requests.get, data={}, headers={}):
+    def _call_here(self, url, params={}, http_method=requests.get, data={}, headers={}):
         self.log.debug('Here routing service, url: {}'.format(url))
         try:
-            r = self.breaker.call(mode, url, timeout=self.timeout, params=params, data=data, headers=headers)
+            r = self.breaker.call(
+                http_method, url, timeout=self.timeout, params=params, data=data, headers=headers
+            )
             self.record_call('ok')
             return r
         except pybreaker.CircuitBreakerError as e:
@@ -311,10 +310,9 @@ class Here(AbstractStreetNetworkService):
                 return 0
 
         # instruction
-        i = 0
-        for maneuver in here_section.get('actions', []):
+        for idx, maneuver in enumerate(here_section.get('actions', [])):
             path_item = section.street_network.path_items.add()
-            path_item.id = i
+            path_item.id = idx
             path_item.length = maneuver.get('length', 0)
             path_item.duration = maneuver.get('duration', 0)
             path_item.instruction = maneuver.get('instruction', '')
@@ -324,7 +322,6 @@ class Here(AbstractStreetNetworkService):
             if offset < shape_len:
                 path_item.instruction_start_coordinate.lat = float(shape[offset][0])
                 path_item.instruction_start_coordinate.lon = float(shape[offset][1])
-            i = i + 1
 
         return resp
 
@@ -530,14 +527,14 @@ class Here(AbstractStreetNetworkService):
         datetime = request['datetime']
         payload['departureTime'] = _str_to_dt(datetime)
 
-        return json.dumps(payload)
+        return ujson.dumps(payload)
 
     def post_matrix_request(self, origins, destinations, request):
         post_data = self.matrix_payload(origins, destinations, request)
         params = {'apiKey': self.apiKey}
         headers = {'Content-Type': 'application/json'}
         post_resp = self._call_here(
-            self.matrix_service_url, params=params, mode=requests.post, data=post_data, headers=headers
+            self.matrix_service_url, params=params, http_method=requests.post, data=post_data, headers=headers
         )
         post_resp.raise_for_status()
 
@@ -555,18 +552,18 @@ class Here(AbstractStreetNetworkService):
 
         # Here just expose a get to retreive matrix but you have to wait for the result to be available.
         # It is your own waiting loop !
-        t = 0
-        step_time = self.lapse_time_matrix_to_retry
-        while t < self.timeout:
-            self.log.debug('Here, try to fetch matrix data with a get')
-            time.sleep(self.lapse_time_matrix_to_retry)
-            get_url = self.matrix_service_url + '/' + str(matrix_id) + '?apiKey=' + str(self.apiKey)
+
+        get_url = self.matrix_service_url + '/' + str(matrix_id) + '?apiKey=' + str(self.apiKey)
+
+        @retry(stop_max_delay=self.timeout * 1000, wait_fixed=self.lapse_time_matrix_to_retry)
+        def _get_matrix_response(get_url):
             matrix_resp = requests.request("GET", get_url, headers=headers)
             if matrix_resp.status_code == 200:
                 return self._create_matrix_response(matrix_resp.json(), origins, destinations)
-            t = t + step_time
+            else:
+                raise TechnicalError('Here, impossible to get matrix data. Should retry')
 
-        raise TechnicalError('Here, impossible to retreive matrix data, timeout')
+        return _get_matrix_response(get_url)
 
     def _get_street_network_routing_matrix(
         self, instance, origins, destinations, mode, max_duration, request, request_id, **kwargs
