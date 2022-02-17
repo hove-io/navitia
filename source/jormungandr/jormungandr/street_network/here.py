@@ -309,6 +309,14 @@ class Here(AbstractStreetNetworkService):
             else:
                 return 0
 
+        # dynamic speed
+        for span in here_section.get('spans', []):
+            dynamic_speed = section.street_network.dynamic_speeds.add()
+            dynamic_speed.geojson_offset = span.get('offset', 0)
+            dynamic_speed_info = span.get('dynamicSpeedInfo', {})
+            dynamic_speed.base_speed = int(dynamic_speed_info.get('baseSpeed', 0))
+            dynamic_speed.traffic_speed = int(dynamic_speed_info.get('trafficSpeed', 0))
+
         # instruction
         for idx, maneuver in enumerate(here_section.get('actions', [])):
             path_item = section.street_network.path_items.add()
