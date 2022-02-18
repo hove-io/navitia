@@ -563,7 +563,7 @@ class Here(AbstractStreetNetworkService):
 
         get_url = self.matrix_service_url + '/' + str(matrix_id) + '?apiKey=' + str(self.apiKey)
 
-        @retry(stop_max_delay=self.timeout * 1000, wait_fixed=self.lapse_time_matrix_to_retry)
+        @retry(stop_max_delay=self.timeout * 1000, wait_fixed=self.lapse_time_matrix_to_retry * 1000)
         def _get_matrix_response(get_url):
             matrix_resp = requests.request("GET", get_url, headers=headers)
             if matrix_resp.status_code == 200:
