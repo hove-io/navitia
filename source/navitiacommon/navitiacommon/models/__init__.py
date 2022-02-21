@@ -671,6 +671,13 @@ class Instance(db.Model):  # type: ignore
         server_default=str(default_values.transfer_path),
     )
 
+    access_points = db.Column(
+        db.Boolean,
+        default=default_values.access_points,
+        nullable=False,
+        server_default=str(default_values.access_points),
+    )
+
     def __init__(self, name=None, is_free=False, authorizations=None, jobs=None):
         self.name = name
         self.is_free = is_free
