@@ -162,6 +162,8 @@ def test_update_instances(create_instance):
         "transfer_path": True,
         "access_points": True,
     }
+    resp = api_get('/v0/instances/{}'.format(create_instance))
+    assert resp[0]['access_points'] is False
 
     resp = api_put('/v0/instances/fr', data=json.dumps(params), content_type='application/json')
     for key, param in params.items():
