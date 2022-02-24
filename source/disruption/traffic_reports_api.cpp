@@ -343,8 +343,17 @@ void TrafficReport::disruptions_list(const std::string& filter,
         return;
     }
 
-    type::Indexes network_idx = ptref::make_query(type::Type_e::Network, filter, forbidden_uris, d);
-    add_networks(network_idx, d, now, filter_period);
+    type::Indexes network_idx;
+    try {
+        network_idx = ptref::make_query(type::Type_e::Network, filter, forbidden_uris, d);
+    } catch (const std::exception&) {
+    }
+    if (network_idx.size() > 0) {
+        add_networks(network_idx, d, now, filter_period);
+    }
+    // Get networks without forbidden_uris as this filter is used to filter other pt_objects
+    // We should not exclude ant network at this level
+    network_idx = ptref::make_query(type::Type_e::Network, filter, d);
     add_lines(filter, forbidden_uris, d, now, filter_period);
     add_stop_areas(network_idx, filter, forbidden_uris, d, now, filter_period);
     add_vehicle_journeys(network_idx, filter, forbidden_uris, d, now, filter_period);
