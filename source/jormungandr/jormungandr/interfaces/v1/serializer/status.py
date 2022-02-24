@@ -90,6 +90,7 @@ class ParametersSerializer(serpy.Serializer):
     max_nb_crowfly_by_mode = Field(schema_type=dict)
     places_proximity_radius = Field(schema_type=int)
     transfer_path = Field(schema_type=bool)
+    access_points = Field(schema_type=bool)
 
 
 class TravelerProfilesSerializer(serpy.Serializer):

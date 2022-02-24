@@ -225,6 +225,7 @@ instance_fields = {
     'max_waiting_duration': fields.Raw,
     'places_proximity_radius': fields.Raw,
     'transfer_path': fields.Boolean,
+    'access_points': fields.Boolean,
     'asgard_language': fields.Raw,
 }
 

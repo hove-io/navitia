@@ -688,6 +688,7 @@ class Instance(object):
     asgard_language = _make_property_getter('asgard_language')
 
     transfer_path = _make_property_getter('transfer_path')
+    access_points = _make_property_getter('access_points')
 
     @property
     def places_proximity_radius(self):

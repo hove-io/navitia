@@ -480,7 +480,6 @@ class JourneyCommon(ResourceUri, ResourceUtc):
         parser_get.add_argument(
             "_access_points",
             type=BooleanType(),
-            default=False,
             hidden=True,
             help="use/disuse the entrance/exit in journeys computation",
         )
