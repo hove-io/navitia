@@ -532,6 +532,10 @@ struct routing_api_data {
         b.add_access_point("stop_point:stopA", "access_point:A2", false, true, 3, 4, 0.000718649585563767,
                            0.0010779743);
 
+        // this access_point is supposed to trigger a bug in distributed which is covered by a test in jormungandr
+        b.add_access_point("stop_point:stopB", "access_point:A1", true, true, 42, 42, 0.000718649585563767,
+                           0.0010779743);
+
         sp = b.get<nt::StopPoint>("stop_point:stopB");
         b.data->pt_data->codes.add(sp, "TCL_ASCENSEUR", "6");
         b.data->pt_data->codes.add(sp, "TCL_ASCENSEUR", "7");

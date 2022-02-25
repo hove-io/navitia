@@ -55,6 +55,8 @@ DurationElement = namedtuple(
     'DurationElement', ['duration', 'status', 'car_park', 'car_park_crowfly_duration', 'via_access_point']
 )
 
+AccessMapElement = namedtuple('AccessMapElement', ['stop_point_uri', 'access_point'])
+
 
 class FallbackDurations:
     """
@@ -146,14 +148,15 @@ class FallbackDurations:
             access_points = (ap for ap in stop_point.access_points if ap.is_exit)
 
         for ap in access_points:
+            # we convert the access point to pt object in order to make it easier to handle in later computation
+            pt_object_ap = type_pb2.PtObject(
+                name=ap.name, uri=ap.uri, embedded_type=type_pb2.ACCESS_POINT, access_point=ap
+            )
             if ap.uri not in access_points_map:
                 # every object in place_isochrone has a type of PtObject. We convert the AccessPoint into PtObject
-                places_isochrone.append(
-                    type_pb2.PtObject(
-                        name=ap.name, uri=ap.uri, embedded_type=type_pb2.ACCESS_POINT, access_point=ap
-                    )
-                )
-            access_points_map[ap.uri].append((stop_point.uri, ap.length, ap.traversal_time))
+                places_isochrone.append(pt_object_ap)
+
+            access_points_map[ap.uri].append(AccessMapElement(stop_point.uri, pt_object_ap))
 
     def _update_fb_durations(self, fb_durations, stop_point, duration, resp):
         if duration < self._max_duration_to_pt:
@@ -162,11 +165,12 @@ class FallbackDurations:
     def _update_fb_durations_from_access_point(
         self, fb_durations, access_point, duration, resp, access_points_map
     ):
-        for sp_uri, length, traversal_time in access_points_map[access_point.uri]:
+        for element in access_points_map[access_point.uri]:
+            sp_uri, ap = element
             current_duration = fb_durations[sp_uri].duration if sp_uri in fb_durations else float('inf')
-            if (duration + traversal_time) < min(current_duration, self._max_duration_to_pt):
+            if (duration + ap.access_point.traversal_time) < min(current_duration, self._max_duration_to_pt):
                 fb_durations[sp_uri] = DurationElement(
-                    duration + traversal_time, resp.routing_status, None, 0, access_point
+                    duration + ap.access_point.traversal_time, resp.routing_status, None, 0, ap
                 )
 
     def _update_free_access_with_free_radius(self, free_access, proximities_by_crowfly):
@@ -188,12 +192,16 @@ class FallbackDurations:
 
     def _build_places_isochrone(self, proximities_by_crowfly, all_free_access):
         places_isochrone = []
+        # in this map, we store all the information that will be useful where we update the final result
+        # since an access point, aka the same access point uri, may be attached to multiple stop points
+        # we store access point uri VS a LIST of AccessMapElement which contains:
+        #   - stop_point_uri: to which stop point the access point is attached
+        #   - access_point: the actual access_point, of type pt_object
         access_points_map = defaultdict(list)
         if self._mode == FallbackModes.car.name or self._request['_access_points'] is False:
             # if a place is freely accessible, there is no need to compute it's access duration in isochrone
             places_isochrone.extend(p for p in proximities_by_crowfly if p.uri not in all_free_access)
         else:
-            access_points_map = defaultdict(list)
             for p in proximities_by_crowfly:
                 # if a place is freely accessible, there is no need to compute it's access duration in isochrone
 
