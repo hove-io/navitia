@@ -913,6 +913,14 @@ class Instance(flask_restful.Resource):
             default=instance.transfer_path,
         )
 
+        parser.add_argument(
+            'access_points',
+            type=inputs.boolean,
+            help='use/disuse access points in journey computations',
+            location=('json', 'values'),
+            default=instance.access_points,
+        )
+
         args = parser.parse_args()
 
         try:
@@ -1001,6 +1009,7 @@ class Instance(flask_restful.Resource):
                         'places_proximity_radius',
                         'asgard_language',
                         'transfer_path',
+                        'access_points',
                     ],
                 ),
                 maxlen=0,

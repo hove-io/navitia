@@ -212,6 +212,9 @@ asgard_language = "english_us"
 # Compute pathways using the street_network engine for transfers between surface physical modes
 transfer_path = False
 
+# use/disuse access points in journey computations
+access_points = False
+
 
 def get_value_or_default(attr, instance, instance_name):
     if not instance or getattr(instance, attr, None) == None:

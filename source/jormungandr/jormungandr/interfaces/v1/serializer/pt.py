@@ -735,21 +735,26 @@ class RouteDisplayInformationSerializer(PbNestedSerializer):
     text_color = jsonschema.Field(schema_type=str)
 
     def get_links(self, obj):
-        response = DisruptionLinkSerializer().to_value(obj.impact_uris)
-        if obj.HasField(str("uris")):
-            for type_, value in obj.uris.ListFields():
-                if type_.name == "stop_area":
-                    response.append(create_internal_link(_type="stop_area", rel="terminus", id=value))
-        return response
+        return DisruptionLinkSerializer().to_value(obj.impact_uris)
 
 
-class VJDisplayInformationSerializer(RouteDisplayInformationSerializer):
+class PassageDisplayInformationSerializer(RouteDisplayInformationSerializer):
     description = jsonschema.Field(schema_type=str)
     physical_mode = jsonschema.Field(schema_type=str)
     equipments = Equipments(attr='has_equipments', display_none=True)
     headsign = jsonschema.Field(schema_type=str, display_none=True)
     headsigns = StringListField(display_none=False)
     trip_short_name = jsonschema.Field(schema_type=str, display_none=False)
+
+
+class VJDisplayInformationSerializer(PassageDisplayInformationSerializer):
+    def get_links(self, obj):
+        response = DisruptionLinkSerializer().to_value(obj.impact_uris)
+        if obj.HasField(str("uris")):
+            for type_, value in obj.uris.ListFields():
+                if type_.name == "stop_area":
+                    response.append(create_internal_link(_type="stop_area", rel="terminus", id=value))
+        return response
 
 
 def make_properties_links(properties):

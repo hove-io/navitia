@@ -210,6 +210,30 @@ class ElevationSerializer(PbNestedSerializer):
     geojson_offset = RoundedField(attr="geojson_index", display_none=False)
 
 
+class DynamicSpeedSerializer(PbNestedSerializer):
+    base_speed = jsonschema.MethodField(schema_type=int, display_none=False)
+    traffic_speed = jsonschema.MethodField(schema_type=int, display_none=False)
+    geojson_offset = jsonschema.MethodField(schema_type=int, display_none=False)
+
+    def get_base_speed(self, obj):
+        if obj.HasField(str('base_speed')):
+            return obj.base_speed
+        else:
+            return None
+
+    def get_traffic_speed(self, obj):
+        if obj.HasField(str('traffic_speed')):
+            return obj.traffic_speed
+        else:
+            return None
+
+    def get_geojson_offset(self, obj):
+        if obj.HasField(str('geojson_offset')):
+            return obj.geojson_offset
+        else:
+            return None
+
+
 class SectionTypeEnum(EnumField):
     def as_getter(self, serializer_field_name, serializer_cls):
         def getter(value):
@@ -351,6 +375,7 @@ class SectionSerializer(PbNestedSerializer):
 
     cycle_lane_length = PbIntField(display_none=False)
     elevations = ElevationSerializer(attr="street_network.elevations", many=True, display_none=False)
+    dynamic_speeds = DynamicSpeedSerializer(attr="street_network.dynamic_speeds", many=True, display_none=False)
     vias = jsonschema.MethodField(schema_type=PlaceSerializer(), many=True, display_none=False)
 
     def get_vias(self, obj):

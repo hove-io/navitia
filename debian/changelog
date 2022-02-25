@@ -1,3 +1,15 @@
+navitia2 (15.2.0) unstable; urgency=low
+
+  * [Jormungandr] fix access_points in journeys  <https://github.com/CanalTP/navitia/pull/3670>
+  * [Jormungandr] Add access_points in db  <https://github.com/CanalTP/navitia/pull/3668>
+  * [Jormungandr] Here: fix unit problem  <https://github.com/CanalTP/navitia/pull/3667>
+  * [Jormungandr] Here: pull up dynamic speeds  <https://github.com/CanalTP/navitia/pull/3666>
+  * [Jormungandr] Here api version 8  <https://github.com/CanalTP/navitia/pull/3662>
+  * [Jormungandr] Fix terminus with journeys filterd  <https://github.com/CanalTP/navitia/pull/3665>
+  * [Kraken] Respect pick_up/drop_off while shortening of backtracking journey  <https://github.com/CanalTP/navitia/pull/3664>
+
+ -- Abderrahim AZIME <azime_1@yahoo.fr>  Fri, 25 Feb 2022 11:02:26 +0100
+
 navitia2 (15.1.1) unstable; urgency=low
 
   * [Kraken] Respect pick_up/drop_off while shortening of backtracking journey <https://github.com/CanalTP/navitia/pull/3664>
