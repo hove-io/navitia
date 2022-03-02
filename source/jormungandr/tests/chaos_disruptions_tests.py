@@ -1069,7 +1069,7 @@ class TestChaosDisruptionsUpdate(ChaosDisruptionsFixture):
         # traffic_reports with forbidden_uris[]=physical_mode:0x0 (Tramway) gives empty result
         # as all the pt_objects impacted are related to physical_mode Tramway
         response = self.query_region(
-            'traffic_reports?_current_datetime=20120801T000000&depth=3&' 'forbidden_uris[]=physical_mode:0x0'
+            'traffic_reports?_current_datetime=20120801T000000&depth=3&forbidden_uris[]=physical_mode:0x0'
         )
         assert len(response['traffic_reports']) == 0
         assert len(response['disruptions']) == 0
@@ -1077,7 +1077,7 @@ class TestChaosDisruptionsUpdate(ChaosDisruptionsFixture):
         # traffic_reports with forbidden_uris[]=physical_mode:0x1 (Metro) filters all the objects impacted
         # and related to physical_mode Metro. stop_area 'stopA' is hence excluded
         response = self.query_region(
-            'traffic_reports?_current_datetime=20120801T000000&depth=3&' 'forbidden_uris[]=physical_mode:0x1'
+            'traffic_reports?_current_datetime=20120801T000000&depth=3&forbidden_uris[]=physical_mode:0x1'
         )
         assert len(response['traffic_reports']) == 1
         assert len(response['disruptions']) == 3
