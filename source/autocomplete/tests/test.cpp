@@ -998,6 +998,58 @@ BOOST_AUTO_TEST_CASE(autocomplete_pt_object_Network_Mode_Line_Route_stop_area_te
     BOOST_CHECK_EQUAL(resp.places(4).embedded_type(), pbnavitia::ROUTE);
 }
 
+/*
+1. We have 1 Network (name="base_network"), 2 mode (name="Tramway" et name="Metro")
+2. 1 line for mode Metro
+3. 1 line for mode Tramway
+*/
+BOOST_AUTO_TEST_CASE(autocomplete_pt_object_Network_Mode_Line_with_code_test) {
+    std::vector<std::string> admins;
+    std::vector<navitia::type::Type_e> type_filter;
+    ed::builder b("201409011T1739");
+    b.generate_dummy_basis();
+
+    // Create a new line and affect it to mode "Metro"
+    auto* line = new navitia::type::Line();
+    line->idx = b.data->pt_data->lines.size();
+    line->uri = "line:IDFM:C01371";
+    line->code = "1";
+    line->name = "Château de Vincennes - La Défense";
+    line->commercial_mode = b.data->pt_data->commercial_modes_map.at("0x1");
+    b.data->pt_data->lines.push_back(line);
+
+    // Create a new line and affect it to mode "Tramway"
+    line = new navitia::type::Line();
+    line->idx = b.data->pt_data->lines.size();
+    line->uri = "line:IDFM:C01390";
+    line->code = "T2";
+    line->name = "Porte de Versailles - Pont de Bezons";
+    line->commercial_mode = b.data->pt_data->commercial_modes_map.at("0x0");
+    b.data->pt_data->lines.push_back(line);
+
+    b.build_autocomplete();
+
+    type_filter = {navitia::type::Type_e::Line};
+    // Call with q=t2
+    auto* data_ptr = b.data.get();
+    navitia::PbCreator pb_creator(data_ptr, boost::gregorian::not_a_date_time, null_time_period);
+    navitia::autocomplete::autocomplete(pb_creator, "t2", type_filter, 1, 10, admins, 0, *(b.data));
+    pbnavitia::Response resp = pb_creator.get_response();
+    // The result contains network and stop_area
+    BOOST_REQUIRE_EQUAL(resp.places_size(), 1);
+    BOOST_CHECK_EQUAL(resp.places(0).embedded_type(), pbnavitia::LINE);
+    BOOST_CHECK_EQUAL(resp.places(0).line().uri(), "line:IDFM:C01390");
+
+    // Call with q=1
+    pb_creator.init(data_ptr, boost::gregorian::not_a_date_time, null_time_period);
+    navitia::autocomplete::autocomplete(pb_creator, "1", type_filter, 1, 10, admins, 0, *(b.data));
+    resp = pb_creator.get_response();
+
+    BOOST_REQUIRE_EQUAL(resp.places_size(), 1);
+    BOOST_CHECK_EQUAL(resp.places(0).embedded_type(), pbnavitia::LINE);
+    BOOST_CHECK_EQUAL(resp.places(0).line().uri(), "line:IDFM:C01371");
+}
+
 BOOST_AUTO_TEST_CASE(find_with_synonyms_mairie_de_vannes_test) {
     int nbmax = 10;
     autocomplete_map synonyms;
