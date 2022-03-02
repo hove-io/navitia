@@ -1044,6 +1044,8 @@ class TestChaosDisruptionsUpdate(ChaosDisruptionsFixture):
                     return sa
             return None
 
+        mode_tramway = 'physical_mode:0x0'
+
         # Call traffic_reports and verify all the objects
         response = self.query_region('traffic_reports?_current_datetime=20120801T000000&depth=3')
         assert len(response['traffic_reports']) == 1
@@ -1052,19 +1054,19 @@ class TestChaosDisruptionsUpdate(ChaosDisruptionsFixture):
         assert len(response['traffic_reports'][0]['lines']) == 1
         assert response['traffic_reports'][0]['lines'][0]['id'] == 'A'
         assert len(response['traffic_reports'][0]['lines'][0]['physical_modes']) == 1
-        assert response['traffic_reports'][0]['lines'][0]['physical_modes'][0]['id'] == 'physical_mode:0x0'
+        assert response['traffic_reports'][0]['lines'][0]['physical_modes'][0]['id'] == mode_tramway
         assert len(response['traffic_reports'][0]['stop_areas']) == 2
 
         stop_area = get_stop_area(response['traffic_reports'][0]['stop_areas'], 'stopA')
         assert stop_area['id'] == 'stopA'
         assert len(stop_area['physical_modes']) == 2
-        assert any(pm['id'] == 'physical_mode:0x0' for pm in stop_area['physical_modes'])
+        assert any(pm['id'] == mode_tramway for pm in stop_area['physical_modes'])
         assert any(pm['id'] == 'physical_mode:0x1' for pm in stop_area['physical_modes'])
 
         stop_area = get_stop_area(response['traffic_reports'][0]['stop_areas'], 'stopB')
         assert stop_area['id'] == 'stopB'
         assert len(stop_area['physical_modes']) == 1
-        assert stop_area['physical_modes'][0]['id'] == 'physical_mode:0x0'
+        assert stop_area['physical_modes'][0]['id'] == mode_tramway
 
         # traffic_reports with forbidden_uris[]=physical_mode:0x0 (Tramway) gives empty result
         # as all the pt_objects impacted are related to physical_mode Tramway
@@ -1085,11 +1087,11 @@ class TestChaosDisruptionsUpdate(ChaosDisruptionsFixture):
         assert len(response['traffic_reports'][0]['lines']) == 1
         assert response['traffic_reports'][0]['lines'][0]['id'] == 'A'
         assert len(response['traffic_reports'][0]['lines'][0]['physical_modes']) == 1
-        assert response['traffic_reports'][0]['lines'][0]['physical_modes'][0]['id'] == 'physical_mode:0x0'
+        assert response['traffic_reports'][0]['lines'][0]['physical_modes'][0]['id'] == mode_tramway
         assert len(response['traffic_reports'][0]['stop_areas']) == 1
         assert response['traffic_reports'][0]['stop_areas'][0]['id'] == 'stopB'
         assert len(response['traffic_reports'][0]['stop_areas'][0]['physical_modes']) == 1
-        assert response['traffic_reports'][0]['stop_areas'][0]['physical_modes'][0]['id'] == 'physical_mode:0x0'
+        assert response['traffic_reports'][0]['stop_areas'][0]['physical_modes'][0]['id'] == mode_tramway
 
     def test_disruption_with_and_without_tags(self):
         """
