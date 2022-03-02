@@ -1541,12 +1541,13 @@ void make_response(navitia::PbCreator& pb_creator,
             if (departures->empty() && destinations->empty()) {
                 pb_creator.fill_pb_error(pbnavitia::Error::no_origin_nor_destination,
                                          pbnavitia::NO_ORIGIN_NOR_DESTINATION_POINT,
-                                         "no origin point nor destination point");
+                                         "Public transport is not reachable from origin nor destination");
             } else if (departures->empty()) {
-                pb_creator.fill_pb_error(pbnavitia::Error::no_origin, pbnavitia::NO_ORIGIN_POINT, "no origin point");
+                pb_creator.fill_pb_error(pbnavitia::Error::no_origin, pbnavitia::NO_ORIGIN_POINT,
+                                         "Public transport is not reachable from origin");
             } else if (destinations->empty()) {
                 pb_creator.fill_pb_error(pbnavitia::Error::no_destination, pbnavitia::NO_DESTINATION_POINT,
-                                         "no destination point");
+                                         "Public transport is not reachable from destination");
             }
         }
         return;
