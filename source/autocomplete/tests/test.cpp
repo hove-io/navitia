@@ -1030,17 +1030,17 @@ BOOST_AUTO_TEST_CASE(autocomplete_pt_object_Network_Mode_Line_with_code_test) {
     b.build_autocomplete();
 
     type_filter = {navitia::type::Type_e::Line};
-    // Call with q=t2
+    // Call with q=t2 : response: Porte de Versailles - Pont de Bezons
     auto* data_ptr = b.data.get();
     navitia::PbCreator pb_creator(data_ptr, boost::gregorian::not_a_date_time, null_time_period);
     navitia::autocomplete::autocomplete(pb_creator, "t2", type_filter, 1, 10, admins, 0, *(b.data));
     pbnavitia::Response resp = pb_creator.get_response();
-    // The result contains network and stop_area
+
     BOOST_REQUIRE_EQUAL(resp.places_size(), 1);
     BOOST_CHECK_EQUAL(resp.places(0).embedded_type(), pbnavitia::LINE);
     BOOST_CHECK_EQUAL(resp.places(0).line().uri(), "line:IDFM:C01390");
 
-    // Call with q=1
+    // Call with q=1 : response: Château de Vincennes - La Défense
     pb_creator.init(data_ptr, boost::gregorian::not_a_date_time, null_time_period);
     navitia::autocomplete::autocomplete(pb_creator, "1", type_filter, 1, 10, admins, 0, *(b.data));
     resp = pb_creator.get_response();
