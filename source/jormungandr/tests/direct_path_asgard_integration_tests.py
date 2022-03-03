@@ -384,11 +384,14 @@ class TestAsgardDirectPath(AbstractTestFixture):
         """
         query = journey_basic_query + "&direct_path=only"
         response = self.query_region(query)
-        assert len(response['exceptions']) == 0
+
+        assert len(response['journeys']) == 1
 
         query = journey_basic_query + "&max_walking_direct_path_distance={}".format(2) + "&direct_path=only"
         response = self.query_region(query, check=False)
-        assert response[1] == 404
+
+        assert response[0]['error']['message'] == "no solution found for this journey"
+        assert response[1] == 200
 
 
 @dataset(

@@ -125,10 +125,10 @@ class PtJourney:
             # Here needs to modify error message of no_solution
             if not orig_fallback_durations:
                 resp.error.id = response_pb2.Error.no_origin
-                resp.error.message = "no origin point"
+                resp.error.message = "Public transport is not reachable from origin"
             elif not dest_fallback_durations:
                 resp.error.id = response_pb2.Error.no_destination
-                resp.error.message = "no destination point"
+                resp.error.message = "Public transport is not reachable from destination"
 
         self._logger.debug(
             "finish public transport journey with dep_mode: %s and arr_mode: %s", self._dep_mode, self._arr_mode
@@ -189,10 +189,10 @@ class PtJourney:
             if not fallback_durations:
                 if self._orig_fallback_durtaions_pool is not None:
                     resp.error.id = response_pb2.Error.no_origin
-                    resp.error.message = "no origin point"
+                    resp.error.message = "Public transport is not reachable from origin"
                 else:
                     resp.error.id = response_pb2.Error.no_destination
-                    resp.error.message = "no destination point"
+                    resp.error.message = "Public transport is not reachable from destination"
 
         logger.debug("finish public transport journey with mode: %s", mode)
         return resp
