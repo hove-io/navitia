@@ -1960,7 +1960,7 @@ class BillingPlan(flask_restful.Resource):
             'lockable',
             type=bool,
             required=False,
-            default=False,
+            default=billing_plan.lockable,
             help='block access to navitia when request count > max_request_count ',
             location=('json', 'values'),
         )
@@ -1969,6 +1969,7 @@ class BillingPlan(flask_restful.Resource):
             type=int,
             action='append',
             required=False,
+            default=billing_plan.notify_threshold_list,
             help='Request threshold list to send notifications',
             location=('json', 'values'),
         )
