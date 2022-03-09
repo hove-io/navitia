@@ -837,6 +837,22 @@ class Instance(flask_restful.Resource):
         )
 
         parser.add_argument(
+            'bss_rent_duration',
+            type=int,
+            help='How long it takes to rent a bike from bike share station (s)',
+            location=('json', 'values'),
+            default=instance.bss_rent_duration,
+        )
+
+        parser.add_argument(
+            'bss_return_duration',
+            type=int,
+            help='How long it takes to return a bike to bike share station (s)',
+            location=('json', 'values'),
+            default=instance.bss_return_duration,
+        )
+
+        parser.add_argument(
             "asgard_language",
             type=OptionValue(
                 [
@@ -1010,6 +1026,8 @@ class Instance(flask_restful.Resource):
                         'asgard_language',
                         'transfer_path',
                         'access_points',
+                        'bss_return_duration',
+                        'bss_rent_duration',
                     ],
                 ),
                 maxlen=0,

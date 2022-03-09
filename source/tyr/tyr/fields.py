@@ -151,6 +151,8 @@ instance_fields = {
     'max_car_no_park_duration_to_pt': fields.Raw,
     'max_nb_transfers': fields.Raw,
     'walking_speed': fields.Raw,
+    'bss_rent_duration': fields.Integer,
+    'bss_return_duration': fields.Integer,
     'bike_speed': fields.Raw,
     'bss_speed': fields.Raw,
     'car_speed': fields.Raw,

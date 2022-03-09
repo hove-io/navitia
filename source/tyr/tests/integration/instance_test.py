@@ -161,6 +161,8 @@ def test_update_instances(create_instance):
         "places_proximity_radius": 10000,
         "transfer_path": True,
         "access_points": True,
+        "bss_rent_duration": 180,
+        "bss_return_duration": 80,
     }
     resp = api_get('/v0/instances/{}'.format(create_instance))
     assert resp[0]['access_points'] is False
@@ -197,6 +199,8 @@ def test_update_instances(create_instance):
     assert resp['places_proximity_radius'] == 10000
     assert resp['transfer_path'] is True
     assert resp['access_points'] is True
+    assert resp['bss_rent_duration'] == 180
+    assert resp['bss_return_duration'] == 80
 
 
 def test_update_instances_is_free(create_instance):
