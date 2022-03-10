@@ -98,6 +98,9 @@ def test_get_instance_with_traveler_profile(create_instance):
 
 
 def test_update_instances(create_instance):
+    loki_config = {
+        "loki": {"class": "jormungandr.pt_planners.loki.Loki", "args": {"zmq_socket": "ipc:///tmp/fr-idf_loki"}}
+    }
     params = {
         "journey_order": "arrival_time",
         "max_duration": 200,
