@@ -953,6 +953,22 @@ class Instance(flask_restful.Resource):
             default=instance.access_points,
         )
 
+        parser.add_argument(
+            'pt_planner_id',
+            type=OptionValue(['kraken', 'loki']),
+            help='choose public transport calculator for distributed',
+            location=('json', 'values'),
+            default=instance.pt_planner_id,
+        )
+
+        parser.add_argument(
+            'pt_planners_configurations',
+            type=dict,
+            help='pt_planners_configurations',
+            location=('json', 'values'),
+            default=instance.pt_planners_configurations,
+        )
+
         args = parser.parse_args()
 
         try:
@@ -1046,6 +1062,8 @@ class Instance(flask_restful.Resource):
                         'bss_rent_duration',
                         'bss_rent_penalty',
                         'bss_return_penalty',
+                        'pt_planner_id',
+                        'pt_planners_configurations',
                     ],
                 ),
                 maxlen=0,
@@ -1996,7 +2014,7 @@ class BillingPlan(flask_restful.Resource):
             'lockable',
             type=bool,
             required=False,
-            default=billing_plan.lockable,
+            default=False,
             help='block access to navitia when request count > max_request_count ',
             location=('json', 'values'),
         )
@@ -2005,7 +2023,6 @@ class BillingPlan(flask_restful.Resource):
             type=int,
             action='append',
             required=False,
-            default=billing_plan.notify_threshold_list,
             help='Request threshold list to send notifications',
             location=('json', 'values'),
         )

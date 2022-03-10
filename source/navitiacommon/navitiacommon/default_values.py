@@ -215,6 +215,24 @@ transfer_path = False
 # use/disuse access points in journey computations
 access_points = False
 
+pt_planner_id = 'kraken'
+
+# {
+#     "kraken": {
+#         "class": "jormungandr.pt_planners.kraken.Kraken",
+#         "args": {
+#             "zmq_socket": "ipc:///tmp/dummy_kraken"
+#         }
+#     },
+#     "loki": {
+#         "class": "jormungandr.pt_planners.loki.Loki",
+#         "args": {
+#             "zmq_socket": "ipc:///tmp/dummy_kraken"
+#         }
+#     }
+# }
+pt_planners_configurations = dict()  # type: dict
+
 
 def get_value_or_default(attr, instance, instance_name):
     if not instance or getattr(instance, attr, None) == None:
