@@ -191,7 +191,7 @@ max_waiting_duration = 4 * 60 * 60
 # Bss parameters
 bss_rent_duration = 2 * 60
 bss_rent_penalty = 0
-bss_return_duration = 2 * 60
+bss_return_duration = 1 * 60
 bss_return_penalty = 0
 
 # max_{mode}_direct_path_distance default
