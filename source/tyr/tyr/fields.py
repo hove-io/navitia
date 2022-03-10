@@ -153,6 +153,8 @@ instance_fields = {
     'walking_speed': fields.Raw,
     'bss_rent_duration': fields.Raw,
     'bss_return_duration': fields.Raw,
+    'bss_rent_penalty': fields.Raw,
+    'bss_return_penalty': fields.Raw,
     'bike_speed': fields.Raw,
     'bss_speed': fields.Raw,
     'car_speed': fields.Raw,

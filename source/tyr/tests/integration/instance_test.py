@@ -163,6 +163,8 @@ def test_update_instances(create_instance):
         "access_points": True,
         "bss_rent_duration": 180,
         "bss_return_duration": 80,
+        "bss_rent_penalty": 20,
+        "bss_return_penalty": 10,
     }
     resp = api_get('/v0/instances/{}'.format(create_instance))
     assert resp[0]['access_points'] is False
@@ -201,6 +203,8 @@ def test_update_instances(create_instance):
     assert resp['access_points'] is True
     assert resp['bss_rent_duration'] == 180
     assert resp['bss_return_duration'] == 80
+    assert resp['bss_rent_penalty'] == 20
+    assert resp['bss_return_penalty'] == 10
 
 
 def test_update_instances_is_free(create_instance):

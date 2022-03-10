@@ -853,6 +853,22 @@ class Instance(flask_restful.Resource):
         )
 
         parser.add_argument(
+            'bss_rent_penalty',
+            type=int,
+            help='How much the rent maneuver is penalized in the search algorithm',
+            location=('json', 'values'),
+            default=instance.bss_rent_penalty,
+        )
+
+        parser.add_argument(
+            'bss_return_penalty',
+            type=int,
+            help='How much the return maneuver is penalized in the search algorithm',
+            location=('json', 'values'),
+            default=instance.bss_return_penalty,
+        )
+
+        parser.add_argument(
             "asgard_language",
             type=OptionValue(
                 [
@@ -1028,6 +1044,8 @@ class Instance(flask_restful.Resource):
                         'access_points',
                         'bss_return_duration',
                         'bss_rent_duration',
+                        'bss_rent_penalty',
+                        'bss_return_penalty',
                     ],
                 ),
                 maxlen=0,
