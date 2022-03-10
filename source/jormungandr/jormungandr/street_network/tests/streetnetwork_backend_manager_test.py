@@ -424,6 +424,7 @@ class FakeInstance(Instance):
             street_network_configurations=[],
             ridesharing_configurations=[],
             realtime_proxies_configuration=[],
+            pt_planners_configurations={},
             zmq_socket_type=None,
             autocomplete_type='kraken',
             instance_equipment_providers=[],
