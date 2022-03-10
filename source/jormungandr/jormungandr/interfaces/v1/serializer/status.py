@@ -92,6 +92,7 @@ class ParametersSerializer(serpy.Serializer):
     places_proximity_radius = Field(schema_type=int)
     transfer_path = Field(schema_type=bool)
     access_points = Field(schema_type=bool)
+    pt_planner_id = Field(schema_type=str)
 
 
 class TravelerProfilesSerializer(serpy.Serializer):

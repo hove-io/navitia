@@ -65,6 +65,7 @@ from navitiacommon import default_values
 from jormungandr.equipments import EquipmentProviderManager
 from jormungandr.external_services import ExternalServiceManager
 from jormungandr.utils import can_connect_to_database
+from jormungandr import pt_planners_manager
 
 type_to_pttype = {
     "stop_area": request_pb2.PlaceCodeRequest.StopArea,  # type: ignore
@@ -118,6 +119,7 @@ class Instance(object):
         instance_equipment_providers,  # type: List[Text]
         streetnetwork_backend_manager,
         external_service_provider_configurations,
+        pt_planners_configurations,
         pt_zmq_socket=None,  # type: Text
         instance_db=None,
     ):
@@ -157,6 +159,14 @@ class Instance(object):
                 self, ridesharing_configurations, self.get_ridesharing_services_from_db
             )
 
+        self._pt_planner_manager = pt_planners_manager.PtPlannersManager(
+            pt_planners_configurations,
+            name,
+            zmq_socket_type,
+            context,
+            default_socket_path=zmq_socket,
+            db_configs_getter=lambda: self.pt_planners_configurations,
+        )
         # Init Ridesharing services from config file
         self.ridesharing_services_manager.init_ridesharing_services()
 
@@ -689,6 +699,13 @@ class Instance(object):
 
     transfer_path = _make_property_getter('transfer_path')
     access_points = _make_property_getter('access_points')
+
+    pt_planner_id = _make_property_getter('pt_planner_id')
+    pt_planners_configurations = _make_property_getter('pt_planners_configurations')
+
+    def get_pt_planner(self, pt_planner_id=None):
+        pt_planner_id = pt_planner_id or self.pt_planner_id
+        return self._pt_planner_manager.get_pt_planner(pt_planner_id)
 
     @property
     def places_proximity_radius(self):

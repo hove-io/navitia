@@ -122,6 +122,7 @@ class InstanceManager(object):
             config.get('equipment_details_providers', []),
             self._streetnetwork_backend_manager,
             config.get('external_services_providers', []),
+            config.get('pt_planners', {}),
             pt_zmq_socket=config.get('pt_zmq_socket'),
         )
         self.instances[instance.name] = instance

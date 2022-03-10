@@ -836,6 +836,9 @@ class Journeys(JourneyCommon):
             if args.get('_access_points') is None:
                 args['_access_points'] = mod.access_points
 
+            if args.get('_pt_planner') is None:
+                args['_pt_planner'] = mod.pt_planner_id
+
             if args.get('_asgard_language') is None:
                 args['_asgard_language'] = mod.asgard_language
 
