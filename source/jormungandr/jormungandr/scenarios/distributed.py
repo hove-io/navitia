@@ -153,9 +153,9 @@ class Distributed(object):
                     request_id="{}_direct_path_mode_{}".format(request_id, mode),
                 )
 
-            # if max_duration(time to pass in pt) is zero, there is no need to continue,
+            # if public transport is not requested, there is no need to continue,
             # we return all direct path without pt
-            if request['max_duration'] == 0:
+            if request['max_duration'] == 0 or request.get('direct_path', "") == "only":
                 res = [
                     context.streetnetwork_path_pool.wait_and_get(
                         requested_orig_obj=context.requested_orig_obj,

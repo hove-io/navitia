@@ -886,7 +886,7 @@ class JourneyCommon(object):
         assert status != 200, "the response should not be valid"
         check_best(response)
         assert response['error']['id'] == "no_origin"
-        assert response['error']['message'] == "no origin point"
+        assert response['error']['message'] == "Public transport is not reachable from origin"
 
         # and no journey is to be provided
         assert 'journeys' not in response or len(response['journeys']) == 0
@@ -906,7 +906,7 @@ class JourneyCommon(object):
         assert status != 200, "the response should not be valid"
         check_best(response)
         assert response['error']['id'] == "no_destination"
-        assert response['error']['message'] == "no destination point"
+        assert response['error']['message'] == "Public transport is not reachable from destination"
 
         # and no journey is to be provided
         assert 'journeys' not in response or len(response['journeys']) == 0
@@ -926,7 +926,7 @@ class JourneyCommon(object):
         assert status != 200, "the response should not be valid"
         check_best(response)
         assert response['error']['id'] == "no_origin_nor_destination"
-        assert response['error']['message'] == "no origin point nor destination point"
+        assert response['error']['message'] == "Public transport is not reachable from origin nor destination"
 
         # and no journey is to be provided
         assert 'journeys' not in response or len(response['journeys']) == 0

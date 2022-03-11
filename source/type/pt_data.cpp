@@ -320,8 +320,12 @@ void PT_Data::build_autocomplete(const navitia::georef::GeoRef& georef) {
     for (const Line* line : this->lines) {
         if (!line->name.empty()) {
             std::string key;
+            key = line->code;
             if (line->network) {
-                key = line->network->name;
+                if (!key.empty()) {
+                    key += " ";
+                }
+                key += line->network->name;
             }
             if (line->commercial_mode) {
                 if (!key.empty()) {
@@ -329,10 +333,6 @@ void PT_Data::build_autocomplete(const navitia::georef::GeoRef& georef) {
                 }
                 key += line->commercial_mode->name;
             }
-            if (!key.empty()) {
-                key += " ";
-            }
-            key += line->code;
             this->line_autocomplete.add_string(key + " " + line->name, line->idx, georef.ghostwords, georef.synonyms);
         }
     }

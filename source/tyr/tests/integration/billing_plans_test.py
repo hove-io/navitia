@@ -118,7 +118,7 @@ def test_actions_on_billing_plans():
 
     # Modify certain attributes of the existing billing_plan
     # Will update only modified attributes.
-    billing_plan = {'max_request_count': 101, 'lockable': False, 'notify_threshold_list': [75, 100]}
+    billing_plan = {'max_request_count': 101, 'lockable': True, 'notify_threshold_list': [75, 100]}
     data = json.dumps(billing_plan)
 
     # Put without id
@@ -140,7 +140,7 @@ def test_actions_on_billing_plans():
     assert resp['name'] == 'bp_test_1'
     assert resp['max_request_count'] == 101
     assert resp['end_point']['name'] == 'navitia.io'
-    assert resp['lockable'] is False
+    assert resp['lockable'] is True
     assert resp['default'] is False
     assert resp['notify_threshold_list'] == [75, 100]
     assert resp['end_point']['name'] == 'navitia.io'
@@ -148,3 +148,15 @@ def test_actions_on_billing_plans():
     # Get all billing_plans
     resp = api_get('/v0/billing_plans/')
     assert len(resp) == 6
+
+    # Put without lockable and notify_threshold_list should not modify existing values
+    # notify_threshold_list = [75, 100] and lockable = True
+    billing_plan = {'max_request_count': 101}
+    data = json.dumps(billing_plan)
+    resp = api_put('/v0/billing_plans/6', data=data, content_type='application/json')
+    assert resp['name'] == 'bp_test_1'
+    assert resp['max_request_count'] == 101
+    assert resp['end_point']['name'] == 'navitia.io'
+    assert resp['lockable'] is True
+    assert resp['notify_threshold_list'] == [75, 100]
+    assert resp['end_point']['name'] == 'navitia.io'

@@ -1033,6 +1033,66 @@ class TestChaosDisruptionsUpdate(ChaosDisruptionsFixture):
         for disruption in disrupt:
             assert disruption['uri'] != 'test_disruption', 'this disruption must have been deleted'
 
+    def test_traffic_reports_with_parameters(self):
+        """
+        Here we test api /traffic_reports with parameters
+        """
+
+        def get_stop_area(sas, sa_id):
+            for sa in sas:
+                if sa['id'] == sa_id:
+                    return sa
+            return None
+
+        mode_tramway = 'physical_mode:0x0'
+
+        # Call traffic_reports and verify all the objects
+        response = self.query_region('traffic_reports?_current_datetime=20120801T000000&depth=3')
+        assert len(response['traffic_reports']) == 1
+        assert len(response['disruptions']) == 7
+        assert response['traffic_reports'][0]['network']['id'] == 'base_network'
+        assert len(response['traffic_reports'][0]['lines']) == 1
+        assert response['traffic_reports'][0]['lines'][0]['id'] == 'A'
+        assert len(response['traffic_reports'][0]['lines'][0]['physical_modes']) == 1
+        assert response['traffic_reports'][0]['lines'][0]['physical_modes'][0]['id'] == mode_tramway
+        assert len(response['traffic_reports'][0]['stop_areas']) == 2
+
+        stop_area = get_stop_area(response['traffic_reports'][0]['stop_areas'], 'stopA')
+        assert stop_area['id'] == 'stopA'
+        assert len(stop_area['physical_modes']) == 2
+        assert any(pm['id'] == mode_tramway for pm in stop_area['physical_modes'])
+        assert any(pm['id'] == 'physical_mode:0x1' for pm in stop_area['physical_modes'])
+
+        stop_area = get_stop_area(response['traffic_reports'][0]['stop_areas'], 'stopB')
+        assert stop_area['id'] == 'stopB'
+        assert len(stop_area['physical_modes']) == 1
+        assert stop_area['physical_modes'][0]['id'] == mode_tramway
+
+        # traffic_reports with forbidden_uris[]=physical_mode:0x0 (Tramway) gives empty result
+        # as all the pt_objects impacted are related to physical_mode Tramway
+        response = self.query_region(
+            'traffic_reports?_current_datetime=20120801T000000&depth=3&forbidden_uris[]=physical_mode:0x0'
+        )
+        assert len(response['traffic_reports']) == 0
+        assert len(response['disruptions']) == 0
+
+        # traffic_reports with forbidden_uris[]=physical_mode:0x1 (Metro) filters all the objects impacted
+        # and related to physical_mode Metro. stop_area 'stopA' is hence excluded
+        response = self.query_region(
+            'traffic_reports?_current_datetime=20120801T000000&depth=3&forbidden_uris[]=physical_mode:0x1'
+        )
+        assert len(response['traffic_reports']) == 1
+        assert len(response['disruptions']) == 3
+        assert response['traffic_reports'][0]['network']['id'] == 'base_network'
+        assert len(response['traffic_reports'][0]['lines']) == 1
+        assert response['traffic_reports'][0]['lines'][0]['id'] == 'A'
+        assert len(response['traffic_reports'][0]['lines'][0]['physical_modes']) == 1
+        assert response['traffic_reports'][0]['lines'][0]['physical_modes'][0]['id'] == mode_tramway
+        assert len(response['traffic_reports'][0]['stop_areas']) == 1
+        assert response['traffic_reports'][0]['stop_areas'][0]['id'] == 'stopB'
+        assert len(response['traffic_reports'][0]['stop_areas'][0]['physical_modes']) == 1
+        assert response['traffic_reports'][0]['stop_areas'][0]['physical_modes'][0]['id'] == mode_tramway
+
     def test_disruption_with_and_without_tags(self):
         """
         test api /disruptions with and without parameter tags[] and check the result

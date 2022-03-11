@@ -724,14 +724,17 @@ def check_final_results_or_raise(final_results, orig_fallback_durations_pool, de
     dest_fallback_durations_is_empty = dest_fallback_durations_pool.is_empty()
     if orig_fallback_durations_is_empty and dest_fallback_durations_is_empty:
         raise EntryPointException(
-            error_message="no origin point nor destination point",
+            error_message="Public transport is not reachable from origin nor destination",
             error_id=response_pb2.Error.no_origin_nor_destination,
         )
     if orig_fallback_durations_is_empty:
-        raise EntryPointException(error_message="no origin point", error_id=response_pb2.Error.no_origin)
+        raise EntryPointException(
+            error_message="Public transport is not reachable from origin", error_id=response_pb2.Error.no_origin
+        )
     if dest_fallback_durations_is_empty:
         raise EntryPointException(
-            error_message="no destination point", error_id=response_pb2.Error.no_destination
+            error_message="Public transport is not reachable from destination",
+            error_id=response_pb2.Error.no_destination,
         )
 
 
