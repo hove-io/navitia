@@ -63,34 +63,8 @@ class ZmqSocket(six.with_metaclass(ABCMeta, object)):
     def name(self):
         pass
 
-    def reap_socket(self, ttl):
-        # type: (int) -> None
-        if self.zmq_socket_type != 'transient':
-            return
-        logger = logging.getLogger(__name__)
-        now = time.time()
-
-        def _reap_sockets(sockets):
-            while True:
-                try:
-                    socket, t = sockets.popleft()
-                    if now - t > ttl:
-                        logger.debug("closing one socket for %s pt_socket", self.name)
-                        socket.setsockopt(zmq.LINGER, 0)
-                        socket.close()
-                    else:
-                        self.sockets.appendleft((socket, t))
-                        break  # remaining socket are still in "keep alive" state
-                except IndexError:
-                    break
-
-        _reap_sockets(self.sockets)
-
     @contextmanager
     def socket(self, context):
-        sockets = self.sockets
-        socket_path = self.zmq_socket
-
         try:
             socket, _ = self.sockets.pop()
         except IndexError:  # there is no socket available: lets create one
@@ -100,7 +74,7 @@ class ZmqSocket(six.with_metaclass(ABCMeta, object)):
             yield socket
         finally:
             if not socket.closed:
-                sockets.append((socket, time.time()))
+                self.sockets.append((socket, time.time()))
 
     def _send_and_receive(
         self, request, timeout=app.config.get('INSTANCE_TIMEOUT', 10000), quiet=False, **kwargs
@@ -139,7 +113,7 @@ class ZmqSocket(six.with_metaclass(ABCMeta, object)):
         """
         try:
             return self.breaker.call(self._send_and_receive, *args, **kwargs)
-        except pybreaker.CircuitBreakerError as e:
+        except pybreaker.CircuitBreakerError:
             raise DeadSocketException(self.name, self.zmq_socket)
 
 
