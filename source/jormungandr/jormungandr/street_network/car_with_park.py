@@ -234,3 +234,6 @@ class CarWithPark(AbstractStreetNetworkService):
         return self._car_service.make_path_key(
             mode, orig_uri, dest_uri, streetnetwork_path_type, period_extremity
         )
+
+    def feed_publisher(self):
+        return self._car_service.feed_publisher()
