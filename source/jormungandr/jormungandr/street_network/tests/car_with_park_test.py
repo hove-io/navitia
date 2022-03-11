@@ -32,20 +32,15 @@ from jormungandr.street_network.car_with_park import CarWithPark
 from jormungandr.street_network.kraken import Kraken
 from jormungandr.street_network.here import Here
 
+
 def test_feed_publisher():
-    walking_service = Kraken(instance=None, service_url='http://bob.com', id=u"walking_service_id", modes=["walking"])
+    walking_service = Kraken(
+        instance=None, service_url='http://bob.com', id=u"walking_service_id", modes=["walking"]
+    )
     car_service = here = Here(
-        instance=None,
-        service_base_url='http://bobobo.com',
-        id=u"car_service_id",
-        modes=["car"],
-        timeout=1,
+        instance=None, service_base_url='http://bobobo.com', id=u"car_service_id", modes=["car"], timeout=1
     )
-    car_with_park = CarWithPark(
-        instance=None,
-        walking_service=walking_service,
-        car_service=car_service,
-    )
+    car_with_park = CarWithPark(instance=None, walking_service=walking_service, car_service=car_service)
 
     fp_car_service = car_service.feed_publisher()
     fp_car_with_park = car_with_park.feed_publisher()
