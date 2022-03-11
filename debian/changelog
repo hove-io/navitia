@@ -1,3 +1,14 @@
+navitia2 (15.3.0) unstable; urgency=low
+
+  * [Jormun] Add max_car_no_park_direct_path_duration in /status   <https://github.com/CanalTP/navitia/pull/3676>
+  * [Tyr] Make bss_rent/return_duration configurable  <https://github.com/CanalTP/navitia/pull/3674>
+  * [Tyr] Fix action put on api billing_plans without lockable and notify_threshold_list  <https://github.com/CanalTP/navitia/pull/3673>
+  * [Kraken] Better error messages when public transport is not reachable from origin/destination  <https://github.com/CanalTP/navitia/pull/3671>
+  * [Kraken] Line code prioritization in pt_object API  <https://github.com/CanalTP/navitia/pull/3672>
+  * [Kraken] Fix traffic_reports with forbidden_uris on physical_modes  <https://github.com/CanalTP/navitia/pull/3669>
+
+ -- Hicham <hicham.azimani@kisio.com>  Fri, 11 Mar 2022 11:03:04 +0100
+
 navitia2 (15.2.0) unstable; urgency=low
 
   * [Jormungandr] fix access_points in journeys  <https://github.com/CanalTP/navitia/pull/3670>
