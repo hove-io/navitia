@@ -28,7 +28,8 @@
 # www.navitia.io
 from __future__ import absolute_import, print_function, unicode_literals, division
 
-from jormungandr.pt_planners.common import ZmqSocket, create_journeys_request
+from jormungandr.pt_planners.common import ZmqSocket
+from jormungandr import utils
 
 
 class Loki(ZmqSocket):
@@ -44,7 +45,9 @@ class Loki(ZmqSocket):
         raise NotImplementedError("Too bad, you cannot ask loki for places_nearby :) ")
 
     def journeys(self, origins, destinations, datetime, clockwise, journey_parameters, bike_in_pt, request_id):
-        req = create_journeys_request(origins, destinations, datetime, clockwise, journey_parameters, bike_in_pt)
+        req = utils.create_journeys_request(
+            origins, destinations, datetime, clockwise, journey_parameters, bike_in_pt
+        )
         return self.send_and_receive(req, request_id=request_id)
 
     def graphical_isochrones(
