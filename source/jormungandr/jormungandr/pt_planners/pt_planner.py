@@ -46,7 +46,13 @@ class AbstractPtPlanner(six.with_metaclass(ABCMeta, object)):  # type: ignore
         pass
 
     @abstractmethod
-    def places_nearby(self):
+    def stop_points_nearby(self, place, distance, access_points=False):
+        """
+        place: the center of the circle
+        access_points: should I return the access points attached to the stop_points?
+
+        Retrieve stop_points around the give place with distance.
+        """
         pass
 
     # to be continued...

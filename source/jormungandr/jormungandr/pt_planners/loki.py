@@ -30,9 +30,10 @@ from __future__ import absolute_import, print_function, unicode_literals, divisi
 
 from jormungandr.pt_planners.common import ZmqSocket
 from jormungandr import utils
+from .pt_planner import AbstractPtPlanner
 
 
-class Loki(ZmqSocket):
+class Loki(ZmqSocket, AbstractPtPlanner):
     def __init__(self, name, zmq_context, zmq_socket, zmq_socket_type=None):
 
         super(Loki, self).__init__(zmq_context, zmq_socket, zmq_socket_type)
@@ -41,7 +42,7 @@ class Loki(ZmqSocket):
     def name(self):
         return self.instance_name
 
-    def places_nearby(self):
+    def stop_points_nearby(self, place, distance, access_points=False):
         raise NotImplementedError("Too bad, you cannot ask loki for places_nearby :) ")
 
     def journeys(self, origins, destinations, datetime, clockwise, journey_parameters, bike_in_pt, request_id):

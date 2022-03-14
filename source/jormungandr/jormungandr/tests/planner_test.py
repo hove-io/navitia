@@ -30,7 +30,7 @@
 # www.navitia.io
 import pytest
 from jormungandr.planner import JourneyParameters, GraphicalIsochronesParameters, Kraken
-from jormungandr.utils import str_to_time_stamp
+from jormungandr.utils import str_to_time_stamp, create_journeys_request, create_graphical_isochrones_request
 import navitiacommon.type_pb2 as type_pb2
 
 
@@ -80,9 +80,8 @@ def create_journeys_request_test():
     destination = {"Somewhere": 666}
     journey_parameters = JourneyParameters()
     datetime = str_to_time_stamp("20120614T080000")
-    planner = Kraken(None)
 
-    req = planner._create_journeys_request(origin, destination, datetime, True, journey_parameters, False)
+    req = create_journeys_request(origin, destination, datetime, True, journey_parameters, False)
 
     assert req.requested_api == type_pb2.pt_planner
     check_basic_journeys_request(req.journeys)
@@ -95,9 +94,8 @@ def test_journey_request_current_time():
     destination = {"Somewhere": 666}
     datetime = str_to_time_stamp("20120614T080000")
     journey_parameters = JourneyParameters(current_datetime=123456789)
-    planner = Kraken(None)
 
-    req = planner._create_journeys_request(origin, destination, datetime, True, journey_parameters, False)
+    req = create_journeys_request(origin, destination, datetime, True, journey_parameters, False)
     assert req._current_datetime == 123456789
 
 
@@ -106,9 +104,8 @@ def create_graphical_isochrones_request_test():
     destination = {"Somewhere": 666}
     graphical_isochrones_parameters = GraphicalIsochronesParameters()
     datetime = str_to_time_stamp("20120614T080000")
-    planner = Kraken(None)
 
-    req = planner._create_graphical_isochrones_request(
+    req = create_graphical_isochrones_request(
         origin, destination, datetime, True, graphical_isochrones_parameters, False
     )
 
@@ -121,9 +118,8 @@ def test_journey_request_tranfer_penalties():
     destination = {"Somewhere": 666}
     journey_parameters = JourneyParameters(arrival_transfer_penalty=60, walking_transfer_penalty=240)
     datetime = str_to_time_stamp("20120614T080000")
-    planner = Kraken(None)
 
-    req = planner._create_journeys_request(origin, destination, datetime, True, journey_parameters, False)
+    req = create_journeys_request(origin, destination, datetime, True, journey_parameters, False)
 
     assert req.requested_api == type_pb2.pt_planner
     check_basic_journeys_request(req.journeys)

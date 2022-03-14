@@ -41,7 +41,7 @@ class Kraken(ZmqSocket, AbstractPtPlanner):
     def name(self):
         return self.instance_name
 
-    def places_nearby(self):
+    def stop_points_nearby(self, place, distance, access_points=False):
         raise NotImplementedError("Too bad, you cannot ask kraken for places nearby :)")
 
     def journeys(self, origins, destinations, datetime, clockwise, journey_parameters, bike_in_pt, request_id):
