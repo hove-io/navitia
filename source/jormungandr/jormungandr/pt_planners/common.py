@@ -47,13 +47,13 @@ from navitiacommon import response_pb2
 
 class ZmqSocket(six.with_metaclass(ABCMeta, object)):
     def __init__(
-        self, zmq_context, zmq_socket, timeout=app.config.get('INSTANCE_TIMEOUT', 10000), zmq_socket_type=None
+        self, zmq_context, zmq_socket, zmq_socket_type=None, timeout=app.config.get('INSTANCE_TIMEOUT', 10000)
     ):
         self.zmq_socket = zmq_socket
         self.context = zmq_context
         self.sockets = deque()
-        self.timeout = timeout
         self.zmq_socket_type = zmq_socket_type
+        self.timeout = timeout
         self.breaker = pybreaker.CircuitBreaker(
             fail_max=app.config.get(str('CIRCUIT_BREAKER_MAX_INSTANCE_FAIL'), 5),
             reset_timeout=app.config.get(str('CIRCUIT_BREAKER_INSTANCE_TIMEOUT_S'), 60),
