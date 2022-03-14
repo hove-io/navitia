@@ -7,6 +7,10 @@ from jormungandr.utils import can_connect_to_database
 DEFAULT_PT_PLANNER = 'kraken'
 
 
+class NoRequestedPtPlanner(Exception):
+    pass
+
+
 class PtPlannersManager(object):
     def __init__(
         self,
@@ -76,4 +80,4 @@ class PtPlannersManager(object):
         pt_planner = self.pt_planners.get(pt_planner_id)
         if pt_planner:
             return pt_planner
-        raise Exception("no requested pt_planner: {}".format(pt_planner_id))
+        raise NoRequestedPtPlanner("no requested pt_planner: {}".format(pt_planner_id))
