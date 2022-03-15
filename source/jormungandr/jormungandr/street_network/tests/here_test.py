@@ -36,7 +36,7 @@ from mock import MagicMock
 from jormungandr.exceptions import TechnicalError
 from jormungandr.street_network.here import Here
 from jormungandr.street_network.tests.streetnetwork_test_utils import make_pt_object
-from jormungandr.utils import PeriodExtremity, str_to_time_stamp
+from jormungandr.utils import PeriodExtremity, str_to_time_stamp, timestamp_to_str
 from navitiacommon import type_pb2, response_pb2
 
 
@@ -297,6 +297,8 @@ def here_basic_routing_test(valid_here_routing_response):
     assert section.origin == origin
     assert section.begin_date_time == str_to_time_stamp('20161010T152000')
     assert section.end_date_time == section.begin_date_time + section.duration
+    assert section.base_begin_date_time == str_to_time_stamp('20161010T152204')
+    assert section.base_end_date_time == section.begin_date_time + section.duration
     # dynamic_speed
     dynamic_speeds = section.street_network.dynamic_speeds
     assert len(dynamic_speeds) == 6

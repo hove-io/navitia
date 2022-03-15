@@ -224,6 +224,7 @@ class Here(AbstractStreetNetworkService):
 
         # durations
         travel_time = here_section.get('summary', {}).get('duration', 0)
+        base_duration = here_section.get('summary', {}).get('baseDuration', 0)
         journey.duration = travel_time
         journey.durations.total = travel_time
         if mode == 'walking':
@@ -267,10 +268,13 @@ class Here(AbstractStreetNetworkService):
         section.begin_date_time = journey.departure_date_time
         section.end_date_time = section.begin_date_time + section.duration
 
-        # since HERE can give us the base time, we display it.
-        # we do not try to do clever stuff (like taking the 'clockwise' into account) here
-        section.base_begin_date_time = section.begin_date_time
-        section.base_end_date_time = section.base_begin_date_time + travel_time
+        # base duration impacts the base arrival and departure datetime
+        if represents_start_fallback:
+            section.base_begin_date_time = section.begin_date_time + (travel_time - base_duration)
+            section.base_end_date_time = section.end_date_time
+        else:
+            section.base_begin_date_time = section.begin_date_time
+            section.base_end_date_time = section.end_date_time - (travel_time - base_duration)
 
         section.id = 'section_0'
         section.length = length
