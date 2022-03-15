@@ -36,7 +36,7 @@ from mock import MagicMock
 from jormungandr.exceptions import TechnicalError
 from jormungandr.street_network.here import Here
 from jormungandr.street_network.tests.streetnetwork_test_utils import make_pt_object
-from jormungandr.utils import PeriodExtremity, str_to_time_stamp, timestamp_to_str
+from jormungandr.utils import PeriodExtremity, str_to_time_stamp
 from navitiacommon import type_pb2, response_pb2
 
 
