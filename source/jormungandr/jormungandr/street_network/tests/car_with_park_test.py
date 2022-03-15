@@ -35,10 +35,10 @@ from jormungandr.street_network.here import Here
 
 def test_feed_publisher():
     walking_service = Kraken(
-        instance=None, service_url='http://bob.com', id=u"walking_service_id", modes=["walking"]
+        instance=None, service_url='https://bob.com', id=u"walking_service_id", modes=["walking"]
     )
-    car_service = here = Here(
-        instance=None, service_base_url='http://bobobo.com', id=u"car_service_id", modes=["car"], timeout=1
+    car_service = Here(
+        instance=None, service_base_url='https://bobobo.com', id=u"car_service_id", modes=["car"], timeout=1
     )
     car_with_park = CarWithPark(instance=None, walking_service=walking_service, car_service=car_service)
 
