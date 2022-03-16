@@ -178,6 +178,7 @@ def import_data(
                 filename = move_to_backupdirectory(_file, instance_config.backup_directory, manage_sp_char=True)
             else:
                 filename = _file
+            # and instance_config.pt_planner_id == "loki"
             if dataset.type == "fusio":
                 actions.append(fusio2s3.si(instance_config, filename, dataset_uid=dataset.uid))
             if dataset.type == "gtfs":

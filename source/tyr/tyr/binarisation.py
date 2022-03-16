@@ -41,7 +41,6 @@ from functools import wraps
 
 from flask import current_app
 from minio import Minio
-from minio.commonconfig import Tags
 from shapely.geometry import MultiPolygon
 from shapely import wkt
 from zipfile import BadZipfile
@@ -73,6 +72,22 @@ def unzip_if_needed(filename):
     else:
         working_directory = filename
     return working_directory
+
+
+def zip_if_needed(filename):
+    if os.path.isdir(filename):
+        # if it's a directory, we zip it
+        file = filename + ".zip"
+        try:
+            with zipfile.ZipFile(file, "w", zipfile.ZIP_DEFLATED) as zf:
+                for dirname, _, files in os.walk(filename):
+                    for _filename in files:
+                        zf.write(os.path.join(dirname, _filename), _filename)
+        except BadZipfile:
+            return filename  # the file is not a zip, we don't do anything
+    else:
+        file = filename
+    return file
 
 
 def manage_file_with_unwanted_char(file_basename, sub_string):
@@ -1063,21 +1078,18 @@ def fusio2s3(self, instance_config, filename, job_id, dataset_uid):
 
     logger = get_instance_logger(instance, task_id=job_id)
     try:
-        working_directory = unzip_if_needed(filename)
+        filename = zip_if_needed(filename)
 
         config = MinioConfig()
         client = Minio(endpoint=config.host, access_key=config.key, secret_key=config.secret, secure=False)
 
         dt_now_str = datetime.datetime.now().strftime("%Y-%m-%d-%H:%M:%S")
-        tags = Tags(for_object=True)
-        tags["coverage"] = instance_config.name
-        tags["datetime"] = dt_now_str
-        tags["data_type"] = "fusio"
+        tags = {"coverage": instance_config.name, "datetime": dt_now_str, "data_type": "gtfs"}
 
-        file_key = "/{coverage}/ntfs.zip".format(coverage=instance_config.name)
+        file_key = "{coverage}/ntfs.zip".format(coverage=instance_config.name)
 
         with collect_metric("fusio2s3", job, dataset_uid):
-            client.fput_object(config.bucket, file_key, filename, tags=tags, content_type="application/zip")
+            client.fput_object(config.bucket, file_key, filename, metadata=tags, content_type="application/zip")
 
         dataset.state = "done"
     except:
@@ -1099,21 +1111,18 @@ def gtfs2s3(self, instance_config, filename, job_id, dataset_uid):
 
     logger = get_instance_logger(instance, task_id=job_id)
     try:
-        working_directory = unzip_if_needed(filename)
+        filename = zip_if_needed(filename)
 
         config = MinioConfig()
         client = Minio(endpoint=config.host, access_key=config.key, secret_key=config.secret, secure=False)
 
         dt_now_str = datetime.datetime.now().strftime("%Y-%m-%d-%H:%M:%S")
-        tags = Tags(for_object=True)
-        tags["coverage"] = instance_config.name
-        tags["datetime"] = dt_now_str
-        tags["data_type"] = "gtfs"
+        tags = {"coverage": instance_config.name, "datetime": dt_now_str, "data_type": "gtfs"}
 
-        file_key = "/{coverage}/gtfs.zip".format(coverage=instance_config.name)
+        file_key = "{coverage}/gtfs.zip".format(coverage=instance_config.name)
 
         with collect_metric("gtfs2s3", job, dataset_uid):
-            client.fput_object(config.bucket, file_key, filename, tags=tags, content_type="application/zip")
+            client.fput_object(config.bucket, file_key, filename, metadata=tags, content_type="application/zip")
 
         dataset.state = "done"
     except:
