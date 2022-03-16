@@ -36,6 +36,7 @@ from mock import MagicMock
 from jormungandr.exceptions import TechnicalError
 from jormungandr.street_network.here import Here
 from jormungandr.street_network.tests.streetnetwork_test_utils import make_pt_object
+from jormungandr.street_network.street_network import StreetNetworkPathType
 from jormungandr.utils import PeriodExtremity, str_to_time_stamp
 from navitiacommon import type_pb2, response_pb2
 
@@ -283,6 +284,7 @@ def here_basic_routing_test(valid_here_routing_response):
         destination=destination,
         fallback_extremity=fallback_extremity,
         request={'datetime': str_to_time_stamp('20170621T174600')},
+        direct_path_type=StreetNetworkPathType.BEGINNING_FALLBACK,
     )
     assert response.status_code == 200
     assert response.response_type == response_pb2.ITINERARY_FOUND
