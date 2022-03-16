@@ -39,7 +39,6 @@ import datetime
 import shutil
 from functools import wraps
 
-from datetime import datetime
 from flask import current_app
 from minio import Minio
 from minio.commonconfig import Tags
@@ -1067,18 +1066,54 @@ def fusio2s3(self, instance_config, filename, job_id, dataset_uid):
         working_directory = unzip_if_needed(filename)
 
         config = MinioConfig()
+        client = Minio(endpoint=config.host, access_key=config.key, secret_key=config.secret, secure=False)
 
-        dt_now_str = datetime.now().strftime("%Y-%m-%d-%H:%M:%S")
+        dt_now_str = datetime.datetime.now().strftime("%Y-%m-%d-%H:%M:%S")
         tags = Tags(for_object=True)
         tags["coverage"] = instance_config.name
         tags["datetime"] = dt_now_str
+        tags["data_type"] = "fusio"
 
+        file_key = "/{coverage}/ntfs.zip".format(coverage=instance_config.name)
+
+        with collect_metric("fusio2s3", job, dataset_uid):
+            client.fput_object(config.bucket, file_key, filename, tags=tags, content_type="application/zip")
+
+        dataset.state = "done"
+    except:
+        logger.exception("")
+        job.state = "failed"
+        dataset.state = "failed"
+        raise
+    finally:
+        models.db.session.commit()
+
+
+@celery.task(bind=True)
+def gtfs2s3(self, instance_config, filename, job_id, dataset_uid):
+    """ Zip fusio file and launch gtfs2s3 """
+
+    job = models.Job.query.get(job_id)
+    dataset = _retrieve_dataset_and_set_state("gtfs", job.id)
+    instance = job.instance
+
+    logger = get_instance_logger(instance, task_id=job_id)
+    try:
+        working_directory = unzip_if_needed(filename)
+
+        config = MinioConfig()
         client = Minio(endpoint=config.host, access_key=config.key, secret_key=config.secret, secure=False)
 
-        file_key = "/{coverage}/dataset.zip".format(coverage=instance_config.name)
-        client.fput_object(
-            config.bucket, file_key, filename, tags=tags, content_type="application/zip"
-        )
+        dt_now_str = datetime.datetime.now().strftime("%Y-%m-%d-%H:%M:%S")
+        tags = Tags(for_object=True)
+        tags["coverage"] = instance_config.name
+        tags["datetime"] = dt_now_str
+        tags["data_type"] = "gtfs"
+
+        file_key = "/{coverage}/gtfs.zip".format(coverage=instance_config.name)
+
+        with collect_metric("gtfs2s3", job, dataset_uid):
+            client.fput_object(config.bucket, file_key, filename, tags=tags, content_type="application/zip")
 
         dataset.state = "done"
     except:

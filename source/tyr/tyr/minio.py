@@ -31,10 +31,12 @@
 
 import os
 
+from flask import current_app
+
 
 class MinioConfig:
-    def __init__(self, args=None):
-        self.host = ""
-        self.key = ""
-        self.secret = ""
-        self.bucket = ""
+    def __init__(self):
+        self.host = current_app.config['MINIO_LOKI_URL']
+        self.key = current_app.config['MINIO_LOKI_ACCESS_KEY']
+        self.secret = current_app.config['MINIO_LOKI_SECRET_KEY']
+        self.bucket = current_app.config['MINIO_LOKI_BUCKET_NAME']
