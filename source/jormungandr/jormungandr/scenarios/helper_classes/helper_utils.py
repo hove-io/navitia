@@ -613,7 +613,7 @@ def compute_fallback(
         fallback = _get_fallback_logic(direct_path_type)
         pt_orig = fallback.get_pt_boundaries(journey)
         pt_departure = fallback.get_pt_section_datetime(journey)
-        fallback_extremity_dep = PeriodExtremity(pt_departure, False)
+        fallback_extremity_dep = PeriodExtremity(pt_departure, True)
         from_sub_request_id = "{}_{}_from".format(request_id, i)
         if from_obj.uri != pt_orig.uri and pt_orig.uri not in orig_all_free_access:
             # here, if the mode is car, we have to find from which car park the stop_point is accessed
@@ -641,7 +641,7 @@ def compute_fallback(
         fallback = _get_fallback_logic(direct_path_type)
         pt_dest = fallback.get_pt_boundaries(journey)
         pt_arrival = fallback.get_pt_section_datetime(journey)
-        fallback_extremity_arr = PeriodExtremity(pt_arrival, True)
+        fallback_extremity_arr = PeriodExtremity(pt_arrival, False)
         to_sub_request_id = "{}_{}_to".format(request_id, i)
         if to_obj.uri != pt_dest.uri and pt_dest.uri not in dest_all_free_access:
             if arr_mode == 'car':
