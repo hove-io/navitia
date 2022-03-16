@@ -38,7 +38,11 @@ from jormungandr import app
 from jormungandr.exceptions import TechnicalError
 from jormungandr.utils import get_pt_object_coord
 import flexpolyline as fp
-from jormungandr.street_network.street_network import AbstractStreetNetworkService, StreetNetworkPathKey
+from jormungandr.street_network.street_network import (
+    AbstractStreetNetworkService,
+    StreetNetworkPathKey,
+    StreetNetworkPathType,
+)
 from jormungandr.ptref import FeedPublisher
 from jormungandr.fallback_modes import FallbackModes as fm
 from jormungandr.utils import is_coord, get_lon_lat
@@ -200,7 +204,7 @@ class Here(AbstractStreetNetworkService):
             raise TechnicalError('impossible to access Here service')
 
     @staticmethod
-    def _read_response(response, origin, destination, mode, fallback_extremity, request):
+    def _read_response(response, origin, destination, mode, fallback_extremity, request, direct_path_type):
         resp = response_pb2.Response()
         resp.status_code = 200
 
@@ -236,8 +240,11 @@ class Here(AbstractStreetNetworkService):
         else:
             journey.durations.taxi = travel_time
 
-        datetime, represents_start_fallback = fallback_extremity
-        if represents_start_fallback:
+        datetime, _ = fallback_extremity
+        if (
+            direct_path_type == StreetNetworkPathType.BEGINNING_FALLBACK
+            or direct_path_type == StreetNetworkPathType.DIRECT
+        ):
             journey.departure_date_time = datetime
             journey.arrival_date_time = datetime + journey.duration
         else:
@@ -269,9 +276,19 @@ class Here(AbstractStreetNetworkService):
         section.end_date_time = section.begin_date_time + section.duration
 
         # base duration impacts the base arrival and departure datetime
-        if represents_start_fallback:
+        if (
+            direct_path_type == StreetNetworkPathType.BEGINNING_FALLBACK
+            or direct_path_type == StreetNetworkPathType.DIRECT
+        ):
+            print('LOVA ', direct_path_type)
+            print('LOVA begin ', section.begin_date_time)
+            print('LOVA end ', section.end_date_time)
             section.base_begin_date_time = section.begin_date_time + (travel_time - base_duration)
             section.base_end_date_time = section.end_date_time
+            print('LOVA base begin ', section.base_begin_date_time)
+            print('LOVA base end ', section.base_end_date_time)
+            print('LOVA ', travel_time)
+            print('LOVA ', base_duration)
         else:
             section.base_begin_date_time = section.begin_date_time
             section.base_end_date_time = section.end_date_time - (travel_time - base_duration)
@@ -472,7 +489,7 @@ class Here(AbstractStreetNetworkService):
         self.log.debug('here response = {}'.format(json))
 
         return self._read_response(
-            json, pt_object_origin, pt_object_destination, mode, fallback_extremity, request
+            json, pt_object_origin, pt_object_destination, mode, fallback_extremity, request, direct_path_type
         )
 
     def _create_matrix_response(self, json_response, origins, destinations):

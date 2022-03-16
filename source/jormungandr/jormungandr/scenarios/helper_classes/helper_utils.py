@@ -120,6 +120,9 @@ def _align_fallback_direct_path_datetime(fallback_direct_path, fallback_extremit
         for s in journey.sections:
             s.begin_date_time += delta
             s.end_date_time += delta
+            if s.base_begin_date_time != None and s.base_end_date_time:
+                s.base_begin_date_time += delta
+                s.base_end_date_time += delta
     return fallback_direct_path
 
 
@@ -613,7 +616,7 @@ def compute_fallback(
         fallback = _get_fallback_logic(direct_path_type)
         pt_orig = fallback.get_pt_boundaries(journey)
         pt_departure = fallback.get_pt_section_datetime(journey)
-        fallback_extremity_dep = PeriodExtremity(pt_departure, True)
+        fallback_extremity_dep = PeriodExtremity(pt_departure, False)
         from_sub_request_id = "{}_{}_from".format(request_id, i)
         if from_obj.uri != pt_orig.uri and pt_orig.uri not in orig_all_free_access:
             # here, if the mode is car, we have to find from which car park the stop_point is accessed
@@ -641,7 +644,7 @@ def compute_fallback(
         fallback = _get_fallback_logic(direct_path_type)
         pt_dest = fallback.get_pt_boundaries(journey)
         pt_arrival = fallback.get_pt_section_datetime(journey)
-        fallback_extremity_arr = PeriodExtremity(pt_arrival, False)
+        fallback_extremity_arr = PeriodExtremity(pt_arrival, True)
         to_sub_request_id = "{}_{}_to".format(request_id, i)
         if to_obj.uri != pt_dest.uri and pt_dest.uri not in dest_all_free_access:
             if arr_mode == 'car':
