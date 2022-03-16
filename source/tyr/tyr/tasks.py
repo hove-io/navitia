@@ -57,6 +57,7 @@ from tyr.binarisation import (
     ntfs2mimir,
     cosmogony2mimir,
     poi2mimir,
+    fusio2s3
 )
 from tyr.binarisation import reload_data, move_to_backupdirectory
 from tyr import celery
@@ -176,6 +177,8 @@ def import_data(
                 filename = move_to_backupdirectory(_file, instance_config.backup_directory, manage_sp_char=True)
             else:
                 filename = _file
+            if dataset.type == "fusio" or dataset.type == "gtfs":
+                actions.append(fusio2s3.si(instance_config, filename, dataset_uid=dataset.uid))
             actions.append(task[dataset.type].si(instance_config, filename, dataset_uid=dataset.uid))
         else:
             # unknown type, we skip it

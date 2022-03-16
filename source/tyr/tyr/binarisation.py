@@ -39,7 +39,10 @@ import datetime
 import shutil
 from functools import wraps
 
+from datetime import datetime
 from flask import current_app
+from minio import Minio
+from minio.commonconfig import Tags
 from shapely.geometry import MultiPolygon
 from shapely import wkt
 from zipfile import BadZipfile
@@ -55,6 +58,8 @@ from contextlib import contextmanager
 import glob
 from redis.exceptions import ConnectionError
 import retrying
+
+from tyr.minio import MinioConfig
 
 
 def unzip_if_needed(filename):
@@ -1047,3 +1052,39 @@ def poi2mimir(self, instance_name, input, autocomplete_version, job_id=None, dat
             models.db.session.commit()
 
         raise
+
+
+@celery.task(bind=True)
+def fusio2s3(self, instance_config, filename, job_id, dataset_uid):
+    """ Zip fusio file and launch fusio2s3 """
+
+    job = models.Job.query.get(job_id)
+    dataset = _retrieve_dataset_and_set_state("fusio", job.id)
+    instance = job.instance
+
+    logger = get_instance_logger(instance, task_id=job_id)
+    try:
+        working_directory = unzip_if_needed(filename)
+
+        config = MinioConfig()
+
+        dt_now_str = datetime.now().strftime("%Y-%m-%d-%H:%M:%S")
+        tags = Tags(for_object=True)
+        tags["coverage"] = instance_config.name
+        tags["datetime"] = dt_now_str
+
+        client = Minio(endpoint=config.host, access_key=config.key, secret_key=config.secret, secure=False)
+
+        file_key = "/{coverage}/dataset.zip".format(coverage=instance_config.name)
+        client.fput_object(
+            config.bucket, file_key, filename, tags=tags, content_type="application/zip"
+        )
+
+        dataset.state = "done"
+    except:
+        logger.exception("")
+        job.state = "failed"
+        dataset.state = "failed"
+        raise
+    finally:
+        models.db.session.commit()
