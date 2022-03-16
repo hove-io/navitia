@@ -84,7 +84,7 @@ def zip_if_needed(filename):
                     for _filename in files:
                         zf.write(os.path.join(dirname, _filename), _filename)
         except BadZipfile:
-            return filename  # the file is not a zip, we don't do anything
+            return filename  # the file is a zip, we don't do anything
     else:
         file = filename
     return file
@@ -1071,42 +1071,20 @@ def poi2mimir(self, instance_name, input, autocomplete_version, job_id=None, dat
 @celery.task(bind=True)
 def fusio2s3(self, instance_config, filename, job_id, dataset_uid):
     """ Zip fusio file and launch fusio2s3 """
-
-    job = models.Job.query.get(job_id)
-    dataset = _retrieve_dataset_and_set_state("fusio", job.id)
-    instance = job.instance
-
-    logger = get_instance_logger(instance, task_id=job_id)
-    try:
-        filename = zip_if_needed(filename)
-
-        config = MinioConfig()
-        client = Minio(endpoint=config.host, access_key=config.key, secret_key=config.secret, secure=False)
-
-        dt_now_str = datetime.datetime.now().strftime("%Y-%m-%d-%H:%M:%S")
-        tags = {"coverage": instance_config.name, "datetime": dt_now_str, "data_type": "gtfs"}
-
-        file_key = "{coverage}/ntfs.zip".format(coverage=instance_config.name)
-
-        with collect_metric("fusio2s3", job, dataset_uid):
-            client.fput_object(config.bucket, file_key, filename, metadata=tags, content_type="application/zip")
-
-        dataset.state = "done"
-    except:
-        logger.exception("")
-        job.state = "failed"
-        dataset.state = "failed"
-        raise
-    finally:
-        models.db.session.commit()
+    _inner_2s3(self, "fusio", instance_config, filename, job_id, dataset_uid)
 
 
 @celery.task(bind=True)
 def gtfs2s3(self, instance_config, filename, job_id, dataset_uid):
     """ Zip fusio file and launch gtfs2s3 """
+    _inner_2s3(self, "gtfs", instance_config, filename, job_id, dataset_uid)
+
+
+def _inner_2s3(self, dataset_type, instance_config, filename, job_id, dataset_uid):
+    """ Zip fusio file and launch gtfs2s3 """
 
     job = models.Job.query.get(job_id)
-    dataset = _retrieve_dataset_and_set_state("gtfs", job.id)
+    dataset = _retrieve_dataset_and_set_state(dataset_type, job.id)
     instance = job.instance
 
     logger = get_instance_logger(instance, task_id=job_id)
@@ -1117,11 +1095,13 @@ def gtfs2s3(self, instance_config, filename, job_id, dataset_uid):
         client = Minio(endpoint=config.host, access_key=config.key, secret_key=config.secret, secure=False)
 
         dt_now_str = datetime.datetime.now().strftime("%Y-%m-%d-%H:%M:%S")
-        tags = {"coverage": instance_config.name, "datetime": dt_now_str, "data_type": "gtfs"}
+        tags = {"coverage": instance_config.name, "datetime": dt_now_str, "data_type": dataset_type}
 
-        file_key = "{coverage}/gtfs.zip".format(coverage=instance_config.name)
+        file_key = "{coverage}/{dataset_type}.zip".format(
+            coverage=instance_config.name, dataset_type=dataset_type
+        )
 
-        with collect_metric("gtfs2s3", job, dataset_uid):
+        with collect_metric("{dataset_type}2s3".format(dataset_type=dataset_type), job, dataset_uid):
             client.fput_object(config.bucket, file_key, filename, metadata=tags, content_type="application/zip")
 
         dataset.state = "done"
