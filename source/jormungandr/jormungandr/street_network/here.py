@@ -280,15 +280,8 @@ class Here(AbstractStreetNetworkService):
             direct_path_type == StreetNetworkPathType.BEGINNING_FALLBACK
             or direct_path_type == StreetNetworkPathType.DIRECT
         ):
-            print('LOVA ', direct_path_type)
-            print('LOVA begin ', section.begin_date_time)
-            print('LOVA end ', section.end_date_time)
             section.base_begin_date_time = section.begin_date_time + (travel_time - base_duration)
             section.base_end_date_time = section.end_date_time
-            print('LOVA base begin ', section.base_begin_date_time)
-            print('LOVA base end ', section.base_end_date_time)
-            print('LOVA ', travel_time)
-            print('LOVA ', base_duration)
         else:
             section.base_begin_date_time = section.begin_date_time
             section.base_end_date_time = section.end_date_time - (travel_time - base_duration)
