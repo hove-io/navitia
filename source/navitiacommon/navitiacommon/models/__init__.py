@@ -682,7 +682,7 @@ class Instance(db.Model):  # type: ignore
         db.Text,
         default=default_values.pt_planner_id,
         nullable=False,
-        server_default=str(default_values.access_points),
+        server_default=str(default_values.pt_planner_id),
     )
 
     pt_planners_configurations = db.Column(
