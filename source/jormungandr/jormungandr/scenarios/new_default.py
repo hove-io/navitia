@@ -1329,15 +1329,12 @@ class Scenario(simple.Scenario):
         logging.debug("calling autocomplete {}".format(request["_autocomplete"]))
         autocomplete = instance.get_autocomplete(request.get('_autocomplete'))
 
-        
         logging.debug("calling autocomplete {} for {}".format(autocomplete, entrypoint))
 
         detail = autocomplete.get_object_by_uri(entrypoint, instances=[instance], request_id=request_id)
 
         if detail:
             return detail
-
-        
 
         if not isinstance(instance.autocomplete, GeocodeJson):
             bragi = global_autocomplete.get('bragi')
@@ -1351,18 +1348,18 @@ class Scenario(simple.Scenario):
     def build_place_proto_object(input_json):
 
         proto = type_pb2.PtObject()
-        
+
         proto.name = input_json.get("name", "")
         proto.uri = input_json.get("id", "")
 
         embedded_type = input_json["embedded_type"]
-        if embedded_type == "stop_area":           
+        if embedded_type == "stop_area":
             proto.embedded_type = type_pb2.STOP_AREA
             json_coord = input_json.get("stop_area", {}).get("coord", {})
             proto.stop_area.coord.lon = coord["lon"]
             proto.stop_area.coord.lat = coord["lat"]
             return proto
-        
+
         if embedded_type == "stop_point":
             proto.embedded_type = type_pb2.STOP_POINT
             json_coord = input_json.get("stop_point", {}).get("coord", {})
@@ -1372,8 +1369,6 @@ class Scenario(simple.Scenario):
 
         if embedded_type == "address":
             proto.embedded_type == type_pb2.ADDRESS
-
-
 
     def get_next_datetime(self, responses):
         request_datetime_list = []
