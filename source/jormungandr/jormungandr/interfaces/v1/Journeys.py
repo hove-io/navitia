@@ -390,13 +390,6 @@ class Journeys(JourneyCommon):
             help="debug param to specify a custom scenario",
         )
         parser_get.add_argument(
-            "_use_pt_socket",
-            type=BooleanType(),
-            default=False,
-            hidden=True,
-            help="Use the 'pt_zmq_socket' instead of 'zmq_socket' for pt_planner sub-requests. This has no effect if 'pt_zmq_socket' is not set in the instance configuration",
-        )
-        parser_get.add_argument(
             "_street_network", type=six.text_type, hidden=True, help="choose the streetnetwork component"
         )
         parser_get.add_argument("_walking_transfer_penalty", hidden=True, type=int)

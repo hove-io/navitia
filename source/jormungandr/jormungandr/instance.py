@@ -104,7 +104,6 @@ def _make_property_getter(attr_name):
 class Instance(object):
     name = None  # type: Text
     _sockets = None  # type: Deque[Tuple[zmq.Socket, float]]
-    _pt_sockets = None  # type: Deque[Tuple[zmq.Socket, float]]
 
     def __init__(
         self,
@@ -126,7 +125,6 @@ class Instance(object):
         self.geom = None
         self.geojson = None
         self._sockets = deque()
-        self._pt_sockets = deque()
         self.socket_path = zmq_socket
         self._scenario = None
         self._scenario_name = None
@@ -143,10 +141,6 @@ class Instance(object):
         self.georef = georef.Kraken(self)
         self.planner = planner.Kraken(self)
         self._streetnetwork_backend_manager = streetnetwork_backend_manager
-        if pt_zmq_socket:
-            self.pt_socket_path = pt_zmq_socket
-        else:
-            self.pt_socket_path = zmq_socket
 
         disable_database = app.config[str('DISABLE_DATABASE')]
         if disable_database:
@@ -735,18 +729,13 @@ class Instance(object):
                     break
 
         _reap_sockets(self._sockets)
-        _reap_sockets(self._pt_sockets)
 
     @contextmanager
-    def socket(self, context, pt_socket=False):
+    def socket(self, context):
 
         socket = None
-        if pt_socket:
-            sockets = self._pt_sockets
-            socket_path = self.pt_socket_path
-        else:
-            sockets = self._sockets
-            socket_path = self.socket_path
+        sockets = self._sockets
+        socket_path = self.socket_path
 
         try:
             socket, _ = sockets.pop()
@@ -775,8 +764,7 @@ class Instance(object):
         deadline = datetime.utcnow() + timedelta(milliseconds=timeout)
         request.deadline = deadline.strftime('%Y%m%dT%H%M%S,%f')
 
-        use_pt_socket = 'use_pt_socket' in kwargs and kwargs['use_pt_socket']
-        with self.socket(self.context, use_pt_socket) as socket:
+        with self.socket(self.context) as socket:
             if 'request_id' in kwargs and kwargs['request_id']:
                 request.request_id = kwargs['request_id']
             else:
