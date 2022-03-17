@@ -51,4 +51,4 @@ class Loki(ZmqSocket, AbstractPtPlanner):
     def graphical_isochrones(
         self, origins, destinations, datetime, clockwise, graphical_isochrones_parameters, bike_in_pt
     ):
-        raise NotImplementedError("Too bad, you cannot ask loki for graphical isochrones :) ")
+        raise NotImplementedError("Too bad, you cannot ask loki for graphical isochrones :)")
