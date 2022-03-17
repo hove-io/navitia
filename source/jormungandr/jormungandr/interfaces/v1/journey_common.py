@@ -499,6 +499,12 @@ class JourneyCommon(ResourceUri, ResourceUtc):
             hidden=True,
             help="choose which pt engine to compute the pt journey",
         )
+        parser_get.add_argument(
+            "_autocomplete",
+            type=OptionValue(['kraken', 'bragi7', 'bragi']),
+            hidden=True,
+            help="choose an autocomplete backend among the ones configured for jormungandr",
+        )
 
     def parse_args(self, region=None, uri=None):
         args = self.parsers['get'].parse_args()

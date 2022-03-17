@@ -135,6 +135,7 @@ class Distributed(object):
 
             context.requested_orig_obj = get_entry_point_or_raise(context.requested_orig, request['origin'])
             context.requested_dest_obj = get_entry_point_or_raise(context.requested_dest, request['destination'])
+            logger.debug("DISTRIBUTED ORIGIN DETAIL %s", context.requested_orig.wait_and_get())
 
             context.streetnetwork_path_pool = StreetNetworkPathPool(
                 future_manager=future_manager, instance=instance
