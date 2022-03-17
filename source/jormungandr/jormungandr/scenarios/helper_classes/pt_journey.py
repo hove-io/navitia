@@ -276,7 +276,11 @@ class PtJourneyPool:
 
     @staticmethod
     def _create_parameters(request, isochrone_center, request_type):
-        from jormungandr.planner import JourneyParameters, GraphicalIsochronesParameters, StreetNetworkParameters
+        from jormungandr.pt_planners.pt_planner import (
+            JourneyParameters,
+            GraphicalIsochronesParameters,
+            StreetNetworkParameters,
+        )
 
         if request_type == type_pb2.graphical_isochrone:
             # Yes, graphical_isochrones needs that...

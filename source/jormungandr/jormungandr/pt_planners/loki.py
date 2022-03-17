@@ -42,9 +42,6 @@ class Loki(ZmqSocket, AbstractPtPlanner):
     def name(self):
         return self.instance_name
 
-    def stop_points_nearby(self, place, distance, access_points=False):
-        raise NotImplementedError("Too bad, you cannot ask loki for places_nearby :) ")
-
     def journeys(self, origins, destinations, datetime, clockwise, journey_parameters, bike_in_pt, request_id):
         req = utils.create_journeys_request(
             origins, destinations, datetime, clockwise, journey_parameters, bike_in_pt
