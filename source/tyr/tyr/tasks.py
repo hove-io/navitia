@@ -180,7 +180,8 @@ def import_data(
                 filename = _file
 
             is_pt_planner_loki = (
-                hasattr(instance_config, 'pt_planner_id') and instance_config.pt_planner_id == "loki"
+                hasattr(instance_config, 'pt_planners_configurations')
+                and "loki" in instance_config.pt_planners_configurations
             )
             if dataset.type == "fusio" and is_pt_planner_loki:
                 actions.append(fusio2s3.si(instance_config, filename, dataset_uid=dataset.uid))

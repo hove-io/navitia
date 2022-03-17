@@ -1081,8 +1081,6 @@ def gtfs2s3(self, instance_config, filename, job_id, dataset_uid):
 
 
 def _inner_2s3(self, dataset_type, instance_config, filename, job_id, dataset_uid):
-    """ Zip fusio file and launch gtfs2s3 """
-
     job = models.Job.query.get(job_id)
     dataset = _retrieve_dataset_and_set_state(dataset_type, job.id)
     instance = job.instance
