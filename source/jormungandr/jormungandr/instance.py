@@ -55,7 +55,7 @@ from shapely.geos import PredicateError, ReadingError, TopologicalError
 from flask import g
 import flask
 import pybreaker
-from jormungandr import georef, planner, schedule, realtime_schedule, ptref, street_network, fallback_modes
+from jormungandr import georef, schedule, realtime_schedule, ptref, street_network, fallback_modes
 from jormungandr.scenarios.ridesharing.ridesharing_service_manager import RidesharingServiceManager
 import six
 import time
@@ -139,7 +139,6 @@ class Instance(object):
             reset_timeout=app.config.get(str('CIRCUIT_BREAKER_INSTANCE_TIMEOUT_S'), 60),
         )
         self.georef = georef.Kraken(self)
-        self.planner = planner.Kraken(self)
         self._streetnetwork_backend_manager = streetnetwork_backend_manager
 
         disable_database = app.config[str('DISABLE_DATABASE')]

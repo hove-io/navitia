@@ -113,7 +113,7 @@ class PtJourney:
         ):
             return None
 
-        resp = self._journeys(self._instance.planner, orig_fallback_durations, dest_fallback_durations)
+        resp = self._journeys(self._pt_planner, orig_fallback_durations, dest_fallback_durations)
 
         for j in resp.journeys:
             j.internal_id = str(utils.generate_id())
@@ -176,9 +176,9 @@ class PtJourney:
             }
 
         if self._request_type == type_pb2.ISOCHRONE:
-            resp = self._journeys(self._instance.planner, **orig_and_dest_fallback_durations)
+            resp = self._journeys(self._pt_planner, **orig_and_dest_fallback_durations)
         else:
-            resp = self._graphical_isochrone(self._instance.planner, **orig_and_dest_fallback_durations)
+            resp = self._graphical_isochrone(self._pt_planner, **orig_and_dest_fallback_durations)
 
         for j in resp.journeys:
             j.internal_id = str(utils.generate_id())
