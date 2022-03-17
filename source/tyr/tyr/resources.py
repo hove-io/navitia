@@ -954,11 +954,11 @@ class Instance(flask_restful.Resource):
         )
 
         parser.add_argument(
-            'pt_planner_id',
+            'default_pt_planner',
             type=OptionValue(['kraken', 'loki']),
             help='choose public transport calculator for distributed',
             location=('json', 'values'),
-            default=instance.pt_planner_id,
+            default=instance.default_pt_planner,
         )
 
         parser.add_argument(
@@ -1062,7 +1062,7 @@ class Instance(flask_restful.Resource):
                         'bss_rent_duration',
                         'bss_rent_penalty',
                         'bss_return_penalty',
-                        'pt_planner_id',
+                        'default_pt_planner',
                         'pt_planners_configurations',
                     ],
                 ),

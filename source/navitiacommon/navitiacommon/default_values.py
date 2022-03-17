@@ -215,7 +215,7 @@ transfer_path = False
 # use/disuse access points in journey computations
 access_points = False
 
-pt_planner_id = 'kraken'
+default_pt_planner = 'kraken'
 
 # {
 #     "kraken": {

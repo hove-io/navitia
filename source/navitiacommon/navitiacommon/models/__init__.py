@@ -678,11 +678,11 @@ class Instance(db.Model):  # type: ignore
         server_default=str(default_values.access_points),
     )
 
-    pt_planner_id = db.Column(
+    default_pt_planner = db.Column(
         db.Text,
-        default=default_values.pt_planner_id,
+        default=default_values.default_pt_planner,
         nullable=False,
-        server_default=str(default_values.pt_planner_id),
+        server_default=str(default_values.default_pt_planner),
     )
 
     pt_planners_configurations = db.Column(

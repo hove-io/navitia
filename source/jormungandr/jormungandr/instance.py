@@ -700,11 +700,11 @@ class Instance(object):
     transfer_path = _make_property_getter('transfer_path')
     access_points = _make_property_getter('access_points')
 
-    pt_planner_id = _make_property_getter('pt_planner_id')
+    default_pt_planner = _make_property_getter('default_pt_planner')
     pt_planners_configurations = _make_property_getter('pt_planners_configurations')
 
     def get_pt_planner(self, pt_planner_id=None):
-        pt_planner_id = pt_planner_id or self.pt_planner_id
+        pt_planner_id = pt_planner_id or self.default_pt_planner
         return self._pt_planner_manager.get_pt_planner(pt_planner_id)
 
     @property

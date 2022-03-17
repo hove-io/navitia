@@ -168,12 +168,12 @@ def test_update_instances(create_instance):
         "bss_return_duration": 80,
         "bss_rent_penalty": 20,
         "bss_return_penalty": 10,
-        "pt_planner_id": 'loki',
+        "default_pt_planner": 'loki',
         "pt_planners_configurations": loki_config,
     }
     resp = api_get('/v0/instances/{}'.format(create_instance))
     assert resp[0]['access_points'] is False
-    assert resp[0]['pt_planner_id'] == 'kraken'
+    assert resp[0]['default_pt_planner'] == 'kraken'
     assert resp[0]['pt_planners_configurations'] == {}
 
     resp = api_put('/v0/instances/fr', data=json.dumps(params), content_type='application/json')
@@ -212,7 +212,7 @@ def test_update_instances(create_instance):
     assert resp['bss_return_duration'] == 80
     assert resp['bss_rent_penalty'] == 20
     assert resp['bss_return_penalty'] == 10
-    assert resp['pt_planner_id'] == 'loki'
+    assert resp['default_pt_planner'] == 'loki'
     assert resp['pt_planners_configurations'] == loki_config
 
 
