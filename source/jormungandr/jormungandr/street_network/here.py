@@ -273,7 +273,7 @@ class Here(AbstractStreetNetworkService):
 
         section.duration = travel_time
         section.begin_date_time = journey.departure_date_time
-        section.end_date_time = section.begin_date_time + section.duration
+        section.end_date_time = journey.arrival_date_time
 
         # base duration impacts the base arrival and departure datetime
         if (
