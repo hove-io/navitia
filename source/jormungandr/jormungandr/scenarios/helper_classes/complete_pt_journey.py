@@ -83,10 +83,13 @@ def wait_and_build_crowflies(
     :return: A list of pt journeys with crowfly as a fallback
     """
     logger = logging.getLogger(__name__)
+    logger.debug("wait_and_build_crowflies pt_journey_pool size {}".format(len(pt_journey_pool._value)))
     res = []
     for (dep_mode, arr_mode, future_pt_journey) in pt_journey_pool:
         logger.debug("waiting for pt journey starts with %s and ends with %s", dep_mode, arr_mode)
         pt_journeys = wait_and_get_pt_journeys(future_pt_journey, has_valid_direct_paths)
+
+        logger.debug("wait_and_build_crowflies origin pt journeys {}".format(pt_journeys))
 
         if pt_journeys and pt_journeys.journeys:
             orig_fallback_durations = orig_fallback_durations_pool.get_best_fallback_durations(dep_mode)
@@ -97,6 +100,8 @@ def wait_and_build_crowflies(
                 "fallback_durations": orig_fallback_durations,
                 "fallback_type": StreetNetworkPathType.BEGINNING_FALLBACK,
             }
+
+            logger.debug("wait_and_build_crowflies origin fallback durations {}".format(orig_fallback_durations))
 
             dest_fallback_durations = dest_fallback_durations_pool.get_best_fallback_durations(arr_mode)
             dest_crowfly = {

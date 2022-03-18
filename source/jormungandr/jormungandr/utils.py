@@ -404,7 +404,7 @@ def get_pt_object_coord(pt_object):
     coord = getattr(attr, "coord", None)
 
     if not coord:
-        logging.getLogger(__name__).error('Invalid coord for ptobject type: {}'.format(pt_object.embedded_type))
+        logging.getLogger(__name__).error('Invalid coord for ptobject: {}'.format(pt_object))
         raise UnableToParse('Invalid coord for ptobject type: {}'.format(pt_object.embedded_type))
     return coord
 

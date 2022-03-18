@@ -119,23 +119,11 @@ class Distributed(object):
 
         if context.partial_response_is_empty:
             logger.debug('requesting places by uri orig: %s dest %s', request['origin'], request['destination'])
+            logger.debug('origin proto {}'.format(request['origin_proto']))
+            logger.debug('dest proto {}'.format(request['destination_proto']))
 
-            context.requested_orig = PlaceByUri(
-                future_manager=future_manager,
-                instance=instance,
-                uri=request['origin'],
-                request_id="{}_place_origin".format(request_id),
-            )
-            context.requested_dest = PlaceByUri(
-                future_manager=future_manager,
-                instance=instance,
-                uri=request['destination'],
-                request_id="{}_place_dest".format(request_id),
-            )
-
-            context.requested_orig_obj = get_entry_point_or_raise(context.requested_orig, request['origin'])
-            context.requested_dest_obj = get_entry_point_or_raise(context.requested_dest, request['destination'])
-            logger.debug("DISTRIBUTED ORIGIN DETAIL %s", context.requested_orig.wait_and_get())
+            context.requested_orig_obj = request['origin_proto']
+            context.requested_dest_obj = request['destination_proto']
 
             context.streetnetwork_path_pool = StreetNetworkPathPool(
                 future_manager=future_manager, instance=instance
@@ -280,6 +268,8 @@ class Distributed(object):
 
         # pt_journeys may contain None and res must be a list of protobuf journey
         res.extend((j.pt_journeys for j in pt_journey_elements if j.pt_journeys))
+
+        logger.debug("3 origin fallback durations {}".format(context.orig_fallback_durations_pool))
 
         check_final_results_or_raise(
             res, context.orig_fallback_durations_pool, context.dest_fallback_durations_pool

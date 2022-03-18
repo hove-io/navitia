@@ -381,6 +381,7 @@ class FallbackDurations:
             )
 
         logger.debug("finish fallback durations from %s by %s", self._requested_place_obj.uri, self._mode)
+        logger.debug("fallback durations {}".format(len(fallback_durations)))
 
         return fallback_durations
 

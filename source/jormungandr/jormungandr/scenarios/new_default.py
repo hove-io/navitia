@@ -80,6 +80,7 @@ from jormungandr.autocomplete.geocodejson import GeocodeJson
 from jormungandr import global_autocomplete
 from jormungandr.new_relic import record_custom_parameter
 from jormungandr import fallback_modes
+from jormungandr.scenarios.helper_classes.helper_exceptions import EntryPointException
 
 from six.moves import filter
 from six.moves import range
@@ -1017,16 +1018,24 @@ class Scenario(simple.Scenario):
         destination_detail = self.get_entrypoint_detail(
             api_request.get('destination'), instance, api_request, request_id="{}_dest_detail".format(request_id)
         )
+        if origin_detail is None:
+            raise EntryPointException(
+                error_message="Could not resolve origin", error_id=response_pb2.Error.unknown_object
+            )
+        if destination_detail is None:
+            raise EntryPointException(
+                error_message="Could not resolve destination", error_id=response_pb2.Error.unknown_object
+            )
+
         # we store the origin/destination detail in g to be able to use them after the marshall
         g.origin_detail = origin_detail
         g.destination_detail = destination_detail
 
-        logger.debug('ORIGIN DETAIL %s', origin_detail)
-
-        return -1
-
         api_request['origin'] = get_kraken_id(origin_detail) or api_request.get('origin')
         api_request['destination'] = get_kraken_id(destination_detail) or api_request.get('destination')
+
+        api_request['origin_proto'] = build_place_proto_object(origin_detail)
+        api_request['destination_proto'] = build_place_proto_object(destination_detail)
 
         # building ridesharing request from "original" request
         ridesharing_req = deepcopy(api_request)
@@ -1345,31 +1354,6 @@ class Scenario(simple.Scenario):
 
         return None
 
-    def build_place_proto_object(input_json):
-
-        proto = type_pb2.PtObject()
-
-        proto.name = input_json.get("name", "")
-        proto.uri = input_json.get("id", "")
-
-        embedded_type = input_json["embedded_type"]
-        if embedded_type == "stop_area":
-            proto.embedded_type = type_pb2.STOP_AREA
-            json_coord = input_json.get("stop_area", {}).get("coord", {})
-            proto.stop_area.coord.lon = coord["lon"]
-            proto.stop_area.coord.lat = coord["lat"]
-            return proto
-
-        if embedded_type == "stop_point":
-            proto.embedded_type = type_pb2.STOP_POINT
-            json_coord = input_json.get("stop_point", {}).get("coord", {})
-            proto.stop_area.coord.lon = coord["lon"]
-            proto.stop_area.coord.lat = coord["lat"]
-            return proto
-
-        if embedded_type == "address":
-            proto.embedded_type == type_pb2.ADDRESS
-
     def get_next_datetime(self, responses):
         request_datetime_list = []
         for r in responses:
@@ -1412,3 +1396,51 @@ class Scenario(simple.Scenario):
         req.heat_map.journeys_request.max_duration = request["max_duration"]
         resp = instance.send_and_receive(req)
         return resp
+
+
+def build_place_proto_object(input_json):
+
+    logging.getLogger(__name__).debug("Build place proto object  {}".format(input_json))
+
+    if input_json is None:
+        return None
+
+    proto = type_pb2.PtObject()
+
+    proto.name = input_json.get("name", "")
+    proto.uri = input_json.get("id", "")
+
+    embedded_type = input_json["embedded_type"]
+
+    if embedded_type == "address":
+        proto.embedded_type = type_pb2.NavitiaType.ADDRESS
+        json_coord = input_json.get("address", {}).get("coord", {})
+        proto.address.coord.lon = float(json_coord["lon"])
+        proto.address.coord.lat = float(json_coord["lat"])
+        logging.getLogger(__name__).debug("proto object  {}".format(proto))
+        logging.getLogger(__name__).debug("proto embedded  {}".format(proto.embedded_type))
+        logging.getLogger(__name__).debug("proto embedded  should be {}".format(type_pb2.NavitiaType.ADDRESS))
+        return proto
+
+    if embedded_type == "stop_area":
+        proto.embedded_type = type_pb2.NavitiaType.STOP_AREA
+        json_coord = input_json.get("stop_area", {}).get("coord", {})
+        proto.stop_area.coord.lon = float(json_coord["lon"])
+        proto.stop_area.coord.lat = float(json_coord["lat"])
+        return proto
+
+    if embedded_type == "stop_point":
+        proto.embedded_type = type_pb2.NavitiaType.STOP_POINT
+        json_coord = input_json.get("stop_point", {}).get("coord", {})
+        proto.stop_area.coord.lon = float(json_coord["lon"])
+        proto.stop_area.coord.lat = float(json_coord["lat"])
+        return proto
+
+    if embedded_type == "administrative_region":
+        proto.embedded_type = type_pb2.NavitiaType.ADMINISTRATIVE_REGION
+        json_coord = input_json.get("administrative_region", {}).get("coord", {})
+        proto.administrative_region.coord.lon = float(json_coord["lon"])
+        proto.administrative_region.coord.lat = float(json_coord["lat"])
+        return proto
+
+    return None
