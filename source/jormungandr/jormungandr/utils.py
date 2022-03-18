@@ -787,7 +787,10 @@ def create_graphical_isochrones_request(
     req.isochrone.boundary_duration.insert(0, req.journeys.max_duration)
     req.isochrone.boundary_duration.append(graphical_isochrones_parameters.min_duration)
 
-    req.journeys.clockwise = True if req.journeys.origin else False
+    if req.journeys.origin:
+        req.journeys.clockwise = True
+    else:
+        req.journeys.clockwise = False
 
     req.isochrone.journeys_request.CopyFrom(req.journeys)
     return req
