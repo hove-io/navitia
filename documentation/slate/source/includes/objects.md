@@ -260,7 +260,7 @@ You can use these ids in the forbidden_uris[] parameter from
 ### <a name="place"></a>Place
 
 A container containing either a [admin](#admin), [poi](#poi), [address](#address), [stop_area](#stop-area),
-[stop_point](#stop-point)
+[stop_point](#stop-point) or [access_point](#access-point) 
 
 ``` json
 {
@@ -285,6 +285,7 @@ A container containing either a [admin](#admin), [poi](#poi), [address](#address
 |poi|[poi](#poi)|Embedded poi|
 |address|[address](#address)|Embedded address|
 |stop_point|[stop_point](#stop-point)|Embedded Stop point|
+|access_point|[access_point](#access-point)|Embedded Access point|
 
 ### <a name="trip"></a>Trip
 
@@ -608,7 +609,26 @@ Poi = Point Of Interest
 |name    |string               |Name of the poi                                                     |
 |label   |string               |Label of the poi. The name is directly taken from the data whereas the label is something we compute for better traveler information. If you don't know what to display, display the label.|
 |poi_type|[poi_type](#poi-type)|Type of the poi                                                     |
-|stands  |[stands](#stands)    |Information on the spots available, for BSS stations               |
+|stands  |[stands](#stands)    |Information on the spots available, for BSS stations                |
+
+### <a name="access-point"></a>Access_point
+
+``` shell
+$ curl 'https://api.navitia.io/v1/coverage/sandbox/access_points' -H 'Authorization: 3b036afe-0110-4202-b9ed-99718476c2e0'
+```
+
+Access_point = point of access to a station, a multimodal area. It could be an entrance, an exit or both.
+
+|Field                  |Type                     |Description                                                         |
+|-----------------------|-------------------------|--------------------------------------------------------------------|
+|id                     |string                   |Identifier of the access point                                      |
+|name                   |string                   |Name of the access point                                            |
+|coord                  |[coord](#coord)          |Coordinates of the access point                                     |
+|is_entrance            |boolean                  |Identifies whether access to the stoparea is possible through this access point|
+|is_exit                |boolean                  |Identifies whether exit from the stoparea is possible through this access point|
+|parent_station         |[stop_area](#stop-area)  |Identifies the linked Stop Area                                     |
+|length                 |int                      |Length from the stop point to the access point                      |
+|traversal_time         |int                      |Time spent to reach the access point from the stop point            |
 
 ### Address
 
@@ -786,6 +806,8 @@ It's also used inside different responses (journeys, ...).
 | [stop_point](#stop-point)                         | a location where vehicles can pickup or drop off passengers   |
 | [address](#address)                               | a point located in a street                                   |
 | [poi](#poi)                                       | a point of interest                                           |
+| [access_point](#access-point)                     | an exit or entrance to a stop_area                            |
+
 
 ### <a name="pt-object-embedded-type"></a>PT-object embedded type
 
