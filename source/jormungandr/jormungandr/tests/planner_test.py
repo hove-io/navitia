@@ -29,7 +29,7 @@
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 import pytest
-from jormungandr.planner import JourneyParameters, GraphicalIsochronesParameters, Kraken
+from jormungandr.pt_planners.pt_planner import JourneyParameters, GraphicalIsochronesParameters
 from jormungandr.utils import str_to_time_stamp, create_journeys_request, create_graphical_isochrones_request
 import navitiacommon.type_pb2 as type_pb2
 
