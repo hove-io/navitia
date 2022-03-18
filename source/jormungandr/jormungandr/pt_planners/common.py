@@ -84,15 +84,13 @@ class ZmqSocket(six.with_metaclass(ABCMeta, object)):
         request.deadline = deadline.strftime('%Y%m%dT%H%M%S,%f')
 
         with self.socket(self.context) as socket:
-            if 'request_id' in kwargs and kwargs['request_id']:
-                request.request_id = kwargs['request_id']
-            else:
+            request.request_id = kwargs.get('request_id')
+            if not request.request_id:
                 try:
                     request.request_id = flask.request.id
                 except RuntimeError:
                     # we aren't in a flask context, so there is no request
-                    if 'flask_request_id' in kwargs and kwargs['flask_request_id']:
-                        request.request_id = kwargs['flask_request_id']
+                    request.request_id = kwargs.get('flask_request_id')
 
             socket.send(request.SerializeToString())
             if socket.poll(timeout=self.timeout) > 0:
