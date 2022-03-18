@@ -119,7 +119,6 @@ class Instance(object):
         streetnetwork_backend_manager,
         external_service_provider_configurations,
         pt_planners_configurations,
-        pt_zmq_socket=None,  # type: Text
         instance_db=None,
     ):
         self.geom = None
