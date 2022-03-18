@@ -207,7 +207,7 @@ class PathSerializer(PbNestedSerializer):
 
 class StreetInformationSerializer(PbNestedSerializer):
     geojson_offset = jsonschema.MethodField(schema_type=int, display_none=False)
-    cycle_path_type = jsonschema.MethodField(schema_type=int, display_none=False)
+    cycle_path_type = jsonschema.MethodField(schema_type=str, display_none=False)
 
     def get_cycle_path_type(self, obj):
         if obj.HasField(str('cycle_path_type')):
