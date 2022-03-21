@@ -732,14 +732,14 @@ def _tag_by_mode(responses):
             _tag_journey_by_mode(j)
 
 
-def tag_robust_journeys(responses):
+def tag_reliable_journeys(responses):
     for r in responses:
         for j in r.journeys:
-            if is_robust_journey(j):
-                j.tags.append("robust")
+            if is_reliable_journey(j):
+                j.tags.append("reliable")
 
 
-robust_physical_modes = [
+reliable_physical_modes = [
     "physical_mode:RapidTransit",
     "physical_mode:Metro",
     "physical_mode:Train",
@@ -747,22 +747,22 @@ robust_physical_modes = [
     "physical_mode:LocalTrain",
     "physical_mode:LongDistanceTrain",
 ]
-robust_fallback_modes = [response_pb2.Bike, response_pb2.Walking]
+reliable_fallback_modes = [response_pb2.Bike, response_pb2.Walking]
 # returns true if :
 #  - a journey has at least one public transport section
-#  - all public transport sections use robust physical modes
-#  - start and end fallbacks use robust fallback mode
-def is_robust_journey(journey):
-    found_a_pt_section_with_robust_mode = False
+#  - all public transport sections use reliable physical modes
+#  - start and end fallbacks use reliable fallback mode
+def is_reliable_journey(journey):
+    found_a_pt_section_with_reliable_mode = False
     for section in journey.sections:
 
-        # if this section uses a non robust fallback mode
-        # the journey is not robust
+        # if this section uses a non reliable fallback mode
+        # the journey is not reliable
         if section.HasField("street_network"):
             street_network = section.street_network
             if street_network.HasField("mode"):
                 mode = street_network.mode
-                if mode not in robust_fallback_modes:
+                if mode not in reliable_fallback_modes:
                     return False
 
         if section.type != response_pb2.PUBLIC_TRANSPORT:
@@ -772,11 +772,11 @@ def is_robust_journey(journey):
         uris = section.uris
         if not uris.HasField("physical_mode"):
             continue
-        if uris.physical_mode in robust_physical_modes:
-            found_a_pt_section_with_robust_mode = True
+        if uris.physical_mode in reliable_physical_modes:
+            found_a_pt_section_with_reliable_mode = True
         else:
             return False
-    return found_a_pt_section_with_robust_mode
+    return found_a_pt_section_with_reliable_mode
 
 
 def type_journeys(resp, req):
@@ -1132,7 +1132,7 @@ class Scenario(simple.Scenario):
             _tag_by_mode(new_resp)
             _tag_direct_path(new_resp)
             _tag_bike_in_pt(new_resp)
-            tag_robust_journeys(new_resp)
+            tag_reliable_journeys(new_resp)
 
             if journey_filter.nb_qualifed_journeys(new_resp) == 0:
                 # no new journeys found, we stop
