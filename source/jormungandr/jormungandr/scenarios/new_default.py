@@ -732,6 +732,32 @@ def _tag_by_mode(responses):
             _tag_journey_by_mode(j)
 
 
+def tag_robust_journeys(responses):
+    for r in responses:
+        for j in r.journeys:
+            if is_robust_journey(j):
+                j.tags.append("robust")
+
+
+robust_physical_modes = ["physical_mode:RapidTransit", "physical_mode:Metro"]
+# returns true if a journey uses only robust physical modes
+def is_robust_journey(journey):
+    found_a_robust_mode = False
+    for section in journey.sections:
+        if section.type != response_pb2.PUBLIC_TRANSPORT:
+            continue
+        if not section.HasField("uris"):
+            continue
+        uris = section.uris
+        if not uris.HasField("physical_mode"):
+            continue
+        if uris.physical_mode in robust_physical_modes:
+            found_a_robust_mode = True
+        else:
+            return False
+    return found_a_robust_mode
+
+
 def type_journeys(resp, req):
     """
     Set the type of the journeys
@@ -1085,6 +1111,7 @@ class Scenario(simple.Scenario):
             _tag_by_mode(new_resp)
             _tag_direct_path(new_resp)
             _tag_bike_in_pt(new_resp)
+            tag_robust_journeys(new_resp)
 
             if journey_filter.nb_qualifed_journeys(new_resp) == 0:
                 # no new journeys found, we stop
