@@ -747,12 +747,25 @@ robust_physical_modes = [
     "physical_mode:LocalTrain",
     "physical_mode:LongDistanceTrain",
 ]
+robust_fallback_modes = [response_pb2.Bike, response_pb2.Walking]
 # returns true if :
 #  - a journey has at least one public transport section
-#   - all public transport sections use robust physical modes
+#  - all public transport sections use robust physical modes
+#  - start and end fallbacks use robust fallback mode
 def is_robust_journey(journey):
     found_a_robust_mode = False
+    found_a_non_robust_fallback = False
     for section in journey.sections:
+
+        # check if this section uses a non robust fallback mode
+        if section.HasField("street_network"):
+            street_network = section.street_network
+            if street_network.HasField("mode"):
+                mode = street_network.mode
+                if mode not in robust_fallback_modes:
+                    found_a_non_robust_fallback = True
+                    break
+
         if section.type != response_pb2.PUBLIC_TRANSPORT:
             continue
         if not section.HasField("uris"):
@@ -760,14 +773,11 @@ def is_robust_journey(journey):
         uris = section.uris
         if not uris.HasField("physical_mode"):
             continue
-        print(uris.physical_mode)
-        print(uris.physical_mode in robust_physical_modes)
         if uris.physical_mode in robust_physical_modes:
-            print("coucou")
             found_a_robust_mode = True
         else:
             return False
-    return found_a_robust_mode
+    return found_a_robust_mode and not found_a_non_robust_fallback
 
 
 def type_journeys(resp, req):
