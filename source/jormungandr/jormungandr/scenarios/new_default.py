@@ -739,8 +739,17 @@ def tag_robust_journeys(responses):
                 j.tags.append("robust")
 
 
-robust_physical_modes = ["physical_mode:RapidTransit", "physical_mode:Metro"]
-# returns true if a journey uses only robust physical modes
+robust_physical_modes = [
+    "physical_mode:RapidTransit",
+    "physical_mode:Metro",
+    "physical_mode:Train",
+    "physical_mode:RailShuttle",
+    "physical_mode:LocalTrain",
+    "physical_mode:LongDistanceTrain",
+]
+# returns true if :
+#  - a journey has at least one public transport section
+#   - all public transport sections use robust physical modes
 def is_robust_journey(journey):
     found_a_robust_mode = False
     for section in journey.sections:
@@ -751,7 +760,10 @@ def is_robust_journey(journey):
         uris = section.uris
         if not uris.HasField("physical_mode"):
             continue
+        print(uris.physical_mode)
+        print(uris.physical_mode in robust_physical_modes)
         if uris.physical_mode in robust_physical_modes:
+            print("coucou")
             found_a_robust_mode = True
         else:
             return False

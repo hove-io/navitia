@@ -28,6 +28,7 @@
 # www.navitia.io
 from __future__ import absolute_import, print_function, unicode_literals, division
 from jormungandr.scenarios import qualifier
+from jormungandr.scenarios.new_default import is_robust_journey
 import navitiacommon.response_pb2 as response_pb2
 from jormungandr.utils import str_to_time_stamp
 from six.moves import range
@@ -242,3 +243,29 @@ def qualifier_nontransport_duration_with_tc_test():
     journey.sections[-1].duration = 864
 
     assert qualifier.get_nontransport_duration(journey) == 2797
+
+
+def tag_robust_journey_test():
+    journey = response_pb2.Journey()
+    assert is_robust_journey(journey) == False
+
+    journey.sections.add()
+    journey.sections[0].type = response_pb2.PUBLIC_TRANSPORT
+    journey.sections[0].uris.physical_mode = "physical_mode:Bus"
+
+    assert is_robust_journey(journey) == False
+
+    journey.sections[0].uris.physical_mode = "physical_mode:Train"
+    print("{}".format(journey))
+
+    assert is_robust_journey(journey) == True
+
+    journey.sections.add()
+    journey.sections[1].type = response_pb2.PUBLIC_TRANSPORT
+    journey.sections[1].uris.physical_mode = "physical_mode:Bus"
+
+    assert is_robust_journey(journey) == False
+
+    journey.sections[1].uris.physical_mode = "physical_mode:Train"
+
+    assert is_robust_journey(journey) == True
