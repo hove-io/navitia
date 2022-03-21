@@ -753,18 +753,17 @@ robust_fallback_modes = [response_pb2.Bike, response_pb2.Walking]
 #  - all public transport sections use robust physical modes
 #  - start and end fallbacks use robust fallback mode
 def is_robust_journey(journey):
-    found_a_robust_mode = False
-    found_a_non_robust_fallback = False
+    found_a_pt_section_with_robust_mode = False
     for section in journey.sections:
 
-        # check if this section uses a non robust fallback mode
+        # if this section uses a non robust fallback mode
+        # the journey is not robust
         if section.HasField("street_network"):
             street_network = section.street_network
             if street_network.HasField("mode"):
                 mode = street_network.mode
                 if mode not in robust_fallback_modes:
-                    found_a_non_robust_fallback = True
-                    break
+                    return False
 
         if section.type != response_pb2.PUBLIC_TRANSPORT:
             continue
@@ -777,7 +776,7 @@ def is_robust_journey(journey):
             found_a_robust_mode = True
         else:
             return False
-    return found_a_robust_mode and not found_a_non_robust_fallback
+    return found_a_pt_section_with_robust_mode
 
 
 def type_journeys(resp, req):
