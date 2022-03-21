@@ -773,7 +773,7 @@ def is_robust_journey(journey):
         if not uris.HasField("physical_mode"):
             continue
         if uris.physical_mode in robust_physical_modes:
-            found_a_robust_mode = True
+            found_a_pt_section_with_robust_mode = True
         else:
             return False
     return found_a_pt_section_with_robust_mode
