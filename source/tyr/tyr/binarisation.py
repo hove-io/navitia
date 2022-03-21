@@ -40,6 +40,7 @@ import shutil
 from functools import wraps
 
 from flask import current_app
+from minio import Minio
 from shapely.geometry import MultiPolygon
 from shapely import wkt
 from zipfile import BadZipfile
@@ -56,6 +57,8 @@ import glob
 from redis.exceptions import ConnectionError
 import retrying
 
+from tyr.minio import MinioConfig
+
 
 def unzip_if_needed(filename):
     if not os.path.isdir(filename):
@@ -69,6 +72,22 @@ def unzip_if_needed(filename):
     else:
         working_directory = filename
     return working_directory
+
+
+def zip_if_needed(filename):
+    if os.path.isdir(filename):
+        # if it's a directory, we zip it
+        file = filename + ".zip"
+        try:
+            with zipfile.ZipFile(file, "w", zipfile.ZIP_DEFLATED) as zf:
+                for dirname, _, files in os.walk(filename):
+                    for _filename in files:
+                        zf.write(os.path.join(dirname, _filename), _filename)
+        except BadZipfile:
+            return filename  # the file is a zip, we don't do anything
+    else:
+        file = filename
+    return file
 
 
 def manage_file_with_unwanted_char(file_basename, sub_string):
@@ -1047,3 +1066,47 @@ def poi2mimir(self, instance_name, input, autocomplete_version, job_id=None, dat
             models.db.session.commit()
 
         raise
+
+
+@celery.task(bind=True)
+def fusio2s3(self, instance_config, filename, job_id, dataset_uid):
+    """ Zip fusio file and launch fusio2s3 """
+    _inner_2s3(self, "fusio", instance_config, filename, job_id, dataset_uid)
+
+
+@celery.task(bind=True)
+def gtfs2s3(self, instance_config, filename, job_id, dataset_uid):
+    """ Zip fusio file and launch gtfs2s3 """
+    _inner_2s3(self, "gtfs", instance_config, filename, job_id, dataset_uid)
+
+
+def _inner_2s3(self, dataset_type, instance_config, filename, job_id, dataset_uid):
+    job = models.Job.query.get(job_id)
+    dataset = _retrieve_dataset_and_set_state(dataset_type, job.id)
+    instance = job.instance
+
+    logger = get_instance_logger(instance, task_id=job_id)
+    try:
+        filename = zip_if_needed(filename)
+
+        config = MinioConfig()
+        client = Minio(endpoint=config.host, access_key=config.key, secret_key=config.secret, secure=False)
+
+        dt_now_str = datetime.datetime.now().strftime("%Y-%m-%d-%H:%M:%S")
+        tags = {"coverage": instance_config.name, "datetime": dt_now_str, "data_type": dataset_type}
+
+        file_key = "{coverage}/{dataset_type}.zip".format(
+            coverage=instance_config.name, dataset_type=dataset_type
+        )
+
+        with collect_metric("{dataset_type}2s3".format(dataset_type=dataset_type), job, dataset_uid):
+            client.fput_object(config.bucket, file_key, filename, metadata=tags, content_type="application/zip")
+
+        dataset.state = "done"
+    except:
+        logger.exception("")
+        job.state = "failed"
+        dataset.state = "failed"
+        raise
+    finally:
+        models.db.session.commit()

@@ -37,3 +37,4 @@ kombu==4.0.2 ; python_version < "3.9"
 redis==2.10.6
 celery==4.1.0 ; python_version < "3.9"
 celery==5.2.2 ; python_version >= "3.9"
+minio==6.0.2
