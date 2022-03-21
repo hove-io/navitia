@@ -953,6 +953,22 @@ class Instance(flask_restful.Resource):
             default=instance.access_points,
         )
 
+        parser.add_argument(
+            'default_pt_planner',
+            type=OptionValue(['kraken', 'loki']),
+            help='choose public transport calculator for distributed',
+            location=('json', 'values'),
+            default=instance.default_pt_planner,
+        )
+
+        parser.add_argument(
+            'pt_planners_configurations',
+            type=dict,
+            help='pt_planners_configurations',
+            location=('json', 'values'),
+            default=instance.pt_planners_configurations,
+        )
+
         args = parser.parse_args()
 
         try:
@@ -1046,6 +1062,8 @@ class Instance(flask_restful.Resource):
                         'bss_rent_duration',
                         'bss_rent_penalty',
                         'bss_return_penalty',
+                        'default_pt_planner',
+                        'pt_planners_configurations',
                     ],
                 ),
                 maxlen=0,

@@ -493,6 +493,12 @@ class JourneyCommon(ResourceUri, ResourceUtc):
             type=int,
             help="the additional time added to the taxi section, right before riding the taxi but after hopping off the public transit",
         )
+        parser_get.add_argument(
+            "_pt_planner",
+            type=OptionValue(['kraken', 'loki']),
+            hidden=True,
+            help="choose which pt engine to compute the pt journey",
+        )
 
     def parse_args(self, region=None, uri=None):
         args = self.parsers['get'].parse_args()

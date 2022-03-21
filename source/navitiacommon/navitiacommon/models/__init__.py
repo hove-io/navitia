@@ -678,6 +678,20 @@ class Instance(db.Model):  # type: ignore
         server_default=str(default_values.access_points),
     )
 
+    default_pt_planner = db.Column(
+        db.Text,
+        default=default_values.default_pt_planner,
+        nullable=False,
+        server_default=str(default_values.default_pt_planner),
+    )
+
+    pt_planners_configurations = db.Column(
+        JSONB,
+        default=default_values.pt_planners_configurations,
+        nullable=False,
+        server_default=json.dumps(default_values.pt_planners_configurations),
+    )
+
     def __init__(self, name=None, is_free=False, authorizations=None, jobs=None):
         self.name = name
         self.is_free = is_free
