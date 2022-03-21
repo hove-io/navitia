@@ -56,11 +56,13 @@ class TestAccessPoints(AbstractTestFixture):
                         assert ap['is_exit'] == False
                         assert ap['length'] == 13
                         assert ap['traversal_time'] == 26
+                        assert ap['access_point_code'] == "access_point_code_2"
                     if ap['name'] == 'AP1':
                         assert ap['is_entrance'] == True
                         assert ap['is_exit'] == True
                         assert ap['length'] == 10
                         assert ap['traversal_time'] == 23
+                        assert ap['access_point_code'] == "access_point_code_1"
             # spC
             if sp['name'] == 'spC':
                 assert len(get_not_null(sp, 'access_points')) == 2
@@ -72,11 +74,13 @@ class TestAccessPoints(AbstractTestFixture):
                         assert ap['is_exit'] == False
                         assert ap['length'] == 12
                         assert ap['traversal_time'] == 36
+                        assert ap['access_point_code'] == "access_point_code_3"
                     if ap['name'] == 'AP2':
                         assert ap['is_entrance'] == True
                         assert ap['is_exit'] == False
                         assert ap['length'] == 13
                         assert ap['traversal_time'] == 26
+                        assert ap['access_point_code'] == "access_point_code_4"
 
         # without depth=3
         r = self.query_region('stop_points')
