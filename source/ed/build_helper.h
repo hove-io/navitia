@@ -375,7 +375,8 @@ struct builder {
                           const int length = 0,
                           const int traversal_time = 0,
                           const double lat = 0,
-                          const double lon = 0);
+                          const double lon = 0,
+                          const std::string& stop_code = "");
 
     void add_ticket(const std::string& ticket_id,
                     const std::string& line,

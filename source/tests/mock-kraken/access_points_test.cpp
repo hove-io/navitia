@@ -50,10 +50,10 @@ int main(int argc, const char* const argv[]) {
     b.data->complete();
     b.make();
 
-    b.add_access_point("spA", "AP1", true, true, 10, 23, 48.874871, 2.364795);
-    b.add_access_point("spA", "AP2", true, false, 13, 26, 48.875871, 2.365795);
-    b.add_access_point("spC", "AP3", true, false, 12, 36, 48.876871, 2.366795);
-    b.add_access_point("spC", "AP2", true, false, 13, 26, 48.875871, 2.365795);
+    b.add_access_point("spA", "AP1", true, true, 10, 23, 48.874871, 2.364795, "access_point_code_1");
+    b.add_access_point("spA", "AP2", true, false, 13, 26, 48.875871, 2.365795, "access_point_code_2");
+    b.add_access_point("spC", "AP3", true, false, 12, 36, 48.876871, 2.366795, "access_point_code_3");
+    b.add_access_point("spC", "AP2", true, false, 13, 26, 48.875871, 2.365795, "access_point_code_4");
 
     mock_kraken kraken(b, argc, argv);
 
