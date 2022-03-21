@@ -225,7 +225,6 @@ class Here(AbstractStreetNetworkService):
         resp.response_type = response_pb2.ITINERARY_FOUND
 
         journey = resp.journeys.add()
-
         # durations
         travel_time = here_section.get('summary', {}).get('duration', 0)
         base_duration = here_section.get('summary', {}).get('baseDuration', 0)
@@ -240,13 +239,17 @@ class Here(AbstractStreetNetworkService):
         else:
             journey.durations.taxi = travel_time
 
-        datetime, _ = fallback_extremity
+        datetime, clockwise = fallback_extremity
         if (
             direct_path_type == StreetNetworkPathType.BEGINNING_FALLBACK
             or direct_path_type == StreetNetworkPathType.DIRECT
         ):
-            journey.departure_date_time = datetime
-            journey.arrival_date_time = datetime + journey.duration
+            if clockwise == True:
+                journey.departure_date_time = datetime
+                journey.arrival_date_time = datetime + journey.duration
+            else:
+                journey.departure_date_time = datetime - journey.duration
+                journey.arrival_date_time = datetime
         else:
             journey.departure_date_time = datetime - journey.duration
             journey.arrival_date_time = datetime
