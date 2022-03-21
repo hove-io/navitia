@@ -297,3 +297,7 @@ def robust_journey_with_fallbacks_test():
     journey.sections[2].street_network.mode = response_pb2.Walking
 
     assert is_robust_journey(journey) == True
+
+    journey.sections[0].street_network.mode = response_pb2.Car
+
+    assert is_robust_journey(journey) == False
