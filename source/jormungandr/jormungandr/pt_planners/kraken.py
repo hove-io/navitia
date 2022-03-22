@@ -29,13 +29,15 @@
 from __future__ import absolute_import, print_function, unicode_literals, division
 
 from jormungandr.pt_planners.common import ZmqSocket
-from jormungandr import utils
+from jormungandr import utils, app
 from .pt_planner import AbstractPtPlanner
 
 
 class Kraken(ZmqSocket, AbstractPtPlanner):
-    def __init__(self, name, zmq_context, zmq_socket, zmq_socket_type):
-        super(Kraken, self).__init__(zmq_context, zmq_socket, zmq_socket_type)
+    def __init__(
+        self, name, zmq_context, zmq_socket, zmq_socket_type, timeout=app.config.get('INSTANCE_TIMEOUT', 10000)
+    ):
+        super(Kraken, self).__init__(zmq_context, zmq_socket, zmq_socket_type, timeout)
         self.instance_name = name
 
     def name(self):

@@ -360,7 +360,7 @@ def create_object(configuration):
     try:
         obj = attr(**kwargs)  # call to the contructor, with all the args
     except TypeError as e:
-        log.warning('impossible to build object {}, wrong arguments: {}'.format(class_path, e.message))
+        log.warning('impossible to build object {}, wrong arguments: {}'.format(class_path, e))
         raise ConfigException(class_path)
 
     return obj
