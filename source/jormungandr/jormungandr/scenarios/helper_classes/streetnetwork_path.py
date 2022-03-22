@@ -96,7 +96,7 @@ class StreetNetworkPath:
                 logging.getLogger(__name__).exception('')
                 return None
 
-    def _replace_first_and_last_coord(self, dp):
+    def _add_first_and_last_coord(self, dp):
         if not dp or not dp.journeys or not dp.journeys[0].sections:
             return
 
@@ -132,7 +132,7 @@ class StreetNetworkPath:
 
         dp = self._direct_path_with_fp(self._streetnetwork_service)
 
-        self._replace_first_and_last_coord(dp)
+        self._add_first_and_last_coord(dp)
 
         if getattr(dp, "journeys", None):
             dp.journeys[0].internal_id = str(utils.generate_id())
