@@ -755,8 +755,6 @@ reliable_fallback_modes = [response_pb2.Bike, response_pb2.Walking]
 #  - there is no disruptions linked to the journey
 def is_reliable_journey(journey):
     found_a_pt_section_with_reliable_mode = False
-    logger = logging.getLogger(__name__)
-    logger.info("{}".format(journey))
 
     # if there is a disruption linked to this journey
     # then the field most_serious_disruption_effect should be
