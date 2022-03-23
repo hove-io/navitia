@@ -752,8 +752,16 @@ reliable_fallback_modes = [response_pb2.Bike, response_pb2.Walking]
 #  - a journey has at least one public transport section
 #  - all public transport sections use reliable physical modes
 #  - start and end fallbacks use reliable fallback mode
+#  - there is no disruptions linked to the journey
 def is_reliable_journey(journey):
     found_a_pt_section_with_reliable_mode = False
+
+    # if there is a disruption linked to this journey
+    # then the field most_serious_disruption_effect should be
+    # filled by kraken
+    if journey.HasField("most_serious_disruption_effect"):
+        return False
+
     for section in journey.sections:
 
         # if this section uses a non reliable fallback mode
