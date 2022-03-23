@@ -43,6 +43,7 @@ import six
 from enum import Enum
 import pybreaker
 
+
 # Possible values implemented. Full languages within the doc:
 # https://valhalla.readthedocs.io/en/latest/api/turn-by-turn/api-reference/#supported-language-tags
 # Be careful, the syntax has to be exact
