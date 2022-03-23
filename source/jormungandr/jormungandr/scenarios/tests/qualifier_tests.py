@@ -268,6 +268,10 @@ def reliable_journey_test():
     journey.sections[1].uris.physical_mode = "physical_mode:Train"
     assert is_reliable_journey(journey) == True
 
+    journey.most_serious_disruption_effect = "SIGNIFICANT_DELAYS"
+
+    assert is_reliable_journey(journey) == False
+
 
 def reliable_journey_with_fallbacks_test():
     journey = response_pb2.Journey()
