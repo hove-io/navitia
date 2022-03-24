@@ -35,7 +35,12 @@ from jormungandr.transient_socket import TransientSocket
 from jormungandr.fallback_modes import FallbackModes
 from jormungandr.street_network.kraken import Kraken
 from jormungandr.utils import get_pt_object_coord
-from jormungandr.street_network.utils import make_speed_switcher, crowfly_distance_between
+from jormungandr.street_network.utils import (
+    make_speed_switcher,
+    crowfly_distance_between,
+    create_kraken_direct_path_request,
+    create_kraken_matrix_request,
+)
 
 from navitiacommon import response_pb2, request_pb2, type_pb2
 from zmq import green as zmq
@@ -144,27 +149,9 @@ class Asgard(TransientSocket, Kraken):
     def _create_sn_routing_matrix_request(
         self, origins, destinations, street_network_mode, max_duration, speed_switcher, request, **kwargs
     ):
-        req = request_pb2.Request()
-        req.requested_api = type_pb2.street_network_routing_matrix
-
-        req.sn_routing_matrix.origins.extend((self.make_location(o) for o in origins))
-        req.sn_routing_matrix.destinations.extend((self.make_location(d) for d in destinations))
-
-        req.sn_routing_matrix.mode = self._hanlde_car_no_park_modes(street_network_mode)
-        req.sn_routing_matrix.speed = speed_switcher.get(street_network_mode, kwargs.get("walking"))
-        req.sn_routing_matrix.max_duration = max_duration
-
-        req.sn_routing_matrix.streetnetwork_params.origin_mode = self._hanlde_car_no_park_modes(
-            street_network_mode
-        )
-        req.sn_routing_matrix.streetnetwork_params.walking_speed = speed_switcher.get(
-            "walking", kwargs.get("walking")
-        )
-        req.sn_routing_matrix.streetnetwork_params.bike_speed = speed_switcher.get("bike", kwargs.get("bike"))
-        req.sn_routing_matrix.streetnetwork_params.bss_speed = speed_switcher.get("bss", kwargs.get("bss"))
-        req.sn_routing_matrix.streetnetwork_params.car_speed = speed_switcher.get("car", kwargs.get("car"))
-        req.sn_routing_matrix.streetnetwork_params.car_no_park_speed = speed_switcher.get(
-            "car_no_park", kwargs.get("car_no_park")
+        # asgard and kraken have a part of request in common
+        req = create_kraken_matrix_request(
+            self, origins, destinations, street_network_mode, max_duration, speed_switcher, request, **kwargs
         )
 
         # Asgard/Valhalla bike
@@ -232,7 +219,8 @@ class Asgard(TransientSocket, Kraken):
 
         return response
 
-    def _hanlde_car_no_park_modes(self, mode):
+    @staticmethod
+    def handle_car_no_park_modes(mode):
         if mode in (FallbackModes.ridesharing.name, FallbackModes.taxi.name, FallbackModes.car_no_park.name):
             return FallbackModes.car.name
         return mode
@@ -240,34 +228,14 @@ class Asgard(TransientSocket, Kraken):
     def _create_direct_path_request(
         self, mode, pt_object_origin, pt_object_destination, fallback_extremity, request, language="en-US"
     ):
-        req = request_pb2.Request()
-        req.requested_api = type_pb2.direct_path
-        req.direct_path.origin.CopyFrom(self.make_location(pt_object_origin))
-        req.direct_path.destination.CopyFrom(self.make_location(pt_object_destination))
-        req.direct_path.datetime = fallback_extremity.datetime
-        req.direct_path.clockwise = fallback_extremity.represents_start
-        req.direct_path.streetnetwork_params.origin_mode = self._hanlde_car_no_park_modes(mode)
-        req.direct_path.streetnetwork_params.destination_mode = self._hanlde_car_no_park_modes(mode)
-        req.direct_path.streetnetwork_params.walking_speed = request['walking_speed']
-        req.direct_path.streetnetwork_params.max_walking_duration_to_pt = request['max_walking_duration_to_pt']
-        req.direct_path.streetnetwork_params.bike_speed = request['bike_speed']
-        req.direct_path.streetnetwork_params.max_bike_duration_to_pt = request['max_bike_duration_to_pt']
-        req.direct_path.streetnetwork_params.bss_speed = request['bss_speed']
-        req.direct_path.streetnetwork_params.max_bss_duration_to_pt = request['max_bss_duration_to_pt']
-        req.direct_path.streetnetwork_params.car_speed = request['car_speed']
-        req.direct_path.streetnetwork_params.max_car_duration_to_pt = request['max_car_duration_to_pt']
-        req.direct_path.streetnetwork_params.language = language
-        if mode in (
-            FallbackModes.ridesharing.name,
-            FallbackModes.taxi.name,
-            FallbackModes.car_no_park.name,
-            FallbackModes.car.name,
-        ):
-            req.direct_path.streetnetwork_params.car_no_park_speed = request['{}_speed'.format(mode)]
-            req.direct_path.streetnetwork_params.max_car_no_park_duration_to_pt = request[
-                'max_{}_duration_to_pt'.format(mode)
-            ]
+        # asgard and kraken have a part of request in common
+        req = create_kraken_direct_path_request(
+            self, mode, pt_object_origin, pt_object_destination, fallback_extremity, request, language
+        )
 
+        # In addition to the request for kraken, we add more params for asgard
+
+        # Asgard/Valhalla bss
         for attr in ("bss_rent_duration", "bss_rent_penalty", "bss_return_duration", "bss_return_penalty"):
             setattr(req.direct_path.streetnetwork_params, attr, request[attr])
 
