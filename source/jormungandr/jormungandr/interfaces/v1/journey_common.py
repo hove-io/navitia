@@ -535,7 +535,7 @@ class JourneyCommon(ResourceUri, ResourceUtc):
         )
         parser_get.add_argument(
             "bike_shortest",
-            type=bool,
+            type=BooleanType(),
             hidden=True,
             default=False,
             help="only available for Asgard: Changes the metric to quasi-shortest, i.e. purely distance-based costing.",

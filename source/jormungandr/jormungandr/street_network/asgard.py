@@ -37,7 +37,7 @@ from jormungandr.street_network.kraken import Kraken
 from jormungandr.utils import get_pt_object_coord
 from jormungandr.street_network.utils import make_speed_switcher, crowfly_distance_between
 
-from navitiacommon import response_pb2, type_pb2
+from navitiacommon import response_pb2, request_pb2, type_pb2
 from zmq import green as zmq
 import six
 from enum import Enum
@@ -141,6 +141,64 @@ class Asgard(TransientSocket, Kraken):
         language_tag = getattr(Languages, language, Languages.english_us).value
         return language_tag
 
+    def _create_sn_routing_matrix_request(
+        self, origins, destinations, street_network_mode, max_duration, speed_switcher, request, **kwargs
+    ):
+        req = request_pb2.Request()
+        req.requested_api = type_pb2.street_network_routing_matrix
+
+        req.sn_routing_matrix.origins.extend((self.make_location(o) for o in origins))
+        req.sn_routing_matrix.destinations.extend((self.make_location(d) for d in destinations))
+
+        req.sn_routing_matrix.mode = self._hanlde_car_no_park_modes(street_network_mode)
+        req.sn_routing_matrix.speed = speed_switcher.get(street_network_mode, kwargs.get("walking"))
+        req.sn_routing_matrix.max_duration = max_duration
+
+        req.sn_routing_matrix.streetnetwork_params.origin_mode = self._hanlde_car_no_park_modes(
+            street_network_mode
+        )
+        req.sn_routing_matrix.streetnetwork_params.walking_speed = speed_switcher.get(
+            "walking", kwargs.get("walking")
+        )
+        req.sn_routing_matrix.streetnetwork_params.bike_speed = speed_switcher.get("bike", kwargs.get("bike"))
+        req.sn_routing_matrix.streetnetwork_params.bss_speed = speed_switcher.get("bss", kwargs.get("bss"))
+        req.sn_routing_matrix.streetnetwork_params.car_speed = speed_switcher.get("car", kwargs.get("car"))
+        req.sn_routing_matrix.streetnetwork_params.car_no_park_speed = speed_switcher.get(
+            "car_no_park", kwargs.get("car_no_park")
+        )
+
+        # Asgard/Valhalla bike
+        req.sn_routing_matrix.streetnetwork_params.bike_use_roads = request['bike_use_roads']
+        req.sn_routing_matrix.streetnetwork_params.bike_use_hills = request['bike_use_hills']
+        req.sn_routing_matrix.streetnetwork_params.bike_use_ferry = request['bike_use_ferry']
+        req.sn_routing_matrix.streetnetwork_params.bike_avoid_bad_surfaces = request['bike_avoid_bad_surfaces']
+        req.sn_routing_matrix.streetnetwork_params.bike_shortest = request['bike_shortest']
+        req.sn_routing_matrix.streetnetwork_params.bicycle_type = type_pb2.BicycleType.Value(
+            request['bicycle_type']
+        )
+        req.sn_routing_matrix.streetnetwork_params.bike_use_living_streets = request['bike_use_living_streets']
+        req.sn_routing_matrix.streetnetwork_params.bike_maneuver_penalty = request['bike_maneuver_penalty']
+        req.sn_routing_matrix.streetnetwork_params.bike_service_penalty = request['bike_service_penalty']
+        req.sn_routing_matrix.streetnetwork_params.bike_service_factor = request['bike_service_factor']
+        req.sn_routing_matrix.streetnetwork_params.bike_country_crossing_cost = request[
+            'bike_country_crossing_cost'
+        ]
+        req.sn_routing_matrix.streetnetwork_params.bike_country_crossing_penalty = request[
+            'bike_country_crossing_penalty'
+        ]
+
+        req.sn_routing_matrix.asgard_max_walking_duration_coeff = request.get(
+            "_asgard_max_walking_duration_coeff"
+        )
+        req.sn_routing_matrix.asgard_max_bike_duration_coeff = request.get("_asgard_max_bike_duration_coeff")
+        req.sn_routing_matrix.asgard_max_bss_duration_coeff = request.get("_asgard_max_bss_duration_coeff")
+        req.sn_routing_matrix.asgard_max_car_duration_coeff = request.get("_asgard_max_car_duration_coeff")
+
+        for attr in ("bss_rent_duration", "bss_rent_penalty", "bss_return_duration", "bss_return_penalty"):
+            setattr(req.sn_routing_matrix.streetnetwork_params, attr, request[attr])
+
+        return req
+
     def _get_street_network_routing_matrix(
         self, instance, origins, destinations, mode, max_duration, request, request_id, **kwargs
     ):
@@ -178,6 +236,60 @@ class Asgard(TransientSocket, Kraken):
         if mode in (FallbackModes.ridesharing.name, FallbackModes.taxi.name, FallbackModes.car_no_park.name):
             return FallbackModes.car.name
         return mode
+
+    def _create_direct_path_request(
+        self, mode, pt_object_origin, pt_object_destination, fallback_extremity, request, language="en-US"
+    ):
+        req = request_pb2.Request()
+        req.requested_api = type_pb2.direct_path
+        req.direct_path.origin.CopyFrom(self.make_location(pt_object_origin))
+        req.direct_path.destination.CopyFrom(self.make_location(pt_object_destination))
+        req.direct_path.datetime = fallback_extremity.datetime
+        req.direct_path.clockwise = fallback_extremity.represents_start
+        req.direct_path.streetnetwork_params.origin_mode = self._hanlde_car_no_park_modes(mode)
+        req.direct_path.streetnetwork_params.destination_mode = self._hanlde_car_no_park_modes(mode)
+        req.direct_path.streetnetwork_params.walking_speed = request['walking_speed']
+        req.direct_path.streetnetwork_params.max_walking_duration_to_pt = request['max_walking_duration_to_pt']
+        req.direct_path.streetnetwork_params.bike_speed = request['bike_speed']
+        req.direct_path.streetnetwork_params.max_bike_duration_to_pt = request['max_bike_duration_to_pt']
+        req.direct_path.streetnetwork_params.bss_speed = request['bss_speed']
+        req.direct_path.streetnetwork_params.max_bss_duration_to_pt = request['max_bss_duration_to_pt']
+        req.direct_path.streetnetwork_params.car_speed = request['car_speed']
+        req.direct_path.streetnetwork_params.max_car_duration_to_pt = request['max_car_duration_to_pt']
+        req.direct_path.streetnetwork_params.language = language
+        if mode in (
+            FallbackModes.ridesharing.name,
+            FallbackModes.taxi.name,
+            FallbackModes.car_no_park.name,
+            FallbackModes.car.name,
+        ):
+            req.direct_path.streetnetwork_params.car_no_park_speed = request['{}_speed'.format(mode)]
+            req.direct_path.streetnetwork_params.max_car_no_park_duration_to_pt = request[
+                'max_{}_duration_to_pt'.format(mode)
+            ]
+
+        for attr in ("bss_rent_duration", "bss_rent_penalty", "bss_return_duration", "bss_return_penalty"):
+            setattr(req.direct_path.streetnetwork_params, attr, request[attr])
+
+        req.direct_path.streetnetwork_params.enable_instructions = request['_enable_instructions']
+
+        # Asgard/Valhalla bike
+        req.direct_path.streetnetwork_params.bike_use_roads = request['bike_use_roads']
+        req.direct_path.streetnetwork_params.bike_use_hills = request['bike_use_hills']
+        req.direct_path.streetnetwork_params.bike_use_ferry = request['bike_use_ferry']
+        req.direct_path.streetnetwork_params.bike_avoid_bad_surfaces = request['bike_avoid_bad_surfaces']
+        req.direct_path.streetnetwork_params.bike_shortest = request['bike_shortest']
+        req.direct_path.streetnetwork_params.bicycle_type = type_pb2.BicycleType.Value(request['bicycle_type'])
+        req.direct_path.streetnetwork_params.bike_use_living_streets = request['bike_use_living_streets']
+        req.direct_path.streetnetwork_params.bike_maneuver_penalty = request['bike_maneuver_penalty']
+        req.direct_path.streetnetwork_params.bike_service_penalty = request['bike_service_penalty']
+        req.direct_path.streetnetwork_params.bike_service_factor = request['bike_service_factor']
+        req.direct_path.streetnetwork_params.bike_country_crossing_cost = request['bike_country_crossing_cost']
+        req.direct_path.streetnetwork_params.bike_country_crossing_penalty = request[
+            'bike_country_crossing_penalty'
+        ]
+
+        return req
 
     def _direct_path(
         self,

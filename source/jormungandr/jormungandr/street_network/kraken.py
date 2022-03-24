@@ -209,25 +209,6 @@ class Kraken(AbstractStreetNetworkService):
             req.direct_path.streetnetwork_params.max_car_no_park_duration_to_pt = request[
                 'max_{}_duration_to_pt'.format(mode)
             ]
-        for attr in ("bss_rent_duration", "bss_rent_penalty", "bss_return_duration", "bss_return_penalty"):
-            setattr(req.direct_path.streetnetwork_params, attr, request[attr])
-
-        req.direct_path.streetnetwork_params.enable_instructions = request['_enable_instructions']
-        # Asgard/Valhalla bike
-        req.direct_path.streetnetwork_params.bike_use_roads = request['bike_use_roads']
-        req.direct_path.streetnetwork_params.bike_use_hills = request['bike_use_hills']
-        req.direct_path.streetnetwork_params.bike_use_ferry = request['bike_use_ferry']
-        req.direct_path.streetnetwork_params.bike_avoid_bad_surfaces = request['bike_avoid_bad_surfaces']
-        req.direct_path.streetnetwork_params.bike_shortest = request['bike_shortest']
-        req.direct_path.streetnetwork_params.bicycle_type = type_pb2.BicycleType.Value(request['bicycle_type'])
-        req.direct_path.streetnetwork_params.bike_use_living_streets = request['bike_use_living_streets']
-        req.direct_path.streetnetwork_params.bike_maneuver_penalty = request['bike_maneuver_penalty']
-        req.direct_path.streetnetwork_params.bike_service_penalty = request['bike_service_penalty']
-        req.direct_path.streetnetwork_params.bike_service_factor = request['bike_service_factor']
-        req.direct_path.streetnetwork_params.bike_country_crossing_cost = request['bike_country_crossing_cost']
-        req.direct_path.streetnetwork_params.bike_country_crossing_penalty = request[
-            'bike_country_crossing_penalty'
-        ]
 
         return req
 
@@ -285,36 +266,6 @@ class Kraken(AbstractStreetNetworkService):
         req.sn_routing_matrix.streetnetwork_params.car_no_park_speed = speed_switcher.get(
             "car_no_park", kwargs.get("car_no_park")
         )
-
-        # Asgard/Valhalla bike
-        req.sn_routing_matrix.streetnetwork_params.bike_use_roads = request['bike_use_roads']
-        req.sn_routing_matrix.streetnetwork_params.bike_use_hills = request['bike_use_hills']
-        req.sn_routing_matrix.streetnetwork_params.bike_use_ferry = request['bike_use_ferry']
-        req.sn_routing_matrix.streetnetwork_params.bike_avoid_bad_surfaces = request['bike_avoid_bad_surfaces']
-        req.sn_routing_matrix.streetnetwork_params.bike_shortest = request['bike_shortest']
-        req.sn_routing_matrix.streetnetwork_params.bicycle_type = type_pb2.BicycleType.Value(
-            request['bicycle_type']
-        )
-        req.sn_routing_matrix.streetnetwork_params.bike_use_living_streets = request['bike_use_living_streets']
-        req.sn_routing_matrix.streetnetwork_params.bike_maneuver_penalty = request['bike_maneuver_penalty']
-        req.sn_routing_matrix.streetnetwork_params.bike_service_penalty = request['bike_service_penalty']
-        req.sn_routing_matrix.streetnetwork_params.bike_service_factor = request['bike_service_factor']
-        req.sn_routing_matrix.streetnetwork_params.bike_country_crossing_cost = request[
-            'bike_country_crossing_cost'
-        ]
-        req.sn_routing_matrix.streetnetwork_params.bike_country_crossing_penalty = request[
-            'bike_country_crossing_penalty'
-        ]
-
-        req.sn_routing_matrix.asgard_max_walking_duration_coeff = request.get(
-            "_asgard_max_walking_duration_coeff"
-        )
-        req.sn_routing_matrix.asgard_max_bike_duration_coeff = request.get("_asgard_max_bike_duration_coeff")
-        req.sn_routing_matrix.asgard_max_bss_duration_coeff = request.get("_asgard_max_bss_duration_coeff")
-        req.sn_routing_matrix.asgard_max_car_duration_coeff = request.get("_asgard_max_car_duration_coeff")
-
-        for attr in ("bss_rent_duration", "bss_rent_penalty", "bss_return_duration", "bss_return_penalty"):
-            setattr(req.sn_routing_matrix.streetnetwork_params, attr, request[attr])
 
         return req
 
