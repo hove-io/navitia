@@ -104,7 +104,7 @@ class StreetNetworkPath:
         if len(dp_coords) < 2:
             return
 
-        # we are insert the coord of the origin at the beginning of the geojson
+        # we are inserting the coord of the origin at the beginning of the geojson
         coord = utils.get_pt_object_coord(self._orig_obj)
         if coord != dp_coords[0]:
             dp_coords.add(lon=coord.lon, lat=coord.lat)
@@ -116,7 +116,7 @@ class StreetNetworkPath:
                 dp_coords[i].CopyFrom(dp_coords[-1])
                 dp_coords[-1].CopyFrom(tmp)
 
-        # we are append the coord of the destination at the end of the geojson
+        # we are appending the coord of the destination at the end of the geojson
         coord = utils.get_pt_object_coord(self._dest_obj)
         if coord != dp_coords[-1]:
             dp_coords.add(lon=coord.lon, lat=coord.lat)
