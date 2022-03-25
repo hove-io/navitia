@@ -452,6 +452,8 @@ class TestJourneysDistributed(
         assert access_point["id"] == "access_point:B1"
         assert access_point["is_entrance"]
         assert not access_point["is_exit"]
+        assert access_point["traversal_time"] == 2
+        assert access_point["length"] == 1
 
         path = pt_journey['sections'][0]['path'][-1]
         assert path['duration'] == 2
@@ -466,6 +468,8 @@ class TestJourneysDistributed(
         assert access_point["id"] == "access_point:A2"
         assert not access_point["is_entrance"]
         assert access_point["is_exit"]
+        assert access_point["traversal_time"] == 4
+        assert access_point["length"] == 3
 
         path = pt_journey['sections'][2]['path'][0]
         assert path['duration'] == 4
