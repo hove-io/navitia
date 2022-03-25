@@ -408,6 +408,8 @@ class AccessPointSerializer(PbGenericSerializer):
     is_entrance = jsonschema.MethodField(schema_type=bool, display_none=False)
     is_exit = jsonschema.MethodField(schema_type=bool, display_none=False)
     pathway_mode = jsonschema.MethodField(schema_type=int, display_none=False)
+    length = jsonschema.MethodField(schema_type=int, display_none=False)
+    traversal_time = jsonschema.MethodField(schema_type=int, display_none=False)
     stair_count = jsonschema.MethodField(schema_type=int, display_none=False)
     max_slope = jsonschema.MethodField(schema_type=int, display_none=False)
     min_width = jsonschema.MethodField(schema_type=int, display_none=False)
@@ -424,6 +426,12 @@ class AccessPointSerializer(PbGenericSerializer):
 
     def get_pathway_mode(self, obj):
         return get_proto_attr_or_default(obj, 'pathway_mode')
+
+    def get_length(self, obj):
+        return get_proto_attr_or_default(obj, 'length')
+
+    def get_traversal_time(self, obj):
+        return get_proto_attr_or_default(obj, 'traversal_time')
 
     def get_stair_count(self, obj):
         return get_proto_attr_or_default(obj, 'stair_count')
