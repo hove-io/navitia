@@ -148,6 +148,7 @@ class FakeInstance(Instance):
             ridesharing_configurations=ridesharing_configurations,
             instance_equipment_providers=[],
             realtime_proxies_configuration=[],
+            pt_planners_configurations={},
             zmq_socket_type=None,
             autocomplete_type='kraken',
             streetnetwork_backend_manager=StreetNetworkBackendManager(),

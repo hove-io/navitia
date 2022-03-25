@@ -36,6 +36,7 @@ from mock import MagicMock
 from jormungandr.exceptions import TechnicalError
 from jormungandr.street_network.here import Here
 from jormungandr.street_network.tests.streetnetwork_test_utils import make_pt_object
+from jormungandr.street_network.street_network import StreetNetworkPathType
 from jormungandr.utils import PeriodExtremity, str_to_time_stamp
 from navitiacommon import type_pb2, response_pb2
 
@@ -275,6 +276,8 @@ def test_matrix_timeout():
 def here_basic_routing_test(valid_here_routing_response):
     origin = make_pt_object(type_pb2.POI, 2.439938, 48.572841)
     destination = make_pt_object(type_pb2.STOP_AREA, 2.440548, 48.57307)
+
+    # for a beginning fallback
     fallback_extremity = PeriodExtremity(str_to_time_stamp('20161010T152000'), True)
     response = Here._read_response(
         response=valid_here_routing_response,
@@ -282,7 +285,8 @@ def here_basic_routing_test(valid_here_routing_response):
         origin=origin,
         destination=destination,
         fallback_extremity=fallback_extremity,
-        request={'datetime': str_to_time_stamp('20170621T174600')},
+        request={'datetime': str_to_time_stamp('20161010T152000')},
+        direct_path_type=StreetNetworkPathType.BEGINNING_FALLBACK,
     )
     assert response.status_code == 200
     assert response.response_type == response_pb2.ITINERARY_FOUND
@@ -297,6 +301,8 @@ def here_basic_routing_test(valid_here_routing_response):
     assert section.origin == origin
     assert section.begin_date_time == str_to_time_stamp('20161010T152000')
     assert section.end_date_time == section.begin_date_time + section.duration
+    assert section.base_begin_date_time == str_to_time_stamp('20161010T152000') + (1468 - 1344)
+    assert section.base_end_date_time == section.begin_date_time + section.duration
     # dynamic_speed
     dynamic_speeds = section.street_network.dynamic_speeds
     assert len(dynamic_speeds) == 6
@@ -308,6 +314,88 @@ def here_basic_routing_test(valid_here_routing_response):
     assert last_ds.base_speed == 13
     assert last_ds.traffic_speed == 13
     assert last_ds.geojson_offset == 769
+
+    # for a direct path and clockiwe == True
+    response = Here._read_response(
+        response=valid_here_routing_response,
+        mode='walking',
+        origin=origin,
+        destination=destination,
+        fallback_extremity=fallback_extremity,
+        request={'datetime': str_to_time_stamp('20161010T152000')},
+        direct_path_type=StreetNetworkPathType.DIRECT,
+    )
+    assert response.status_code == 200
+    assert response.response_type == response_pb2.ITINERARY_FOUND
+    assert len(response.journeys) == 1
+    assert len(response.journeys[0].sections) == 1
+    section = response.journeys[0].sections[0]
+    assert section.begin_date_time == str_to_time_stamp('20161010T152000')
+    assert section.end_date_time == section.begin_date_time + section.duration
+    assert section.base_begin_date_time == str_to_time_stamp('20161010T152000') + (1468 - 1344)
+    assert section.base_end_date_time == section.begin_date_time + section.duration
+
+    # for a ending fallback
+    fallback_extremity = PeriodExtremity(str_to_time_stamp('20161010T152000'), True)
+    response = Here._read_response(
+        response=valid_here_routing_response,
+        mode='walking',
+        origin=origin,
+        destination=destination,
+        fallback_extremity=fallback_extremity,
+        request={'datetime': str_to_time_stamp('20161010T152000')},
+        direct_path_type=StreetNetworkPathType.ENDING_FALLBACK,
+    )
+    assert response.status_code == 200
+    assert response.response_type == response_pb2.ITINERARY_FOUND
+    assert len(response.journeys) == 1
+    section = response.journeys[0].sections[0]
+    assert section.begin_date_time == str_to_time_stamp('20161010T152000') - section.duration
+    assert section.end_date_time == str_to_time_stamp('20161010T152000')
+    assert section.base_begin_date_time == str_to_time_stamp('20161010T152000') - section.duration
+    assert section.base_end_date_time == section.end_date_time - (1468 - 1344)
+
+    # for a direct path and clockiwe == False
+    fallback_extremity = PeriodExtremity(str_to_time_stamp('20161010T152000'), False)
+    response = Here._read_response(
+        response=valid_here_routing_response,
+        mode='walking',
+        origin=origin,
+        destination=destination,
+        fallback_extremity=fallback_extremity,
+        request={'datetime': str_to_time_stamp('20161010T152000')},
+        direct_path_type=StreetNetworkPathType.DIRECT,
+    )
+    assert response.status_code == 200
+    assert response.response_type == response_pb2.ITINERARY_FOUND
+    assert len(response.journeys) == 1
+    assert len(response.journeys[0].sections) == 1
+    section = response.journeys[0].sections[0]
+    assert section.end_date_time == str_to_time_stamp('20161010T152000')
+    assert section.begin_date_time == section.end_date_time - section.duration
+    assert section.base_end_date_time == section.end_date_time
+    assert section.base_begin_date_time == section.base_end_date_time - section.duration + (1468 - 1344)
+
+    # for a beginning fallback and clockiwe == False
+    fallback_extremity = PeriodExtremity(str_to_time_stamp('20161010T152000'), False)
+    response = Here._read_response(
+        response=valid_here_routing_response,
+        mode='walking',
+        origin=origin,
+        destination=destination,
+        fallback_extremity=fallback_extremity,
+        request={'datetime': str_to_time_stamp('20161010T152000')},
+        direct_path_type=StreetNetworkPathType.BEGINNING_FALLBACK,
+    )
+    assert response.status_code == 200
+    assert response.response_type == response_pb2.ITINERARY_FOUND
+    assert len(response.journeys) == 1
+    assert len(response.journeys[0].sections) == 1
+    section = response.journeys[0].sections[0]
+    assert section.end_date_time == str_to_time_stamp('20161010T152000')
+    assert section.begin_date_time == section.end_date_time - section.duration
+    assert section.base_end_date_time == section.end_date_time
+    assert section.base_begin_date_time == section.base_end_date_time - section.duration + (1468 - 1344)
 
 
 def status_test():

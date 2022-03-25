@@ -120,6 +120,9 @@ def _align_fallback_direct_path_datetime(fallback_direct_path, fallback_extremit
         for s in journey.sections:
             s.begin_date_time += delta
             s.end_date_time += delta
+            if s.base_begin_date_time != None and s.base_end_date_time:
+                s.base_begin_date_time += delta
+                s.base_end_date_time += delta
     return fallback_direct_path
 
 

@@ -38,7 +38,11 @@ from jormungandr import app
 from jormungandr.exceptions import TechnicalError
 from jormungandr.utils import get_pt_object_coord
 import flexpolyline as fp
-from jormungandr.street_network.street_network import AbstractStreetNetworkService, StreetNetworkPathKey
+from jormungandr.street_network.street_network import (
+    AbstractStreetNetworkService,
+    StreetNetworkPathKey,
+    StreetNetworkPathType,
+)
 from jormungandr.ptref import FeedPublisher
 from jormungandr.fallback_modes import FallbackModes as fm
 from jormungandr.utils import is_coord, get_lon_lat
@@ -200,7 +204,7 @@ class Here(AbstractStreetNetworkService):
             raise TechnicalError('impossible to access Here service')
 
     @staticmethod
-    def _read_response(response, origin, destination, mode, fallback_extremity, request):
+    def _read_response(response, origin, destination, mode, fallback_extremity, request, direct_path_type):
         resp = response_pb2.Response()
         resp.status_code = 200
 
@@ -221,9 +225,9 @@ class Here(AbstractStreetNetworkService):
         resp.response_type = response_pb2.ITINERARY_FOUND
 
         journey = resp.journeys.add()
-
         # durations
         travel_time = here_section.get('summary', {}).get('duration', 0)
+        base_duration = here_section.get('summary', {}).get('baseDuration', 0)
         journey.duration = travel_time
         journey.durations.total = travel_time
         if mode == 'walking':
@@ -235,10 +239,17 @@ class Here(AbstractStreetNetworkService):
         else:
             journey.durations.taxi = travel_time
 
-        datetime, represents_start_fallback = fallback_extremity
-        if represents_start_fallback:
-            journey.departure_date_time = datetime
-            journey.arrival_date_time = datetime + journey.duration
+        datetime, clockwise = fallback_extremity
+        if (
+            direct_path_type == StreetNetworkPathType.BEGINNING_FALLBACK
+            or direct_path_type == StreetNetworkPathType.DIRECT
+        ):
+            if clockwise == True:
+                journey.departure_date_time = datetime
+                journey.arrival_date_time = datetime + journey.duration
+            else:
+                journey.departure_date_time = datetime - journey.duration
+                journey.arrival_date_time = datetime
         else:
             journey.departure_date_time = datetime - journey.duration
             journey.arrival_date_time = datetime
@@ -265,12 +276,18 @@ class Here(AbstractStreetNetworkService):
 
         section.duration = travel_time
         section.begin_date_time = journey.departure_date_time
-        section.end_date_time = section.begin_date_time + section.duration
+        section.end_date_time = journey.arrival_date_time
 
-        # since HERE can give us the base time, we display it.
-        # we do not try to do clever stuff (like taking the 'clockwise' into account) here
-        section.base_begin_date_time = section.begin_date_time
-        section.base_end_date_time = section.base_begin_date_time + travel_time
+        # base duration impacts the base arrival and departure datetime
+        if (
+            direct_path_type == StreetNetworkPathType.BEGINNING_FALLBACK
+            or direct_path_type == StreetNetworkPathType.DIRECT
+        ):
+            section.base_begin_date_time = section.begin_date_time + (travel_time - base_duration)
+            section.base_end_date_time = section.end_date_time
+        else:
+            section.base_begin_date_time = section.begin_date_time
+            section.base_end_date_time = section.end_date_time - (travel_time - base_duration)
 
         section.id = 'section_0'
         section.length = length
@@ -468,7 +485,7 @@ class Here(AbstractStreetNetworkService):
         self.log.debug('here response = {}'.format(json))
 
         return self._read_response(
-            json, pt_object_origin, pt_object_destination, mode, fallback_extremity, request
+            json, pt_object_origin, pt_object_destination, mode, fallback_extremity, request, direct_path_type
         )
 
     def _create_matrix_response(self, json_response, origins, destinations):

@@ -415,7 +415,7 @@ class AccessPointSerializer(PbGenericSerializer):
     min_width = jsonschema.MethodField(schema_type=int, display_none=False)
     signposted_as = jsonschema.MethodField(schema_type=str, display_none=False)
     reversed_signposted_as = jsonschema.MethodField(schema_type=str, display_none=False)
-    stop_code = jsonschema.MethodField(schema_type=str, display_none=False)
+    stop_code = jsonschema.MethodField(label='access_point_code', schema_type=str, display_none=False)
     parent_station = jsonschema.MethodField(schema_type=lambda: StopAreaSerializer(), display_none=False)
 
     def get_is_entrance(self, obj):

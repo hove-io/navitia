@@ -82,4 +82,8 @@ class AccessPoints(ResourceUri, ResourceUtc):
 
         response = i_manager.dispatch(args, "access_points", instance_name=self.region)
 
+        for access_point in response.access_points or []:
+            access_point.ClearField('length')
+            access_point.ClearField('traversal_time')
+
         return response

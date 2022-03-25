@@ -140,6 +140,15 @@ MIMIR7_URL = os.getenv('TYR_MIMIR7_URL', None)
 
 MIMIR_CONFIG_DIR = os.getenv('MIMIR_CONFIG_DIR', "/etc/mimir/")
 
+
+MINIO_LOKI_URL = os.getenv('TYR_MINIO_LOKI_URL', None)
+
+MINIO_LOKI_BUCKET_NAME = os.getenv('TYR_MINIO_LOKI_BUCKET_NAME', None)
+
+MINIO_LOKI_ACCESS_KEY = os.getenv('TYR_MINIO_LOKI_ACCESS_KEY', None)
+
+MINIO_LOKI_SECRET_KEY = os.getenv('TYR_MINIO_LOKI_SECRET_KEY', None)
+
 # we don't enable serpy for now
 USE_SERPY = False
 

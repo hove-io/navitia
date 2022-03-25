@@ -79,12 +79,13 @@ class PtJourney:
         self._request_type = request_type
         self._logger = logging.getLogger(__name__)
         self._request_id = request_id
+        self._pt_planner = self._instance.get_pt_planner(request['_pt_planner'])
         self._async_request()
 
     @new_relic.distributedEvent("journeys", "journeys")
     def _journeys(self, orig_fallback_durations, dest_fallback_durations):
         with timed_logger(self._logger, 'pt_journyes_calling_kraken', self._request_id):
-            return self._instance.planner.journeys(
+            return self._pt_planner.journeys(
                 orig_fallback_durations,
                 dest_fallback_durations,
                 self._periode_extremity.datetime,
@@ -92,7 +93,6 @@ class PtJourney:
                 self._journey_params,
                 self._bike_in_pt,
                 self._request_id,
-                self._request.get('_use_pt_socket', False),
             )
 
     def _do_journeys_request(self):
@@ -113,7 +113,7 @@ class PtJourney:
         ):
             return None
 
-        resp = self._journeys(self._instance.planner, orig_fallback_durations, dest_fallback_durations)
+        resp = self._journeys(self._pt_planner, orig_fallback_durations, dest_fallback_durations)
 
         for j in resp.journeys:
             j.internal_id = str(utils.generate_id())
@@ -137,7 +137,7 @@ class PtJourney:
 
     @new_relic.distributedEvent("graphical_isochrone", "graphical_isochrone")
     def _graphical_isochrone(self, orig_fallback_durations, dest_fallback_durations):
-        return self._instance.planner.graphical_isochrones(
+        return self._pt_planner.graphical_isochrones(
             orig_fallback_durations,
             dest_fallback_durations,
             self._periode_extremity.datetime,
@@ -176,9 +176,9 @@ class PtJourney:
             }
 
         if self._request_type == type_pb2.ISOCHRONE:
-            resp = self._journeys(self._instance.planner, **orig_and_dest_fallback_durations)
+            resp = self._journeys(self._pt_planner, **orig_and_dest_fallback_durations)
         else:
-            resp = self._graphical_isochrone(self._instance.planner, **orig_and_dest_fallback_durations)
+            resp = self._graphical_isochrone(self._pt_planner, **orig_and_dest_fallback_durations)
 
         for j in resp.journeys:
             j.internal_id = str(utils.generate_id())
@@ -276,7 +276,11 @@ class PtJourneyPool:
 
     @staticmethod
     def _create_parameters(request, isochrone_center, request_type):
-        from jormungandr.planner import JourneyParameters, GraphicalIsochronesParameters, StreetNetworkParameters
+        from jormungandr.pt_planners.pt_planner import (
+            JourneyParameters,
+            GraphicalIsochronesParameters,
+            StreetNetworkParameters,
+        )
 
         if request_type == type_pb2.graphical_isochrone:
             # Yes, graphical_isochrones needs that...
