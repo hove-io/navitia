@@ -1,3 +1,20 @@
+navitia2 (15.4.0) unstable; urgency=low
+
+  * [Jormungandr] Conceal length and traversal_time for /access_points  <https://github.com/CanalTP/navitia/pull/3692>
+  * [Jormungandr] Add street_information for bike & update navitia-proto  <https://github.com/CanalTP/navitia/pull/3680>
+  * [Jormungandr] A disrupted journey is not "reliable"  <https://github.com/CanalTP/navitia/pull/3689>
+  * [Here] Base duration for base datetime  <https://github.com/CanalTP/navitia/pull/3679>
+  * [Jormungandr] Make the tag 'reliable' instead of 'robust'  <https://github.com/CanalTP/navitia/pull/3685>
+  * [Jormungandr] Robust tag  <https://github.com/CanalTP/navitia/pull/3682>
+  * [Jormungandr] Access point: Access points with access_point_code  <https://github.com/CanalTP/navitia/pull/3684>
+  * [Tyr] Fix python requirement  <https://github.com/CanalTP/navitia/pull/3683>
+  * [Distributed] Ability to switch pt_planner  <https://github.com/CanalTP/navitia/pull/3675>
+  * [Tyr] Push fusio data to S3/Minio  <https://github.com/CanalTP/navitia/pull/3678>
+  * Bump celery from 5.1.2 to 5.2.2 in /source/tyr  <https://github.com/CanalTP/navitia/pull/3635>
+  * [Distributed] Fix feed_publisher for CarWithPark  <https://github.com/CanalTP/navitia/pull/3677>
+
+ -- xlqian <patrick.qian@kisio.com>  Fri, 25 Mar 2022 13:03:18 +0100
+
 navitia2 (15.3.0) unstable; urgency=low
 
   * [Jormun] Add max_car_no_park_direct_path_duration in /status   <https://github.com/CanalTP/navitia/pull/3676>
