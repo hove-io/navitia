@@ -234,7 +234,7 @@ def valid_request(request):
         )
         assert request.direct_path.streetnetwork_params.bss_rent_penalty == 0
         assert request.direct_path.streetnetwork_params.bss_return_duration == (
-            24 if request.direct_path.streetnetwork_params.origin_mode == "bss" else 120
+            24 if request.direct_path.streetnetwork_params.origin_mode == "bss" else 60
         )
         assert request.direct_path.streetnetwork_params.bss_return_penalty == 0
         assert request.direct_path.streetnetwork_params.enable_instructions == True
