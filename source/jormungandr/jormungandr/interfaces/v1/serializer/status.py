@@ -93,6 +93,10 @@ class ParametersSerializer(serpy.Serializer):
     transfer_path = Field(schema_type=bool)
     access_points = Field(schema_type=bool)
     default_pt_planner = Field(schema_type=str)
+    bss_rent_duration = Field(schema_type=int)
+    bss_rent_penalty = Field(schema_type=int)
+    bss_return_duration = Field(schema_type=int)
+    bss_return_penalty = Field(schema_type=int)
 
 
 class TravelerProfilesSerializer(serpy.Serializer):

@@ -835,6 +835,18 @@ class Journeys(JourneyCommon):
             if args.get('_asgard_language') is None:
                 args['_asgard_language'] = mod.asgard_language
 
+            if args.get('bss_rent_duration') is None:
+                args['bss_rent_duration'] = mod.bss_rent_duration
+
+            if args.get('bss_rent_penalty') is None:
+                args['bss_rent_penalty'] = mod.bss_rent_penalty
+
+            if args.get('bss_return_duration') is None:
+                args['bss_return_duration'] = mod.bss_return_duration
+
+            if args.get('bss_return_penalty') is None:
+                args['bss_return_penalty'] = mod.bss_return_penalty
+
         # When computing 'same_journey_schedules'(is_journey_schedules=True), some parameters need to be overridden
         # because they are contradictory to the request
         if args.get("is_journey_schedules"):
