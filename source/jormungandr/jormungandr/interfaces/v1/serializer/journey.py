@@ -229,8 +229,8 @@ class ElevationSerializer(PbNestedSerializer):
 
 
 class DynamicSpeedSerializer(PbNestedSerializer):
-    base_speed = jsonschema.MethodField(schema_type=int, display_none=False)
-    traffic_speed = jsonschema.MethodField(schema_type=int, display_none=False)
+    base_speed = jsonschema.MethodField(schema_type=float, display_none=False)
+    traffic_speed = jsonschema.MethodField(schema_type=float, display_none=False)
     geojson_offset = jsonschema.MethodField(schema_type=int, display_none=False)
 
     def get_base_speed(self, obj):

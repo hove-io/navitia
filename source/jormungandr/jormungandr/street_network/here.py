@@ -331,8 +331,8 @@ class Here(AbstractStreetNetworkService):
             dynamic_speed = section.street_network.dynamic_speeds.add()
             dynamic_speed.geojson_offset = span.get('offset', 0)
             dynamic_speed_info = span.get('dynamicSpeedInfo', {})
-            dynamic_speed.base_speed = int(dynamic_speed_info.get('baseSpeed', 0))
-            dynamic_speed.traffic_speed = int(dynamic_speed_info.get('trafficSpeed', 0))
+            dynamic_speed.base_speed = round(float(dynamic_speed_info.get('baseSpeed', 0)), 2)
+            dynamic_speed.traffic_speed = round(float(dynamic_speed_info.get('trafficSpeed', 0)), 2)
 
         # instruction
         for idx, maneuver in enumerate(here_section.get('actions', [])):
