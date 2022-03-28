@@ -661,7 +661,6 @@ class Journeys(JourneyCommon):
         parser_get.add_argument(
             "bss_rent_duration",
             type=int,
-            default=120,
             hidden=True,
             help="Only used in bss mode, how long it takes to rent a bike from bike share station",
         )
@@ -669,7 +668,6 @@ class Journeys(JourneyCommon):
         parser_get.add_argument(
             "bss_rent_penalty",
             type=int,
-            default=0,
             hidden=True,
             help="Only used in bss mode, how much the maneuver is penalized in the search algorithm",
         )
@@ -677,7 +675,6 @@ class Journeys(JourneyCommon):
         parser_get.add_argument(
             "bss_return_duration",
             type=int,
-            default=120,
             hidden=True,
             help="Only used in bss mode, how long it takes to return a bike to bike share station",
         )
@@ -685,7 +682,6 @@ class Journeys(JourneyCommon):
         parser_get.add_argument(
             "bss_return_penalty",
             type=int,
-            default=0,
             hidden=True,
             help="Only used in bss mode, how much the maneuver is penalized in the search algorithm",
         )
