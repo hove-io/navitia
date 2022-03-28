@@ -480,6 +480,27 @@ class TestJourneysDistributed(
         path_sum = sum(p['duration'] for p in pt_journey['sections'][2]['path'])
         assert pt_journey['sections'][2]['duration'] == pytest.approx(path_sum, 1.0)
 
+    def test_last_and_first_coord_in_geojson(self):
+        """
+        Test when departure/arrival fallback modes are different
+        """
+        query = journey_basic_query + "&first_section_mode[]=walking"
+        response = self.query_region(query)
+        check_best(response)
+        jrnys = response['journeys']
+        pt_journey = next((j for j in jrnys if 'non_pt' not in j['tags']), None)
+        assert pt_journey
+        from_coord = pt_journey['sections'][0]['from']['address']['coord']
+        to_coord = pt_journey['sections'][0]['to']['stop_point']['coord']
+
+        coords = pt_journey['sections'][0]['geojson']['coordinates']
+
+        assert coords[0][0] == pytest.approx(float(from_coord['lon']), 0.1e-5)
+        assert coords[0][1] == pytest.approx(float(from_coord['lat']), 0.1e-5)
+
+        assert coords[-1][0] == pytest.approx(float(to_coord['lon']), 0.1e-5)
+        assert coords[-1][1] == pytest.approx(float(to_coord['lat']), 0.1e-5)
+
 
 @config({"scenario": "distributed"})
 class TestDistributedJourneysWithPtref(JourneysWithPtref, NewDefaultScenarioAbstractTestFixture):

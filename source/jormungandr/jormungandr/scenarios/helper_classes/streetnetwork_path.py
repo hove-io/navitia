@@ -31,6 +31,7 @@ from jormungandr import utils, new_relic
 from jormungandr.street_network.street_network import StreetNetworkPathType
 import logging
 from .helper_utils import timed_logger
+from navitiacommon import type_pb2
 
 
 class StreetNetworkPath:
@@ -95,6 +96,31 @@ class StreetNetworkPath:
                 logging.getLogger(__name__).exception('')
                 return None
 
+    def _add_first_and_last_coord(self, dp):
+        if not dp or not dp.journeys or not dp.journeys[0].sections:
+            return
+
+        dp_coords = dp.journeys[0].sections[0].street_network.coordinates
+        if len(dp_coords) < 2:
+            return
+
+        # we are inserting the coord of the origin at the beginning of the geojson
+        coord = utils.get_pt_object_coord(self._orig_obj)
+        if coord != dp_coords[0]:
+            dp_coords.add(lon=coord.lon, lat=coord.lat)
+            # we cannot insert an element at the beginning of a list :(
+            # a little algo to move the last element to the beginning
+            tmp = type_pb2.GeographicalCoord()
+            for i in range(len(dp_coords)):
+                tmp.CopyFrom(dp_coords[i])
+                dp_coords[i].CopyFrom(dp_coords[-1])
+                dp_coords[-1].CopyFrom(tmp)
+
+        # we are appending the coord of the destination at the end of the geojson
+        coord = utils.get_pt_object_coord(self._dest_obj)
+        if coord != dp_coords[-1]:
+            dp_coords.add(lon=coord.lon, lat=coord.lat)
+
     def _do_request(self):
         self._logger.debug(
             "requesting %s direct path from %s to %s by %s",
@@ -105,6 +131,8 @@ class StreetNetworkPath:
         )
 
         dp = self._direct_path_with_fp(self._streetnetwork_service)
+
+        self._add_first_and_last_coord(dp)
 
         if getattr(dp, "journeys", None):
             dp.journeys[0].internal_id = str(utils.generate_id())
