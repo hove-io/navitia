@@ -786,11 +786,6 @@ def openaddresses2mimir(self, autocomplete_instance, filename, job_id, dataset_u
 def get_osm2mimir_params(
     autocomplete_instance, data_filename, working_directory, custom_config, autocomplete_version=2
 ):
-    config_file = (
-        '{}_{}'.format(current_app.config['MIMIR_PLATFORM_TAG'], autocomplete_instance.name)
-        if current_app.config['MIMIR_PLATFORM_TAG'] != 'default'
-        else autocomplete_instance.name
-    )
     if autocomplete_version == 2:
         return [
             '-i',
@@ -802,6 +797,11 @@ def get_osm2mimir_params(
             '-s',
             custom_config,
         ]
+    config_file = (
+        '{}_{}'.format(current_app.config['MIMIR_PLATFORM_TAG'], autocomplete_instance.name)
+        if current_app.config['MIMIR_PLATFORM_TAG'] != 'default'
+        else autocomplete_instance.name
+    )
     return [
         '-s',
         'elasticsearch.url=\'{}\''.format(current_app.config['MIMIR7_URL']),
