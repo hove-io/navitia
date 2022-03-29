@@ -405,18 +405,24 @@ class EquipmentDetailsSerializer(PbNestedSerializer):
 
 class AccessPointSerializer(PbGenericSerializer):
     coord = CoordSerializer(required=False)
+    access_point_code = jsonschema.MethodField(schema_type=str, display_none=False)
+
+    def get_access_point_code(self, obj):
+        return get_proto_attr_or_default(obj, 'stop_code')
+
+
+class PathWaySerializer(PbGenericSerializer):
+    access_point = jsonschema.MethodField(schema_type=AccessPointSerializer(), display_none=False)
     is_entrance = jsonschema.MethodField(schema_type=bool, display_none=False)
     is_exit = jsonschema.MethodField(schema_type=bool, display_none=False)
-    pathway_mode = jsonschema.MethodField(schema_type=int, display_none=False)
     length = jsonschema.MethodField(schema_type=int, display_none=False)
     traversal_time = jsonschema.MethodField(schema_type=int, display_none=False)
+    pathway_mode = jsonschema.MethodField(schema_type=int, display_none=False)
     stair_count = jsonschema.MethodField(schema_type=int, display_none=False)
     max_slope = jsonschema.MethodField(schema_type=int, display_none=False)
     min_width = jsonschema.MethodField(schema_type=int, display_none=False)
     signposted_as = jsonschema.MethodField(schema_type=str, display_none=False)
     reversed_signposted_as = jsonschema.MethodField(schema_type=str, display_none=False)
-    stop_code = jsonschema.MethodField(label='access_point_code', schema_type=str, display_none=False)
-    parent_station = jsonschema.MethodField(schema_type=lambda: StopAreaSerializer(), display_none=False)
 
     def get_is_entrance(self, obj):
         return get_proto_attr_or_default(obj, 'is_entrance')
@@ -424,14 +430,14 @@ class AccessPointSerializer(PbGenericSerializer):
     def get_is_exit(self, obj):
         return get_proto_attr_or_default(obj, 'is_exit')
 
-    def get_pathway_mode(self, obj):
-        return get_proto_attr_or_default(obj, 'pathway_mode')
-
     def get_length(self, obj):
         return get_proto_attr_or_default(obj, 'length')
 
     def get_traversal_time(self, obj):
         return get_proto_attr_or_default(obj, 'traversal_time')
+
+    def get_pathway_mode(self, obj):
+        return get_proto_attr_or_default(obj, 'pathway_mode')
 
     def get_stair_count(self, obj):
         return get_proto_attr_or_default(obj, 'stair_count')
@@ -448,14 +454,8 @@ class AccessPointSerializer(PbGenericSerializer):
     def get_reversed_signposted_as(self, obj):
         return get_proto_attr_or_default(obj, 'reversed_signposted_as')
 
-    def get_stop_code(self, obj):
-        return get_proto_attr_or_default(obj, 'stop_code')
-
-    def get_parent_station(self, obj):
-        if obj.HasField(str('parent_station')):
-            return StopAreaSerializer(obj.parent_station, display_none=False).data
-        else:
-            return None
+    def get_access_point(self, obj):
+        return AccessPointSerializer(obj).data
 
 
 class StopPointSerializer(PbGenericSerializer):
@@ -474,7 +474,7 @@ class StopPointSerializer(PbGenericSerializer):
     fare_zone = jsonschema.MethodField(schema_type=lambda: FareZoneSerializer(), display_none=False)
     equipment_details = EquipmentDetailsSerializer(many=True)
     lines = jsonschema.MethodField(schema_type=lambda: LineSerializer(many=True), display_none=False)
-    access_points = AccessPointSerializer(many=True, display_none=False)
+    access_points = PathWaySerializer(many=True, display_none=False)
 
     def get_fare_zone(self, obj):
         if obj.HasField(str('fare_zone')):
@@ -530,7 +530,7 @@ class PlaceSerializer(PbGenericSerializer):
     embedded_type = EnumField(attr='embedded_type', pb_type=NavitiaType, display_none=True)
     address = AddressSerializer(display_none=False)
     poi = PoiSerializer(display_none=False)
-    access_point = AccessPointSerializer(display_none=False)
+    access_point = PathWaySerializer(display_none=False)
 
     distance = base.PbStrField(
         required=False, display_none=False, description='Distance to the object in meters'

@@ -36,7 +36,7 @@ from jormungandr.interfaces.v1.serializer.pt import (
     VJDisplayInformationSerializer,
     StopDateTimeSerializer,
     StringListField,
-    AccessPointSerializer,
+    PathWaySerializer,
 )
 from jormungandr.interfaces.v1.serializer.time import DateTimeField
 from jormungandr.interfaces.v1.serializer.fields import (
@@ -403,21 +403,10 @@ class SectionSerializer(PbNestedSerializer):
     cycle_lane_length = PbIntField(display_none=False)
     elevations = ElevationSerializer(attr="street_network.elevations", many=True, display_none=False)
     dynamic_speeds = DynamicSpeedSerializer(attr="street_network.dynamic_speeds", many=True, display_none=False)
-    vias = jsonschema.MethodField(schema_type=PlaceSerializer(), many=True, display_none=False)
+    vias = PathWaySerializer(many=True, display_none=False)
     street_informations = StreetInformationSerializer(
         attr="street_network.street_information", many=True, display_none=False
     )
-
-    def get_vias(self, obj):
-        if not hasattr(obj, 'vias'):
-            return None
-        from navitiacommon import type_pb2
-
-        pt_obejcts = [
-            type_pb2.PtObject(name=ap.name, uri=ap.uri, embedded_type=type_pb2.ACCESS_POINT, access_point=ap)
-            for ap in obj.vias
-        ]
-        return PlaceSerializer(pt_obejcts, display_none=False, many=True).data
 
 
 class JourneySerializer(PbNestedSerializer):
