@@ -140,6 +140,7 @@ MIMIR7_URL = os.getenv('TYR_MIMIR7_URL', None)
 
 MIMIR_CONFIG_DIR = os.getenv('MIMIR_CONFIG_DIR', "/etc/mimir/")
 
+MIMIR_PLATFORM_TAG = os.getenv('TYR_MIMIR_PLATFORM_TAG', 'default')
 
 MINIO_LOKI_URL = os.getenv('TYR_MINIO_LOKI_URL', None)
 
