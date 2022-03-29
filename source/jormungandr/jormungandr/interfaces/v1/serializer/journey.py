@@ -65,6 +65,7 @@ from navitiacommon.response_pb2 import (
     SectionType,
     CyclePathType,
 )
+import navitiacommon.response_pb2
 from navitiacommon.type_pb2 import RTLevel
 from jormungandr.interfaces.v1.make_links import create_internal_link
 
@@ -205,13 +206,21 @@ class PathSerializer(PbNestedSerializer):
         return obj.via_uri if obj.HasField(str('via_uri')) else None
 
 
+CYCLEPATHTYPE_TO_STR = {
+    navitiacommon.response_pb2.NoCycleLane: "no_cycle_lane",
+    navitiacommon.response_pb2.SharedCycleWay: "shared_cycle_way",
+    navitiacommon.response_pb2.DedicatedCycleWay: "dedicated_cycle_way",
+    navitiacommon.response_pb2.SeparatedCycleWay: "separated_cycle_way",
+}
+
+
 class StreetInformationSerializer(PbNestedSerializer):
     geojson_offset = jsonschema.MethodField(schema_type=int, display_none=False)
     cycle_path_type = jsonschema.MethodField(schema_type=str, display_none=False)
 
     def get_cycle_path_type(self, obj):
         if obj.HasField(str('cycle_path_type')):
-            return CyclePathType.Name(obj.cycle_path_type)
+            return CYCLEPATHTYPE_TO_STR.get(obj.cycle_path_type)
         else:
             return None
 
@@ -395,7 +404,7 @@ class SectionSerializer(PbNestedSerializer):
     elevations = ElevationSerializer(attr="street_network.elevations", many=True, display_none=False)
     dynamic_speeds = DynamicSpeedSerializer(attr="street_network.dynamic_speeds", many=True, display_none=False)
     vias = jsonschema.MethodField(schema_type=PlaceSerializer(), many=True, display_none=False)
-    street_information = StreetInformationSerializer(
+    street_informations = StreetInformationSerializer(
         attr="street_network.street_information", many=True, display_none=False
     )
 
