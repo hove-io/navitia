@@ -56,13 +56,13 @@ class TestAccessPoints(AbstractTestFixture):
                         assert ap['is_exit'] == False
                         assert ap['length'] == 13
                         assert ap['traversal_time'] == 26
-                        assert ap['access_point_code'] == "access_point_code_2"
+                        assert ap['access_point']['access_point_code'] == "access_point_code_2"
                     if ap['name'] == 'AP1':
                         assert ap['is_entrance'] == True
                         assert ap['is_exit'] == True
                         assert ap['length'] == 10
                         assert ap['traversal_time'] == 23
-                        assert ap['access_point_code'] == "access_point_code_1"
+                        assert ap['access_point']['access_point_code'] == "access_point_code_1"
             # spC
             if sp['name'] == 'spC':
                 assert len(get_not_null(sp, 'access_points')) == 2
@@ -74,13 +74,13 @@ class TestAccessPoints(AbstractTestFixture):
                         assert ap['is_exit'] == False
                         assert ap['length'] == 12
                         assert ap['traversal_time'] == 36
-                        assert ap['access_point_code'] == "access_point_code_3"
+                        assert ap['access_point']['access_point_code'] == "access_point_code_3"
                     if ap['name'] == 'AP2':
                         assert ap['is_entrance'] == True
                         assert ap['is_exit'] == False
                         assert ap['length'] == 13
                         assert ap['traversal_time'] == 26
-                        assert ap['access_point_code'] == "access_point_code_4"
+                        assert ap['access_point']['access_point_code'] == "access_point_code_4"
 
         # without depth=3
         r = self.query_region('stop_points')
@@ -123,14 +123,17 @@ class TestAccessPoints(AbstractTestFixture):
 
         for ap in r['access_points']:
             if ap['name'] == 'AP1':
-                assert ap['is_entrance'] == True
-                assert ap['is_exit'] == True
+                assert ap['access_point_code'] == "access_point_code_1"
+                assert ap['id'] == "AP1"
+                assert ap['coord'] == {'lon': '2.364795', 'lat': '48.874871'}
             if ap['name'] == 'AP2':
-                assert ap['is_entrance'] == True
-                assert ap['is_exit'] == False
+                assert ap['access_point_code'] == "access_point_code_2"
+                assert ap['id'] == "AP2"
+                assert ap['coord'] == {'lat': '48.875871', 'lon': '2.365795'}
             if ap['name'] == 'AP3':
-                assert ap['is_entrance'] == True
-                assert ap['is_exit'] == False
+                assert ap['access_point_code'] == "access_point_code_3"
+                assert ap['id'] == "AP3"
+                assert ap['coord'] == {'lat': '48.876871', 'lon': '2.366795'}
 
     def test_access_points_api_with_filter(self):
         r = self.query_region('stop_points/spA/access_points')
@@ -138,11 +141,13 @@ class TestAccessPoints(AbstractTestFixture):
 
         for ap in r['access_points']:
             if ap['name'] == 'AP1':
-                assert ap['is_entrance'] == True
-                assert ap['is_exit'] == True
+                assert ap['access_point_code'] == "access_point_code_1"
+                assert ap['id'] == "AP1"
+                assert ap['coord'] == {'lon': '2.364795', 'lat': '48.874871'}
             if ap['name'] == 'AP2':
-                assert ap['is_entrance'] == True
-                assert ap['is_exit'] == False
+                assert ap['access_point_code'] == "access_point_code_2"
+                assert ap['id'] == "AP2"
+                assert ap['coord'] == {'lat': '48.875871', 'lon': '2.365795'}
 
         r = self.query_region('stop_points/spB/access_points')
         assert len(r['access_points']) == 0
