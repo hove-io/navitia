@@ -1,3 +1,10 @@
+navitia2 (15.4.1) unstable; urgency=low
+
+  * [Jormungandr] fix access point in journey <https://github.com/CanalTP/navitia/pull/3697>
+  * [Jormungandr] fix street informations <https://github.com/CanalTP/navitia/pull/3696>
+
+ -- xlqian <patrick.qian@kisio.com>  Tue, 29 Mar 2022 17:03:45 +0100
+
 navitia2 (15.4.0) unstable; urgency=low
 
   * [Jormungandr] Conceal length and traversal_time for /access_points  <https://github.com/CanalTP/navitia/pull/3692>
