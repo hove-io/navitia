@@ -34,6 +34,10 @@ from .pt_planner import AbstractPtPlanner
 from navitiacommon import type_pb2
 
 
+class PlannerLokiException(Exception):
+    pass
+
+
 class Loki(ZmqSocket, AbstractPtPlanner):
     def __init__(
         self,
@@ -76,6 +80,12 @@ class Loki(ZmqSocket, AbstractPtPlanner):
         allowed_id=[],
         **kwargs
     ):
+        if object_type != type_pb2.STOP_POINT:
+            raise PlannerLokiException('Loki can only handle requests with object_type=type_pb2.STOP_POINT')
+
+        if filter is not None:
+            raise PlannerLokiException('Loki can only handle requests with filter that is not empty')
+
         return get_crow_fly(
             self,
             origin,
