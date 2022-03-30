@@ -71,12 +71,13 @@ class ProximitiesByCrowfly:
         self._depth = depth
         self._forbidden_uris = utils.get_poi_params(request['forbidden_uris[]'])
         self._allowed_id = utils.get_poi_params(request['allowed_id[]'])
+        self._pt_planner = self._instance.get_pt_planner(request['_pt_planner'])
         self._async_request()
 
     @new_relic.distributedEvent("get_crowfly", "street_network")
     def _get_crow_fly(self):
         with timed_logger(self._logger, 'get_crow_fly_calling_external_service', self._request_id):
-            return self._instance.georef.get_crow_fly(
+            return self._pt_planner.get_crow_fly(
                 utils.get_uri_pt_object(self._requested_place_obj),
                 self._mode,
                 self._max_duration,
