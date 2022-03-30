@@ -34,7 +34,7 @@ GREENLET_POOL_FOR_RIDESHARING_SERVICES = boolean(os.getenv('JORMUNGANDR_GREENLET
 RIDESHARING_GREENLET_POOL_SIZE = int(os.getenv('JORMUNGANDR_RIDESHARING_GREENLET_POOL_SIZE', 10))
 
 # disable authentication
-PUBLIC = boolean(os.getenv('JORMUNGANDR_IS_PUBLIC', False))
+PUBLIC = boolean(os.getenv('JORMUNGANDR_IS_PUBLIC', True))
 
 # message returned on authentication request
 HTTP_BASIC_AUTH_REALM = os.getenv('JORMUNGANDR_HTTP_BASIC_AUTH_REALM', 'Token Required')
