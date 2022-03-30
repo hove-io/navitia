@@ -77,19 +77,11 @@ LOGGER = {
 
 # Bike self-service configuration
 # This should be moved in a central configuration system like ectd, consul, etc...
-BSS_PROVIDER = []
+BSS_PROVIDER = json.loads(os.getenv("JORMUNGANDR_BSS_PROVIDER_", "[]"))
 # Car parking places availability service
-CAR_PARK_PROVIDER = []
+CAR_PARK_PROVIDER = json.loads(os.getenv("JORMUNGANDR_CAR_PARK_PROVIDER_", "[]"))
 # Equipment details service configuration
-EQUIPMENT_DETAILS_PROVIDERS = []
-
-for key, value in os.environ.items():
-    if key.startswith('JORMUNGANDR_BSS_PROVIDER_'):
-        BSS_PROVIDER.append(json.loads(value))
-    elif key.startswith('JORMUNGANDR_CAR_PARK_PROVIDER_'):
-        CAR_PARK_PROVIDER.append(json.loads(value))
-    elif key.startswith('JORMUNGANDR_EQUIPMENT_DETAILS_PROVIDER_'):
-        EQUIPMENT_DETAILS_PROVIDERS.append(json.loads(value))
+EQUIPMENT_DETAILS_PROVIDERS = json.loads(os.getenv("JORMUNGANDR_EQUIPMENT_DETAILS_PROVIDER_", "[]"))
 
 # Parameters for statistics
 SAVE_STAT = boolean(os.getenv('JORMUNGANDR_SAVE_STAT', False))
@@ -135,6 +127,7 @@ MODULES = {
 }
 
 # This should be moved in a central configuration system like ectd, consul, etc...
+
 AUTOCOMPLETE_SYSTEMS = json.loads(os.getenv('JORMUNGANDR_AUTOCOMPLETE_SYSTEMS', '{}')) or None
 
 ISOCHRONE_DEFAULT_VALUE = os.getenv('JORMUNGANDR_ISOCHRONE_DEFAULT_VALUE', 1800)  # in s
