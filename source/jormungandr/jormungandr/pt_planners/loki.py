@@ -28,9 +28,14 @@
 # www.navitia.io
 from __future__ import absolute_import, print_function, unicode_literals, division
 
-from jormungandr.pt_planners.common import ZmqSocket
+from jormungandr.pt_planners.common import ZmqSocket, get_crow_fly
 from jormungandr import utils, app
 from .pt_planner import AbstractPtPlanner
+from navitiacommon import type_pb2
+
+
+class PlannerLokiException(Exception):
+    pass
 
 
 class Loki(ZmqSocket, AbstractPtPlanner):
@@ -59,3 +64,40 @@ class Loki(ZmqSocket, AbstractPtPlanner):
         self, origins, destinations, datetime, clockwise, graphical_isochrones_parameters, bike_in_pt
     ):
         raise NotImplementedError("Too bad, you cannot ask loki for graphical isochrones :)")
+
+    def get_crow_fly(
+        self,
+        origin,
+        streetnetwork_mode,
+        max_duration,
+        max_nb_crowfly,
+        object_type=type_pb2.STOP_POINT,
+        filter=None,
+        stop_points_nearby_duration=300,
+        request_id=None,
+        depth=2,
+        forbidden_uris=[],
+        allowed_id=[],
+        **kwargs
+    ):
+        if object_type != type_pb2.STOP_POINT:
+            raise PlannerLokiException('Loki can only handle requests with object_type=type_pb2.STOP_POINT')
+
+        if filter is not None:
+            raise PlannerLokiException('Loki can only handle requests with filter that is not empty')
+
+        return get_crow_fly(
+            self,
+            origin,
+            streetnetwork_mode,
+            max_duration,
+            max_nb_crowfly,
+            object_type,
+            filter,
+            stop_points_nearby_duration,
+            request_id,
+            depth,
+            forbidden_uris,
+            allowed_id,
+            **kwargs
+        )
