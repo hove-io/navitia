@@ -259,8 +259,8 @@ You can use these ids in the forbidden_uris[] parameter from
 
 ### <a name="place"></a>Place
 
-A container containing either a [admin](#admin), [poi](#poi), [address](#address), [stop_area](#stop-area),
-[stop_point](#stop-point) or [access_point](#access-point)
+A container containing either a [admin](#admin), [poi](#poi), [address](#address), [stop_area](#stop-area) or 
+[stop_point](#stop-point)
 
 ``` json
 {
@@ -285,7 +285,6 @@ A container containing either a [admin](#admin), [poi](#poi), [address](#address
 |poi|[poi](#poi)|Embedded poi|
 |address|[address](#address)|Embedded address|
 |stop_point|[stop_point](#stop-point)|Embedded Stop point|
-|access_point|[access_point](#access-point)|Embedded Access point|
 
 ### <a name="trip"></a>Trip
 
@@ -808,7 +807,6 @@ It's also used inside different responses (journeys, ...).
 | [stop_point](#stop-point)                         | a location where vehicles can pickup or drop off passengers   |
 | [address](#address)                               | a point located in a street                                   |
 | [poi](#poi)                                       | a point of interest                                           |
-| [access_point](#access-point)                     | an exit or entrance to a stop_area                            |
 
 
 ### <a name="pt-object-embedded-type"></a>PT-object embedded type
