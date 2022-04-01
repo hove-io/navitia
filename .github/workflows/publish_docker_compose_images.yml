@@ -21,11 +21,11 @@ jobs:
     - name: install httpie dependency
       run: sudo apt update && sudo apt install -y httpie
     - name: build, create and publish images for branch [ ${{ env.BRANCH_NAME }} ]
-      if: ${{ success() && github.event_name == 'push' && ${{github.event.workflow_run.head_branch}} == 'release' }}
+      if: ${{ success() && github.event.workflow_run.head_branch == 'release' }}
       working-directory: builder_from_package
       run: ./build.sh -e push -o ${{secrets.access_token_github}} -t latest -b release -r -u ${{secrets.docker_user}} -p ${{secrets.docker_password}}
     - name: build, create and publish images for branch [ ${{ env.BRANCH_NAME }} ]
-      if: ${{ success() && github.event_name == 'push' && ${{github.event.workflow_run.head_branch}} == 'dev' }}
+      if: ${{ success() && github.event.workflow_run.head_branch == 'dev' }}
       working-directory: builder_from_package
       run: ./build.sh -e push -o ${{secrets.access_token_github}} -t dev -b dev -r -u ${{secrets.docker_user}} -p ${{secrets.docker_password}}
     - name: slack notification (the job has failed)
