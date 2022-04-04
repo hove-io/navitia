@@ -40,10 +40,7 @@ class Kraken(ZmqSocket, AbstractPtPlanner):
         self, name, zmq_context, zmq_socket, zmq_socket_type, timeout=app.config.get('INSTANCE_TIMEOUT', 10000)
     ):
         super(Kraken, self).__init__(zmq_context, zmq_socket, zmq_socket_type, timeout)
-        self.instance_name = name
-
-    def name(self):
-        return self.instance_name
+        self.name = "pt_planner:{}".format(name)
 
     def journeys(self, origins, destinations, datetime, clockwise, journey_parameters, bike_in_pt, request_id):
         req = utils.create_journeys_request(
