@@ -65,7 +65,6 @@ class PtPlannersManager(object):
                 self.pt_planners[k].clean_up_zmq_sockets()
 
             self.pt_planners[k] = utils.create_object(configs[k])
-            self.old_configs[k] = configs[k]
 
     def update_from_db(self):
         if not can_connect_to_database():
