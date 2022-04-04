@@ -38,11 +38,11 @@ from datetime import datetime, timedelta
 import flask
 import six
 from threading import Lock
-from abc import abstractmethod, ABCMeta
+from abc import ABCMeta
 
 from jormungandr import app
 from jormungandr.exceptions import DeadSocketException
-from navitiacommon import response_pb2
+from navitiacommon import response_pb2, request_pb2, type_pb2
 
 
 class ZmqSocket(six.with_metaclass(ABCMeta, object)):
@@ -51,7 +51,7 @@ class ZmqSocket(six.with_metaclass(ABCMeta, object)):
     ):
         self.zmq_socket = zmq_socket
         self.context = zmq_context
-        self.sockets = deque()
+        self._sockets = deque()
         self.zmq_socket_type = zmq_socket_type
         self.timeout = timeout
         self.breaker = pybreaker.CircuitBreaker(
@@ -61,14 +61,10 @@ class ZmqSocket(six.with_metaclass(ABCMeta, object)):
         self.is_initialized = False
         self.lock = Lock()
 
-    @abstractmethod
-    def name(self):
-        pass
-
     @contextmanager
     def socket(self, context):
         try:
-            socket, _ = self.sockets.pop()
+            socket, _ = self._sockets.pop()
         except IndexError:  # there is no socket available: lets create one
             socket = context.socket(zmq.REQ)
             socket.connect(self.zmq_socket)
@@ -76,7 +72,7 @@ class ZmqSocket(six.with_metaclass(ABCMeta, object)):
             yield socket
         finally:
             if not socket.closed:
-                self.sockets.append((socket, time.time()))
+                self._sockets.append((socket, time.time()))
 
     def _send_and_receive(self, request, quiet=False, **kwargs):
         logger = logging.getLogger(__name__)
@@ -115,3 +111,66 @@ class ZmqSocket(six.with_metaclass(ABCMeta, object)):
             return self.breaker.call(self._send_and_receive, *args, **kwargs)
         except pybreaker.CircuitBreakerError:
             raise DeadSocketException(self.name, self.zmq_socket)
+
+    def clean_up_zmq_sockets(self):
+        for socket in self._sockets:
+            socket.setsockopt(zmq.LINGER, 0)
+            socket.close()
+
+    @staticmethod
+    def is_zmq_socket():
+        return True
+
+
+def get_crow_fly(
+    pt_planner,
+    origin,
+    streetnetwork_mode,
+    max_duration,
+    max_nb_crowfly,
+    object_type=type_pb2.STOP_POINT,
+    filter=None,
+    stop_points_nearby_duration=300,
+    request_id=None,
+    depth=2,
+    forbidden_uris=[],
+    allowed_id=[],
+    **kwargs
+):
+    logger = logging.getLogger(__name__)
+    # Getting stop_points or stop_areas using crow fly
+    # the distance of crow fly is defined by the mode speed and max_duration
+    req = request_pb2.Request()
+    req.requested_api = type_pb2.places_nearby
+    req.places_nearby.uri = origin
+    req.places_nearby.distance = kwargs.get(streetnetwork_mode, kwargs.get("walking")) * max_duration
+    req.places_nearby.depth = depth
+    req.places_nearby.count = max_nb_crowfly
+    req.places_nearby.start_page = 0
+    req.disable_feedpublisher = True
+    req.places_nearby.types.append(object_type)
+
+    allowed_id_filter = ''
+    if allowed_id is not None:
+        allowed_id_count = len(allowed_id)
+        if allowed_id_count > 0:
+            poi_ids = ('poi.id={}'.format(uri) for uri in allowed_id)
+            allowed_id_items = '  or  '.join(poi_ids)
+
+            # Format the filter for all allowed_ids uris
+            if allowed_id_count >= 1:
+                allowed_id_filter = ' and ({})'.format(allowed_id_items)
+
+    # We implement filter only for poi with poi_type.uri=poi_type:amenity:parking
+    if filter is not None:
+        req.places_nearby.filter = filter + allowed_id_filter
+    if streetnetwork_mode == "car":
+        req.places_nearby.stop_points_nearby_radius = kwargs.get("walking", 1.11) * stop_points_nearby_duration
+        req.places_nearby.depth = 1
+    if forbidden_uris is not None:
+        for uri in forbidden_uris:
+            req.places_nearby.forbidden_uris.append(uri)
+    res = pt_planner.send_and_receive(req, request_id=request_id)
+    if len(res.feed_publishers) != 0:
+        logger.error("feed publisher not empty: expect performance regression!")
+    return res.places_nearby

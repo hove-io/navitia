@@ -34,7 +34,7 @@ class PtPlannersManager(object):
         # For the sake of retro-compatibility, configs may be None
         configs = configs or {}
         self.logger = logging.getLogger(__name__)
-
+        self.old_configs = {}
         self.init(configs)
 
     def init(self, configs):
@@ -56,7 +56,16 @@ class PtPlannersManager(object):
             conf['args']['zmq_socket_type'] = self.zmq_socket_type
 
         for k in configs:
+            if self.old_configs.get(k) == configs[k]:
+                continue
+
+            # config has changed regarding the old one, we must close all
+            # zmq sockets before opening new ones
+            if k in self.pt_planners and self.pt_planners[k].is_zmq_socket():
+                self.pt_planners[k].clean_up_zmq_sockets()
+
             self.pt_planners[k] = utils.create_object(configs[k])
+            self.old_configs[k] = configs[k]
 
     def update_from_db(self):
         if not can_connect_to_database():
@@ -73,6 +82,9 @@ class PtPlannersManager(object):
         configs = self.db_configs_getter()
         self.init(configs)
         self.last_update = datetime.datetime.utcnow()
+
+    def get_all_pt_planners(self):
+        return self.pt_planners.items()
 
     def get_pt_planner(self, pt_planner_id):
         self.update_from_db()
