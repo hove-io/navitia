@@ -14,18 +14,18 @@ jobs:
 
     steps:
     - name: Get branch name
-      run: echo ${{github.event.workflow_run.head_branch}}
+      run: echo ${{ github.event.ref }}
     - uses: actions/checkout@v2
       with:
         repository: CanalTP/navitia-docker-compose
     - name: install httpie dependency
       run: sudo apt update && sudo apt install -y httpie
     - name: build, create and publish images for branch release
-      if: ${{ success() && github.event.workflow_run.head_branch == 'release' }}
+      if: ${{ github.event.ref == 'refs/heads/release' }}
       working-directory: builder_from_package
       run: ./build.sh -e push -o ${{secrets.access_token_github}} -t latest -b release -r -u ${{secrets.docker_user}} -p ${{secrets.docker_password}}
     - name: build, create and publish images for branch dev
-      if: ${{ success() && github.event.workflow_run.head_branch == 'dev' }}
+      if: ${{ github.event.ref == 'refs/heads/dev' }}
       working-directory: builder_from_package
       run: ./build.sh -e push -o ${{secrets.access_token_github}} -t dev -b dev -r -u ${{secrets.docker_user}} -p ${{secrets.docker_password}}
     - name: slack notification (the job has failed)
