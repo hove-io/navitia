@@ -1,21 +1,21 @@
 [submodule "source/utils"]
 	path = source/utils
-	url = git@github.com:CanalTP/utils.git
+	url = git@github.com:hove-io/utils.git
 [submodule "source/third_party/osmpbfreader"]
 	path = source/third_party/osmpbfreader
-	url = git@github.com:CanalTP/libosmpbfreader.git
+	url = git@github.com:hove-io/libosmpbfreader.git
 [submodule "source/third_party/SimpleAmqpClient"]
 	path = source/third_party/SimpleAmqpClient
-	url = git@github.com:canaltp/SimpleAmqpClient.git
+	url = git@github.com:hove-io/SimpleAmqpClient.git
 [submodule "source/third_party/librabbitmq-c"]
 	path = source/third_party/librabbitmq-c
 	url = git@github.com:alanxz/rabbitmq-c.git
 [submodule "source/chaos-proto"]
 	path = source/chaos-proto
-	url = git@github.com:CanalTP/chaos-proto.git
+	url = git@github.com:hove-io/chaos-proto.git
 [submodule "source/navitia-proto"]
 	path = source/navitia-proto
-	url = git@github.com:CanalTP/navitia-proto.git
+	url = git@github.com:hove-io/navitia-proto.git
 [submodule "source/third_party/prometheus-cpp"]
 	path = source/third_party/prometheus-cpp
 	url = https://github.com/jupp0r/prometheus-cpp

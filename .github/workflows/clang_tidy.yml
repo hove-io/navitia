@@ -50,7 +50,7 @@ jobs:
 
           [#clang-tidy documentation](https://clang.llvm.org/extra/clang-tidy/)
         labels: not_in_changelog
-        team-reviewers: CanalTP/coreteam
+        team-reviewers: hove-io/coreteam
         branch: auto/clang-tidy
         base: dev
     - name: Check outputs
