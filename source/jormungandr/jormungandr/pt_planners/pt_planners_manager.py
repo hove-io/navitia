@@ -2,7 +2,7 @@ from jormungandr import utils
 import datetime
 import logging
 
-from jormungandr.utils import can_connect_to_database
+from jormungandr.utils import can_connect_to_database, close_sockets
 
 DEFAULT_PT_PLANNER = 'kraken'
 
@@ -92,3 +92,8 @@ class PtPlannersManager(object):
         if pt_planner:
             return pt_planner
         raise NoRequestedPtPlanner("no requested pt_planner: {}".format(pt_planner_id))
+
+    def reap_sockets(self, ttl):
+        for _, planner in self.pt_planners.items():
+            if planner.is_zmq_socket():
+                close_sockets(planner, ttl)

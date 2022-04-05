@@ -50,6 +50,8 @@ from contextlib import contextmanager
 import functools
 import sys
 import six
+import time
+from zmq import green as zmq
 
 PY2 = sys.version_info[0] == 2
 PY3 = sys.version_info[0] == 3
@@ -794,3 +796,24 @@ def create_graphical_isochrones_request(
 
     req.isochrone.journeys_request.CopyFrom(req.journeys)
     return req
+
+
+def close_sockets(connector, ttl):
+    """
+    this function is used to close zmq sockets. Currently used by all kinds of connector that use
+    zmq as communication methods.
+    """
+    logger = logging.getLogger(__name__)
+    now = time.time()
+    while True:
+        try:
+            socket, t = connector.get_sockets().popleft()
+            if now - t > ttl:
+                logger.debug("closing one socket for %s", connector.name)
+                socket.setsockopt(zmq.LINGER, 0)
+                socket.close()
+            else:
+                connector.get_sockets().appendleft((socket, t))
+                break  # remaining socket are still in "keep alive" state
+        except IndexError:
+            break

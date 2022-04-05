@@ -246,6 +246,7 @@ class InstanceManager(object):
     def reap_sockets(self):
         for instance in self.instances.values():
             instance.reap_socket(self.socket_ttl)
+            instance.reap_pt_planner_sockets(self.socket_ttl)
             gevent.idle(-1)  # request handling has the priority
 
     def socket_reaper_thread(self, disable_gevent=False):

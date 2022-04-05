@@ -30,7 +30,7 @@
 # www.navitia.io
 
 from __future__ import absolute_import, print_function, unicode_literals, division
-from jormungandr import pt_planners_manager
+from jormungandr.pt_planners import pt_planners_manager
 import pytest
 from jormungandr.exceptions import ConfigException
 

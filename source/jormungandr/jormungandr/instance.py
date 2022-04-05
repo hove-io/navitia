@@ -64,8 +64,8 @@ from datetime import datetime, timedelta
 from navitiacommon import default_values
 from jormungandr.equipments import EquipmentProviderManager
 from jormungandr.external_services import ExternalServiceManager
-from jormungandr.utils import can_connect_to_database
-from jormungandr import pt_planners_manager
+from jormungandr.utils import can_connect_to_database, close_sockets
+from jormungandr.pt_planners import pt_planners_manager
 
 type_to_pttype = {
     "stop_area": request_pb2.PlaceCodeRequest.StopArea,  # type: ignore
@@ -705,31 +705,20 @@ class Instance(object):
         instance_db = self.get_models()
         return get_value_or_default('places_proximity_radius', instance_db, self.name)
 
+    def get_sockets(self):
+        return self._sockets
+
+    def reap_pt_planner_sockets(self, ttl):
+        # type: (int) -> None
+        if self.zmq_socket_type != 'transient':
+            return
+        self._pt_planner_manager.reap_sockets(ttl)
+
     def reap_socket(self, ttl):
         # type: (int) -> None
         if self.zmq_socket_type != 'transient':
             return
-        logger = logging.getLogger(__name__)
-        now = time.time()
-
-        def _reap_sockets(connector):
-            while True:
-                try:
-                    socket, t = connector._sockets.popleft()
-                    if now - t > ttl:
-                        logger.debug("closing one socket for %s", connector.name)
-                        socket.setsockopt(zmq.LINGER, 0)
-                        socket.close()
-                    else:
-                        connector._sockets.appendleft((socket, t))
-                        break  # remaining socket are still in "keep alive" state
-                except IndexError:
-                    break
-
-        for _, planner in self._pt_planner_manager.get_all_pt_planners():
-            if planner.is_zmq_socket():
-                _reap_sockets(planner)
-        _reap_sockets(self)
+        close_sockets(self, ttl)
 
     @contextmanager
     def socket(self, context):
