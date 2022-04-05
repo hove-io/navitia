@@ -1,3 +1,9 @@
+navitia2 (15.4.2) unstable; urgency=low
+
+  * [Jormungandr] reap pt_planners sockets <https://github.com/CanalTP/navitia/pull/3702>
+
+ -- xlqian <patrick.qian@kisio.com>  Tue, 05 Apr 2022 15:04:01 +0100
+
 navitia2 (15.4.1) unstable; urgency=low
 
   * [Jormungandr] fix access point in journey <https://github.com/CanalTP/navitia/pull/3697>
