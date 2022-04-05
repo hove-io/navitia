@@ -121,9 +121,6 @@ class ZmqSocket(six.with_metaclass(ABCMeta, object)):
     def is_zmq_socket():
         return True
 
-    def get_sockets(self):
-        return self._sockets
-
 
 def get_crow_fly(
     pt_planner,
