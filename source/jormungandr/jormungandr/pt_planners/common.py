@@ -38,7 +38,7 @@ from datetime import datetime, timedelta
 import flask
 import six
 from threading import Lock
-from abc import abstractmethod, ABCMeta
+from abc import ABCMeta
 
 from jormungandr import app
 from jormungandr.exceptions import DeadSocketException
@@ -51,7 +51,7 @@ class ZmqSocket(six.with_metaclass(ABCMeta, object)):
     ):
         self.zmq_socket = zmq_socket
         self.context = zmq_context
-        self.sockets = deque()
+        self._sockets = deque()
         self.zmq_socket_type = zmq_socket_type
         self.timeout = timeout
         self.breaker = pybreaker.CircuitBreaker(
@@ -61,14 +61,10 @@ class ZmqSocket(six.with_metaclass(ABCMeta, object)):
         self.is_initialized = False
         self.lock = Lock()
 
-    @abstractmethod
-    def name(self):
-        pass
-
     @contextmanager
     def socket(self, context):
         try:
-            socket, _ = self.sockets.pop()
+            socket, _ = self._sockets.pop()
         except IndexError:  # there is no socket available: lets create one
             socket = context.socket(zmq.REQ)
             socket.connect(self.zmq_socket)
@@ -76,7 +72,7 @@ class ZmqSocket(six.with_metaclass(ABCMeta, object)):
             yield socket
         finally:
             if not socket.closed:
-                self.sockets.append((socket, time.time()))
+                self._sockets.append((socket, time.time()))
 
     def _send_and_receive(self, request, quiet=False, **kwargs):
         logger = logging.getLogger(__name__)
@@ -115,6 +111,15 @@ class ZmqSocket(six.with_metaclass(ABCMeta, object)):
             return self.breaker.call(self._send_and_receive, *args, **kwargs)
         except pybreaker.CircuitBreakerError:
             raise DeadSocketException(self.name, self.zmq_socket)
+
+    def clean_up_zmq_sockets(self):
+        for socket in self._sockets:
+            socket.setsockopt(zmq.LINGER, 0)
+            socket.close()
+
+    @staticmethod
+    def is_zmq_socket():
+        return True
 
 
 def get_crow_fly(
