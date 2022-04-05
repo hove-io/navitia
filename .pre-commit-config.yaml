@@ -15,7 +15,7 @@ repos:
         args: [--allow-multiple-documents]
     -   id: flake8
         language_version: python2.7
--   repo: https://github.com/CanalTP/navitia-pre-commit
+-   repo: https://github.com/hove-io/navitia-pre-commit
     rev: master
     hooks:
     -   id: clang-format-6.0
