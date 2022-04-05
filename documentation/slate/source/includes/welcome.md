@@ -25,7 +25,7 @@ Technically, Navitia is a [HATEOAS](https://en.wikipedia.org/wiki/HATEOAS) API t
 
 ### Who's who
 
-Navitia is instanciated and exposed publicly through [api.navitia.io](https://api.navitia.io).<br>Developments on Navitia are lead by Kisio Digital (previously CanalTP).<br>Kisio Digital is a subsidiary of Keolis (itself a subsidiary of SNCF, French national railway company).
+Navitia is instanciated and exposed publicly through [api.navitia.io](https://api.navitia.io).<br>Developments on Navitia are lead by Hove (previously Kisio Digital and CanalTP).<br>Hove is a subsidiary of Keolis (itself a subsidiary of SNCF, French national railway company).
 
 ### About "sandbox" coverage
 
@@ -93,12 +93,12 @@ At some point you will want to read [transport public lexicon](#lexicon).
 Navitia for humans
 ------------------
 
->[Try a basic request on Navitia playground](https://canaltp.github.io/navitia-playground/play.html?request=https%3A%2F%2Fapi.navitia.io%2Fv1%2Fcoverage%2Fsandbox&token=3b036afe-0110-4202-b9ed-99718476c2e0)
+>[Try a basic request on Navitia playground](https://hove-io.github.io/navitia-playground/play.html?request=https%3A%2F%2Fapi.navitia.io%2Fv1%2Fcoverage%2Fsandbox&token=3b036afe-0110-4202-b9ed-99718476c2e0)
 
->[Try a journey request on Navitia playground](https://canaltp.github.io/navitia-playground/play.html?request=https%3A%2F%2Fapi.navitia.io%2Fv1%2Fcoverage%2Fsandbox%2Fjourneys%3Ffrom%3D2.3749036%253B48.8467927%26to%3D2.2922926%253B48.8583736%26&token=3b036afe-0110-4202-b9ed-99718476c2e0)
+>[Try a journey request on Navitia playground](https://hove-io.github.io/navitia-playground/play.html?request=https%3A%2F%2Fapi.navitia.io%2Fv1%2Fcoverage%2Fsandbox%2Fjourneys%3Ffrom%3D2.3749036%253B48.8467927%26to%3D2.2922926%253B48.8583736%26&token=3b036afe-0110-4202-b9ed-99718476c2e0)
 
 <aside class="success">
-if you only want to challenge Navitia functionality, take your token and go to the <a href="https://canaltp.github.io/navitia-playground">navitia playground website </a>.
+if you only want to challenge Navitia functionality, take your token and go to the <a href="https://hove-io.github.io/navitia-playground">navitia playground website </a>.
 </aside>
 
 ![Try Navitia playgroung](/images/navitia_playground.png)
