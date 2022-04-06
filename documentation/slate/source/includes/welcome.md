@@ -25,7 +25,7 @@ Technically, Navitia is a [HATEOAS](https://en.wikipedia.org/wiki/HATEOAS) API t
 
 ### Who's who
 
-Navitia is instanciated and exposed publicly through [api.navitia.io](https://api.navitia.io).<br>Developments on Navitia are lead by Kisio Digital (previously CanalTP).<br>Kisio Digital is a subsidiary of Keolis (itself a subsidiary of SNCF, French national railway company).
+Navitia is instanciated and exposed publicly through [api.navitia.io](https://api.navitia.io).<br>Developments on Navitia are lead by Hove (previously CanalTP).<br>Hove is a subsidiary of Keolis (itself a subsidiary of SNCF, French national railway company).
 
 ### About "sandbox" coverage
 
