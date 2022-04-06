@@ -692,6 +692,13 @@ class Instance(db.Model):  # type: ignore
         server_default=json.dumps(default_values.pt_planners_configurations),
     )
 
+    zmq_socket = db.Column(
+        db.Text,
+        default=default_values.zmq_socket,
+        nullable=False,
+        server_default=str(default_values.zmq_socket),
+    )
+
     def __init__(self, name=None, is_free=False, authorizations=None, jobs=None):
         self.name = name
         self.is_free = is_free

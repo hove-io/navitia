@@ -34,7 +34,7 @@ from flask import json
 
 from shapely import geometry
 from zmq import green as zmq
-from navitiacommon import type_pb2, request_pb2
+from navitiacommon import type_pb2, request_pb2, models
 import glob
 import logging
 from jormungandr.protobuf_to_dict import protobuf_to_dict
@@ -144,6 +144,15 @@ class InstanceManager(object):
             with open(file_name) as f:
                 config_data = json.load(f)
                 self.register_instance(config_data)
+
+        if app.config['DISABLE_DATABASE']:
+            db_instances = models.Instance.query_existing()
+            for db_instance in db_instances:
+                config = {
+                    'key': db_instance.name,
+                    'zmq_socket': db_instance.zmq_socket
+                }
+                self.register_instance(config)
 
         # we fetch the krakens metadata first
         # not on the ping thread to always have the data available (for the tests for example)
