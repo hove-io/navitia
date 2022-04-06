@@ -14,7 +14,7 @@ Basics on the API request
 $ curl 'https://api.navitia.io/v1/coverage/sandbox/stop_areas/stop_area%3ARAT%3ASA%3ABASTI/lines/line%3ARAT%3AM5/departures?count=4&depth=2&' -H 'Authorization: 3b036afe-0110-4202-b9ed-99718476c2e0'
 ```
 
-A query to Navitia's API is divided in 4 parts, as highlighted by colors in a [Navitia Playground example](http://canaltp.github.io/navitia-playground/play.html?request=https%3A%2F%2Fapi.navitia.io%2Fv1%2Fcoverage%2Fsandbox%2Fstop_areas%2Fstop_area%253ARAT%253ASA%253ABASTI%2Flines%2Fline%253ARAT%253AM5%2Fdepartures%3Fcount%3D4%26depth%3D2%26&token=3b036afe-0110-4202-b9ed-99718476c2e0):<br>![Navitia basic request](/images/navitia_basic.png)
+A query to Navitia's API is divided in 4 parts, as highlighted by colors in a [Navitia Playground example](https://playground.navitia.io/play.html?request=https%3A%2F%2Fapi.navitia.io%2Fv1%2Fcoverage%2Fsandbox%2Fstop_areas%2Fstop_area%253ARAT%253ASA%253ABASTI%2Flines%2Fline%253ARAT%253AM5%2Fdepartures%3Fcount%3D4%26depth%3D2%26&token=3b036afe-0110-4202-b9ed-99718476c2e0):<br>![Navitia basic request](/images/navitia_basic.png)
 
 1. **Root url** of the API, the address of the server.<br>Here `https://api.navitia.io/v1/`
 2. **Path**, used to filter the request and precise what is affected by the query. This filter is an intersection of multiple `key/value` (logical _AND_).<br>Here `/coverage/sandbox/stop_areas/stop_area:RAT:SA:BASTI/lines/line:RAT:M5/` means we are looking for information on everything that is in the region _"sandbox"_ and that is stricly related to both station _"Bastille"_ and line _"metro 5"_.
@@ -25,7 +25,7 @@ Here `/departures?` means we are requesting _"next departures"_.
 <aside class="success">
     Tadaaa!
     </br>
-    <a href="http://canaltp.github.io/navitia-playground/play.html?request=https%3A%2F%2Fapi.navitia.io%2Fv1%2Fcoverage%2Fsandbox%2Fstop_areas%2Fstop_area%253ARAT%253ASA%253ABASTI%2Flines%2Fline%253ARAT%253AM5%2Fdepartures%3Fcount%3D4%26depth%3D2%26&token=3b036afe-0110-4202-b9ed-99718476c2e0">https://api.navitia.io/v1/coverage/sandbox/stop_areas/stop_area:RAT:SA:BASTI/lines/line:RAT:M5/departures?count=4&depth=2</a>
+    <a href="https://playground.navitia.io/play.html?request=https%3A%2F%2Fapi.navitia.io%2Fv1%2Fcoverage%2Fsandbox%2Fstop_areas%2Fstop_area%253ARAT%253ASA%253ABASTI%2Flines%2Fline%253ARAT%253AM5%2Fdepartures%3Fcount%3D4%26depth%3D2%26&token=3b036afe-0110-4202-b9ed-99718476c2e0">https://api.navitia.io/v1/coverage/sandbox/stop_areas/stop_area:RAT:SA:BASTI/lines/line:RAT:M5/departures?count=4&depth=2</a>
     </br>
     We get the next 4 departures for the metro 5 at Bastille in the great "sandbox" region, and with a middle level of details.
 </aside>
@@ -206,21 +206,21 @@ a journey can be faster than an other but requires more changes or more walking.
 
 This API has more options explained in the reference as:
 
->[Try it on Navitia playground using "datetime" and "datetime_represents" parameters)](https://canaltp.github.io/navitia-playground/play.html?request=https%3A%2F%2Fapi.navitia.io%2Fv1%2Fcoverage%2Fsandbox%2Fjourneys%3Ffrom%3D2.380465%253B48.861081%26to%3D2.37715%253B48.846781%26datetime%3D20200901T120000%26datetime_represents%3Darrival%26&token=3b036afe-0110-4202-b9ed-99718476c2e0)
+>[Try it on Navitia playground using "datetime" and "datetime_represents" parameters)](https://playground.navitia.io/play.html?request=https%3A%2F%2Fapi.navitia.io%2Fv1%2Fcoverage%2Fsandbox%2Fjourneys%3Ffrom%3D2.380465%253B48.861081%26to%3D2.37715%253B48.846781%26datetime%3D20200901T120000%26datetime_represents%3Darrival%26&token=3b036afe-0110-4202-b9ed-99718476c2e0)
 
 * The dates are given in the basic form of the ISO 8601 datetime format: `YYYYMMDDTHHMM`.
   For example, if you want to compute a journey on friday, April 07 use `datetime=20170407T120000`.
 
 * To get the latest departure, you can query for journeys arriving before the end of the service using the `datetime_represents` parameter
 
->[Try personalization capacities on Navitia playground)](https://canaltp.github.io/navitia-playground/play.html?request=https%3A%2F%2Fapi.navitia.io%2Fv1%2Fcoverage%2Fsandbox%2Fjourneys%3Ffrom%3D2.380465%253B48.861081%26to%3D2.37715%253B48.846781%26traveler_type%3Dstandard%26forbidden_uris%255B%255D%3Dline%253ARAT%253AM5%26&token=3b036afe-0110-4202-b9ed-99718476c2e0)
+>[Try personalization capacities on Navitia playground)](https://playground.navitia.io/play.html?request=https%3A%2F%2Fapi.navitia.io%2Fv1%2Fcoverage%2Fsandbox%2Fjourneys%3Ffrom%3D2.380465%253B48.861081%26to%3D2.37715%253B48.846781%26traveler_type%3Dstandard%26forbidden_uris%255B%255D%3Dline%253ARAT%253AM5%26&token=3b036afe-0110-4202-b9ed-99718476c2e0)
 
 * You can also change the [traveler profile](#traveler-type) (to adapt the walking/biking/driving parts and comfort of journeys)
 
 * Forbid certain lines, routes or modes:
   for example you can forbid the line 5 and all lines using cable car mode. See [/journeys](#journeys) section.
 
->[Using your token! You can try "real life" personalizations on Paris area)](http://canaltp.github.io/navitia-playground/play.html?request=https%3A%2F%2Fapi.navitia.io%2Fv1%2Fjourneys%3Ffrom%3D2.37715%253B48.846781%26to%3D2.380464%253B48.861081%26first_section_mode%255B%255D%3Dbss%26first_section_mode%255B%255D%3Dwalking%26first_section_mode%255B%255D%3Dbike%26)
+>[Using your token! You can try "real life" personalizations on Paris area)](https://playground.navitia.io/play.html?request=https%3A%2F%2Fapi.navitia.io%2Fv1%2Fjourneys%3Ffrom%3D2.37715%253B48.846781%26to%3D2.380464%253B48.861081%26first_section_mode%255B%255D%3Dbss%26first_section_mode%255B%255D%3Dwalking%26first_section_mode%255B%255D%3Dbike%26)
 
 * You can override traveler_type parameters by enabling biking, driving or bike sharing system (bss) in your area. For instance, you can allow bss (and walking since it's implicit with it) at the departure from Paris area
 
