@@ -206,7 +206,7 @@ a journey can be faster than an other but requires more changes or more walking.
 
 This API has more options explained in the reference as:
 
->[Try it on Navitia playground using "datetime" and "datetime_represents" parameters)](https://playground.navitia.io/play.html?request=https%3A%2F%2Fapi.navitia.io%2Fv1%2Fcoverage%2Fsandbox%2Fjourneys%3Ffrom%3D2.380465%253B48.861081%26to%3D2.37715%253B48.846781%26datetime%3D20200901T120000%26datetime_represents%3Darrival%26&token=3b036afe-0110-4202-b9ed-99718476c2e0)
+>[Try it on Navitia playground using "datetime" and "datetime_represents" parameters)](https://playground.navitia.io/play.html?request=https%3A%2F%2Fapi.navitia.io%2Fv1%2Fcoverage%2Fsandbox%2Fjourneys%3Ffrom%3D2.380465%253B48.861081%26to%3D2.37715%253B48.846781%26datetime%3D20220601T120000%26datetime_represents%3Darrival%26&token=3b036afe-0110-4202-b9ed-99718476c2e0)
 
 * The dates are given in the basic form of the ISO 8601 datetime format: `YYYYMMDDTHHMM`.
   For example, if you want to compute a journey on friday, April 07 use `datetime=20170407T120000`.
