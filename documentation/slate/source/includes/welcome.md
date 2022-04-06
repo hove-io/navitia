@@ -40,7 +40,7 @@ You have to use yours to get real services on real data (your token has no acces
 
 First step
 ---------------
-> Your token is available on your [navitia.io account page](https://espace-client.navitia.io/).
+> Your token is available on your [navitia.io account page](https://navitia.io/se-connecter/).
 
 > It sounds like "3b036afe-0110-4202-b9ed-99718476c2e0"
 
@@ -110,10 +110,10 @@ To help you in the building of your project, there are some wrappers implemented
 
 |Language / Framework |Plugin                                              |
 |---------------------|----------------------------------------------------|
-|PHP5                 |<https://github.com/CanalTP/NavitiaComponent>       |
-|Symfony 2 or 3       |<https://github.com/CanalTP/NavitiaBundle>          |
+|PHP5                 |<https://github.com/hove-io/NavitiaComponent>       |
+|Symfony 2 or 3       |<https://github.com/hove-io/NavitiaBundle>          |
 |Python               |<https://github.com/leonardbinet/navitia_client>    |
-|Python               |<https://github.com/CanalTP/navitia_python_wrapper> |
+|Python               |<https://github.com/hove-io/navitia_python_wrapper> |
 
 <h2 id="about-data">About the data</h2>
 
