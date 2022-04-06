@@ -146,10 +146,13 @@ class InstanceManager(object):
                 self.register_instance(config_data)
 
         if app.config['DISABLE_DATABASE']:
-            db_instances = models.Instance.query_existing()
-            for db_instance in db_instances:
-                config = {'key': db_instance.name, 'zmq_socket': db_instance.zmq_socket}
-                self.register_instance(config)
+            try:
+                db_instances = models.Instance.query_existing()
+                for db_instance in db_instances:
+                    config = {'key': db_instance.name, 'zmq_socket': db_instance.zmq_socket}
+                    self.register_instance(config)
+            except Exception as e:
+                logging.getLogger(__name__).error('No access to table instance (error: {})'.format(e))
 
         # we fetch the krakens metadata first
         # not on the ping thread to always have the data available (for the tests for example)
