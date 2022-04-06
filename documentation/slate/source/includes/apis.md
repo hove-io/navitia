@@ -397,7 +397,7 @@ is sent.
 
 #### {collection}.has_code
 
->[Try it on Navitia playground](https://playground.navitia.io/play.html?request=https%3A%2F%2Fapi.navitia.io%2Fv1%2Fcoverage%2Fsandbox%2Fstop_areas%3Ffilter%3Dstop_area.has_code%28source%2CCAMPO%29)
+>[Try it on Navitia playground](https://playground.navitia.io/play.html?request=https%3A%2F%2Fapi.navitia.io%2Fv1%2Fcoverage%2Fsandbox%2Fstop_areas%3Ffilter%3Dstop_area.has_code(source%252CSA%253ACAMPO)%26&token=3b036afe-0110-4202-b9ed-99718476c2e0)
 
 ``` shell
 #for any pt_object request, as this one:
