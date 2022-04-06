@@ -693,10 +693,7 @@ class Instance(db.Model):  # type: ignore
     )
 
     zmq_socket = db.Column(
-        db.Text,
-        default=default_values.zmq_socket,
-        nullable=False,
-        server_default=str(default_values.zmq_socket),
+        db.Text, default=default_values.zmq_socket, nullable=False, server_default=str(default_values.zmq_socket)
     )
 
     def __init__(self, name=None, is_free=False, authorizations=None, jobs=None):

@@ -16,12 +16,10 @@ from sqlalchemy.dialects import postgresql
 
 from navitiacommon import default_values
 
+
 def upgrade():
     op.add_column(
-        'instance',
-        sa.Column(
-            'zmq_socket', sa.Text(), server_default=default_values.zmq_socket, nullable=False
-        ),
+        'instance', sa.Column('zmq_socket', sa.Text(), server_default=default_values.zmq_socket, nullable=False)
     )
 
 

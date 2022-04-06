@@ -148,10 +148,7 @@ class InstanceManager(object):
         if app.config['DISABLE_DATABASE']:
             db_instances = models.Instance.query_existing()
             for db_instance in db_instances:
-                config = {
-                    'key': db_instance.name,
-                    'zmq_socket': db_instance.zmq_socket
-                }
+                config = {'key': db_instance.name, 'zmq_socket': db_instance.zmq_socket}
                 self.register_instance(config)
 
         # we fetch the krakens metadata first
