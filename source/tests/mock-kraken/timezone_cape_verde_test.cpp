@@ -110,7 +110,7 @@ int main(int argc, const char* const argv[]) {
 
             b.build_autocomplete();
         },
-        false, "canal tp", "Atlantic/Cape_Verde", timezones);
+        false, "hove", "Atlantic/Cape_Verde", timezones);
 
     b.data->meta->production_date = bg::date_period(bg::date(2017, 1, 1), bg::days(30));
 

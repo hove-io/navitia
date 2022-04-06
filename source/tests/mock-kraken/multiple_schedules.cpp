@@ -66,26 +66,26 @@ int main(int argc, const char* const argv[]) {
     b.get<nt::Line>("B")->code = "code B";
     b.get<nt::Line>("C")->code = "code C";
 
-    b.get<nt::Line>("A")->properties["realtime_system"] = "Kisio数字";
-    b.get<nt::Line>("B")->properties["realtime_system"] = "Kisio数字";
-    b.get<nt::Line>("C")->properties["realtime_system"] = "Kisio数字";
+    b.get<nt::Line>("A")->properties["realtime_system"] = "Hove数字";
+    b.get<nt::Line>("B")->properties["realtime_system"] = "Hove数字";
+    b.get<nt::Line>("C")->properties["realtime_system"] = "Hove数字";
 
-    b.data->pt_data->codes.add(b.get<nt::StopPoint>("SP_1"), "Kisio数字", "syn_stoppoint1");
-    b.data->pt_data->codes.add(b.get<nt::StopPoint>("SP_2"), "Kisio数字", "SP_2");
-    b.data->pt_data->codes.add(b.get<nt::StopPoint>("SP_11"), "Kisio数字", "syn_stoppoint11");
-    b.data->pt_data->codes.add(b.get<nt::StopPoint>("SP_20"), "Kisio数字", "syn_stoppoint20");
-    b.data->pt_data->codes.add(b.get<nt::StopPoint>("SP_21"), "Kisio数字", "syn_stoppoint21");
-    b.data->pt_data->codes.add(b.get<nt::StopPoint>("SP_22"), "Kisio数字", "syn_stoppoint22");
-    b.data->pt_data->codes.add(b.get<nt::StopPoint>("SP_31"), "Kisio数字", "syn_stoppoint31");
-    b.data->pt_data->codes.add(b.get<nt::StopPoint>("SP_41"), "Kisio数字", "syn_stoppoint41");
+    b.data->pt_data->codes.add(b.get<nt::StopPoint>("SP_1"), "Hove数字", "syn_stoppoint1");
+    b.data->pt_data->codes.add(b.get<nt::StopPoint>("SP_2"), "Hove数字", "SP_2");
+    b.data->pt_data->codes.add(b.get<nt::StopPoint>("SP_11"), "Hove数字", "syn_stoppoint11");
+    b.data->pt_data->codes.add(b.get<nt::StopPoint>("SP_20"), "Hove数字", "syn_stoppoint20");
+    b.data->pt_data->codes.add(b.get<nt::StopPoint>("SP_21"), "Hove数字", "syn_stoppoint21");
+    b.data->pt_data->codes.add(b.get<nt::StopPoint>("SP_22"), "Hove数字", "syn_stoppoint22");
+    b.data->pt_data->codes.add(b.get<nt::StopPoint>("SP_31"), "Hove数字", "syn_stoppoint31");
+    b.data->pt_data->codes.add(b.get<nt::StopPoint>("SP_41"), "Hove数字", "syn_stoppoint41");
 
     auto r1 = b.get<nt::Route>("A1");
-    b.data->pt_data->codes.add(r1, "Kisio数字", "syn_routeA1");
-    b.data->pt_data->codes.add(r1, "Kisio数字", "syn_cute_routeA1");
+    b.data->pt_data->codes.add(r1, "Hove数字", "syn_routeA1");
+    b.data->pt_data->codes.add(r1, "Hove数字", "syn_cute_routeA1");
 
-    b.data->pt_data->codes.add(b.get<nt::Line>("A"), "Kisio数字", "Kisio数字 A");
-    b.data->pt_data->codes.add(b.get<nt::Line>("B"), "Kisio数字", "syn_lineB");
-    b.data->pt_data->codes.add(b.get<nt::Line>("C"), "Kisio数字", "syn_lineC");
+    b.data->pt_data->codes.add(b.get<nt::Line>("A"), "Hove数字", "Hove数字 A");
+    b.data->pt_data->codes.add(b.get<nt::Line>("B"), "Hove数字", "syn_lineB");
+    b.data->pt_data->codes.add(b.get<nt::Line>("C"), "Hove数字", "syn_lineC");
 
     mock_kraken kraken(b, argc, argv);
 

@@ -120,9 +120,9 @@ class TestPtRef(AbstractTestFixture):
 
         feed_publisher = feed_publishers[0]
         assert feed_publisher["id"] == "builder"
-        assert feed_publisher["name"] == "canal tp"
+        assert feed_publisher["name"] == "hove"
         assert feed_publisher["license"] == "ODBL"
-        assert feed_publisher["url"] == "www.canaltp.fr"
+        assert feed_publisher["url"] == "www.hove.com"
         self.check_context(response)
 
     def test_vj_depth_0(self):
