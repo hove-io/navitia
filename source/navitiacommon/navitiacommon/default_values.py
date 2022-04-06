@@ -233,6 +233,8 @@ default_pt_planner = 'kraken'
 # }
 pt_planners_configurations = dict()  # type: dict
 
+zmq_socket = 'tcp://localhost:30000'
+
 
 def get_value_or_default(attr, instance, instance_name):
     if not instance or getattr(instance, attr, None) == None:
