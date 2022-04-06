@@ -1,14 +1,14 @@
 Explore transport
 =================
 
->[Try it on Navitia playground](http://canaltp.github.io/navitia-playground/play.html?request=https%3A%2F%2Fapi.navitia.io%2Fv1%2Fcoverage%2Fsandbox%2Flines&token=3b036afe-0110-4202-b9ed-99718476c2e0)
+>[Try it on Navitia playground](https://playground.navitia.io/play.html?request=https%3A%2F%2Fapi.navitia.io%2Fv1%2Fcoverage%2Fsandbox%2Flines&token=3b036afe-0110-4202-b9ed-99718476c2e0)
 
 The Explore Transport feature lets you explore places, coordinates, bus stops, subway stations, etc.
 to navigate all the data available on the API (collection service).
 
-[![some data request on Navitia playground](playground_pt_ref.png)](http://canaltp.github.io/navitia-playground/play.html?request=https%3A%2F%2Fapi.navitia.io%2Fv1%2Fcoverage%2Fsandbox%2Flines&token=3b036afe-0110-4202-b9ed-99718476c2e0)
+[![some data request on Navitia playground](playground_pt_ref.png)](https://playground.navitia.io/play.html?request=https%3A%2F%2Fapi.navitia.io%2Fv1%2Fcoverage%2Fsandbox%2Flines&token=3b036afe-0110-4202-b9ed-99718476c2e0)
 
-If you want to play with Navitia at a hardcore gamer level, you may want to build some advanced requests: here is [how to](https://github.com/CanalTP/navitia/blob/dev/documentation/rfc/ptref_grammar.md)
+If you want to play with Navitia at a hardcore gamer level, you may want to build some advanced requests: here is [how to](https://github.com/hove-io/navitia/blob/dev/documentation/rfc/ptref_grammar.md)
 
 You can use these APIs (click on them for details):
 
