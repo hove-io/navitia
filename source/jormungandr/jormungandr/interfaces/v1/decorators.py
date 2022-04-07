@@ -2,7 +2,7 @@
 #     the software to build cool stuff with public transport.
 #
 # Hope you'll enjoy and contribute to this project,
-#     powered by Canal TP (www.canaltp.fr).
+#     powered by Hove (www.kisio.com).
 # Help us simplify mobility and open public transport:
 #     a non ending quest to the responsive locomotion way of traveling!
 #

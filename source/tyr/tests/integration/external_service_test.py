@@ -1,10 +1,10 @@
 # coding: utf-8
-# Copyright (c) 2001-2021, Canal TP and/or its affiliates. All rights reserved.
+# Copyright (c) 2001-2021, Hove and/or its affiliates. All rights reserved.
 #
 # This file is part of Navitia,
 #     the software to build cool stuff with public transport.
 #
-#     powered by Canal TP (www.canaltp.fr).
+#     powered by Hove (www.kisio.com).
 # Help us simplify mobility and open public transport:
 #     a non ending quest to the responsive locomotion way of traveling!
 #
