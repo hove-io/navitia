@@ -307,12 +307,12 @@ def here_basic_routing_test(valid_here_routing_response):
     dynamic_speeds = section.street_network.dynamic_speeds
     assert len(dynamic_speeds) == 6
     first_ds = dynamic_speeds[0]
-    assert first_ds.base_speed == 13
-    assert first_ds.traffic_speed == 11
+    assert round(first_ds.base_speed, 2) == 13.89
+    assert round(first_ds.traffic_speed, 2) == 11.94
     assert first_ds.geojson_offset == 0
     last_ds = dynamic_speeds[5]
-    assert last_ds.base_speed == 13
-    assert last_ds.traffic_speed == 13
+    assert round(last_ds.base_speed, 2) == 13.89
+    assert round(last_ds.traffic_speed, 2) == 13.89
     assert last_ds.geojson_offset == 769
 
     # for a direct path and clockiwe == True
