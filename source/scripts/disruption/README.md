@@ -5,7 +5,7 @@ RabbitMq is used as a broker to exchange disruption messages.
 
 ## Set up
 
-Disruptor depends on [chaos-proto](https://github.com/CanalTP/chaos-proto) sources for disrurption messages.
+Disruptor depends on [chaos-proto](https://github.com/hove-io/chaos-proto) sources for disruption messages.
 
 ```
 # Install protobuf compiler
