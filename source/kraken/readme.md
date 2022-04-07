@@ -1,9 +1,9 @@
 # Kraken
 Kraken is a public transport trip planner and much more, it provides schedules, timetables and expose public
 transport data via
-[PTReferential](https://github.com/CanalTP/navitia/blob/dev/documentation/rfc/ptref_grammar.md).<br>It also provides:
-  - (bad) street network routing that will be replaced by [asgard](https://github.com/CanalTP/asgard)
-  - autocomplete that will be replaced by [mimir](https://github.com/CanalTP/mimirsbrunn)
+[PTReferential](https://github.com/hove-io/navitia/blob/dev/documentation/rfc/ptref_grammar.md).<br>It also provides:
+  - (bad) street network routing that will be replaced by [asgard](https://github.com/hove-io/asgard)
+  - autocomplete that will be replaced by [mimir](https://github.com/hove-io/mimirsbrunn)
 
 
 ## Configuration
@@ -158,7 +158,7 @@ Rebuilding raptor's cache is not strictly required, but it reduces the slowdown 
 dataset.
 
 ## Request handling
-The main thread executes the [`ZMQ LoadBalancer`](https://github.com/CanalTP/utils/blob/master/zmq.h) that
+The main thread executes the [`ZMQ LoadBalancer`](https://github.com/hove-io/utils/blob/master/zmq.h) that
 dispatches requests to available worker threads, it only forwards the requests to a worker and responds to the client
 once the worker have finished. There is no serialization done here, only (unneeded) copy of bytes.
 The waiting queue is not handled by the load balancer, it won't accept a request if there is no worker available, the

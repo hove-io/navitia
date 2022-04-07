@@ -255,7 +255,7 @@ def send_to_mimir(instance, filename, family_type):
                 actions.append(ntfs2mimir.si(instance.name, filename, version, job.id, dataset_uid=ds.uid))
             # Import stops in Mimir.
             # if we are loading pt data we might want to load the stops to autocomplete
-            # This action is deprecated: https://github.com/CanalTP/mimirsbrunn/blob/4430eed1d81247fffa7cf32ba675a9c5ad8b1cbe/documentation/components.md#stops2mimir
+            # This action is deprecated: https://github.com/hove-io/mimirsbrunn/blob/4430eed1d81247fffa7cf32ba675a9c5ad8b1cbe/documentation/components.md#stops2mimir
             if instance.import_stops_in_mimir and not instance.import_ntfs_in_mimir:
                 actions.append(stops2mimir.si(instance.name, filename, version, job.id, dataset_uid=ds.uid))
         else:  # assume family_type == 'poi':
@@ -421,7 +421,7 @@ def import_in_mimir(_file, instance, asynchronous=True):
         if family_type == 'pt':
             if instance.import_ntfs_in_mimir:
                 actions.append(ntfs2mimir.si(instance.name, _file, version))
-            # Deprecated: https://github.com/CanalTP/mimirsbrunn/blob/4430eed1d81247fffa7cf32ba675a9c5ad8b1cbe/documentation/components.md#stops2mimir
+            # Deprecated: https://github.com/hove-io/mimirsbrunn/blob/4430eed1d81247fffa7cf32ba675a9c5ad8b1cbe/documentation/components.md#stops2mimir
             if instance.import_stops_in_mimir and not instance.import_ntfs_in_mimir:
                 actions.append(stops2mimir.si(instance.name, _file, version))
         elif family_type == 'poi':

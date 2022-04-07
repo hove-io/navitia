@@ -3,7 +3,7 @@
 
 ## Overview on how-to contribute
 
-Dev branch: [![Last build](https://img.shields.io/github/workflow/status/CanalTP/navitia/Build%20Navitia%20Packages%20For%20Dev?logo=github&style=flat-square)](https://github.com/CanalTP/navitia/actions?query=workflow%3A%22Build+Navitia+Packages+For+Dev%22)
+Dev branch: [![Last build](https://img.shields.io/github/workflow/status/hove-io/navitia/Build%20Navitia%20Packages%20For%20Dev?logo=github&style=flat-square)](https://github.com/hove-io/navitia/actions?query=workflow%3A%22Build+Navitia+Packages+For+Dev%22)
 
 Fork the github repo, create a new branch from dev, and submit your pull request!
 
@@ -19,13 +19,13 @@ If you have the rights, once your PR has 2 approvals, you are encouraged to merg
 ## Build Navitia
 
 If you want to build navitia, please refer to the
-[installation documentation](https://github.com/canaltp/navitia/blob/dev/install.rst).
+[installation documentation](https://github.com/hove-io/navitia/blob/dev/install.rst).
 
 You can install a full development environment with helping
-[scripts](https://github.com/CanalTP/navitia/tree/dev/scripts), depending on your OS.
+[scripts](https://github.com/hove-io/navitia/tree/dev/scripts), depending on your OS.
 
 Therefore, an
-[automated navitia script](https://github.com/canaltp/navitia/blob/dev/scripts/build_setup_and_run_navitia_demo.sh)
+[automated navitia script](https://github.com/hove-io/navitia/blob/dev/scripts/build_setup_and_run_navitia_demo.sh)
 is available to build, setup and run a navitia demo.
 It's needed as a prerequisite for a dev environment setup.
 Kraken is built into navitia_dir/build_release and all demo files are available in navitia_dir/run:
@@ -46,7 +46,7 @@ At the root of the repository, several directories can be found:
 
 1. source: contains the navitia source code (c++ and python)
 2. documentation: all the navitia documentation
-3. release: contains [script_release.py](https://github.com/canaltp/navitia/blob/dev/release/script_release.py) to run the release process
+3. release: contains [script_release.py](https://github.com/hove-io/navitia/blob/dev/release/script_release.py) to run the release process
 4. scripts: different useful scripts
 
 ### `data_version` management

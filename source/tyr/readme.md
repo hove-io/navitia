@@ -724,7 +724,7 @@ It is possible to define what type of POI should be extracted from OSM for a spe
 A type of poi is characterised by an uri and a name.
 
 If nothing if configured, default POI are extracted. At this time the json parameter list is available in file:
-[default_poi_types.h](https://github.com/CanalTP/navitia/blob/dev/source/ed/default_poi_types.h)
+[default_poi_types.h](https://github.com/hove-io/navitia/blob/dev/source/ed/default_poi_types.h)
 
 Let's say you want to see all poi types for the instance fr-bre, you have to call the PoiTypes endpoint for this
 instance:

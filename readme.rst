@@ -23,13 +23,13 @@
     :target: https://app.element.io/#/room/#navitia:matrix.org
     :alt: chat
 
-.. |Code Coverage| image:: https://sonarcloud.io/api/project_badges/measure?project=CanalTP_navitia&metric=coverage
+.. |Code Coverage| image:: https://sonarcloud.io/api/project_badges/measure?project=Hove_navitia&metric=coverage
     :alt: SonarCloud Coverage
 
-.. |Vulnerabilities| image:: https://sonarcloud.io/api/project_badges/measure?project=CanalTP_navitia&metric=vulnerabilities
+.. |Vulnerabilities| image:: https://sonarcloud.io/api/project_badges/measure?project=Hove_navitia&metric=vulnerabilities
     :alt: SonarCloud Vulnerabilities
 
-.. |Security Rating| image:: https://sonarcloud.io/api/project_badges/measure?project=CanalTP_navitia&metric=security_rating
+.. |Security Rating| image:: https://sonarcloud.io/api/project_badges/measure?project=Hove_navitia&metric=security_rating
     :alt: SonarCloud Security Rating
 
 
@@ -42,22 +42,22 @@
 +----------------+----------------+-----------+--------+-----------------+-------------------+-------------------+
 
 
-.. |Maintainability Rating| image:: https://sonarcloud.io/api/project_badges/measure?project=CanalTP_navitia&metric=sqale_rating
+.. |Maintainability Rating| image:: https://sonarcloud.io/api/project_badges/measure?project=Hove_navitia&metric=sqale_rating
     :alt: SonarCloud Maintainability Rating
 
-.. |Quality Gate Status| image:: https://sonarcloud.io/api/project_badges/measure?project=CanalTP_navitia&metric=alert_status
+.. |Quality Gate Status| image:: https://sonarcloud.io/api/project_badges/measure?project=Hove_navitia&metric=alert_status
     :alt: SonarCloud Quality Gate Status
 
-.. |Duplicated Lines (%)| image:: https://sonarcloud.io/api/project_badges/measure?project=CanalTP_navitia&metric=duplicated_lines_density
+.. |Duplicated Lines (%)| image:: https://sonarcloud.io/api/project_badges/measure?project=Hove_navitia&metric=duplicated_lines_density
     :alt: SonarCloud Duplicated Lines (%)
 
-.. |Reliability Rating| image:: https://sonarcloud.io/api/project_badges/measure?project=CanalTP_navitia&metric=reliability_rating
+.. |Reliability Rating| image:: https://sonarcloud.io/api/project_badges/measure?project=Hove_navitia&metric=reliability_rating
     :alt: SonarCloud Reliability Rating
 
-.. |Bugs| image:: https://sonarcloud.io/api/project_badges/measure?project=CanalTP_navitia&metric=bugs
+.. |Bugs| image:: https://sonarcloud.io/api/project_badges/measure?project=Hove_navitia&metric=bugs
     :alt: SonarCloud Bugs
 
-.. |Lines of Code| image:: https://sonarcloud.io/api/project_badges/measure?project=CanalTP_navitia&metric=ncloc
+.. |Lines of Code| image:: https://sonarcloud.io/api/project_badges/measure?project=Hove_navitia&metric=ncloc
     :alt: SonarCloud Lines of Code
 
 +--------------------------+-----------------------+------------------------+----------------------+--------+-------------------+
@@ -106,8 +106,8 @@ Who's who
 ----------
 
 | Navitia is instanciated and exposed publicly through api.navitia.io_.
-| Developments on Navitia are lead by Kisio Digital (previously CanalTP).
-| Kisio Digital is a subsidiary of Keolis (itself a subsidiary of SNCF, French national railway company).
+| Developments on Navitia are lead by Hove (previously Kisio Digital and CanalTP).
+| Hove is a subsidiary of Keolis (itself a subsidiary of SNCF, French national railway company).
 
 .. _api.navitia.io: https://api.navitia.io
 

@@ -14,7 +14,7 @@ The core of navitia, contains all public transport routing algorithm
 ### ed
 Collection of public transport data import tools
 
-This module contains tool to read GTFS, Fusio (format used by CanalTP, derived from GTFS), Osm, ...
+This module contains tool to read GTFS, Fusio (format used by Hove, derived from GTFS), Osm, ...
 
 It also contains ed2nav, the tool to build all those data together for Kraken
 
@@ -107,7 +107,7 @@ Module used to fill a database with some OSM administrative regions.
 
 The database will be used in ed2nav to find the administrative region of public transport objects outside the streetnetwork of the insances
 
-> :warning: `cities` is very France centric OSM wise (only admins with level 8 are treated as a city etc...). If you plan on integrating admins from other countries, please refer to https://github.com/CanalTP/cosmogony2cities.
+> :warning: `cities` is very France centric OSM wise (only admins with level 8 are treated as a city etc...). If you plan on integrating admins from other countries, please refer to https://github.com/hove-io/cosmogony2cities.
 
 :zap: **cpp module**
 
