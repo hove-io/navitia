@@ -4,7 +4,7 @@
 # This file is part of Navitia,
 #     the software to build cool stuff with public transport.
 #
-#     powered by Hove (www.kisio.com).
+#     powered by Hove (www.hove.com).
 # Help us simplify mobility and open public transport:
 #     a non ending quest to the responsive locomotion way of traveling!
 #
