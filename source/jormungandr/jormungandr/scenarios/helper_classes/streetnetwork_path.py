@@ -100,26 +100,28 @@ class StreetNetworkPath:
         if not dp or not dp.journeys or not dp.journeys[0].sections:
             return
 
-        dp_coords = dp.journeys[0].sections[0].street_network.coordinates
-        if len(dp_coords) < 2:
+        nb_coords = sum((len(sec.street_network.coordinates) for sec in dp.journeys[0].sections))
+        if nb_coords < 2:
             return
 
+        starting_coords = dp.journeys[0].sections[0].street_network.coordinates
         # we are inserting the coord of the origin at the beginning of the geojson
         coord = utils.get_pt_object_coord(self._orig_obj)
-        if coord != dp_coords[0]:
-            dp_coords.add(lon=coord.lon, lat=coord.lat)
+        if coord != starting_coords[0]:
+            starting_coords.add(lon=coord.lon, lat=coord.lat)
             # we cannot insert an element at the beginning of a list :(
             # a little algo to move the last element to the beginning
             tmp = type_pb2.GeographicalCoord()
-            for i in range(len(dp_coords)):
-                tmp.CopyFrom(dp_coords[i])
-                dp_coords[i].CopyFrom(dp_coords[-1])
-                dp_coords[-1].CopyFrom(tmp)
+            for i in range(len(starting_coords)):
+                tmp.CopyFrom(starting_coords[i])
+                starting_coords[i].CopyFrom(starting_coords[-1])
+                starting_coords[-1].CopyFrom(tmp)
 
+        edning_coords = dp.journeys[0].sections[-1].street_network.coordinates
         # we are appending the coord of the destination at the end of the geojson
         coord = utils.get_pt_object_coord(self._dest_obj)
-        if coord != dp_coords[-1]:
-            dp_coords.add(lon=coord.lon, lat=coord.lat)
+        if coord != edning_coords[-1]:
+            edning_coords.add(lon=coord.lon, lat=coord.lat)
 
     def _do_request(self):
         self._logger.debug(
@@ -132,8 +134,7 @@ class StreetNetworkPath:
 
         dp = self._direct_path_with_fp(self._streetnetwork_service)
 
-        if self._mode != 'bss':
-            self._add_first_and_last_coord(dp)
+        self._add_first_and_last_coord(dp)
 
         if getattr(dp, "journeys", None):
             dp.journeys[0].internal_id = str(utils.generate_id())
