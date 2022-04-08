@@ -52,3 +52,4 @@ kombu==4.0.2  ; python_version < "3.9"
 kombu==5.0.2  ; python_version >= "3.9"
 redis==2.10.6
 flexpolyline==0.1.0
+newrelic==2.70.0.51
