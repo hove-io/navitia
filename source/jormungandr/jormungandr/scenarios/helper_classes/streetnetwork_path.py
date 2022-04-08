@@ -107,7 +107,7 @@ class StreetNetworkPath:
         starting_coords = dp.journeys[0].sections[0].street_network.coordinates
         # we are inserting the coord of the origin at the beginning of the geojson
         coord = utils.get_pt_object_coord(self._orig_obj)
-        if coord != starting_coords[0]:
+        if starting_coords and coord != starting_coords[0]:
             starting_coords.add(lon=coord.lon, lat=coord.lat)
             # we cannot insert an element at the beginning of a list :(
             # a little algo to move the last element to the beginning
@@ -117,11 +117,11 @@ class StreetNetworkPath:
                 starting_coords[i].CopyFrom(starting_coords[-1])
                 starting_coords[-1].CopyFrom(tmp)
 
-        edning_coords = dp.journeys[0].sections[-1].street_network.coordinates
+        ending_coords = dp.journeys[0].sections[-1].street_network.coordinates
         # we are appending the coord of the destination at the end of the geojson
         coord = utils.get_pt_object_coord(self._dest_obj)
-        if coord != edning_coords[-1]:
-            edning_coords.add(lon=coord.lon, lat=coord.lat)
+        if ending_coords and coord != ending_coords[-1]:
+            ending_coords.add(lon=coord.lon, lat=coord.lat)
 
     def _do_request(self):
         self._logger.debug(
