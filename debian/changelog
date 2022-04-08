@@ -1,3 +1,23 @@
+navitia2 (15.5.0) unstable; urgency=low
+
+  * [Distributed] feat: collage from_coord and to_coord to geojson  <https://github.com/hove-io/navitia/pull/3686>
+  * [Jormungandr] feat: take bss parameters from db into account  <https://github.com/hove-io/navitia/pull/3693>
+  * [Distributed/Valhalla] feat: expose valhalla advanced parameters  <https://github.com/hove-io/navitia/pull/3690>
+  * [Tyr] feat: modify params for indexing data in elastic search  <https://github.com/hove-io/navitia/pull/3695>
+  * [Jormungandr] fix: correction in the loading of environment variables  <https://github.com/hove-io/navitia/pull/3699>
+  * [Distributed] feat: ability to use loki as crowfly service  <https://github.com/hove-io/navitia/pull/3698>
+  * docs: fix playground url  <https://github.com/hove-io/navitia/pull/3709>
+  * docs: change organization name to hove-io  <https://github.com/hove-io/navitia/pull/3706>
+  * ci: fix workflow publish docker images  <https://github.com/hove-io/navitia/pull/3710>
+  * ci: fix Docker image publish  <https://github.com/hove-io/navitia/pull/3711>
+  * [Here] fix: dynamic speed has to be float  <https://github.com/hove-io/navitia/pull/3694>
+  * [Jormungandr/Tyr] docs: update license headers  <https://github.com/hove-io/navitia/pull/3712>
+  * [Jormungandr] fix: /access_points  <https://github.com/hove-io/navitia/pull/3713>
+  * [Distributed] fix: bss direct_path geojson  <https://github.com/hove-io/navitia/pull/3716>
+  * docs: update markdown to Hove  <https://github.com/hove-io/navitia/pull/3714>
+
+ -- Jean SIMARD <woshilapin@tuziwo.info>  Fri, 08 Apr 2022 14:04:09 +0100
+
 navitia2 (15.4.2) unstable; urgency=low
 
   * [Jormungandr] reap pt_planners sockets <https://github.com/CanalTP/navitia/pull/3702>
