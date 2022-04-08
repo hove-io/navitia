@@ -132,7 +132,8 @@ class StreetNetworkPath:
 
         dp = self._direct_path_with_fp(self._streetnetwork_service)
 
-        self._add_first_and_last_coord(dp)
+        if self._mode != 'bss':
+            self._add_first_and_last_coord(dp)
 
         if getattr(dp, "journeys", None):
             dp.journeys[0].internal_id = str(utils.generate_id())
