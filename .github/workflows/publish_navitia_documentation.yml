@@ -34,4 +34,4 @@ jobs:
     - name: slack notification (the job has failed)
       if: failure()
       run: |
-          echo '{"text":":warning: Navitia Github Actions: publish_navitia_documentation failed ! (https://github.com/CanalTP/navitia/actions?query=workflow%3A%22Publish+Navitia+Documentation%22)"}' | http --json POST ${{secrets.SLACK_NAVITIA_CORE_TEAM_URL}}
+          echo '{"text":":warning: Navitia Github Actions: publish_navitia_documentation failed ! (https://github.com/hove-io/navitia/actions?query=workflow%3A%22Publish+Navitia+Documentation%22)"}' | http --json POST ${{secrets.SLACK_NAVITIA_CORE_TEAM_URL}}

@@ -93,7 +93,7 @@ Thus, in our case, this algorithm seems to run in
 
 which is much better than the naive implementation.  In practice, our problematic case run in 33 seconds using the naive algorithm, and 1 seconds using the binary searches.
 
-For the details and the implementation, you can see [navitia's pull request #1366](https://github.com/CanalTP/navitia/pull/1366).
+For the details and the implementation, you can see [navitia's pull request #1366](https://github.com/hove-io/navitia/pull/1366).
 
 # Stop points' revolution
 

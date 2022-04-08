@@ -1,10 +1,10 @@
-# Copyright (c) 2001-2017, Canal TP and/or its affiliates. All rights reserved.
+# Copyright (c) 2001-2022, Hove and/or its affiliates. All rights reserved.
 #
 # This file is part of Navitia,
 #     the software to build cool stuff with public transport.
 #
 # Hope you'll enjoy and contribute to this project,
-#     powered by Canal TP (www.canaltp.fr).
+#     powered by Hove (www.hove.com).
 # Help us simplify mobility and open public transport:
 #     a non ending quest to the responsive locomotion way of traveling!
 #
@@ -93,6 +93,10 @@ class ParametersSerializer(serpy.Serializer):
     transfer_path = Field(schema_type=bool)
     access_points = Field(schema_type=bool)
     default_pt_planner = Field(schema_type=str)
+    bss_rent_duration = Field(schema_type=int)
+    bss_rent_penalty = Field(schema_type=int)
+    bss_return_duration = Field(schema_type=int)
+    bss_return_penalty = Field(schema_type=int)
 
 
 class TravelerProfilesSerializer(serpy.Serializer):

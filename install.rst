@@ -126,7 +126,7 @@ Testing
 
    This step will generate a compressed nav file that can be given as input to *Kraken*
 
-   ***Alternative to step 1 to 5*** : You can use *Eitri* as an alternative to generate the *.nav* file (cf. https://github.com/CanalTP/navitia/tree/dev/source/eitri). This will setup the environment and call the right tool for you. Hasle-free Navitia file generator :)
+   ***Alternative to step 1 to 5*** : You can use *Eitri* as an alternative to generate the *.nav* file (cf. https://github.com/hove-io/navitia/tree/dev/source/eitri). This will setup the environment and call the right tool for you. Hasle-free Navitia file generator :)
 
 #. Running the *Kraken* backend
 
@@ -153,4 +153,4 @@ Testing
 
    #. Grab a browser and open http://localhost:5000/v1/coverage/default_region
 
-   #. Any trouble running Jormungandr see https://github.com/CanalTP/navitia/blob/dev/source/jormungandr/readme.md
+   #. Any trouble running Jormungandr see https://github.com/hove-io/navitia/blob/dev/source/jormungandr/readme.md

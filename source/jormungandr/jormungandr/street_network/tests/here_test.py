@@ -1,11 +1,11 @@
 # coding=utf-8
-#  Copyright (c) 2001-2017, Canal TP and/or its affiliates. All rights reserved.
+#  Copyright (c) 2001-2022, Hove and/or its affiliates. All rights reserved.
 #
 # This file is part of Navitia,
 #     the software to build cool stuff with public transport.
 #
 # Hope you'll enjoy and contribute to this project,
-#     powered by Canal TP (www.canaltp.fr).
+#     powered by Hove (www.hove.com).
 # Help us simplify mobility and open public transport:
 #     a non ending quest to the responsive locomotion way of traveling!
 #
@@ -307,12 +307,12 @@ def here_basic_routing_test(valid_here_routing_response):
     dynamic_speeds = section.street_network.dynamic_speeds
     assert len(dynamic_speeds) == 6
     first_ds = dynamic_speeds[0]
-    assert first_ds.base_speed == 13
-    assert first_ds.traffic_speed == 11
+    assert round(first_ds.base_speed, 2) == 13.89
+    assert round(first_ds.traffic_speed, 2) == 11.94
     assert first_ds.geojson_offset == 0
     last_ds = dynamic_speeds[5]
-    assert last_ds.base_speed == 13
-    assert last_ds.traffic_speed == 13
+    assert round(last_ds.base_speed, 2) == 13.89
+    assert round(last_ds.traffic_speed, 2) == 13.89
     assert last_ds.geojson_offset == 769
 
     # for a direct path and clockiwe == True

@@ -1,10 +1,10 @@
-#  Copyright (c) 2001-2020, Canal TP and/or its affiliates. All rights reserved.
+#  Copyright (c) 2001-2022, Hove and/or its affiliates. All rights reserved.
 #
 # This file is part of Navitia,
 #     the software to build cool stuff with public transport.
 #
 # Hope you'll enjoy and contribute to this project,
-#     powered by Canal TP (www.canaltp.fr).
+#     powered by Hove (www.hove.com).
 # Help us simplify mobility and open public transport:
 #     a non ending quest to the responsive locomotion way of traveling!
 #
@@ -331,8 +331,8 @@ class Here(AbstractStreetNetworkService):
             dynamic_speed = section.street_network.dynamic_speeds.add()
             dynamic_speed.geojson_offset = span.get('offset', 0)
             dynamic_speed_info = span.get('dynamicSpeedInfo', {})
-            dynamic_speed.base_speed = int(dynamic_speed_info.get('baseSpeed', 0))
-            dynamic_speed.traffic_speed = int(dynamic_speed_info.get('trafficSpeed', 0))
+            dynamic_speed.base_speed = round(float(dynamic_speed_info.get('baseSpeed', 0)), 2)
+            dynamic_speed.traffic_speed = round(float(dynamic_speed_info.get('trafficSpeed', 0)), 2)
 
         # instruction
         for idx, maneuver in enumerate(here_section.get('actions', [])):

@@ -1,10 +1,10 @@
-# Copyright (c) 2001-2017, Canal TP and/or its affiliates. All rights reserved.
+# Copyright (c) 2001-2022, Hove and/or its affiliates. All rights reserved.
 #
 # This file is part of Navitia,
 #     the software to build cool stuff with public transport.
 #
 # Hope you'll enjoy and contribute to this project,
-#     powered by Canal TP (www.canaltp.fr).
+#     powered by Hove (www.hove.com).
 # Help us simplify mobility and open public transport:
 #     a non ending quest to the responsive locomotion way of traveling!
 #
@@ -31,6 +31,7 @@ from jormungandr import utils, new_relic
 from jormungandr.street_network.street_network import StreetNetworkPathType
 import logging
 from .helper_utils import timed_logger
+from navitiacommon import type_pb2
 
 
 class StreetNetworkPath:
@@ -95,6 +96,33 @@ class StreetNetworkPath:
                 logging.getLogger(__name__).exception('')
                 return None
 
+    def _add_first_and_last_coord(self, dp):
+        if not dp or not dp.journeys or not dp.journeys[0].sections:
+            return
+
+        nb_coords = sum((len(sec.street_network.coordinates) for sec in dp.journeys[0].sections))
+        if nb_coords < 2:
+            return
+
+        starting_coords = dp.journeys[0].sections[0].street_network.coordinates
+        # we are inserting the coord of the origin at the beginning of the geojson
+        coord = utils.get_pt_object_coord(self._orig_obj)
+        if starting_coords and coord != starting_coords[0]:
+            starting_coords.add(lon=coord.lon, lat=coord.lat)
+            # we cannot insert an element at the beginning of a list :(
+            # a little algo to move the last element to the beginning
+            tmp = type_pb2.GeographicalCoord()
+            for i in range(len(starting_coords)):
+                tmp.CopyFrom(starting_coords[i])
+                starting_coords[i].CopyFrom(starting_coords[-1])
+                starting_coords[-1].CopyFrom(tmp)
+
+        ending_coords = dp.journeys[0].sections[-1].street_network.coordinates
+        # we are appending the coord of the destination at the end of the geojson
+        coord = utils.get_pt_object_coord(self._dest_obj)
+        if ending_coords and coord != ending_coords[-1]:
+            ending_coords.add(lon=coord.lon, lat=coord.lat)
+
     def _do_request(self):
         self._logger.debug(
             "requesting %s direct path from %s to %s by %s",
@@ -105,6 +133,8 @@ class StreetNetworkPath:
         )
 
         dp = self._direct_path_with_fp(self._streetnetwork_service)
+
+        self._add_first_and_last_coord(dp)
 
         if getattr(dp, "journeys", None):
             dp.journeys[0].internal_id = str(utils.generate_id())

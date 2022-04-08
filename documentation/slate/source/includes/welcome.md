@@ -25,7 +25,7 @@ Technically, Navitia is a [HATEOAS](https://en.wikipedia.org/wiki/HATEOAS) API t
 
 ### Who's who
 
-Navitia is instanciated and exposed publicly through [api.navitia.io](https://api.navitia.io).<br>Developments on Navitia are lead by Kisio Digital (previously CanalTP).<br>Kisio Digital is a subsidiary of Keolis (itself a subsidiary of SNCF, French national railway company).
+Navitia is instanciated and exposed publicly through [api.navitia.io](https://api.navitia.io).<br>Developments on Navitia are lead by Hove (previously Kisio Digital and CanalTP).<br>Hove is a subsidiary of Keolis (itself a subsidiary of SNCF, French national railway company).
 
 ### About "sandbox" coverage
 
@@ -40,7 +40,7 @@ You have to use yours to get real services on real data (your token has no acces
 
 First step
 ---------------
-> Your token is available on your [navitia.io account page](https://espace-client.navitia.io/).
+> Your token is available on your [navitia.io account page](https://navitia.io/se-connecter/).
 
 > It sounds like "3b036afe-0110-4202-b9ed-99718476c2e0"
 
@@ -93,12 +93,12 @@ At some point you will want to read [transport public lexicon](#lexicon).
 Navitia for humans
 ------------------
 
->[Try a basic request on Navitia playground](https://canaltp.github.io/navitia-playground/play.html?request=https%3A%2F%2Fapi.navitia.io%2Fv1%2Fcoverage%2Fsandbox&token=3b036afe-0110-4202-b9ed-99718476c2e0)
+>[Try a basic request on Navitia playground](https://playground.navitia.io/play.html?request=https%3A%2F%2Fapi.navitia.io%2Fv1%2Fcoverage%2Fsandbox&token=3b036afe-0110-4202-b9ed-99718476c2e0)
 
->[Try a journey request on Navitia playground](https://canaltp.github.io/navitia-playground/play.html?request=https%3A%2F%2Fapi.navitia.io%2Fv1%2Fcoverage%2Fsandbox%2Fjourneys%3Ffrom%3D2.3749036%253B48.8467927%26to%3D2.2922926%253B48.8583736%26&token=3b036afe-0110-4202-b9ed-99718476c2e0)
+>[Try a journey request on Navitia playground](https://playground.navitia.io/play.html?request=https%3A%2F%2Fapi.navitia.io%2Fv1%2Fcoverage%2Fsandbox%2Fjourneys%3Ffrom%3D2.3749036%253B48.8467927%26to%3D2.2922926%253B48.8583736%26&token=3b036afe-0110-4202-b9ed-99718476c2e0)
 
 <aside class="success">
-if you only want to challenge Navitia functionality, take your token and go to the <a href="https://canaltp.github.io/navitia-playground">navitia playground website </a>.
+if you only want to challenge Navitia functionality, take your token and go to the <a href="https://playground.navitia.io">navitia playground website </a>.
 </aside>
 
 ![Try Navitia playgroung](/images/navitia_playground.png)
@@ -106,18 +106,18 @@ if you only want to challenge Navitia functionality, take your token and go to t
 Wrappers
 --------------
 
-To help you in the building of your project, there are some wrappers implemented (by Kisio or not) to query the API Navitia:
+To help you in the building of your project, there are some wrappers implemented (by Hove or not) to query the API Navitia:
 
 |Language / Framework |Plugin                                              |
 |---------------------|----------------------------------------------------|
-|PHP5                 |<https://github.com/CanalTP/NavitiaComponent>       |
-|Symfony 2 or 3       |<https://github.com/CanalTP/NavitiaBundle>          |
+|PHP5                 |<https://github.com/hove-io/NavitiaComponent>       |
+|Symfony 2 or 3       |<https://github.com/hove-io/NavitiaBundle>          |
 |Python               |<https://github.com/leonardbinet/navitia_client>    |
-|Python               |<https://github.com/CanalTP/navitia_python_wrapper> |
+|Python               |<https://github.com/hove-io/navitia_python_wrapper> |
 
 <h2 id="about-data">About the data</h2>
 
-The street network is extracted from [OpenStreetMap](https://www.openstreetmap.org). The public transport data are provided by networks that provide their timetables as open data. Some data improvements are achieved by Kisio Digital and are published back there <https://navitia.opendatasoft.com>.
+The street network is extracted from [OpenStreetMap](https://www.openstreetmap.org). The public transport data are provided by networks that provide their timetables as open data. Some data improvements are achieved by Hove and are published back there <https://navitia.opendatasoft.com>.
 
 Want to know if your city is in Navitia? Know if a special contributor is used? You can either search in [datasets](#datasets) of the different [coverages](#coverage). Or use the filter provided on our data catalog <https://navitia.opendatasoft.com>.
 
@@ -145,7 +145,7 @@ If you want to go further, there is an Swagger-openAPI documentation at [https:/
 A mailing list is available to ask questions or request [new data](#about-data) integrations: <a href="mailto:navitia@googlegroups.com">navitia@googlegroups.com</a>
 
 In order to report bug and make feature requests please use our github navitia project
-<https://github.com/CanalTP/navitia/issues>.
+<https://github.com/hove-io/navitia/issues>.
 
 Stay tuned on twitter [@navitia](https://twitter.com/navitia).
 

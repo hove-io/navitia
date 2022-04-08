@@ -34,9 +34,9 @@ Create a file `jormungandr.json` in a custom directory like:
 }
 ```
 
-You can copy the one from [documentation/examples/config/Jormungandr.json](https://github.com/CanalTP/navitia/blob/dev/documentation/examples/config/Jormungandr.json)
+You can copy the one from [documentation/examples/config/Jormungandr.json](https://github.com/hove-io/navitia/blob/dev/documentation/examples/config/Jormungandr.json)
 
-Make sure `key` and `socket` respectively match `instance_name` and `zmq_socket` from your Kraken config file ([kraken.ini](https://github.com/CanalTP/navitia/blob/dev/documentation/examples/config/kraken.ini)).
+Make sure `key` and `socket` respectively match `instance_name` and `zmq_socket` from your Kraken config file ([kraken.ini](https://github.com/hove-io/navitia/blob/dev/documentation/examples/config/kraken.ini)).
 
 As an alternative, you can also give the json through an environment variable like:
 ```sh
@@ -45,7 +45,7 @@ JORMUNGANDR_INSTANCE_FR_IDF='{"key": "fr-idf","zmq_socket": "tcp://localhost:300
 
 ## Environment Variables
 
-Environment variables can be set when the service is started. Referer to [default_settings.py](https://github.com/CanalTP/navitia/blob/dev/source/jormungandr/jormungandr/default_settings.py)
+Environment variables can be set when the service is started. Referer to [default_settings.py](https://github.com/hove-io/navitia/blob/dev/source/jormungandr/jormungandr/default_settings.py)
 
 example for a development environment:
 
@@ -142,8 +142,8 @@ Jormungandr is trying to access a "jormungandr" database. You can disable this d
 
 The profiling of Jormungandr is done thanks to Werkzeug profiler, for more details, one can read this interesting [article](https://blog.miguelgrinberg.com/post/the-flask-mega-tutorial-part-xvi-debugging-testing-and-profiling), more specifically, in the Profiling section.
 
-To enable the profiling of Jormungandr, one must set `ACTIVATE_PROFILING` to True in the `$JORMUNGANDR_CONFIG_FILE`[default_settings.py](https://github.com/CanalTP/navitia/blob/dev/source/jormungandr/jormungandr/default_settings.py).
-Then set the correct directory(create one if not exists) for the output of profiler [profile](https://github.com/CanalTP/navitia/blob/dev/source/jormungandr/jormungandr/api.py#L130).
+To enable the profiling of Jormungandr, one must set `ACTIVATE_PROFILING` to True in the `$JORMUNGANDR_CONFIG_FILE`[default_settings.py](https://github.com/hove-io/navitia/blob/dev/source/jormungandr/jormungandr/default_settings.py).
+Then set the correct directory(create one if not exists) for the output of profiler [profile](https://github.com/hove-io/navitia/blob/dev/source/jormungandr/jormungandr/api.py#L130).
 
 The profiling is triggered on every arrival of a request, so a profile file is generated when a request is processed.
 

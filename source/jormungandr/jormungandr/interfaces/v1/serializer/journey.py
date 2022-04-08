@@ -1,10 +1,12 @@
 # coding: utf-8
 
+# Copyright (c) 2001-2022, Hove and/or its affiliates. All rights reserved.
+#
 # This file is part of Navitia,
 #     the software to build cool stuff with public transport.
 #
 # Hope you'll enjoy and contribute to this project,
-#     powered by Canal TP (www.canaltp.fr).
+#     powered by Hove (www.hove.com).
 # Help us simplify mobility and open public transport:
 #     a non ending quest to the responsive locomotion way of traveling!
 #
@@ -238,8 +240,8 @@ class ElevationSerializer(PbNestedSerializer):
 
 
 class DynamicSpeedSerializer(PbNestedSerializer):
-    base_speed = jsonschema.MethodField(schema_type=int, display_none=False)
-    traffic_speed = jsonschema.MethodField(schema_type=int, display_none=False)
+    base_speed = jsonschema.MethodField(schema_type=float, display_none=False)
+    traffic_speed = jsonschema.MethodField(schema_type=float, display_none=False)
     geojson_offset = jsonschema.MethodField(schema_type=int, display_none=False)
 
     def get_base_speed(self, obj):

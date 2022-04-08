@@ -1,10 +1,10 @@
-# Copyright (c) 2001-2014, Canal TP and/or its affiliates. All rights reserved.
+# Copyright (c) 2001-2022, Hove and/or its affiliates. All rights reserved.
 #
 # This file is part of Navitia,
 #     the software to build cool stuff with public transport.
 #
 # Hope you'll enjoy and contribute to this project,
-#     powered by Canal TP (www.canaltp.fr).
+#     powered by Hove (www.hove.com).
 # Help us simplify mobility and open public transport:
 #     a non ending quest to the responsive locomotion way of traveling!
 #
@@ -691,10 +691,12 @@ def get_bano2mimir_params(working_directory, autocomplete_instance, autocomplete
         'elasticsearch.url=\'{}\''.format(current_app.config['MIMIR7_URL']),
         '-s',
         'container.dataset=\'{}\''.format(autocomplete_instance.name),
-        "-c",
+        '-c',
         current_app.config['MIMIR_CONFIG_DIR'],
         '-i',
         working_directory,
+        '-m',
+        current_app.config['MIMIR_PLATFORM_TAG'],
         'run',
     ]
 
@@ -746,6 +748,8 @@ def get_openaddresses2mimir_params(autocomplete_instance, working_directory, aut
         current_app.config['MIMIR_CONFIG_DIR'],
         '-i',
         working_directory,
+        '-m',
+        current_app.config['MIMIR_PLATFORM_TAG'],
         'run',
     ]
 
@@ -793,6 +797,11 @@ def get_osm2mimir_params(
             '-s',
             custom_config,
         ]
+    config_file = (
+        '{}_{}'.format(current_app.config['MIMIR_PLATFORM_TAG'], autocomplete_instance.name)
+        if current_app.config['MIMIR_PLATFORM_TAG'] != 'default'
+        else autocomplete_instance.name
+    )
     return [
         '-s',
         'elasticsearch.url=\'{}\''.format(current_app.config['MIMIR7_URL']),
@@ -801,7 +810,7 @@ def get_osm2mimir_params(
         '-c',
         current_app.config['MIMIR_CONFIG_DIR'],
         '-m',
-        autocomplete_instance.name,
+        config_file,
         'run',
     ]
 
@@ -917,6 +926,8 @@ def get_ntfs2mimir_params(instance_name, working_directory, autocomplete_version
         working_directory,
         '-c',
         current_app.config['MIMIR_CONFIG_DIR'],
+        '-m',
+        current_app.config['MIMIR_PLATFORM_TAG'],
         'run',
     ]
 
@@ -977,6 +988,8 @@ def get_cosmogony2mimir_params(cosmo_file, autocomplete_instance, autocomplete_v
         current_app.config['MIMIR_CONFIG_DIR'],
         "-i",
         cosmo_file,
+        "-m",
+        current_app.config['MIMIR_PLATFORM_TAG'],
         "run",
     ]
 
@@ -1022,6 +1035,8 @@ def get_poi2mimir_params(poi_file, dataset_name, autocomplete_version=2):
         current_app.config['MIMIR_CONFIG_DIR'],
         "-i",
         poi_file,
+        "-m",
+        current_app.config['MIMIR_PLATFORM_TAG'],
         "run",
     ]
 

@@ -79,7 +79,7 @@ Clone source files (use ssh instead of http if you have a github account, no git
 cd dev/navitia_dev
 mkdir source build
 cd source
-git clone https://github.com/CanalTP/navitia.git
+git clone https://github.com/hove-io/navitia.git
 ```
 
 If you don't use a github account, before submodule init:
@@ -92,15 +92,15 @@ Below is what it should look like:
 ```
 [submodule "source/utils"]
 path = source/utils
-url = https://github.com/CanalTP/utils.git
+url = https://github.com/hove-io/utils.git
 
 [submodule "source/third_party/osmpbfreader"]
 path = source/third_party/osmpbfreader
-url = https://github.com/CanalTP/libosmpbfreader.git
+url = https://github.com/hove-io/libosmpbfreader.git
 
 [submodule "source/third_party/SimpleAmqpClient"]
 path = source/third_party/SimpleAmqpClient
-url = https://github.com/CanalTP/SimpleAmqpClient.git
+url = https://github.com/hove-io/SimpleAmqpClient.git
 
 [submodule "source/third_party/librabbitmq-c"]
 path = source/third_party/librabbitmq-c
@@ -112,11 +112,11 @@ url = https://github.com/antirez/linenoise.git
 
 [submodule "source/chaos-proto"]
 path = source/chaos-proto
-url = https://github.com/CanalTP/chaos-proto.git
+url = https://github.com/hove-io/chaos-proto.git
 
 [submodule "source/navitia-proto"]
 path = source/navitia-proto
-url = https://github.com/CanalTP/navitia-proto.git
+url = https://github.com/hove-io/navitia-proto.git
 ```
 
 Update submodules:
@@ -341,10 +341,10 @@ JORMUNGANDR_CONFIG_FILE="/navitia_dev/run/jormungandr_settings.py" PYTHONPATH="/
 Navitia API is now running at localhost:5001!
 
 
-Setting up Chaos (see docs in Github): [https://github.com/CanalTP/Chaos](https://github.com/CanalTP/Chaos)
+Setting up Chaos (see docs in Github): [https://github.com/hove-io/Chaos](https://github.com/hove-io/Chaos)
 ```sh
 cd /navitia_dev/source
-git clone https://github.com/CanalTP/Chaos.git
+git clone https://github.com/hove-io/Chaos.git
 
 cd Chaos
 mkvirtualenv chaos

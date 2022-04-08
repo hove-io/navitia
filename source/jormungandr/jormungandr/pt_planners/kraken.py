@@ -1,10 +1,10 @@
-# Copyright (c) 2001-2022, Canal TP and/or its affiliates. All rights reserved.
+# Copyright (c) 2001-2022, Hove and/or its affiliates. All rights reserved.
 #
 # This file is part of Navitia,
 #     the software to build cool stuff with public transport.
 #
 # Hope you'll enjoy and contribute to this project,
-#     powered by Canal TP (www.canaltp.fr).
+#     powered by Hove (www.hove.com).
 # Help us simplify mobility and open public transport:
 #     a non ending quest to the responsive locomotion way of traveling!
 #
@@ -28,9 +28,11 @@
 # www.navitia.io
 from __future__ import absolute_import, print_function, unicode_literals, division
 
-from jormungandr.pt_planners.common import ZmqSocket
+from jormungandr.pt_planners.common import ZmqSocket, get_crow_fly
 from jormungandr import utils, app
 from .pt_planner import AbstractPtPlanner
+from navitiacommon import type_pb2, request_pb2
+import logging
 
 
 class Kraken(ZmqSocket, AbstractPtPlanner):
@@ -53,3 +55,34 @@ class Kraken(ZmqSocket, AbstractPtPlanner):
             origins, destinations, datetime, clockwise, graphical_isochrones_parameters, bike_in_pt
         )
         return self.send_and_receive(req)
+
+    def get_crow_fly(
+        self,
+        origin,
+        streetnetwork_mode,
+        max_duration,
+        max_nb_crowfly,
+        object_type=type_pb2.STOP_POINT,
+        filter=None,
+        stop_points_nearby_duration=300,
+        request_id=None,
+        depth=2,
+        forbidden_uris=[],
+        allowed_id=[],
+        **kwargs
+    ):
+        return get_crow_fly(
+            self,
+            origin,
+            streetnetwork_mode,
+            max_duration,
+            max_nb_crowfly,
+            object_type,
+            filter,
+            stop_points_nearby_duration,
+            request_id,
+            depth,
+            forbidden_uris,
+            allowed_id,
+            **kwargs
+        )

@@ -1,12 +1,12 @@
 # encoding: utf-8
 
-#  Copyright (c) 2001-2014, Canal TP and/or its affiliates. All rights reserved.
+#  Copyright (c) 2001-2022, Hove and/or its affiliates. All rights reserved.
 #
 # This file is part of Navitia,
 #     the software to build cool stuff with public transport.
 #
 # Hope you'll enjoy and contribute to this project,
-#     powered by Canal TP (www.canaltp.fr).
+#     powered by Hove (www.hove.com).
 # Help us simplify mobility and open public transport:
 #     a non ending quest to the responsive locomotion way of traveling!
 #
@@ -31,6 +31,8 @@
 from __future__ import absolute_import, print_function, unicode_literals, division
 
 import math
+from navitiacommon import request_pb2, type_pb2
+from jormungandr.fallback_modes import FallbackModes
 
 N_DEG_TO_RAD = 0.01745329238
 EARTH_RADIUS_IN_METERS = 6372797.560856
@@ -84,3 +86,66 @@ def pick_up_park_ride_car_park(pt_objects):
     park_ride_poi_filter = utils.ComposedFilter().add_filter(is_poi).add_filter(is_park_ride).compose_filters()
 
     return list(park_ride_poi_filter(pt_objects))
+
+
+def create_kraken_direct_path_request(
+    connector, mode, pt_object_origin, pt_object_destination, fallback_extremity, request, language
+):
+    req = request_pb2.Request()
+    req.requested_api = type_pb2.direct_path
+    req.direct_path.origin.CopyFrom(connector.make_location(pt_object_origin))
+    req.direct_path.destination.CopyFrom(connector.make_location(pt_object_destination))
+    req.direct_path.datetime = fallback_extremity.datetime
+    req.direct_path.clockwise = fallback_extremity.represents_start
+    req.direct_path.streetnetwork_params.origin_mode = connector.handle_car_no_park_modes(mode)
+    req.direct_path.streetnetwork_params.destination_mode = connector.handle_car_no_park_modes(mode)
+    req.direct_path.streetnetwork_params.walking_speed = request['walking_speed']
+    req.direct_path.streetnetwork_params.max_walking_duration_to_pt = request['max_walking_duration_to_pt']
+    req.direct_path.streetnetwork_params.bike_speed = request['bike_speed']
+    req.direct_path.streetnetwork_params.max_bike_duration_to_pt = request['max_bike_duration_to_pt']
+    req.direct_path.streetnetwork_params.bss_speed = request['bss_speed']
+    req.direct_path.streetnetwork_params.max_bss_duration_to_pt = request['max_bss_duration_to_pt']
+    req.direct_path.streetnetwork_params.car_speed = request['car_speed']
+    req.direct_path.streetnetwork_params.max_car_duration_to_pt = request['max_car_duration_to_pt']
+    req.direct_path.streetnetwork_params.language = language
+    if mode in (
+        FallbackModes.ridesharing.name,
+        FallbackModes.taxi.name,
+        FallbackModes.car_no_park.name,
+        FallbackModes.car.name,
+    ):
+        req.direct_path.streetnetwork_params.car_no_park_speed = request['{}_speed'.format(mode)]
+        req.direct_path.streetnetwork_params.max_car_no_park_duration_to_pt = request[
+            'max_{}_duration_to_pt'.format(mode)
+        ]
+
+    return req
+
+
+def create_kraken_matrix_request(
+    connector, origins, destinations, street_network_mode, max_duration, speed_switcher, _, **kwargs
+):
+    req = request_pb2.Request()
+    req.requested_api = type_pb2.street_network_routing_matrix
+
+    req.sn_routing_matrix.origins.extend((connector.make_location(o) for o in origins))
+    req.sn_routing_matrix.destinations.extend((connector.make_location(d) for d in destinations))
+
+    req.sn_routing_matrix.mode = connector.handle_car_no_park_modes(street_network_mode)
+    req.sn_routing_matrix.speed = speed_switcher.get(street_network_mode, kwargs.get("walking"))
+    req.sn_routing_matrix.max_duration = max_duration
+
+    req.sn_routing_matrix.streetnetwork_params.origin_mode = connector.handle_car_no_park_modes(
+        street_network_mode
+    )
+    req.sn_routing_matrix.streetnetwork_params.walking_speed = speed_switcher.get(
+        "walking", kwargs.get("walking")
+    )
+    req.sn_routing_matrix.streetnetwork_params.bike_speed = speed_switcher.get("bike", kwargs.get("bike"))
+    req.sn_routing_matrix.streetnetwork_params.bss_speed = speed_switcher.get("bss", kwargs.get("bss"))
+    req.sn_routing_matrix.streetnetwork_params.car_speed = speed_switcher.get("car", kwargs.get("car"))
+    req.sn_routing_matrix.streetnetwork_params.car_no_park_speed = speed_switcher.get(
+        "car_no_park", kwargs.get("car_no_park")
+    )
+
+    return req

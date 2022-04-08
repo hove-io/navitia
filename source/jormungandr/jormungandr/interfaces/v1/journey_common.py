@@ -1,12 +1,12 @@
 # coding=utf-8
 
-#  Copyright (c) 2001-2014, Canal TP and/or its affiliates. All rights reserved.
+#  Copyright (c) 2001-2022, Hove and/or its affiliates. All rights reserved.
 #
 # This file is part of Navitia,
 #     the software to build cool stuff with public transport.
 #
 # Hope you'll enjoy and contribute to this project,
-#     powered by Canal TP (www.canaltp.fr).
+#     powered by Hove (www.hove.com).
 # Help us simplify mobility and open public transport:
 #     a non ending quest to the responsive locomotion way of traveling!
 #
@@ -54,7 +54,11 @@ from navitiacommon.parser_args_type import (
     DateTimeFormat,
     PositiveFloat,
     SpeedRange,
+    FloatRange,
 )
+from navitiacommon import type_pb2
+
+BICYCLE_TYPES = [t for t, _ in type_pb2.BicycleType.items()]
 
 
 class DatetimeRepresents(CustomSchemaType):
@@ -498,6 +502,92 @@ class JourneyCommon(ResourceUri, ResourceUtc):
             type=OptionValue(['kraken', 'loki']),
             hidden=True,
             help="choose which pt engine to compute the pt journey",
+        )
+
+        # Advanced parameters for valhalla bike
+        parser_get.add_argument(
+            "bike_use_roads",
+            type=FloatRange(0, 1),
+            hidden=True,
+            default=0.5,
+            help="only available for Asgard: A cyclist's propensity to use roads alongside other vehicles.",
+        )
+        parser_get.add_argument(
+            "bike_use_hills",
+            type=FloatRange(0, 1),
+            hidden=True,
+            default=0.5,
+            help="only available for Asgard: A cyclist's desire to tackle hills in their routes.",
+        )
+        parser_get.add_argument(
+            "bike_use_ferry",
+            type=FloatRange(0, 1),
+            hidden=True,
+            default=0.5,
+            help="only available for Asgard: This value indicates the willingness to take ferries.",
+        )
+        parser_get.add_argument(
+            "bike_avoid_bad_surfaces",
+            type=FloatRange(0, 1),
+            hidden=True,
+            default=0.25,
+            help="only available for Asgard: This value is meant to represent how much a cyclist wants to avoid roads with poor surfaces relative to the bicycle type being used.",
+        )
+        parser_get.add_argument(
+            "bike_shortest",
+            type=BooleanType(),
+            hidden=True,
+            default=False,
+            help="only available for Asgard: Changes the metric to quasi-shortest, i.e. purely distance-based costing.",
+        )
+        parser_get.add_argument(
+            "bicycle_type",
+            type=OptionValue(BICYCLE_TYPES),
+            hidden=True,
+            default='hybrid',
+            help="only available for Asgard: The type of bicycle.",
+        )
+        parser_get.add_argument(
+            "bike_use_living_streets",
+            type=FloatRange(0, 1),
+            hidden=True,
+            default=0.5,
+            help="only available for Asgard: This value indicates the willingness to take living streets.",
+        )
+        parser_get.add_argument(
+            "bike_maneuver_penalty",
+            type=float,
+            hidden=True,
+            default=5,
+            help="only available for Asgard: A penalty applied when transitioning between roads that do not have consistent naming–in other words, no road names in common. This penalty can be used to create simpler routes that tend to have fewer maneuvers or narrative guidance instructions.",
+        )
+        parser_get.add_argument(
+            "bike_service_penalty",
+            type=float,
+            hidden=True,
+            default=0,
+            help="only available for Asgard: A penalty applied for transition to generic service road. ",
+        )
+        parser_get.add_argument(
+            "bike_service_factor",
+            type=float,
+            hidden=True,
+            default=1,
+            help="only available for Asgard: A factor that modifies (multiplies) the cost when generic service roads are encountered. ",
+        )
+        parser_get.add_argument(
+            "bike_country_crossing_cost",
+            type=float,
+            hidden=True,
+            default=600,
+            help="only available for Asgard: A cost applied when encountering an international border. This cost is added to the estimated and elapsed times. ",
+        )
+        parser_get.add_argument(
+            "bike_country_crossing_penalty",
+            type=float,
+            hidden=True,
+            default=0,
+            help="only available for Asgard: A penalty applied for a country crossing. ",
         )
 
     def parse_args(self, region=None, uri=None):

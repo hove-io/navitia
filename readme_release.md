@@ -13,7 +13,7 @@ This lets the script decide if it's major or minor release.
 The decision is based on the data_version located in source/type/data.cpp
 See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how data_version is managed.
 
-First have a look on github's repo at PRs about to be released https://github.com/CanalTP/navitia/pulls?q=is%3Apr+is%3Aclosed+sort%3Aupdated-desc
+First have a look on github's repo at PRs about to be released https://github.com/hove-io/navitia/pulls?q=is%3Apr+is%3Aclosed+sort%3Aupdated-desc
 * Check that `not_in_changelog` and `hotfix` labels are correct and none is missing on PRs that are gonna be released
 * Check that titles are correct (clear, with the component impacted)
 
@@ -63,7 +63,7 @@ Then the process is less automated (but still, instructions are given):
     ```
     Version 2.57.0
 
-        * Kraken: Add ptref shortcut between physical_mode and jpps  <https://github.com/CanalTP/navitia/pull/2417>
+        * Kraken: Add ptref shortcut between physical_mode and jpps  <https://github.com/hove-io/navitia/pull/2417>
     ```
 
 ## And Finally

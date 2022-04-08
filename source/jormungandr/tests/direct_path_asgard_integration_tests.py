@@ -1,10 +1,10 @@
-# Copyright (c) 2001-2016, Canal TP and/or its affiliates. All rights reserved.
+# Copyright (c) 2001-2022, Hove and/or its affiliates. All rights reserved.
 #
 # This file is part of Navitia,
 #     the software to build cool stuff with public transport.
 #
 # Hope you'll enjoy and contribute to this project,
-#     powered by Canal TP (www.canaltp.fr).
+#     powered by Hove (www.hove.com).
 # Help us simplify mobility and open public transport:
 #     a non ending quest to the responsive locomotion way of traveling!
 #
@@ -234,7 +234,7 @@ def valid_request(request):
         )
         assert request.direct_path.streetnetwork_params.bss_rent_penalty == 0
         assert request.direct_path.streetnetwork_params.bss_return_duration == (
-            24 if request.direct_path.streetnetwork_params.origin_mode == "bss" else 120
+            24 if request.direct_path.streetnetwork_params.origin_mode == "bss" else 60
         )
         assert request.direct_path.streetnetwork_params.bss_return_penalty == 0
         assert request.direct_path.streetnetwork_params.enable_instructions == True
