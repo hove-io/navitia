@@ -75,13 +75,13 @@ jobs:
         name: navitia-debian10-packages
         path: ./builder_from_package
     - name: build, create and publish images for branch dev
-      if: true #${{ github.event_name == 'push' }}
+      if: ${{ github.event_name == 'push' }}
       working-directory: builder_from_package
-      run: ./build.sh -o ${{secrets.access_token_github}} -n -r -e pull_request -f hove-io -t pr -b ${{steps.branch-name.outputs.current_branch}} -u ${{secrets.docker_user}} -p ${{secrets.docker_password}}
+      run: ./build.sh -o ${{secrets.access_token_github}} -n -r -e push -t dev -b dev -u ${{secrets.docker_user}} -p ${{secrets.docker_password}}
     - name: slack notification (the job has failed)
       if: failure()
       run: |
-          echo '{"text":":warning: Navitia Github Actions: publish_docker_compose_images failed ! (https://github.com/hove-io/navitia/actions?query=workflow%3A%22Publish+Docker+Compose+Images%22)"}' | http --json POST ${{secrets.SLACK_NAVITIA_CORE_TEAM_URL}}
+          echo '{"text":":warning: Navitia Github Actions: publish_docker_compose_images failed ! "}' | http --json POST ${{secrets.SLACK_NAVITIA_CORE_TEAM_URL}}
 
   artemis:
     runs-on: ubuntu-latest
