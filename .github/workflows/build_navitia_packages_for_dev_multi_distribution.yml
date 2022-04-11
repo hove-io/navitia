@@ -64,7 +64,8 @@ jobs:
     needs: build
     steps:
     - name: Get branch name
-      run: echo ${{ github.event.ref }}
+      id: branch-name
+      uses: tj-actions/branch-names@v5.2
     - uses: actions/checkout@v2
       with:
         repository: hove-io/navitia-docker-compose
@@ -73,7 +74,7 @@ jobs:
     - name: build, create and publish images for branch dev
       if: true #${{ github.event_name == 'push' }}
       working-directory: builder_from_package
-      run: ./build.sh -e pull_request -o ${{secrets.access_token_github}} -t dev -b ${{github.ref_name }} -r -u ${{secrets.docker_user}} -p ${{secrets.docker_password}}
+      run: ./build.sh -o ${{secrets.access_token_github}} -e pull_request -f hove-io -t pr -b ${{steps.branch-name.outputs.current_branch}} -u ${{secrets.docker_user}} -p ${{secrets.docker_password}}
     - name: slack notification (the job has failed)
       if: failure()
       run: |
