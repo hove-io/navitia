@@ -41,7 +41,7 @@ jobs:
       run: |
         zip navitia_${{matrix.distribution}}_packages.zip ../navitia-* ../mock-kraken*
     - name: upload ${{matrix.distribution}} packages
-      uses: actions/upload-artifact@v1
+      uses: actions/upload-artifact@v3
       with:
         name: navitia-${{matrix.distribution}}-packages
         path: "navitia_${{matrix.distribution}}_packages.zip"
@@ -61,3 +61,26 @@ jobs:
           echo '{"text":":information_source: Navitia Github Actions: build_navitia_packages_for_release succeded -' $version_number 'navitia debian packages are available"}' | http --json POST ${{secrets.SLACK_NAVITIA_CORE_TEAM_URL}}
           echo '{"text":":octopus: Navitia Release: The version' $version_number 'is available. changelog: https://github.com/hove-io/navitia/releases/tag/v'$version_number'"}' | http --json POST ${{secrets.SLACK_NAVITIA_URL}}
 
+  docker:
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+    - name: Get branch name
+      id: branch-name
+      uses: tj-actions/branch-names@v5.2
+    - uses: actions/checkout@v2
+      with:
+        repository: hove-io/navitia-docker-compose
+    - name: install httpie dependency
+      run: sudo apt update && sudo apt install -y httpie
+    - uses: actions/download-artifact@v3 # Download all artifacts Debian10 (job 'build') to the current working directory
+      with:
+        name: navitia-debian10-packages
+        path: ./builder_from_package
+    - name: build, create and publish images for branch release
+      working-directory: builder_from_package
+      run: ./build.sh -o ${{secrets.access_token_github}} -n -r -e push -t release -b release -u ${{secrets.docker_user}} -p ${{secrets.docker_password}}
+    - name: slack notification (the job has failed)
+      if: failure()
+      run: |
+          echo '{"text":":warning: Navitia Github Actions: publish_docker_compose_images failed ! "}' | http --json POST ${{secrets.SLACK_NAVITIA_CORE_TEAM_URL}}
