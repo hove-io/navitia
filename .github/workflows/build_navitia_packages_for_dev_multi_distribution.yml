@@ -45,9 +45,8 @@ jobs:
     - name: create navitia_${{matrix.distribution}}_packages.zip
       run: |
         zip navitia_${{matrix.distribution}}_packages.zip ../navitia-* ../mock-kraken*
-
     - name: upload ${{matrix.distribution}} packages
-      uses: actions/upload-artifact@v1
+      uses: actions/upload-artifact@v3
       with:
         name: navitia-${{matrix.distribution}}-packages
         path: "navitia_${{matrix.distribution}}_packages.zip"
@@ -71,10 +70,11 @@ jobs:
         repository: hove-io/navitia-docker-compose
     - name: install httpie dependency
       run: sudo apt update && sudo apt install -y httpie
+    - uses: actions/download-artifact@v3 # Download all artifacts (job 'build') to the current working directory
     - name: build, create and publish images for branch dev
       if: true #${{ github.event_name == 'push' }}
       working-directory: builder_from_package
-      run: ./build.sh -o ${{secrets.access_token_github}} -e pull_request -f hove-io -t pr -b ${{steps.branch-name.outputs.current_branch}} -u ${{secrets.docker_user}} -p ${{secrets.docker_password}}
+      run: ./build.sh -o ${{secrets.access_token_github}} -n -r -e pull_request -f hove-io -t pr -b ${{steps.branch-name.outputs.current_branch}} -u ${{secrets.docker_user}} -p ${{secrets.docker_password}}
     - name: slack notification (the job has failed)
       if: failure()
       run: |
