@@ -17,7 +17,7 @@ down_revision = '9d7151d79dc3'
 def upgrade():
     op.add_column('autocomplete_parameter', sa.Column('config_toml', sa.Text(), nullable=True))
     # config_toml must contain the configuration of osm2mimir which looks like :
-    # https://github.com/CanalTP/mimirsbrunn/pull/436/files#diff-e90069baea048406777c4cc75d75c1c655ad2729ffec59108a1f30f2517f7d28
+    # https://github.com/hove-io/mimirsbrunn/pull/436/files#diff-e90069baea048406777c4cc75d75c1c655ad2729ffec59108a1f30f2517f7d28
     # Create config_toml from old params
     connection = op.get_bind()
 

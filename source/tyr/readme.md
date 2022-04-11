@@ -52,7 +52,7 @@ Tyr is split into 3 different services:
 
 ### Example with Honcho
 
-In Kisio production environments, Tyr is installed as a service via debian packages, but to configure it on dev environment Honcho can be used.
+In Hove production environments, Tyr is installed as a service via debian packages, but to configure it on dev environment Honcho can be used.
 
 Honcho is handy to start all the different services.
 

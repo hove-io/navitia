@@ -2,7 +2,7 @@
 
 branch_to=$1 # Branch to merge to
 pull_request_num=$2 # Github PR number
-pull_request_slug=$3 # Git respo destination (eg. Canaltp/navitia)
+pull_request_slug=$3 # Git respo destination (eg. hove-io/navitia)
 buildbotctp_token=$4 # Github token
 github_api_endpoint="https://api.github.com/repos"
 warning_msg="## Warning \n You've modified files that potentially affect the model. \

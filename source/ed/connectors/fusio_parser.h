@@ -32,7 +32,7 @@ www.navitia.io
 #include "gtfs_parser.h"
 
 /**
- * Read CanalTP custom transportation files
+ * Read Hove custom transportation files
  *
  * The format is based on GTFS but additional data have been added
  *
