@@ -44,7 +44,7 @@ struct logger_initialized {
 BOOST_GLOBAL_FIXTURE(logger_initialized);
 
 using namespace ed::connectors;
-using namespace CanalTP;
+using namespace Hove;
 
 BOOST_AUTO_TEST_CASE(osm2ed_with_no_param_should_start_without_throwing) {
     const char* argv[] = {"osm2ed_test"};

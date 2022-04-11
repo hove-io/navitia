@@ -62,9 +62,7 @@ namespace connectors {
  * Stores admins relations and initializes nodes and ways associated to it.
  * Stores relations for associatedStreet, also initializes nodes and ways.
  */
-void ReadRelationsVisitor::relation_callback(uint64_t osm_id,
-                                             const CanalTP::Tags& tags,
-                                             const CanalTP::References& refs) {
+void ReadRelationsVisitor::relation_callback(uint64_t osm_id, const Hove::Tags& tags, const Hove::References& refs) {
     auto logger = log4cplus::Logger::getInstance("log");
     const auto tmp_admin_level = tags.find("admin_level");
     const auto boundary = tags.find("boundary");
@@ -93,7 +91,7 @@ void ReadRelationsVisitor::relation_callback(uint64_t osm_id,
                                                  << it_end_date->second << "' (kept)");
             }
         }
-        for (const CanalTP::Reference& ref : refs) {
+        for (const Hove::Reference& ref : refs) {
             switch (ref.member_type) {
                 case OSMPBF::Relation_MemberType::Relation_MemberType_WAY:
                     if (ref.role == "outer" || ref.role.empty() || ref.role == "exclave") {
@@ -129,7 +127,7 @@ void ReadRelationsVisitor::relation_callback(uint64_t osm_id,
     } else if (tags.find("type") != tags.end() && tags.at("type") == "associatedStreet") {
         uint64_t way_id = std::numeric_limits<uint64_t>::max();
         std::vector<uint64_t> osm_ids;
-        for (const CanalTP::Reference& ref : refs) {
+        for (const Hove::Reference& ref : refs) {
             switch (ref.member_type) {
                 case OSMPBF::Relation_MemberType::Relation_MemberType_WAY:
                     if (ref.role == "house" || ref.role == "addr:houselink" || ref.role == "address") {
@@ -170,9 +168,7 @@ ReadWaysVisitor::~ReadWaysVisitor() {
  * We stores ways they are streets.
  * We store ids of needed nodes
  */
-void ReadWaysVisitor::way_callback(uint64_t osm_id,
-                                   const CanalTP::Tags& tags,
-                                   const std::vector<uint64_t>& nodes_refs) {
+void ReadWaysVisitor::way_callback(uint64_t osm_id, const Hove::Tags& tags, const std::vector<uint64_t>& nodes_refs) {
     const auto properties = parse_way_tags(tags);
     const auto name_it = tags.find("name");
     bool is_street = properties.any();
@@ -218,7 +214,7 @@ void ReadWaysVisitor::way_callback(uint64_t osm_id,
 /*
  * We fill needed nodes with their coordinates
  */
-void ReadNodesVisitor::node_callback(uint64_t osm_id, double lon, double lat, const CanalTP::Tags& /*unused*/) {
+void ReadNodesVisitor::node_callback(uint64_t osm_id, double lon, double lat, const Hove::Tags& /*unused*/) {
     auto node_it = cache.nodes.find(OSMNode(osm_id));
     if (node_it != cache.nodes.end()) {
         node_it->set_coord(lon, lat);
@@ -675,11 +671,11 @@ void OSMCache::fusion_ways() {
  */
 void OSMAdminRelation::build_polygon(OSMCache& cache) {
     std::set<u_int64_t> explored_ids;
-    auto is_outer_way = [](const CanalTP::Reference& r) {
+    auto is_outer_way = [](const Hove::Reference& r) {
         return r.member_type == OSMPBF::Relation_MemberType::Relation_MemberType_WAY
                && navitia::contains({"outer", "enclave", ""}, r.role);
     };
-    auto pickable_way = [&](const CanalTP::Reference& r) {
+    auto pickable_way = [&](const Hove::Reference& r) {
         return is_outer_way(r) && explored_ids.count(r.member_id) == 0;
     };
     // We need to explore every node because a boundary can be made in several parts
@@ -709,7 +705,7 @@ void OSMAdminRelation::build_polygon(OSMCache& cache) {
         // We try to find a closed ring
         while (first_node != next_node) {
             // We look for a way that begin or end by the last node
-            ref = boost::find_if(references, [&](const CanalTP::Reference& r) {
+            ref = boost::find_if(references, [&](const Hove::Reference& r) {
                 if (!pickable_way(r)) {
                     return false;
                 }
@@ -820,7 +816,7 @@ Admin::~Admin() = default;
 
 OSMAdminRelation::OSMAdminRelation(u_int64_t id,
                                    const std::string& uri,
-                                   std::vector<CanalTP::Reference> refs,
+                                   std::vector<Hove::Reference> refs,
                                    const std::string& insee,
                                    const std::string& postal_code,
                                    const std::string& name,
@@ -828,7 +824,7 @@ OSMAdminRelation::OSMAdminRelation(u_int64_t id,
     : Admin(id, uri, insee, postal_code, name, level), references(std::move(refs)) {}
 
 void OSMAdminRelation::build_geometry(OSMCache& cache) {
-    for (const CanalTP::Reference& ref : references) {
+    for (const Hove::Reference& ref : references) {
         if (ref.member_type == OSMPBF::Relation_MemberType::Relation_MemberType_NODE) {
             auto node_it = cache.nodes.find(ref.member_id);
             if (node_it == cache.nodes.end()) {
@@ -849,7 +845,7 @@ void OSMAdminRelation::build_geometry(OSMCache& cache) {
 /*
  * We read another time nodes to insert housenumbers and poi
  */
-void PoiHouseNumberVisitor::node_callback(uint64_t osm_id, double lon, double lat, const CanalTP::Tags& tags) {
+void PoiHouseNumberVisitor::node_callback(uint64_t osm_id, double lon, double lat, const Hove::Tags& tags) {
     this->fill_poi(osm_id, tags, lon, lat, OsmObjectType::Node);
     this->fill_housenumber(osm_id, tags, lon, lat);
     if ((data.pois.size() + house_numbers.size()) >= max_inserts_without_bulk) {
@@ -860,9 +856,7 @@ void PoiHouseNumberVisitor::node_callback(uint64_t osm_id, double lon, double la
 /*
  * We read another time ways to insert housenumbers and poi
  */
-void PoiHouseNumberVisitor::way_callback(uint64_t osm_id,
-                                         const CanalTP::Tags& tags,
-                                         const std::vector<uint64_t>& refs) {
+void PoiHouseNumberVisitor::way_callback(uint64_t osm_id, const Hove::Tags& tags, const std::vector<uint64_t>& refs) {
     if (tags.find("addr:housenumber") == tags.end() && poi_params.get_applicable_poi_rule(tags) == nullptr) {
         return;
     }
@@ -969,7 +963,7 @@ const OSMWay* PoiHouseNumberVisitor::find_way_without_name(const double lon, con
     return result;
 }
 
-const OSMWay* PoiHouseNumberVisitor::find_way(const CanalTP::Tags& tags, const double lon, const double lat) {
+const OSMWay* PoiHouseNumberVisitor::find_way(const Hove::Tags& tags, const double lon, const double lat) {
     auto it_street = tags.find("addr:street");
     if (it_street == tags.end()) {
         return find_way_without_name(lon, lat);
@@ -1028,7 +1022,7 @@ const OSMWay* PoiHouseNumberVisitor::find_way(const CanalTP::Tags& tags, const d
 }
 
 void PoiHouseNumberVisitor::fill_housenumber(const uint64_t osm_id,
-                                             const CanalTP::Tags& tags,
+                                             const Hove::Tags& tags,
                                              const double lon,
                                              const double lat) {
     auto it_hn = tags.find("addr:housenumber");
@@ -1057,7 +1051,7 @@ void PoiHouseNumberVisitor::fill_housenumber(const uint64_t osm_id,
 }
 
 void PoiHouseNumberVisitor::fill_poi(const u_int64_t osm_id,
-                                     const CanalTP::Tags& tags,
+                                     const Hove::Tags& tags,
                                      const double lon,
                                      const double lat,
                                      OsmObjectType osm_relation_type) {
@@ -1209,11 +1203,11 @@ int osm2ed(int argc, const char** argv) {
 
     ed::connectors::OSMCache cache(std::make_unique<Lotus>(connection_string), cities_cnx);
     ed::connectors::ReadRelationsVisitor relations_visitor(cache, use_cities);
-    CanalTP::read_osm_pbf(input, relations_visitor);
+    Hove::read_osm_pbf(input, relations_visitor);
     ed::connectors::ReadWaysVisitor ways_visitor(cache, poi_params, speed_parser);
-    CanalTP::read_osm_pbf(input, ways_visitor);
+    Hove::read_osm_pbf(input, ways_visitor);
     ed::connectors::ReadNodesVisitor node_visitor(cache);
-    CanalTP::read_osm_pbf(input, node_visitor);
+    Hove::read_osm_pbf(input, node_visitor);
     cache.build_relations_geometries();
     cache.match_nodes_admin();
     cache.build_way_map();
@@ -1228,7 +1222,7 @@ int osm2ed(int argc, const char** argv) {
 
     ed::Georef data;
     ed::connectors::PoiHouseNumberVisitor poi_visitor(persistor, cache, data, persistor.parse_pois, poi_params);
-    CanalTP::read_osm_pbf(input, poi_visitor);
+    Hove::read_osm_pbf(input, poi_visitor);
     poi_visitor.finish();
     LOG4CPLUS_INFO(logger, "compute bounding shape");
     persistor.compute_bounding_shape();
