@@ -76,7 +76,7 @@ jobs:
         path: ./builder_from_package
     - name: build, create and publish images for branch dev
       if: ${{ github.event_name == 'push' }}
-      working-directory: builder_from_package
+      working-directory: builder_from_package/debian10
       run: ./build.sh -o ${{secrets.access_token_github}} -n -r -e push -t dev -b dev -u ${{secrets.docker_user}} -p ${{secrets.docker_password}}
     - name: slack notification (the job has failed)
       if: failure()
@@ -120,10 +120,15 @@ jobs:
           secret = "${{secrets.JENKINS_NG_TOKEN}}"
 
           url = "https://{}@jenkins-core.canaltp.fr/job/artemis_ng/buildWithParameters".format(secret)
-
           request = requests.post(url, data = params )
           print("Response status code : {}".format(request.status_code) )
           print(request.text)
+
+          url = "https://{}@jenkins-core.canaltp.fr/job/artemis_ng_debian8/buildWithParameters".format(secret)
+          request = requests.post(url, data = params )
+          print("Response status code : {}".format(request.status_code) )
+          print(request.text)
+
     - name: run artemis NG on pull_request
       shell: python3 {0}
       if: ${{ github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'run_artemis') }}
@@ -153,7 +158,11 @@ jobs:
           secret = "${{secrets.JENKINS_NG_TOKEN}}"
 
           url = "https://{}@jenkins-core.canaltp.fr/job/artemis_ng/buildWithParameters".format(secret)
+          request = requests.post(url, data = params )
+          print("Response status code : {}".format(request.status_code) )
+          print(request.text)
 
+          url = "https://{}@jenkins-core.canaltp.fr/job/artemis_ng_debian8/buildWithParameters".format(secret)
           request = requests.post(url, data = params )
           print("Response status code : {}".format(request.status_code) )
           print(request.text)
