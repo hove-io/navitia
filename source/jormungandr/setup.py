@@ -39,5 +39,9 @@ setup(
     author_email='navitia.pt.core@kisio.com',
     url='www.navitia.io',
     packages=find_packages(),
-    data_files=[('/usr/share/jormungandr', ['requirements.txt'])],
+    data_files=[
+        ('/usr/share/jormungandr', ['requirements.txt']),
+        # Add newrelic config
+        ('/etc/jormungandr', ['newrelic.ini']),
+    ],
 )
