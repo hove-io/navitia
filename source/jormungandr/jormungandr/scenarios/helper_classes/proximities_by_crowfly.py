@@ -200,7 +200,7 @@ class ProximitiesByCrowflyPool:
                 max_fallback_duration = min(max_fallback_duration, self._o_d_crowfly_distance / float(speed))
 
             if mode == fm.FallbackModes.bss.name:
-                # we reduce the time spent when renting and returning the bike
+                # we subtract the time spent when renting and returning the bike
                 max_fallback_duration -= (
                     self._request['bss_rent_duration'] + self._request['bss_return_duration']
                 )
