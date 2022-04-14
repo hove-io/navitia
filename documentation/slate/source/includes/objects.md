@@ -616,7 +616,7 @@ Poi = Point Of Interest
 $ curl 'https://api.navitia.io/v1/coverage/sandbox/access_points' -H 'Authorization: 3b036afe-0110-4202-b9ed-99718476c2e0'
 ```
 
-Access_point = point of access to a station, a multimodal area. It could be an entrance, an exit or both.
+Access_point = point of access from the pavement to a station, a multimodal area.
 
 |Field                  |Type                     |Description                                                         |
 |-----------------------|-------------------------|--------------------------------------------------------------------|
@@ -627,6 +627,21 @@ Access_point = point of access to a station, a multimodal area. It could be an e
 
 You should labelized the access-point using "access_point_code" and "name".
 For example: "follow the `access_point_code` - `name` to exit from `parent_station` "
+
+### <a name="pathway"></a>Pathway
+
+Pathway = indoor way from a stop point to an access point. It could be an entrance, an exit or both.
+
+|Field                  |Type                     |Description                                                         |
+|-----------------------|-------------------------|--------------------------------------------------------------------|
+|id                     |string                   |Identifier of the access point                                      |
+|name                   |string                   |Name of the access point                                            |
+|is_entrance            |boolean                  |Identifies whether the path is an entrance                          |
+|is_exit                |boolean                  |Identifies whether the path is an exit                              |
+|length                 |int                      |Length of the path                                                  |
+|traversal_time         |int                      |Duration to walk the path when it's known                           |
+
+You can find pathways in [journeys](#journeys) service, where there is some "vias" in walking sections. "Vias" are "pathways" in navitia.
 
 ### Address
 
