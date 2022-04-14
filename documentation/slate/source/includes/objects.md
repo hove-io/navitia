@@ -623,10 +623,7 @@ Access_point = point of access to a station, a multimodal area. It could be an e
 |id                     |string                   |Identifier of the access point                                      |
 |name                   |string                   |Name of the access point                                            |
 |coord                  |[coord](#coord)          |Coordinates of the access point                                     |
-|is_entrance            |boolean                  |Identifies whether access to the stoparea is possible through this access point|
-|is_exit                |boolean                  |Identifies whether exit from the stoparea is possible through this access point|
 |access_point_code      |string                   |Identifies the well-known code for the access_point                 |
-|parent_station         |[stop_area](#stop-area)  |Identifies the linked Stop Area                                     |
 
 You should labelized the access-point using "access_point_code" and "name".
 For example: "follow the `access_point_code` - `name` to exit from `parent_station` "
