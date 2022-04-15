@@ -114,11 +114,6 @@ jobs:
         TYR_REDIS_HOST: 'redis'
   precommit:
     runs-on: ubuntu-latest
-    container:
-      image: ubuntu:18.04
-      # we need python 3.6 and clang-format-6.0
-      # we should be able to use no container once https://github.com/actions/virtual-environments/issues/46 is
-      # resolved
     steps:
     - uses: actions/checkout@v3
     - name: install dependencies
