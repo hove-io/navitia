@@ -118,8 +118,11 @@ jobs:
     - uses: actions/checkout@v3
     - name: install dependencies
       run: |
-        apt update && apt install -y protobuf-compiler python python-pip python3  python3-pip clang-format-6.0 git 2to3
+        sudo apt update && sudo apt install -y protobuf-compiler clang-format-6.0 git 2to3
         pip install -r requirements_pre-commit.txt --upgrade
+    - uses: actions/setup-python@v3
+      with:
+        python-version: '3.6.x'
     - name: get submodule
       run: |
         sed -i 's,git\@github.com:\([^/]*\)/\(.*\).git,https://github.com/\1/\2,' .gitmodules
