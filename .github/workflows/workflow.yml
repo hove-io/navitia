@@ -22,7 +22,7 @@ jobs:
   checks:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
     - name: checkout submodules
       shell: bash
       run: |
@@ -53,7 +53,7 @@ jobs:
         ports:
           - 6379:6379
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
       with:
           submodules: 'recursive'
     - name: Restore ccache
@@ -120,7 +120,7 @@ jobs:
       # we should be able to use no container once https://github.com/actions/virtual-environments/issues/46 is
       # resolved
     steps:
-    - uses: actions/checkout@v1
+    - uses: actions/checkout@v3
     - name: install dependencies
       run: |
         apt update && apt install -y protobuf-compiler python python-pip python3  python3-pip clang-format-6.0 git 2to3
@@ -145,7 +145,7 @@ jobs:
     - uses: actions/setup-python@v1
       with:
         python-version: '2.7'
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
     - name: Setup Pipenv and Run tests
       working-directory: release
       env:
