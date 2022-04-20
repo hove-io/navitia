@@ -259,7 +259,7 @@ You can use these ids in the forbidden_uris[] parameter from
 
 ### <a name="place"></a>Place
 
-A container containing either a [admin](#admin), [poi](#poi), [address](#address), [stop_area](#stop-area) or 
+A container containing either a [admin](#admin), [poi](#poi), [address](#address), [stop_area](#stop-area) or
 [stop_point](#stop-point)
 
 ``` json
