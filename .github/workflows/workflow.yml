@@ -140,7 +140,7 @@ jobs:
   release_script_tests:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/setup-python@v1
+    - uses: actions/setup-python@v3
       with:
         python-version: '2.7'
     - uses: actions/checkout@v3

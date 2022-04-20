@@ -43,7 +43,7 @@ jobs:
       run: pip install -r source/jormungandr/requirements_dev.txt
     - name: Cache Sonar
       id: cache-sonar
-      uses: actions/cache@v2
+      uses: actions/cache@v3
       with:
         path: sonar_cache
         key: sonar-cache-${{ github.event.head_commit.id }}
