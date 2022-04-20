@@ -1505,8 +1505,9 @@ class TestFirstLastDatetimeWithNegativeTimezone(AbstractTestFixture):
     """
 
     def test_first_last_datetime_same_day(self):
-        """20170102
-                       from_datetime 20170102T1630
+        """
+                        20170102
+                from_datetime 20170102T1630
                             |
                             v
         (Open)                        (Close)
@@ -1612,7 +1613,8 @@ class TestFirstLastDatetimeWithNegativeTimezone(AbstractTestFixture):
         assert 'last_datetime' not in stop_schedules[1]
 
     def test_first_last_datetime_diff_validity(self):
-        """20170102                                                20170103
+        """
+                    20170102                                           20170103
                                       from_datetime 20170103T0300
                                                   |
                                                   v
@@ -1720,7 +1722,8 @@ class TestFirstLastDatetimeWithNegativeTimezone(AbstractTestFixture):
         assert 'last_datetime' not in stop_schedules[1]
 
     def test_first_last_datetime_another_validity(self):
-        """20170104
+        """
+                    20170104
                            from_datetime 20170105T0030
                                       |
                                       v
@@ -1756,7 +1759,8 @@ class TestFirstLastDatetimeWithNegativeTimezone(AbstractTestFixture):
         assert 'last_datetime' not in stop_schedules[1]
 
     def test_first_last_datetime_just_after_midnight(self):
-        """20170101
+        """
+                    20170101
                            from_datetime 20170102T002959
                                       |
                                       v
@@ -1777,7 +1781,8 @@ class TestFirstLastDatetimeWithNegativeTimezone(AbstractTestFixture):
         assert stop_schedules[0]['last_datetime']['date_time'] == "20170102T013000"
 
     def test_first_last_datetime_with_very_small_duration(self):
-        """20170101
+        """
+                        20170101
                            from_datetime 20170102T002959
                                       |
                                       v
@@ -1855,7 +1860,8 @@ class TestFirstLastDatetimeWithPositiveTimezone(AbstractTestFixture):
     """
 
     def test_first_last_datetime_same_day(self):
-        """20170102
+        """
+                        20170102
         from_datetime 20170102T0631
                  |
                  v
@@ -1926,7 +1932,8 @@ class TestFirstLastDatetimeWithPositiveTimezone(AbstractTestFixture):
         assert 'last_datetime' not in stop_schedules[1]
 
     def test_first_last_datetime_diff_validity(self):
-        """20170102                                      20170103
+        """
+                    20170102                                            20170103
                                       from_datetime 20170103T0300
                                                  |
                                                  v
@@ -1998,7 +2005,8 @@ class TestFirstLastDatetimeWithPositiveTimezone(AbstractTestFixture):
         assert 'last_datetime' not in stop_schedules[1]
 
     def test_first_last_datetime_another_validity(self):
-        """20170105
+        """
+                        20170105
         from_datetime 20170105T0730
                    |
                    v
@@ -2034,7 +2042,8 @@ class TestFirstLastDatetimeWithPositiveTimezone(AbstractTestFixture):
         assert 'last_datetime' not in stop_schedules[1]
 
     def test_first_last_datetime_just_after_midnight(self):
-        """20170101 (the beginning of production)
+        """
+                        20170101 (the beginning of production)
                            from_datetime 20170102T000001
                                       |
                                       v
@@ -2077,7 +2086,8 @@ class TestFirstLastDatetimeWithPositiveTimezone(AbstractTestFixture):
         assert stop_schedules[0]['last_datetime']['date_time'] == "20170103T001000"
 
     def test_first_last_datetime_with_very_small_duration(self):
-        """20170102
+        """
+                    20170102
                             from_datetime 20170102T235959
                                       |
                                       v
