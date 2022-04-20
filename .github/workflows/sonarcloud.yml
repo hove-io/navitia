@@ -6,6 +6,8 @@ on:
   pull_request:
     branches: [ dev ]
 
+env:
+   SONAR_SCANNER_VERSION: 4.7.0.2747
 
 jobs:
   static_analysis:
@@ -32,8 +34,6 @@ jobs:
       with:
           submodules: 'recursive'
     - name: Install Gcov and SonarCloud's dependencies for C++ analysis
-      env:
-        SONAR_SCANNER_VERSION: 4.7.0.2747
       run : |
         rm -rf "$AGENT_TOOLSDIRECTORY"
         apt update -y
