@@ -421,7 +421,7 @@ def decode_polyline(encoded, precision=6):
     See: https://mapzen.com/documentation/mobility/decoding/#python (valhalla)
          http://developers.geovelo.fr/#/documentation/compute (geovelo)
     '''
-    inv = 10 ** -precision
+    inv = 10**-precision
     decoded = []
     previous = [0, 0]
     i = 0

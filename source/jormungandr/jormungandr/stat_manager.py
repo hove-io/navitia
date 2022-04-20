@@ -296,7 +296,7 @@ class StatManager(object):
             stat_error.message = error['message']
 
     def fill_journey(self, stat_journey, resp_journey):
-        """"
+        """ "
         Fill journey and all sections from resp_journey.
         resp_journey is a OrderedDict and contains information
         of the node journeys in the result.

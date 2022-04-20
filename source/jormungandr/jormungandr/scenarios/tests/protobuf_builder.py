@@ -104,7 +104,7 @@ class ResponseBuilder(object):
         return self
 
     def __compute_values(self, journey):
-        """ Compute some values on the journey """
+        """Compute some values on the journey"""
         if not journey.HasField('duration'):
             journey.duration = sum(section.duration for section in journey.sections)
         if not journey.HasField('arrival_date_time') and journey.HasField('departure_date_time'):

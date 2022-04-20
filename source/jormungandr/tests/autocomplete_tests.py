@@ -34,7 +34,7 @@ from .check_utils import *
 
 
 def valid_autocomplete_with_one_stop_area(response):
-    """ response contains 1 stop_areas "gare" """
+    """response contains 1 stop_areas "gare" """
     assert len(response['links']) == 1
     links = get_not_null(response, 'links')
     places = get_not_null(response, 'places')

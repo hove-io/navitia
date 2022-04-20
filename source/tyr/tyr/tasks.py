@@ -612,7 +612,7 @@ def load_data(instance_id, data_dirs):
 
 @celery.task()
 def cities(file_path, job_id, exe):
-    """ Launch 'cities' or 'cosmogony2cities' """
+    """Launch 'cities' or 'cosmogony2cities'"""
     job = models.Job.query.get(job_id)
     res = -1
     try:
@@ -640,7 +640,7 @@ def cities(file_path, job_id, exe):
 
 @celery.task()
 def bounding_shape(instance_name, shape_path):
-    """ Set the bounding shape to a custom value """
+    """Set the bounding shape to a custom value"""
 
     instance_conf = load_instance_config(instance_name)
 

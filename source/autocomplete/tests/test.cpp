@@ -93,7 +93,8 @@ BOOST_AUTO_TEST_CASE(parse_find_with_synonym_and_synonyms_test) {
     // Recherche : "mai paris" -> "mai paris"
     // distance = 3 / word_weight = 0*5 = 0
     // Qualité = 100 - (3 + 0) = 97
-    auto res = ac.find_complete("mai paris", nbmax, [](int) { return true; }, ghostwords);
+    auto res = ac.find_complete(
+        "mai paris", nbmax, [](int) { return true; }, ghostwords);
     BOOST_REQUIRE_EQUAL(res.size(), 1);
     BOOST_CHECK_EQUAL(res.at(0).quality, 100);
 
@@ -101,7 +102,8 @@ BOOST_AUTO_TEST_CASE(parse_find_with_synonym_and_synonyms_test) {
     // Recherche : "hotel de ville par" -> "mairie par"
     // distance = 3 / word_weight = 0*5 = 0
     // Qualité = 100 - (2 + 0) = 98
-    auto res1 = ac.find_complete("hotel de ville par", nbmax, [](int) { return true; }, ghostwords);
+    auto res1 = ac.find_complete(
+        "hotel de ville par", nbmax, [](int) { return true; }, ghostwords);
     BOOST_REQUIRE_EQUAL(res1.size(), 1);
     BOOST_CHECK_EQUAL(res1.at(0).quality, 100);
 
@@ -110,19 +112,23 @@ BOOST_AUTO_TEST_CASE(parse_find_with_synonym_and_synonyms_test) {
     // distance = 5 / word_weight = 0*5 = 0
     // Qualité = 100 - (5 + 0) = 95
 
-    auto res2 = ac.find_complete("c c ca 2", nbmax, [](int) { return true; }, ghostwords);
+    auto res2 = ac.find_complete(
+        "c c ca 2", nbmax, [](int) { return true; }, ghostwords);
     BOOST_REQUIRE_EQUAL(res2.size(), 1);
     BOOST_CHECK_EQUAL(res2.at(0).quality, 100);
 
-    auto res3 = ac.find_complete("cc ca 2", nbmax, [](int) { return true; }, ghostwords);
+    auto res3 = ac.find_complete(
+        "cc ca 2", nbmax, [](int) { return true; }, ghostwords);
     BOOST_REQUIRE_EQUAL(res3.size(), 1);
     BOOST_CHECK_EQUAL(res3.at(0).quality, 100);
 
-    auto res4 = ac.find_complete("rue rene", nbmax, [](int) { return true; }, ghostwords);
+    auto res4 = ac.find_complete(
+        "rue rene", nbmax, [](int) { return true; }, ghostwords);
     BOOST_REQUIRE_EQUAL(res4.size(), 1);
     BOOST_CHECK_EQUAL(res4.at(0).quality, 100);
 
-    auto res5 = ac.find_complete("rue rené", nbmax, [](int) { return true; }, ghostwords);
+    auto res5 = ac.find_complete(
+        "rue rené", nbmax, [](int) { return true; }, ghostwords);
     BOOST_REQUIRE_EQUAL(res5.size(), 1);
     BOOST_CHECK_EQUAL(res5.at(0).quality, 100);
 }
@@ -373,12 +379,14 @@ BOOST_AUTO_TEST_CASE(Faute_de_frappe_One) {
 
     ac.build();
 
-    auto res = ac.find_partial_with_pattern("batau", word_weight, nbmax, [](int) { return true; }, ghostwords);
+    auto res = ac.find_partial_with_pattern(
+        "batau", word_weight, nbmax, [](int) { return true; }, ghostwords);
     BOOST_REQUIRE_EQUAL(res.size(), 1);
     BOOST_CHECK_EQUAL(res.at(0).idx, 1);
     BOOST_CHECK_EQUAL(res.at(0).quality, 90);
 
-    auto res1 = ac.find_partial_with_pattern("gare patea", word_weight, nbmax, [](int) { return true; }, ghostwords);
+    auto res1 = ac.find_partial_with_pattern(
+        "gare patea", word_weight, nbmax, [](int) { return true; }, ghostwords);
     BOOST_REQUIRE_EQUAL(res1.size(), 3);
     std::initializer_list<unsigned> best_res = {1, 4};  // they are equivalent
     BOOST_CHECK(navitia::contains(best_res, res1.at(0).idx));
@@ -426,7 +434,8 @@ BOOST_AUTO_TEST_CASE(autocomplete_find_quality_test) {
 
     ac.build();
 
-    auto res = ac.find_complete("rue jean", nbmax, [](int) { return true; }, ghostwords);
+    auto res = ac.find_complete(
+        "rue jean", nbmax, [](int) { return true; }, ghostwords);
     std::vector<int> expected = {6, 7, 0, 2};
     BOOST_REQUIRE_EQUAL(res.size(), 4);
     BOOST_CHECK_EQUAL(res.at(0).quality, 100);
@@ -456,7 +465,8 @@ BOOST_AUTO_TEST_CASE(autocomplete_add_string_with_Line) {
 
     ac.build();
 
-    auto res = ac.find_complete("jean-jau", nbmax, [](int) { return true; }, ghostwords);
+    auto res = ac.find_complete(
+        "jean-jau", nbmax, [](int) { return true; }, ghostwords);
     BOOST_REQUIRE_EQUAL(res.size(), 3);
     BOOST_CHECK_EQUAL(res.at(0).idx, 6);
     BOOST_CHECK_EQUAL(res.at(1).idx, 1);
@@ -492,30 +502,35 @@ BOOST_AUTO_TEST_CASE(autocompletesynonym_and_weight_test) {
 
     ac.build();
 
-    auto res = ac.find_complete("rue jean", nbmax, [](int) { return true; }, ghostwords);
+    auto res = ac.find_complete(
+        "rue jean", nbmax, [](int) { return true; }, ghostwords);
     BOOST_REQUIRE_EQUAL(res.size(), 4);
     BOOST_CHECK_EQUAL(res.at(0).quality, 100);
 
-    auto res1 = ac.find_complete("r jean", nbmax, [](int) { return true; }, ghostwords);
+    auto res1 = ac.find_complete(
+        "r jean", nbmax, [](int) { return true; }, ghostwords);
     BOOST_REQUIRE_EQUAL(res1.size(), 4);
 
     BOOST_CHECK_EQUAL(res1.at(0).quality, 100);
 
-    auto res2 = ac.find_complete("av jean", nbmax, [](int) { return true; }, ghostwords);
+    auto res2 = ac.find_complete(
+        "av jean", nbmax, [](int) { return true; }, ghostwords);
     BOOST_REQUIRE_EQUAL(res2.size(), 1);
     // rue jean zay
     // distance = 6 / word_weight = 1*5 = 5
     // Qualité = 100 - (6 + 5) = 89
     BOOST_CHECK_EQUAL(res2.at(0).quality, 100);
 
-    auto res3 = ac.find_complete("av jean", nbmax, [](int) { return true; }, ghostwords);
+    auto res3 = ac.find_complete(
+        "av jean", nbmax, [](int) { return true; }, ghostwords);
     BOOST_REQUIRE_EQUAL(res3.size(), 1);
     // rue jean zay
     // distance = 6 / word_weight = 1*10 = 10
     // Qualité = 100 - (6 + 10) = 84
     BOOST_CHECK_EQUAL(res3.at(0).quality, 100);
 
-    auto res4 = ac.find_complete("chu gau", nbmax, [](int) { return true; }, ghostwords);
+    auto res4 = ac.find_complete(
+        "chu gau", nbmax, [](int) { return true; }, ghostwords);
     BOOST_REQUIRE_EQUAL(res4.size(), 1);
     // hopital paul gaultier
     // distance = 9 / word_weight = 1*10 = 10
@@ -562,7 +577,8 @@ BOOST_AUTO_TEST_CASE(autocomplete_duplicate_words_and_weight_test) {
 
     ac.build();
 
-    auto res = ac.find_complete("gare", nbmax, [](int) { return true; }, ghostwords);
+    auto res = ac.find_complete(
+        "gare", nbmax, [](int) { return true; }, ghostwords);
     BOOST_REQUIRE_EQUAL(res.size(), 8);
     std::set<size_t> indexes;
     for (auto i = 0; i < 8; ++i) {
@@ -571,15 +587,18 @@ BOOST_AUTO_TEST_CASE(autocomplete_duplicate_words_and_weight_test) {
     }
     BOOST_CHECK_EQUAL_RANGE(indexes, std::set<size_t>({0, 1, 2, 3, 4, 5, 6, 7}));
 
-    auto res1 = ac.find_complete("gare tours", nbmax, [](int) { return true; }, ghostwords);
+    auto res1 = ac.find_complete(
+        "gare tours", nbmax, [](int) { return true; }, ghostwords);
     BOOST_REQUIRE_EQUAL(res1.size(), 1);
     BOOST_CHECK_EQUAL(res1.at(0).quality, 100);
 
-    auto res2 = ac.find_complete("gare tours tours", nbmax, [](int) { return true; }, ghostwords);
+    auto res2 = ac.find_complete(
+        "gare tours tours", nbmax, [](int) { return true; }, ghostwords);
     BOOST_REQUIRE_EQUAL(res1.size(), 1);
     BOOST_CHECK_EQUAL(res1.at(0).quality, 100);
 
-    auto res3 = ac.find_complete("les Sorinières", nbmax, [](int) { return true; }, ghostwords);
+    auto res3 = ac.find_complete(
+        "les Sorinières", nbmax, [](int) { return true; }, ghostwords);
     BOOST_REQUIRE_EQUAL(res3.size(), 10);
     BOOST_CHECK_EQUAL(res3.at(0).quality, 100);
 }
@@ -1085,14 +1104,16 @@ BOOST_AUTO_TEST_CASE(find_with_synonyms_mairie_de_vannes_test) {
     // Dans le dictionnaire : "mairie vannes" -> "mairie hotel de ville vannes"
     // search : "hotel vannes" -> "hotel vannes" no synonym is applied for search string
     // Found : mairie vannes et place hotel de ville vannes
-    auto res = ac.find_complete("mairie vannes", nbmax, [](int) { return true; }, ghostwords);
+    auto res = ac.find_complete(
+        "mairie vannes", nbmax, [](int) { return true; }, ghostwords);
     BOOST_REQUIRE_EQUAL(res.size(), 2);
 
     // Dans le dictionnaire : "mairie vannes" -> "mairie hotel de ville vannes"
     // search : "hotel vannes" -> "hotel vannes" no synonym is applied for search
     // Found : mairie vannes, place hotel de ville vannes, rue DE L'HOTEL DIEU vannes, Hôtel-Dieu vannes et Hôtel de
     // Région vannes
-    auto res1 = ac.find_complete("hotel vannes", nbmax, [](int) { return true; }, ghostwords);
+    auto res1 = ac.find_complete(
+        "hotel vannes", nbmax, [](int) { return true; }, ghostwords);
     BOOST_REQUIRE_EQUAL(res1.size(), 5);
 }
 
@@ -1140,19 +1161,22 @@ BOOST_AUTO_TEST_CASE(find_with_synonyms_gare_with_or_without_sncf_test) {
     // search : "Gare SNCF Rennes" -> "gare sncf rennes" no synonym is applied for search string
     // Found : "gare SNCF et routière Rennes", "Gare Sud Féval Rennes", "Parking gare SNCF et routière Rennes" et "place
     // DE LA GARE Rennes"
-    auto res = ac.find_complete("gare sncf rennes", nbmax, [](int) { return true; }, ghostwords);
+    auto res = ac.find_complete(
+        "gare sncf rennes", nbmax, [](int) { return true; }, ghostwords);
     BOOST_REQUIRE_EQUAL(res.size(), 4);
 
     // search : "SNCF Rennes" -> "sncf rennes" no synonym is applied for search string
     // Found : "gare SNCF et routière Rennes", "Gare Sud Féval Rennes", "Parking gare SNCF et routière Rennes" ,"place
     // DE LA GARE Rennes" et "Parking SNCF Rennes"
-    auto res1 = ac.find_complete("sncf rennes", nbmax, [](int) { return true; }, ghostwords);
+    auto res1 = ac.find_complete(
+        "sncf rennes", nbmax, [](int) { return true; }, ghostwords);
     BOOST_REQUIRE_EQUAL(res1.size(), 5);
 
     // search : "Gare Rennes" -> "gare rennes" no synonym is applied for search string
     // Found : "gare SNCF et routière Rennes", "Gare Sud Féval Rennes", "Parking gare SNCF et routière Rennes" ,"place
     // DE LA GARE Rennes" et "Parking SNCF Rennes"
-    auto res2 = ac.find_complete("gare rennes", nbmax, [](int) { return true; }, ghostwords);
+    auto res2 = ac.find_complete(
+        "gare rennes", nbmax, [](int) { return true; }, ghostwords);
     BOOST_REQUIRE_EQUAL(res2.size(), 6);
 }
 
@@ -1277,12 +1301,14 @@ BOOST_AUTO_TEST_CASE(synonyms_without_grand_champ_test) {
     // search : "grand-champ" -> "grand champ" no synonym is applied for search string
     // Found : "Grand-Champ 56390", "Locmaria-Grand-Champ 56390", "Place de la Mairie Grand-Champ" ,
     //"Champs-Elysées - Clémenceau - Grand Palais Paris" et "Collec Locmaria-Grand-Champ"
-    auto res = ac.find_complete("grand-champ", nbmax, [](int) { return true; }, ghostwords);
+    auto res = ac.find_complete(
+        "grand-champ", nbmax, [](int) { return true; }, ghostwords);
     BOOST_REQUIRE_EQUAL(res.size(), 5);
 
     // search : "grandchamp" -> "grandchamp" no synonym is applied for search string
     // Found : "Grandchamp 52600", "Parking Grandchamp Grandchamp" et "impasse DE GRANDCHAMP Trégunc"
-    auto res1 = ac.find_complete("grandchamp", nbmax, [](int) { return true; }, ghostwords);
+    auto res1 = ac.find_complete(
+        "grandchamp", nbmax, [](int) { return true; }, ghostwords);
     BOOST_REQUIRE_EQUAL(res1.size(), 3);
 }
 
@@ -1321,12 +1347,14 @@ BOOST_AUTO_TEST_CASE(synonyms_with_grand_champ_test) {
 
     // search : "grand-champ" -> "grand champ" no synonym is applied for search string
     // Found : all
-    auto res = ac.find_complete("grand-champ", nbmax, [](int) { return true; }, ghostwords);
+    auto res = ac.find_complete(
+        "grand-champ", nbmax, [](int) { return true; }, ghostwords);
     BOOST_REQUIRE_EQUAL(res.size(), 8);
 
     // search : "grandchamp" -> "grandchamp" no synonym is applied for search string
     // Found : All except "Champs-Elysées - Clémenceau - Grand Palais Paris"
-    auto res1 = ac.find_complete("grandchamp", nbmax, [](int) { return true; }, ghostwords);
+    auto res1 = ac.find_complete(
+        "grandchamp", nbmax, [](int) { return true; }, ghostwords);
     BOOST_REQUIRE_EQUAL(res1.size(), 7);
 }
 
@@ -1750,13 +1778,16 @@ BOOST_AUTO_TEST_CASE(synonyms_with_non_ascii) {
     ac.add_string("gare maritime de canaltp", 1, ghostwords, synonyms);
     ac.build();
 
-    auto res0 = ac.find_complete("fac", nbmax, [](int) { return true; }, ghostwords);
+    auto res0 = ac.find_complete(
+        "fac", nbmax, [](int) { return true; }, ghostwords);
     BOOST_REQUIRE_EQUAL(res0.size(), 1);
 
-    auto res1 = ac.find_complete("faculté", nbmax, [](int) { return true; }, ghostwords);
+    auto res1 = ac.find_complete(
+        "faculté", nbmax, [](int) { return true; }, ghostwords);
     BOOST_REQUIRE_EQUAL(res1.size(), 1);
 
-    auto res2 = ac.find_complete("embarca", nbmax, [](int) { return true; }, ghostwords);
+    auto res2 = ac.find_complete(
+        "embarca", nbmax, [](int) { return true; }, ghostwords);
     BOOST_REQUIRE_EQUAL(res2.size(), 1);
 }
 
@@ -1769,13 +1800,16 @@ BOOST_AUTO_TEST_CASE(synonyms_with_capital) {
     ac.add_string("Pole Emploi de paris", 0, ghostwords, synonyms);
     ac.build();
 
-    auto res0 = ac.find_complete("ANPE", nbmax, [](int) { return true; }, ghostwords);
+    auto res0 = ac.find_complete(
+        "ANPE", nbmax, [](int) { return true; }, ghostwords);
     BOOST_REQUIRE_EQUAL(res0.size(), 1);
 
-    auto res1 = ac.find_complete("anpe", nbmax, [](int) { return true; }, ghostwords);
+    auto res1 = ac.find_complete(
+        "anpe", nbmax, [](int) { return true; }, ghostwords);
     BOOST_REQUIRE_EQUAL(res1.size(), 1);
 
-    auto res2 = ac.find_complete("AnPe", nbmax, [](int) { return true; }, ghostwords);
+    auto res2 = ac.find_complete(
+        "AnPe", nbmax, [](int) { return true; }, ghostwords);
     BOOST_REQUIRE_EQUAL(res2.size(), 1);
 }
 
@@ -1788,10 +1822,12 @@ BOOST_AUTO_TEST_CASE(synonyms_with_capital_and_non_ascii) {
     ac.add_string("Sécurité Sociale de paris", 0, ghostwords, synonyms);
     ac.build();
 
-    auto res0 = ac.find_complete("CPAM", nbmax, [](int) { return true; }, ghostwords);
+    auto res0 = ac.find_complete(
+        "CPAM", nbmax, [](int) { return true; }, ghostwords);
     BOOST_REQUIRE_EQUAL(res0.size(), 1);
 
-    auto res1 = ac.find_complete("cpam", nbmax, [](int) { return true; }, ghostwords);
+    auto res1 = ac.find_complete(
+        "cpam", nbmax, [](int) { return true; }, ghostwords);
     BOOST_REQUIRE_EQUAL(res1.size(), 1);
 }
 
@@ -1874,7 +1910,8 @@ BOOST_AUTO_TEST_CASE(test_ways) {
     way->uri = "2";
     geo_ref.ways.push_back(way);
 
-    auto res = ac.find_complete("rue de la loire saint seb", nbmax, [](int) { return true; }, ghostwords);
+    auto res = ac.find_complete(
+        "rue de la loire saint seb", nbmax, [](int) { return true; }, ghostwords);
     BOOST_REQUIRE_EQUAL(res.size(), 3);
 
     BOOST_CHECK_EQUAL(res[0].idx, 2);  // The first one is "rue de la Loire"
@@ -1890,7 +1927,8 @@ BOOST_AUTO_TEST_CASE(test_accent) {
     ac.add_string("fòrum", 0, ghostwords, {});
     ac.build();
 
-    auto res = ac.find_complete("forum", nbmax, [](int) { return true; }, ghostwords);
+    auto res = ac.find_complete(
+        "forum", nbmax, [](int) { return true; }, ghostwords);
     BOOST_REQUIRE_EQUAL(res.size(), 1);
 }
 

@@ -88,7 +88,7 @@ def read_async(fd):
 
 
 def hide_args(whole_args, args_to_be_hidden):
-    """ hide the given args' contents.
+    """hide the given args' contents.
 
     >>> hide_args(["--toto", "12345", "--titi", "my almighty password", "--tati", "hid args"], ["--titi", "--tati"])
     ['--toto', '12345', '--titi', 'xxxxxxxxx', '--tati', 'xxxxxxxxx']
@@ -102,7 +102,7 @@ def hide_args(whole_args, args_to_be_hidden):
 
 
 def launch_exec_traces(exec_name, args, logger):
-    """ Launch an exec with args, log the outputs """
+    """Launch an exec with args, log the outputs"""
     hidden_args = hide_args(args, ["--cities-connection-string", "--connection-string"])
     log = 'Launching ' + exec_name + ' ' + ' '.join(hidden_args)
     # we hide the password in logs

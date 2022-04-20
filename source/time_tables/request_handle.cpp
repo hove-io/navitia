@@ -48,7 +48,7 @@ RequestHandle::RequestHandle(PbCreator& pb_creator,
         // Because of UTC and local date_time problem, we allow one more day before production_date.begin()
         if (!pb_creator.data->meta->production_date.contains(datetime.date())
             && !pb_creator.data->meta->production_date.contains(
-                   (datetime + boost::posix_time::seconds(86399)).date())) {
+                (datetime + boost::posix_time::seconds(86399)).date())) {
             pb_creator.fill_pb_error(pbnavitia::Error::date_out_of_bounds, "date is out of bound");
         }
     }

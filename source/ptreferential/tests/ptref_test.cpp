@@ -405,8 +405,7 @@ BOOST_AUTO_TEST_CASE(mvj_filtering) {
     BOOST_CHECK_EQUAL_RANGE(indexes, std::vector<size_t>({0, 1, 2}));
 
     // looking for MetaVJ 0
-    indexes = make_query(nt::Type_e::MetaVehicleJourney,
-                         R"(trip.uri="vj 0")", *(builder.data));
+    indexes = make_query(nt::Type_e::MetaVehicleJourney, R"(trip.uri="vj 0")", *(builder.data));
     BOOST_REQUIRE_EQUAL(indexes.size(), 1);
     const auto mvj_idx = navitia::Idx<nt::MetaVehicleJourney>(*indexes.begin());
     BOOST_CHECK_EQUAL(builder.data->pt_data->meta_vjs[mvj_idx]->uri, "vj 0");
@@ -504,8 +503,7 @@ BOOST_AUTO_TEST_CASE(headsign_request) {
         b.vj("C")("stop3", 9000, 9050)("stop5", 9200, 9250);
     });
 
-    const auto res = make_query(nt::Type_e::VehicleJourney,
-                                R"(vehicle_journey.has_headsign("vj 1"))", *(b.data));
+    const auto res = make_query(nt::Type_e::VehicleJourney, R"(vehicle_journey.has_headsign("vj 1"))", *(b.data));
     BOOST_CHECK_EQUAL_RANGE(res, nt::make_indexes({1}));
 }
 
@@ -516,8 +514,7 @@ BOOST_AUTO_TEST_CASE(headsign_sa_request) {
         b.vj("C")("stop3", 9000, 9050)("stop5", 9200, 9250);
     });
 
-    const auto res = make_query(nt::Type_e::StopArea,
-                                R"(vehicle_journey.has_headsign("vj 1"))", *(b.data));
+    const auto res = make_query(nt::Type_e::StopArea, R"(vehicle_journey.has_headsign("vj 1"))", *(b.data));
     BOOST_REQUIRE_EQUAL(res.size(), 2);
     std::set<std::string> sas;
     for (const auto& idx : res) {
@@ -533,8 +530,7 @@ BOOST_AUTO_TEST_CASE(code_request) {
         b.data->pt_data->codes.add(a, "UIC", "8727100");
     });
 
-    const auto res = make_query(nt::Type_e::StopArea,
-                                R"(stop_area.has_code(UIC, 8727100))", *(b.data));
+    const auto res = make_query(nt::Type_e::StopArea, R"(stop_area.has_code(UIC, 8727100))", *(b.data));
 
     BOOST_CHECK_EQUAL_RANGE(get_uris<nt::StopArea>(res, *b.data), std::set<std::string>({"A"}));
 }
@@ -554,20 +550,16 @@ BOOST_AUTO_TEST_CASE(code_type_request) {
     const auto* sa = b.get<nt::StopArea>("sa_1");
     b.data->pt_data->codes.add(sa, "code_type_1", "0");
 
-    auto res = make_query(nt::Type_e::StopPoint,
-                          R"(stop_point.has_code_type(code_type_1))", *(b.data));
+    auto res = make_query(nt::Type_e::StopPoint, R"(stop_point.has_code_type(code_type_1))", *(b.data));
     BOOST_CHECK_EQUAL_RANGE(get_uris<nt::StopPoint>(res, *b.data), std::set<std::string>({"stop1", "stop3"}));
 
-    res = make_query(nt::Type_e::StopPoint,
-                     R"(stop_point.has_code_type(code_type_2))", *(b.data));
+    res = make_query(nt::Type_e::StopPoint, R"(stop_point.has_code_type(code_type_2))", *(b.data));
     BOOST_CHECK_EQUAL_RANGE(get_uris<nt::StopPoint>(res, *b.data), std::set<std::string>({"stop2", "stop4"}));
 
-    res = make_query(nt::Type_e::StopArea,
-                     R"(stop_area.has_code_type(code_type_1))", *(b.data));
+    res = make_query(nt::Type_e::StopArea, R"(stop_area.has_code_type(code_type_1))", *(b.data));
     BOOST_CHECK_EQUAL_RANGE(get_uris<nt::StopArea>(res, *b.data), std::set<std::string>({"sa_1"}));
 
-    BOOST_CHECK_THROW(make_query(nt::Type_e::StopArea,
-                                 R"(stop_area.has_code_type(code_type_doesnt_exist))", *(b.data)),
+    BOOST_CHECK_THROW(make_query(nt::Type_e::StopArea, R"(stop_area.has_code_type(code_type_doesnt_exist))", *(b.data)),
                       ptref_error);
 }
 
@@ -1018,45 +1010,35 @@ BOOST_AUTO_TEST_CASE(direction_type_request) {
         b.vj("L7").route("route7", "outbound").name("vj:0")("stop1", "8:05"_t, "8:06"_t)("stop2", "8:10"_t, "8:11"_t);
     });
 
-    auto res = make_query(nt::Type_e::Route,
-                          R"(route.has_direction_type(forward))", *(b.data));
+    auto res = make_query(nt::Type_e::Route, R"(route.has_direction_type(forward))", *(b.data));
     BOOST_CHECK_EQUAL_RANGE(get_uris<nt::Route>(res, *b.data), std::set<std::string>({"route1", "route2"}));
 
-    res = make_query(nt::Type_e::Route,
-                     R"(route.has_direction_type(backward))", *(b.data));
+    res = make_query(nt::Type_e::Route, R"(route.has_direction_type(backward))", *(b.data));
     BOOST_CHECK_EQUAL_RANGE(get_uris<nt::Route>(res, *b.data), std::set<std::string>({"route5"}));
 
-    res = make_query(nt::Type_e::Route,
-                     R"(route.has_direction_type(forward, clockwise, inbound))", *(b.data));
+    res = make_query(nt::Type_e::Route, R"(route.has_direction_type(forward, clockwise, inbound))", *(b.data));
     BOOST_CHECK_EQUAL_RANGE(get_uris<nt::Route>(res, *b.data),
                             std::set<std::string>({"route1", "route2", "route3", "route4"}));
 
-    res = make_query(nt::Type_e::Line,
-                     R"(route.has_direction_type(clockwise, backward, outbound))", *(b.data));
+    res = make_query(nt::Type_e::Line, R"(route.has_direction_type(clockwise, backward, outbound))", *(b.data));
     BOOST_CHECK_EQUAL_RANGE(get_uris<nt::Line>(res, *b.data), std::set<std::string>({"L3", "L5", "L7"}));
 
-    BOOST_CHECK_THROW(make_query(nt::Type_e::Route,
-                                 R"(route.has_direction_type(direction_type_doesnt_exist))", *(b.data)),
-                      ptref_error);
+    BOOST_CHECK_THROW(
+        make_query(nt::Type_e::Route, R"(route.has_direction_type(direction_type_doesnt_exist))", *(b.data)),
+        ptref_error);
 
-    res = make_query(nt::Type_e::Line,
-                     R"(route.has_direction_type(forward))", *(b.data));
+    res = make_query(nt::Type_e::Line, R"(route.has_direction_type(forward))", *(b.data));
     BOOST_CHECK_EQUAL_RANGE(get_uris<nt::Line>(res, *b.data), std::set<std::string>({"L1", "L2"}));
 
-    res = make_query(nt::Type_e::StopPoint,
-                     R"(route.has_direction_type(forward))", *(b.data));
+    res = make_query(nt::Type_e::StopPoint, R"(route.has_direction_type(forward))", *(b.data));
     BOOST_CHECK_EQUAL_RANGE(get_uris<nt::StopPoint>(res, *b.data),
                             std::set<std::string>({"stop1", "stop2", "stop3", "stop4"}));
 
-    res = make_query(nt::Type_e::JourneyPatternPoint,
-                     R"(route.has_direction_type(forward))", *(b.data));
+    res = make_query(nt::Type_e::JourneyPatternPoint, R"(route.has_direction_type(forward))", *(b.data));
     BOOST_CHECK_EQUAL(res.size(), 4);
 
     // Only route has direction type
-    BOOST_CHECK_THROW(make_query(nt::Type_e::Route,
-                                 R"(line.has_direction_type(forward))", *(b.data)),
-                      ptref_error);
-    BOOST_CHECK_THROW(make_query(nt::Type_e::Line,
-                                 R"(stop_point.has_direction_type(forward))", *(b.data)),
+    BOOST_CHECK_THROW(make_query(nt::Type_e::Route, R"(line.has_direction_type(forward))", *(b.data)), ptref_error);
+    BOOST_CHECK_THROW(make_query(nt::Type_e::Line, R"(stop_point.has_direction_type(forward))", *(b.data)),
                       ptref_error);
 }

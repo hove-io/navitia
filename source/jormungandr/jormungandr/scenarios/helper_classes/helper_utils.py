@@ -827,9 +827,9 @@ def compute_transfer(pt_journey, transfer_path_pool, request, request_id):
 
 def complete_transfer(pt_journey, transfer_path_pool, request, transfer_sections):
     """
-        We complete the pt_journey by adding to transfer section :
-        - path
-        - We do not modify duration !!
+    We complete the pt_journey by adding to transfer section :
+    - path
+    - We do not modify duration !!
     """
     logger = logging.getLogger(__name__)
     logger.debug("completing walking transfer in pt journey")

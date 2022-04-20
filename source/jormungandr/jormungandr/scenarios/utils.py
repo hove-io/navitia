@@ -388,7 +388,7 @@ def gen_all_combin(n, t):
 
 
 def add_link(resp, rel, **kwargs):
-    """ create and add a protobuf link to a protobuff response"""
+    """create and add a protobuf link to a protobuff response"""
     link = resp.links.add(rel=rel, is_templated=False, ressource_name='journeys')
     for k, v in kwargs.items():
         if k is None or v is None:

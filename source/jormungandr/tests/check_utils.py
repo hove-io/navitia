@@ -290,7 +290,7 @@ def check_links(object, tester, href_mandatory=True):
     for link_name, link in links.items():
 
         def get_bool(name):
-            """ give boolean if in dict, else False"""
+            """give boolean if in dict, else False"""
             if name in link:
                 assert is_valid_bool(link[name])
                 if bool(link[name]):
@@ -1390,7 +1390,7 @@ def check_journey(journey, ref_journey):
 
 
 def generate_pt_journeys(response):
-    """ generate all journeys with at least a public transport section """
+    """generate all journeys with at least a public transport section"""
     for j in response.get('journeys', []):
         if any(s for s in j.get('sections', []) if s['type'] == 'public_transport'):
             yield j
@@ -1430,7 +1430,7 @@ def has_the_disruption(response, disrupt_id):
 
 
 def get_departure(dep, sp_uri, line_code):
-    """ small helper that extract the information from a route point departures """
+    """small helper that extract the information from a route point departures"""
     return [
         {
             'rt': r['stop_date_time']['data_freshness'] == 'realtime',
@@ -1442,7 +1442,7 @@ def get_departure(dep, sp_uri, line_code):
 
 
 def get_schedule(scs, sp_uri, line_code):
-    """ small helper that extract the information from a route point stop schedule """
+    """small helper that extract the information from a route point stop schedule"""
     return [
         {'rt': r['data_freshness'] == 'realtime', 'dt': r['date_time']}
         for r in next(

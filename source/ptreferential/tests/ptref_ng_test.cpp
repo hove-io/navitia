@@ -69,27 +69,19 @@ BOOST_AUTO_TEST_CASE(parse_pred) {
     assert_expr("  all  ", "all");
     assert_expr("  empty  ", "empty");
     assert_expr("line . a ( ) ", "line.a()");
-    assert_expr(
-        R"#(vehicle_journey . has_code ( external_code , "OIF:42" ) )#",
-        R"#(vehicle_journey.has_code("external_code", "OIF:42"))#");
-    assert_expr(
-        R"#(vehicle_journey . has_code_type ( external_code ) )#",
-        R"#(vehicle_journey.has_code_type("external_code"))#");
-    assert_expr(
-        R"#(route . has_direction_type ( forward ) )#",
-        R"#(route.has_direction_type("forward"))#");
+    assert_expr(R"#(vehicle_journey . has_code ( external_code , "OIF:42" ) )#",
+                R"#(vehicle_journey.has_code("external_code", "OIF:42"))#");
+    assert_expr(R"#(vehicle_journey . has_code_type ( external_code ) )#",
+                R"#(vehicle_journey.has_code_type("external_code"))#");
+    assert_expr(R"#(route . has_direction_type ( forward ) )#", R"#(route.has_direction_type("forward"))#");
     assert_expr(R"#(stop_area . uri ( "OIF:42" ) )#", R"#(stop_area.uri("OIF:42"))#");
     assert_expr(R"#(stop_area . uri = "OIF:42" )#", R"#(stop_area.uri("OIF:42"))#");
     assert_expr(R"#(stop_area . uri = OIF:42 )#", R"#(stop_area.uri("OIF:42"))#");
     assert_expr(R"#(stop_area . uri = foo )#", R"#(stop_area.uri("foo"))#");
     assert_expr(R"#(stop_area . uri = 42 )#", R"#(stop_area.uri("42"))#");
     assert_expr(R"#(stop_area . uri = 1ee7_: )#", R"#(stop_area.uri("1ee7_:"))#");
-    assert_expr(
-        R"#(stop_point.within(42, -2.2;4.9e-2))#",
-        R"#(stop_point.within("42", "-2.2;4.9e-2"))#");
-    assert_expr(
-        R"#(stop_point.coord DWITHIN (-2.2, 4.9e-2, 42))#",
-        R"#(stop_point.within("42", "-2.2;4.9e-2"))#");
+    assert_expr(R"#(stop_point.within(42, -2.2;4.9e-2))#", R"#(stop_point.within("42", "-2.2;4.9e-2"))#");
+    assert_expr(R"#(stop_point.coord DWITHIN (-2.2, 4.9e-2, 42))#", R"#(stop_point.within("42", "-2.2;4.9e-2"))#");
 }
 
 BOOST_AUTO_TEST_CASE(parse_expr) {

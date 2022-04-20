@@ -425,13 +425,13 @@ def get_passages_stop_time_with_is_realtime_test():
 
 def get_next_passage_for_route_point_with_requests_response_model_test():
     '''
-        We test a call on Timeo based on a real requests' response model object.
+    We test a call on Timeo based on a real requests' response model object.
 
-        requests.models.Response() behaves differently from our mock_response
-        as a boolean cast is performed on request.models.Response() to return True
-        if the http status code is less than 400.
+    requests.models.Response() behaves differently from our mock_response
+    as a boolean cast is performed on request.models.Response() to return True
+    if the http status code is less than 400.
 
-        Hence a Timeo request with a 404 response should raise an error !
+    Hence a Timeo request with a 404 response should raise an error !
     '''
     timeo_test_url = 'http://bob.com/tata'
 
