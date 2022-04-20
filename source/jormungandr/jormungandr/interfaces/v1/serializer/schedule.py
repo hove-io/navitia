@@ -84,7 +84,7 @@ class DateTimeTypeSerializer(PbNestedSerializer):
         return properties_links + disruption_links
 
     def get_date_time(self, obj):
-        __date_time_null_value__ = 2 ** 64 - 1
+        __date_time_null_value__ = 2**64 - 1
         if obj.time == __date_time_null_value__:
             return ""
         if obj.HasField('date'):

@@ -43,7 +43,8 @@ struct data_set {
              std::string publisher_name,
              std::string timezone_name,
              navitia::type::TimeZoneHandler::dst_periods timezones)
-        : b(date,
+        : b(
+            date,
             [](ed::builder& b) {
                 // Add calendar
                 navitia::type::Calendar* wednesday_cal{

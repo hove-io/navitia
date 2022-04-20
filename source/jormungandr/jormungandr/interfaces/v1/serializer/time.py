@@ -37,7 +37,7 @@ from jormungandr.utils import timestamp_to_str, dt_to_str, DATETIME_FORMAT
 
 # a time null value is represented by the max value (since 0 is a perfectly valid value)
 # WARNING! be careful to change that value if the time type change (from uint64 to uint32 for example)
-__date_time_null_value__ = 2 ** 64 - 1
+__date_time_null_value__ = 2**64 - 1
 
 
 class TimeField(NestedPbField, TimeType):

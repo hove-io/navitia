@@ -161,7 +161,7 @@ class Siri(RealtimeProxy):
 
     def __repr__(self):
         """
-         used as the cache key. we use the rt_system_id to share the cache between servers in production
+        used as the cache key. we use the rt_system_id to share the cache between servers in production
         """
         try:
             return self.rt_system_id.encode('utf-8', 'backslashreplace')

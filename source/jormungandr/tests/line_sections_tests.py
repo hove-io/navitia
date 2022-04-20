@@ -349,7 +349,7 @@ class TestLineSections(AbstractTestFixture):
     )
     def test_failing_traffic_reports_on_lines(self):
         """
-            specific cases for lines where the actual behavior is undesirable
+        specific cases for lines where the actual behavior is undesirable
         """
 
         assert not self.has_tf_disruption('lines/line:3/traffic_reports', 'line_section_on_line_1')
@@ -412,7 +412,7 @@ class TestLineSections(AbstractTestFixture):
     )
     def test_failing_traffic_reports_on_routes(self):
         """
-            specific cases for routes where the actual behavior is undesirable
+        specific cases for routes where the actual behavior is undesirable
         """
 
         assert not self.has_dis('routes/route:line:3:1/traffic_reports', 'line_section_on_line_1')
@@ -480,7 +480,7 @@ class TestLineSections(AbstractTestFixture):
     )
     def test_failing_traffic_reports_on_vjs(self):
         """
-            specific cases for vjs where the actual behavior is undesirable
+        specific cases for vjs where the actual behavior is undesirable
         """
 
         assert not self.has_dis(

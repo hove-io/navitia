@@ -116,13 +116,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
-    - name: install dependencies
-      run: |
-        sudo apt update && sudo apt install -y protobuf-compiler clang-format-6.0 git 2to3
-        pip install -r requirements_pre-commit.txt --upgrade
     - uses: actions/setup-python@v3
       with:
         python-version: '3.6.x'
+    - name: install dependencies
+      run: |
+        sudo apt update && sudo apt install -y protobuf-compiler clang-format git 2to3
+        pip install -r requirements_pre-commit.txt --upgrade
     - name: get submodule
       run: |
         sed -i 's,git\@github.com:\([^/]*\)/\(.*\).git,https://github.com/\1/\2,' .gitmodules
@@ -140,7 +140,7 @@ jobs:
   release_script_tests:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/setup-python@v1
+    - uses: actions/setup-python@v3
       with:
         python-version: '2.7'
     - uses: actions/checkout@v3

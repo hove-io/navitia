@@ -59,8 +59,8 @@ void PT_Data::serialize(Archive& ar, const unsigned int /*unused*/) {
 #define SERIALIZE_ELEMENTS(type_name, collection_name) &collection_name& collection_name##_map
             ITERATE_NAVITIA_PT_TYPES(SERIALIZE_ELEMENTS)
         & stop_area_autocomplete& stop_point_autocomplete& line_autocomplete& network_autocomplete& mode_autocomplete&
-              route_autocomplete& stop_area_proximity_list& stop_point_proximity_list& stop_point_connections&
-                  disruption_holder& meta_vjs& stop_points_by_area& comments& codes& headsign_handler& tz_manager;
+            route_autocomplete& stop_area_proximity_list& stop_point_proximity_list& stop_point_connections&
+                disruption_holder& meta_vjs& stop_points_by_area& comments& codes& headsign_handler& tz_manager;
 }
 SERIALIZABLE(PT_Data)
 

@@ -330,8 +330,8 @@ def test_similar_journeys_test3():
 
 def test_similar_journeys_different_transfer():
     """
-     If 2 journeys take the same vjs but with a different number of sections,
-     one should be filtered
+    If 2 journeys take the same vjs but with a different number of sections,
+    one should be filtered
     """
     responses = [response_pb2.Response()]
     journey1 = responses[0].journeys.add()
@@ -362,8 +362,8 @@ def test_similar_journeys_different_transfer():
 
 def test_similar_journeys_different_waiting_durations():
     """
-     If 2 journeys take the same vj, same number of sections but with different waiting durations,
-     filter one with smaller waiting duration
+    If 2 journeys take the same vj, same number of sections but with different waiting durations,
+    filter one with smaller waiting duration
     """
     responses = [response_pb2.Response()]
     journey1 = responses[0].journeys.add()
@@ -405,9 +405,9 @@ def test_similar_journeys_different_waiting_durations():
 
 def test_similar_journeys_multi_trasfer_and_different_waiting_durations():
     """
-     If 2 journeys take the same vj, same number of sections and several waitings with different waiting durations,
-     for each journey find "min waiting duration"
-     keep the journey which has larger "min waiting duration"
+    If 2 journeys take the same vj, same number of sections and several waitings with different waiting durations,
+    for each journey find "min waiting duration"
+    keep the journey which has larger "min waiting duration"
     """
     responses = [response_pb2.Response()]
     journey1 = responses[0].journeys.add()
@@ -467,8 +467,8 @@ def test_similar_journeys_multi_trasfer_and_different_waiting_durations():
 
 def test_similar_journeys_with_and_without_waiting_section():
     """
-     If 2 journeys take the same vj, one with a waiting section and another without,
-     filtere one with transfer but without waiting section
+    If 2 journeys take the same vj, one with a waiting section and another without,
+    filtere one with transfer but without waiting section
     """
     responses = [response_pb2.Response()]
     journey1 = responses[0].journeys.add()
@@ -869,13 +869,13 @@ def test_heavy_journey_bss():
 def test_activate_deactivate_min_bike():
     """
 
-      A                 B                           C            D
-      *................*============================*.............*
-      A: origin
-      D: Destination
-      A->B : Bike
-      B->C : public transport
-      C->D : Bike
+    A                 B                           C            D
+    *................*============================*.............*
+    A: origin
+    D: Destination
+    A->B : Bike
+    B->C : public transport
+    C->D : Bike
 
     """
     # case 1: request with duration_bike greater than min_bike
@@ -912,13 +912,13 @@ def test_activate_deactivate_min_bike():
 def test_activate_deactivate_min_car():
     """
 
-      A                 B                           C            D
-      *................*============================*.............*
-      A: origin
-      D: Destination
-      A->B : car
-      B->C : public transport
-      C->D : car
+    A                 B                           C            D
+    *................*============================*.............*
+    A: origin
+    D: Destination
+    A->B : car
+    B->C : public transport
+    C->D : car
 
     """
     # case 1: request with duration_car greater than min_car
@@ -955,13 +955,13 @@ def test_activate_deactivate_min_car():
 def test_activate_deactivate_min_taxi():
     """
 
-      A                 B                           C            D
-      *................*============================*.............*
-      A: origin
-      D: Destination
-      A->B : taxi
-      B->C : public transport
-      C->D : taxi
+    A                 B                           C            D
+    *................*============================*.............*
+    A: origin
+    D: Destination
+    A->B : taxi
+    B->C : public transport
+    C->D : taxi
 
     """
     # case 1: request with duration_taxi greater than min_taxi
@@ -998,14 +998,14 @@ def test_activate_deactivate_min_taxi():
 def test_activate_deactivate_mixed_min_taxi_bike_car():
     """
 
-      A          B               C      D           E
-      *..........*===============*......*###########*
-      A: origin
-      E: Destination
-      A->B : taxi
-      B->C : public transport
-      C->D : bike
-      D->E : car
+    A          B               C      D           E
+    *..........*===============*......*###########*
+    A: origin
+    E: Destination
+    A->B : taxi
+    B->C : public transport
+    C->D : bike
+    D->E : car
 
     """
     # case 1: request with all duration_{mode} greater than min_{mode}

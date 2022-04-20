@@ -34,8 +34,7 @@ from navitiacommon import models
 
 
 class BuildDataCommand(Command):
-    """A command used to build all the datasets
-    """
+    """A command used to build all the datasets"""
 
     def get_options(self):
         return [

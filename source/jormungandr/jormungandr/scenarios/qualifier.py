@@ -102,7 +102,7 @@ def has_no_bss(journey):
 
 
 def non_pt_journey(journey):
-    """ check if the journey has not public transport section"""
+    """check if the journey has not public transport section"""
     has_pt = all(section.type != response_pb2.PUBLIC_TRANSPORT for section in journey.sections)
     return has_pt
 
