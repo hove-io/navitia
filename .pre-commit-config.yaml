@@ -1,6 +1,6 @@
 repos:
 -   repo: https://github.com/ambv/black
-    rev: 18.9b0
+    rev: 22.3.0
     hooks:
     - id: black
       language_version: python3.6
@@ -18,7 +18,7 @@ repos:
 -   repo: https://github.com/hove-io/navitia-pre-commit
     rev: master
     hooks:
-    -   id: clang-format-6.0
+    -   id: clang-format
         verbose: true
         exclude: ^source/third_party/
         files: \.(c|cc|cxx|cpp|h|hpp|hxx)$
