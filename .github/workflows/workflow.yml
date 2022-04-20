@@ -118,7 +118,7 @@ jobs:
     - uses: actions/checkout@v3
     - name: install dependencies
       run: |
-        sudo apt update && sudo apt install -y protobuf-compiler clang-format-6.0 git 2to3
+        sudo apt update && sudo apt install -y protobuf-compiler clang-format git 2to3
         pip install -r requirements_pre-commit.txt --upgrade
     - uses: actions/setup-python@v3
       with:
