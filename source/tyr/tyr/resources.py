@@ -1794,7 +1794,7 @@ class TravelerProfile(flask_restful.Resource):
 
         return wrapper
 
-    @marshal_with(traveler_profile)
+    @marshal_with(traveler_profile)  # type: ignore
     @check_resources
     def get(self, name=None, traveler_type=None):
         try:
@@ -1818,7 +1818,7 @@ class TravelerProfile(flask_restful.Resource):
             logging.exception("fail")
             raise
 
-    @marshal_with(traveler_profile)
+    @marshal_with(traveler_profile)  # type: ignore
     @check_resources
     def post(self, name=None, traveler_type=None):
         try:
@@ -1840,7 +1840,7 @@ class TravelerProfile(flask_restful.Resource):
             logging.exception("fail")
             raise
 
-    @marshal_with(traveler_profile)
+    @marshal_with(traveler_profile)  # type: ignore
     @check_resources
     def put(self, name=None, traveler_type=None):
         profile = models.TravelerProfile.get_by_coverage_and_type(name, traveler_type)
@@ -1859,7 +1859,7 @@ class TravelerProfile(flask_restful.Resource):
             logging.exception("fail")
             raise
 
-    @check_resources
+    @check_resources  # type: ignore
     def delete(self, name=None, traveler_type=None):
         profile = models.TravelerProfile.get_by_coverage_and_type(name, traveler_type)
         if profile is None:
