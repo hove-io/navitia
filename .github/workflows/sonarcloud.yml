@@ -27,7 +27,7 @@ jobs:
       run: rm -rf /usr/share/dotnet/*
     - name: Display remaining space
       run: df -h
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
       with:
           submodules: 'recursive'
     - name: Install Gcov and SonarCloud's dependencies for C++ analysis
