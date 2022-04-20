@@ -351,7 +351,7 @@ class BetaEndpointsSerializer(serpy.Serializer):
 
     id = LiteralField("beta_endpoint", schema_type=str, display_none=True)
     message = LiteralField(
-        'This service is under construction. You can help through github.com/CanalTP/navitia',
+        'This service is under construction. You can help through github.com/hove-io/navitia',
         schema_type=str,
         display_none=True,
     )

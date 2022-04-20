@@ -127,7 +127,7 @@ inline transit_realtime::TripUpdate make_trip_update_message(
         trip_update.SetExtension(kirin::headsign, headsign);
     }
     // start_date is used to disambiguate trips that are very late, cf:
-    // https://github.com/CanalTP/chaos-proto/blob/master/gtfs-realtime.proto#L459
+    // https://github.com/hove-io/chaos-proto/blob/master/gtfs-realtime.proto#L459
     trip->set_start_date(start_date);
     auto st_update = trip_update.mutable_stop_time_update();
 
