@@ -43,6 +43,7 @@ import flask_restful
 import six
 import sqlalchemy
 import werkzeug
+from werkzeug.utils import secure_filename
 from flask import current_app, request
 from flask_restful import marshal_with, marshal, reqparse, inputs, abort
 from jsonschema import validate, ValidationError
@@ -138,6 +139,7 @@ class Job(flask_restful.Resource):
             return {'message': 'the Data file is missing'}, 400
 
         content = request.files['file']
+        filename = secure_filename(content.filename)
         logger = get_instance_logger(instance)
         logger.info('content received: %s', content)
 
@@ -145,7 +147,7 @@ class Job(flask_restful.Resource):
         if not os.path.exists(instance.source_directory):
             return {'error': 'input folder unavailable'}, 500
 
-        if utils.filename_has_valid_extension(content.filename) == False:
+        if utils.filename_has_valid_extension(filename) == False:
             return (
                 {
                     'message': "Filename has invalid extension :'{}'".format(content.filename),
@@ -154,7 +156,7 @@ class Job(flask_restful.Resource):
                 400,
             )
 
-        full_file_name = os.path.join(os.path.realpath(instance.source_directory), content.filename)
+        full_file_name = os.path.join(os.path.realpath(instance.source_directory), filename)
         tmp_file_name = full_file_name + ".tmp"
         content.save(tmp_file_name)
         shutil.move(tmp_file_name, full_file_name)
