@@ -39,6 +39,7 @@ jobs:
         max-size: 2000M
     - name: dkpg-buildpackage
       run: |
+        git --version && git describe --dirty
         sed -i 's,git\@github.com:\([^/]*\)/\(.*\).git,https://github.com/\1/\2,' .gitmodules
         git submodule update --init --recursive
         DEB_BUILD_OPTIONS=nocheck dpkg-buildpackage -b
