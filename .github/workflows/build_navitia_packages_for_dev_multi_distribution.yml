@@ -30,6 +30,8 @@ jobs:
         echo "Free space:"
         df -h
     - uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
     - name: install zip dependency
       run: apt update && apt install -y zip httpie dh-python
     - name: Restore ccache
