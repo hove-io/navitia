@@ -78,9 +78,9 @@ jobs:
     - uses: actions/download-artifact@v3 # Download all artifacts Debian10 (job 'build') to the current working directory
       with:
         name: navitia-debian10-packages
-        path: ./builder_from_package
+        path: ./builder_from_package/debian10
     - name: build, create and publish images for branch release
-      working-directory: builder_from_package
+      working-directory: builder_from_package/debian10
       run: ./build.sh -o ${{secrets.access_token_github}} -n -r -e push -t release -b release -u ${{secrets.docker_user}} -p ${{secrets.docker_password}}
     - name: slack notification (the job has failed)
       if: failure()
