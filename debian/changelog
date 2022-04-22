@@ -1,3 +1,24 @@
+navitia2 (15.6.0) unstable; urgency=low
+
+  * [doc] bullet points corrections  <https://github.com/hove-io/navitia/pull/3732>
+  * refactor: rename namespace  <https://github.com/hove-io/navitia/pull/3721>
+  * [CI] fix git fetch tag  <https://github.com/hove-io/navitia/pull/3731>
+  * [doc] add 'reliable' tag  <https://github.com/hove-io/navitia/pull/3729>
+  * [doc] Add Access_point documentation  <https://github.com/hove-io/navitia/pull/3681>
+  * [doc] update some comment and documentation to Hove  <https://github.com/hove-io/navitia/pull/3720>
+  * [CI] Upgrade ci tools  <https://github.com/hove-io/navitia/pull/3727>
+  * [CI] update action checkout version  <https://github.com/hove-io/navitia/pull/3726>
+  * [CI] Fix docker-compose CI  <https://github.com/hove-io/navitia/pull/3725>
+  * [CI] Trig Artemis NG Debian 8 & 10   <https://github.com/hove-io/navitia/pull/3723>
+  * [Asgard] Optimize bss matrix  <https://github.com/hove-io/navitia/pull/3724>
+  * Add newrelic config file  <https://github.com/hove-io/navitia/pull/3722>
+  * [CI] Workflow/Artemis optimization  <https://github.com/hove-io/navitia/pull/3719>
+  * [doc] update license headers for H/CPP  <https://github.com/hove-io/navitia/pull/3715>
+  * [doc] add some more details about release  <https://github.com/hove-io/navitia/pull/3718>
+  * Add NewRelic python dependency  <https://github.com/hove-io/navitia/pull/3717>
+
+ -- Hicham <hicham.azimani@kisio.com>  Fri, 22 Apr 2022 13:04:03 +0100
+
 navitia2 (15.5.0) unstable; urgency=low
 
   * [Distributed] feat: collage from_coord and to_coord to geojson  <https://github.com/hove-io/navitia/pull/3686>
