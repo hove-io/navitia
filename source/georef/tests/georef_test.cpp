@@ -1,10 +1,10 @@
-/* Copyright © 2001-2014, Canal TP and/or its affiliates. All rights reserved.
+/* Copyright © 2001-2022, Hove and/or its affiliates. All rights reserved.
 
 This file is part of Navitia,
     the software to build cool stuff with public transport.
 
 Hope you'll enjoy and contribute to this project,
-    powered by Canal TP (www.canaltp.fr).
+    powered by Hove (www.hove.com).
 Help us simplify mobility and open public transport:
     a non ending quest to the responsive locomotion way of traveling!
 
@@ -1181,7 +1181,8 @@ BOOST_AUTO_TEST_CASE(build_autocomplete_test) {
     b.manage_admin();
     b.build_autocomplete();
 
-    result = b.data->geo_ref->find_ways("10 rue jean jaures", nbmax, false, [](int) { return true; }, ghostwords);
+    result = b.data->geo_ref->find_ways(
+        "10 rue jean jaures", nbmax, false, [](int) { return true; }, ghostwords);
 
     // we should have found the 10 of the rue jean jaures
     BOOST_REQUIRE_EQUAL(result.size(), 1);
@@ -1190,7 +1191,8 @@ BOOST_AUTO_TEST_CASE(build_autocomplete_test) {
     BOOST_CHECK_EQUAL(b.data->geo_ref->ways[result[0].idx]->get_label(), "jean jaures (Quimper)");
 
     // when we search only for jean jaures we should have the avenue, the place and the street
-    result = b.data->geo_ref->find_ways("jean jaures", nbmax, false, [](int) { return true; }, ghostwords);
+    result = b.data->geo_ref->find_ways(
+        "jean jaures", nbmax, false, [](int) { return true; }, ghostwords);
     BOOST_REQUIRE_EQUAL(result.size(), 3);
     // and none of the result should have a house number
     for (const auto& r : result) {

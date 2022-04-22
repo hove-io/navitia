@@ -53,7 +53,7 @@ class TestPlaces(AbstractTestFixture):
         assert response['places'][0]['name'] == "42 rue kb (Condom)"
 
     def test_label_of_admin(self):
-        """ test label of admin "Condom (03430)" """
+        """test label of admin "Condom (03430)" """
         response = self.query_region("places?q=Condom&type[]=administrative_region")
 
         assert len(response['places']) == 1
@@ -287,7 +287,7 @@ class TestPlaces(AbstractTestFixture):
         assert response["error"]["message"] == u'Unable to find place: -1.5348252000000002;47.2554241'
 
     def test_line_forbidden(self):
-        """ test that line is not an allowed type """
+        """test that line is not an allowed type"""
         response, status = self.query_region("places?q=A&type[]=line", check=False)
 
         assert status == 400
@@ -360,7 +360,7 @@ class TestPlaces(AbstractTestFixture):
         assert 'distance' not in places[0]
 
     def test_stop_area_attributes_with_different_depth(self):
-        """ verify that stop_area contains lines in all apis with depth>2 """
+        """verify that stop_area contains lines in all apis with depth>2"""
         # API places without depth
         response = self.query_region("places?type[]=stop_area&q=stopA")
         places = response['places']
@@ -405,7 +405,7 @@ class TestPlaces(AbstractTestFixture):
         assert status == 200
 
     def test_stop_point_attributes_with_different_depth(self):
-        """ verify that stop_area contains lines in all apis with depth>2 """
+        """verify that stop_area contains lines in all apis with depth>2"""
         # API places without depth
         response = self.query_region("places?type[]=stop_point&q=stopA")
         places = response['places']

@@ -115,9 +115,13 @@ def test_external_service_get(default_external_service_config):
     """
     Test that the list of services with their info is correctly returned when queried
     """
-    _, external_service_1, external_service_2, external_service_3, external_service_4 = (
-        default_external_service_config
-    )
+    (
+        _,
+        external_service_1,
+        external_service_2,
+        external_service_3,
+        external_service_4,
+    ) = default_external_service_config
     resp = api_get('/v0/external_services')
     assert "external_services" in resp
     assert len(resp['external_services']) == 4
@@ -289,9 +293,13 @@ def test_external_service_delete(default_external_service_config):
 
 
 def test_associate_instance_external_service(default_external_service_config):
-    instance, external_service_1, external_service_2, external_service_3, external_service_4 = (
-        default_external_service_config
-    )
+    (
+        instance,
+        external_service_1,
+        external_service_2,
+        external_service_3,
+        external_service_4,
+    ) = default_external_service_config
 
     # Associate one external service
     resp = api_put('/v1/instances/{}?external_services={}'.format(instance.name, external_service_1.id))

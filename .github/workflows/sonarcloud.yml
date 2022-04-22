@@ -6,6 +6,9 @@ on:
   pull_request:
     branches: [ dev ]
 
+env:
+   SONAR_SCANNER_VERSION: 4.7.0.2747
+
 jobs:
   static_analysis:
     runs-on: ubuntu-latest
@@ -27,7 +30,7 @@ jobs:
       run: rm -rf /usr/share/dotnet/*
     - name: Display remaining space
       run: df -h
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
       with:
           submodules: 'recursive'
     - name: Install Gcov and SonarCloud's dependencies for C++ analysis
@@ -36,14 +39,14 @@ jobs:
         apt update -y
         pip install gcovr
         apt install -y unzip wget
-        wget 'https://sonarcloud.io/static/cpp/build-wrapper-linux-x86.zip' 'https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-4.6.0.2311-linux.zip'
+        wget https://sonarcloud.io/static/cpp/build-wrapper-linux-x86.zip https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-$SONAR_SCANNER_VERSION-linux.zip
         unzip -u build-wrapper-linux-x86.zip
-        unzip -u sonar-scanner-cli-4.6.0.2311-linux.zip
+        unzip -u sonar-scanner-cli-$SONAR_SCANNER_VERSION-linux.zip
     - name: Install dependencies for python2
       run: pip install -r source/jormungandr/requirements_dev.txt
     - name: Cache Sonar
       id: cache-sonar
-      uses: actions/cache@v2
+      uses: actions/cache@v3
       with:
         path: sonar_cache
         key: sonar-cache-${{ github.event.head_commit.id }}
@@ -67,6 +70,6 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
       run: |
-          sonar-scanner-4.6.0.2311-linux/bin/sonar-scanner \
+          sonar-scanner-$SONAR_SCANNER_VERSION-linux/bin/sonar-scanner \
                 -Dsonar.login=$SONAR_TOKEN \
                 -Dsonar.cfamily.threads=$(nproc)

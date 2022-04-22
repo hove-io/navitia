@@ -199,6 +199,12 @@ class ProximitiesByCrowflyPool:
             if mode == fm.FallbackModes.car.name and no_dp and self._o_d_crowfly_distance is not None:
                 max_fallback_duration = min(max_fallback_duration, self._o_d_crowfly_distance / float(speed))
 
+            if mode == fm.FallbackModes.bss.name:
+                # we subtract the time spent when renting and returning the bike
+                max_fallback_duration -= (
+                    self._request['bss_rent_duration'] + self._request['bss_return_duration']
+                )
+
             p = ProximitiesByCrowfly(
                 future_manager=self._future_manager,
                 instance=self._instance,

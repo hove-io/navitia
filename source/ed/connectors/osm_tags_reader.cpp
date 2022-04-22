@@ -1,10 +1,10 @@
-/* Copyright © 2001-2014, Canal TP and/or its affiliates. All rights reserved.
+/* Copyright © 2001-2022, Hove and/or its affiliates. All rights reserved.
 
 This file is part of Navitia,
     the software to build cool stuff with public transport.
 
 Hope you'll enjoy and contribute to this project,
-    powered by Canal TP (www.canaltp.fr).
+    powered by Hove (www.hove.com).
 Help us simplify mobility and open public transport:
     a non ending quest to the responsive locomotion way of traveling!
 
@@ -309,7 +309,7 @@ PoiTypeParams::PoiTypeParams(const std::string& json_params) {
  * the first rule that matches OSM object decides POI-type
  * match : OSM object has all OSM tags required by rule
  */
-const RuleOsmTag2PoiType* PoiTypeParams::get_applicable_poi_rule(const CanalTP::Tags& tags) const {
+const RuleOsmTag2PoiType* PoiTypeParams::get_applicable_poi_rule(const Hove::Tags& tags) const {
     auto poi_misses_a_tag = [&](const std::pair<const std::string, std::string>& osm_rule_tag) {
         const auto it_poi_tag = tags.find(osm_rule_tag.first);
         return (it_poi_tag == tags.end() || it_poi_tag->second != osm_rule_tag.second);
@@ -322,7 +322,7 @@ const RuleOsmTag2PoiType* PoiTypeParams::get_applicable_poi_rule(const CanalTP::
     return nullptr;
 }
 
-const std::string get_postal_code_from_tags(const CanalTP::Tags& tags) {
+const std::string get_postal_code_from_tags(const Hove::Tags& tags) {
     if (tags.find("addr:postcode") != tags.end()) {
         return tags.at("addr:postcode");
     }

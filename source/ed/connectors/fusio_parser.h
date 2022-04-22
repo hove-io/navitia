@@ -1,10 +1,10 @@
-/* Copyright © 2001-2014, Canal TP and/or its affiliates. All rights reserved.
+/* Copyright © 2001-2022, Hove and/or its affiliates. All rights reserved.
 
 This file is part of Navitia,
     the software to build cool stuff with public transport.
 
 Hope you'll enjoy and contribute to this project,
-    powered by Canal TP (www.canaltp.fr).
+    powered by Hove (www.hove.com).
 Help us simplify mobility and open public transport:
     a non ending quest to the responsive locomotion way of traveling!
 
@@ -32,7 +32,8 @@ www.navitia.io
 #include "gtfs_parser.h"
 
 /**
- * Read CanalTP custom transportation files
+ * Read Hove custom transportation files
+ * (see https://github.com/hove-io/ntfs-specification)
  *
  * The format is based on GTFS but additional data have been added
  *

@@ -1,10 +1,10 @@
-/* Copyright © 2001-2014, Canal TP and/or its affiliates. All rights reserved.
+/* Copyright © 2001-2022, Hove and/or its affiliates. All rights reserved.
 
 This file is part of Navitia,
     the software to build cool stuff with public transport.
 
 Hope you'll enjoy and contribute to this project,
-    powered by Canal TP (www.canaltp.fr).
+    powered by Hove (www.hove.com).
 Help us simplify mobility and open public transport:
     a non ending quest to the responsive locomotion way of traveling!
 
@@ -351,7 +351,7 @@ BOOST_FIXTURE_TEST_CASE(test_get_all_route_stop_times_with_time, route_schedule_
 }
 
 /*
- * Test with a dataset close to https://github.com/CanalTP/navitia/issues/1161
+ * Test with a dataset close to https://github.com/hove-io/navitia/issues/1161
  *
  * The dataset in LOCAL TIME (france) is:
  *
@@ -438,7 +438,7 @@ BOOST_FIXTURE_TEST_CASE(test_get_all_route_stop_times_with_different_vp_and_hour
 // S2 23:40  00:00  00:20
 // S3 23:50  00:10  00:30
 //
-// Detail in associated PR https://github.com/CanalTP/navitia/pull/1304
+// Detail in associated PR https://github.com/hove-io/navitia/pull/1304
 BOOST_AUTO_TEST_CASE(test_route_schedule_with_different_vp_over_midnight) {
     navitia::type::Calendar* c1;
 

@@ -60,7 +60,7 @@ from jormungandr.modules.v1_routing.resources import Index
 
 
 class RegionConverter(BaseConverter):
-    """ The region you want to query"""
+    """The region you want to query"""
 
     type_ = str
     regex = '[^(/;)]+'
@@ -70,7 +70,7 @@ class RegionConverter(BaseConverter):
 
 
 class LonConverter(FloatConverter):
-    """ The longitude of where the coord you want to query"""
+    """The longitude of where the coord you want to query"""
 
     type_ = float
     regex = '-?\\d+(\\.\\d+)?'
@@ -80,7 +80,7 @@ class LonConverter(FloatConverter):
 
 
 class LatConverter(FloatConverter):
-    """ The latitude of where the coord you want to query"""
+    """The latitude of where the coord you want to query"""
 
     type_ = float
     regex = '-?\\d+(\\.\\d+)?'

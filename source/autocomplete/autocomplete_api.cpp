@@ -1,10 +1,10 @@
-/* Copyright © 2001-2014, Canal TP and/or its affiliates. All rights reserved.
+/* Copyright © 2001-2022, Hove and/or its affiliates. All rights reserved.
 
 This file is part of Navitia,
     the software to build cool stuff with public transport.
 
 Hope you'll enjoy and contribute to this project,
-    powered by Canal TP (www.canaltp.fr).
+    powered by Hove (www.hove.com).
 Help us simplify mobility and open public transport:
     a non ending quest to the responsive locomotion way of traveling!
 
@@ -244,8 +244,8 @@ static std::vector<Autocomplete<nt::idx_t>::fl_quality> complete(const type::Dat
             break;
         case nt::Type_e::Network:
             if (search_type == 0) {
-                result = d.pt_data->network_autocomplete.find_complete(q, nbmax, [](type::idx_t) { return true; },
-                                                                       d.geo_ref->ghostwords);
+                result = d.pt_data->network_autocomplete.find_complete(
+                    q, nbmax, [](type::idx_t) { return true; }, d.geo_ref->ghostwords);
             } else {
                 result = d.pt_data->network_autocomplete.find_partial_with_pattern(
                     q, d.geo_ref->word_weight, nbmax, [](type::idx_t) { return true; }, d.geo_ref->ghostwords);
@@ -253,8 +253,8 @@ static std::vector<Autocomplete<nt::idx_t>::fl_quality> complete(const type::Dat
             break;
         case nt::Type_e::CommercialMode:
             if (search_type == 0) {
-                result = d.pt_data->mode_autocomplete.find_complete(q, nbmax, [](type::idx_t) { return true; },
-                                                                    d.geo_ref->ghostwords);
+                result = d.pt_data->mode_autocomplete.find_complete(
+                    q, nbmax, [](type::idx_t) { return true; }, d.geo_ref->ghostwords);
             } else {
                 result = d.pt_data->mode_autocomplete.find_partial_with_pattern(
                     q, d.geo_ref->word_weight, nbmax, [](type::idx_t) { return true; }, d.geo_ref->ghostwords);
@@ -262,8 +262,8 @@ static std::vector<Autocomplete<nt::idx_t>::fl_quality> complete(const type::Dat
             break;
         case nt::Type_e::Line:
             if (search_type == 0) {
-                result = d.pt_data->line_autocomplete.find_complete(q, nbmax, [](type::idx_t) { return true; },
-                                                                    d.geo_ref->ghostwords);
+                result = d.pt_data->line_autocomplete.find_complete(
+                    q, nbmax, [](type::idx_t) { return true; }, d.geo_ref->ghostwords);
             } else {
                 result = d.pt_data->line_autocomplete.find_partial_with_pattern(
                     q, d.geo_ref->word_weight, nbmax, [](type::idx_t) { return true; }, d.geo_ref->ghostwords);
@@ -271,8 +271,8 @@ static std::vector<Autocomplete<nt::idx_t>::fl_quality> complete(const type::Dat
             break;
         case nt::Type_e::Route:
             if (search_type == 0) {
-                result = d.pt_data->route_autocomplete.find_complete(q, nbmax, [](type::idx_t) { return true; },
-                                                                     d.geo_ref->ghostwords);
+                result = d.pt_data->route_autocomplete.find_complete(
+                    q, nbmax, [](type::idx_t) { return true; }, d.geo_ref->ghostwords);
             } else {
                 result = d.pt_data->route_autocomplete.find_partial_with_pattern(
                     q, d.geo_ref->word_weight, nbmax, [](type::idx_t) { return true; }, d.geo_ref->ghostwords);

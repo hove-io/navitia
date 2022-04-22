@@ -59,8 +59,7 @@ unit for scenario experimental
 )
 class TestJourneysDistributedWithMock(JourneyMinBikeMinCar, NewDefaultScenarioAbstractTestFixture):
     def test_first_and_last_section_multi_modes(self):
-        """Test to verify optimization of direct path calls
-        """
+        """Test to verify optimization of direct path calls"""
         # Initialize counter value in the object MockKraken
         sn_service = i_manager.instances['main_routing_test'].get_all_street_networks()[0]
         sn_service.direct_path_call_count = 0
@@ -91,8 +90,7 @@ class TestJourneysDistributedWithMock(JourneyMinBikeMinCar, NewDefaultScenarioAb
         self.is_valid_journey_response(response, query)
 
     def test_first_and_last_section_multi_modes_no_debug(self):
-        """Test to verify optimization of direct path calls
-        """
+        """Test to verify optimization of direct path calls"""
         # Initialize counter value in the object MockKraken
         sn_service = i_manager.instances['main_routing_test'].get_all_street_networks()[0]
         sn_service.direct_path_call_count = 0
@@ -1218,11 +1216,11 @@ class TesDistributedJourneyNoCoverageParams(NoCoverageParams, NewDefaultScenario
 class TestRoutingWithTransfer(NewDefaultScenarioAbstractTestFixture):
     def test_complete_transfer_path_bus_coach(self):
         """
-            We first query without requesting walking _transfer_path and then with _transfer_path
-            With _transfer_path enabled we expect in transfer section :
-            - a path
-            - detailed geojson instead of a simple line (crow_fly)
-            - same duration as with _transfer_path=false
+        We first query without requesting walking _transfer_path and then with _transfer_path
+        With _transfer_path enabled we expect in transfer section :
+        - a path
+        - detailed geojson instead of a simple line (crow_fly)
+        - same duration as with _transfer_path=false
         """
         query = (
             '/v1/coverage/routing_with_transfer_test/journeys?'
@@ -1276,8 +1274,8 @@ class TestRoutingWithTransfer(NewDefaultScenarioAbstractTestFixture):
 
     def test_complete_transfer_path_metro_coach(self):
         """
-            We first query without requesting walking _transfer_path and then with _transfer_path
-            In this case : transfer tramway <-> Metro, we expect to receive the same response
+        We first query without requesting walking _transfer_path and then with _transfer_path
+        In this case : transfer tramway <-> Metro, we expect to receive the same response
         """
         query = (
             '/v1/coverage/routing_with_transfer_test/journeys?'

@@ -1,10 +1,10 @@
-/* Copyright © 2001-2015, Canal TP and/or its affiliates. All rights reserved.
+/* Copyright © 2001-2022, Hove and/or its affiliates. All rights reserved.
 
 This file is part of Navitia,
     the software to build cool stuff with public transport.
 
 Hope you'll enjoy and contribute to this project,
-    powered by Canal TP (www.canaltp.fr).
+    powered by Hove (www.hove.com).
 Help us simplify mobility and open public transport:
     a non ending quest to the responsive locomotion way of traveling!
 
@@ -1388,8 +1388,8 @@ BOOST_AUTO_TEST_CASE(get_impacts_on_vj) {
     BOOST_CHECK(vj_rt_d0->get_validity_pattern_at(vj_rt_d0->realtime_level)->check(0));
 
     // Search by code should also find two vehicle_journeys
-    indexes = navitia::ptref::make_query(nt::Type_e::VehicleJourney,
-                                         R"(vehicle_journey.has_code(source, source_vj:1))", *(b.data));
+    indexes = navitia::ptref::make_query(nt::Type_e::VehicleJourney, R"(vehicle_journey.has_code(source, source_vj:1))",
+                                         *(b.data));
     BOOST_CHECK_EQUAL(indexes.size(), 2);
 
     BOOST_REQUIRE_EQUAL(vj->get_impacts().size(), 1);
@@ -1406,8 +1406,8 @@ BOOST_AUTO_TEST_CASE(get_impacts_on_vj) {
     BOOST_CHECK(vj_rt_d1->get_validity_pattern_at(vj_rt_d1->realtime_level)->check(1));
 
     // Search by code should also find three vehicle_journeys
-    indexes = navitia::ptref::make_query(nt::Type_e::VehicleJourney,
-                                         R"(vehicle_journey.has_code(source, source_vj:1))", *(b.data));
+    indexes = navitia::ptref::make_query(nt::Type_e::VehicleJourney, R"(vehicle_journey.has_code(source, source_vj:1))",
+                                         *(b.data));
     BOOST_CHECK_EQUAL(indexes.size(), 3);
 
     BOOST_REQUIRE_EQUAL(vj->get_impacts().size(), 2);
@@ -1422,8 +1422,8 @@ BOOST_AUTO_TEST_CASE(get_impacts_on_vj) {
 
     BOOST_REQUIRE_EQUAL(pt_data->vehicle_journeys.size(), 3);
     // Search by code should also find three vehicle_journeys
-    indexes = navitia::ptref::make_query(nt::Type_e::VehicleJourney,
-                                         R"(vehicle_journey.has_code(source, source_vj:1))", *(b.data));
+    indexes = navitia::ptref::make_query(nt::Type_e::VehicleJourney, R"(vehicle_journey.has_code(source, source_vj:1))",
+                                         *(b.data));
     BOOST_CHECK_EQUAL(indexes.size(), 3);
     BOOST_REQUIRE_EQUAL(vj->get_impacts().size(), 3);
     BOOST_CHECK_EQUAL(vj->get_impacts()[0]->uri, "delay1hourD0");

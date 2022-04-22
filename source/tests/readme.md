@@ -2,7 +2,7 @@
 # How do you run Navitia's tests suite:
 
 ## Requirements
- * You have already setup your environment and built Navitia following the [installation documentation](https://github.com/canaltp/navitia/blob/dev/install.rst).
+ * You have already setup your environment and built Navitia following the [installation documentation](https://github.com/hove-io/navitia/blob/dev/install.rst).
 
 ## How to run the tests
 

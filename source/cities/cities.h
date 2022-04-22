@@ -1,10 +1,10 @@
-/* Copyright © 2001-2014, Canal TP and/or its affiliates. All rights reserved.
+/* Copyright © 2001-2022, Hove and/or its affiliates. All rights reserved.
 
 This file is part of Navitia,
     the software to build cool stuff with public transport.
 
 Hope you'll enjoy and contribute to this project,
-    powered by Canal TP (www.canaltp.fr).
+    powered by Hove (www.hove.com).
 Help us simplify mobility and open public transport:
     a non ending quest to the responsive locomotion way of traveling!
 
@@ -107,7 +107,7 @@ struct OSMNode {
 };
 
 struct OSMRelation {
-    CanalTP::References references;
+    Hove::References references;
     const std::string insee = "", name = "";
     const uint32_t level = std::numeric_limits<uint32_t>::max();
 
@@ -116,7 +116,7 @@ struct OSMRelation {
     mpolygon_type polygon;
     point centre = point(0.0, 0.0);
 
-    OSMRelation(std::vector<CanalTP::Reference> refs,
+    OSMRelation(std::vector<Hove::Reference> refs,
                 std::string insee,
                 const std::string& postal_code,
                 std::string name,
@@ -165,9 +165,9 @@ struct ReadRelationsVisitor {
     OSMCache& cache;
     ReadRelationsVisitor(OSMCache& cache) : cache(cache) {}
 
-    void node_callback(OSMId, double, double, const CanalTP::Tags&) {}
-    void relation_callback(OSMId, const CanalTP::Tags& tags, const CanalTP::References& refs);
-    void way_callback(OSMId, const CanalTP::Tags&, const std::vector<OSMId>&) {}
+    void node_callback(OSMId, double, double, const Hove::Tags&) {}
+    void relation_callback(OSMId, const Hove::Tags& tags, const Hove::References& refs);
+    void way_callback(OSMId, const Hove::Tags&, const std::vector<OSMId>&) {}
 };
 struct ReadWaysVisitor {
     // Read references and set if a node is used by a way
@@ -176,9 +176,9 @@ struct ReadWaysVisitor {
 
     ReadWaysVisitor(OSMCache& cache) : cache(cache) {}
 
-    void node_callback(OSMId, double, double, const CanalTP::Tags&) {}
-    void relation_callback(OSMId, const CanalTP::Tags&, const CanalTP::References&) {}
-    void way_callback(OSMId, const CanalTP::Tags& tags, const std::vector<OSMId>& nodes_refs);
+    void node_callback(OSMId, double, double, const Hove::Tags&) {}
+    void relation_callback(OSMId, const Hove::Tags&, const Hove::References&) {}
+    void way_callback(OSMId, const Hove::Tags& tags, const std::vector<OSMId>& nodes_refs);
 };
 
 struct ReadNodesVisitor {
@@ -188,9 +188,9 @@ struct ReadNodesVisitor {
 
     ReadNodesVisitor(OSMCache& cache) : cache(cache) {}
 
-    void node_callback(uint64_t osm_id, double lon, double lat, const CanalTP::Tags& tags);
-    void relation_callback(uint64_t, const CanalTP::Tags&, const CanalTP::References&) {}
-    void way_callback(uint64_t, const CanalTP::Tags&, const std::vector<uint64_t>&) {}
+    void node_callback(uint64_t osm_id, double lon, double lat, const Hove::Tags& tags);
+    void relation_callback(uint64_t, const Hove::Tags&, const Hove::References&) {}
+    void way_callback(uint64_t, const Hove::Tags&, const std::vector<uint64_t>&) {}
 };
 }  // namespace cities
 }  // namespace navitia

@@ -222,7 +222,7 @@ class Uri(ResourceUri, ResourceUtc):
 def journey_pattern_points(is_collection):
     class JourneyPatternPoints(Uri):
 
-        """ Retrieves journey pattern points"""
+        """Retrieves journey pattern points"""
 
         def __init__(self):
             Uri.__init__(
@@ -239,7 +239,7 @@ def journey_pattern_points(is_collection):
 def commercial_modes(is_collection):
     class CommercialModes(Uri):
 
-        """ Retrieves commercial modes"""
+        """Retrieves commercial modes"""
 
         def __init__(self):
             Uri.__init__(
@@ -253,7 +253,7 @@ def commercial_modes(is_collection):
 def journey_patterns(is_collection):
     class JourneyPatterns(Uri):
 
-        """ Retrieves journey patterns"""
+        """Retrieves journey patterns"""
 
         def __init__(self):
             Uri.__init__(
@@ -267,7 +267,7 @@ def journey_patterns(is_collection):
 def vehicle_journeys(is_collection):
     class VehicleJourneys(Uri):
 
-        """ Retrieves vehicle journeys"""
+        """Retrieves vehicle journeys"""
 
         def __init__(self):
             Uri.__init__(
@@ -281,7 +281,7 @@ def vehicle_journeys(is_collection):
 def trips(is_collection):
     class Trips(Uri):
 
-        """ Retrieves trips"""
+        """Retrieves trips"""
 
         def __init__(self):
             Uri.__init__(self, is_collection, "trips", output_type_serializer=api.TripsSerializer)
@@ -293,7 +293,7 @@ def trips(is_collection):
 def physical_modes(is_collection):
     class PhysicalModes(Uri):
 
-        """ Retrieves physical modes"""
+        """Retrieves physical modes"""
 
         def __init__(self):
             Uri.__init__(
@@ -307,7 +307,7 @@ def physical_modes(is_collection):
 def stop_points(is_collection):
     class StopPoints(Uri):
 
-        """ Retrieves stop points """
+        """Retrieves stop points"""
 
         def __init__(self, *args, **kwargs):
             Uri.__init__(
@@ -330,7 +330,7 @@ def stop_points(is_collection):
 def stop_areas(is_collection):
     class StopAreas(Uri):
 
-        """ Retrieves stop areas """
+        """Retrieves stop areas"""
 
         def __init__(self):
             Uri.__init__(self, is_collection, "stop_areas", output_type_serializer=api.StopAreasSerializer)
@@ -346,7 +346,7 @@ def stop_areas(is_collection):
 def connections(is_collection):
     class Connections(Uri):
 
-        """ Retrieves connections"""
+        """Retrieves connections"""
 
         def __init__(self):
             Uri.__init__(self, is_collection, "connections", output_type_serializer=api.ConnectionsSerializer)
@@ -358,7 +358,7 @@ def connections(is_collection):
 def companies(is_collection):
     class Companies(Uri):
 
-        """ Retrieves companies"""
+        """Retrieves companies"""
 
         def __init__(self):
             Uri.__init__(self, is_collection, "companies", output_type_serializer=api.CompaniesSerializer)
@@ -370,7 +370,7 @@ def companies(is_collection):
 def poi_types(is_collection):
     class PoiTypes(Uri):
 
-        """ Retrieves poi types"""
+        """Retrieves poi types"""
 
         def __init__(self):
             Uri.__init__(self, is_collection, "poi_types", output_type_serializer=api.PoiTypesSerializer)
@@ -382,7 +382,7 @@ def poi_types(is_collection):
 def routes(is_collection):
     class Routes(Uri):
 
-        """ Retrieves routes"""
+        """Retrieves routes"""
 
         def __init__(self):
             Uri.__init__(self, is_collection, "routes", output_type_serializer=api.RoutesSerializer)
@@ -396,7 +396,7 @@ def routes(is_collection):
 
 def line_groups(is_collection):
     class LineGroups(Uri):
-        """ Retrieves line_groups"""
+        """Retrieves line_groups"""
 
         def __init__(self):
             Uri.__init__(self, is_collection, "line_groups", output_type_serializer=api.LineGroupsSerializer)
@@ -411,7 +411,7 @@ def line_groups(is_collection):
 def lines(is_collection):
     class Lines(Uri):
 
-        """ Retrieves lines"""
+        """Retrieves lines"""
 
         def __init__(self):
             Uri.__init__(self, is_collection, "lines", output_type_serializer=api.LinesSerializer)
@@ -427,7 +427,7 @@ def lines(is_collection):
 def pois(is_collection):
     class Pois(Uri):
 
-        """ Retrieves pois"""
+        """Retrieves pois"""
 
         def __init__(self):
             Uri.__init__(self, is_collection, "pois", output_type_serializer=api.PoisSerializer)
@@ -462,7 +462,7 @@ def pois(is_collection):
 def networks(is_collection):
     class Networks(Uri):
 
-        """ Retrieves networks"""
+        """Retrieves networks"""
 
         def __init__(self):
             Uri.__init__(self, is_collection, "networks", output_type_serializer=api.NetworksSerializer)
@@ -489,7 +489,7 @@ def disruptions(is_collection):
 def contributors(is_collection):
     class Contributors(Uri):
 
-        """ Retrieves contributors"""
+        """Retrieves contributors"""
 
         def __init__(self):
             Uri.__init__(self, is_collection, "contributors", output_type_serializer=api.ContributorsSerializer)
@@ -501,7 +501,7 @@ def contributors(is_collection):
 def datasets(is_collection):
     class Datasets(Uri):
 
-        """ Retrieves datasets"""
+        """Retrieves datasets"""
 
         def __init__(self):
             Uri.__init__(self, is_collection, "datasets", output_type_serializer=api.DatasetsSerializer)
@@ -513,7 +513,7 @@ def datasets(is_collection):
 def addresses(is_collection):
     class Addresses(Coord):
 
-        """ Not implemented yet"""
+        """Not implemented yet"""
 
         pass
 
@@ -522,7 +522,7 @@ def addresses(is_collection):
 
 def coords(is_collection):
     class Coords(Coord):
-        """ Not implemented yet"""
+        """Not implemented yet"""
 
         pass
 

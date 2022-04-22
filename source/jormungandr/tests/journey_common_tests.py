@@ -93,7 +93,7 @@ class JourneyCommon(object):
             is_valid_address(address, depth_check=0)
 
     def test_error_on_journeys_out_of_bounds(self):
-        """ if we got an error with kraken, an error should be returned"""
+        """if we got an error with kraken, an error should be returned"""
 
         query_out_of_production_bound = "journeys?from={from_coord}&to={to_coord}&datetime={datetime}".format(
             from_coord="0.0000898312;0.0000898312",  # coordinate of S in the dataset
@@ -112,7 +112,7 @@ class JourneyCommon(object):
         assert 'journeys' not in response or len(response['journeys']) == 0
 
     def test_error_on_journeys_too_early(self):
-        """ datetime is > 1970y """
+        """datetime is > 1970y"""
 
         query_out_of_production_bound = "journeys?from={from_coord}&to={to_coord}&datetime={datetime}".format(
             from_coord="0.0000898312;0.0000898312", to_coord="0.00188646;0.00071865", datetime="19700101T000000"
@@ -1250,8 +1250,10 @@ class JourneyCommon(object):
                 in response[0]['message']
             )
 
-        query = "journeys?from={from_sa}&to={to_sa}&datetime={datetime}&min_nb_journeys={min_nb_journeys}".format(
-            from_sa="stopA", to_sa="stopB", datetime="20120614T223000", min_nb_journeys=int(-42)
+        query = (
+            "journeys?from={from_sa}&to={to_sa}&datetime={datetime}&min_nb_journeys={min_nb_journeys}".format(
+                from_sa="stopA", to_sa="stopB", datetime="20120614T223000", min_nb_journeys=int(-42)
+            )
         )
 
         response = self.query_region(query, check=False)
@@ -1314,13 +1316,13 @@ class JourneyCommon(object):
 class AddErrorFieldInJormun(object):
     def test_add_error_field(self):
         """
-            The goal of this test is to put forward the addition of the error
-            in the Jormungandr part.
-            Kraken send journeys but after the Jormungandr filtering, there is
-            no more journeys field. So Jormungandr have to add an error field
-            with "no_solution" id and "no solution found for this journey"
-            message.
-            """
+        The goal of this test is to put forward the addition of the error
+        in the Jormungandr part.
+        Kraken send journeys but after the Jormungandr filtering, there is
+        no more journeys field. So Jormungandr have to add an error field
+        with "no_solution" id and "no solution found for this journey"
+        message.
+        """
         query = (
             "journeys?from={from_sp}&to={to_sp}&datetime={datetime}"
             "&datetime_represents=arrival&_max_successive_physical_mode=3&_max_additional_connections=10".format(

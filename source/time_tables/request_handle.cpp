@@ -1,10 +1,10 @@
-/* Copyright © 2001-2014, Canal TP and/or its affiliates. All rights reserved.
+/* Copyright © 2001-2022, Hove and/or its affiliates. All rights reserved.
 
 This file is part of Navitia,
     the software to build cool stuff with public transport.
 
 Hope you'll enjoy and contribute to this project,
-    powered by Canal TP (www.canaltp.fr).
+    powered by Hove (www.hove.com).
 Help us simplify mobility and open public transport:
     a non ending quest to the responsive locomotion way of traveling!
 
@@ -48,7 +48,7 @@ RequestHandle::RequestHandle(PbCreator& pb_creator,
         // Because of UTC and local date_time problem, we allow one more day before production_date.begin()
         if (!pb_creator.data->meta->production_date.contains(datetime.date())
             && !pb_creator.data->meta->production_date.contains(
-                   (datetime + boost::posix_time::seconds(86399)).date())) {
+                (datetime + boost::posix_time::seconds(86399)).date())) {
             pb_creator.fill_pb_error(pbnavitia::Error::date_out_of_bounds, "date is out of bound");
         }
     }

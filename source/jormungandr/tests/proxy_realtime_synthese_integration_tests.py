@@ -47,7 +47,7 @@ MOCKED_PROXY_CONF = [
 
 
 def _get_schedule(sched, sp_uri, route_uri):
-    """ small helper that extract the information from a route point stop schedule """
+    """small helper that extract the information from a route point stop schedule"""
     return [
         {'rt': r['data_freshness'] == 'realtime', 'dt': r['date_time']}
         for r in next(

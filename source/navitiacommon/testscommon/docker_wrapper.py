@@ -221,7 +221,7 @@ class DockerWrapper(object):
 def PostgisDocker():
     return DockerWrapper(
         image_name='postgis:2.1',
-        dockerfile_path='github.com/CanalTP/docker-postgis.git',
+        dockerfile_path='github.com/hove-io/docker-postgis.git',
         dbname='postgres',
         dbuser='docker',
         dbpassword='docker',

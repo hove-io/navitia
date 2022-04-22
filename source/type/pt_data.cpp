@@ -1,10 +1,10 @@
-/* Copyright © 2001-2014, Canal TP and/or its affiliates. All rights reserved.
+/* Copyright © 2001-2022, Hove and/or its affiliates. All rights reserved.
 
 This file is part of Navitia,
     the software to build cool stuff with public transport.
 
 Hope you'll enjoy and contribute to this project,
-    powered by Canal TP (www.canaltp.fr).
+    powered by Hove (www.hove.com).
 Help us simplify mobility and open public transport:
     a non ending quest to the responsive locomotion way of traveling!
 
@@ -59,8 +59,8 @@ void PT_Data::serialize(Archive& ar, const unsigned int /*unused*/) {
 #define SERIALIZE_ELEMENTS(type_name, collection_name) &collection_name& collection_name##_map
             ITERATE_NAVITIA_PT_TYPES(SERIALIZE_ELEMENTS)
         & stop_area_autocomplete& stop_point_autocomplete& line_autocomplete& network_autocomplete& mode_autocomplete&
-              route_autocomplete& stop_area_proximity_list& stop_point_proximity_list& stop_point_connections&
-                  disruption_holder& meta_vjs& stop_points_by_area& comments& codes& headsign_handler& tz_manager;
+            route_autocomplete& stop_area_proximity_list& stop_point_proximity_list& stop_point_connections&
+                disruption_holder& meta_vjs& stop_points_by_area& comments& codes& headsign_handler& tz_manager;
 }
 SERIALIZABLE(PT_Data)
 

@@ -1,10 +1,10 @@
-/* Copyright © 2001-2014, Canal TP and/or its affiliates. All rights reserved.
+/* Copyright © 2001-2022, Hove and/or its affiliates. All rights reserved.
 
 This file is part of Navitia,
     the software to build cool stuff with public transport.
 
 Hope you'll enjoy and contribute to this project,
-    powered by Canal TP (www.canaltp.fr).
+    powered by Hove (www.hove.com).
 Help us simplify mobility and open public transport:
     a non ending quest to the responsive locomotion way of traveling!
 
@@ -89,13 +89,13 @@ BOOST_AUTO_TEST_CASE(distances_grand_cercle) {
 }
 
 BOOST_AUTO_TEST_CASE(approx_distance) {
-    GeographicalCoord canaltp(2.3921, 48.8296);
+    GeographicalCoord coord(2.3921, 48.8296);
     GeographicalCoord tour_eiffel(2.29447, 48.85834);
-    double coslat = ::cos(canaltp.lat() * 0.0174532925199432958);
-    BOOST_CHECK_CLOSE(canaltp.distance_to(tour_eiffel), ::sqrt(canaltp.approx_sqr_distance(tour_eiffel, coslat)), 1);
-    BOOST_CHECK_CLOSE(tour_eiffel.distance_to(canaltp), ::sqrt(tour_eiffel.approx_sqr_distance(canaltp, coslat)), 1);
-    BOOST_CHECK_CLOSE(canaltp.distance_to(tour_eiffel), ::sqrt(tour_eiffel.approx_sqr_distance(canaltp, coslat)), 1);
-    BOOST_CHECK_CLOSE(tour_eiffel.distance_to(canaltp), ::sqrt(canaltp.approx_sqr_distance(tour_eiffel, coslat)), 1);
+    double coslat = ::cos(coord.lat() * 0.0174532925199432958);
+    BOOST_CHECK_CLOSE(coord.distance_to(tour_eiffel), ::sqrt(coord.approx_sqr_distance(tour_eiffel, coslat)), 1);
+    BOOST_CHECK_CLOSE(tour_eiffel.distance_to(coord), ::sqrt(tour_eiffel.approx_sqr_distance(coord, coslat)), 1);
+    BOOST_CHECK_CLOSE(coord.distance_to(tour_eiffel), ::sqrt(tour_eiffel.approx_sqr_distance(coord, coslat)), 1);
+    BOOST_CHECK_CLOSE(tour_eiffel.distance_to(coord), ::sqrt(coord.approx_sqr_distance(tour_eiffel, coslat)), 1);
 }
 
 BOOST_AUTO_TEST_CASE(find_nearest) {

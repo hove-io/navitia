@@ -119,7 +119,7 @@ class Timeo(RealtimeProxy):
 
     def __repr__(self):
         """
-         used as the cache key. we use the rt_system_id to share the cache between servers in production
+        used as the cache key. we use the rt_system_id to share the cache between servers in production
         """
         try:
             return self.rt_system_id.encode('utf-8', 'backslashreplace')
@@ -223,8 +223,10 @@ class Timeo(RealtimeProxy):
                     'Timeo RT internal service error',
                     'ResponseCode: {} - ResponseComment: {}'.format(resp_code, resp_comment),
                 )
-                timeo_internal_error_message = 'Timeo RT internal service error, ResponseCode: {} - ResponseComment: {}'.format(
-                    resp_code, resp_comment
+                timeo_internal_error_message = (
+                    'Timeo RT internal service error, ResponseCode: {} - ResponseComment: {}'.format(
+                        resp_code, resp_comment
+                    )
                 )
                 logging.getLogger(__name__).error(timeo_internal_error_message)
                 raise RealtimeProxyError(timeo_internal_error_message)
@@ -270,7 +272,7 @@ class Timeo(RealtimeProxy):
 
          Note: since there are some strange symbol ('?' and ';') in the url we can't use param as dict in
          requests
-         """
+        """
 
         base_params = '&'.join([k + '=' + v for k, v in self.service_args.items()])
 

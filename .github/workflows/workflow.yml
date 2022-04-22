@@ -22,7 +22,7 @@ jobs:
   checks:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
     - name: checkout submodules
       shell: bash
       run: |
@@ -53,7 +53,7 @@ jobs:
         ports:
           - 6379:6379
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
       with:
           submodules: 'recursive'
     - name: Restore ccache
@@ -114,16 +114,14 @@ jobs:
         TYR_REDIS_HOST: 'redis'
   precommit:
     runs-on: ubuntu-latest
-    container:
-      image: ubuntu:18.04
-      # we need python 3.6 and clang-format-6.0
-      # we should be able to use no container once https://github.com/actions/virtual-environments/issues/46 is
-      # resolved
     steps:
-    - uses: actions/checkout@v1
+    - uses: actions/checkout@v3
+    - uses: actions/setup-python@v3
+      with:
+        python-version: '3.6.x'
     - name: install dependencies
       run: |
-        apt update && apt install -y protobuf-compiler python python-pip python3  python3-pip clang-format-6.0 git 2to3
+        sudo apt update && sudo apt install -y protobuf-compiler clang-format git 2to3
         pip install -r requirements_pre-commit.txt --upgrade
     - name: get submodule
       run: |
@@ -142,10 +140,10 @@ jobs:
   release_script_tests:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/setup-python@v1
+    - uses: actions/setup-python@v3
       with:
         python-version: '2.7'
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
     - name: Setup Pipenv and Run tests
       working-directory: release
       env:

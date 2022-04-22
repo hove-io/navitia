@@ -1,6 +1,6 @@
 # HOW TO Release navitia
 
-## Versionning
+## Versioning
 
 Our versionning is based on [Semantic Versionning](nhttps://semver.org/)
 * the **major** version is bumped in case of an API/interface change or **when a binarisation is needed**.
@@ -21,13 +21,13 @@ Then the script should take over:
 ```sh
 cd <path/to/repo/navitia>
 # to be sure to trigger the correct version of the release script
-git fetch <canaltp_distant_repo_name> && git rebase <canaltp_distant_repo_name>/dev dev
+git fetch <hove_git_remote_name> && git rebase <hove_git_remote_name>/dev dev
 ```
 At this point, you may build and run tests to check that everything is OK. If you're confident, proceed with:
 ```sh
-./release_navitia.sh <canaltp_distant_repo_name>
+./release_navitia.sh <hove_git_remote_name>
 ```
-Note: this script uses "vim", make sure it's installed on your machine.
+Note: this script uses `python2.7`, `pipenv` and `vim`, make sure it's installed on your machine.
 
 Then follow the instructions given by the script, and also:
 * pay attention to the changelog, remove useless PR (small doc) and check that every important PR is there
@@ -40,7 +40,7 @@ Nota: `major` and `minor` invocations are possible but deprecated.
 
 Note: It is preferable but not mandatory to merge the hotfix PR before.
 ```sh
-./release_navitia.sh <canaltp_distant_repo_name>
+./release_navitia.sh <hove_git_remote_name>
 ```
 A new branch has been created <release_x.yy.z> and the changelog is opened.
 Then the process is less automated (but still, instructions are given):
@@ -75,7 +75,7 @@ Then the process is less automated (but still, instructions are given):
 	```
 * Push the release and dev branches to the repo
 	```
-	git push <canaltp_distant_repo_name> release dev --tags
+	git push <hove_git_remote_name> release dev --tags
 	```
 
 # Troubleshooting

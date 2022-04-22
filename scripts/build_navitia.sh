@@ -15,7 +15,7 @@
 # - to have git and sudo installed
 # - to have cloned the sources repository
 #
-# git clone https://github.com/CanalTP/navitia
+# git clone https://github.com/hove-io/navitia
 #
 # - and to be in the cloned repository:
 # cd navitia

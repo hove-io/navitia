@@ -253,7 +253,7 @@ def get_user(token, abort_if_no_token=True):
                 if abort_if_no_token:
                     flask_restful.abort(
                         401,
-                        message='no token. You can get one at http://www.navitia.io or contact your support if you’re using the opensource version of Navitia https://github.com/CanalTP/navitia',
+                        message='no token. You can get one at http://www.navitia.io or contact your support if you’re using the opensource version of Navitia https://github.com/hove-io/navitia',
                     )
                 else:
                     return None

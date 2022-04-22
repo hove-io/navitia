@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 2.8)
 
-#      The Kraken project (kisio Digital corp.)
+#      The Kraken project (Hove corp.)
 #      https://www.navitia.io/
 #                        ___
 #                     .-'   `'.

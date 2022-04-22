@@ -259,7 +259,7 @@ You can use these ids in the forbidden_uris[] parameter from
 
 ### <a name="place"></a>Place
 
-A container containing either a [admin](#admin), [poi](#poi), [address](#address), [stop_area](#stop-area),
+A container containing either a [admin](#admin), [poi](#poi), [address](#address), [stop_area](#stop-area) or
 [stop_point](#stop-point)
 
 ``` json
@@ -608,7 +608,40 @@ Poi = Point Of Interest
 |name    |string               |Name of the poi                                                     |
 |label   |string               |Label of the poi. The name is directly taken from the data whereas the label is something we compute for better traveler information. If you don't know what to display, display the label.|
 |poi_type|[poi_type](#poi-type)|Type of the poi                                                     |
-|stands  |[stands](#stands)    |Information on the spots available, for BSS stations               |
+|stands  |[stands](#stands)    |Information on the spots available, for BSS stations                |
+
+### <a name="access-point"></a>Access_point
+
+``` shell
+$ curl 'https://api.navitia.io/v1/coverage/sandbox/access_points' -H 'Authorization: 3b036afe-0110-4202-b9ed-99718476c2e0'
+```
+
+Access_point = point of access from the pavement to a station, a multimodal area.
+
+|Field                  |Type                     |Description                                                         |
+|-----------------------|-------------------------|--------------------------------------------------------------------|
+|id                     |string                   |Identifier of the access point                                      |
+|name                   |string                   |Name of the access point                                            |
+|coord                  |[coord](#coord)          |Coordinates of the access point                                     |
+|access_point_code      |string                   |Identifies the well-known code for the access_point                 |
+
+You should labelized the access-point using "access_point_code" and "name".
+For example: "follow the `access_point_code` - `name` to exit from `parent_station` "
+
+### <a name="pathway"></a>Pathway
+
+Pathway = indoor way from a stop point to an access point. It could be an entrance, an exit or both.
+
+|Field                  |Type                     |Description                                                         |
+|-----------------------|-------------------------|--------------------------------------------------------------------|
+|id                     |string                   |Identifier of the access point                                      |
+|name                   |string                   |Name of the access point                                            |
+|is_entrance            |boolean                  |Identifies whether the path is an entrance                          |
+|is_exit                |boolean                  |Identifies whether the path is an exit                              |
+|length                 |int                      |Length of the path                                                  |
+|traversal_time         |int                      |Duration to walk the path when it's known                           |
+
+You can find pathways in [journeys](#journeys) service, where there is some "vias" in walking sections. "Vias" are "pathways" in navitia.
 
 ### Address
 
@@ -786,6 +819,7 @@ It's also used inside different responses (journeys, ...).
 | [stop_point](#stop-point)                         | a location where vehicles can pickup or drop off passengers   |
 | [address](#address)                               | a point located in a street                                   |
 | [poi](#poi)                                       | a point of interest                                           |
+
 
 ### <a name="pt-object-embedded-type"></a>PT-object embedded type
 

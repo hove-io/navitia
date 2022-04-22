@@ -1,10 +1,10 @@
-/* Copyright © 2001-2014, Canal TP and/or its affiliates. All rights reserved.
+/* Copyright © 2001-2022, Hove and/or its affiliates. All rights reserved.
 
 This file is part of Navitia,
     the software to build cool stuff with public transport.
 
 Hope you'll enjoy and contribute to this project,
-    powered by Canal TP (www.canaltp.fr).
+    powered by Hove (www.hove.com).
 Help us simplify mobility and open public transport:
     a non ending quest to the responsive locomotion way of traveling!
 
@@ -55,7 +55,7 @@ boost::optional<float> parse_way_speed(const std::map<std::string, std::string>&
 ed::types::Poi fill_poi(const uint64_t osm_id,
                         const double lon,
                         const double lat,
-                        const CanalTP::Tags& tags,
+                        const Hove::Tags& tags,
                         const size_t potential_id,
                         std::unordered_map<std::string, ed::types::PoiType>& poi_types);
 
@@ -69,10 +69,10 @@ struct PoiTypeParams {
     std::vector<RuleOsmTag2PoiType> rules;
 
     PoiTypeParams(const std::string& json_params);
-    const RuleOsmTag2PoiType* get_applicable_poi_rule(const CanalTP::Tags& tags) const;
+    const RuleOsmTag2PoiType* get_applicable_poi_rule(const Hove::Tags& tags) const;
 };
 
-const std::string get_postal_code_from_tags(const CanalTP::Tags& tags);
+const std::string get_postal_code_from_tags(const Hove::Tags& tags);
 
 }  // namespace connectors
 }  // namespace ed

@@ -39,7 +39,8 @@ struct departure_board_fixture {
     ed::builder b;
     navitia::type::StopPoint* sp_ptr;
     departure_board_fixture()
-        : b("20160101",
+        : b(
+            "20160101",
             [&](ed::builder& b) {
                 b.sa("SA1")("S1")("S2");
 
@@ -390,7 +391,8 @@ struct calendar_fixture {
     navitia::type::VehicleJourney* r_vj2;
 
     calendar_fixture()
-        : b("20120614",
+        : b(
+            "20120614",
             [&](ed::builder& b) {
                 // Stop areas
                 b.sa("SA1", 0., 1.)("stop1_D", 0., 1.);

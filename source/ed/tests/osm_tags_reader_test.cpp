@@ -1,10 +1,10 @@
-/* Copyright © 2001-2016, Canal TP and/or its affiliates. All rights reserved.
+/* Copyright © 2001-2022, Hove and/or its affiliates. All rights reserved.
 
 This file is part of Navitia,
     the software to build cool stuff with public transport.
 
 Hope you'll enjoy and contribute to this project,
-    powered by Canal TP (www.canaltp.fr).
+    powered by Hove (www.hove.com).
 Help us simplify mobility and open public transport:
     a non ending quest to the responsive locomotion way of traveling!
 
@@ -207,8 +207,8 @@ BOOST_AUTO_TEST_CASE(multiple_match_tagging) {
         })";
     const ed::connectors::PoiTypeParams bss_prior_params(bss_prior_json);
 
-    CanalTP::Tags velib_tags = {{"amenity", "bicycle_rental"}, {"bss_type", "velib"}};
-    CanalTP::Tags bss_tags = {{"amenity", "bicycle_rental"}, {"bss_type", "unknown"}};
+    Hove::Tags velib_tags = {{"amenity", "bicycle_rental"}, {"bss_type", "velib"}};
+    Hove::Tags bss_tags = {{"amenity", "bicycle_rental"}, {"bss_type", "unknown"}};
 
     BOOST_CHECK_EQUAL(velib_prior_params.get_applicable_poi_rule(velib_tags)->poi_type_id, "velib");
     BOOST_CHECK_EQUAL(bss_prior_params.get_applicable_poi_rule(velib_tags)->poi_type_id, "amenity:bicycle_rental");
@@ -243,8 +243,8 @@ BOOST_AUTO_TEST_CASE(colon_tagging) {
         })";
     const ed::connectors::PoiTypeParams colon_params(colon_json);
 
-    CanalTP::Tags bss_tags = {{"amenity:bicycle_rental", "true"}};
-    CanalTP::Tags effia_tags = {{"amenity", "parking:effia"}};
+    Hove::Tags bss_tags = {{"amenity:bicycle_rental", "true"}};
+    Hove::Tags effia_tags = {{"amenity", "parking:effia"}};
 
     BOOST_CHECK_EQUAL(colon_params.get_applicable_poi_rule(bss_tags)->poi_type_id, "amenity:bicycle_rental");
     BOOST_CHECK_EQUAL(colon_params.get_applicable_poi_rule(effia_tags)->poi_type_id, "amenity:parking");
