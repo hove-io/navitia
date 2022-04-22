@@ -41,6 +41,8 @@ import os
 import sys
 import tempfile
 
+from werkzeug.utils import secure_filename
+
 END_POINT_NOT_EXIST_MSG = 'end_point doesn\'t exist'
 BILLING_PLAN_NOT_EXIST_MSG = 'billing plan doesn\'t exist'
 
@@ -264,7 +266,8 @@ def save_in_tmp(file_storage):
     :param file_storage: stream file
     :return: filename
     """
-    tmp_file = os.path.join(tempfile.gettempdir(), file_storage.filename)
+    filename = secure_filename(file_storage.filename)
+    tmp_file = os.path.join(tempfile.gettempdir(), filename)
     file_storage.save(tmp_file)
     return tmp_file
 
