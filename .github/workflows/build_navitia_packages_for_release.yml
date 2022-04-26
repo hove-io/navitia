@@ -81,7 +81,7 @@ jobs:
         path: ./builder_from_package/debian10
     - name: build, create and publish images for branch release
       working-directory: builder_from_package/debian10
-      run: ./build.sh -o ${{secrets.access_token_github}} -n -r -e push -t release -b release -u ${{secrets.docker_user}} -p ${{secrets.docker_password}}
+      run: ./build.sh -o ${{secrets.access_token_github}} -n -r -e push -t latest -b release -u ${{secrets.docker_user}} -p ${{secrets.docker_password}}
     - name: slack notification (the job has failed)
       if: failure()
       run: |
