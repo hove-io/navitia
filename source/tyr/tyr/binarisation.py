@@ -1108,7 +1108,12 @@ def _inner_2s3(self, dataset_type, instance_config, filename, job_id, dataset_ui
         client = Minio(endpoint=config.host, access_key=config.key, secret_key=config.secret, secure=False)
 
         dt_now_str = datetime.datetime.now().strftime("%Y-%m-%d-%H:%M:%S")
-        tags = {"coverage": instance_config.name, "datetime": dt_now_str, "data_type": dataset_type}
+        tags = {
+            "coverage": instance_config.name,
+            "datetime": dt_now_str,
+            "data_type": dataset_type,
+            "tyr_data_path": filename,
+        }
 
         file_key = "{coverage}/{dataset_type}.zip".format(
             coverage=instance_config.name, dataset_type=dataset_type
