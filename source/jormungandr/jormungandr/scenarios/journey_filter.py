@@ -658,6 +658,24 @@ def apply_final_journey_filters(response_list, instance, request):
     journeys = journey_generator(response_list)
     _filter_too_much_connections(journeys, instance, request)
 
+    filter_non_car_journey = request['origin_mode'] == ['car']
+    if filter_non_car_journey:
+        journeys = journey_generator(response_list)
+        filter_non_car_tagged_journey(journeys, request)
+
+
+def filter_non_car_tagged_journey(journeys, request):
+    is_debug = request.get('debug', False)
+
+    for j in journeys:
+        if not j.tags or "car" in j.tags:
+            continue
+        mark_as_dead(
+            j,
+            is_debug,
+            'non-car tagged journey filtered',
+        )
+
 
 def apply_final_journey_filters_post_finalize(response_list, request):
     """
