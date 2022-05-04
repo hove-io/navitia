@@ -39,6 +39,7 @@ jobs:
       with:
         key: ${{matrix.distribution}}-package
         max-size: 2000M
+        save: ${{ github.event_name == 'push' }}
     - name: dkpg-buildpackage
       run: |
         sed -i 's,git\@github.com:\([^/]*\)/\(.*\).git,https://github.com/\1/\2,' .gitmodules

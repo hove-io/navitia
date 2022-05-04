@@ -61,6 +61,7 @@ jobs:
       with:
         key: ${{matrix.os.docker_image}}-ci
         max-size: 2000M
+        save: ${{ github.event_name == 'push' }}
     - name: configure for Release
       run: mkdir build && cd ./build && cmake -DSTRIP_SYMBOLS=ON ../source
     - name: run
