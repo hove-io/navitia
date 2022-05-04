@@ -78,8 +78,12 @@ jobs:
         path: ./builder_from_package/debian10
     - name: build, create and publish images for branch dev
       if: ${{ github.event_name == 'push' }}
-      working-directory: builder_from_package/debian10
-      run: ./build.sh -o ${{secrets.access_token_github}} -n -r -e push -t dev -b dev -u ${{secrets.docker_user}} -p ${{secrets.docker_password}}
+      working-directory: builder_from_package
+      run: ./build.sh -o ${{secrets.access_token_github}} -d debian10 -n -r -e push -t dev -b dev -u ${{secrets.docker_user}} -p ${{secrets.docker_password}}
+    - name: build and create images for pull_request
+      if: ${{ github.event_name != 'push' }}
+      working-directory: builder_from_package
+      run: ./build.sh -o ${{secrets.access_token_github}} -d debian10 -n -e push -t dev -b dev
     - name: slack notification (the job has failed)
       if: failure()
       run: |
