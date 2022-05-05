@@ -16,17 +16,18 @@ jobs:
       run: echo $GITHUB_CONTEXT
 
   clang-tidy:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
+    container:
+      image: navitia/debian11_dev
     steps:
     - uses: actions/checkout@v3
       with:
-          ref: ${{ github.head_ref }}
           submodules: 'recursive'
     - name : Install dependencies
-      run: sudo apt update && sudo apt install -y liblog4cplus-dev libgoogle-perftools-dev libprotobuf-dev protobuf-compiler libssl-dev libosmpbf-dev libpqxx-dev libproj-dev libzmq3-dev python-yaml clang-tools clang-tidy libboost-all-dev 2to3 xmlto
+      run: apt update && apt install -y clang-tools clang-tidy
     - name : Clang-tidy Info
       run: clang-tidy --version
-    - name: Cmake
+    - name: cmake
       working-directory: ${{ runner.temp }}
       run: cmake $GITHUB_WORKSPACE/source
     - name: Clang-tidy
