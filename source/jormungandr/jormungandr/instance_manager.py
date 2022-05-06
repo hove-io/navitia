@@ -350,7 +350,7 @@ class InstanceManager(object):
         valid_instances = self._filter_authorized_instances(available_instances, api)
         if available_instances and not valid_instances:
             # user doesn't have access to any of the instances
-            context = 'user does not have access to any of the instances'
+            context = 'User does not have access to any of the instances'
             authentication.abort_request(user=authentication.get_user(None), context=context)
         else:
             return valid_instances
