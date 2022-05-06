@@ -674,7 +674,7 @@ def filter_non_car_tagged_journey(journeys, request):
         mark_as_dead(
             j,
             is_debug,
-            'non-car tagged journey filtered',
+            'non_car_tagged_journey_filtered',
         )
 
 
