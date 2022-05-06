@@ -35,6 +35,7 @@ import binascii
 import flask_restful
 from flask import request, g
 from functools import wraps
+from sqlalchemy.orm import noload
 from jormungandr.exceptions import RegionNotFound
 import datetime
 import base64
@@ -68,7 +69,8 @@ def authentication_required(func):
         user = get_user(token=get_token())
         if not region:
             # we could not find any regions, we abort
-            abort_request(user=user)
+            context = 'We could not find any regions, we abort'
+            abort_request(user=user, context=context)
         if has_access(region, 'ALL', abort=True, user=user):
             return func(*args, **kwargs)
 
@@ -116,11 +118,12 @@ def get_token():
 
 def can_read_user():
     try:
-        User.query.first()
+        User.query.options(noload('*')).first()
     except Exception as e:
         logging.getLogger(__name__).error('No access to table User (error: {})'.format(e))
         g.can_connect_to_database = False
         return False
+
     return True
 
 
@@ -136,6 +139,8 @@ def has_access(region, api, abort, user):
     dependent of the request context, so keep it as a pure function.
     """
     # if jormungandr is on public mode or database is not accessible, we skip the authentication process
+    logging.getLogger(__name__).debug('User "has_access" to region/api not cached')
+
     if current_app.config.get('PUBLIC', False) or (not can_connect_to_database()):
         return True
 
@@ -144,7 +149,8 @@ def has_access(region, api, abort, user):
         # To manage database error of the following type we should fetch one more time from database
         # Can connect to database but at least one table/attribute is not accessible due to transaction problem
         if can_read_user():
-            abort_request(user=user)
+            context = 'User is undefined, but users are accessible in database'
+            abort_request(user=user, context=context)
         else:
             return True
     try:
@@ -165,7 +171,10 @@ def has_access(region, api, abort, user):
         return True
     else:
         if abort:
-            abort_request(user=user)
+            context = 'User has no permission to access this api {} or instance {}'.format(
+                api, model_instance.id
+            )
+            abort_request(user=user, context=context)
         else:
             return False
 
@@ -179,7 +188,9 @@ def cache_get_user(token):
     We allow this method to be cached even if it depends on the current time
     because we assume the cache time is small and the error can be tolerated.
     """
+    logging.getLogger(__name__).debug('User not cached, we retrieve it from database')
     if not can_connect_to_database():
+        logging.getLogger(__name__).debug('Cannot connect to database, we set User to None')
         return None
     try:
         user = User.get_from_token(token, datetime.datetime.now())
@@ -277,11 +288,13 @@ def get_app_name(token):
     return None
 
 
-def abort_request(user=None):
+def abort_request(user=None, context=None):
     """
     abort a request with the proper http status in case of authentification
     issues
     """
+    if context:
+        logging.getLogger(__name__).debug('Abort request with context : {}'.format(context))
     if user:
         flask_restful.abort(403)
     else:

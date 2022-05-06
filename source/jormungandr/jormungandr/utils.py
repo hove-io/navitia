@@ -689,6 +689,7 @@ def can_connect_to_database():
         connection.close()
         g.can_connect_to_database = True
     except Exception:
+        logging.getLogger(__name__).error('Connection to database has failed')
         g.can_connect_to_database = False
         return False
 
