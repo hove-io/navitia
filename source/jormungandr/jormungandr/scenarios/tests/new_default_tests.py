@@ -543,3 +543,76 @@ def filter_too_many_connections_test():
     assert sum('deleted_because_too_much_connections' not in j.tags for j in mocked_pb_response.journeys) == 19
     # the best journey must be kept
     assert 'deleted_because_too_much_connections' not in mocked_pb_response.journeys[14].tags
+
+
+def build_mocked_car_response():
+    response = response_pb2.Response()
+    sections = (
+        (response_pb2.STREET_NETWORK, response_pb2.Walking, 'walking'),
+        (response_pb2.STREET_NETWORK, response_pb2.Car, 'car'),
+        (response_pb2.PUBLIC_TRANSPORT, None, 'uri_1'),
+        (response_pb2.PUBLIC_TRANSPORT, None, 'uri_2'),
+    )
+    journeys = (
+        # J1
+        # 10 / 15 / 2015 @ 12:30pm (UTC)
+        # this journey will be tagged 'walking'
+        (1444905000, 'rapid', (0, 2, 0)),
+        # J2
+        # 10 / 15 / 2015 @ 12:30pm (UTC)
+        # this journey will be tagged 'car'
+        (1444905000, 'car', (1, 3, 2)),
+    )
+    for jrny in journeys:
+        arrival_time, jrny_type, sections_idx = jrny
+        pb_j = response.journeys.add()
+        pb_j.arrival_date_time = arrival_time
+        # we remove the street network section
+        pb_j.nb_transfers = len(sections_idx) - 1 - (1 in sections_idx) - (10 in sections_idx)
+        if jrny_type:
+            pb_j.type = jrny_type
+        for idx in sections_idx:
+            section_type, network_mode, line_uri = sections[idx]
+            section = pb_j.sections.add()
+            section.type = section_type
+            if network_mode:
+                section.street_network.mode = network_mode
+            if line_uri:
+                section.uris.line = line_uri
+
+    new_default._tag_by_mode([response])
+    new_default._tag_direct_path([response])
+    new_default._tag_bike_in_pt([response])
+
+    return response
+
+
+def filter_non_car_tagged_journey_test():
+    # yes, it's a hack...
+    instance = lambda: None
+    instance.max_additional_connections = 10
+
+    mocked_pb_response = build_mocked_car_response()
+    mocked_request = {'debug': True, 'datetime': 1444903200, 'clockwise': True}
+
+    def expected_deleted_non_car_journey(journeys, nb):
+        assert sum('deleted_because_non_car_tagged_journey_filtered' in j.tags for j in journeys) == nb
+
+    expected_deleted_non_car_journey(mocked_pb_response.journeys, 0)
+
+    # Apply filter
+    # We should see no filtered journey because we did not request for first_section_mode/origin_mode = ['car'] only
+    journey_filter.apply_final_journey_filters([mocked_pb_response], instance, mocked_request)
+    expected_deleted_non_car_journey(mocked_pb_response.journeys, 0)
+
+    # Apply filter
+    # with origin_mode = ['car', 'walking'] the filter does not apply to our journeys
+    mocked_request['origin_mode'] = ['car', 'walking']
+    journey_filter.apply_final_journey_filters([mocked_pb_response], instance, mocked_request)
+    expected_deleted_non_car_journey(mocked_pb_response.journeys, 0)
+
+    # Apply filter
+    # with origin_mode = ['car'] we expect to retain only 'car' tagged journey
+    mocked_request['origin_mode'] = ['car']
+    journey_filter.apply_final_journey_filters([mocked_pb_response], instance, mocked_request)
+    expected_deleted_non_car_journey(mocked_pb_response.journeys, 1)
