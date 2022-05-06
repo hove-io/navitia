@@ -182,7 +182,7 @@ class User(db.Model, TimestampMixin):  # type: ignore
     def get_from_token(cls, token, valid_until):
         query = (
             cls.query.join(Key)
-            .filter(Key.token == token, (Key.valid_until > valid_until) | (Key.valid_until is None))
+            .filter(Key.token == token, (Key.valid_until > valid_until) | (Key.valid_until == None))
             .options(noload('*'))
         )
         res = query.first()

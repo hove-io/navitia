@@ -144,13 +144,18 @@ def has_access(region, api, abort, user):
     if current_app.config.get('PUBLIC', False) or (not can_connect_to_database()):
         return True
 
-    if not user:
+    local_user = user
+
+    if not local_user:
         # no user --> no need to continue, we can abort, a user is mandatory even for free region
         # To manage database error of the following type we should fetch one more time from database
         # Can connect to database but at least one table/attribute is not accessible due to transaction problem
         if can_read_user():
-            context = 'User is undefined, but users are accessible in database'
-            abort_request(user=user, context=context)
+            # let's retry one more time because users are accessible !!
+            local_user = uncached_get_user(token=get_token())
+            if not local_user:
+                context = 'User is undefined, but table users is accessible in database'
+                abort_request(user=local_user, context=context)
         else:
             return True
     try:
@@ -165,7 +170,7 @@ def has_access(region, api, abort, user):
             raise RegionNotFound(region)
         return False
 
-    if (model_instance.is_free and user.have_access_to_free_instances) or user.has_access(
+    if (model_instance.is_free and local_user.have_access_to_free_instances) or local_user.has_access(
         model_instance.id, api
     ):
         return True
@@ -174,7 +179,7 @@ def has_access(region, api, abort, user):
             context = 'User has no permission to access this api {} or instance {}'.format(
                 api, model_instance.id
             )
-            abort_request(user=user, context=context)
+            abort_request(user=local_user, context=context)
         else:
             return False
 
@@ -188,6 +193,10 @@ def cache_get_user(token):
     We allow this method to be cached even if it depends on the current time
     because we assume the cache time is small and the error can be tolerated.
     """
+    uncached_get_user(token)
+
+
+def uncached_get_user(token):
     logging.getLogger(__name__).debug('User not cached, we retrieve it from database')
     if not can_connect_to_database():
         logging.getLogger(__name__).debug('Cannot connect to database, we set User to None')
