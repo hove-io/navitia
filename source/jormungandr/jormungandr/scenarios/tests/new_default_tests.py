@@ -595,33 +595,24 @@ def filter_non_car_tagged_journey_test():
     mocked_pb_response = build_mocked_car_response()
     mocked_request = {'debug': True, 'datetime': 1444903200, 'clockwise': True}
 
-    assert (
-        sum('deleted_because_non_car_tagged_journey_filtered' not in j.tags for j in mocked_pb_response.journeys)
-        == 2
-    )
+    def expected_deleted_non_car_journey(journeys, nb):
+        assert sum('deleted_because_non_car_tagged_journey_filtered' in j.tags for j in journeys) == nb
+
+    expected_deleted_non_car_journey(mocked_pb_response.journeys, 0)
 
     # Apply filter
     # We should see no filtered journey because we did not request for first_section_mode/origin_mode = ['car'] only
     journey_filter.apply_final_journey_filters([mocked_pb_response], instance, mocked_request)
-    assert (
-        sum('deleted_because_non_car_tagged_journey_filtered' not in j.tags for j in mocked_pb_response.journeys)
-        == 2
-    )
+    expected_deleted_non_car_journey(mocked_pb_response.journeys, 0)
 
     # Apply filter
     # with origin_mode = ['car', 'walking'] the filter does not apply to our journeys
     mocked_request['origin_mode'] = ['car', 'walking']
     journey_filter.apply_final_journey_filters([mocked_pb_response], instance, mocked_request)
-    assert (
-        sum('deleted_because_non_car_tagged_journey_filtered' not in j.tags for j in mocked_pb_response.journeys)
-        == 2
-    )
+    expected_deleted_non_car_journey(mocked_pb_response.journeys, 0)
 
     # Apply filter
     # with origin_mode = ['car'] we expect to retain only 'car' tagged journey
     mocked_request['origin_mode'] = ['car']
     journey_filter.apply_final_journey_filters([mocked_pb_response], instance, mocked_request)
-    assert (
-        sum('deleted_because_non_car_tagged_journey_filtered' not in j.tags for j in mocked_pb_response.journeys)
-        == 1
-    )
+    expected_deleted_non_car_journey(mocked_pb_response.journeys, 1)

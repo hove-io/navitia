@@ -659,8 +659,7 @@ def apply_final_journey_filters(response_list, instance, request):
     _filter_too_much_connections(journeys, instance, request)
 
     origin_mode = get_or_default(request, 'origin_mode', [])
-    filter_non_car_journey = origin_mode == ['car']
-    if filter_non_car_journey:
+    if origin_mode == ['car']:
         journeys = journey_generator(response_list)
         filter_non_car_tagged_journey(journeys, request)
 
