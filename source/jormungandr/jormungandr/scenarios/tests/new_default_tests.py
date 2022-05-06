@@ -560,7 +560,7 @@ def build_mocked_car_response():
         (1444905000, 'rapid', (0, 2, 0)),
         # J2
         # 10 / 15 / 2015 @ 12:30pm (UTC)
-        # this journey will be tagged 'walking' & 'car'
+        # this journey will be tagged 'car'
         (1444905000, 'car', (1, 3, 2)),
     )
     for jrny in journeys:
