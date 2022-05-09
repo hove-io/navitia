@@ -278,7 +278,8 @@ class InstanceManager(object):
             i for i in instances if authentication.has_access(i.name, abort=False, user=user, api=api)
         ]
         if not valid_instances:
-            authentication.abort_request(user)
+            context = 'User has no access to any instance'
+            authentication.abort_request(user, context)
         return valid_instances
 
     def _find_coverage_by_object_id(self, object_id):
@@ -349,7 +350,8 @@ class InstanceManager(object):
         valid_instances = self._filter_authorized_instances(available_instances, api)
         if available_instances and not valid_instances:
             # user doesn't have access to any of the instances
-            authentication.abort_request(user=authentication.get_user())
+            context = 'User does not have access to any of the instances'
+            authentication.abort_request(user=authentication.get_user(None), context=context)
         else:
             return valid_instances
 

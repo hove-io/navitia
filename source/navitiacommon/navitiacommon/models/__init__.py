@@ -33,7 +33,7 @@ from __future__ import absolute_import
 import uuid
 import re
 from navitiacommon.sqlalchemy import SQLAlchemy
-from sqlalchemy.orm import backref
+from sqlalchemy.orm import backref, lazyload, noload
 from datetime import datetime
 from sqlalchemy import func, and_, UniqueConstraint, cast, true, false
 from sqlalchemy.dialects.postgresql import ARRAY, UUID, INTERVAL
@@ -180,8 +180,10 @@ class User(db.Model, TimestampMixin):  # type: ignore
 
     @classmethod
     def get_from_token(cls, token, valid_until):
-        query = cls.query.join(Key).filter(
-            Key.token == token, (Key.valid_until > valid_until) | (Key.valid_until == None)
+        query = (
+            cls.query.join(Key)
+            .filter(Key.token == token, (Key.valid_until > valid_until) | (Key.valid_until == None))
+            .options(noload('*'))
         )
         res = query.first()
         return res
@@ -189,8 +191,10 @@ class User(db.Model, TimestampMixin):  # type: ignore
     def has_access(self, instance_id, api_name):
         if self.is_super_user:
             return True
-        query = Instance.query.join(Authorization, Api).filter(
-            Instance.id == instance_id, Api.name == api_name, Authorization.user_id == self.id
+        query = (
+            Instance.query.join(Authorization, Api)
+            .filter(Instance.id == instance_id, Api.name == api_name, Authorization.user_id == self.id)
+            .options(noload('*'))
         )
 
         return query.count() > 0
@@ -244,7 +248,7 @@ class Key(db.Model, TimestampMixin):  # type: ignore
 
     @classmethod
     def get_by_token(cls, token):
-        return cls.query.filter_by(token=token).first()
+        return cls.query.filter_by(token=token).options(noload('*')).first()
 
 
 class PoiTypeJson(db.Model):  # type: ignore
