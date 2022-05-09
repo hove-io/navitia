@@ -109,9 +109,8 @@ def get_token():
                 decoded = decoded.decode()
             return decoded.split(':')[0]
         except (binascii.Error, UnicodeDecodeError):
-            logging.getLogger(__name__).info('badly formated token %s', auth)
+            logging.getLogger(__name__).exception('badly formated token %s', auth)
             flask_restful.abort(401, message="Unauthorized, invalid token", status=401)
-            return None
     else:
         return auth
 
@@ -303,7 +302,7 @@ def abort_request(user=None, context=None):
     issues
     """
     if context:
-        logging.getLogger(__name__).debug('Abort request with context : {}'.format(context))
+        logging.getLogger(__name__).warning('Abort request with context : {}'.format(context))
     if user:
         flask_restful.abort(403)
     else:
