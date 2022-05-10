@@ -1,3 +1,20 @@
+navitia2 (15.7.0) unstable; urgency=low
+
+  * [Jormun] Fork get_user for auth/stat/new_relic  <https://github.com/hove-io/navitia/pull/3744>
+  * [Jormun] Fix for Authentication  <https://github.com/hove-io/navitia/pull/3742>
+  * [Jormun] Improve Authentification  <https://github.com/hove-io/navitia/pull/3740>
+  * [Jormun] Filter non-car tagged journey  <https://github.com/hove-io/navitia/pull/3736>
+  * [CI] Add coverage for tyr tests  <https://github.com/hove-io/navitia/pull/3741>
+  * [CI] Update clang-tidy workflow  <https://github.com/hove-io/navitia/pull/3739>
+  * [CI] Cache CI optimization  <https://github.com/hove-io/navitia/pull/3738>
+  * [CI] Fix build navitia docker image  <https://github.com/hove-io/navitia/pull/3737>
+  * [CI] Change docker tag for release  <https://github.com/hove-io/navitia/pull/3735>
+  * [Tyr] Minio task add metadata (filepath)  <https://github.com/hove-io/navitia/pull/3734>
+  * [Docker] Fix docker build for release  <https://github.com/hove-io/navitia/pull/3733>
+  * [Sonar] Fix security issues  <https://github.com/hove-io/navitia/pull/3728>
+
+ -- Hicham <hicham.azimani@kisio.com>  Tue, 10 May 2022 18:05:35 +0100
+
 navitia2 (15.6.0) unstable; urgency=low
 
   * [doc] bullet points corrections  <https://github.com/hove-io/navitia/pull/3732>
