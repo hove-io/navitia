@@ -111,6 +111,7 @@ def get_token():
         except (binascii.Error, UnicodeDecodeError):
             logging.getLogger(__name__).exception('badly formated token %s', auth)
             flask_restful.abort(401, message="Unauthorized, invalid token", status=401)
+            return None
     else:
         return auth
 
@@ -192,11 +193,11 @@ def cache_get_user(token):
     We allow this method to be cached even if it depends on the current time
     because we assume the cache time is small and the error can be tolerated.
     """
-    uncached_get_user(token)
+    return uncached_get_user(token)
 
 
 def uncached_get_user(token):
-    logging.getLogger(__name__).debug('User not cached, we retrieve it from database')
+    logging.getLogger(__name__).debug('Get User from token (uncached)')
     if not can_connect_to_database():
         logging.getLogger(__name__).debug('Cannot connect to database, we set User to None')
         return None

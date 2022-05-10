@@ -33,7 +33,7 @@ from __future__ import absolute_import
 import uuid
 import re
 from navitiacommon.sqlalchemy import SQLAlchemy
-from sqlalchemy.orm import backref, lazyload, noload
+from sqlalchemy.orm import backref, lazyload, noload, joinedload
 from datetime import datetime
 from sqlalchemy import func, and_, UniqueConstraint, cast, true, false
 from sqlalchemy.dialects.postgresql import ARRAY, UUID, INTERVAL
@@ -183,7 +183,7 @@ class User(db.Model, TimestampMixin):  # type: ignore
         query = (
             cls.query.join(Key)
             .filter(Key.token == token, (Key.valid_until > valid_until) | (Key.valid_until == None))
-            .options(noload('*'))
+            .options(joinedload('end_point').noload('*'))
         )
         res = query.first()
         return res
