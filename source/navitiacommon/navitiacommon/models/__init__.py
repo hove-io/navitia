@@ -179,22 +179,19 @@ class User(db.Model, TimestampMixin):  # type: ignore
         return key
 
     @classmethod
-    def _query_get_from_token(cls, token, valid_until):
+    def get_from_token(cls, token, valid_until):
         query = (
             cls.query.join(Key)
             .join(EndPoint)
             .filter(Key.token == token, (Key.valid_until > valid_until) | (Key.valid_until == None))
-        )
-        return query
-
-    @classmethod
-    def get_from_token(cls, token, valid_until):
-        query = cls._query_get_from_token(token, valid_until).options(noload('*'))
+        ).options(noload('*'))
         return query.first()
 
     @classmethod
     def get_from_key(cls, token, valid_until):
-        query = cls._query_get_from_token(token, valid_until)
+        query = cls.query.join(Key).filter(
+            Key.token == token, (Key.valid_until > valid_until) | (Key.valid_until == None)
+        )
         return query.first()
 
     def has_access(self, instance_id, api_name):
