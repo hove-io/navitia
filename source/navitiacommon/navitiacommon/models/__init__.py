@@ -181,12 +181,18 @@ class User(db.Model, TimestampMixin):  # type: ignore
     @classmethod
     def get_from_token(cls, token, valid_until):
         query = (
-            cls.query.join(Key)
-            .filter(Key.token == token, (Key.valid_until > valid_until) | (Key.valid_until == None))
-            .options(joinedload('end_point').noload('*'))
+            cls.query.join(Key).filter(
+                Key.token == token, (Key.valid_until > valid_until) | (Key.valid_until == None)
+            )
+        ).options(joinedload('end_point'), noload('*'))
+        return query.first()
+
+    @classmethod
+    def get_from_key(cls, token, valid_until):
+        query = cls.query.join(Key).filter(
+            Key.token == token, (Key.valid_until > valid_until) | (Key.valid_until == None)
         )
-        res = query.first()
-        return res
+        return query.first()
 
     def has_access(self, instance_id, api_name):
         if self.is_super_user:

@@ -1154,7 +1154,7 @@ class User(flask_restful.Resource):
 
     def _get_user_by_keys(self, keys):
         logging.debug(keys)
-        return models.User.get_from_token(keys, datetime.now())
+        return models.User.get_from_key(keys, datetime.now())
 
     def _get_all_users(self, args):
         del args['disable_geojson']
