@@ -186,12 +186,12 @@ class User(db.Model, TimestampMixin):  # type: ignore
         return query
 
     @classmethod
-    def get_from_token_simple(cls, token, valid_until):
+    def get_from_token(cls, token, valid_until):
         query = cls._query_get_from_token(token, valid_until).options(joinedload('end_point').noload('*'))
         return query.first()
 
     @classmethod
-    def get_from_token(cls, token, valid_until):
+    def get_from_key(cls, token, valid_until):
         query = cls._query_get_from_token(token, valid_until)
         return query.first()
 

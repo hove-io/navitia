@@ -40,7 +40,7 @@ from jormungandr.modules_loader import ModulesLoader
 import ujson
 import logging
 from jormungandr.new_relic import record_custom_parameter
-from jormungandr.authentication import get_user, get_user_simple, get_token, get_app_name, get_used_coverages
+from jormungandr.authentication import get_user, get_token, get_app_name, get_used_coverages
 from jormungandr._version import __version__
 from jormungandr.utils import can_connect_to_database
 import six
@@ -92,7 +92,7 @@ def add_info_newrelic(response, *args, **kwargs):
 
         if can_connect_to_database():
             token = get_token()
-            user = get_user_simple(token=token, abort_if_no_token=False)
+            user = get_user(token=token, abort_if_no_token=False)
             app_name = get_app_name(token)
             if user:
                 record_custom_parameter('user_id', str(user.id))

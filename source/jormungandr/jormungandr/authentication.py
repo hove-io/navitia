@@ -66,7 +66,7 @@ def authentication_required(func):
                 pass
         elif current_app.config.get('DEFAULT_REGION'):  # if a default region is defined in config
             region = current_app.config.get('DEFAULT_REGION')  # we use it
-        user = get_user_simple(token=get_token())
+        user = get_user(token=get_token())
         if not region:
             # we could not find any regions, we abort
             context = 'We could not find any regions, we abort'
@@ -152,7 +152,7 @@ def has_access(region, api, abort, user):
         # Can connect to database but at least one table/attribute is not accessible due to transaction problem
         if can_read_user():
             # let's retry one more time because users are accessible !!
-            local_user = uncached_get_user_simple(token=get_token())
+            local_user = uncached_get_user(token=get_token())
             if not local_user:
                 context = 'User is undefined, but table users is accessible in database'
                 abort_request(user=local_user, context=context)
@@ -203,33 +203,6 @@ def uncached_get_user(token):
         return None
     try:
         user = User.get_from_token(token, datetime.datetime.now())
-    except Exception as e:
-        logging.getLogger(__name__).error('No access to table User (error: {})'.format(e))
-        g.can_connect_to_database = False
-        return None
-
-    return user
-
-
-@memory_cache.memoize(
-    current_app.config[str('MEMORY_CACHE_CONFIGURATION')].get(str('TIMEOUT_AUTHENTICATION'), 30)
-)
-@cache.memoize(current_app.config[str('CACHE_CONFIGURATION')].get(str('TIMEOUT_AUTHENTICATION'), 300))
-def cache_get_user_simple(token):
-    """
-    We allow this method to be cached even if it depends on the current time
-    because we assume the cache time is small and the error can be tolerated.
-    """
-    return uncached_get_user_simple(token)
-
-
-def uncached_get_user_simple(token):
-    logging.getLogger(__name__).debug('Get User from token (uncached)')
-    if not can_connect_to_database():
-        logging.getLogger(__name__).debug('Cannot connect to database, we set User to None')
-        return None
-    try:
-        user = User.get_from_token_simple(token, datetime.datetime.now())
     except Exception as e:
         logging.getLogger(__name__).error('No access to table User (error: {})'.format(e))
         g.can_connect_to_database = False
@@ -311,32 +284,6 @@ def get_user(token, abort_if_no_token=True):
             g.user = cache_get_user(token)
 
         return g.user
-
-
-def get_user_simple(token, abort_if_no_token=True):
-    """
-    return the current authenticated User or None
-    """
-    if hasattr(g, 'user_simple'):
-        return g.user_simple
-    else:
-        if not token:
-            # a token is mandatory for non public jormungandr
-            if not current_app.config.get('PUBLIC', False):
-                if abort_if_no_token:
-                    flask_restful.abort(
-                        401,
-                        message='no token. You can get one at http://www.navitia.io or contact your support if you’re using the opensource version of Navitia https://github.com/hove-io/navitia',
-                    )
-                else:
-                    return None
-            else:  # for public one we allow unknown user
-                g.user_simple = User(login="unknown_user")
-                g.user_simple.id = 0
-        else:
-            g.user_simple = cache_get_user(token)
-
-        return g.user_simple
 
 
 def get_app_name(token):
