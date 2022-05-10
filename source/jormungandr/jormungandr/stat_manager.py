@@ -35,7 +35,7 @@ from functools import wraps
 from navitiacommon import stat_pb2
 import logging
 from jormungandr import app
-from jormungandr.authentication import get_user, get_token, get_app_name, get_used_coverages
+from jormungandr.authentication import get_user, get_user_simple, get_token, get_app_name, get_used_coverages
 from jormungandr import utils
 import re
 from threading import Lock
@@ -204,7 +204,7 @@ class StatManager(object):
         # Note: for stat we don't want to abort if no token has been
         # given (it's up to the authentication process)
         token = get_token()
-        user = get_user(token=token, abort_if_no_token=False)
+        user = get_user_simple(token=token, abort_if_no_token=False)
 
         if user is not None:
             stat_request.user_id = user.id
