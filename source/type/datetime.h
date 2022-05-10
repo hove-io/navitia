@@ -50,7 +50,7 @@ class time_duration;
 }  // namespace boost
 
 namespace navitia {
-typedef uint32_t DateTime;
+using DateTime = uint32_t;
 
 namespace DateTimeUtils {
 

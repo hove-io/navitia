@@ -51,7 +51,7 @@ namespace type {
 class PT_Data;
 class Data;
 struct FrequencyVehicleJourney;
-typedef std::bitset<8> VehicleProperties;
+using VehicleProperties = std::bitset<8>;
 struct AccessibiliteParams;
 }  // namespace type
 

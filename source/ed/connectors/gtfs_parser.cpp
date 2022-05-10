@@ -43,7 +43,7 @@ www.navitia.io
 #include <boost/filesystem.hpp>
 
 namespace nm = ed::types;
-typedef boost::tokenizer<boost::escaped_list_separator<char> > Tokenizer;
+using Tokenizer = boost::tokenizer<boost::escaped_list_separator<char>>;
 
 namespace ed {
 namespace connectors {

@@ -74,14 +74,13 @@ template <typename OpTag>
 struct BinaryOp;
 
 struct Expr {
-    typedef boost::variant<All,
-                           Empty,
-                           Fun,
-                           boost::recursive_wrapper<GetCorresponding>,
-                           boost::recursive_wrapper<BinaryOp<And>>,
-                           boost::recursive_wrapper<BinaryOp<Or>>,
-                           boost::recursive_wrapper<BinaryOp<Diff>>>
-        type;
+    using type = boost::variant<All,
+                                Empty,
+                                Fun,
+                                boost::recursive_wrapper<GetCorresponding>,
+                                boost::recursive_wrapper<BinaryOp<And>>,
+                                boost::recursive_wrapper<BinaryOp<Or>>,
+                                boost::recursive_wrapper<BinaryOp<Diff>>>;
 
     Expr() : expr(All()) {}
     template <typename E>

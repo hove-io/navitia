@@ -108,7 +108,7 @@ struct Autocomplete {
 
     /// À chaque mot (par exemple "rue" ou "jaures") on associe un tableau de T qui contient la liste des éléments
     /// contenant ce mot
-    typedef std::pair<std::string, std::vector<T> > vec_elt;
+    using vec_elt = std::pair<std::string, std::vector<T>>;
 
     /// Structure principale de notre indexe
     std::vector<vec_elt> word_dictionnary;

@@ -91,7 +91,7 @@ static void shape_eq(const navitia::type::GeographicalCoord& from,
 }
 
 BOOST_AUTO_TEST_CASE(create_shape) {
-    typedef navitia::type::LineString LS;
+    using LS = navitia::type::LineString;
 
     // nearest on same segment: direct path
     shape_eq(B, C, LS({B, C}));

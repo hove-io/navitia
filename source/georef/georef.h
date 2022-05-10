@@ -213,7 +213,7 @@ struct GeoRef {
     proximitylist::ProximityList<vertex_t> pl_car;
 
     /// for all stop_point, we store it's projection on each graph
-    typedef flat_enum_map<nt::Mode_e, ProjectionData> ProjectionByMode;
+    using ProjectionByMode = flat_enum_map<nt::Mode_e, ProjectionData>;
     std::vector<ProjectionByMode> projected_stop_points = {};
 
     using ProjectedCoords = std::unordered_map<nt::GeographicalCoord, ProjectionByMode>;
