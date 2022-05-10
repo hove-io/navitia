@@ -12,6 +12,8 @@ add_custom_command(TARGET tyr_tests
                         --doctest-modules
                         --junit-xml=${CMAKE_BINARY_DIR}/tyr_tests.xml
                         --ignore=${CMAKE_CURRENT_SOURCE_DIR}/migrations/
+                        --cov=tyr
+                        --cov-report=xml:${CMAKE_BINARY_DIR}/tyr_integration_coverage.xml
                         ${TYR_TEST_PATH})
 
 add_dependencies(docker_test tyr_tests)

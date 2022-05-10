@@ -149,7 +149,7 @@ def test_post_pbf_autocomplete_with_parenthesis(create_instance_fr, enable_mimir
             assert type(job['id']) == int
             assert len(job['data_sets']) == 1
             assert 'empty_pbf.osm(1).pbf' not in job['data_sets'][0]['name']
-            assert 'empty_pbf.osm_' in job['data_sets'][0]['name']
+            assert 'empty_pbf.osm1.pbf' in job['data_sets'][0]['name']
 
             job = get_jobs_from_db(id=job['id'])
             assert job

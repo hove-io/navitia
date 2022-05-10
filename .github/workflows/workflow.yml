@@ -57,10 +57,11 @@ jobs:
       with:
           submodules: 'recursive'
     - name: Restore ccache
-      uses: hendrikmuhs/ccache-action@v1
+      uses: hendrikmuhs/ccache-action@v1.2
       with:
         key: ${{matrix.os.docker_image}}-ci
         max-size: 2000M
+        save: ${{ github.event_name == 'push' }}
     - name: configure for Release
       run: mkdir build && cd ./build && cmake -DSTRIP_SYMBOLS=ON ../source
     - name: run

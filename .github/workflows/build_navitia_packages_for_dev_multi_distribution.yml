@@ -35,10 +35,11 @@ jobs:
     - name: install zip dependency
       run: apt update && apt install -y zip httpie dh-python
     - name: Restore ccache
-      uses: hendrikmuhs/ccache-action@v1
+      uses: hendrikmuhs/ccache-action@v1.2
       with:
         key: ${{matrix.distribution}}-package
         max-size: 2000M
+        save: ${{ github.event_name == 'push' }}
     - name: dkpg-buildpackage
       run: |
         sed -i 's,git\@github.com:\([^/]*\)/\(.*\).git,https://github.com/\1/\2,' .gitmodules
@@ -75,13 +76,17 @@ jobs:
     - uses: actions/download-artifact@v3 # Download all artifacts Debian10 (job 'build') to the current working directory
       with:
         name: navitia-debian10-packages
-        path: ./builder_from_package/debian10
+        path: ./builder_from_package
     - name: build, create and publish images for branch dev
       if: ${{ github.event_name == 'push' }}
-      working-directory: builder_from_package/debian10
-      run: ./build.sh -o ${{secrets.access_token_github}} -n -r -e push -t dev -b dev -u ${{secrets.docker_user}} -p ${{secrets.docker_password}}
+      working-directory: builder_from_package
+      run: ./build.sh -o ${{secrets.access_token_github}} -d debian10 -n -e push -t dev -b dev -r -u ${{secrets.docker_user}} -p ${{secrets.docker_password}}
+    - name: build and create images for pull_request
+      if: ${{ github.event_name != 'push' }}
+      working-directory: builder_from_package
+      run: ./build.sh -o ${{secrets.access_token_github}} -d debian10 -n -e push -t dev -b dev
     - name: slack notification (the job has failed)
-      if: failure()
+      if: ${{ failure() && github.event_name == 'push' }}
       run: |
           echo '{"text":":warning: Navitia Github Actions: publish_docker_compose_images failed ! "}' | http --json POST ${{secrets.SLACK_NAVITIA_CORE_TEAM_URL}}
 
