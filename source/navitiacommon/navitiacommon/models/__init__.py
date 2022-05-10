@@ -180,9 +180,8 @@ class User(db.Model, TimestampMixin):  # type: ignore
 
     @classmethod
     def _query_get_from_token(cls, token, valid_until):
-        query = (
-            cls.query.join(Key)
-            .filter(Key.token == token, (Key.valid_until > valid_until) | (Key.valid_until == None))
+        query = cls.query.join(Key).filter(
+            Key.token == token, (Key.valid_until > valid_until) | (Key.valid_until == None)
         )
         return query
 
