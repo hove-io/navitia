@@ -104,7 +104,7 @@ struct Autocomplete {
     navitia::type::Type_e object_type;
 
     /// Structure temporaire pour construire l'indexe
-    std::map<std::string, std::set<T> > temp_word_map;
+    std::map<std::string, std::set<T>> temp_word_map;
 
     /// À chaque mot (par exemple "rue" ou "jaures") on associe un tableau de T qui contient la liste des éléments
     /// contenant ce mot
@@ -114,7 +114,7 @@ struct Autocomplete {
     std::vector<vec_elt> word_dictionnary;
 
     /// Structure temporaire pour garder les patterns et leurs indexs
-    std::map<std::string, std::set<T> > temp_pattern_map;
+    std::map<std::string, std::set<T>> temp_pattern_map;
     std::vector<vec_elt> pattern_dictionnary;
 
     /// Structure pour garder les informations comme nombre des mots, la distance des mots...dans chaque Autocomplete
@@ -228,16 +228,14 @@ struct Autocomplete {
         /** Utilisé pour trouver la borne inf. Quand on cherche av, on veux que avenue soit également trouvé
          * Il faut donc que "av" < "avenue" soit false
          */
-        bool operator()(const std::string& a, const std::pair<std::string, std::vector<T> >& b) {
+        bool operator()(const std::string& a, const std::pair<std::string, std::vector<T>>& b) {
             if (b.first.find(a) == 0)
                 return false;
             return (a < b.first);
         }
 
         /** Utilisé pour la borne sup. Ici rien d'extraordinaire */
-        bool operator()(const std::pair<std::string, std::vector<T> >& b, const std::string& a) {
-            return (b.first < a);
-        }
+        bool operator()(const std::pair<std::string, std::vector<T>>& b, const std::string& a) { return (b.first < a); }
     };
 
     /** Retrouve toutes les positions des élements contenant le mot des mots qui commencent par token */

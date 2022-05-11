@@ -169,7 +169,7 @@ ed::types::Company* GtfsData::get_or_create_default_company(Data& data) {
 }
 
 int time_to_int(const std::string& time) {
-    using tokenizer = boost::tokenizer<boost::char_separator<char> >;
+    using tokenizer = boost::tokenizer<boost::char_separator<char>>;
     boost::char_separator<char> sep(":");
     tokenizer tokens(time, sep);
     std::vector<std::string> elts(tokens.begin(), tokens.end());
