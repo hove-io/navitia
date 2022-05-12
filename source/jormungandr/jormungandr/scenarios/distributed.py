@@ -103,17 +103,23 @@ class Distributed(object):
         logger.debug("request_id : {}".format(request_id))
 
         requested_dep_modes_with_pt = {
-            mode for mode, _, direct_path_type in krakens_call if direct_path_type != "only"
+            mode
+            for mode, _, direct_path_type in krakens_call
+            if direct_path_type not in ("only", "only_with_alternatives")
         }
         requested_arr_modes_with_pt = {
-            mode for _, mode, direct_path_type in krakens_call if direct_path_type != "only"
+            mode
+            for _, mode, direct_path_type in krakens_call
+            if direct_path_type not in ("only", "only_with_alternatives")
         }
 
         # These are the modes in first_section_modes[] and direct_path_modes[]
         # We need to compute direct_paths for them either because we requested it with direct_path_modes[]
         # Or because we need them to optimize the pt_journey computation
         requested_direct_path_modes = {
-            mode for mode, _, direct_path_type in krakens_call if direct_path_type == "only"
+            mode
+            for mode, _, direct_path_type in krakens_call
+            if direct_path_type in ("only", "only_with_alternatives")
         }
         requested_direct_path_modes.update(requested_dep_modes_with_pt)
 
@@ -155,7 +161,10 @@ class Distributed(object):
 
             # if public transport is not requested, there is no need to continue,
             # we return all direct path without pt
-            if request['max_duration'] == 0 or request.get('direct_path', "") == "only":
+            if request['max_duration'] == 0 or request.get('direct_path', "") in (
+                "only",
+                "only_with_alternatives",
+            ):
                 res = [
                     context.streetnetwork_path_pool.wait_and_get(
                         requested_orig_obj=context.requested_orig_obj,

@@ -433,7 +433,7 @@ class JourneyCommon(ResourceUri, ResourceUtc):
         )
         parser_get.add_argument(
             "direct_path",
-            type=OptionValue(['indifferent', 'only', 'none']),
+            type=OptionValue(['indifferent', 'only', 'none', 'only_with_alternatives']),
             default='indifferent',
             help="Specify if direct path should be suggested",
         )
