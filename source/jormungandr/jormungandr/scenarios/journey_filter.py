@@ -335,9 +335,7 @@ class FilterDirectPath(SingleJourneyFilter):
         """
         if self.dp == 'none' and 'non_pt' in journey.tags:
             return False
-        elif self.dp == 'only' and 'non_pt' not in journey.tags:
-            return False
-        elif self.dp == 'only_with_alternatives' and 'non_pt' not in journey.tags:
+        elif self.dp in ('only', 'only_with_alternatives') and 'non_pt' not in journey.tags:
             return False
         return True
 
