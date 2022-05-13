@@ -44,7 +44,7 @@ www.navitia.io
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/optional/optional_io.hpp>
 
-static void respond(zmq::socket_t& socket, const std::string& address, const pbnavitia::Response& response) {
+static void respond(zmq::socket_t& socket, const std::vector<std::string>& client_id, const pbnavitia::Response& response) {
     zmq::message_t reply(response.ByteSize());
     try {
         response.SerializeToArray(reply.data(), response.ByteSize());
@@ -57,8 +57,10 @@ static void respond(zmq::socket_t& socket, const std::string& address, const pbn
         reply.rebuild(error_response.ByteSize());
         error_response.SerializeToArray(reply.data(), error_response.ByteSize());
     }
-    z_send(socket, address, ZMQ_SNDMORE);
-    z_send(socket, "", ZMQ_SNDMORE);
+    for(size_t idx = 0; idx < client_id.size(); ++idx) {
+
+        z_send(socket, client_id[idx], ZMQ_SNDMORE);
+    }
     socket.send(reply);
 }
 
@@ -79,31 +81,59 @@ inline void doWork(zmq::context_t& context,
     navitia::Worker w(conf);
     z_send(socket, "READY");
     auto slow_request_duration = pt::milliseconds(conf.slow_request_duration());
+
+    std::vector<std::string> frames{};
+
+            
     while (run) {
-        const std::string address = z_recv(socket);
-        {
-            std::string empty = z_recv(socket);
-            assert(empty.size() == 0);
-        }
-        zmq::message_t request;
+        
+        size_t more = 0;
+        size_t more_size = sizeof (more);
+        frames.clear();
         try {
-            // Wait for next request from client
-            socket.recv(&request);
+            do {
+                std::string frame = z_recv(socket);
+                frames.push_back(frame);
+
+                // Are there more frames coming?
+                socket.getsockopt(ZMQ_RCVMORE, &more, &more_size);
+            } while (more);
         } catch (const zmq::error_t&) {
             // on gére le cas du sighup durant un recv
             continue;
         }
+
+        // we should obtain at least 3 frames
+        if (frames.size() <3) {
+            continue;
+        }
+
+        // the penultimate frame should be empty
+        if (frames[frames.size() - 2] != "") {
+            continue;   
+        }
+
+        // the payload is the last frame
+        // we pop it from the "frames" vector
+        // the remaining elements in "frames"
+        // is :
+        //  - one or more frame with the client_id
+        //  - then an empty frame
+        std::string payload = frames.back();
+        frames.pop_back();
+
+        
         navitia::InFlightGuard in_flight_guard(metrics.start_in_flight());
         pbnavitia::Request pb_req;
         pt::ptime start = pt::microsec_clock::universal_time();
         pbnavitia::API api = pbnavitia::UNKNOWN_API;
-        if (!pb_req.ParseFromArray(request.data(), request.size())) {
+        if (!pb_req.ParseFromArray(payload.data(), payload.size())) {
             LOG4CPLUS_WARN(logger, "receive invalid protobuf");
             pbnavitia::Response response;
             auto* error = response.mutable_error();
             error->set_id(pbnavitia::Error::invalid_protobuf_request);
             error->set_message("receive invalid protobuf");
-            respond(socket, address, response);
+            respond(socket, frames, response);
             continue;
         }
 
@@ -148,7 +178,7 @@ inline void doWork(zmq::context_t& context,
         } else {
             w.pb_creator.set_publication_date(data->meta->publication_date);
         }
-        respond(socket, address, w.pb_creator.get_response());
+        respond(socket, frames, w.pb_creator.get_response());
         auto end = pt::microsec_clock::universal_time();
         auto duration = end - start;
         metrics.observe_api(api, duration.total_milliseconds() / 1000.0);
