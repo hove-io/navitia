@@ -44,7 +44,9 @@ www.navitia.io
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/optional/optional_io.hpp>
 
-static void respond(zmq::socket_t& socket, const std::vector<std::string>& client_id, const pbnavitia::Response& response) {
+static void respond(zmq::socket_t& socket,
+                    const std::vector<std::string>& client_id,
+                    const pbnavitia::Response& response) {
     zmq::message_t reply(response.ByteSize());
     try {
         response.SerializeToArray(reply.data(), response.ByteSize());
@@ -57,8 +59,7 @@ static void respond(zmq::socket_t& socket, const std::vector<std::string>& clien
         reply.rebuild(error_response.ByteSize());
         error_response.SerializeToArray(reply.data(), error_response.ByteSize());
     }
-    for(size_t idx = 0; idx < client_id.size(); ++idx) {
-
+    for (size_t idx = 0; idx < client_id.size(); ++idx) {
         z_send(socket, client_id[idx], ZMQ_SNDMORE);
     }
     socket.send(reply);
@@ -84,11 +85,9 @@ inline void doWork(zmq::context_t& context,
 
     std::vector<std::string> frames{};
 
-            
     while (run) {
-        
         size_t more = 0;
-        size_t more_size = sizeof (more);
+        size_t more_size = sizeof(more);
         frames.clear();
         try {
             do {
@@ -104,13 +103,13 @@ inline void doWork(zmq::context_t& context,
         }
 
         // we should obtain at least 3 frames
-        if (frames.size() <3) {
+        if (frames.size() < 3) {
             continue;
         }
 
         // the penultimate frame should be empty
         if (frames[frames.size() - 2] != "") {
-            continue;   
+            continue;
         }
 
         // the payload is the last frame
@@ -122,7 +121,6 @@ inline void doWork(zmq::context_t& context,
         std::string payload = frames.back();
         frames.pop_back();
 
-        
         navitia::InFlightGuard in_flight_guard(metrics.start_in_flight());
         pbnavitia::Request pb_req;
         pt::ptime start = pt::microsec_clock::universal_time();
