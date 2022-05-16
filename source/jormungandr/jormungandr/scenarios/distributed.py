@@ -87,6 +87,10 @@ class Distributed(object):
             for pt_j in e.pt_journeys.journeys
         }
 
+    @staticmethod
+    def is_type_only(direct_path_type):
+        return direct_path_type in ("only", "only_with_alternatives")
+
     def _compute_journeys(self, future_manager, request, instance, krakens_call, context, request_type):
         """
         For all krakens_call, call the kraken and aggregate the responses
@@ -103,23 +107,17 @@ class Distributed(object):
         logger.debug("request_id : {}".format(request_id))
 
         requested_dep_modes_with_pt = {
-            mode
-            for mode, _, direct_path_type in krakens_call
-            if direct_path_type not in ("only", "only_with_alternatives")
+            mode for mode, _, direct_path_type in krakens_call if not self.is_type_only(direct_path_type)
         }
         requested_arr_modes_with_pt = {
-            mode
-            for _, mode, direct_path_type in krakens_call
-            if direct_path_type not in ("only", "only_with_alternatives")
+            mode for _, mode, direct_path_type in krakens_call if not self.is_type_only(direct_path_type)
         }
 
         # These are the modes in first_section_modes[] and direct_path_modes[]
         # We need to compute direct_paths for them either because we requested it with direct_path_modes[]
         # Or because we need them to optimize the pt_journey computation
         requested_direct_path_modes = {
-            mode
-            for mode, _, direct_path_type in krakens_call
-            if direct_path_type in ("only", "only_with_alternatives")
+            mode for mode, _, direct_path_type in krakens_call if self.is_type_only(direct_path_type)
         }
         requested_direct_path_modes.update(requested_dep_modes_with_pt)
 

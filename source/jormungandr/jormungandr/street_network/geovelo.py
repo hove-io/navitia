@@ -181,6 +181,19 @@ class Geovelo(AbstractStreetNetworkService):
             self.record_external_failure(str(e))
         return None
 
+    @staticmethod
+    def get_geovelo_tag(geovelo_response):
+        if geovelo_response['title'] == 'RECOMMENDED':
+            return 'rapid'
+        elif geovelo_response['title'] == 'FASTER':
+            return 'shortest'
+        elif geovelo_response['title'] == 'SAFER':
+            return 'balanced'
+        elif geovelo_response['title'] == 'BIS':
+            return 'comfort'
+        else:
+            return 'geovelo_other'
+
     @classmethod
     def _get_matrix(cls, json_response):
         '''
@@ -277,11 +290,10 @@ class Geovelo(AbstractStreetNetworkService):
         resp.status_code = 200
         resp.response_type = response_pb2.ITINERARY_FOUND
 
-        geovelo_resp = json_response
-        for i in geovelo_resp:
+        for geovelo_response in json_response:
             journey = resp.journeys.add()
-            journey.tags.append(i['title'].lower())
-            journey.duration = int(i['duration'])
+            journey.tags.append(cls.get_geovelo_tag(geovelo_response))
+            journey.duration = int(geovelo_response['duration'])
             datetime, represents_start_fallback = fallback_extremity
             if represents_start_fallback:
                 journey.departure_date_time = datetime
@@ -292,10 +304,10 @@ class Geovelo(AbstractStreetNetworkService):
             journey.durations.total = journey.duration
             journey.durations.bike = journey.duration
 
-            journey.distances.bike = int(i['distances']['total'])
+            journey.distances.bike = int(geovelo_response['distances']['total'])
 
             previous_section_endtime = journey.departure_date_time
-            for index, geovelo_section in enumerate(i['sections']):
+            for index, geovelo_section in enumerate(geovelo_response['sections']):
                 section = journey.sections.add()
                 section.type = response_pb2.STREET_NETWORK
 
@@ -309,7 +321,7 @@ class Geovelo(AbstractStreetNetworkService):
 
                 if index == 0:
                     section.origin.CopyFrom(pt_object_origin)
-                if index == len(i['sections']) - 1:
+                if index == len(geovelo_response['sections']) - 1:
                     section.destination.CopyFrom(pt_object_destination)
 
                 section.street_network.duration = section.duration
@@ -327,7 +339,7 @@ class Geovelo(AbstractStreetNetworkService):
                     path_item.duration = round(path_item.length / speed) if speed != 0 else 0
                     path_item.direction = map_instructions_direction.get(geovelo_instruction[0], 0)
 
-                shape = decode_polyline(i['sections'][0]['geometry'])
+                shape = decode_polyline(geovelo_response['sections'][0]['geometry'])
                 for sh in shape:
                     section.street_network.coordinates.add(lon=sh[0], lat=sh[1])
 
@@ -380,6 +392,10 @@ class Geovelo(AbstractStreetNetworkService):
         )
         self._check_response(r)
         resp_json = ujson.loads(r.text)
+
+        if len(resp_json) != 1 and single_result:
+            logging.getLogger(__name__).error('Geovelo nb response != nb requested')
+            raise UnableToParse('Geovelo nb response != nb requested')
 
         return self._get_response(resp_json, pt_object_origin, pt_object_destination, fallback_extremity)
 
