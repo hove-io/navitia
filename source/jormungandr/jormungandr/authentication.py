@@ -144,15 +144,13 @@ def has_access(region, api, abort, user):
     if current_app.config.get('PUBLIC', False) or (not can_connect_to_database()):
         return True
 
-    local_user = user
-
-    if not local_user:
+    if not user:
         # no user --> no need to continue, we can abort, a user is mandatory even for free region
         # To manage database error of the following type we should fetch one more time from database
         # Can connect to database but at least one table/attribute is not accessible due to transaction problem
         if can_read_user():
             context = 'User is undefined, but table users is accessible in database'
-            abort_request(user=local_user, context=context)
+            abort_request(user=user, context=context)
         else:
             return True
     try:
@@ -167,7 +165,7 @@ def has_access(region, api, abort, user):
             raise RegionNotFound(region)
         return False
 
-    if (model_instance.is_free and local_user.have_access_to_free_instances) or local_user.has_access(
+    if (model_instance.is_free and user.have_access_to_free_instances) or user.has_access(
         model_instance.id, api
     ):
         return True
@@ -176,7 +174,7 @@ def has_access(region, api, abort, user):
             context = 'User has no permission to access this api {} or instance {}'.format(
                 api, model_instance.id
             )
-            abort_request(user=local_user, context=context)
+            abort_request(user=user, context=context)
         else:
             return False
 
