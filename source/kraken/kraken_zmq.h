@@ -99,16 +99,19 @@ inline void doWork(zmq::context_t& context,
             } while (more);
         } catch (const zmq::error_t&) {
             // on gére le cas du sighup durant un recv
+            LOG4CPLUS_WARN(logger, "Zmq error occured while receiving. I'll ignore this message.");
             continue;
         }
 
         // we should obtain at least 3 frames
         if (frames.size() < 3) {
+            LOG4CPLUS_WARN(logger, "Received a zmq message with less than 3 frames. I'll ignore it.");
             continue;
         }
 
         // the penultimate frame should be empty
         if (frames[frames.size() - 2] != "") {
+            LOG4CPLUS_WARN(logger, "Received a zmq message with a non empty penultimate frame. I'll ignore it.");
             continue;
         }
 
