@@ -331,11 +331,11 @@ class FilterDirectPath(SingleJourneyFilter):
 
     def filter_func(self, journey):
         """
-        eliminates journeys that are not matching direct path parameter (none, only or indifferent)
+        eliminates journeys that are not matching direct path parameter (none, only, only_with_alternatives or indifferent)
         """
         if self.dp == 'none' and 'non_pt' in journey.tags:
             return False
-        elif self.dp == 'only' and 'non_pt' not in journey.tags:
+        elif self.dp in ('only', 'only_with_alternatives') and 'non_pt' not in journey.tags:
             return False
         return True
 
@@ -462,7 +462,7 @@ def _crow_fly_sn_functor(_s):
 def similar_journeys_generator(journey, pt_functor, sn_functor=_sn_functor, crow_fly_functor=_sn_functor):
     def _similar_non_pt():
         for s in journey.sections:
-            yield "sn:{} type:{}".format(s.street_network.mode, s.type)
+            yield "sn:{} type:{} tags:{}".format(s.street_network.mode, s.type, journey.tags)
 
     def _similar_pt():
         for idx, s in enumerate(journey.sections):
