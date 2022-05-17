@@ -151,11 +151,8 @@ def has_access(region, api, abort, user):
         # To manage database error of the following type we should fetch one more time from database
         # Can connect to database but at least one table/attribute is not accessible due to transaction problem
         if can_read_user():
-            # let's retry one more time because users are accessible !!
-            local_user = uncached_get_user(token=get_token())
-            if not local_user:
-                context = 'User is undefined, but table users is accessible in database'
-                abort_request(user=local_user, context=context)
+            context = 'User is undefined, but table users is accessible in database'
+            abort_request(user=local_user, context=context)
         else:
             return True
     try:
