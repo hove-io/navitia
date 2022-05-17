@@ -65,6 +65,14 @@ static void respond(zmq::socket_t& socket,
     socket.send(reply);
 }
 
+static pbnavitia::Response create_error_response(std::string  error_message, pbnavitia::Error_error_id error_id) {
+    pbnavitia::Response response;
+    auto* error = response.mutable_error();
+    error->set_id(pbnavitia::Error::invalid_protobuf_request);
+    error->set_message("receive invalid protobuf");
+    return response;
+}
+
 namespace pt = boost::posix_time;
 inline void doWork(zmq::context_t& context,
                    DataManager<navitia::type::Data>& data_manager,
@@ -100,18 +108,24 @@ inline void doWork(zmq::context_t& context,
         } catch (const zmq::error_t&) {
             // on gére le cas du sighup durant un recv
             LOG4CPLUS_WARN(logger, "Zmq error occured while receiving. I'll ignore this message.");
+            pbnavitia::Response response = create_error_response("zmq error occured while receiving", pbnavitia::Error::internal_error);
+            respond(socket, {}, response);
             continue;
         }
 
         // we should obtain at least 3 frames
         if (frames.size() < 3) {
             LOG4CPLUS_WARN(logger, "Received a zmq message with less than 3 frames. I'll ignore it.");
+            pbnavitia::Response response = create_error_response("Received a zmq message with less than 3 frames.", pbnavitia::Error::internal_error);
+            respond(socket, {}, response);
             continue;
         }
 
         // the penultimate frame should be empty
         if (frames[frames.size() - 2] != "") {
             LOG4CPLUS_WARN(logger, "Received a zmq message with a non empty penultimate frame. I'll ignore it.");
+            pbnavitia::Response response = create_error_response("Received a zmq message with a non empty penultimate frame.", pbnavitia::Error::internal_error);
+            respond(socket, {}, response);
             continue;
         }
 
@@ -130,10 +144,7 @@ inline void doWork(zmq::context_t& context,
         pbnavitia::API api = pbnavitia::UNKNOWN_API;
         if (!pb_req.ParseFromArray(payload.data(), payload.size())) {
             LOG4CPLUS_WARN(logger, "receive invalid protobuf");
-            pbnavitia::Response response;
-            auto* error = response.mutable_error();
-            error->set_id(pbnavitia::Error::invalid_protobuf_request);
-            error->set_message("receive invalid protobuf");
+            pbnavitia::Response response = create_error_response("Receive invalid protobuf.", pbnavitia::Error::invalid_protobuf_request);
             respond(socket, frames, response);
             continue;
         }
