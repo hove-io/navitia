@@ -68,8 +68,8 @@ static void respond(zmq::socket_t& socket,
 static pbnavitia::Response create_error_response(std::string error_message, pbnavitia::Error_error_id error_id) {
     pbnavitia::Response response;
     auto* error = response.mutable_error();
-    error->set_id(pbnavitia::Error::invalid_protobuf_request);
-    error->set_message("receive invalid protobuf");
+    error->set_id(error_id);
+    error->set_message(error_message);
     return response;
 }
 
