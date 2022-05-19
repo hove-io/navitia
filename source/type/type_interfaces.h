@@ -43,7 +43,7 @@ www.navitia.io
 namespace navitia {
 namespace type {
 
-typedef navitia::idx_t idx_t;
+using idx_t = navitia::idx_t;
 const idx_t invalid_idx = std::numeric_limits<idx_t>::max();
 
 #define ITERATE_NAVITIA_PT_TYPES(FUN)       \

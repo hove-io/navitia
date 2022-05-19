@@ -61,7 +61,7 @@ namespace ed {
 #if PQXX_COMPATIBILITY
 typedef pqxx::tuple pqxx_row;
 #else
-typedef pqxx::row pqxx_row;
+using pqxx_row = pqxx::row;
 #endif
 
 // A functor that first asks to GeoRef the admins of coord, and, if
