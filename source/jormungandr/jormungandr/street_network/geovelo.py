@@ -51,7 +51,7 @@ DEFAULT_GEOVELO_FEED_PUBLISHER = {
     'id': 'geovelo',
     'name': 'geovelo',
     'license': 'Private',
-    'url': 'http://about.geovelo.fr/cgu/',
+    'url': 'https://geovelo.fr/a-propos/cgu/',
 }
 
 
