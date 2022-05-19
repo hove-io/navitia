@@ -638,7 +638,18 @@ std::set<StopPoint*> LineSection::get_stop_points_section() const {
     }
     return res;
 }
-
+bool RailSection::is_blocked_start_point() const {
+ if (this->blocked_stop_areas.empty()) {
+     return false;
+ }
+ return this->blocked_stop_areas.front().first == this->start_point->uri;
+}
+bool RailSection::is_blocked_end_point() const {
+    if (this->blocked_stop_areas.empty()) {
+        return false;
+    }
+    return this->blocked_stop_areas.back().first == this->end_point->uri;
+}
 std::set<StopPoint*> get_stop_points_section(const RailSection& rs) {
     std::set<StopPoint*> res;
     std::vector<navitia::type::Route*> routes;
