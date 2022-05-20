@@ -38,9 +38,9 @@ from jormungandr.utils import get_pt_object_coord
 from jormungandr.street_network.utils import (
     make_speed_switcher,
     crowfly_distance_between,
-    create_kraken_direct_path_request,
     create_kraken_matrix_request,
 )
+from jormungandr.street_network.street_network import StreetNetworkPathType
 
 from navitiacommon import response_pb2, request_pb2, type_pb2
 from zmq import green as zmq
@@ -82,6 +82,58 @@ class Languages(Enum):
     swedish = "sv-SE"
     turkish = "tr-TR"
     ukrainian = "uk-UA"
+
+
+class DirectPathProfile(object):
+
+    def __init__(self,
+                 bike_use_roads,
+                 bike_use_hills,
+                 bike_use_ferry,
+                 bike_avoid_bad_surfaces,
+                 bike_shortest,
+                 bicycle_type,
+                 bike_use_living_streets,
+                 bike_maneuver_penalty,
+                 bike_service_penalty,
+                 bike_service_factor,
+                 bike_country_crossing_cost,
+                 bike_country_crossing_penalty,
+                 tag,
+                ):
+        self.bike_use_roads = bike_use_roads
+        self.bike_use_hills = bike_use_hills
+        self.bike_use_ferry = bike_use_ferry
+        self.bike_avoid_bad_surfaces = bike_avoid_bad_surfaces
+        self.bike_shortest = bike_shortest
+        self.bicycle_type = bicycle_type
+        self.bike_use_living_streets = bike_use_living_streets
+        self.bike_maneuver_penalty = bike_maneuver_penalty
+        self.bike_service_penalty = bike_service_penalty
+        self.bike_service_factor = bike_service_factor
+        self.bike_service_penalty = bike_service_penalty
+        self.bike_country_crossing_cost = bike_country_crossing_cost
+        self.bike_country_crossing_penalty = bike_country_crossing_penalty
+        self.tag = tag
+
+# yes it's hardcoded
+DIRECT_PATH_ALTERNATIVES_PROFILES = [
+    DirectPathProfile(
+        bike_use_roads=0.5,
+        bike_use_hills=0.5,
+        bike_use_ferry=0.5,
+        bike_avoid_bad_surfaces=0.25,
+        bike_shortest=False,
+        bicycle_type='hybrid',
+        bike_use_living_streets=0.5,
+        bike_maneuver_penalty=5,
+        bike_service_penalty=0,
+        bike_service_factor=1,
+        bike_country_crossing_cost=600,
+        bike_country_crossing_penalty=0,
+        tag='balanced'
+    ),
+]
 
 
 class Asgard(TransientSocket, Kraken):
@@ -228,36 +280,80 @@ class Asgard(TransientSocket, Kraken):
         return mode
 
     def _create_direct_path_request(
-        self, mode, pt_object_origin, pt_object_destination, fallback_extremity, request, language="en-US"
+        self, mode, pt_object_origin, pt_object_destination, fallback_extremity, request, direct_path_type, language="en-US"
     ):
-        # asgard and kraken have a part of request in common
-        req = create_kraken_direct_path_request(
-            self, mode, pt_object_origin, pt_object_destination, fallback_extremity, request, language
-        )
+        req = request_pb2.Request()
+        req.requested_api = type_pb2.direct_path
+        req.direct_path.origin.CopyFrom(self.make_location(pt_object_origin))
+        req.direct_path.destination.CopyFrom(self.make_location(pt_object_destination))
+        req.direct_path.datetime = fallback_extremity.datetime
+        req.direct_path.clockwise = fallback_extremity.represents_start
 
-        # In addition to the request for kraken, we add more params for asgard
+        profiles = [DirectPathProfile(bike_use_roads=request['bike_use_roads'],
+                                      bike_use_hills=request['bike_use_hills'],
+                                      bike_use_ferry=request['bike_use_ferry'],
+                                      bike_avoid_bad_surfaces=request['bike_avoid_bad_surfaces'],
+                                      bike_shortest=request['bike_shortest'],
+                                      bicycle_type=request['bicycle_type'],
+                                      bike_use_living_streets=request['bike_use_living_streets'],
+                                      bike_maneuver_penalty=request['bike_maneuver_penalty'],
+                                      bike_service_penalty=request['bike_service_penalty'],
+                                      bike_service_factor=request['bike_service_factor'],
+                                      bike_country_crossing_cost=request['bike_country_crossing_cost'],
+                                      bike_country_crossing_penalty=request['bike_country_crossing_penalty'],
+                                      tag=None,
+                                      )]
+        if direct_path_type == StreetNetworkPathType.DIRECT and request['only_with_alternatives']:
+            profiles = DIRECT_PATH_ALTERNATIVES_PROFILES
 
-        # Asgard/Valhalla bss
-        for attr in ("bss_rent_duration", "bss_rent_penalty", "bss_return_duration", "bss_return_penalty"):
-            setattr(req.direct_path.streetnetwork_params, attr, request[attr])
+        for p in profiles:
+            profile_param = req.direct_path.profile_params.add()
 
-        req.direct_path.streetnetwork_params.enable_instructions = request['_enable_instructions']
+            profile_param.origin_mode = self.handle_car_no_park_modes(mode)
+            profile_param.destination_mode = self.handle_car_no_park_modes(mode)
+            profile_param.walking_speed = request['walking_speed']
+            profile_param.max_walking_duration_to_pt = request['max_walking_duration_to_pt']
+            profile_param.bike_speed = request['bike_speed']
+            profile_param.max_bike_duration_to_pt = request['max_bike_duration_to_pt']
+            profile_param.bss_speed = request['bss_speed']
+            profile_param.max_bss_duration_to_pt = request['max_bss_duration_to_pt']
+            profile_param.car_speed = request['car_speed']
+            profile_param.max_car_duration_to_pt = request['max_car_duration_to_pt']
+            profile_param.language = language
+            if mode in (
+                    FallbackModes.ridesharing.name,
+                    FallbackModes.taxi.name,
+                    FallbackModes.car_no_park.name,
+                    FallbackModes.car.name,
+            ):
+                profile_param.car_no_park_speed = request['{}_speed'.format(mode)]
+                profile_param.max_car_no_park_duration_to_pt = request[
+                    'max_{}_duration_to_pt'.format(mode)
+                ]
 
-        # Asgard/Valhalla bike
-        req.direct_path.streetnetwork_params.bike_use_roads = request['bike_use_roads']
-        req.direct_path.streetnetwork_params.bike_use_hills = request['bike_use_hills']
-        req.direct_path.streetnetwork_params.bike_use_ferry = request['bike_use_ferry']
-        req.direct_path.streetnetwork_params.bike_avoid_bad_surfaces = request['bike_avoid_bad_surfaces']
-        req.direct_path.streetnetwork_params.bike_shortest = request['bike_shortest']
-        req.direct_path.streetnetwork_params.bicycle_type = type_pb2.BicycleType.Value(request['bicycle_type'])
-        req.direct_path.streetnetwork_params.bike_use_living_streets = request['bike_use_living_streets']
-        req.direct_path.streetnetwork_params.bike_maneuver_penalty = request['bike_maneuver_penalty']
-        req.direct_path.streetnetwork_params.bike_service_penalty = request['bike_service_penalty']
-        req.direct_path.streetnetwork_params.bike_service_factor = request['bike_service_factor']
-        req.direct_path.streetnetwork_params.bike_country_crossing_cost = request['bike_country_crossing_cost']
-        req.direct_path.streetnetwork_params.bike_country_crossing_penalty = request[
-            'bike_country_crossing_penalty'
-        ]
+            # In addition to the request for kraken, we add more params for asgard
+
+            # Asgard/Valhalla bss
+            for attr in ("bss_rent_duration", "bss_rent_penalty", "bss_return_duration", "bss_return_penalty"):
+                setattr(profile_param, attr, request[attr])
+
+            profile_param.enable_instructions = request['_enable_instructions']
+
+            # Asgard/Valhalla bike
+            profile_param.bike_use_roads = p.bike_use_roads
+            profile_param.bike_use_hills = p.bike_use_hills
+            profile_param.bike_use_ferry = p.bike_use_ferry
+            profile_param.bike_avoid_bad_surfaces = p.bike_avoid_bad_surfaces
+            profile_param.bike_shortest = p.bike_shortest
+            profile_param.bicycle_type = type_pb2.BicycleType.Value(p.bicycle_type)
+            profile_param.bike_use_living_streets = p.bike_use_living_streets
+            profile_param.bike_maneuver_penalty = p.bike_maneuver_penalty
+            profile_param.bike_service_penalty = p.bike_service_penalty
+            profile_param.bike_service_factor = p.bike_service_factor
+            profile_param.bike_country_crossing_cost = p.bike_country_crossing_cost
+            profile_param.bike_country_crossing_penalty = p.bike_country_crossing_penalty
+            if p.tag is not None:
+                profile_param.tag = p.tag
 
         return req
 
@@ -291,7 +387,7 @@ class Asgard(TransientSocket, Kraken):
         language = self.get_language_parameter(request)
 
         req = self._create_direct_path_request(
-            mode, pt_object_origin, pt_object_destination, fallback_extremity, request, language
+            mode, pt_object_origin, pt_object_destination, fallback_extremity, request, direct_path_type, language
         )
 
         response = self._call_asgard(req)
