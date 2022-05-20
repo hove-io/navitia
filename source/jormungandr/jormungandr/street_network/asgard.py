@@ -85,22 +85,22 @@ class Languages(Enum):
 
 
 class DirectPathProfile(object):
-
-    def __init__(self,
-                 bike_use_roads,
-                 bike_use_hills,
-                 bike_use_ferry,
-                 bike_avoid_bad_surfaces,
-                 bike_shortest,
-                 bicycle_type,
-                 bike_use_living_streets,
-                 bike_maneuver_penalty,
-                 bike_service_penalty,
-                 bike_service_factor,
-                 bike_country_crossing_cost,
-                 bike_country_crossing_penalty,
-                 tag,
-                ):
+    def __init__(
+        self,
+        bike_use_roads=0.5,
+        bike_use_hills=0.5,
+        bike_use_ferry=0.5,
+        bike_avoid_bad_surfaces=0.25,
+        bike_shortest=False,
+        bicycle_type='hybrid',
+        bike_use_living_streets=0.5,
+        bike_maneuver_penalty=5,
+        bike_service_penalty=0,
+        bike_service_factor=1,
+        bike_country_crossing_cost=600,
+        bike_country_crossing_penalty=0,
+        tag=None,
+    ):
         self.bike_use_roads = bike_use_roads
         self.bike_use_hills = bike_use_hills
         self.bike_use_ferry = bike_use_ferry
@@ -114,26 +114,20 @@ class DirectPathProfile(object):
         self.bike_service_penalty = bike_service_penalty
         self.bike_country_crossing_cost = bike_country_crossing_cost
         self.bike_country_crossing_penalty = bike_country_crossing_penalty
-        self.tag = tag
+        self.profile_tag = tag
+
 
 # yes it's hardcoded
-DIRECT_PATH_ALTERNATIVES_PROFILES = [
-    DirectPathProfile(
-        bike_use_roads=0.5,
-        bike_use_hills=0.5,
-        bike_use_ferry=0.5,
-        bike_avoid_bad_surfaces=0.25,
-        bike_shortest=False,
-        bicycle_type='hybrid',
-        bike_use_living_streets=0.5,
-        bike_maneuver_penalty=5,
-        bike_service_penalty=0,
-        bike_service_factor=1,
-        bike_country_crossing_cost=600,
-        bike_country_crossing_penalty=0,
-        tag='balanced'
-    ),
-]
+BALANCED = DirectPathProfile(
+    bike_use_living_streets=0.8, bike_maneuver_penalty=0, bike_use_roads=0.3, tag='balanced'
+)
+COMFORT = DirectPathProfile(
+    bike_use_living_streets=1, bike_maneuver_penalty=-10, bike_use_roads=0.2, tag='comfort'
+)
+SHORTEST = DirectPathProfile(bike_shortest=True, tag='shortest')
+
+
+DIRECT_PATH_ALTERNATIVES_PROFILES = [BALANCED, COMFORT, SHORTEST]
 
 
 class Asgard(TransientSocket, Kraken):
@@ -279,8 +273,23 @@ class Asgard(TransientSocket, Kraken):
             return FallbackModes.car.name
         return mode
 
+    @staticmethod
+    def is_alternatives_request(mode, direct_path_type, request):
+        return (
+            mode == 'bike'
+            and direct_path_type == StreetNetworkPathType.DIRECT
+            and request['direct_path'] == 'only_with_alternatives'
+        )
+
     def _create_direct_path_request(
-        self, mode, pt_object_origin, pt_object_destination, fallback_extremity, request, direct_path_type, language="en-US"
+        self,
+        mode,
+        pt_object_origin,
+        pt_object_destination,
+        fallback_extremity,
+        request,
+        direct_path_type,
+        language="en-US",
     ):
         req = request_pb2.Request()
         req.requested_api = type_pb2.direct_path
@@ -289,25 +298,29 @@ class Asgard(TransientSocket, Kraken):
         req.direct_path.datetime = fallback_extremity.datetime
         req.direct_path.clockwise = fallback_extremity.represents_start
 
-        profiles = [DirectPathProfile(bike_use_roads=request['bike_use_roads'],
-                                      bike_use_hills=request['bike_use_hills'],
-                                      bike_use_ferry=request['bike_use_ferry'],
-                                      bike_avoid_bad_surfaces=request['bike_avoid_bad_surfaces'],
-                                      bike_shortest=request['bike_shortest'],
-                                      bicycle_type=request['bicycle_type'],
-                                      bike_use_living_streets=request['bike_use_living_streets'],
-                                      bike_maneuver_penalty=request['bike_maneuver_penalty'],
-                                      bike_service_penalty=request['bike_service_penalty'],
-                                      bike_service_factor=request['bike_service_factor'],
-                                      bike_country_crossing_cost=request['bike_country_crossing_cost'],
-                                      bike_country_crossing_penalty=request['bike_country_crossing_penalty'],
-                                      tag=None,
-                                      )]
-        if direct_path_type == StreetNetworkPathType.DIRECT and request['only_with_alternatives']:
+        profiles = [
+            DirectPathProfile(
+                bike_use_roads=request['bike_use_roads'],
+                bike_use_hills=request['bike_use_hills'],
+                bike_use_ferry=request['bike_use_ferry'],
+                bike_avoid_bad_surfaces=request['bike_avoid_bad_surfaces'],
+                bike_shortest=request['bike_shortest'],
+                bicycle_type=request['bicycle_type'],
+                bike_use_living_streets=request['bike_use_living_streets'],
+                bike_maneuver_penalty=request['bike_maneuver_penalty'],
+                bike_service_penalty=request['bike_service_penalty'],
+                bike_service_factor=request['bike_service_factor'],
+                bike_country_crossing_cost=request['bike_country_crossing_cost'],
+                bike_country_crossing_penalty=request['bike_country_crossing_penalty'],
+                tag=None,
+            )
+        ]
+
+        if self.is_alternatives_request(mode, direct_path_type, request):
             profiles = DIRECT_PATH_ALTERNATIVES_PROFILES
 
         for p in profiles:
-            profile_param = req.direct_path.profile_params.add()
+            profile_param = req.direct_path.profiles_params.add()
 
             profile_param.origin_mode = self.handle_car_no_park_modes(mode)
             profile_param.destination_mode = self.handle_car_no_park_modes(mode)
@@ -321,15 +334,13 @@ class Asgard(TransientSocket, Kraken):
             profile_param.max_car_duration_to_pt = request['max_car_duration_to_pt']
             profile_param.language = language
             if mode in (
-                    FallbackModes.ridesharing.name,
-                    FallbackModes.taxi.name,
-                    FallbackModes.car_no_park.name,
-                    FallbackModes.car.name,
+                FallbackModes.ridesharing.name,
+                FallbackModes.taxi.name,
+                FallbackModes.car_no_park.name,
+                FallbackModes.car.name,
             ):
                 profile_param.car_no_park_speed = request['{}_speed'.format(mode)]
-                profile_param.max_car_no_park_duration_to_pt = request[
-                    'max_{}_duration_to_pt'.format(mode)
-                ]
+                profile_param.max_car_no_park_duration_to_pt = request['max_{}_duration_to_pt'.format(mode)]
 
             # In addition to the request for kraken, we add more params for asgard
 
@@ -352,8 +363,8 @@ class Asgard(TransientSocket, Kraken):
             profile_param.bike_service_factor = p.bike_service_factor
             profile_param.bike_country_crossing_cost = p.bike_country_crossing_cost
             profile_param.bike_country_crossing_penalty = p.bike_country_crossing_penalty
-            if p.tag is not None:
-                profile_param.tag = p.tag
+            if p.profile_tag is not None:
+                profile_param.profile_tag = p.profile_tag
 
         return req
 
@@ -387,7 +398,13 @@ class Asgard(TransientSocket, Kraken):
         language = self.get_language_parameter(request)
 
         req = self._create_direct_path_request(
-            mode, pt_object_origin, pt_object_destination, fallback_extremity, request, direct_path_type, language
+            mode,
+            pt_object_origin,
+            pt_object_destination,
+            fallback_extremity,
+            request,
+            direct_path_type,
+            language,
         )
 
         response = self._call_asgard(req)
