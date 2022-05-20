@@ -1,3 +1,12 @@
+navitia2 (15.8.0) unstable; urgency=low
+
+  * [Jormun] Fix cycle_lane_length on walking sections  <https://github.com/hove-io/navitia/pull/3750>
+  * [Jormun] Fixed url for geovelo CGU  <https://github.com/hove-io/navitia/pull/3749>
+  * [Jormun] Added 'only_with_alternatives' parameter to direct_path (bike)  <https://github.com/hove-io/navitia/pull/3746>
+  * [Jormun] fix: remove double call to DB  <https://github.com/hove-io/navitia/pull/3748>
+
+ -- Patrick QIAN <patrick.qian@kisio.com>  Fri, 20 May 2022 11:05:12 +0100
+
 navitia2 (15.7.0) unstable; urgency=low
 
   * [Jormun] Fork get_user for auth/stat/new_relic  <https://github.com/hove-io/navitia/pull/3744>
