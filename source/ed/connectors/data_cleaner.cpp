@@ -46,7 +46,7 @@ void data_cleaner::clean() {
 
 // We group the way with the same name and the same admin
 void data_cleaner::fusion_ways() {
-    typedef std::unordered_map<std::string, std::vector<types::Edge*>> wayname_ways;
+    using wayname_ways = std::unordered_map<std::string, std::vector<types::Edge*>>;
     std::unordered_map<std::string, wayname_ways> admin_wayname_way;
     for (auto way : this->data.ways) {
         if (way.second->admin == nullptr || way.second->edges.empty() || way.second->name == "") {

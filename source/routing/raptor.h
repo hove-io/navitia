@@ -75,7 +75,7 @@ struct RAPTOR {
         CACHED,
     };
 
-    typedef std::list<Journey> Journeys;
+    using Journeys = std::list<Journey>;
 
     const navitia::type::Data& data;
 

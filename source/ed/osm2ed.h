@@ -48,7 +48,7 @@ www.navitia.io
 #include <utility>
 
 namespace bg = boost::geometry;
-typedef bg::model::point<double, 2, bg::cs::cartesian> point;
+using point = bg::model::point<double, 2, bg::cs::cartesian>;
 using polygon_type = bg::model::polygon<point, false, false>;  // ccw, open polygon
 using mpolygon_type = bg::model::multi_polygon<polygon_type>;
 using mpoint_type = bg::model::multi_point<point>;

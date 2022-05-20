@@ -176,7 +176,7 @@ namespace {
 //     +       +       +
 //     2       4       8
 struct HouseNumberFromEdgesFiller {
-    typedef navitia::type::GeographicalCoord Coord;
+    using Coord = navitia::type::GeographicalCoord;
     using Way = ed::types::Way;
 
     HouseNumberFromEdgesFiller(const CsvReader& r, GeopalParser& p)

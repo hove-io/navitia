@@ -148,7 +148,7 @@ std::ostream& operator<<(std::ostream&, const GeographicalCoord&);
 bool operator==(const GeographicalCoord& a, const GeographicalCoord& b);
 
 // Used to modelize the shapes of the different objects
-typedef std::vector<GeographicalCoord> LineString;
+using LineString = std::vector<GeographicalCoord>;
 using MultiLineString = std::vector<LineString>;
 
 // Project a point on a line.  The returned point is the nearest point on the line.

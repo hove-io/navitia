@@ -38,7 +38,7 @@ www.navitia.io
 using namespace navitia::vptranslator;
 using navitia::type::ExceptionDate;
 using navitia::type::ValidityPattern;
-typedef navitia::type::WeekPattern Week;
+using Week = navitia::type::WeekPattern;
 using boost::gregorian::date;
 using boost::gregorian::date_period;
 

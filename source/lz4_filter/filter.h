@@ -38,7 +38,7 @@ www.navitia.io
 #include <boost/iostreams/read.hpp>
 #include <boost/cstdint.hpp>
 
-typedef std::exception LZ4Exception;
+using LZ4Exception = std::exception;
 
 /**
  * Filtre de compression utilisant l'algorithme de compression LZ4 pour boost::iostreams

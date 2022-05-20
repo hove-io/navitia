@@ -43,7 +43,6 @@ The different journey types are:
 |best|The best journey if you have to display only one.|
 |rapid|A good trade off between duration, changes and constraint respect|
 |comfort|A journey with less changes and walking|
-|reliable|A journey with a low risk of not arriving on time|
 |car|A journey with car to get to the public transport|
 |less_fallback_walk|A journey with less walking|
 |less_fallback_bike|A journey with less biking|

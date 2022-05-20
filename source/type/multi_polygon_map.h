@@ -43,7 +43,7 @@ namespace bg = boost::geometry;
 
 template <typename T>
 struct MultiPolygonMap {
-    typedef boost::geometry::model::box<GeographicalCoord> Box;
+    using Box = boost::geometry::model::box<GeographicalCoord>;
     using Value = std::pair<MultiPolygon, T>;
     using RT = RTree<const Value*, double, 2>;
 

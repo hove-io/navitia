@@ -115,7 +115,7 @@ struct StopPointConnection : public Header, hasProperties {
 
 struct Calendar : public Nameable, public Header {
     const static nt::Type_e type = nt::Type_e::Calendar;
-    typedef std::bitset<7> Week;
+    using Week = std::bitset<7>;
     Week week_pattern;
     std::vector<Line*> line_list;
     std::vector<boost::gregorian::date_period> period_list;

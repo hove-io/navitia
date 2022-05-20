@@ -72,7 +72,7 @@ static boost::gregorian::date_period period(std::string beg, std::string end) {
 }
 
 namespace bg = boost::geometry;
-typedef bg::model::point<double, 2, bg::cs::cartesian> point_t;
+using point_t = bg::model::point<double, 2, bg::cs::cartesian>;
 
 int main(int argc, const char* const argv[]) {
     navitia::init_app();
