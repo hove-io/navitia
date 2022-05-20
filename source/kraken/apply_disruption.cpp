@@ -410,12 +410,12 @@ struct add_impacts_visitor : public apply_impacts_visitor {
                 const auto base_st = st.get_base_stop_time();
                 if (impact->severity->effect == nt::disruption::Effect::REDUCED_SERVICE
                     && impacted_vj.impacted_ranks.count(base_st->order())) {
-                    if (*begin == base_st->order() && base_st->stop_point->stop_area->uri == rs.start_point->uri
+                    if (*begin == base_st->order() && rs.is_start_stop(base_st->stop_point->stop_area->uri)
                         && rs.is_blocked_start_point()) {
                         continue;
                     }
                     const auto& last_stop_time = vj->stop_time_list.back();
-                    if (*end == base_st->order() && base_st->stop_point->stop_area->uri == rs.end_point->uri
+                    if (*end == base_st->order() && rs.is_end_stop(base_st->stop_point->stop_area->uri)
                         && st.order() == last_stop_time.order() && rs.is_blocked_end_point()) {
                         continue;
                     }

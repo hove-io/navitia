@@ -221,7 +221,9 @@ struct RailSection {
     std::vector<Route*> routes;
 
     bool is_blocked_start_point() const;
+    bool is_start_stop(const std::string& uri) const;
     bool is_blocked_end_point() const;
+    bool is_end_stop(const std::string& uri) const;
 
     template <class archive>
     void serialize(archive& ar, const unsigned int);

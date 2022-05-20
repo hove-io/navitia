@@ -644,12 +644,28 @@ bool RailSection::is_blocked_start_point() const {
     }
     return this->blocked_stop_areas.front().first == this->start_point->uri;
 }
+
+bool RailSection::is_start_stop(const std::string& uri) const {
+    if (this->blocked_stop_areas.empty()) {
+        return false;
+    }
+    return this->start_point->uri == uri;
+}
+
 bool RailSection::is_blocked_end_point() const {
     if (this->blocked_stop_areas.empty()) {
         return false;
     }
     return this->blocked_stop_areas.back().first == this->end_point->uri;
 }
+
+bool RailSection::is_end_stop(const std::string& uri) const {
+    if (this->blocked_stop_areas.empty()) {
+        return false;
+    }
+    return this->end_point->uri == uri;
+}
+
 std::set<StopPoint*> get_stop_points_section(const RailSection& rs) {
     std::set<StopPoint*> res;
     std::vector<navitia::type::Route*> routes;
