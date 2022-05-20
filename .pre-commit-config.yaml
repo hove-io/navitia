@@ -3,7 +3,7 @@ repos:
     rev: 22.3.0
     hooks:
     - id: black
-      language_version: python3.6
+      language_version: python3.8
 -   repo: https://github.com/pycqa/flake8
     rev: 3.9.2
     hooks:
@@ -32,5 +32,5 @@ repos:
     -   id: mypy
         args: [--ignore-missing-imports, --py2]
         files: source
-        language_version: python3.6
+        language_version: python3.8
         exclude: /monitor/|/third_party/|/tests/|/sql/|env\.py$|setup\.py$
