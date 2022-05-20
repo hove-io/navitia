@@ -639,10 +639,10 @@ std::set<StopPoint*> LineSection::get_stop_points_section() const {
     return res;
 }
 bool RailSection::is_blocked_start_point() const {
- if (this->blocked_stop_areas.empty()) {
-     return false;
- }
- return this->blocked_stop_areas.front().first == this->start_point->uri;
+    if (this->blocked_stop_areas.empty()) {
+        return false;
+    }
+    return this->blocked_stop_areas.front().first == this->start_point->uri;
 }
 bool RailSection::is_blocked_end_point() const {
     if (this->blocked_stop_areas.empty()) {
