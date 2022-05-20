@@ -376,7 +376,8 @@ struct add_impacts_visitor : public apply_impacts_visitor {
         }
         this->log_start_action(uri);
 
-        if (impact->severity->effect != nt::disruption::Effect::NO_SERVICE && impact->severity->effect != nt::disruption::Effect::REDUCED_SERVICE) {
+        if (impact->severity->effect != nt::disruption::Effect::NO_SERVICE
+            && impact->severity->effect != nt::disruption::Effect::REDUCED_SERVICE) {
             LOG4CPLUS_DEBUG(log, "Unhandled action on " << uri);
             this->log_end_action(uri);
             return;
@@ -389,9 +390,8 @@ struct add_impacts_visitor : public apply_impacts_visitor {
 
         // Loop on each affected vj
         for (auto& impacted_vj : impacted_vjs) {
-
             const auto begin = impacted_vj.impacted_ranks.begin();
-            const auto end = std::next(begin, impacted_vj.impacted_ranks.size() -1 );
+            const auto end = std::next(begin, impacted_vj.impacted_ranks.size() - 1);
 
             std::vector<nt::StopTime> new_stop_times;
             const std::string& vj_uri = impacted_vj.vj_uri;
@@ -408,15 +408,18 @@ struct add_impacts_visitor : public apply_impacts_visitor {
             for (const auto& st : vj->stop_time_list) {
                 // We need to get the associated base stop_time to compare its rank
                 const auto base_st = st.get_base_stop_time();
-                if (impact->severity->effect == nt::disruption::Effect::REDUCED_SERVICE && impacted_vj.impacted_ranks.count(base_st->order())){
-                    if (*begin == base_st->order() && base_st->stop_point->stop_area->uri == rs.start_point->uri && rs.is_blocked_start_point()) {
+                if (impact->severity->effect == nt::disruption::Effect::REDUCED_SERVICE
+                    && impacted_vj.impacted_ranks.count(base_st->order())) {
+                    if (*begin == base_st->order() && base_st->stop_point->stop_area->uri == rs.start_point->uri
+                        && rs.is_blocked_start_point()) {
                         continue;
                     }
                     const auto& last_stop_time = vj->stop_time_list.back();
-                    if (*end == base_st->order() && base_st->stop_point->stop_area->uri == rs.end_point->uri && st.order()==last_stop_time.order() && rs.is_blocked_end_point()) {
+                    if (*end == base_st->order() && base_st->stop_point->stop_area->uri == rs.end_point->uri
+                        && st.order() == last_stop_time.order() && rs.is_blocked_end_point()) {
                         continue;
                     }
-                    if (*begin != base_st->order() && *end != base_st->order()){
+                    if (*begin != base_st->order() && *end != base_st->order()) {
                         continue;
                     }
                 }
