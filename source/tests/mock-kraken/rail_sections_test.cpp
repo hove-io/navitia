@@ -192,6 +192,10 @@ int main(int argc, const char* const argv[]) {
                               *b.data->pt_data, *b.data->meta);
 
     // new rail_section disruption on route 11
+    // AA  BB  CC DD  EE  FF  GG
+    // Start CC
+    // End   FF
+    // Blocked: DD, EE
     navitia::apply_disruption(b.impact(nt::RTLevel::Adapted, "rail_section_on_line11")
                                   .severity(nt::disruption::Effect::REDUCED_SERVICE)
                                   .application_periods(btp("20170101T000000"_dt, "20170105T000000"_dt))
