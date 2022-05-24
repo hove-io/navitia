@@ -122,7 +122,7 @@ BALANCED = DirectPathProfile(
     bike_use_living_streets=0.8, bike_maneuver_penalty=0, bike_use_roads=0.3, tag='balanced'
 )
 COMFORT = DirectPathProfile(
-    bike_use_living_streets=1, bike_maneuver_penalty=-10, bike_use_roads=0.2, bike_use_hills=0, tag='comfort'
+    bike_use_living_streets=1, bike_maneuver_penalty=0, bike_use_roads=0.2, bike_use_hills=0, tag='comfort'
 )
 SHORTEST = DirectPathProfile(bike_shortest=True, tag='shortest')
 
