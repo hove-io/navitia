@@ -4061,11 +4061,10 @@ BOOST_AUTO_TEST_CASE(classic_impact_rail_section_with_start_and_end_sa_in_blocke
         base_vp = vj->base_validity_pattern()->days;
         BOOST_CHECK_MESSAGE(ba::ends_with(adapted_vp.to_string(), "000001"), adapted_vp);
         BOOST_CHECK_MESSAGE(ba::ends_with(base_vp.to_string(), "000000"), base_vp);
-        // The adapted vj should have only 3 stop_times, for A, B, C and F stop point
-        BOOST_REQUIRE_EQUAL(vj->stop_time_list.size(), 4);
+        // The adapted vj should have only 2 stop_times, for A and B stop point
+        BOOST_REQUIRE_EQUAL(vj->stop_time_list.size(), 2);
         BOOST_REQUIRE_EQUAL(vj->stop_time_list[0].stop_point->uri, "stopA");
         BOOST_REQUIRE_EQUAL(vj->stop_time_list[1].stop_point->uri, "stopB");
-        BOOST_REQUIRE_EQUAL(vj->stop_time_list[2].stop_point->uri, "stopC");
 
         // disruption
         BOOST_REQUIRE_EQUAL(b.data->pt_data->disruption_holder.nb_disruptions(), 1);
