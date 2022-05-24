@@ -394,9 +394,6 @@ struct add_impacts_visitor : public apply_impacts_visitor {
 
         // Loop on each affected vj
         for (auto& impacted_vj : impacted_vjs) {
-            const auto begin = impacted_vj.impacted_ranks.begin();
-            const auto end = std::next(begin, impacted_vj.impacted_ranks.size() - 1);
-
             std::vector<nt::StopTime> new_stop_times;
             const std::string& vj_uri = impacted_vj.vj_uri;
             LOG4CPLUS_TRACE(log, "Impacted vj : " << vj_uri);
@@ -405,6 +402,13 @@ struct add_impacts_visitor : public apply_impacts_visitor {
                 LOG4CPLUS_TRACE(log, "impacted vj : " << vj_uri << " not found in data. I ignore it.");
                 continue;
             }
+            if (impacted_vj.impacted_ranks.empty()) {
+                LOG4CPLUS_TRACE(log, "impacted vj : " << vj_uri << " without impacted_ranks data. I ignore it.");
+                continue;
+            }
+            const auto begin = impacted_vj.impacted_ranks.begin();
+            const auto end = std::next(begin, impacted_vj.impacted_ranks.size() - 1);
+
             nt::VehicleJourney* vj = vj_iterator->second;
             auto& new_vp = impacted_vj.new_vp;
 
