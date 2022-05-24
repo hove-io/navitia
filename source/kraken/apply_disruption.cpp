@@ -383,6 +383,10 @@ struct add_impacts_visitor : public apply_impacts_visitor {
             return;
         }
 
+        auto sort_predicate = [](const std::pair<std::string, uint32_t>& sa1,
+                                 const std::pair<std::string, uint32_t>& sa2) { return sa1.second < sa2.second; };
+        std::sort(rs.blocked_stop_areas.begin(), rs.blocked_stop_areas.end(), sort_predicate);
+
         LOG4CPLUS_TRACE(log, "canceling " << uri);
 
         // Get all impacted VJs and compute the corresponding base_canceled vp
