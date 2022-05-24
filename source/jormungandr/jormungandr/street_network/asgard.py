@@ -281,6 +281,51 @@ class Asgard(TransientSocket, Kraken):
             and request['direct_path'] == 'only_with_alternatives'
         )
 
+    def _set_profile_param(self, profile_param, mode, language, request, dp_profile):
+        profile_param.origin_mode = self.handle_car_no_park_modes(mode)
+        profile_param.destination_mode = self.handle_car_no_park_modes(mode)
+        profile_param.walking_speed = request['walking_speed']
+        profile_param.max_walking_duration_to_pt = request['max_walking_duration_to_pt']
+        profile_param.bike_speed = request['bike_speed']
+        profile_param.max_bike_duration_to_pt = request['max_bike_duration_to_pt']
+        profile_param.bss_speed = request['bss_speed']
+        profile_param.max_bss_duration_to_pt = request['max_bss_duration_to_pt']
+        profile_param.car_speed = request['car_speed']
+        profile_param.max_car_duration_to_pt = request['max_car_duration_to_pt']
+        profile_param.language = language
+        if mode in (
+            FallbackModes.ridesharing.name,
+            FallbackModes.taxi.name,
+            FallbackModes.car_no_park.name,
+            FallbackModes.car.name,
+        ):
+            profile_param.car_no_park_speed = request['{}_speed'.format(mode)]
+            profile_param.max_car_no_park_duration_to_pt = request['max_{}_duration_to_pt'.format(mode)]
+
+        # In addition to the request for kraken, we add more params for asgard
+
+        # Asgard/Valhalla bss
+        for attr in ("bss_rent_duration", "bss_rent_penalty", "bss_return_duration", "bss_return_penalty"):
+            setattr(profile_param, attr, request[attr])
+
+        profile_param.enable_instructions = request['_enable_instructions']
+
+        # Asgard/Valhalla bike
+        profile_param.bike_use_roads = dp_profile.bike_use_roads
+        profile_param.bike_use_hills = dp_profile.bike_use_hills
+        profile_param.bike_use_ferry = dp_profile.bike_use_ferry
+        profile_param.bike_avoid_bad_surfaces = dp_profile.bike_avoid_bad_surfaces
+        profile_param.bike_shortest = dp_profile.bike_shortest
+        profile_param.bicycle_type = type_pb2.BicycleType.Value(dp_profile.bicycle_type)
+        profile_param.bike_use_living_streets = dp_profile.bike_use_living_streets
+        profile_param.bike_maneuver_penalty = dp_profile.bike_maneuver_penalty
+        profile_param.bike_service_penalty = dp_profile.bike_service_penalty
+        profile_param.bike_service_factor = dp_profile.bike_service_factor
+        profile_param.bike_country_crossing_cost = dp_profile.bike_country_crossing_cost
+        profile_param.bike_country_crossing_penalty = dp_profile.bike_country_crossing_penalty
+        if dp_profile.profile_tag is not None:
+            profile_param.profile_tag = dp_profile.profile_tag
+
     def _create_direct_path_request(
         self,
         mode,
@@ -321,50 +366,7 @@ class Asgard(TransientSocket, Kraken):
 
         for p in profiles:
             profile_param = req.direct_path.profiles_params.add()
-
-            profile_param.origin_mode = self.handle_car_no_park_modes(mode)
-            profile_param.destination_mode = self.handle_car_no_park_modes(mode)
-            profile_param.walking_speed = request['walking_speed']
-            profile_param.max_walking_duration_to_pt = request['max_walking_duration_to_pt']
-            profile_param.bike_speed = request['bike_speed']
-            profile_param.max_bike_duration_to_pt = request['max_bike_duration_to_pt']
-            profile_param.bss_speed = request['bss_speed']
-            profile_param.max_bss_duration_to_pt = request['max_bss_duration_to_pt']
-            profile_param.car_speed = request['car_speed']
-            profile_param.max_car_duration_to_pt = request['max_car_duration_to_pt']
-            profile_param.language = language
-            if mode in (
-                FallbackModes.ridesharing.name,
-                FallbackModes.taxi.name,
-                FallbackModes.car_no_park.name,
-                FallbackModes.car.name,
-            ):
-                profile_param.car_no_park_speed = request['{}_speed'.format(mode)]
-                profile_param.max_car_no_park_duration_to_pt = request['max_{}_duration_to_pt'.format(mode)]
-
-            # In addition to the request for kraken, we add more params for asgard
-
-            # Asgard/Valhalla bss
-            for attr in ("bss_rent_duration", "bss_rent_penalty", "bss_return_duration", "bss_return_penalty"):
-                setattr(profile_param, attr, request[attr])
-
-            profile_param.enable_instructions = request['_enable_instructions']
-
-            # Asgard/Valhalla bike
-            profile_param.bike_use_roads = p.bike_use_roads
-            profile_param.bike_use_hills = p.bike_use_hills
-            profile_param.bike_use_ferry = p.bike_use_ferry
-            profile_param.bike_avoid_bad_surfaces = p.bike_avoid_bad_surfaces
-            profile_param.bike_shortest = p.bike_shortest
-            profile_param.bicycle_type = type_pb2.BicycleType.Value(p.bicycle_type)
-            profile_param.bike_use_living_streets = p.bike_use_living_streets
-            profile_param.bike_maneuver_penalty = p.bike_maneuver_penalty
-            profile_param.bike_service_penalty = p.bike_service_penalty
-            profile_param.bike_service_factor = p.bike_service_factor
-            profile_param.bike_country_crossing_cost = p.bike_country_crossing_cost
-            profile_param.bike_country_crossing_penalty = p.bike_country_crossing_penalty
-            if p.profile_tag is not None:
-                profile_param.profile_tag = p.profile_tag
+            self._set_profile_param(profile_param, mode, language, request, p)
 
         return req
 
