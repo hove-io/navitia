@@ -360,15 +360,41 @@ class TestRailSections(AbstractTestFixture):
         for disruption, result in scenario.items():
             assert result == (disruption in d)
 
-        # stopAA-> stopGG
+        # stopAA-> stopEE
         # Base_schedule
         scenario = {
             'rail_section_on_line11': True,
         }
 
+        r = journeys(_from='stopAA', to='stopEE')
+        assert len(r["journeys"]) == 1
+        assert get_used_vj(r) == [['vehicle_journey:vj:11-1']]
+        d = get_all_element_disruptions(r['journeys'], r)
+        assert impacted_headsigns(d) == {'vj:11-1'}
+        for disruption, result in scenario.items():
+            assert result == (disruption in d)
+
+        # stopAA-> stopEE
+        # realtime
+        q = journey_query(_from='stopAA', to='stopEE', data_freshness="realtime")
+        r = self.query_region(q)
+        assert "journeys" not in r
+
+        # stopAA-> stopGG
+        # Base_schedule
         r = journeys(_from='stopAA', to='stopGG')
         assert len(r["journeys"]) == 1
         assert get_used_vj(r) == [['vehicle_journey:vj:11-1']]
+        d = get_all_element_disruptions(r['journeys'], r)
+        assert impacted_headsigns(d) == {'vj:11-1'}
+        for disruption, result in scenario.items():
+            assert result == (disruption in d)
+
+        # stopAA-> stopGG
+        # Base_schedule
+        r = journeys(_from='stopAA', to='stopGG', data_freshness="realtime")
+        assert len(r["journeys"]) == 1
+        assert get_used_vj(r) == [['vehicle_journey:vj:11-1:Adapted:0:rail_section_on_line11']]
         d = get_all_element_disruptions(r['journeys'], r)
         assert impacted_headsigns(d) == {'vj:11-1'}
         for disruption, result in scenario.items():
@@ -457,7 +483,7 @@ class TestRailSections(AbstractTestFixture):
         r = self.default_query('traffic_reports')
         # only one network (base_network) is disrupted
         assert len(r['traffic_reports']) == 1
-        assert len(r['traffic_reports'][0]['stop_areas']) == 13
+        assert len(r['traffic_reports'][0]['stop_areas']) == 14
 
         for sa in r['traffic_reports'][0]['stop_areas']:
             if sa['id'] in ['stopAreaB', 'stopAreaC', 'stopAreaD']:
