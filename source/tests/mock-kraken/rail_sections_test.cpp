@@ -205,7 +205,7 @@ int main(int argc, const char* const argv[]) {
                                                    {"route11-1"}, *b.data->pt_data)
                                   .get_disruption(),
                               *b.data->pt_data, *b.data->meta);
-
+    b.finish();
     mock_kraken kraken(b, argc, argv);
 
     return 0;
