@@ -105,16 +105,16 @@ class FakeUserAuth(FakeUser):
             return True
         return authorizations[self.login][instance_name][api_name]
 
-    def _get_all_explicitly_authorized_instances(self):
+    def _get_all_explicitly_authorized_instances(self, exclude_backend=None):
         """mocked to avoid using the db"""
         authorized_instance_names = [i for i, a in authorizations[self.login].items() if a['ALL']]
         return [mock_instances[n] for n in authorized_instance_names]
 
-    def _get_all_free_instances(self):
+    def _get_all_free_instances(self, exclude_backend=None):
         """mocked to avoid using the db"""
         return [i for i in mock_instances.values() if i.is_free]
 
-    def _get_all_instances(self):
+    def _get_all_instances(self, exclude_backend=None):
         return mock_instances.values()
 
 
