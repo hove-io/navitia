@@ -216,22 +216,48 @@ class User(db.Model, TimestampMixin):  # type: ignore
 
     # Note: the private methods below exist to be mocked in the integration tests
 
-    def _get_all_explicitly_authorized_instances(self):
-        return Instance.query_existing().join(Authorization).filter(Authorization.user_id == self.id).all()
+    def _get_all_explicitly_authorized_instances(self, exclude_backend=None):
+        if exclude_backend:
+            return (
+                Instance.query_existing()
+                .join(Authorization)
+                .filter(Authorization.user_id == self.id)
+                .filter(Instance.autocomplete_backend != exclude_backend)
+                .all()
+            )
+        else:
+            return (
+                Instance.query_existing()
+                .join(Authorization)
+                .filter(Authorization.user_id == self.id)
+                .filter(Instance.autocomplete_backend != exclude_backend)
+                .all()
+            )
 
-    def _get_all_free_instances(self):
-        return Instance.query_existing().filter_by(is_free=True).all()
+    def _get_all_free_instances(self, exclude_backend=None):
+        if exclude_backend:
+            return (
+                Instance.query_existing()
+                .filter_by(is_free=True)
+                .filter(Instance.autocomplete_backend != exclude_backend)
+                .all()
+            )
+        else:
+            return Instance.query_existing().filter_by(is_free=True).all()
 
-    def _get_all_instances(self):
-        return Instance.query_existing().all()
+    def _get_all_instances(self, exclude_backend=None):
+        if exclude_backend:
+            return Instance.query_existing().filter(Instance.autocomplete_backend != exclude_backend).all()
+        else:
+            return Instance.query_existing().all()
 
-    def get_all_available_instances(self):
+    def get_all_available_instances(self, exclude_backend=None):
         if self.is_super_user:
-            return self._get_all_instances()
-        instances = self._get_all_explicitly_authorized_instances()
+            return self._get_all_instances(exclude_backend=exclude_backend)
+        instances = self._get_all_explicitly_authorized_instances(exclude_backend=exclude_backend)
 
         if self.type == 'with_free_instances':
-            free_instances = self._get_all_free_instances()
+            free_instances = self._get_all_free_instances(exclude_backend=exclude_backend)
             instances = list(set(instances + free_instances))
 
         return instances

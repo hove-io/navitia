@@ -1384,7 +1384,7 @@ class Scenario(simple.Scenario):
             return detail
 
         if not isinstance(instance.autocomplete, GeocodeJson):
-            bragi = global_autocomplete.get('bragi')
+            bragi = app.config.get('BRAGI_VERSION', 'bragi')
             if bragi:
                 # if the instance's autocomplete is not a geocodejson autocomplete, we also check in the
                 # global autocomplete instance

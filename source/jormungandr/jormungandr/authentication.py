@@ -226,7 +226,7 @@ def cache_get_key(token):
     current_app.config[str('MEMORY_CACHE_CONFIGURATION')].get(str('TIMEOUT_AUTHENTICATION'), 30)
 )
 @cache.memoize(current_app.config[str('CACHE_CONFIGURATION')].get(str('TIMEOUT_AUTHENTICATION'), 300))
-def get_all_available_instances(user):
+def get_all_available_instances(user, exclude_backend=None):
     """
     get the list of instances that a user can use (for the autocomplete apis)
     if Jormungandr has no authentication set (or no database), the user can use all the instances
@@ -252,7 +252,7 @@ def get_all_available_instances(user):
         # only users with access to opendata can use the global /places
         abort_request(user=user)
 
-    return user.get_all_available_instances()
+    return user.get_all_available_instances(exclude_backend=exclude_backend)
 
 
 def get_user(token, abort_if_no_token=True):
