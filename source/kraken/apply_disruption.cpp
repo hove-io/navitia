@@ -407,39 +407,57 @@ struct add_impacts_visitor : public apply_impacts_visitor {
                 continue;
             }
             const auto begin = impacted_vj.impacted_ranks.begin();
-            const auto end = std::next(begin, impacted_vj.impacted_ranks.size() - 1);
+            const auto end = impacted_vj.impacted_ranks.rbegin();
 
             nt::VehicleJourney* vj = vj_iterator->second;
             auto& new_vp = impacted_vj.new_vp;
 
             // We keep only stop time before to touch the first impacted stop time
-            for (const auto& st : vj->stop_time_list) {
-                // We need to get the associated base stop_time to compare its rank
-                const auto base_st = st.get_base_stop_time();
-                if (impact->severity->effect == nt::disruption::Effect::REDUCED_SERVICE
-                    && impacted_vj.impacted_ranks.count(base_st->order())) {
-                    if (*begin == base_st->order() && rs.is_start_stop(base_st->stop_point->stop_area->uri)
-                        && rs.is_blocked_start_point()) {
+            if (impact->severity->effect == nt::disruption::Effect::REDUCED_SERVICE) {
+                for (const auto& st : vj->stop_time_list) {
+                    // We need to get the associated base stop_time to compare its rank
+                    const auto base_st = st.get_base_stop_time();
+                    if (base_st == nullptr) {
+                        LOG4CPLUS_TRACE(log, "Ignoring stop " << st.stop_point->uri << "on " << vj->uri);
                         continue;
                     }
-                    const auto& last_stop_time = vj->stop_time_list.back();
-                    if (*end == base_st->order() && rs.is_end_stop(base_st->stop_point->stop_area->uri)
-                        && st.order() == last_stop_time.order() && rs.is_blocked_end_point()) {
-                        continue;
+                    if (impacted_vj.impacted_ranks.count(base_st->order())) {
+                        if (*begin == base_st->order() && rs.is_start_stop(base_st->stop_point->stop_area->uri)
+                            && rs.is_blocked_start_point()) {
+                            continue;
+                        }
+                        const auto& last_stop_time = vj->stop_time_list.back();
+                        if (*end == base_st->order() && rs.is_end_stop(base_st->stop_point->stop_area->uri)
+                            && st.order() == last_stop_time.order() && rs.is_blocked_end_point()) {
+                            continue;
+                        }
+                        if (*begin != base_st->order() && *end != base_st->order()) {
+                            continue;
+                        }
                     }
-                    if (*begin != base_st->order() && *end != base_st->order()) {
-                        continue;
-                    }
+                    nt::StopTime new_st = clone_stop_time_and_shift(st, vj);
+                    // A stop_time created by realtime should be initialized with skipped_stop = false
+                    new_st.set_skipped_stop(false);
+                    new_stop_times.push_back(std::move(new_st));
                 }
-                nt::StopTime new_st = clone_stop_time_and_shift(st, vj);
-                if (*begin == base_st->order() && impact->severity->effect == nt::disruption::Effect::NO_SERVICE) {
-                    new_st.set_pick_up_allowed(false);
-                }
-                // A stop_time created by realtime should be initialized with skipped_stop = false
-                new_st.set_skipped_stop(false);
-                new_stop_times.push_back(std::move(new_st));
-                if (*begin == base_st->order() && impact->severity->effect == nt::disruption::Effect::NO_SERVICE) {
-                    break;
+            } else {
+                for (const auto& st : vj->stop_time_list) {
+                    // We need to get the associated base stop_time to compare its rank
+                    const auto base_st = st.get_base_stop_time();
+                    if (base_st == nullptr) {
+                        LOG4CPLUS_TRACE(log, "Ignoring stop " << st.stop_point->uri << "on " << vj->uri);
+                        continue;
+                    }
+                    nt::StopTime new_st = clone_stop_time_and_shift(st, vj);
+                    if (*begin == base_st->order()) {
+                        new_st.set_pick_up_allowed(false);
+                    }
+                    // A stop_time created by realtime should be initialized with skipped_stop = false
+                    new_st.set_skipped_stop(false);
+                    new_stop_times.push_back(std::move(new_st));
+                    if (*begin == base_st->order()) {
+                        break;
+                    }
                 }
             }
 
