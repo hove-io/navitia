@@ -226,13 +226,7 @@ class User(db.Model, TimestampMixin):  # type: ignore
                 .all()
             )
         else:
-            return (
-                Instance.query_existing()
-                .join(Authorization)
-                .filter(Authorization.user_id == self.id)
-                .filter(Instance.autocomplete_backend != exclude_backend)
-                .all()
-            )
+            return Instance.query_existing().join(Authorization).filter(Authorization.user_id == self.id).all()
 
     def _get_all_free_instances(self, exclude_backend=None):
         if exclude_backend:
