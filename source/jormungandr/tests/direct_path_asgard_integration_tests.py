@@ -29,9 +29,11 @@
 
 from __future__ import absolute_import
 from .tests_mechanism import AbstractTestFixture, dataset
-from jormungandr.street_network.asgard import Asgard
+from jormungandr.street_network.asgard import Asgard, DIRECT_PATH_ALTERNATIVES_PROFILES
 import logging
 from navitiacommon import response_pb2, type_pb2
+import pytest
+
 
 MOCKED_ASGARD_CONF = [
     {
@@ -86,12 +88,10 @@ def add_cycle_path_type_in_section(section):
     path_item.cycle_path_type = response_pb2.SeparatedCycleWay
 
 
-def route_response(mode):
+def journey_response(journey, mode):
     map_mode_dist = {"walking": 200, "car": 50, "bike": 100, "car_no_park": 50}
     map_mode_time = {"walking": 2000, "car": 500, "bike": 1000, "car_no_park": 500}
-    response = response_pb2.Response()
-    response.response_type = response_pb2.ITINERARY_FOUND
-    journey = response.journeys.add()
+
     journey.nb_transfers = 0
     journey.nb_sections = 1
     journey.departure_date_time = 1548669936
@@ -124,6 +124,12 @@ def route_response(mode):
     section.begin_date_time = 1548669936
     section.end_date_time = 1548670472
 
+
+def route_response(mode):
+    response = response_pb2.Response()
+    response.response_type = response_pb2.ITINERARY_FOUND
+    journey = response.journeys.add()
+    journey_response(journey, mode)
     return response
 
 
@@ -134,8 +140,8 @@ def bss_route_response(request):
     journey.nb_transfers = 0
     journey.nb_sections = 5
 
-    bss_rent_duration = int(request.direct_path.streetnetwork_params.bss_rent_duration)
-    bss_return_duration = int(request.direct_path.streetnetwork_params.bss_return_duration)
+    bss_rent_duration = int(request.direct_path.profiles_params[0].bss_rent_duration)
+    bss_return_duration = int(request.direct_path.profiles_params[0].bss_return_duration)
 
     # 200 + bss_rent_duration + 1600 + bss_return_duration + 200
     duration = int(2000 + bss_rent_duration + bss_return_duration)
@@ -201,43 +207,103 @@ def bss_route_response(request):
     return response
 
 
+def alternative_route_response(profiles_params):
+    response = response_pb2.Response()
+    response.response_type = response_pb2.ITINERARY_FOUND
+    for params in profiles_params:
+        journey = response.journeys.add()
+        journey.tags.append(params.profile_tag)
+        journey_response(journey, params.origin_mode)
+    return response
+
+
 def valid_response(request):
     if request.requested_api == type_pb2.direct_path:
-        if request.direct_path.streetnetwork_params.origin_mode == "bss":
+        if request.direct_path.profiles_params[0].origin_mode == "bss":
             return bss_route_response(request)
-        return route_response(request.direct_path.streetnetwork_params.origin_mode)
+        if len(request.direct_path.profiles_params) == 1:
+            return route_response(request.direct_path.profiles_params[0].origin_mode)
+        if len(request.direct_path.profiles_params) == len(DIRECT_PATH_ALTERNATIVES_PROFILES):
+            return alternative_route_response(request.direct_path.profiles_params)
     else:
         return response_pb2.Response()
 
 
 def valid_request(request):
     if request.requested_api == type_pb2.direct_path:
-        assert request.direct_path.streetnetwork_params.origin_mode
-        assert request.direct_path.streetnetwork_params.destination_mode
-        assert request.direct_path.streetnetwork_params.walking_speed == 1.12
-        assert request.direct_path.streetnetwork_params.max_walking_duration_to_pt == 1800
-        assert request.direct_path.streetnetwork_params.bike_speed == 4.1
-        assert request.direct_path.streetnetwork_params.max_bike_duration_to_pt == 1800
-        assert request.direct_path.streetnetwork_params.bss_speed == 4.1
-        assert request.direct_path.streetnetwork_params.max_bss_duration_to_pt == 1800
-        assert request.direct_path.streetnetwork_params.car_speed == 11.11
-        assert request.direct_path.streetnetwork_params.max_car_duration_to_pt == 1800
-        assert request.direct_path.streetnetwork_params.language == "en-US"
-        assert request.direct_path.streetnetwork_params.car_no_park_speed == (
-            11.11 if request.direct_path.streetnetwork_params.origin_mode in ("car", "car_no_park") else 0
-        )
-        assert request.direct_path.streetnetwork_params.max_car_no_park_duration_to_pt == (
-            1800 if request.direct_path.streetnetwork_params.origin_mode in ("car", "car_no_park") else 0
-        )
-        assert request.direct_path.streetnetwork_params.bss_rent_duration == (
-            42 if request.direct_path.streetnetwork_params.origin_mode == "bss" else 120
-        )
-        assert request.direct_path.streetnetwork_params.bss_rent_penalty == 0
-        assert request.direct_path.streetnetwork_params.bss_return_duration == (
-            24 if request.direct_path.streetnetwork_params.origin_mode == "bss" else 60
-        )
-        assert request.direct_path.streetnetwork_params.bss_return_penalty == 0
-        assert request.direct_path.streetnetwork_params.enable_instructions == True
+        # direct path with alternatives
+        if len(request.direct_path.profiles_params) == 1:
+            assert len(request.direct_path.profiles_params) == 1
+            params = request.direct_path.profiles_params[0]
+            assert params.origin_mode
+            assert params.destination_mode
+            assert params.walking_speed == 1.12
+            assert params.max_walking_duration_to_pt == 1800
+            assert params.bike_speed == 4.1
+            assert params.max_bike_duration_to_pt == 1800
+            assert params.bss_speed == 4.1
+            assert params.max_bss_duration_to_pt == 1800
+            assert params.car_speed == 11.11
+            assert params.max_car_duration_to_pt == 1800
+            assert params.language == "en-US"
+            assert params.car_no_park_speed == (11.11 if params.origin_mode in ("car", "car_no_park") else 0)
+            assert params.max_car_no_park_duration_to_pt == (
+                1800 if params.origin_mode in ("car", "car_no_park") else 0
+            )
+            assert params.bss_rent_duration == (42 if params.origin_mode == "bss" else 120)
+            assert params.bss_rent_penalty == 0
+            assert params.bss_return_duration == (24 if params.origin_mode == "bss" else 60)
+            assert params.bss_return_penalty == 0
+            assert params.enable_instructions
+        # direct path with alternatives
+        elif len(request.direct_path.profiles_params) == len(DIRECT_PATH_ALTERNATIVES_PROFILES):
+            from jormungandr.street_network.asgard import COMFORT, SHORTEST, BALANCED
+
+            for params in request.direct_path.profiles_params:
+                if params.profile_tag == "comfort":
+                    profile = COMFORT
+                elif params.profile_tag == "shortest":
+                    profile = SHORTEST
+                elif params.profile_tag == "balanced":
+                    profile = BALANCED
+                else:
+                    assert False, "Bad alternatives tag"
+
+                assert params.origin_mode
+                assert params.destination_mode
+                assert params.walking_speed == 1.12
+                assert params.max_walking_duration_to_pt == 1800
+                assert params.bike_speed == 4.1
+                assert params.max_bike_duration_to_pt == 1800
+                assert params.bss_speed == 4.1
+                assert params.max_bss_duration_to_pt == 1800
+                assert params.car_speed == 11.11
+                assert params.max_car_duration_to_pt == 1800
+                assert params.language == "en-US"
+                assert params.car_no_park_speed == (11.11 if params.origin_mode in ("car", "car_no_park") else 0)
+                assert params.max_car_no_park_duration_to_pt == (
+                    1800 if params.origin_mode in ("car", "car_no_park") else 0
+                )
+                assert params.bss_rent_duration == (42 if params.origin_mode == "bss" else 120)
+                assert params.bss_rent_penalty == 0
+                assert params.bss_return_duration == (24 if params.origin_mode == "bss" else 60)
+                assert params.bss_return_penalty == 0
+                assert params.enable_instructions
+
+                assert params.bike_use_roads == pytest.approx(profile.bike_use_roads, 0.00001)
+                assert params.bike_use_hills == profile.bike_use_hills
+                assert params.bike_use_ferry == profile.bike_use_ferry
+                assert params.bike_avoid_bad_surfaces == profile.bike_avoid_bad_surfaces
+                assert params.bike_shortest == profile.bike_shortest
+                assert params.bicycle_type == type_pb2.BicycleType.Value(profile.bicycle_type)
+                assert params.bike_use_living_streets == pytest.approx(profile.bike_use_living_streets, 0.00001)
+                assert params.bike_maneuver_penalty == profile.bike_maneuver_penalty
+                assert params.bike_service_penalty == profile.bike_service_penalty
+                assert params.bike_service_factor == profile.bike_service_factor
+                assert params.bike_country_crossing_cost == profile.bike_country_crossing_cost
+                assert params.bike_country_crossing_penalty == profile.bike_country_crossing_penalty
+        else:
+            assert False, "wrong number of profiles_params"
 
     if request.requested_api == type_pb2.street_network_routing_matrix:
         assert request.sn_routing_matrix.max_duration == 1800
@@ -337,6 +403,22 @@ class TestAsgardDirectPath(AbstractTestFixture):
         assert not response['journeys'][2]['sections'][0].get('cycle_lane_length')
 
         assert not response.get('feed_publishers')
+
+    def test_journey_with_bike_alternatives(self):
+        """
+        we want a bike direct path with alternatives
+        """
+        query = (
+            journey_basic_query
+            + "&first_section_mode[]=bike"
+            + "&direct_path=only_with_alternatives"
+            + "&forbidden_uris[]=stop_point:stopA"
+            + "&forbidden_uris[]=stop_point:stopB"
+        )
+        response = self.query_region(query)
+        check_journeys(response)
+
+        assert len(response['journeys']) == len(DIRECT_PATH_ALTERNATIVES_PROFILES)
 
     def test_journey_bss_with_direct_path(self):
         """
