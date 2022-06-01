@@ -202,7 +202,7 @@ def import_data(
                                 loki_data_source, instance.name
                             )
                         )
-                            
+
             actions.append(task[dataset.type].si(instance_config, filename, dataset_uid=dataset.uid))
         else:
             # unknown type, we skip it
