@@ -198,7 +198,7 @@ class Places(ResourceUri):
             timezone.set_request_timezone(self.region)
             response = i_manager.dispatch(args, "places", instance_name=self.region)
         else:
-            available_instances = get_all_available_instances(user)
+            available_instances = get_all_available_instances(user, exclude_backend='kraken')
 
             # If no instance available most probably due to database error
             if (not user) and (not available_instances):
