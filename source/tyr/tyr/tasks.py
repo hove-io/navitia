@@ -59,6 +59,7 @@ from tyr.binarisation import (
     poi2mimir,
     fusio2s3,
     gtfs2s3,
+    zip_if_needed,
 )
 from tyr.binarisation import reload_data, move_to_backupdirectory
 from tyr import celery
@@ -179,13 +180,29 @@ def import_data(
             else:
                 filename = _file
 
-            is_pt_planner_loki = (
+            has_pt_planner_loki = (
                 hasattr(instance, 'pt_planners_configurations') and "loki" in instance.pt_planners_configurations
             )
-            if dataset.type == "fusio" and is_pt_planner_loki:
-                actions.append(fusio2s3.si(instance_config, filename, dataset_uid=dataset.uid))
-            if dataset.type == "gtfs" and is_pt_planner_loki:
-                actions.append(gtfs2s3.si(instance_config, filename, dataset_uid=dataset.uid))
+            if has_pt_planner_loki:
+                loki_data_source = instance.pt_planners_configurations.get('loki', {}).get('data_source')
+                if loki_data_source is not None:
+                    if loki_data_source == "minio":
+                        if dataset.type == "fusio":
+                            actions.append(fusio2s3.si(instance_config, filename, dataset_uid=dataset.uid))
+                        if dataset.type == "gtfs":
+                            actions.append(gtfs2s3.si(instance_config, filename, dataset_uid=dataset.uid))
+                    elif loki_data_source == "local" and dataset.type in ["fusio", "gtfs"]:
+                        zip_file = zip_if_needed(filename)
+                        dest = os.path.join(os.path.dirname(instance_config.target_file), "ntfs")
+                        os.makedirs(dest, 0o755)
+                        shutil.copy(zip_file, dest)
+                    else:
+                        current_app.logger.debug(
+                            "unknown loki data_source '{}' for coverage '{}'".format(
+                                loki_data_source, instance.name
+                            )
+                        )
+
             actions.append(task[dataset.type].si(instance_config, filename, dataset_uid=dataset.uid))
         else:
             # unknown type, we skip it
