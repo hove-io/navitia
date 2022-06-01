@@ -200,8 +200,8 @@ def import_data(
                         current_app.logger.debug(
                             "unknown loki data_source '{}' for coverage '{}'".format(
                                 loki_data_source, instance.name
-                                )
                             )
+                        )
                             
             actions.append(task[dataset.type].si(instance_config, filename, dataset_uid=dataset.uid))
         else:
