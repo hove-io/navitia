@@ -223,7 +223,7 @@ nt::StopTime clone_stop_time_and_shift(const nt::StopTime& st, const nt::Vehicle
 
 std::vector<nt::StopTime> handle_reduced_service(const nt::VehicleJourney* vj,
                                                  const nt::disruption::ImpactedVJ& impacted_vj,
-                                                 nt::disruption::RailSection& rs) {
+                                                 const nt::disruption::RailSection& rs) {
     log4cplus::Logger logger = log4cplus::Logger::getInstance("log");
     std::vector<nt::StopTime> new_stop_times;
     const auto begin = impacted_vj.impacted_ranks.begin();
@@ -470,8 +470,6 @@ struct add_impacts_visitor : public apply_impacts_visitor {
                 LOG4CPLUS_TRACE(log, "impacted vj : " << vj_uri << " without impacted_ranks data. I ignore it.");
                 continue;
             }
-            const auto begin = impacted_vj.impacted_ranks.begin();
-            const auto end = impacted_vj.impacted_ranks.rbegin();
 
             nt::VehicleJourney* vj = vj_iterator->second;
             auto& new_vp = impacted_vj.new_vp;
