@@ -74,14 +74,16 @@ std::string OSMWay::coord_to_string() const {
  * Stores admins relations and initializes nodes and ways associated to it.
  * Stores relations for associatedStreet, also initializes nodes and ways.
  */
-void ReadRelationsVisitor::relation_callback(OSMId osm_id, const Hove::Tags& tags, const Hove::References& refs) {
+void ReadRelationsVisitor::relation_callback(OSMId osm_id,
+                                             const osmpbfreader::Tags& tags,
+                                             const osmpbfreader::References& refs) {
     const auto boundary = tags.find("boundary");
     if (boundary == tags.end() || (boundary->second != "administrative" && boundary->second != "multipolygon")) {
         return;
     }
     const auto tmp_admin_level = tags.find("admin_level");
     if (tmp_admin_level != tags.end() && (tmp_admin_level->second == "8" || tmp_admin_level->second == "9")) {
-        for (const Hove::Reference& ref : refs) {
+        for (const osmpbfreader::Reference& ref : refs) {
             switch (ref.member_type) {
                 case OSMPBF::Relation_MemberType::Relation_MemberType_WAY:
                     if (ref.role == "outer" || ref.role.empty() || ref.role == "exclave") {
@@ -110,7 +112,9 @@ void ReadRelationsVisitor::relation_callback(OSMId osm_id, const Hove::Tags& tag
  * We stores ways they are streets.
  * We store ids of needed nodes
  */
-void ReadWaysVisitor::way_callback(OSMId osm_id, const Hove::Tags& /*unused*/, const std::vector<OSMId>& nodes_refs) {
+void ReadWaysVisitor::way_callback(OSMId osm_id,
+                                   const osmpbfreader::Tags& /*unused*/,
+                                   const std::vector<OSMId>& nodes_refs) {
     auto it_way = cache.ways.find(osm_id);
     if (it_way == cache.ways.end()) {
         return;
@@ -124,7 +128,7 @@ void ReadWaysVisitor::way_callback(OSMId osm_id, const Hove::Tags& /*unused*/, c
 /*
  * We fill needed nodes with their coordinates
  */
-void ReadNodesVisitor::node_callback(OSMId osm_id, double lon, double lat, const Hove::Tags& tags) {
+void ReadNodesVisitor::node_callback(OSMId osm_id, double lon, double lat, const osmpbfreader::Tags& tags) {
     auto node_it = cache.nodes.find(osm_id);
     if (node_it != cache.nodes.end()) {
         node_it->second.set_coord(lon, lat);
@@ -221,7 +225,7 @@ std::string OSMNode::to_geographic_point() const {
     return geog.str();
 }
 
-OSMRelation::OSMRelation(std::vector<Hove::Reference> refs,
+OSMRelation::OSMRelation(std::vector<osmpbfreader::Reference> refs,
                          std::string insee,
                          const std::string& postal_code,
                          std::string name,
@@ -258,11 +262,11 @@ std::string OSMRelation::postal_code() const {
  */
 void OSMRelation::build_polygon(OSMCache& cache, OSMId osm_id) {
     std::set<u_int64_t> explored_ids;
-    auto is_outer_way = [](const Hove::Reference& r) {
+    auto is_outer_way = [](const osmpbfreader::Reference& r) {
         return r.member_type == OSMPBF::Relation_MemberType::Relation_MemberType_WAY
                && contains({"outer", "enclave", ""}, r.role);
     };
-    auto pickable_way = [&](const Hove::Reference& r) {
+    auto pickable_way = [&](const osmpbfreader::Reference& r) {
         return is_outer_way(r) && explored_ids.count(r.member_id) == 0;
     };
     // We need to explore every node because a boundary can be made in several parts
@@ -291,7 +295,7 @@ void OSMRelation::build_polygon(OSMCache& cache, OSMId osm_id) {
         // We try to find a closed ring
         while (first_node != next_node->first) {
             // We look for a way that begin or end by the last node
-            ref = boost::find_if(references, [&](Hove::Reference& r) {
+            ref = boost::find_if(references, [&](osmpbfreader::Reference& r) {
                 if (!pickable_way(r)) {
                     return false;
                 }
@@ -375,7 +379,7 @@ void OSMRelation::build_polygon(OSMCache& cache, OSMId osm_id) {
 }
 
 void OSMRelation::build_geometry(OSMCache& cache, OSMId osm_id) {
-    for (Hove::Reference ref : references) {
+    for (osmpbfreader::Reference ref : references) {
         if (ref.member_type == OSMPBF::Relation_MemberType::Relation_MemberType_NODE) {
             auto node_it = cache.nodes.find(ref.member_id);
             if (node_it == cache.nodes.end()) {
@@ -432,11 +436,11 @@ int main(int argc, char** argv) {
 
     navitia::cities::OSMCache cache(connection_string);
     navitia::cities::ReadRelationsVisitor relations_visitor(cache);
-    Hove::read_osm_pbf(input, relations_visitor);
+    osmpbfreader::read_osm_pbf(input, relations_visitor);
     navitia::cities::ReadWaysVisitor ways_visitor(cache);
-    Hove::read_osm_pbf(input, ways_visitor);
+    osmpbfreader::read_osm_pbf(input, ways_visitor);
     navitia::cities::ReadNodesVisitor node_visitor(cache);
-    Hove::read_osm_pbf(input, node_visitor);
+    osmpbfreader::read_osm_pbf(input, node_visitor);
     cache.build_relations_geometries();
     cache.build_postal_codes();
     cache.insert_relations();

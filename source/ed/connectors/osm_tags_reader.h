@@ -55,7 +55,7 @@ boost::optional<float> parse_way_speed(const std::map<std::string, std::string>&
 ed::types::Poi fill_poi(const uint64_t osm_id,
                         const double lon,
                         const double lat,
-                        const Hove::Tags& tags,
+                        const osmpbfreader::Tags& tags,
                         const size_t potential_id,
                         std::unordered_map<std::string, ed::types::PoiType>& poi_types);
 
@@ -69,10 +69,10 @@ struct PoiTypeParams {
     std::vector<RuleOsmTag2PoiType> rules;
 
     PoiTypeParams(const std::string& json_params);
-    const RuleOsmTag2PoiType* get_applicable_poi_rule(const Hove::Tags& tags) const;
+    const RuleOsmTag2PoiType* get_applicable_poi_rule(const osmpbfreader::Tags& tags) const;
 };
 
-const std::string get_postal_code_from_tags(const Hove::Tags& tags);
+const std::string get_postal_code_from_tags(const osmpbfreader::Tags& tags);
 
 }  // namespace connectors
 }  // namespace ed
