@@ -51,7 +51,7 @@ from jormungandr.scenarios.utils import (
     updated_common_journey_request_with_default,
 )
 from jormungandr.new_relic import record_custom_parameter
-from navitiacommon import type_pb2
+from navitiacommon import type_pb2, response_pb2
 from flask_restful import abort
 from .helper_classes.helper_utils import timed_logger
 
@@ -462,6 +462,8 @@ class Scenario(new_default.Scenario):
             return [e.get()]
         except EntryPointException as e:
             logger.exception('')
+            return [e.get()]
+        except StreetNetworkException as e:
             return [e.get()]
 
     def finalise_journeys(self, request, responses, context, instance, is_debug, request_id):
