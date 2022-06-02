@@ -206,7 +206,10 @@ class GeocodeJson(AbstractAutocomplete):
     def _check_response(cls, response, uri):
         if response is None:
             raise GeocodeJsonError('impossible to access autocomplete service')
-        if response.status_code == 404:
+        if response.status_code in (400, 404):
+            logging.getLogger(__name__).error(
+                'Autocomplete request failed with HTTP code {} fallback kraken'.format(response.status_code)
+            )
             raise UnknownObject(uri)
         if response.status_code == 503:
             raise GeocodeJsonUnavailable('geocodejson responded with 503')
