@@ -193,8 +193,7 @@ def import_data(
                             actions.append(gtfs2s3.si(instance_config, filename, dataset_uid=dataset.uid))
                     elif loki_data_source == "local" and dataset.type in ["fusio", "gtfs"]:
                         zip_file = zip_if_needed(filename)
-                        dest = os.path.join(os.path.dirname(instance_config.target_file), "ntfs")
-                        os.makedirs(dest, 0o755, True)
+                        dest = os.path.join(os.path.dirname(instance_config.target_file), "ntfs.zip")
                         shutil.copy(zip_file, dest)
                     else:
                         current_app.logger.debug(
