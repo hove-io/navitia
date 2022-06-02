@@ -237,7 +237,7 @@ std::vector<nt::StopTime> handle_reduced_service(const nt::VehicleJourney* vj,
         }
         const auto& base_st_order = base_st->order();
         if (impacted_vj.impacted_ranks.count(base_st_order)) {
-            if (*begin == base_st->order() && rs.is_start_stop(base_st->stop_point->stop_area->uri)
+            if (*begin == base_st_order && rs.is_start_stop(base_st->stop_point->stop_area->uri)
                 && rs.is_blocked_start_point()) {
                 continue;
             }
