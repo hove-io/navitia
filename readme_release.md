@@ -29,10 +29,13 @@ At this point, you may build and run tests to check that everything is OK. If yo
 ```
 Note: this script uses `python2.7`, `pipenv` and `vim`, make sure it's installed on your machine.
 
-Then follow the instructions given by the script, and also:
+Then follow the instructions given by the script, and also (see below for troubleshooting):
 * pay attention to the changelog, remove useless PR (small doc) and check that every important PR is there
 * don't forget to make `git submodule update --recursive` when necessary
 * check that `release` branch COMPILES and TESTS (unit, docker and tyr) before pushing it!
+* you might want to disable `pre-commit` since `black` requires a recent version of `pre-commit` which is not available on Python 2.7
+	* `pre-commit uninstall`
+	* comment the line that installs `pre-commit` in `release_navitia.sh`
 
 Nota: `major` and `minor` invocations are possible but deprecated.
 
@@ -79,5 +82,10 @@ Then the process is less automated (but still, instructions are given):
 	```
 
 # Troubleshooting
-If you run into github's daily limitation, you can easily provide your login/token into the script.
-Search for "rate limit exceeded" in script.
+Note that if the release process fails in the middle, here are a few tips that might help before launching it again:
+
+- check you're on `dev` branch
+- check the branch `release` doesn't exist (might have been created by a previous execution); **or else** remove it
+- check the branch `release_X.X.X` doesn't exist (might have been created by a previous execution); **or else** remove it
+- check that no files is modified; **or else** `git restore --staged --worktree .`
+- if you run into Github's daily limitation, you can easily provide your login/token into the script, search for "rate limit exceeded" in script.
