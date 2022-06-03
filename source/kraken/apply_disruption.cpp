@@ -211,6 +211,80 @@ nt::Route* get_or_create_route(const nt::disruption::Impact& impact, nt::PT_Data
     return route;
 }
 
+nt::StopTime clone_stop_time_and_shift(const nt::StopTime& st, const nt::VehicleJourney* vj) {
+    nt::StopTime new_st = st.clone();
+    // Here the first arrival/departure time may be > 24hours.
+    new_st.arrival_time = st.arrival_time + ndtu::SECONDS_PER_DAY * vj->shift;
+    new_st.departure_time = st.departure_time + ndtu::SECONDS_PER_DAY * vj->shift;
+    new_st.alighting_time = st.alighting_time + ndtu::SECONDS_PER_DAY * vj->shift;
+    new_st.boarding_time = st.boarding_time + ndtu::SECONDS_PER_DAY * vj->shift;
+    return new_st;
+}
+
+std::vector<nt::StopTime> handle_reduced_service(const nt::VehicleJourney* vj,
+                                                 const nt::disruption::ImpactedVJ& impacted_vj,
+                                                 const nt::disruption::RailSection& rs) {
+    log4cplus::Logger logger = log4cplus::Logger::getInstance("log");
+    std::vector<nt::StopTime> new_stop_times;
+    const auto begin = impacted_vj.impacted_ranks.begin();
+    const auto end = impacted_vj.impacted_ranks.rbegin();
+    for (const auto& st : vj->stop_time_list) {
+        // We need to get the associated base stop_time to compare its rank
+        const auto base_st = st.get_base_stop_time();
+        if (base_st == nullptr) {
+            LOG4CPLUS_TRACE(logger, "Ignoring stop " << st.stop_point->uri << "on " << vj->uri);
+            continue;
+        }
+        const auto& base_st_order = base_st->order();
+        if (impacted_vj.impacted_ranks.count(base_st_order)) {
+            if (*begin == base_st_order && rs.is_start_stop(base_st->stop_point->stop_area->uri)
+                && rs.is_blocked_start_point()) {
+                continue;
+            }
+            const auto& last_stop_time = vj->stop_time_list.back();
+            if (*end == base_st_order && rs.is_end_stop(base_st->stop_point->stop_area->uri)
+                && st.order() == last_stop_time.order() && rs.is_blocked_end_point()) {
+                continue;
+            }
+            if (*begin != base_st_order && *end != base_st_order) {
+                continue;
+            }
+        }
+        nt::StopTime new_st = clone_stop_time_and_shift(st, vj);
+        // A stop_time created by realtime should be initialized with skipped_stop = false
+        new_st.set_skipped_stop(false);
+        new_stop_times.push_back(std::move(new_st));
+    }
+    return new_stop_times;
+}
+
+std::vector<nt::StopTime> handle_no_service(const nt::VehicleJourney* vj,
+                                            const nt::disruption::ImpactedVJ& impacted_vj) {
+    log4cplus::Logger logger = log4cplus::Logger::getInstance("log");
+    std::vector<nt::StopTime> new_stop_times;
+    const auto begin = impacted_vj.impacted_ranks.begin();
+    for (const auto& st : vj->stop_time_list) {
+        // We need to get the associated base stop_time to compare its rank
+        const auto base_st = st.get_base_stop_time();
+        if (base_st == nullptr) {
+            LOG4CPLUS_TRACE(logger, "Ignoring stop " << st.stop_point->uri << "on " << vj->uri);
+            continue;
+        }
+        const auto& base_st_order = base_st->order();
+        nt::StopTime new_st = clone_stop_time_and_shift(st, vj);
+        if (*begin == base_st_order) {
+            new_st.set_pick_up_allowed(false);
+        }
+        // A stop_time created by realtime should be initialized with skipped_stop = false
+        new_st.set_skipped_stop(false);
+        new_stop_times.push_back(std::move(new_st));
+        if (*begin == base_st_order) {
+            break;
+        }
+    }
+    return new_stop_times;
+}
+
 struct add_impacts_visitor : public apply_impacts_visitor {
     add_impacts_visitor(const boost::shared_ptr<nt::disruption::Impact>& impact,
                         nt::PT_Data& pt_data,
@@ -366,11 +440,16 @@ struct add_impacts_visitor : public apply_impacts_visitor {
         }
         this->log_start_action(uri);
 
-        if (impact->severity->effect != nt::disruption::Effect::NO_SERVICE) {
+        if (impact->severity->effect != nt::disruption::Effect::NO_SERVICE
+            && impact->severity->effect != nt::disruption::Effect::REDUCED_SERVICE) {
             LOG4CPLUS_DEBUG(log, "Unhandled action on " << uri);
             this->log_end_action(uri);
             return;
         }
+
+        auto sort_predicate = [](const std::pair<std::string, uint32_t>& sa1,
+                                 const std::pair<std::string, uint32_t>& sa2) { return sa1.second < sa2.second; };
+        std::sort(rs.blocked_stop_areas.begin(), rs.blocked_stop_areas.end(), sort_predicate);
 
         LOG4CPLUS_TRACE(log, "canceling " << uri);
 
@@ -387,34 +466,20 @@ struct add_impacts_visitor : public apply_impacts_visitor {
                 LOG4CPLUS_TRACE(log, "impacted vj : " << vj_uri << " not found in data. I ignore it.");
                 continue;
             }
+            if (impacted_vj.impacted_ranks.empty()) {
+                LOG4CPLUS_TRACE(log, "impacted vj : " << vj_uri << " without impacted_ranks data. I ignore it.");
+                continue;
+            }
+
             nt::VehicleJourney* vj = vj_iterator->second;
             auto& new_vp = impacted_vj.new_vp;
 
-            // We keep only stop time before to touch the first impacted stop time
-            bool first_sa = false;
-            for (const auto& st : vj->stop_time_list) {
-                // We need to get the associated base stop_time to compare its rank
-                const auto base_st = st.get_base_stop_time();
-                // stop is ignored if its stop_point is not in impacted_stops
-                // if we don't find an associated base we keep it
-                if (base_st && impacted_vj.impacted_ranks.count(base_st->order())) {
-                    LOG4CPLUS_TRACE(log, "Ignoring stop " << st.stop_point->uri << "on " << vj->uri);
-                    if (first_sa == true) {
-                        break;
-                    }
-                    first_sa = true;
-                }
-                nt::StopTime new_st = st.clone();
-                if (first_sa == true) {
-                    new_st.set_pick_up_allowed(false);
-                }
-                // A stop_time created by realtime should be initialized with skipped_stop = false
-                new_st.set_skipped_stop(false);
-                new_st.arrival_time = st.arrival_time + ndtu::SECONDS_PER_DAY * vj->shift;
-                new_st.departure_time = st.departure_time + ndtu::SECONDS_PER_DAY * vj->shift;
-                new_st.alighting_time = st.alighting_time + ndtu::SECONDS_PER_DAY * vj->shift;
-                new_st.boarding_time = st.boarding_time + ndtu::SECONDS_PER_DAY * vj->shift;
-                new_stop_times.push_back(std::move(new_st));
+            if (impact->severity->effect == nt::disruption::Effect::REDUCED_SERVICE) {
+                // we remove all stop_times of vj with a rank that appears in impacted_vj.impacted_ranks
+                // except start_stop and end_stop
+                new_stop_times = handle_reduced_service(vj, impacted_vj, rs);
+            } else {
+                new_stop_times = handle_no_service(vj, impacted_vj);
             }
 
             auto mvj = vj->meta_vj;
@@ -480,11 +545,7 @@ struct add_impacts_visitor : public apply_impacts_visitor {
                     LOG4CPLUS_TRACE(log, "Ignoring stop " << st.stop_point->uri << "on " << vj->uri);
                     continue;
                 }
-                nt::StopTime new_st = st.clone();
-                new_st.arrival_time = st.arrival_time + ndtu::SECONDS_PER_DAY * vj->shift;
-                new_st.departure_time = st.departure_time + ndtu::SECONDS_PER_DAY * vj->shift;
-                new_st.alighting_time = st.alighting_time + ndtu::SECONDS_PER_DAY * vj->shift;
-                new_st.boarding_time = st.boarding_time + ndtu::SECONDS_PER_DAY * vj->shift;
+                nt::StopTime new_st = clone_stop_time_and_shift(st, vj);
                 new_stop_times.push_back(std::move(new_st));
             }
 
@@ -646,13 +707,7 @@ struct add_impacts_visitor : public apply_impacts_visitor {
                 if (st.stop_point == stop_point) {
                     continue;
                 }
-                nt::StopTime new_st = st.clone();
-                // Here the first arrival/departure time may be > 24hours.
-                // Check the test case: apply_disruption_test/test_shift_of_a_disrupted_delayed_train for more details
-                new_st.arrival_time = st.arrival_time + ndtu::SECONDS_PER_DAY * vj->shift;
-                new_st.departure_time = st.departure_time + ndtu::SECONDS_PER_DAY * vj->shift;
-                new_st.alighting_time = st.alighting_time + ndtu::SECONDS_PER_DAY * vj->shift;
-                new_st.boarding_time = st.boarding_time + ndtu::SECONDS_PER_DAY * vj->shift;
+                nt::StopTime new_st = clone_stop_time_and_shift(st, vj);
                 new_stop_times.push_back(std::move(new_st));
             }
 
@@ -877,7 +932,6 @@ void delete_impact(const boost::shared_ptr<nt::disruption::Impact>& impact,
     boost::for_each(impact->mut_informed_entities(), boost::apply_visitor(v));
     LOG4CPLUS_DEBUG(log, impact->uri << " deleted");
 }
-
 }  // anonymous namespace
 
 void delete_disruption(const std::string& disruption_id, nt::PT_Data& pt_data, const nt::MetaData& meta) {

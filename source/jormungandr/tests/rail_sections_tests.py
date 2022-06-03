@@ -98,10 +98,11 @@ class TestRailSections(AbstractTestFixture):
 
     def test_disruption_api_with_rail_section(self):
         r = self.default_query('disruptions')
-        assert len(get_not_null(r, 'disruptions')) == 3
+        assert len(get_not_null(r, 'disruptions')) == 4
         assert r['disruptions'][0]['id'] == 'rail_section_on_line1-1'
         assert r['disruptions'][1]['id'] == 'rail_section_on_line1-2'
         assert r['disruptions'][2]['id'] == 'rail_section_on_line1-3'
+        assert r['disruptions'][3]['id'] == 'rail_section_on_line11'
 
     def test_stop_points_api_with_rail_section(self):
         r = self.default_query('stop_points/stopC')
@@ -261,10 +262,11 @@ class TestRailSections(AbstractTestFixture):
 
     def test_line_reports_impacted_by_rail_section(self):
         r = self.default_query('line_reports')
-        assert len(get_not_null(r, 'disruptions')) == 3
+        assert len(get_not_null(r, 'disruptions')) == 4
         is_valid_rail_section_disruption(r['disruptions'][0])
         is_valid_rail_section_disruption(r['disruptions'][1])
         is_valid_rail_section_disruption(r['disruptions'][2])
+        is_valid_rail_section_disruption(r['disruptions'][3])
 
     def test_terminus_schedules_impacted_by_rail_section(self):
 
@@ -290,13 +292,13 @@ class TestRailSections(AbstractTestFixture):
         date = '20170102T080000'
         current = '_current_datetime=20170101T080000'
 
-        def journey_query(_from, to):
-            return 'journeys?from={fr}&to={to}&datetime={dt}&{cur}&data_freshness=base_schedule'.format(
-                fr=_from, to=to, dt=date, cur=current
+        def journey_query(_from, to, data_freshness="base_schedule"):
+            return 'journeys?from={fr}&to={to}&datetime={dt}&{cur}&data_freshness={data_freshness}'.format(
+                fr=_from, to=to, dt=date, cur=current, data_freshness=data_freshness
             )
 
-        def journeys(_from, to):
-            q = journey_query(_from=_from, to=to)
+        def journeys(_from, to, data_freshness="base_schedule"):
+            q = journey_query(_from=_from, to=to, data_freshness=data_freshness)
             r = self.query_region(q)
             self.is_valid_journey_response(r, q)
             return r
@@ -355,6 +357,46 @@ class TestRailSections(AbstractTestFixture):
         assert get_used_vj(r) == [['vehicle_journey:vj:5']]
         d = get_all_element_disruptions(r['journeys'], r)
         assert impacted_headsigns(d) == {'vj:5'}
+        for disruption, result in scenario.items():
+            assert result == (disruption in d)
+
+        # stopAA-> stopEE
+        # Base_schedule
+        scenario = {
+            'rail_section_on_line11': True,
+        }
+
+        r = journeys(_from='stopAA', to='stopEE')
+        assert len(r["journeys"]) == 1
+        assert get_used_vj(r) == [['vehicle_journey:vj:11-1']]
+        d = get_all_element_disruptions(r['journeys'], r)
+        assert impacted_headsigns(d) == {'vj:11-1'}
+        for disruption, result in scenario.items():
+            assert result == (disruption in d)
+
+        # stopAA-> stopEE
+        # realtime
+        q = journey_query(_from='stopAA', to='stopEE', data_freshness="realtime")
+        r = self.query_region(q)
+        assert "journeys" not in r
+
+        # stopAA-> stopGG
+        # Base_schedule
+        r = journeys(_from='stopAA', to='stopGG')
+        assert len(r["journeys"]) == 1
+        assert get_used_vj(r) == [['vehicle_journey:vj:11-1']]
+        d = get_all_element_disruptions(r['journeys'], r)
+        assert impacted_headsigns(d) == {'vj:11-1'}
+        for disruption, result in scenario.items():
+            assert result == (disruption in d)
+
+        # stopAA-> stopGG
+        # Base_schedule
+        r = journeys(_from='stopAA', to='stopGG', data_freshness="realtime")
+        assert len(r["journeys"]) == 1
+        assert get_used_vj(r) == [['vehicle_journey:vj:11-1:Adapted:0:rail_section_on_line11']]
+        d = get_all_element_disruptions(r['journeys'], r)
+        assert impacted_headsigns(d) == {'vj:11-1'}
         for disruption, result in scenario.items():
             assert result == (disruption in d)
 
@@ -441,7 +483,7 @@ class TestRailSections(AbstractTestFixture):
         r = self.default_query('traffic_reports')
         # only one network (base_network) is disrupted
         assert len(r['traffic_reports']) == 1
-        assert len(r['traffic_reports'][0]['stop_areas']) == 10
+        assert len(r['traffic_reports'][0]['stop_areas']) == 14
 
         for sa in r['traffic_reports'][0]['stop_areas']:
             if sa['id'] in ['stopAreaB', 'stopAreaC', 'stopAreaD']:
@@ -455,6 +497,9 @@ class TestRailSections(AbstractTestFixture):
                 'stopAreaP',
                 'stopAreaQ',
                 'stopAreaR',
+                'stopAreaDD',
+                'stopAreaEE',
+                'stopAreaFF',
             ]:
                 assert len(sa['links']) == 1
 

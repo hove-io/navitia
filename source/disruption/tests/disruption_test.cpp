@@ -1229,7 +1229,9 @@ struct DisruptedNetworkWithRailSection {
     DisruptedNetworkWithRailSection()
         : b("20180101", [](ed::builder& b) {
               b.vj_with_network("network_1", "line_1").route("route_1")("sp1_1", "08:10"_t)("sp1_2", "08:20"_t);
-              b.vj_with_network("network_2", "line_2").route("route_2")("sp2_1", "08:10"_t)("sp2_2", "08:20"_t);
+              b.vj_with_network("network_2", "line_2")
+                  .route("route_2")("sp2_1", "08:10"_t)("sp2_2", "08:20"_t)("sp2_3", "08:30"_t)("sp2_4", "08:40"_t)(
+                      "sp2_5", "08:50"_t)("sp2_6", "08:55"_t);
               b.vj_with_network("network_3", "line_3")
                   .route("route_3")("sp3_1", "08:10"_t)("sp3_2", "08:20"_t)("sp3_3", "08:30"_t)("sp3_4", "08:40"_t);
           }) {
@@ -1245,6 +1247,22 @@ struct DisruptedNetworkWithRailSection {
                                       .on_rail_section("line_3", "sp3_2", "sp3_3", {}, {"route_3"}, *b.data->pt_data)
                                       .get_disruption(),
                                   *b.data->pt_data, *b.data->meta);
+        // now applying disruption on a 'Rail Section' with REDUCED_SERVICE effect
+        // route_2:
+        // StopArea:        sp2_1       sp2_2       sp2_3       sp2_4       sp2_5       sp2_6
+        //                    *----------*------------*-----------*-----------*-----------*
+        // Blocked:                                   *************
+        navitia::apply_disruption(
+            b.disrupt(nt::RTLevel::Adapted, "disrup_rail_section_reduced_service")
+                .tag("TAG_RAIL_SECTION_REDUCED_SERVICE")
+                .impact()
+                .severity(nt::disruption::Effect::REDUCED_SERVICE)
+                .application_periods(period)
+                .publish(period)
+                .on_rail_section("line_2", "sp2_2", "sp2_5", {std::make_pair("sp2_3", 2), std::make_pair("sp2_4", 3)},
+                                 {"route_2"}, *b.data->pt_data)
+                .get_disruption(),
+            *b.data->pt_data, *b.data->meta);
         pb_creator.init(b.data.get(), since, period);
     }
 };
@@ -1255,19 +1273,19 @@ struct DisruptedNetworkWithRailSection {
 BOOST_FIXTURE_TEST_CASE(line_report_on_a_tagged_rail_section, DisruptedNetworkWithRailSection) {
     disruption::line_reports(pb_creator, *b.data, 1, 25, 0, "", {}, {}, since, until);
 
-    BOOST_CHECK_EQUAL(pb_creator.impacts.size(), 1);
+    BOOST_CHECK_EQUAL(pb_creator.impacts.size(), 2);
 
     std::set<std::string> uris = navitia::test::get_impacts_uris(pb_creator.impacts);
-    std::set<std::string> res = {"disrup_rail_section"};
+    std::set<std::string> res = {"disrup_rail_section", "disrup_rail_section_reduced_service"};
     BOOST_CHECK_EQUAL_RANGE(res, uris);
 }
 
 BOOST_FIXTURE_TEST_CASE(traffic_report_on_a_tagged_rail_section, DisruptedNetworkWithRailSection) {
     disruption::traffic_reports(pb_creator, *b.data, 1, 25, 0, "", {}, boost::none, boost::none);
 
-    BOOST_CHECK_EQUAL(pb_creator.impacts.size(), 1);
+    BOOST_CHECK_EQUAL(pb_creator.impacts.size(), 2);
 
     std::set<std::string> uris = navitia::test::get_impacts_uris(pb_creator.impacts);
-    std::set<std::string> res = {"disrup_rail_section"};
+    std::set<std::string> res = {"disrup_rail_section", "disrup_rail_section_reduced_service"};
     BOOST_CHECK_EQUAL_RANGE(res, uris);
 }

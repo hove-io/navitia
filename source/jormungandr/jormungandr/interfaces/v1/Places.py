@@ -36,7 +36,7 @@ import flask
 from jormungandr.authentication import get_all_available_instances
 from jormungandr.interfaces.v1.decorators import get_serializer
 from jormungandr.interfaces.v1.serializer.api import PlacesSerializer, PlacesNearbySerializer
-from jormungandr import i_manager, timezone, global_autocomplete, authentication
+from jormungandr import i_manager, timezone, global_autocomplete, authentication, app
 from jormungandr.interfaces.v1.ResourceUri import ResourceUri
 from jormungandr.interfaces.parsers import default_count_arg_type, places_count_arg_type
 from jormungandr.interfaces.v1.transform_id import transform_id
@@ -198,7 +198,7 @@ class Places(ResourceUri):
             timezone.set_request_timezone(self.region)
             response = i_manager.dispatch(args, "places", instance_name=self.region)
         else:
-            available_instances = get_all_available_instances(user)
+            available_instances = get_all_available_instances(user, exclude_backend='kraken')
 
             # If no instance available most probably due to database error
             if (not user) and (not available_instances):
@@ -206,7 +206,7 @@ class Places(ResourceUri):
 
             # If parameter '_autocomplete' is absent use 'bragi' as default value
             if args["_autocomplete"] is None:
-                args["_autocomplete"] = 'bragi'
+                args["_autocomplete"] = app.config.get('DEFAULT_AUTOCOMPLETE_BACKEND', 'bragi')
             autocomplete = global_autocomplete.get(args["_autocomplete"])
             if not autocomplete:
                 raise TechnicalError('world wide autocompletion service not available')
@@ -272,7 +272,7 @@ class PlaceUri(ResourceUri):
             response = i_manager.dispatch(args, "place_uri", instance_name=self.region)
         else:
             user = authentication.get_user(token=authentication.get_token(), abort_if_no_token=False)
-            available_instances = get_all_available_instances(user)
+            available_instances = get_all_available_instances(user, exclude_backend='kraken')
 
             # If no instance available most probably due to database error
             if (not user) and (not available_instances):
@@ -280,7 +280,7 @@ class PlaceUri(ResourceUri):
 
             # If parameter '_autocomplete' is absent use 'bragi' as default value
             if args["_autocomplete"] is None:
-                args["_autocomplete"] = 'bragi'
+                args["_autocomplete"] = app.config.get('DEFAULT_AUTOCOMPLETE_BACKEND', 'bragi')
             autocomplete = global_autocomplete.get(args["_autocomplete"])
             if not autocomplete:
                 raise TechnicalError('world wide autocompletion service not available')

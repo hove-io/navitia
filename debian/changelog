@@ -1,3 +1,16 @@
+navitia2 (15.9.0) unstable; urgency=low
+
+  * [Jormun] add alternatives asgard  <https://github.com/hove-io/navitia/pull/3752>
+  * [Jormun] Fix autocomplete without coverage and bragi version in configuration  <https://github.com/hove-io/navitia/pull/3755>
+  * [Disruption] Manage reduced service in RailSection  <https://github.com/hove-io/navitia/pull/3756>
+  * [Jormun] Include also error 400 from bragi to manage fallback kraken in autocomplete  <https://github.com/hove-io/navitia/pull/3758>
+  * [Jormun] Fix default autocomplete backend bragi version for places  <https://github.com/hove-io/navitia/pull/3763>
+  * [Jormun] Fix default autocomplete backend bragi version for places Uri  <https://github.com/hove-io/navitia/pull/3766>
+  * [tyr][loki] deposit ntfs in shared nfs for loki  <https://github.com/hove-io/navitia/pull/3757> <https://github.com/hove-io/navitia/pull/3765> <https://github.com/hove-io/navitia/pull/3764> <https://github.com/hove-io/navitia/pull/3762>
+  * [ZMQ] allow more than one frame to identify client  <https://github.com/hove-io/navitia/pull/3747>
+
+ -- Jean SIMARD <woshilapin@tuziwo.info>  Fri, 03 Jun 2022 15:06:38 +0100
+
 navitia2 (15.8.0) unstable; urgency=low
 
   * [Jormun] Fix cycle_lane_length on walking sections  <https://github.com/hove-io/navitia/pull/3750>
