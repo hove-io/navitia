@@ -85,7 +85,6 @@ Then the process is less automated (but still, instructions are given):
 Note that if the release process fails in the middle, here are a few tips that might help before launching it again:
 
 - check you're on `dev` branch
-- check the branch `release` doesn't exist (might have been created by a previous execution); **or else** remove it
 - check the branch `release_X.X.X` doesn't exist (might have been created by a previous execution); **or else** remove it
 - check that no files is modified; **or else** `git restore --staged --worktree .`
 - if you run into Github's daily limitation, you can easily provide your login/token into the script, search for "rate limit exceeded" in script.
