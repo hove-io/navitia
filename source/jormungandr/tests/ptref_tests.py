@@ -408,7 +408,7 @@ class TestPtRef(AbstractTestFixture):
 
     def test_line_codes(self):
         """test line formating"""
-        response = self.query_region("lines/line:A?")
+        response = self.query_region("lines/line:A")
 
         lines = get_not_null(response, 'lines')
 
