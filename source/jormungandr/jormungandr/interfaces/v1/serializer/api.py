@@ -91,7 +91,7 @@ class ContextSerializer(PbNestedSerializer):
     timezone = MethodField(
         schema_type=str,
         display_none=False,
-        description='Timezone of any datetime in the response, ' 'default value Africa/Abidjan (UTC)',
+        description='Timezone of any datetime in the response, default value Africa/Abidjan (UTC)',
     )
 
     def get_car_direct_path(self, obj):
@@ -282,11 +282,11 @@ class CoverageSerializer(NullableDictSerializer):
     id = Field(attr="region_id", schema_type=str, display_none=True, description='Identifier of the coverage')
     start_production_date = Field(
         schema_type=str,
-        description='Beginning of the production period. ' 'We only have data on this production period',
+        description='Beginning of the production period. We only have data on this production period',
     )
     end_production_date = Field(
         schema_type=str,
-        description='End of the production period. ' 'We only have data on this production period',
+        description='End of the production period. We only have data on this production period',
     )
     last_load_at = LambdaField(
         method=lambda _, o: CoverageUTCDateTimeField('last_load_at').to_value(o),

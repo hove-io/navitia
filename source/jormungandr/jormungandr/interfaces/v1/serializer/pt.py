@@ -505,7 +505,7 @@ class StopAreaSerializer(PbGenericSerializer):
     administrative_regions = AdminSerializer(
         many=True,
         display_none=False,
-        description='Administrative regions of the stop area ' 'in which is the stop area',
+        description='Administrative regions of the stop area in which is the stop area',
     )
     stop_points = StopPointSerializer(
         many=True, display_none=False, description='Stop points contained in this stop area'

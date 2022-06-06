@@ -274,13 +274,11 @@ class Siri(RealtimeProxy):
                 timeout=self.timeout,
             )
         except pybreaker.CircuitBreakerError as e:
-            logging.getLogger(__name__).error(
-                'siri RT service dead, using base ' 'schedule (error: {}'.format(e)
-            )
+            logging.getLogger(__name__).error('siri RT service dead, using base schedule (error: {}'.format(e))
             raise RealtimeProxyError('circuit breaker open')
         except requests.Timeout as t:
             logging.getLogger(__name__).error(
-                'siri RT service timeout, using base ' 'schedule (error: {}'.format(t)
+                'siri RT service timeout, using base schedule (error: {}'.format(t)
             )
             raise RealtimeProxyError('timeout')
         except Exception as e:

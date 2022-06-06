@@ -771,12 +771,12 @@ class TestPtRef(AbstractTestFixture):
         assert disruptions[0]['disruption_id'] == 'Disruption On line:A'
 
         response = self.query_region(
-            'pt_objects?q=line:A&type[]=line&_current_datetime=20140115T235959' '&disable_disruption=true'
+            'pt_objects?q=line:A&type[]=line&_current_datetime=20140115T235959&disable_disruption=true'
         )
         assert len(response['disruptions']) == 0
 
         response = self.query_region(
-            'pt_objects?q=line:A&type[]=line&_current_datetime=20140115T235959' '&disable_disruption=false'
+            'pt_objects?q=line:A&type[]=line&_current_datetime=20140115T235959&disable_disruption=false'
         )
         assert len(response['disruptions']) == 1
 
@@ -1105,7 +1105,7 @@ class TestPtRefRoutingCov(AbstractTestFixture):
 
     def test_headsign_with_resource_uri(self):
         """test usage of headsign with resource uri"""
-        response = self.query_region('physical_modes/physical_mode:0x0/vehicle_journeys' '?headsign=vjA_hs')
+        response = self.query_region('physical_modes/physical_mode:0x0/vehicle_journeys?headsign=vjA_hs')
         assert 'error' not in response
         vjs = get_not_null(response, 'vehicle_journeys')
         assert len(vjs) == 1
@@ -1113,7 +1113,7 @@ class TestPtRefRoutingCov(AbstractTestFixture):
     def test_headsign_with_code_filter_and_resource_uri(self):
         """test usage of headsign with code filter and resource uri"""
         response = self.query_region(
-            'physical_modes/physical_mode:0x0/vehicle_journeys' '?headsign=vjA_hs&filter=line.code=1A'
+            'physical_modes/physical_mode:0x0/vehicle_journeys?headsign=vjA_hs&filter=line.code=1A'
         )
         assert 'error' not in response
         vjs = get_not_null(response, 'vehicle_journeys')
