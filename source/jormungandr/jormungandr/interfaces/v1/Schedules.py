@@ -124,7 +124,12 @@ class Schedules(ResourceUri, ResourceUtc):
             help="Distance range of the query. Used only if a coord is in the query",
         )
         parser_get.add_argument(
-            "show_codes", type=BooleanType(), default=False, help="show more identification codes"
+            "show_codes",
+            type=BooleanType(),
+            default=True,
+            hidden=True,
+            deprecated=True,
+            help="DEPRECATED (always True), show more identification codes",
         )
         # Note: no default param for data freshness, the default depends on the API
         parser_get.add_argument(

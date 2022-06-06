@@ -372,12 +372,10 @@ MOCKED_PROXY_CONF = [
 @dataset({"basic_schedule_test": {'instance_config': {'realtime_proxies': MOCKED_PROXY_CONF}}})
 class TestDepartures(AbstractTestFixture):
     query_template_scs = (
-        'stop_points/{sp}/stop_schedules?from_datetime={dt}&show_codes=true{data_freshness}'
-        '&_current_datetime={c_dt}'
+        'stop_points/{sp}/stop_schedules?from_datetime={dt}{data_freshness}&_current_datetime={c_dt}'
     )
     query_template_ter = (
-        'stop_points/{sp}/terminus_schedules?from_datetime={dt}&show_codes=true{data_freshness}'
-        '&_current_datetime={c_dt}'
+        'stop_points/{sp}/terminus_schedules?from_datetime={dt}{data_freshness}&_current_datetime={c_dt}'
     )
 
     def test_stop_schedule_without_rt(self):
