@@ -47,6 +47,8 @@ from jormungandr.street_network.street_network import (
 from jormungandr.utils import get_pt_object_coord, is_url, decode_polyline, mps_to_kmph
 from jormungandr.ptref import FeedPublisher
 
+from navitiacommon.response_pb2 import StreetInformation
+
 DEFAULT_GEOVELO_FEED_PUBLISHER = {
     'id': 'geovelo',
     'name': 'geovelo',
@@ -194,6 +196,17 @@ class Geovelo(AbstractStreetNetworkService):
         else:
             return 'geovelo_other'
 
+    @staticmethod
+    def get_geovelo_cycle_path_type(cyclability):
+        if cyclability == 1:
+            return 0
+        elif cyclability == 2:
+            return 1
+        elif cyclability in [3, 4]:
+            return 2
+        else:
+            return 3
+
     @classmethod
     def _get_matrix(cls, json_response):
         '''
@@ -338,6 +351,10 @@ class Geovelo(AbstractStreetNetworkService):
                     path_item.length = geovelo_instruction[2]
                     path_item.duration = round(path_item.length / speed) if speed != 0 else 0
                     path_item.direction = map_instructions_direction.get(geovelo_instruction[0], 0)
+                    street_info = StreetInformation()
+                    street_info.geojson_offset = geovelo_instruction[5]
+                    street_info.cycle_path_type = cls.get_geovelo_cycle_path_type(geovelo_instruction[4])
+                    section.street_network.street_information.append(street_info)
 
                 shape = decode_polyline(geovelo_response['sections'][0]['geometry'])
                 for sh in shape:
