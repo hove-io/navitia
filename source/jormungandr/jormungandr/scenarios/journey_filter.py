@@ -654,6 +654,11 @@ def apply_final_journey_filters(response_list, instance, request):
         journey_pairs_pool = itertools.combinations(journeys, 2)
         filter_shared_sections_journeys(journey_pairs_pool, request)
 
+    filter_odt_journeys = get_or_default(request, '_odt_filter', False)
+    if filter_odt_journeys:
+        journeys = journey_generator(response_list)
+        filter_odt_journeys(journeys, request)
+
     # we filter journeys having too much connections compared to minimum
     journeys = journey_generator(response_list)
     _filter_too_much_connections(journeys, instance, request)
@@ -888,6 +893,85 @@ def _filter_similar_journeys(journey_pairs_pool, request, *similar_journey_gener
                 'duplicate_journey',
                 'similar_to_{other}'.format(other=j1.internal_id if worst == j2 else j2.internal_id),
             )
+
+
+def filter_odt_journeys(journeys, request):
+    clockwise = request.get('clockwise', True)
+    debug = request.get('debug', False)
+    if clockwise:
+        return _filter_odt_journeys_clockwise(journeys, debug)
+    else:
+        return _filter_odt_journeys_counter_clockwise(journeys, debug)
+
+
+def _filter_odt_journeys_clockwise(journeys, debug):
+    """
+    eliminates a journey that uses On Demand Transport if there is a public transport journey
+    that arrive earlier
+    """
+    # let's find the the earliest arrival time among public transport journeys
+    earliest_arrival_pt_journey = None
+    for journey in journeys:
+        if _contains_pt_section(journey):
+            if earliest_arrival_pt_journey is None:
+                earliest_arrival_pt_journey = journey
+            elif journey.arrival_date_time < earliest_arrival_pt_journey.arrival_date_time:
+                earliest_arrival_pt_journey = journey
+
+    # no pt journey found, so there is nothing to filter
+    if earliest_arrival_pt_journey is None:
+        return
+
+    # let's mark as dead all odt journeys that arrives after earliest_arrival_pt_journey
+    for journey in journeys:
+        if _contains_odt(journey) and journey.arrival_date_time >= earliest_arrival_pt_journey.arrival_date_time:
+            mark_as_dead(
+                journey,
+                debug,
+                'duplicate_journey',
+                'odt_arrives_after_{other}'.format(other=earliest_arrival_pt_journey.internal_id),
+            )
+
+
+def _filter_odt_journeys_counter_clockwise(journeys, debug):
+    """
+    eliminates a journey that uses On Demand Transport if there is a public transport journey
+    that depart later
+    """
+    # let's find the the earliest arrival time among public transport journeys
+    latest_departure_pt_journey = None
+    for journey in journeys:
+        if _contains_pt_section(journey):
+            if latest_departure_pt_journey is None:
+                latest_departure_pt_journey = journey
+            elif journey.departure_date_time > latest_departure_pt_journey.departure_date_time:
+                latest_departure_pt_journey = journey
+
+    # no pt journey found, so there is nothing to filter
+    if latest_departure_pt_journey is None:
+        return
+
+    # let's mark as dead all odt journeys that depart before latest_departure_pt_journey
+    for journey in journeys:
+        if (
+            _contains_odt(journey)
+            and journey.departure_date_time <= latest_departure_pt_journey.arrival_date_time
+        ):
+            mark_as_dead(
+                journey,
+                debug,
+                'duplicate_journey',
+                'odt_departs_before_{other}'.format(other=latest_departure_pt_journey.internal_id),
+            )
+
+
+def _contains_pt_section(journey):
+    return any(section.type == response_pb2.PUBLIC_TRANSPORT for section in journey.sections)
+
+
+def _contains_odt(journey):
+    odt_infos = {response_pb2.ODT_WITH_ZONE, response_pb2.ODT_WITH_STOP_POINT, response_pb2.ODT_WITH_STOP_TIME}
+    return any(section.additional_informations in odt_infos for section in journey.sections)
 
 
 def _filter_too_much_connections(journeys, instance, request):
