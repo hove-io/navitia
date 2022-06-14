@@ -40,7 +40,7 @@ from importlib import import_module
 import logging
 from jormungandr.exceptions import ConfigException, UnableToParse, InvalidArguments
 from six.moves.urllib.parse import urlparse
-from jormungandr import new_relic
+from jormungandr import new_relic, app
 from six.moves import zip, range
 from jormungandr.exceptions import TechnicalError
 from flask import request, g
@@ -677,6 +677,10 @@ def journeys_absent(objects):
 
 
 def can_connect_to_database():
+    # Why testing the db connection when the db is disabled?
+    if app.config['DISABLE_DATABASE']:
+        return True
+
     # If g is not initialized we are out of app_context. This never happens for any service jormungandr
     # in this case we return true to have retro-compatibility.
     if not g:
