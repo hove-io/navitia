@@ -32,7 +32,7 @@ from jormungandr.street_network.street_network import StreetNetworkPathType
 import logging
 from .helper_utils import timed_logger
 from navitiacommon import type_pb2, response_pb2
-from jormungandr.exceptions import TechnicalError
+from jormungandr.exceptions import GeoveloTechnicalError
 from .helper_exceptions import StreetNetworkException
 
 
@@ -94,10 +94,10 @@ class StreetNetworkPath:
                     self._path_type,
                     self._request_id,
                 )
-            except TechnicalError as e:
+            except GeoveloTechnicalError as e:
                 logging.getLogger(__name__).exception('')
-                raise StreetNetworkException(response_pb2.Error.service_unavailable, e.data["message"])
-            except Exception as e:
+                raise StreetNetworkException(response_pb2.Error.internal_error, e.data["message"])
+            except Exception:
                 logging.getLogger(__name__).exception('')
                 return None
 

@@ -34,7 +34,14 @@ import logging
 from jormungandr.new_relic import record_exception
 
 
-__all__ = ["RegionNotFound", "DeadSocketException", "ApiNotFound", "InvalidArguments"]
+__all__ = [
+    "RegionNotFound",
+    "DeadSocketException",
+    "ApiNotFound",
+    "InvalidArguments",
+    "TechnicalError",
+    "GeoveloTechnicalError",
+]
 
 
 def format_error(code, message):
@@ -115,6 +122,14 @@ class UnableToParse(HTTPException):
 class TechnicalError(HTTPException):
     def __init__(self, msg):
         super(TechnicalError, self).__init__()
+        self.data = format_error("technical_error", msg)
+        self.code = 500
+
+
+# Only used by geovelo streetnetwork
+class GeoveloTechnicalError(HTTPException):
+    def __init__(self, msg):
+        super(GeoveloTechnicalError, self).__init__()
         self.data = format_error("technical_error", msg)
         self.code = 500
 

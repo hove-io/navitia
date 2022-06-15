@@ -38,7 +38,7 @@ import itertools
 import sys
 from navitiacommon import response_pb2
 from jormungandr import app
-from jormungandr.exceptions import TechnicalError, InvalidArguments, UnableToParse
+from jormungandr.exceptions import GeoveloTechnicalError, InvalidArguments, UnableToParse
 from jormungandr.street_network.street_network import (
     AbstractStreetNetworkService,
     StreetNetworkPathKey,
@@ -175,13 +175,15 @@ class Geovelo(AbstractStreetNetworkService):
         except pybreaker.CircuitBreakerError as e:
             logging.getLogger(__name__).error('Geovelo routing service dead (error: {})'.format(e))
             self.record_external_failure('circuit breaker open')
+            raise GeoveloTechnicalError('Geovelo routing service dead (error: {})'.format(e))
         except requests.Timeout as t:
             logging.getLogger(__name__).error('Geovelo routing service dead (error: {})'.format(t))
             self.record_external_failure('timeout')
+            raise GeoveloTechnicalError('Geovelo routing service dead (error: {})'.format(t))
         except Exception as e:
             logging.getLogger(__name__).exception('Geovelo routing error')
             self.record_external_failure(str(e))
-        return None
+            raise GeoveloTechnicalError('Geovelo routing error')
 
     @staticmethod
     def get_geovelo_tag(geovelo_response):
@@ -199,13 +201,13 @@ class Geovelo(AbstractStreetNetworkService):
     @staticmethod
     def get_geovelo_cycle_path_type(cyclability):
         if cyclability == 1:
-            return 0
+            return response_pb2.NoCycleLane
         elif cyclability == 2:
-            return 1
+            return response_pb2.SharedCycleWay
         elif cyclability in [3, 4]:
-            return 2
+            return response_pb2.DedicatedCycleWay
         else:
-            return 3
+            return response_pb2.SeparatedCycleWay
 
     @classmethod
     def _get_matrix(cls, json_response):
@@ -230,14 +232,14 @@ class Geovelo(AbstractStreetNetworkService):
 
     @classmethod
     def _check_response(cls, response):
-        if response is None:
-            raise TechnicalError('impossible to access geovelo service')
         if response.status_code != 200:
             logging.getLogger(__name__).error(
                 'Geovelo service unavailable, impossible to query : {}'
                 ' with response : {}'.format(response.url, response.text)
             )
-            raise TechnicalError('Geovelo service unavailable, impossible to query : {}'.format(response.url))
+            raise GeoveloTechnicalError(
+                'Geovelo service unavailable, impossible to query : {}'.format(response.url)
+            )
 
     def _get_street_network_routing_matrix(
         self, instance, origins, destinations, street_network_mode, max_duration, request, request_id, **kwargs
