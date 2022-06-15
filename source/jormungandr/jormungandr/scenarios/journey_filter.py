@@ -654,7 +654,7 @@ def apply_final_journey_filters(response_list, instance, request):
         journey_pairs_pool = itertools.combinations(journeys, 2)
         filter_shared_sections_journeys(journey_pairs_pool, request)
 
-    filter_odt = get_or_default(request, '_odt_filter', False)
+    filter_odt = get_or_default(request, '_filter_odt', False)
     if filter_odt:
         journeys = journey_generator(response_list)
         filter_odt_journeys(journeys, request)

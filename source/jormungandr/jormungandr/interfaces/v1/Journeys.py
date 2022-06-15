@@ -376,6 +376,13 @@ class Journeys(JourneyCommon):
             help='Activate debug mode.\n' 'No journeys are filtered in this mode.',
         )
         parser_get.add_argument(
+            "_filter_odt",
+            type=BooleanType(),
+            default=True,
+            hidden=True,
+            help='Filter journeys that uses On Demand Transport if they arrive later/depart earlier than a pure public transport journey.',
+        )
+        parser_get.add_argument(
             "show_codes",
             type=BooleanType(),
             default=False,
