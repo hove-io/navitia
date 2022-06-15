@@ -654,8 +654,8 @@ def apply_final_journey_filters(response_list, instance, request):
         journey_pairs_pool = itertools.combinations(journeys, 2)
         filter_shared_sections_journeys(journey_pairs_pool, request)
 
-    filter_odt_journeys = get_or_default(request, '_odt_filter', False)
-    if filter_odt_journeys:
+    filter_odt = get_or_default(request, '_odt_filter', False)
+    if filter_odt:
         journeys = journey_generator(response_list)
         filter_odt_journeys(journeys, request)
 
@@ -898,10 +898,11 @@ def _filter_similar_journeys(journey_pairs_pool, request, *similar_journey_gener
 def filter_odt_journeys(journeys, request):
     clockwise = request.get('clockwise', True)
     debug = request.get('debug', False)
+    journeys_list = [j for j in journeys]
     if clockwise:
-        return _filter_odt_journeys_clockwise(journeys, debug)
+        return _filter_odt_journeys_clockwise(journeys_list, debug)
     else:
-        return _filter_odt_journeys_counter_clockwise(journeys, debug)
+        return _filter_odt_journeys_counter_clockwise(journeys_list, debug)
 
 
 def _filter_odt_journeys_clockwise(journeys, debug):
@@ -912,7 +913,7 @@ def _filter_odt_journeys_clockwise(journeys, debug):
     # let's find the the earliest arrival time among public transport journeys
     earliest_arrival_pt_journey = None
     for journey in journeys:
-        if _contains_pt_section(journey):
+        if _contains_pt_section(journey) and not _contains_odt(journey):
             if earliest_arrival_pt_journey is None:
                 earliest_arrival_pt_journey = journey
             elif journey.arrival_date_time < earliest_arrival_pt_journey.arrival_date_time:
@@ -928,7 +929,6 @@ def _filter_odt_journeys_clockwise(journeys, debug):
             mark_as_dead(
                 journey,
                 debug,
-                'duplicate_journey',
                 'odt_arrives_after_{other}'.format(other=earliest_arrival_pt_journey.internal_id),
             )
 
@@ -941,7 +941,7 @@ def _filter_odt_journeys_counter_clockwise(journeys, debug):
     # let's find the the earliest arrival time among public transport journeys
     latest_departure_pt_journey = None
     for journey in journeys:
-        if _contains_pt_section(journey):
+        if _contains_pt_section(journey) and not _contains_odt(journey):
             if latest_departure_pt_journey is None:
                 latest_departure_pt_journey = journey
             elif journey.departure_date_time > latest_departure_pt_journey.departure_date_time:
@@ -960,7 +960,6 @@ def _filter_odt_journeys_counter_clockwise(journeys, debug):
             mark_as_dead(
                 journey,
                 debug,
-                'duplicate_journey',
                 'odt_departs_before_{other}'.format(other=latest_departure_pt_journey.internal_id),
             )
 
@@ -970,8 +969,15 @@ def _contains_pt_section(journey):
 
 
 def _contains_odt(journey):
-    odt_infos = {response_pb2.ODT_WITH_ZONE, response_pb2.ODT_WITH_STOP_POINT, response_pb2.ODT_WITH_STOP_TIME}
-    return any(section.additional_informations in odt_infos for section in journey.sections)
+    for section in journey.sections:
+        for info in section.additional_informations:
+            if (
+                info == response_pb2.ODT_WITH_ZONE
+                or info == response_pb2.ODT_WITH_STOP_POINT
+                or info == response_pb2.ODT_WITH_STOP_TIME
+            ):
+                return True
+    return False
 
 
 def _filter_too_much_connections(journeys, instance, request):
