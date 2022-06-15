@@ -955,7 +955,7 @@ def _filter_odt_journeys_counter_clockwise(journeys, debug):
     for journey in journeys:
         if (
             _contains_odt(journey)
-            and journey.departure_date_time <= latest_departure_pt_journey.arrival_date_time
+            and journey.departure_date_time <= latest_departure_pt_journey.departure_date_time
         ):
             mark_as_dead(
                 journey,
