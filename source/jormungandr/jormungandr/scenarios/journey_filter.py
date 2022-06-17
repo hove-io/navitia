@@ -971,10 +971,10 @@ def _contains_pt_section(journey):
 def _contains_odt(journey):
     for section in journey.sections:
         for info in section.additional_informations:
-            if (
-                info == response_pb2.ODT_WITH_ZONE
-                or info == response_pb2.ODT_WITH_STOP_POINT
-                or info == response_pb2.ODT_WITH_STOP_TIME
+            if info in (
+                response_pb2.ODT_WITH_ZONE,
+                response_pb2.ODT_WITH_STOP_POINT,
+                response_pb2.ODT_WITH_STOP_TIME,
             ):
                 return True
     return False
