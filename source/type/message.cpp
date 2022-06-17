@@ -231,7 +231,6 @@ std::vector<ImpactedVJ> get_impacted_vehicle_journeys(const RailSection& rs,
         auto section = vj.get_sections_ranks(rs.start_point, rs.end_point);
         // If the vj pass by both stops both elements will be different than nullptr, otherwise
         // it's not passing by both stops and should not be impacted
-
         if ((!section.empty() && rs.blocked_stop_areas.empty())
             || (!section.empty() && blocked_sa_sequence_matching(blocked_sa_uri_sequence.second, vj, section))) {
             // Once we know the line section is part of the vj we compute the vp for the adapted_vj
@@ -239,6 +238,11 @@ std::vector<ImpactedVJ> get_impacted_vehicle_journeys(const RailSection& rs,
             for (const auto& period : impact.application_periods) {
                 // get the vp of the section
                 new_vp.days |= vj.get_vp_for_section(section, rt_level, period).days;
+            }
+            // For NO_SERVICE we should impact all stop_points from rs.start_point to
+            // last stop_point of the vj
+            if (impact.severity->effect == nt::disruption::Effect::NO_SERVICE) {
+                section = vj.get_sections_ranks(rs.start_point, vj.stop_time_list.back().stop_point->stop_area);
             }
             // If there is effective days for the adapted vp we're keeping it
             if (!new_vp.days.none()) {
@@ -507,10 +511,14 @@ bool Impact::is_relevant(const std::vector<const StopTime*>& stop_times) const {
     // line section not relevant
     auto line_section_impacted_obj_it = boost::find_if(
         informed_entities(), [](const PtObj& ptobj) { return boost::get<LineSection>(&ptobj) != nullptr; });
+    auto is_line_section = (line_section_impacted_obj_it != informed_entities().end());
+
     // rail section not relevant
     auto rail_section_impacted_obj_it = boost::find_if(
         informed_entities(), [](const PtObj& ptobj) { return boost::get<RailSection>(&ptobj) != nullptr; });
-    if (line_section_impacted_obj_it != informed_entities().end()) {
+    auto is_rail_section = (rail_section_impacted_obj_it != informed_entities().end());
+
+    if (is_line_section) {
         // note in this we take the premise that an impact
         // cannot impact a line section AND a vj
 
@@ -524,8 +532,44 @@ bool Impact::is_relevant(const std::vector<const StopTime*>& stop_times) const {
             }
         }
         return false;
-    } else if (rail_section_impacted_obj_it != informed_entities().end()) {
-        return true;
+    } else if (is_rail_section && this->severity->effect == nt::disruption::Effect::REDUCED_SERVICE) {
+        const auto& informed_entity = *rail_section_impacted_obj_it;
+        const RailSection* rail_section = boost::get<RailSection>(&informed_entity);
+
+        const auto& first_stop_time = stop_times.front();
+        if (first_stop_time->stop_point->stop_area != rail_section->start_point
+            && first_stop_time->stop_point->stop_area != rail_section->end_point) {
+            for (const auto& sp_message : first_stop_time->stop_point->get_impacts()) {
+                if (sp_message.get() == this) {
+                    return true;
+                }
+            }
+        }
+
+        const auto& last_stop_time = stop_times.back();
+        if (last_stop_time->stop_point->stop_area != rail_section->start_point
+            && last_stop_time->stop_point->stop_area != rail_section->end_point) {
+            for (const auto& sp_message : last_stop_time->stop_point->get_impacts()) {
+                if (sp_message.get() == this) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    } else if (is_rail_section && this->severity->effect == nt::disruption::Effect::NO_SERVICE) {
+        const auto& informed_entity = *rail_section_impacted_obj_it;
+        const RailSection* rail_section = boost::get<RailSection>(&informed_entity);
+        for (const auto& st : stop_times) {
+            if (st->stop_point->stop_area == rail_section->start_point) {
+                continue;
+            }
+            for (const auto& sp_message : st->stop_point->get_impacts()) {
+                if (sp_message.get() == this) {
+                    return true;
+                }
+            }
+        }
+        return false;
     } else {
         // else, no reason to not be interested by it
         return true;
