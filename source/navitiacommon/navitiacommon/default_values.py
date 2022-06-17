@@ -217,7 +217,7 @@ access_points = False
 
 default_pt_planner = 'kraken'
 
-filter_odt_journeys = True
+filter_odt_journeys = False
 
 # {
 #     "kraken": {
