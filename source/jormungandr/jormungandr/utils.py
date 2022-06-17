@@ -679,7 +679,7 @@ def journeys_absent(objects):
 def can_connect_to_database():
     # Why testing the db connection when the db is disabled?
     if app.config['DISABLE_DATABASE']:
-        return True
+        return False
 
     # If g is not initialized we are out of app_context. This never happens for any service jormungandr
     # in this case we return true to have retro-compatibility.
