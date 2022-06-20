@@ -59,8 +59,8 @@ static void respond(zmq::socket_t& socket,
         reply.rebuild(error_response.ByteSize());
         error_response.SerializeToArray(reply.data(), error_response.ByteSize());
     }
-    for (size_t idx = 0; idx < client_id.size(); ++idx) {
-        z_send(socket, client_id[idx], ZMQ_SNDMORE);
+    for (const auto& idx : client_id) {
+        z_send(socket, idx, ZMQ_SNDMORE);
     }
     socket.send(reply);
 }
