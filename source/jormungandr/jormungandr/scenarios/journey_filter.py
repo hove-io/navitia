@@ -910,7 +910,7 @@ def _filter_odt_journeys_clockwise(journeys, debug):
     eliminates a journey that uses On Demand Transport if there is a public transport journey
     that arrive earlier
     """
-    # let's find the the earliest arrival time among public transport journeys
+    # let's find the earliest arrival time among public transport journeys
     earliest_arrival_pt_journey = portable_min(
         (j for j in journeys if _contains_pt_section(j) and not _contains_odt(j)),
         key=lambda j: j.arrival_date_time,
@@ -935,7 +935,7 @@ def _filter_odt_journeys_counter_clockwise(journeys, debug):
     eliminates a journey that uses On Demand Transport if there is a public transport journey
     that depart later
     """
-    # let's find the the latest departure time among public transport journeys
+    # let's find the latest departure time among public transport journeys
     latest_departure_pt_journey = portable_min(
         (j for j in journeys if _contains_pt_section(j) and not _contains_odt(j)),
         key=lambda j: -1 * j.departure_date_time,
