@@ -125,6 +125,8 @@ def get_journeys_to_complete(responses, context, is_debug):
     """
     journeys_to_complete = []
     for r in responses:
+        if r is None:
+            continue
         for j in r.journeys:
             if is_debug == False and "to_delete" in j.tags:
                 continue
