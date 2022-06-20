@@ -3,7 +3,6 @@ name: Publish Navitia Documentation
 on:
   push:
     branches:
-      - dev
       - release
 
 jobs:
