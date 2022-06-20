@@ -217,6 +217,8 @@ access_points = False
 
 default_pt_planner = 'kraken'
 
+filter_odt_journeys = False
+
 # {
 #     "kraken": {
 #         "class": "jormungandr.pt_planners.kraken.Kraken",

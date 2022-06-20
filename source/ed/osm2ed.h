@@ -147,11 +147,11 @@ struct Admin {
 };
 
 struct OSMAdminRelation : public Admin {
-    Hove::References references;
+    osmpbfreader::References references;
 
     OSMAdminRelation(u_int64_t id,
                      const std::string& uri,
-                     std::vector<Hove::Reference> refs,
+                     std::vector<osmpbfreader::Reference> refs,
                      const std::string& insee,
                      const std::string& postal_code,
                      const std::string& name,
@@ -316,9 +316,9 @@ struct ReadRelationsVisitor {
     bool use_cities;
     ReadRelationsVisitor(OSMCache& cache, bool use_cities) : cache(cache), use_cities(use_cities) {}
 
-    void node_callback(uint64_t, double, double, const Hove::Tags&) {}
-    void relation_callback(uint64_t osm_id, const Hove::Tags& tags, const Hove::References& refs);
-    void way_callback(uint64_t, const Hove::Tags&, const std::vector<uint64_t>&) {}
+    void node_callback(uint64_t, double, double, const osmpbfreader::Tags&) {}
+    void relation_callback(uint64_t osm_id, const osmpbfreader::Tags& tags, const osmpbfreader::References& refs);
+    void way_callback(uint64_t, const osmpbfreader::Tags&, const std::vector<uint64_t>&) {}
 };
 struct ReadWaysVisitor {
     // Read references and set if a node is used by a way
@@ -332,9 +332,9 @@ struct ReadWaysVisitor {
         : cache(cache), poi_params(std::move(poi_params)), speed_parser(std::move(parser)) {}
     ~ReadWaysVisitor();
 
-    void node_callback(uint64_t, double, double, const Hove::Tags&) {}
-    void relation_callback(uint64_t, const Hove::Tags&, const Hove::References&) {}
-    void way_callback(uint64_t osm_id, const Hove::Tags& tags, const std::vector<uint64_t>& nodes_refs);
+    void node_callback(uint64_t, double, double, const osmpbfreader::Tags&) {}
+    void relation_callback(uint64_t, const osmpbfreader::Tags&, const osmpbfreader::References&) {}
+    void way_callback(uint64_t osm_id, const osmpbfreader::Tags& tags, const std::vector<uint64_t>& nodes_refs);
 
     size_t filtered_private_way = 0;
 };
@@ -346,9 +346,9 @@ struct ReadNodesVisitor {
 
     ReadNodesVisitor(OSMCache& cache) : cache(cache) {}
 
-    void node_callback(uint64_t osm_id, double lon, double lat, const Hove::Tags& tag);
-    void relation_callback(uint64_t, const Hove::Tags&, const Hove::References&) {}
-    void way_callback(uint64_t, const Hove::Tags&, const std::vector<uint64_t>&) {}
+    void node_callback(uint64_t osm_id, double lon, double lat, const osmpbfreader::Tags& tag);
+    void relation_callback(uint64_t, const osmpbfreader::Tags&, const osmpbfreader::References&) {}
+    void way_callback(uint64_t, const osmpbfreader::Tags&, const std::vector<uint64_t>&) {}
 };
 
 struct Rect {
@@ -427,17 +427,17 @@ struct PoiHouseNumberVisitor {
         persistor.insert_poi_types(data);
     }
 
-    void node_callback(uint64_t osm_id, double lon, double lat, const Hove::Tags& tags);
-    void relation_callback(uint64_t, const Hove::Tags&, const Hove::References&) {}
-    void way_callback(uint64_t osm_id, const Hove::Tags& tags, const std::vector<uint64_t>& refs);
+    void node_callback(uint64_t osm_id, double lon, double lat, const osmpbfreader::Tags& tags);
+    void relation_callback(uint64_t, const osmpbfreader::Tags&, const osmpbfreader::References&) {}
+    void way_callback(uint64_t osm_id, const osmpbfreader::Tags& tags, const std::vector<uint64_t>& refs);
     const OSMWay* find_way_without_name(const double lon, const double lat);
-    const OSMWay* find_way(const Hove::Tags& tags, const double lon, const double lat);
+    const OSMWay* find_way(const osmpbfreader::Tags& tags, const double lon, const double lat);
     void fill_poi(const u_int64_t osm_id,
-                  const Hove::Tags& tags,
+                  const osmpbfreader::Tags& tags,
                   const double lon,
                   const double lat,
                   OsmObjectType osm_relation_type);
-    void fill_housenumber(const u_int64_t osm_id, const Hove::Tags& tags, const double lon, const double lat);
+    void fill_housenumber(const u_int64_t osm_id, const osmpbfreader::Tags& tags, const double lon, const double lat);
     void insert_house_numbers();
     void insert_data();
     void finish();

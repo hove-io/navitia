@@ -1,3 +1,13 @@
+navitia2 (15.10.0) unstable; urgency=low
+
+  * [Kraken] More consistent namespace  <https://github.com/hove-io/navitia/pull/3760>
+  * [Docs] minor fixes on formatting   <https://github.com/hove-io/navitia/pull/3761>
+  * [Docs] add some tips for troubleshooting the release  <https://github.com/hove-io/navitia/pull/3768>
+  * [Jormungandr] Filter On Demand Transport journeys  <https://github.com/hove-io/navitia/pull/3772>
+  * [Disruption] [rail_section]Modify apply_disruption to impact all sps after rs.end_point for rail_section  <https://github.com/hove-io/navitia/pull/3773>
+
+ -- krishna <krishna.adhikari@kisio.com>  Mon, 20 Jun 2022 15:06:06 +0100
+
 navitia2 (15.9.0) unstable; urgency=low
 
   * [Jormun] add alternatives asgard  <https://github.com/hove-io/navitia/pull/3752>

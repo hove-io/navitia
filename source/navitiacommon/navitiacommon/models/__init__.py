@@ -722,6 +722,13 @@ class Instance(db.Model):  # type: ignore
         server_default=json.dumps(default_values.pt_planners_configurations),
     )
 
+    filter_odt_journeys = db.Column(
+        db.Boolean,
+        default=default_values.filter_odt_journeys,
+        nullable=False,
+        server_default=str(default_values.filter_odt_journeys),
+    )
+
     def __init__(self, name=None, is_free=False, authorizations=None, jobs=None):
         self.name = name
         self.is_free = is_free

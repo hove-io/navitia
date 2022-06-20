@@ -101,3 +101,47 @@ def remove_excess_terminus_with_2items_uri_in_display_information_test():
 
     journey_filter.remove_excess_terminus(response)
     assert len(response.terminus) == 1
+
+
+def filter_odt_journeys_clockwise_test():
+    request = {"clockwise": True}
+
+    response = response_pb2.Response()
+    # a public transport journey
+    pt_journey = response.journeys.add()
+    pt_journey.arrival_date_time = 10
+    pt_section = pt_journey.sections.add()
+    pt_section.type = response_pb2.PUBLIC_TRANSPORT
+
+    # an On Demand Transport journey
+    # that arrives after the public transport journey
+    odt_journey = response.journeys.add()
+    odt_section = odt_journey.sections.add()
+    odt_section.additional_informations.append(response_pb2.ODT_WITH_ZONE)
+    odt_journey.arrival_date_time = 11
+
+    journey_filter.filter_odt_journeys(response.journeys, request)
+
+    assert odt_journey.tags[0] == "to_delete"
+
+
+def filter_odt_journeys_counter_clockwise_test():
+    request = {"clockwise": False}
+
+    response = response_pb2.Response()
+    # a public transport journey
+    pt_journey = response.journeys.add()
+    pt_journey.departure_date_time = 10
+    pt_section = pt_journey.sections.add()
+    pt_section.type = response_pb2.PUBLIC_TRANSPORT
+
+    # an On Demand Transport journey
+    # that depart before the public transport journey
+    odt_journey = response.journeys.add()
+    odt_section = odt_journey.sections.add()
+    odt_section.additional_informations.append(response_pb2.ODT_WITH_ZONE)
+    odt_journey.departure_date_time = 9
+
+    journey_filter.filter_odt_journeys(response.journeys, request)
+
+    assert odt_journey.tags[0] == "to_delete"
