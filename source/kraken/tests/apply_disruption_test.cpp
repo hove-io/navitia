@@ -3357,8 +3357,8 @@ void check_rail_section_impact(const ed::builder& b) {
     BOOST_REQUIRE_EQUAL(impact->is_rail_section_of(*vj->route->line), true);
     BOOST_REQUIRE_EQUAL(impact->is_only_rail_section(), true);
     BOOST_REQUIRE_EQUAL(b.get<nt::StopPoint>("stopD")->get_impacts().size(), 1);
-    BOOST_REQUIRE_EQUAL(b.get<nt::StopPoint>("stopE")->get_impacts().size(), 0);
-    BOOST_REQUIRE_EQUAL(b.get<nt::StopPoint>("stopF")->get_impacts().size(), 0);
+    BOOST_REQUIRE_EQUAL(b.get<nt::StopPoint>("stopE")->get_impacts().size(), 1);
+    BOOST_REQUIRE_EQUAL(b.get<nt::StopPoint>("stopF")->get_impacts().size(), 1);
 
     // Deleting the disruption
     navitia::delete_disruption("rail_section_on_line1", *b.data->pt_data, *b.data->meta);
@@ -4508,10 +4508,10 @@ BOOST_AUTO_TEST_CASE(complex_impact_with_rail_section) {
     BOOST_REQUIRE_EQUAL(b.get<nt::StopPoint>("stopC")->get_impacts().size(), 1);
     BOOST_REQUIRE_EQUAL(b.get<nt::StopPoint>("stopD")->get_impacts().size(), 1);
     BOOST_REQUIRE_EQUAL(b.get<nt::StopPoint>("stopE")->get_impacts().size(), 1);
-    BOOST_REQUIRE_EQUAL(b.get<nt::StopPoint>("stopF")->get_impacts().size(), 0);
-    BOOST_REQUIRE_EQUAL(b.get<nt::StopPoint>("stopG")->get_impacts().size(), 0);
-    BOOST_REQUIRE_EQUAL(b.get<nt::StopPoint>("stopH")->get_impacts().size(), 0);
-    BOOST_REQUIRE_EQUAL(b.get<nt::StopPoint>("stopI")->get_impacts().size(), 0);
+    BOOST_REQUIRE_EQUAL(b.get<nt::StopPoint>("stopF")->get_impacts().size(), 1);
+    BOOST_REQUIRE_EQUAL(b.get<nt::StopPoint>("stopG")->get_impacts().size(), 1);
+    BOOST_REQUIRE_EQUAL(b.get<nt::StopPoint>("stopH")->get_impacts().size(), 1);
+    BOOST_REQUIRE_EQUAL(b.get<nt::StopPoint>("stopI")->get_impacts().size(), 1);
 
     // new rail_section disruption
     navitia::apply_disruption(b.impact(nt::RTLevel::Adapted, "rail_section_on_line1-2")
@@ -4554,9 +4554,9 @@ BOOST_AUTO_TEST_CASE(complex_impact_with_rail_section) {
     BOOST_REQUIRE_EQUAL(b.get<nt::StopPoint>("stopM")->get_impacts().size(), 1);
     BOOST_REQUIRE_EQUAL(b.get<nt::StopPoint>("stopN")->get_impacts().size(), 1);
     BOOST_REQUIRE_EQUAL(b.get<nt::StopPoint>("stopO")->get_impacts().size(), 1);
-    BOOST_REQUIRE_EQUAL(b.get<nt::StopPoint>("stopG")->get_impacts().size(), 0);
-    BOOST_REQUIRE_EQUAL(b.get<nt::StopPoint>("stopH")->get_impacts().size(), 0);
-    BOOST_REQUIRE_EQUAL(b.get<nt::StopPoint>("stopI")->get_impacts().size(), 0);
+    BOOST_REQUIRE_EQUAL(b.get<nt::StopPoint>("stopG")->get_impacts().size(), 2);
+    BOOST_REQUIRE_EQUAL(b.get<nt::StopPoint>("stopH")->get_impacts().size(), 2);
+    BOOST_REQUIRE_EQUAL(b.get<nt::StopPoint>("stopI")->get_impacts().size(), 2);
 
     // new rail_section disruption
     navitia::apply_disruption(b.impact(nt::RTLevel::Adapted, "rail_section_on_line1-3")
