@@ -376,6 +376,12 @@ class Journeys(JourneyCommon):
             help='Activate debug mode.\n' 'No journeys are filtered in this mode.',
         )
         parser_get.add_argument(
+            "_filter_odt_journeys",
+            type=BooleanType(),
+            hidden=True,
+            help='Filter journeys that uses On Demand Transport if they arrive later/depart earlier than a pure public transport journey.',
+        )
+        parser_get.add_argument(
             "show_codes",
             type=BooleanType(),
             default=False,
@@ -842,6 +848,9 @@ class Journeys(JourneyCommon):
 
             if args.get('bss_return_penalty') is None:
                 args['bss_return_penalty'] = mod.bss_return_penalty
+
+            if args.get('_filter_odt_journeys') is None:
+                args['_filter_odt_journeys'] = mod.filter_odt_journeys
 
         # When computing 'same_journey_schedules'(is_journey_schedules=True), some parameters need to be overridden
         # because they are contradictory to the request

@@ -695,6 +695,8 @@ class Instance(object):
     default_pt_planner = _make_property_getter('default_pt_planner')
     pt_planners_configurations = _make_property_getter('pt_planners_configurations')
 
+    filter_odt_journeys = _make_property_getter('filter_odt_journeys')
+
     def get_pt_planner(self, pt_planner_id=None):
         pt_planner_id = pt_planner_id or self.default_pt_planner
         return self._pt_planner_manager.get_pt_planner(pt_planner_id)
