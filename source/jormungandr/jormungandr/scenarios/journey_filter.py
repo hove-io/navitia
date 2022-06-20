@@ -614,7 +614,7 @@ def get_qualified_journeys(responses):
     :param responses: protobuf
     :return: generator of journeys
     """
-    return (j for r in responses for j in r.journeys if not to_be_deleted(j))
+    return (j for r in responses if r is not None for j in r.journeys if not to_be_deleted(j))
 
 
 def nb_qualifed_journeys(responses):
@@ -626,7 +626,7 @@ def get_all_journeys(responses):
     :param responses: protobuf
     :return: generator of journeys
     """
-    return (j for r in responses for j in r.journeys)
+    return (j for r in responses if r is not None for j in r.journeys)
 
 
 def apply_final_journey_filters(response_list, instance, request):
