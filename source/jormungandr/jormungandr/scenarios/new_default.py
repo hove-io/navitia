@@ -113,9 +113,7 @@ def get_kraken_calls(request):
     # - direct_path_type is either 'only' or 'only_with_alternatives'
     # on compute direct paths only for the specified mode
     if direct_path_mode and direct_path_type in ('only', 'only_with_alternatives'):
-        for mode in direct_path_mode:
-            res.add((mode, mode, "only"))
-        return res
+        return set([(mode, mode, "only") for mode in direct_path_mode])
 
     if direct_path_type != "none":
         for mode in direct_path_mode:
