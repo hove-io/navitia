@@ -406,6 +406,46 @@ def get_kraken_calls_test():
     }
     assert get_kraken_calls(req) == {("walking", "walking", "none")}
 
+    req = {
+        "origin_mode": ["walking"],
+        "destination_mode": ["walking"],
+        "direct_path_mode": ["bike", "car"],
+        "direct_path": "only",
+    }
+    assert get_kraken_calls(req) == {("bike", "bike", "only"), ("car", "car", "only")}
+
+    req = {
+        "origin_mode": ["walking"],
+        "destination_mode": ["walking"],
+        "direct_path_mode": ["bike", "car"],
+        "direct_path": "only_with_alternatives",
+    }
+    assert get_kraken_calls(req) == {("bike", "bike", "only"), ("car", "car", "only")}
+
+    req = {
+        "origin_mode": [],
+        "destination_mode": [],
+        "direct_path_mode": ["bike"],
+        "direct_path": "only",
+    }
+    assert get_kraken_calls(req) == {("bike", "bike", "only")}
+
+    req = {
+        "origin_mode": [],
+        "destination_mode": [],
+        "direct_path_mode": ["bike"],
+        "direct_path": "only_with_alternatives",
+    }
+    assert get_kraken_calls(req) == {("bike", "bike", "only")}
+
+    req = {
+        "origin_mode": ["walking", "bike"],
+        "destination_mode": ["walking"],
+        "direct_path_mode": [],
+        "direct_path": "only",
+    }
+    assert get_kraken_calls(req) == {("walking", "walking", "only"), ("bike", "walking", "only")}
+
 
 def get_kraken_calls_invalid_1_test():
     with pytest.raises(HTTPException):
