@@ -108,6 +108,13 @@ def get_kraken_calls(request):
     direct_path_mode = request.get('direct_path_mode', [])
 
     res = set()
+    # In the query we found:
+    # - direct_path_mode[] is not empty
+    # - direct_path_type is either 'only' or 'only_with_alternatives'
+    # on compute direct paths only for the specified mode
+    if direct_path_mode and direct_path_type in ('only', 'only_with_alternatives'):
+        return set([(mode, mode, "only") for mode in direct_path_mode])
+
     if direct_path_type != "none":
         for mode in direct_path_mode:
             # to avoid duplicate tuples (mode1, mode2, "indifferent") and (mode1, mode2, "only")
