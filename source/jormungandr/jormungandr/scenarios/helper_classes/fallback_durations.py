@@ -141,7 +141,7 @@ class FallbackDurations:
                 )
             except GeoveloTechnicalError as e:
                 logging.getLogger(__name__).exception('')
-                raise StreetNetworkException(response_pb2.Error.internal_error, e.data["message"])
+                raise StreetNetworkException(response_pb2.Error.service_unavailable, e.data["message"])
             except Exception as e:
                 self._logger.exception("Exception':{}".format(str(e)))
                 return None

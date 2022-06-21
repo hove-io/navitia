@@ -96,7 +96,7 @@ class StreetNetworkPath:
                 )
             except GeoveloTechnicalError as e:
                 logging.getLogger(__name__).exception('')
-                raise StreetNetworkException(response_pb2.Error.internal_error, e.data["message"])
+                raise StreetNetworkException(response_pb2.Error.service_unavailable, e.data["message"])
             except Exception:
                 logging.getLogger(__name__).exception('')
                 return None

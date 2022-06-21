@@ -173,17 +173,17 @@ class Geovelo(AbstractStreetNetworkService):
                 verify=self.verify,
             )
         except pybreaker.CircuitBreakerError as e:
-            logging.getLogger(__name__).error('Geovelo routing service dead (error: {})'.format(e))
+            logging.getLogger(__name__).error('Geovelo routing service unavailable (error: {})'.format(e))
             self.record_external_failure('circuit breaker open')
-            raise GeoveloTechnicalError('Geovelo routing service dead (error: {})'.format(e))
+            raise GeoveloTechnicalError('Geovelo routing service unavailable')
         except requests.Timeout as t:
-            logging.getLogger(__name__).error('Geovelo routing service dead (error: {})'.format(t))
+            logging.getLogger(__name__).error('Geovelo routing service unavailable (error: {})'.format(t))
             self.record_external_failure('timeout')
-            raise GeoveloTechnicalError('Geovelo routing service dead (error: {})'.format(t))
+            raise GeoveloTechnicalError('Geovelo routing service unavailable')
         except Exception as e:
             logging.getLogger(__name__).exception('Geovelo routing error')
             self.record_external_failure(str(e))
-            raise GeoveloTechnicalError('Geovelo routing error')
+            raise GeoveloTechnicalError('Geovelo routing has encountered unknown error')
 
     @staticmethod
     def get_geovelo_tag(geovelo_response):
@@ -237,9 +237,7 @@ class Geovelo(AbstractStreetNetworkService):
                 'Geovelo service unavailable, impossible to query : {}'
                 ' with response : {}'.format(response.url, response.text)
             )
-            raise GeoveloTechnicalError(
-                'Geovelo service unavailable, impossible to query : {}'.format(response.url)
-            )
+            raise GeoveloTechnicalError('Geovelo service unavailable, impossible to query')
 
     def _get_street_network_routing_matrix(
         self, instance, origins, destinations, street_network_mode, max_duration, request, request_id, **kwargs
