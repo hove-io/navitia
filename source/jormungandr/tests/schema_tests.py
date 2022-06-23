@@ -274,7 +274,7 @@ class TestSwaggerSchema(AbstractTestFixture, SchemaChecker):
         # so the '/' is urlencoded as %2F to be able to test the call
 
         obj, errors = self._check_schema(
-            '/v1/coverage/main_routing_test/stop_areas%2FstopB/stop_schedules?' 'from_datetime=20120614T165200',
+            '/v1/coverage/main_routing_test/stop_areas%2FstopB/stop_schedules?from_datetime=20120614T165200',
             hard_check=False,
         )
 
@@ -302,7 +302,7 @@ class TestSwaggerSchema(AbstractTestFixture, SchemaChecker):
         # so the '/' is urlencoded as %2F to be able to test the call
 
         _, errors = self._check_schema(
-            '/v1/coverage/main_routing_test/routes%2FA:0/route_schedules?' 'from_datetime=20120614T165200',
+            '/v1/coverage/main_routing_test/routes%2FA:0/route_schedules?from_datetime=20120614T165200',
             hard_check=False,
         )
 
@@ -317,16 +317,16 @@ class TestSwaggerSchema(AbstractTestFixture, SchemaChecker):
 
     def test_departures(self):
         self._check_schema(
-            '/v1/coverage/main_routing_test/stop_areas%2FstopB/departures?' 'from_datetime=20120614T165200'
+            '/v1/coverage/main_routing_test/stop_areas%2FstopB/departures?from_datetime=20120614T165200'
         )
 
     def test_arrivals(self):
         self._check_schema(
-            '/v1/coverage/main_routing_test/stop_areas%2FstopB/arrivals?' 'from_datetime=20120614T165200'
+            '/v1/coverage/main_routing_test/stop_areas%2FstopB/arrivals?from_datetime=20120614T165200'
         )
 
     def test_traffic_reports(self):
-        self._check_schema('/v1/coverage/main_routing_test/traffic_reports?' '_current_datetime=20120801T0000')
+        self._check_schema('/v1/coverage/main_routing_test/traffic_reports?_current_datetime=20120801T0000')
 
     def test_places_nearby(self):
         self._check_schema('/v1/coverage/main_routing_test/stop_areas%2FstopA/places_nearby')

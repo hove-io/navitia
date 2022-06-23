@@ -176,14 +176,14 @@ class JourneyCommon(ResourceUri, ResourceUtc):
             "from",
             type=six.text_type,
             dest="origin",
-            help='The id of the departure of your journey. ' 'If not provided an isochrone is computed.',
+            help='The id of the departure of your journey. If not provided an isochrone is computed.',
             schema_metadata={'format': 'place'},
         )
         parser_get.add_argument(
             "to",
             type=six.text_type,
             dest="destination",
-            help='The id of the arrival of your journey. ' 'If not provided an isochrone is computed.',
+            help='The id of the arrival of your journey. If not provided an isochrone is computed.',
             schema_metadata={'format': 'place'},
         )
         parser_get.add_argument(
@@ -302,12 +302,12 @@ class JourneyCommon(ResourceUri, ResourceUtc):
         parser_get.add_argument(
             "walking_speed",
             type=SpeedRange(),
-            help='Walking speed for the fallback sections.\n' 'Speed unit must be in meter/second',
+            help='Walking speed for the fallback sections.\nSpeed unit must be in meter/second',
         )
         parser_get.add_argument(
             "bike_speed",
             type=SpeedRange(),
-            help='Biking speed for the fallback sections.\n' 'Speed unit must be in meter/second',
+            help='Biking speed for the fallback sections.\nSpeed unit must be in meter/second',
         )
         parser_get.add_argument(
             "bss_speed",
@@ -319,13 +319,13 @@ class JourneyCommon(ResourceUri, ResourceUtc):
         parser_get.add_argument(
             "car_speed",
             type=SpeedRange(),
-            help='Driving speed for the fallback sections.\n' 'Speed unit must be in meter/second',
+            help='Driving speed for the fallback sections.\nSpeed unit must be in meter/second',
         )
         parser_get.add_argument(
             "ridesharing_speed",
             type=SpeedRange(),
             dest="ridesharing_speed",
-            help='ridesharing speed for the fallback sections.\n' 'Speed unit must be in meter/second',
+            help='ridesharing speed for the fallback sections.\nSpeed unit must be in meter/second',
         )
         parser_get.add_argument(
             "car_no_park_speed",
@@ -336,7 +336,7 @@ class JourneyCommon(ResourceUri, ResourceUtc):
         parser_get.add_argument(
             "taxi_speed",
             type=SpeedRange(),
-            help='taxi speed speed for the fallback sections.\n' 'Speed unit must be in meter/second',
+            help='taxi speed speed for the fallback sections.\nSpeed unit must be in meter/second',
         )
         parser_get.add_argument(
             "forbidden_uris[]",

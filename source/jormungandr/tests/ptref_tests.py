@@ -408,7 +408,7 @@ class TestPtRef(AbstractTestFixture):
 
     def test_line_codes(self):
         """test line formating"""
-        response = self.query_region("lines/line:A?show_codes=true")
+        response = self.query_region("lines/line:A")
 
         lines = get_not_null(response, 'lines')
 
@@ -692,29 +692,29 @@ class TestPtRef(AbstractTestFixture):
 
     def test_line_by_code(self):
         """test the filter=type.has_code(key, value)"""
-        response = self.query_region("lines?filter=line.has_code(codeB, B)&show_codes=true")
+        response = self.query_region("lines?filter=line.has_code(codeB, B)")
         lines = get_not_null(response, 'lines')
         assert len(lines) == 1
         assert 'B' in [code['value'] for code in lines[0]['codes'] if code['type'] == 'codeB']
 
-        response = self.query_region("lines?filter=line.has_code(codeB, Bise)&show_codes=true")
+        response = self.query_region("lines?filter=line.has_code(codeB, Bise)")
         lines = get_not_null(response, 'lines')
         assert len(lines) == 1
         assert 'B' in [code['value'] for code in lines[0]['codes'] if code['type'] == 'codeB']
 
-        response = self.query_region("lines?filter=line.has_code(codeC, C)&show_codes=true")
+        response = self.query_region("lines?filter=line.has_code(codeC, C)")
         lines = get_not_null(response, 'lines')
         assert len(lines) == 1
         assert 'B' in [code['value'] for code in lines[0]['codes'] if code['type'] == 'codeB']
 
         response, code = self.query_no_assert(
-            "v1/coverage/main_ptref_test/lines?filter=line.has_code(codeB, rien)&show_codes=true"
+            "v1/coverage/main_ptref_test/lines?filter=line.has_code(codeB, rien)"
         )
         assert code == 400
         assert get_not_null(response, 'error')['message'] == 'ptref : Filters: Unable to find object'
 
         response, code = self.query_no_assert(
-            "v1/coverage/main_ptref_test/lines?filter=line.has_code(codeC, rien)&show_codes=true"
+            "v1/coverage/main_ptref_test/lines?filter=line.has_code(codeC, rien)"
         )
         assert code == 400
         assert get_not_null(response, 'error')['message'] == 'ptref : Filters: Unable to find object'
@@ -771,12 +771,12 @@ class TestPtRef(AbstractTestFixture):
         assert disruptions[0]['disruption_id'] == 'Disruption On line:A'
 
         response = self.query_region(
-            'pt_objects?q=line:A&type[]=line&_current_datetime=20140115T235959' '&disable_disruption=true'
+            'pt_objects?q=line:A&type[]=line&_current_datetime=20140115T235959&disable_disruption=true'
         )
         assert len(response['disruptions']) == 0
 
         response = self.query_region(
-            'pt_objects?q=line:A&type[]=line&_current_datetime=20140115T235959' '&disable_disruption=false'
+            'pt_objects?q=line:A&type[]=line&_current_datetime=20140115T235959&disable_disruption=false'
         )
         assert len(response['disruptions']) == 1
 
@@ -941,7 +941,7 @@ class TestPtRef(AbstractTestFixture):
 class TestPtRefRoutingAndPtrefCov(AbstractTestFixture):
     def test_external_code(self):
         """test the strange and ugly external code api"""
-        response = self.query("v1/lines?external_code=A&show_codes=true")
+        response = self.query("v1/lines?external_code=A")
         lines = get_not_null(response, 'lines')
         assert len(lines) == 1
         assert 'A' in [code['value'] for code in lines[0]['codes'] if code['type'] == 'external_code']
@@ -1105,7 +1105,7 @@ class TestPtRefRoutingCov(AbstractTestFixture):
 
     def test_headsign_with_resource_uri(self):
         """test usage of headsign with resource uri"""
-        response = self.query_region('physical_modes/physical_mode:0x0/vehicle_journeys' '?headsign=vjA_hs')
+        response = self.query_region('physical_modes/physical_mode:0x0/vehicle_journeys?headsign=vjA_hs')
         assert 'error' not in response
         vjs = get_not_null(response, 'vehicle_journeys')
         assert len(vjs) == 1
@@ -1113,7 +1113,7 @@ class TestPtRefRoutingCov(AbstractTestFixture):
     def test_headsign_with_code_filter_and_resource_uri(self):
         """test usage of headsign with code filter and resource uri"""
         response = self.query_region(
-            'physical_modes/physical_mode:0x0/vehicle_journeys' '?headsign=vjA_hs&filter=line.code=1A'
+            'physical_modes/physical_mode:0x0/vehicle_journeys?headsign=vjA_hs&filter=line.code=1A'
         )
         assert 'error' not in response
         vjs = get_not_null(response, 'vehicle_journeys')

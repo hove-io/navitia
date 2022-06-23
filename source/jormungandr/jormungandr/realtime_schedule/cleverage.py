@@ -106,12 +106,12 @@ class Cleverage(RealtimeProxy):
             return self.breaker.call(requests.get, url, timeout=self.timeout, headers=self.service_args)
         except pybreaker.CircuitBreakerError as e:
             logging.getLogger(__name__).error(
-                'Cleverage RT service dead, using base ' 'schedule (error: {}'.format(e)
+                'Cleverage RT service dead, using base schedule (error: {}'.format(e)
             )
             raise RealtimeProxyError('circuit breaker open')
         except requests.Timeout as t:
             logging.getLogger(__name__).error(
-                'Cleverage RT service timeout, using base ' 'schedule (error: {}'.format(t)
+                'Cleverage RT service timeout, using base schedule (error: {}'.format(t)
             )
             raise RealtimeProxyError('timeout')
         except Exception as e:

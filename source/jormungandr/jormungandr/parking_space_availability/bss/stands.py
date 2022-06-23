@@ -41,9 +41,7 @@ class StandsStatus(Enum):
 class Stands(object):
     def __init__(self, available_places, available_bikes, status=None):
         if status is not None and not isinstance(status, StandsStatus):
-            logging.getLogger(__name__).error(
-                'status must be a StandsStatus enum value, ' 'obtained: {}', status
-            )
+            logging.getLogger(__name__).error('status must be a StandsStatus enum value, obtained: {}', status)
             self.status = None
         else:
             self.status = status.name  # can't serialize enum value with ujson as it's a recursive struct

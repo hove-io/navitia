@@ -569,7 +569,7 @@ def culling_journeys(resp, request):
         """
         for j in remaining_journeys[max(0, max_nb_journeys - len(aggregated_journeys)) :]:
             journey_filter.mark_as_dead(
-                j, is_debug, 'max_nb_journeys >= len(aggregated_journeys), ' 'Filtered by max_nb_journeys'
+                j, is_debug, 'max_nb_journeys >= len(aggregated_journeys), Filtered by max_nb_journeys'
             )
         journey_filter.delete_journeys((resp,), request)
         return
@@ -580,7 +580,7 @@ def culling_journeys(resp, request):
     """
     for j in remaining_journeys:
         journey_filter.mark_as_dead(
-            j, is_debug, 'Filtered by max_nb_journeys, ' 'max_nb_journeys < len(aggregated_journeys)'
+            j, is_debug, 'Filtered by max_nb_journeys, max_nb_journeys < len(aggregated_journeys)'
         )
 
     logger.debug('Trying to culling the journeys')

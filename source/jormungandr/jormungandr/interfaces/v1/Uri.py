@@ -93,7 +93,12 @@ class Uri(ResourceUri, ResourceUtc):
         )
         parser.add_argument("headsign", type=six.text_type, help="filter vehicle journeys on headsign")
         parser.add_argument(
-            "show_codes", type=BooleanType(), default=False, help="show more identification codes"
+            "show_codes",
+            type=BooleanType(),
+            default=True,
+            hidden=True,
+            deprecated=True,
+            help="DEPRECATED (always True), show more identification codes",
         )
         parser.add_argument(
             "odt_level",

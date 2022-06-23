@@ -667,7 +667,7 @@ class Instance(flask_restful.Resource):
         parser.add_argument(
             'max_nb_crowfly_by_mode',
             type=dict,
-            help='maximum nb of crowfly, used before computing the fallback matrix,' ' in distributed scenario',
+            help='maximum nb of crowfly, used before computing the fallback matrix, in distributed scenario',
             location=('json', 'values'),
             default=instance.max_nb_crowfly_by_mode,
         )

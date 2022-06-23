@@ -121,13 +121,13 @@ class Sytral(RealtimeProxy):
             return self.breaker.call(requests.get, url=self.service_url, params=params, timeout=self.timeout)
         except pybreaker.CircuitBreakerError as e:
             logging.getLogger(__name__).error(
-                'systralRT service dead, using base ' 'schedule (error: {}'.format(e),
+                'systralRT service dead, using base schedule (error: {}'.format(e),
                 extra={'rt_system_id': six.text_type(self.rt_system_id)},
             )
             raise RealtimeProxyError('circuit breaker open')
         except requests.Timeout as t:
             logging.getLogger(__name__).error(
-                'systralRT service timeout, using base ' 'schedule (error: {}'.format(t),
+                'systralRT service timeout, using base schedule (error: {}'.format(t),
                 extra={'rt_system_id': six.text_type(self.rt_system_id)},
             )
             raise RealtimeProxyError('timeout')

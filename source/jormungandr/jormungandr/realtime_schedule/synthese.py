@@ -149,12 +149,12 @@ class Synthese(RealtimeProxy):
             return self.breaker.call(requests.get, url, timeout=self.timeout)
         except pybreaker.CircuitBreakerError as e:
             logging.getLogger(__name__).error(
-                'Synthese RT service dead, using base ' 'schedule (error: {}'.format(e)
+                'Synthese RT service dead, using base schedule (error: {}'.format(e)
             )
             raise RealtimeProxyError('circuit breaker open')
         except requests.Timeout as t:
             logging.getLogger(__name__).error(
-                'Synthese RT service timeout, using base ' 'schedule (error: {}'.format(t)
+                'Synthese RT service timeout, using base schedule (error: {}'.format(t)
             )
             raise RealtimeProxyError('timeout')
         except redis.ConnectionError:
