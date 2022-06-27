@@ -242,6 +242,115 @@ def mock_no_data_response():
   </soap:Body>
 </soap:Envelope>
     """
+    
+def mock_bayonne_response():
+    return """<SOAP-ENV:Envelope xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/">
+    <SOAP-ENV:Header/>
+    <SOAP-ENV:Body>
+        <wsdl:GetStopMonitoringResponse xmlns:wsdl="http://wsdl.siri.org.uk">
+            <ServiceDeliveryInfo>
+                <siri:ResponseTimestamp xmlns:siri="http://www.siri.org.uk/siri">2022-06-27T14:59:51.528+02:00</siri:ResponseTimestamp>
+                <siri:ProducerRef xmlns:siri="http://www.siri.org.uk/siri">VTAB</siri:ProducerRef>
+                <siri:Address xmlns:siri="http://www.siri.org.uk/siri">http://localhost:8080/SiriServer</siri:Address>
+                <siri:ResponseMessageIdentifier xmlns:siri="http://www.siri.org.uk/siri">VTAB:StopMonitoring:95710:LOC</siri:ResponseMessageIdentifier>
+                <siri:RequestMessageRef xmlns:siri="http://www.siri.org.uk/siri">HOVE:MessageIdentifier:random111:LOC</siri:RequestMessageRef>
+            </ServiceDeliveryInfo>
+            <Answer>
+                <siri:StopMonitoringDelivery xmlns:siri="http://www.siri.org.uk/siri" version="1.3">
+                    <siri:ResponseTimestamp>2022-06-27T14:59:50.419+02:00</siri:ResponseTimestamp>
+                    <siri:Status>true</siri:Status>
+                    <siri:MonitoredStopVisit>
+                        <siri:RecordedAtTime>2022-06-27T14:59:40.000+02:00</siri:RecordedAtTime>
+                        <siri:ItemIdentifier>VTAB:StopPoint:874206-VTAB:VehicleJourney:3599548</siri:ItemIdentifier>
+                        <siri:MonitoringRef>VTAB:StopPoint:BP:FORU11:LOC</siri:MonitoringRef>
+                        <siri:MonitoredVehicleJourney>
+                            <siri:LineRef>VTAB:Line:T1:LOC</siri:LineRef>
+                            <siri:FramedVehicleJourneyRef>
+                                <siri:DataFrameRef>V._20:2022-06-27</siri:DataFrameRef>
+                                <siri:DatedVehicleJourneyRef>VTAB:VehicleJourney:3599548:LOC</siri:DatedVehicleJourneyRef>
+                            </siri:FramedVehicleJourneyRef>
+                            <siri:JourneyPatternRef>VTAB:JourneyPattern:79211:LOC</siri:JourneyPatternRef>
+                            <siri:VehicleMode>bus</siri:VehicleMode>
+                            <siri:RouteRef>VTAB:Route:79211:LOC</siri:RouteRef>
+                            <siri:PublishedLineName xml:lang="FR">T1</siri:PublishedLineName>
+                            <siri:DirectionName xml:lang="FR">Mairie de Biarritz L. Barthou</siri:DirectionName>
+                            <siri:OperatorRef>VTAB:Company:1:LOC</siri:OperatorRef>
+                            <siri:OriginRef>VTAB:StopPoint:BP:HTSB03:LOC</siri:OriginRef>
+                            <siri:OriginName xml:lang="FR">Hauts de Bayonne</siri:OriginName>
+                            <siri:DestinationRef>VTAB:StopPoint:BP:MBIA03:LOC</siri:DestinationRef>
+                            <siri:DestinationName xml:lang="FR">Mairie de Biarritz L. Barthou</siri:DestinationName>
+                            <siri:OriginAimedDepartureTime>2022-06-27T14:36:00.000+02:00</siri:OriginAimedDepartureTime>
+                            <siri:DestinationAimedArrivalTime>2022-06-27T15:19:00.000+02:00</siri:DestinationAimedArrivalTime>
+                            <siri:Monitored>true</siri:Monitored>
+                            <siri:InCongestion>false</siri:InCongestion>
+                            <siri:InPanic>false</siri:InPanic>
+                            <siri:VehicleLocation>
+                                <siri:Longitude>-1.49121</siri:Longitude>
+                                <siri:Latitude>43.4954</siri:Latitude>
+                            </siri:VehicleLocation>
+                            <siri:Delay>PT3M35S</siri:Delay>
+                            <siri:MonitoredCall>
+                                <siri:StopPointRef>VTAB:StopPoint:SPOR:874206:LOC</siri:StopPointRef>
+                                <siri:Order>16</siri:Order>
+                                <siri:StopPointName xml:lang="FR">Forum</siri:StopPointName>
+                                <siri:VehicleAtStop>false</siri:VehicleAtStop>
+                                <siri:PlatformTraversal>false</siri:PlatformTraversal>
+                                <siri:DestinationDisplay xml:lang="FR">Mairie de Biarritz L. Barthou</siri:DestinationDisplay>
+                                <siri:AimedDepartureTime>2022-06-27T14:57:00.000+02:00</siri:AimedDepartureTime>
+                                <siri:ExpectedDepartureTime>2022-06-27T15:00:18.000+02:00</siri:ExpectedDepartureTime>
+                                <siri:DepartureStatus>onTime</siri:DepartureStatus>
+                            </siri:MonitoredCall>
+                        </siri:MonitoredVehicleJourney>
+                    </siri:MonitoredStopVisit>
+                    <siri:MonitoredStopVisit>
+                        <siri:RecordedAtTime>2022-06-27T14:59:00.000+02:00</siri:RecordedAtTime>
+                        <siri:ItemIdentifier>VTAB:StopPoint:874206-VTAB:VehicleJourney:3600788</siri:ItemIdentifier>
+                        <siri:MonitoringRef>VTAB:StopPoint:BP:FORU11:LOC</siri:MonitoringRef>
+                        <siri:MonitoredVehicleJourney>
+                            <siri:LineRef>VTAB:Line:T1:LOC</siri:LineRef>
+                            <siri:FramedVehicleJourneyRef>
+                                <siri:DataFrameRef>V._20:2022-06-27</siri:DataFrameRef>
+                                <siri:DatedVehicleJourneyRef>VTAB:VehicleJourney:3600788:LOC</siri:DatedVehicleJourneyRef>
+                            </siri:FramedVehicleJourneyRef>
+                            <siri:JourneyPatternRef>VTAB:JourneyPattern:79211:LOC</siri:JourneyPatternRef>
+                            <siri:VehicleMode>bus</siri:VehicleMode>
+                            <siri:RouteRef>VTAB:Route:79211:LOC</siri:RouteRef>
+                            <siri:PublishedLineName xml:lang="FR">T1</siri:PublishedLineName>
+                            <siri:DirectionName xml:lang="FR">Mairie de Biarritz L. Barthou</siri:DirectionName>
+                            <siri:OperatorRef>VTAB:Company:1:LOC</siri:OperatorRef>
+                            <siri:OriginRef>VTAB:StopPoint:BP:HTSB03:LOC</siri:OriginRef>
+                            <siri:OriginName xml:lang="FR">Hauts de Bayonne</siri:OriginName>
+                            <siri:DestinationRef>VTAB:StopPoint:BP:MBIA03:LOC</siri:DestinationRef>
+                            <siri:DestinationName xml:lang="FR">Mairie de Biarritz L. Barthou</siri:DestinationName>
+                            <siri:OriginAimedDepartureTime>2022-06-27T14:48:00.000+02:00</siri:OriginAimedDepartureTime>
+                            <siri:DestinationAimedArrivalTime>2022-06-27T15:31:00.000+02:00</siri:DestinationAimedArrivalTime>
+                            <siri:Monitored>true</siri:Monitored>
+                            <siri:InCongestion>false</siri:InCongestion>
+                            <siri:InPanic>false</siri:InPanic>
+                            <siri:VehicleLocation>
+                                <siri:Longitude>-1.46978</siri:Longitude>
+                                <siri:Latitude>43.4958</siri:Latitude>
+                            </siri:VehicleLocation>
+                            <siri:Delay>PT1M</siri:Delay>
+                            <siri:MonitoredCall>
+                                <siri:StopPointRef>VTAB:StopPoint:SPOR:874206:LOC</siri:StopPointRef>
+                                <siri:Order>16</siri:Order>
+                                <siri:StopPointName xml:lang="FR">Forum</siri:StopPointName>
+                                <siri:VehicleAtStop>false</siri:VehicleAtStop>
+                                <siri:PlatformTraversal>false</siri:PlatformTraversal>
+                                <siri:DestinationDisplay xml:lang="FR">Mairie de Biarritz L. Barthou</siri:DestinationDisplay>
+                                <siri:AimedDepartureTime>2022-06-27T15:09:00.000+02:00</siri:AimedDepartureTime>
+                                <siri:ExpectedDepartureTime>2022-06-27T15:09:49.000+02:00</siri:ExpectedDepartureTime>
+                                <siri:DepartureStatus>onTime</siri:DepartureStatus>
+                            </siri:MonitoredCall>
+                        </siri:MonitoredVehicleJourney>
+                    </siri:MonitoredStopVisit>
+                </siri:StopMonitoringDelivery>
+            </Answer>
+            <AnswerExtension/>
+        </wsdl:GetStopMonitoringResponse>
+    </SOAP-ENV:Body>
+</SOAP-ENV:Envelope>"""
 
 
 def next_passage_for_route_point_test():
