@@ -352,10 +352,10 @@ std::set<RankStopTime> VehicleJourney::get_sections_ranks(const StopArea* start_
     return res;
 }
 
-std::set<RankStopTime> VehicleJourney::get_no_service_sections_ranks(const StopArea* start_sa) const {
+std::set<RankStopTime> VehicleJourney::get_no_service_sections_ranks(const StopArea* stop_area) const {
     std::set<RankStopTime> res;
 
-    if (start_sa == nullptr) {
+    if (stop_area == nullptr) {
         return res;
     }
 
@@ -368,7 +368,7 @@ std::set<RankStopTime> VehicleJourney::get_no_service_sections_ranks(const StopA
         }
         const auto* sa = st.stop_point->stop_area;
 
-        if (sa->idx == start_sa->idx) {
+        if (sa->idx == stop_area->idx) {
             section_starting = true;
         }
 
