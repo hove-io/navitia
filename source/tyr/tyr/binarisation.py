@@ -700,7 +700,8 @@ def get_bano2mimir_params(working_directory, autocomplete_instance, autocomplete
     ]
     if cosmogony_file is not None:
         params.extend(['-s', 'cosmogony_file=\'{}\''.format(cosmogony_file)])
-    return params.extend(['run'])
+    params.extend(['run'])
+    return params
 
 
 @celery.task(bind=True)
@@ -761,7 +762,8 @@ def get_openaddresses2mimir_params(
 
     if cosmogony_file is not None:
         params.extend(['-s', 'cosmogony_file=\'{}\''.format(cosmogony_file)])
-    return params.extend(['run'])
+    params.extend(['run'])
+    return params
 
 
 @celery.task(bind=True)
@@ -833,7 +835,8 @@ def get_osm2mimir_params(
 
     if cosmogony_file is not None:
         params.extend(['-s', 'cosmogony_file=\'{}\''.format(cosmogony_file)])
-    return params.extend(['run'])
+    params.extend(['run'])
+    return params
 
 
 @celery.task(bind=True)
@@ -894,7 +897,8 @@ def get_stops2mimir_params(instance_name, working_directory, autocomplete_versio
     ]
     if cosmogony_file is not None:
         params.extend(['-s', 'cosmogony_file=\'{}\''.format(cosmogony_file)])
-    return params.extend(['run'])
+    params.extend(['run'])
+    return params
 
 
 @celery.task(bind=True)
@@ -960,7 +964,8 @@ def get_ntfs2mimir_params(instance_name, working_directory, autocomplete_version
     ]
     if cosmogony_file is not None:
         params.extend(['-s', 'cosmogony_file=\'{}\''.format(cosmogony_file)])
-    return params.extend(['run'])
+    params.extend(['run'])
+    return params
 
 
 @celery.task(bind=True)
@@ -1072,7 +1077,8 @@ def get_poi2mimir_params(poi_file, dataset_name, autocomplete_version=2, cosmogo
     ]
     if cosmogony_file is not None:
         params.extend(['-s', 'cosmogony_file=\'{}\''.format(cosmogony_file)])
-    return params.extend(['run'])
+    params.extend(['run'])
+    return params
 
 
 @celery.task(bind=True)
