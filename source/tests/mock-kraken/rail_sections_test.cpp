@@ -58,9 +58,12 @@ ed::builder create_complex_data_for_rail_section() {
      * route 5 : A B C P Q R
      * route 6 : R Q P C B A
      *
-     * route 11: AA BB CC DD EE FF GG HH II
+     * route 11-1: AA BB CC DD EE FF GG HH II
+     * route 11-2: II HH GG FF EE DD CC BB AA
      *
      * route 100: A1 B1 C1 D1 E1 F1 G1 H1 I1
+     * route 101-1: P1 Q1 R1 S1 T1 U1 V1
+     * route 101-2: V1 U1 T1 S1 R1 Q1 P1
      */
     ed::builder b("20170101", [](ed::builder& b) {
         b.sa("stopAreaA", 0., 1.)("stopA", 0., 1.);
@@ -106,6 +109,14 @@ ed::builder create_complex_data_for_rail_section() {
         b.sa("stopAreaH1", 0., 37.)("stopH1", 0., 37.);
         b.sa("stopAreaI1", 0., 38.)("stopI1", 0., 38.);
 
+        b.sa("stopAreaP1", 0., 40.)("stopP1", 0., 40.);
+        b.sa("stopAreaQ1", 0., 41.)("stopQ1", 0., 41.);
+        b.sa("stopAreaR1", 0., 42.)("stopR1", 0., 42.);
+        b.sa("stopAreaS1", 0., 43.)("stopS1", 0., 43.);
+        b.sa("stopAreaT1", 0., 44.)("stopT1", 0., 44.);
+        b.sa("stopAreaU1", 0., 45.)("stopU1", 0., 45.);
+        b.sa("stopAreaV1", 0., 46.)("stopV1", 0., 46.);
+
         b.vj("line:1", "111111", "", true, "vj:1")
             .route("route1")("stopA", "08:00"_t)("stopB", "08:05"_t)("stopC", "08:10"_t)("stopD", "08:15"_t)(
                 "stopE", "08:20"_t)("stopF", "08:25"_t)("stopG", "08:30"_t)("stopH", "08:35"_t)("stopI", "08:40"_t);
@@ -132,11 +143,22 @@ ed::builder create_complex_data_for_rail_section() {
             .route("route11-1")("stopAA", "08:00"_t)("stopBB", "08:05"_t)("stopCC", "08:10"_t)("stopDD", "08:15"_t)(
                 "stopEE", "08:20"_t)("stopFF", "08:25"_t)("stopGG", "08:30"_t)("stopHH", "08:35"_t)("stopII",
                                                                                                     "08:40"_t);
+        b.vj("line:11", "111111", "", true, "vj:11-2")
+            .route("route11-2")("stopII", "08:00"_t)("stopHH", "08:05"_t)("stopGG", "08:10"_t)("stopFF", "08:15"_t)(
+                "stopEE", "08:20"_t)("stopDD", "08:25"_t)("stopCC", "08:30"_t)("stopBB", "08:35"_t)("stopAA",
+                                                                                                    "08:40"_t);
 
         b.vj("line:100", "111111", "", true, "vj:100-1")
             .route("route100-1")("stopA1", "08:00"_t)("stopB1", "08:05"_t)("stopC1", "08:10"_t)("stopD1", "08:15"_t)(
                 "stopE1", "08:20"_t)("stopF1", "08:25"_t)("stopG1", "08:30"_t)("stopH1", "08:35"_t)("stopI1",
                                                                                                     "08:40"_t);
+
+        b.vj("line:101", "111111", "", true, "vj:101-1")
+            .route("route101-1")("stopP1", "08:00"_t)("stopQ1", "08:05"_t)("stopR1", "08:10"_t)("stopS1", "08:15"_t)(
+                "stopT1", "08:20"_t)("stopU1", "08:25"_t)("stopV1", "08:30"_t);
+        b.vj("line:101", "111111", "", true, "vj:101-2")
+            .route("route101-2")("stopV1", "08:00"_t)("stopU1", "08:05"_t)("stopT1", "08:10"_t)("stopS1", "08:15"_t)(
+                "stopR1", "08:20"_t)("stopQ1", "08:25"_t)("stopP1", "08:30"_t);
     });
 
     b.data->meta->production_date = bg::date_period(bg::date(2017, 1, 1), bg::days(30));
@@ -212,11 +234,11 @@ int main(int argc, const char* const argv[]) {
                                   .get_disruption(),
                               *b.data->pt_data, *b.data->meta);
 
-    // new rail_section disruption REDUCED_SERVICE on route 11
-    // AA  BB  CC DD  EE  FF  GG HH II
-    // Start CC
-    // End   FF
-    // Blocked: DD, EE
+    // new impact with two rail_sections and severity lavel REDUCED_SERVICE on route11-1 and route11-2
+    // route11-1: AA  BB  CC DD  EE  FF  GG HH II
+    // rail_section: Start CC / End   FF / Blocked: DD, EE
+    // route11-2: II  HH  GG FF  EE  DD  CC BB AA
+    // rail_section: Start FF / End   CC / Blocked: EE, DD
     navitia::apply_disruption(b.impact(nt::RTLevel::Adapted, "rail_section_on_line11")
                                   .severity(nt::disruption::Effect::REDUCED_SERVICE)
                                   .application_periods(btp("20170101T000000"_dt, "20170105T000000"_dt))
@@ -224,6 +246,9 @@ int main(int argc, const char* const argv[]) {
                                   .on_rail_section("line:11", "stopAreaCC", "stopAreaFF",
                                                    {std::make_pair("stopAreaDD", 3), std::make_pair("stopAreaEE", 4)},
                                                    {"route11-1"}, *b.data->pt_data)
+                                  .on_rail_section("line:11", "stopAreaFF", "stopAreaCC",
+                                                   {std::make_pair("stopAreaDD", 4), std::make_pair("stopAreaEE", 3)},
+                                                   {"route11-2"}, *b.data->pt_data)
                                   .get_disruption(),
                               *b.data->pt_data, *b.data->meta);
     // new rail_section disruption NO_SERVICE on route 100
@@ -238,6 +263,24 @@ int main(int argc, const char* const argv[]) {
                                   .on_rail_section("line:100", "stopAreaC1", "stopAreaF1",
                                                    {std::make_pair("stopAreaD1", 1), std::make_pair("stopAreaE1", 2)},
                                                    {"route100-1"}, *b.data->pt_data)
+                                  .get_disruption(),
+                              *b.data->pt_data, *b.data->meta);
+
+    // new impact with two rail_sections and severity lavel NO_SERVICE on route101-1 and route101-2
+    // route101-1: P1  Q1  R1 S1  T1  U1  V1
+    // rail_section: Start S1 / End   V1 / Blocked: T1, U1
+    // route101-2: V1  U1  T1 S1  R1  Q1  P1
+    // rail_section: Start V1 / End   S1 / Blocked: U1, T1
+    navitia::apply_disruption(b.impact(nt::RTLevel::Adapted, "rail_section_on_line101")
+                                  .severity(nt::disruption::Effect::NO_SERVICE)
+                                  .application_periods(btp("20170101T000000"_dt, "20170105T000000"_dt))
+                                  .publish(btp("20170101T000000"_dt, "20170110T000000"_dt))
+                                  .on_rail_section("line:101", "stopAreaS1", "stopAreaV1",
+                                                   {std::make_pair("stopAreaT1", 1), std::make_pair("stopAreaU1", 2)},
+                                                   {"route101-1"}, *b.data->pt_data)
+                                  .on_rail_section("line:101", "stopAreaV1", "stopAreaS1",
+                                                   {std::make_pair("stopAreaT1", 2), std::make_pair("stopAreaU1", 1)},
+                                                   {"route101-2"}, *b.data->pt_data)
                                   .get_disruption(),
                               *b.data->pt_data, *b.data->meta);
 

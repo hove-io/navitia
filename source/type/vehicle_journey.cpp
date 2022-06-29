@@ -352,6 +352,34 @@ std::set<RankStopTime> VehicleJourney::get_sections_ranks(const StopArea* start_
     return res;
 }
 
+std::set<RankStopTime> VehicleJourney::get_no_service_sections_ranks(const StopArea* stop_area) const {
+    std::set<RankStopTime> res;
+
+    if (stop_area == nullptr) {
+        return res;
+    }
+
+    bool section_starting = false;
+    const auto* base_vj = this->get_corresponding_base();
+    const auto* vj = base_vj ? base_vj : this;
+    for (const auto& st : vj->stop_time_list) {
+        if (!st.stop_point || !st.stop_point->stop_area) {
+            continue;
+        }
+        const auto* sa = st.stop_point->stop_area;
+
+        if (sa->idx == stop_area->idx) {
+            section_starting = true;
+        }
+
+        if (section_starting) {
+            res.insert(st.order());
+        }
+    }
+
+    return res;
+}
+
 boost::posix_time::time_period VehicleJourney::execution_period(const boost::gregorian::date& date) const {
     uint32_t first_departure = std::numeric_limits<uint32_t>::max();
     uint32_t last_arrival = 0;
