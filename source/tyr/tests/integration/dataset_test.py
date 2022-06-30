@@ -37,6 +37,37 @@ def create_basic_job_with_data_sets():
         models.db.session.commit()
 
 
+@pytest.fixture
+def create_autocomplete_job_with_data_sets():
+    with app.app_context():
+        instance = models.Instance('fr')
+        models.db.session.add(instance)
+        models.db.session.commit()
+
+        job = models.Job()
+        job.instance = instance
+
+        # we also create 2 datasets, one for fusio, one for autocomplete_cosmogony
+        for i, dset_type in enumerate(['fusio', 'cosmogony']):
+            dataset = models.DataSet()
+            dataset.type = dset_type
+            dataset.family_type = dataset.type
+            if dataset.type == 'fusio':
+                dataset.family_type = 'pt'
+                dataset.name = '/path/to/dataset_{}'.format(i)
+            else:
+                dataset.family_type = 'autocomplete_cosmogony'
+                dataset.name = '/path/to/dataset_cosmogony/cosmogony_europe.jsonl.gz'
+
+            models.db.session.add(dataset)
+
+            job.data_sets.append(dataset)
+
+        job.state = 'done'
+        models.db.session.add(job)
+        models.db.session.commit()
+
+
 def add_job_with_data_set_mimir(create_basic_job_with_data_sets):
     with app.app_context():
         # we also create 1 job with a dataset for mimir
@@ -134,3 +165,9 @@ def test_basic_datasets(create_basic_job_with_data_sets):
     # Here we should have the same data_sets as before since the new job added has state 'running'
     resp = api_get('/v0/jobs/fr')
     assert len(resp['jobs']) == 3
+
+
+def test_cosmogony_file_path(create_autocomplete_job_with_data_sets):
+    with app.app_context():
+        # retrieve the cosmogony file path
+        assert models.DataSet.get_cosmogony_file_path() == '/path/to/dataset_cosmogony/cosmogony_europe.jsonl.gz'
