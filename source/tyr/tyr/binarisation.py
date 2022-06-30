@@ -699,7 +699,7 @@ def get_bano2mimir_params(working_directory, autocomplete_instance, autocomplete
         current_app.config['MIMIR_PLATFORM_TAG'],
     ]
     if cosmogony_file is not None:
-        params.extend(['-s', 'cosmogony_file=\'{}\''.format(cosmogony_file)])
+        params.extend(['-s', 'admins.cosmogony_file=\'{}\''.format(cosmogony_file)])
     params.extend(['run'])
     return params
 
@@ -761,7 +761,7 @@ def get_openaddresses2mimir_params(
     ]
 
     if cosmogony_file is not None:
-        params.extend(['-s', 'cosmogony_file=\'{}\''.format(cosmogony_file)])
+        params.extend(['-s', 'admins.cosmogony_file=\'{}\''.format(cosmogony_file)])
     params.extend(['run'])
     return params
 
@@ -834,7 +834,7 @@ def get_osm2mimir_params(
     ]
 
     if cosmogony_file is not None:
-        params.extend(['-s', 'cosmogony_file=\'{}\''.format(cosmogony_file)])
+        params.extend(['-s', 'admins.cosmogony_file=\'{}\''.format(cosmogony_file)])
     params.extend(['run'])
     return params
 
@@ -896,7 +896,7 @@ def get_stops2mimir_params(instance_name, working_directory, autocomplete_versio
         current_app.config['MIMIR_CONFIG_DIR'],
     ]
     if cosmogony_file is not None:
-        params.extend(['-s', 'cosmogony_file=\'{}\''.format(cosmogony_file)])
+        params.extend(['-s', 'admins.cosmogony_file=\'{}\''.format(cosmogony_file)])
     params.extend(['run'])
     return params
 
@@ -963,7 +963,7 @@ def get_ntfs2mimir_params(instance_name, working_directory, autocomplete_version
         current_app.config['MIMIR_PLATFORM_TAG'],
     ]
     if cosmogony_file is not None:
-        params.extend(['-s', 'cosmogony_file=\'{}\''.format(cosmogony_file)])
+        params.extend(['-s', 'admins.cosmogony_file=\'{}\''.format(cosmogony_file)])
     params.extend(['run'])
     return params
 
@@ -1076,7 +1076,7 @@ def get_poi2mimir_params(poi_file, dataset_name, autocomplete_version=2, cosmogo
         current_app.config['MIMIR_PLATFORM_TAG'],
     ]
     if cosmogony_file is not None:
-        params.extend(['-s', 'cosmogony_file=\'{}\''.format(cosmogony_file)])
+        params.extend(['-s', 'admins.cosmogony_file=\'{}\''.format(cosmogony_file)])
     params.extend(['run'])
     return params
 
