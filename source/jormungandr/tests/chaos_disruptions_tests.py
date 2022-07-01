@@ -1128,7 +1128,7 @@ class TestChaosDisruptionsUpdate(ChaosDisruptionsFixture):
 
         # query with parameter filter
         disruptions = self.query_region(
-            'disruptions?since=20120801T000000' '&filter=stop_area.id="stopA" or stop_area.id="stopB"'
+            'disruptions?since=20120801T000000&filter=stop_area.id="stopA" or stop_area.id="stopB"'
         )['disruptions']
         assert len(disruptions) == 4
 

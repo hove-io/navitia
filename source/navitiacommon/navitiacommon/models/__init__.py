@@ -1018,6 +1018,14 @@ class DataSet(db.Model):  # type: ignore
     def find_by_type_and_job_id(cls, dataset_type, job_id):
         return cls.query.filter(cls.job_id == job_id, cls.type == dataset_type).first()
 
+    @classmethod
+    def get_cosmogony_file_path(cls):
+        query = cls.query.join(Job).filter(cls.family_type == 'autocomplete_cosmogony', Job.state == 'done')
+        result = query.order_by(Job.id.desc()).first()
+        if result is None:
+            return None
+        return result.name
+
     def __repr__(self):
         return '<DataSet %r>' % self.id
 

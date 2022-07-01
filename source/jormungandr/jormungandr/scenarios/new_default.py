@@ -108,6 +108,13 @@ def get_kraken_calls(request):
     direct_path_mode = request.get('direct_path_mode', [])
 
     res = set()
+    # In the query we found:
+    # - direct_path_mode[] is not empty
+    # - direct_path_type is either 'only' or 'only_with_alternatives'
+    # on compute direct paths only for the specified mode
+    if direct_path_mode and direct_path_type in ('only', 'only_with_alternatives'):
+        return set([(mode, mode, "only") for mode in direct_path_mode])
+
     if direct_path_type != "none":
         for mode in direct_path_mode:
             # to avoid duplicate tuples (mode1, mode2, "indifferent") and (mode1, mode2, "only")
@@ -291,7 +298,7 @@ def _tag_direct_path(responses):
         response_pb2.Ridesharing: ['non_pt_ridesharing'],
     }
 
-    for j in itertools.chain.from_iterable(r.journeys for r in responses):
+    for j in itertools.chain.from_iterable(r.journeys for r in responses if r is not None):
         if all(s.type != response_pb2.PUBLIC_TRANSPORT for s in j.sections):
             j.tags.extend(['non_pt'])
 
@@ -338,7 +345,7 @@ def _tag_bike_in_pt(responses):
     we tag as 'bike _in_pt' journeys that are using bike as start AND end fallback AND
     that allow carrying bike in transport (and journey has to include PT)
     """
-    for j in itertools.chain.from_iterable(r.journeys for r in responses):
+    for j in itertools.chain.from_iterable(r.journeys for r in responses if r is not None):
         if _is_bike_in_pt_journey(j):
             j.tags.extend(['bike_in_pt'])
 
@@ -562,7 +569,7 @@ def culling_journeys(resp, request):
         """
         for j in remaining_journeys[max(0, max_nb_journeys - len(aggregated_journeys)) :]:
             journey_filter.mark_as_dead(
-                j, is_debug, 'max_nb_journeys >= len(aggregated_journeys), ' 'Filtered by max_nb_journeys'
+                j, is_debug, 'max_nb_journeys >= len(aggregated_journeys), Filtered by max_nb_journeys'
             )
         journey_filter.delete_journeys((resp,), request)
         return
@@ -573,7 +580,7 @@ def culling_journeys(resp, request):
     """
     for j in remaining_journeys:
         journey_filter.mark_as_dead(
-            j, is_debug, 'Filtered by max_nb_journeys, ' 'max_nb_journeys < len(aggregated_journeys)'
+            j, is_debug, 'Filtered by max_nb_journeys, max_nb_journeys < len(aggregated_journeys)'
         )
 
     logger.debug('Trying to culling the journeys')
@@ -728,12 +735,16 @@ def _tag_journey_by_mode(journey):
 
 def _tag_by_mode(responses):
     for r in responses:
+        if r is None:
+            continue
         for j in r.journeys:
             _tag_journey_by_mode(j)
 
 
 def tag_reliable_journeys(responses):
     for r in responses:
+        if r is None:
+            continue
         for j in r.journeys:
             if is_reliable_journey(j):
                 j.tags.append("reliable")
@@ -855,6 +866,8 @@ def merge_responses(responses, debug):
     merged_response = response_pb2.Response()
 
     for response_index, r in enumerate(responses):
+        if r is None:
+            continue
         if r.HasField(str('error')) or not r.journeys:
             # we do not take responses with error, but if all responses have errors, we'll aggregate them
             continue
@@ -1395,6 +1408,8 @@ class Scenario(simple.Scenario):
     def get_next_datetime(self, responses):
         request_datetime_list = []
         for r in responses:
+            if r is None:
+                continue
             if r.HasField('next_request_date_time'):
                 request_datetime_list.append(r.next_request_date_time)
         return min(request_datetime_list) if request_datetime_list else None

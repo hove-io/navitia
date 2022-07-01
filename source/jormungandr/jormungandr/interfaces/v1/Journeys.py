@@ -373,7 +373,7 @@ class Journeys(JourneyCommon):
             type=BooleanType(),
             default=False,
             hidden=True,
-            help='Activate debug mode.\n' 'No journeys are filtered in this mode.',
+            help='Activate debug mode.\nNo journeys are filtered in this mode.',
         )
         parser_get.add_argument(
             "_filter_odt_journeys",
@@ -384,10 +384,10 @@ class Journeys(JourneyCommon):
         parser_get.add_argument(
             "show_codes",
             type=BooleanType(),
-            default=False,
+            default=True,
             hidden=True,
             deprecated=True,
-            help="DEPRECATED, show more identification codes",
+            help="DEPRECATED (always True), show more identification codes",
         )
         parser_get.add_argument(
             "_override_scenario",

@@ -118,7 +118,7 @@ if 'MODULES' in rest_api.app.config:
     rest_api.module_loader.run()
 else:
     rest_api.app.logger.warning(
-        'MODULES isn\'t defined in config. No module will be loaded, then no route ' 'will be defined.'
+        'MODULES isn\'t defined in config. No module will be loaded, then no route will be defined.'
     )
 
 if rest_api.app.config.get('ACTIVATE_PROFILING'):

@@ -63,6 +63,15 @@ class EntryPointException(Exception):
         return self._response
 
 
+class StreetNetworkException(Exception):
+    def __init__(self, error_id, error_message):
+        super(StreetNetworkException, self).__init__()
+        self._response = _make_error_response(error_id=error_id, message=error_message)
+
+    def get(self):
+        return self._response
+
+
 class FinaliseException(EntryPointException):
     def __init__(self, exception):
         super(FinaliseException, self).__init__(

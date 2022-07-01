@@ -1816,7 +1816,7 @@ class JourneysWithPtref:
 @dataset({"main_routing_test": {}})
 class JourneyMinBikeMinCar(object):
     def test_first_section_mode_and_last_section_mode_bike(self):
-        query = '{sub_query}&last_section_mode[]=bike&first_section_mode[]=bike&' 'datetime={datetime}'.format(
+        query = '{sub_query}&last_section_mode[]=bike&first_section_mode[]=bike&datetime={datetime}'.format(
             sub_query=sub_query, datetime="20120614T080000"
         )
         response = self.query_region(query)
@@ -1929,7 +1929,7 @@ class JourneyMinBikeMinCar(object):
         assert response['journeys'][-1]['sections'][0]['duration'] == 276
 
     def test_first_section_mode_and_last_section_mode_car(self):
-        query = '{sub_query}&last_section_mode[]=car&first_section_mode[]=car&' 'datetime={datetime}'.format(
+        query = '{sub_query}&last_section_mode[]=car&first_section_mode[]=car&datetime={datetime}'.format(
             sub_query=sub_query, datetime="20120614T070000"
         )
         response = self.query_region(query)
@@ -2160,14 +2160,14 @@ class JourneysTimeFrameDuration:
         # Time frame to catch only the first journeys, timeframe_duration = 10 min (60*10=600).
         # Even though a journey's departure is later than the timeframe, we still keep it
         query = (
-            'journeys?from={_from}&' 'to={to}&' 'datetime={datetime}&' 'timeframe_duration={timeframe_duration}&'
+            'journeys?from={_from}&to={to}&datetime={datetime}&timeframe_duration={timeframe_duration}&'
         ).format(_from='stop_area:sa1', to='stop_area:sa3', datetime='20180315T080000', timeframe_duration=600)
         response = self.query_region(query)
         assert 1 <= len(response['journeys'])
 
         # Time frame to catch journeys in the first hour, timeframe_duration = 1 H (60*60=3600).
         query = (
-            'journeys?from={_from}&' 'to={to}&' 'datetime={datetime}&' 'timeframe_duration={timeframe_duration}&'
+            'journeys?from={_from}&to={to}&datetime={datetime}&timeframe_duration={timeframe_duration}&'
         ).format(_from='stop_area:sa1', to='stop_area:sa3', datetime='20180315T080000', timeframe_duration=3600)
         response = self.query_region(query)
         assert 6 <= len(response['journeys'])
@@ -2201,7 +2201,7 @@ class JourneysTimeFrameDuration:
         as there is simply no contraint
         """
         query = (
-            'journeys?from={_from}&' 'to={to}&' 'datetime={datetime}&' 'timeframe_duration={timeframe_duration}&'
+            'journeys?from={_from}&to={to}&datetime={datetime}&timeframe_duration={timeframe_duration}&'
         ).format(_from='stop_area:sa1', to='stop_area:sa3', datetime='20180315T080000', timeframe_duration=0)
         response = self.query_region(query)
         assert 1 == len(response['journeys'])
@@ -2258,7 +2258,7 @@ class JourneysTimeFrameDuration:
         The response must not contains the last jouneys because we filter with a max time frame of 24H
         """
         query = (
-            'journeys?from={_from}&' 'to={to}&' 'datetime={datetime}&' 'timeframe_duration={timeframe_duration}&'
+            'journeys?from={_from}&to={to}&datetime={datetime}&timeframe_duration={timeframe_duration}&'
         ).format(_from='stop_area:sa1', to='stop_area:sa3', datetime='20180315T080000', timeframe_duration=87300)
         response = self.query_region(query)
         assert 20 == len(response['journeys'])

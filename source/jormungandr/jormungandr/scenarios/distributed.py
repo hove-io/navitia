@@ -463,6 +463,8 @@ class Scenario(new_default.Scenario):
         except EntryPointException as e:
             logger.exception('')
             return [e.get()]
+        except StreetNetworkException as e:
+            return [e.get()]
 
     def finalise_journeys(self, request, responses, context, instance, is_debug, request_id):
         logger = logging.getLogger(__name__)

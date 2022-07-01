@@ -372,7 +372,7 @@ class TestOverlappingAuthentication(AbstractTestAuthentication):
             assert status == 403
             # we get a 404 (because 'stopbidon' cannot be found) and not a 403
             _, status = self.query_no_assert(
-                'v1/coverage/empty_routing_test/stop_areas/' 'stopbidon/stop_schedules'
+                'v1/coverage/empty_routing_test/stop_areas/stopbidon/stop_schedules'
             )
             assert status == 404
 
@@ -385,14 +385,14 @@ class TestOverlappingAuthentication(AbstractTestAuthentication):
             _, status = self.query_no_assert('v1/coverage/departure_board_test/stop_areas/stop1/stop_schedules')
             assert status == 403
             _, status = self.query_no_assert(
-                'v1/coverage/empty_routing_test/stop_areas/' 'stopbidon/stop_schedules'
+                'v1/coverage/empty_routing_test/stop_areas/stopbidon/stop_schedules'
             )
             assert status == 403
 
     def test_stop_schedules_for_bobitto(self):
         with user_set(app, FakeUserAuth, 'bobitto'):
             response = self.query(
-                'v1/coverage/main_routing_test/stop_areas/' 'stopA/stop_schedules?from_datetime=20120614T080000'
+                'v1/coverage/main_routing_test/stop_areas/stopA/stop_schedules?from_datetime=20120614T080000'
             )
             assert 'error' not in response
             response = self.query(

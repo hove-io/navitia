@@ -557,23 +557,38 @@ bool Impact::is_relevant(const std::vector<const StopTime*>& stop_times) const {
         }
         return false;
     } else if (is_rail_section && this->severity->effect == nt::disruption::Effect::NO_SERVICE) {
-        const auto& informed_entity = *rail_section_impacted_obj_it;
-        const RailSection* rail_section = boost::get<RailSection>(&informed_entity);
-        for (const auto& st : stop_times) {
-            if (st->stop_point->stop_area == rail_section->start_point) {
+        for (auto informed_entity : informed_entities()) {
+            const RailSection* rail_section = boost::get<RailSection>(&informed_entity);
+            if (rail_section == nullptr) {
                 continue;
             }
-            for (const auto& sp_message : st->stop_point->get_impacts()) {
-                if (sp_message.get() == this) {
+
+            // From the vehicle journey of first date_time retrieve all stop_time ranks
+            auto first_st = stop_times.front();
+            auto vj = first_st->vehicle_journey;
+            auto section = vj->get_no_service_sections_ranks(rail_section->start_point);
+
+            for (const auto& st : stop_times) {
+                if (st->stop_point->stop_area == rail_section->start_point) {
+                    continue;
+                }
+
+                const auto base_st = st->get_base_stop_time();
+                if (!base_st) {
+                    continue;
+                }
+                if (section.count(base_st->order()) > 0) {
                     return true;
                 }
             }
+            return false;
         }
-        return false;
+
     } else {
         // else, no reason to not be interested by it
         return true;
     }
+    return false;
 }
 
 bool Impact::is_only_line_section() const {

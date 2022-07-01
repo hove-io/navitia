@@ -91,8 +91,8 @@ DepartureCheck = namedtuple('DepartureCheck', ['route', 'dt', 'data_freshness', 
 @dataset({"basic_schedule_test": {'instance_config': {'realtime_proxies': MOCKED_PROXY_CONF}}})
 class TestDepartures(AbstractTestFixture):
 
-    query_template_scs = 'stop_points/{sp}/stop_schedules?from_datetime={dt}&show_codes=true{data_freshness}'
-    query_template_ter = 'stop_points/{sp}/terminus_schedules?from_datetime={dt}&show_codes=true{data_freshness}'
+    query_template_scs = 'stop_points/{sp}/stop_schedules?from_datetime={dt}{data_freshness}'
+    query_template_ter = 'stop_points/{sp}/terminus_schedules?from_datetime={dt}{data_freshness}'
 
     def test_stop_schedule(self):
         query = self.query_template_scs.format(sp='C:S0', dt='20160102T1100', data_freshness='')
@@ -192,10 +192,7 @@ class TestDepartures(AbstractTestFixture):
             assert dt['data_freshness'] == 'base_schedule'
 
     def test_departures_realtime_informations(self):
-        query = (
-            'stop_areas/S42/departures?from_datetime=20160102T1000&show_codes=true&count=7'
-            '&_current_datetime=20160102T1000'
-        )
+        query = 'stop_areas/S42/departures?from_datetime=20160102T1000&count=7&_current_datetime=20160102T1000'
         response = self.query_region(query)
 
         assert "departures" in response
@@ -298,7 +295,7 @@ class TestDepartures(AbstractTestFixture):
         # expected output, 2 realtime ->
         # "pagination" { "items_on_page": 2, "items_per_page": 100,
         #                "start_page": 0,"total_result": 2}
-        query = 'stop_areas/S42/lines/J/departures?' 'from_datetime=20160102T1000&show_codes=true&count=100'
+        query = 'stop_areas/S42/lines/J/departures?from_datetime=20160102T1000&count=100'
         response = self.query_region(query)
         assert "departures" in response
         assert len(response["departures"]) == 2
@@ -315,7 +312,7 @@ class TestDepartures(AbstractTestFixture):
         #                "start_page": 0,"total_result": 2}
         query = (
             'stop_areas/S42/lines/J/departures?'
-            'from_datetime=20160102T1000&show_codes=true&count=100'
+            'from_datetime=20160102T1000&count=100'
             '&data_freshness=realtime'
         )
         response = self.query_region(query)
@@ -334,7 +331,7 @@ class TestDepartures(AbstractTestFixture):
         #                "start_page": 0,"total_result": 1}
         query = (
             'stop_areas/S42/lines/J/departures?'
-            'from_datetime=20160102T1000&show_codes=true&count=100'
+            'from_datetime=20160102T1000&count=100'
             '&data_freshness=base_schedule'
         )
         response = self.query_region(query)
@@ -420,7 +417,7 @@ MOCKED_PROXY_CONF = [
 @dataset({"basic_schedule_test": {'instance_config': {'realtime_proxies': MOCKED_PROXY_CONF}}})
 class TestDeparturesWithAnotherSource(AbstractTestFixture):
 
-    query_template = 'stop_points/{sp}/stop_schedules?from_datetime={dt}&show_codes=true{data_freshness}'
+    query_template = 'stop_points/{sp}/stop_schedules?from_datetime={dt}{data_freshness}'
 
     def test_departure_with_another_source(self):
         query = self.query_template.format(sp='C:S1', dt='20160102T1000', data_freshness='')
@@ -461,7 +458,7 @@ class MockedTestProxyWithTimezone(MockedTestProxy):
 @dataset({"basic_schedule_test": {'instance_config': {'realtime_proxies': MOCKED_PROXY_WITH_TIMEZONE_CONF}}})
 class TestDeparturesWithTimeZone(AbstractTestFixture):
 
-    query_template = 'stop_points/{sp}/stop_schedules?from_datetime={dt}&show_codes=true{data_freshness}'
+    query_template = 'stop_points/{sp}/stop_schedules?from_datetime={dt}{data_freshness}'
 
     def test_departure_with_timezone(self):
         query = self.query_template.format(

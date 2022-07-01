@@ -36,6 +36,8 @@ from .streetnetwork_test_utils import make_pt_object, make_pt_object_with_sp_mod
 from jormungandr.utils import str_to_time_stamp, PeriodExtremity
 import requests_mock
 import ujson
+import pytest
+import jormungandr.exceptions
 
 MOCKED_REQUEST = {'walking_speed': 1, 'bike_speed': 3.33}
 
@@ -237,7 +239,8 @@ def call_geovelo_func_with_circuit_breaker_error_test():
     geovelo = Geovelo(instance=instance, service_url='http://bob.com')
     geovelo.breaker = MagicMock()
     geovelo.breaker.call = MagicMock(side_effect=pybreaker.CircuitBreakerError())
-    assert geovelo._call_geovelo(geovelo.service_url) == None
+    with pytest.raises(jormungandr.exceptions.GeoveloTechnicalError):
+        geovelo._call_geovelo(geovelo.service_url)
 
 
 def call_geovelo_func_with_unknown_exception_test():
@@ -245,7 +248,8 @@ def call_geovelo_func_with_unknown_exception_test():
     geovelo = Geovelo(instance=instance, service_url='http://bob.com')
     geovelo.breaker = MagicMock()
     geovelo.breaker.call = MagicMock(side_effect=ValueError())
-    assert geovelo._call_geovelo(geovelo.service_url) == None
+    with pytest.raises(jormungandr.exceptions.GeoveloTechnicalError):
+        geovelo._call_geovelo(geovelo.service_url)
 
 
 def get_matrix_test():

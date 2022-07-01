@@ -676,7 +676,7 @@ def fare2ed(self, instance_config, filename, job_id, dataset_uid):
         raise
 
 
-def get_bano2mimir_params(working_directory, autocomplete_instance, autocomplete_version=2):
+def get_bano2mimir_params(working_directory, autocomplete_instance, autocomplete_version=2, cosmogony_file=None):
     if autocomplete_version == 2:
         return [
             '-i',
@@ -686,7 +686,7 @@ def get_bano2mimir_params(working_directory, autocomplete_instance, autocomplete
             '--dataset',
             autocomplete_instance.name,
         ]
-    return [
+    params = [
         '-s',
         'elasticsearch.url=\'{}\''.format(current_app.config['MIMIR7_URL']),
         '-s',
@@ -697,8 +697,11 @@ def get_bano2mimir_params(working_directory, autocomplete_instance, autocomplete
         working_directory,
         '-m',
         current_app.config['MIMIR_PLATFORM_TAG'],
-        'run',
     ]
+    if cosmogony_file is not None:
+        params.extend(['-s', 'admins.cosmogony_file=\'{}\''.format(cosmogony_file)])
+    params.extend(['run'])
+    return params
 
 
 @celery.task(bind=True)
@@ -716,7 +719,10 @@ def bano2mimir(self, autocomplete_instance, filename, job_id, dataset_uid, autoc
         return
     job = models.Job.query.get(job_id)
     working_directory = unzip_if_needed(filename)
-    params = get_bano2mimir_params(working_directory, autocomplete_instance, autocomplete_version)
+    cosmogony_file = models.DataSet.get_cosmogony_file_path()
+    params = get_bano2mimir_params(
+        working_directory, autocomplete_instance, autocomplete_version, cosmogony_file
+    )
     try:
         res = launch_exec(executable, params, logger)
         if res != 0:
@@ -729,7 +735,9 @@ def bano2mimir(self, autocomplete_instance, filename, job_id, dataset_uid, autoc
         raise
 
 
-def get_openaddresses2mimir_params(autocomplete_instance, working_directory, autocomplete_version=2):
+def get_openaddresses2mimir_params(
+    autocomplete_instance, working_directory, autocomplete_version=2, cosmogony_file=None
+):
     if autocomplete_version == 2:
         return [
             '-i',
@@ -739,19 +747,23 @@ def get_openaddresses2mimir_params(autocomplete_instance, working_directory, aut
             '--dataset',
             autocomplete_instance.name,
         ]
-    return [
+    params = [
         '-s',
         'elasticsearch.url=\'{}\''.format(current_app.config['MIMIR7_URL']),
         '-s',
         'container.dataset=\'{}\''.format(autocomplete_instance.name),
-        "-c",
+        '-c',
         current_app.config['MIMIR_CONFIG_DIR'],
         '-i',
         working_directory,
         '-m',
         current_app.config['MIMIR_PLATFORM_TAG'],
-        'run',
     ]
+
+    if cosmogony_file is not None:
+        params.extend(['-s', 'admins.cosmogony_file=\'{}\''.format(cosmogony_file)])
+    params.extend(['run'])
+    return params
 
 
 @celery.task(bind=True)
@@ -770,7 +782,10 @@ def openaddresses2mimir(self, autocomplete_instance, filename, job_id, dataset_u
 
     job = models.Job.query.get(job_id)
     working_directory = unzip_if_needed(filename)
-    params = get_openaddresses2mimir_params(autocomplete_instance, working_directory, autocomplete_version)
+    cosmogony_file = models.DataSet.get_cosmogony_file_path()
+    params = get_openaddresses2mimir_params(
+        autocomplete_instance, working_directory, autocomplete_version, cosmogony_file
+    )
     try:
         res = launch_exec(executable, params, logger)
         if res != 0:
@@ -784,7 +799,12 @@ def openaddresses2mimir(self, autocomplete_instance, filename, job_id, dataset_u
 
 
 def get_osm2mimir_params(
-    autocomplete_instance, data_filename, working_directory, custom_config, autocomplete_version=2
+    autocomplete_instance,
+    data_filename,
+    working_directory,
+    custom_config,
+    autocomplete_version=2,
+    cosmogony_file=None,
 ):
     if autocomplete_version == 2:
         return [
@@ -802,7 +822,7 @@ def get_osm2mimir_params(
         if current_app.config['MIMIR_PLATFORM_TAG'] != 'default'
         else autocomplete_instance.name
     )
-    return [
+    params = [
         '-s',
         'elasticsearch.url=\'{}\''.format(current_app.config['MIMIR7_URL']),
         '-i',
@@ -811,8 +831,12 @@ def get_osm2mimir_params(
         current_app.config['MIMIR_CONFIG_DIR'],
         '-m',
         config_file,
-        'run',
     ]
+
+    if cosmogony_file is not None:
+        params.extend(['-s', 'admins.cosmogony_file=\'{}\''.format(cosmogony_file)])
+    params.extend(['run'])
+    return params
 
 
 @celery.task(bind=True)
@@ -828,10 +852,16 @@ def osm2mimir(self, autocomplete_instance, filename, job_id, dataset_uid, autoco
     working_directory = os.path.dirname(data_filename)
     custom_config_config_toml = '{}/{}.toml'.format(working_directory, custom_config)
     data = autocomplete_instance.config_toml.encode("utf-8")
+    cosmogony_file = models.DataSet.get_cosmogony_file_path()
     with open(custom_config_config_toml, 'w') as f:
         f.write(data)
     params = get_osm2mimir_params(
-        autocomplete_instance, data_filename, working_directory, custom_config, autocomplete_version
+        autocomplete_instance,
+        data_filename,
+        working_directory,
+        custom_config,
+        autocomplete_version,
+        cosmogony_file,
     )
     try:
         res = launch_exec(executable, params, logger)
@@ -845,7 +875,7 @@ def osm2mimir(self, autocomplete_instance, filename, job_id, dataset_uid, autoco
         raise
 
 
-def get_stops2mimir_params(instance_name, working_directory, autocomplete_version=2):
+def get_stops2mimir_params(instance_name, working_directory, autocomplete_version=2, cosmogony_file=None):
     if autocomplete_version == 2:
         return [
             '--input',
@@ -855,7 +885,7 @@ def get_stops2mimir_params(instance_name, working_directory, autocomplete_versio
             '--dataset',
             instance_name,
         ]
-    return [
+    params = [
         '-s',
         'elasticsearch.url=\'{}\''.format(current_app.config['MIMIR7_URL']),
         '-s',
@@ -864,8 +894,11 @@ def get_stops2mimir_params(instance_name, working_directory, autocomplete_versio
         os.path.join(working_directory, 'stops.txt'),
         '-c',
         current_app.config['MIMIR_CONFIG_DIR'],
-        'run',
     ]
+    if cosmogony_file is not None:
+        params.extend(['-s', 'admins.cosmogony_file=\'{}\''.format(cosmogony_file)])
+    params.extend(['run'])
+    return params
 
 
 @celery.task(bind=True)
@@ -885,8 +918,8 @@ def stops2mimir(self, instance_name, input, autocomplete_version, job_id=None, d
     executable = "stops2mimir" if autocomplete_version == 2 else "stops2mimir7"
 
     logger.debug('running {} for Es{}'.format(executable, autocomplete_version))
-
-    argv = get_stops2mimir_params(instance_name, os.path.dirname(input), autocomplete_version)
+    cosmogony_file = models.DataSet.get_cosmogony_file_path()
+    argv = get_stops2mimir_params(instance_name, os.path.dirname(input), autocomplete_version, cosmogony_file)
 
     try:
         res = launch_exec(executable, argv, logger)
@@ -907,7 +940,7 @@ def stops2mimir(self, instance_name, input, autocomplete_version, job_id=None, d
         raise
 
 
-def get_ntfs2mimir_params(instance_name, working_directory, autocomplete_version=2):
+def get_ntfs2mimir_params(instance_name, working_directory, autocomplete_version=2, cosmogony_file=None):
     if autocomplete_version == 2:
         return [
             '--input',
@@ -917,7 +950,7 @@ def get_ntfs2mimir_params(instance_name, working_directory, autocomplete_version
             '--dataset',
             instance_name,
         ]
-    return [
+    params = [
         '-s',
         'elasticsearch.url=\'{}\''.format(current_app.config['MIMIR7_URL']),
         '-s',
@@ -928,8 +961,11 @@ def get_ntfs2mimir_params(instance_name, working_directory, autocomplete_version
         current_app.config['MIMIR_CONFIG_DIR'],
         '-m',
         current_app.config['MIMIR_PLATFORM_TAG'],
-        'run',
     ]
+    if cosmogony_file is not None:
+        params.extend(['-s', 'admins.cosmogony_file=\'{}\''.format(cosmogony_file)])
+    params.extend(['run'])
+    return params
 
 
 @celery.task(bind=True)
@@ -948,7 +984,8 @@ def ntfs2mimir(self, instance_name, input, autocomplete_version, job_id=None, da
     logger.debug('running {} for Es{}'.format(executable, autocomplete_version))
 
     working_directory = unzip_if_needed(input)
-    argv = get_ntfs2mimir_params(instance_name, working_directory, autocomplete_version)
+    cosmogony_file = models.DataSet.get_cosmogony_file_path()
+    argv = get_ntfs2mimir_params(instance_name, working_directory, autocomplete_version, cosmogony_file)
     try:
         res = launch_exec(executable, argv, logger)
         if res != 0:
@@ -1015,7 +1052,7 @@ def cosmogony2mimir(self, autocomplete_instance, filename, job_id, dataset_uid, 
         raise
 
 
-def get_poi2mimir_params(poi_file, dataset_name, autocomplete_version=2):
+def get_poi2mimir_params(poi_file, dataset_name, autocomplete_version=2, cosmogony_file=None):
     if autocomplete_version == 2:
         return [
             '--input',
@@ -1026,19 +1063,22 @@ def get_poi2mimir_params(poi_file, dataset_name, autocomplete_version=2):
             dataset_name,
             '--private',
         ]
-    return [
-        "-s",
+    params = [
+        '-s',
         'elasticsearch.url=\'{}\''.format(current_app.config['MIMIR7_URL']),
-        "-s",
+        '-s',
         'container.dataset=\'{}\''.format(dataset_name),
-        "-c",
+        '-c',
         current_app.config['MIMIR_CONFIG_DIR'],
-        "-i",
+        '-i',
         poi_file,
-        "-m",
+        '-m',
         current_app.config['MIMIR_PLATFORM_TAG'],
-        "run",
     ]
+    if cosmogony_file is not None:
+        params.extend(['-s', 'admins.cosmogony_file=\'{}\''.format(cosmogony_file)])
+    params.extend(['run'])
+    return params
 
 
 @celery.task(bind=True)
@@ -1057,7 +1097,8 @@ def poi2mimir(self, instance_name, input, autocomplete_version, job_id=None, dat
         instance = models.Instance.query_existing().filter_by(name=instance_name).first()
     executable = "poi2mimir" if autocomplete_version == 2 else "poi2mimir7"
     logger.debug('running {} version autocomplete {}'.format(executable, autocomplete_version))
-    argv = get_poi2mimir_params(input, dataset_name, autocomplete_version)
+    cosmogony_file = models.DataSet.get_cosmogony_file_path()
+    argv = get_poi2mimir_params(input, dataset_name, autocomplete_version, cosmogony_file)
     try:
         if job:
             with collect_metric(executable, job, dataset_uid):
