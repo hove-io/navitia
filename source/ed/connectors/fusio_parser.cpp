@@ -457,7 +457,7 @@ void StopTimeFusioHandler::init(Data& data) {
     StopTimeGtfsHandler::init(data);
     itl_c = csv.get_pos_col("local_zone_id");
     desc_c = csv.get_pos_col("stop_desc");
-    date_time_estimated_c = csv.get_pos_col("stop_time_prevision");
+    date_time_estimated_c = csv.get_pos_col("stop_time_precision");
     // For backward compatibilty
     if (date_time_estimated_c == UNKNOWN_COLUMN) {
         is_stop_time_precision = false;
