@@ -1,3 +1,19 @@
+navitia2 (15.11.0) unstable; urgency=low
+
+  * Added error code for when geovelo return None  <https://github.com/hove-io/navitia/pull/3767>
+  * [TYR]: add parameter cosmogony_file while indexing for ES7  <https://github.com/hove-io/navitia/pull/3783>
+  * exclude mock_kraken from sonar code coverage  <https://github.com/hove-io/navitia/pull/3782>
+  * [kraken]: fix on impact with multi rail_sections  <https://github.com/hove-io/navitia/pull/3781>
+  * Bump numpy from 1.21.2 to 1.22.0 in /source/jormungandr  <https://github.com/hove-io/navitia/pull/3777>
+  * Bump numpy from 1.21.0 to 1.22.0 in /source/log_analyzer  <https://github.com/hove-io/navitia/pull/3778>
+  * Bump numpy from 1.21.0 to 1.22.0 in /source/benchmark  <https://github.com/hove-io/navitia/pull/3779>
+  * Remove/clarify `show_codes`  <https://github.com/hove-io/navitia/pull/3770>
+  * [Jormungandr] Handle direct_path_mode more precisely when direct_path is only/only_with_alternatives  <https://github.com/hove-io/navitia/pull/3776>
+  * publish doc only on push on release branch  <https://github.com/hove-io/navitia/pull/3775>
+  * [Jormungandr] handle empty journeys  <https://github.com/hove-io/navitia/pull/3774>
+
+ -- Pascal Benchimol <pascal.benchimol@polytechnique.edu>  Fri, 01 Jul 2022 10:07:03 +0100
+
 navitia2 (15.10.0) unstable; urgency=low
 
   * [Kraken] More consistent namespace  <https://github.com/hove-io/navitia/pull/3760>
