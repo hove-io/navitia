@@ -360,7 +360,7 @@ struct DisruptionDatabaseReader {
                 FILL_REQUIRED(rs_end, created_at, uint64_t)
                 FILL_NULLABLE(rs_end, uri, std::string)
             } else {
-                ptobject->set_pt_object_type(chaos::PtObject_Type_unkown_type);
+                ptobject->set_pt_object_type(chaos::PtObject_Type_unknown_type);
             }
         }
     }
@@ -444,7 +444,7 @@ struct DisruptionDatabaseReader {
         } else if (type_ == "beacon") {
             channel->add_types(chaos::Channel_Type_beacon);
         } else {
-            channel->add_types(chaos::Channel_Type_unkown_type);
+            channel->add_types(chaos::Channel_Type_unknown_type);
         }
     }
 

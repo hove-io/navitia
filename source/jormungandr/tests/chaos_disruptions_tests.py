@@ -1346,7 +1346,7 @@ def make_mock_chaos_item(
 
     ptobject = impact.informed_entities.add()
     ptobject.uri = impacted_obj
-    ptobject.pt_object_type = type_col.get(impacted_obj_type, chaos_pb2.PtObject.unkown_type)
+    ptobject.pt_object_type = type_col.get(impacted_obj_type, chaos_pb2.PtObject.unknown_type)
     if ptobject.pt_object_type == chaos_pb2.PtObject.line_section:
         line_section = ptobject.pt_line_section
         line_section.line.uri = impacted_obj

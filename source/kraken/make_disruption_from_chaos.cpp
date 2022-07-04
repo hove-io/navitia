@@ -330,7 +330,7 @@ static std::vector<nt::disruption::PtObj> make_pt_objects(
             case chaos::PtObject_Type_trip:
                 res.push_back(make_pt_obj(nt::Type_e::MetaVehicleJourney, chaos_pt_object.uri(), pt_data));
                 break;
-            case chaos::PtObject_Type_unkown_type:
+            case chaos::PtObject_Type_unknown_type:
                 res.emplace_back(UnknownPtObj());
                 break;
         }
@@ -364,7 +364,7 @@ static std::set<nt::disruption::ChannelType> create_channel_types(const chaos::C
             case chaos::Channel_Type_facebook:
                 res.insert(nt::disruption::ChannelType::facebook);
                 break;
-            case chaos::Channel_Type_unkown_type:
+            case chaos::Channel_Type_unknown_type:
                 res.insert(nt::disruption::ChannelType::unknown_type);
                 break;
             case chaos::Channel_Type_title:
