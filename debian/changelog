@@ -1,6 +1,6 @@
 navitia2 (15.11.1) unstable; urgency=low
 
-  * [Estimated times] NTFS column typo  <https://github.com/hove-io/navitia/pull/3767> 
+  * [Estimated times] NTFS column typo  <https://github.com/hove-io/navitia/pull/3767>
 
  -- patrick.qian <patrick.qian@kisio.com>  Mon, 04 Jul 2022 10:07:44 +0100
 
