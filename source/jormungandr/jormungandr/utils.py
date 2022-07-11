@@ -769,6 +769,11 @@ def create_journeys_request(origins, destinations, datetime, clockwise, journey_
     if journey_parameters.arrival_transfer_penalty:
         req.journeys.arrival_transfer_penalty = journey_parameters.arrival_transfer_penalty
 
+    if journey_parameters.criteria == "robustness":
+        req.journeys.criteria = request_pb2.Robustness
+    elif journey_parameters.criteria == "classic":
+        req.journeys.criteria = request_pb2.Classic
+
     return req
 
 
