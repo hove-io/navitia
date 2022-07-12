@@ -52,7 +52,7 @@ struct RAPTOR;
 
 namespace navitia {
 
-struct Deadline;
+class Deadline;
 
 struct JourneysArg {
     type::EntryPoints origins;

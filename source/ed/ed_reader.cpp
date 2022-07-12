@@ -683,7 +683,7 @@ void EdReader::fill_access_point_field(const navitia::type::AccessPoint& access_
     }
 }
 
-void EdReader::fill_access_points(nt::Data& data, pqxx::work& work) {
+void EdReader::fill_access_points(nt::Data& /*unused*/, pqxx::work& work) {
     // access_point
     std::string request =
         "SELECT id, name, uri, "

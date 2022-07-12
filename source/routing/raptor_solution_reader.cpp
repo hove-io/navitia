@@ -358,7 +358,7 @@ struct RaptorSolutionReader {
         // best vj, we want the different tradeoff between maximizing
         // the waiting duration and minimizing the transfer duration.
         inline bool operator()(const Transfer& lhs, const Transfer& rhs) const {
-            const Visitor v;
+            const Visitor v{};
             if (v.comp(lhs.end_vj, rhs.end_vj)) {
                 return true;
             }

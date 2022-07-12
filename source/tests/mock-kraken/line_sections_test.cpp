@@ -46,7 +46,7 @@ o --------- o --------- o --------- o --------- o --------- o   <- route:line:1:
 
   We also add another route route:line:1:3 that only pass on (A, B, F) and that shouldn't be impacted
 
-  We finaly add another line line_2 that pass on the same stops areas
+  We finally add another line line_2 that pass on the same stops areas
   */
 
 namespace bg = boost::gregorian;
