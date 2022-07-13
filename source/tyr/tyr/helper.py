@@ -33,6 +33,7 @@ import logging.config
 import uuid
 import celery
 from celery.exceptions import TimeoutError
+import glob
 
 from configobj import ConfigObj, flatten_errors
 from validate import Validator
@@ -168,6 +169,20 @@ def get_config_instance_from_ini_file(instance_name):
         raise ValueError("Config is not valid: %s in %s" % (error, ini_file))
 
     return config
+
+
+def get_instances_name():
+    instances = list()
+    for instance_file in glob.glob(current_app.config['INSTANCES_DIR'] + '/*.ini'):
+        instance_name = os.path.basename(instance_file).replace('.ini', '')
+        instances.append(instance_name)
+    prefix = "TYR_INSTANCE_"
+    for key, value in os.environ.items():
+        if key.startswith(prefix):
+            instance_name = key.replace(prefix, "")
+            if instance_name not in instances:
+                instances.append(instance_name)
+    return instances
 
 
 def select_json_by_instance_name(instance_name):
