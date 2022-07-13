@@ -64,7 +64,12 @@ from tyr.binarisation import (
 from tyr.binarisation import reload_data, move_to_backupdirectory
 from tyr import celery
 from navitiacommon import models, task_pb2, utils
-from tyr.helper import load_instance_config, get_instance_logger, is_activate_autocomplete_version
+from tyr.helper import (
+    load_instance_config,
+    get_instance_logger,
+    is_activate_autocomplete_version,
+    get_instances_name,
+)
 from navitiacommon.launch_exec import launch_exec
 from datetime import datetime, timedelta
 
@@ -573,8 +578,7 @@ def purge_jobs(days_to_keep=None):
 
 @celery.task()
 def scan_instances():
-    for instance_file in glob.glob(current_app.config['INSTANCES_DIR'] + '/*.ini'):
-        instance_name = os.path.basename(instance_file).replace('.ini', '')
+    for instance_name in get_instances_name():
         instance = models.Instance.query_all().filter_by(name=instance_name).first()
         if not instance:
             current_app.logger.info('new instances detected: %s', instance_name)
