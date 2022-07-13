@@ -31,7 +31,7 @@ CITIES_OSM_FILE_PATH = os.getenv('TYR_CITIES_OSM_FILE_PATH', '.')
 INSTANCES_DIR = os.getenv('TYR_INSTANCES_DIR', '.')
 
 # Path to the directory where the data sources for autocomplete are stocked
-TYR_AUTOCOMPLETE_DIR = os.getenv('TYR_TYR_AUTOCOMPLETE_DIR', "/srv/ed/autocomplete")
+AUTOCOMPLETE_DIR = os.getenv('TYR_AUTOCOMPLETE_DIR', "/srv/ed/autocomplete")
 
 AUOTOCOMPLETE_MAX_BACKUPS_TO_KEEP = os.getenv('TYR_AUOTOCOMPLETE_MAX_BACKUPS_TO_KEEP', 5)
 
