@@ -28,7 +28,7 @@
 # www.navitia.io
 
 from __future__ import absolute_import, print_function, division
-from tyr.helper import is_activate_autocomplete_version, load_instance_config
+from tyr.helper import is_activate_autocomplete_version, load_instance_config, get_instances_name
 from tyr import app
 import pytest
 
@@ -95,3 +95,19 @@ def test_invalid_config_instance_from_env_variables(invalid_instance_env_variabl
     assert (
         str(exc.value) == 'Config is not valid for instance fr-se-lyon, error u\'492\' is not of type \'number\''
     )
+
+
+def test_get_instances_name(init_instances_dir, valid_instance_env_variables):
+    with app.app_context():
+        instancies = get_instances_name()
+        assert len(instancies) == 2
+        for name in ["fr", "fr-se-lyon"]:
+            assert name in instancies
+
+
+def test_get_instances_name_same_instance(init_instances_dir, valid_instance_env_variables_fr):
+    # the same instance in config file and env variables
+    with app.app_context():
+        instancies = get_instances_name()
+        assert len(instancies) == 1
+        assert "fr" in instancies
