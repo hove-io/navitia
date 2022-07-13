@@ -1,5 +1,4 @@
 # encoding: utf-8
-import logging
 from datetime import timedelta
 from celery import schedules
 import os
@@ -15,7 +14,9 @@ KRAKEN_BROKER_URL = os.getenv('TYR_KRAKEN_BROKER_URL', 'amqp://guest:guest@local
 # URI for postgresql
 # postgresql://<user>:<password>@<host>:<port>/<dbname>
 # http://docs.sqlalchemy.org/en/rel_0_9/dialects/postgresql.html#psycopg2
-SQLALCHEMY_DATABASE_URI = 'postgresql://navitia:navitia@localhost/jormungandr'
+SQLALCHEMY_DATABASE_URI = os.getenv(
+    'TYR_SQLALCHEMY_DATABASE_URI', 'postgresql://navitia:navitia@localhost/jormungandr'
+)
 
 
 # URI for cities database
@@ -27,15 +28,15 @@ CITIES_DATABASE_URI = os.getenv('TYR_CITIES_DATABASE_URI', 'postgresql://navitia
 CITIES_OSM_FILE_PATH = os.getenv('TYR_CITIES_OSM_FILE_PATH', '.')
 
 # Path to the directory where the configuration file of each instance of ed are defined
-INSTANCES_DIR = '.'
+INSTANCES_DIR = os.getenv('TYR_INSTANCES_DIR', '.')
 
 # Path to the directory where the data sources for autocomplete are stocked
-TYR_AUTOCOMPLETE_DIR = "/srv/ed/autocomplete"
+TYR_AUTOCOMPLETE_DIR = os.getenv('TYR_TYR_AUTOCOMPLETE_DIR', "/srv/ed/autocomplete")
 
-AUOTOCOMPLETE_MAX_BACKUPS_TO_KEEP = 5
+AUOTOCOMPLETE_MAX_BACKUPS_TO_KEEP = os.getenv('TYR_AUOTOCOMPLETE_MAX_BACKUPS_TO_KEEP', 5)
 
 # Max number of dataset to keep per instance and type
-DATASET_MAX_BACKUPS_TO_KEEP = 1
+DATASET_MAX_BACKUPS_TO_KEEP = os.getenv('TYR_DATASET_MAX_BACKUPS_TO_KEEP', 1)
 
 # Period of time to keep job (in days)
 JOB_MAX_PERIOD_TO_KEEP = os.getenv('TYR_JOB_MAX_PERIOD_TO_KEEP', 60)
