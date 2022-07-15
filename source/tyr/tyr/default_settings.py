@@ -1,5 +1,4 @@
 # encoding: utf-8
-import logging
 from datetime import timedelta
 from celery import schedules
 import os
@@ -15,7 +14,9 @@ KRAKEN_BROKER_URL = os.getenv('TYR_KRAKEN_BROKER_URL', 'amqp://guest:guest@local
 # URI for postgresql
 # postgresql://<user>:<password>@<host>:<port>/<dbname>
 # http://docs.sqlalchemy.org/en/rel_0_9/dialects/postgresql.html#psycopg2
-SQLALCHEMY_DATABASE_URI = 'postgresql://navitia:navitia@localhost/jormungandr'
+SQLALCHEMY_DATABASE_URI = os.getenv(
+    'TYR_SQLALCHEMY_DATABASE_URI', 'postgresql://navitia:navitia@localhost/jormungandr'
+)
 
 
 # URI for cities database
@@ -27,21 +28,21 @@ CITIES_DATABASE_URI = os.getenv('TYR_CITIES_DATABASE_URI', 'postgresql://navitia
 CITIES_OSM_FILE_PATH = os.getenv('TYR_CITIES_OSM_FILE_PATH', '.')
 
 # Path to the directory where the configuration file of each instance of ed are defined
-INSTANCES_DIR = '.'
+INSTANCES_DIR = os.getenv('TYR_INSTANCES_DIR', '.')
 
 # Path to the directory where the data sources for autocomplete are stocked
-TYR_AUTOCOMPLETE_DIR = "/srv/ed/autocomplete"
+AUTOCOMPLETE_DIR = os.getenv('TYR_AUTOCOMPLETE_DIR', "/srv/ed/autocomplete")
 
-AUOTOCOMPLETE_MAX_BACKUPS_TO_KEEP = 5
+AUOTOCOMPLETE_MAX_BACKUPS_TO_KEEP = os.getenv('TYR_AUOTOCOMPLETE_MAX_BACKUPS_TO_KEEP', 5)
 
 # Max number of dataset to keep per instance and type
-DATASET_MAX_BACKUPS_TO_KEEP = 1
+DATASET_MAX_BACKUPS_TO_KEEP = os.getenv('TYR_DATASET_MAX_BACKUPS_TO_KEEP', 1)
 
 # Period of time to keep job (in days)
-JOB_MAX_PERIOD_TO_KEEP = 60
+JOB_MAX_PERIOD_TO_KEEP = os.getenv('TYR_JOB_MAX_PERIOD_TO_KEEP', 60)
 
 # Tyr v1: Items per page with pagination
-MAX_ITEMS_PER_PAGE = 10
+MAX_ITEMS_PER_PAGE = os.getenv('TYR_MAX_ITEMS_PER_PAGE', 10)
 
 
 # Log Level available
@@ -72,21 +73,21 @@ LOGGER = {
 
 REDIS_HOST = os.getenv('TYR_REDIS_HOST', '127.0.0.1')
 
-REDIS_PORT = 6379
+REDIS_PORT = os.getenv('TYR_REDIS_PORT', 6379)
 
 # index of the database use in redis, between 0 and 15 by default
-REDIS_DB = 0
+REDIS_DB = os.getenv('TYR_REDIS_DB', 0)
 
-REDIS_PASSWORD = None
+REDIS_PASSWORD = os.getenv('TYR_REDIS_PASSWORD', None)
 
 # Validate the presence of a mx record on the domain
-EMAIL_CHECK_MX = True
+EMAIL_CHECK_MX = os.getenv('TYR_EMAIL_CHECK_MX', True)
 
 # Validate the email by connecting to the smtp server, but doesn't send an email
-EMAIL_CHECK_SMTP = True
+EMAIL_CHECK_SMTP = os.getenv('TYR_EMAIL_CHECK_SMTP', True)
 
 # configuration of celery, don't edit
-CELERY_ACCEPT_CONTENT = ['pickle', 'json']
+CELERY_ACCEPT_CONTENT = os.getenv('TYR_CELERY_ACCEPT_CONTENT', ['pickle', 'json'])
 
 CELERYBEAT_SCHEDULE = {
     'udpate-data-every-30-seconds': {
@@ -127,12 +128,12 @@ CELERYBEAT_SCHEDULE = {
         'options': {'expires': 50},
     },
 }
-CELERY_TIMEZONE = 'UTC'
+CELERY_TIMEZONE = os.getenv('TYR_CELERY_TIMEZONE', 'UTC')
 
 # http://docs.celeryproject.org/en/master/configuration.html#std:setting-CELERYBEAT_SCHEDULE_FILENAME
-CELERYBEAT_SCHEDULE_FILENAME = '/tmp/celerybeat-schedule'
+CELERYBEAT_SCHEDULE_FILENAME = os.getenv('TYR_CELERYBEAT_SCHEDULE_FILENAME', '/tmp/celerybeat-schedule')
 
-CELERYD_HIJACK_ROOT_LOGGER = False
+CELERYD_HIJACK_ROOT_LOGGER = os.getenv('TYR_CELERYD_HIJACK_ROOT_LOGGER', False)
 
 MIMIR_URL = os.getenv('TYR_MIMIR_URL', None)
 
@@ -151,8 +152,8 @@ MINIO_LOKI_ACCESS_KEY = os.getenv('TYR_MINIO_LOKI_ACCESS_KEY', None)
 MINIO_LOKI_SECRET_KEY = os.getenv('TYR_MINIO_LOKI_SECRET_KEY', None)
 
 # we don't enable serpy for now
-USE_SERPY = False
+USE_SERPY = os.getenv('TYR_USE_SERPY', False)
 
 # https://flask-sqlalchemy.palletsprojects.com/en/2.x/signals/
 # deprecated and slow
-SQLALCHEMY_TRACK_MODIFICATIONS = False
+SQLALCHEMY_TRACK_MODIFICATIONS = os.getenv('TYR_SQLALCHEMY_TRACK_MODIFICATIONS', False)

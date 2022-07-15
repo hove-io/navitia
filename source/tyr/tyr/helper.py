@@ -33,6 +33,7 @@ import logging.config
 import uuid
 import celery
 from celery.exceptions import TimeoutError
+import glob
 
 from configobj import ConfigObj, flatten_errors
 from validate import Validator
@@ -40,8 +41,11 @@ from flask import current_app
 import os
 import sys
 import tempfile
+from flask import json
+from jsonschema import validate, ValidationError
 
 from werkzeug.utils import secure_filename
+from tyr.formats import instance_config_format
 
 END_POINT_NOT_EXIST_MSG = 'end_point doesn\'t exist'
 BILLING_PLAN_NOT_EXIST_MSG = 'billing plan doesn\'t exist'
@@ -127,7 +131,11 @@ def is_activate_autocomplete_version(version=2):
     return current_app.config.get('MIMIR7_URL', None) != None
 
 
-def load_instance_config(instance_name):
+def get_config_instance_from_ini_file(instance_name):
+    ini_file = os.path.join(os.path.realpath(current_app.config['INSTANCES_DIR']), instance_name + ".ini")
+    if not os.path.isfile(ini_file):
+        raise ValueError("File doesn't exists or is not a file %s" % ini_file)
+
     def b(unicode):
         """
         convert unicode to bytestring
@@ -152,10 +160,6 @@ def load_instance_config(instance_name):
     confspec.append(b(u'password = string()'))
     confspec.append(b(u'port = string(default="5432")'))
 
-    ini_file = os.path.join(os.path.realpath(current_app.config['INSTANCES_DIR']), instance_name + ".ini")
-    if not os.path.isfile(ini_file):
-        raise ValueError("File doesn't exists or is not a file %s" % ini_file)
-
     config = ConfigObj(ini_file, configspec=confspec, stringify=True)
     val = Validator()
     res = config.validate(val, preserve_errors=True)
@@ -163,6 +167,54 @@ def load_instance_config(instance_name):
     if type(res) is dict:
         error = build_error(config, res)
         raise ValueError("Config is not valid: %s in %s" % (error, ini_file))
+
+    return config
+
+
+def get_instances_name():
+    instances = list()
+    for instance_file in glob.glob(current_app.config['INSTANCES_DIR'] + '/*.ini'):
+        instance_name = os.path.basename(instance_file).replace('.ini', '')
+        instances.append(instance_name)
+    prefix = "TYR_INSTANCE_"
+    for key, value in os.environ.items():
+        if key.startswith(prefix):
+            instance_name = key.replace(prefix, "")
+            if instance_name not in instances:
+                instances.append(instance_name)
+    return instances
+
+
+def select_json_by_instance_name(instance_name):
+    prefix = "TYR_INSTANCE_"
+    for key, value in os.environ.items():
+        if key.startswith(prefix):
+            lower_key = key.lower()
+            lower_instance = "{}{}".format(prefix.lower(), instance_name.lower())
+            if lower_key == lower_instance:
+                return value
+    return None
+
+
+def get_config_instance_from_env_variables(instance_name):
+    config = select_json_by_instance_name(instance_name)
+    if not config:
+        return None
+    logging.getLogger(__name__).info("Initialisation, reading: %s", instance_name)
+    json_config = json.loads(config)
+    try:
+        validate(json_config, instance_config_format)
+    except ValidationError as e:
+        msg = "Config is not valid for instance {}, error {}".format(instance_name, str(e.message))
+        logging.getLogger(__name__).error(msg)
+        raise ValueError(msg)
+    return json_config
+
+
+def load_instance_config(instance_name):
+    config = get_config_instance_from_env_variables(instance_name)
+    if not config:
+        config = get_config_instance_from_ini_file(instance_name)
     instance = InstanceConfig()
     instance.source_directory = config['instance']['source-directory']
     instance.backup_directory = config['instance']['backup-directory']

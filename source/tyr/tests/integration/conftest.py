@@ -116,3 +116,45 @@ def enable_mimir2_and_mimir():
     yield
     app.config['MIMIR_URL'] = previous_mimir2_value
     app.config['MIMIR7_URL'] = previous_mimir_value
+
+
+@pytest.fixture
+def valid_instance_env_variables():
+    os.environ["TYR_INSTANCE_fr-se-lyon"] = (
+        '{"instance":{"name":"fr-se-lyon","source-directory":"/ed/source",'
+        '"backup-directory":"/ed/backup","aliases_file":"/ed/aliases",'
+        '"synonyms_file":"/ed/synonyms","target-file":"ed/target_file",'
+        '"tmp_file":"/ed/tmp_file","is-free":true,"exchange":"exchange"},'
+        '"database":{"host":"host1","dbname":"jormun","username":"user1",'
+        '"password":"pass1","port":492}}'
+    )
+    yield
+    del os.environ["TYR_INSTANCE_fr-se-lyon"]
+
+
+@pytest.fixture
+def invalid_instance_env_variables():
+    os.environ["TYR_INSTANCE_fr-se-lyon"] = (
+        '{"instance":{"name":"fr-se-lyon","source-directory":"/ed/source",'
+        '"backup-directory":"/ed/backup","aliases_file":"/ed/aliases",'
+        '"synonyms_file":"/ed/synonyms","target-file":"ed/target_file",'
+        '"tmp_file":"/ed/tmp_file","is-free":true,"exchange":"exchange"},'
+        '"database":{"host":"host1","dbname":"jormun","username":"user1",'
+        '"password":"pass1","port":"492"}}'
+    )
+    yield
+    del os.environ["TYR_INSTANCE_fr-se-lyon"]
+
+
+@pytest.fixture
+def valid_instance_env_variables_fr():
+    os.environ["TYR_INSTANCE_fr"] = (
+        '{"instance":{"name":"fr","source-directory":"/ed/source",'
+        '"backup-directory":"/ed/backup","aliases_file":"/ed/aliases",'
+        '"synonyms_file":"/ed/synonyms","target-file":"ed/target_file",'
+        '"tmp_file":"/ed/tmp_file","is-free":true,"exchange":"exchange"},'
+        '"database":{"host":"host1","dbname":"jormun","username":"user1",'
+        '"password":"pass1","port":492}}'
+    )
+    yield
+    del os.environ["TYR_INSTANCE_fr"]
