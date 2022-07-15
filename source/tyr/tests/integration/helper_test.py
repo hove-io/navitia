@@ -99,15 +99,15 @@ def test_invalid_config_instance_from_env_variables(invalid_instance_env_variabl
 
 def test_get_instances_name(init_instances_dir, valid_instance_env_variables):
     with app.app_context():
-        instancies = get_instances_name()
-        assert len(instancies) == 2
+        instances = get_instances_name()
+        assert len(instances) == 2
         for name in ["fr", "fr-se-lyon"]:
-            assert name in instancies
+            assert name in instances
 
 
 def test_get_instances_name_same_instance(init_instances_dir, valid_instance_env_variables_fr):
     # the same instance in config file and env variables
     with app.app_context():
-        instancies = get_instances_name()
-        assert len(instancies) == 1
-        assert "fr" in instancies
+        instances = get_instances_name()
+        assert len(instances) == 1
+        assert "fr" in instances
