@@ -92,9 +92,8 @@ def test_invalid_config_instance_from_env_variables(invalid_instance_env_variabl
     with pytest.raises(ValueError) as exc:
         load_instance_config("fr-se-lyon")
 
-    assert (
-        str(exc.value) == 'Config is not valid for instance fr-se-lyon, error u\'492\' is not of type \'number\''
-    )
+    assert "Config is not valid for instance fr-se-lyon" in str(exc.value)
+    assert "'492' is not of type 'number'" in str(exc.value)
 
 
 def test_get_instances_name(init_instances_dir, valid_instance_env_variables):
