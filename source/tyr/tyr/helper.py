@@ -211,7 +211,28 @@ def get_config_instance_from_env_variables(instance_name):
     return json_config
 
 
-def load_instance_config(instance_name):
+def create_repositories(instance):
+    for path in [
+        instance.source_directory,
+        instance.backup_directory,
+        instance.synonyms_file,
+        instance.aliases_file,
+    ]:
+        if path and not os.path.exists(path):
+            logging.getLogger(__name__).info(
+                "Create {path} path for {name} instance".format(path=path, name=instance.name)
+            )
+            try:
+                os.makedirs(path)
+            except OSError as error:
+                msg = "Error on create path {path} for instance {name} , error: {message}".format(
+                    path=path, name=instance.name, message=error.strerror
+                )
+                logging.getLogger(__name__).error(msg)
+                raise ValueError(msg)
+
+
+def load_instance_config(instance_name, force_create_paths=True):
     config = get_config_instance_from_env_variables(instance_name)
     if not config:
         config = get_config_instance_from_ini_file(instance_name)
@@ -229,7 +250,9 @@ def load_instance_config(instance_name):
     instance.pg_dbname = config['database']['dbname']
     instance.pg_username = config['database']['username']
     instance.pg_password = config['database']['password']
-    instance.pg_port = config['database']['port']
+    instance.pg_port = int(config['database']['port'])
+    if force_create_paths:
+        create_repositories(instance)
     return instance
 
 
