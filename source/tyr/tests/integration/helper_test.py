@@ -32,6 +32,11 @@ from tyr.helper import is_activate_autocomplete_version, load_instance_config, g
 from tyr import app
 import pytest
 import os
+from mock import patch
+
+
+def fake_create_repositories(_):
+    pass
 
 
 def test_is_activate_autocomplete_version_with_mimir2(enable_mimir2):
@@ -59,23 +64,27 @@ def test_is_activate_autocomplete_version_without_mimir(disable_mimir):
 
 
 def test_valid_config_instance_from_env_variables(valid_instance_env_variables):
-    instance = load_instance_config("fr-se-lyon", force_create_paths=False)
-    assert instance.aliases_file == "/ed/aliases"
-    assert instance.backup_directory == "/ed/backup"
-    assert instance.exchange == "exchange"
-    assert instance.is_free == True
-    assert instance.name == "fr-se-lyon"
-    assert instance.pg_port == 492
+    with patch('tyr.helper.create_repositories', fake_create_repositories):
+        instance = load_instance_config("fr-se-lyon")
+        assert instance.aliases_file == "/ed/aliases"
+        assert instance.backup_directory == "/ed/backup"
+        assert instance.exchange == "exchange"
+        assert instance.is_free == True
+        assert instance.name == "fr-se-lyon"
+        assert instance.pg_port == 492
 
 
 def test_valid_config_instance_from_env_variables_upper_instance_name(valid_instance_env_variables):
-    instance = load_instance_config("FR-SE-lyon", force_create_paths=False)
-    assert instance.aliases_file == "/ed/aliases"
-    assert instance.backup_directory == "/ed/backup"
-    assert instance.exchange == "exchange"
-    assert instance.is_free == True
-    assert instance.name == "fr-se-lyon"
-    assert instance.pg_port == 492
+    with patch('tyr.helper.create_repositories', fake_create_repositories):
+        instance = load_instance_config("FR-SE-lyon")
+        assert instance.aliases_file == "/ed/aliases"
+        assert instance.backup_directory == "/ed/backup"
+        assert instance.exchange == "exchange"
+        assert instance.is_free == True
+        assert instance.name == "fr-se-lyon"
+        assert instance.pg_port == 492
+        assert not os.path.exists(instance.aliases_file)
+        assert not os.path.exists(instance.backup_directory)
 
 
 def test_valid_config_instance_from_env_variables_and_instance_not_in_env_variables(
@@ -83,18 +92,20 @@ def test_valid_config_instance_from_env_variables_and_instance_not_in_env_variab
 ):
     with app.app_context():
         with pytest.raises(ValueError) as exc:
-            load_instance_config("fr-auv", force_create_paths=False)
-        assert 'File doesn\'t exists or is not a file' in str(exc.value)
-        assert '/fr-auv.ini' in str(exc.value)
+            with patch('tyr.helper.create_repositories', fake_create_repositories):
+                load_instance_config("fr-auv")
+            assert 'File doesn\'t exists or is not a file' in str(exc.value)
+            assert '/fr-auv.ini' in str(exc.value)
 
 
 def test_invalid_config_instance_from_env_variables(invalid_instance_env_variables):
 
     with pytest.raises(ValueError) as exc:
-        load_instance_config("fr-se-lyon", force_create_paths=False)
+        with patch('tyr.helper.create_repositories', fake_create_repositories):
+            load_instance_config("fr-se-lyon")
 
-    assert "Config is not valid for instance fr-se-lyon" in str(exc.value)
-    assert "'492' is not of type 'number'" in str(exc.value)
+        assert "Config is not valid for instance fr-se-lyon" in str(exc.value)
+        assert "'492' is not of type 'number'" in str(exc.value)
 
 
 def test_get_instances_name(init_instances_dir, valid_instance_env_variables):

@@ -232,7 +232,7 @@ def create_repositories(instance):
                 raise ValueError(msg)
 
 
-def load_instance_config(instance_name, force_create_paths=True):
+def load_instance_config(instance_name):
     config = get_config_instance_from_env_variables(instance_name)
     if not config:
         config = get_config_instance_from_ini_file(instance_name)
@@ -251,8 +251,7 @@ def load_instance_config(instance_name, force_create_paths=True):
     instance.pg_username = config['database']['username']
     instance.pg_password = config['database']['password']
     instance.pg_port = int(config['database']['port'])
-    if force_create_paths:
-        create_repositories(instance)
+    create_repositories(instance)
     return instance
 
 
