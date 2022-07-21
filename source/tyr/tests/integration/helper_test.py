@@ -31,6 +31,12 @@ from __future__ import absolute_import, print_function, division
 from tyr.helper import is_activate_autocomplete_version, load_instance_config, get_instances_name
 from tyr import app
 import pytest
+import os
+from mock import patch
+
+
+def fake_create_repositories(_):
+    pass
 
 
 def test_is_activate_autocomplete_version_with_mimir2(enable_mimir2):
@@ -58,23 +64,27 @@ def test_is_activate_autocomplete_version_without_mimir(disable_mimir):
 
 
 def test_valid_config_instance_from_env_variables(valid_instance_env_variables):
-    instance = load_instance_config("fr-se-lyon")
-    assert instance.aliases_file == "/ed/aliases"
-    assert instance.backup_directory == "/ed/backup"
-    assert instance.exchange == "exchange"
-    assert instance.is_free == True
-    assert instance.name == "fr-se-lyon"
-    assert instance.pg_port == 492
+    with patch('tyr.helper.create_repositories', fake_create_repositories):
+        instance = load_instance_config("fr-se-lyon")
+        assert instance.aliases_file == "/ed/aliases"
+        assert instance.backup_directory == "/ed/backup"
+        assert instance.exchange == "exchange"
+        assert instance.is_free == True
+        assert instance.name == "fr-se-lyon"
+        assert instance.pg_port == 492
 
 
 def test_valid_config_instance_from_env_variables_upper_instance_name(valid_instance_env_variables):
-    instance = load_instance_config("FR-SE-lyon")
-    assert instance.aliases_file == "/ed/aliases"
-    assert instance.backup_directory == "/ed/backup"
-    assert instance.exchange == "exchange"
-    assert instance.is_free == True
-    assert instance.name == "fr-se-lyon"
-    assert instance.pg_port == 492
+    with patch('tyr.helper.create_repositories', fake_create_repositories):
+        instance = load_instance_config("FR-SE-lyon")
+        assert instance.aliases_file == "/ed/aliases"
+        assert instance.backup_directory == "/ed/backup"
+        assert instance.exchange == "exchange"
+        assert instance.is_free == True
+        assert instance.name == "fr-se-lyon"
+        assert instance.pg_port == 492
+        assert not os.path.exists(instance.aliases_file)
+        assert not os.path.exists(instance.backup_directory)
 
 
 def test_valid_config_instance_from_env_variables_and_instance_not_in_env_variables(
@@ -82,18 +92,20 @@ def test_valid_config_instance_from_env_variables_and_instance_not_in_env_variab
 ):
     with app.app_context():
         with pytest.raises(ValueError) as exc:
-            load_instance_config("fr-auv")
-        assert 'File doesn\'t exists or is not a file' in str(exc.value)
-        assert '/fr-auv.ini' in str(exc.value)
+            with patch('tyr.helper.create_repositories', fake_create_repositories):
+                load_instance_config("fr-auv")
+            assert 'File doesn\'t exists or is not a file' in str(exc.value)
+            assert '/fr-auv.ini' in str(exc.value)
 
 
 def test_invalid_config_instance_from_env_variables(invalid_instance_env_variables):
 
     with pytest.raises(ValueError) as exc:
-        load_instance_config("fr-se-lyon")
+        with patch('tyr.helper.create_repositories', fake_create_repositories):
+            load_instance_config("fr-se-lyon")
 
-    assert "Config is not valid for instance fr-se-lyon" in str(exc.value)
-    assert "'492' is not of type 'number'" in str(exc.value)
+        assert "Config is not valid for instance fr-se-lyon" in str(exc.value)
+        assert "'492' is not of type 'number'" in str(exc.value)
 
 
 def test_get_instances_name(init_instances_dir, valid_instance_env_variables):
@@ -110,3 +122,16 @@ def test_get_instances_name_same_instance(init_instances_dir, valid_instance_env
         instances = get_instances_name()
         assert len(instances) == 1
         assert "fr" in instances
+
+
+def test_create_repositories(create_repositories_instance_env_variables):
+    with app.app_context():
+        instance = load_instance_config("auv")
+        for path in [
+            instance.source_directory,
+            instance.backup_directory,
+            instance.synonyms_file,
+            instance.aliases_file,
+        ]:
+            assert path.startswith("/tmp/tyr_instance_auv_")
+            assert os.path.exists(path)
