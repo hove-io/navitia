@@ -51,6 +51,8 @@ MAX_ITEMS_PER_PAGE = os.getenv('TYR_MAX_ITEMS_PER_PAGE', 10)
 # - WARN
 # - ERROR
 
+log_level = os.getenv('TYR_LOG_LEVEL', 'DEBUG')
+
 # logger configuration
 LOGGER = {
     'version': 1,
@@ -61,9 +63,9 @@ LOGGER = {
             'format': '%(name)s: [%(asctime)s] [%(levelname)5s] [%(process)5s] [%(task_id)s] %(message)s'
         },
     },
-    'handlers': {'default': {'level': 'DEBUG', 'class': 'logging.StreamHandler', 'formatter': 'default'}},
+    'handlers': {'default': {'level': log_level, 'class': 'logging.StreamHandler', 'formatter': 'default'}},
     'loggers': {
-        '': {'handlers': ['default'], 'level': 'DEBUG'},
+        '': {'handlers': ['default'], 'level': log_level},
         'celery': {'level': 'INFO'},
         'sqlalchemy.engine': {'handlers': ['default'], 'level': 'WARN', 'propagate': True},
         'sqlalchemy.pool': {'handlers': ['default'], 'level': 'WARN', 'propagate': True},
