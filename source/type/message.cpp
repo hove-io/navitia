@@ -218,7 +218,7 @@ std::vector<ImpactedVJ> get_impacted_vehicle_journeys(const RailSection& rs,
 
     LOG4CPLUS_DEBUG(log, "validity pattern " << impact_vp.str());
     LOG4CPLUS_DEBUG(log, "start stop area " << rs.start_point->label);
-    LOG4CPLUS_DEBUG(log, "start stop area " << rs.end_point->label);
+    LOG4CPLUS_DEBUG(log, "end stop area " << rs.end_point->label);
     LOG4CPLUS_DEBUG(log, "impact application periods length " << impact.application_periods.size());
 
     auto apply_impacts_on_vj = [&](const nt::VehicleJourney& vj) {
@@ -234,39 +234,29 @@ std::vector<ImpactedVJ> get_impacted_vehicle_journeys(const RailSection& rs,
         }
 
         // Filtering each journey to see if it's impacted by the section.
-        auto section = vj.get_sections_ranks(rs.start_point, rs.end_point);
+        LOG4CPLUS_DEBUG(log, "check impact " << impact.uri << " on vj " << vj.uri);
+        if (rs.impacts(&vj)) {
+            auto section = vj.get_sections_ranks(rs.start_point, rs.end_point);
 
-        // For NO_SERVICE we should impact all stop_points from rs.start_point to
-        // last stop_point of the vj
-        if (impact.severity->effect == nt::disruption::Effect::NO_SERVICE) {
-            section = vj.get_no_service_sections_ranks(rs.start_point);
-        }
-
-        if (section.size() > 0) {
-            LOG4CPLUS_DEBUG(log, "vj " << vj.uri << " section length " << section.size());
-            std::string section_str = "";
-            for (auto rank : section) {
-                section_str = section_str + "_" + std::to_string(rank.val);
+            // For NO_SERVICE we should impact all stop_points from rs.start_point to
+            // last stop_point of the vj
+            if (impact.severity->effect == nt::disruption::Effect::NO_SERVICE) {
+                section = vj.get_no_service_sections_ranks(rs.start_point);
             }
-            LOG4CPLUS_DEBUG(log, " section " << section_str);
-            LOG4CPLUS_DEBUG(log, " vj stop times length " << vj.stop_time_list.size());
-            LOG4CPLUS_DEBUG(log, " base vj stop times length " << vj.get_corresponding_base()->stop_time_list.size());
-        }
-
-        if (!section.empty()) {
             LOG4CPLUS_DEBUG(log, "vj " << vj.uri << " Inside !" << section.size());
             // Once we know the line section is part of the vj we compute the vp for the adapted_vj
             nt::ValidityPattern new_vp{vj.validity_patterns[rt_level]->beginning_date};
             for (const auto& period : impact.application_periods) {
                 // get the vp of the section
                 auto section_validity_pattern = vj.get_vp_for_section(section, rt_level, period);
-                LOG4CPLUS_DEBUG(log, "vj " << vj.uri << "section validity pattern " << section_validity_pattern.str());
+                // LOG4CPLUS_DEBUG(log, "vj " << vj.uri << "section validity pattern " <<
+                // section_validity_pattern.str());
                 new_vp.days |= section_validity_pattern.days;
             }
 
             // If there is effective days for the adapted vp we're keeping it
             if (!new_vp.days.none()) {
-                LOG4CPLUS_TRACE(log, "vj " << vj.uri << " is affected, keeping it.");
+                LOG4CPLUS_DEBUG(log, "impact " << impact.uri << " does affect vj " << vj.uri);
                 new_vp.days >>= vj.shift;
                 vj_vp_pairs.emplace_back(vj.uri, new_vp, std::move(section));
             }
@@ -746,6 +736,102 @@ bool RailSection::is_end_stop(const std::string& uri) const {
     return this->end_point->uri == uri;
 }
 
+bool RailSection::impacts(const VehicleJourney* vehicle_journey) const {
+    auto log = log4cplus::Logger::getInstance("log");
+    if (vehicle_journey == nullptr) {
+        return false;
+    }
+    // we work on the base_vj (if it exists) to determine if this rail section impacts vehicle_journey
+    const VehicleJourney* base_vj = vehicle_journey->get_corresponding_base();
+    const VehicleJourney* vj = base_vj ? base_vj : vj;
+
+    // the RailSection impacts the vj in 3 cases :
+    // 1. the vj contains all blocked_stop_areas in their exact order
+    // 2. the vj starts in a blocked_stop_area, and then visit the subsequent blocked_stop_areas in their exact order
+    // 3. the vj ends in a blocked stop_area, and visit the previous blocked_stop_areas in their exact order
+
+    const std::vector<StopTime>& stop_times = vj->stop_time_list;
+
+    // there is no blocked_stop_area, so this rail section does not impact any vj
+    if (blocked_stop_areas.empty()) {
+        return false;
+    }
+
+    if (stop_times.empty()) {
+        return false;
+    }
+
+    // let's first check if we can find the first blocked_stop_area in the stop_time list
+    const std::string& first_stop_area_uri = blocked_stop_areas.front().first;
+    auto find_first_blocked_stop_area = std::find_if(stop_times.begin(), stop_times.end(), [&](StopTime stop_time) {
+        return stop_time.is_in_stop_area(first_stop_area_uri);
+    });
+    bool first_blocked_stop_area_found_in_stop_times = find_first_blocked_stop_area != stop_times.end();
+
+    // the first blocked stop_area appears in the stop_time list,
+    // let's keep iterating the stop_times to see if it contains have all blocked stop_areas consecutively
+    if (first_blocked_stop_area_found_in_stop_times) {
+        auto blocked_stop_area_iter = blocked_stop_areas.begin();
+        auto stop_times_iter = find_first_blocked_stop_area;
+        LOG4CPLUS_DEBUG(log, "first blocked_stop_area " << first_stop_area_uri << " found");
+
+        // let's iterate on both stop_times and blocked stop_areas
+        while (blocked_stop_area_iter != blocked_stop_areas.end() && stop_times_iter != stop_times.end()) {
+            const std::string& stop_area_uri = blocked_stop_area_iter->first;
+            const StopTime& stop_time = *stop_times_iter;
+            if (!stop_time.is_in_stop_area(stop_area_uri)) {
+                LOG4CPLUS_DEBUG(log, "blocked_stop_area " << stop_area_uri << " NOT FOUND");
+                // found a stop_time which is not in the sequence of blocked_stop_areas
+                return false;
+            }
+            LOG4CPLUS_DEBUG(log, "blocked_stop_area " << stop_area_uri << " found");
+            blocked_stop_area_iter++;
+            stop_times_iter++;
+        }
+        // here either :
+        //  - blocked_stop_area_iter == blocked_stop_areas.end() which means we found all blocked_stop_areas in their
+        //  exact order
+        //  - stop_times_iter == stop_times.end() which means the vj ends in a blocked stop_area, and visit the previous
+        //  blocked_stop_areas in their exact order
+        return true;
+    }
+
+    // let's now check if the first stop_time is in the blocked_stop_areas
+    const StopTime& first_stop_time = stop_times.front();
+    auto find_first_stop_time = std::find_if(
+        blocked_stop_areas.begin(), blocked_stop_areas.end(),
+        [&](std::pair<std::string, uint32_t> pair) { return first_stop_time.is_in_stop_area(pair.first); });
+    bool first_stop_time_found_in_blocked_stop_areas = find_first_stop_time != blocked_stop_areas.end();
+
+    if (first_stop_time_found_in_blocked_stop_areas) {
+        auto blocked_stop_area_iter = find_first_stop_time;
+        auto stop_times_iter = stop_times.begin();
+
+        // let's iterate on both stop_times and blocked stop_areas
+        while (blocked_stop_area_iter != blocked_stop_areas.end() && stop_times_iter != stop_times.end()) {
+            const std::string& stop_area_uri = blocked_stop_area_iter->first;
+            const StopTime& stop_time = *stop_times_iter;
+            if (!stop_time.is_in_stop_area(stop_area_uri)) {
+                // found a stop_time which is not in the sequence of blocked_stop_areas
+                return false;
+            }
+            blocked_stop_area_iter++;
+            stop_times_iter++;
+        }
+
+        if (blocked_stop_area_iter == blocked_stop_areas.end()) {
+            // here it means that the vj starts in a blocked_stop_area, and then visit the subsequent blocked_stop_areas
+            // in their exact order
+            return true;
+        }
+        // here it means that the vj starts in a blocked stop_area, visit the subsequent blocked_stop_areas in their
+        // exact order, but it does not visit ALL blocked_stop_area before the end of its stop_times
+        return false;
+    }
+
+    return false;
+}
+
 std::set<StopPoint*> get_stop_points_section(const RailSection& rs, const Effect effect) {
     std::set<StopPoint*> res;
     std::vector<navitia::type::Route*> routes;
@@ -757,23 +843,24 @@ std::set<StopPoint*> get_stop_points_section(const RailSection& rs, const Effect
 
     for (const auto* route : routes) {
         route->for_each_vehicle_journey([&](const VehicleJourney& vj) {
-            auto section = vj.get_sections_ranks(rs.start_point, rs.end_point);
-            if (effect == nt::disruption::Effect::NO_SERVICE) {
-                section = vj.get_no_service_sections_ranks(rs.start_point);
-            }
-            if (section.empty()) {
-                return true;
-            }
-            for (auto stop_time : vj.stop_time_list) {
-                const StopTime* base_stop_time = stop_time.get_base_stop_time();
-                if (base_stop_time == nullptr) {
-                    continue;
+            if (rs.impacts(&vj)) {
+                auto section = vj.get_sections_ranks(rs.start_point, rs.end_point);
+                if (effect == nt::disruption::Effect::NO_SERVICE) {
+                    section = vj.get_no_service_sections_ranks(rs.start_point);
                 }
-                if (section.count(base_stop_time->order()) > 0) {
-                    res.insert(stop_time.stop_point);
+                if (section.empty()) {
+                    return true;
+                }
+                for (auto stop_time : vj.stop_time_list) {
+                    const StopTime* base_stop_time = stop_time.get_base_stop_time();
+                    if (base_stop_time == nullptr) {
+                        continue;
+                    }
+                    if (section.count(base_stop_time->order()) > 0) {
+                        res.insert(stop_time.stop_point);
+                    }
                 }
             }
-
             return false;
         });
     }

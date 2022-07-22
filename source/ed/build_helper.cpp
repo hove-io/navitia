@@ -541,6 +541,11 @@ Impacter& Impacter::on_rail_section(const std::string& line_uri,
             rail_section.blocked_stop_areas.emplace_back(bsa.first, bsa.second);
         }
     }
+    auto sort_predicate = [](const std::pair<std::string, uint32_t>& sa1, const std::pair<std::string, uint32_t>& sa2) {
+        return sa1.second < sa2.second;
+    };
+
+    std::sort(rail_section.blocked_stop_areas.begin(), rail_section.blocked_stop_areas.end(), sort_predicate);
 
     for (auto& uri : route_uris) {
         auto* route = b.get<nt::Route>(uri);

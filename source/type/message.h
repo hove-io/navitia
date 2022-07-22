@@ -225,6 +225,8 @@ struct RailSection {
     bool is_blocked_end_point() const;
     bool is_end_stop(const std::string& uri) const;
 
+    bool impacts(const VehicleJourney* vj) const;
+
     template <class archive>
     void serialize(archive& ar, const unsigned int);
 };

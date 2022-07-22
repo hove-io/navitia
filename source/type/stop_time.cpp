@@ -33,6 +33,7 @@ www.navitia.io
 #include "type/indexes.h"
 #include "type/serialization.h"
 #include "type/stop_point.h"
+#include "type/stop_area.h"
 #include "type/vehicle_journey.h"
 #include "utils/logger.h"
 
@@ -116,6 +117,16 @@ const StopTime* StopTime::get_base_stop_time() const {
 bool StopTime::is_similar(const StopTime& st) const {
     return arrival_time == st.arrival_time && departure_time == st.departure_time
            && stop_point->idx == st.stop_point->idx;
+}
+
+bool StopTime::is_in_stop_area(const std::string& stop_area_uri) const {
+    if (stop_point == nullptr) {
+        return false;
+    }
+    if (stop_point->stop_area == nullptr) {
+        return false;
+    }
+    return stop_point->stop_area->uri == stop_area_uri;
 }
 
 }  // namespace type
