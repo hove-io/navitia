@@ -284,9 +284,18 @@ boost::optional<nt::disruption::RailSection> make_rail_section(const chaos::PtOb
     // Blocked_stop_areas
     if (!pb_section.blocked_stop_areas().empty()) {
         log_message += " blocked stop _areas: ";
-        for (const auto& pb_bsa : pb_section.blocked_stop_areas()) {
-            rail_section.blocked_stop_areas.emplace_back(pb_bsa.uri(), pb_bsa.order());
-            log_message += pb_bsa.uri() + "_order_" + std::to_string(pb_bsa.order()) + ";";
+        for (const auto& blocked_stop_area : pb_section.blocked_stop_areas()) {
+            auto stop_area_uri = blocked_stop_area.uri();
+
+            auto found_stop_area = pt_data.stop_areas_map.find(stop_area_uri);
+            if (found_stop_area == pt_data.stop_areas_map.end()) {
+                LOG4CPLUS_WARN(
+                    log, "Unknown stop area " << stop_area_uri << " in rail section. I'll ignore this rail section");
+                return boost::none;
+            }
+
+            rail_section.blocked_stop_areas.emplace_back(stop_area_uri, blocked_stop_area.order());
+            log_message += stop_area_uri + "_order_" + std::to_string(blocked_stop_area.order()) + ";";
         }
     }
     auto sort_predicate = [](const std::pair<std::string, uint32_t>& sa1, const std::pair<std::string, uint32_t>& sa2) {
