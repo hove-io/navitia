@@ -490,13 +490,6 @@ std::vector<ImpactedVJ> get_impacted_vehicle_journeys(const RailSection& rs,
                                                       const boost::gregorian::date_period& production_period,
                                                       type::RTLevel rt_level);
 
-std::pair<BlockedSAList, ConcatenateBlockedSASequence> create_blocked_sa_sequence(const RailSection& rs);
-bool is_route_to_impact_content_sa_list(const BlockedSAList& blocked_sa_uri_sequence,
-                                        const boost::container::flat_set<StopArea*>& stop_area_list);
-bool blocked_sa_sequence_matching(const ConcatenateBlockedSASequence& concatenate_blocked_sa_uri_sequence_string,
-                                  const navitia::type::VehicleJourney& vj,
-                                  const std::set<RankStopTime>& st_rank_list);
-
 }  // namespace disruption
 
 }  // namespace type

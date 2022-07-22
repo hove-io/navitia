@@ -210,16 +210,8 @@ std::vector<ImpactedVJ> get_impacted_vehicle_journeys(const RailSection& rs,
         routes = rs.routes;
     }
 
-    // auto blocked_sa_uri_sequence = create_blocked_sa_sequence(rs);
-    // LOG4CPLUS_DEBUG(log, "blocked stop areas sequence " << blocked_sa_uri_sequence.second);
-
     // Computing a validity_pattern of impact used to pre-filter concerned vjs later
     type::ValidityPattern impact_vp = impact.get_impact_vp(production_period);
-
-    LOG4CPLUS_DEBUG(log, "validity pattern " << impact_vp.str());
-    LOG4CPLUS_DEBUG(log, "start stop area " << rs.start_point->label);
-    LOG4CPLUS_DEBUG(log, "start stop area " << rs.end_point->label);
-    LOG4CPLUS_DEBUG(log, "impact application periods length " << impact.application_periods.size());
 
     auto apply_impacts_on_vj = [&](const nt::VehicleJourney& vj) {
         /*
@@ -242,25 +234,12 @@ std::vector<ImpactedVJ> get_impacted_vehicle_journeys(const RailSection& rs,
             section = vj.get_no_service_sections_ranks(rs.start_point);
         }
 
-        if (section.size() > 0) {
-            LOG4CPLUS_DEBUG(log, "vj " << vj.uri << " section length " << section.size());
-            std::string section_str = "";
-            for (auto rank : section) {
-                section_str = section_str + "_" + std::to_string(rank.val);
-            }
-            LOG4CPLUS_DEBUG(log, " section " << section_str);
-            LOG4CPLUS_DEBUG(log, " vj stop times length " << vj.stop_time_list.size());
-            LOG4CPLUS_DEBUG(log, " base vj stop times length " << vj.get_corresponding_base()->stop_time_list.size());
-        }
-
         if (!section.empty()) {
-            LOG4CPLUS_DEBUG(log, "vj " << vj.uri << " Inside !" << section.size());
             // Once we know the line section is part of the vj we compute the vp for the adapted_vj
             nt::ValidityPattern new_vp{vj.validity_patterns[rt_level]->beginning_date};
             for (const auto& period : impact.application_periods) {
                 // get the vp of the section
                 auto section_validity_pattern = vj.get_vp_for_section(section, rt_level, period);
-                LOG4CPLUS_DEBUG(log, "vj " << vj.uri << "section validity pattern " << section_validity_pattern.str());
                 new_vp.days |= section_validity_pattern.days;
             }
 
@@ -275,87 +254,10 @@ std::vector<ImpactedVJ> get_impacted_vehicle_journeys(const RailSection& rs,
     };
 
     for (const auto* route : routes) {
-        // TODO : fix the stop_area_list issue
-        // The list is empty
-        // if (!is_route_to_impact_content_sa_list(blocked_sa_uri_sequence.first, route->stop_area_list)) {
-        // continue;
-        //}
-
         // Loop on each vj
         route->for_each_vehicle_journey(apply_impacts_on_vj);
     }
     return vj_vp_pairs;
-}
-
-// convert URI SA rail section into ordered list
-std::pair<BlockedSAList, ConcatenateBlockedSASequence> create_blocked_sa_sequence(const RailSection& rs) {
-    BlockedSAList blocked_sa_uri_sequence;
-
-    if (rs.start_point == nullptr || rs.end_point == nullptr) {
-        return std::make_pair(blocked_sa_uri_sequence, "");
-    }
-
-    // add start_point SA only if start_point SA is not first (ordered)
-    // element of blocked_stop_areas
-    const auto min = std::min_element(std::begin(rs.blocked_stop_areas), std::end(rs.blocked_stop_areas),
-                                      [](const auto& lhs, const auto& rhs) { return lhs.second < rhs.second; });
-
-    if (min != std::end(rs.blocked_stop_areas) && min->first != rs.start_point->uri) {
-        blocked_sa_uri_sequence.insert(std::make_pair(0, rs.start_point->uri));
-    }
-
-    // add blocked_stop_areas list
-    for (const auto& bsa : rs.blocked_stop_areas) {
-        blocked_sa_uri_sequence.insert(std::make_pair(bsa.second + 1, bsa.first));
-    }
-    // add end_point SA only if end_point SA is not already in blocked_stop_areas
-    if (blocked_sa_uri_sequence.rbegin() != blocked_sa_uri_sequence.rend()
-        && blocked_sa_uri_sequence.rbegin()->second != rs.end_point->uri) {
-        blocked_sa_uri_sequence.insert(std::make_pair(blocked_sa_uri_sequence.rbegin()->first + 1, rs.end_point->uri));
-    }
-
-    std::string concatenate_bsa_uri_sequence_string = "";
-    for (const auto& bsa : blocked_sa_uri_sequence) {
-        concatenate_bsa_uri_sequence_string += bsa.second;
-    }
-    return std::make_pair(blocked_sa_uri_sequence, concatenate_bsa_uri_sequence_string);
-}
-
-// Only check if all blocked SA are contained inside route
-bool is_route_to_impact_content_sa_list(const BlockedSAList& blocked_sa_uri_sequence,
-                                        const boost::container::flat_set<StopArea*>& stop_area_list) {
-    for (const auto& sa : blocked_sa_uri_sequence) {
-        std::string bsa_uri = sa.second;
-        auto result = std::find_if(stop_area_list.begin(), stop_area_list.end(),
-                                   [&bsa_uri](const auto& sa) { return sa->uri == bsa_uri; });
-        if (result == stop_area_list.end()) {
-            return false;
-        }
-    }
-    return true;
-}
-
-// Check if the SA sequence (start point - blocked sa list - end point) match with the founded sa list
-bool blocked_sa_sequence_matching(const ConcatenateBlockedSASequence& concatenate_bsa_uri_sequence_string,
-                                  const nt::VehicleJourney& vj,
-                                  const std::set<RankStopTime>& st_rank_list) {
-    if (!concatenate_bsa_uri_sequence_string.empty() || !st_rank_list.empty()) {
-        std::string st_meta_string = "";
-        for (const auto st : st_rank_list) {
-            if (st.val >= vj.stop_time_list.size()) {
-                return false;
-            }
-            const auto sp = vj.stop_time_list[st.val].stop_point;
-            if (sp == nullptr || sp->stop_area == nullptr) {
-                return false;
-            }
-            st_meta_string += sp->stop_area->uri;
-        }
-        if (st_meta_string == concatenate_bsa_uri_sequence_string) {
-            return true;
-        }
-    }
-    return false;
 }
 
 struct InformedEntitiesLinker : public boost::static_visitor<> {
@@ -412,7 +314,6 @@ struct InformedEntitiesLinker : public boost::static_visitor<> {
         }
     }
     void operator()(const nt::disruption::RailSection& rail_section) const {
-        LOG4CPLUS_INFO(log, "New rail section for impact " << impact->uri);
         auto impacted_vjs = get_impacted_vehicle_journeys(rail_section, *impact, production_period, rt_level);
         std::set<type::StopPoint*> impacted_stop_points;
         std::set<type::MetaVehicleJourney*> impacted_meta_vjs;
@@ -422,7 +323,6 @@ struct InformedEntitiesLinker : public boost::static_visitor<> {
         }
         for (auto& impacted_vj : impacted_vjs) {
             const std::string& vj_uri = impacted_vj.vj_uri;
-            LOG4CPLUS_TRACE(log, "Impacted vj : " << vj_uri);
             auto vj_iterator = pt_data.vehicle_journeys_map.find(vj_uri);
             if (vj_iterator == pt_data.vehicle_journeys_map.end()) {
                 LOG4CPLUS_TRACE(log, "impacted vj : " << vj_uri << " not found in data. I ignore it.");
