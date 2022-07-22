@@ -136,7 +136,7 @@ def make_connection_string(instance_config):
     connection_string += ' user=' + instance_config.pg_username
     connection_string += ' dbname=' + instance_config.pg_dbname
     connection_string += ' password=' + instance_config.pg_password
-    connection_string += ' port=' + instance_config.pg_port
+    connection_string += ' port={port}'.format(port=instance_config.pg_port)
     return connection_string
 
 
