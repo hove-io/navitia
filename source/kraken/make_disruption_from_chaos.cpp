@@ -286,7 +286,7 @@ boost::optional<nt::disruption::RailSection> make_rail_section(const chaos::PtOb
         log_message += " blocked stop _areas: ";
         for (const auto& pb_bsa : pb_section.blocked_stop_areas()) {
             rail_section.blocked_stop_areas.emplace_back(pb_bsa.uri(), pb_bsa.order());
-            log_message += pb_bsa.uri() + ";";
+            log_message += pb_bsa.uri() + "_order_" + std::to_string(pb_bsa.order()) + ";";
         }
     }
 
@@ -424,11 +424,14 @@ static boost::shared_ptr<nt::disruption::Impact> make_impact(const chaos::Impact
 
     impact->severity = make_severity(chaos_impact.severity(), holder);
 
+    auto log = log4cplus::Logger::getInstance("log");
+    LOG4CPLUS_WARN(log, "Make impact " << chaos_impact.id());
     for (auto& ptobj : make_pt_objects(chaos_impact.informed_entities(), pt_data)) {
+        LOG4CPLUS_WARN(log, "New pt object for impact " << chaos_impact.id());
         nt::disruption::Impact::link_informed_entity(std::move(ptobj), impact, meta.production_date,
                                                      nt::RTLevel::Adapted, pt_data);
     }
-
+    LOG4CPLUS_WARN(log, "Finished making impact " << chaos_impact.id());
     for (const auto& chaos_message : chaos_impact.messages()) {
         const auto& channel = chaos_message.channel();
         auto channel_types = create_channel_types(channel);
