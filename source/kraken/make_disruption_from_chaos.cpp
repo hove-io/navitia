@@ -289,6 +289,11 @@ boost::optional<nt::disruption::RailSection> make_rail_section(const chaos::PtOb
             log_message += pb_bsa.uri() + "_order_" + std::to_string(pb_bsa.order()) + ";";
         }
     }
+    auto sort_predicate = [](const std::pair<std::string, uint32_t>& sa1, const std::pair<std::string, uint32_t>& sa2) {
+        return sa1.second < sa2.second;
+    };
+
+    std::sort(rail_section.blocked_stop_areas.begin(), rail_section.blocked_stop_areas.end(), sort_predicate);
 
     LOG4CPLUS_DEBUG(log, log_message);
     return rail_section;
