@@ -708,6 +708,61 @@ std::set<StopPoint*> LineSection::get_stop_points_section() const {
     }
     return res;
 }
+
+boost::optional<RailSection> try_make_rail_section(
+    const nt::PT_Data& pt_data,
+    const std::string& start_uri,
+    const std::vector<std::pair<std::string, uint32_t>>& blockeds_uri_order,
+    const std::string& end_uri,
+    const std::string* line_uri,                // may be null
+    const std::vector<std::string> routes_uris  // may be empty
+) {
+    auto logger = log4cplus::Logger::getInstance("log");
+    const std::unordered_map<std::string, StopArea*>& stop_areas_map = pt_data.stop_areas_map;
+
+    // find start stop area if it exists
+    auto find_start = stop_areas_map.find(start_uri);
+    if (find_start == stop_areas_map.end()) {
+        LOG4CPLUS_WARN(logger, "Rail section with unknown start stop area : " << start_uri);
+        return boost::none;
+    }
+    const StopArea* start = stop_areas_map.at(start_uri);
+
+    // find end_stop_area if it exists
+    auto find_end = stop_areas_map.find(end_uri);
+    if (find_end == stop_areas_map.end()) {
+        LOG4CPLUS_WARN(logger, "Rail section with unknown end stop area : " << end_uri);
+        return boost::none;
+    }
+    const StopArea* end = stop_areas_map.at(end_uri);
+
+    // sort blockeds by their order
+    std::vector<std::pair<std::string, uint32_t>> blockeds_sorted = blockeds_uri_order;
+    auto sort_predicate = [](const std::pair<std::string, uint32_t>& sa1, const std::pair<std::string, uint32_t>& sa2) {
+        return sa1.second < sa2.second;
+    };
+
+    std::sort(blockeds_sorted.begin(), blockeds_sorted.end(), sort_predicate);
+
+    std::vector<StopArea*> blockeds{};
+
+    for (const auto& pair : blockeds_sorted) {
+        const std::string& blocked_uri = pair.first;
+        auto find_blocked = stop_areas_map.find(blocked_uri);
+        if (find_blocked == stop_areas_map.end()) {
+            LOG4CPLUS_WARN(logger, "Rail section with unknown blocked stop area : " << blocked_uri);
+            return boost::none;
+        }
+        StopArea* blocked_stop_area = stop_areas_map.at(blocked_uri);
+        blockeds.push_back(blocked_stop_area);
+    }
+
+    if (line_uri == nullptr && routes_uris.empty()) {
+        LOG4CPLUS_WARN(logger, "Rail section with empty line and empty routes.");
+        return boost::none;
+    }
+}
+
 bool RailSection::is_blocked_start_point() const {
     if (this->blocked_stop_areas.empty()) {
         return false;
@@ -745,21 +800,40 @@ bool RailSection::impacts(const VehicleJourney* vehicle_journey) const {
     const VehicleJourney* base_vj = vehicle_journey->get_corresponding_base();
     const VehicleJourney* vj = base_vj ? base_vj : vj;
 
-    // the RailSection impacts the vj in 3 cases :
-    // 1. the vj contains all blocked_stop_areas in their exact order
-    // 2. the vj starts in a blocked_stop_area, and then visit the subsequent blocked_stop_areas in their exact order
-    // 3. the vj ends in a blocked stop_area, and visit the previous blocked_stop_areas in their exact order
-
     const std::vector<StopTime>& stop_times = vj->stop_time_list;
-
-    // there is no blocked_stop_area, so this rail section does not impact any vj
-    if (blocked_stop_areas.empty()) {
-        return false;
-    }
 
     if (stop_times.empty()) {
         return false;
     }
+
+    // there is no blocked_stop_areas, so we just rely on start_point and end_point
+    // the rail_section will impact vj iff the vj contains two consecutive stop_times whose stop_areas are start_point
+    // and end_point
+    if (blocked_stop_areas.empty()) {
+        if (start_point == nullptr) {
+            return false;
+        }
+        if (end_point == nullptr) {
+            return false;
+        }
+        const std::string& start_uri = start_point->uri;
+        const std::string& end_uri = end_point->uri;
+        for (int i = 0; i + 1 < stop_times.size(); ++i) {
+            const StopTime& stop_time = stop_times[i];
+            if (stop_time.is_in_stop_area(start_uri)) {
+                const StopTime& next_stop_time = stop_times[i + 1];
+                if (next_stop_time.is_in_stop_area(end_uri)) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    // we have some blocked stop_areas, so the RailSection impacts the vj in 3 cases :
+    // 1. the vj contains all blocked_stop_areas in their exact order
+    // 2. the vj starts in a blocked_stop_area, and then visit the subsequent blocked_stop_areas in their exact order
+    // 3. the vj ends in a blocked stop_area, and visit the previous blocked_stop_areas in their exact order
 
     // let's first check if we can find the first blocked_stop_area in the stop_time list
     const std::string& first_stop_area_uri = blocked_stop_areas.front().first;

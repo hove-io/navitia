@@ -215,9 +215,16 @@ struct LineSection {
 
 struct RailSection {
     Line* line = nullptr;
-    StopArea* start_point = nullptr;
-    StopArea* end_point = nullptr;
-    std::vector<std::pair<std::string, uint32_t>> blocked_stop_areas;
+    StopArea* start = nullptr;
+    StopArea* end = nullptr;
+    std::vector<StopArea*> blockeds;
+
+    // if start and end are both not blocked      : contains [start, blockeds, end]
+    // if start is blocked and end is not blocked : contains [blockeds, end]
+    // if start is not blocked and end is blocked : contains [start, blockeds]
+    // if start and end are both blocked          : contains [blockeds]
+    std::vector<StopArea*> impacted_stop_areas;
+
     std::vector<Route*> routes;
 
     bool is_blocked_start_point() const;
@@ -230,6 +237,15 @@ struct RailSection {
     template <class archive>
     void serialize(archive& ar, const unsigned int);
 };
+
+boost::optional<RailSection> try_make_rail_section(
+    const nt::PT_Data& pt_data,
+    const std::string& start_uri,
+    const std::vector<std::pair<std::string, uint32_t>> blockeds_uri_order,
+    const std::string& end_uri,
+    const std::string* line_uri,                // may be null
+    const std::vector<std::string> routes_uris  // may be empty
+);
 
 std::set<StopPoint*> get_stop_points_section(const RailSection& rs);
 
