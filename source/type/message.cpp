@@ -79,7 +79,7 @@ SERIALIZABLE(LineSection)
 
 template <class archive>
 void RailSection::serialize(archive& ar, const unsigned int /*unused*/) {
-    ar& line& start_point& end_point& blocked_stop_areas& routes;
+    ar& line& start& end& blockeds& impacted_stop_areas& routes;
 }
 SERIALIZABLE(RailSection)
 
@@ -834,31 +834,25 @@ boost::optional<RailSection> try_make_rail_section(
 }
 
 bool RailSection::is_blocked_start_point() const {
-    if (this->blocked_stop_areas.empty()) {
+    if (this->blockeds.empty()) {
         return false;
     }
-    return this->blocked_stop_areas.front().first == this->start_point->uri;
+    return this->blockeds.front()->idx == this->start->idx;
 }
 
 bool RailSection::is_start_stop(const std::string& uri) const {
-    if (this->blocked_stop_areas.empty()) {
-        return false;
-    }
-    return this->start_point->uri == uri;
+    return this->start->uri == uri;
 }
 
 bool RailSection::is_blocked_end_point() const {
-    if (this->blocked_stop_areas.empty()) {
+    if (this->blockeds.empty()) {
         return false;
     }
-    return this->blocked_stop_areas.back().first == this->end_point->uri;
+    return this->blockeds.back()->idx == this->end->idx;
 }
 
 bool RailSection::is_end_stop(const std::string& uri) const {
-    if (this->blocked_stop_areas.empty()) {
-        return false;
-    }
-    return this->end_point->uri == uri;
+    return this->end->uri == uri;
 }
 
 bool RailSection::impacts(const VehicleJourney* vehicle_journey) const {
