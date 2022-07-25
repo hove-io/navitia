@@ -214,9 +214,24 @@ struct LineSection {
 };
 
 struct RailSection {
-    Line* line = nullptr;
-    StopArea* start = nullptr;
-    StopArea* end = nullptr;
+    RailSection(StopArea* start_,
+                StopArea* end_,
+                std::vector<StopArea*> blockeds_,
+                std::vector<StopArea*> impacted_stop_areas_,
+                Line* line_,
+                std::vector<Route*> routes_)
+        : start(start_),
+          end(end_),
+          blockeds(blockeds_),
+          impacted_stop_areas(impacted_stop_areas_),
+          line(line_),
+          routes(routes_){};
+
+    // never null
+    StopArea* start;
+    // never null
+    StopArea* end;
+
     std::vector<StopArea*> blockeds;
 
     // if start and end are both not blocked      : contains [start, blockeds, end]
@@ -225,6 +240,10 @@ struct RailSection {
     // if start and end are both blocked          : contains [blockeds]
     std::vector<StopArea*> impacted_stop_areas;
 
+    // may be null if not line was given
+    Line* line;
+
+    // never empty
     std::vector<Route*> routes;
 
     bool is_blocked_start_point() const;

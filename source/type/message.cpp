@@ -723,18 +723,23 @@ boost::optional<RailSection> try_make_rail_section(
     // find start stop area if it exists
     auto find_start = stop_areas_map.find(start_uri);
     if (find_start == stop_areas_map.end()) {
-        LOG4CPLUS_WARN(logger, "Rail section with unknown start stop area : " << start_uri);
+        LOG4CPLUS_WARN(logger, "Rail section with unknown start stop area: " << start_uri);
         return boost::none;
     }
-    const StopArea* start = stop_areas_map.at(start_uri);
+    StopArea* start = stop_areas_map.at(start_uri);
 
     // find end_stop_area if it exists
     auto find_end = stop_areas_map.find(end_uri);
     if (find_end == stop_areas_map.end()) {
-        LOG4CPLUS_WARN(logger, "Rail section with unknown end stop area : " << end_uri);
+        LOG4CPLUS_WARN(logger, "Rail section with unknown end stop area: " << end_uri);
         return boost::none;
     }
-    const StopArea* end = stop_areas_map.at(end_uri);
+    StopArea* end = stop_areas_map.at(end_uri);
+
+    if (start->idx == end->idx) {
+        LOG4CPLUS_WARN(logger, "Rail section with the same start and end stop_area: " << end_uri);
+        return boost::none;
+    }
 
     // sort blockeds by their order
     std::vector<std::pair<std::string, uint32_t>> blockeds_sorted = blockeds_uri_order;
@@ -758,9 +763,74 @@ boost::optional<RailSection> try_make_rail_section(
     }
 
     if (line_uri == nullptr && routes_uris.empty()) {
-        LOG4CPLUS_WARN(logger, "Rail section with empty line and empty routes.");
+        LOG4CPLUS_WARN(logger, "Rail section with no line and empty routes.");
         return boost::none;
     }
+
+    const std::unordered_map<std::string, Route*>& routes_map = pt_data.routes_map;
+    std::vector<Route*> routes{};
+    for (const auto& route_uri : routes_uris) {
+        auto find_route = routes_map.find(route_uri);
+        if (find_route == routes_map.end()) {
+            LOG4CPLUS_WARN(logger, "Rail section with unknown route : " << route_uri);
+            return boost::none;
+        }
+        Route* route = routes_map.at(route_uri);
+        routes.push_back(route);
+    }
+
+    Line* line = nullptr;
+    if (line_uri != nullptr) {
+        const std::unordered_map<std::string, Line*>& lines_map = pt_data.lines_map;
+        auto find_line = lines_map.find(*line_uri);
+        if (find_line == lines_map.end()) {
+            LOG4CPLUS_WARN(logger, "Rail section with unknown line : " << *line_uri);
+            return boost::none;
+        }
+        line = lines_map.at(*line_uri);
+
+        // if no routes are given in the input, we take all routes from the line
+        if (routes.empty()) {
+            routes = line->route_list;
+        }
+        // some routes were given, let's check that they belong to "line"
+        else {
+            for (Route* route : routes) {
+                if (route->line == nullptr) {
+                    LOG4CPLUS_WARN(logger, "Rail section has line: '"
+                                               << *line_uri << "' but also a route with no line: " << route->uri);
+                    return boost::none;
+                }
+                if (route->line->idx != line->idx) {
+                    LOG4CPLUS_WARN(logger, "Rail section has line: '"
+                                               << *line_uri << "' but also a route: '" << route->uri
+                                               << "' that belongs to a different line: " << route->line->uri);
+                    return boost::none;
+                }
+            }
+        }
+    }
+
+    std::vector<StopArea*> impacted_stop_areas{};
+    if (impacted_stop_areas.empty()) {
+        impacted_stop_areas.push_back(start);
+        impacted_stop_areas.push_back(end);
+    } else {
+        if (blockeds.front()->idx != start->idx) {
+            impacted_stop_areas.push_back(start);
+        }
+
+        for (StopArea* blocked : blockeds) {
+            impacted_stop_areas.push_back(blocked);
+        }
+
+        if (blockeds.back()->idx != end->idx) {
+            impacted_stop_areas.push_back(end);
+        }
+    }
+
+    RailSection result(start, end, blockeds, impacted_stop_areas, line, routes);
+    return result;
 }
 
 bool RailSection::is_blocked_start_point() const {
