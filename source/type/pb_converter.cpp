@@ -92,8 +92,8 @@ struct PbCreator::Filler::PtObjVisitor : public boost::static_visitor<> {
 
         auto* impacted_rail_section = pobj->mutable_impacted_rail_section();
 
-        filler.copy(0, DumpMessage::No).fill_pb_object(rail_section.start_point, impacted_rail_section->mutable_from());
-        filler.copy(0, DumpMessage::No).fill_pb_object(rail_section.end_point, impacted_rail_section->mutable_to());
+        filler.copy(0, DumpMessage::No).fill_pb_object(rail_section.start, impacted_rail_section->mutable_from());
+        filler.copy(0, DumpMessage::No).fill_pb_object(rail_section.end, impacted_rail_section->mutable_to());
 
         std::vector<navitia::type::Route*> routes;
         if (rail_section.routes.empty()) {

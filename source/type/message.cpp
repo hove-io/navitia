@@ -643,8 +643,8 @@ boost::optional<RailSection> try_make_rail_section(
     const std::string& start_uri,
     const std::vector<std::pair<std::string, uint32_t>>& blockeds_uri_order,
     const std::string& end_uri,
-    const boost::optional<std::string> line_uri,  // may be null
-    const std::vector<std::string> routes_uris    // may be empty
+    const boost::optional<std::string>& line_uri,  // may be null
+    const std::vector<std::string>& routes_uris    // may be empty
 ) {
     auto logger = log4cplus::Logger::getInstance("log");
     const std::unordered_map<std::string, StopArea*>& stop_areas_map = pt_data.stop_areas_map;

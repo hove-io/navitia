@@ -202,7 +202,7 @@ boost::optional<nt::disruption::LineSection> make_line_section(const chaos::PtOb
 }
 
 boost::optional<nt::disruption::RailSection> make_rail_section(const chaos::PtObject& chaos_section,
-                                                               nt::PT_Data& pt_data) {
+                                                               const nt::PT_Data& pt_data) {
     auto log = log4cplus::Logger::getInstance("log");
     if (!chaos_section.has_pt_rail_section()) {
         LOG4CPLUS_WARN(log, "fill_disruption_from_chaos: RailSection invalid!");
@@ -227,9 +227,10 @@ boost::optional<nt::disruption::RailSection> make_rail_section(const chaos::PtOb
         routes.push_back(proto_route.uri());
     }
 
-    return navitia::type::disruption::try_make_rail_section(pt_data, proto_section.start_point().uri(),
-                                                            blockeds_uri_order, proto_section.end_point().uri(),
-                                                            line_uri, routes);
+    std::string start_uri = proto_section.start_point().uri();
+    std::string end_uri = proto_section.end_point().uri();
+
+    return nt::disruption::try_make_rail_section(pt_data, start_uri, blockeds_uri_order, end_uri, line_uri, routes);
 }
 
 static std::vector<nt::disruption::PtObj> make_pt_objects(

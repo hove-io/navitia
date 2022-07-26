@@ -215,6 +215,7 @@ struct LineSection {
 };
 
 struct RailSection {
+    RailSection() = default;
     RailSection(StopArea* start_,
                 StopArea* end_,
                 std::vector<StopArea*> blockeds_,
@@ -261,10 +262,10 @@ struct RailSection {
 boost::optional<RailSection> try_make_rail_section(
     const navitia::type::PT_Data& pt_data,
     const std::string& start_uri,
-    const std::vector<std::pair<std::string, uint32_t>> blockeds_uri_order,
+    const std::vector<std::pair<std::string, uint32_t>>& blockeds_uri_order,
     const std::string& end_uri,
-    const boost::optional<std::string> line_uri,  // may be null
-    const std::vector<std::string> routes_uris    // may be empty
+    const boost::optional<std::string>& line_uri,  // may be null
+    const std::vector<std::string>& routes_uris    // may be empty
 );
 
 std::set<StopPoint*> get_stop_points_section(const RailSection& rs);
