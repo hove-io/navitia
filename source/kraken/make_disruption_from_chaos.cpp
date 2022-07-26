@@ -209,103 +209,27 @@ boost::optional<nt::disruption::RailSection> make_rail_section(const chaos::PtOb
         return boost::none;
     }
     std::string log_message = "new rail Section disruption received -";
-    const auto& pb_section = chaos_section.pt_rail_section();
-    nt::disruption::RailSection rail_section;
+    const auto& proto_section = chaos_section.pt_rail_section();
 
-    // Start
-    if (auto* start = find_or_default(pb_section.start_point().uri(), pt_data.stop_areas_map)) {
-        rail_section.start_point = start;
-        log_message += " start: " + pb_section.start_point().uri();
-    } else {
-        LOG4CPLUS_WARN(log, "fill_disruption_from_chaos: start_point id " << pb_section.start_point().uri()
-                                                                          << " in RailSection invalid!");
-        return boost::none;
+    std::vector<std::pair<std::string, uint32_t>> blockeds_uri_order;
+
+    for (const auto& blocked_stop_area : proto_section.blocked_stop_areas()) {
+        blockeds_uri_order.emplace_back(blocked_stop_area.uri(), blocked_stop_area.order());
     }
 
-    // End
-    if (auto* end = find_or_default(pb_section.end_point().uri(), pt_data.stop_areas_map)) {
-        rail_section.end_point = end;
-        log_message += " end: " + pb_section.end_point().uri();
-    } else {
-        LOG4CPLUS_WARN(log, "fill_disruption_from_chaos: end_point id " << pb_section.end_point().uri()
-                                                                        << " in RailSection invalid!");
-        return boost::none;
+    boost::optional<std::string> line_uri = boost::none;
+    if (proto_section.has_line()) {
+        line_uri = proto_section.line().uri();
     }
 
-    if (pb_section.routes().empty() && !pb_section.has_line()) {
-        LOG4CPLUS_WARN(log, "routes or line are mandatory. Railsection ignored");
-        return boost::none;
+    std::vector<std::string> routes;
+    for (const auto& proto_route : proto_section.routes()) {
+        routes.push_back(proto_route.uri());
     }
 
-    // Line
-    if (pb_section.has_line()) {
-        auto* line = find_or_default(pb_section.line().uri(), pt_data.lines_map);
-        if (line) {
-            rail_section.line = line;
-            log_message += " line: " + pb_section.line().uri();
-        } else {
-            LOG4CPLUS_WARN(
-                log, "fill_disruption_from_chaos: line id " << pb_section.line().uri() << " in RailSection invalid!");
-            return boost::none;
-        }
-        if (pb_section.routes().empty()) {
-            rail_section.routes = rail_section.line->route_list;
-        }
-    }
-
-    // Routes
-    if (!pb_section.routes().empty()) {
-        log_message += " route: ";
-        for (const auto& pb_route : pb_section.routes()) {
-            auto* route = find_or_default(pb_route.uri(), pt_data.routes_map);
-            if (route) {
-                rail_section.routes.push_back(route);
-                log_message += pb_route.uri() + ";";
-            } else {
-                LOG4CPLUS_WARN(log,
-                               "fill_disruption_from_chaos: route id " << pb_route.uri() << " in RailSection invalid!");
-            }
-        }
-        if (rail_section.routes.empty()) {
-            LOG4CPLUS_WARN(log, "fill_disruption_from_chaos: no valid routes. Railsection ignored");
-            return boost::none;
-        }
-        if (!pb_section.has_line()) {
-            auto* route = find_or_default(pb_section.routes().Get(0).uri(), pt_data.routes_map);
-            if (route) {
-                rail_section.line = route->line;
-            } else {
-                LOG4CPLUS_WARN(log, "fill_disruption_from_chaos: route id " << pb_section.routes().Get(0).uri()
-                                                                            << " in RailSection invalid!");
-            }
-        }
-    }
-
-    // Blocked_stop_areas
-    if (!pb_section.blocked_stop_areas().empty()) {
-        log_message += " blocked stop _areas: ";
-        for (const auto& blocked_stop_area : pb_section.blocked_stop_areas()) {
-            auto stop_area_uri = blocked_stop_area.uri();
-
-            auto found_stop_area = pt_data.stop_areas_map.find(stop_area_uri);
-            if (found_stop_area == pt_data.stop_areas_map.end()) {
-                LOG4CPLUS_WARN(
-                    log, "Unknown stop area " << stop_area_uri << " in rail section. I'll ignore this rail section");
-                return boost::none;
-            }
-
-            rail_section.blocked_stop_areas.emplace_back(stop_area_uri, blocked_stop_area.order());
-            log_message += stop_area_uri + "_order_" + std::to_string(blocked_stop_area.order()) + ";";
-        }
-    }
-    auto sort_predicate = [](const std::pair<std::string, uint32_t>& sa1, const std::pair<std::string, uint32_t>& sa2) {
-        return sa1.second < sa2.second;
-    };
-
-    std::sort(rail_section.blocked_stop_areas.begin(), rail_section.blocked_stop_areas.end(), sort_predicate);
-
-    LOG4CPLUS_DEBUG(log, log_message);
-    return rail_section;
+    return navitia::type::disruption::try_make_rail_section(pt_data, proto_section.start_point().uri(),
+                                                            blockeds_uri_order, proto_section.end_point().uri(),
+                                                            line_uri, routes);
 }
 
 static std::vector<nt::disruption::PtObj> make_pt_objects(

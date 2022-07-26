@@ -427,7 +427,7 @@ struct add_impacts_visitor : public apply_impacts_visitor {
     }
 
     void operator()(nt::disruption::RailSection& rs) {
-        std::string uri = "new rail section, start: " + rs.start_point->uri + " - end: " + rs.end_point->uri;
+        std::string uri = "new rail section, start: " + rs.start->uri + " - end: " + rs.end->uri;
         if (rs.line) {
             uri += ", line : " + rs.line->uri;
         } else if (!rs.routes.empty()) {
@@ -446,10 +446,6 @@ struct add_impacts_visitor : public apply_impacts_visitor {
             this->log_end_action(uri);
             return;
         }
-
-        auto sort_predicate = [](const std::pair<std::string, uint32_t>& sa1,
-                                 const std::pair<std::string, uint32_t>& sa2) { return sa1.second < sa2.second; };
-        std::sort(rs.blocked_stop_areas.begin(), rs.blocked_stop_areas.end(), sort_predicate);
 
         LOG4CPLUS_TRACE(log, "canceling " << uri);
 

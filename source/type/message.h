@@ -37,6 +37,7 @@ www.navitia.io
 
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/variant.hpp>
+#include <boost/optional.hpp>
 #include <boost/range/iterator_range.hpp>
 
 #include <atomic>
@@ -258,12 +259,12 @@ struct RailSection {
 };
 
 boost::optional<RailSection> try_make_rail_section(
-    const nt::PT_Data& pt_data,
+    const navitia::type::PT_Data& pt_data,
     const std::string& start_uri,
     const std::vector<std::pair<std::string, uint32_t>> blockeds_uri_order,
     const std::string& end_uri,
-    const std::string* line_uri,                // may be null
-    const std::vector<std::string> routes_uris  // may be empty
+    const boost::optional<std::string> line_uri,  // may be null
+    const std::vector<std::string> routes_uris    // may be empty
 );
 
 std::set<StopPoint*> get_stop_points_section(const RailSection& rs);

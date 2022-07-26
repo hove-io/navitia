@@ -639,12 +639,12 @@ std::set<StopPoint*> LineSection::get_stop_points_section() const {
 }
 
 boost::optional<RailSection> try_make_rail_section(
-    const nt::PT_Data& pt_data,
+    const navitia::type::PT_Data& pt_data,
     const std::string& start_uri,
     const std::vector<std::pair<std::string, uint32_t>>& blockeds_uri_order,
     const std::string& end_uri,
-    const std::string* line_uri,                // may be null
-    const std::vector<std::string> routes_uris  // may be empty
+    const boost::optional<std::string> line_uri,  // may be null
+    const std::vector<std::string> routes_uris    // may be empty
 ) {
     auto logger = log4cplus::Logger::getInstance("log");
     const std::unordered_map<std::string, StopArea*>& stop_areas_map = pt_data.stop_areas_map;
@@ -705,7 +705,7 @@ boost::optional<RailSection> try_make_rail_section(
 
     // find lines
     Line* line = nullptr;
-    if (line_uri != nullptr) {
+    if (line_uri) {
         const std::unordered_map<std::string, Line*>& lines_map = pt_data.lines_map;
         auto find_line = lines_map.find(*line_uri);
         if (find_line == lines_map.end()) {
