@@ -119,14 +119,17 @@ bool StopTime::is_similar(const StopTime& st) const {
            && stop_point->idx == st.stop_point->idx;
 }
 
-bool StopTime::is_in_stop_area(const std::string& stop_area_uri) const {
+bool StopTime::is_in_stop_area(const StopArea* stop_area) const {
     if (stop_point == nullptr) {
         return false;
     }
     if (stop_point->stop_area == nullptr) {
         return false;
     }
-    return stop_point->stop_area->uri == stop_area_uri;
+    if (stop_area == nullptr) {
+        return false;
+    }
+    return stop_point->stop_area->idx == stop_area->idx;
 }
 
 }  // namespace type

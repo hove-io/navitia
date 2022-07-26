@@ -126,7 +126,7 @@ struct StopTime {
 
     const StopTime* get_base_stop_time() const;
 
-    bool is_in_stop_area(const std::string& stop_area_uri) const;
+    bool is_in_stop_area(const StopArea* stop_area) const;
 
     //  Check if a stop time has similar hours of departure/arrival/alighting/boarding_time etc...
     //  We don't want to rely on properties that might change with real time object.
