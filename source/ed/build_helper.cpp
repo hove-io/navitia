@@ -527,19 +527,15 @@ Impacter& Impacter::on_rail_section(const std::string& line_uri,
                                     const std::vector<std::pair<std::string, uint32_t>>& blocked_stop_areas,
                                     const std::vector<std::string>& routes_uris,
                                     nt::PT_Data& pt_data) {
-    // Note: don't forget to set the application period before calling this method for the correct
-    // vehicle_journeys to be impacted
-
     boost::optional<dis::RailSection> rail_section =
         dis::try_make_rail_section(pt_data, start_uri, blocked_stop_areas, end_uri, line_uri, routes_uris);
     if (!rail_section) {
-        LOG4CPLUS_DEBUG(log4cplus::Logger::getInstance("logger"), "bad rail section");
-        // we set rail_section to an empty one
-        rail_section = dis::RailSection();
+        LOG4CPLUS_WARN(log4cplus::Logger::getInstance("logger"), "bad rail section");
+    } else {
+        dis::Impact::link_informed_entity(std::move(*rail_section), impact, b.data->meta->production_date,
+                                          get_disruption().rt_level, pt_data);
     }
 
-    dis::Impact::link_informed_entity(std::move(*rail_section), impact, b.data->meta->production_date,
-                                      get_disruption().rt_level, pt_data);
     return *this;
 }
 
