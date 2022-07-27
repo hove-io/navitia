@@ -310,16 +310,6 @@ int main(int argc, const char* const argv[]) {
                                   .get_disruption(),
                               *b.data->pt_data, *b.data->meta);
 
-    // line_section NO_SERVICE on rer B on port_royal
-    navitia::apply_disruption(b.impact(nt::RTLevel::Adapted, "line_section_on_rer_b_port_royal")
-                                  .severity(nt::disruption::Effect::NO_SERVICE)
-                                  .application_periods(btp("20170101T000000"_dt, "20170105T000000"_dt))
-                                  .publish(btp("20170101T000000"_dt, "20170110T000000"_dt))
-                                  .on_line_section("line:RER-B", "port_royal_area", "port_royal_area",
-                                                   {"route_rer_b_sud", "route_rer_b_nord"}, *b.data->pt_data)
-                                  .get_disruption(),
-                              *b.data->pt_data, *b.data->meta);
-
     // rail_section NO_SERVICE on rer B between gare_du_nord and parc_des_expos on both routes
     navitia::apply_disruption(
         b.impact(nt::RTLevel::Adapted, "rail_section_on_rer_b")
@@ -334,6 +324,16 @@ int main(int argc, const char* const argv[]) {
                              {"route_rer_b_sud"}, *b.data->pt_data)
             .get_disruption(),
         *b.data->pt_data, *b.data->meta);
+
+    // line_section NO_SERVICE on rer B on port_royal
+    navitia::apply_disruption(b.impact(nt::RTLevel::Adapted, "line_section_on_rer_b_port_royal")
+                                  .severity(nt::disruption::Effect::NO_SERVICE)
+                                  .application_periods(btp("20170101T000000"_dt, "20170105T000000"_dt))
+                                  .publish(btp("20170101T000000"_dt, "20170110T000000"_dt))
+                                  .on_line_section("line:RER-B", "port_royal_area", "port_royal_area",
+                                                   {"route_rer_b_sud", "route_rer_b_nord"}, *b.data->pt_data)
+                                  .get_disruption(),
+                              *b.data->pt_data, *b.data->meta);
 
     b.finish();
     mock_kraken kraken(b, argc, argv);

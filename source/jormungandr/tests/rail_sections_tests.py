@@ -704,6 +704,54 @@ class TestRailSections(AbstractTestFixture):
         for disruption, result in scenario.items():
             assert result == (disruption in d)
 
+        # denfert-> cdg / Base_schedule: A disruption to display on vj:rer_b_nord
+        scenario = {
+            'rail_section_on_rer_b': True,
+            'line_section_on_rer_b_port_royal': False,
+        }
+        r = journeys(_from='denfert_area', to='cdg_area')
+        assert len(r["journeys"]) == 1
+        assert get_used_vj(r) == [['vehicle_journey:vj:rer_b_nord']]
+        d = get_all_element_disruptions(r['journeys'], r)
+        for disruption, result in scenario.items():
+            assert result == (disruption in d)
+
+        # denfert-> port_royal / Base_schedule: A disruption to display on vj:rer_b_nord
+        scenario = {
+            'rail_section_on_rer_b': False,
+            'line_section_on_rer_b_port_royal': True,
+        }
+        r = journeys(_from='denfert_area', to='port_royal_area')
+        assert len(r["journeys"]) == 1
+        assert get_used_vj(r) == [['vehicle_journey:vj:rer_b_nord']]
+        d = get_all_element_disruptions(r['journeys'], r)
+        for disruption, result in scenario.items():
+            assert result == (disruption in d)
+
+        # cdg-> denfert / Base_schedule: A disruption to display on vj:rer_b_sud
+        scenario = {
+            'rail_section_on_rer_b': True,
+            'line_section_on_rer_b_port_royal': False,
+        }
+        r = journeys(_from='cdg_area', to='denfert_area')
+        assert len(r["journeys"]) == 1
+        assert get_used_vj(r) == [['vehicle_journey:vj:rer_b_sud']]
+        d = get_all_element_disruptions(r['journeys'], r)
+        for disruption, result in scenario.items():
+            assert result == (disruption in d)
+
+        # cdg-> port_royal / Base_schedule: Two disruption to display on vj:rer_b_sud
+        scenario = {
+            'rail_section_on_rer_b': True,
+            'line_section_on_rer_b_port_royal': True,
+        }
+        r = journeys(_from='cdg_area', to='port_royal_area')
+        assert len(r["journeys"]) == 1
+        assert get_used_vj(r) == [['vehicle_journey:vj:rer_b_sud']]
+        d = get_all_element_disruptions(r['journeys'], r)
+        for disruption, result in scenario.items():
+            assert result == (disruption in d)
+
     def test_traffic_reports_on_stop_areas(self):
         """
         we should be able to find the related rail section disruption with /traffic_reports
