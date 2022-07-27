@@ -363,14 +363,10 @@ static boost::shared_ptr<nt::disruption::Impact> make_impact(const chaos::Impact
 
     impact->severity = make_severity(chaos_impact.severity(), holder);
 
-    auto log = log4cplus::Logger::getInstance("log");
-    LOG4CPLUS_WARN(log, "Make impact " << chaos_impact.id());
     for (auto& ptobj : make_pt_objects(chaos_impact.informed_entities(), pt_data)) {
-        LOG4CPLUS_WARN(log, "New pt object for impact " << chaos_impact.id());
         nt::disruption::Impact::link_informed_entity(std::move(ptobj), impact, meta.production_date,
                                                      nt::RTLevel::Adapted, pt_data);
     }
-    LOG4CPLUS_WARN(log, "Finished making impact " << chaos_impact.id());
     for (const auto& chaos_message : chaos_impact.messages()) {
         const auto& channel = chaos_message.channel();
         auto channel_types = create_channel_types(channel);

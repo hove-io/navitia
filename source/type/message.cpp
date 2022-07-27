@@ -216,11 +216,6 @@ std::vector<ImpactedVJ> get_impacted_vehicle_journeys(const RailSection& rs,
     // Computing a validity_pattern of impact used to pre-filter concerned vjs later
     type::ValidityPattern impact_vp = impact.get_impact_vp(production_period);
 
-    LOG4CPLUS_DEBUG(log, "validity pattern " << impact_vp.str());
-    LOG4CPLUS_DEBUG(log, "start stop area " << rs.start->label);
-    LOG4CPLUS_DEBUG(log, "end stop area " << rs.end->label);
-    LOG4CPLUS_DEBUG(log, "impact application periods length " << impact.application_periods.size());
-
     auto apply_impacts_on_vj = [&](const nt::VehicleJourney& vj) {
         /*
          * Pre-filtering by validity pattern, which allows us to check if the vj is impacted quickly
@@ -234,7 +229,7 @@ std::vector<ImpactedVJ> get_impacted_vehicle_journeys(const RailSection& rs,
         }
 
         // Filtering each journey to see if it's impacted by the section.
-        LOG4CPLUS_DEBUG(log, "check impact " << impact.uri << " on vj " << vj.uri);
+
         if (rs.impacts(&vj)) {
             auto section = vj.get_sections_ranks(rs.start, rs.end);
 
@@ -243,7 +238,7 @@ std::vector<ImpactedVJ> get_impacted_vehicle_journeys(const RailSection& rs,
             if (impact.severity->effect == nt::disruption::Effect::NO_SERVICE) {
                 section = vj.get_no_service_sections_ranks(rs.start);
             }
-            LOG4CPLUS_DEBUG(log, "vj " << vj.uri << " Inside !" << section.size());
+
             // Once we know the line section is part of the vj we compute the vp for the adapted_vj
             nt::ValidityPattern new_vp{vj.validity_patterns[rt_level]->beginning_date};
             for (const auto& period : impact.application_periods) {
@@ -256,7 +251,6 @@ std::vector<ImpactedVJ> get_impacted_vehicle_journeys(const RailSection& rs,
 
             // If there is effective days for the adapted vp we're keeping it
             if (!new_vp.days.none()) {
-                LOG4CPLUS_DEBUG(log, "impact " << impact.uri << " does affect vj " << vj.uri);
                 new_vp.days >>= vj.shift;
                 vj_vp_pairs.emplace_back(vj.uri, new_vp, std::move(section));
             }
@@ -265,12 +259,6 @@ std::vector<ImpactedVJ> get_impacted_vehicle_journeys(const RailSection& rs,
     };
 
     for (const auto* route : routes) {
-        // TODO : fix the stop_area_list issue
-        // The list is empty
-        // if (!is_route_to_impact_content_sa_list(blocked_sa_uri_sequence.first, route->stop_area_list)) {
-        // continue;
-        //}
-
         // Loop on each vj
         route->for_each_vehicle_journey(apply_impacts_on_vj);
     }
