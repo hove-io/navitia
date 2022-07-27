@@ -64,6 +64,12 @@ ed::builder create_complex_data_for_rail_section() {
      * route 100: A1 B1 C1 D1 E1 F1 G1 H1 I1
      * route 101-1: P1 Q1 R1 S1 T1 U1 V1
      * route 101-2: V1 U1 T1 S1 R1 Q1 P1
+     *
+     *
+     *
+     * line RER-B : denfert - port_royal - luxembourg - chatelet - gare_du_nord - aulnay - villepinte - parc_des_expos -
+     * cdg
+     *
      */
     ed::builder b("20170101", [](ed::builder& b) {
         b.sa("stopAreaA", 0., 1.)("stopA", 0., 1.);
@@ -117,6 +123,17 @@ ed::builder create_complex_data_for_rail_section() {
         b.sa("stopAreaU1", 0., 45.)("stopU1", 0., 45.);
         b.sa("stopAreaV1", 0., 46.)("stopV1", 0., 46.);
 
+        b.sa("denfert_area", 0., 47.)("denfert", 0., 47.);
+        b.sa("port_royal_area", 0., 48.)("port_royal", 0., 48.);
+        b.sa("luxembourg_area", 0., 49.)("luxembourg", 0., 49.);
+        b.sa("chatelet_area", 0., 50.)("chatelet", 0., 50.);
+        b.sa("gare_du_nord_area", 0., 51.)("gare_du_nord", 0., 51.);
+        b.sa("aulnay_area", 0., 52.)("aulnay", 0., 52.);
+        b.sa("villepinte_area", 0., 53.)("villepinte", 0., 53.);
+        b.sa("parc_des_expos_area", 0., 54.)("parc_des_expos", 0., 54.);
+        b.sa("cdg_area", 0., 55.)("cdg", 0., 55.);
+        b.sa("denfert_area", 0., 56.)("denfert", 0., 56.);
+
         b.vj("line:1", "111111", "", true, "vj:1")
             .route("route1")("stopA", "08:00"_t)("stopB", "08:05"_t)("stopC", "08:10"_t)("stopD", "08:15"_t)(
                 "stopE", "08:20"_t)("stopF", "08:25"_t)("stopG", "08:30"_t)("stopH", "08:35"_t)("stopI", "08:40"_t);
@@ -159,6 +176,15 @@ ed::builder create_complex_data_for_rail_section() {
         b.vj("line:101", "111111", "", true, "vj:101-2")
             .route("route101-2")("stopV1", "08:00"_t)("stopU1", "08:05"_t)("stopT1", "08:10"_t)("stopS1", "08:15"_t)(
                 "stopR1", "08:20"_t)("stopQ1", "08:25"_t)("stopP1", "08:30"_t);
+
+        b.vj("line:RER-B", "111111", "", true, "vj:rer_b_nord")
+            .route("route_rer_b_nord")("denfert", "08:00"_t)("port_royal", "08:05"_t)("luxembourg", "08:10"_t)(
+                "chatelet", "08:15"_t)("gare_du_nord", "08:20"_t)("aulnay", "08:25"_t)("villepinte", "08:30"_t)(
+                "parc_des_expos", "08:35"_t)("cdg", "08:40"_t);
+        b.vj("line:RER-B", "111111", "", true, "vj:rer_b_sud")
+            .route("route_rer_b_sud")("cdg", "08:00"_t)("parc_des_expos", "08:05"_t)("villepinte", "08:10"_t)(
+                "aulnay", "08:15"_t)("gare_du_nord", "08:20"_t)("chatelet", "08:25"_t)("luxembourg", "08:30"_t)(
+                "port_royal", "08:35"_t)("denfert", "08:40"_t);
     });
 
     b.data->meta->production_date = bg::date_period(bg::date(2017, 1, 1), bg::days(30));
@@ -283,6 +309,31 @@ int main(int argc, const char* const argv[]) {
                                                    {"route101-2"}, *b.data->pt_data)
                                   .get_disruption(),
                               *b.data->pt_data, *b.data->meta);
+
+    // line_section NO_SERVICE on rer B on port_royal
+    navitia::apply_disruption(b.impact(nt::RTLevel::Adapted, "line_section_on_rer_b_port_royal")
+                                  .severity(nt::disruption::Effect::NO_SERVICE)
+                                  .application_periods(btp("20170101T000000"_dt, "20170105T000000"_dt))
+                                  .publish(btp("20170101T000000"_dt, "20170110T000000"_dt))
+                                  .on_line_section("line:RER-B", "port_royal_area", "port_royal_area",
+                                                   {"route_rer_b_sud", "route_rer_b_nord"}, *b.data->pt_data)
+                                  .get_disruption(),
+                              *b.data->pt_data, *b.data->meta);
+
+    // rail_section NO_SERVICE on rer B between gare_du_nord and parc_des_expos on both routes
+    navitia::apply_disruption(
+        b.impact(nt::RTLevel::Adapted, "rail_section_on_rer_b")
+            .severity(nt::disruption::Effect::NO_SERVICE)
+            .application_periods(btp("20170101T000000"_dt, "20170105T000000"_dt))
+            .publish(btp("20170101T000000"_dt, "20170110T000000"_dt))
+            .on_rail_section("line:RER-B", "gare_du_nord_area", "parc_des_expos_area",
+                             {std::make_pair("aulnay_area", 1), std::make_pair("villepinte_area", 2)},
+                             {"route_rer_b_nord"}, *b.data->pt_data)
+            .on_rail_section("line:RER-B", "parc_des_expos_area", "gare_du_nord_area",
+                             {std::make_pair("aulnay_area", 2), std::make_pair("villepinte_area", 1)},
+                             {"route_rer_b_sud"}, *b.data->pt_data)
+            .get_disruption(),
+        *b.data->pt_data, *b.data->meta);
 
     b.finish();
     mock_kraken kraken(b, argc, argv);
