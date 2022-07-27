@@ -787,10 +787,8 @@ bool RailSection::impacts(const VehicleJourney* vehicle_journey) const {
         return false;
     }
 
-    // the RailSection impacts the vj in 3 cases :
-    // 1. the vj contains all impacted_stop_areas in their exact order
-    // 2. the vj starts in a impacted_stop_area, and then visit the subsequent impacted_stop_areas in their exact order
-    // 3. the vj ends in a impacted_stop_area, and visit the previous impacted_stop_areas in their exact order
+    // the RailSection impacts the vj if :
+    // the vj contains all impacted_stop_areas in their exact order
 
     // let's first check if we can find the first impacted_stop_area in the stop_time list
     const StopArea* first_stop_area = impacted_stop_areas.front();
@@ -819,48 +817,17 @@ bool RailSection::impacts(const VehicleJourney* vehicle_journey) const {
             impacted_stop_area_iter++;
             stop_times_iter++;
         }
-        // here either :
-        //  - impacted_stop_area_iter == impacted_stop_areas.end() which means we found all impacted_stop_areas in their
-        //  exact order
-        //  - stop_times_iter == stop_times.end() which means the vj ends in an impacted stop_area, and visit the
-        //  previous impacted_stop_areas in their exact order
+        if (impacted_stop_area_iter == impacted_stop_areas.end()) {
+            // here it means that found all impacted_stop_areas in their
+            //  exact order
+            return true;
+        } else {
+            // here it means that the vj ends in an impacted stop_area, and visit the
+            //  previous impacted_stop_areas in their exact order
+            return false;
+        }
         return true;
     }
-
-    // let's now check if the first stop_time is in the impacted_stop_areas
-    const StopTime& first_stop_time = stop_times.front();
-    auto find_first_stop_time =
-        std::find_if(impacted_stop_areas.begin(), impacted_stop_areas.end(),
-                     [&](StopArea* stop_area) { return first_stop_time.is_in_stop_area(stop_area); });
-    bool first_stop_time_found_in_impacted_stop_areas = find_first_stop_time != impacted_stop_areas.end();
-
-    if (first_stop_time_found_in_impacted_stop_areas) {
-        auto impacted_stop_area_iter = find_first_stop_time;
-        auto stop_times_iter = stop_times.begin();
-
-        // let's iterate on both stop_times and impacted stop_areas
-        while (impacted_stop_area_iter != impacted_stop_areas.end() && stop_times_iter != stop_times.end()) {
-            const StopArea* stop_area = *impacted_stop_area_iter;
-            const StopTime& stop_time = *stop_times_iter;
-            if (!stop_time.is_in_stop_area(stop_area)) {
-                // found a stop_time which is not in the sequence of blocked_stop_areas
-                return false;
-            }
-            impacted_stop_area_iter++;
-            stop_times_iter++;
-        }
-
-        if (impacted_stop_area_iter == impacted_stop_areas.end()) {
-            // here it means that the vj starts in a impacted_stop_area, and then visit the subsequent
-            // impacted_stop_areas in their exact order
-            return true;
-        }
-        // here it means that the vj starts in a impactted stop_area, visit the subsequent impactted_stop_areas in their
-        // exact order, but it does not visit ALL impacted_stop_area before the end of its stop_times
-        return false;
-    }
-
-    return false;
 }
 
 std::set<StopPoint*> get_stop_points_section(const RailSection& rs, const Effect effect) {
