@@ -768,7 +768,6 @@ bool RailSection::is_end_stop(const std::string& uri) const {
 }
 
 bool RailSection::impacts(const VehicleJourney* vehicle_journey) const {
-    log4cplus::Logger log = log4cplus::Logger::getInstance("log");
     if (vehicle_journey == nullptr) {
         return false;
     }
@@ -797,18 +796,15 @@ bool RailSection::impacts(const VehicleJourney* vehicle_journey) const {
     if (first_stop_area_found_in_stop_times) {
         auto impacted_stop_area_iter = impacted_stop_areas.begin();
         auto stop_times_iter = find_first_stop_area;
-        LOG4CPLUS_DEBUG(log, "first impacted_stop_area " << first_stop_area->uri << " found");
 
         // let's iterate on both stop_times and impacted stop_areas
         while (impacted_stop_area_iter != impacted_stop_areas.end() && stop_times_iter != stop_times.end()) {
             const StopArea* stop_area = *impacted_stop_area_iter;
             const StopTime& stop_time = *stop_times_iter;
             if (!stop_time.is_in_stop_area(stop_area)) {
-                LOG4CPLUS_DEBUG(log, "impacted_stop_area " << stop_area->uri << " NOT FOUND");
                 // found a stop_time which is not in the sequence of impacted_stop_areas
                 return false;
             }
-            LOG4CPLUS_DEBUG(log, "impacted_stop_area " << stop_area->uri << " found");
             impacted_stop_area_iter++;
             stop_times_iter++;
         }
