@@ -692,7 +692,7 @@ Differents kind of objects can be returned (sorted as):
   ---------|-----------|-------------|------------------------|-------------------
   yep      | q           | string    | The search term        |
   nop      | type[]      | array of string | Type of objects you want to query It takes one the following values: [`stop_area`, `address`, `administrative_region`, `poi`, `stop_point`] | [`stop_area`, `address`, `poi`, `administrative_region`]
-  nop      | admin_uri[] | array of string | If filled, it will filter the search within the given admin uris
+  nop      | ~~admin_uri[]~~ |   | Deprecated. Filters on shape are now possible straight in user account
   nop      | disable_geojson | boolean | remove geojson from the response | False
   nop      | depth       | int             | Json response [depth](#depth)     | 1
   nop      | from | string | Coordinates longitude;latitude used to prioritize the objects around this coordinate. Note this parameter will be taken into account only if the autocomplete's backend can handle it |
