@@ -87,4 +87,5 @@ jobs:
       run: |
           sonar-scanner-$SONAR_SCANNER_VERSION-linux/bin/sonar-scanner \
                 -Dsonar.login=$SONAR_TOKEN \
+                -X \
                 -Dsonar.cfamily.threads=$(nproc)
