@@ -237,12 +237,8 @@ ValidityPattern VehicleJourney::get_vp_for_section(const std::set<RankStopTime>&
             }
         }
     };
-    auto base_vj = get_corresponding_base();
-    if (base_vj != nullptr) {
-        boost::for_each(base_vj->stop_time_list, pass_in_the_section);
-    } else {
-        boost::for_each(stop_time_list, pass_in_the_section);
-    }
+
+    boost::for_each(stop_time_list, pass_in_the_section);
 
     return vp_for_section;
 }

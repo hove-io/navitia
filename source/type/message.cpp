@@ -195,7 +195,7 @@ std::vector<ImpactedVJ> get_impacted_vehicle_journeys(const RailSection& rs,
                                                       const Impact& impact,
                                                       const boost::gregorian::date_period& production_period,
                                                       type::RTLevel rt_level) {
-    auto log = log4cplus::Logger::getInstance("log");
+    log4cplus::Logger log = log4cplus::Logger::getInstance("log");
     std::vector<ImpactedVJ> vj_vp_pairs;
 
     if (rs.routes.empty() && rs.line == nullptr) {
@@ -209,9 +209,6 @@ std::vector<ImpactedVJ> get_impacted_vehicle_journeys(const RailSection& rs,
     } else {
         routes = rs.routes;
     }
-
-    // auto blocked_sa_uri_sequence = create_blocked_sa_sequence(rs);
-    // LOG4CPLUS_DEBUG(log, "blocked stop areas sequence " << blocked_sa_uri_sequence.second);
 
     // Computing a validity_pattern of impact used to pre-filter concerned vjs later
     type::ValidityPattern impact_vp = impact.get_impact_vp(production_period);
@@ -244,8 +241,6 @@ std::vector<ImpactedVJ> get_impacted_vehicle_journeys(const RailSection& rs,
             for (const auto& period : impact.application_periods) {
                 // get the vp of the section
                 auto section_validity_pattern = vj.get_vp_for_section(section, rt_level, period);
-                // LOG4CPLUS_DEBUG(log, "vj " << vj.uri << "section validity pattern " <<
-                // section_validity_pattern.str());
                 new_vp.days |= section_validity_pattern.days;
             }
 
@@ -773,7 +768,7 @@ bool RailSection::is_end_stop(const std::string& uri) const {
 }
 
 bool RailSection::impacts(const VehicleJourney* vehicle_journey) const {
-    auto log = log4cplus::Logger::getInstance("log");
+    log4cplus::Logger log = log4cplus::Logger::getInstance("log");
     if (vehicle_journey == nullptr) {
         return false;
     }
@@ -828,6 +823,8 @@ bool RailSection::impacts(const VehicleJourney* vehicle_journey) const {
         }
         return true;
     }
+
+    return false;
 }
 
 std::set<StopPoint*> get_stop_points_section(const RailSection& rs, const Effect effect) {
