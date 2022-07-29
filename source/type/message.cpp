@@ -773,7 +773,7 @@ bool RailSection::impacts(const VehicleJourney* vehicle_journey) const {
     }
     // we work on the base_vj (if it exists) to determine if this rail section impacts vehicle_journey
     const VehicleJourney* base_vj = vehicle_journey->get_corresponding_base();
-    const VehicleJourney* vj = base_vj ? base_vj : vj;
+    const VehicleJourney* vj = base_vj ? base_vj : vehicle_journey;
 
     const std::vector<StopTime>& stop_times = vj->stop_time_list;
 
