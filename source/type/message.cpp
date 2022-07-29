@@ -817,7 +817,6 @@ bool RailSection::impacts(const VehicleJourney* vehicle_journey) const {
             //  previous impacted_stop_areas in their exact order
             return false;
         }
-        return true;
     }
 
     return false;
