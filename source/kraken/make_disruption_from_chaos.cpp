@@ -203,7 +203,7 @@ boost::optional<nt::disruption::LineSection> make_line_section(const chaos::PtOb
 
 boost::optional<nt::disruption::RailSection> make_rail_section(const chaos::PtObject& chaos_section,
                                                                const nt::PT_Data& pt_data) {
-    auto log = log4cplus::Logger::getInstance("log");
+    log4cplus::Logger log = log4cplus::Logger::getInstance("log");
     if (!chaos_section.has_pt_rail_section()) {
         LOG4CPLUS_WARN(log, "fill_disruption_from_chaos: RailSection invalid!");
         return boost::none;
@@ -404,7 +404,7 @@ bool is_publishable(const transit_realtime::TimeRange& publication_period,
 static const type::disruption::Disruption& make_disruption(const chaos::Disruption& chaos_disruption,
                                                            nt::PT_Data& pt_data,
                                                            const navitia::type::MetaData& meta) {
-    auto log = log4cplus::Logger::getInstance("log");
+    log4cplus::Logger log = log4cplus::Logger::getInstance("log");
     LOG4CPLUS_DEBUG(log, "Adding disruption: " << chaos_disruption.id());
     nt::disruption::DisruptionHolder& holder = pt_data.disruption_holder;
 

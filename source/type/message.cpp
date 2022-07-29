@@ -145,7 +145,7 @@ std::vector<ImpactedVJ> get_impacted_vehicle_journeys(const LineSection& ls,
                                                       const Impact& impact,
                                                       const boost::gregorian::date_period& production_period,
                                                       type::RTLevel rt_level) {
-    auto log = log4cplus::Logger::getInstance("log");
+    log4cplus::Logger log = log4cplus::Logger::getInstance("log");
     // Get all impacted VJs and compute the corresponding base_canceled vp
     std::vector<ImpactedVJ> vj_vp_pairs;
 
@@ -629,7 +629,7 @@ boost::optional<RailSection> try_make_rail_section(
     const boost::optional<std::string>& line_uri,  // may be null
     const std::vector<std::string>& routes_uris    // may be empty
 ) {
-    auto logger = log4cplus::Logger::getInstance("log");
+    log4cplus::Logger logger = log4cplus::Logger::getInstance("log");
     const std::unordered_map<std::string, StopArea*>& stop_areas_map = pt_data.stop_areas_map;
 
     // find start stop area if it exists
