@@ -225,7 +225,7 @@ struct RailSection {
         : start(start_),
           end(end_),
           blockeds(blockeds_),
-          impacted_stop_areas(impacted_stop_areas_),
+          impacteds(impacted_stop_areas_),
           line(line_),
           routes(routes_){};
 
@@ -243,9 +243,9 @@ struct RailSection {
     //
     // this sequence of stop_areas is used to determine if a vehicle_journey is impacted by
     // this rail section :
-    //  a vehicle_journey is impacted if and only if the sequence "impacted_stop_areas"
+    //  a vehicle_journey is impacted if and only if the sequence "impacteds"
     //  appears as subsequence of the stop_time list of the vj
-    std::vector<StopArea*> impacted_stop_areas;
+    std::vector<StopArea*> impacteds;
 
     // may be null if not line was given
     Line* line;
