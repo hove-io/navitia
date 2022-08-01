@@ -703,7 +703,7 @@ boost::optional<RailSection> try_make_rail_section(
         }
         // some routes were given, let's check that they belong to "line"
         else {
-            for (Route* route : routes) {
+            for (const Route* route : routes) {
                 if (route->line == nullptr) {
                     LOG4CPLUS_WARN(logger, "Rail section has line: '"
                                                << *line_uri << "' but also a route with no line: " << route->uri);
@@ -786,7 +786,7 @@ bool RailSection::impacts(const VehicleJourney* vehicle_journey) const {
 
     // let's first check if we can find the first impacted_stop_area in the stop_time list
     const StopArea* first_stop_area = impacted_stop_areas.front();
-    auto find_first_stop_area = std::find_if(stop_times.begin(), stop_times.end(), [&](StopTime stop_time) {
+    auto find_first_stop_area = std::find_if(stop_times.begin(), stop_times.end(), [&](const StopTime& stop_time) {
         return stop_time.is_in_stop_area(first_stop_area);
     });
     bool first_stop_area_found_in_stop_times = find_first_stop_area != stop_times.end();
