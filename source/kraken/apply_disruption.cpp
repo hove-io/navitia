@@ -426,7 +426,7 @@ struct add_impacts_visitor : public apply_impacts_visitor {
         log_end_action(mvj->uri);
     }
 
-    void operator()(nt::disruption::RailSection& rs) {
+    void operator()(const nt::disruption::RailSection& rs) {
         std::string uri = "new rail section, start: " + rs.start->uri + " - end: " + rs.end->uri;
         if (rs.line) {
             uri += ", line : " + rs.line->uri;
