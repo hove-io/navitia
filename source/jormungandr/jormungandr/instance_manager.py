@@ -268,7 +268,7 @@ class InstanceManager(object):
 
     def _filter_authorized_instances(self, instances, api):
         if not instances:
-            return None
+            return []
         # During the period database is not accessible, all the instances are valid for the user.
         if not can_connect_to_database():
             return instances
