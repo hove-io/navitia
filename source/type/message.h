@@ -240,6 +240,11 @@ struct RailSection {
     // if start is blocked and end is not blocked : contains [blockeds, end]
     // if start is not blocked and end is blocked : contains [start, blockeds]
     // if start and end are both blocked          : contains [blockeds]
+    //
+    // this sequence of stop_areas is used to determine if a vehicle_journey is impacted by
+    // this rail section :
+    //  a vehicle_journey is impacted if and only if the sequence "impacted_stop_areas"
+    //  appears as subsequence of the stop_time list of the vj
     std::vector<StopArea*> impacted_stop_areas;
 
     // may be null if not line was given

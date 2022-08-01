@@ -785,17 +785,17 @@ bool RailSection::impacts(const VehicleJourney* vehicle_journey) const {
     // the vj contains all impacted_stop_areas in their exact order
 
     // let's first check if we can find the first impacted_stop_area in the stop_time list
-    const StopArea* first_stop_area = impacted_stop_areas.front();
-    auto find_first_stop_area = std::find_if(stop_times.begin(), stop_times.end(), [&](const StopTime& stop_time) {
-        return stop_time.is_in_stop_area(first_stop_area);
-    });
-    bool first_stop_area_found_in_stop_times = find_first_stop_area != stop_times.end();
+    const StopArea* begin_stop_area = impacted_stop_areas.front();
+    auto find_a_stop_time_in_begin_stop_area =
+        std::find_if(stop_times.begin(), stop_times.end(),
+                     [&](const StopTime& stop_time) { return stop_time.is_in_stop_area(begin_stop_area); });
+    bool first_stop_area_found_in_stop_times = find_a_stop_time_in_begin_stop_area != stop_times.end();
 
     // the first impacted stop_area appears in the stop_time list,
     // let's keep iterating the stop_times to see if it contains all impacted_stop_areas consecutively
     if (first_stop_area_found_in_stop_times) {
         auto impacted_stop_area_iter = impacted_stop_areas.begin();
-        auto stop_times_iter = find_first_stop_area;
+        auto stop_times_iter = find_a_stop_time_in_begin_stop_area;
 
         // let's iterate on both stop_times and impacted stop_areas
         while (impacted_stop_area_iter != impacted_stop_areas.end() && stop_times_iter != stop_times.end()) {
