@@ -51,7 +51,7 @@ from jormungandr.scenarios.utils import (
     updated_common_journey_request_with_default,
 )
 from jormungandr.new_relic import record_custom_parameter
-from navitiacommon import type_pb2
+from navitiacommon import response_pb2, type_pb2
 from flask_restful import abort
 from .helper_classes.helper_utils import timed_logger
 
@@ -417,6 +417,8 @@ class Distributed(object):
 
         # Graphical isochrone returns one response, not a list of responses
         if request_type == type_pb2.graphical_isochrone:
+            if len(res) == 0:
+                raise PtException("No graphical isochrone found", response_pb2.Error.no_solution)
             return res[0]
 
         return res
