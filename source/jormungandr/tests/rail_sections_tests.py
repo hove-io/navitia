@@ -101,7 +101,7 @@ class TestRailSections(AbstractTestFixture):
 
     def test_disruption_api_with_rail_section(self):
         r = self.default_query('disruptions')
-        assert len(get_not_null(r, 'disruptions')) == 6
+        assert len(get_not_null(r, 'disruptions')) == 8
         assert r['disruptions'][0]['id'] == 'rail_section_on_line1-1'
         assert r['disruptions'][1]['id'] == 'rail_section_on_line1-2'
         assert r['disruptions'][2]['id'] == 'rail_section_on_line1-3'
@@ -265,11 +265,11 @@ class TestRailSections(AbstractTestFixture):
 
     def test_line_reports_impacted_by_rail_section(self):
         r = self.default_query('line_reports')
-        assert len(get_not_null(r, 'disruptions')) == 6
-        is_valid_rail_section_disruption(r['disruptions'][0])
+        assert len(get_not_null(r, 'disruptions')) == 8
         is_valid_rail_section_disruption(r['disruptions'][1])
         is_valid_rail_section_disruption(r['disruptions'][2])
         is_valid_rail_section_disruption(r['disruptions'][3])
+        is_valid_rail_section_disruption(r['disruptions'][4])
 
     def test_terminus_schedules_impacted_by_rail_section(self):
         # terminus_schedules on line:1 gives us 3 rail_section impacts
@@ -704,6 +704,54 @@ class TestRailSections(AbstractTestFixture):
         for disruption, result in scenario.items():
             assert result == (disruption in d)
 
+        # denfert-> cdg / Base_schedule: A disruption to display on vj:rer_b_nord
+        scenario = {
+            'rail_section_on_rer_b': True,
+            'line_section_on_rer_b_port_royal': False,
+        }
+        r = journeys(_from='denfert_area', to='cdg_area')
+        assert len(r["journeys"]) == 1
+        assert get_used_vj(r) == [['vehicle_journey:vj:rer_b_nord']]
+        d = get_all_element_disruptions(r['journeys'], r)
+        for disruption, result in scenario.items():
+            assert result == (disruption in d)
+
+        # denfert-> port_royal / Base_schedule: A disruption to display on vj:rer_b_nord
+        scenario = {
+            'rail_section_on_rer_b': False,
+            'line_section_on_rer_b_port_royal': True,
+        }
+        r = journeys(_from='denfert_area', to='port_royal_area')
+        assert len(r["journeys"]) == 1
+        assert get_used_vj(r) == [['vehicle_journey:vj:rer_b_nord']]
+        d = get_all_element_disruptions(r['journeys'], r)
+        for disruption, result in scenario.items():
+            assert result == (disruption in d)
+
+        # cdg-> denfert / Base_schedule: A disruption to display on vj:rer_b_sud
+        scenario = {
+            'rail_section_on_rer_b': True,
+            'line_section_on_rer_b_port_royal': False,
+        }
+        r = journeys(_from='cdg_area', to='denfert_area')
+        assert len(r["journeys"]) == 1
+        assert get_used_vj(r) == [['vehicle_journey:vj:rer_b_sud']]
+        d = get_all_element_disruptions(r['journeys'], r)
+        for disruption, result in scenario.items():
+            assert result == (disruption in d)
+
+        # cdg-> port_royal / Base_schedule: Two disruption to display on vj:rer_b_sud
+        scenario = {
+            'rail_section_on_rer_b': True,
+            'line_section_on_rer_b_port_royal': True,
+        }
+        r = journeys(_from='cdg_area', to='port_royal_area')
+        assert len(r["journeys"]) == 1
+        assert get_used_vj(r) == [['vehicle_journey:vj:rer_b_sud']]
+        d = get_all_element_disruptions(r['journeys'], r)
+        for disruption, result in scenario.items():
+            assert result == (disruption in d)
+
     def test_traffic_reports_on_stop_areas(self):
         """
         we should be able to find the related rail section disruption with /traffic_reports
@@ -812,7 +860,7 @@ class TestRailSections(AbstractTestFixture):
         r = self.default_query('traffic_reports')
         # only one network (base_network) is disrupted
         assert len(r['traffic_reports']) == 1
-        assert len(r['traffic_reports'][0]['stop_areas']) == 32
+        assert len(r['traffic_reports'][0]['stop_areas']) == 41
 
         for sa in r['traffic_reports'][0]['stop_areas']:
             if sa['id'] in ['stopAreaB', 'stopAreaC', 'stopAreaD']:

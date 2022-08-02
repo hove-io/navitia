@@ -37,6 +37,7 @@ www.navitia.io
 
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/variant.hpp>
+#include <boost/optional.hpp>
 #include <boost/range/iterator_range.hpp>
 
 #include <atomic>
@@ -214,10 +215,42 @@ struct LineSection {
 };
 
 struct RailSection {
-    Line* line = nullptr;
-    StopArea* start_point = nullptr;
-    StopArea* end_point = nullptr;
-    std::vector<std::pair<std::string, uint32_t>> blocked_stop_areas;
+    RailSection() = default;
+    RailSection(StopArea* start_,
+                StopArea* end_,
+                const std::vector<StopArea*>& blockeds_,
+                const std::vector<StopArea*>& impacted_stop_areas_,
+                Line* line_,
+                const std::vector<Route*>& routes_)
+        : start(start_),
+          end(end_),
+          blockeds(blockeds_),
+          impacteds(impacted_stop_areas_),
+          line(line_),
+          routes(routes_){};
+
+    // never null
+    StopArea* start;
+    // never null
+    StopArea* end;
+
+    std::vector<StopArea*> blockeds;
+
+    // if start and end are both not blocked      : contains [start, blockeds, end]
+    // if start is blocked and end is not blocked : contains [blockeds, end]
+    // if start is not blocked and end is blocked : contains [start, blockeds]
+    // if start and end are both blocked          : contains [blockeds]
+    //
+    // this sequence of stop_areas is used to determine if a vehicle_journey is impacted by
+    // this rail section :
+    //  a vehicle_journey is impacted if and only if the sequence "impacteds"
+    //  appears as subsequence of the stop_time list of the vj
+    std::vector<StopArea*> impacteds;
+
+    // may be null if not line was given
+    Line* line;
+
+    // never empty
     std::vector<Route*> routes;
 
     bool is_blocked_start_point() const;
@@ -225,9 +258,20 @@ struct RailSection {
     bool is_blocked_end_point() const;
     bool is_end_stop(const std::string& uri) const;
 
+    bool impacts(const VehicleJourney* vj) const;
+
     template <class archive>
     void serialize(archive& ar, const unsigned int);
 };
+
+boost::optional<RailSection> try_make_rail_section(
+    const navitia::type::PT_Data& pt_data,
+    const std::string& start_uri,
+    const std::vector<std::pair<std::string, uint32_t>>& blockeds_uri_order,
+    const std::string& end_uri,
+    const boost::optional<std::string>& line_uri,  // may be null
+    const std::vector<std::string>& routes_uris    // may be empty
+);
 
 std::set<StopPoint*> get_stop_points_section(const RailSection& rs);
 
