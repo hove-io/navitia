@@ -40,6 +40,7 @@ www.navitia.io
 #include "type/pt_data.h"
 #include "utils/logger.h"
 #include "utils/map_find.h"
+#include "utils/functions.h"
 
 #include <boost/container/flat_set.hpp>
 #include <boost/date_time/gregorian/gregorian.hpp>
@@ -508,7 +509,9 @@ struct add_impacts_visitor : public apply_impacts_visitor {
         std::string uri = "line section (" + ls.line->uri + " : " + ls.start_point->uri + "/" + ls.end_point->uri + ")";
         this->log_start_action(uri);
 
-        if (impact->severity->effect != nt::disruption::Effect::NO_SERVICE) {
+        auto blocking_effects = {nt::disruption::Effect::NO_SERVICE, nt::disruption::Effect::DETOUR,
+                                 nt::disruption::Effect::REDUCED_SERVICE};
+        if (!navitia::contains(blocking_effects, impact->severity->effect)) {
             LOG4CPLUS_DEBUG(log, "Unhandled action on " << uri);
             this->log_end_action(uri);
             return;
