@@ -734,6 +734,8 @@ class TestLineSections(AbstractTestFixture):
         assert impacted_headsigns(d) == {'vj:1:1'}
         for disruption, result in scenario.items():
             assert result == (disruption in d)
+        # same request in realtime should bypass disruption if any
+        r = journeys(_from='A', to='F', freshness='realtime')
         # we check the used vj to be certain we use disrupted version of base-VJ
         assert 'vehicle_journey:vj:1:1' in get_used_vj(r)[0][0]
         d = get_all_element_disruptions(r['journeys'], r)
