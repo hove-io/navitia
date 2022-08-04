@@ -102,19 +102,19 @@ BOOST_FIXTURE_TEST_CASE(test_access_point_reading, AccessPointTestFixture) {
     BOOST_REQUIRE_EQUAL(resp.access_points().size(), 3);
     auto access_points = resp.access_points();
     sort(access_points.begin(), access_points.end(), ap_comp);
-    auto ap = access_points[0];
+    auto ap = access_points.Get(0);
     BOOST_REQUIRE_EQUAL(ap.uri(), "AP1");
     BOOST_REQUIRE_EQUAL(ap.is_entrance(), true);
     BOOST_REQUIRE_EQUAL(ap.is_exit(), true);
     BOOST_REQUIRE_EQUAL(ap.length(), 10);
     BOOST_REQUIRE_EQUAL(ap.traversal_time(), 23);
-    ap = access_points[1];
+    ap = access_points.Get(1);
     BOOST_REQUIRE_EQUAL(ap.uri(), "AP2");
     BOOST_REQUIRE_EQUAL(ap.is_entrance(), true);
     BOOST_REQUIRE_EQUAL(ap.is_exit(), false);
     BOOST_REQUIRE_EQUAL(ap.length(), 13);
     BOOST_REQUIRE_EQUAL(ap.traversal_time(), 26);
-    ap = access_points[2];
+    ap = access_points.Get(2);
     BOOST_REQUIRE_EQUAL(ap.uri(), "AP3");
     BOOST_REQUIRE_EQUAL(ap.is_entrance(), true);
     BOOST_REQUIRE_EQUAL(ap.is_exit(), false);
@@ -138,9 +138,9 @@ BOOST_FIXTURE_TEST_CASE(test_access_point_filtering, AccessPointTestFixture) {
 
         auto access_points = resp.access_points();
         sort(access_points.begin(), access_points.end(), ap_comp);
-        auto ap = access_points[0];
+        auto ap = access_points.Get(0);
         BOOST_REQUIRE_EQUAL(ap.uri(), "AP1");
-        ap = access_points[1];
+        ap = access_points.Get(1);
         BOOST_REQUIRE_EQUAL(ap.uri(), "AP2");
     }
     {
@@ -171,9 +171,9 @@ BOOST_FIXTURE_TEST_CASE(test_access_point_filtering, AccessPointTestFixture) {
 
         auto access_points = resp.access_points();
         sort(access_points.begin(), access_points.end(), ap_comp);
-        auto ap = access_points[0];
+        auto ap = access_points.Get(0);
         BOOST_REQUIRE_EQUAL(ap.uri(), "AP2");
-        ap = access_points[1];
+        ap = access_points.Get(1);
         BOOST_REQUIRE_EQUAL(ap.uri(), "AP3");
     }
 }
