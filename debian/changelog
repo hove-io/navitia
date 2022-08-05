@@ -1,3 +1,17 @@
+navitia2 (15.12.0) unstable; urgency=low
+
+  * [Config][AWS]: Management of tyr parameters by env variables  <https://github.com/hove-io/navitia/pull/3788>
+  * [Config][AWS]: Force create repositories for tyr web  <https://github.com/hove-io/navitia/pull/3789>
+  * [Config][AWS]: Fix make connection string function  <https://github.com/hove-io/navitia/pull/3790>
+  * [Kraken][RailSection]: Revamp rail section  <https://github.com/hove-io/navitia/pull/3793>
+  * [Jormungandr]: Fix apdex bugs linked to Error Type   <https://github.com/hove-io/navitia/pull/3796>
+  * [Kraken][Feature]: For line-section, effect DETOUR and REDUCED_SERVICE are now blocking  <https://github.com/hove-io/navitia/pull/3797>
+  * [documentation] Deprecate 1 filter on /places  <https://github.com/hove-io/navitia/pull/3795>
+  * [loki] api parameter to switch criteria in journeys request  <https://github.com/hove-io/navitia/pull/3786>
+  * [Estimated times] NTFS column typo  <https://github.com/hove-io/navitia/pull/3784>
+
+ -- patrick.qian <patrick.qian@kisio.com>  Fri, 05 Aug 2022 13:08:28 +0100
+
 navitia2 (15.11.1) unstable; urgency=low
 
   * [Estimated times] NTFS column typo  <https://github.com/hove-io/navitia/pull/3767>
