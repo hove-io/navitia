@@ -68,6 +68,7 @@ class JourneyParameters(object):
         isochrone_center=None,
         sn_params=None,
         current_datetime=None,
+        criteria=None,
     ):
 
         self.max_duration = max_duration
@@ -88,6 +89,7 @@ class JourneyParameters(object):
         self.current_datetime = current_datetime
         self.arrival_transfer_penalty = arrival_transfer_penalty
         self.walking_transfer_penalty = walking_transfer_penalty
+        self.criteria = criteria
 
 
 # Needed for GraphicalIsochrones

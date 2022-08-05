@@ -268,7 +268,7 @@ class InstanceManager(object):
 
     def _filter_authorized_instances(self, instances, api):
         if not instances:
-            return None
+            return []
         # During the period database is not accessible, all the instances are valid for the user.
         if not can_connect_to_database():
             return instances
@@ -342,9 +342,11 @@ class InstanceManager(object):
                 self.instances[k] for k in self._all_keys_of_coord(lon, lat) if k in self.instances
             ]
         elif object_id:
-            available_instances = [
-                self.instances[k] for k in self._find_coverage_by_object_id(object_id) if k in self.instances
-            ]
+            instance_keys = self._find_coverage_by_object_id(object_id)
+            if instance_keys is None:
+                available_instances = []
+            else:
+                available_instances = [self.instances[k] for k in instance_keys if k in self.instances]
         else:
             available_instances = list(self.instances.values())
         valid_instances = self._filter_authorized_instances(available_instances, api)

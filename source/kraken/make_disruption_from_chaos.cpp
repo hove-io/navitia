@@ -202,96 +202,35 @@ boost::optional<nt::disruption::LineSection> make_line_section(const chaos::PtOb
 }
 
 boost::optional<nt::disruption::RailSection> make_rail_section(const chaos::PtObject& chaos_section,
-                                                               nt::PT_Data& pt_data) {
-    auto log = log4cplus::Logger::getInstance("log");
+                                                               const nt::PT_Data& pt_data) {
+    log4cplus::Logger log = log4cplus::Logger::getInstance("log");
     if (!chaos_section.has_pt_rail_section()) {
         LOG4CPLUS_WARN(log, "fill_disruption_from_chaos: RailSection invalid!");
         return boost::none;
     }
     std::string log_message = "new rail Section disruption received -";
-    const auto& pb_section = chaos_section.pt_rail_section();
-    nt::disruption::RailSection rail_section;
+    const auto& proto_section = chaos_section.pt_rail_section();
 
-    // Start
-    if (auto* start = find_or_default(pb_section.start_point().uri(), pt_data.stop_areas_map)) {
-        rail_section.start_point = start;
-        log_message += " start: " + pb_section.start_point().uri();
-    } else {
-        LOG4CPLUS_WARN(log, "fill_disruption_from_chaos: start_point id " << pb_section.start_point().uri()
-                                                                          << " in RailSection invalid!");
-        return boost::none;
+    std::vector<std::pair<std::string, uint32_t>> blockeds_uri_order;
+
+    for (const auto& blocked_stop_area : proto_section.blocked_stop_areas()) {
+        blockeds_uri_order.emplace_back(blocked_stop_area.uri(), blocked_stop_area.order());
     }
 
-    // End
-    if (auto* end = find_or_default(pb_section.end_point().uri(), pt_data.stop_areas_map)) {
-        rail_section.end_point = end;
-        log_message += " end: " + pb_section.end_point().uri();
-    } else {
-        LOG4CPLUS_WARN(log, "fill_disruption_from_chaos: end_point id " << pb_section.end_point().uri()
-                                                                        << " in RailSection invalid!");
-        return boost::none;
+    boost::optional<std::string> line_uri = boost::none;
+    if (proto_section.has_line()) {
+        line_uri = proto_section.line().uri();
     }
 
-    if (pb_section.routes().empty() && !pb_section.has_line()) {
-        LOG4CPLUS_WARN(log, "routes or line are mandatory. Railsection ignored");
-        return boost::none;
+    std::vector<std::string> routes;
+    for (const auto& proto_route : proto_section.routes()) {
+        routes.push_back(proto_route.uri());
     }
 
-    // Line
-    if (pb_section.has_line()) {
-        auto* line = find_or_default(pb_section.line().uri(), pt_data.lines_map);
-        if (line) {
-            rail_section.line = line;
-            log_message += " line: " + pb_section.line().uri();
-        } else {
-            LOG4CPLUS_WARN(
-                log, "fill_disruption_from_chaos: line id " << pb_section.line().uri() << " in RailSection invalid!");
-            return boost::none;
-        }
-        if (pb_section.routes().empty()) {
-            rail_section.routes = rail_section.line->route_list;
-        }
-    }
+    std::string start_uri = proto_section.start_point().uri();
+    std::string end_uri = proto_section.end_point().uri();
 
-    // Routes
-    if (!pb_section.routes().empty()) {
-        log_message += " route: ";
-        for (const auto& pb_route : pb_section.routes()) {
-            auto* route = find_or_default(pb_route.uri(), pt_data.routes_map);
-            if (route) {
-                rail_section.routes.push_back(route);
-                log_message += pb_route.uri() + ";";
-            } else {
-                LOG4CPLUS_WARN(log,
-                               "fill_disruption_from_chaos: route id " << pb_route.uri() << " in RailSection invalid!");
-            }
-        }
-        if (rail_section.routes.empty()) {
-            LOG4CPLUS_WARN(log, "fill_disruption_from_chaos: no valid routes. Railsection ignored");
-            return boost::none;
-        }
-        if (!pb_section.has_line()) {
-            auto* route = find_or_default(pb_section.routes().Get(0).uri(), pt_data.routes_map);
-            if (route) {
-                rail_section.line = route->line;
-            } else {
-                LOG4CPLUS_WARN(log, "fill_disruption_from_chaos: route id " << pb_section.routes().Get(0).uri()
-                                                                            << " in RailSection invalid!");
-            }
-        }
-    }
-
-    // Blocked_stop_areas
-    if (!pb_section.blocked_stop_areas().empty()) {
-        log_message += " blocked stop _areas: ";
-        for (const auto& pb_bsa : pb_section.blocked_stop_areas()) {
-            rail_section.blocked_stop_areas.emplace_back(pb_bsa.uri(), pb_bsa.order());
-            log_message += pb_bsa.uri() + ";";
-        }
-    }
-
-    LOG4CPLUS_DEBUG(log, log_message);
-    return rail_section;
+    return nt::disruption::try_make_rail_section(pt_data, start_uri, blockeds_uri_order, end_uri, line_uri, routes);
 }
 
 static std::vector<nt::disruption::PtObj> make_pt_objects(
@@ -428,7 +367,6 @@ static boost::shared_ptr<nt::disruption::Impact> make_impact(const chaos::Impact
         nt::disruption::Impact::link_informed_entity(std::move(ptobj), impact, meta.production_date,
                                                      nt::RTLevel::Adapted, pt_data);
     }
-
     for (const auto& chaos_message : chaos_impact.messages()) {
         const auto& channel = chaos_message.channel();
         auto channel_types = create_channel_types(channel);
@@ -466,7 +404,7 @@ bool is_publishable(const transit_realtime::TimeRange& publication_period,
 static const type::disruption::Disruption& make_disruption(const chaos::Disruption& chaos_disruption,
                                                            nt::PT_Data& pt_data,
                                                            const navitia::type::MetaData& meta) {
-    auto log = log4cplus::Logger::getInstance("log");
+    log4cplus::Logger log = log4cplus::Logger::getInstance("log");
     LOG4CPLUS_DEBUG(log, "Adding disruption: " << chaos_disruption.id());
     nt::disruption::DisruptionHolder& holder = pt_data.disruption_holder;
 

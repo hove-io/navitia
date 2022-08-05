@@ -145,3 +145,34 @@ external_service_format = {
     },
     'required': ['klass', 'navitia_service', 'args'],
 }
+
+instance_config_format = {
+    'type': 'object',
+    'properties': {
+        "instance": {
+            'type': 'object',
+            'properties': {
+                'name': {'type': 'string'},
+                'source-directory': {'type': 'string'},
+                'backup-directory': {'type': 'string'},
+                'aliases_file': {'type': 'string'},
+                'synonyms_file': {'type': 'string'},
+                'target-file': {'type': 'string'},
+                'tmp_file': {'type': 'string'},
+                'is-free': {'type': 'boolean'},
+                'exchange': {'type': 'string'},
+            },
+            'required': ['name'],
+        },
+        "database": {
+            'type': 'object',
+            'properties': {
+                'host': {'type': 'string'},
+                'port': {'type': 'number'},
+                'dbname': {'type': 'string'},
+                'username': {'type': 'string'},
+                'password': {'type': 'string'},
+            },
+        },
+    },
+}

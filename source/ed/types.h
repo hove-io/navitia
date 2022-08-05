@@ -410,10 +410,10 @@ struct StopTime {
           ODT(odt),
           pick_up_allowed(pick),
           drop_off_allowed(drop),
+          skipped_stop(skipped),
           is_frequency(freq),
           wheelchair_boarding(wheel),
           date_time_estimated(estim),
-          skipped_stop(skipped),
           headsign(std::move(headsign)) {}
     bool operator<(const StopTime& other) const;
     void shift_times(int n_days) {

@@ -51,10 +51,10 @@ def create_instance_fr():
 @pytest.yield_fixture(scope="function", autouse=True)
 def autocomplete_path(tmpdir):
     with app.app_context():
-        current_ac_path = current_app.config['TYR_AUTOCOMPLETE_DIR']
-        current_app.config['TYR_AUTOCOMPLETE_DIR'] = tmpdir.strpath
+        current_ac_path = current_app.config['AUTOCOMPLETE_DIR']
+        current_app.config['AUTOCOMPLETE_DIR'] = tmpdir.strpath
         yield
-        current_app.config['TYR_AUTOCOMPLETE_DIR'] = current_ac_path
+        current_app.config['AUTOCOMPLETE_DIR'] = current_ac_path
 
 
 def get_jobs_from_db(id=None):

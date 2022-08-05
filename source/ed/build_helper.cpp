@@ -522,35 +522,20 @@ Impacter& Impacter::on_line_section(const std::string& line_uri,
 }
 
 Impacter& Impacter::on_rail_section(const std::string& line_uri,
-                                    const std::string& start_stop_uri,
-                                    const std::string& end_stop_uri,
+                                    const std::string& start_uri,
+                                    const std::string& end_uri,
                                     const std::vector<std::pair<std::string, uint32_t>>& blocked_stop_areas,
-                                    const std::vector<std::string>& route_uris,
+                                    const std::vector<std::string>& routes_uris,
                                     nt::PT_Data& pt_data) {
-    // Note: don't forget to set the application period before calling this method for the correct
-    // vehicle_journeys to be impacted
-
-    dis::RailSection rail_section;
-    rail_section.line = b.get<nt::Line>(line_uri);
-    rail_section.start_point = b.get<nt::StopArea>(start_stop_uri);
-    rail_section.end_point = b.get<nt::StopArea>(end_stop_uri);
-
-    for (const auto& bsa : blocked_stop_areas) {
-        auto* sa = b.get<nt::StopArea>(bsa.first);
-        if (sa) {
-            rail_section.blocked_stop_areas.emplace_back(bsa.first, bsa.second);
-        }
+    boost::optional<dis::RailSection> rail_section =
+        dis::try_make_rail_section(pt_data, start_uri, blocked_stop_areas, end_uri, line_uri, routes_uris);
+    if (!rail_section) {
+        LOG4CPLUS_WARN(log4cplus::Logger::getInstance("logger"), "bad rail section");
+    } else {
+        dis::Impact::link_informed_entity(std::move(*rail_section), impact, b.data->meta->production_date,
+                                          get_disruption().rt_level, pt_data);
     }
 
-    for (auto& uri : route_uris) {
-        auto* route = b.get<nt::Route>(uri);
-        if (route) {
-            rail_section.routes.push_back(route);
-        }
-    }
-
-    dis::Impact::link_informed_entity(std::move(rail_section), impact, b.data->meta->production_date,
-                                      get_disruption().rt_level, pt_data);
     return *this;
 }
 

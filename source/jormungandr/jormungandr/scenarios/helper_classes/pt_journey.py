@@ -84,7 +84,7 @@ class PtJourney:
 
     @new_relic.distributedEvent("journeys", "journeys")
     def _journeys(self, orig_fallback_durations, dest_fallback_durations):
-        with timed_logger(self._logger, 'pt_journyes_calling_kraken', self._request_id):
+        with timed_logger(self._logger, 'pt_journeys_calling_kraken', self._request_id):
             return self._pt_planner.journeys(
                 orig_fallback_durations,
                 dest_fallback_durations,
@@ -323,6 +323,7 @@ class PtJourneyPool:
                 depth=request['depth'],
                 isochrone_center=isochrone_center,
                 current_datetime=date_to_timestamp(request['_current_datetime']),
+                criteria=request.get('_criteria', 'classic'),
             )
 
     def _async_request(self):

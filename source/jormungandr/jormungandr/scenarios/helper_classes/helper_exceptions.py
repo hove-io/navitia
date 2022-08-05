@@ -40,6 +40,14 @@ class PtException(Exception):
         return self._response
 
 
+class NoGraphicalIsochroneFoundException(PtException):
+    def __init__(self):
+        self._response = _make_error_response(
+            error_id=response_pb2.Error.no_solution,
+            message="No public transit journey found in graphical isochrone computation.",
+        )
+
+
 class InvalidDateBoundException(PtException):
     def __init__(self, pt_journey_with_error):
         super(PtException, self).__init__()

@@ -46,7 +46,7 @@ o --------- o --------- o --------- o --------- o --------- o   <- route:line:1:
 
   We also add another route route:line:1:3 that only pass on (A, B, F) and that shouldn't be impacted
 
-  We finaly add another line line_2 that pass on the same stops areas
+  We finally add another line line_2 that pass on the same stops areas
   */
 
 namespace bg = boost::gregorian;
@@ -63,23 +63,27 @@ int main(int argc, const char* const argv[]) {
     b.sa("E", 0., 5.)("E_1", 0., 5.)("E_2", 0., 5.);
     b.sa("F", 0., 6.)("F_1", 0., 6.)("F_2", 0., 6.);
 
-    b.vj("line:1")
+    b.vj("line:1", "111111111111111111111111")
         .route("route:line:1:1")
         .name("vj:1:1")("A_1", "08:00"_t)("B_1", "08:15"_t)("C_1", "08:45"_t)("D_1", "09:00"_t)("D_3", "09:05"_t)(
             "E_1", "09:15"_t)("F_1", "09:30"_t);
 
-    b.vj("line:1")
+    b.vj("line:1", "111111111111111111111111")
         .route("route:line:1:2")
         .name("vj:1:2")("A_2", "09:00"_t)("B_2", "09:15"_t)("C_2", "09:45"_t)("D_2", "10:00"_t)("E_2", "10:15"_t)(
             "F_2", "10:30"_t);
 
-    b.vj("line:1").route("route:line:1:3").name("vj:1:3")("A_1", "10:00"_t)("B_1", "10:15"_t)("F_1", "11:30"_t);
+    b.vj("line:1", "111111111111111111111111")
+        .route("route:line:1:3")
+        .name("vj:1:3")("A_1", "10:00"_t)("B_1", "10:15"_t)("F_1", "11:30"_t);
 
-    b.vj("line:2").route("route:line:2:1").name("vj:2")("A_1", "11:00"_t)("B_1", "11:15"_t)("F_1", "12:30"_t);
+    b.vj("line:2", "111111111111111111111111")
+        .route("route:line:2:1")
+        .name("vj:2")("A_1", "11:00"_t)("B_1", "11:15"_t)("F_1", "12:30"_t);
 
-    b.vj("line:3").route("route:line:3:1").name("vj:3")("C_1", "11:00"_t)("A_1", "12:30"_t);
+    b.vj("line:3", "111111111111111111111111").route("route:line:3:1").name("vj:3")("C_1", "11:00"_t)("A_1", "12:30"_t);
 
-    b.vj_with_network("network:other", "line:B", "11111111", "", true, "")("C_3", "08:10"_t, "08:11"_t)(
+    b.vj_with_network("network:other", "line:B", "111111111111111111111111", "", true, "")("C_3", "08:10"_t, "08:11"_t)(
         "stop_area:other", "08:20"_t, "08:21"_t);
 
     b.make();
@@ -102,6 +106,24 @@ int main(int argc, const char* const argv[]) {
             .publish(btp("20170101T000000"_dt, "20170110T000000"_dt))
             .on_line_section("line:1", "E", "F", {"route:line:1:1", "route:line:1:3"}, *b.data->pt_data)
             .on_line_section("line:1", "F", "E", {"route:line:1:1", "route:line:1:3"}, *b.data->pt_data)
+            .get_disruption(),
+        *b.data->pt_data, *b.data->meta);
+
+    navitia::apply_disruption(
+        b.impact(nt::RTLevel::Adapted, "line_section_on_line_1_one_stop_detour")
+            .severity(nt::disruption::Effect::DETOUR)
+            .application_periods(btp("20170106T000000"_dt, "20170108T000000"_dt))
+            .publish(btp("20170106T000000"_dt, "20170108T000000"_dt))
+            .on_line_section("line:1", "B", "B", {"route:line:1:1", "route:line:1:3"}, *b.data->pt_data)
+            .get_disruption(),
+        *b.data->pt_data, *b.data->meta);
+
+    navitia::apply_disruption(
+        b.impact(nt::RTLevel::Adapted, "line_section_on_line_1_two_stop_reduced")
+            .severity(nt::disruption::Effect::REDUCED_SERVICE)
+            .application_periods(btp("20170109T000000"_dt, "20170111T000000"_dt))
+            .publish(btp("20170109T000000"_dt, "20170111T000000"_dt))
+            .on_line_section("line:1", "C", "D", {"route:line:1:1", "route:line:1:3"}, *b.data->pt_data)
             .get_disruption(),
         *b.data->pt_data, *b.data->meta);
 

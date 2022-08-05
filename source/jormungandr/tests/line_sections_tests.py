@@ -598,18 +598,18 @@ class TestLineSections(AbstractTestFixture):
         date = '20170102T080000'
         current = '_current_datetime=20170101T080000'
 
-        def journey_query(_from, to):
-            return 'journeys?from={fr}&to={to}&datetime={dt}&{cur}&data_freshness=base_schedule'.format(
-                fr=_from, to=to, dt=date, cur=current
+        def journey_query(_from, to, freshness):
+            return 'journeys?from={fr}&to={to}&datetime={dt}&{cur}&data_freshness={fresh}'.format(
+                fr=_from, to=to, dt=date, cur=current, fresh=freshness
             )
 
-        def journeys(_from, to):
-            q = journey_query(_from=_from, to=to)
+        def journeys(_from, to, freshness):
+            q = journey_query(_from=_from, to=to, freshness=freshness)
             r = self.query_region(q)
             self.is_valid_journey_response(r, q)
             return r
 
-        # A -> B
+        # A -> B: OK
         scenario = {
             'line_section_on_line_1': False,
             'line_section_on_line_1_other_effect': False,
@@ -617,15 +617,23 @@ class TestLineSections(AbstractTestFixture):
         }
 
         # if we do not use an impacted section we shouldn't see the impact
-        r = journeys(_from='A', to='B')
+        r = journeys(_from='A', to='B', freshness='base_schedule')
         # we check the used vj to be certain we took an impacted vj
         assert get_used_vj(r) == [['vehicle_journey:vj:1:1']]
         d = get_all_element_disruptions(r['journeys'], r)
         assert not impacted_headsigns(d)
         for disruption, result in scenario.items():
             assert result == (disruption in d)
+        # same request in realtime should bypass disruption if any
+        r = journeys(_from='A', to='B', freshness='realtime')
+        # we check the used vj to be certain we use disrupted version of base-VJ
+        assert 'vehicle_journey:vj:1:1' in get_used_vj(r)[0][0]
+        d = get_all_element_disruptions(r['journeys'], r)
+        assert not impacted_headsigns(d)
+        for disruption, result in scenario.items():
+            assert result == (disruption in d)
 
-        # A -> C
+        # A -> C: KO
         scenario = {
             'line_section_on_line_1': True,
             'line_section_on_line_1_other_effect': False,
@@ -633,54 +641,86 @@ class TestLineSections(AbstractTestFixture):
         }
         # 'C' is part of the impacted section, it's the first stop,
         # so A->C use an impacted section
-        r = journeys(_from='A', to='C')
+        r = journeys(_from='A', to='C', freshness='base_schedule')
         assert get_used_vj(r) == [['vehicle_journey:vj:1:1']]
         d = get_all_element_disruptions(r['journeys'], r)
         assert impacted_headsigns(d) == {'vj:1:1'}
         for disruption, result in scenario.items():
             assert result == (disruption in d)
+        # same request in realtime should bypass disruption if any
+        r = journeys(_from='A', to='C', freshness='realtime')
+        # we check the used vj to be certain we bypassed impacted vj
+        assert 'vehicle_journey:vj:1:2' in get_used_vj(r)[0][0]
+        d = get_all_element_disruptions(r['journeys'], r)
+        assert not impacted_headsigns(d)
+        for disruption, result in scenario.items():
+            assert False == (disruption in d)
 
-        # B -> C
+        # B -> C: KO
         scenario = {
             'line_section_on_line_1': True,
             'line_section_on_line_1_other_effect': False,
             'line_section_on_line_2': False,
         }
         # same for B->C
-        r = journeys(_from='B', to='C')
+        r = journeys(_from='B', to='C', freshness='base_schedule')
         assert get_used_vj(r) == [['vehicle_journey:vj:1:1']]
         d = get_all_element_disruptions(r['journeys'], r)
         assert impacted_headsigns(d) == {'vj:1:1'}
         for disruption, result in scenario.items():
             assert result == (disruption in d)
+        # same request in realtime should bypass disruption if any
+        r = journeys(_from='B', to='C', freshness='realtime')
+        # we check the used vj to be certain we bypassed impacted vj
+        assert 'vehicle_journey:vj:1:2' in get_used_vj(r)[0][0]
+        d = get_all_element_disruptions(r['journeys'], r)
+        assert not impacted_headsigns(d)
+        for disruption, result in scenario.items():
+            assert False == (disruption in d)
 
-        # C -> D
+        # C -> D: KO
         scenario = {
             'line_section_on_line_1': True,
             'line_section_on_line_1_other_effect': False,
             'line_section_on_line_2': False,
         }
-        r = journeys(_from='C', to='D')
+        r = journeys(_from='C', to='D', freshness='base_schedule')
         assert get_used_vj(r) == [['vehicle_journey:vj:1:1']]
         d = get_all_element_disruptions(r['journeys'], r)
         assert impacted_headsigns(d) == {'vj:1:1'}
         for disruption, result in scenario.items():
             assert result == (disruption in d)
+        # same request in realtime should bypass disruption if any
+        r = journeys(_from='C', to='D', freshness='realtime')
+        # we check the used vj to be certain we bypassed impacted vj
+        assert 'vehicle_journey:vj:1:2' in get_used_vj(r)[0][0]
+        d = get_all_element_disruptions(r['journeys'], r)
+        assert not impacted_headsigns(d)
+        for disruption, result in scenario.items():
+            assert False == (disruption in d)
 
-        # D -> F
+        # D -> F: KO
         scenario = {
             'line_section_on_line_1': True,
             'line_section_on_line_1_other_effect': True,
             'line_section_on_line_2': False,
         }
-        r = journeys(_from='D', to='F')
+        r = journeys(_from='D', to='F', freshness='base_schedule')
         assert get_used_vj(r) == [['vehicle_journey:vj:1:1']]
         d = get_all_element_disruptions(r['journeys'], r)
         assert impacted_headsigns(d) == {'vj:1:1'}
         for disruption, result in scenario.items():
             assert result == (disruption in d)
+        # same request in realtime should bypass disruption if any
+        r = journeys(_from='D', to='F', freshness='realtime')
+        # we check the used vj to be certain we bypassed impacted vj
+        assert 'vehicle_journey:vj:1:2' in get_used_vj(r)[0][0]
+        d = get_all_element_disruptions(r['journeys'], r)
+        assert not impacted_headsigns(d)
+        for disruption, result in scenario.items():
+            assert False == (disruption in d)
 
-        # A -> F
+        # A -> F: OK but disrupted by OTHER_EFFECT
         scenario = {
             'line_section_on_line_1': False,
             'line_section_on_line_1_other_effect': True,
@@ -688,10 +728,275 @@ class TestLineSections(AbstractTestFixture):
         }
         # this journey passes over the impacted section but does not stop (or transfer) on it
         # as such it isn't impacted
-        r = journeys(_from='A', to='F')
+        r = journeys(_from='A', to='F', freshness='base_schedule')
         assert get_used_vj(r) == [['vehicle_journey:vj:1:1']]
         d = get_all_element_disruptions(r['journeys'], r)
         assert impacted_headsigns(d) == {'vj:1:1'}
+        for disruption, result in scenario.items():
+            assert result == (disruption in d)
+        # same request in realtime should bypass disruption if any
+        r = journeys(_from='A', to='F', freshness='realtime')
+        # we check the used vj to be certain we use disrupted version of base-VJ
+        assert 'vehicle_journey:vj:1:1' in get_used_vj(r)[0][0]
+        d = get_all_element_disruptions(r['journeys'], r)
+        assert impacted_headsigns(d) == {'vj:1:1'}
+        for disruption, result in scenario.items():
+            assert result == (disruption in d)
+
+    def test_journeys_use_vj_impacted_by_line_section_detour(self):
+        """
+        for /journeys, we should display a line section disruption only if we use an impacted section
+        by a DETOUR, NO_SERVICE or REDUCED_SERVICE
+
+        We do all the calls as base_schedule to see the disruption but not be really impacted by them
+        Then call in realtime to check disruptions are bypassed
+
+        In this test we leave at 08:00 so we'll use vj:1:1 (that is impacted) during the application
+        period of the impact if there is no disruption
+
+        There is a DETOUR line-section disruption on "B" stop only at that time
+        """
+        # with this departure time we should take 'vj:1:1' that is impacted
+        date = '20170107T080000'
+        current = '_current_datetime={}'.format(date)
+
+        def journey_query(_from, to, freshness):
+            return 'journeys?from={fr}&to={to}&datetime={dt}&{cur}&data_freshness={fresh}'.format(
+                fr=_from, to=to, dt=date, cur=current, fresh=freshness
+            )
+
+        def journeys(_from, to, freshness):
+            q = journey_query(_from=_from, to=to, freshness=freshness)
+            r = self.query_region(q)
+            self.is_valid_journey_response(r, q)
+            return r
+
+        # A -> B: KO
+        scenario = {
+            'line_section_on_line_1_one_stop_detour': True,
+        }
+        # 'B' is part of the impacted section, it's the first stop,
+        # so A->B uses an impacted section
+        r = journeys(_from='A', to='B', freshness='base_schedule')
+        # we check the used vj to be certain we took an impacted vj
+        assert get_used_vj(r) == [['vehicle_journey:vj:1:1']]
+        d = get_all_element_disruptions(r['journeys'], r)
+        assert impacted_headsigns(d) == {'vj:1:1'}
+        for disruption, result in scenario.items():
+            assert result == (disruption in d)
+        # same request in realtime should bypass disruption if any
+        r = journeys(_from='A', to='B', freshness='realtime')
+        # we check the used vj to be certain we bypassed impacted vj
+        assert get_used_vj(r) == [['vehicle_journey:vj:1:2']]
+        d = get_all_element_disruptions(r['journeys'], r)
+        assert not impacted_headsigns(d)
+        for disruption, result in scenario.items():
+            assert False == (disruption in d)
+
+        # A -> C: OK
+        scenario = {
+            'line_section_on_line_1_one_stop_detour': False,
+        }
+        r = journeys(_from='A', to='C', freshness='base_schedule')
+        assert get_used_vj(r) == [['vehicle_journey:vj:1:1']]
+        d = get_all_element_disruptions(r['journeys'], r)
+        assert not impacted_headsigns(d)
+        for disruption, result in scenario.items():
+            assert result == (disruption in d)
+        # same request in realtime should bypass disruption if any
+        r = journeys(_from='A', to='C', freshness='realtime')
+        # we check the used vj to be certain we use disrupted version of base-VJ
+        assert 'vehicle_journey:vj:1:1' in get_used_vj(r)[0][0]
+        d = get_all_element_disruptions(r['journeys'], r)
+        assert not impacted_headsigns(d)
+        for disruption, result in scenario.items():
+            assert result == (disruption in d)
+
+        # B -> C: KO
+        scenario = {
+            'line_section_on_line_1_one_stop_detour': True,
+        }
+        # 'B' is part of the impacted section, it's the first stop,
+        # so B->C uses an impacted section
+        r = journeys(_from='B', to='C', freshness='base_schedule')
+        assert get_used_vj(r) == [['vehicle_journey:vj:1:1']]
+        d = get_all_element_disruptions(r['journeys'], r)
+        assert impacted_headsigns(d) == {'vj:1:1'}
+        for disruption, result in scenario.items():
+            assert result == (disruption in d)
+        # same request in realtime should bypass disruption if any
+        r = journeys(_from='B', to='C', freshness='realtime')
+        # we check the used vj to be certain we bypassed impacted vj
+        assert get_used_vj(r) == [['vehicle_journey:vj:1:2']]
+        d = get_all_element_disruptions(r['journeys'], r)
+        assert not impacted_headsigns(d)
+        for disruption, result in scenario.items():
+            assert False == (disruption in d)
+
+        # C -> D: OK
+        scenario = {
+            'line_section_on_line_1_one_stop_detour': False,
+        }
+        r = journeys(_from='C', to='D', freshness='base_schedule')
+        assert get_used_vj(r) == [['vehicle_journey:vj:1:1']]
+        d = get_all_element_disruptions(r['journeys'], r)
+        assert not impacted_headsigns(d)
+        for disruption, result in scenario.items():
+            assert result == (disruption in d)
+        # same request in realtime should bypass disruption if any
+        r = journeys(_from='C', to='D', freshness='realtime')
+        # we check the used vj to be certain we use disrupted version of base-VJ
+        assert 'vehicle_journey:vj:1:1' in get_used_vj(r)[0][0]
+        d = get_all_element_disruptions(r['journeys'], r)
+        assert not impacted_headsigns(d)
+        for disruption, result in scenario.items():
+            assert result == (disruption in d)
+
+    def test_journeys_use_vj_impacted_by_line_section_reduced_service(self):
+        """
+        for /journeys, we should display a line section disruption only if we use an impacted section
+        by a DETOUR, NO_SERVICE or REDUCED_SERVICE
+
+        We do all the calls as base_schedule to see the disruption but not be really impacted by them
+        Then call in realtime to check disruptions are bypassed
+
+        In this test we leave at 08:00 so we'll use vj:1:1 (that is impacted) during the application
+        period of the impact if there is no disruption
+
+        There is a REDUCED_SERVICE line-section disruption on "C-D" stops at that time
+        """
+        # with this departure time we should take 'vj:1:1' that is impacted
+        date = '20170110T080000'
+        current = '_current_datetime={}'.format(date)
+
+        def journey_query(_from, to, freshness):
+            return 'journeys?from={fr}&to={to}&datetime={dt}&{cur}&data_freshness={fresh}'.format(
+                fr=_from, to=to, dt=date, cur=current, fresh=freshness
+            )
+
+        def journeys(_from, to, freshness):
+            q = journey_query(_from=_from, to=to, freshness=freshness)
+            r = self.query_region(q)
+            self.is_valid_journey_response(r, q)
+            return r
+
+        # A -> B: OK
+        scenario = {
+            'line_section_on_line_1_two_stop_reduced': False,
+        }
+        r = journeys(_from='A', to='B', freshness='base_schedule')
+        # we check the used vj to be certain we took an impacted vj
+        assert get_used_vj(r) == [['vehicle_journey:vj:1:1']]
+        d = get_all_element_disruptions(r['journeys'], r)
+        assert not impacted_headsigns(d)
+        for disruption, result in scenario.items():
+            assert result == (disruption in d)
+        # same request in realtime should bypass disruption if any
+        r = journeys(_from='A', to='B', freshness='realtime')
+        # we check the used vj to be certain we use disrupted version of base-VJ
+        assert 'vehicle_journey:vj:1:1' in get_used_vj(r)[0][0]
+        d = get_all_element_disruptions(r['journeys'], r)
+        assert not impacted_headsigns(d)
+        for disruption, result in scenario.items():
+            assert result == (disruption in d)
+
+        # B -> C: KO
+        scenario = {
+            'line_section_on_line_1_two_stop_reduced': True,
+        }
+        r = journeys(_from='B', to='C', freshness='base_schedule')
+        assert get_used_vj(r) == [['vehicle_journey:vj:1:1']]
+        d = get_all_element_disruptions(r['journeys'], r)
+        assert impacted_headsigns(d) == {'vj:1:1'}
+        for disruption, result in scenario.items():
+            assert result == (disruption in d)
+        # same request in realtime should bypass disruption if any
+        r = journeys(_from='B', to='C', freshness='realtime')
+        # we check the used vj to be certain we bypassed impacted vj
+        assert get_used_vj(r) == [['vehicle_journey:vj:1:2']]
+        d = get_all_element_disruptions(r['journeys'], r)
+        assert not impacted_headsigns(d)
+        for disruption, result in scenario.items():
+            assert False == (disruption in d)
+
+        # A -> D: KO
+        scenario = {
+            'line_section_on_line_1_two_stop_reduced': True,
+        }
+        # 'D' is part of the impacted section, it's the last stop,
+        # so A->D uses an impacted section
+        r = journeys(_from='A', to='D', freshness='base_schedule')
+        assert get_used_vj(r) == [['vehicle_journey:vj:1:1']]
+        d = get_all_element_disruptions(r['journeys'], r)
+        assert impacted_headsigns(d) == {'vj:1:1'}
+        for disruption, result in scenario.items():
+            assert result == (disruption in d)
+        # same request in realtime should bypass disruption if any
+        r = journeys(_from='A', to='D', freshness='realtime')
+        # we check the used vj to be certain we bypassed impacted vj
+        assert get_used_vj(r) == [['vehicle_journey:vj:1:2']]
+        d = get_all_element_disruptions(r['journeys'], r)
+        assert not impacted_headsigns(d)
+        for disruption, result in scenario.items():
+            assert False == (disruption in d)
+
+        # C -> D: KO
+        scenario = {
+            'line_section_on_line_1_two_stop_reduced': True,
+        }
+        # 'D' is part of the impacted section, it's the last stop,
+        # so A->D uses an impacted section
+        r = journeys(_from='C', to='D', freshness='base_schedule')
+        assert get_used_vj(r) == [['vehicle_journey:vj:1:1']]
+        d = get_all_element_disruptions(r['journeys'], r)
+        assert impacted_headsigns(d) == {'vj:1:1'}
+        for disruption, result in scenario.items():
+            assert result == (disruption in d)
+        # same request in realtime should bypass disruption if any
+        r = journeys(_from='C', to='D', freshness='realtime')
+        # we check the used vj to be certain we bypassed impacted vj
+        assert get_used_vj(r) == [['vehicle_journey:vj:1:2']]
+        d = get_all_element_disruptions(r['journeys'], r)
+        assert not impacted_headsigns(d)
+        for disruption, result in scenario.items():
+            assert False == (disruption in d)
+
+        # D -> E: KO
+        scenario = {
+            'line_section_on_line_1_two_stop_reduced': True,
+        }
+        r = journeys(_from='D', to='E', freshness='base_schedule')
+        assert get_used_vj(r) == [['vehicle_journey:vj:1:1']]
+        d = get_all_element_disruptions(r['journeys'], r)
+        assert impacted_headsigns(d) == {'vj:1:1'}
+        for disruption, result in scenario.items():
+            assert result == (disruption in d)
+        # same request in realtime should bypass disruption if any
+        r = journeys(_from='D', to='E', freshness='realtime')
+        # we check the used vj to be certain we bypassed impacted vj
+        assert get_used_vj(r) == [['vehicle_journey:vj:1:2']]
+        d = get_all_element_disruptions(r['journeys'], r)
+        assert not impacted_headsigns(d)
+        for disruption, result in scenario.items():
+            assert False == (disruption in d)
+
+        # A -> E: OK
+        scenario = {
+            'line_section_on_line_1_two_stop_reduced': False,
+        }
+        r = journeys(_from='A', to='E', freshness='base_schedule')
+        # we check the used vj to be certain we took an impacted vj
+        assert get_used_vj(r) == [['vehicle_journey:vj:1:1']]
+        d = get_all_element_disruptions(r['journeys'], r)
+        assert not impacted_headsigns(d)
+        for disruption, result in scenario.items():
+            assert result == (disruption in d)
+        # same request in realtime should bypass disruption if any
+        r = journeys(_from='A', to='E', freshness='realtime')
+        # we check the used vj to be certain we use disrupted version of base-VJ
+        assert 'vehicle_journey:vj:1:1' in get_used_vj(r)[0][0]
+        d = get_all_element_disruptions(r['journeys'], r)
+        assert not impacted_headsigns(d)
         for disruption, result in scenario.items():
             assert result == (disruption in d)
 

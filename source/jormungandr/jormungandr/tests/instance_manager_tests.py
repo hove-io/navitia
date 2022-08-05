@@ -62,7 +62,7 @@ def get_instances_test(manager):
         assert len(instances) == 1
         assert 'paris' == instances[0].name
 
-        assert manager.get_instances('foo') is None
+        assert manager.get_instances('foo') == []
 
 
 def get_instances_by_coord_test(manager, mocker):

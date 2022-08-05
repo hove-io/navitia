@@ -504,6 +504,13 @@ class JourneyCommon(ResourceUri, ResourceUtc):
             help="choose which pt engine to compute the pt journey",
         )
 
+        parser_get.add_argument(
+            "_criteria",
+            type=OptionValue(['classic', 'robustness']),
+            hidden=True,
+            help="choose the criteria used to compute pt journeys",
+        )
+
         # Advanced parameters for valhalla bike
         parser_get.add_argument(
             "bike_use_roads",

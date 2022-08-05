@@ -64,7 +64,12 @@ from tyr.binarisation import (
 from tyr.binarisation import reload_data, move_to_backupdirectory
 from tyr import celery
 from navitiacommon import models, task_pb2, utils
-from tyr.helper import load_instance_config, get_instance_logger, is_activate_autocomplete_version
+from tyr.helper import (
+    load_instance_config,
+    get_instance_logger,
+    is_activate_autocomplete_version,
+    get_instances_name,
+)
 from navitiacommon.launch_exec import launch_exec
 from datetime import datetime, timedelta
 
@@ -366,7 +371,7 @@ def import_autocomplete(files, autocomplete_instance, asynchronous=True, backup_
         'osm': {2: osm2mimir, 7: osm2mimir},
         'cosmogony': {2: cosmogony2mimir, 7: cosmogony2mimir},
     }
-    autocomplete_dir = current_app.config['TYR_AUTOCOMPLETE_DIR']
+    autocomplete_dir = current_app.config['AUTOCOMPLETE_DIR']
 
     # it's important for the admin to be loaded first, then addresses, then street, then poi
     import_order = ['cosmogony', 'bano', 'oa', 'osm']
@@ -455,7 +460,7 @@ def import_in_mimir(_file, instance, asynchronous=True):
 @celery.task()
 def update_autocomplete():
     current_app.logger.debug("Update autocomplete data")
-    autocomplete_dir = current_app.config['TYR_AUTOCOMPLETE_DIR']
+    autocomplete_dir = current_app.config['AUTOCOMPLETE_DIR']
     for autocomplete_instance in models.AutocompleteParameter.query.all():
         files = glob.glob(autocomplete_instance.source_dir(autocomplete_dir) + "/*")
         if files:
@@ -573,8 +578,7 @@ def purge_jobs(days_to_keep=None):
 
 @celery.task()
 def scan_instances():
-    for instance_file in glob.glob(current_app.config['INSTANCES_DIR'] + '/*.ini'):
-        instance_name = os.path.basename(instance_file).replace('.ini', '')
+    for instance_name in get_instances_name():
         instance = models.Instance.query_all().filter_by(name=instance_name).first()
         if not instance:
             current_app.logger.info('new instances detected: %s', instance_name)
@@ -695,7 +699,7 @@ def heartbeat():
 
 @celery.task()
 def create_autocomplete_depot(name):
-    autocomplete_dir = current_app.config['TYR_AUTOCOMPLETE_DIR']
+    autocomplete_dir = current_app.config['AUTOCOMPLETE_DIR']
     autocomplete = models.AutocompleteParameter.query.filter_by(name=name).first_or_404()
     main_dir = autocomplete.main_dir(autocomplete_dir)
     try:
@@ -714,7 +718,7 @@ def create_autocomplete_depot(name):
 @celery.task()
 def remove_autocomplete_depot(name):
     logging.info('removing instance dir for {}'.format(name))
-    autocomplete_dir = current_app.config['TYR_AUTOCOMPLETE_DIR']
+    autocomplete_dir = current_app.config['AUTOCOMPLETE_DIR']
     if os.path.exists(autocomplete_dir):
         autocomplete = models.AutocompleteParameter.query.filter_by(name=name).first_or_404()
         main_dir = autocomplete.main_dir(autocomplete_dir)
@@ -736,7 +740,7 @@ def purge_autocomplete():
         dir_to_keep = set(
             os.path.realpath(os.path.dirname(dataset.name)) for dataset in ac_instance.last_datasets(max_backups)
         )
-        autocomplete_dir = current_app.config['TYR_AUTOCOMPLETE_DIR']
+        autocomplete_dir = current_app.config['AUTOCOMPLETE_DIR']
         backup_dir = os.path.join(autocomplete_dir, ac_instance.name, 'backup')
         all_backups = set(os.path.join(backup_dir, backup) for backup in os.listdir(backup_dir))
         to_remove = all_backups - dir_to_keep

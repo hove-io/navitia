@@ -32,6 +32,8 @@ import os
 from tyr import app, db
 import pytest
 import flask_migrate
+import tempfile
+import shutil
 
 
 @pytest.yield_fixture(scope="module", autouse=True)
@@ -116,3 +118,66 @@ def enable_mimir2_and_mimir():
     yield
     app.config['MIMIR_URL'] = previous_mimir2_value
     app.config['MIMIR7_URL'] = previous_mimir_value
+
+
+@pytest.fixture
+def valid_instance_env_variables():
+    os.environ["TYR_INSTANCE_fr-se-lyon"] = (
+        '{"instance":{"name":"fr-se-lyon","source-directory":"/ed/source",'
+        '"backup-directory":"/ed/backup","aliases_file":"/ed/aliases",'
+        '"synonyms_file":"/ed/synonyms","target-file":"ed/target_file",'
+        '"tmp_file":"/ed/tmp_file","is-free":true,"exchange":"exchange"},'
+        '"database":{"host":"host1","dbname":"jormun","username":"user1",'
+        '"password":"pass1","port":492}}'
+    )
+    yield
+    del os.environ["TYR_INSTANCE_fr-se-lyon"]
+
+
+@pytest.fixture
+def invalid_instance_env_variables():
+    os.environ["TYR_INSTANCE_fr-se-lyon"] = (
+        '{"instance":{"name":"fr-se-lyon","source-directory":"/ed/source",'
+        '"backup-directory":"/ed/backup","aliases_file":"/ed/aliases",'
+        '"synonyms_file":"/ed/synonyms","target-file":"ed/target_file",'
+        '"tmp_file":"/ed/tmp_file","is-free":true,"exchange":"exchange"},'
+        '"database":{"host":"host1","dbname":"jormun","username":"user1",'
+        '"password":"pass1","port":"492"}}'
+    )
+    yield
+    del os.environ["TYR_INSTANCE_fr-se-lyon"]
+
+
+@pytest.fixture
+def valid_instance_env_variables_fr():
+    os.environ["TYR_INSTANCE_fr"] = (
+        '{"instance":{"name":"fr","source-directory":"/ed/source",'
+        '"backup-directory":"/ed/backup","aliases_file":"/ed/aliases",'
+        '"synonyms_file":"/ed/synonyms","target-file":"ed/target_file",'
+        '"tmp_file":"/ed/tmp_file","is-free":true,"exchange":"exchange"},'
+        '"database":{"host":"host1","dbname":"jormun","username":"user1",'
+        '"password":"pass1","port":492}}'
+    )
+    yield
+    del os.environ["TYR_INSTANCE_fr"]
+
+
+@pytest.fixture
+def create_repositories_instance_env_variables():
+    tmp_path = tempfile.mkdtemp(prefix='tyr_instance_auv_')
+    source_directory = "{path}/ed/source".format(path=tmp_path)
+    backup_directory = "{path}/ed/backup".format(path=tmp_path)
+    aliases_directory = "{path}/ed/aliases".format(path=tmp_path)
+    synonyms_directory = "{path}/ed/synonyms_file".format(path=tmp_path)
+
+    os.environ["TYR_INSTANCE_auv"] = (
+        '{"instance":{"name":"auv","source-directory":"' + source_directory + '",'
+        '"backup-directory":"' + backup_directory + '","aliases_file":"' + aliases_directory + '",'
+        '"synonyms_file":"' + synonyms_directory + '","target-file":"ed/target_file",'
+        '"tmp_file":"/ed/tmp_file","is-free":true,"exchange":"exchange"},'
+        '"database":{"host":"host1","dbname":"jormun","username":"user1",'
+        '"password":"pass1","port":492}}'
+    )
+    yield
+    del os.environ["TYR_INSTANCE_auv"]
+    shutil.rmtree(tmp_path)

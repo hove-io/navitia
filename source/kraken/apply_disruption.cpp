@@ -40,6 +40,7 @@ www.navitia.io
 #include "type/pt_data.h"
 #include "utils/logger.h"
 #include "utils/map_find.h"
+#include "utils/functions.h"
 
 #include <boost/container/flat_set.hpp>
 #include <boost/date_time/gregorian/gregorian.hpp>
@@ -65,7 +66,7 @@ nt::VehicleJourney* create_vj_from_old_vj(nt::MetaVehicleJourney* mvj,
                                           const nt::VehicleJourney* vj,
                                           const std::string& new_vj_uri,
                                           nt::RTLevel rt_level,
-                                          const nt::ValidityPattern& new_vp,
+                                          const nt::ValidityPattern& canceled_vp,
                                           std::vector<nt::StopTime> new_stop_times,
                                           nt::PT_Data& pt_data) {
     auto* company = vj->company;
@@ -73,7 +74,7 @@ nt::VehicleJourney* create_vj_from_old_vj(nt::MetaVehicleJourney* mvj,
     auto odt_message = vj->odt_message;
     auto vehicle_properties = vj->_vehicle_properties;
 
-    auto* new_vj = mvj->create_discrete_vj(new_vj_uri, vj->name, vj->headsign, rt_level, new_vp, vj->route,
+    auto* new_vj = mvj->create_discrete_vj(new_vj_uri, vj->name, vj->headsign, rt_level, canceled_vp, vj->route,
                                            std::move(new_stop_times), pt_data);
     vj = nullptr;  // after create_discrete_vj, the vj can have been deleted
 
@@ -426,8 +427,8 @@ struct add_impacts_visitor : public apply_impacts_visitor {
         log_end_action(mvj->uri);
     }
 
-    void operator()(nt::disruption::RailSection& rs) {
-        std::string uri = "new rail section, start: " + rs.start_point->uri + " - end: " + rs.end_point->uri;
+    void operator()(const nt::disruption::RailSection& rs) {
+        std::string uri = "new rail section, start: " + rs.start->uri + " - end: " + rs.end->uri;
         if (rs.line) {
             uri += ", line : " + rs.line->uri;
         } else if (!rs.routes.empty()) {
@@ -446,10 +447,6 @@ struct add_impacts_visitor : public apply_impacts_visitor {
             this->log_end_action(uri);
             return;
         }
-
-        auto sort_predicate = [](const std::pair<std::string, uint32_t>& sa1,
-                                 const std::pair<std::string, uint32_t>& sa2) { return sa1.second < sa2.second; };
-        std::sort(rs.blocked_stop_areas.begin(), rs.blocked_stop_areas.end(), sort_predicate);
 
         LOG4CPLUS_TRACE(log, "canceling " << uri);
 
@@ -512,7 +509,9 @@ struct add_impacts_visitor : public apply_impacts_visitor {
         std::string uri = "line section (" + ls.line->uri + " : " + ls.start_point->uri + "/" + ls.end_point->uri + ")";
         this->log_start_action(uri);
 
-        if (impact->severity->effect != nt::disruption::Effect::NO_SERVICE) {
+        auto blocking_effects = {nt::disruption::Effect::NO_SERVICE, nt::disruption::Effect::DETOUR,
+                                 nt::disruption::Effect::REDUCED_SERVICE};
+        if (!navitia::contains(blocking_effects, impact->severity->effect)) {
             LOG4CPLUS_DEBUG(log, "Unhandled action on " << uri);
             this->log_end_action(uri);
             return;
