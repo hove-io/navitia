@@ -455,7 +455,9 @@ bool Impact::is_relevant(const std::vector<const StopTime*>& stop_times) const {
             }
         }
         return false;
-    } else if (is_rail_section && this->severity->effect == nt::disruption::Effect::REDUCED_SERVICE) {
+    } else if (is_rail_section
+               && (this->severity->effect == nt::disruption::Effect::REDUCED_SERVICE
+                   || this->severity->effect == nt::disruption::Effect::DETOUR)) {
         const auto& informed_entity = *rail_section_impacted_obj_it;
         const RailSection* rail_section = boost::get<RailSection>(&informed_entity);
 
