@@ -441,8 +441,9 @@ struct add_impacts_visitor : public apply_impacts_visitor {
         }
         this->log_start_action(uri);
 
-        if (impact->severity->effect != nt::disruption::Effect::NO_SERVICE
-            && impact->severity->effect != nt::disruption::Effect::REDUCED_SERVICE) {
+        auto blocking_effects = {nt::disruption::Effect::NO_SERVICE, nt::disruption::Effect::DETOUR,
+                                 nt::disruption::Effect::REDUCED_SERVICE};
+        if (!navitia::contains(blocking_effects, impact->severity->effect)) {
             LOG4CPLUS_DEBUG(log, "Unhandled action on " << uri);
             this->log_end_action(uri);
             return;
@@ -471,7 +472,8 @@ struct add_impacts_visitor : public apply_impacts_visitor {
             nt::VehicleJourney* vj = vj_iterator->second;
             auto& new_vp = impacted_vj.new_vp;
 
-            if (impact->severity->effect == nt::disruption::Effect::REDUCED_SERVICE) {
+            if (impact->severity->effect == nt::disruption::Effect::REDUCED_SERVICE
+                || impact->severity->effect == nt::disruption::Effect::DETOUR) {
                 // we remove all stop_times of vj with a rank that appears in impacted_vj.impacted_ranks
                 // except start_stop and end_stop
                 new_stop_times = handle_reduced_service(vj, impacted_vj, rs);
