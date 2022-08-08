@@ -101,11 +101,12 @@ class TestRailSections(AbstractTestFixture):
 
     def test_disruption_api_with_rail_section(self):
         r = self.default_query('disruptions')
-        assert len(get_not_null(r, 'disruptions')) == 8
+        assert len(get_not_null(r, 'disruptions')) == 9
         assert r['disruptions'][0]['id'] == 'rail_section_on_line1-1'
         assert r['disruptions'][1]['id'] == 'rail_section_on_line1-2'
         assert r['disruptions'][2]['id'] == 'rail_section_on_line1-3'
         assert r['disruptions'][3]['id'] == 'rail_section_on_line11'
+        assert r['disruptions'][4]['id'] == 'rail_section_bis_on_line11'
 
     def test_stop_points_api_with_rail_section(self):
         r = self.default_query('stop_points/stopC')
@@ -265,11 +266,12 @@ class TestRailSections(AbstractTestFixture):
 
     def test_line_reports_impacted_by_rail_section(self):
         r = self.default_query('line_reports')
-        assert len(get_not_null(r, 'disruptions')) == 8
+        assert len(get_not_null(r, 'disruptions')) == 9
         is_valid_rail_section_disruption(r['disruptions'][1])
         is_valid_rail_section_disruption(r['disruptions'][2])
         is_valid_rail_section_disruption(r['disruptions'][3])
         is_valid_rail_section_disruption(r['disruptions'][4])
+        is_valid_rail_section_disruption(r['disruptions'][5])
 
     def test_terminus_schedules_impacted_by_rail_section(self):
         # terminus_schedules on line:1 gives us 3 rail_section impacts
@@ -442,6 +444,7 @@ class TestRailSections(AbstractTestFixture):
             assert result == (disruption in d)
 
         # Test on line 'line:11' impacted with a rail_section with severity=REDUCED_SERVICE
+        # since 2017-01-01 until 2017-01-05
         # Impacted from CC to FF with blocked stops DD and EE (vehicle_journey:vj:11-1)
         # Impacted from FF to CC with blocked stops EE and DD (vehicle_journey:vj:11-2)
         # stopAA-> stopBB / base_schedule: No disruption
@@ -752,6 +755,196 @@ class TestRailSections(AbstractTestFixture):
         for disruption, result in scenario.items():
             assert result == (disruption in d)
 
+    def test_journeys_with_rail_section_detour(self):
+        """
+        for /journeys, we should display a rail section disruption only if we use an impacted section
+
+        We do all the calls as base_schedule to see the disruption but not be really impacted by them
+        """
+        # with this departure time we should take 'vj:1:1' that is impacted
+        date = '20170107T080000'
+        current = '_current_datetime=20170107T080000'
+
+        def journey_query(_from, to, data_freshness="base_schedule"):
+            return 'journeys?from={fr}&to={to}&datetime={dt}&{cur}&data_freshness={data_freshness}'.format(
+                fr=_from, to=to, dt=date, cur=current, data_freshness=data_freshness
+            )
+
+        def journeys(_from, to, data_freshness="base_schedule"):
+            q = journey_query(_from=_from, to=to, data_freshness=data_freshness)
+            r = self.query_region(q)
+            self.is_valid_journey_response(r, q)
+            return r
+
+        # Test on line 'line:11' impacted with a rail_section with severity=DETOUR
+        # since 2017-01-06 until 2017-01-10
+        # Impacted from CC to FF with blocked stops DD and EE (vehicle_journey:vj:11-1)
+        # Impacted from FF to CC with blocked stops EE and DD (vehicle_journey:vj:11-2)
+        # stopAA-> stopBB / base_schedule: No disruption
+        scenario = {
+            'rail_section_bis_on_line11': False,
+        }
+
+        r = journeys(_from='stopAA', to='stopBB')
+        assert len(r["journeys"]) == 1
+        assert get_used_vj(r) == [['vehicle_journey:vj:11-1']]
+        d = get_all_element_disruptions(r['journeys'], r)
+        assert not impacted_headsigns(d)
+        for disruption, result in scenario.items():
+            assert result == (disruption in d)
+
+        # stopBB-> stopAA / base_schedule: No disruption
+        r = journeys(_from='stopBB', to='stopAA')
+        assert len(r["journeys"]) == 1
+        assert get_used_vj(r) == [['vehicle_journey:vj:11-2']]
+        d = get_all_element_disruptions(r['journeys'], r)
+        assert not impacted_headsigns(d)
+        for disruption, result in scenario.items():
+            assert result == (disruption in d)
+
+        # stopAA-> stopBB / realtime: No disruption
+        r = journeys(_from='stopAA', to='stopBB', data_freshness="realtime")
+        assert len(r["journeys"]) == 1
+        assert get_used_vj(r) == [['vehicle_journey:vj:11-1:Adapted:1:rail_section_bis_on_line11']]
+        d = get_all_element_disruptions(r['journeys'], r)
+        assert not impacted_headsigns(d)
+        for disruption, result in scenario.items():
+            assert result == (disruption in d)
+
+        # stopAA-> stopCC / base_schedule: No disruption
+        scenario = {
+            'rail_section_bis_on_line11': False,
+        }
+
+        r = journeys(_from='stopAA', to='stopCC')
+        assert len(r["journeys"]) == 1
+        assert get_used_vj(r) == [['vehicle_journey:vj:11-1']]
+        d = get_all_element_disruptions(r['journeys'], r)
+        assert not impacted_headsigns(d)
+        for disruption, result in scenario.items():
+            assert result == (disruption in d)
+
+        # stopAA-> stopEE / base_schedule: A disruption to display
+        scenario = {
+            'rail_section_bis_on_line11': True,
+        }
+
+        r = journeys(_from='stopAA', to='stopEE')
+        assert len(r["journeys"]) == 1
+        assert get_used_vj(r) == [['vehicle_journey:vj:11-1']]
+        d = get_all_element_disruptions(r['journeys'], r)
+        assert impacted_headsigns(d) == {'vj:11-1'}
+        for disruption, result in scenario.items():
+            assert result == (disruption in d)
+
+        # stopEE-> stopAA / base_schedule: A disruption to display
+        r = journeys(_from='stopEE', to='stopAA')
+        assert len(r["journeys"]) == 1
+        assert get_used_vj(r) == [['vehicle_journey:vj:11-2']]
+        d = get_all_element_disruptions(r['journeys'], r)
+        assert impacted_headsigns(d) == {'vj:11-2'}
+        for disruption, result in scenario.items():
+            assert result == (disruption in d)
+
+        # stopAA-> stopEE / realtime: No journey as the stop stopEE is in the section completely impacted
+        q = journey_query(_from='stopAA', to='stopEE', data_freshness="realtime")
+        r = self.query_region(q)
+        assert "journeys" not in r
+
+        # stopAA-> stopFF / base_schedule: No disruption
+        # We should not have disruption on rail_section
+        scenario = {
+            'rail_section_on_line11': False,
+        }
+
+        r = journeys(_from='stopAA', to='stopFF')
+        assert len(r["journeys"]) == 1
+        assert get_used_vj(r) == [['vehicle_journey:vj:11-1']]
+        d = get_all_element_disruptions(r['journeys'], r)
+        assert not impacted_headsigns(d)
+        for disruption, result in scenario.items():
+            assert result == (disruption in d)
+
+        # stopFF-> stopAA / base_schedule: No disruption
+        r = journeys(_from='stopFF', to='stopAA')
+        assert len(r["journeys"]) == 1
+        assert get_used_vj(r) == [['vehicle_journey:vj:11-2']]
+        d = get_all_element_disruptions(r['journeys'], r)
+        assert not impacted_headsigns(d)
+        for disruption, result in scenario.items():
+            assert result == (disruption in d)
+
+        # stopAA-> stopFF / realtime: No disruption to display
+        r = journeys(_from='stopAA', to='stopGG', data_freshness="realtime")
+        assert len(r["journeys"]) == 1
+        assert get_used_vj(r) == [['vehicle_journey:vj:11-1:Adapted:1:rail_section_bis_on_line11']]
+        d = get_all_element_disruptions(r['journeys'], r)
+        assert not impacted_headsigns(d)
+        for disruption, result in scenario.items():
+            assert result == (disruption in d)
+
+        # stopCC-> stopFF / base_schedule: No disruption
+        scenario = {
+            'rail_section_bis_on_line11': False,
+        }
+
+        r = journeys(_from='stopCC', to='stopFF')
+        assert len(r["journeys"]) == 1
+        assert get_used_vj(r) == [['vehicle_journey:vj:11-1']]
+        d = get_all_element_disruptions(r['journeys'], r)
+        assert not impacted_headsigns(d)
+        for disruption, result in scenario.items():
+            assert result == (disruption in d)
+
+        # stopCC-> stopFF / realtime: No disruption
+        r = journeys(_from='stopCC', to='stopFF', data_freshness="realtime")
+        assert len(r["journeys"]) == 1
+        assert get_used_vj(r) == [['vehicle_journey:vj:11-1:Adapted:1:rail_section_bis_on_line11']]
+        d = get_all_element_disruptions(r['journeys'], r)
+        assert not impacted_headsigns(d)
+        for disruption, result in scenario.items():
+            assert result == (disruption in d)
+
+        # stopDD-> stopFF / base_schedule: A disruption to display
+        scenario = {
+            'rail_section_bis_on_line11': True,
+        }
+
+        r = journeys(_from='stopDD', to='stopFF')
+        assert len(r["journeys"]) == 1
+        assert get_used_vj(r) == [['vehicle_journey:vj:11-1']]
+        d = get_all_element_disruptions(r['journeys'], r)
+        assert impacted_headsigns(d) == {'vj:11-1'}
+        for disruption, result in scenario.items():
+            assert result == (disruption in d)
+
+        # stopDD-> stopFF / realtime: No journey as the stop stopEE is in the section completely impacted
+        q = journey_query(_from='stopDD', to='stopFF', data_freshness="realtime")
+        r = self.query_region(q)
+        assert "journeys" not in r
+
+        # stopGG-> stopII / Base_schedule: No disruption
+        scenario = {
+            'rail_section_bis_on_line11': False,
+        }
+
+        r = journeys(_from='stopGG', to='stopII')
+        assert len(r["journeys"]) == 1
+        assert get_used_vj(r) == [['vehicle_journey:vj:11-1']]
+        d = get_all_element_disruptions(r['journeys'], r)
+        assert not impacted_headsigns(d)
+        for disruption, result in scenario.items():
+            assert result == (disruption in d)
+
+        # stopGG-> stopII / realtime: No disruption
+        r = journeys(_from='stopGG', to='stopII', data_freshness="realtime")
+        assert len(r["journeys"]) == 1
+        assert get_used_vj(r) == [['vehicle_journey:vj:11-1:Adapted:1:rail_section_bis_on_line11']]
+        d = get_all_element_disruptions(r['journeys'], r)
+        assert not impacted_headsigns(d)
+        for disruption, result in scenario.items():
+            assert result == (disruption in d)
+
     def test_traffic_reports_on_stop_areas(self):
         """
         we should be able to find the related rail section disruption with /traffic_reports
@@ -853,6 +1046,7 @@ class TestRailSections(AbstractTestFixture):
             'rail_section_on_line1-2',
             'rail_section_on_line1-3',
             'rail_section_on_line11',
+            'rail_section_bis_on_line11',
             'rail_section_on_line100',
         ]:
             assert self.has_dis('networks/base_network/traffic_reports', disruption_label)
@@ -863,7 +1057,15 @@ class TestRailSections(AbstractTestFixture):
         assert len(r['traffic_reports'][0]['stop_areas']) == 41
 
         for sa in r['traffic_reports'][0]['stop_areas']:
-            if sa['id'] in ['stopAreaB', 'stopAreaC', 'stopAreaD']:
+            if sa['id'] in [
+                'stopAreaB',
+                'stopAreaC',
+                'stopAreaD',
+                'stopAreaCC',
+                'stopAreaDD',
+                'stopAreaEE',
+                'stopAreaFF',
+            ]:
                 assert len(sa['links']) == 2
         for sa in r['traffic_reports'][0]['stop_areas']:
             if sa['id'] in [
@@ -874,9 +1076,6 @@ class TestRailSections(AbstractTestFixture):
                 'stopAreaP',
                 'stopAreaQ',
                 'stopAreaR',
-                'stopAreaDD',
-                'stopAreaEE',
-                'stopAreaFF',
                 'stopAreaGG',
                 'stopAreaHH',
                 'stopAreaII',
