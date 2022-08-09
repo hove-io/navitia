@@ -134,54 +134,54 @@ ed::builder create_complex_data_for_rail_section() {
         b.sa("cdg_area", 0., 55.)("cdg", 0., 55.);
         b.sa("denfert_area", 0., 56.)("denfert", 0., 56.);
 
-        b.vj("line:1", "111111", "", true, "vj:1")
+        b.vj("line:1", "111111111111", "", true, "vj:1")
             .route("route1")("stopA", "08:00"_t)("stopB", "08:05"_t)("stopC", "08:10"_t)("stopD", "08:15"_t)(
                 "stopE", "08:20"_t)("stopF", "08:25"_t)("stopG", "08:30"_t)("stopH", "08:35"_t)("stopI", "08:40"_t);
-        b.vj("line:1", "111111", "", true, "vj:2")
+        b.vj("line:1", "111111111111", "", true, "vj:2")
             .route("route2")("stopI", "08:00"_t)("stopH", "08:05"_t)("stopG", "08:10"_t)("stopF", "08:15"_t)(
                 "stopE", "08:20"_t)("stopD", "08:25"_t)("stopC", "08:30"_t)("stopB", "08:35"_t)("stopA", "08:40"_t);
-        b.vj("line:1", "111111", "", true, "vj:3")
+        b.vj("line:1", "111111111111", "", true, "vj:3")
             .route("route3")("stopA", "08:00"_t)("stopB", "08:05"_t)("stopJ", "08:10"_t)("stopK", "08:15"_t)(
                 "stopL", "08:20"_t)("stopF", "08:25"_t)("stopG", "08:30"_t)("stopH", "08:35"_t)("stopI", "08:40"_t);
-        b.vj("line:1", "111111", "", true, "vj:4")
+        b.vj("line:1", "111111111111", "", true, "vj:4")
             .route("route4")("stopA", "08:00"_t)("stopB", "08:05"_t)("stopC", "08:10"_t)("stopD", "08:15"_t)(
                 "stopM", "08:20"_t)("stopN", "08:25"_t)("stopO", "08:30"_t)("stopG", "08:35"_t)("stopH", "08:40"_t)(
                 "stopI", "08:40"_t);
-        b.vj("line:1", "111111", "", true, "vj:5")
+        b.vj("line:1", "111111111111", "", true, "vj:5")
             .route("route5")("stopA", "08:00"_t)("stopB", "08:05"_t)("stopC", "08:10"_t)("stopP", "08:15"_t)(
                 "stopQ", "08:20"_t)("stopR", "08:25"_t);
-        b.vj("line:1", "111111", "", true, "vj:6")
+        b.vj("line:1", "111111111111", "", true, "vj:6")
             .route("route6")("stopR", "08:00"_t)("stopQ", "08:05"_t)("stopP", "08:10"_t)("stopC", "08:15"_t)(
                 "stopB", "08:20"_t)("stopA", "08:25"_t);
-        b.vj("line:2", "111111", "", true, "vj:2-1")
+        b.vj("line:2", "111111111111", "", true, "vj:2-1")
             .route("route2-1")("stopW", "08:00"_t)("stopX", "08:05"_t)("stopY", "08:10"_t)("stopZ", "08:15"_t);
 
-        b.vj("line:11", "111111", "", true, "vj:11-1")
+        b.vj("line:11", "111111111111", "", true, "vj:11-1")
             .route("route11-1")("stopAA", "08:00"_t)("stopBB", "08:05"_t)("stopCC", "08:10"_t)("stopDD", "08:15"_t)(
                 "stopEE", "08:20"_t)("stopFF", "08:25"_t)("stopGG", "08:30"_t)("stopHH", "08:35"_t)("stopII",
                                                                                                     "08:40"_t);
-        b.vj("line:11", "111111", "", true, "vj:11-2")
+        b.vj("line:11", "111111111111", "", true, "vj:11-2")
             .route("route11-2")("stopII", "08:00"_t)("stopHH", "08:05"_t)("stopGG", "08:10"_t)("stopFF", "08:15"_t)(
                 "stopEE", "08:20"_t)("stopDD", "08:25"_t)("stopCC", "08:30"_t)("stopBB", "08:35"_t)("stopAA",
                                                                                                     "08:40"_t);
 
-        b.vj("line:100", "111111", "", true, "vj:100-1")
+        b.vj("line:100", "111111111111", "", true, "vj:100-1")
             .route("route100-1")("stopA1", "08:00"_t)("stopB1", "08:05"_t)("stopC1", "08:10"_t)("stopD1", "08:15"_t)(
                 "stopE1", "08:20"_t)("stopF1", "08:25"_t)("stopG1", "08:30"_t)("stopH1", "08:35"_t)("stopI1",
                                                                                                     "08:40"_t);
 
-        b.vj("line:101", "111111", "", true, "vj:101-1")
+        b.vj("line:101", "111111111111", "", true, "vj:101-1")
             .route("route101-1")("stopP1", "08:00"_t)("stopQ1", "08:05"_t)("stopR1", "08:10"_t)("stopS1", "08:15"_t)(
                 "stopT1", "08:20"_t)("stopU1", "08:25"_t)("stopV1", "08:30"_t);
         b.vj("line:101", "111111", "", true, "vj:101-2")
             .route("route101-2")("stopV1", "08:00"_t)("stopU1", "08:05"_t)("stopT1", "08:10"_t)("stopS1", "08:15"_t)(
                 "stopR1", "08:20"_t)("stopQ1", "08:25"_t)("stopP1", "08:30"_t);
 
-        b.vj("line:RER-B", "111111", "", true, "vj:rer_b_nord")
+        b.vj("line:RER-B", "111111111111", "", true, "vj:rer_b_nord")
             .route("route_rer_b_nord")("denfert", "08:00"_t)("port_royal", "08:05"_t)("luxembourg", "08:10"_t)(
                 "chatelet", "08:15"_t)("gare_du_nord", "08:20"_t)("aulnay", "08:25"_t)("villepinte", "08:30"_t)(
                 "parc_des_expos", "08:35"_t)("cdg", "08:40"_t);
-        b.vj("line:RER-B", "111111", "", true, "vj:rer_b_sud")
+        b.vj("line:RER-B", "111111111111", "", true, "vj:rer_b_sud")
             .route("route_rer_b_sud")("cdg", "08:00"_t)("parc_des_expos", "08:05"_t)("villepinte", "08:10"_t)(
                 "aulnay", "08:15"_t)("gare_du_nord", "08:20"_t)("chatelet", "08:25"_t)("luxembourg", "08:30"_t)(
                 "port_royal", "08:35"_t)("denfert", "08:40"_t);
@@ -260,11 +260,11 @@ int main(int argc, const char* const argv[]) {
                                   .get_disruption(),
                               *b.data->pt_data, *b.data->meta);
 
-    // new impact with two rail_sections and severity lavel REDUCED_SERVICE on route11-1 and route11-2
+    // new impact with two rail_sections and severity level REDUCED_SERVICE on route11-1 and route11-2
     // route11-1: AA  BB  CC DD  EE  FF  GG HH II
-    // rail_section: Start CC / End   FF / Blocked: DD, EE
+    // rail_section: Start CC - End FF / Blocked: DD, EE
     // route11-2: II  HH  GG FF  EE  DD  CC BB AA
-    // rail_section: Start FF / End   CC / Blocked: EE, DD
+    // rail_section: Start FF - End CC / Blocked: EE, DD
     navitia::apply_disruption(b.impact(nt::RTLevel::Adapted, "rail_section_on_line11")
                                   .severity(nt::disruption::Effect::REDUCED_SERVICE)
                                   .application_periods(btp("20170101T000000"_dt, "20170105T000000"_dt))
@@ -277,6 +277,25 @@ int main(int argc, const char* const argv[]) {
                                                    {"route11-2"}, *b.data->pt_data)
                                   .get_disruption(),
                               *b.data->pt_data, *b.data->meta);
+
+    // new impact with two rail_sections and severity level DETOUR on route11-1 and route11-2
+    // route11-1: AA  BB  CC DD  EE  FF  GG HH II
+    // rail_section: Start CC - End FF / Blocked: DD, EE
+    // route11-2: II  HH  GG FF  EE  DD  CC BB AA
+    // rail_section: Start FF - End CC / Blocked: EE, DD
+    navitia::apply_disruption(b.impact(nt::RTLevel::Adapted, "rail_section_bis_on_line11")
+                                  .severity(nt::disruption::Effect::DETOUR)
+                                  .application_periods(btp("20170106T000000"_dt, "20170110T000000"_dt))
+                                  .publish(btp("20170101T000000"_dt, "20170110T000000"_dt))
+                                  .on_rail_section("line:11", "stopAreaCC", "stopAreaFF",
+                                                   {std::make_pair("stopAreaDD", 3), std::make_pair("stopAreaEE", 4)},
+                                                   {"route11-1"}, *b.data->pt_data)
+                                  .on_rail_section("line:11", "stopAreaFF", "stopAreaCC",
+                                                   {std::make_pair("stopAreaDD", 4), std::make_pair("stopAreaEE", 3)},
+                                                   {"route11-2"}, *b.data->pt_data)
+                                  .get_disruption(),
+                              *b.data->pt_data, *b.data->meta);
+
     // new rail_section disruption NO_SERVICE on route 100
     // A1  B1  C1 D1  E1  F1  G1 H1 I1
     // Start C1
@@ -292,7 +311,7 @@ int main(int argc, const char* const argv[]) {
                                   .get_disruption(),
                               *b.data->pt_data, *b.data->meta);
 
-    // new impact with two rail_sections and severity lavel NO_SERVICE on route101-1 and route101-2
+    // new impact with two rail_sections and severity level NO_SERVICE on route101-1 and route101-2
     // route101-1: P1  Q1  R1 S1  T1  U1  V1
     // rail_section: Start S1 / End   V1 / Blocked: T1, U1
     // route101-2: V1  U1  T1 S1  R1  Q1  P1
