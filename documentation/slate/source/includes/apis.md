@@ -1555,7 +1555,7 @@ nop      | direction_type     | enum                            | Allow to filte
 |route|[route](#route)|The route of the schedule|
 |date_times|Array of [pt-date-time](#pt-date-time)|When does a bus stops at the stop point|
 |stop_point|[stop_point](#stop-point)|The stop point of the schedule|
-|additional_informations|[additional_informations](#additional-informations)|Other informations, when no departures<br> enum values:<ul><li>date_out_of_bounds: dataset loaded in Navitia doesn't cover this date</li><li>no_departure_this_day: there is no departure during the date (for example a sunday)</li><li>no_active_circulation_this_day: there is no more journeys, the line is closed</li><li>terminus: there will never be departure, you're at the terminus of the line</li><li>partial_terminus: same as terminus, but be careful, some vehicles are departing from the stop some other days</li><li>active_disruption: no departure, due to a disruption</li></ul>|
+|additional_informations|[additional_informations](#additional-informations)|Other informations, when no departures<br> enum values:<ul><li>date_out_of_bounds: dataset loaded in Navitia doesn't cover this date</li><li>no_departure_this_day: there is no departure during the date (for example a sunday)</li><li>no_active_circulation_this_day: there is no more journeys for the date (for example you're too late, the line has closed for today)</li><li>terminus: there will never be departure, you're at the terminus of the line</li><li>partial_terminus: same as terminus, but be careful, some vehicles are departing from the stop some other days</li><li>active_disruption: no departure, due to a disruption</li></ul>|
 
 <h2 id="terminus-schedules">Terminus Schedules</h2>
 
