@@ -1,3 +1,9 @@
+navitia2 (15.12.1) unstable; urgency=low
+
+  * [Kraken][Feature]: For rail-sections DETOUR now works like REDUCED_SERVICE  <https://github.com/hove-io/navitia/pull/3799>
+
+ -- patrick.qian <patrick.qian@kisio.com>  Tue, 09 Aug 2022 11:08:39 +0100
+
 navitia2 (15.12.0) unstable; urgency=low
 
   * [Config][AWS]: Management of tyr parameters by env variables  <https://github.com/hove-io/navitia/pull/3788>
