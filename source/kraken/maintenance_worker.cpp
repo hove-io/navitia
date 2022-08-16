@@ -337,7 +337,8 @@ void MaintenanceWorker::listen_rabbitmq() {
 
 void MaintenanceWorker::init_rabbitmq() {
     std::string instance_name = conf.instance_name();
-    // connection through URI, if URI is provided, it will be used in the first place as other other connection options are neglected
+    // connection through URI, if URI is provided, it will be used in the first place as other other connection options
+    // are neglected
     boost::optional<std::string> broker_uri = conf.broker_uri();
     // connection through classic method
     std::string exchange_name = conf.broker_exchange();
@@ -358,7 +359,7 @@ void MaintenanceWorker::init_rabbitmq() {
     if (broker_uri) {
         LOG4CPLUS_INFO(logger, boost::format("connection to rabbitmq with uri: %s") % *broker_uri);
         channel = AmqpClient::Channel::CreateFromUri(*broker_uri);
-    }else {
+    } else {
         LOG4CPLUS_INFO(logger, boost::format("connection to rabbitmq: %s@%s:%s/%s") % username % host % port % vhost);
         channel = AmqpClient::Channel::Create(host, port, username, password, vhost);
     }
