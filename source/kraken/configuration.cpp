@@ -85,6 +85,7 @@ po::options_description get_options_description(const boost::optional<std::strin
         ("GENERAL.metrics_binding", po::value<std::string>(), "IP:PORT to serving metrics in http")
         ("GENERAL.core_file_size_limit", po::value<int>()->default_value(0), "ulimit that define the maximum size of a core file")
 
+        ("BROKER.uri", po::value<std::string>(), "rabbitmq connection uri")
         ("BROKER.host", po::value<std::string>()->default_value("localhost"), "host of rabbitmq")
         ("BROKER.port", po::value<int>()->default_value(5672), "port of rabbitmq")
         ("BROKER.username", po::value<std::string>()->default_value("guest"), "username for rabbitmq")
@@ -198,6 +199,12 @@ int Configuration::core_file_size_limit() const {
     return this->vm["GENERAL.core_file_size_limit"].as<int>();
 }
 
+boost::optional<std::string> Configuration::broker_uri() const {
+    if (this->vm.count("BROKER.uri") > 0) {
+        return this->vm["BROKER.uri"].as<std::string>();
+    }
+    return {};
+}
 std::string Configuration::broker_host() const {
     return this->vm["BROKER.host"].as<std::string>();
 }
