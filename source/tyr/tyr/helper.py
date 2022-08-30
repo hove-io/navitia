@@ -217,16 +217,22 @@ def create_repositories(instance):
         instance.backup_directory,
         instance.synonyms_file,
         instance.aliases_file,
+        instance.target_file,
     ]:
-        if path and not os.path.exists(path):
+        if not path:
+            continue
+        dir_name = os.path.dirname(path)
+        if not dir_name:
+            continue
+        if not os.path.exists(dir_name):
             logging.getLogger(__name__).info(
-                "Create {path} path for {name} instance".format(path=path, name=instance.name)
+                "Create {path} path for {name} instance".format(path=dir_name, name=instance.name)
             )
             try:
-                os.makedirs(path)
+                os.makedirs(dir_name)
             except OSError as error:
                 msg = "Error on create path {path} for instance {name} , error: {message}".format(
-                    path=path, name=instance.name, message=error.strerror
+                    path=dir_name, name=instance.name, message=error.strerror
                 )
                 logging.getLogger(__name__).error(msg)
                 raise ValueError(msg)
