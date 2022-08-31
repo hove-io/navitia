@@ -169,12 +169,14 @@ def create_repositories_instance_env_variables():
     backup_directory = "{path}/ed/backup".format(path=tmp_path)
     aliases_directory = "{path}/ed/aliases".format(path=tmp_path)
     synonyms_directory = "{path}/ed/synonyms_file".format(path=tmp_path)
+    target_path = "{path}/ed/target_file".format(path=tmp_path)
 
     os.environ["TYR_INSTANCE_auv"] = (
         '{"instance":{"name":"auv","source-directory":"' + source_directory + '",'
         '"backup-directory":"' + backup_directory + '","aliases_file":"' + aliases_directory + '",'
         '"synonyms_file":"' + synonyms_directory + '","target-file":"ed/target_file",'
-        '"tmp_file":"/ed/tmp_file","is-free":true,"exchange":"exchange"},'
+        '"tmp_file":"/ed/tmp_file","is-free":true,"exchange":"exchange",'
+        '"target-file":"' + target_path + '/data.nav.lz4"},'
         '"database":{"host":"host1","dbname":"jormun","username":"user1",'
         '"password":"pass1","port":492}}'
     )
