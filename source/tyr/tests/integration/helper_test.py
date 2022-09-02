@@ -66,7 +66,6 @@ def test_is_activate_autocomplete_version_without_mimir(disable_mimir):
 def test_valid_config_instance_from_env_variables(valid_instance_env_variables):
     with patch('tyr.helper.create_repositories', fake_create_repositories):
         instance = load_instance_config("fr-se-lyon")
-        assert instance.aliases_file == "/ed/aliases"
         assert instance.backup_directory == "/ed/backup"
         assert instance.exchange == "exchange"
         assert instance.is_free == True
@@ -77,13 +76,11 @@ def test_valid_config_instance_from_env_variables(valid_instance_env_variables):
 def test_valid_config_instance_from_env_variables_upper_instance_name(valid_instance_env_variables):
     with patch('tyr.helper.create_repositories', fake_create_repositories):
         instance = load_instance_config("FR-SE-lyon")
-        assert instance.aliases_file == "/ed/aliases"
         assert instance.backup_directory == "/ed/backup"
         assert instance.exchange == "exchange"
         assert instance.is_free == True
         assert instance.name == "fr-se-lyon"
         assert instance.pg_port == 492
-        assert not os.path.exists(instance.aliases_file)
         assert not os.path.exists(instance.backup_directory)
 
 

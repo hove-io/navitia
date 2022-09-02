@@ -236,8 +236,8 @@ def load_instance_config(instance_name):
     instance.backup_directory = config['instance']['backup-directory']
     instance.target_file = config['instance']['target-file']
     instance.exchange = config['instance']['exchange']
-    instance.synonyms_file = config['instance']['synonyms_file']
-    instance.aliases_file = config['instance']['aliases_file']
+    instance.synonyms_file = config.get('instance').get('synonyms_file')
+    instance.aliases_file = config.get('instance').get('aliases_file')
     instance.name = config['instance']['name']
     instance.is_free = config['instance']['is-free']
 
