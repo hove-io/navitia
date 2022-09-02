@@ -113,6 +113,8 @@ class InstanceConfig(object):
         self.backup_directory = None
         self.target_file = None
         self.exchange = None
+        self.synonyms_file = None
+        self.aliases_file = None
         self.pg_host = None
         self.pg_dbname = None
         self.pg_username = None
@@ -209,17 +211,22 @@ def get_config_instance_from_env_variables(instance_name):
     return json_config
 
 
-def create_repositories(paths, instance_name):
-    for path in paths:
+def create_repositories(instance):
+    for path in [
+        instance.source_directory,
+        instance.backup_directory,
+        instance.synonyms_file,
+        instance.aliases_file,
+    ]:
         if path and not os.path.exists(path):
             logging.getLogger(__name__).info(
-                "Create {path} path for {name} instance".format(path=path, name=instance_name)
+                "Create {path} path for {name} instance".format(path=path, name=instance.name)
             )
             try:
                 os.makedirs(path)
             except OSError as error:
                 msg = "Error on create path {path} for instance {name} , error: {message}".format(
-                    path=path, name=instance_name, message=error.strerror
+                    path=path, name=instance.name, message=error.strerror
                 )
                 logging.getLogger(__name__).error(msg)
                 raise ValueError(msg)
@@ -234,6 +241,8 @@ def load_instance_config(instance_name):
     instance.backup_directory = config['instance']['backup-directory']
     instance.target_file = config['instance']['target-file']
     instance.exchange = config['instance']['exchange']
+    instance.synonyms_file = config['instance']['synonyms_file']
+    instance.aliases_file = config['instance']['aliases_file']
     instance.name = config['instance']['name']
     instance.is_free = config['instance']['is-free']
 
@@ -242,9 +251,7 @@ def load_instance_config(instance_name):
     instance.pg_username = config['database']['username']
     instance.pg_password = config['database']['password']
     instance.pg_port = int(config['database']['port'])
-
-    create_repositories([instance.source_directory, instance.backup_directory], instance.name)
-    create_repositories([os.path.dirname(instance.target_file)], instance.name)
+    create_repositories(instance)
     return instance
 
 
