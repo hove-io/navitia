@@ -113,8 +113,6 @@ class InstanceConfig(object):
         self.backup_directory = None
         self.target_file = None
         self.exchange = None
-        self.synonyms_file = None
-        self.aliases_file = None
         self.pg_host = None
         self.pg_dbname = None
         self.pg_username = None
@@ -236,8 +234,6 @@ def load_instance_config(instance_name):
     instance.backup_directory = config['instance']['backup-directory']
     instance.target_file = config['instance']['target-file']
     instance.exchange = config['instance']['exchange']
-    instance.synonyms_file = config.get('instance').get('synonyms_file')
-    instance.aliases_file = config.get('instance').get('aliases_file')
     instance.name = config['instance']['name']
     instance.is_free = config['instance']['is-free']
 

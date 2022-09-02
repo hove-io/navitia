@@ -168,7 +168,7 @@ def create_repositories_instance_env_variables():
 
     os.environ["TYR_INSTANCE_auv"] = (
         '{"instance":{"name":"auv","source-directory":"' + source_directory + '",'
-        '"backup-directory":"' + backup_directory + '","target-file":"ed/target_file",'
+        '"backup-directory":"' + backup_directory + '",'
         '"tmp_file":"/ed/tmp_file","is-free":true,"exchange":"exchange",'
         '"target-file":"' + target_path + '/data.nav.lz4"},'
         '"database":{"host":"host1","dbname":"jormun","username":"user1",'
