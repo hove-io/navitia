@@ -35,7 +35,7 @@ import os
 from mock import patch
 
 
-def fake_create_repositories(_):
+def fake_create_repositories(paths, instance_name):
     pass
 
 
@@ -127,11 +127,8 @@ def test_get_instances_name_same_instance(init_instances_dir, valid_instance_env
 def test_create_repositories(create_repositories_instance_env_variables):
     with app.app_context():
         instance = load_instance_config("auv")
-        for path in [
-            instance.source_directory,
-            instance.backup_directory,
-            instance.synonyms_file,
-            instance.aliases_file,
-        ]:
+        assert instance.target_file.endswith("/ed/target_file/data.nav.lz4")
+        assert os.path.exists(instance.target_file.replace("data.nav.lz4", ""))
+        for path in [instance.source_directory, instance.backup_directory]:
             assert path.startswith("/tmp/tyr_instance_auv_")
             assert os.path.exists(path)
