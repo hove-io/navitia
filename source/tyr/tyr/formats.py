@@ -155,6 +155,8 @@ instance_config_format = {
                 'name': {'type': 'string'},
                 'source-directory': {'type': 'string'},
                 'backup-directory': {'type': 'string'},
+                'aliases_file': {'type': 'string'},
+                'synonyms_file': {'type': 'string'},
                 'target-file': {'type': 'string'},
                 'tmp_file': {'type': 'string'},
                 'is-free': {'type': 'boolean'},
