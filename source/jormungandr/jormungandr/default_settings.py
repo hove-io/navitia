@@ -223,6 +223,9 @@ ZMQ_DEFAULT_SOCKET_TYPE = os.getenv('JORMUNGANDR_ZMQ_DEFAULT_SOCKET_TYPE', 'pers
 ASGARD_ZMQ_SOCKET_TTL_SECONDS = int(os.getenv('JORMUNGANDR_ASGARD_ZMQ_SOCKET_TTL_SECONDS', 30))
 ASGARD_ZMQ_SOCKET_REAPER_INTERVAL = int(os.getenv('JORMUNGANDR_ASGARD_ZMQ_SOCKET_REAPER_INTERVAL', 10))
 
+# Variable used only when deploying on aws
+ASGARD_ZMQ_SOCKET = os.getenv('JORMUNGANDR_ASGARD_ZMQ_SOCKET')
+
 # https://flask-sqlalchemy.palletsprojects.com/en/2.x/signals/
 # deprecated and slow
 SQLALCHEMY_TRACK_MODIFICATIONS = False

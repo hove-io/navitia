@@ -146,7 +146,7 @@ class Asgard(TransientSocket, Kraken):
         super(Asgard, self).__init__(
             name=instance.name,
             zmq_context=instance.context,
-            socket_path=asgard_socket,
+            socket_path=app.config.get("ASGARD_ZMQ_SOCKET") or asgard_socket,
             socket_ttl=socket_ttl,
             instance=instance,
             service_url=service_url,
@@ -156,7 +156,7 @@ class Asgard(TransientSocket, Kraken):
             api_key=api_key,
             **kwargs
         )
-        self.asgard_socket = asgard_socket
+        self.asgard_socket = app.config.get("ASGARD_ZMQ_SOCKET") or asgard_socket
         self.timeout = timeout
 
         self.breaker = pybreaker.CircuitBreaker(
