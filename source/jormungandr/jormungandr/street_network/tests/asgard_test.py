@@ -29,6 +29,15 @@
 # www.navitia.io
 
 from jormungandr.street_network.asgard import Asgard
+from jormungandr import app
+import pytest
+
+
+@pytest.fixture
+def config_asgard_socket():
+    app.config['ASGARD_ZMQ_SOCKET'] = "tcp://127.0.0.1:3000"
+    yield
+    del app.config["ASGARD_ZMQ_SOCKET"]
 
 
 class FakeInstance(object):
@@ -48,6 +57,7 @@ def status_test():
         timeout=77,
         socket_ttl=60,
     )
+    assert asgard.asgard_socket == "asgard_socket"
 
     status = asgard.status()
     assert len(status) == 7
@@ -60,3 +70,17 @@ def status_test():
     assert status['circuit_breaker']['reset_timeout'] == 60
     assert status['zmq_socket_ttl'] == 60
     assert status['language'] == 'en-US'
+
+
+def asgard_socket_var_test(config_asgard_socket):
+
+    asgard = Asgard(
+        instance=FakeInstance(),
+        service_url=None,
+        asgard_socket="asgard_socket",
+        modes=["walking", "bike", "car"],
+        timeout=77,
+        socket_ttl=60,
+    )
+    assert asgard.asgard_socket == "tcp://127.0.0.1:3000"
+    assert asgard.sn_system_id == "asgard"
