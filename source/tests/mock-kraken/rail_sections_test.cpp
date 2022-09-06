@@ -122,6 +122,7 @@ ed::builder create_complex_data_for_rail_section() {
         b.sa("stopAreaT1", 0., 44.)("stopT1", 0., 44.);
         b.sa("stopAreaU1", 0., 45.)("stopU1", 0., 45.);
         b.sa("stopAreaV1", 0., 46.)("stopV1", 0., 46.);
+        b.sa("stopAreaW1", 0., 88.)("stopW1", 0., 88.);
 
         b.sa("denfert_area", 0., 47.)("denfert", 0., 47.);
         b.sa("port_royal_area", 0., 48.)("port_royal", 0., 48.);
@@ -172,10 +173,10 @@ ed::builder create_complex_data_for_rail_section() {
 
         b.vj("line:101", "111111111111", "", true, "vj:101-1")
             .route("route101-1")("stopP1", "08:00"_t)("stopQ1", "08:05"_t)("stopR1", "08:10"_t)("stopS1", "08:15"_t)(
-                "stopT1", "08:20"_t)("stopU1", "08:25"_t)("stopV1", "08:30"_t);
+                "stopT1", "08:20"_t)("stopU1", "08:25"_t)("stopV1", "08:30"_t)("stopW1", "08:35"_t);
         b.vj("line:101", "111111", "", true, "vj:101-2")
-            .route("route101-2")("stopV1", "08:00"_t)("stopU1", "08:05"_t)("stopT1", "08:10"_t)("stopS1", "08:15"_t)(
-                "stopR1", "08:20"_t)("stopQ1", "08:25"_t)("stopP1", "08:30"_t);
+            .route("route101-2")("stopW1", "07:55"_t)("stopV1", "08:00"_t)("stopU1", "08:05"_t)("stopT1", "08:10"_t)(
+                "stopS1", "08:15"_t)("stopR1", "08:20"_t)("stopQ1", "08:25"_t)("stopP1", "08:30"_t);
 
         b.vj("line:RER-B", "111111111111", "", true, "vj:rer_b_nord")
             .route("route_rer_b_nord")("denfert", "08:00"_t)("port_royal", "08:05"_t)("luxembourg", "08:10"_t)(
@@ -312,9 +313,9 @@ int main(int argc, const char* const argv[]) {
                               *b.data->pt_data, *b.data->meta);
 
     // new impact with two rail_sections and severity level NO_SERVICE on route101-1 and route101-2
-    // route101-1: P1  Q1  R1 S1  T1  U1  V1
+    // route101-1: P1   Q1  R1  S1  T1  U1  V1  W1
     // rail_section: Start S1 / End   V1 / Blocked: T1, U1
-    // route101-2: V1  U1  T1 S1  R1  Q1  P1
+    // route101-2: W1   V1  U1  T1  S1  R1  Q1  P1
     // rail_section: Start V1 / End   S1 / Blocked: U1, T1
     navitia::apply_disruption(b.impact(nt::RTLevel::Adapted, "rail_section_on_line101")
                                   .severity(nt::disruption::Effect::NO_SERVICE)
