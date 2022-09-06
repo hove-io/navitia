@@ -612,6 +612,29 @@ class TestRailSections(AbstractTestFixture):
         for disruption, result in scenario.items():
             assert result == (disruption in d)
 
+        # Tests added to support https://navitia.atlassian.net/browse/NAV-1442
+        # stopCC-> stopEE / base_schedule: A disruption to display
+        scenario = {
+            'rail_section_on_line11': True,
+        }
+
+        r = journeys(_from='stopCC', to='stopEE')
+        assert len(r["journeys"]) == 1
+        assert get_used_vj(r) == [['vehicle_journey:vj:11-1']]
+        d = get_all_element_disruptions(r['journeys'], r)
+        assert impacted_headsigns(d) == {'vj:11-1'}
+        for disruption, result in scenario.items():
+            assert result == (disruption in d)
+
+        # stopEE-> stopCC / base_schedule: A disruption to display
+        r = journeys(_from='stopEE', to='stopCC')
+        assert len(r["journeys"]) == 1
+        assert get_used_vj(r) == [['vehicle_journey:vj:11-2']]
+        d = get_all_element_disruptions(r['journeys'], r)
+        assert impacted_headsigns(d) == {'vj:11-2'}
+        for disruption, result in scenario.items():
+            assert result == (disruption in d)
+
         # Test on line 'line:100' impacted with a rail_section with severity=NO_SERVICE
         # Impacted from C1 to E1 with blocked stops D1 and E1
         # All the stops from stopDD to stopII are impacted
@@ -700,6 +723,46 @@ class TestRailSections(AbstractTestFixture):
         }
 
         r = journeys(_from='stopR1', to='stopP1')
+        assert len(r["journeys"]) == 1
+        assert get_used_vj(r) == [['vehicle_journey:vj:101-2']]
+        d = get_all_element_disruptions(r['journeys'], r)
+        assert impacted_headsigns(d) == {'vj:101-2'}
+        for disruption, result in scenario.items():
+            assert result == (disruption in d)
+
+        # This test relates to https://navitia.atlassian.net/browse/NAV-1442
+        # stopS1 -> stopU1 / Base_schedule: A disruption to display on vj:101-1
+        scenario = {
+            'rail_section_on_line101': True,
+        }
+
+        r = journeys(_from='stopS1', to='stopU1')
+        assert len(r["journeys"]) == 1
+        assert get_used_vj(r) == [['vehicle_journey:vj:101-1']]
+        d = get_all_element_disruptions(r['journeys'], r)
+        assert impacted_headsigns(d) == {'vj:101-1'}
+        for disruption, result in scenario.items():
+            assert result == (disruption in d)
+
+        # stopU1-> stopS1 / Base_schedule: A disruption to display on vj:101-2
+        scenario = {
+            'rail_section_on_line101': True,
+        }
+
+        r = journeys(_from='stopU1', to='stopS1')
+        assert len(r["journeys"]) == 1
+        assert get_used_vj(r) == [['vehicle_journey:vj:101-2']]
+        d = get_all_element_disruptions(r['journeys'], r)
+        assert impacted_headsigns(d) == {'vj:101-2'}
+        for disruption, result in scenario.items():
+            assert result == (disruption in d)
+
+        # stopU1-> stopR1 / Base_schedule: A disruption to display on vj:101-2
+        scenario = {
+            'rail_section_on_line101': True,
+        }
+
+        r = journeys(_from='stopU1', to='stopR1')
         assert len(r["journeys"]) == 1
         assert get_used_vj(r) == [['vehicle_journey:vj:101-2']]
         d = get_all_element_disruptions(r['journeys'], r)
