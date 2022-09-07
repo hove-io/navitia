@@ -227,6 +227,17 @@ def create_repositories(paths, instance_name):
                 raise ValueError(msg)
 
 
+def create_autocomplete_instance_paths(autocomplete_instance):
+    autocomplete_dir = current_app.config['AUTOCOMPLETE_DIR']
+    main_dir = autocomplete_instance.main_dir(autocomplete_dir)
+    source_dir = autocomplete_instance.source_dir(autocomplete_dir)
+    backup_dir = autocomplete_instance.backup_dir(autocomplete_dir)
+    tmp_dir = autocomplete_instance.tmp_dir(autocomplete_dir)
+    create_repositories(
+        [autocomplete_dir, main_dir, tmp_dir, source_dir, backup_dir], autocomplete_instance.name
+    )
+
+
 def load_instance_config(instance_name):
     config = get_config_instance_from_env_variables(instance_name)
     if not config:

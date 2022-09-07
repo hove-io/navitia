@@ -73,6 +73,7 @@ from tyr.helper import (
     END_POINT_NOT_EXIST_MSG,
     load_instance_config,
     hide_domain,
+    create_autocomplete_instance_paths,
 )
 from tyr.tasks import (
     create_autocomplete_depot,
@@ -2297,8 +2298,14 @@ class AutocompleteUpdateData(flask_restful.Resource):
         content = request.files['file']
         logger = get_instance_logger(instance)
         logger.info('content received: %s', content)
-        filename = save_in_tmp(content)
-        _, job = import_autocomplete([filename], instance)
+        create_autocomplete_instance_paths(instance)
+        filename = secure_filename(content.filename)
+
+        tmp_directory = instance.tmp_dir(current_app.config['AUTOCOMPLETE_DIR'])
+        tmp_file_name = os.path.join(os.path.realpath(tmp_directory), filename)
+        content.save(tmp_file_name)
+
+        _, job = import_autocomplete([tmp_file_name], instance)
         job = models.db.session.merge(job)  # reatache the object
         return marshal({'job': job}, one_job_fields), 200
 

@@ -1081,6 +1081,9 @@ class AutocompleteParameter(db.Model, TimestampMixin):  # type: ignore
     def main_dir(self, root_path):
         return os.path.join(root_path, self.name)
 
+    def tmp_dir(self, root_path):
+        return os.path.join(self.main_dir(root_path), "tmp")
+
     def source_dir(self, root_path):
         return os.path.join(self.main_dir(root_path), "source")
 
