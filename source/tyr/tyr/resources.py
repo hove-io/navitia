@@ -68,12 +68,12 @@ from tyr.formats import (
 )
 from tyr.helper import (
     get_instance_logger,
-    save_in_tmp,
     get_message,
     END_POINT_NOT_EXIST_MSG,
     load_instance_config,
     hide_domain,
     create_autocomplete_instance_paths,
+    create_repositories,
 )
 from tyr.tasks import (
     create_autocomplete_depot,
@@ -2423,6 +2423,9 @@ class Cities(flask_restful.Resource):
         f = args['file']
         file_name = f.filename
         file_path = str(os.path.join(os.path.abspath(current_app.config['CITIES_OSM_FILE_PATH']), file_name))
+
+        create_repositories(current_app.config['CITIES_OSM_FILE_PATH'], "cities")
+
         f.save(file_path)
         logging.info("file received: {}".format(f))
 
