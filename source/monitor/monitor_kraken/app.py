@@ -29,9 +29,9 @@
 
 from flask import Flask, request
 import json
-import datetime
 from ConfigParser import ConfigParser
 import zmq
+import os
 
 from monitor_kraken import request_pb2
 from monitor_kraken import response_pb2
@@ -43,17 +43,28 @@ app.config.from_envvar('MONITOR_CONFIG_FILE', silent=True)
 context = zmq.Context()
 
 
-@app.route('/')
-def monitor():
-    if 'instance' not in request.args:
-        return json.dumps({'error': ['instance invalid']}), 400
-
-    instance = request.args['instance']
-    config_file = '{path}/{instance}/kraken.ini'.format(path=app.config['KRAKEN_DIR'], instance=instance)
+def get_kraken_uri(instance_name):
+    uri = os.environ.get("KRAKEN_GENERAL_zmq_socket")
+    if uri:
+        return uri
+    config_file = '{path}/{instance}/kraken.ini'.format(path=app.config['KRAKEN_DIR'], instance=instance_name)
     parser = ConfigParser()
     parser.read(config_file)
     try:
         uri = parser.get('GENERAL', 'zmq_socket')
+    except:
+        raise
+    return uri
+
+
+@app.route('/')
+def monitor():
+    instance = request.args.get('instance')
+    if not instance:
+        return json.dumps({'error': ['instance invalid']}), 400
+
+    try:
+        uri = get_kraken_uri(instance)
     except:
         return json.dumps({'error': ['instance invalid']}), 500
 
