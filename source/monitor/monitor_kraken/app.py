@@ -29,7 +29,6 @@
 
 from flask import Flask, request
 import json
-import datetime
 from ConfigParser import ConfigParser
 import zmq
 
