@@ -182,3 +182,13 @@ def create_repositories_instance_env_variables():
     yield
     del os.environ["TYR_INSTANCE_auv"]
     shutil.rmtree(tmp_path)
+
+
+@pytest.fixture
+def create_repositories_autocomplete_instance():
+    tmp_path = tempfile.mkdtemp(prefix='autocomplete_fr_')
+    app.config['AUTOCOMPLETE_DIR'] = tmp_path
+
+    yield
+    shutil.rmtree(tmp_path)
+    del app.config["AUTOCOMPLETE_DIR"]

@@ -227,6 +227,17 @@ def create_repositories(paths, instance_name):
                 raise ValueError(msg)
 
 
+def create_autocomplete_instance_paths(autocomplete_instance):
+    autocomplete_dir = current_app.config['AUTOCOMPLETE_DIR']
+    main_dir = autocomplete_instance.main_dir(autocomplete_dir)
+    source_dir = autocomplete_instance.source_dir(autocomplete_dir)
+    backup_dir = autocomplete_instance.backup_dir(autocomplete_dir)
+    tmp_dir = autocomplete_instance.tmp_dir(autocomplete_dir)
+    create_repositories(
+        [autocomplete_dir, main_dir, tmp_dir, source_dir, backup_dir], autocomplete_instance.name
+    )
+
+
 def load_instance_config(instance_name):
     config = get_config_instance_from_env_variables(instance_name)
     if not config:
@@ -329,18 +340,6 @@ def get_named_arg(arg_name, func, args, kwargs):
             return args[idx]
         else:
             return None
-
-
-def save_in_tmp(file_storage):
-    """
-    Save stream file in temp directory
-    :param file_storage: stream file
-    :return: filename
-    """
-    filename = secure_filename(file_storage.filename)
-    tmp_file = os.path.join(tempfile.gettempdir(), filename)
-    file_storage.save(tmp_file)
-    return tmp_file
 
 
 def hide_domain(email):
