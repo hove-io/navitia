@@ -342,18 +342,6 @@ def get_named_arg(arg_name, func, args, kwargs):
             return None
 
 
-def save_in_tmp(file_storage):
-    """
-    Save stream file in temp directory
-    :param file_storage: stream file
-    :return: filename
-    """
-    filename = secure_filename(file_storage.filename)
-    tmp_file = os.path.join(tempfile.gettempdir(), filename)
-    file_storage.save(tmp_file)
-    return tmp_file
-
-
 def hide_domain(email):
     if not email:
         return email
