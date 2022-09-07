@@ -700,7 +700,6 @@ def heartbeat():
 
 @celery.task()
 def create_autocomplete_depot(name):
-    autocomplete_dir = current_app.config['AUTOCOMPLETE_DIR']
     autocomplete = models.AutocompleteParameter.query.filter_by(name=name).first_or_404()
     create_autocomplete_instance_paths(autocomplete)
 
