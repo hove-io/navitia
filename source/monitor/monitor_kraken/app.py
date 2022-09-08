@@ -115,4 +115,4 @@ def monitor():
 
 
 if __name__ == '__main__':
-    app.run()
+    app.run(host=os.environ.get("MONITOR_HOST", "127.0.0.1"))
