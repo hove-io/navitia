@@ -1,3 +1,17 @@
+navitia2 (15.13.0) unstable; urgency=low
+
+  * [aws migration]: Host added in kraken monitoring api  <https://github.com/hove-io/navitia/pull/3810>
+  * [aws migration]: Kraken monitoring: Zmq socket from var env  <https://github.com/hove-io/navitia/pull/3809>
+  * [aws migration]: Create autocomplete paths  <https://github.com/hove-io/navitia/pull/3808>
+  * [Disruption] [rail_section]: Fix display disruptions with multi rail_sections on forward as well as backward direction  <https://github.com/hove-io/navitia/pull/3807>
+  * [aws migration]: Configure asgard zmq socket  <https://github.com/hove-io/navitia/pull/3805>
+  * [aws migration] Revert "[Tyr]: Create target path and remove unused path (synonyms and aliases)"  <https://github.com/hove-io/navitia/pull/3804>
+  * [aws migration] [Tyr]: Create target path and remove unused path (synonyms and aliases)  <https://github.com/hove-io/navitia/pull/3802>
+  * [aws migration] use uri for kraken  <https://github.com/hove-io/navitia/pull/3801>
+  * [documentation] timetable error code precision  <https://github.com/hove-io/navitia/pull/3800>
+
+ -- Pierre-Etienne Bougue <pierre-etienne.bougue@canaltp.fr>  Fri, 09 Sep 2022 12:09:12 +0100
+
 navitia2 (15.12.1) unstable; urgency=low
 
   * [Kraken][Feature]: For rail-sections DETOUR now works like REDUCED_SERVICE  <https://github.com/hove-io/navitia/pull/3799>
