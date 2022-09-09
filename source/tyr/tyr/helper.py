@@ -211,25 +211,31 @@ def get_config_instance_from_env_variables(instance_name):
     return json_config
 
 
-def create_repositories(instance):
-    for path in [
-        instance.source_directory,
-        instance.backup_directory,
-        instance.synonyms_file,
-        instance.aliases_file,
-    ]:
+def create_repositories(paths, instance_name):
+    for path in paths:
         if path and not os.path.exists(path):
             logging.getLogger(__name__).info(
-                "Create {path} path for {name} instance".format(path=path, name=instance.name)
+                "Create {path} path for {name} instance".format(path=path, name=instance_name)
             )
             try:
                 os.makedirs(path)
             except OSError as error:
                 msg = "Error on create path {path} for instance {name} , error: {message}".format(
-                    path=path, name=instance.name, message=error.strerror
+                    path=path, name=instance_name, message=error.strerror
                 )
                 logging.getLogger(__name__).error(msg)
                 raise ValueError(msg)
+
+
+def create_autocomplete_instance_paths(autocomplete_instance):
+    autocomplete_dir = current_app.config['AUTOCOMPLETE_DIR']
+    main_dir = autocomplete_instance.main_dir(autocomplete_dir)
+    source_dir = autocomplete_instance.source_dir(autocomplete_dir)
+    backup_dir = autocomplete_instance.backup_dir(autocomplete_dir)
+    tmp_dir = autocomplete_instance.tmp_dir(autocomplete_dir)
+    create_repositories(
+        [autocomplete_dir, main_dir, tmp_dir, source_dir, backup_dir], autocomplete_instance.name
+    )
 
 
 def load_instance_config(instance_name):
@@ -251,7 +257,9 @@ def load_instance_config(instance_name):
     instance.pg_username = config['database']['username']
     instance.pg_password = config['database']['password']
     instance.pg_port = int(config['database']['port'])
-    create_repositories(instance)
+
+    create_repositories([instance.source_directory, instance.backup_directory], instance.name)
+    create_repositories([os.path.dirname(instance.target_file)], instance.name)
     return instance
 
 
@@ -332,18 +340,6 @@ def get_named_arg(arg_name, func, args, kwargs):
             return args[idx]
         else:
             return None
-
-
-def save_in_tmp(file_storage):
-    """
-    Save stream file in temp directory
-    :param file_storage: stream file
-    :return: filename
-    """
-    filename = secure_filename(file_storage.filename)
-    tmp_file = os.path.join(tempfile.gettempdir(), filename)
-    file_storage.save(tmp_file)
-    return tmp_file
 
 
 def hide_domain(email):

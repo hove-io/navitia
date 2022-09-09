@@ -51,6 +51,8 @@ public:
     int chaos_batch_size() const;
     int nb_threads() const;
 
+    boost::optional<std::string> broker_uri() const;
+
     std::string broker_host() const;
     int broker_port() const;
     std::string broker_username() const;

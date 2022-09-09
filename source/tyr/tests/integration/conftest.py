@@ -165,6 +165,7 @@ def valid_instance_env_variables_fr():
 @pytest.fixture
 def create_repositories_instance_env_variables():
     tmp_path = tempfile.mkdtemp(prefix='tyr_instance_auv_')
+    target_path = "{path}/ed/target_file".format(path=tmp_path)
     source_directory = "{path}/ed/source".format(path=tmp_path)
     backup_directory = "{path}/ed/backup".format(path=tmp_path)
     aliases_directory = "{path}/ed/aliases".format(path=tmp_path)
@@ -173,7 +174,7 @@ def create_repositories_instance_env_variables():
     os.environ["TYR_INSTANCE_auv"] = (
         '{"instance":{"name":"auv","source-directory":"' + source_directory + '",'
         '"backup-directory":"' + backup_directory + '","aliases_file":"' + aliases_directory + '",'
-        '"synonyms_file":"' + synonyms_directory + '","target-file":"ed/target_file",'
+        '"synonyms_file":"' + synonyms_directory + '","target-file":"' + target_path + '/data.nav.lz4",'
         '"tmp_file":"/ed/tmp_file","is-free":true,"exchange":"exchange"},'
         '"database":{"host":"host1","dbname":"jormun","username":"user1",'
         '"password":"pass1","port":492}}'
@@ -181,3 +182,13 @@ def create_repositories_instance_env_variables():
     yield
     del os.environ["TYR_INSTANCE_auv"]
     shutil.rmtree(tmp_path)
+
+
+@pytest.fixture
+def create_repositories_autocomplete_instance():
+    tmp_path = tempfile.mkdtemp(prefix='autocomplete_fr_')
+    app.config['AUTOCOMPLETE_DIR'] = tmp_path
+
+    yield
+    shutil.rmtree(tmp_path)
+    del app.config["AUTOCOMPLETE_DIR"]

@@ -506,8 +506,8 @@ bool Impact::is_relevant(const std::vector<const StopTime*>& stop_times) const {
                     return true;
                 }
             }
-            return false;
         }
+        return false;
 
     } else {
         // else, no reason to not be interested by it

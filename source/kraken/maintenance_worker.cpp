@@ -337,6 +337,10 @@ void MaintenanceWorker::listen_rabbitmq() {
 
 void MaintenanceWorker::init_rabbitmq() {
     std::string instance_name = conf.instance_name();
+    // connection through URI, if URI is provided, it will be used in the first place as other other connection options
+    // are neglected
+    boost::optional<std::string> broker_uri = conf.broker_uri();
+    // connection through classic method
     std::string exchange_name = conf.broker_exchange();
     std::string host = conf.broker_host();
     int port = conf.broker_port();
@@ -351,9 +355,14 @@ void MaintenanceWorker::init_rabbitmq() {
     queue_name_task = (boost::format("%s_task") % queue_name).str();
     queue_name_rt = (boost::format("%s_rt") % queue_name).str();
 
-    // connection
-    LOG4CPLUS_DEBUG(logger, boost::format("connection to rabbitmq: %s@%s:%s/%s") % username % host % port % vhost);
-    this->channel = AmqpClient::Channel::Create(host, port, username, password, vhost);
+    // connection through URI or classic method
+    if (broker_uri) {
+        LOG4CPLUS_INFO(logger, boost::format("connection to rabbitmq with uri: %s") % *broker_uri);
+        channel = AmqpClient::Channel::CreateFromUri(*broker_uri);
+    } else {
+        LOG4CPLUS_INFO(logger, boost::format("connection to rabbitmq: %s@%s:%s/%s") % username % host % port % vhost);
+        channel = AmqpClient::Channel::Create(host, port, username, password, vhost);
+    }
     if (!is_initialized) {
         // first we have to delete the queues, binding can change between two run, and it's don't seem possible
         // to unbind a queue if we don't know at what topic it's subscribed
