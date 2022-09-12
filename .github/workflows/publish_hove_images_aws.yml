@@ -2,6 +2,20 @@ name: Publish Hove images on AWS
 
 on:
   workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment'
+        type: choice
+        options:
+          - dev
+          - release
+        required: true
+      tag:
+        description: 'Tag of the image'
+        type: string
+        default: 'dev'
+        required: true
+
   workflow_run:
     workflows: ["Build Navitia Packages For Release", "Build Navitia Packages For Dev Multi Distributions"]
     branches: [release, dev]
@@ -9,11 +23,34 @@ on:
       - completed
 
 jobs:
-  aws_dev_images:
-    runs-on: [self-hosted, deploy, sandbox]
-    if: ${{ github.event.workflow_run.head_branch == 'dev' }}
-    name: AWS Dev images
+  publish_on_aws:
+    runs-on: ubuntu-latest
+    outputs:
+      branch: ${{ steps.init_variables.outputs.branch }}
+      tag: ${{ steps.init_variables.outputs.tag }}
     steps:
+      - id: init_variables
+        run: |
+          if [[ ${{ github.event_name }} == 'repository_dispatch' ]]
+          then
+            echo "Workflow triggered due to finished upstream workflow"
+            echo "::set-output name=branch::${{ github.event.workflow_run.head_branch }}"
+            if [[ ${{ github.event.workflow_run.head_branch }} == 'dev' ]]
+              echo "::set-output name=tag::dev"
+            else :
+              echo "Realease branch, collecting last version"
+              VERSION=$(curl https://api.github.com/repos/hove-io/navitia/tags | jq '.[0].name')
+              echo "::set-output name=tag::$VERSION"
+            fi
+          elif [[ ${{ github.event_name }} == 'workflow_dispatch' ]]
+          then
+            echo "Workflow triggered manually"
+            echo "::set-output name=branch::${{ github.event.inputs.environment }}"
+            echo "::set-output name=tag::${{ github.event.inputs.tag }}"
+          else :
+            exit 1
+          fi
+
       - name: Generate token
         id: app-token
         uses: getsentry/action-github-app-token@v1
@@ -21,62 +58,10 @@ jobs:
           app_id: ${{ secrets.AWS_TERRAFORM_WORKFLOW_APP_ID }}
           private_key: ${{ secrets.AWS_TERRAFORM_WORKFLOW_APP_PEM_KEY }}
 
-      - name: Checkout mimirsbrunn-config
-        uses: actions/checkout@v3
+      - name: Repository Dispatch
+        uses: peter-evans/repository-dispatch@v2
         with:
-          repository: hove-io/mimirsbrunn-config
           token: ${{ steps.app-token.outputs.token }}
-          path: .mimirsbrunn-config
-
-      - name: tyr-worker update
-        run: |
-          cat << EOF > .mimirsbrunn-config/Dockerfile
-          FROM navitia/tyr-worker
-          COPY ./config /etc/mimir
-          EOF
-
-          IMAGE=162230498103.dkr.ecr.eu-west-1.amazonaws.com/navitia-tyr-tyrworker
-          TAG=dev
-          docker build -t ${IMAGE}:${TAG} -f .mimirsbrunn-config/Dockerfile .mimirsbrunn-config
-          docker push -t ${IMAGE}:${TAG}
-
-  aws_release_images:
-    runs-on: [self-hosted, build, shared_services]
-    if: ${{ github.event.workflow_run.head_branch == 'release' }}
-    name: AWS Release images
-    steps:
-      - name: Get branch names
-        id: branch-name
-        uses: tj-actions/branch-names@v6
-        with:
-          strip_tag_prefix: v
-
-      - name: Generate token
-        id: app-token
-        if: steps.branch-name.outputs.is_tag == 'true'
-        uses: getsentry/action-github-app-token@v1
-        with:
-          app_id: ${{ secrets.AWS_TERRAFORM_WORKFLOW_APP_ID }}
-          private_key: ${{ secrets.AWS_TERRAFORM_WORKFLOW_APP_PEM_KEY }}
-
-
-      - name: Checkout mimirsbrunn-config
-        if: steps.branch-name.outputs.is_tag == 'true'
-        uses: actions/checkout@v3
-        with:
-          repository: hove-io/mimirsbrunn-config
-          token: ${{ steps.app-token.outputs.token }}
-          path: .mimirsbrunn-config
-
-      - name: tyr-worker update
-        if: steps.branch-name.outputs.is_tag == 'true'
-        run: |
-          cat << EOF > .mimirsbrunn-config/Dockerfile
-          FROM navitia/tyr-worker
-          COPY ./config /etc/mimir
-          EOF
-
-          IMAGE=162230498103.dkr.ecr.eu-west-1.amazonaws.com/navitia-tyr-tyrworker
-          TAG=${{ steps.branch-name.outputs.tag }}
-          docker build -t ${IMAGE}:${TAG} -f .mimirsbrunn-config/Dockerfile .mimirsbrunn-config
-          docker push -t ${IMAGE}:${TAG}
+          repository: hove-io/core-backend-aws-assets
+          event-type: build-trigger
+          client-payload: '{"branch": "${{ steps.init_variables.outputs.branch }}", "tag": "${{ steps.init_variables.outputs.tag }}"}'
