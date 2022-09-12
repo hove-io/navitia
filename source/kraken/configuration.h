@@ -53,6 +53,7 @@ public:
 
     boost::optional<std::string> broker_uri() const;
 
+    std::string broker_protocol() const;
     std::string broker_host() const;
     int broker_port() const;
     std::string broker_username() const;
