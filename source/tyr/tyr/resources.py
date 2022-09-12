@@ -2424,7 +2424,7 @@ class Cities(flask_restful.Resource):
         file_name = f.filename
         file_path = str(os.path.join(os.path.abspath(current_app.config['CITIES_OSM_FILE_PATH']), file_name))
 
-        create_repositories(current_app.config['CITIES_OSM_FILE_PATH'], "cities")
+        create_repositories([current_app.config['CITIES_OSM_FILE_PATH']], "cities")
 
         f.save(file_path)
         logging.info("file received: {}".format(f))

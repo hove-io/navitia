@@ -40,11 +40,8 @@ from validate import Validator
 from flask import current_app
 import os
 import sys
-import tempfile
 from flask import json
 from jsonschema import validate, ValidationError
-
-from werkzeug.utils import secure_filename
 from tyr.formats import instance_config_format
 
 END_POINT_NOT_EXIST_MSG = 'end_point doesn\'t exist'
@@ -212,6 +209,9 @@ def get_config_instance_from_env_variables(instance_name):
 
 
 def create_repositories(paths, instance_name):
+    if not isinstance(paths, list):
+        raise ValueError("Invalid paths parameter")
+
     for path in paths:
         if path and not os.path.exists(path):
             logging.getLogger(__name__).info(
