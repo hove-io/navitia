@@ -366,7 +366,7 @@ void MaintenanceWorker::init_rabbitmq() {
         open_opts.vhost = vhost;
         open_opts.auth = AmqpClient::Channel::OpenOpts::BasicAuth(username, password);
         if (protocol == "amqps") {
-            (*open_opts.tls_params) = AmqpClient::Channel::OpenOpts::TLSParams();
+            open_opts.tls_params = AmqpClient::Channel::OpenOpts::TLSParams();
         }
     }
     if (open_opts.tls_params.is_initialized()) {
