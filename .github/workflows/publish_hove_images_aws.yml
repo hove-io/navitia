@@ -31,18 +31,18 @@ jobs:
     steps:
       - id: init_variables
         run: |
-          if [[ ${{ github.event_name }} == 'repository_dispatch' ]]
+          if [[ '${{ github.event_name }}' == 'repository_dispatch' ]]
           then
             echo "Workflow triggered due to finished upstream workflow"
             echo "::set-output name=branch::${{ github.event.workflow_run.head_branch }}"
-            if [[ ${{ github.event.workflow_run.head_branch }} == 'dev' ]]
+            if [[ '${{ github.event.workflow_run.head_branch }}' == 'dev' ]]
               echo "::set-output name=tag::dev"
             else :
               echo "Realease branch, collecting last version"
               VERSION=$(curl https://api.github.com/repos/hove-io/navitia/tags | jq '.[0].name')
               echo "::set-output name=tag::$VERSION"
             fi
-          elif [[ ${{ github.event_name }} == 'workflow_dispatch' ]]
+          elif [[ '${{ github.event_name }}' == 'workflow_dispatch' ]]
           then
             echo "Workflow triggered manually"
             echo "::set-output name=branch::${{ github.event.inputs.environment }}"
