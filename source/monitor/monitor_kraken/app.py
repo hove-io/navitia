@@ -103,7 +103,7 @@ def monitor():
 
         # Kraken used to not respond on zmq status requests during the initial
         # data load. So the zmq requests timed-out and here we responded with a "timeout" response.
-        #  Now it does answer zmq requests even during the initial load.
+        # Now it does answer zmq requests even during the initial load.
         # So to be backward compatible, we send a "timeout" response when the data
         # is not yet loaded by kraken.
         if resp.status.loaded == False:
