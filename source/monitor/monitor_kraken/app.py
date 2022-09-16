@@ -84,6 +84,14 @@ def monitor():
         resp = response_pb2.Response()
         resp.ParseFromString(pb)
 
+        # Kraken used to not respond on zmq status requests during the initial
+        # data load. So the zmq requests timed-out and here we responded with a "timeout" response.
+        # Now it does answer zmq requests even during the initial load.
+        # So to be backward compatible, we send a "timeout" response when the data
+        # is not yet loaded by kraken.
+        if resp.status.loaded == False:
+            return json.dumps({'status': 'timeout'}), 503
+
         response = {}
         return_code = 200
         if resp.error and resp.error.message:
@@ -100,14 +108,6 @@ def monitor():
         response['is_realtime_loaded'] = resp.status.is_realtime_loaded
         response['kraken_version'] = resp.status.navitia_version
         response['data_version'] = resp.status.data_version
-
-        # Kraken used to not respond on zmq status requests during the initial
-        # data load. So the zmq requests timed-out and here we responded with a "timeout" response.
-        # Now it does answer zmq requests even during the initial load.
-        # So to be backward compatible, we send a "timeout" response when the data
-        # is not yet loaded by kraken.
-        if resp.status.loaded == False:
-            return json.dumps({'status': 'timeout'}), 503
 
         if resp.status.last_load_status == False and 'status' not in response:
             response['status'] = 'last load failed'
