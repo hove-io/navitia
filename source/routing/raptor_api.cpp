@@ -1408,8 +1408,19 @@ bool shorten_section(navitia::routing::Journey::Section& section,
              boost::make_iterator_range(vj->stop_time_list.begin() + order.val, vj->stop_time_list.end())) {
             if (can_shorten_at(departures, destinations, st, clockwise)
                 && st.stop_point->stop_area->uri == stop_area_uri && vj != vj_to_skip) {
-                (clockwise ? section.get_out_st : section.get_in_st) = &st;
-                (clockwise ? section.get_out_dt : section.get_in_dt) = clockwise ? st.arrival_time : st.departure_time;
+                // determine midnigth of the day at which the vj is used
+                // with protection from underflow
+                navitia::DateTime base_dt = 0;
+                if (section.get_in_dt > section.get_in_st->departure_time) {
+                    base_dt = section.get_in_dt - section.get_in_st->departure_time;
+                }
+                if (clockwise) {
+                    section.get_out_st = &st;
+                    section.get_out_dt = base_dt + st.arrival_time;
+                } else {
+                    section.get_in_st = &st;
+                    section.get_in_dt = base_dt + st.departure_time;
+                }
 
                 return true;
             }
