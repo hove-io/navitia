@@ -29,9 +29,6 @@ www.navitia.io
 */
 
 #include "configuration.h"
-
-#include "utils/exception.h"
-
 #include <boost/algorithm/string/predicate.hpp>
 #include <boost/algorithm/string/replace.hpp>
 #include <boost/optional.hpp>
