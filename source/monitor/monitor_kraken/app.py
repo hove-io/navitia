@@ -38,9 +38,15 @@ from monitor_kraken import response_pb2
 from monitor_kraken import type_pb2
 
 app = Flask(__name__)
+# config used in monitor() for several kraken
 app.config.from_object('monitor_kraken.default_settings')
 app.config.from_envvar('MONITOR_CONFIG_FILE', silent=True)
 context = zmq.Context()
+
+# config used in status() health() and ready()
+# for a single kraken
+single_kraken_zmq_socket = os.environ.get("KRAKEN_GENERAL_zmq_socket")
+single_kraken_zmq_timeout_in_ms = os.environ.get("MONITOR_KRAKEN_ZMQ_TIMEOUT", 10000)
 
 
 def get_kraken_uri(instance_name):
@@ -128,11 +134,9 @@ def monitor():
 # and dumps the response into json
 @app.route('/status')
 def status():
-    zmq_socket = os.environ.get("KRAKEN_GENERAL_zmq_socket")
-    if not zmq_socket:
+    if not single_kraken_zmq_socket:
         return json.dumps({'error': ['no zmq socket configured']}), 500
-    zmq_timeout_in_ms = os.environ.get("MONITOR_KRAKEN_ZMQ_TIMEOUT", 10000)
-    proto_response = request_kraken_zmq_status(zmq_socket, zmq_timeout_in_ms)
+    proto_response = request_kraken_zmq_status(single_kraken_zmq_socket, single_kraken_zmq_timeout_in_ms)
     if proto_response == None:
         return json.dumps({'error': 'zmq timed out'}), 503
 
@@ -173,11 +177,9 @@ def status():
 # Respond with a 200 when kraken gives a response on a zmq status request
 @app.route('/health')
 def health():
-    zmq_socket = os.environ.get("KRAKEN_GENERAL_zmq_socket")
-    if not zmq_socket:
+    if not single_kraken_zmq_socket:
         return json.dumps({'error': ['no zmq socket configured']}), 500
-    zmq_timeout_in_ms = os.environ.get("MONITOR_KRAKEN_ZMQ_TIMEOUT", 10000)
-    proto_response = request_kraken_zmq_status(zmq_socket, zmq_timeout_in_ms)
+    proto_response = request_kraken_zmq_status(single_kraken_zmq_socket, single_kraken_zmq_timeout_in_ms)
     if proto_response == None:
         return json.dumps({'error': 'zmq timed out'}), 503
     return json.dumps("alive"), 200
@@ -190,11 +192,9 @@ def health():
 #  - the "loaded" field of the status response is set to True
 @app.route('/ready')
 def ready():
-    zmq_socket = os.environ.get("KRAKEN_GENERAL_zmq_socket")
-    if not zmq_socket:
+    if not single_kraken_zmq_socket:
         return json.dumps({'error': ['no zmq socket configured']}), 500
-    zmq_timeout_in_ms = os.environ.get("MONITOR_KRAKEN_ZMQ_TIMEOUT", 10000)
-    proto_response = request_kraken_zmq_status(zmq_socket, zmq_timeout_in_ms)
+    proto_response = request_kraken_zmq_status(single_kraken_zmq_socket, single_kraken_zmq_timeout_in_ms)
     if proto_response == None:
         return json.dumps({'error': 'zmq timed out'}), 503
     if proto_response.status == None:
