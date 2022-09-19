@@ -31,7 +31,7 @@ jobs:
     steps:
       - id: init_variables
         run: |
-          if [[ '${{ github.event_name }}' == 'repository_dispatch' ]]
+          if [[ '${{ github.event_name }}' == 'workflow_run' ]]
           then
             echo "Workflow triggered due to finished upstream workflow"
             echo "::set-output name=branch::${{ github.event.workflow_run.head_branch }}"
@@ -56,8 +56,8 @@ jobs:
         id: app-token
         uses: getsentry/action-github-app-token@v1
         with:
-          app_id: ${{ secrets.AWS_TERRAFORM_WORKFLOW_APP_ID }}
-          private_key: ${{ secrets.AWS_TERRAFORM_WORKFLOW_APP_PEM_KEY }}
+          app_id: ${{ secrets.GA_OS_WORKFLOW_TRIGGER_APP_ID }}
+          private_key: ${{ secrets.GA_OS_WORKFLOW_TRIGGER_APP_PEM }}
 
       - name: Repository Dispatch
         uses: peter-evans/repository-dispatch@v2
