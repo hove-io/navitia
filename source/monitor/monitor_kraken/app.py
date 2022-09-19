@@ -209,7 +209,7 @@ def request_kraken_zmq_status(zmq_socket, zmq_timeout_in_ms):
     # discard messages when socket closed
     sock.setsockopt(zmq.LINGER, 0)
     try:
-        sock.connect(zmq_socket)
+        sock.connect(zmq_socket.replace('*', 'localhost'))
         req = request_pb2.Request()
         req.requested_api = type_pb2.STATUS
         sock.send(req.SerializeToString())
