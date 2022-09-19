@@ -1404,10 +1404,13 @@ bool shorten_section(navitia::routing::Journey::Section& section,
     // because of stay-ins, we may have several vj in one section, we have to scan the stop times
     // of all vjs
     for (const auto* vj = section.get_in_st->vehicle_journey; vj; (vj = vj->next_vj, order = type::RankStopTime(0))) {
+        if (vj == vj_to_skip) {
+            continue;
+        }
         for (const auto& st :
              boost::make_iterator_range(vj->stop_time_list.begin() + order.val, vj->stop_time_list.end())) {
-            if (can_shorten_at(departures, destinations, st, clockwise)
-                && st.stop_point->stop_area->uri == stop_area_uri && vj != vj_to_skip) {
+            if (st.stop_point->stop_area->uri == stop_area_uri
+                && can_shorten_at(departures, destinations, st, clockwise)) {
                 // determine midnigth of the day at which the vj is used
                 // with protection from underflow
                 navitia::DateTime base_dt = 0;
