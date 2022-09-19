@@ -1407,22 +1407,23 @@ bool shorten_section(navitia::routing::Journey::Section& section,
         if (vj == vj_to_skip) {
             continue;
         }
+
+        if (section.get_in_dt < section.get_in_st->boarding_time) {
+            LOG4CPLUS_ERROR(logger, "Error : section.get_in_dt < section.get_in_st->boarding_time");
+            return false;
+        }
+        // determine midnigth of the day at which the vj is used
+        navitia::DateTime base_dt = section.get_in_dt - section.get_in_st->boarding_time;
         for (const auto& st :
              boost::make_iterator_range(vj->stop_time_list.begin() + order.val, vj->stop_time_list.end())) {
             if (st.stop_point->stop_area->uri == stop_area_uri
                 && can_shorten_at(departures, destinations, st, clockwise)) {
-                // determine midnigth of the day at which the vj is used
-                // with protection from underflow
-                navitia::DateTime base_dt = 0;
-                if (section.get_in_dt > section.get_in_st->departure_time) {
-                    base_dt = section.get_in_dt - section.get_in_st->departure_time;
-                }
                 if (clockwise) {
                     section.get_out_st = &st;
-                    section.get_out_dt = base_dt + st.arrival_time;
+                    section.get_out_dt = base_dt + st.alighting_time;
                 } else {
                     section.get_in_st = &st;
-                    section.get_in_dt = base_dt + st.departure_time;
+                    section.get_in_dt = base_dt + st.boarding_time;
                 }
 
                 return true;
