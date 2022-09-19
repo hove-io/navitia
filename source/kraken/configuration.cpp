@@ -29,15 +29,13 @@ www.navitia.io
 */
 
 #include "configuration.h"
-
-#include "utils/exception.h"
-
 #include <boost/algorithm/string/predicate.hpp>
 #include <boost/algorithm/string/replace.hpp>
 #include <boost/optional.hpp>
 
 #include <fstream>
 #include <iostream>
+#include "utils/functions.h"
 
 namespace po = boost::program_options;
 
@@ -251,7 +249,11 @@ std::vector<std::string> Configuration::rt_topics() const {
     if (!this->vm.count("BROKER.rt_topics")) {
         return std::vector<std::string>();
     }
-    return this->vm["BROKER.rt_topics"].as<std::vector<std::string>>();
+    std::vector<std::string> result = this->vm["BROKER.rt_topics"].as<std::vector<std::string>>();
+    if (result.size() == 1) {
+        return split_string(result.at(0), ";");
+    }
+    return result;
 }
 
 int Configuration::kirin_retry_timeout() const {
