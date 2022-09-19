@@ -109,9 +109,7 @@ static std::string env_parser(std::string env) {
         return "";
     }
     boost::algorithm::replace_first(env, "KRAKEN_", "");
-    boost::algorithm::replace_first(env, "GENERAL_", "GENERAL.");
-    boost::algorithm::replace_first(env, "BROKER_", "BROKER.");
-    boost::algorithm::replace_first(env, "CHAOS_", "CHAOS.");
+    boost::algorithm::replace_first(env, "_", ".");
     if (!boost::algorithm::starts_with(env, "GENERAL") && !boost::algorithm::starts_with(env, "BROKER")
         && !boost::algorithm::starts_with(env, "CHAOS")) {
         // it doesn't look like one of our var, we ignore it
