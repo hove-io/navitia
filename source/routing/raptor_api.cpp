@@ -1404,10 +1404,6 @@ bool shorten_section(navitia::routing::Journey::Section& section,
     // because of stay-ins, we may have several vj in one section, we have to scan the stop times
     // of all vjs
     for (const auto* vj = section.get_in_st->vehicle_journey; vj; (vj = vj->next_vj, order = type::RankStopTime(0))) {
-        if (vj == vj_to_skip) {
-            continue;
-        }
-
         if (section.get_in_dt < section.get_in_st->boarding_time) {
             LOG4CPLUS_ERROR(logger, "Error : section.get_in_dt < section.get_in_st->boarding_time");
             return false;
@@ -1416,7 +1412,7 @@ bool shorten_section(navitia::routing::Journey::Section& section,
         navitia::DateTime base_dt = section.get_in_dt - section.get_in_st->boarding_time;
         for (const auto& st :
              boost::make_iterator_range(vj->stop_time_list.begin() + order.val, vj->stop_time_list.end())) {
-            if (st.stop_point->stop_area->uri == stop_area_uri
+            if (st.stop_point->stop_area->uri == stop_area_uri && vj != vj_to_skip
                 && can_shorten_at(departures, destinations, st, clockwise)) {
                 if (clockwise) {
                     section.get_out_st = &st;
@@ -1433,7 +1429,7 @@ bool shorten_section(navitia::routing::Journey::Section& section,
             }
         }
     }
-    LOG4CPLUS_WARN(logger, "Error occurred when modifying backtracking journeys");
+    LOG4CPLUS_ERROR(logger, "Error occurred when modifying backtracking journeys");
     return false;
 }
 
