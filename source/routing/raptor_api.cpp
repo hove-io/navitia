@@ -1409,6 +1409,8 @@ bool shorten_section(navitia::routing::Journey::Section& section,
             return false;
         }
         // determine midnigth of the day at which the vj is used
+        // WARNING : this base_dt may need to be increased in case there is some stay-ins vehicle
+        // with stop_times that are past midnight
         navitia::DateTime base_dt = section.get_in_dt - section.get_in_st->boarding_time;
         for (const auto& st :
              boost::make_iterator_range(vj->stop_time_list.begin() + order.val, vj->stop_time_list.end())) {
