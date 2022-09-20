@@ -129,7 +129,7 @@ int main(int argn, char** argv) {
 
     threads.create_thread([&data_manager, conf, &metrics] {
         navitia::MaintenanceWorker maintenance_worker = navitia::MaintenanceWorker(data_manager, conf, metrics);
-        return maintenance_worker.run();
+        return maintenance_worker();
     });
     //
     // Data have been loaded, we can now accept connections
