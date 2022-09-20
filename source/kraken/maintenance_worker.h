@@ -88,7 +88,7 @@ public:
 
     void load_data();
 
-    void operator()();
+    void run();
 };
 
 }  // namespace navitia

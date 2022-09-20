@@ -123,7 +123,7 @@ void MaintenanceWorker::load_realtime() {
     channel->DeleteQueue(queue_name);
 }
 
-void MaintenanceWorker::operator()() {
+void MaintenanceWorker::run() {
     LOG4CPLUS_INFO(logger, "Starting background thread");
 
     try {
