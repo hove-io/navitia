@@ -1400,34 +1400,62 @@ bool shorten_section(navitia::routing::Journey::Section& section,
                      const map_stop_point_duration& destinations,
                      const bool clockwise) {
     log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
-    auto order = section.get_in_st->order();
-    // because of stay-ins, we may have several vj in one section, we have to scan the stop times
-    // of all vjs
-    for (const auto* vj = section.get_in_st->vehicle_journey; vj; (vj = vj->next_vj, order = type::RankStopTime(0))) {
-        if (section.get_in_dt < section.get_in_st->boarding_time) {
-            LOG4CPLUS_ERROR(logger, "Error : section.get_in_dt < section.get_in_st->boarding_time");
-            return false;
-        }
-        // determine midnigth of the day at which the vj is used
-        // WARNING : this base_dt may need to be increased in case there is some stay-ins vehicle
-        // with stop_times that are past midnight
-        navitia::DateTime base_dt = section.get_in_dt - section.get_in_st->boarding_time;
-        for (const auto& st :
-             boost::make_iterator_range(vj->stop_time_list.begin() + order.val, vj->stop_time_list.end())) {
-            if (st.stop_point->stop_area->uri == stop_area_uri && vj != vj_to_skip
-                && can_shorten_at(departures, destinations, st, clockwise)) {
-                if (clockwise) {
+
+    if (clockwise) {
+        // because of stay-ins, we may have several vj in one section, we have to scan the stop times of all vjs
+        auto order = section.get_in_st->order();
+        for (const auto* vj = section.get_in_st->vehicle_journey; vj;
+             (vj = vj->next_vj, order = type::RankStopTime(0))) {
+            if (vj == vj_to_skip) {
+                return false;
+            }
+
+            if (section.get_in_dt < section.get_in_st->boarding_time) {
+                LOG4CPLUS_ERROR(logger, "Error : section.get_in_dt < section.get_in_st->boarding_time");
+                return false;
+            }
+            // determine midnigth of the day at which the vj is used
+            // WARNING : this base_dt may need to be increased in case there is some stay-ins vehicle
+            // with stop_times that are past midnight
+            navitia::DateTime base_dt = section.get_in_dt - section.get_in_st->boarding_time;
+            for (const auto& st :
+                 boost::make_iterator_range(vj->stop_time_list.begin() + order.val, vj->stop_time_list.end())) {
+                if (st.stop_point->stop_area->uri == stop_area_uri
+                    && can_shorten_at(departures, destinations, st, clockwise)) {
                     section.get_out_st = &st;
                     section.get_out_dt = base_dt + st.alighting_time;
-                } else {
+
+                    return true;
+                }
+            }
+        }
+    } else {
+        // because of stay-ins, we may have several vj in one section, we have to scan the stop times of all vjs
+        auto order = type::RankStopTime(section.get_out_st->vehicle_journey->stop_time_list.size() - 1
+                                        - section.get_out_st->order().val);
+        for (const auto* vj = section.get_out_st->vehicle_journey; vj;
+             (vj = vj->prev_vj, order = type::RankStopTime(0))) {
+            if (vj == vj_to_skip) {
+                return false;
+            }
+
+            if (section.get_in_dt < section.get_in_st->boarding_time) {
+                LOG4CPLUS_ERROR(logger, "Error : section.get_in_dt < section.get_in_st->boarding_time");
+                return false;
+            }
+            // determine midnigth of the day at which the vj is used
+            // WARNING : this base_dt may need to be increased in case there is some stay-ins vehicle
+            // with stop_times that are past midnight
+            navitia::DateTime base_dt = section.get_in_dt - section.get_in_st->boarding_time;
+            for (const auto& st :
+                 boost::make_iterator_range(vj->stop_time_list.rbegin() + order.val, vj->stop_time_list.rend())) {
+                if (st.stop_point->stop_area->uri == stop_area_uri
+                    && can_shorten_at(departures, destinations, st, clockwise)) {
                     section.get_in_st = &st;
                     section.get_in_dt = base_dt + st.boarding_time;
-                }
 
-                return true;
-            }
-            if (section.get_out_st == &st) {
-                return false;
+                    return true;
+                }
             }
         }
     }
