@@ -38,6 +38,7 @@ www.navitia.io
 #include "type/meta_data.h"
 #include "type/pb_converter.h"
 #include "type/type_utils.h"
+#include "utils/functions.h"
 #include "utils/map_find.h"
 
 #include <boost/date_time/posix_time/posix_time.hpp>
@@ -1369,138 +1370,87 @@ void filter_late_journeys(RAPTOR::Journeys& journeys, const NightBusFilter::Para
     }
 }
 
-bool can_shorten_at(const map_stop_point_duration& departures,
-                    const map_stop_point_duration& destinations,
-                    const navitia::type::StopTime& stop_time,
-                    const bool clockwise) {
-    const auto& map = clockwise ? destinations : departures;
-    auto it = map.find(routing::SpIdx{stop_time.stop_point->idx});
-    // if the stop_point is not one of the allowed fallback stop_points, we cannot shorten the journey there
-    if (it == map.end()) {
-        return false;
-    }
-
-    if (clockwise) {
-        return stop_time.drop_off_allowed();
-    } else {
-        return stop_time.pick_up_allowed();
-    }
-}
-
 // - if `clockwise` : remove everything in the section *after* the *first* occurence of `stop_area_uri`, unless this
 // stop is served by `vj_to_skip`
+//
+// returns `true` if the section has been modified
+bool shorten_section_clockwise(navitia::routing::Journey::Section& section,
+                               const std::string& last_stop_area_uri,
+                               const navitia::type::VehicleJourney* last_vj,
+                               const map_stop_point_duration& fallbacks) {
+    log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
+
+    // because of stay-ins, we may have several vj in one section, we have to scan the stop times of all vjs
+    auto order = section.get_in_st->order();
+    for (const auto* vj = section.get_in_st->vehicle_journey; vj; (vj = vj->next_vj, order = type::RankStopTime(0))) {
+        if (vj == last_vj) {
+            return false;
+        }
+
+        if (section.get_in_dt < section.get_in_st->boarding_time) {
+            LOG4CPLUS_ERROR(logger, "Error : section.get_in_dt < section.get_in_st->boarding_time");
+            return false;
+        }
+        // determine midnigth of the day at which the vj is used
+        // WARNING : this base_dt may need to be increased in case there is some stay-ins vehicle
+        // with stop_times that are past midnight (not handled yet)
+        navitia::DateTime base_dt = section.get_in_dt - section.get_in_st->boarding_time;
+        for (const auto& st :
+             boost::make_iterator_range(vj->stop_time_list.begin() + order.val, vj->stop_time_list.end())) {
+            // check stop_area is the same and it's possible to use stop_point to get out of PT
+            if (st.stop_point->stop_area->uri == last_stop_area_uri
+                && navitia::contains(fallbacks, routing::SpIdx{st.stop_point->idx}) && st.drop_off_allowed()) {
+                section.get_out_st = &st;
+                section.get_out_dt = base_dt + st.alighting_time;
+
+                return true;
+            }
+        }
+    }
+    LOG4CPLUS_ERROR(logger, "Error occurred when modifying backtracking journeys clockwise");
+    return false;
+}
+
 // - if `! clockwise` : remove everything in the section *before* the *last* occurence of `stop_area_uri`, unless this
 // stop is served by `vj_to_skip`
 //
 // returns `true` if the section has been modified
-bool shorten_section(navitia::routing::Journey::Section& section,
-                     const std::string& stop_area_uri,
-                     const navitia::type::VehicleJourney* vj_to_skip,
-                     const map_stop_point_duration& departures,
-                     const map_stop_point_duration& destinations,
-                     const bool clockwise) {
+bool shorten_section_anticlockwise(navitia::routing::Journey::Section& section,
+                                   const std::string& first_stop_area_uri,
+                                   const navitia::type::VehicleJourney* first_vj,
+                                   const map_stop_point_duration& fallbacks) {
     log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
 
-    if (clockwise) {
-        // because of stay-ins, we may have several vj in one section, we have to scan the stop times of all vjs
-        auto order = section.get_in_st->order();
-        for (const auto* vj = section.get_in_st->vehicle_journey; vj;
-             (vj = vj->next_vj, order = type::RankStopTime(0))) {
-            if (vj == vj_to_skip) {
-                return false;
-            }
-
-            if (section.get_in_dt < section.get_in_st->boarding_time) {
-                LOG4CPLUS_ERROR(logger, "Error : section.get_in_dt < section.get_in_st->boarding_time");
-                return false;
-            }
-            // determine midnigth of the day at which the vj is used
-            // WARNING : this base_dt may need to be increased in case there is some stay-ins vehicle
-            // with stop_times that are past midnight
-            navitia::DateTime base_dt = section.get_in_dt - section.get_in_st->boarding_time;
-            for (const auto& st :
-                 boost::make_iterator_range(vj->stop_time_list.begin() + order.val, vj->stop_time_list.end())) {
-                if (st.stop_point->stop_area->uri == stop_area_uri
-                    && can_shorten_at(departures, destinations, st, clockwise)) {
-                    section.get_out_st = &st;
-                    section.get_out_dt = base_dt + st.alighting_time;
-
-                    return true;
-                }
-            }
+    // because of stay-ins, we may have several vj in one section, we have to scan the stop times of all vjs
+    auto order = type::RankStopTime(section.get_out_st->vehicle_journey->stop_time_list.size() - 1
+                                    - section.get_out_st->order().val);
+    for (const auto* vj = section.get_out_st->vehicle_journey; vj; (vj = vj->prev_vj, order = type::RankStopTime(0))) {
+        if (vj == first_vj) {
+            return false;
         }
-    } else {
-        // because of stay-ins, we may have several vj in one section, we have to scan the stop times of all vjs
-        auto order = type::RankStopTime(section.get_out_st->vehicle_journey->stop_time_list.size() - 1
-                                        - section.get_out_st->order().val);
-        for (const auto* vj = section.get_out_st->vehicle_journey; vj;
-             (vj = vj->prev_vj, order = type::RankStopTime(0))) {
-            if (vj == vj_to_skip) {
-                return false;
-            }
 
-            if (section.get_in_dt < section.get_in_st->boarding_time) {
-                LOG4CPLUS_ERROR(logger, "Error : section.get_in_dt < section.get_in_st->boarding_time");
-                return false;
-            }
-            // determine midnigth of the day at which the vj is used
-            // WARNING : this base_dt may need to be increased in case there is some stay-ins vehicle
-            // with stop_times that are past midnight
-            navitia::DateTime base_dt = section.get_in_dt - section.get_in_st->boarding_time;
-            for (const auto& st :
-                 boost::make_iterator_range(vj->stop_time_list.rbegin() + order.val, vj->stop_time_list.rend())) {
-                if (st.stop_point->stop_area->uri == stop_area_uri
-                    && can_shorten_at(departures, destinations, st, clockwise)) {
-                    section.get_in_st = &st;
-                    section.get_in_dt = base_dt + st.boarding_time;
+        if (section.get_in_dt < section.get_in_st->boarding_time) {
+            LOG4CPLUS_ERROR(logger, "Error : section.get_in_dt < section.get_in_st->boarding_time");
+            return false;
+        }
+        // determine midnigth of the day at which the vj is used
+        // WARNING : this base_dt may need to be increased in case there is some stay-ins vehicle
+        // with stop_times that are past midnight (not handled yet)
+        navitia::DateTime base_dt = section.get_in_dt - section.get_in_st->boarding_time;
+        for (const auto& st :
+             boost::make_iterator_range(vj->stop_time_list.rbegin() + order.val, vj->stop_time_list.rend())) {
+            // check stop_area is the same and it's possible to use stop_point to get in PT
+            if (st.stop_point->stop_area->uri == first_stop_area_uri
+                && navitia::contains(fallbacks, routing::SpIdx{st.stop_point->idx}) && st.pick_up_allowed()) {
+                section.get_in_st = &st;
+                section.get_in_dt = base_dt + st.boarding_time;
 
-                    return true;
-                }
+                return true;
             }
         }
     }
-    LOG4CPLUS_ERROR(logger, "Error occurred when modifying backtracking journeys");
-    return false;
-}
 
-std::pair<bool, size_t> get_and_update_visited_section(navitia::routing::Journey& journey,
-                                                       const std::string& stop_area_uri,
-                                                       const navitia::type::VehicleJourney* vj_to_skip,
-                                                       const map_stop_point_duration& departures,
-                                                       const map_stop_point_duration& destinations,
-
-                                                       const bool clockwise) {
-    // TODO: use boost::adaptors::indexed(0), index() and value() once boost>1.55 is available, sigh...
-    size_t section_idx = 0;
-    for (auto& section : journey.sections) {
-        if (shorten_section(section, stop_area_uri, vj_to_skip, departures, destinations, clockwise)) {
-            return {true, section_idx};
-        }
-        ++section_idx;
-    }
-    return {false, 0};
-}
-
-// - if `clockwise` : remove everything in the journey *after* the *first* occurence of `stop_area_uri`, unless this
-// stop is served by `vj_to_skip`
-// - if `! clockwise` : remove everything in the journey *before* the *last* occurence of `stop_area_uri`, unless this
-// stop is served by `vj_to_skip`
-//
-// returns `true` if the journey has been modified
-bool shorten_journey(navitia::routing::Journey& journey,
-                     const std::string& stop_area_uri,
-                     const navitia::type::VehicleJourney* vj_to_skip,
-                     const map_stop_point_duration& departures,
-                     const map_stop_point_duration& destinations,
-                     const bool clockwise) {
-    auto res = get_and_update_visited_section(journey, stop_area_uri, vj_to_skip, departures, destinations, clockwise);
-    if (res.first) {
-        if (clockwise) {
-            journey.sections.erase(journey.sections.begin() + res.second + 1, journey.sections.end());
-        } else {
-            journey.sections.erase(journey.sections.begin(), journey.sections.begin() + res.second);
-        }
-    }
+    LOG4CPLUS_ERROR(logger, "Error occurred when modifying backtracking journeys anticlockwise");
     return false;
 }
 
@@ -1510,15 +1460,39 @@ void modify_backtracking_journeys(RAPTOR::Journeys& journeys,
                                   const bool clockwise) {
     for (auto& journey : journeys) {
         if (clockwise) {
-            auto last_section = journey.sections.rbegin();
+            const auto& last_section = journey.sections.rbegin();
             const auto& last_stop_area_uri = last_section->get_out_st->stop_point->stop_area->uri;
             const auto* last_vj = last_section->get_out_st->vehicle_journey;
-            shorten_journey(journey, last_stop_area_uri, last_vj, departures, destinations, clockwise);
+
+            size_t section_idx = 0;
+            // browse sections and modify any section that allows shortening
+            for (; section_idx < journey.sections.size(); section_idx++) {
+                if (shorten_section_clockwise(journey.sections[section_idx], last_stop_area_uri, last_vj,
+                                              destinations)) {
+                    break;
+                }
+            }
+            // remove useless sections after the one allowing shortening
+            if (section_idx + 1 < journey.sections.size()) {
+                journey.sections.erase(journey.sections.begin() + section_idx + 1, journey.sections.end());
+            }
         } else {
-            auto first_section = journey.sections.begin();
+            const auto& first_section = journey.sections.begin();
             const auto& first_stop_area_uri = first_section->get_in_st->stop_point->stop_area->uri;
             const auto* first_vj = first_section->get_in_st->vehicle_journey;
-            shorten_journey(journey, first_stop_area_uri, first_vj, departures, destinations, clockwise);
+
+            int section_idx = journey.sections.size() - 1;
+            // browse sections and modify any section that allows shortening
+            for (; section_idx >= 0; section_idx--) {
+                if (shorten_section_anticlockwise(journey.sections[section_idx], first_stop_area_uri, first_vj,
+                                                  departures)) {
+                    break;
+                }
+            }
+            // remove useless sections before the one allowing shortening
+            if (section_idx > 0) {
+                journey.sections.erase(journey.sections.begin(), journey.sections.begin() + section_idx);
+            }
         }
     }
 }
