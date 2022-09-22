@@ -1397,10 +1397,6 @@ bool shorten_section_clockwise(navitia::routing::Journey::Section& section,
         navitia::DateTime base_dt = section.get_in_dt - section.get_in_st->boarding_time;
         for (const auto& st :
              boost::make_iterator_range(vj->stop_time_list.begin() + order.val, vj->stop_time_list.end())) {
-            // if the end of original section is reached: no shortening on that section
-            if (&st == section.get_out_st) {
-                return false;
-            }
             // check stop_area is the same and it's possible to use stop_point to get out of PT
             if (st.stop_point->stop_area->uri == last_stop_area_uri
                 && navitia::contains(fallbacks, routing::SpIdx{st.stop_point->idx}) && st.drop_off_allowed()) {
@@ -1408,6 +1404,10 @@ bool shorten_section_clockwise(navitia::routing::Journey::Section& section,
                 section.get_out_dt = base_dt + st.alighting_time;
 
                 return true;
+            }
+            // if the end of original section is reached: interrupt search for shortening on that section
+            if (&st == section.get_out_st) {
+                return false;
             }
         }
     }
@@ -1443,10 +1443,6 @@ bool shorten_section_anticlockwise(navitia::routing::Journey::Section& section,
         navitia::DateTime base_dt = section.get_in_dt - section.get_in_st->boarding_time;
         for (const auto& st :
              boost::make_iterator_range(vj->stop_time_list.rbegin() + order.val, vj->stop_time_list.rend())) {
-            // if the start of original section is reached: no shortening on that section
-            if (&st == section.get_in_st) {
-                return false;
-            }
             // check stop_area is the same and it's possible to use stop_point to get in PT
             if (st.stop_point->stop_area->uri == first_stop_area_uri
                 && navitia::contains(fallbacks, routing::SpIdx{st.stop_point->idx}) && st.pick_up_allowed()) {
@@ -1454,6 +1450,10 @@ bool shorten_section_anticlockwise(navitia::routing::Journey::Section& section,
                 section.get_in_dt = base_dt + st.boarding_time;
 
                 return true;
+            }
+            // if the start of original section is reached: interrupt search for shortening on that section
+            if (&st == section.get_in_st) {
+                return false;
             }
         }
     }
