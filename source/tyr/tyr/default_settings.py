@@ -159,3 +159,5 @@ USE_SERPY = os.getenv('TYR_USE_SERPY', False)
 # https://flask-sqlalchemy.palletsprojects.com/en/2.x/signals/
 # deprecated and slow
 SQLALCHEMY_TRACK_MODIFICATIONS = os.getenv('TYR_SQLALCHEMY_TRACK_MODIFICATIONS', False)
+
+POST_DATA_TO_TYR = os.getenv('TYR_POST_DATA_TO_TYR', None)

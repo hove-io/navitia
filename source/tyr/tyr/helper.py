@@ -43,9 +43,11 @@ import sys
 from flask import json
 from jsonschema import validate, ValidationError
 from tyr.formats import instance_config_format
+import requests
 
 END_POINT_NOT_EXIST_MSG = 'end_point doesn\'t exist'
 BILLING_PLAN_NOT_EXIST_MSG = 'billing plan doesn\'t exist'
+MAX_NB_CALLS = 3
 
 
 def get_message(key, email, args):
@@ -348,3 +350,21 @@ def hide_domain(email):
     if "@" not in email:
         return email
     return "{}******".format(email.split('@')[0])
+
+
+def repost_to_another_tyr(logger, url, content, instance_name):
+    content.seek(0)
+    file_to_post = {"file": (content.filename, content.stream, content.mimetype)}
+    url_secondary_tyr = '{}/jobs/{}'.format(url, instance_name)
+    nb_try = 0
+    while nb_try < MAX_NB_CALLS:
+        try:
+            resp = requests.post(url_secondary_tyr, files=file_to_post, verify=False)
+            logging.info('Info on posting data: {}'.format(resp.text))
+            if resp.status_code == 200:
+                return True
+            nb_try = nb_try + 1
+        except Exception as e:
+            logger.error("Error while posting data to secondary tyr: {i}: {e}".format(i=url_secondary_tyr, e=e))
+            return False
+    return False
