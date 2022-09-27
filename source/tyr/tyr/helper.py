@@ -359,7 +359,7 @@ def repost_to_another_url(logger, url, content, instance_name):
     nb_try = 0
     while nb_try < MAX_TRY_FOR_REPOST_TO_SECONDARY_TYR:
         try:
-            resp = requests.post(secondary_url, files=file_to_post, verify=False)
+            resp = requests.post(secondary_url, files=file_to_post)
             logging.info('Info on posting data: {}'.format(resp.text))
             if resp.status_code == 200:
                 return True
