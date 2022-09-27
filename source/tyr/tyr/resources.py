@@ -74,10 +74,9 @@ from tyr.helper import (
     hide_domain,
     create_autocomplete_instance_paths,
     create_repositories,
-    repost_to_another_tyr,
+    repost_to_another_url,
 )
 
-max_nb_calls = 3
 from tyr.tasks import (
     create_autocomplete_depot,
     remove_autocomplete_depot,
@@ -150,7 +149,7 @@ class Job(flask_restful.Resource):
         # Send content file to secondary tyr in aws and return an error message if failed
         url_secondary_tyr = current_app.config.get('POST_DATA_TO_TYR', None)
         if url_secondary_tyr is not None:
-            resp = repost_to_another_tyr(logger, url_secondary_tyr, content, instance_name)
+            resp = repost_to_another_url(logger, url_secondary_tyr, content, instance_name)
             if not resp:
                 return {'error': 'Upload to secondary tyr failed'}, 500
             content.seek(0)

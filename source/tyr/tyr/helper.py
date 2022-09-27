@@ -47,7 +47,7 @@ import requests
 
 END_POINT_NOT_EXIST_MSG = 'end_point doesn\'t exist'
 BILLING_PLAN_NOT_EXIST_MSG = 'billing plan doesn\'t exist'
-MAX_NB_CALLS = 3
+MAX_TRY_FOR_REPOST_TO_SECONDARY_TYR = 3
 
 
 def get_message(key, email, args):
@@ -352,19 +352,20 @@ def hide_domain(email):
     return "{}******".format(email.split('@')[0])
 
 
-def repost_to_another_tyr(logger, url, content, instance_name):
+def repost_to_another_url(logger, url, content, instance_name):
     content.seek(0)
     file_to_post = {"file": (content.filename, content.stream, content.mimetype)}
-    url_secondary_tyr = '{}/jobs/{}'.format(url, instance_name)
+    secondary_url = '{}/jobs/{}'.format(url, instance_name)
+    secondary_url = '{}/jobs/ca-qc-sherbrooke'.format(url)
     nb_try = 0
-    while nb_try < MAX_NB_CALLS:
+    while nb_try < MAX_TRY_FOR_REPOST_TO_SECONDARY_TYR:
         try:
-            resp = requests.post(url_secondary_tyr, files=file_to_post, verify=False)
+            resp = requests.post(secondary_url, files=file_to_post, verify=False)
             logging.info('Info on posting data: {}'.format(resp.text))
             if resp.status_code == 200:
                 return True
             nb_try = nb_try + 1
         except Exception as e:
-            logger.error("Error while posting data to secondary tyr: {i}: {e}".format(i=url_secondary_tyr, e=e))
+            logger.error("Error while posting data to secondary tyr: {i}: {e}".format(i=secondary_url, e=e))
             return False
     return False

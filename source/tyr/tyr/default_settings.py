@@ -160,4 +160,6 @@ USE_SERPY = os.getenv('TYR_USE_SERPY', False)
 # deprecated and slow
 SQLALCHEMY_TRACK_MODIFICATIONS = os.getenv('TYR_SQLALCHEMY_TRACK_MODIFICATIONS', False)
 
-POST_DATA_TO_TYR = os.getenv('TYR_POST_DATA_TO_TYR', None)
+# Url of a secondary Tyr. The data posted to an instance of this Tyr via the '/jobs'
+# endpoint will be reposted to this url
+POST_DATA_TO_TYR = os.getenv('TYR_REPOST_DATA_TO_TYR', None)
