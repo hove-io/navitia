@@ -356,7 +356,6 @@ def repost_to_another_url(logger, url, content, instance_name):
     content.seek(0)
     file_to_post = {"file": (content.filename, content.stream, content.mimetype)}
     secondary_url = '{}/jobs/{}'.format(url, instance_name)
-    secondary_url = '{}/jobs/ca-qc-sherbrooke'.format(url)
     nb_try = 0
     while nb_try < MAX_TRY_FOR_REPOST_TO_SECONDARY_TYR:
         try:

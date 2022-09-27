@@ -158,7 +158,7 @@ class Job(flask_restful.Resource):
         if not os.path.exists(instance.source_directory):
             return {'error': 'input folder unavailable'}, 500
 
-        if not utils.filename_has_valid_extension(filename):
+        if utils.filename_has_valid_extension(filename) == False:
             return (
                 {
                     'message': "Filename has invalid extension :'{}'".format(content.filename),
