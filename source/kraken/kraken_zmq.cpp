@@ -127,7 +127,10 @@ int main(int argn, char** argv) {
 
     const navitia::Metrics metrics(conf.metrics_binding(), conf.instance_name());
 
-    threads.create_thread(navitia::MaintenanceWorker(data_manager, conf, metrics));
+    threads.create_thread([&data_manager, conf, &metrics] {
+        navitia::MaintenanceWorker maintenance_worker = navitia::MaintenanceWorker(data_manager, conf, metrics);
+        return maintenance_worker();
+    });
     //
     // Data have been loaded, we can now accept connections
     try {

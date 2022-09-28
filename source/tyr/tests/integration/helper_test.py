@@ -33,6 +33,7 @@ from tyr.helper import (
     load_instance_config,
     get_instances_name,
     create_autocomplete_instance_paths,
+    create_repositories,
 )
 from tyr import app
 import pytest
@@ -91,6 +92,13 @@ def test_valid_config_instance_from_env_variables_upper_instance_name(valid_inst
         assert instance.pg_port == 492
         assert not os.path.exists(instance.aliases_file)
         assert not os.path.exists(instance.backup_directory)
+
+
+def test_create_paths_with_invalid_paths():
+    with pytest.raises(ValueError) as exc:
+        create_repositories("abcd", "test")
+
+    assert 'Invalid paths parameter' in str(exc.value)
 
 
 def test_valid_config_instance_from_env_variables_and_instance_not_in_env_variables(

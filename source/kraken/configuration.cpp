@@ -29,15 +29,13 @@ www.navitia.io
 */
 
 #include "configuration.h"
-
-#include "utils/exception.h"
-
 #include <boost/algorithm/string/predicate.hpp>
 #include <boost/algorithm/string/replace.hpp>
 #include <boost/optional.hpp>
 
 #include <fstream>
 #include <iostream>
+#include "utils/functions.h"
 
 namespace po = boost::program_options;
 
@@ -86,6 +84,7 @@ po::options_description get_options_description(const boost::optional<std::strin
         ("GENERAL.core_file_size_limit", po::value<int>()->default_value(0), "ulimit that define the maximum size of a core file")
 
         ("BROKER.uri", po::value<std::string>(), "rabbitmq connection uri")
+        ("BROKER.protocol", po::value<std::string>()->default_value("amqp"), "rabbitmq connection protocol")
         ("BROKER.host", po::value<std::string>()->default_value("localhost"), "host of rabbitmq")
         ("BROKER.port", po::value<int>()->default_value(5672), "port of rabbitmq")
         ("BROKER.username", po::value<std::string>()->default_value("guest"), "username for rabbitmq")
@@ -205,6 +204,9 @@ boost::optional<std::string> Configuration::broker_uri() const {
     }
     return {};
 }
+std::string Configuration::broker_protocol() const {
+    return this->vm["BROKER.protocol"].as<std::string>();
+}
 std::string Configuration::broker_host() const {
     return this->vm["BROKER.host"].as<std::string>();
 }
@@ -247,7 +249,11 @@ std::vector<std::string> Configuration::rt_topics() const {
     if (!this->vm.count("BROKER.rt_topics")) {
         return std::vector<std::string>();
     }
-    return this->vm["BROKER.rt_topics"].as<std::vector<std::string>>();
+    std::vector<std::string> result = this->vm["BROKER.rt_topics"].as<std::vector<std::string>>();
+    if (result.size() == 1) {
+        return split_string(result.at(0), ";");
+    }
+    return result;
 }
 
 int Configuration::kirin_retry_timeout() const {

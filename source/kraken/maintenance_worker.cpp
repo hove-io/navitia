@@ -342,6 +342,7 @@ void MaintenanceWorker::init_rabbitmq() {
     boost::optional<std::string> broker_uri = conf.broker_uri();
     // connection through classic method
     std::string exchange_name = conf.broker_exchange();
+    std::string protocol = conf.broker_protocol();
     std::string host = conf.broker_host();
     int port = conf.broker_port();
     std::string username = conf.broker_username();
@@ -355,14 +356,29 @@ void MaintenanceWorker::init_rabbitmq() {
     queue_name_task = (boost::format("%s_task") % queue_name).str();
     queue_name_rt = (boost::format("%s_rt") % queue_name).str();
 
+    AmqpClient::Channel::OpenOpts open_opts;
     // connection through URI or classic method
     if (broker_uri) {
-        LOG4CPLUS_INFO(logger, boost::format("connection to rabbitmq with uri: %s") % *broker_uri);
-        channel = AmqpClient::Channel::CreateFromUri(*broker_uri);
+        open_opts = AmqpClient::Channel::OpenOpts::FromUri(*broker_uri);
     } else {
-        LOG4CPLUS_INFO(logger, boost::format("connection to rabbitmq: %s@%s:%s/%s") % username % host % port % vhost);
-        channel = AmqpClient::Channel::Create(host, port, username, password, vhost);
+        open_opts.host = host;
+        open_opts.port = port;
+        open_opts.vhost = vhost;
+        open_opts.auth = AmqpClient::Channel::OpenOpts::BasicAuth(username, password);
+        if (protocol == "amqps") {
+            open_opts.tls_params = AmqpClient::Channel::OpenOpts::TLSParams();
+        }
     }
+    if (open_opts.tls_params.is_initialized()) {
+        (*open_opts.tls_params).verify_hostname = true;
+        (*open_opts.tls_params).verify_peer = false;
+    }
+    LOG4CPLUS_DEBUG(logger, boost::format("connection to rabbitmq: %s://%s@%s:%s/%s")
+                                % (open_opts.tls_params.is_initialized() ? "amqps" : "amqp")
+                                % boost::get<AmqpClient::Channel::OpenOpts::BasicAuth>(open_opts.auth).username
+                                % open_opts.host % open_opts.port % open_opts.vhost);
+    channel = AmqpClient::Channel::Open(open_opts);
+
     if (!is_initialized) {
         // first we have to delete the queues, binding can change between two run, and it's don't seem possible
         // to unbind a queue if we don't know at what topic it's subscribed

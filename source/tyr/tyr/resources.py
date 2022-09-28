@@ -74,7 +74,9 @@ from tyr.helper import (
     hide_domain,
     create_autocomplete_instance_paths,
     create_repositories,
+    repost_to_another_url,
 )
+
 from tyr.tasks import (
     create_autocomplete_depot,
     remove_autocomplete_depot,
@@ -144,6 +146,14 @@ class Job(flask_restful.Resource):
         logger = get_instance_logger(instance)
         logger.info('content received: %s', content)
 
+        # Send content file to secondary tyr in aws and return an error message if failed
+        url_secondary_tyr = current_app.config.get('POST_DATA_TO_TYR', None)
+        if url_secondary_tyr is not None:
+            resp = repost_to_another_url(logger, url_secondary_tyr, content, instance_name)
+            if not resp:
+                return {'error': 'Upload to secondary tyr failed'}, 500
+            content.seek(0)
+
         instance = load_instance_config(instance_name)
         if not os.path.exists(instance.source_directory):
             return {'error': 'input folder unavailable'}, 500
@@ -159,9 +169,9 @@ class Job(flask_restful.Resource):
 
         full_file_name = os.path.join(os.path.realpath(instance.source_directory), filename)
         tmp_file_name = full_file_name + ".tmp"
+
         content.save(tmp_file_name)
         shutil.move(tmp_file_name, full_file_name)
-
         return {'message': 'OK'}, 200
 
     def delete(self, id=None, instance_name=None):
@@ -2424,7 +2434,7 @@ class Cities(flask_restful.Resource):
         file_name = f.filename
         file_path = str(os.path.join(os.path.abspath(current_app.config['CITIES_OSM_FILE_PATH']), file_name))
 
-        create_repositories(current_app.config['CITIES_OSM_FILE_PATH'], "cities")
+        create_repositories([current_app.config['CITIES_OSM_FILE_PATH']], "cities")
 
         f.save(file_path)
         logging.info("file received: {}".format(f))

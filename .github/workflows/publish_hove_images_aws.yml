@@ -1,0 +1,68 @@
+name: Publish Hove images on AWS
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment'
+        type: choice
+        options:
+          - dev
+          - release
+        required: true
+      tag:
+        description: 'Tag of the image'
+        type: string
+        default: 'dev'
+        required: true
+
+  workflow_run:
+    workflows: ["Build Navitia Packages For Release", "Build Navitia Packages For Dev Multi Distributions"]
+    branches: [release, dev]
+    types:
+      - completed
+
+jobs:
+  publish_on_aws:
+    runs-on: ubuntu-latest
+    outputs:
+      branch: ${{ steps.init_variables.outputs.branch }}
+      tag: ${{ steps.init_variables.outputs.tag }}
+    steps:
+      - id: init_variables
+        run: |
+          if [[ '${{ github.event_name }}' == 'workflow_run' ]]
+          then
+            echo "Workflow triggered due to finished upstream workflow"
+            echo "::set-output name=branch::${{ github.event.workflow_run.head_branch }}"
+            if [[ '${{ github.event.workflow_run.head_branch }}' == 'dev' ]]
+            then
+              echo "::set-output name=tag::dev"
+            else :
+              echo "Realease branch, collecting last version"
+              VERSION=$(curl https://api.github.com/repos/hove-io/navitia/tags | jq '.[0].name')
+              echo "::set-output name=tag::$VERSION"
+            fi
+          elif [[ '${{ github.event_name }}' == 'workflow_dispatch' ]]
+          then
+            echo "Workflow triggered manually"
+            echo "::set-output name=branch::${{ github.event.inputs.environment }}"
+            echo "::set-output name=tag::${{ github.event.inputs.tag }}"
+          else :
+            exit 1
+          fi
+
+      - name: Generate token
+        id: app-token
+        uses: getsentry/action-github-app-token@v1
+        with:
+          app_id: ${{ secrets.GA_OS_WORKFLOW_TRIGGER_APP_ID }}
+          private_key: ${{ secrets.GA_OS_WORKFLOW_TRIGGER_APP_PEM }}
+
+      - name: Repository Dispatch
+        uses: peter-evans/repository-dispatch@v2
+        with:
+          token: ${{ steps.app-token.outputs.token }}
+          repository: hove-io/core-backend-aws-assets
+          event-type: build-trigger
+          client-payload: '{"branch": "${{ steps.init_variables.outputs.branch }}", "tag": "${{ steps.init_variables.outputs.tag }}"}'
