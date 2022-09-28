@@ -1,3 +1,20 @@
+navitia2 (15.14.0) unstable; urgency=low
+
+  * [Tyr] Tyr should repost data to secondary tyr  <https://github.com/hove-io/navitia/pull/3828>
+  * [Monitor] always return the 'loaded' field in response  <https://github.com/hove-io/navitia/pull/3827>
+  * [Kraken] fix the datetime set in backtracking correction  <https://github.com/hove-io/navitia/pull/3817>
+  * [Kraken] Fix kraken monitor  <https://github.com/hove-io/navitia/pull/3823>
+  * [Kraken] Read rt topics env var  <https://github.com/hove-io/navitia/pull/3818>
+  * [Kraken] Readyness endpoint  <https://github.com/hove-io/navitia/pull/3814>
+  * [AWS] fix: new fix on aws build script  <https://github.com/hove-io/navitia/pull/3816>
+  * [AWS] fix: aws images workflow with empty variables  <https://github.com/hove-io/navitia/pull/3815>
+  * [AWS] feat: Adding workflow to push images to ECR  <https://github.com/hove-io/navitia/pull/3806>
+  * [AWS] fix: cannot dereference an uninitialized variable  <https://github.com/hove-io/navitia/pull/3813>
+  * [AWS] Fix create paths  <https://github.com/hove-io/navitia/pull/3812>
+  * [AWS] feat: add 'amqps' support for kraken  <https://github.com/hove-io/navitia/pull/3803>
+
+ -- patrick.qian <patrick.qian@kisio.com>  Wed, 28 Sep 2022 16:09:55 +0100
+
 navitia2 (15.13.0) unstable; urgency=low
 
   * [aws migration]: Host added in kraken monitoring api  <https://github.com/hove-io/navitia/pull/3810>
