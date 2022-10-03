@@ -50,20 +50,25 @@ private:
 
     const Metrics& metrics;
 
-    AmqpClient::Channel::ptr_t channel;
+    
     // nom de la queue créer pour ce worker
     std::string queue_name_task;
     std::string queue_name_rt;
 
     boost::posix_time::ptime next_try_realtime_loading;
 
-    void init_rabbitmq();
+    AmqpClient::Channel::ptr_t channel;
+
+
+
     void listen_rabbitmq();
 
     void handle_task_in_batch(const std::vector<AmqpClient::Envelope::ptr_t>& envelopes);
     void handle_rt_in_batch(const std::vector<AmqpClient::Envelope::ptr_t>& envelopes);
 
     void load_realtime();
+
+
 
     /*!
      * This function will consume message in batch. It calls
@@ -84,11 +89,23 @@ private:
 public:
     MaintenanceWorker(DataManager<type::Data>& data_manager, const kraken::Configuration conf, const Metrics& metrics);
 
-    bool load_and_switch();
 
+    // try to read data.nav.lz4 
+    // and reload chaos disruption
     void load_data();
+    bool is_data_loaded();
 
-    void operator()();
+
+    void open_channel_to_rabbitmq();
+
+    void bind_to_task_queue();
+
+    void listen_to_task_queue();
+
+    void bind_to_realtime_queue();
+
+
+    void run();
 };
 
 }  // namespace navitia

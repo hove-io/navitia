@@ -56,6 +56,113 @@ namespace bg = boost::gregorian;
 
 namespace navitia {
 
+
+
+void MaintenanceWorker::run() {
+
+    // wait until data is loaded 
+    load_data();
+    // if data loading failed,
+    // wait until we get a reload message from rabbitmq
+    // that results in a sucessfull data load
+    while (! is_data_loaded()) {
+        try {   
+            open_channel_to_rabbitmq();
+            bind_to_task_queue();
+            listen_to_task_queue();
+        } catch (const std::runtime_error& ex) {
+            LOG4CPLUS_ERROR(logger, "Connection to rabbitmq failed: " << ex.what());
+            data_manager.get_data()->is_connected_to_rabbitmq = false;
+            sleep(10);
+        }
+    }
+
+    // if we connected to rabbitmq above
+    // then the reload queue is already connected, and we just have
+    // to bind the realtime queue and begin listening to rabbitmq
+    // otherwise, rabbitmq is not connected and we will fail immediatly
+    try {
+        bind_to_realtime_queue();
+        listen_rabbitmq();
+    } catch (const std::runtime_error& ex) {
+        LOG4CPLUS_ERROR(logger, "Connection to rabbitmq failed: " << ex.what());
+        data_manager.get_data()->is_connected_to_rabbitmq = false;
+        sleep(10);
+    }
+
+    // if rabbitmq was not connected, or was disconnected during the previous listen_rabbitmq()
+    // we try to reconnect to rabbitmq
+    // When reconnection is successfull, we don't want to load_data(), we just listen to the queues
+    while(true) {
+        try {
+            open_channel_to_rabbitmq();
+            bind_to_task_queue();
+            bind_to_realtime_queue();
+            listen_rabbitmq();
+        } catch (const std::runtime_error& ex) {
+            LOG4CPLUS_ERROR(logger, "Connection to rabbitmq failed: " << ex.what());
+            data_manager.get_data()->is_connected_to_rabbitmq = false;
+            sleep(10);
+        }
+    }
+
+
+}
+
+
+
+bool MaintenanceWorker::is_data_loaded() {
+    const auto data = data_manager.get_data();
+    return data->loaded;
+}
+
+void MaintenanceWorker::open_channel_to_rabbitmq() {
+    std::string instance_name = conf.instance_name();
+    // connection through URI, if URI is provided, it will be used in the first place as other other connection options
+    // are neglected
+    boost::optional<std::string> broker_uri = conf.broker_uri();
+    // connection through classic method
+    std::string exchange_name = conf.broker_exchange();
+    std::string protocol = conf.broker_protocol();
+    std::string host = conf.broker_host();
+    int port = conf.broker_port();
+    std::string username = conf.broker_username();
+    std::string password = conf.broker_password();
+    std::string vhost = conf.broker_vhost();
+    std::string hostname = get_hostname();
+
+    AmqpClient::Channel::OpenOpts open_opts;
+    // connection through URI or classic method
+    if (broker_uri) {
+        open_opts = AmqpClient::Channel::OpenOpts::FromUri(*broker_uri);
+    } else {
+        open_opts.host = host;
+        open_opts.port = port;
+        open_opts.vhost = vhost;
+        open_opts.auth = AmqpClient::Channel::OpenOpts::BasicAuth(username, password);
+        if (protocol == "amqps") {
+            open_opts.tls_params = AmqpClient::Channel::OpenOpts::TLSParams();
+        }
+    }
+    if (open_opts.tls_params.is_initialized()) {
+        (*open_opts.tls_params).verify_hostname = true;
+        (*open_opts.tls_params).verify_peer = false;
+    }
+    LOG4CPLUS_DEBUG(logger, boost::format("trying to connect to rabbitmq: %s://%s@%s:%s/%s")
+                                % (open_opts.tls_params.is_initialized() ? "amqps" : "amqp")
+                                % boost::get<AmqpClient::Channel::OpenOpts::BasicAuth>(open_opts.auth).username
+                                % open_opts.host % open_opts.port % open_opts.vhost);
+    channel = AmqpClient::Channel::Open(open_opts);
+    LOG4CPLUS_INFO(logger, "connected to rabbitmq");
+
+
+
+    channel->DeclareExchange(exchange_name, "topic", false, true, false);
+
+    
+}
+
+
 void MaintenanceWorker::load_data() {
     const std::string database = conf.databases_path();
     auto chaos_database = conf.chaos_database();
@@ -63,7 +170,8 @@ void MaintenanceWorker::load_data() {
     auto contributors = conf.rt_topics();
     LOG4CPLUS_INFO(logger, "Loading database from file: " + database);
     auto start = pt::microsec_clock::universal_time();
-    if (this->data_manager.load(database, chaos_database, contributors, conf.raptor_cache_size(), chaos_batch_size)) {
+    bool data_loaded = this->data_manager.load(database, chaos_database, contributors, conf.raptor_cache_size(), chaos_batch_size);
+    if (data_loaded) {
         auto data = data_manager.get_data();
         data->is_realtime_loaded = false;
         data->meta->instance_name = conf.instance_name();
@@ -72,6 +180,93 @@ void MaintenanceWorker::load_data() {
     this->metrics.observe_data_loading(duration.total_seconds());
     LOG4CPLUS_INFO(logger, "Loading database duration: " << duration);
 }
+
+
+void MaintenanceWorker::bind_to_task_queue() {
+
+    // first we have to delete the queues, binding can change between two run, and it's don't seem possible
+    // to unbind a queue if we don't know at what topic it's subscribed
+    // if the queue doesn't exist an exception is throw...
+
+    try {
+        channel->DeleteQueue(queue_name_rt);
+    } catch (const std::runtime_error&) {
+    }
+  
+
+
+    // creation of task queue for this kraken
+    bool passive = false;
+    bool durable = true;
+    bool exclusive = false;
+    bool auto_delete_queue = conf.broker_queue_auto_delete();
+    channel->DeclareQueue(queue_name_task, passive, durable, exclusive, auto_delete_queue);
+    LOG4CPLUS_INFO(logger, "binding queue for tasks: " << this->queue_name_task);
+    std::string instance_name = conf.instance_name();
+    std::string exchange_name = conf.broker_exchange();
+    // binding the queue to the exchange for all task for this instance
+    channel->BindQueue(queue_name_task, exchange_name, instance_name + ".task.*");
+
+    
+}
+
+
+void MaintenanceWorker::listen_to_task_queue() {
+
+    bool no_local = true;
+    bool no_ack = false;
+    bool exclusive = false;
+    std::string task_tag = this->channel->BasicConsume(this->queue_name_task, "", no_local, no_ack, exclusive);
+    size_t timeout_ms = conf.broker_timeout();
+    while (true) {
+        boost::this_thread::interruption_point();
+        try {
+            auto task_envelopes = consume_in_batch(task_tag, 1, timeout_ms, no_ack);
+            handle_task_in_batch(task_envelopes);
+        } catch (const navitia::recoverable_exception& e) {
+            // on a recoverable an internal server error is returned
+            LOG4CPLUS_ERROR(logger, "internal server error on rabbitmq message: " << e.what());
+            LOG4CPLUS_ERROR(logger, "backtrace: " << e.backtrace());
+        }
+
+        // Since consume_in_batch is non blocking, we don't want that the worker loops for nothing, when the
+        // queue is empty.
+        std::this_thread::sleep_for(std::chrono::seconds(conf.broker_sleeptime()));
+    }
+}
+
+
+void MaintenanceWorker::bind_to_realtime_queue() {
+
+    std::string exchange_name = conf.broker_exchange();
+
+    bool auto_delete_queue = conf.broker_queue_auto_delete();
+
+
+
+    try {
+        channel->DeleteQueue(queue_name_rt);
+    } catch (const std::runtime_error&) {
+    }
+
+    this->channel->DeclareExchange(exchange_name, "topic", false, true, false);
+
+    // creation of queues for this kraken
+    bool passive = false;
+    bool durable = true;
+    bool exclusive = false;
+
+    channel->DeclareQueue(this->queue_name_rt, passive, durable, exclusive, auto_delete_queue);
+    LOG4CPLUS_INFO(logger, "queue for disruptions: " << this->queue_name_rt);
+    // binding the queue to the exchange for all task for this instance
+    LOG4CPLUS_INFO(logger, "subscribing to [" << boost::algorithm::join(conf.rt_topics(), ", ") << "]");
+    for (const auto& topic : conf.rt_topics()) {
+        channel->BindQueue(queue_name_rt, exchange_name, topic);
+    }
+
+}
+
+
 
 void MaintenanceWorker::load_realtime() {
     if (!conf.is_realtime_enabled()) {
@@ -123,27 +318,6 @@ void MaintenanceWorker::load_realtime() {
     channel->DeleteQueue(queue_name);
 }
 
-void MaintenanceWorker::operator()() {
-    LOG4CPLUS_INFO(logger, "Starting background thread");
-
-    try {
-        this->listen_rabbitmq();
-    } catch (const std::runtime_error& ex) {
-        LOG4CPLUS_ERROR(logger, "Connection to rabbitmq failed: " << ex.what());
-        data_manager.get_data()->is_connected_to_rabbitmq = false;
-        sleep(10);
-    }
-    while (true) {
-        try {
-            this->init_rabbitmq();
-            this->listen_rabbitmq();
-        } catch (const std::runtime_error& ex) {
-            LOG4CPLUS_ERROR(logger, "Connection to rabbitmq failed: " << ex.what());
-            data_manager.get_data()->is_connected_to_rabbitmq = false;
-            sleep(10);
-        }
-    }
-}
 
 void MaintenanceWorker::handle_task_in_batch(const std::vector<AmqpClient::Envelope::ptr_t>& envelopes) {
     for (auto& envelope : envelopes) {
@@ -335,85 +509,8 @@ void MaintenanceWorker::listen_rabbitmq() {
     }
 }
 
-void MaintenanceWorker::init_rabbitmq() {
-    std::string instance_name = conf.instance_name();
-    // connection through URI, if URI is provided, it will be used in the first place as other other connection options
-    // are neglected
-    boost::optional<std::string> broker_uri = conf.broker_uri();
-    // connection through classic method
-    std::string exchange_name = conf.broker_exchange();
-    std::string protocol = conf.broker_protocol();
-    std::string host = conf.broker_host();
-    int port = conf.broker_port();
-    std::string username = conf.broker_username();
-    std::string password = conf.broker_password();
-    std::string vhost = conf.broker_vhost();
-    std::string hostname = get_hostname();
-    std::string default_queue_name = "kraken_" + hostname + "_" + instance_name;
-    std::string queue_name = conf.broker_queue(default_queue_name);
-    bool auto_delete_queue = conf.broker_queue_auto_delete();
 
-    queue_name_task = (boost::format("%s_task") % queue_name).str();
-    queue_name_rt = (boost::format("%s_rt") % queue_name).str();
 
-    AmqpClient::Channel::OpenOpts open_opts;
-    // connection through URI or classic method
-    if (broker_uri) {
-        open_opts = AmqpClient::Channel::OpenOpts::FromUri(*broker_uri);
-    } else {
-        open_opts.host = host;
-        open_opts.port = port;
-        open_opts.vhost = vhost;
-        open_opts.auth = AmqpClient::Channel::OpenOpts::BasicAuth(username, password);
-        if (protocol == "amqps") {
-            open_opts.tls_params = AmqpClient::Channel::OpenOpts::TLSParams();
-        }
-    }
-    if (open_opts.tls_params.is_initialized()) {
-        (*open_opts.tls_params).verify_hostname = true;
-        (*open_opts.tls_params).verify_peer = false;
-    }
-    LOG4CPLUS_DEBUG(logger, boost::format("connection to rabbitmq: %s://%s@%s:%s/%s")
-                                % (open_opts.tls_params.is_initialized() ? "amqps" : "amqp")
-                                % boost::get<AmqpClient::Channel::OpenOpts::BasicAuth>(open_opts.auth).username
-                                % open_opts.host % open_opts.port % open_opts.vhost);
-    channel = AmqpClient::Channel::Open(open_opts);
-
-    if (!is_initialized) {
-        // first we have to delete the queues, binding can change between two run, and it's don't seem possible
-        // to unbind a queue if we don't know at what topic it's subscribed
-        // if the queue doesn't exist an exception is throw...
-        try {
-            channel->DeleteQueue(queue_name_task);
-        } catch (const std::runtime_error&) {
-        }
-        try {
-            channel->DeleteQueue(queue_name_rt);
-        } catch (const std::runtime_error&) {
-        }
-
-        this->channel->DeclareExchange(exchange_name, "topic", false, true, false);
-
-        // creation of queues for this kraken
-        bool passive = false;
-        bool durable = true;
-        bool exclusive = false;
-        channel->DeclareQueue(this->queue_name_task, passive, durable, exclusive, auto_delete_queue);
-        LOG4CPLUS_INFO(logger, "queue for tasks: " << this->queue_name_task);
-        // binding the queue to the exchange for all task for this instance
-        channel->BindQueue(queue_name_task, exchange_name, instance_name + ".task.*");
-
-        channel->DeclareQueue(this->queue_name_rt, passive, durable, exclusive, auto_delete_queue);
-        LOG4CPLUS_INFO(logger, "queue for disruptions: " << this->queue_name_rt);
-        // binding the queue to the exchange for all task for this instance
-        LOG4CPLUS_INFO(logger, "subscribing to [" << boost::algorithm::join(conf.rt_topics(), ", ") << "]");
-        for (const auto& topic : conf.rt_topics()) {
-            channel->BindQueue(queue_name_rt, exchange_name, topic);
-        }
-        is_initialized = true;
-    }
-    LOG4CPLUS_DEBUG(logger, "connected to rabbitmq");
-}
 
 MaintenanceWorker::MaintenanceWorker(DataManager<type::Data>& data_manager,
                                      kraken::Configuration conf,
@@ -422,25 +519,14 @@ MaintenanceWorker::MaintenanceWorker(DataManager<type::Data>& data_manager,
       logger(log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("background"))),
       conf(std::move(conf)),
       metrics(metrics),
-      next_try_realtime_loading(pt::microsec_clock::universal_time()) {
-    // Connect Rabbitmq
-    try {
-        this->init_rabbitmq();
-    } catch (const std::runtime_error& ex) {
-        LOG4CPLUS_ERROR(logger, "Connection to rabbitmq failed: " << ex.what());
-        data_manager.get_data()->is_connected_to_rabbitmq = false;
-    }
+      next_try_realtime_loading(pt::microsec_clock::universal_time())
+    {
 
-    // Load Data (.nav, disruption Bdd, build raptor data)
-    this->load_data();
+    std::string instance_name = conf.instance_name();
+    std::string hostname = get_hostname();
+    std::string default_queue_name = "kraken_" + hostname + "_" + instance_name;
+    std::string queue_name = conf.broker_queue(default_queue_name);
 
-    // Load Realtime
-    try {
-        this->load_realtime();
-    } catch (const std::runtime_error& ex) {
-        LOG4CPLUS_ERROR(logger, "Connection to rabbitmq failed: " << ex.what());
-        data_manager.get_data()->is_connected_to_rabbitmq = false;
-    }
 }
 
 }  // namespace navitia
