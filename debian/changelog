@@ -1,7 +1,7 @@
 navitia2 (15.14.1) unstable; urgency=low
 
   * [Tyr] fix install requests lib <https://github.com/hove-io/navitia/pull/3829>
- 
+
  -- patrick.qian <patrick.qian@kisio.com>  Thu, 29 Sep 2022 11:09:23 +0100
 
 navitia2 (15.14.0) unstable; urgency=low
