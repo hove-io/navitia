@@ -40,7 +40,7 @@ jobs:
               echo "::set-output name=tag::dev"
             else :
               echo "Realease branch, collecting last version"
-              VERSION=$(curl https://api.github.com/repos/hove-io/navitia/tags | jq '.[0].name')
+              VERSION=$(curl https://api.github.com/repos/hove-io/navitia/tags | jq -r '.[0].name')
               echo "::set-output name=tag::$VERSION"
             fi
           elif [[ '${{ github.event_name }}' == 'workflow_dispatch' ]]
