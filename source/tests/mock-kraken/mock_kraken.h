@@ -71,10 +71,10 @@ struct mock_kraken {
 
         // this option is not parsed by get_options_description because it is used only here
         if (std::find(other_options.begin(), other_options.end(), "spawn_maintenance_worker") != other_options.end()) {
-                threads.create_thread([&data_manager, conf, &metrics] {
-                    navitia::MaintenanceWorker maintenance_worker = navitia::MaintenanceWorker(data_manager, conf, metrics);
-                    return maintenance_worker.run();
-                });
+            threads.create_thread([&data_manager, conf, &metrics] {
+                navitia::MaintenanceWorker maintenance_worker = navitia::MaintenanceWorker(data_manager, conf, metrics);
+                return maintenance_worker.run();
+            });
         }
 
         // Launch only one thread for the tests

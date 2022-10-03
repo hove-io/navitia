@@ -56,17 +56,14 @@ namespace bg = boost::gregorian;
 
 namespace navitia {
 
-
-
 void MaintenanceWorker::run() {
-
-    // wait until data is loaded 
+    // wait until data is loaded
     load_data();
     // if data loading failed,
     // wait until we get a reload message from rabbitmq
     // that results in a sucessfull data load
-    while (! is_data_loaded()) {
-        try {   
+    while (!is_data_loaded()) {
+        try {
             open_channel_to_rabbitmq();
             bind_to_task_queue();
             listen_to_task_queue();
@@ -93,7 +90,7 @@ void MaintenanceWorker::run() {
     // if rabbitmq was not connected, or was disconnected during the previous listen_rabbitmq()
     // we try to reconnect to rabbitmq
     // When reconnection is successfull, we don't want to load_data(), we just listen to the queues
-    while(true) {
+    while (true) {
         try {
             open_channel_to_rabbitmq();
             bind_to_task_queue();
@@ -105,11 +102,7 @@ void MaintenanceWorker::run() {
             sleep(10);
         }
     }
-
-
 }
-
-
 
 bool MaintenanceWorker::is_data_loaded() {
     const auto data = data_manager.get_data();
@@ -155,13 +148,8 @@ void MaintenanceWorker::open_channel_to_rabbitmq() {
     channel = AmqpClient::Channel::Open(open_opts);
     LOG4CPLUS_INFO(logger, "connected to rabbitmq");
 
-
-
     channel->DeclareExchange(exchange_name, "topic", false, true, false);
-
-    
 }
-
 
 void MaintenanceWorker::load_data() {
     const std::string database = conf.databases_path();
@@ -170,7 +158,8 @@ void MaintenanceWorker::load_data() {
     auto contributors = conf.rt_topics();
     LOG4CPLUS_INFO(logger, "Loading database from file: " + database);
     auto start = pt::microsec_clock::universal_time();
-    bool data_loaded = this->data_manager.load(database, chaos_database, contributors, conf.raptor_cache_size(), chaos_batch_size);
+    bool data_loaded =
+        this->data_manager.load(database, chaos_database, contributors, conf.raptor_cache_size(), chaos_batch_size);
     if (data_loaded) {
         auto data = data_manager.get_data();
         data->is_realtime_loaded = false;
@@ -181,9 +170,7 @@ void MaintenanceWorker::load_data() {
     LOG4CPLUS_INFO(logger, "Loading database duration: " << duration);
 }
 
-
 void MaintenanceWorker::bind_to_task_queue() {
-
     // first we have to delete the queues, binding can change between two run, and it's don't seem possible
     // to unbind a queue if we don't know at what topic it's subscribed
     // if the queue doesn't exist an exception is throw...
@@ -192,8 +179,6 @@ void MaintenanceWorker::bind_to_task_queue() {
         channel->DeleteQueue(queue_name_rt);
     } catch (const std::runtime_error&) {
     }
-  
-
 
     // creation of task queue for this kraken
     bool passive = false;
@@ -206,13 +191,9 @@ void MaintenanceWorker::bind_to_task_queue() {
     std::string exchange_name = conf.broker_exchange();
     // binding the queue to the exchange for all task for this instance
     channel->BindQueue(queue_name_task, exchange_name, instance_name + ".task.*");
-
-    
 }
 
-
 void MaintenanceWorker::listen_to_task_queue() {
-
     bool no_local = true;
     bool no_ack = false;
     bool exclusive = false;
@@ -235,14 +216,10 @@ void MaintenanceWorker::listen_to_task_queue() {
     }
 }
 
-
 void MaintenanceWorker::bind_to_realtime_queue() {
-
     std::string exchange_name = conf.broker_exchange();
 
     bool auto_delete_queue = conf.broker_queue_auto_delete();
-
-
 
     try {
         channel->DeleteQueue(queue_name_rt);
@@ -263,10 +240,7 @@ void MaintenanceWorker::bind_to_realtime_queue() {
     for (const auto& topic : conf.rt_topics()) {
         channel->BindQueue(queue_name_rt, exchange_name, topic);
     }
-
 }
-
-
 
 void MaintenanceWorker::load_realtime() {
     if (!conf.is_realtime_enabled()) {
@@ -317,7 +291,6 @@ void MaintenanceWorker::load_realtime() {
     // Finally delete the queue as we create a new one in each call to the function
     channel->DeleteQueue(queue_name);
 }
-
 
 void MaintenanceWorker::handle_task_in_batch(const std::vector<AmqpClient::Envelope::ptr_t>& envelopes) {
     for (auto& envelope : envelopes) {
@@ -509,9 +482,6 @@ void MaintenanceWorker::listen_rabbitmq() {
     }
 }
 
-
-
-
 MaintenanceWorker::MaintenanceWorker(DataManager<type::Data>& data_manager,
                                      kraken::Configuration conf,
                                      const Metrics& metrics)
@@ -519,14 +489,11 @@ MaintenanceWorker::MaintenanceWorker(DataManager<type::Data>& data_manager,
       logger(log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("background"))),
       conf(std::move(conf)),
       metrics(metrics),
-      next_try_realtime_loading(pt::microsec_clock::universal_time())
-    {
-
+      next_try_realtime_loading(pt::microsec_clock::universal_time()) {
     std::string instance_name = conf.instance_name();
     std::string hostname = get_hostname();
     std::string default_queue_name = "kraken_" + hostname + "_" + instance_name;
     std::string queue_name = conf.broker_queue(default_queue_name);
-
 }
 
 }  // namespace navitia
