@@ -96,6 +96,7 @@ po::options_description get_options_description(const boost::optional<std::strin
         ("BROKER.sleeptime", po::value<int>()->default_value(1), "sleeptime for maintenance worker in second")
         ("BROKER.queue", po::value<std::string>(), "rabbitmq's queue name to be bound")
         ("BROKER.queue_auto_delete", po::value<bool>()->default_value(false), "auto delete rabbitmq's queue when unbind")
+        ("BROKER.queue_ttl", po::value<int>()->default_value(7200), "Time To Live for rabbitmq queues created by kraken, in seconds")
 
         ("CHAOS.database", po::value<std::string>(), "Chaos database connection string")
         ("CHAOS.batch_size", po::value<int>()->default_value(1000000), "Chaos database row batch size");
@@ -243,6 +244,10 @@ std::string Configuration::broker_queue(const std::string& default_queue) const 
 
 bool Configuration::broker_queue_auto_delete() const {
     return vm["BROKER.queue_auto_delete"].as<bool>();
+}
+
+int Configuration::broker_queue_ttl() const {
+    return vm["BROKER.queue_ttl"].as<int>();
 }
 
 std::vector<std::string> Configuration::rt_topics() const {

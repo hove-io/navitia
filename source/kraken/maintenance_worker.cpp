@@ -214,7 +214,11 @@ void MaintenanceWorker::create_task_queue() {
         bool durable = true;
         bool exclusive = false;
         bool auto_delete_queue = conf.broker_queue_auto_delete();
-        channel->DeclareQueue(queue_name_task, passive, durable, exclusive, auto_delete_queue);
+
+        AmqpClient::Table args;
+        args.insert(std::make_pair("x-expires", conf.broker_queue_ttl() * 1000));
+
+        channel->DeclareQueue(queue_name_task, passive, durable, exclusive, auto_delete_queue, args);
         LOG4CPLUS_INFO(logger, "binding queue for tasks: " << this->queue_name_task);
 
         // binding the queue to the exchange for all task for this instance
@@ -273,7 +277,10 @@ void MaintenanceWorker::create_realtime_queue() {
         bool exclusive = false;
         bool auto_delete_queue = conf.broker_queue_auto_delete();
 
-        channel->DeclareQueue(this->queue_name_rt, passive, durable, exclusive, auto_delete_queue);
+        AmqpClient::Table args;
+        args.insert(std::make_pair("x-expires", conf.broker_queue_ttl() * 1000));
+
+        channel->DeclareQueue(this->queue_name_rt, passive, durable, exclusive, auto_delete_queue, args);
         LOG4CPLUS_INFO(logger, "queue for disruptions: " << this->queue_name_rt);
         // binding the queue to the exchange for all task for this instance
         LOG4CPLUS_INFO(logger, "subscribing to [" << boost::algorithm::join(conf.rt_topics(), ", ") << "]");
