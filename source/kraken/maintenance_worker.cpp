@@ -77,45 +77,27 @@ void MaintenanceWorker::run() {
             } catch (const std::runtime_error& ex) {
                 LOG4CPLUS_ERROR(logger, "Connection to rabbitmq failed: " << ex.what());
                 data_manager.get_data()->is_connected_to_rabbitmq = false;
+                channel_opened = false;
                 sleep(10);
             }
         }
-    } else {
-        // the data is loaded, so we just try to connect to rabbitmq and create
-        // the task queue
-        try {
-            open_channel_to_rabbitmq();
-            create_task_queue();
-        } catch (const std::runtime_error& ex) {
-            LOG4CPLUS_ERROR(logger, "Connection to rabbitmq failed: " << ex.what());
-            data_manager.get_data()->is_connected_to_rabbitmq = false;
-        }
     }
 
-    // if we connected to rabbitmq above
-    // then the reload queue is already connected, and we just have
-    // to bind the realtime queue and begin listening to rabbitmq
-    // otherwise, rabbitmq is not connected and this block will fail immediatly
-    try {
-        create_realtime_queue();
-        listen_rabbitmq();
-    } catch (const std::runtime_error& ex) {
-        LOG4CPLUS_ERROR(logger, "Connection to rabbitmq failed: " << ex.what());
-        data_manager.get_data()->is_connected_to_rabbitmq = false;
-    }
-
-    // if rabbitmq was not connected, or was disconnected during the previous listen_rabbitmq()
-    // we try to reconnect to rabbitmq
-    // When reconnection is successfull, we don't want to load_data(), we just listen to the queues
+    // if rabbitmq was not connected, we try to connect to rabbitmq
+    // When connection is successfull, we don't want to load_data(), we just listen to the queues
     while (true) {
         try {
+            // will do nothing is channel is already opened
             open_channel_to_rabbitmq();
+            // will do nothing if the queue already exists
             create_task_queue();
+
             create_realtime_queue();
             listen_rabbitmq();
         } catch (const std::runtime_error& ex) {
             LOG4CPLUS_ERROR(logger, "Connection to rabbitmq failed: " << ex.what());
             data_manager.get_data()->is_connected_to_rabbitmq = false;
+            channel_opened = false;
             sleep(10);
         }
     }
@@ -127,6 +109,9 @@ bool MaintenanceWorker::is_data_loaded() const {
 }
 
 void MaintenanceWorker::open_channel_to_rabbitmq() {
+    if (channel_opened) {
+        return;
+    }
     std::string instance_name = conf.instance_name();
     // connection through URI, if URI is provided, it will be used in the first place as other other connection options
     // are neglected
@@ -168,6 +153,7 @@ void MaintenanceWorker::open_channel_to_rabbitmq() {
     channel->DeclareExchange(exchange_name, "topic", false, true, false);
 
     data_manager.get_data()->is_connected_to_rabbitmq = true;
+    channel_opened = true;
 }
 
 void MaintenanceWorker::load_data() {

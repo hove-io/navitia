@@ -58,6 +58,8 @@ private:
 
     AmqpClient::Channel::ptr_t channel;
 
+    bool channel_opened = false;
+
     bool task_queue_created = false;
     bool realtime_queue_created = false;
 
