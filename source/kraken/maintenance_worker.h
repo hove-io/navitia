@@ -89,7 +89,7 @@ public:
     // try to read data.nav.lz4
     // and reload chaos disruption
     void load_data();
-    bool is_data_loaded();
+    bool is_data_loaded() const;
 
     void open_channel_to_rabbitmq();
 

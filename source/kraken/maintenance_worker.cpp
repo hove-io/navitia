@@ -121,7 +121,7 @@ void MaintenanceWorker::run() {
     }
 }
 
-bool MaintenanceWorker::is_data_loaded() {
+bool MaintenanceWorker::is_data_loaded() const {
     const auto data = data_manager.get_data();
     return data->loaded;
 }
@@ -540,8 +540,6 @@ MaintenanceWorker::MaintenanceWorker(DataManager<type::Data>& data_manager,
       logger(log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("background"))),
       conf(std::move(conf)),
       metrics(metrics),
-      next_try_realtime_loading(pt::microsec_clock::universal_time()),
-      task_queue_created(false),
-      realtime_queue_created(false) {}
+      next_try_realtime_loading(pt::microsec_clock::universal_time()) {}
 
 }  // namespace navitia
