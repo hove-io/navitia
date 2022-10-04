@@ -149,6 +149,7 @@ def make_ed_common_params(instance_config):
         common_params.append("--local_syslog")
     return common_params
 
+
 def lock_release(lock, logger):
     token = None
     if hasattr(lock, 'local') and hasattr(lock.local, 'token'):
