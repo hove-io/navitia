@@ -250,7 +250,8 @@ def fusio2ed(self, instance_config, filename, job_id, dataset_uid):
         connection_string = make_connection_string(instance_config)
         params.append("--connection-string")
         params.append(connection_string)
-        params.append("--local_syslog")
+        if current_app.config.get('USE_LOCAL_SYS_LOG'):
+            params.append("--local_syslog")
         params.append("--log_comment")
         params.append(instance_config.name)
         res = None
@@ -293,7 +294,8 @@ def gtfs2ed(self, instance_config, gtfs_filename, job_id, dataset_uid):
         connection_string = make_connection_string(instance_config)
         params.append("--connection-string")
         params.append(connection_string)
-        params.append("--local_syslog")
+        if current_app.config.get('USE_LOCAL_SYS_LOG'):
+            params.append("--local_syslog")
         params.append("--log_comment")
         params.append(instance_config.name)
         res = None
@@ -335,7 +337,9 @@ def osm2ed(self, instance_config, osm_filename, job_id, dataset_uid):
             args.append('-p')
             args.append(u'{}'.format(poi_types_json))
 
-        args.append("--local_syslog")
+        if current_app.config.get('USE_LOCAL_SYS_LOG'):
+            args.append("--local_syslog")
+
         args.append("--log_comment")
         args.append(instance_config.name)
 
@@ -378,7 +382,8 @@ def geopal2ed(self, instance_config, filename, job_id, dataset_uid):
         params = ["-i", working_directory]
         params.append("--connection-string")
         params.append(connection_string)
-        params.append("--local_syslog")
+        if current_app.config.get('USE_LOCAL_SYS_LOG'):
+            params.append("--local_syslog")
         params.append("--log_comment")
         params.append(instance_config.name)
         with collect_metric('geopal2ed', job, dataset_uid):
@@ -413,7 +418,8 @@ def poi2ed(self, instance_config, filename, job_id, dataset_uid):
         params = ["-i", working_directory]
         params.append("--connection-string")
         params.append(connection_string)
-        params.append("--local_syslog")
+        if current_app.config.get('USE_LOCAL_SYS_LOG'):
+            params.append("--local_syslog")
         params.append("--log_comment")
         params.append(instance_config.name)
         with collect_metric("poi2ed", job, dataset_uid):
@@ -447,7 +453,8 @@ def synonym2ed(self, instance_config, filename, job_id, dataset_uid):
         params = ["-i", filename]
         params.append("--connection-string")
         params.append(connection_string)
-        params.append("--local_syslog")
+        if current_app.config.get('USE_LOCAL_SYS_LOG'):
+            params.append("--local_syslog")
         params.append("--log_comment")
         params.append(instance_config.name)
         with collect_metric('synonym2ed', job, dataset_uid):
@@ -627,7 +634,8 @@ def ed2nav(self, instance_config, job_id, custom_output_dir):
         if instance.full_sn_geometries:
             argv.extend(['--full_street_network_geometries'])
 
-        argv.extend(['--local_syslog'])
+        if current_app.config.get('USE_LOCAL_SYS_LOG'):
+            argv.append("--local_syslog")
         argv.extend(["--log_comment", instance_config.name])
 
         res = None
@@ -661,10 +669,12 @@ def fare2ed(self, instance_config, filename, job_id, dataset_uid):
             working_directory,
             "--connection-string",
             make_connection_string(instance_config),
-            "--local_syslog",
             "--log_comment",
             instance_config.name,
         ]
+        if current_app.config.get('USE_LOCAL_SYS_LOG'):
+            params.append("--local_syslog")
+
         res = launch_exec("fare2ed", params, logger)
         if res != 0:
             # @TODO: exception
