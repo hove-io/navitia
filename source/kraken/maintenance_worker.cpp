@@ -57,16 +57,24 @@ namespace bg = boost::gregorian;
 namespace navitia {
 
 void MaintenanceWorker::run() {
-    // wait until data is loaded
+    // try to load data from disk
     load_data();
-    // if data loading failed,
-    // wait until we get a reload message from rabbitmq
-    // that results in a sucessfull data load
-    while (!is_data_loaded()) {
+
+    // Here we wait for a reload message on the task queue
+    // that results in a successfull data load.
+    // We may be disconnected from rabbitmq during this wait,
+    // and reconnection to rabbitmq is handled by this outer loop
+    while (true) {
         try {
             open_channel_to_rabbitmq();
-            bind_to_task_queue();
-            listen_to_task_queue();
+            create_task_queue();
+            // will return when a reload message on the task queue
+            // arrived and resulted in a successfull data load
+            listen_to_task_queue_until_data_loaded();
+            if (is_data_loaded()) {
+                // data is loaded, let's break from the outer loop
+                break;
+            }
         } catch (const std::runtime_error& ex) {
             LOG4CPLUS_ERROR(logger, "Connection to rabbitmq failed: " << ex.what());
             data_manager.get_data()->is_connected_to_rabbitmq = false;
@@ -77,9 +85,9 @@ void MaintenanceWorker::run() {
     // if we connected to rabbitmq above
     // then the reload queue is already connected, and we just have
     // to bind the realtime queue and begin listening to rabbitmq
-    // otherwise, rabbitmq is not connected and we will fail immediatly
+    // otherwise, rabbitmq is not connected and this block will fail immediatly
     try {
-        bind_to_realtime_queue();
+        create_realtime_queue();
         listen_rabbitmq();
     } catch (const std::runtime_error& ex) {
         LOG4CPLUS_ERROR(logger, "Connection to rabbitmq failed: " << ex.what());
@@ -93,8 +101,8 @@ void MaintenanceWorker::run() {
     while (true) {
         try {
             open_channel_to_rabbitmq();
-            bind_to_task_queue();
-            bind_to_realtime_queue();
+            create_task_queue();
+            create_realtime_queue();
             listen_rabbitmq();
         } catch (const std::runtime_error& ex) {
             LOG4CPLUS_ERROR(logger, "Connection to rabbitmq failed: " << ex.what());
@@ -170,36 +178,46 @@ void MaintenanceWorker::load_data() {
     LOG4CPLUS_INFO(logger, "Loading database duration: " << duration);
 }
 
-void MaintenanceWorker::bind_to_task_queue() {
-    // first we have to delete the queues, binding can change between two run, and it's don't seem possible
-    // to unbind a queue if we don't know at what topic it's subscribed
-    // if the queue doesn't exist an exception is throw...
+void MaintenanceWorker::create_task_queue() {
+    if (!task_queue_created) {
+        std::string instance_name = conf.instance_name();
+        std::string hostname = get_hostname();
+        std::string default_queue_name = "kraken_" + hostname + "_" + instance_name;
+        std::string queue_name = conf.broker_queue(default_queue_name);
+        queue_name_task = (boost::format("%s_task") % queue_name).str();
 
-    try {
-        channel->DeleteQueue(queue_name_rt);
-    } catch (const std::runtime_error&) {
+        // first we have to delete the queues, binding can change between two run, and it's don't seem possible
+        // to unbind a queue if we don't know at what topic it's subscribed
+        // if the queue doesn't exist an exception is throw...
+        try {
+            channel->DeleteQueue(queue_name_task);
+        } catch (const std::runtime_error&) {
+        }
+        std::string exchange_name = conf.broker_exchange();
+        this->channel->DeclareExchange(exchange_name, "topic", false, true, false);
+
+        // creation of task queue for this kraken
+        bool passive = false;
+        bool durable = true;
+        bool exclusive = false;
+        bool auto_delete_queue = conf.broker_queue_auto_delete();
+        channel->DeclareQueue(queue_name_task, passive, durable, exclusive, auto_delete_queue);
+        LOG4CPLUS_INFO(logger, "binding queue for tasks: " << this->queue_name_task);
+
+        // binding the queue to the exchange for all task for this instance
+        channel->BindQueue(queue_name_task, exchange_name, instance_name + ".task.*");
+
+        task_queue_created = true;
     }
-
-    // creation of task queue for this kraken
-    bool passive = false;
-    bool durable = true;
-    bool exclusive = false;
-    bool auto_delete_queue = conf.broker_queue_auto_delete();
-    channel->DeclareQueue(queue_name_task, passive, durable, exclusive, auto_delete_queue);
-    LOG4CPLUS_INFO(logger, "binding queue for tasks: " << this->queue_name_task);
-    std::string instance_name = conf.instance_name();
-    std::string exchange_name = conf.broker_exchange();
-    // binding the queue to the exchange for all task for this instance
-    channel->BindQueue(queue_name_task, exchange_name, instance_name + ".task.*");
 }
 
-void MaintenanceWorker::listen_to_task_queue() {
+void MaintenanceWorker::listen_to_task_queue_until_data_loaded() {
     bool no_local = true;
     bool no_ack = false;
     bool exclusive = false;
     std::string task_tag = this->channel->BasicConsume(this->queue_name_task, "", no_local, no_ack, exclusive);
     size_t timeout_ms = conf.broker_timeout();
-    while (true) {
+    while (!is_data_loaded()) {
         boost::this_thread::interruption_point();
         try {
             auto task_envelopes = consume_in_batch(task_tag, 1, timeout_ms, no_ack);
@@ -216,29 +234,40 @@ void MaintenanceWorker::listen_to_task_queue() {
     }
 }
 
-void MaintenanceWorker::bind_to_realtime_queue() {
-    std::string exchange_name = conf.broker_exchange();
+void MaintenanceWorker::create_realtime_queue() {
+    if (!realtime_queue_created) {
+        std::string exchange_name = conf.broker_exchange();
 
-    bool auto_delete_queue = conf.broker_queue_auto_delete();
+        std::string instance_name = conf.instance_name();
+        std::string hostname = get_hostname();
+        std::string default_queue_name = "kraken_" + hostname + "_" + instance_name;
+        std::string queue_name = conf.broker_queue(default_queue_name);
+        queue_name_rt = (boost::format("%s_rt") % queue_name).str();
 
-    try {
-        channel->DeleteQueue(queue_name_rt);
-    } catch (const std::runtime_error&) {
-    }
+        // first we have to delete the queues, binding can change between two run, and it's don't seem possible
+        // to unbind a queue if we don't know at what topic it's subscribed
+        // if the queue doesn't exist an exception is throw...
+        try {
+            channel->DeleteQueue(queue_name_rt);
+        } catch (const std::runtime_error&) {
+        }
 
-    this->channel->DeclareExchange(exchange_name, "topic", false, true, false);
+        this->channel->DeclareExchange(exchange_name, "topic", false, true, false);
 
-    // creation of queues for this kraken
-    bool passive = false;
-    bool durable = true;
-    bool exclusive = false;
+        // creation of queues for this kraken
+        bool passive = false;
+        bool durable = true;
+        bool exclusive = false;
+        bool auto_delete_queue = conf.broker_queue_auto_delete();
 
-    channel->DeclareQueue(this->queue_name_rt, passive, durable, exclusive, auto_delete_queue);
-    LOG4CPLUS_INFO(logger, "queue for disruptions: " << this->queue_name_rt);
-    // binding the queue to the exchange for all task for this instance
-    LOG4CPLUS_INFO(logger, "subscribing to [" << boost::algorithm::join(conf.rt_topics(), ", ") << "]");
-    for (const auto& topic : conf.rt_topics()) {
-        channel->BindQueue(queue_name_rt, exchange_name, topic);
+        channel->DeclareQueue(this->queue_name_rt, passive, durable, exclusive, auto_delete_queue);
+        LOG4CPLUS_INFO(logger, "queue for disruptions: " << this->queue_name_rt);
+        // binding the queue to the exchange for all task for this instance
+        LOG4CPLUS_INFO(logger, "subscribing to [" << boost::algorithm::join(conf.rt_topics(), ", ") << "]");
+        for (const auto& topic : conf.rt_topics()) {
+            channel->BindQueue(queue_name_rt, exchange_name, topic);
+        }
+        realtime_queue_created = true;
     }
 }
 
@@ -489,11 +518,8 @@ MaintenanceWorker::MaintenanceWorker(DataManager<type::Data>& data_manager,
       logger(log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("background"))),
       conf(std::move(conf)),
       metrics(metrics),
-      next_try_realtime_loading(pt::microsec_clock::universal_time()) {
-    std::string instance_name = conf.instance_name();
-    std::string hostname = get_hostname();
-    std::string default_queue_name = "kraken_" + hostname + "_" + instance_name;
-    std::string queue_name = conf.broker_queue(default_queue_name);
-}
+      next_try_realtime_loading(pt::microsec_clock::universal_time()),
+      task_queue_created(false),
+      realtime_queue_created(false) {}
 
 }  // namespace navitia

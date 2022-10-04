@@ -58,6 +58,9 @@ private:
 
     AmqpClient::Channel::ptr_t channel;
 
+    bool task_queue_created;
+    bool realtime_queue_created;
+
     void listen_rabbitmq();
 
     void handle_task_in_batch(const std::vector<AmqpClient::Envelope::ptr_t>& envelopes);
@@ -91,11 +94,11 @@ public:
 
     void open_channel_to_rabbitmq();
 
-    void bind_to_task_queue();
+    void create_task_queue();
 
-    void listen_to_task_queue();
+    void listen_to_task_queue_until_data_loaded();
 
-    void bind_to_realtime_queue();
+    void create_realtime_queue();
 
     void run();
 };
