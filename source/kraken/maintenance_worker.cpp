@@ -60,25 +60,37 @@ void MaintenanceWorker::run() {
     // try to load data from disk
     load_data();
 
-    // Here we wait for a reload message on the task queue
-    // that results in a successfull data load.
-    // We may be disconnected from rabbitmq during this wait,
-    // and reconnection to rabbitmq is handled by this outer loop
-    while (true) {
+    if (!is_data_loaded()) {
+        // The data is not loaded, so we wait for a reload message on the task queue
+        // that results in a successfull data load.
+        // We may be disconnected from rabbitmq during this wait,
+        // and reconnection to rabbitmq is handled by this while(true) loop
+        while (true) {
+            try {
+                open_channel_to_rabbitmq();
+                create_task_queue();
+                // will return when a reload message on the task queue
+                // arrived and resulted in a successfull data load
+                listen_to_task_queue_until_data_loaded();
+                if (is_data_loaded()) {
+                    // data is loaded, let's break from the while(true)  loop
+                    break;
+                }
+            } catch (const std::runtime_error& ex) {
+                LOG4CPLUS_ERROR(logger, "Connection to rabbitmq failed: " << ex.what());
+                data_manager.get_data()->is_connected_to_rabbitmq = false;
+                sleep(10);
+            }
+        }
+    } else {
+        // the data is loaded, so we just try to connect to rabbitmq and create
+        // the task queue
         try {
             open_channel_to_rabbitmq();
             create_task_queue();
-            // will return when a reload message on the task queue
-            // arrived and resulted in a successfull data load
-            listen_to_task_queue_until_data_loaded();
-            if (is_data_loaded()) {
-                // data is loaded, let's break from the outer loop
-                break;
-            }
         } catch (const std::runtime_error& ex) {
             LOG4CPLUS_ERROR(logger, "Connection to rabbitmq failed: " << ex.what());
             data_manager.get_data()->is_connected_to_rabbitmq = false;
-            sleep(10);
         }
     }
 
@@ -92,7 +104,6 @@ void MaintenanceWorker::run() {
     } catch (const std::runtime_error& ex) {
         LOG4CPLUS_ERROR(logger, "Connection to rabbitmq failed: " << ex.what());
         data_manager.get_data()->is_connected_to_rabbitmq = false;
-        sleep(10);
     }
 
     // if rabbitmq was not connected, or was disconnected during the previous listen_rabbitmq()
@@ -157,6 +168,8 @@ void MaintenanceWorker::open_channel_to_rabbitmq() {
     LOG4CPLUS_INFO(logger, "connected to rabbitmq");
 
     channel->DeclareExchange(exchange_name, "topic", false, true, false);
+
+    data_manager.get_data()->is_connected_to_rabbitmq = true;
 }
 
 void MaintenanceWorker::load_data() {
@@ -478,7 +491,7 @@ void MaintenanceWorker::listen_rabbitmq() {
     std::string rt_tag = this->channel->BasicConsume(this->queue_name_rt, "", no_local, no_ack, exclusive);
 
     LOG4CPLUS_INFO(logger, "start event loop");
-    data_manager.get_data()->is_connected_to_rabbitmq = true;
+
     while (true) {
         boost::this_thread::interruption_point();
         auto now = pt::microsec_clock::universal_time();
