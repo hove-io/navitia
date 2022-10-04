@@ -72,10 +72,8 @@ void MaintenanceWorker::run() {
                 // will return when a reload message on the task queue
                 // arrived and resulted in a successfull data load
                 listen_to_task_queue_until_data_loaded();
-                if (is_data_loaded()) {
-                    // data is loaded, let's break from the while(true)  loop
-                    break;
-                }
+                // data is loaded, let's break from the while(true)  loop
+                break;
             } catch (const std::runtime_error& ex) {
                 LOG4CPLUS_ERROR(logger, "Connection to rabbitmq failed: " << ex.what());
                 data_manager.get_data()->is_connected_to_rabbitmq = false;
