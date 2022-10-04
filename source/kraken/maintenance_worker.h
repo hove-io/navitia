@@ -58,8 +58,8 @@ private:
 
     AmqpClient::Channel::ptr_t channel;
 
-    bool task_queue_created;
-    bool realtime_queue_created;
+    bool task_queue_created = false;
+    bool realtime_queue_created = false;
 
     void listen_rabbitmq();
 
@@ -82,7 +82,6 @@ private:
                                                               size_t max_nb,
                                                               size_t timeout_ms,
                                                               bool no_ack);
-    bool is_initialized = false;
 
 public:
     MaintenanceWorker(DataManager<type::Data>& data_manager, const kraken::Configuration conf, const Metrics& metrics);
