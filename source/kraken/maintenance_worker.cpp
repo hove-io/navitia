@@ -78,7 +78,7 @@ void MaintenanceWorker::run() {
                 LOG4CPLUS_ERROR(logger, "Connection to rabbitmq failed: " << ex.what());
                 data_manager.get_data()->is_connected_to_rabbitmq = false;
                 channel_opened = false;
-                std::this_thread::sleep_for(10);
+                std::this_thread::sleep_for(std::chrono::seconds(1));
             }
         }
     }
@@ -98,7 +98,7 @@ void MaintenanceWorker::run() {
             LOG4CPLUS_ERROR(logger, "Connection to rabbitmq failed: " << ex.what());
             data_manager.get_data()->is_connected_to_rabbitmq = false;
             channel_opened = false;
-            std::this_thread::sleep_for(10);
+            std::this_thread::sleep_for(std::chrono::seconds(1));
         }
     }
 }
