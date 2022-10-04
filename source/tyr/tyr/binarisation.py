@@ -142,12 +142,9 @@ def make_connection_string(instance_config):
 
 def make_ed_common_params(instance_config):
     common_params = list()
-    common_params.extend([
-        "--connection-string",
-        make_connection_string(instance_config),
-        "--log_comment",
-        instance_config.name
-    ])
+    common_params.extend(
+        ["--connection-string", make_connection_string(instance_config), "--log_comment", instance_config.name]
+    )
     if current_app.config.get('USE_LOCAL_SYS_LOG'):
         common_params.append("--local_syslog")
     return common_params
@@ -653,11 +650,7 @@ def fare2ed(self, instance_config, filename, job_id, dataset_uid):
     try:
 
         working_directory = unzip_if_needed(filename)
-
-        params = [
-            "-f",
-            working_directory
-        ]
+        params = ["-f", working_directory]
 
         common_params = make_ed_common_params(instance_config)
         params.extend(common_params)
