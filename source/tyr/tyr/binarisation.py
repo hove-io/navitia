@@ -140,10 +140,11 @@ def make_connection_string(instance_config):
     return connection_string
 
 
-def make_ed_common_params(instance_config):
+def make_ed_common_params(instance_config, ed_action):
     common_params = list()
     common_params.extend(
-        ["--connection-string", make_connection_string(instance_config), "--log_comment", instance_config.name]
+        ["--connection-string", make_connection_string(instance_config),
+         "--log_comment", '{} {}'.format(instance_config.name, ed_action)]
     )
     if current_app.config.get('USE_LOCAL_SYS_LOG'):
         common_params.append("--local_syslog")
@@ -257,7 +258,7 @@ def fusio2ed(self, instance_config, filename, job_id, dataset_uid):
             params.append("-s")
             params.append(instance_config.synonyms_file)
 
-        common_params = make_ed_common_params(instance_config)
+        common_params = make_ed_common_params(instance_config, 'fusio2ed')
         params.extend(common_params)
 
         res = None
@@ -297,7 +298,7 @@ def gtfs2ed(self, instance_config, gtfs_filename, job_id, dataset_uid):
             params.append("-s")
             params.append(instance_config.synonyms_file)
 
-        common_params = make_ed_common_params(instance_config)
+        common_params = make_ed_common_params(instance_config, 'gtfs2ed')
         params.extend(common_params)
 
         res = None
@@ -339,7 +340,7 @@ def osm2ed(self, instance_config, osm_filename, job_id, dataset_uid):
             params.append('-p')
             params.append(u'{}'.format(poi_types_json))
 
-        common_params = make_ed_common_params(instance_config)
+        common_params = make_ed_common_params(instance_config, 'osm2ed')
         params.extend(common_params)
 
         if instance.admins_from_cities_db:
@@ -379,7 +380,7 @@ def geopal2ed(self, instance_config, filename, job_id, dataset_uid):
         res = None
         params = ["-i", working_directory]
 
-        common_params = make_ed_common_params(instance_config)
+        common_params = make_ed_common_params(instance_config, 'geopal2ed')
         params.extend(common_params)
 
         with collect_metric('geopal2ed', job, dataset_uid):
@@ -412,7 +413,7 @@ def poi2ed(self, instance_config, filename, job_id, dataset_uid):
         res = None
         params = ["-i", working_directory]
 
-        common_params = make_ed_common_params(instance_config)
+        common_params = make_ed_common_params(instance_config, 'poi2ed')
         params.extend(common_params)
 
         with collect_metric("poi2ed", job, dataset_uid):
@@ -444,7 +445,7 @@ def synonym2ed(self, instance_config, filename, job_id, dataset_uid):
         res = None
         params = ["-i", filename]
 
-        common_params = make_ed_common_params(instance_config)
+        common_params = make_ed_common_params(instance_config, 'synonym2ed')
         params.extend(common_params)
 
         with collect_metric('synonym2ed', job, dataset_uid):
@@ -623,7 +624,7 @@ def ed2nav(self, instance_config, job_id, custom_output_dir):
         if instance.full_sn_geometries:
             params.extend(['--full_street_network_geometries'])
 
-        common_params = make_ed_common_params(instance_config)
+        common_params = make_ed_common_params(instance_config, 'ed2nav')
         params.extend(common_params)
 
         res = None
@@ -653,7 +654,7 @@ def fare2ed(self, instance_config, filename, job_id, dataset_uid):
         working_directory = unzip_if_needed(filename)
         params = ["-f", working_directory]
 
-        common_params = make_ed_common_params(instance_config)
+        common_params = make_ed_common_params(instance_config, 'fare2ed')
         params.extend(common_params)
 
         res = launch_exec("fare2ed", params, logger)
