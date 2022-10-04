@@ -190,40 +190,42 @@ void MaintenanceWorker::load_data() {
 }
 
 void MaintenanceWorker::create_task_queue() {
-    if (!task_queue_created) {
-        std::string instance_name = conf.instance_name();
-        std::string hostname = get_hostname();
-        std::string default_queue_name = "kraken_" + hostname + "_" + instance_name;
-        std::string queue_name = conf.broker_queue(default_queue_name);
-        queue_name_task = (boost::format("%s_task") % queue_name).str();
-
-        // first we have to delete the queues, binding can change between two run, and it's don't seem possible
-        // to unbind a queue if we don't know at what topic it's subscribed
-        // if the queue doesn't exist an exception is throw...
-        try {
-            channel->DeleteQueue(queue_name_task);
-        } catch (const std::runtime_error&) {
-        }
-        std::string exchange_name = conf.broker_exchange();
-        this->channel->DeclareExchange(exchange_name, "topic", false, true, false);
-
-        // creation of task queue for this kraken
-        bool passive = false;
-        bool durable = true;
-        bool exclusive = false;
-        bool auto_delete_queue = conf.broker_queue_auto_delete();
-
-        AmqpClient::Table args;
-        args.insert(std::make_pair("x-expires", conf.broker_queue_ttl() * 1000));
-
-        channel->DeclareQueue(queue_name_task, passive, durable, exclusive, auto_delete_queue, args);
-        LOG4CPLUS_INFO(logger, "binding queue for tasks: " << this->queue_name_task);
-
-        // binding the queue to the exchange for all task for this instance
-        channel->BindQueue(queue_name_task, exchange_name, instance_name + ".task.*");
-
-        task_queue_created = true;
+    if (task_queue_created) {
+        return;
     }
+
+    std::string instance_name = conf.instance_name();
+    std::string hostname = get_hostname();
+    std::string default_queue_name = "kraken_" + hostname + "_" + instance_name;
+    std::string queue_name = conf.broker_queue(default_queue_name);
+    queue_name_task = (boost::format("%s_task") % queue_name).str();
+
+    // first we have to delete the queues, binding can change between two run, and it's don't seem possible
+    // to unbind a queue if we don't know at what topic it's subscribed
+    // if the queue doesn't exist an exception is throw...
+    try {
+        channel->DeleteQueue(queue_name_task);
+    } catch (const std::runtime_error&) {
+    }
+    std::string exchange_name = conf.broker_exchange();
+    this->channel->DeclareExchange(exchange_name, "topic", false, true, false);
+
+    // creation of task queue for this kraken
+    bool passive = false;
+    bool durable = true;
+    bool exclusive = false;
+    bool auto_delete_queue = conf.broker_queue_auto_delete();
+
+    AmqpClient::Table args;
+    args.insert(std::make_pair("x-expires", conf.broker_queue_ttl() * 1000));
+
+    channel->DeclareQueue(queue_name_task, passive, durable, exclusive, auto_delete_queue, args);
+    LOG4CPLUS_INFO(logger, "binding queue for tasks: " << this->queue_name_task);
+
+    // binding the queue to the exchange for all task for this instance
+    channel->BindQueue(queue_name_task, exchange_name, instance_name + ".task.*");
+
+    task_queue_created = true;
 }
 
 void MaintenanceWorker::listen_to_task_queue_until_data_loaded() {
@@ -250,43 +252,45 @@ void MaintenanceWorker::listen_to_task_queue_until_data_loaded() {
 }
 
 void MaintenanceWorker::create_realtime_queue() {
-    if (!realtime_queue_created) {
-        std::string exchange_name = conf.broker_exchange();
-
-        std::string instance_name = conf.instance_name();
-        std::string hostname = get_hostname();
-        std::string default_queue_name = "kraken_" + hostname + "_" + instance_name;
-        std::string queue_name = conf.broker_queue(default_queue_name);
-        queue_name_rt = (boost::format("%s_rt") % queue_name).str();
-
-        // first we have to delete the queues, binding can change between two run, and it's don't seem possible
-        // to unbind a queue if we don't know at what topic it's subscribed
-        // if the queue doesn't exist an exception is throw...
-        try {
-            channel->DeleteQueue(queue_name_rt);
-        } catch (const std::runtime_error&) {
-        }
-
-        this->channel->DeclareExchange(exchange_name, "topic", false, true, false);
-
-        // creation of queues for this kraken
-        bool passive = false;
-        bool durable = true;
-        bool exclusive = false;
-        bool auto_delete_queue = conf.broker_queue_auto_delete();
-
-        AmqpClient::Table args;
-        args.insert(std::make_pair("x-expires", conf.broker_queue_ttl() * 1000));
-
-        channel->DeclareQueue(this->queue_name_rt, passive, durable, exclusive, auto_delete_queue, args);
-        LOG4CPLUS_INFO(logger, "queue for disruptions: " << this->queue_name_rt);
-        // binding the queue to the exchange for all task for this instance
-        LOG4CPLUS_INFO(logger, "subscribing to [" << boost::algorithm::join(conf.rt_topics(), ", ") << "]");
-        for (const auto& topic : conf.rt_topics()) {
-            channel->BindQueue(queue_name_rt, exchange_name, topic);
-        }
-        realtime_queue_created = true;
+    if (realtime_queue_created) {
+        return;
     }
+
+    std::string exchange_name = conf.broker_exchange();
+
+    std::string instance_name = conf.instance_name();
+    std::string hostname = get_hostname();
+    std::string default_queue_name = "kraken_" + hostname + "_" + instance_name;
+    std::string queue_name = conf.broker_queue(default_queue_name);
+    queue_name_rt = (boost::format("%s_rt") % queue_name).str();
+
+    // first we have to delete the queues, binding can change between two run, and it's don't seem possible
+    // to unbind a queue if we don't know at what topic it's subscribed
+    // if the queue doesn't exist an exception is throw...
+    try {
+        channel->DeleteQueue(queue_name_rt);
+    } catch (const std::runtime_error&) {
+    }
+
+    this->channel->DeclareExchange(exchange_name, "topic", false, true, false);
+
+    // creation of queues for this kraken
+    bool passive = false;
+    bool durable = true;
+    bool exclusive = false;
+    bool auto_delete_queue = conf.broker_queue_auto_delete();
+
+    AmqpClient::Table args;
+    args.insert(std::make_pair("x-expires", conf.broker_queue_ttl() * 1000));
+
+    channel->DeclareQueue(this->queue_name_rt, passive, durable, exclusive, auto_delete_queue, args);
+    LOG4CPLUS_INFO(logger, "queue for disruptions: " << this->queue_name_rt);
+    // binding the queue to the exchange for all task for this instance
+    LOG4CPLUS_INFO(logger, "subscribing to [" << boost::algorithm::join(conf.rt_topics(), ", ") << "]");
+    for (const auto& topic : conf.rt_topics()) {
+        channel->BindQueue(queue_name_rt, exchange_name, topic);
+    }
+    realtime_queue_created = true;
 }
 
 void MaintenanceWorker::load_realtime() {
