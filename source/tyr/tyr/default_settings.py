@@ -163,3 +163,5 @@ SQLALCHEMY_TRACK_MODIFICATIONS = os.getenv('TYR_SQLALCHEMY_TRACK_MODIFICATIONS',
 # Url of a secondary Tyr. The data posted to an instance of this Tyr via the '/jobs'
 # endpoint will be reposted to this url
 POST_DATA_TO_TYR = os.getenv('TYR_POST_DATA_TO_TYR', None)
+
+USE_LOCAL_SYS_LOG = os.getenv('TYR_USE_LOCAL_SYS_LOG', 'true').lower() in ['1', 'true', 'yes']
