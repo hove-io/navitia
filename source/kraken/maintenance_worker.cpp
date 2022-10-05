@@ -267,7 +267,7 @@ void MaintenanceWorker::create_realtime_queue() {
     bool auto_delete_queue = conf.broker_queue_auto_delete();
 
     AmqpClient::Table args;
-    args.insert(std::make_pair("x-expires", conf.broker_queue_expires() * 1000));
+    args.insert(std::make_pair("x-expires", conf.broker_queue_expire() * 1000));
 
     channel->DeclareQueue(this->queue_name_rt, passive, durable, exclusive, auto_delete_queue, args);
     LOG4CPLUS_INFO(logger, "queue for disruptions: " << this->queue_name_rt);
