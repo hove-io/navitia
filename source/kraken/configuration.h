@@ -62,7 +62,7 @@ public:
     std::string broker_exchange() const;
     std::string broker_queue(const std::string& default_queue) const;
     bool broker_queue_auto_delete() const;
-    int broker_queue_ttl() const;
+    int broker_queue_expire() const;
     int broker_timeout() const;
     int broker_sleeptime() const;
     bool is_realtime_enabled() const;

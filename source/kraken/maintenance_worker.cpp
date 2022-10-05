@@ -203,7 +203,7 @@ void MaintenanceWorker::create_task_queue() {
     bool auto_delete_queue = conf.broker_queue_auto_delete();
 
     AmqpClient::Table args;
-    args.insert(std::make_pair("x-expires", conf.broker_queue_ttl() * 1000));
+    args.insert(std::make_pair("x-expires", conf.broker_queue_expire() * 1000));
 
     channel->DeclareQueue(queue_name_task, passive, durable, exclusive, auto_delete_queue, args);
     LOG4CPLUS_INFO(logger, "binding queue for tasks: " << this->queue_name_task);
