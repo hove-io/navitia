@@ -147,7 +147,7 @@ def make_ed_common_params(instance_config, ed_action):
             "--connection-string",
             make_connection_string(instance_config),
             "--log_comment",
-            '{} {}'.format(instance_config.name, ed_action),
+            '{}-{}'.format(instance_config.name, ed_action),
         ]
     )
     if current_app.config.get('USE_LOCAL_SYS_LOG'):
