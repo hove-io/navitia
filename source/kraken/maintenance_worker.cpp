@@ -62,7 +62,7 @@ void MaintenanceWorker::run() {
 
     if (!is_data_loaded()) {
         // The data is not loaded, so we wait for a reload message on the task queue
-        // that results in a successfull data load.
+        // that results in a successful data load.
         // We may be disconnected from rabbitmq during this wait,
         // and reconnection to rabbitmq is handled by this while(true) loop
         while (true) {
@@ -70,7 +70,7 @@ void MaintenanceWorker::run() {
                 open_channel_to_rabbitmq();
                 create_task_queue();
                 // will return when a reload message on the task queue
-                // arrived and resulted in a successfull data load
+                // arrived and resulted in a successful data load
                 listen_to_task_queue_until_data_loaded();
                 // data is loaded, let's break from the while(true)  loop
                 break;
@@ -186,7 +186,7 @@ void MaintenanceWorker::create_task_queue() {
     std::string queue_name = conf.broker_queue(default_queue_name);
     queue_name_task = (boost::format("%s_task") % queue_name).str();
 
-    // first we have to delete the queues, binding can change between two run, and it's don't seem possible
+    // first we have to delete the queues, binding can change between two run, and it doesn't seem possible
     // to unbind a queue if we don't know at what topic it's subscribed
     // if the queue doesn't exist an exception is throw...
     try {
@@ -250,7 +250,7 @@ void MaintenanceWorker::create_realtime_queue() {
     std::string queue_name = conf.broker_queue(default_queue_name);
     queue_name_rt = (boost::format("%s_rt") % queue_name).str();
 
-    // first we have to delete the queues, binding can change between two run, and it's don't seem possible
+    // first we have to delete the queues, binding can change between two run, and it doesn't seem possible
     // to unbind a queue if we don't know at what topic it's subscribed
     // if the queue doesn't exist an exception is throw...
     try {
@@ -271,7 +271,7 @@ void MaintenanceWorker::create_realtime_queue() {
 
     channel->DeclareQueue(this->queue_name_rt, passive, durable, exclusive, auto_delete_queue, args);
     LOG4CPLUS_INFO(logger, "queue for disruptions: " << this->queue_name_rt);
-    // binding the queue to the exchange for all task for this instance
+    // binding the queue to the exchange for all tasks for this instance
     LOG4CPLUS_INFO(logger, "subscribing to [" << boost::algorithm::join(conf.rt_topics(), ", ") << "]");
     for (const auto& topic : conf.rt_topics()) {
         channel->BindQueue(queue_name_rt, exchange_name, topic);
