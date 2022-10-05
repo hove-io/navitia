@@ -342,7 +342,9 @@ def osm2ed(self, instance_config, osm_filename, job_id, dataset_uid):
         params = ["-i", osm_filename]
         if poi_types_json:
             params.append('-p')
-            params.append(u'{}'.format(poi_types_json))
+            import json
+            # poi_types_json is just unicode string... we use this trick to one-line the json content
+            params.append(u'{}'.format(json.dumps(json.loads(poi_types_json))))
 
         common_params = make_ed_common_params(instance_config, 'osm2ed')
         params.extend(common_params)
