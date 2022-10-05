@@ -50,14 +50,19 @@ private:
 
     const Metrics& metrics;
 
-    AmqpClient::Channel::ptr_t channel;
     // nom de la queue créer pour ce worker
     std::string queue_name_task;
     std::string queue_name_rt;
 
     boost::posix_time::ptime next_try_realtime_loading;
 
-    void init_rabbitmq();
+    AmqpClient::Channel::ptr_t channel;
+
+    bool channel_opened = false;
+
+    bool task_queue_created = false;
+    bool realtime_queue_created = false;
+
     void listen_rabbitmq();
 
     void handle_task_in_batch(const std::vector<AmqpClient::Envelope::ptr_t>& envelopes);
@@ -79,16 +84,24 @@ private:
                                                               size_t max_nb,
                                                               size_t timeout_ms,
                                                               bool no_ack);
-    bool is_initialized = false;
 
 public:
     MaintenanceWorker(DataManager<type::Data>& data_manager, const kraken::Configuration conf, const Metrics& metrics);
 
-    bool load_and_switch();
-
+    // try to read data.nav.lz4
+    // and reload chaos disruption
     void load_data();
+    bool is_data_loaded() const;
 
-    void operator()();
+    void open_channel_to_rabbitmq();
+
+    void create_task_queue();
+
+    void listen_to_task_queue_until_data_loaded();
+
+    void create_realtime_queue();
+
+    void run();
 };
 
 }  // namespace navitia
