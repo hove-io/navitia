@@ -94,6 +94,7 @@ po::options_description get_options_description(const boost::optional<std::strin
         ("BROKER.rt_topics", po::value<std::vector<std::string>>(), "list of realtime topic for this instance")
         ("BROKER.timeout", po::value<int>()->default_value(100), "timeout for maintenance worker in millisecond")
         ("BROKER.sleeptime", po::value<int>()->default_value(1), "sleeptime for maintenance worker in second")
+        ("BROKER.reconnect_wait", po::value<int>()->default_value(1), "Wait duration between connection attempts to rabbitmq, in seconds")
         ("BROKER.queue", po::value<std::string>(), "rabbitmq's queue name to be bound")
         ("BROKER.queue_auto_delete", po::value<bool>()->default_value(false), "auto delete rabbitmq's queue when unbind")
         ("BROKER.queue_expire", po::value<int>()->default_value(7200), "Rabbitmq queues created by kraken will be deleted by rabbitmq after this duration , in seconds")
@@ -233,6 +234,10 @@ int Configuration::broker_timeout() const {
 
 int Configuration::broker_sleeptime() const {
     return vm["BROKER.sleeptime"].as<int>();
+}
+
+int Configuration::broker_reconnect_wait() const {
+    return vm["BROKER.reconnect_wait"].as<int>();
 }
 
 std::string Configuration::broker_queue(const std::string& default_queue) const {

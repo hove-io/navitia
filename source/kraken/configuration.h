@@ -65,6 +65,7 @@ public:
     int broker_queue_expire() const;
     int broker_timeout() const;
     int broker_sleeptime() const;
+    int broker_reconnect_wait() const;
     bool is_realtime_enabled() const;
     bool is_realtime_add_enabled() const;
     bool is_realtime_add_trip_enabled() const;
