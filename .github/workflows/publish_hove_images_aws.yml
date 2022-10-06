@@ -59,10 +59,18 @@ jobs:
           app_id: ${{ secrets.GA_OS_WORKFLOW_TRIGGER_APP_ID }}
           private_key: ${{ secrets.GA_OS_WORKFLOW_TRIGGER_APP_PEM }}
 
-      - name: Repository Dispatch
+      - name: Repository Dispatch Backend
         uses: peter-evans/repository-dispatch@v2
         with:
           token: ${{ steps.app-token.outputs.token }}
           repository: hove-io/core-backend-aws-assets
+          event-type: build-trigger
+          client-payload: '{"branch": "${{ steps.init_variables.outputs.branch }}", "tag": "${{ steps.init_variables.outputs.tag }}"}'
+
+      - name: Repository Dispatch Frontend
+        uses: peter-evans/repository-dispatch@v2
+        with:
+          token: ${{ steps.app-token.outputs.token }}
+          repository: hove-io/core-front-aws-assets
           event-type: build-trigger
           client-payload: '{"branch": "${{ steps.init_variables.outputs.branch }}", "tag": "${{ steps.init_variables.outputs.tag }}"}'
