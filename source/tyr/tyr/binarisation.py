@@ -343,6 +343,7 @@ def osm2ed(self, instance_config, osm_filename, job_id, dataset_uid):
         if poi_types_json:
             params.append('-p')
             import json
+
             # poi_types_json is just unicode string... we use this trick to one-line the json content
             params.append(u'{}'.format(json.dumps(json.loads(poi_types_json))))
 
