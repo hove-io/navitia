@@ -199,7 +199,7 @@ def get_config_instance_from_env_variables(instance_name):
     config = select_json_by_instance_name(instance_name)
     if not config:
         return None
-    logging.getLogger(__name__).info("Initialisation, reading: %s", instance_name)
+    logging.getLogger(__name__).debug("Initialisation, reading: %s", instance_name)
     json_config = json.loads(config)
     try:
         validate(json_config, instance_config_format)

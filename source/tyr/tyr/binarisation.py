@@ -140,6 +140,21 @@ def make_connection_string(instance_config):
     return connection_string
 
 
+def make_ed_common_params(instance_config, ed_action):
+    common_params = list()
+    common_params.extend(
+        [
+            "--connection-string",
+            make_connection_string(instance_config),
+            "--log_comment",
+            '{}.{}'.format(instance_config.name, ed_action),
+        ]
+    )
+    if current_app.config.get('USE_LOCAL_SYS_LOG'):
+        common_params.append("--local_syslog")
+    return common_params
+
+
 def lock_release(lock, logger):
     token = None
     if hasattr(lock, 'local') and hasattr(lock.local, 'token'):
@@ -247,12 +262,9 @@ def fusio2ed(self, instance_config, filename, job_id, dataset_uid):
             params.append("-s")
             params.append(instance_config.synonyms_file)
 
-        connection_string = make_connection_string(instance_config)
-        params.append("--connection-string")
-        params.append(connection_string)
-        params.append("--local_syslog")
-        params.append("--log_comment")
-        params.append(instance_config.name)
+        common_params = make_ed_common_params(instance_config, 'fusio2ed')
+        params.extend(common_params)
+
         res = None
         with collect_metric("fusio2ed", job, dataset_uid):
             res = launch_exec("fusio2ed", params, logger)
@@ -290,12 +302,9 @@ def gtfs2ed(self, instance_config, gtfs_filename, job_id, dataset_uid):
             params.append("-s")
             params.append(instance_config.synonyms_file)
 
-        connection_string = make_connection_string(instance_config)
-        params.append("--connection-string")
-        params.append(connection_string)
-        params.append("--local_syslog")
-        params.append("--log_comment")
-        params.append(instance_config.name)
+        common_params = make_ed_common_params(instance_config, 'gtfs2ed')
+        params.extend(common_params)
+
         res = None
         with collect_metric("gtfs2ed", job, dataset_uid):
             res = launch_exec("gtfs2ed", params, logger)
@@ -328,16 +337,18 @@ def osm2ed(self, instance_config, osm_filename, job_id, dataset_uid):
 
     logger = get_instance_logger(instance, task_id=job_id)
     try:
-        connection_string = make_connection_string(instance_config)
-        res = None
-        args = ["-i", osm_filename, "--connection-string", connection_string]
-        if poi_types_json:
-            args.append('-p')
-            args.append(u'{}'.format(poi_types_json))
 
-        args.append("--local_syslog")
-        args.append("--log_comment")
-        args.append(instance_config.name)
+        res = None
+        params = ["-i", osm_filename]
+        if poi_types_json:
+            params.append('-p')
+            import json
+
+            # poi_types_json is just unicode string... we use this trick to one-line the json content
+            params.append(u'{}'.format(json.dumps(json.loads(poi_types_json))))
+
+        common_params = make_ed_common_params(instance_config, 'osm2ed')
+        params.extend(common_params)
 
         if instance.admins_from_cities_db:
             cities_db = current_app.config.get('CITIES_DATABASE_URI')
@@ -345,9 +356,9 @@ def osm2ed(self, instance_config, osm_filename, job_id, dataset_uid):
                 raise ValueError(
                     "impossible to use osm2ed with cities db since no cities database configuration has been set"
                 )
-            args.extend(["--cities-connection-string", cities_db])
+            params.extend(["--cities-connection-string", cities_db])
         with collect_metric("osm2ed", job, dataset_uid):
-            res = launch_exec("osm2ed", args, logger)
+            res = launch_exec("osm2ed", params, logger)
         if res != 0:
             # @TODO: exception
             raise ValueError("osm2ed failed")
@@ -373,14 +384,12 @@ def geopal2ed(self, instance_config, filename, job_id, dataset_uid):
     try:
         working_directory = unzip_if_needed(filename)
 
-        connection_string = make_connection_string(instance_config)
         res = None
         params = ["-i", working_directory]
-        params.append("--connection-string")
-        params.append(connection_string)
-        params.append("--local_syslog")
-        params.append("--log_comment")
-        params.append(instance_config.name)
+
+        common_params = make_ed_common_params(instance_config, 'geopal2ed')
+        params.extend(common_params)
+
         with collect_metric('geopal2ed', job, dataset_uid):
             res = launch_exec('geopal2ed', params, logger)
         if res != 0:
@@ -408,14 +417,12 @@ def poi2ed(self, instance_config, filename, job_id, dataset_uid):
     try:
         working_directory = unzip_if_needed(filename)
 
-        connection_string = make_connection_string(instance_config)
         res = None
         params = ["-i", working_directory]
-        params.append("--connection-string")
-        params.append(connection_string)
-        params.append("--local_syslog")
-        params.append("--log_comment")
-        params.append(instance_config.name)
+
+        common_params = make_ed_common_params(instance_config, 'poi2ed')
+        params.extend(common_params)
+
         with collect_metric("poi2ed", job, dataset_uid):
             res = launch_exec("poi2ed", params, logger)
         if res != 0:
@@ -442,14 +449,12 @@ def synonym2ed(self, instance_config, filename, job_id, dataset_uid):
 
     logger = get_instance_logger(instance, task_id=job_id)
     try:
-        connection_string = make_connection_string(instance_config)
         res = None
         params = ["-i", filename]
-        params.append("--connection-string")
-        params.append(connection_string)
-        params.append("--local_syslog")
-        params.append("--log_comment")
-        params.append(instance_config.name)
+
+        common_params = make_ed_common_params(instance_config, 'synonym2ed')
+        params.extend(common_params)
+
         with collect_metric('synonym2ed', job, dataset_uid):
             res = launch_exec('synonym2ed', params, logger)
         if res != 0:
@@ -620,19 +625,18 @@ def ed2nav(self, instance_config, job_id, custom_output_dir):
             if not os.path.exists(target_path):
                 os.makedirs(target_path)
 
-        connection_string = make_connection_string(instance_config)
-        argv = ["-o", output_file, "--connection-string", connection_string]
+        params = ["-o", output_file]
         if 'CITIES_DATABASE_URI' in current_app.config and current_app.config['CITIES_DATABASE_URI']:
-            argv.extend(["--cities-connection-string", current_app.config['CITIES_DATABASE_URI']])
+            params.extend(["--cities-connection-string", current_app.config['CITIES_DATABASE_URI']])
         if instance.full_sn_geometries:
-            argv.extend(['--full_street_network_geometries'])
+            params.extend(['--full_street_network_geometries'])
 
-        argv.extend(['--local_syslog'])
-        argv.extend(["--log_comment", instance_config.name])
+        common_params = make_ed_common_params(instance_config, 'ed2nav')
+        params.extend(common_params)
 
         res = None
         with collect_metric('ed2nav', job, None):
-            res = launch_exec('ed2nav', argv, logger)
+            res = launch_exec('ed2nav', params, logger)
             os.system('sync')  # we sync to be safe
         if res != 0:
             raise ValueError('ed2nav failed')
@@ -655,16 +659,11 @@ def fare2ed(self, instance_config, filename, job_id, dataset_uid):
     try:
 
         working_directory = unzip_if_needed(filename)
+        params = ["-f", working_directory]
 
-        params = [
-            "-f",
-            working_directory,
-            "--connection-string",
-            make_connection_string(instance_config),
-            "--local_syslog",
-            "--log_comment",
-            instance_config.name,
-        ]
+        common_params = make_ed_common_params(instance_config, 'fare2ed')
+        params.extend(common_params)
+
         res = launch_exec("fare2ed", params, logger)
         if res != 0:
             # @TODO: exception
