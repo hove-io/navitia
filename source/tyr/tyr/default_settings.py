@@ -83,10 +83,10 @@ REDIS_DB = os.getenv('TYR_REDIS_DB', 0)
 REDIS_PASSWORD = os.getenv('TYR_REDIS_PASSWORD', None)
 
 # Validate the presence of a mx record on the domain
-EMAIL_CHECK_MX = os.getenv('TYR_EMAIL_CHECK_MX', True)
+EMAIL_CHECK_MX = os.getenv('TYR_EMAIL_CHECK_MX', 'true').lower() in ['1', 'true', 'yes']
 
 # Validate the email by connecting to the smtp server, but doesn't send an email
-EMAIL_CHECK_SMTP = os.getenv('TYR_EMAIL_CHECK_SMTP', True)
+EMAIL_CHECK_SMTP = os.getenv('TYR_EMAIL_CHECK_SMTP', 'true').lower() in ['1', 'true', 'yes']
 
 # configuration of celery, don't edit
 CELERY_ACCEPT_CONTENT = os.getenv('TYR_CELERY_ACCEPT_CONTENT', ['pickle', 'json'])
