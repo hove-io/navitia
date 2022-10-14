@@ -73,7 +73,7 @@ jobs:
         repository: hove-io/navitia-docker-compose
     - name: install httpie dependency
       run: sudo apt update && sudo apt install -y httpie
-    - uses: actions/download-artifact@v3 # Download all artifacts Debian10 (job 'build') to the current working directory
+    - uses: actions/download-artifact@v3 # Download all artifacts Debian8 (job 'build') to the current working directory
       with:
         name: navitia-debian8-packages
         path: ./builder_from_package
