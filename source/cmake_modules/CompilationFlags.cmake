@@ -76,7 +76,7 @@ if(STRIP_SYMBOLS)
     set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -s")
 endif(STRIP_SYMBOLS)
 
-set(NAVITIA_ALLOCATOR "tcmalloc")
+set(NAVITIA_ALLOCATOR "")
 
 option(USE_SANITIZER "build with the desired sanitizer enabled. usual values: address, thread, leak, undefined" OFF)
 if(USE_SANITIZER)
