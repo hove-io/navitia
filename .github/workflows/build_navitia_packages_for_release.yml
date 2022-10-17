@@ -75,13 +75,13 @@ jobs:
         repository: hove-io/navitia-docker-compose
     - name: install httpie dependency
       run: sudo apt update && sudo apt install -y httpie
-    - uses: actions/download-artifact@v3 # Download all artifacts Debian10 (job 'build') to the current working directory
+    - uses: actions/download-artifact@v3 # Download all artifacts Debian8 (job 'build') to the current working directory
       with:
-        name: navitia-debian10-packages
+        name: navitia-debian8-packages
         path: ./builder_from_package
     - name: build, create and publish images for branch release
       working-directory: builder_from_package
-      run: ./build.sh -o ${{secrets.access_token_github}} -d debian10 -n -r -e push -t latest -b release -u ${{secrets.docker_user}} -p ${{secrets.docker_password}}
+      run: ./build.sh -o ${{secrets.access_token_github}} -d debian8 -n -r -e push -t latest -b release -u ${{secrets.docker_user}} -p ${{secrets.docker_password}}
     - name: slack notification (the job has failed)
       if: failure()
       run: |
