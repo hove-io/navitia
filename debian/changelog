@@ -1,3 +1,11 @@
+navitia2 (15.16.0) unstable; urgency=low
+
+  * use debian8 for dev dockers  <https://github.com/hove-io/navitia/pull/3841>
+  * Fix config in default settings for AWS  <https://github.com/hove-io/navitia/pull/3839>
+  * feat: CI - Add AWS front images build  <https://github.com/hove-io/navitia/pull/3837>
+
+ -- Pascal Benchimol <pascal.benchimol@polytechnique.edu>  Tue, 18 Oct 2022 10:10:24 +0100
+
 navitia2 (15.15.0) unstable; urgency=low
 
   * Tyr: log level changed  <https://github.com/hove-io/navitia/pull/3838>
