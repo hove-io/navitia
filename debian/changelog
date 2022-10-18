@@ -1,3 +1,8 @@
+navitia2 (15.17.0) unstable; urgency=low
+
+
+ -- Pascal Benchimol <pascal.benchimol@polytechnique.edu>  Tue, 18 Oct 2022 14:10:04 +0100
+
 navitia2 (15.16.0) unstable; urgency=low
 
   * use debian8 for dev dockers  <https://github.com/hove-io/navitia/pull/3841>
