@@ -50,8 +50,8 @@ class BuildDataRemoteCommand(Command):
 
     def run(self, instance_name=None, all_instances=False):
         if all_instances:
-            logging.info("Building all data")
+            logging.info("Launching ed2nav for all instances")
             return build_all_data.delay()
 
-        logging.info("Building {} data".format(instance_name))
+        logging.info("Launching ed2nav for instance: {}".format(instance_name))
         return build_data_with_instance_name.delay(instance_name)
