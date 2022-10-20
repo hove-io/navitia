@@ -27,13 +27,30 @@
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 
-from tyr.command.reload_kraken import ReloadKrakenCommand
-from tyr.command.build_data import BuildDataCommand
-from tyr.command.build_data_remote import BuildDataRemoteCommand
-from tyr.command.load_data import LoadDataCommand
-import tyr.command.purge
-import tyr.command.cities
-import tyr.command.bounding_shape
-import tyr.command.import_last_dataset
-import tyr.command.import_last_autocomplete_dataset
-import tyr.command.last_dataset
+from flask_script import Command, Option
+from tyr.tasks import build_all_data, build_data_with_instance_name
+import logging
+
+
+class BuildDataRemoteCommand(Command):
+    """A command used to build all the datasets REMOTELY"""
+
+    def get_options(self):
+        return [
+            Option(
+                '-n',
+                '--name',
+                dest='instance_name',
+                help="name of the instance to build. If non given, build all instances",
+                default=None,
+            ),
+            Option('-a', '--all', dest='all_instances', action="store_true", help="build all instances"),
+        ]
+
+    def run(self, instance_name=None, all_instances=False):
+        if all_instances:
+            logging.info("Launching ed2nav for all instances")
+            return build_all_data.delay()
+
+        logging.info("Launching ed2nav for instance: {}".format(instance_name))
+        return build_data_with_instance_name.delay(instance_name)
