@@ -609,7 +609,7 @@ def reload_kraken(instance_id):
 @celery.task()
 def build_all_data():
     for instance in models.Instance.query_existing().all():
-        build_data(instance)
+        build_data.delay(instance)
 
 
 @celery.task()
