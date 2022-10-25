@@ -255,6 +255,29 @@ def sort_journeys(resp, journey_order, clockwise):
         resp.journeys.sort(key=cmp_to_key(journey_sorter[journey_order](clockwise=clockwise)))
 
 
+def fill_missing_co2_emission(pb_resp, instance, request_id):
+    if not pb_resp.journeys:
+        return
+
+    is_car_section_without_co2 = (
+        lambda s: s.type == response_pb2.STREET_NETWORK
+        and s.street_network.mode == response_pb2.Car
+        and not s.co2_emission.value
+    )
+
+    for j in pb_resp.journeys:
+        if 'car' not in j.tags:
+            continue
+
+        car_sections = (s for s in j.sections if is_car_section_without_co2(s))
+
+        for s in car_sections:
+            co2_emission = instance.georef.get_car_co2_emission(
+                s.street_network.length, request_id
+            )
+            s.co2_emission.CopyFrom(co2_emission)
+
+
 def compute_car_co2_emission(pb_resp, api_request, instance, request_id):
     if not pb_resp.journeys:
         return
@@ -1210,6 +1233,8 @@ class Scenario(simple.Scenario):
         type_journeys(pb_resp, api_request)
         culling_journeys(pb_resp, api_request)
 
+        # We fill empty co2_emission with estimations for car sections
+        fill_missing_co2_emission(pb_resp, instance, "{}_missing_car_co2".format(request_id))
         # We have to update total duration as some sections could be updated in distributed.
         update_durations(pb_resp)
         # We have to update total co2_emission as some sections could be updated in distributed.
