@@ -36,7 +36,5 @@ from flask import current_app
 
 class MinioConfig:
     def __init__(self):
-        self.host = current_app.config['MINIO_LOKI_URL']
-        self.key = current_app.config['MINIO_LOKI_ACCESS_KEY']
-        self.secret = current_app.config['MINIO_LOKI_SECRET_KEY']
-        self.bucket = current_app.config['MINIO_LOKI_BUCKET_NAME']
+        self.endpoint = current_app.config['S3_URL']
+        self.bucket = current_app.config['S3_BUCKET_NAME']

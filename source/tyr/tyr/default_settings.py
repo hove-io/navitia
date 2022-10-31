@@ -145,13 +145,10 @@ MIMIR_CONFIG_DIR = os.getenv('MIMIR_CONFIG_DIR', "/etc/mimir/")
 
 MIMIR_PLATFORM_TAG = os.getenv('TYR_MIMIR_PLATFORM_TAG', 'default')
 
-MINIO_LOKI_URL = os.getenv('TYR_MINIO_LOKI_URL', None)
+S3_URL = os.getenv('TYR_S3_URL', "s3.amazonaws.com")
 
-MINIO_LOKI_BUCKET_NAME = os.getenv('TYR_MINIO_LOKI_BUCKET_NAME', None)
+S3_BUCKET_NAME = os.getenv('TYR_S3_BUCKET_NAME', None)
 
-MINIO_LOKI_ACCESS_KEY = os.getenv('TYR_MINIO_LOKI_ACCESS_KEY', None)
-
-MINIO_LOKI_SECRET_KEY = os.getenv('TYR_MINIO_LOKI_SECRET_KEY', None)
 
 # we don't enable serpy for now
 USE_SERPY = os.getenv('TYR_USE_SERPY', False)

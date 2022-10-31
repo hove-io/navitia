@@ -41,6 +41,7 @@ from functools import wraps
 
 from flask import current_app
 from minio import Minio
+from minio.credentials import Credentials, IAMProvider
 from shapely.geometry import MultiPolygon
 from shapely import wkt
 from zipfile import BadZipfile
@@ -1145,7 +1146,7 @@ def _inner_2s3(self, dataset_type, instance_config, filename, job_id, dataset_ui
         filename = zip_if_needed(filename)
 
         config = MinioConfig()
-        client = Minio(endpoint=config.host, access_key=config.key, secret_key=config.secret, secure=False)
+        client = Minio(endpoint=config.endpoint, credentials=Credentials(provider=IAMProvider()))
 
         dt_now_str = datetime.datetime.now().strftime("%Y-%m-%d-%H:%M:%S")
         tags = {
