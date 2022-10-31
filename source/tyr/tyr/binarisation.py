@@ -1148,7 +1148,7 @@ def _inner_2s3(self, dataset_type, instance_config, filename, job_id, dataset_ui
         config = MinioConfig()
         client = Minio(
             endpoint=config.endpoint,
-            credentials=Credentials(provider=IAMProvider(endpoint=config.credentials_uri())),
+            credentials=Credentials(provider=IAMProvider(endpoint=config.credentials_uri)),
         )
 
         dt_now_str = datetime.datetime.now().strftime("%Y-%m-%d-%H:%M:%S")
