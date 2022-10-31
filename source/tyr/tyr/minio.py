@@ -38,3 +38,18 @@ class MinioConfig:
     def __init__(self):
         self.endpoint = current_app.config['S3_URL']
         self.bucket = current_app.config['S3_BUCKET_NAME']
+
+        self._relative_uri = os.environ.get(
+            "AWS_CONTAINER_CREDENTIALS_RELATIVE_URI",
+        )
+        if self._relative_uri and not self._relative_uri.startswith("/"):
+            self._relative_uri = "/" + self._relative_uri
+
+        if self._relative_uri:
+            self._credentials_uri = "http://169.254.170.2" + self._relative_uri
+        else:
+            self._credentials_uri = None
+
+        # https://stackoverflow.com/questions/57065458/cannot-access-instance-metadata-from-within-a-fargate-task
+        def credentials_uri(self):
+            self._credentials_uri
