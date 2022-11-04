@@ -41,7 +41,7 @@ from functools import wraps
 
 from flask import current_app
 from minio import Minio
-from minio.credentials import Credentials, IAMProvider
+from minio.credentials import IamAwsProvider
 from shapely.geometry import MultiPolygon
 from shapely import wkt
 from zipfile import BadZipfile
@@ -1145,11 +1145,13 @@ def _inner_2s3(self, dataset_type, instance_config, filename, job_id, dataset_ui
     try:
         filename = zip_if_needed(filename)
 
-        config = MinioConfig()
-        client = Minio(
-            endpoint=config.endpoint,
-            credentials=Credentials(provider=IAMProvider(endpoint=config.credentials_uri)),
-        )
+        s3_endpoint = current_app.config.get('S3_URL', "s3.amazonaws.com")
+        s3_bucket_name = current_app.config.get('S3_BUCKET_NAME', None)
+        if s3_bucket_name is None:
+            logger.exception("S3_BUCKET_NAME is not configured")
+            raise
+
+        client = Minio(s3_endpoint, credentials=IamAwsProvider())
 
         dt_now_str = datetime.datetime.now().strftime("%Y-%m-%d-%H:%M:%S")
         tags = {
@@ -1164,7 +1166,7 @@ def _inner_2s3(self, dataset_type, instance_config, filename, job_id, dataset_ui
         )
 
         with collect_metric("{dataset_type}2s3".format(dataset_type=dataset_type), job, dataset_uid):
-            client.fput_object(config.bucket, file_key, filename, metadata=tags, content_type="application/zip")
+            client.fput_object(s3_bucket_name, file_key, filename, metadata=tags, content_type="application/zip")
 
         dataset.state = "done"
     except:
