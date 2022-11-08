@@ -31,7 +31,8 @@
 
 import os
 import requests
-from minio import Minio
+import minio
+
 
 from flask import current_app
 
@@ -69,7 +70,7 @@ class MinioWrapper:
     ):
         if self.use_iam_provider:
             self.retrieve_credentials()
-        client = Minio(
+        client = minio.Minio(
             endpoint=self.endpoint,
             access_key=self.access_key,
             secret_key=self.secret_key,
