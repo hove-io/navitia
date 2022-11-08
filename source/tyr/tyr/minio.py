@@ -74,7 +74,7 @@ class MinioWrapper:
             endpoint=self.endpoint,
             access_key=self.access_key,
             secret_key=self.secret_key,
-            token=self.session_token,
+            session_token=self.session_token,
         )
         client.fput_object(self.bucket_name, file_key, filename, metadata=metadata, content_type=content_type)
 
