@@ -145,7 +145,7 @@ MIMIR_CONFIG_DIR = os.getenv('MIMIR_CONFIG_DIR', "/etc/mimir/")
 
 MIMIR_PLATFORM_TAG = os.getenv('TYR_MIMIR_PLATFORM_TAG', 'default')
 
-S3_URL = os.getenv('TYR_S3_URL', "s3.amazonaws.com")
+S3_URL = os.getenv('TYR_S3_URL', None)
 
 S3_BUCKET_NAME = os.getenv('TYR_S3_BUCKET_NAME', None)
 
