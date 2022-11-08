@@ -54,11 +54,11 @@ class MinioWrapper:
             self.session_token = None
             if self.access_key is None:
                 raise Exception(
-                    "MINIO_ACCESS_KEY is not configured but needed since MINIO_IAM_PROVIDER is False"
+                    "MINIO_ACCESS_KEY is not configured but needed since MINIO_USE_IAM_PROVIDER is False"
                 )
             if self.secret_key is None:
                 raise Exception(
-                    "MINIO_SECRET_KEY is not configured but needed since MINIO_IAM_PROVIDER is False"
+                    "MINIO_SECRET_KEY is not configured but needed since MINIO_USE_IAM_PROVIDER is False"
                 )
 
     def upload_file(
