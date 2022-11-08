@@ -40,7 +40,6 @@ import shutil
 from functools import wraps
 
 from flask import current_app
-from minio import Minio
 from shapely.geometry import MultiPolygon
 from shapely import wkt
 from zipfile import BadZipfile
@@ -57,7 +56,7 @@ import glob
 from redis.exceptions import ConnectionError
 import retrying
 
-from tyr.minio import MinioConfig
+from tyr.minio import MinioWrapper
 
 
 def unzip_if_needed(filename):
@@ -1144,9 +1143,6 @@ def _inner_2s3(self, dataset_type, instance_config, filename, job_id, dataset_ui
     try:
         filename = zip_if_needed(filename)
 
-        config = MinioConfig()
-        client = Minio(endpoint=config.host, access_key=config.key, secret_key=config.secret, secure=False)
-
         dt_now_str = datetime.datetime.now().strftime("%Y-%m-%d-%H:%M:%S")
         tags = {
             "coverage": instance_config.name,
@@ -1159,8 +1155,9 @@ def _inner_2s3(self, dataset_type, instance_config, filename, job_id, dataset_ui
             coverage=instance_config.name, dataset_type=dataset_type
         )
 
+        minio_wrapper = MinioWrapper()
         with collect_metric("{dataset_type}2s3".format(dataset_type=dataset_type), job, dataset_uid):
-            client.fput_object(config.bucket, file_key, filename, metadata=tags, content_type="application/zip")
+            minio_wrapper.upload_file(filename, file_key, metadata=tags, content_type="application/zip")
 
         dataset.state = "done"
     except:
