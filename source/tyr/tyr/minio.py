@@ -28,10 +28,10 @@
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 
-
+from __future__ import absolute_import
 import os
 import requests
-import minio
+from minio import Minio
 
 
 from flask import current_app
@@ -70,7 +70,7 @@ class MinioWrapper:
     ):
         if self.use_iam_provider:
             self.retrieve_credentials()
-        client = minio.Minio(
+        client = Minio(
             endpoint=self.endpoint,
             access_key=self.access_key,
             secret_key=self.secret_key,
