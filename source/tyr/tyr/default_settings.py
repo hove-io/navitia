@@ -149,7 +149,7 @@ MINIO_URL = os.getenv('TYR_MINIO_URL', None)
 
 MINIO_BUCKET_NAME = os.getenv('TYR_MINIO_BUCKET_NAME', None)
 
-MINIO_USE_IAM_PROVIDER = os.getenv('TYR_MINIO_USE_IAM_PROVIDER', False)
+MINIO_USE_IAM_PROVIDER = os.getenv('TYR_MINIO_USE_IAM_PROVIDER', 'true').lower() in ['1', 'true', 'yes']
 
 MINIO_ACCESS_KEY = os.getenv('TYR_MINIO_ACCESS_KEY', None)
 
