@@ -1145,7 +1145,10 @@ def _inner_2s3(self, dataset_type, instance_config, filename, job_id, dataset_ui
     try:
         filename = zip_if_needed(filename)
 
-        s3_endpoint = current_app.config.get('S3_URL', "s3.amazonaws.com")
+        s3_endpoint = current_app.config.get('S3_URL', None)
+        if s3_endpoint is None:
+            logger.exception("S3_URL is not configured")
+            raise
         s3_bucket_name = current_app.config.get('S3_BUCKET_NAME', None)
         if s3_bucket_name is None:
             logger.exception("S3_BUCKET_NAME is not configured")
