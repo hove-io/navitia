@@ -984,7 +984,6 @@ BOOST_AUTO_TEST_CASE(xfail_stop_times_with_skipped_stops_from_the_beginning) {
 // st4  4       -       -
 // st5  5       4       -
 
-
 BOOST_AUTO_TEST_CASE(stop_times_with_skipped_stops_toward_the_end) {
     ed::builder b("20220614", [&](ed::builder& b) {
         b.vj("L", "1111111", "", true, "VJ_A", "hs_VJ_A", "VJ_A")("st1", "1:00"_t)("st2", "2:00"_t)("st3", "3:00"_t)(
@@ -1024,7 +1023,6 @@ BOOST_AUTO_TEST_CASE(stop_times_with_skipped_stops_toward_the_end) {
     BOOST_CHECK_EQUAL(route_schedule.table().rows(2).date_times(1).time(), std::numeric_limits<u_int64_t>::max());
     BOOST_CHECK_EQUAL(route_schedule.table().rows(3).date_times(1).time(), std::numeric_limits<u_int64_t>::max());
     BOOST_CHECK_EQUAL(route_schedule.table().rows(4).date_times(1).time(), "4:00"_t);
-
 
     BOOST_CHECK_EQUAL(get_vj(route_schedule, 2), "vehicle_journey:VJ_C");
     BOOST_CHECK_EQUAL(route_schedule.table().rows(0).date_times(2).time(), "3:00"_t);
