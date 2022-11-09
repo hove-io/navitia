@@ -1,10 +1,12 @@
+# coding=utf-8
+
 # Copyright (c) 2001-2022, Hove and/or its affiliates. All rights reserved.
 #
 # This file is part of Navitia,
 # the software to build cool stuff with public transport.
 #
 # Hope you'll enjoy and contribute to this project,
-# powered by Hove (www.hove.com).
+#     powered by Hove (www.hove.com).
 # Help us simplify mobility and open public transport:
 #     a non ending quest to the responsive locomotion way of traveling!
 #
@@ -26,5 +28,12 @@
 # channel `#navitia` on riot https://riot.im/app/#/room/#navitia:matrix.org
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
+from __future__ import absolute_import, print_function, unicode_literals, division
+from jormungandr.module_resource import ModuleResource
+from jormungandr import i_manager
 
-__all__ = ['Index', 'Readyness']
+
+class Readyness(ModuleResource):
+    def get(self):
+        instances_is_initialized = [instance.is_initialized for instance in i_manager.instances.values()]
+        return ("OK", 200) if all(instances_is_initialized) else ("KO", 500)
