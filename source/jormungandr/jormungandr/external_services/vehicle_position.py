@@ -110,7 +110,7 @@ class VehiclePosition(AbstractExternalService):
         for vehicle_position in vehicle_positions:
             for vehicle_journey_position in vehicle_position.vehicle_journey_positions:
                 args = self.get_codes('vehicle_journey', vehicle_journey_position.vehicle_journey.codes)
-                if len(args) > 0:
+                if args:
                     futures.append(pool.spawn(worker, vehicle_journey_position, args))
 
         for future in gevent.iwait(futures):
