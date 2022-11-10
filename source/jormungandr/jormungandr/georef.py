@@ -73,7 +73,6 @@ class Kraken(object):
             return None
         return response.car_co2_emission
 
-
     def get_car_co2_emission(self, distance, request_id):
         logger = logging.getLogger(__name__)
         req = request_pb2.Request()
@@ -86,7 +85,6 @@ class Kraken(object):
             return None
 
         return response.car_co2_emission
-
 
     def get_crow_fly(
         self,

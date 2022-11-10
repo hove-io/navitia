@@ -272,9 +272,7 @@ def fill_missing_co2_emission(pb_resp, instance, request_id):
         car_sections = (s for s in j.sections if is_car_section_without_co2(s))
 
         for s in car_sections:
-            co2_emission = instance.georef.get_car_co2_emission(
-                s.street_network.length, request_id
-            )
+            co2_emission = instance.georef.get_car_co2_emission(s.street_network.length, request_id)
             s.co2_emission.CopyFrom(co2_emission)
 
 
