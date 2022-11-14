@@ -929,31 +929,36 @@ void Worker::heat_map(const pbnavitia::HeatMapRequest& request) {
                                     end_speed, end_mode, request.resolution(), center_and_stop_points.second);
 }
 
-void Worker::car_co2_emission_on_crow_fly(const pbnavitia::CarCO2EmissionRequest& request) {
+void Worker::car_co2_emission(const pbnavitia::CarCO2EmissionRequest& request) {
     const auto* data = this->pb_creator.data;
-    auto get_geographical_coord = [&](const pbnavitia::LocationContext& location) {
-        auto origin_type = data->get_type_of_id(location.place());
-        auto origin = type::EntryPoint{origin_type, location.place(), location.access_duration()};
-        auto coordinates = coord_of_entry_point(origin, *data);
-        return navitia::type::GeographicalCoord{coordinates.lon(), coordinates.lat()};
-    };
-    navitia::type::GeographicalCoord origin;
-    navitia::type::GeographicalCoord destin;
-    try {
-        origin = get_geographical_coord(request.origin());
-        destin = get_geographical_coord(request.destination());
-    } catch (const navitia::coord_conversion_exception& e) {
-        this->pb_creator.fill_pb_error(pbnavitia::Error::bad_format, e.what());
-        return;
-    }
+    double distance = 0;
 
-    auto distance = origin.distance_to(destin);
+    if (!request.has_distance()) {
+        auto get_geographical_coord = [&](const pbnavitia::LocationContext& location) {
+            auto origin_type = data->get_type_of_id(location.place());
+            auto origin = type::EntryPoint{origin_type, location.place(), location.access_duration()};
+            auto coordinates = coord_of_entry_point(origin, *data);
+            return navitia::type::GeographicalCoord{coordinates.lon(), coordinates.lat()};
+        };
+        navitia::type::GeographicalCoord origin;
+        navitia::type::GeographicalCoord destin;
+        try {
+            origin = get_geographical_coord(request.origin());
+            destin = get_geographical_coord(request.destination());
+        } catch (const navitia::coord_conversion_exception& e) {
+            this->pb_creator.fill_pb_error(pbnavitia::Error::bad_format, e.what());
+            return;
+        }
+        distance = origin.distance_to(destin) * CO2_ESTIMATION_COEFF;
+    } else {
+        distance = request.distance();
+    }
     auto car_mode = data->pt_data->physical_modes_map.find("physical_mode:Car");
 
     if (car_mode != data->pt_data->physical_modes_map.end() && car_mode->second->co2_emission) {
         auto co2_emission = this->pb_creator.mutable_car_co2_emission();
         co2_emission->set_unit("gEC");
-        co2_emission->set_value(CO2_ESTIMATION_COEFF * distance / 1000.0 * car_mode->second->co2_emission.get());
+        co2_emission->set_value(distance / 1000.0 * car_mode->second->co2_emission.get());
         return;
     }
     this->pb_creator.fill_pb_error(pbnavitia::Error::no_solution,
@@ -1154,7 +1159,7 @@ void Worker::dispatch(const pbnavitia::Request& request,
             geo_status();
             break;
         case pbnavitia::car_co2_emission:
-            car_co2_emission_on_crow_fly(request.car_co2_emission());
+            car_co2_emission(request.car_co2_emission());
             break;
         case pbnavitia::direct_path:
             direct_path(request);

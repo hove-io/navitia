@@ -73,6 +73,19 @@ class Kraken(object):
             return None
         return response.car_co2_emission
 
+    def get_car_co2_emission(self, distance, request_id):
+        logger = logging.getLogger(__name__)
+        req = request_pb2.Request()
+        req.requested_api = type_pb2.car_co2_emission
+        req.car_co2_emission.distance = distance
+
+        response = self.instance.send_and_receive(req, request_id=request_id)
+        if response.error and response.error.id == response_pb2.Error.error_id.Value('no_solution'):
+            logger.error("Cannot compute car co2 emission with the distance {}".format(distance))
+            return None
+
+        return response.car_co2_emission
+
     def get_crow_fly(
         self,
         origin,
