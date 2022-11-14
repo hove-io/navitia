@@ -1,4 +1,4 @@
-/* Copyright © 2001-2022, Hove and/or its affiliates. All rights reserved.
+/* Copyright �� 2001-2022, Hove and/or its affiliates. All rights reserved.
 
 This file is part of Navitia,
     the software to build cool stuff with public transport.
@@ -750,6 +750,14 @@ void PbCreator::Filler::fill_pb_object(const nt::Network* n, pbnavitia::Network*
 void PbCreator::Filler::fill_pb_object(const nt::PhysicalMode* m, pbnavitia::PhysicalMode* physical_mode) {
     physical_mode->set_name(m->name);
     physical_mode->set_uri(m->uri);
+
+    if (depth == 0) {
+        return;
+    }
+
+    auto* emission_rate = physical_mode->mutable_co2_emission_rate();
+    emission_rate->set_value(*m->co2_emission);
+    emission_rate->set_unit("gCo2/Km");
 }
 
 void PbCreator::Filler::fill_pb_object(const nt::CommercialMode* m, pbnavitia::CommercialMode* commercial_mode) {

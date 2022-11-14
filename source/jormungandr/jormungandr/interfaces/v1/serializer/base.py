@@ -237,10 +237,15 @@ class AmountSerializer(PbNestedSerializer):
     value = jsonschema.Field(schema_type=float)
     unit = jsonschema.Field(schema_type=str)
 
+    def __init__(self, default_unit='', **kwargs):
+        super(AmountSerializer, self).__init__(**kwargs)
+        self.default_unit = default_unit
+
     # TODO check that retro compatibility is really useful
     def to_value(self, value):
-        if value is None:
-            return {'value': 0.0, 'unit': ''}
+        # could be either 0 or None
+        if value is None or value.value == 0:
+            return {'value': 0.0, 'unit': self.default_unit}
         return super(AmountSerializer, self).to_value(value)
 
 

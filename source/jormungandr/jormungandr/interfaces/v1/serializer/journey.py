@@ -327,7 +327,8 @@ class SectionSerializer(PbNestedSerializer):
     duration = jsonschema.Field(
         schema_type=int, display_none=True, description='Duration of the section (seconds)'
     )
-    co2_emission = AmountSerializer(display_none=True)
+    co2_emission = AmountSerializer(display_none=True, default_unit='gEC')
+
     transfer_type = EnumField(attr='transfer_type', pb_type=TransferType)
     departure_date_time = DateTimeField(
         attr='begin_date_time', description='Departure date and time of the section'
@@ -437,7 +438,7 @@ class JourneySerializer(PbNestedSerializer):
         '(can be "NO_SERVICE", "SIGNIFICANT_DELAYS", ...',
     )
     tags = StringListField(display_none=True)
-    co2_emission = AmountSerializer(display_none=True)
+    co2_emission = AmountSerializer(display_none=True, default_unit='gEC')
     durations = DurationsSerializer()
     distances = DistancesSerializer()
     fare = FareSerializer(display_none=True)

@@ -261,12 +261,12 @@ def fill_missing_co2_emission(pb_resp, instance, request_id):
 
     is_car_section_without_co2 = (
         lambda s: s.type == response_pb2.STREET_NETWORK
-        and s.street_network.mode == response_pb2.Car
+        and s.street_network.mode in [response_pb2.Car, response_pb2.CarNoPark]
         and not s.co2_emission.value
     )
 
     for j in pb_resp.journeys:
-        if 'car' not in j.tags:
+        if not {'car', 'car_no_park'} & set(j.tags):
             continue
 
         car_sections = (s for s in j.sections if is_car_section_without_co2(s))
@@ -397,6 +397,7 @@ def update_total_co2_emission(pb_resp):
         return
     for j in pb_resp.journeys:
         j.co2_emission.value = sum(s.co2_emission.value for s in j.sections)
+        j.co2_emission.unit = 'gEC'
 
 
 def _get_section_id(section):
