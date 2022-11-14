@@ -1,4 +1,4 @@
-/* Copyright © 2001-2022, Hove and/or its affiliates. All rights reserved.
+/* Copyright �� 2001-2022, Hove and/or its affiliates. All rights reserved.
 
 This file is part of Navitia,
     the software to build cool stuff with public transport.
@@ -931,8 +931,7 @@ void Worker::heat_map(const pbnavitia::HeatMapRequest& request) {
 
 void Worker::car_co2_emission(const pbnavitia::CarCO2EmissionRequest& request) {
     const auto* data = this->pb_creator.data;
-    auto distance = request.distance();
-    auto co2_estimation_coeff = 1;
+    double distance = 0;
 
     if (!request.has_distance()) {
         auto get_geographical_coord = [&](const pbnavitia::LocationContext& location) {
@@ -950,16 +949,16 @@ void Worker::car_co2_emission(const pbnavitia::CarCO2EmissionRequest& request) {
             this->pb_creator.fill_pb_error(pbnavitia::Error::bad_format, e.what());
             return;
         }
-
-        co2_estimation_coeff = CO2_ESTIMATION_COEFF;
-        distance = origin.distance_to(destin);
+        distance = origin.distance_to(destin) * CO2_ESTIMATION_COEFF;
+    } else {
+        distance = request.distance();
     }
     auto car_mode = data->pt_data->physical_modes_map.find("physical_mode:Car");
 
     if (car_mode != data->pt_data->physical_modes_map.end() && car_mode->second->co2_emission) {
         auto co2_emission = this->pb_creator.mutable_car_co2_emission();
         co2_emission->set_unit("gEC");
-        co2_emission->set_value(co2_estimation_coeff * distance / 1000.0 * car_mode->second->co2_emission.get());
+        co2_emission->set_value(distance / 1000.0 * car_mode->second->co2_emission.get());
         return;
     }
     this->pb_creator.fill_pb_error(pbnavitia::Error::no_solution,
