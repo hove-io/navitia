@@ -758,7 +758,7 @@ void PbCreator::Filler::fill_pb_object(const nt::PhysicalMode* m, pbnavitia::Phy
     if (m->co2_emission) {
         auto* emission_rate = physical_mode->mutable_co2_emission_rate();
         emission_rate->set_value(*m->co2_emission);
-        emission_rate->set_unit("gCO2/Km");
+        emission_rate->set_unit("gEC/Km");
     }
 }
 
