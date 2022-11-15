@@ -16,7 +16,9 @@ from sqlalchemy.dialects import postgresql
 
 
 def upgrade():
-    op.add_column('instance', sa.Column('ghost_words', postgresql.ARRAY(sa.Text()), server_default='{}', nullable=True))
+    op.add_column(
+        'instance', sa.Column('ghost_words', postgresql.ARRAY(sa.Text()), server_default='{}', nullable=True)
+    )
 
 
 def downgrade():

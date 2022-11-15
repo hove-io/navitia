@@ -34,7 +34,9 @@ import logging
 from .tests_mechanism import AbstractTestFixture, dataset
 from .check_utils import *
 
-MOCKED_INSTANCE_CONF = {'instance_config': {'ghost_words': ["gare de ", "gare du ", "gare des ", "gare d'", "gare d "]}}
+MOCKED_INSTANCE_CONF = {
+    'instance_config': {'ghost_words': ["gare de ", "gare du ", "gare des ", "gare d'", "gare d "]}
+}
 
 
 @dataset({"main_routing_test": MOCKED_INSTANCE_CONF})
@@ -440,9 +442,9 @@ class TestPlaces(AbstractTestFixture):
                 assert place['stop_point'].get('lines') is None
 
     def test_places_stop_areas(self):
-        """ Here we test the new feature to exclude ghost words as 'gare de ', 'gare du ', 'gare d ' + 'toto'
-            from the queries
-            Data contains Bourget,  gare de Bourgil and gare du Bourg
+        """Here we test the new feature to exclude ghost words as 'gare de ', 'gare du ', 'gare d ' + 'toto'
+        from the queries
+        Data contains Bourget,  gare de Bourgil and gare du Bourg
         """
         response, status = self.query_region("places?q=stopA", check=False)
         assert status == 200
