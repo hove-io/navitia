@@ -368,8 +368,15 @@ class PoiSerializer(PbGenericSerializer):
         return {p.type: p.value for p in obj.properties}
 
 
+class CO2EmissionRateSerializer(PbNestedSerializer):
+    value = jsonschema.Field(schema_type=int, display_none=False)
+    unit = jsonschema.Field(schema_type=str, display_none=False)
+
+
 class PhysicalModeSerializer(PbGenericSerializer):
-    pass
+    co2_emission_rate = CO2EmissionRateSerializer(
+        display_none=False, attr='co2_emission_rate', description='co2 emission rate'
+    )
 
 
 class CommercialModeSerializer(PbGenericSerializer):
