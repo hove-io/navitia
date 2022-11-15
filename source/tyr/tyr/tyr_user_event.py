@@ -1,6 +1,7 @@
 # encoding=utf-8
 
 from tyr import tyr_rabbit_mq_handler
+from flask import current_app
 
 
 class RabbitMqMessage(object):
@@ -70,9 +71,13 @@ class RabbitMqMessage(object):
 
 class TyrUserEvent(object):
     def __init__(self):
+        if not current_app.config['ENABLE_USER_EVENT']:
+            return
         self._rabbit_mq_message = RabbitMqMessage()
 
     def request(self, user, event_name, last_login=None):
+        if not current_app.config['ENABLE_USER_EVENT']:
+            return
         self._rabbit_mq_message.set_user(user)
         self._rabbit_mq_message.set_event_name(event_name)
 
