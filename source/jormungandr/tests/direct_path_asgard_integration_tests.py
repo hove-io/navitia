@@ -119,6 +119,7 @@ def journey_response(journey, mode):
 
     section.type = response_pb2.STREET_NETWORK
     section.duration = duration
+    section.street_network.length = distance
     section.length = distance
     section.id = "section"
     section.begin_date_time = 1548669936
@@ -380,6 +381,8 @@ class TestAsgardDirectPath(AbstractTestFixture):
         assert response['journeys'][0]['durations']['car'] == 500
         assert response['journeys'][0]['durations']['total'] == 500
         assert response['journeys'][0]['distances']['car'] == 50
+        assert response['journeys'][0]['sections'][0]['co2_emission'] == {'value': 9.2, 'unit': 'gEC'}
+        assert response['journeys'][0]['co2_emission'] == {'value': 9.2, 'unit': 'gEC'}
         assert not response['journeys'][0]['sections'][0].get('cycle_lane_length')
 
         # bike direct path from asgard
@@ -390,6 +393,8 @@ class TestAsgardDirectPath(AbstractTestFixture):
         assert response['journeys'][1]['durations']['total'] == 1000
         assert response['journeys'][1]['distances']['bike'] == 100
         assert response['journeys'][1]['duration'] == 1000
+        assert response['journeys'][1]['sections'][0]['co2_emission'] == {'value': 0, 'unit': 'gEC'}
+        assert response['journeys'][1]['co2_emission'] == {'value': 0, 'unit': 'gEC'}
         assert response['journeys'][1]['sections'][0]['cycle_lane_length'] == 30
 
         # walking direct path from asgard
@@ -400,6 +405,8 @@ class TestAsgardDirectPath(AbstractTestFixture):
         assert response['journeys'][2]['durations']['total'] == 2000
         assert response['journeys'][2]['distances']['walking'] == 200
         assert response['journeys'][2]['duration'] == 2000
+        assert response['journeys'][2]['sections'][0]['co2_emission'] == {'value': 0, 'unit': 'gEC'}
+        assert response['journeys'][2]['co2_emission'] == {'value': 0, 'unit': 'gEC'}
         assert not response['journeys'][2]['sections'][0].get('cycle_lane_length')
 
         assert not response.get('feed_publishers')
