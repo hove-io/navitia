@@ -369,7 +369,7 @@ class PoiSerializer(PbGenericSerializer):
 
 
 class CO2EmissionRateSerializer(PbNestedSerializer):
-    value = jsonschema.Field(schema_type=int, display_none=False)
+    value = jsonschema.Field(schema_type=float, display_none=False)
     unit = jsonschema.Field(schema_type=str, display_none=False)
 
 
