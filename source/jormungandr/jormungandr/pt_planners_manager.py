@@ -87,7 +87,6 @@ class PtPlannersManager(object):
         return self.pt_planners.items()
 
     def get_pt_planner(self, pt_planner_id):
-        self.update_from_db()
 
         pt_planner = self.pt_planners.get(pt_planner_id)
         if pt_planner:
