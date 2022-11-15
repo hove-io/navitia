@@ -804,3 +804,9 @@ def create_graphical_isochrones_request(
 
     req.isochrone.journeys_request.CopyFrom(req.journeys)
     return req
+
+
+def remove_ghost_words(query_string, ghost_words):
+    for gw in ghost_words:
+        query_string = query_string.replace(gw, '').strip()
+    return query_string

@@ -45,6 +45,7 @@ from datetime import datetime
 from jormungandr.parking_space_availability.parking_places_manager import ManageParkingPlaces
 import ujson as json
 from jormungandr.scenarios.utils import places_type
+from jormungandr.utils import remove_ghost_words
 from navitiacommon import parser_args_type
 from navitiacommon.parser_args_type import (
     TypeSchema,
@@ -192,10 +193,15 @@ class Places(ResourceUri):
             self.region = i_manager.get_region(region, lon, lat)
 
             # when autocompletion is done on a specific coverage we want to filter on its shape
+            instance = i_manager.instances.get(self.region)
             if not args['shape']:
-                instance = i_manager.instances.get(self.region)
                 args['shape'] = build_instance_shape(instance)
             timezone.set_request_timezone(self.region)
+            # If attribute ghost_words contains any word then remove it from the search text.
+            if instance.ghost_words:
+                query_string = args.get('q')
+                query_string = remove_ghost_words(query_string, instance.ghost_words)
+                args["q"] = query_string
             response = i_manager.dispatch(args, "places", instance_name=self.region)
         else:
             available_instances = get_all_available_instances(user, exclude_backend='kraken')

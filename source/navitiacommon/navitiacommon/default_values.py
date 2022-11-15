@@ -219,6 +219,8 @@ default_pt_planner = 'kraken'
 
 filter_odt_journeys = False
 
+ghost_words = []
+
 # {
 #     "kraken": {
 #         "class": "jormungandr.pt_planners.kraken.Kraken",

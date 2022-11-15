@@ -233,6 +233,7 @@ instance_fields = {
     'asgard_language': fields.Raw,
     'default_pt_planner': fields.Raw,
     'pt_planners_configurations': fields.Raw,
+    'ghost_words': fields.List(fields.String),
 }
 
 api_fields = {'id': fields.Raw, 'name': fields.Raw}

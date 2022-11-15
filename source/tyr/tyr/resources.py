@@ -982,6 +982,16 @@ class Instance(flask_restful.Resource):
             default=instance.pt_planners_configurations,
         )
 
+        parser.add_argument(
+            'ghost_words',
+            type=str,
+            action='append',
+            required=False,
+            help='List of ghost words to remove from search query string for api /places',
+            location=('json', 'values'),
+            default=instance.ghost_words,
+        )
+
         args = parser.parse_args()
 
         try:
@@ -1077,6 +1087,7 @@ class Instance(flask_restful.Resource):
                         'bss_return_penalty',
                         'default_pt_planner',
                         'pt_planners_configurations',
+                        'ghost_words',
                     ],
                 ),
                 maxlen=0,
