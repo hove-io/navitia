@@ -2,6 +2,7 @@
 from datetime import timedelta
 from celery import schedules
 import os
+from flask_restful.inputs import boolean
 
 # URL for the brokker, by default it's the local rabbitmq
 # For amqp (rabbitMQ) the syntax is:
@@ -165,3 +166,5 @@ SQLALCHEMY_TRACK_MODIFICATIONS = os.getenv('TYR_SQLALCHEMY_TRACK_MODIFICATIONS',
 POST_DATA_TO_TYR = os.getenv('TYR_POST_DATA_TO_TYR', None)
 
 USE_LOCAL_SYS_LOG = os.getenv('TYR_USE_LOCAL_SYS_LOG', 'true').lower() in ['1', 'true', 'yes']
+
+ENABLE_USER_EVENT = boolean(os.getenv('TYR_ENABLE_USER_EVENT', True))
