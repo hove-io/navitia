@@ -219,7 +219,7 @@ default_pt_planner = 'kraken'
 
 filter_odt_journeys = False
 
-ghost_words = []
+ghost_words = [] # type: List[str]
 
 # {
 #     "kraken": {
