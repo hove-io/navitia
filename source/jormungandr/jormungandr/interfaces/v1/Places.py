@@ -197,7 +197,7 @@ class Places(ResourceUri):
             if not args['shape']:
                 args['shape'] = build_instance_shape(instance)
             timezone.set_request_timezone(self.region)
-            # If attribute ghost_words contains any word then remove it from the search text.
+            # If attribute ghost_words contains any word then remove it from the search text
             if instance.ghost_words:
                 query_string = args.get('q')
                 query_string = remove_ghost_words(query_string, instance.ghost_words)
