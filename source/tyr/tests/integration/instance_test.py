@@ -35,6 +35,8 @@ import pytest
 from navitiacommon import models
 from tyr import app
 
+GHOST_WORDS = ["gare de ", "gare des ", "gare d'", "gare des"]
+
 
 @pytest.fixture
 def create_instance():
@@ -98,6 +100,7 @@ def test_get_instance_with_traveler_profile(create_instance):
 
 
 def test_update_instances(create_instance):
+
     loki_config = {
         "loki": {"class": "jormungandr.pt_planners.loki.Loki", "args": {"zmq_socket": "ipc:///tmp/fr-idf_loki"}}
     }
@@ -170,6 +173,7 @@ def test_update_instances(create_instance):
         "bss_return_penalty": 10,
         "default_pt_planner": 'loki',
         "pt_planners_configurations": loki_config,
+        "ghost_words": GHOST_WORDS,
     }
     resp = api_get('/v0/instances/{}'.format(create_instance))
     assert resp[0]['access_points'] is False
@@ -214,6 +218,7 @@ def test_update_instances(create_instance):
     assert resp['bss_return_penalty'] == 10
     assert resp['default_pt_planner'] == 'loki'
     assert resp['pt_planners_configurations'] == loki_config
+    assert resp['ghost_words'] == GHOST_WORDS
 
 
 def test_update_instances_is_free(create_instance):
@@ -258,6 +263,26 @@ def test_update_instances_is_free(create_instance):
     assert resp['max_car_no_park_direct_path_duration'] == 86400
     assert resp['ridesharing_speed'] == 6.94
     assert resp['max_ridesharing_duration_to_pt'] == 1800
+
+
+def test_update_instance_with_ghost_words(create_instance):
+    resp = api_get('/v0/instances/fr')
+    assert len(resp) == 1
+    assert resp[0]['name'] == 'fr'
+    assert resp[0]['ghost_words'] == []
+
+    params = {"ghost_words": ["gare d'", "gare des "]}
+    resp = api_put(
+        '/v0/instances/{}'.format(create_instance), data=json.dumps(params), content_type='application/json'
+    )
+    assert resp['ghost_words'] != ["gare d'", "gare des"]
+    assert resp['ghost_words'] == ["gare d'", "gare des "]
+
+    params = {"ghost_words": GHOST_WORDS}
+    resp = api_put(
+        '/v0/instances/{}'.format(create_instance), data=json.dumps(params), content_type='application/json'
+    )
+    assert resp['ghost_words'] == GHOST_WORDS
 
 
 def test_delete_instance_by_id(create_instance):

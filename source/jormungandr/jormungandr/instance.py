@@ -119,6 +119,7 @@ class Instance(object):
         streetnetwork_backend_manager,
         external_service_provider_configurations,
         pt_planners_configurations,
+        ghost_words=None,
         instance_db=None,
     ):
         self.geom = None
@@ -202,6 +203,7 @@ class Instance(object):
             )
         self.external_service_provider_manager.init_external_services()
         self.instance_db = instance_db
+        self._ghost_words = ghost_words or []
 
     def get_providers_from_db(self):
         """
@@ -660,6 +662,14 @@ class Instance(object):
         # type: () -> int
         instance_db = self.get_models()
         return get_value_or_default('max_taxi_direct_path_distance', instance_db, self.name)
+
+    @property
+    def ghost_words(self):
+        # type: () -> List
+        if self._ghost_words:
+            return self._ghost_words
+        instance_db = self.get_models()
+        return get_value_or_default('ghost_words', instance_db, self.name)
 
     # TODO: refactorise all properties
     taxi_speed = _make_property_getter('taxi_speed')

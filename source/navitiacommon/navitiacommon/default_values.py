@@ -35,6 +35,7 @@ This parameters can be used directly by jormungandr if the instance is not known
 
 import logging
 import sys
+from typing import List
 
 max_walking_duration_to_pt = 30 * 60
 
@@ -218,6 +219,8 @@ access_points = False
 default_pt_planner = 'kraken'
 
 filter_odt_journeys = False
+
+ghost_words = []  # type: List[str]
 
 # {
 #     "kraken": {
