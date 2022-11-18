@@ -16,7 +16,7 @@ class CustomRedisCache(BaseCache):
     Note: Python Redis API already takes care of encoding unicode strings on
     the fly.
 
-    :param host_write_client, host_read_client : address of the Redis server or an object which API is
+    :param write_client, read_client : address of the Redis server or an object which API is
                  compatible with the official Python Redis client (redis-py).
     :param port: port number on which Redis server listens for connections.
     :param password: password authentication for the Redis server.
