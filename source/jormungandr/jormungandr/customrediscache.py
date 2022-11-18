@@ -41,34 +41,29 @@ class CustomRedisCache(BaseCache):
         **kwargs
     ):
         super(CustomRedisCache, self).__init__(default_timeout)
-        if write_client is None and read_client is None:
+        if write_client is None:
             raise ValueError("CustomRedisCache host parameter may not be None")
-        if isinstance(write_client, string_types):
+        self._write_client = self._get_client(host=write_client, port=port, password=password, db=db, **kwargs)
+
+        if read_client is None:
+            self._read_client = self._write_client
+        else:
+            self._read_client = self._get_client(host=read_client, port=port, password=password, db=db, **kwargs)
+
+        self.key_prefix = key_prefix or ""
+
+    def _get_client(self, host, port, password, db, **kwargs):
+        if isinstance(host, string_types):
             try:
                 import redis
             except ImportError:
                 raise RuntimeError("no redis module found")
             if kwargs.get("decode_responses", None):
-                raise ValueError("decode_responses is not supported by " "RedisCache.")
-            self._write_client = redis.Redis(host=write_client, port=port, password=password, db=db, **kwargs)
+                raise ValueError("decode_responses is not supported by CustomRedisCache.")
+            client = redis.Redis(host=host, port=port, password=password, db=db, **kwargs)
         else:
-            self._write_client = write_client
-
-        if read_client is None:
-            self._read_client = self._write_client
-        else:
-            if isinstance(read_client, string_types):
-                try:
-                    import redis
-                except ImportError:
-                    raise RuntimeError("no redis module found")
-                if kwargs.get("decode_responses", None):
-                    raise ValueError("decode_responses is not supported by " "CustomRedisCache.")
-                self._read_client = redis.Redis(host=read_client, port=port, password=password, db=db, **kwargs)
-            else:
-                self._read_client = write_client
-
-        self.key_prefix = key_prefix or ""
+            client = host
+        return client
 
     def _normalize_timeout(self, timeout):
         timeout = BaseCache._normalize_timeout(self, timeout)
