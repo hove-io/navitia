@@ -1,20 +1,29 @@
 from __future__ import absolute_import, print_function, unicode_literals, division
-from flask_caching.backends import RedisCache as BaseRedisCache
+from jormungandr.customrediscache import CustomRedisCache
 import pybreaker
-import logging
 
 
-class RedisCache(BaseRedisCache):
+class RedisCache(CustomRedisCache):
     """
     Override the base RedisCache to add a circuitbreaker, to prevent slowdown in case of a redis failure
     """
 
     def __init__(
-        self, host='localhost', port=6379, password=None, db=0, default_timeout=300, key_prefix=None, **kwargs
+        self,
+        write_client='localhost',
+        read_client='localhost',
+        port=6379,
+        password=None,
+        db=0,
+        default_timeout=300,
+        key_prefix=None,
+        **kwargs
     ):
         fail_max = kwargs.pop('fail_max', 5)
         reset_timeout = kwargs.pop('reset_timeout', 60)
-        BaseRedisCache.__init__(self, host, port, password, db, default_timeout, key_prefix, **kwargs)
+        CustomRedisCache.__init__(
+            self, write_client, read_client, port, password, db, default_timeout, key_prefix, **kwargs
+        )
         self.breaker = pybreaker.CircuitBreaker(fail_max=fail_max, reset_timeout=reset_timeout)
 
     def get(self, key):
@@ -68,7 +77,11 @@ def redis(app, config, args, kwargs):
         raise RuntimeError('no redis module found')
 
     kwargs.update(
-        dict(host=config.get('CACHE_REDIS_HOST', 'localhost'), port=config.get('CACHE_REDIS_PORT', 6379))
+        dict(
+            write_client=config.get('CACHE_REDIS_HOST', 'localhost'),
+            read_client=config.get('CACHE_REDIS_HOST_READER', config.get('CACHE_REDIS_HOST', 'localhost')),
+            port=config.get('CACHE_REDIS_PORT', 6379),
+        )
     )
     password = config.get('CACHE_REDIS_PASSWORD')
     if password:
@@ -84,6 +97,9 @@ def redis(app, config, args, kwargs):
 
     redis_url = config.get('CACHE_REDIS_URL')
     if redis_url:
-        kwargs['host'] = redis_from_url(redis_url, db=kwargs.pop('db', None))
+        kwargs['write_client'] = redis_from_url(redis_url, db=kwargs.pop('db', None))
+    redis_url_reader = config.get('CACHE_REDIS_HOST_READER')
+    if redis_url_reader:
+        kwargs['read_client'] = redis_from_url(redis_url_reader, db=kwargs.pop('db', None))
 
     return RedisCache(*args, **kwargs)
