@@ -78,8 +78,8 @@ def redis(app, config, args, kwargs):
 
     kwargs.update(
         dict(
-            write_client=config.get('CACHE_REDIS_HOST', 'localhost'),
-            read_client=config.get('CACHE_REDIS_HOST_READER', config.get('CACHE_REDIS_HOST', 'localhost')),
+            write_client=config.get('CACHE_REDIS_PRIMARY', config.get('CACHE_REDIS_HOST', 'localhost')),
+            read_client=config.get('CACHE_REDIS_READER', config.get('CACHE_REDIS_HOST', 'localhost')),
             port=config.get('CACHE_REDIS_PORT', 6379),
         )
     )
@@ -95,11 +95,11 @@ def redis(app, config, args, kwargs):
     if db_number:
         kwargs['db'] = db_number
 
-    redis_url = config.get('CACHE_REDIS_URL')
-    if redis_url:
-        kwargs['write_client'] = redis_from_url(redis_url, db=kwargs.pop('db', None))
-    redis_url_reader = config.get('CACHE_REDIS_HOST_READER')
-    if redis_url_reader:
-        kwargs['read_client'] = redis_from_url(redis_url_reader, db=kwargs.pop('db', None))
+    redis_primary_url = config.get('CACHE_REDIS_PRIMARY_URL', config.get('CACHE_REDIS_URL'))
+    if redis_primary_url:
+        kwargs['write_client'] = redis_from_url(redis_primary_url, db=kwargs.pop('db', None))
+    redis_reader_url = config.get('CACHE_REDIS_READER_URL')
+    if redis_reader_url:
+        kwargs['read_client'] = redis_from_url(redis_reader_url, db=kwargs.pop('db', None))
 
     return RedisCache(*args, **kwargs)
