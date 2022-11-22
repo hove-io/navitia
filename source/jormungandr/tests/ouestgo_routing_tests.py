@@ -64,21 +64,14 @@ OUESTGO_RESPONSE = [
             "operator": "Ouestgo",
             "origin": "test.ouestgo.mobicoop.io",
             "url": "https://test.ouestgo.mobicoop.io/covoiturage/rdex/8e975ea22a915a2d7c01",
-            "driver": {
-                "uuid": 2,
-                "alias": "Colin P.",
-                "image": None,
-                "gender": "male",
-                "seats": 3,
-                "state": 1
-            },
+            "driver": {"uuid": 2, "alias": "Colin P.", "image": None, "gender": "male", "seats": 3, "state": 1},
             "passenger": {
                 "uuid": 2,
                 "alias": "Colin P.",
                 "image": None,
                 "gender": "male",
                 "persons": 0,
-                "state": 0
+                "state": 0,
             },
             "from": {
                 "address": None,
@@ -86,7 +79,7 @@ OUESTGO_RESPONSE = [
                 "postalcode": "54100",
                 "country": "France",
                 "latitude": "0.0000898312",
-                "longitude": "0.0000898312"
+                "longitude": "0.0000898312",
             },
             "to": {
                 "address": None,
@@ -94,16 +87,14 @@ OUESTGO_RESPONSE = [
                 "postalcode": "57360",
                 "country": "France",
                 "latitude": "0.00071865",
-                "longitude": "0.00188646"
+                "longitude": "0.00188646",
             },
             "distance": 18869,
             "duration": 1301,
             "route": None,
             "number_of_waypoints": 0,
             "waypoints": {},
-            "cost": {
-                "variable": "1"
-            },
+            "cost": {"variable": "1"},
             "details": None,
             "vehicle": None,
             "frequency": "punctual",
@@ -117,7 +108,7 @@ OUESTGO_RESPONSE = [
                 "thursday": 0,
                 "friday": 1,
                 "saturday": 0,
-                "sunday": 0
+                "sunday": 0,
             },
             "outward": {
                 "mindate": "2012-06-14",
@@ -125,15 +116,12 @@ OUESTGO_RESPONSE = [
                 "monday": None,
                 "tuesday": None,
                 "wednesday": None,
-                "thursday":  {
-                    "mintime": "08:55:00",
-                    "maxtime": "09:15:00"
-                },
+                "thursday":  {"mintime": "08:55:00", "maxtime": "09:15:00"},
                 "friday": None,
                 "saturday": None,
-                "sunday": None
+                "sunday": None,
             },
-            "return": None
+            "return": None,
         }
     }
 ]
@@ -145,9 +133,7 @@ def mock_ouestgo(_, params, headers):
 
 @pytest.fixture(scope="function", autouse=True)
 def mock_http_ouestgo(monkeypatch):
-    monkeypatch.setattr(
-        'jormungandr.scenarios.ridesharing.ouestgo.Ouestgo._call_service', mock_ouestgo
-    )
+    monkeypatch.setattr('jormungandr.scenarios.ridesharing.ouestgo.Ouestgo._call_service', mock_ouestgo)
 
 
 @dataset({'main_routing_test': MOCKED_INSTANCE_CONF})
@@ -211,7 +197,7 @@ class TestOuestgo(NewDefaultScenarioAbstractTestFixture):
         assert rsj_sections[0].get('type') == 'crow_fly'
         assert rsj_sections[0].get('mode') == 'walking'
         assert rsj_sections[0].get('duration') == 2
-        assert (rsj_sections[0].get('departure_date_time') == '20120614T085458')
+        assert rsj_sections[0].get('departure_date_time') == '20120614T085458'
         assert rsj_sections[0].get('arrival_date_time') == '20120614T085500'
 
         assert rsj_sections[1].get('type') == 'ridesharing'

@@ -205,8 +205,10 @@ def ouestgo_basic_test():
         assert len(ridesharing_journeys) == 1
         assert ridesharing_journeys[0].metadata.network == 'dummyNetwork'
         assert ridesharing_journeys[0].metadata.system_id == 'ouestgo'
-        assert ridesharing_journeys[0].ridesharing_ad == \
-               'https://test.ouestgo.mobicoop.io/covoiturage/rdex/9e2922c777e583cfae11'
+        assert (
+            ridesharing_journeys[0].ridesharing_ad
+            == 'https://test.ouestgo.mobicoop.io/covoiturage/rdex/9e2922c777e583cfae11'
+        )
 
         assert ridesharing_journeys[0].pickup_place.addr == ""  # address is not provided in mock
         assert ridesharing_journeys[0].pickup_place.lat == 48.687930
