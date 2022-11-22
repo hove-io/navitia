@@ -387,7 +387,8 @@ class RidesharingServiceManager(object):
             # TODO CO2 = length * coeffCar / (totalSeats  + 1)
             rs_section.length = int(rsj.distance)
 
-            rs_section.shape.extend(rsj.shape)
+            if rsj.shape:
+                rs_section.shape.extend(rsj.shape)
 
             if rsj.pickup_date_time:
                 rs_section.begin_date_time = rsj.pickup_date_time
