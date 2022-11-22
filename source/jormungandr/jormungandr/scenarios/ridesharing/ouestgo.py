@@ -234,12 +234,6 @@ class Ouestgo(AbstractRidesharingService):
                 extra={'ridesharing_service_id': self._get_rs_id(), 'nb_ridesharing_offers': len(r)},
             )
             return r
-        self.record_additional_info('Received ridesharing offers', nb_ridesharing_offers=0)
-        logging.getLogger('stat.ridesharing.Ouestgo').info(
-            'Received ridesharing offers : 0',
-            extra={'ridesharing_service_id': self._get_rs_id(), 'nb_ridesharing_offers': 0},
-        )
-        return []
 
     def _get_feed_publisher(self):
         return self.feed_publisher
