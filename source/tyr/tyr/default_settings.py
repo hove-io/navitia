@@ -2,6 +2,7 @@
 from datetime import timedelta
 from celery import schedules
 import os
+from flask_restful.inputs import boolean
 
 # URL for the brokker, by default it's the local rabbitmq
 # For amqp (rabbitMQ) the syntax is:
@@ -145,13 +146,15 @@ MIMIR_CONFIG_DIR = os.getenv('MIMIR_CONFIG_DIR', "/etc/mimir/")
 
 MIMIR_PLATFORM_TAG = os.getenv('TYR_MIMIR_PLATFORM_TAG', 'default')
 
-MINIO_LOKI_URL = os.getenv('TYR_MINIO_LOKI_URL', None)
+MINIO_URL = os.getenv('TYR_MINIO_URL', None)
 
-MINIO_LOKI_BUCKET_NAME = os.getenv('TYR_MINIO_LOKI_BUCKET_NAME', None)
+MINIO_BUCKET_NAME = os.getenv('TYR_MINIO_BUCKET_NAME', None)
 
-MINIO_LOKI_ACCESS_KEY = os.getenv('TYR_MINIO_LOKI_ACCESS_KEY', None)
+MINIO_USE_IAM_PROVIDER = os.getenv('TYR_MINIO_USE_IAM_PROVIDER', 'true').lower() in ['1', 'true', 'yes']
 
-MINIO_LOKI_SECRET_KEY = os.getenv('TYR_MINIO_LOKI_SECRET_KEY', None)
+MINIO_ACCESS_KEY = os.getenv('TYR_MINIO_ACCESS_KEY', None)
+
+MINIO_SECRET_KEY = os.getenv('TYR_MINIO_SECRET_KEY', None)
 
 # we don't enable serpy for now
 USE_SERPY = os.getenv('TYR_USE_SERPY', False)
@@ -165,3 +168,5 @@ SQLALCHEMY_TRACK_MODIFICATIONS = os.getenv('TYR_SQLALCHEMY_TRACK_MODIFICATIONS',
 POST_DATA_TO_TYR = os.getenv('TYR_POST_DATA_TO_TYR', None)
 
 USE_LOCAL_SYS_LOG = os.getenv('TYR_USE_LOCAL_SYS_LOG', 'true').lower() in ['1', 'true', 'yes']
+
+ENABLE_USER_EVENT = boolean(os.getenv('TYR_ENABLE_USER_EVENT', True))

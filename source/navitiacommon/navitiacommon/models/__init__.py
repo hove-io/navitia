@@ -729,6 +729,8 @@ class Instance(db.Model):  # type: ignore
         server_default=str(default_values.filter_odt_journeys),
     )
 
+    ghost_words = db.Column(ARRAY(db.Text), nullable=True, server_default="{}")
+
     def __init__(self, name=None, is_free=False, authorizations=None, jobs=None):
         self.name = name
         self.is_free = is_free

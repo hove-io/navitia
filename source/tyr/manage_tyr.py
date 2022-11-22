@@ -32,13 +32,14 @@
 
 from tyr import app, db, manager
 from flask_migrate import Migrate, MigrateCommand
-from tyr.command import ReloadKrakenCommand, BuildDataCommand, LoadDataCommand
+from tyr.command import ReloadKrakenCommand, BuildDataCommand, LoadDataCommand, BuildDataRemoteCommand
 
 
 migrate = Migrate(app, db)
 manager.add_command('db', MigrateCommand)
 manager.add_command('reload_kraken', ReloadKrakenCommand())
 manager.add_command('build_data', BuildDataCommand())
+manager.add_command('build_data_remote', BuildDataRemoteCommand())
 manager.add_command('load_data', LoadDataCommand())
 
 if __name__ == '__main__':

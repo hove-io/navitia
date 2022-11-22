@@ -34,8 +34,12 @@ import logging
 from .tests_mechanism import AbstractTestFixture, dataset
 from .check_utils import *
 
+MOCKED_INSTANCE_CONF = {
+    'instance_config': {'ghost_words': ["gare de ", "gare du ", "gare des ", "gare d'", "gare d "]}
+}
 
-@dataset({"main_routing_test": {}})
+
+@dataset({"main_routing_test": MOCKED_INSTANCE_CONF})
 class TestPlaces(AbstractTestFixture):
     """
     Test places responses
@@ -436,6 +440,41 @@ class TestPlaces(AbstractTestFixture):
                 assert len(place['stop_point'].get('lines')) > 0
             else:
                 assert place['stop_point'].get('lines') is None
+
+    def test_places_stop_areas(self):
+        """Here we test the new feature to exclude ghost words as 'gare de ', 'gare du ', 'gare d ' + 'toto'
+        from the queries
+        Data contains Bourget,  gare de Bourgil and gare du Bourg
+        """
+        response, status = self.query_region("places?q=stopA", check=False)
+        assert status == 200
+        places = response['places']
+        assert len(response['places']) == 1
+        assert places[0]["id"] == "stopA"
+
+        # Search with 'gare de'
+        response, status = self.query_region("places?q=gare de stop", check=False)
+        assert status == 200
+        assert len(response['places']) == 3
+
+        # Search with 'gare de'
+        response, status = self.query_region("places?q=gare du stop", check=False)
+        assert status == 200
+        assert len(response['places']) == 3
+
+        # Search with 'gare d '
+        response, status = self.query_region("places?q=gare d stop", check=False)
+        assert status == 200
+        assert len(response['places']) == 3
+
+        response, status = self.query_region("places?q=gare d'stop", check=False)
+        assert status == 200
+        assert len(response['places']) == 3
+
+        # Search with 'gare d'
+        response, status = self.query_region("places?q=gare dstop", check=False)
+        assert status == 200
+        assert "places" not in response
 
 
 @dataset({"basic_routing_test": {}})

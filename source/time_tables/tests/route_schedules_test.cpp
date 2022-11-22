@@ -893,3 +893,142 @@ BOOST_AUTO_TEST_CASE(route_schedule_multiple_days) {
         BOOST_CHECK_EQUAL(route_schedule.table().rows(1).date_times(4).time(), "08:05"_t);
     }
 }
+
+// stop_times with skipped_stops from the beginning (*)
+//      VJ_A   VJ_B   VJ_C  VJ_D
+// st1  1       4       3   5 *
+// st2  2       4 *     4   5 *
+// st3  3       4 *     5   6
+// st4  4       5       6   7
+// st5  5       6       7   8
+
+// wanted but not obtained:
+//      VJ_A   VJ_B   VJ_C  VJ_D
+// st1  1       4       3   -
+// st2  2       -       4   -
+// st3  3       -       5   6
+// st4  4       5       6   7
+// st5  5       6       7   8
+
+// obtained: here vehicle_journey VJ_D disappeared as the start date_time is skipped_stop
+//      VJ_A   VJ_C   VJ_B
+// st1  1       3       4
+// st2  2       4       -
+// st3  3       5       -
+// st4  4       6       5
+// st5  5       7       6
+
+BOOST_AUTO_TEST_CASE(xfail_stop_times_with_skipped_stops_from_the_beginning) {
+    ed::builder b("20220614", [&](ed::builder& b) {
+        b.vj("L", "1111111", "", true, "VJ_A", "hs_VJ_A", "VJ_A")("st1", "1:00"_t)("st2", "2:00"_t)("st3", "3:00"_t)(
+            "st4", "4:00"_t)("st5", "5:00"_t);
+        b.vj("L", "1111111", "", true, "VJ_B", "hs_VJ_B", "VJ_B")("st1", "4:00"_t)(
+            "st2", "4:00"_t, "5:00"_t, std::numeric_limits<uint16_t>::max(), false, false, 0, 0, true)(
+            "st3", "4:00"_t, "5:00"_t, std::numeric_limits<uint16_t>::max(), false, false, 0, 0, true)(
+            "st4", "5:00"_t, "5:00"_t, std::numeric_limits<uint16_t>::max(), false, true)("st5", "6:00"_t);
+        b.vj("L", "1111111", "", true, "VJ_C", "hs_VJ_C", "VJ_C")("st1", "3:00"_t)("st2", "4:00"_t)("st3", "5:00"_t)(
+            "st4", "6:00"_t)("st5", "7:00"_t);
+        b.vj("L", "1111111", "", true, "VJ_D", "hs_VJ_D", "VJ_D")(
+            "st1", "5:00"_t, "5:00"_t, std::numeric_limits<uint16_t>::max(), false, false, 0, 0, true)(
+            "st2", "5:00"_t, "5:00"_t, std::numeric_limits<uint16_t>::max(), false, false, 0, 0, true)(
+            "st3", "6:00"_t, "6:00"_t, std::numeric_limits<uint16_t>::max(), false, true)("st4", "7:00"_t)("st5",
+                                                                                                           "8:00"_t);
+    });
+
+    auto* data_ptr = b.data.get();
+    navitia::PbCreator pb_creator(data_ptr, bt::second_clock::universal_time(), null_time_period);
+    navitia::timetables::route_schedule(pb_creator, "line.uri=L", {}, {}, d("20220615T000000"), 86400, 100, 3, 10, 0,
+                                        nt::RTLevel::Base);
+
+    pbnavitia::Response resp = pb_creator.get_response();
+    BOOST_REQUIRE_EQUAL(resp.route_schedules().size(), 1);
+    pbnavitia::RouteSchedule route_schedule = resp.route_schedules(0);
+    print_route_schedule(route_schedule);
+    BOOST_CHECK_EQUAL(get_vj(route_schedule, 0), "vehicle_journey:VJ_A");
+    BOOST_CHECK_EQUAL(route_schedule.table().rows(0).date_times(0).time(), "1:00"_t);
+    BOOST_CHECK_EQUAL(route_schedule.table().rows(1).date_times(0).time(), "2:00"_t);
+    BOOST_CHECK_EQUAL(route_schedule.table().rows(2).date_times(0).time(), "3:00"_t);
+    BOOST_CHECK_EQUAL(route_schedule.table().rows(3).date_times(0).time(), "4:00"_t);
+    BOOST_CHECK_EQUAL(route_schedule.table().rows(4).date_times(0).time(), "5:00"_t);
+
+    BOOST_CHECK_EQUAL(get_vj(route_schedule, 1), "vehicle_journey:VJ_C");
+    BOOST_CHECK_EQUAL(route_schedule.table().rows(0).date_times(1).time(), "3:00"_t);
+    BOOST_CHECK_EQUAL(route_schedule.table().rows(1).date_times(1).time(), "4:00"_t);
+    BOOST_CHECK_EQUAL(route_schedule.table().rows(2).date_times(1).time(), "5:00"_t);
+    BOOST_CHECK_EQUAL(route_schedule.table().rows(3).date_times(1).time(), "6:00"_t);
+    BOOST_CHECK_EQUAL(route_schedule.table().rows(4).date_times(1).time(), "7:00"_t);
+
+    BOOST_CHECK_EQUAL(get_vj(route_schedule, 2), "vehicle_journey:VJ_B");
+    BOOST_CHECK_EQUAL(route_schedule.table().rows(0).date_times(2).time(), "4:00"_t);
+    // Empty date_time at stop point with skipped_stop = true
+    BOOST_CHECK_EQUAL(route_schedule.table().rows(1).date_times(2).time(), std::numeric_limits<u_int64_t>::max());
+    BOOST_CHECK_EQUAL(route_schedule.table().rows(2).date_times(2).time(), std::numeric_limits<u_int64_t>::max());
+
+    BOOST_CHECK_EQUAL(route_schedule.table().rows(3).date_times(2).time(), "5:00"_t);
+    BOOST_CHECK_EQUAL(route_schedule.table().rows(4).date_times(2).time(), "6:00"_t);
+}
+
+// stop_times with skipped_stops toward the end (*)
+//      VJ_A   VJ_B   VJ_C
+// st1  1       2       3
+// st2  2       3       4
+// st3  3       4 *     4 *
+// st4  4       4 *     4 *
+// st5  5       4       4 *
+
+// wanted and obtained:
+//      VJ_A   VJ_B   VJ_C
+// st1  1       2       3
+// st2  2       3       4
+// st3  3       -       -
+// st4  4       -       -
+// st5  5       4       -
+
+BOOST_AUTO_TEST_CASE(stop_times_with_skipped_stops_toward_the_end) {
+    ed::builder b("20220614", [&](ed::builder& b) {
+        b.vj("L", "1111111", "", true, "VJ_A", "hs_VJ_A", "VJ_A")("st1", "1:00"_t)("st2", "2:00"_t)("st3", "3:00"_t)(
+            "st4", "4:00"_t)("st5", "5:00"_t);
+        b.vj("L", "1111111", "", true, "VJ_B", "hs_VJ_B", "VJ_B")("st1", "2:00"_t)(
+            "st2", "3:00"_t, "3:00"_t, std::numeric_limits<uint16_t>::max(), true, false)(
+            "st3", "4:00"_t, "4:00"_t, std::numeric_limits<uint16_t>::max(), false, false, 0, 0, true)(
+            "st4", "4:00"_t, "4:00"_t, std::numeric_limits<uint16_t>::max(), false, false, 0, 0, true)(
+            "st5", "4:00"_t, "4:00"_t, std::numeric_limits<uint16_t>::max(), false, true);
+        b.vj("L", "1111111", "", true, "VJ_C", "hs_VJ_C", "VJ_C")("st1", "3:00"_t)(
+            "st2", "4:00"_t, "4:00"_t, std::numeric_limits<uint16_t>::max(), true, false)(
+            "st3", "4:00"_t, "4:00"_t, std::numeric_limits<uint16_t>::max(), false, false, 0, 0, true)(
+            "st4", "4:00"_t, "4:00"_t, std::numeric_limits<uint16_t>::max(), false, false, 0, 0, true)(
+            "st5", "4:00"_t, "4:00"_t, std::numeric_limits<uint16_t>::max(), false, false, 0, 0, true);
+    });
+
+    auto* data_ptr = b.data.get();
+    navitia::PbCreator pb_creator(data_ptr, bt::second_clock::universal_time(), null_time_period);
+    navitia::timetables::route_schedule(pb_creator, "line.uri=L", {}, {}, d("20220615T000000"), 86400, 100, 3, 10, 0,
+                                        nt::RTLevel::Base);
+
+    pbnavitia::Response resp = pb_creator.get_response();
+    BOOST_REQUIRE_EQUAL(resp.route_schedules().size(), 1);
+    pbnavitia::RouteSchedule route_schedule = resp.route_schedules(0);
+    print_route_schedule(route_schedule);
+    BOOST_CHECK_EQUAL(get_vj(route_schedule, 0), "vehicle_journey:VJ_A");
+    BOOST_CHECK_EQUAL(route_schedule.table().rows(0).date_times(0).time(), "1:00"_t);
+    BOOST_CHECK_EQUAL(route_schedule.table().rows(1).date_times(0).time(), "2:00"_t);
+    BOOST_CHECK_EQUAL(route_schedule.table().rows(2).date_times(0).time(), "3:00"_t);
+    BOOST_CHECK_EQUAL(route_schedule.table().rows(3).date_times(0).time(), "4:00"_t);
+    BOOST_CHECK_EQUAL(route_schedule.table().rows(4).date_times(0).time(), "5:00"_t);
+
+    BOOST_CHECK_EQUAL(get_vj(route_schedule, 1), "vehicle_journey:VJ_B");
+    BOOST_CHECK_EQUAL(route_schedule.table().rows(0).date_times(1).time(), "2:00"_t);
+    BOOST_CHECK_EQUAL(route_schedule.table().rows(1).date_times(1).time(), "3:00"_t);
+    // Empty date_time at stop point with skipped_stop = true
+    BOOST_CHECK_EQUAL(route_schedule.table().rows(2).date_times(1).time(), std::numeric_limits<u_int64_t>::max());
+    BOOST_CHECK_EQUAL(route_schedule.table().rows(3).date_times(1).time(), std::numeric_limits<u_int64_t>::max());
+    BOOST_CHECK_EQUAL(route_schedule.table().rows(4).date_times(1).time(), "4:00"_t);
+
+    BOOST_CHECK_EQUAL(get_vj(route_schedule, 2), "vehicle_journey:VJ_C");
+    BOOST_CHECK_EQUAL(route_schedule.table().rows(0).date_times(2).time(), "3:00"_t);
+    BOOST_CHECK_EQUAL(route_schedule.table().rows(1).date_times(2).time(), "4:00"_t);
+    // Empty date_time at stop point with skipped_stop = true
+    BOOST_CHECK_EQUAL(route_schedule.table().rows(2).date_times(2).time(), std::numeric_limits<u_int64_t>::max());
+    BOOST_CHECK_EQUAL(route_schedule.table().rows(3).date_times(2).time(), std::numeric_limits<u_int64_t>::max());
+    BOOST_CHECK_EQUAL(route_schedule.table().rows(4).date_times(2).time(), std::numeric_limits<u_int64_t>::max());
+}

@@ -123,6 +123,7 @@ class InstanceManager(object):
             self._streetnetwork_backend_manager,
             config.get('external_services_providers', []),
             config.get('pt_planners', {}),
+            config.get('ghost_words', []),
         )
         self.instances[instance.name] = instance
 

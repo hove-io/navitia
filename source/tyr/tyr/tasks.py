@@ -609,7 +609,13 @@ def reload_kraken(instance_id):
 @celery.task()
 def build_all_data():
     for instance in models.Instance.query_existing().all():
-        build_data(instance)
+        build_data.delay(instance)
+
+
+@celery.task()
+def build_data_with_instance_name(instance_name):
+    instance = models.Instance.query_existing().filter_by(name=instance_name).first_or_404()
+    build_data(instance)
 
 
 @celery.task()
