@@ -54,3 +54,4 @@ redis==2.10.6
 flexpolyline==0.1.0
 newrelic==2.70.0.51
 greenlet==0.4.15 ; python_version <= "3.6"
+pickle-mixin==1.0.2
