@@ -83,6 +83,7 @@ class Timeo(RealtimeProxy):
         self.timeo_stop_code = kwargs.get("source_stop_code", "StopTimeoCode")
         self.timeo_line_code = kwargs.get("source_line_code", "LineTimeoCode")
         self.next_stop_time_number = kwargs.get("next_stop_time_number", 5)
+        self.verify = kwargs.get("verify", True)
 
         self.instance = instance
         fail_max = kwargs.get(
@@ -141,7 +142,7 @@ class Timeo(RealtimeProxy):
         try:
             if not self.rate_limiter.acquire(self.rt_system_id, block=False):
                 return None
-            return self.breaker.call(requests.get, url, timeout=self.timeout)
+            return self.breaker.call(requests.get, url, timeout=self.timeout, verify=self.verify)
         except pybreaker.CircuitBreakerError as e:
             logging.getLogger(__name__).error(
                 'Timeo RT service dead, using base schedule (error: {}'.format(e),
