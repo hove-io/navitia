@@ -819,4 +819,3 @@ def get_weekday(timestamp):
         return WEEK_DAYS_MAPPING[date_time.weekday()]
     except ValueError:
         return None
-

@@ -116,7 +116,7 @@ OUESTGO_RESPONSE = [
                 "monday": None,
                 "tuesday": None,
                 "wednesday": None,
-                "thursday":  {"mintime": "08:55:00", "maxtime": "09:15:00"},
+                "thursday": {"mintime": "08:55:00", "maxtime": "09:15:00"},
                 "friday": None,
                 "saturday": None,
                 "sunday": None,
