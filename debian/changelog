@@ -1,3 +1,20 @@
+navitia2 (15.18.0) unstable; urgency=low
+
+  * [Jormungandr] Option for no-verify SSL on Timeo  <https://github.com/hove-io/navitia/pull/3858>
+  * [Jormungandr] Redis cluster mode  <https://github.com/hove-io/navitia/pull/3856>
+  * [Jormungandr] Manage ghost words per coverage in api /places  <https://github.com/hove-io/navitia/pull/3854>
+  * [Tyr] Second try for IAM Credentials for S3 bucket  <https://github.com/hove-io/navitia/pull/3849>
+  * [loki] dont update pt planner from db  <https://github.com/hove-io/navitia/pull/3853>
+  * [Tyr]ENABLE_USER_EVENT parameter added  <https://github.com/hove-io/navitia/pull/3855>
+  * [Jormungandr] co2 optim: cache the physical_mode; fix unit problem  <https://github.com/hove-io/navitia/pull/3852>
+  * [Jormungandr/Kraken] Co2 emission physical mode  <https://github.com/hove-io/navitia/pull/3851>
+  * [Jormungandr][ fix without source code  <https://github.com/hove-io/navitia/pull/3845>
+  * [Jormungandr] Fix greenlet for python2.7 and python3.6  <https://github.com/hove-io/navitia/pull/3848>
+  * [Jormungandr] fix DetachedInstanceException  <https://github.com/hove-io/navitia/pull/3843>
+  * [TYR] enable build_data remotely  <https://github.com/hove-io/navitia/pull/3842>
+
+ -- Abderrahim AZIME <azime_1@yahoo.fr>  Tue, 22 Nov 2022 14:11:00 +0100
+
 navitia2 (15.17.0) unstable; urgency=low
 
 
