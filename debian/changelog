@@ -2,6 +2,12 @@ navitia2 (15.19.0) unstable; urgency=low
 
   * Fix release generation  <https://github.com/hove-io/navitia/pull/3859>
 
+ -- Abderrahim AZIME <azime_1@yahoo.fr>  Tue, 22 Nov 2022 16:11:21 +0100
+
+navitia2 (15.19.0) unstable; urgency=low
+
+  * Fix release generation  <https://github.com/hove-io/navitia/pull/3859>
+
  -- Abderrahim AZIME <azime_1@yahoo.fr>  Tue, 22 Nov 2022 16:11:23 +0100
 
 navitia2 (15.18.0) unstable; urgency=low
