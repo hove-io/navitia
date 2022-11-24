@@ -300,7 +300,12 @@ void Worker::status() {
     const auto* d = this->pb_creator.data;
     status->set_data_version(d->version);
     status->set_navitia_version(config::project_version);
-    status->set_loaded(d->loaded);
+    if (conf.is_realtime_enabled()) {
+        bool everything_loaded = d->loaded && d->is_realtime_loaded;
+        status->set_loaded(everything_loaded);
+    } else {
+        status->set_loaded(d->loaded);
+    }
     status->set_last_load_status(d->last_load_succeeded);
     status->set_last_load_at(pt::to_iso_string(d->last_load_at));
     status->set_last_rt_data_loaded(pt::to_iso_string(d->last_rt_data_loaded()));
