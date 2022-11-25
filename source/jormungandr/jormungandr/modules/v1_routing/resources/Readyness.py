@@ -31,9 +31,18 @@
 from __future__ import absolute_import, print_function, unicode_literals, division
 from jormungandr.module_resource import ModuleResource
 from jormungandr import i_manager
+import logging
 
 
 class Readyness(ModuleResource):
     def get(self):
         instances_is_initialized = (instance.is_initialized for instance in i_manager.instances.values())
-        return ("OK", 200) if all(instances_is_initialized) else ("KO", 500)
+        if all(instances_is_initialized):
+            return ("OK", 200)
+
+        for instance in i_manager.instances.values():
+            if not instance.is_initialized:
+                logging.getLogger(__name__).warning(
+                    "The instance {instance} not initialized".format(instance=instance.name)
+                )
+        return ("KO", 500)
