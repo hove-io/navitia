@@ -506,7 +506,7 @@ class JourneyCommon(ResourceUri, ResourceUtc):
 
         parser_get.add_argument(
             "_criteria",
-            type=OptionValue(['classic', 'robustness']),
+            type=OptionValue(['classic', 'robustness', 'occupancy']),
             hidden=True,
             help="choose the criteria used to compute pt journeys",
         )

@@ -771,6 +771,8 @@ def create_journeys_request(origins, destinations, datetime, clockwise, journey_
 
     if journey_parameters.criteria == "robustness":
         req.journeys.criteria = request_pb2.Robustness
+    elif journey_parameters.criteria == "occupancy":
+        req.journeys.criteria = request_pb2.Occupancy
     elif journey_parameters.criteria == "classic":
         req.journeys.criteria = request_pb2.Classic
 
