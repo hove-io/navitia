@@ -332,7 +332,7 @@ void Worker::status() {
         bool is_kirin_reloaded = d->is_realtime_loaded;
         is_everything_loaded = is_everything_loaded && is_kirin_reloaded;
     }
-    bool chaos_enabled = conf.chaos_database().has_value();
+    bool chaos_enabled != boost::none;
     if (chaos_enabled) {
         bool is_chaos_reloaded = d->is_chaos_reloaded;
         is_everything_loaded = is_everything_loaded && is_chaos_reloaded;
