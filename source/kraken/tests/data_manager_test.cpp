@@ -49,12 +49,16 @@ public:
     void build_autocomplete_partial() {}
     mutable std::atomic<bool> loading;
     mutable std::atomic<bool> is_connected_to_rabbitmq;
+    mutable std::atomic<bool> is_chaos_reloaded{};
     static bool load_status;
     static bool last_load_succeeded;
     static bool destructor_called;
     size_t data_identifier;
 
-    Data(size_t data_identifier = 0) : data_identifier(data_identifier) { is_connected_to_rabbitmq = false; }
+    Data(size_t data_identifier = 0) : data_identifier(data_identifier) {
+        is_connected_to_rabbitmq = false;
+        is_chaos_reloaded = false;
+    }
 
     ~Data() { Data::destructor_called = true; }
 };
