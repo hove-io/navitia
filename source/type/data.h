@@ -190,6 +190,8 @@ public:
 
     mutable std::atomic<bool> is_realtime_loaded{};
 
+    mutable std::atomic<bool> is_chaos_reloaded{};
+
     Data(size_t data_identifier = 0);
     ~Data();
 

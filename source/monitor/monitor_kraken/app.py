@@ -191,7 +191,7 @@ def ready():
         return json.dumps({'error': 'zmq timed out'}), 503
     if proto_response.status == None:
         return json.dumps({'error': 'no status in zmq response'}), 500
-    if proto_response.status.loaded == True:
+    if proto_response.status.is_everythin_loaded == True:
         return json.dumps("ready"), 200
     return json.dumps("not ready"), 400
 

@@ -133,6 +133,7 @@ public:
             try {
                 data->load_disruptions(*chaos_database, chaos_batch_size, contributors);
                 data->build_autocomplete_partial();
+                data->is_chaos_reloaded = true;
             } catch (const navitia::data::disruptions_broken_connection&) {
                 LOG4CPLUS_WARN(logger, "Load data without disruptions");
             } catch (const navitia::data::disruptions_loading_error&) {

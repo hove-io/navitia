@@ -300,12 +300,7 @@ void Worker::status() {
     const auto* d = this->pb_creator.data;
     status->set_data_version(d->version);
     status->set_navitia_version(config::project_version);
-    if (conf.is_realtime_enabled()) {
-        bool everything_loaded = d->loaded && d->is_realtime_loaded;
-        status->set_loaded(everything_loaded);
-    } else {
-        status->set_loaded(d->loaded);
-    }
+    status->set_loaded(d->loaded);
     status->set_last_load_status(d->last_load_succeeded);
     status->set_last_load_at(pt::to_iso_string(d->last_load_at));
     status->set_last_rt_data_loaded(pt::to_iso_string(d->last_rt_data_loaded()));
@@ -328,6 +323,21 @@ void Worker::status() {
         status->set_end_production_date("");
         status->set_dataset_created_at("");
     }
+
+    bool base_data_loaded = d->loaded;
+    bool is_everything_loaded = base_data_loaded;
+
+    bool kirin_enabled = conf.is_realtime_enabled();
+    if (kirin_enabled) {
+        bool is_kirin_reloaded = d->is_realtime_loaded;
+        is_everything_loaded = is_everything_loaded && is_kirin_reloaded;
+    }
+    bool chaos_enabled = conf.chaos_database().has_value();
+    if (chaos_enabled) {
+        bool is_chaos_reloaded = d->is_chaos_reloaded;
+        is_everything_loaded = is_everything_loaded && is_chaos_reloaded;
+    }
+    status->set_is_everything_loaded(is_everything_loaded);
 }
 
 void Worker::metadatas() {

@@ -91,6 +91,7 @@ Data::Data(size_t data_identifier)
     loaded = false;
     is_connected_to_rabbitmq = false;
     is_realtime_loaded = false;
+    is_chaos_reloaded = false;
 }
 
 Data::~Data() = default;
@@ -98,7 +99,7 @@ Data::~Data() = default;
 template <class Archive>
 void Data::save(Archive& ar, const unsigned int /*unused*/) const {
     ar& pt_data& geo_ref& meta& fare& last_load_at& loaded& last_load_succeeded& is_connected_to_rabbitmq&
-        is_realtime_loaded;
+        is_realtime_loaded& is_chaos_reloaded;
 }
 template <class Archive>
 void Data::load(Archive& ar, const unsigned int version) {
@@ -111,7 +112,7 @@ void Data::load(Archive& ar, const unsigned int version) {
         throw navitia::data::wrong_version(msg.str());
     }
     ar& pt_data& geo_ref& meta& fare& last_load_at& loaded& last_load_succeeded& is_connected_to_rabbitmq&
-        is_realtime_loaded;
+        is_realtime_loaded& is_chaos_reloaded;
 }
 SPLIT_SERIALIZABLE(Data)
 
