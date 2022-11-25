@@ -1,9 +1,9 @@
-# coding=utf-8
+# encoding: utf-8
 
-# Copyright (c) 2001-2022, Hove and/or its affiliates. All rights reserved.
+#  Copyright (c) 2001-2022, Hove and/or its affiliates. All rights reserved.
 #
 # This file is part of Navitia,
-# the software to build cool stuff with public transport.
+#     the software to build cool stuff with public transport.
 #
 # Hope you'll enjoy and contribute to this project,
 #     powered by Hove (www.hove.com).
@@ -28,21 +28,21 @@
 # channel `#navitia` on riot https://riot.im/app/#/room/#navitia:matrix.org
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
+
 from __future__ import absolute_import, print_function, unicode_literals, division
-from jormungandr.module_resource import ModuleResource
+from .tests_mechanism import AbstractTestFixture, dataset
 from jormungandr import i_manager
-import logging
 
 
-class Readyness(ModuleResource):
-    def get(self):
-        instances_is_ready = (instance.is_ready for instance in i_manager.instances.values())
-        if all(instances_is_ready):
-            return ("OK", 200)
+@dataset({"main_routing_test": {}, "departure_board_test": {}, "empty_routing_test": {}})
+class TestReadynessApi(AbstractTestFixture):
+    def test_all_is_ready(self):
+        str_resp, status_code = self.query_no_assert("/v1/readyness")
+        assert str_resp == "OK"
+        assert status_code == 200
 
-        for instance in i_manager.instances.values():
-            if not instance.is_ready:
-                logging.getLogger(__name__).warning(
-                    "The instance {instance} not ready".format(instance=instance.name)
-                )
-        return ("KO", 500)
+    def test_one_not_is_ready(self):
+        i_manager.instances["main_routing_test"].is_ready = False
+        str_resp, status_code = self.query_no_assert("/v1/readyness")
+        assert str_resp == "KO"
+        assert status_code == 500

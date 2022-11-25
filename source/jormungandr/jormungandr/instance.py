@@ -134,6 +134,7 @@ class Instance(object):
         self.timezone = None  # timezone will be fetched from the kraken
         self.publication_date = -1
         self.is_initialized = False  # kraken hasn't been called yet we don't have geom nor timezone
+        self.is_ready = False
         self.breaker = pybreaker.CircuitBreaker(
             fail_max=app.config.get(str('CIRCUIT_BREAKER_MAX_INSTANCE_FAIL'), 5),
             reset_timeout=app.config.get(str('CIRCUIT_BREAKER_INSTANCE_TIMEOUT_S'), 60),
@@ -900,6 +901,7 @@ class Instance(object):
         pub_date = self.publication_date
         req = request_pb2.Request()
         req.requested_api = type_pb2.METADATAS
+        self.is_ready = True
         request_id = "instance_init"
         try:
             # we use _send_and_receive to avoid the circuit breaker, we don't want fast fail on init :)
