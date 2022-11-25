@@ -35,5 +35,5 @@ from jormungandr import i_manager
 
 class Readyness(ModuleResource):
     def get(self):
-        instances_is_initialized = [instance.is_initialized for instance in i_manager.instances.values()]
+        instances_is_initialized = (instance.is_initialized for instance in i_manager.instances.values())
         return ("OK", 200) if all(instances_is_initialized) else ("KO", 500)
