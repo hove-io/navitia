@@ -31,18 +31,8 @@
 from __future__ import absolute_import, print_function, unicode_literals, division
 from jormungandr.module_resource import ModuleResource
 from jormungandr import i_manager
-import logging
 
 
 class Readyness(ModuleResource):
     def get(self):
-        instances_is_ready = (instance.is_ready for instance in i_manager.instances.values())
-        if all(instances_is_ready):
-            return ("OK", 200)
-
-        for instance in i_manager.instances.values():
-            if not instance.is_ready:
-                logging.getLogger(__name__).warning(
-                    "The instance {instance} not ready".format(instance=instance.name)
-                )
-        return ("KO", 500)
+        return ("OK", 200) if i_manager.is_ready else ("KO", 500)

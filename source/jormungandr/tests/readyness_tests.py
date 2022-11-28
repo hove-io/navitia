@@ -42,7 +42,7 @@ class TestReadynessApi(AbstractTestFixture):
         assert status_code == 200
 
     def test_one_not_is_ready(self):
-        i_manager.instances["main_routing_test"].is_ready = False
+        i_manager.is_ready = False
         str_resp, status_code = self.query_no_assert("/v1/readyness")
         assert str_resp == "KO"
         assert status_code == 500
