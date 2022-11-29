@@ -55,10 +55,8 @@ public:
     static bool destructor_called;
     size_t data_identifier;
 
-    Data(size_t data_identifier = 0) : data_identifier(data_identifier) {
-        is_connected_to_rabbitmq = false;
-        loaded = false;
-    }
+    explicit Data(size_t data_identifier = 0)
+        : data_identifier(data_identifier), is_connected_to_rabbitmq(false), loaded(false) {}
 
     ~Data() { Data::destructor_called = true; }
 };
