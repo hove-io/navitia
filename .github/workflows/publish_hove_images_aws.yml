@@ -54,7 +54,7 @@ jobs:
 
       - name: Generate token
         id: app-token
-        uses: getsentry/action-github-app-token@v1
+        uses: getsentry/action-github-app-token@v2.0.0
         with:
           app_id: ${{ secrets.GA_OS_WORKFLOW_TRIGGER_APP_ID }}
           private_key: ${{ secrets.GA_OS_WORKFLOW_TRIGGER_APP_PEM }}
