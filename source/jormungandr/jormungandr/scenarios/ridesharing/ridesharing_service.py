@@ -82,7 +82,12 @@ class AbstractRidesharingService(object):
 
         try:
             return self.breaker.call(
-                requests.get, url=self.service_url, headers=headers, params=params, timeout=self.timeout, verify=verify
+                requests.get,
+                url=self.service_url,
+                headers=headers,
+                params=params,
+                timeout=self.timeout,
+                verify=verify
             )
         except pybreaker.CircuitBreakerError as e:
             self.logger.error(
