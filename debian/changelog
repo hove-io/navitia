@@ -1,3 +1,13 @@
+navitia2 (15.20.0) unstable; urgency=low
+
+  * [Kraken] Change meaning of status.loaded  <https://github.com/hove-io/navitia/pull/3864>
+  * [Jormun] Add option to verify SSL for car park and ridesharing  <https://github.com/hove-io/navitia/pull/3863>
+  * [Jormun] forward 'departure_occupancy' protobuf field  <https://github.com/hove-io/navitia/pull/3862>
+  * [AWS] Readyness Api added  <https://github.com/hove-io/navitia/pull/3850>
+  * [Jormun] add support for occupancy criteria  <https://github.com/hove-io/navitia/pull/3861>
+
+ -- patrick.qian <patrick.qian@kisio.com>  Tue, 29 Nov 2022 15:11:44 +0100
+
 navitia2 (15.19.0) unstable; urgency=low
 
   * Fix release generation  <https://github.com/hove-io/navitia/pull/3859>
