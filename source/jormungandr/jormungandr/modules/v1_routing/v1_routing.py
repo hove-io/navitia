@@ -57,6 +57,7 @@ from jormungandr.modules_loader import AModule
 from jormungandr import app
 
 from jormungandr.modules.v1_routing.resources import Index
+from jormungandr.modules.v1_routing.resources import Readyness
 
 
 class RegionConverter(BaseConverter):
@@ -123,6 +124,8 @@ class V1Routing(AModule):
 
         self.module_resources_manager.register_resource(Index.Index())
         self.add_resource(Index.Index, '/', '', endpoint='index')
+        self.module_resources_manager.register_resource(Readyness.Readyness())
+        self.add_resource(Readyness.Readyness, '/readyness', endpoint='readyness')
         self.module_resources_manager.register_resource(Index.TechnicalStatus())
         self.add_resource(Index.TechnicalStatus, '/status', endpoint='technical_status')
         lon_lat = '<lon:lon>;<lat:lat>/'
