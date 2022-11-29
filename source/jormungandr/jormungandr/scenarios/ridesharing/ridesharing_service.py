@@ -87,7 +87,7 @@ class AbstractRidesharingService(object):
                 headers=headers,
                 params=params,
                 timeout=self.timeout,
-                verify=verify
+                verify=verify,
             )
         except pybreaker.CircuitBreakerError as e:
             self.logger.error(
