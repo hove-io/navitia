@@ -102,6 +102,7 @@ class InstanceManager(object):
         self.context = zmq.Context()
         self.socket_ttl = app.config.get("ZMQ_SOCKET_TTL_SECONDS", 10)
         self.reaper_interval = app.config.get("ZMQ_SOCKET_REAPER_INTERVAL", 10)
+        self.is_ready = False
         self.init_socket_reaper()
 
     def __repr__(self):

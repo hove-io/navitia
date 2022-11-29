@@ -68,7 +68,7 @@ class AbstractRidesharingService(object):
         """
         pass
 
-    def _call_service(self, params, headers={}):
+    def _call_service(self, params, headers={}, verify=True):
         """
         :param params: call parameters list
         :return: response from external service
@@ -82,7 +82,12 @@ class AbstractRidesharingService(object):
 
         try:
             return self.breaker.call(
-                requests.get, url=self.service_url, headers=headers, params=params, timeout=self.timeout
+                requests.get,
+                url=self.service_url,
+                headers=headers,
+                params=params,
+                timeout=self.timeout,
+                verify=verify,
             )
         except pybreaker.CircuitBreakerError as e:
             self.logger.error(

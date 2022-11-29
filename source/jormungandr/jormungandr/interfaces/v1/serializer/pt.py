@@ -58,6 +58,7 @@ from navitiacommon.type_pb2 import (
     RTLevel,
     EquipmentDetails,
     CurrentAvailability,
+    OccupancyStatus,
 )
 
 
@@ -833,3 +834,4 @@ class StopDateTimeSerializer(PbNestedSerializer):
     )
     links = PropertiesLinksSerializer(attr="properties")
     data_freshness = EnumField(pb_type=RTLevel)
+    departure_occupancy = EnumField(pb_type=OccupancyStatus)

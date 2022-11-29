@@ -67,6 +67,7 @@ class InstantSystem(AbstractRidesharingService):
         timeout=5,
         crowfly_radius=200,
         timeframe_duration=1800,
+        verify=True,
     ):
         self.service_url = service_url
         self.api_key = api_key
@@ -78,6 +79,7 @@ class InstantSystem(AbstractRidesharingService):
         self.feed_publisher = None if feed_publisher is None else RsFeedPublisher(**feed_publisher)
         self.crowfly_radius = crowfly_radius
         self.timeframe_duration = timeframe_duration
+        self.verify = verify
 
         self.journey_metadata = rsj.MetaData(
             system_id=self.system_id,
@@ -258,7 +260,7 @@ class InstantSystem(AbstractRidesharingService):
             params.update({'limit', limit})
 
         headers = {'apikey': '{}'.format(self.api_key)}
-        resp = self._call_service(params=params, headers=headers)
+        resp = self._call_service(params=params, headers=headers, verify=self.verify)
 
         if not resp or resp.status_code != 200:
             # TODO better error handling, the response might be in 200 but in error

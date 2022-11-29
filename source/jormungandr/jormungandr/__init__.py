@@ -129,3 +129,4 @@ def setup_package():
 from jormungandr import transient_socket
 
 transient_socket.TransientSocket.init_socket_reaper(app.config)
+i_manager.is_ready = True

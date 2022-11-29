@@ -137,7 +137,6 @@ void Data::load_nav(const std::string& filename) {
         std::ifstream ifs(filename.c_str(), std::ios::in | std::ios::binary);
         ifs.exceptions(std::ifstream::failbit | std::ifstream::badbit);
         this->load(ifs);
-        loaded = true;
         last_load_at = pt::microsec_clock::universal_time();
         last_load_succeeded = true;
         LOG4CPLUS_INFO(logger, boost::format("stopTimes : %d nb foot path : %d Nombre de stop points : %d")
