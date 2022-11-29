@@ -48,13 +48,15 @@ public:
     void build_proximity_list() {}
     void build_autocomplete_partial() {}
     mutable std::atomic<bool> loading;
+    mutable std::atomic<bool> loaded;
     mutable std::atomic<bool> is_connected_to_rabbitmq;
     static bool load_status;
     static bool last_load_succeeded;
     static bool destructor_called;
     size_t data_identifier;
 
-    Data(size_t data_identifier = 0) : data_identifier(data_identifier) { is_connected_to_rabbitmq = false; }
+    explicit Data(size_t data_identifier = 0)
+        : data_identifier(data_identifier), is_connected_to_rabbitmq(false), loaded(false) {}
 
     ~Data() { Data::destructor_called = true; }
 };
