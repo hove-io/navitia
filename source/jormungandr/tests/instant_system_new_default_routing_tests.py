@@ -50,6 +50,7 @@ MOCKED_INSTANCE_CONF = {
                     "crowfly_radius": 200,
                     "timeframe_duration": 1800,
                     "feed_publisher": DUMMY_INSTANT_SYSTEM_FEED_PUBLISHER,
+                    "verify": False,
                 },
                 "class": "jormungandr.scenarios.ridesharing.instant_system.InstantSystem",
             }
@@ -97,7 +98,7 @@ INSTANT_SYSTEM_RESPONSE = {
 }
 
 
-def mock_instant_system(_, params, headers):
+def mock_instant_system(_, params, headers, verify):
     return MockResponse(INSTANT_SYSTEM_RESPONSE, 200)
 
 

@@ -59,6 +59,7 @@ class CommonCarParkProvider(AbstractParkingPlacesProvider):
         self.log = logging.LoggerAdapter(logging.getLogger(__name__), extra={'dataset': self.dataset})
 
         self.api_key = kwargs.get('api_key')
+        self.verify = kwargs.get("verify", True)
 
     @abstractmethod
     def process_data(self, data, poi):
@@ -88,7 +89,9 @@ class CommonCarParkProvider(AbstractParkingPlacesProvider):
                 headers = {'Authorization': 'apiKey {}'.format(self.api_key)}
             else:
                 headers = None
-            data = self.breaker.call(requests.get, url=request_url, headers=headers, timeout=self.timeout)
+            data = self.breaker.call(
+                requests.get, url=request_url, headers=headers, timeout=self.timeout, verify=self.verify
+            )
             json_data = data.json()
             self.record_call("OK")
             return json_data
