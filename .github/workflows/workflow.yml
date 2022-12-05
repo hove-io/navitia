@@ -139,7 +139,7 @@ jobs:
         pre-commit run --all --show-diff-on-failure
 
   release_script_tests:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     steps:
     - uses: actions/setup-python@v3
       with:
