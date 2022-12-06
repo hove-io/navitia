@@ -317,6 +317,13 @@ class Distributed(object):
         streetnetwork_path_pool = StreetNetworkPathPool(future_manager=future_manager, instance=instance)
 
         journeys_to_complete = get_journeys_to_complete(responses, context, is_debug)
+
+        transfer_pool = TransferPool(future_manager=future_manager, instance=instance, request=request)
+
+        if request['_transfer_path'] is True:
+            for journey in journeys_to_complete:
+                transfer_pool.async_compute_transfer(journey.pt_journeys.sections)
+
         wait_and_complete_pt_journey(
             requested_orig_obj=context.requested_orig_obj,
             requested_dest_obj=context.requested_dest_obj,
@@ -325,6 +332,7 @@ class Distributed(object):
             dest_places_free_access=context.dest_places_free_access,
             orig_fallback_durations_pool=context.orig_fallback_durations_pool,
             dest_fallback_durations_pool=context.dest_fallback_durations_pool,
+            transfer_pool=transfer_pool,
             request=request,
             journeys=journeys_to_complete,
             request_id="{}_complete_pt_journey".format(request_id),

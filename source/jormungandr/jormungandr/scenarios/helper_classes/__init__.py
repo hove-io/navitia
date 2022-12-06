@@ -33,6 +33,7 @@ from .fallback_durations import FallbackDurationsPool
 from .place_by_uri import PlaceByUri
 from .pt_journey import PtJourneyPool
 from .proximities_by_crowfly import ProximitiesByCrowflyPool
+from .transfer import TransferPool
 from .complete_pt_journey import wait_and_complete_pt_journey
 from .helper_exceptions import PtException, EntryPointException, FinaliseException, StreetNetworkException
 from .helper_utils import get_entry_point_or_raise, check_final_results_or_raise
