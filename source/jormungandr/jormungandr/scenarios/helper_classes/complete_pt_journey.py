@@ -40,8 +40,6 @@ from jormungandr.street_network.street_network import StreetNetworkPathType
 from collections import namedtuple
 from navitiacommon import response_pb2
 
-import jormungandr.scenarios.helper_classes.transfer as transfer
-
 Pt_element = namedtuple("Pt_element", "dep_mode, arr_mode, pt_journeys")
 
 
