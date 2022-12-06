@@ -31,6 +31,7 @@ import itertools
 import logging
 from jormungandr.street_network.street_network import StreetNetworkPathType
 from jormungandr.utils import PeriodExtremity
+from jormungandr.fallback_modes import FallbackModes
 
 NO_ACCESS_POINTS_PHYSICAL_MODES = (
     'physical_mode:Bus',
@@ -38,7 +39,6 @@ NO_ACCESS_POINTS_PHYSICAL_MODES = (
     'physical_mode:BusRapidTransit',
     'physical_mode:Coach',
     'physical_mode:Shuttle',
-    'physical_mode:RapidTransit',
 )
 
 ACCESS_POINTS_PHYSICAL_MODES = ("physical_mode:RapidTransit",)
@@ -63,30 +63,29 @@ class TransferPool(object):
         self._instance = instance
         self._request = request
         self._streetnetwork_service = self._instance.get_street_network("walking", request)
-
         self._transfers_future = dict()
-
         self._logger = logging.getLogger(__name__)
 
+    @staticmethod
+    def hasfield(section, field):
+        try:
+            return section.HasField(field)
+        except ValueError:
+            return False
+
+    def get_physical_mode(self, section):
+        if (
+            self.hasfield(section, 'pt_display_informations')
+            and self.hasfield(section.pt_display_informations, 'uris')
+            and self.hasfield(section.pt_display_informations.uris, 'physical_mode')
+        ):
+            return section.pt_display_informations.uris.physical_mode
+        else:
+            return None
+
     def async_compute_transfer(self, journey_sections):
-        def hasfield(section, field):
-            try:
-                return section.HasField(field)
-            except ValueError:
-                return False
-
-        def get_physical_mode(section):
-            if (
-                hasfield(section, 'pt_display_informations')
-                and hasfield(section.pt_display_informations, 'uris')
-                and hasfield(section.pt_display_informations.uris, 'physical_mode')
-            ):
-                return section.pt_display_informations.uris.physical_mode
-            else:
-                return None
-
-        for index in range(1, len(journey_sections) - 2):
-            if journey_sections[index].type != response_pb2.TRANSFER:
+        for index, section in enumerate(journey_sections[1:-2], start=1):
+            if section.type != response_pb2.TRANSFER:
                 continue
 
             prev_section = journey_sections[index - 1]
@@ -97,14 +96,16 @@ class TransferPool(object):
                 else journey_sections[index + 1]
             )
 
-            prev_section_mode = get_physical_mode(prev_section)
-            next_section_mode = get_physical_mode(next_section)
+            prev_section_mode = self.get_physical_mode(prev_section)
+            next_section_mode = self.get_physical_mode(next_section)
 
-            section = journey_sections[index]
             section_key = self._get_section_key(section)
 
             if (prev_section_mode, next_section_mode) in NO_ACCESS_POINTS_TRANSFER:
                 self._transfers_future[section_key] = self._aysnc_no_access_point_transfer(section)
+            elif (prev_section_mode, next_section_mode) in ACCESS_POINTS_TRANSFER:
+                # TODO: there will be a whole new feature!
+                continue
             else:
                 continue
 
@@ -114,7 +115,7 @@ class TransferPool(object):
         extremity = PeriodExtremity(section.end_date_time, False)
         return self._streetnetwork_service.direct_path_with_fp(
             self._instance,
-            "walking",
+            FallbackModes.walking.name,
             section.origin,
             section.destination,
             extremity,
