@@ -184,6 +184,9 @@ CIRCUIT_BREAKER_ASGARD_TIMEOUT_S = 60  # the circuit breaker retries after this 
 CIRCUIT_BREAKER_MAX_KLAXIT_FAIL = 4  # max instance call failures before stopping attempt
 CIRCUIT_BREAKER_KLAXIT_TIMEOUT_S = 60  # the circuit breaker retries after this timeout (in seconds)
 
+CIRCUIT_BREAKER_MAX_OUESTGO_FAIL = 4  # max instance call failures before stopping attempt
+CIRCUIT_BREAKER_OUESTGO_TIMEOUT_S = 60  # the circuit breaker retries after this timeout (in seconds)
+
 CIRCUIT_BREAKER_MAX_FORSETI_FAIL = 4  # max instance call failures before stopping attempt
 CIRCUIT_BREAKER_FORSETI_TIMEOUT_S = 60  # the circuit breaker retries after this timeout (in seconds)
 

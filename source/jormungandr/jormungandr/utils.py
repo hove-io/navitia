@@ -57,6 +57,7 @@ PY3 = sys.version_info[0] == 3
 DATETIME_FORMAT = "%Y%m%dT%H%M%S"
 UTC_DATETIME_FORMAT = "%Y-%m-%dT%H:%M:%S%z"
 NOT_A_DATE_TIME = "not-a-date-time"
+WEEK_DAYS_MAPPING = ("monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday")
 
 
 def get_uri_pt_object(pt_object):
@@ -812,3 +813,11 @@ def remove_ghost_words(query_string, ghost_words):
     for gw in ghost_words:
         query_string = query_string.replace(gw, '').strip()
     return query_string
+
+
+def get_weekday(timestamp):
+    try:
+        date_time = datetime.fromtimestamp(timestamp)
+        return WEEK_DAYS_MAPPING[date_time.weekday()]
+    except ValueError:
+        return None
