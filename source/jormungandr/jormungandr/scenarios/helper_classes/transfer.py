@@ -102,7 +102,8 @@ class TransferPool(object):
             section_key = self._get_section_key(section)
 
             if (prev_section_mode, next_section_mode) in NO_ACCESS_POINTS_TRANSFER:
-                self._transfers_future[section_key] = self._aysnc_no_access_point_transfer(section)
+                if section_key not in self._transfers_future:
+                    self._transfers_future[section_key] = self._aysnc_no_access_point_transfer(section)
             elif (prev_section_mode, next_section_mode) in ACCESS_POINTS_TRANSFER:
                 # TODO: there will be a whole new feature!
                 continue
