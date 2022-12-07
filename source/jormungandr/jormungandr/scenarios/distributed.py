@@ -443,7 +443,6 @@ class Scenario(new_default.Scenario):
     def call_kraken(self, request_type, request, instance, krakens_call, request_id, context):
         record_custom_parameter('scenario', 'distributed')
         logger = logging.getLogger(__name__)
-        logger.warning("using experimental scenario!!")
         """
         All spawned futures must be started(if they're not yet started) when leaving the scope.
 
@@ -499,7 +498,6 @@ class Scenario(new_default.Scenario):
 
     def graphical_isochrones(self, request, instance):
         logger = logging.getLogger(__name__)
-        logger.warning("using experimental scenario!!")
         """
         All spawned futures must be started(if they're not yet started) when leaving the scope.
 
