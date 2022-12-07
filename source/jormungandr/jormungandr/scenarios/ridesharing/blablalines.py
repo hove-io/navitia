@@ -41,7 +41,8 @@ from jormungandr.scenarios.ridesharing.ridesharing_service import (
     RsFeedPublisher,
     RidesharingServiceError,
 )
-from jormungandr.utils import decode_polyline, Coords
+from jormungandr.utils import Coords
+from jormungandr.street_network.utils import crowfly_distance_between
 from navitiacommon import type_pb2
 import jormungandr.street_network.utils
 
@@ -129,9 +130,7 @@ class Blablalines(AbstractRidesharingService):
 
             res.origin_pickup_duration = offer.get('departure_to_pickup_walking_time')
             res.origin_pickup_shape = None  # Not specified
-            res.origin_pickup_distance = int(
-                jormungandr.street_network.utils.crowfly_distance_between(departure_coord, pickup_coord)
-            )
+            res.origin_pickup_distance = int(crowfly_distance_between(departure_coord, pickup_coord))
 
             # drop off coord
             dropoff_lat = offer.get('dropoff_latitude')
@@ -146,9 +145,7 @@ class Blablalines(AbstractRidesharingService):
 
             res.dropoff_dest_duration = offer.get('dropoff_to_arrival_walking_time')
             res.dropoff_dest_shape = None  # Not specified
-            res.dropoff_dest_distance = int(
-                jormungandr.street_network.utils.crowfly_distance_between(dropoff_coord, arrival_coord)
-            )
+            res.dropoff_dest_distance = int(crowfly_distance_between(dropoff_coord, arrival_coord))
 
             res.shape = self._retreive_main_shape(offer, 'journey_polyline', res.pickup_place, res.dropoff_place)
 

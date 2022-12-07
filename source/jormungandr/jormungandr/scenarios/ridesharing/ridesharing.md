@@ -83,3 +83,30 @@ Insert into **Jormun** configuration:
     }
  ]
 ```
+
+## Ouestgo
+
+Also provides an external API that delivers ridesharing offers.<br>
+As with other connectors Navitia exposes the offers inside **ridesharing_journeys** json output field.<br>
+Ouest documentation : https://api.test.ouestgo.mobicoop.io/doc
+
+### How to connect Ouestgo with Navitia.
+
+Insert into **Jormun** configuration:
+
+```
+ "ridesharing": [
+    {
+      "id": "ouestgo",
+      "args": {
+        "api_key": "rdex_kisio",
+        "network": "Ouestgo",
+        "service_url": "https://api.test.ouestgo.mobicoop.io/rdex/journeys",
+        "timeout": 15,
+        "driver_state": 1,
+        "passenger_state": 0
+      },
+      "class": "jormungandr.scenarios.ridesharing.ouestgo.Ouestgo"
+    }
+  ]
+```
