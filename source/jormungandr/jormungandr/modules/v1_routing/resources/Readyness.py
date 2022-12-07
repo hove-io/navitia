@@ -35,4 +35,4 @@ from jormungandr import i_manager
 
 class Readyness(ModuleResource):
     def get(self):
-        return ("OK", 200) if i_manager.is_ready else ("KO", 500)
+        return ("OK", 200) if i_manager.is_ready else ("KO", 503)
