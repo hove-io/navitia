@@ -45,4 +45,4 @@ class TestReadynessApi(AbstractTestFixture):
         i_manager.is_ready = False
         str_resp, status_code = self.query_no_assert("/v1/readyness")
         assert str_resp == "KO"
-        assert status_code == 500
+        assert status_code == 503

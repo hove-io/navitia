@@ -193,7 +193,7 @@ def ready():
         return json.dumps({'error': 'no status in zmq response'}), 500
     if proto_response.status.loaded == True:
         return json.dumps("ready"), 200
-    return json.dumps("not ready"), 400
+    return json.dumps("not ready"), 503
 
 
 def request_kraken_zmq_status(zmq_socket, zmq_timeout_in_ms):
