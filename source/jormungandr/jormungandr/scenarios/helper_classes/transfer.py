@@ -41,7 +41,7 @@ NO_ACCESS_POINTS_PHYSICAL_MODES = (
     'physical_mode:Shuttle',
 )
 
-ACCESS_POINTS_PHYSICAL_MODES = ("physical_mode:RapidTransit",)
+ACCESS_POINTS_PHYSICAL_MODES = ("physical_mode:RapidTransit", "physical_mode:Metro")
 
 # if `(physical_mode:A, physical_mode:B) in NO_ACCESS_POINTS_TRANSFER` then it means that a transfer
 # where we get out of a vehicle of  `physical_mode:A` and then get in a vehicle of `physical_mode:B`
