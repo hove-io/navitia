@@ -43,14 +43,15 @@ NO_ACCESS_POINTS_PHYSICAL_MODES = (
 
 ACCESS_POINTS_PHYSICAL_MODES = ("physical_mode:RapidTransit",)
 
-# if `(physical_mode:A, physical_mode:B) in NO_ACCESS_POINTS_TRANSFER` then it means that a transfer 
-# where we get out of a vehicle of  `physical_mode:A` and then get in a vehicle of `physical_mode:B` 
+# if `(physical_mode:A, physical_mode:B) in NO_ACCESS_POINTS_TRANSFER` then it means that a transfer
+# where we get out of a vehicle of  `physical_mode:A` and then get in a vehicle of `physical_mode:B`
 # **will not** go through an access point
 NO_ACCESS_POINTS_TRANSFER = set(
     itertools.product(NO_ACCESS_POINTS_PHYSICAL_MODES, NO_ACCESS_POINTS_PHYSICAL_MODES)
 )
-# if `(physical_mode:A, physical_mode:B) in ACCESS_POINTS_TRANSFER` then it means that a transfer 
-# where we get out of a vehicle of  `physical_mode:A` and then get in a vehicle of `physical_mode:B` 
+
+# if `(physical_mode:A, physical_mode:B) in ACCESS_POINTS_TRANSFER` then it means that a transfer
+# where we get out of a vehicle of  `physical_mode:A` and then get in a vehicle of `physical_mode:B`
 # **may use** an access point
 ACCESS_POINTS_TRANSFER = set(
     itertools.product(ACCESS_POINTS_PHYSICAL_MODES, NO_ACCESS_POINTS_PHYSICAL_MODES)
