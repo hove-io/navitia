@@ -1,3 +1,9 @@
+navitia2 (15.22.0) unstable; urgency=low
+
+  * [Kraken] Readyness: status code changed  <https://github.com/hove-io/navitia/pull/3869>
+
+ -- Abderrahim AZIME <azime_1@yahoo.fr>  Thu, 08 Dec 2022 10:12:38 +0100
+
 navitia2 (15.21.0) unstable; urgency=low
 
   * [Jormun] Init ridesharing connector OuestGo  <https://github.com/hove-io/navitia/pull/3857>
