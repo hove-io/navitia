@@ -30,7 +30,7 @@ from __future__ import absolute_import
 from jormungandr import utils, new_relic
 from jormungandr.street_network.street_network import StreetNetworkPathType
 import logging
-from .helper_utils import timed_logger
+from .helper_utils import timed_logger, prepend_first_and_append_last_coord
 from navitiacommon import type_pb2, response_pb2
 from jormungandr.exceptions import GeoveloTechnicalError
 from .helper_exceptions import StreetNetworkException
@@ -139,7 +139,7 @@ class StreetNetworkPath:
 
         dp = self._direct_path_with_fp(self._streetnetwork_service)
 
-        self._add_first_and_last_coord(dp)
+        prepend_first_and_append_last_coord(dp, self._orig_obj, self._dest_obj)
 
         if getattr(dp, "journeys", None):
             dp.journeys[0].internal_id = str(utils.generate_id())

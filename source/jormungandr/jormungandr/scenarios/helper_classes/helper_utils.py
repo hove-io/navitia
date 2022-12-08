@@ -35,7 +35,6 @@ from jormungandr.utils import (
     SectionSorter,
     get_pt_object_coord,
     generate_id,
-    get_overriding_mode,
 )
 from jormungandr.street_network.utils import crowfly_distance_between
 from jormungandr.fallback_modes import FallbackModes, all_fallback_modes
@@ -247,6 +246,34 @@ def _extend_with_car_park(
     dp_journey.distances.walking += int(walking_speed * car_park_crowfly_duration)
 
 
+def append_path_item_with_access_point(path_items, stop_point, access_point):
+    via = path_items.add()
+    via.duration = access_point.traversal_time
+    via.length = access_point.length
+    via.name = access_point.name
+    # Use label in stead of name???
+    via.instruction = u"Then Enter {} via {}.".format(stop_point.label, access_point.name)
+    via.via_uri = access_point.uri
+
+
+def prepend_path_item_with_access_point(path_items, stop_point, access_point):
+    via = path_items.add()
+    via.duration = access_point.traversal_time
+    via.length = access_point.length
+    via.name = access_point.name
+    # Use label in stead of name???
+    via.instruction = u"Exit {} via {}.".format(stop_point.label, access_point.name)
+    via.via_uri = access_point.uri
+
+    # we cannot insert an element at the beginning of a list :(
+    # a little algo to move the last element to the beginning
+    tmp_item = response_pb2.PathItem()
+    for i in range(len(path_items)):
+        tmp_item.CopyFrom(path_items[i])
+        path_items[i].CopyFrom(path_items[-1])
+        path_items[-1].CopyFrom(tmp_item)
+
+
 def _extend_with_via_access_point(fallback_dp, pt_object, fallback_type, via_access_point):
     if via_access_point is None:
         return
@@ -266,13 +293,11 @@ def _extend_with_via_access_point(fallback_dp, pt_object, fallback_type, via_acc
         dp_journey.sections[0].street_network.duration += traversal_time
         dp_journey.sections[0].street_network.length += length
 
-        via = dp_journey.sections[-1].street_network.path_items.add()
-        via.duration = traversal_time
-        via.length = length
-        via.name = via_access_point.name
-        # Use label in stead of name???
-        via.instruction = u"Then Enter {} via {}.".format(pt_object.stop_point.label, via_access_point.name)
-        via.via_uri = via_access_point.uri
+        append_path_item_with_access_point(
+            dp_journey.sections[-1].street_network.path_items,
+            pt_object.stop_point,
+            via_access_point.access_point,
+        )
 
     elif fallback_type == StreetNetworkPathType.ENDING_FALLBACK:
         dp_journey.sections[-1].end_date_time += traversal_time
@@ -280,23 +305,9 @@ def _extend_with_via_access_point(fallback_dp, pt_object, fallback_type, via_acc
         dp_journey.sections[-1].street_network.duration += traversal_time
         dp_journey.sections[-1].street_network.length += length
 
-        path_items = dp_journey.sections[0].street_network.path_items
-
-        via = dp_journey.sections[0].street_network.path_items.add()
-        via.duration = traversal_time
-        via.length = length
-        via.name = via_access_point.name
-        # Use label in stead of name???
-        via.instruction = u"Exit {} via {}.".format(pt_object.stop_point.label, via_access_point.name)
-        via.via_uri = via_access_point.uri
-
-        # we cannot insert an element at the beginning of a list :(
-        # a little algo to move the last element to the beginning
-        tmp_item = response_pb2.PathItem()
-        for i in range(len(path_items)):
-            tmp_item.CopyFrom(path_items[i])
-            path_items[i].CopyFrom(path_items[-1])
-            path_items[-1].CopyFrom(tmp_item)
+        prepend_path_item_with_access_point(
+            dp_journey.sections[0].street_network.path_items, pt_object.stop_point, via_access_point.access_point
+        )
 
 
 def _update_fallback_sections(journey, fallback_dp, fallback_period_extremity, fallback_type, via_access_point):
@@ -766,3 +777,34 @@ def complete_transfer(pt_journey, transfer_pool):
         if section.type != response_pb2.TRANSFER:
             continue
         transfer_pool.wait_and_complete(section)
+
+
+def prepend_first_and_append_last_coord(dp, origin, destination):
+    """
+    Insert/append origin and destination's coordinates to the geojson
+    """
+    if not dp or not dp.journeys or not dp.journeys[0].sections:
+        return
+
+    nb_coords = sum((len(sec.street_network.coordinates) for sec in dp.journeys[0].sections))
+    if nb_coords < 2:
+        return
+
+    starting_coords = dp.journeys[0].sections[0].street_network.coordinates
+    # we are inserting the coord of the origin at the beginning of the geojson
+    coord = get_pt_object_coord(origin)
+    if starting_coords and coord != starting_coords[0]:
+        starting_coords.add(lon=coord.lon, lat=coord.lat)
+        # we cannot insert an element at the beginning of a list :(
+        # a little algo to move the last element to the beginning
+        tmp = type_pb2.GeographicalCoord()
+        for i in range(len(starting_coords)):
+            tmp.CopyFrom(starting_coords[i])
+            starting_coords[i].CopyFrom(starting_coords[-1])
+            starting_coords[-1].CopyFrom(tmp)
+
+    ending_coords = dp.journeys[0].sections[-1].street_network.coordinates
+    # we are appending the coord of the destination at the end of the geojson
+    coord = get_pt_object_coord(destination)
+    if ending_coords and coord != ending_coords[-1]:
+        ending_coords.add(lon=coord.lon, lat=coord.lat)
