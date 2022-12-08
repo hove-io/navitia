@@ -33,7 +33,6 @@ from .helper_utils import (
     compute_fallback,
     _build_crowflies,
     timed_logger,
-    compute_transfer,
     complete_transfer,
 )
 from .helper_exceptions import InvalidDateBoundException
@@ -146,6 +145,7 @@ def wait_and_complete_pt_journey(
     dest_places_free_access,
     orig_fallback_durations_pool,
     dest_fallback_durations_pool,
+    transfer_pool,
     request,
     journeys,
     request_id,
@@ -175,18 +175,6 @@ def wait_and_complete_pt_journey(
             request_id=sub_request_id,
         )
 
-    # launch compute transfer asynchronously
-    transfer_sections = []
-    if request['_transfer_path'] is True:
-        sub_request_transfer_id = "{}_transfer".format(request_id)
-        with timed_logger(logger, 'compute_transfer', sub_request_transfer_id):
-            transfer_sections = compute_transfer(
-                pt_journey=journeys,
-                transfer_path_pool=streetnetwork_path_pool,
-                request=request,
-                request_id=sub_request_transfer_id,
-            )
-
     with timed_logger(logger, 'complete_pt_journeys', request_id):
         for pt_element in journeys:
             complete_pt_journey(
@@ -205,9 +193,8 @@ def wait_and_complete_pt_journey(
 
     if request['_transfer_path'] is True:
         with timed_logger(logger, 'complete_transfer', request_id):
-            complete_transfer(
-                pt_journey=journeys,
-                transfer_path_pool=streetnetwork_path_pool,
-                request=request,
-                transfer_sections=transfer_sections,
-            )
+            for pt_element in journeys:
+                complete_transfer(
+                    pt_journey=pt_element.pt_journeys,
+                    transfer_pool=transfer_pool,
+                )
