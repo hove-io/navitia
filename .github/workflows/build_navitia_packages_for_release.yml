@@ -55,7 +55,7 @@ jobs:
       run: |
           echo '{"text":":warning: Github Actions: build_navitia_packages_for_release failed ! (https://github.com/hove-io/navitia/actions?query=workflow%3A%22Build+Navitia+Packages+For+Release%22). Navboys, this is a release alert !!!"}' | http --json POST ${{secrets.SLACK_NAVITIA_CORE_TEAM_URL}}
 
-    - name: trig publishing + notifications (the job has successed)
+    - name: notifications (the job has successed)
       if: success() && matrix.distribution == 'debian8'
       run: |
           version_number=$(head -n 1 debian/changelog | cut -d'(' -f 2 | cut -d')' -f 1)
