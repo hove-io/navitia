@@ -745,13 +745,12 @@ class Instance(object):
 
     @contextmanager
     def socket(self, context):
-
-        socket = None
         sockets = self._sockets
         socket_path = self.socket_path
 
+        t = None
         try:
-            socket, _ = sockets.pop()
+            socket, t = sockets.pop()
         except IndexError:  # there is no socket available: lets create one
             socket = context.socket(zmq.REQ)
             socket.connect(socket_path)
@@ -759,7 +758,11 @@ class Instance(object):
             yield socket
         finally:
             if not socket.closed:
-                sockets.append((socket, time.time()))
+                if t is not None and time.time() - t > app.config.get("ZMQ_SOCKET_TTL_SECONDS", 10):
+                    socket.setsockopt(zmq.LINGER, 0)
+                    socket.close()
+                else:
+                    sockets.append((socket, t or time.time()))
 
     def send_and_receive(self, *args, **kwargs):
         """
