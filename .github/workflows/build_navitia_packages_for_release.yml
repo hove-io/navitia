@@ -55,10 +55,9 @@ jobs:
       run: |
           echo '{"text":":warning: Github Actions: build_navitia_packages_for_release failed ! (https://github.com/hove-io/navitia/actions?query=workflow%3A%22Build+Navitia+Packages+For+Release%22). Navboys, this is a release alert !!!"}' | http --json POST ${{secrets.SLACK_NAVITIA_CORE_TEAM_URL}}
 
-    - name: trig publishing + notifications (the job has successed)
+    - name: notifications (the job has successed)
       if: success() && matrix.distribution == 'debian8'
       run: |
-          http --ignore-stdin -v -f --verify no POST https://${{secrets.JENKINS_NG_TOKEN}}@jenkins-core.canaltp.fr/job/publish-navitia-packages/buildWithParameters PLATFORM=navitia_debian8_packages
           version_number=$(head -n 1 debian/changelog | cut -d'(' -f 2 | cut -d')' -f 1)
           echo '{"text":":information_source: Navitia Github Actions: build_navitia_packages_for_release succeded -' $version_number 'navitia debian packages are available"}' | http --json POST ${{secrets.SLACK_NAVITIA_CORE_TEAM_URL}}
           echo '{"text":":octopus: Navitia Release: The version' $version_number 'is available. changelog: https://github.com/hove-io/navitia/releases/tag/v'$version_number'"}' | http --json POST ${{secrets.SLACK_NAVITIA_URL}}
