@@ -63,8 +63,9 @@ class ZmqSocket(six.with_metaclass(ABCMeta, object)):
 
     @contextmanager
     def socket(self, context):
+        t = None
         try:
-            socket, _ = self._sockets.pop()
+            socket, t = self._sockets.pop()
         except IndexError:  # there is no socket available: lets create one
             socket = context.socket(zmq.REQ)
             socket.connect(self.zmq_socket)
@@ -72,7 +73,11 @@ class ZmqSocket(six.with_metaclass(ABCMeta, object)):
             yield socket
         finally:
             if not socket.closed:
-                self._sockets.append((socket, time.time()))
+                if t is not None and time.time() - t > app.config.get("ZMQ_SOCKET_TTL_SECONDS", 10):
+                    socket.setsockopt(zmq.LINGER, 0)
+                    socket.close()
+                else:
+                    self._sockets.append((socket, t or time.time()))
 
     def _send_and_receive(self, request, quiet=False, **kwargs):
         logger = logging.getLogger(__name__)
