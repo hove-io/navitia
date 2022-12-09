@@ -1,3 +1,9 @@
+navitia2 (15.22.1) unstable; urgency=low
+
+  * [Jormungandr] fix zmq socket lifetime  <https://github.com/hove-io/navitia/pull/3874>
+
+ -- patrick.qian <patrick.qian@kisio.com>  Fri, 09 Dec 2022 16:12:57 +0100
+
 navitia2 (15.22.0) unstable; urgency=low
 
   * [Kraken] Readyness: status code changed  <https://github.com/hove-io/navitia/pull/3869>
