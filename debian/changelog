@@ -1,3 +1,9 @@
+navitia2 (15.22.2) unstable; urgency=low
+
+  * [CI] Remove POST debian packages to jenkins  <https://github.com/hove-io/navitia/pull/3875>
+
+ -- patrick.qian <patrick.qian@kisio.com>  Fri, 09 Dec 2022 17:12:30 +0100
+
 navitia2 (15.22.1) unstable; urgency=low
 
   * [Jormungandr] fix zmq socket lifetime  <https://github.com/hove-io/navitia/pull/3874>
