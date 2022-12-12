@@ -71,7 +71,7 @@ BOOST_AUTO_TEST_CASE(sans_filtre) {
     BOOST_CHECK_EQUAL(indexes.size(), 1);
 
     indexes = make_query(nt::Type_e::PhysicalMode, "", *(b.data));
-    BOOST_CHECK_EQUAL(indexes.size(), 7);
+    BOOST_CHECK_EQUAL(indexes.size(), 8);
 
     indexes = make_query(nt::Type_e::CommercialMode, "", *(b.data));
     BOOST_CHECK_EQUAL(indexes.size(), 7);
@@ -154,7 +154,7 @@ BOOST_AUTO_TEST_CASE(get_indexes_test) {
         b.connection("stop3", "stop2", 10 * 60);
     });
 
-    // On cherche à retrouver la ligne 1, en passant le stoparea en filtre
+    // On cherche �� retrouver la ligne 1, en passant le stoparea en filtre
     auto indexes = make_query(Type_e::Line, "stop_area.uri = stop1", *b.data);
     BOOST_CHECK_EQUAL_RANGE(indexes, nt::make_indexes({0}));
 
@@ -336,12 +336,12 @@ BOOST_AUTO_TEST_CASE(forbidden_uri) {
 
 BOOST_AUTO_TEST_CASE(find_path_test) {
     auto res = find_path(nt::Type_e::Route);
-    // Cas où on veut partir et arriver au même point
+    // Cas o�� on veut partir et arriver au m��me point
     BOOST_CHECK(res[nt::Type_e::Route] == nt::Type_e::Route);
-    // On regarde qu'il y a un semblant d'itinéraire pour chaque type : il faut un prédécesseur
+    // On regarde qu'il y a un semblant d'itin��raire pour chaque type : il faut un pr��d��cesseur
     for (auto node_pred : res) {
-        // Route c'est lui même puisque c'est la source, et validity pattern est puni, donc il est seul dans son coin,
-        // de même pour POI et POIType
+        // Route c'est lui m��me puisque c'est la source, et validity pattern est puni, donc il est seul dans son coin,
+        // de m��me pour POI et POIType
         if (node_pred.first != Type_e::Route && node_pred.first != Type_e::ValidityPattern
             && node_pred.first != Type_e::POI && node_pred.first != Type_e::POIType
             && node_pred.first != Type_e::Contributor && node_pred.first != Type_e::Impact
@@ -349,9 +349,9 @@ BOOST_AUTO_TEST_CASE(find_path_test) {
             BOOST_CHECK(node_pred.first != node_pred.second);
     }
 
-    // On vérifie qu'il n'y ait pas de nœud qui ne soit pas atteignable depuis un autre nœud
-    // En connexité non forte, il y a un seul ensemble : validity pattern est relié (en un seul sens) au gros paté
-    // Avec les composantes fortement connexes : there must be only two : validity pattern est isolé car on ne peut y
+    // On v��rifie qu'il n'y ait pas de n��ud qui ne soit pas atteignable depuis un autre n��ud
+    // En connexit�� non forte, il y a un seul ensemble : validity pattern est reli�� (en un seul sens) au gros pat��
+    // Avec les composantes fortement connexes : there must be only two : validity pattern est isol�� car on ne peut y
     // aller
     Jointures j;
     std::vector<Jointures::vertex_t> component(boost::num_vertices(j.g));

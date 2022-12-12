@@ -85,6 +85,9 @@ class TransferPool(object):
         self._transfers_future = dict()
         self._logger = logging.getLogger(__name__)
 
+    def _make_sub_request_id(self, origin_uri, destination_uri):
+        return "{}_transfer_{}_{}".format(self._request_id, origin_uri, destination_uri)
+
     @staticmethod
     def hasfield(section, field):
         try:
@@ -132,9 +135,8 @@ class TransferPool(object):
                 continue
 
     def _do_no_access_point_transfer(self, section):
-        sub_request_id = "{}_transfer_{}_{}".format(
-            self._request_id, section.origin.uri, section.destination.uri
-        )
+        sub_request_id = self._make_sub_request_id(section.origin.uri, section.destination.uri)
+
         direct_path_type = StreetNetworkPathType.DIRECT
         extremity = PeriodExtremity(section.end_date_time, False)
         direct_path = self._streetnetwork_service.direct_path_with_fp(
@@ -168,38 +170,83 @@ class TransferPool(object):
             if predicator(ap)
         ]
 
-    def _do_access_point_transfer(self, section, prev_section_mode, next_section_mode):
-        access_points = None
+    def get_underlying_access_points(self, section, prev_section_mode, next_section_mode):
+        """
+        find out based on with extremity of the section the access points are calculated and request the georef for
+        access_points of the underlying stop_point
+        return: access_points
+        """
         if prev_section_mode in ACCESS_POINTS_PHYSICAL_MODES:
-            access_points = self._get_access_points(section.origin.uri, predicator=lambda ap: ap.is_exit)
-            # if no access points are found for this stop point, which is supposed to have access points
-            # we do nothing about the transfer path
-            if not access_points:
-                return None
-
-        elif next_section_mode in ACCESS_POINTS_PHYSICAL_MODES:
-            access_points = self._get_access_points(
-                section.destination.uri, predicator=lambda ap: ap.is_entrance
+            return self._get_access_points(
+                section.origin.uri, predicator=lambda access_point: access_point.is_exit
             )
-            # if no access points are found for this stop point, which is supposed to have access points
-            # we do nothing about the transfer path
-            if not access_points:
-                return None
+        elif next_section_mode in ACCESS_POINTS_PHYSICAL_MODES:
+            return self._get_access_points(
+                section.destination.uri, predicator=lambda access_point: access_point.is_entrance
+            )
 
-        # determine the origins and the destinations for matrix computation
+    @staticmethod
+    def determinate_matrix_entry(section, access_points, prev_section_mode, next_section_mode):
+        """
+        determine the origins and the destinations for matrix computation
+        return: origins, destinations
+        """
         origins = access_points if prev_section_mode in ACCESS_POINTS_PHYSICAL_MODES else [section.origin]
         destinations = (
             access_points if next_section_mode in ACCESS_POINTS_PHYSICAL_MODES else [section.destination]
         )
+        return origins, destinations
+
+    @staticmethod
+    def determinate_direct_path_entry(section, access_point, prev_section_mode, next_section_mode):
+        """
+        determinate the origin and the destination for final direct path computation
+        return: origin, destination
+        """
+        # now we are going to compute the real path
+        origin = access_point if prev_section_mode in ACCESS_POINTS_PHYSICAL_MODES else section.origin
+        destination = access_point if next_section_mode in ACCESS_POINTS_PHYSICAL_MODES else section.destination
+
+        return origin, destination
+
+    @staticmethod
+    def determinate_the_best_access_point(routing_matrix, access_points):
+        """
+        determinate the best access point
+        return: access_point
+        """
+        # since the matrix is not really a matrix(NxM) but a single row(1xN)...
+        best_access_point = None
+        best_duration = float('inf')
+        for i, ap in enumerate(access_points):
+            if routing_matrix.rows[0].routing_response[i].routing_status != response_pb2.reached:
+                continue
+            total_duration = routing_matrix.rows[0].routing_response[i].duration + ap.access_point.traversal_time
+            if total_duration < best_duration:
+                best_duration = total_duration
+                best_access_point = ap
+
+        return best_access_point
+
+    def _do_access_point_transfer(self, section, prev_section_mode, next_section_mode):
+        access_points = self.get_underlying_access_points(section, prev_section_mode, next_section_mode)
+        # if no access points are found for this stop point, which is supposed to have access points
+        # we do nothing about the transfer path
+        if not access_points:
+            return None
+
+        origins, destinations = self.determinate_matrix_entry(
+            section, access_points, prev_section_mode, next_section_mode
+        )
 
         if len(origins) > 1 and len(destinations) > 1:
             self._logger.error(
-                "Error occurred when computing transfer path both origins and destinations's sizes are larger than 1"
+                "Error occurred when computing transfer path both origin's and destination's sizes are larger than 1"
             )
             return None
 
         if len(origins) == 1 and len(destinations) == 1:
-            sub_request_id = "{}_transfer_{}_{}".format(self._request_id, origins[0].uri, destinations[0].uri)
+            sub_request_id = self._make_sub_request_id(origins[0].uri, destinations[0].uri)
             direct_path_type = StreetNetworkPathType.DIRECT
             extremity = PeriodExtremity(section.end_date_time, False)
             direct_path = self._streetnetwork_service.direct_path_with_fp(
@@ -229,25 +276,13 @@ class TransferPool(object):
 
         # now it's time to find the best combo
         # (stop_point -> access_points or access_points -> stop_point)
+        best_access_point = self.determinate_the_best_access_point(routing_matrix, access_points)
 
-        # since the matrix is not really a matrix(NxM) but a single row(1xN)...
-        best_access_point = None
-        best_duration = float('inf')
-        for i, ap in enumerate(access_points):
-            if routing_matrix.rows[0].routing_response[i].routing_status != response_pb2.reached:
-                continue
-            total_duration = routing_matrix.rows[0].routing_response[i].duration + ap.access_point.traversal_time
-            if total_duration < best_duration:
-                best_duration = total_duration
-                best_access_point = ap
-
-        # now we are going to compute the real path
-        origin = best_access_point if prev_section_mode in ACCESS_POINTS_PHYSICAL_MODES else section.origin
-        destination = (
-            best_access_point if next_section_mode in ACCESS_POINTS_PHYSICAL_MODES else section.destination
+        origin, destination = self.determinate_direct_path_entry(
+            section, best_access_point, prev_section_mode, next_section_mode
         )
 
-        sub_request_id = "{}_transfer_{}_{}".format(self._request_id, origins[0].uri, destinations[0].uri)
+        sub_request_id = self._make_sub_request_id(origins[0].uri, destinations[0].uri)
         direct_path_type = StreetNetworkPathType.DIRECT
         extremity = PeriodExtremity(section.end_date_time, False)
 
