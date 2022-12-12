@@ -171,14 +171,16 @@ class TransferPool(object):
     def _do_access_point_transfer(self, section, prev_section_mode, next_section_mode):
         access_points = None
         if prev_section_mode in ACCESS_POINTS_PHYSICAL_MODES:
-            access_points = self._get_access_points(section.origin.uri, predicator=lambda ap: ap.is_entrance)
+            access_points = self._get_access_points(section.origin.uri, predicator=lambda ap: ap.is_exit)
             # if no access points are found for this stop point, which is supposed to have access points
             # we do nothing about the transfer path
             if not access_points:
                 return None
 
         elif next_section_mode in ACCESS_POINTS_PHYSICAL_MODES:
-            access_points = self._get_access_points(section.destination.uri, predicator=lambda ap: ap.is_exit)
+            access_points = self._get_access_points(
+                section.destination.uri, predicator=lambda ap: ap.is_entrance
+            )
             # if no access points are found for this stop point, which is supposed to have access points
             # we do nothing about the transfer path
             if not access_points:
