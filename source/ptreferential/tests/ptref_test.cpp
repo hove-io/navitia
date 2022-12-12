@@ -74,7 +74,7 @@ BOOST_AUTO_TEST_CASE(sans_filtre) {
     BOOST_CHECK_EQUAL(indexes.size(), 8);
 
     indexes = make_query(nt::Type_e::CommercialMode, "", *(b.data));
-    BOOST_CHECK_EQUAL(indexes.size(), 7);
+    BOOST_CHECK_EQUAL(indexes.size(), 8);
 
     indexes = make_query(nt::Type_e::Connection, "", *(b.data));
     BOOST_CHECK_EQUAL(indexes.size(), 2);
