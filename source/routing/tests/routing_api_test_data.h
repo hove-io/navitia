@@ -282,7 +282,7 @@ struct routing_api_data {
         b.data->geo_ref->ways.push_back(way);
 
         way = new navitia::georef::Way();
-        way->name = "rue ts Entr��e/Sortie";  // T->S
+        way->name = "rue ts Entrée/Sortie";  // T->S
         way->idx = 15;
         way->way_type = "rue";
         way->visible = false;
