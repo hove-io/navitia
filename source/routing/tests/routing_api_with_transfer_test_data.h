@@ -117,48 +117,21 @@ struct routing_api_data {
         admin->coord = nt::GeographicalCoord(D.lon(), D.lat());
         admin->idx = 0;
 
-        navitia::georef::Way* way;
-        way = new navitia::georef::Way();
-        way->name = "rue ab";  // A->B
-        way->idx = 0;
-        way->way_type = "rue";
-        way->admin_list.push_back(admin);
-        b.data->geo_ref->ways.push_back(way);
+        auto add_way = [this, admin](const std::string& way_name, navitia::idx_t idx) {
+            auto way_ptr = std::make_unique<navitia::georef::Way>();
+            way_ptr->name = way_name;
+            way_ptr->idx = idx;
+            way_ptr->way_type = "rue";
+            way_ptr->admin_list.push_back(admin);
+            b.data->geo_ref->ways.push_back(way_ptr.release());
+        };
 
-        way = new navitia::georef::Way();
-        way->name = "rue bc";  // B->C
-        way->idx = 1;
-        way->way_type = "rue";
-        way->admin_list.push_back(admin);
-        b.data->geo_ref->ways.push_back(way);
-
-        way = new navitia::georef::Way();
-        way->name = "rue cd";  // C->D
-        way->idx = 2;
-        way->way_type = "rue";
-        way->admin_list.push_back(admin);
-        b.data->geo_ref->ways.push_back(way);
-
-        way = new navitia::georef::Way();
-        way->name = "rue de";  // D->E
-        way->idx = 3;
-        way->way_type = "rue";
-        way->admin_list.push_back(admin);
-        b.data->geo_ref->ways.push_back(way);
-
-        way = new navitia::georef::Way();
-        way->name = "rue ef";  // E->F
-        way->idx = 4;
-        way->way_type = "rue";
-        way->admin_list.push_back(admin);
-        b.data->geo_ref->ways.push_back(way);
-
-        way = new navitia::georef::Way();
-        way->name = "rue dg";  // E->F
-        way->idx = 5;
-        way->way_type = "rue";
-        way->admin_list.push_back(admin);
-        b.data->geo_ref->ways.push_back(way);
+        add_way("rue ab", 0);  // A->B
+        add_way("rue bc", 1);  // B->C
+        add_way("rue cd", 2);  // C->D
+        add_way("rue de", 3);  // D->E
+        add_way("rue ef", 4);  // E->F
+        add_way("rue dg", 5);  // D->G
 
         // B->C
         add_edges(1, *b.data->geo_ref, CC, BB, C, B, navitia::type::Mode_e::Walking);
