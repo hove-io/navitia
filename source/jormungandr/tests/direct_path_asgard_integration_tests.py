@@ -68,7 +68,7 @@ journey_basic_query = "journeys?from={from_coord}&to={to_coord}&datetime={dateti
     from_coord=s_coord, to_coord=r_coord, datetime="20120614T080000"
 )
 
-# Create 4 path items of 10 meters each.
+# Create 4 street information.
 # The first is not a cycle lane, the others are.
 def add_cycle_path_type_in_section(section):
     street_information = section.street_network.street_information.add()
