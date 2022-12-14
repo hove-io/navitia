@@ -158,7 +158,7 @@ class TransferPool(object):
     def _aysnc_no_access_point_transfer(self, section):
         return self._future_manager.create_future(self._do_no_access_point_transfer, section)
 
-    def _get_access_points(self, stop_point_uri, predicator=lambda x: x):
+    def _get_access_points(self, stop_point_uri, access_point_filter=lambda x: x):
         sub_request_id = "{}_transfer_start_{}".format(self._request_id, stop_point_uri)
         stop_points = self._instance.georef.get_stop_points_from_uri(stop_point_uri, sub_request_id, depth=3)
         if not stop_points:
@@ -167,7 +167,7 @@ class TransferPool(object):
         return [
             type_pb2.PtObject(name=ap.name, uri=ap.uri, embedded_type=type_pb2.ACCESS_POINT, access_point=ap)
             for ap in stop_points[0].access_points
-            if predicator(ap)
+            if access_point_filter(ap)
         ]
 
     def get_underlying_access_points(self, section, prev_section_mode, next_section_mode):
@@ -178,12 +178,15 @@ class TransferPool(object):
         """
         if prev_section_mode in ACCESS_POINTS_PHYSICAL_MODES:
             return self._get_access_points(
-                section.origin.uri, predicator=lambda access_point: access_point.is_exit
+                section.origin.uri, access_point_filter=lambda access_point: access_point.is_exit
             )
-        elif next_section_mode in ACCESS_POINTS_PHYSICAL_MODES:
+
+        if next_section_mode in ACCESS_POINTS_PHYSICAL_MODES:
             return self._get_access_points(
-                section.destination.uri, predicator=lambda access_point: access_point.is_entrance
+                section.destination.uri, access_point_filter=lambda access_point: access_point.is_entrance
             )
+
+        return None
 
     @staticmethod
     def determinate_matrix_entry(section, access_points, prev_section_mode, next_section_mode):
