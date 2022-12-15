@@ -80,8 +80,8 @@ struct routing_api_data {
       A -----------------------------B---C
                                          |
                                          D---E----------------F
-
-
+                                         |
+                                         G
 
                     *) A->B has public transport
                     *) B->C->D->E are pedestrian streets
@@ -93,7 +93,8 @@ struct routing_api_data {
                                 C(100, 100)       2
                                 D( 70, 100)       3
                                 E( 70, 120)       4
-                                F( 70, 120)       4
+                                F( 70, 120)       5
+                                G( 50, 100)       6
         */
 
         boost::add_vertex(navitia::georef::Vertex(A), b.data->geo_ref->graph);
@@ -102,6 +103,7 @@ struct routing_api_data {
         boost::add_vertex(navitia::georef::Vertex(D), b.data->geo_ref->graph);
         boost::add_vertex(navitia::georef::Vertex(E), b.data->geo_ref->graph);
         boost::add_vertex(navitia::georef::Vertex(F), b.data->geo_ref->graph);
+        boost::add_vertex(navitia::georef::Vertex(G), b.data->geo_ref->graph);
 
         b.data->geo_ref->init();
 
@@ -115,41 +117,21 @@ struct routing_api_data {
         admin->coord = nt::GeographicalCoord(D.lon(), D.lat());
         admin->idx = 0;
 
-        navitia::georef::Way* way;
-        way = new navitia::georef::Way();
-        way->name = "rue ab";  // A->B
-        way->idx = 0;
-        way->way_type = "rue";
-        way->admin_list.push_back(admin);
-        b.data->geo_ref->ways.push_back(way);
+        auto add_way = [this, admin](const std::string& way_name, navitia::idx_t idx) {
+            auto way_ptr = std::make_unique<navitia::georef::Way>();
+            way_ptr->name = way_name;
+            way_ptr->idx = idx;
+            way_ptr->way_type = "rue";
+            way_ptr->admin_list.push_back(admin);
+            b.data->geo_ref->ways.push_back(way_ptr.release());
+        };
 
-        way = new navitia::georef::Way();
-        way->name = "rue bc";  // B->C
-        way->idx = 1;
-        way->way_type = "rue";
-        way->admin_list.push_back(admin);
-        b.data->geo_ref->ways.push_back(way);
-
-        way = new navitia::georef::Way();
-        way->name = "rue cd";  // C->D
-        way->idx = 2;
-        way->way_type = "rue";
-        way->admin_list.push_back(admin);
-        b.data->geo_ref->ways.push_back(way);
-
-        way = new navitia::georef::Way();
-        way->name = "rue de";  // D->E
-        way->idx = 3;
-        way->way_type = "rue";
-        way->admin_list.push_back(admin);
-        b.data->geo_ref->ways.push_back(way);
-
-        way = new navitia::georef::Way();
-        way->name = "rue ef";  // E->F
-        way->idx = 4;
-        way->way_type = "rue";
-        way->admin_list.push_back(admin);
-        b.data->geo_ref->ways.push_back(way);
+        add_way("rue ab", 0);  // A->B
+        add_way("rue bc", 1);  // B->C
+        add_way("rue cd", 2);  // C->D
+        add_way("rue de", 3);  // D->E
+        add_way("rue ef", 4);  // E->F
+        add_way("rue dg", 5);  // D->G
 
         // B->C
         add_edges(1, *b.data->geo_ref, CC, BB, C, B, navitia::type::Mode_e::Walking);
@@ -166,11 +148,16 @@ struct routing_api_data {
         b.data->geo_ref->ways[3]->edges.emplace_back(EE, DD);
         b.data->geo_ref->ways[3]->edges.emplace_back(DD, EE);
 
+        // D->G
+        add_edges(3, *b.data->geo_ref, DD, GG, D, G, navitia::type::Mode_e::Walking);
+        b.data->geo_ref->ways[3]->edges.emplace_back(DD, GG);
+        b.data->geo_ref->ways[3]->edges.emplace_back(GG, DD);
+
         b.generate_dummy_basis();
-        b.sa("stopA", A.lon(), A.lat());
-        b.sa("stopB", B.lon(), B.lat());
-        b.sa("stopE", E.lon(), E.lat());
-        b.sa("stopF", F.lon(), F.lat());
+        b.sa("stopA", A.lon(), A.lat())("stop_point:stopA", A.lon(), A.lat());
+        b.sa("stopB", B.lon(), B.lat())("stop_point:stopB", B.lon(), B.lat());
+        b.sa("stopE", E.lon(), E.lat())("stop_point:stopE", E.lon(), E.lat());
+        b.sa("stopF", F.lon(), F.lat())("stop_point:stopF", F.lon(), F.lat());
 
         if (activate_pt) {
             auto& builder_vj_FE =
@@ -189,14 +176,30 @@ struct routing_api_data {
             builder_vj_BAbis.vj->physical_mode = b.data->pt_data->physical_modes[1];  // Metro
 
             b.connection("stop_point:stopE", "stop_point:stopB", 120);
+
+            auto& builder_vj_AB =
+                b.vj("AB")("stop_point:stopA", "08:00:00"_t)("stop_point:stopB", "8:10:00"_t).st_shape({A, B});
+            b.lines["AB"]->code = "1AB";
+            builder_vj_AB.vj->physical_mode = b.data->pt_data->physical_modes[4];  // Bus
+
+            auto& builder_vj_EF =
+                b.vj("EF")("stop_point:stopE", "08:20:00"_t)("stop_point:stopF", "8:30:00"_t).st_shape({E, F});
+            b.lines["EF"]->code = "1EF";
+            builder_vj_EF.vj->physical_mode = b.data->pt_data->physical_modes[7];  // RER
+
+            b.connection("stop_point:stopB", "stop_point:stopE", 120);
         }
 
         b.data->complete();
         b.manage_admin();
         b.make();
 
+        // Add access points
+        b.add_access_point("stop_point:stopE", "access_point:E1", true, false, 100, 100, G.lat(), G.lon());
+        b.add_access_point("stop_point:stopE", "access_point:E2", true, true, 120, 120, G.lat(), G.lon());
+        b.add_access_point("stop_point:stopE", "access_point:E3", false, true, 90, 90, G.lat(), G.lon());
+
         // Add a main stop area to our admin
-        admin->main_stop_areas.push_back(b.data->pt_data->stop_areas_map["stopC"]);
 
         b.data->build_proximity_list();
         b.data->meta->production_date = boost::gregorian::date_period("20120614"_d, 365_days);
@@ -258,6 +261,7 @@ struct routing_api_data {
     int DD = 3;
     int EE = 4;
     int FF = 5;
+    int GG = 6;
 
     navitia::type::GeographicalCoord A = {120, 2000, false};
     navitia::type::GeographicalCoord B = {1990, 2000, false};
@@ -265,6 +269,7 @@ struct routing_api_data {
     navitia::type::GeographicalCoord D = {2000, 1900, false};
     navitia::type::GeographicalCoord E = {2010, 1900, false};
     navitia::type::GeographicalCoord F = {3000, 1900, false};
+    navitia::type::GeographicalCoord G = {2000, 1800, false};
 
     ed::builder b = {"20120614", ed::builder::make_builder, true, "routing api data"};
 

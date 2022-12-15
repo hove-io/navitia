@@ -748,6 +748,7 @@ void builder::generate_dummy_basis() {
     this->data->pt_data->get_or_create_commercial_mode("Bus", "Bus");
     this->data->pt_data->get_or_create_commercial_mode("Car", "Car");
     this->data->pt_data->get_or_create_commercial_mode("Coach", "Autocar");
+    this->data->pt_data->get_or_create_commercial_mode("RapidTransit", "RER");
 
     for (navitia::type::CommercialMode* mt : this->data->pt_data->commercial_modes) {
         data->pt_data->get_or_create_physical_mode("physical_mode:" + mt->uri, mt->name, get_co2_emission(mt->uri));

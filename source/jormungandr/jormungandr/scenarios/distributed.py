@@ -318,7 +318,9 @@ class Distributed(object):
 
         journeys_to_complete = get_journeys_to_complete(responses, context, is_debug)
 
-        transfer_pool = TransferPool(future_manager=future_manager, instance=instance, request=request)
+        transfer_pool = TransferPool(
+            future_manager=future_manager, instance=instance, request=request, request_id=request_id
+        )
 
         if request['_transfer_path'] is True:
             for journey in journeys_to_complete:

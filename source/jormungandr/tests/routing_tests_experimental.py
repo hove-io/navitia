@@ -1322,3 +1322,42 @@ class TestRoutingWithTransfer(NewDefaultScenarioAbstractTestFixture):
         assert 'geojson' in journeys[0]['sections'][2]
         assert 'coordinates' in journeys[0]['sections'][2]['geojson']
         assert len(journeys[0]['sections'][2]['geojson']['coordinates']) == 2
+
+    def test_complete_transfer_path_bus_rer_with_access_points(self):
+        query = (
+            '/v1/coverage/routing_with_transfer_test/journeys?'
+            'from={}&to={}&datetime=20120614T080000&_override_scenario=distributed&count=1&_transfer_path=true'
+        ).format("stopA", "stopF")
+
+        response = self.query(query)
+
+        assert 'journeys' in response
+        journeys = response['journeys']
+        assert len(journeys) == 1
+
+        assert len(journeys) == 1
+        journey = journeys[0]
+        assert len(journey['sections']) == 6
+
+        sections = journey['sections']
+        assert sections[1]['display_informations']['physical_mode'] == 'Bus'
+
+        assert sections[2]['type'] == 'transfer'
+        assert sections[2]['transfer_type'] == 'walking'
+        assert len(sections[2]['vias']) == 1
+
+        via = sections[2]['vias'][0]
+        assert via['name'] == 'access_point:E1'
+        assert via['is_entrance'] is True
+        assert via['is_exit'] is False
+        assert via['length'] == 100
+        assert via['traversal_time'] == 100
+        assert via['access_point']['coord']['lat'] == '0.01616961567518476'
+        assert via['access_point']['coord']['lon'] == '0.01796623963909418'
+
+        last_transfer_path = sections[2]['path'][-1]
+        assert last_transfer_path['instruction'] == 'Then Enter stop_point:stopE (Condom) via access_point:E1.'
+        assert last_transfer_path['name'] == "access_point:E1"
+        assert last_transfer_path['via_uri'] == "access_point:E1"
+
+        assert sections[4]['display_informations']['physical_mode'] == 'RER'
