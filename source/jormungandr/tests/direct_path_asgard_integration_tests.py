@@ -68,24 +68,24 @@ journey_basic_query = "journeys?from={from_coord}&to={to_coord}&datetime={dateti
     from_coord=s_coord, to_coord=r_coord, datetime="20120614T080000"
 )
 
-# Create 4 path items of 10 meters each.
+# Create 4 street information.
 # The first is not a cycle lane, the others are.
 def add_cycle_path_type_in_section(section):
-    path_item = section.street_network.path_items.add()
-    path_item.length = 10
-    path_item.cycle_path_type = response_pb2.NoCycleLane
+    street_information = section.street_network.street_information.add()
+    street_information.length = 10
+    street_information.cycle_path_type = response_pb2.NoCycleLane
 
-    path_item = section.street_network.path_items.add()
-    path_item.length = 10
-    path_item.cycle_path_type = response_pb2.SharedCycleWay
+    street_information = section.street_network.street_information.add()
+    street_information.length = 20
+    street_information.cycle_path_type = response_pb2.SharedCycleWay
 
-    path_item = section.street_network.path_items.add()
-    path_item.length = 10
-    path_item.cycle_path_type = response_pb2.DedicatedCycleWay
+    street_information = section.street_network.street_information.add()
+    street_information.length = 30
+    street_information.cycle_path_type = response_pb2.DedicatedCycleWay
 
-    path_item = section.street_network.path_items.add()
-    path_item.length = 10
-    path_item.cycle_path_type = response_pb2.SeparatedCycleWay
+    street_information = section.street_network.street_information.add()
+    street_information.length = 40
+    street_information.cycle_path_type = response_pb2.SeparatedCycleWay
 
 
 def journey_response(journey, mode):
@@ -395,7 +395,7 @@ class TestAsgardDirectPath(AbstractTestFixture):
         assert response['journeys'][1]['duration'] == 1000
         assert response['journeys'][1]['sections'][0]['co2_emission'] == {'value': 0, 'unit': 'gEC'}
         assert response['journeys'][1]['co2_emission'] == {'value': 0, 'unit': 'gEC'}
-        assert response['journeys'][1]['sections'][0]['cycle_lane_length'] == 30
+        assert response['journeys'][1]['sections'][0]['cycle_lane_length'] == 90
 
         # walking direct path from asgard
         assert 'walking' in response['journeys'][2]['tags']
