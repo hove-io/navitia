@@ -47,6 +47,7 @@ MOCKED_INSTANCE_CONF = {
                     "network": "Super Covoit",
                     "timedelta": 3600,
                     "feed_publisher": DUMMY_BLABLALINES_FEED_PUBLISHER,
+                    "verify": False,
                 },
                 "class": "jormungandr.scenarios.ridesharing.blablalines.Blablalines",
             }
@@ -74,7 +75,7 @@ BLABLALINES_RESPONSE = [
 ]
 
 
-def mock_blablalines(_, params):
+def mock_blablalines(_, params, verify):
     return MockResponse(BLABLALINES_RESPONSE, 200)
 
 

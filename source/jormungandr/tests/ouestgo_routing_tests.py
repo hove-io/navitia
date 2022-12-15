@@ -49,6 +49,7 @@ MOCKED_INSTANCE_CONF = {
                     "driver_state": 1,
                     "passenger_state": 0,
                     "feed_publisher": DUMMY_OUESTGO_FEED_PUBLISHER,
+                    "verify": False,
                 },
                 "class": "jormungandr.scenarios.ridesharing.ouestgo.Ouestgo",
             }
@@ -127,7 +128,7 @@ OUESTGO_RESPONSE = [
 ]
 
 
-def mock_ouestgo(_, params, headers):
+def mock_ouestgo(_, params, headers, verify):
     return MockResponse(OUESTGO_RESPONSE, 200)
 
 

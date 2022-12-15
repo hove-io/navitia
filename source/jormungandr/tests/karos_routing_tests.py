@@ -48,6 +48,7 @@ MOCKED_INSTANCE_CONF = {
                     "feed_publisher": DUMMY_KAROS_FEED_PUBLISHER,
                     "rating_scale_min": 0,
                     "rating_scale_max": 5,
+                    "verify": False,
                 },
                 "class": "jormungandr.scenarios.ridesharing.karos.Karos",
             }
@@ -87,7 +88,7 @@ KAROS_RESPONSE = [
 ]
 
 
-def mock_karos(_, params, headers):
+def mock_karos(_, params, headers, verify):
     return MockResponse(KAROS_RESPONSE, 200)
 
 
