@@ -779,20 +779,27 @@ def complete_transfer(pt_journey, transfer_pool):
         transfer_pool.wait_and_complete(section)
 
 
-def prepend_first_and_append_last_coord(dp, origin, destination):
-    """
-    Insert/append origin and destination's coordinates to the geojson
-    """
+def is_valid_direct_path_streetwork(dp):
     if not dp or not dp.journeys or not dp.journeys[0].sections:
-        return
+        return False
 
+    # a valid journey's must comprise at least two coordinates
     nb_coords = sum((len(sec.street_network.coordinates) for sec in dp.journeys[0].sections))
     if nb_coords < 2:
+        return False
+    return True
+
+
+def prepend_first_coord(dp, pt_obj):
+    """
+    prepend pt_object's coord to journeys' coordinates (geojson)
+    """
+    if not is_valid_direct_path_streetwork(dp):
         return
 
     starting_coords = dp.journeys[0].sections[0].street_network.coordinates
     # we are inserting the coord of the origin at the beginning of the geojson
-    coord = get_pt_object_coord(origin)
+    coord = get_pt_object_coord(pt_obj)
     if starting_coords and coord != starting_coords[0]:
         starting_coords.add(lon=coord.lon, lat=coord.lat)
         # we cannot insert an element at the beginning of a list :(
@@ -803,8 +810,16 @@ def prepend_first_and_append_last_coord(dp, origin, destination):
             starting_coords[i].CopyFrom(starting_coords[-1])
             starting_coords[-1].CopyFrom(tmp)
 
+
+def append_last_coord(dp, pt_obj):
+    """
+    append pt_object's coord to journeys' coordinates (geojson)
+    """
+    if not is_valid_direct_path_streetwork(dp):
+        return
+
     ending_coords = dp.journeys[0].sections[-1].street_network.coordinates
     # we are appending the coord of the destination at the end of the geojson
-    coord = get_pt_object_coord(destination)
+    coord = get_pt_object_coord(pt_obj)
     if ending_coords and coord != ending_coords[-1]:
         ending_coords.add(lon=coord.lon, lat=coord.lat)

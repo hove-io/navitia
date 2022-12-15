@@ -35,7 +35,8 @@ from jormungandr.street_network.street_network import StreetNetworkPathType
 from jormungandr.utils import PeriodExtremity
 from jormungandr.fallback_modes import FallbackModes
 from jormungandr.scenarios.helper_classes.helper_utils import (
-    prepend_first_and_append_last_coord,
+    prepend_first_coord,
+    append_last_coord,
     append_path_item_with_access_point,
     prepend_path_item_with_access_point,
 )
@@ -231,6 +232,24 @@ class TransferPool(object):
 
         return best_access_point
 
+    def _get_transfer_result(self, section, origin, destination):
+        sub_request_id = self._make_sub_request_id(origin.uri, destination.uri)
+        direct_path_type = StreetNetworkPathType.DIRECT
+        extremity = PeriodExtremity(section.end_date_time, False)
+        direct_path = self._streetnetwork_service.direct_path_with_fp(
+            self._instance,
+            FallbackModes.walking.name,
+            origin,
+            destination,
+            extremity,
+            self._request,
+            direct_path_type,
+            sub_request_id,
+        )
+        if direct_path and direct_path.journeys:
+            return TransferResult(direct_path, origin, destination)
+        return None
+
     def _do_access_point_transfer(self, section, prev_section_mode, next_section_mode):
         access_points = self.get_underlying_access_points(section, prev_section_mode, next_section_mode)
         # if no access points are found for this stop point, which is supposed to have access points
@@ -249,22 +268,7 @@ class TransferPool(object):
             return None
 
         if len(origins) == 1 and len(destinations) == 1:
-            sub_request_id = self._make_sub_request_id(origins[0].uri, destinations[0].uri)
-            direct_path_type = StreetNetworkPathType.DIRECT
-            extremity = PeriodExtremity(section.end_date_time, False)
-            direct_path = self._streetnetwork_service.direct_path_with_fp(
-                self._instance,
-                FallbackModes.walking.name,
-                origins[0],
-                destinations[0],
-                extremity,
-                self._request,
-                direct_path_type,
-                sub_request_id,
-            )
-            if direct_path and direct_path.journeys:
-                return TransferResult(direct_path, origins[0], destinations[0])
-            return None
+            return self._get_transfer_result(section, origins[0], destinations[0])
 
         sub_request_id = "{}_transfer_matrix".format(self._request_id)
         routing_matrix = self._streetnetwork_service.get_street_network_routing_matrix(
@@ -284,25 +288,7 @@ class TransferPool(object):
         origin, destination = self.determinate_direct_path_entry(
             section, best_access_point, prev_section_mode, next_section_mode
         )
-
-        sub_request_id = self._make_sub_request_id(origins[0].uri, destinations[0].uri)
-        direct_path_type = StreetNetworkPathType.DIRECT
-        extremity = PeriodExtremity(section.end_date_time, False)
-
-        direct_path = self._streetnetwork_service.direct_path_with_fp(
-            self._instance,
-            FallbackModes.walking.name,
-            origin,
-            destination,
-            extremity,
-            self._request,
-            direct_path_type,
-            sub_request_id,
-        )
-        if direct_path and direct_path.journeys:
-            return TransferResult(direct_path, origin, destination)
-
-        return None
+        return self._get_transfer_result(section, origin, destination)
 
     def _aysnc_access_point_transfer(self, section, prev_section_mode, next_section_mode):
         return self._future_manager.create_future(
@@ -313,7 +299,8 @@ class TransferPool(object):
     def _get_section_key(section):
         return section.origin.uri, section.destination.uri
 
-    def _is_valid(self, transfer_result):
+    @staticmethod
+    def _is_valid(transfer_result):
         return (
             transfer_result
             and transfer_result.direct_path
@@ -342,13 +329,13 @@ class TransferPool(object):
         transfer_direct_path = transfer_result.direct_path
 
         if transfer_result.origin and transfer_result.destination:
-            prepend_first_and_append_last_coord(
-                transfer_direct_path, transfer_result.origin, transfer_result.destination
-            )
+            prepend_first_coord(transfer_direct_path, transfer_result.origin)
+            append_last_coord(transfer_direct_path, transfer_result.destination)
 
         self._add_via_if_access_point(section, transfer_result.origin)
         self._add_via_if_access_point(section, transfer_result.destination)
 
+        # we assume here the transfer street network has only one section, which is in walking mode
         transfer_street_network = transfer_direct_path.journeys[0].sections[0].street_network
 
         if self._is_access_point(transfer_result.origin):
