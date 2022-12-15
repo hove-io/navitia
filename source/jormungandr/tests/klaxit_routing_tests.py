@@ -48,6 +48,7 @@ MOCKED_INSTANCE_CONF = {
                     "feed_publisher": DUMMY_KLAXIT_FEED_PUBLISHER,
                     "rating_scale_min": 0,
                     "rating_scale_max": 5,
+                    "verify": False,
                 },
                 "class": "jormungandr.scenarios.ridesharing.klaxit.Klaxit",
             }
@@ -80,7 +81,7 @@ KLAXIT_RESPONSE = [
 ]
 
 
-def mock_klaxit(_, params):
+def mock_klaxit(_, params, verify):
     return MockResponse(KLAXIT_RESPONSE, 200)
 
 

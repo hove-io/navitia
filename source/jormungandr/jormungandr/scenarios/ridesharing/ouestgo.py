@@ -60,6 +60,7 @@ class Ouestgo(AbstractRidesharingService):
         timeout=2,
         driver_state=1,
         passenger_state=0,
+        verify=True,
     ):
         self.service_url = service_url
         self.api_key = api_key
@@ -69,6 +70,7 @@ class Ouestgo(AbstractRidesharingService):
         self.feed_publisher = None if feed_publisher is None else RsFeedPublisher(**feed_publisher)
         self.driver_state = driver_state
         self.passenger_state = passenger_state
+        self.verify = verify
 
         self.journey_metadata = rsj.MetaData(
             system_id=self.system_id, network=self.network, rating_scale_min=None, rating_scale_max=None
@@ -213,7 +215,7 @@ class Ouestgo(AbstractRidesharingService):
 
         headers = {'Authentication': 'key={}'.format(self.api_key)}
 
-        resp = self._call_service(params=params, headers=headers)
+        resp = self._call_service(params=params, headers=headers, verify=self.verify)
 
         if not resp or resp.status_code != 200:
             logging.getLogger(__name__).error(

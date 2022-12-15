@@ -68,6 +68,7 @@ class Blablalines(AbstractRidesharingService):
         feed_publisher=DEFAULT_BLABLALINES_FEED_PUBLISHER,
         timedelta=3600,
         timeout=2,
+        verify=True,
     ):
         self.service_url = service_url
         self.api_key = api_key
@@ -75,6 +76,7 @@ class Blablalines(AbstractRidesharingService):
         self.system_id = 'blablalines'
         self.timeout = timeout
         self.timedelta = timedelta
+        self.verify = verify
         self.feed_publisher = None if feed_publisher is None else RsFeedPublisher(**feed_publisher)
 
         self.logger = logging.getLogger("{} {}".format(__name__, self.system_id))
@@ -212,7 +214,7 @@ class Blablalines(AbstractRidesharingService):
             'departure_timedelta': self.timedelta,
         }
 
-        resp = self._call_service(params=params)
+        resp = self._call_service(params=params, verify=self.verify)
 
         if not resp or resp.status_code != 200:
             logging.getLogger(__name__).error(
