@@ -63,6 +63,7 @@ class Karos(AbstractRidesharingService):
         arrival_radius=2,
         rating_scale_min=None,
         rating_scale_max=None,
+        verify=True,
     ):
         self.service_url = service_url
         self.api_key = api_key
@@ -74,6 +75,7 @@ class Karos(AbstractRidesharingService):
         self.arrival_radius = arrival_radius
         self.rating_scale_min = rating_scale_min
         self.rating_scale_max = rating_scale_max
+        self.verify = verify
         self.feed_publisher = None if feed_publisher is None else RsFeedPublisher(**feed_publisher)
 
         self.journey_metadata = rsj.MetaData(
@@ -201,7 +203,7 @@ class Karos(AbstractRidesharingService):
 
         headers = {'Authentication': 'key={}'.format(self.api_key)}
 
-        resp = self._call_service(params=params, headers=headers)
+        resp = self._call_service(params=params, headers=headers, verify=self.verify)
 
         if not resp or resp.status_code != 200:
             logging.getLogger(__name__).error(
