@@ -1,3 +1,9 @@
+navitia2 (15.22.3) unstable; urgency=low
+
+  * [Jormungandr] Add option to verify SSL: blablalines, karos, klaxit and ouestgo <https://github.com/hove-io/navitia/pull/3879>
+
+ -- Abderrahim AZIME <azime_1@yahoo.fr>  Thu, 15 Dec 2022 11:12:41 +0100
+
 navitia2 (15.22.2) unstable; urgency=low
 
   * [CI] Remove POST debian packages to jenkins  <https://github.com/hove-io/navitia/pull/3875>
