@@ -158,7 +158,7 @@ class TransientSocket(object):
 
     @classmethod
     def init_socket_reaper(cls, config):
-        cls._reaper_interval = config.get('ZMQ_SOCKET_REAPER_INTERVAL', 5)
+        cls._reaper_interval = config.get(str('ZMQ_SOCKET_REAPER_INTERVAL'), 5)
         # start a greenlet that handle connection closing when idle
         cls._logger.info("spawning a socket reaper with gevent")
         gevent.spawn(cls.gevent_reap_sockets)
