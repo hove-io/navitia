@@ -65,7 +65,7 @@ from navitiacommon import default_values
 from jormungandr.equipments import EquipmentProviderManager
 from jormungandr.external_services import ExternalServiceManager
 from jormungandr.utils import can_connect_to_database
-from jormungandr import pt_planners_manager
+from jormungandr import pt_planners_manager, transient_socket
 
 type_to_pttype = {
     "stop_area": request_pb2.PlaceCodeRequest.StopArea,  # type: ignore
@@ -101,9 +101,8 @@ def _make_property_getter(attr_name):
     return property(_getter)
 
 
-class Instance(object):
+class Instance(transient_socket.TransientSocket):
     name = None  # type: Text
-    _sockets = None  # type: Deque[Tuple[zmq.Socket, float]]
 
     def __init__(
         self,
@@ -122,9 +121,15 @@ class Instance(object):
         ghost_words=None,
         instance_db=None,
     ):
+        super(Instance, self).__init__(
+            name=name,
+            zmq_context=context,
+            zmq_socket=zmq_socket,
+            socket_ttl=app.config.get(str('ZMQ_SOCKET_TTL_SECONDS'), 10),
+        )
+
         self.geom = None
         self.geojson = None
-        self._sockets = deque()
         self.socket_path = zmq_socket
         self._scenario = None
         self._scenario_name = None
@@ -717,66 +722,6 @@ class Instance(object):
         instance_db = self.get_models()
         return get_value_or_default('places_proximity_radius', instance_db, self.name)
 
-    def reap_socket(self, ttl):
-        # type: (int) -> None
-        if self.zmq_socket_type != 'transient':
-            return
-        logger = logging.getLogger(__name__)
-        now = time.time()
-
-        def _reap_sockets(connector):
-            while True:
-                try:
-                    socket, t = connector._sockets.popleft()
-                    if now - t > ttl:
-                        logger.debug("closing one socket for %s", connector.name)
-                        socket.setsockopt(zmq.LINGER, 0)
-                        socket.close()
-                    else:
-                        connector._sockets.appendleft((socket, t))
-                        break  # remaining socket are still in "keep alive" state
-                except IndexError:
-                    break
-
-        for _, planner in self._pt_planner_manager.get_all_pt_planners():
-            if planner.is_zmq_socket():
-                _reap_sockets(planner)
-        _reap_sockets(self)
-
-    @contextmanager
-    def socket(self, context):
-        sockets = self._sockets
-        socket_path = self.socket_path
-
-        t = None
-        try:
-            socket, t = sockets.pop()
-        except IndexError:  # there is no socket available: lets create one
-            start = time.time()
-            socket = context.socket(zmq.REQ)
-            socket.connect(socket_path)
-            logging.getLogger(__name__).info(
-                "it took %s ms to open a instance socket of %s during a request",
-                '%.2e' % ((time.time() - start) * 1000),
-                self.name,
-            )
-
-        try:
-            yield socket
-        finally:
-            if not socket.closed:
-                if t is not None and time.time() - t > app.config.get("ZMQ_SOCKET_TTL_SECONDS", 10):
-                    start = time.time()
-                    socket.setsockopt(zmq.LINGER, 0)
-                    socket.close()
-                    logging.getLogger(__name__).info(
-                        "it took %s ms to close a instance socket in %s",
-                        '%.2e' % ((time.time() - start) * 1000),
-                        self.name,
-                    )
-                else:
-                    sockets.append((socket, t or time.time()))
-
     def send_and_receive(self, *args, **kwargs):
         """
         encapsulate all call to kraken in a circuit breaker, this way we don't loose time calling dead instance
@@ -793,7 +738,7 @@ class Instance(object):
         deadline = datetime.utcnow() + timedelta(milliseconds=timeout)
         request.deadline = deadline.strftime('%Y%m%dT%H%M%S,%f')
 
-        with self.socket(self.context) as socket:
+        with self.socket() as socket:
             if 'request_id' in kwargs and kwargs['request_id']:
                 request.request_id = kwargs['request_id']
             else:
