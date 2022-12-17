@@ -30,15 +30,11 @@
 # www.navitia.io
 
 from __future__ import absolute_import, print_function, unicode_literals, division
-import logging
-import logging.config
-import os
+
 from flask import Flask, got_request_exception
 from flask_restful import Api
 from flask_caching import Cache
 from flask_cors import CORS
-import sys
-import six
 from jormungandr import init
 
 app = Flask(__name__)  # type: Flask

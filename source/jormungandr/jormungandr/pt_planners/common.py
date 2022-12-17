@@ -41,50 +41,36 @@ from threading import Lock
 from abc import ABCMeta
 
 from jormungandr import app
+from jormungandr.transient_socket import TransientSocket
 from jormungandr.exceptions import DeadSocketException
 from navitiacommon import response_pb2, request_pb2, type_pb2
 
 
-class ZmqSocket(six.with_metaclass(ABCMeta, object)):
+class ZmqSocket(TransientSocket):
     def __init__(
-        self, zmq_context, zmq_socket, zmq_socket_type=None, timeout=app.config.get('INSTANCE_TIMEOUT', 10000)
+        self,
+        name,
+        zmq_context,
+        zmq_socket,
+        timeout,
+        socket_ttl=app.config.get(str('ZMQ_SOCKET_TTL_SECONDS'), 10),
     ):
-        self.zmq_socket = zmq_socket
-        self.context = zmq_context
-        self._sockets = deque()
-        self.zmq_socket_type = zmq_socket_type
+
+        super(ZmqSocket, self).__init__(
+            name=name, zmq_context=zmq_context, zmq_socket=zmq_socket, socket_ttl=socket_ttl
+        )
         self.timeout = timeout
         self.breaker = pybreaker.CircuitBreaker(
             fail_max=app.config.get(str('CIRCUIT_BREAKER_MAX_INSTANCE_FAIL'), 5),
             reset_timeout=app.config.get(str('CIRCUIT_BREAKER_INSTANCE_TIMEOUT_S'), 60),
         )
-        self.is_initialized = False
-        self.lock = Lock()
-
-    @contextmanager
-    def socket(self, context):
-        t = None
-        try:
-            socket, t = self._sockets.pop()
-        except IndexError:  # there is no socket available: lets create one
-            socket = context.socket(zmq.REQ)
-            socket.connect(self.zmq_socket)
-        try:
-            yield socket
-        finally:
-            if not socket.closed:
-                if t is not None and time.time() - t > app.config.get("ZMQ_SOCKET_TTL_SECONDS", 10):
-                    socket.setsockopt(zmq.LINGER, 0)
-                    socket.close()
-                else:
-                    self._sockets.append((socket, t or time.time()))
 
     def _send_and_receive(self, request, quiet=False, **kwargs):
         logger = logging.getLogger(__name__)
-        deadline = datetime.utcnow() + timedelta(milliseconds=self.timeout)
+        deadline = datetime.utcnow() + timedelta(milliseconds=self.timeout * 1000)
         request.deadline = deadline.strftime('%Y%m%dT%H%M%S,%f')
 
-        with self.socket(self.context) as socket:
+        with self.socket() as socket:
             if 'request_id' in kwargs and kwargs['request_id']:
                 request.request_id = kwargs['request_id']
             else:
@@ -96,7 +82,7 @@ class ZmqSocket(six.with_metaclass(ABCMeta, object)):
                         request.request_id = kwargs['flask_request_id']
 
             socket.send(request.SerializeToString())
-            if socket.poll(timeout=self.timeout) > 0:
+            if socket.poll(timeout=self.timeout * 1000) > 0:
                 pb = socket.recv()
                 resp = response_pb2.Response()
                 resp.ParseFromString(pb)
@@ -105,8 +91,8 @@ class ZmqSocket(six.with_metaclass(ABCMeta, object)):
                 socket.setsockopt(zmq.LINGER, 0)
                 socket.close()
                 if not quiet:
-                    logger.error('request on %s failed: %s', self.zmq_socket, six.text_type(request))
-                raise DeadSocketException(self.name, self.zmq_socket)
+                    logger.error('request on %s failed: %s', self._zmq_socket, six.text_type(request))
+                raise DeadSocketException(self.name, self._zmq_socket)
 
     def send_and_receive(self, *args, **kwargs):
         """
@@ -115,16 +101,12 @@ class ZmqSocket(six.with_metaclass(ABCMeta, object)):
         try:
             return self.breaker.call(self._send_and_receive, *args, **kwargs)
         except pybreaker.CircuitBreakerError:
-            raise DeadSocketException(self.name, self.zmq_socket)
+            raise DeadSocketException(self.name, self._zmq_socket)
 
     def clean_up_zmq_sockets(self):
-        for socket in self._sockets:
+        for socket in self._sockets[self]:
             socket.setsockopt(zmq.LINGER, 0)
             socket.close()
-
-    @staticmethod
-    def is_zmq_socket():
-        return True
 
 
 def get_crow_fly(

@@ -44,12 +44,10 @@ class Loki(ZmqSocket, AbstractPtPlanner):
         name,
         zmq_context,
         zmq_socket,
-        zmq_socket_type=None,
-        timeout=app.config.get('INSTANCE_TIMEOUT', 10000),
+        zmq_socket_type,
+        timeout=app.config.get(str('INSTANCE_TIMEOUT'), 10),
     ):
-
-        super(Loki, self).__init__(zmq_context, zmq_socket, zmq_socket_type, timeout)
-        self.name = "pt_planner:{}".format(name)
+        super(Loki, self).__init__("pt_planner_loki_{}".format(name), zmq_context, zmq_socket, timeout)
 
     def journeys(self, origins, destinations, datetime, clockwise, journey_parameters, bike_in_pt, request_id):
         req = utils.create_journeys_request(
