@@ -30,7 +30,8 @@
 # www.navitia.io
 
 from __future__ import absolute_import, print_function, unicode_literals, division
-
+import logging
+import logging.config
 from flask import Flask, got_request_exception
 from flask_restful import Api
 from flask_caching import Cache
