@@ -94,82 +94,10 @@ jobs:
     runs-on: ubuntu-latest
     needs: docker
     steps:
-    - name: install dependency
-      run: |
-        sudo apt update && sudo apt install -y httpie
-        pip3 install requests
-    - name: run artemis NG on push
-      shell: python3 {0}
+    - name: run artemis  on push to dev
       if: ${{ github.event_name == 'push' }}
-      run: |
-        import json
-        import requests
-
-        # replace \n, simple quotes and double quotes by spaces
-        translation_table = str.maketrans({ '\n' : ' ', "'" : ' ', '"': ' ' })
-        def sanitize(my_string):
-          sanitized = my_string.translate(translation_table)
-          return sanitized
-
-        with open('${{ github.event_path }}') as file:
-
-          github_dict = json.load(file)
-
-          params = {}
-          params["event"] = "push"
-          params["navitia_branch"] = "dev"
-          params["commit_message"] = sanitize(github_dict['head_commit']['message'])
-          params["commit_timestamp"] = github_dict['head_commit']['timestamp']
-          params["commit_url"] = github_dict['repository']['html_url']
-          params["commit_id"] = github_dict['head_commit']['id']
-          params["commit_username"] = github_dict['head_commit']['author']['name']
-
-          secret = "${{secrets.JENKINS_NG_TOKEN}}"
-
-          url = "https://{}@jenkins-core.canaltp.fr/job/artemis_ng/buildWithParameters".format(secret)
-          request = requests.post(url, data = params )
-          print("Response status code : {}".format(request.status_code) )
-          print(request.text)
-
-          url = "https://{}@jenkins-core.canaltp.fr/job/artemis_ng_debian8/buildWithParameters".format(secret)
-          request = requests.post(url, data = params )
-          print("Response status code : {}".format(request.status_code) )
-          print(request.text)
-
-    - name: run artemis NG on pull_request
-      shell: python3 {0}
-      if: ${{ github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'run_artemis') }}
-      run: |
-        import json
-        import requests
-
-        # replace \n, simple quotes and double quotes by spaces
-        translation_table = str.maketrans({ '\n' : ' ', "'" : ' ', '"': ' ' })
-        def sanitize(my_string):
-          sanitized = my_string.translate(translation_table)
-          return sanitized
-
-        with open('${{ github.event_path }}') as file:
-
-          github_dict = json.load(file)
-          params = {}
-          params["event"] = "pull_request"
-          params["navitia_branch"] = github_dict['pull_request']['head']['ref']
-          params["commit_message"] = sanitize(github_dict['pull_request']['title'])
-          params["commit_timestamp"] = github_dict['pull_request']['updated_at']
-          params["commit_url"] = github_dict['pull_request']['html_url']
-          params["commit_id"] = github_dict['pull_request']['head']['sha']
-          params["commit_username"] = github_dict['pull_request']['user']['login']
-          print(params)
-
-          secret = "${{secrets.JENKINS_NG_TOKEN}}"
-
-          url = "https://{}@jenkins-core.canaltp.fr/job/artemis_ng/buildWithParameters".format(secret)
-          request = requests.post(url, data = params )
-          print("Response status code : {}".format(request.status_code) )
-          print(request.text)
-
-          url = "https://{}@jenkins-core.canaltp.fr/job/artemis_ng_debian8/buildWithParameters".format(secret)
-          request = requests.post(url, data = params )
-          print("Response status code : {}".format(request.status_code) )
-          print(request.text)
+      uses: peter-evans/repository-dispatch@v2
+      with:
+        token: ${{ secrets.access_token_github }}
+        repository: hove-io/artemis
+        event-type: run_artemis_ng
