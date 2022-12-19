@@ -82,5 +82,5 @@ def asgard_socket_var_test(config_asgard_socket):
         timeout=77,
         socket_ttl=60,
     )
-    assert asgard.asgard_socket == "tcp://127.0.0.1:3000"
+    assert asgard._zmq_socket == "tcp://127.0.0.1:3000"
     assert asgard.sn_system_id == "asgard"
