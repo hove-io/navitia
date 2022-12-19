@@ -57,7 +57,7 @@ def status_test():
         timeout=77,
         socket_ttl=60,
     )
-    assert asgard.asgard_socket == "asgard_socket"
+    assert asgard._zmq_socket == "asgard_socket"
 
     status = asgard.status()
     assert len(status) == 7
