@@ -1,8 +1,6 @@
 name: Build Navitia Packages For Dev Multi Distributions
 
 on:
-  pull_request:
-    types: [labeled, opened, synchronize, reopened]
   push:
     branches:
       - dev
@@ -81,10 +79,6 @@ jobs:
       if: ${{ github.event_name == 'push' }}
       working-directory: builder_from_package
       run: ./build.sh -o ${{secrets.access_token_github}} -d debian8 -n -e push -t dev -b dev -r -u ${{secrets.docker_user}} -p ${{secrets.docker_password}}
-    - name: build and create images for pull_request
-      if: ${{ github.event_name != 'push' }}
-      working-directory: builder_from_package
-      run: ./build.sh -o ${{secrets.access_token_github}} -d debian8 -n -e push -t dev -b dev
     - name: slack notification (the job has failed)
       if: ${{ failure() && github.event_name == 'push' }}
       run: |
