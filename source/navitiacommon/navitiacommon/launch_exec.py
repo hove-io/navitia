@@ -118,13 +118,16 @@ def launch_exec_traces(exec_name, args, logger):
         while True:
             select.select([proc.stdout, proc.stderr], [], [])
 
-            for pipe in proc.stdout, proc.stderr:
-                log_pipe = read_async(pipe)
-                if log_pipe:
-                    logs, line = parse_log(log_pipe.decode("utf-8"))
-                    for l in logs:
-                        logger.log(l.level, l.msg)
-                        traces += "##  {}  ##".format(l.msg)
+            try:
+                for pipe in proc.stdout, proc.stderr:
+                    log_pipe = read_async(pipe)
+                    if log_pipe:
+                        logs, line = parse_log(log_pipe.decode("utf-8", errors="replace"))
+                        for l in logs:
+                            logger.log(l.level, l.msg)
+                            traces += "##  {}  ##".format(l.msg)
+            except Exception as e:
+                logger.error("error in forwarding logs but process continuing: {}".format(e))
 
             if proc.poll() is not None:
                 break

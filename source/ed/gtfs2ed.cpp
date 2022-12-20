@@ -150,13 +150,13 @@ int main(int argc, char* argv[]) {
     p.persist(data);
     save = (pt::microsec_clock::local_time() - start).total_milliseconds();
 
-    LOG4CPLUS_INFO(logger, "temps de traitement");
-    LOG4CPLUS_INFO(logger, "\t lecture des fichiers " << read << "ms");
-    LOG4CPLUS_INFO(logger, "\t completion des données " << complete << "ms");
-    LOG4CPLUS_INFO(logger, "\t netoyage des données " << clean << "ms");
-    LOG4CPLUS_INFO(logger, "\t trie des données " << sort << "ms");
-    LOG4CPLUS_INFO(logger, "\t Destination of routes " << main_destination << "ms");
-    LOG4CPLUS_INFO(logger, "\t enregistrement des données " << save << "ms");
+    LOG4CPLUS_INFO(logger, "processing times");
+    LOG4CPLUS_INFO(logger, "\t reading files " << read << "ms");
+    LOG4CPLUS_INFO(logger, "\t data completed " << complete << "ms");
+    LOG4CPLUS_INFO(logger, "\t data cleanup " << clean << "ms");
+    LOG4CPLUS_INFO(logger, "\t data ordering " << sort << "ms");
+    LOG4CPLUS_INFO(logger, "\t route destination " << main_destination << "ms");
+    LOG4CPLUS_INFO(logger, "\t data saving " << save << "ms");
 
     return 0;
 }

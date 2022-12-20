@@ -1,3 +1,10 @@
+navitia2 (15.22.4) unstable; urgency=low
+
+  * [tyr-worker]  feat: trying to avoid 'logs forwarding' to fail the entire process  <https://github.com/hove-io/navitia/pull/3884>
+  * [tyr-worker] docs: remove non-ascii characters  <https://github.com/hove-io/navitia/pull/3880>
+
+ -- Jean SIMARD <woshilapin@tuziwo.info>  Tue, 20 Dec 2022 17:12:43 +0100
+
 navitia2 (15.22.3) unstable; urgency=low
 
   * [Jormungandr] Add option to verify SSL: blablalines, karos, klaxit and ouestgo <https://github.com/hove-io/navitia/pull/3879>
