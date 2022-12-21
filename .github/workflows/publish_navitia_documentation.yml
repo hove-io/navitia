@@ -2,6 +2,8 @@ name: Publish Navitia Documentation
 
 on:
   push:
+    tags:
+    - '*'
     branches:
       - release
 

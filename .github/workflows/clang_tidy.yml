@@ -2,6 +2,8 @@ name: Clang-tidy
 
 on:
   push:
+    tags:
+    - '*'
     branches:
     - clang-tidy
     - release
