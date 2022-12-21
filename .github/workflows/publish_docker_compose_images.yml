@@ -20,11 +20,11 @@ jobs:
     - name: install httpie dependency
       run: sudo apt update && sudo apt install -y httpie
     - name: build, create and publish images for branch release
-      if: ${{ github.event.workflow_run.head_branch == 'release' }}
+      if: ${{ github.event.workflow_run.name == 'Build Navitia Packages For Release' }}
       working-directory: builder_from_package
-      run: ./build.sh -e push -o ${{secrets.access_token_github}} -t latest -b release -r -u ${{secrets.docker_user}} -p ${{secrets.docker_password}}
+      run: ./build.sh -e push -o ${{secrets.access_token_github}} -t latest -b ${{ github.event.workflow_run.head_branch }} -r -u ${{secrets.docker_user}} -p ${{secrets.docker_password}}
     - name: build, create and publish images for branch dev
-      if: ${{ github.event.workflow_run.head_branch == 'dev' }}
+      if: ${{ github.event.workflow_run.name == 'Build Navitia Packages For Dev Multi Distributions' }}
       working-directory: builder_from_package
       run: ./build.sh -e push -o ${{secrets.access_token_github}} -t dev -b dev -r -u ${{secrets.docker_user}} -p ${{secrets.docker_password}}
     - name: slack notification (the job has failed)
