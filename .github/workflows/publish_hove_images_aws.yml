@@ -18,7 +18,6 @@ on:
 
   workflow_run:
     workflows: ["Build Navitia Packages For Release", "Build Navitia Packages For Dev Multi Distributions"]
-    branches: [release, dev]
     types:
       - completed
 
@@ -35,13 +34,13 @@ jobs:
           then
             echo "Workflow triggered due to finished upstream workflow"
             echo "::set-output name=branch::${{ github.event.workflow_run.head_branch }}"
-            if [[ '${{ github.event.workflow_run.head_branch }}' == 'dev' ]]
+            if [[ '${{ github.event.workflow_run.head_branch }}' == 'release' || '${{ github.event.workflow_run.head_branch }}' =~ v[0-9]+.[0-9]+.[0-9]+ ]]
             then
-              echo "::set-output name=tag::dev"
-            else :
-              echo "Realease branch, collecting last version"
+              echo "Release branch, collecting last version"
               VERSION=$(curl https://api.github.com/repos/hove-io/navitia/tags | jq --raw-output '.[0].name')
               echo "::set-output name=tag::$VERSION"
+            else :
+              echo "::set-output name=tag::dev"
             fi
           elif [[ '${{ github.event_name }}' == 'workflow_dispatch' ]]
           then
