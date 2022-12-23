@@ -67,15 +67,28 @@ class ZmqSocket(six.with_metaclass(ABCMeta, object)):
         try:
             socket, t = self._sockets.pop()
         except IndexError:  # there is no socket available: lets create one
+            start = time.time()
             socket = context.socket(zmq.REQ)
             socket.connect(self.zmq_socket)
+            logging.getLogger(__name__).info(
+                "it took %s ms to open a pt_planner socket of %s during a request",
+                '%.2e' % ((time.time() - start) * 1000),
+                self.name,
+            )
         try:
             yield socket
         finally:
             if not socket.closed:
                 if t is not None and time.time() - t > app.config.get("ZMQ_SOCKET_TTL_SECONDS", 10):
+                    start = time.time()
                     socket.setsockopt(zmq.LINGER, 0)
                     socket.close()
+                    logging.getLogger(__name__).info(
+                        "it took %s ms to close a pt_planner socket of %s during a request",
+                        '%.2e' % ((time.time() - start) * 1000),
+                        self.name,
+                    )
+
                 else:
                     self._sockets.append((socket, t or time.time()))
 

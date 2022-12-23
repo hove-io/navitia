@@ -245,7 +245,7 @@ class Asgard(TransientSocket, Kraken):
         if mode == FallbackModes.car_no_park.name:
             req.sn_routing_matrix.mode = FallbackModes.car.name
 
-        res = self._call_asgard(req)
+        res = self._call_asgard(req, request_id)
         self._check_for_error_and_raise(res)
         return res.sn_routing_matrix
 
@@ -410,7 +410,7 @@ class Asgard(TransientSocket, Kraken):
             language,
         )
 
-        response = self._call_asgard(req)
+        response = self._call_asgard(req, request_id)
 
         # car_no_park is interpreted as car for Asgard, we need to overwrite the streetnetwork mode here
         if mode == "car_no_park":
@@ -429,9 +429,10 @@ class Asgard(TransientSocket, Kraken):
     def get_uri_pt_object(self, pt_object):
         return 'coord:{c.lon}:{c.lat}'.format(c=get_pt_object_coord(pt_object))
 
-    def _call_asgard(self, request):
+    def _call_asgard(self, request, request_id):
         def _request():
             with self.socket() as socket:
+                request.request_id = request_id
                 socket.send(request.SerializeToString())
                 # timeout is in second, we need it on millisecond
                 if socket.poll(timeout=self.timeout * 1000) > 0:

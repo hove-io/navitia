@@ -752,16 +752,24 @@ def timed_logger(logger, task_name, request_id):
         yield logger
     finally:
         end = time.time()
-        elapsed_time = end - start
+        elapsed_time = (end - start) * 1000
         start_in_ms = int(start * 1000)
         end_in_ms = int(end * 1000)
+        # if elapsed_time is smaller than 0.5ms, we consider that it's negligible
+        if elapsed_time < 0.5:
+            logger.info(
+                "Task : {}, request : {} finished quasi-instantly".format(
+                    task_name,
+                    request_id,
+                )
+            )
+            return
+
         logger.info(
-            "Task : {}, request : {},  start : {}, end : {}".format(
-                task_name, request_id, start_in_ms, end_in_ms
+            "Task : {}, request : {},  start : {}, end : {}, elapsed time: {} ms".format(
+                task_name, request_id, start_in_ms, end_in_ms, '%.2e' % elapsed_time
             )
         )
-        if elapsed_time > 1e-5:
-            logger.info('time  in {}: {}s'.format(task_name, '%.2e' % elapsed_time))
 
 
 def complete_transfer(pt_journey, transfer_pool):
