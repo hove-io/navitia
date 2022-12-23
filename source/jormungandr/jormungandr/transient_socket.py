@@ -95,10 +95,15 @@ class TransientSocket(object):
                 else:
                     raise NoAliveSockets
         except (IndexError, NoAliveSockets):  # there is no socket available: let's create one
-            self._logger.info("opening one socket for %s", self.name)
+            start = time.time()
             socket = self._zmq_context.socket(zmq.REQ)
             socket.connect(self._socket_path)
             t = time.time()
+            logging.getLogger(__name__).info(
+                "it took %s ms to open a asgard socket of %s during a request",
+                '%.2e' % ((time.time() - start) * 1000),
+                self.name,
+            )
 
         try:
             yield socket
@@ -108,14 +113,19 @@ class TransientSocket(object):
         finally:
             if not socket.closed:
                 if time.time() - t >= self.ttl:
+                    start = time.time()
                     self.close_socket(socket, self.name)
+                    logging.getLogger(__name__).info(
+                        "it took %s ms to close a asgard socket of %s during a request",
+                        '%.2e' % ((time.time() - start) * 1000),
+                        self.name,
+                    )
                 else:
                     with _semaphore:
                         self._sockets[self].add(TransientSocket._Socket(t, socket))
 
     @classmethod
     def close_socket(cls, socket, name):
-        cls._logger.info("closing one socket for %s", name)
         try:
             socket.setsockopt(zmq.LINGER, 0)
             socket.close()
@@ -129,9 +139,12 @@ class TransientSocket(object):
             i = sockets.bisect_left(TransientSocket._Socket(oldest_creation_time, None))
             sockets_to_be_closed = sockets[i:]  # no worries, it's a copy
             del sockets[i:]
-
+        start = time.time()
         for _, socket in sockets_to_be_closed:
             cls.close_socket(socket, o.name)
+        logging.getLogger(__name__).info(
+            "it took %s ms to reap all asgard sockets of %s", time.time() - start, o.name
+        )
 
     @classmethod
     def _reap_sockets(cls):

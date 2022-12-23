@@ -336,7 +336,7 @@ class MockAsgard(Asgard):
             self, instance, service_url, asgard_socket, modes or [], id or 'asgard', timeout, api_key, **kwargs
         )
 
-    def _call_asgard(self, request):
+    def _call_asgard(self, request, request_id=None):
         valid_request(request)
         return valid_response(request)
 

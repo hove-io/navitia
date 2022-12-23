@@ -877,20 +877,12 @@ class Journeys(JourneyCommon):
         #  - we add the current_datetime of the request so as to differentiate
         #    the same request made at distinct moments
         def generate_request_id():
-
-            path = str(request.path)
-            args_for_id = dict(request.args)
-            if "_override_scenario" in args_for_id:
-                scenario = str(args_for_id["_override_scenario"][0])
-                args_for_id["_override_scenario"] = ""
+            if "_override_scenario" in args:
+                scenario = str(args["_override_scenario"])
             else:
                 scenario = "new_default"
 
-            json_repr = json.dumps(args_for_id, sort_keys=True, ensure_ascii=True)
-            # we could use the json_repr as an id, but we hash it to have something smaller
-            m = hashlib.sha256()
-            m.update(json_repr.encode("UTF-8"))
-            json_hash = m.hexdigest()
+            json_hash = request.id
 
             now = dt_to_str(datetime.datetime.utcnow())
 

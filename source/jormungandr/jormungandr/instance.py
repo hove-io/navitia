@@ -752,15 +752,28 @@ class Instance(object):
         try:
             socket, t = sockets.pop()
         except IndexError:  # there is no socket available: lets create one
+            start = time.time()
             socket = context.socket(zmq.REQ)
             socket.connect(socket_path)
+            logging.getLogger(__name__).info(
+                "it took %s ms to open a instance socket of %s during a request",
+                '%.2e' % ((time.time() - start) * 1000),
+                self.name,
+            )
+
         try:
             yield socket
         finally:
             if not socket.closed:
                 if t is not None and time.time() - t > app.config.get("ZMQ_SOCKET_TTL_SECONDS", 10):
+                    start = time.time()
                     socket.setsockopt(zmq.LINGER, 0)
                     socket.close()
+                    logging.getLogger(__name__).info(
+                        "it took %s ms to close a instance socket in %s",
+                        '%.2e' % ((time.time() - start) * 1000),
+                        self.name,
+                    )
                 else:
                     sockets.append((socket, t or time.time()))
 

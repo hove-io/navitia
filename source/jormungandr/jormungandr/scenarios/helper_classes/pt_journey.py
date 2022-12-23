@@ -204,8 +204,7 @@ class PtJourney:
             self._value = self._future_manager.create_future(self._do_journeys_request)
 
     def wait_and_get(self):
-        with timed_logger(self._logger, 'waiting_for_pt_journeys', self._request_id):
-            return self._value.wait_and_get()
+        return self._value.wait_and_get()
 
 
 class _PtJourneySorter(object):
@@ -362,7 +361,7 @@ class PtJourneyPool:
                 request=self._request,
                 isochrone_center=self._isochrone_center,
                 request_type=self._request_type,
-                request_id=self._request_id,
+                request_id="{}_{}_{}".format(self._request_id, dep_mode, arr_mode),
             )
 
             self._value.append(PtPoolElement(dep_mode, arr_mode, pt_journey))
