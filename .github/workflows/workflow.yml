@@ -2,12 +2,13 @@ name: CI
 
 on:
   push:
-    tags:
-    - '*'
     branches:
       - dev
       - auto/clang-tidy
   pull_request:
+  release:
+    types:
+      - created
 
 jobs:
   info:
