@@ -755,15 +755,6 @@ def timed_logger(logger, task_name, request_id):
         elapsed_time = (end - start) * 1000
         start_in_ms = int(start * 1000)
         end_in_ms = int(end * 1000)
-        # if elapsed_time is smaller than 0.5ms, we consider that it's negligible
-        if elapsed_time < 0.5:
-            logger.info(
-                "Task : {}, request : {} finished quasi-instantly".format(
-                    task_name,
-                    request_id,
-                )
-            )
-            return
 
         logger.info(
             "Task : {}, request : {},  start : {}, end : {}, elapsed time: {} ms".format(
