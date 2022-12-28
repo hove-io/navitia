@@ -58,6 +58,7 @@ DATETIME_FORMAT = "%Y%m%dT%H%M%S"
 UTC_DATETIME_FORMAT = "%Y-%m-%dT%H:%M:%S%z"
 NOT_A_DATE_TIME = "not-a-date-time"
 WEEK_DAYS_MAPPING = ("monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday")
+COVERAGE_ANY_BETA = "any_beta"
 
 
 def get_uri_pt_object(pt_object):
