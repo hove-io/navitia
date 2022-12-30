@@ -189,7 +189,7 @@ class Places(ResourceUri):
         # If a region or coords are asked, we do the search according
         # to the region, else, we do a word wide search
         args["request_id"] = args.get('request_id', flask.request.id)
-        # We remove the region any_beta if present. This is a temporary hack and should be removed later
+        # We remove the region any-beta if present. This is a temporary hack and should be removed later
         if region == COVERAGE_ANY_BETA:
             region = None
         if any([region, lon, lat]):
@@ -275,7 +275,7 @@ class PlaceUri(ResourceUri):
         request_id = "places_{}".format(flask.request.id)
         args["request_id"] = request_id
 
-        # We remove the region any_beta if present. This is a temporary hack and should be removed later
+        # We remove the region any-beta if present. This is a temporary hack and should be removed later
         if region == COVERAGE_ANY_BETA:
             region = None
         if any([region, lon, lat]):
@@ -370,7 +370,7 @@ class PlacesNearby(ResourceUri):
 
     @get_serializer(serpy=PlacesNearbySerializer)
     def get(self, region=None, lon=None, lat=None, uri=None):
-        # We remove the region any_beta if present. This is a temporary hack and should be removed later
+        # We remove the region any-beta if present. This is a temporary hack and should be removed later
         if region == COVERAGE_ANY_BETA:
             region = None
 

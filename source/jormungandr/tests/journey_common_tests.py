@@ -1778,11 +1778,11 @@ class NoCoverageParams:
         assert len(response_debug["journeys"]) > 1
 
         # Check places_nearby with /coverage/any_beta/coord should work as without any region
-        query = "v1/coverage/any_beta/" + journey_basic_query
+        query = "v1/coverage/any-beta/" + journey_basic_query
         response = self.query(query)
         assert len(response["journeys"]) == 1
 
-        query_debug = "v1/coverage/any_beta/" + journey_basic_query + "&debug=true"
+        query_debug = "v1/coverage/any-beta/" + journey_basic_query + "&debug=true"
         response_debug = self.query(query_debug)
         assert len(response_debug["journeys"]) > 1
 

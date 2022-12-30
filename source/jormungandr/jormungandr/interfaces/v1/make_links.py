@@ -37,6 +37,7 @@ from jormungandr.interfaces.v1.converters_collection_type import (
 )
 from flask_restful.utils import unpack
 from jormungandr import app
+from jormungandr.utils import COVERAGE_ANY_BETA
 
 
 def create_external_link(url, rel, _type=None, templated=False, description=None, **kwargs):
@@ -122,8 +123,8 @@ class add_pagination_links(object):
             endpoint = request.endpoint
             kwargs.update(request.args)
 
-            # We remove the region any_beta if present. This is a temporary hack and should be removed later
-            if kwargs.get('region') == "any_beta":
+            # We remove the region any-beta if present. This is a temporary hack and should be removed later
+            if kwargs.get('region') == COVERAGE_ANY_BETA:
                 del kwargs['region']
             if pagination and endpoint and "region" in kwargs:
                 if (
@@ -278,8 +279,8 @@ class add_id_links(generate_links):
             data = self.prepare_objetcs(objects, True)
             kwargs = self.prepare_kwargs(kwargs, data)
 
-            # We remove the region any_beta if present. This is a temporary hack and should be removed later
-            if kwargs.get('region') == "any_beta":
+            # We remove the region any-beta if present. This is a temporary hack and should be removed later
+            if kwargs.get('region') == COVERAGE_ANY_BETA:
                 del kwargs['region']
 
             if 'region' not in kwargs and 'lon' not in kwargs:

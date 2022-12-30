@@ -737,7 +737,7 @@ class Journeys(JourneyCommon):
     @get_serializer(serpy=api.JourneysSerializer)
     @ManageError()
     def get(self, region=None, lon=None, lat=None, uri=None):
-        # We remove the region any_beta if present. This is a temporary hack and should be removed later
+        # We remove the region any-beta if present. This is a temporary hack and should be removed later
         if region == COVERAGE_ANY_BETA:
             region = None
 
