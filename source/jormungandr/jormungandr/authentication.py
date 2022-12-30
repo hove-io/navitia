@@ -107,7 +107,7 @@ def get_token():
             # Python3 Compatibility 2: Decode bytes to string in order to use split()
             if isinstance(decoded, bytes):
                 decoded = decoded.decode()
-            return decoded.split(':')[0]
+            return decoded.split(':')[0].strip()
         except (binascii.Error, UnicodeDecodeError):
             logging.getLogger(__name__).exception('badly formated token %s', auth)
             flask_restful.abort(401, message="Unauthorized, invalid token", status=401)
@@ -193,11 +193,12 @@ def cache_get_user(token):
 
 def uncached_get_user(token):
     logging.getLogger(__name__).debug('Get User from token (uncached)')
-    if not can_connect_to_database():
-        logging.getLogger(__name__).debug('Cannot connect to database, we set User to None')
-        return None
     try:
         user = User.get_from_token(token, datetime.datetime.now())
+
+        # if user doesn't exist for a token, get default token with user_type = no_access
+        if not user:
+            user = User.get_without_access()
     except Exception as e:
         logging.getLogger(__name__).error('No access to table User (error: {})'.format(e))
         g.can_connect_to_database = False

@@ -129,7 +129,7 @@ class User(db.Model, TimestampMixin):  # type: ignore
     )
 
     type = db.Column(
-        db.Enum('with_free_instances', 'without_free_instances', 'super_user', name='user_type'),
+        db.Enum('with_free_instances', 'without_free_instances', 'super_user', 'no_access', name='user_type'),
         default='with_free_instances',
         nullable=False,
     )
@@ -192,6 +192,11 @@ class User(db.Model, TimestampMixin):  # type: ignore
         query = cls.query.join(Key).filter(
             Key.token == token, (Key.valid_until > valid_until) | (Key.valid_until == None)
         )
+        return query.first()
+
+    @classmethod
+    def get_without_access(cls,):
+        query = cls.query.filter(cls.type == 'no_access')
         return query.first()
 
     def has_access(self, instance_id, api_name):

@@ -90,13 +90,14 @@ def add_info_newrelic(response, *args, **kwargs):
     try:
         record_custom_parameter('navitia-request-id', request.id)
 
-        if can_connect_to_database():
-            token = get_token()
+        token = get_token()
+        if token:
             user = get_user(token=token, abort_if_no_token=False)
-            app_name = get_app_name(token)
             if user:
                 record_custom_parameter('user_id', str(user.id))
-            record_custom_parameter('token_name', app_name)
+            app_name = get_app_name(token)
+            if app_name:
+                record_custom_parameter('token_name', app_name)
 
         record_custom_parameter('version', __version__)
         coverages = get_used_coverages()
