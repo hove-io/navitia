@@ -78,8 +78,14 @@ class TransientSocket(object):
         self._sockets = SortedList([], key=lambda s: -s.t)
 
     def make_new_socket(self):
+        start = time.time()
         socket = self._zmq_context.socket(zmq.REQ)
         socket.connect(self._zmq_socket)
+        self._logger.info(
+            "it took %s ms to open a socket of %s",
+            '%.2e' % ((time.time() - start) * 1000),
+            self.name,
+        )
         t = time.time()
         return TransientSocket.TimedSocket(t, socket)
 
@@ -101,10 +107,8 @@ class TransientSocket(object):
             with self.semaphore:
                 self._sockets.clear()
 
-            before = time.time()
             for s in sockets_to_be_closed:
                 self.close_socket(s.socket)
-            self._logger.debug("closed %s in %s ms", len(sockets_to_be_closed), time.time() - before)
 
             return self.make_new_socket()
 
@@ -132,7 +136,13 @@ class TransientSocket(object):
 
     def close_socket(self, socket):
         try:
+            start = time.time()
             socket.setsockopt(zmq.LINGER, 0)
             socket.close()
+            self._logger.info(
+                "it took %s ms to close a socket of %s",
+                '%.2e' % ((time.time() - start) * 1000),
+                self.name,
+            )
         except:
             self._logger.exception("")
