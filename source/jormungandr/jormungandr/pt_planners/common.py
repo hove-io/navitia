@@ -48,9 +48,13 @@ class ZmqSocket(TransientSocket):
         name,
         zmq_context,
         zmq_socket,
+        zmq_socket_type,
         timeout,
         socket_ttl=app.config.get(str('ZMQ_SOCKET_TTL_SECONDS'), 10),
     ):
+
+        if zmq_socket_type == 'persistent':
+            socket_ttl = float('inf')
 
         super(ZmqSocket, self).__init__(
             name=name, zmq_context=zmq_context, zmq_socket=zmq_socket, socket_ttl=socket_ttl
@@ -75,7 +79,9 @@ class ZmqSocket(TransientSocket):
                 if 'flask_request_id' in kwargs and kwargs['flask_request_id']:
                     request.request_id = kwargs['flask_request_id']
 
-        pb = self.call(request.SerializeToString(), self.timeout, debug_cb=lambda: six.text_type(request))
+        pb = self.call(
+            request.SerializeToString(), self.timeout, debug_cb=lambda: six.text_type(request), quiet=quiet
+        )
         resp = response_pb2.Response()
         resp.ParseFromString(pb)
         return resp

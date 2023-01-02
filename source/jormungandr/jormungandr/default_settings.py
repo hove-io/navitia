@@ -11,6 +11,10 @@ DEFAULT_SQLALCHEMY_ENGINE_OPTIONS = {"connect_args": {"options": "-c statement_t
 # path of the configuration file for each instances
 INSTANCES_DIR = os.getenv('JORMUNGANDR_INSTANCES_DIR', '/etc/jormungandr.d')
 
+
+INSTANCE_TIMEOUT = float(os.getenv('JORMUNGANDR_INSTANCE_TIMEOUT_S', 10))
+INSTANCE_FAST_TIMEOUT = float(os.getenv('JORMUNGANDR_INSTANCE_FAST_TIMEOUT_S', 1))
+
 # Patern that matches Jormungandr configuration files
 #  ex: '*.json' will match all json files within "INSTANCES_DIR" directory
 INSTANCES_FILENAME_PATTERN = os.getenv('JORMUNGANDR_INSTANCES_FILENAME_PATTERN', '*.json')
@@ -223,16 +227,8 @@ DEFAULT_AUTOCOMPLETE_BACKEND = os.getenv('JORMUNGANDR_DEFAULT_AUTOCOMPLETE_BACKE
 # ZMQ
 ZMQ_DEFAULT_SOCKET_TYPE = os.getenv('JORMUNGANDR_ZMQ_DEFAULT_SOCKET_TYPE', 'persistent')
 
-ZMQ_SOCKET_TTL_SECONDS = (
-    int(os.getenv('JORMUNGANDR_ZMQ_SOCKET_TTL_SECONDS', 10))
-    if ZMQ_DEFAULT_SOCKET_TYPE == 'transient'
-    else float('inf')
-)
-ASGARD_ZMQ_SOCKET_TTL_SECONDS = (
-    int(os.getenv('JORMUNGANDR_ASGARD_ZMQ_SOCKET_TTL_SECONDS', 10))
-    if ZMQ_DEFAULT_SOCKET_TYPE == 'transient'
-    else float('inf')
-)
+ZMQ_SOCKET_TTL_SECONDS = float(os.getenv('JORMUNGANDR_ZMQ_SOCKET_TTL_SECONDS', 10))
+ASGARD_ZMQ_SOCKET_TTL_SECONDS = float(os.getenv('JORMUNGANDR_ASGARD_ZMQ_SOCKET_TTL_SECONDS', 10))
 
 
 # Variable used only when deploying on aws
