@@ -35,11 +35,17 @@ from tyr.helper import configure_logger, make_celery
 from redis import Redis
 from celery.signals import setup_logging
 from flask_script import Manager
+from flask_cors import CORS
 from tyr.rabbit_mq_handler import RabbitMqHandler
 
 app = Flask(__name__)
 app.config.from_object('tyr.default_settings')  # type: ignore
 app.config.from_envvar('TYR_CONFIG_FILE', silent=True)  # type: ignore
+
+if app.config['ACCESS_CONTROL_ALLOW_ORIGIN']:
+    CORS(app, origins=[app.config['ACCESS_CONTROL_ALLOW_ORIGIN']])
+    app.config[str('CORS_HEADERS')] = 'Content-Type'
+
 configure_logger(app)
 manager = Manager(app)
 
