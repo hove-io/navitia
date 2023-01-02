@@ -223,9 +223,6 @@ DEFAULT_AUTOCOMPLETE_BACKEND = os.getenv('JORMUNGANDR_DEFAULT_AUTOCOMPLETE_BACKE
 # ZMQ
 ZMQ_DEFAULT_SOCKET_TYPE = os.getenv('JORMUNGANDR_ZMQ_DEFAULT_SOCKET_TYPE', 'persistent')
 
-# reaper interval must at most be half of the TTL to make sure that the socket will not live longer than its TTL by much
-ZMQ_SOCKET_REAPER_INTERVAL = int(os.getenv('JORMUNGANDR_ZMQ_SOCKET_REAPER_INTERVAL', 5))
-
 ZMQ_SOCKET_TTL_SECONDS = (
     int(os.getenv('JORMUNGANDR_ZMQ_SOCKET_TTL_SECONDS', 10))
     if ZMQ_DEFAULT_SOCKET_TYPE == 'transient'
