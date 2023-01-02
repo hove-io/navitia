@@ -449,7 +449,7 @@ struct routing_api_data {
         if (activate_pt) {
             // we add a very fast bus (2 seconds) to be faster than walking and biking
             b.vj("A", "111111", "", false, "vjA", "vjA_hs")
-                .route("A", "backward")("stop_point:stopB", "08:01"_t)("stop_point:stopA", "08:01:02"_t)
+                .route("A:0", "backward")("stop_point:stopB", "08:01"_t)("stop_point:stopA", "08:01:02"_t)
                 .st_shape({B, I, A});
             b.lines["A"]->code = "1A";
             b.lines["A"]->color = "289728";
