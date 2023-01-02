@@ -90,7 +90,7 @@ class ZmqSocket(TransientSocket):
             raise DeadSocketException(self.name, self._zmq_socket)
 
     def clean_up_zmq_sockets(self):
-        for socket in self._sockets[self]:
+        for socket in self._sockets:
             socket.setsockopt(zmq.LINGER, 0)
             socket.close()
 

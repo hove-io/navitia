@@ -758,7 +758,7 @@ class Instance(transient_socket.TransientSocket):
         req = request_pb2.Request()
         req.requested_api = type_pb2.place_uri
         req.place_uri.uri = id_
-        return self.send_and_receive(req, timeout=app.config.get('INSTANCE_FAST_TIMEOUT', 1000))
+        return self.send_and_receive(req, timeout=app.config.get('INSTANCE_FAST_TIMEOUT', 0.1))
 
     def has_id(self, id_):
         """
