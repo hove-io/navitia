@@ -731,37 +731,25 @@ class Instance(transient_socket.TransientSocket):
         except pybreaker.CircuitBreakerError as e:
             raise DeadSocketException(self.name, self.socket_path)
 
-    def _send_and_receive(
-        self, request, timeout=app.config.get('INSTANCE_TIMEOUT', 10000), quiet=False, **kwargs
-    ):
-        logger = logging.getLogger(__name__)
-        deadline = datetime.utcnow() + timedelta(milliseconds=timeout)
+    def _send_and_receive(self, request, timeout=app.config.get('INSTANCE_TIMEOUT', 10), quiet=False, **kwargs):
+        deadline = datetime.utcnow() + timedelta(milliseconds=timeout * 1000)
         request.deadline = deadline.strftime('%Y%m%dT%H%M%S,%f')
 
-        with self.socket() as socket:
-            if 'request_id' in kwargs and kwargs['request_id']:
-                request.request_id = kwargs['request_id']
-            else:
-                try:
-                    request.request_id = flask.request.id
-                except RuntimeError:
-                    # we aren't in a flask context, so there is no request
-                    if 'flask_request_id' in kwargs and kwargs['flask_request_id']:
-                        request.request_id = kwargs['flask_request_id']
+        if 'request_id' in kwargs and kwargs['request_id']:
+            request.request_id = kwargs['request_id']
+        else:
+            try:
+                request.request_id = flask.request.id
+            except RuntimeError:
+                # we aren't in a flask context, so there is no request
+                if 'flask_request_id' in kwargs and kwargs['flask_request_id']:
+                    request.request_id = kwargs['flask_request_id']
 
-            socket.send(request.SerializeToString())
-            if socket.poll(timeout=timeout) > 0:
-                pb = socket.recv()
-                resp = response_pb2.Response()
-                resp.ParseFromString(pb)
-                self.update_property(resp)  # we update the timezone and geom of the instances at each request
-                return resp
-            else:
-                socket.setsockopt(zmq.LINGER, 0)
-                socket.close()
-                if not quiet:
-                    logger.error('request on %s failed: %s', self.socket_path, six.text_type(request))
-                raise DeadSocketException(self.name, self.socket_path)
+        pb = self.call(request.SerializeToString(), timeout, debug_cb=lambda: six.text_type(request))
+        resp = response_pb2.Response()
+        resp.ParseFromString(pb)
+        self.update_property(resp)
+        return resp
 
     def get_id(self, id_):
         """
@@ -864,7 +852,7 @@ class Instance(transient_socket.TransientSocket):
         request_id = "instance_init"
         try:
             # we use _send_and_receive to avoid the circuit breaker, we don't want fast fail on init :)
-            resp = self._send_and_receive(req, request_id=request_id, timeout=1000, quiet=True)
+            resp = self._send_and_receive(req, request_id=request_id, timeout=1, quiet=True)
             # the instance is automatically updated on a call
             if self.publication_date != pub_date:
                 return True

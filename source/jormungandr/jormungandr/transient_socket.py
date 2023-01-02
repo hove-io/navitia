@@ -31,20 +31,16 @@
 
 import zmq
 import time
-import gevent
 from contextlib import contextmanager
 import logging
 import six
-from typing import Dict
+import flask
 from gevent.lock import BoundedSemaphore
-from collections import defaultdict, namedtuple
+from collections import namedtuple
 from sortedcontainers import SortedList
 from jormungandr.exceptions import DeadSocketException
-import ujson
-
-
-class NoAliveSockets(Exception):
-    pass
+from datetime import datetime, timedelta
+from navitiacommon import response_pb2
 
 
 class TransientSocket(object):
@@ -73,8 +69,8 @@ class TransientSocket(object):
         self.name = name
         self._zmq_context = zmq_context
         self._zmq_socket = zmq_socket
-        self.ttl = socket_ttl
-        self.semaphore = BoundedSemaphore(1)
+        self._ttl = socket_ttl
+        self._semaphore = BoundedSemaphore(1)
         self._sockets = SortedList([], key=lambda s: -s.t)
 
     def make_new_socket(self):
@@ -93,56 +89,62 @@ class TransientSocket(object):
         if not self._sockets:
             return self.make_new_socket()
 
-        newest_timed_socket = self._sockets[0]
-        now = time.time()
+        with self._semaphore:
+            # since _sockets is a sorted list, the first element is always the newest socket.
+            newest_timed_socket = self._sockets[0]
+            now = time.time()
 
-        if now - newest_timed_socket.t < self.ttl:
-            # we find an alive socket! we move the ownership to this greenlet and use it!
-            with self.semaphore:
+            if now - newest_timed_socket.t < self._ttl:
+                # we find an alive socket! we move the ownership to this greenlet and use it!
                 self._sockets.pop(0)
-
-            return newest_timed_socket
-        else:
-            sockets_to_be_closed = self._sockets[:]
-            with self.semaphore:
+                return newest_timed_socket
+            else:
+                # copy the sockets to be closed
+                sockets_to_be_closed = self._sockets[:]
                 self._sockets.clear()
+                start = time.time()
+                for s in sockets_to_be_closed:
+                    self.close_socket(s.socket)
+                self._logger.info(
+                    "it took %s ms to close %s sockets of %s",
+                    '%.2e' % ((time.time() - start) * 1000),
+                    len(sockets_to_be_closed),
+                    self.name,
+                )
+        return self.make_new_socket()
 
-            for s in sockets_to_be_closed:
-                self.close_socket(s.socket)
-
-            return self.make_new_socket()
-
-    @contextmanager
-    def socket(self):
-        # We don't want to waste time to close sockets in this function since the performance is critical
-        # The cleaning job is done in another greenlet.
+    def call(self, content, timeout, debug_cb=lambda: "", quiet=False):
         timed_socket = self.get_socket()
 
         try:
-            yield timed_socket.socket
+            timed_socket.socket.send(content)
+            if timed_socket.socket.poll(timeout=timeout * 1000) > 0:
+                pb = timed_socket.socket.recv()
+                return pb
+            else:
+                if not quiet:
+                    self._logger.error('request on %s failed: %s', self._zmq_socket, debug_cb())
+                raise DeadSocketException(self.name, self._zmq_socket)
+
         except DeadSocketException as e:
+            self.close_socket(timed_socket.socket)
             raise e
         except:
+            self.close_socket(timed_socket.socket)
             self._logger.exception("")
 
         finally:
             if not timed_socket.socket.closed:
                 now = time.time()
-                if now - timed_socket.t >= self.ttl:
+                if now - timed_socket.t >= self._ttl:
                     self.close_socket(timed_socket.socket)
                 else:
-                    with self.semaphore:
+                    with self._semaphore:
                         self._sockets.add(timed_socket)
 
     def close_socket(self, socket):
         try:
-            start = time.time()
             socket.setsockopt(zmq.LINGER, 0)
             socket.close()
-            self._logger.info(
-                "it took %s ms to close a socket of %s",
-                '%.2e' % ((time.time() - start) * 1000),
-                self.name,
-            )
         except:
             self._logger.exception("")

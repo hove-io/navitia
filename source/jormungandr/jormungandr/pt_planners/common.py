@@ -31,14 +31,10 @@ from __future__ import absolute_import, print_function, unicode_literals, divisi
 import logging
 import pybreaker
 import zmq
-import time
-from contextlib import contextmanager
-from collections import deque
+
 from datetime import datetime, timedelta
 import flask
 import six
-from threading import Lock
-from abc import ABCMeta
 
 from jormungandr import app
 from jormungandr.transient_socket import TransientSocket
@@ -66,37 +62,27 @@ class ZmqSocket(TransientSocket):
         )
 
     def _send_and_receive(self, request, quiet=False, **kwargs):
-        logger = logging.getLogger(__name__)
         deadline = datetime.utcnow() + timedelta(milliseconds=self.timeout * 1000)
         request.deadline = deadline.strftime('%Y%m%dT%H%M%S,%f')
 
-        with self.socket() as socket:
-            if 'request_id' in kwargs and kwargs['request_id']:
-                request.request_id = kwargs['request_id']
-            else:
-                try:
-                    request.request_id = flask.request.id
-                except RuntimeError:
-                    # we aren't in a flask context, so there is no request
-                    if 'flask_request_id' in kwargs and kwargs['flask_request_id']:
-                        request.request_id = kwargs['flask_request_id']
+        if 'request_id' in kwargs and kwargs['request_id']:
+            request.request_id = kwargs['request_id']
+        else:
+            try:
+                request.request_id = flask.request.id
+            except RuntimeError:
+                # we aren't in a flask context, so there is no request
+                if 'flask_request_id' in kwargs and kwargs['flask_request_id']:
+                    request.request_id = kwargs['flask_request_id']
 
-            socket.send(request.SerializeToString())
-            if socket.poll(timeout=self.timeout * 1000) > 0:
-                pb = socket.recv()
-                resp = response_pb2.Response()
-                resp.ParseFromString(pb)
-                return resp
-            else:
-                socket.setsockopt(zmq.LINGER, 0)
-                socket.close()
-                if not quiet:
-                    logger.error('request on %s failed: %s', self._zmq_socket, six.text_type(request))
-                raise DeadSocketException(self.name, self._zmq_socket)
+        pb = self.call(request.SerializeToString(), self.timeout, debug_cb=lambda: six.text_type(request))
+        resp = response_pb2.Response()
+        resp.ParseFromString(pb)
+        return resp
 
     def send_and_receive(self, *args, **kwargs):
         """
-        encapsulate all call to kraken in a circuit breaker, this way we don't loose time calling dead instance
+        encapsulate all call to kraken in a circuit breaker, this way we don't lose time calling dead instance
         """
         try:
             return self.breaker.call(self._send_and_receive, *args, **kwargs)

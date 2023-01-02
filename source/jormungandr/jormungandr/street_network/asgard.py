@@ -430,22 +430,11 @@ class Asgard(TransientSocket, Kraken):
 
     def _call_asgard(self, request, request_id):
         def _request():
-            with self.socket() as socket:
-                request.request_id = request_id
-                socket.send(request.SerializeToString())
-                # timeout is in second, we need it on millisecond
-                if socket.poll(timeout=self.timeout * 1000) > 0:
-                    pb = socket.recv()
-                    resp = response_pb2.Response()
-                    resp.ParseFromString(pb)
-                    return resp
-                else:
-                    socket.setsockopt(zmq.LINGER, 0)
-                    socket.close()
-                    self.logger.error(
-                        'asgard request on %s failed: %s', self._zmq_socket, six.text_type(request)
-                    )
-                    raise TechnicalError('asgard on {} failed'.format(self._zmq_socket))
+            request.request_id = request_id
+            pb = self.call(request.SerializeToString(), self.timeout)
+            resp = response_pb2.Response()
+            resp.ParseFromString(pb)
+            return resp
 
         try:
             return self.breaker.call(_request)
