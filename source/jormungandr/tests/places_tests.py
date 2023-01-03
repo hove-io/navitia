@@ -369,8 +369,8 @@ class TestPlaces(AbstractTestFixture):
         assert len(places) == 1
         assert 'distance' not in places[0]
 
-    def test_places_to_valide_any_beta(self):
-        """A request with coverage=any_beta behaves as a request without any coverage"""
+    def test_places_to_validate_any_beta(self):
+        """A request with coverage=any-beta behaves as a request without any coverage"""
         response = self.query("/v1/coverage/main_routing_test/places?q=rue ab")
         places = response['places']
         assert len(places) == 1
