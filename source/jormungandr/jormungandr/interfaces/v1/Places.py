@@ -45,7 +45,7 @@ from datetime import datetime
 from jormungandr.parking_space_availability.parking_places_manager import ManageParkingPlaces
 import ujson as json
 from jormungandr.scenarios.utils import places_type
-from jormungandr.utils import remove_ghost_words
+from jormungandr.utils import remove_ghost_words, COVERAGE_ANY_BETA
 from navitiacommon import parser_args_type
 from navitiacommon.parser_args_type import (
     TypeSchema,
@@ -189,6 +189,9 @@ class Places(ResourceUri):
         # If a region or coords are asked, we do the search according
         # to the region, else, we do a word wide search
         args["request_id"] = args.get('request_id', flask.request.id)
+        # We remove the region any-beta if present. This is a temporary hack and should be removed later
+        if region == COVERAGE_ANY_BETA:
+            region = None
         if any([region, lon, lat]):
             self.region = i_manager.get_region(region, lon, lat)
 
@@ -272,6 +275,9 @@ class PlaceUri(ResourceUri):
         request_id = "places_{}".format(flask.request.id)
         args["request_id"] = request_id
 
+        # We remove the region any-beta if present. This is a temporary hack and should be removed later
+        if region == COVERAGE_ANY_BETA:
+            region = None
         if any([region, lon, lat]):
             self.region = i_manager.get_region(region, lon, lat)
             timezone.set_request_timezone(self.region)
@@ -364,6 +370,10 @@ class PlacesNearby(ResourceUri):
 
     @get_serializer(serpy=PlacesNearbySerializer)
     def get(self, region=None, lon=None, lat=None, uri=None):
+        # We remove the region any-beta if present. This is a temporary hack and should be removed later
+        if region == COVERAGE_ANY_BETA:
+            region = None
+
         self.region = i_manager.get_region(region, lon, lat)
         timezone.set_request_timezone(self.region)
         args = self.parsers["get"].parse_args()

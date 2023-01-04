@@ -1777,6 +1777,15 @@ class NoCoverageParams:
         # Check that more than 1 journey should be given if not for the coverage parameter
         assert len(response_debug["journeys"]) > 1
 
+        # Check places_nearby with /coverage/any_beta/coord should work as without any region
+        query = "v1/coverage/any-beta/" + journey_basic_query
+        response = self.query(query)
+        assert len(response["journeys"]) == 1
+
+        query_debug = "v1/coverage/any-beta/" + journey_basic_query + "&debug=true"
+        response_debug = self.query(query_debug)
+        assert len(response_debug["journeys"]) > 1
+
 
 @dataset({"main_ptref_test": {}})
 class JourneysWithPtref:

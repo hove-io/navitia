@@ -53,6 +53,7 @@ from jormungandr.utils import (
     journeys_absent,
     local_str_date_to_utc,
     UTC_DATETIME_FORMAT,
+    COVERAGE_ANY_BETA,
 )
 from jormungandr.interfaces.v1.serializer import api
 from jormungandr.interfaces.v1.decorators import get_serializer
@@ -736,6 +737,10 @@ class Journeys(JourneyCommon):
     @get_serializer(serpy=api.JourneysSerializer)
     @ManageError()
     def get(self, region=None, lon=None, lat=None, uri=None):
+        # We remove the region any-beta if present. This is a temporary hack and should be removed later
+        if region == COVERAGE_ANY_BETA:
+            region = None
+
         args = self.parsers['get'].parse_args()
         possible_regions = compute_possible_region(region, args)
         logging.getLogger(__name__).debug("Possible regions for the request : {}".format(possible_regions))

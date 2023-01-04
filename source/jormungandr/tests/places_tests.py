@@ -116,6 +116,12 @@ class TestPlaces(AbstractTestFixture):
         assert len(response['places_nearby']) > 0
         is_valid_places(response['places_nearby'])
 
+    def test_places_nearby_with_coord_with_region_any_beta(self):
+        """check places_nearby with /coverage/any-beta/coord should work as without any region"""
+        response = self.query("/v1/coverage/any-beta/coord/0.000001;0.000898311281954/places_nearby")
+        assert len(response['places_nearby']) > 0
+        is_valid_places(response['places_nearby'])
+
     def test_places_nearby_with_coords_without_region(self):
         """check places_nearby with /coords"""
 
@@ -362,6 +368,23 @@ class TestPlaces(AbstractTestFixture):
         places = response['places']
         assert len(places) == 1
         assert 'distance' not in places[0]
+
+    def test_places_to_validate_any_beta(self):
+        """A request with coverage=any-beta behaves as a request without any coverage"""
+        response = self.query("/v1/coverage/main_routing_test/places?q=rue ab")
+        places = response['places']
+        assert len(places) == 1
+        assert 'distance' not in places[0]
+
+        response, status = self.query_no_assert("/v1/places?q=rue ab")
+        assert status == 500
+        assert 'error' in response
+        assert response["error"]["message"] == "world wide autocompletion service not available"
+
+        response, status = self.query_no_assert("/v1/coverage/any-beta/places?q=rue ab")
+        assert status == 500
+        assert 'error' in response
+        assert response["error"]["message"] == "world wide autocompletion service not available"
 
     def test_stop_area_attributes_with_different_depth(self):
         """verify that stop_area contains lines in all apis with depth>2"""
