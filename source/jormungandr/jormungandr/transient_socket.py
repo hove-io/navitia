@@ -86,10 +86,10 @@ class TransientSocket(object):
         return TransientSocket.TimedSocket(t, socket)
 
     def get_socket(self):
-        if not self._sockets:
-            return self.make_new_socket()
 
         with self._semaphore:
+            if not self._sockets:
+                return self.make_new_socket()
             # since _sockets is a sorted list, the first element is always the newest socket.
             newest_timed_socket = self._sockets[0]
             now = time.time()
