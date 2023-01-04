@@ -77,7 +77,7 @@ class TransientSocket(object):
         start = time.time()
         socket = self._zmq_context.socket(zmq.REQ)
         socket.connect(self._zmq_socket)
-        self._logger.info(
+        self._logger.debug(
             "it took %s ms to open a socket of %s",
             '%.2e' % ((time.time() - start) * 1000),
             self.name,
@@ -105,7 +105,7 @@ class TransientSocket(object):
                 start = time.time()
                 for s in sockets_to_be_closed:
                     self.close_socket(s.socket)
-                self._logger.info(
+                self._logger.debug(
                     "it took %s ms to close %s sockets of %s",
                     '%.2e' % ((time.time() - start) * 1000),
                     len(sockets_to_be_closed),
