@@ -1,1 +1,14 @@
 FROM debian:10-slim
+
+# update package list from providers
+RUN apt-get update && \
+  apt-get upgrade -y && \
+  apt-get install -y ca-certificates && \
+  apt-get clean && \
+  rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+
+ COPY navitia/docker/ca-certificates/*.crt /usr/local/share/ca-certificates/
+ RUN update-ca-certificates
+ # Python 'requests' package handle its own CA certificate list
+ # Let's force it to use the OS's list
+ ENV REQUESTS_CA_BUNDLE /etc/ssl/certs

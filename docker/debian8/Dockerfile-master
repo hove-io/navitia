@@ -4,12 +4,18 @@ FROM navitia/debian8_dev
 RUN apt-get update --fix-missing
 
 # upgrade installed packages
-RUN  apt-get upgrade -y
+RUN  apt-get upgrade -y --force-yes
 
 # install postgresql-client for tyr-beat
 #         netcat for kraken
 #         curl for jormun
-RUN apt-get install -y postgresql-client \
-                        netcat \
-                        curl
+RUN apt-get install -y --force-yes postgresql-client \
+        ca-certificates \
+        netcat \
+        curl
 
+COPY navitia/docker/ca-certificates/*.crt /usr/local/share/ca-certificates/
+RUN update-ca-certificates
+# Python 'requests' package handle its own CA certificate list
+# Let's force it to use the OS's list
+ENV REQUESTS_CA_BUNDLE /etc/ssl/certs

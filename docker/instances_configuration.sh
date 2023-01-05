@@ -24,7 +24,7 @@ db_config() {
 
   # database schema migration
   alembic_file=/srv/ed/$instance_name/ed_migration.ini
-  INSTANCE=$instance_name envsubst < templates/ed_migration.ini > $alembic_file
+  INSTANCE=$instance_name USER=navitia PASSWORD=navitia DATABASE_HOST=database PORT=5432 envsubst < templates/ed_migration.ini > $alembic_file
   alembic -c $alembic_file upgrade head
 }
 

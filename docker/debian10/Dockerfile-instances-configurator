@@ -3,7 +3,7 @@ FROM navitia/master
 COPY navitia/source/sql/alembic /usr/share/navitia/ed/alembic
 COPY navitia/source/sql/requirements.txt /tmp/requirements.txt
 COPY navitia/source/cities /usr/share/navitia/cities
-COPY templates/* /templates/
+COPY navitia/docker/templates/* /templates/
 
 RUN apt-get update \
     && apt install -y python python-pip git libpq-dev postgresql-client gettext-base \
@@ -11,7 +11,7 @@ RUN apt-get update \
 
 RUN pip install -r /tmp/requirements.txt
 
-COPY instances_configuration.sh /
+COPY navitia/docker/instances_configuration.sh /
 RUN chmod +x /instances_configuration.sh
 
 ENTRYPOINT ["/bin/bash","/instances_configuration.sh"]

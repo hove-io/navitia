@@ -1,13 +1,21 @@
 FROM navitia/master
 
-COPY navitia-common_*.deb navitia-tyr_*.deb ./
-COPY run_tyr_beat.sh /
+# used for data migrations
+COPY navitia/source/sql/alembic /usr/share/navitia/ed/alembic
+COPY navitia/source/sql/requirements.txt /tmp/requirements.txt
+COPY navitia/source/cities /usr/share/navitia/cities
+COPY navitia/docker/templates/* /templates/
 
+COPY navitia-common_*.deb navitia-tyr_*.deb ./
+COPY navitia/docker/run_tyr_beat.sh /
 
 RUN apt-get update \
-    && apt install -y python python-pip git postgresql-client libgeos-c1v5 libpq5 ./navitia-common_*.deb ./navitia-tyr_*.deb \
+    && apt install -y python python-pip git postgresql-client libgeos-c1v5 libpq5 gettext-base jq python-pip ./navitia-common_*.deb ./navitia-tyr_*.deb \
     && apt-get clean \
     && rm -rf navitia-common_*.deb navitia-tyr_*.deb
+
+# install ed migrations requirements
+RUN pip install -r /tmp/requirements.txt
 
 # install tyr requirements
 RUN pip install --no-cache-dir -r /usr/share/tyr/requirements.txt
@@ -16,4 +24,4 @@ RUN chmod +x /run_tyr_beat.sh
 
 WORKDIR /usr/share/tyr/
 
-CMD ["sh", "/run_tyr_beat.sh"]
+CMD ["bash", "/run_tyr_beat.sh"]

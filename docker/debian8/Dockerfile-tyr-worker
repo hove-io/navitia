@@ -4,32 +4,32 @@ COPY navitia-common_*deb ./
 COPY navitia-tyr_*.deb ./
 COPY navitia-ed_*.deb ./
 COPY navitia-cities_*.deb ./
-COPY mimirsbrunn_*.deb ./
+COPY mimirsbrunn7_*.deb ./
 COPY cosmogony2cities_*.deb ./
 
 # install navitia-common package
 RUN dpkg -i ./navitia-common_*.deb || exit 0
-RUN apt-get install -f -y
+RUN apt-get install -f -y --force-yes
 
 # install navitia-tyr package
 RUN dpkg -i ./navitia-tyr_*.deb || exit 0
-RUN apt-get install -f -y
+RUN apt-get install -f -y --force-yes
 
 # install navitia-ed package
 RUN dpkg -i ./navitia-ed_*.deb || exit 0
-RUN apt-get install -f -y
+RUN apt-get install -f -y --force-yes
 
 # install navitia-cities package
 RUN dpkg -i ./navitia-cities_*.deb || exit 0
-RUN apt-get install -f -y
+RUN apt-get install -f -y --force-yes
 
 # install navitia-mimirsbrunn package
-RUN dpkg -i ./mimirsbrunn_jessie-*.deb || exit 0
-RUN apt-get install -f -y
+RUN dpkg -i ./mimirsbrunn7_jessie-*.deb || exit 0
+RUN apt-get install -f -y --force-yes
 
 # install cosmogony2cities package
 RUN dpkg -i ./cosmogony2cities*.deb || exit 0
-RUN apt-get install -f -y
+RUN apt-get install -f -y --force-yes
 
 # install tyr requirements
 RUN pip install --no-cache-dir -r /usr/share/tyr/requirements.txt
@@ -42,4 +42,5 @@ RUN cp /usr/bin/manage_tyr.py /usr/src/app/manage_tyr.py
 
 # TODO change the user to remove this ugly C_FORCE_ROOT
 ENV C_FORCE_ROOT=1
+ENV TYR_WORKER_N_PROC=1
 CMD ["celery", "worker", "-A", "tyr.tasks", "-O", "fair"]

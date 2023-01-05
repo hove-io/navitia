@@ -5,13 +5,13 @@ COPY navitia-jormungandr_*.deb ./
 
 # install navitia-common package
 RUN dpkg -i ./navitia-common_*.deb || exit 0
-RUN apt-get install -f -y
+RUN apt-get install -f -y --force-yes
 
 # install navitia-jormun package
 RUN dpkg -i ./navitia-jormungandr_*.deb || exit 0
-RUN apt-get install -f -y
+RUN apt-get install -f -y --force-yes
 
-RUN apt-get install -y apache2 \
+RUN apt-get install -y --force-yes apache2 \
     && apt-get clean \
     && apt-get autoremove
 
@@ -21,10 +21,10 @@ RUN pip install --no-cache-dir -r /usr/share/jormungandr/requirements.txt \
 
 # Add apache config
 RUN rm /etc/apache2/sites-available/000-default.conf
-COPY apache/jormungandr.default.conf /etc/apache2/sites-available/000-default.conf
-COPY apache/apache2.conf /etc/apache2/apache2.conf
-COPY apache/envvars /etc/apache2/envvars
-COPY apache/logformat.conf /etc/apache2/conf-available/logformat.conf
+COPY navitia/docker/apache/jormungandr.default.conf /etc/apache2/sites-available/000-default.conf
+COPY navitia/docker/apache/apache2.conf /etc/apache2/apache2.conf
+COPY navitia/docker/apache/envvars /etc/apache2/envvars
+COPY navitia/docker/apache/logformat.conf /etc/apache2/conf-available/logformat.conf
 
 # Enable site and modes
 RUN a2ensite 000-default.conf \
@@ -39,8 +39,8 @@ RUN ln -sf /proc/self/fd/1 /var/log/apache2/access.log \
     && ln -sf /proc/self/fd/2 /var/log/apache2/error.log
 
 # jormungandr wsgi
-COPY jormungandr.wsgi /usr/src/app/jormungandr.wsgi
-COPY run_jormungandr.sh /usr/src/app/run.sh
+COPY navitia/docker/jormungandr.wsgi /usr/src/app/jormungandr.wsgi
+COPY navitia/docker/run_jormungandr.sh /usr/src/app/run.sh
 
 WORKDIR /usr/src/app/
 

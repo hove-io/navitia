@@ -5,14 +5,14 @@ COPY navitia-tyr_*.deb ./
 
 # install navitia-common package
 RUN dpkg -i ./navitia-common_*.deb || exit 0
-RUN apt-get install -f -y
+RUN apt-get install -f -y --force-yes
 
 # install navitia-tyr package
 RUN dpkg -i ./navitia-tyr_*.deb || exit 0
-RUN apt-get install -f -y
+RUN apt-get install -f -y --force-yes
 
 # install postgresql-client
-RUN apt-get install -y postgresql-client
+RUN apt-get install -y --force-yes postgresql-client
 
 # install tyr requirements
 RUN pip install --no-cache-dir -r /usr/share/tyr/requirements.txt
