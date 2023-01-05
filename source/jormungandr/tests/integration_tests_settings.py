@@ -34,8 +34,8 @@ START_MONITORING_THREAD = False
 SAVE_STAT = True
 
 DISABLE_DATABASE = True
-# for tests we want only 1/2 seconds timeout instead of the normal 10s
-INSTANCE_TIMEOUT = int(os.environ.get('CUSTOM_INSTANCE_TIMEOUT', 500))
+# for tests we want only 0.5 second timeout instead of the normal 10s
+INSTANCE_TIMEOUT = float(os.environ.get('CUSTOM_INSTANCE_TIMEOUT', 0.5))
 STAT_CIRCUIT_BREAKER_MAX_FAIL = int(os.getenv('JORMUNGANDR_STAT_CIRCUIT_BREAKER_MAX_FAIL', 1000))
 STAT_CIRCUIT_BREAKER_TIMEOUT_S = int(os.getenv('JORMUNGANDR_STAT_CIRCUIT_BREAKER_TIMEOUT_S', 1))
 
