@@ -29,6 +29,7 @@ def upgrade():
     op.execute('ALTER TABLE "user" ALTER COLUMN type TYPE user_type USING type::text::user_type')
     op.execute('ALTER TABLE "user" ALTER COLUMN type SET DEFAULT \'with_free_instances\'')
     tmp_type.drop(op.get_bind(), checkfirst=False)
+    op.execute('INSERT INTO "user"(login, email, type) values(\'user_without_access\', \'user_without_access@noreply.com\', \'no_access\')')
 
 
 def downgrade():
