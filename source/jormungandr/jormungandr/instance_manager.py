@@ -222,7 +222,7 @@ class InstanceManager(object):
     def _filter_authorized_instances(self, instances, api):
         if not instances:
             return []
-        # get_user is cached and hence access to database only once when cache expires.
+        # get_user is cached hence access to database only once when cache expires.
         user = authentication.get_user(token=authentication.get_token())
         # has_access returns true if can_connect_to_database = false when cache expires for each coverage
         valid_instances = [

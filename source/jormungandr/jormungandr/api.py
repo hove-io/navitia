@@ -94,7 +94,7 @@ def add_info_newrelic(response, *args, **kwargs):
             user = get_user(token=token, abort_if_no_token=False)
             if user:
                 record_custom_parameter('user_id', str(user.id))
-            # This method connects and gets object Key only once when cache expires.
+            # This method verifies database connection and gets object Key only once when cache expires.
             app_name = get_app_name(token)
             if app_name:
                 record_custom_parameter('token_name', app_name)
