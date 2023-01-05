@@ -141,6 +141,7 @@ def has_access(region, api, abort, user):
     # if jormungandr is on public mode or database is not accessible, we skip the authentication process
     logging.getLogger(__name__).debug('User "has_access" to region/api not cached')
 
+    # Connection to database verified only once when cache expires.
     if current_app.config.get('PUBLIC', False) or (not can_connect_to_database()):
         return True
 
@@ -212,6 +213,7 @@ def uncached_get_user(token):
 )
 @cache.memoize(current_app.config[str('CACHE_CONFIGURATION')].get(str('TIMEOUT_AUTHENTICATION'), 300))
 def cache_get_key(token):
+    # This verification is done only once when cache expires.
     if not can_connect_to_database():
         return None
     try:
