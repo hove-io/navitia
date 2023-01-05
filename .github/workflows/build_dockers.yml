@@ -1,0 +1,165 @@
+name: Build Navitia Dockers
+
+on:
+  push:
+    branches:
+      - dev
+    tags:
+      - '*'
+env:
+  debian_version: debian8
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    container:
+      image: navitia/${{env.debian_version}}_dev
+      volumes:
+         # Mount so we can delete files from docker and free up space (>20GB)
+          - /usr/share/dotnet:/usr/share/dotnet
+          - /usr/local/lib/android:/usr/local/lib/android
+
+
+    steps:
+    - name: Free up space
+      run: |
+        rm -rf /usr/share/dotnet/*
+        rm -rf /usr/local/lib/android/*
+        echo "Free space:"
+        df -h
+
+    - name: Restore ccache
+      uses: hendrikmuhs/ccache-action@v1.2
+      with:
+        key: ${{env.debian_version}-package
+        max-size: 2000M
+        save: ${{ github.event_name == 'push' }}
+
+    - name: Checkout navitia
+      uses: actions/checkout@v3
+      with:
+        submodules : recursive
+        path: navitia
+        fetch-depth: 0
+
+    - name: Install build dependencies
+      run: |
+        apt update && apt install -y --force-yes zip httpie dh-python
+
+    - name: build packages
+      working-directory: navitia
+      # Will build navitia-*.deb packages in folder ../
+      run: |
+        DEB_BUILD_OPTIONS=nocheck dpkg-buildpackage -b
+
+
+    - name: Checkout core_team_ci_tools
+      uses: actions/checkout@v3
+      with:
+        path: core_team_ci_tools
+        repository : 'hove-io/core_team_ci_tools'
+
+    - name: Setup core_team_ci_tools python environment
+      run: |
+        pip install -r core_team_ci_tools/github_artifacts/requirements.txt --user
+
+    - name: Download mimirsbrunn package
+      run: |
+        mimirsbrunn_package="debian-package-release.zip"
+        python core_team_ci_tools/github_artifacts/github_artifacts.py \
+            -o hove-io \
+            -r mimirsbrunn \
+            -t ${{secrets.access_token_github}} \
+            -w release.yml \
+            -a $mimirsbrunn_package \
+            --output-dir .
+        unzip -qo $mimirsbrunn_package
+        rm -f $mimirsbrunn_package
+
+    - name: Download cosmogony2cities package
+      run: |
+        cosmogony2cities_package="package-${{env.debian_version}}.zip"
+        python core_team_ci_tools/github_artifacts/github_artifacts.py \
+            -o hove-io \
+            -r cosmogony2cities \
+            -t  ${{secrets.access_token_github}} \
+            -w build_package.yml \
+            -a $cosmogony2cities_package \
+            --output-dir .
+        unzip -qo $cosmogony2cities_package
+        rm -f $cosmogony2cities_package
+
+
+    # - name: create navitia_${{matrix.distribution}}_packages.zip
+    #   run: |
+    #     zip navitia_${{matrix.distribution}}_packages.zip ../navitia-* ../mock-kraken*
+
+    # - name: upload ${{matrix.distribution}} packages
+    #   uses: actions/upload-artifact@v3
+    #   with:
+    #     name: navitia-${{matrix.distribution}}-packages
+    #     path: "navitia_${{matrix.distribution}}_packages.zip"
+
+    # see https://docs.github.com/en/actions/using-workflows/workflow-commands-for-github-actions#setting-an-environment-variable
+    - name: Choose dev navitia tag
+      if: github.event_name == 'push' && github.ref == 'refs/heads/dev'
+      run: |
+        echo "navitia_tag=dev" >> $GITHUB_ENV
+
+    - name: Choose release navitia tag
+      if: startsWith(github.ref, 'refs/tags/')
+      run: |
+        cd navitia
+        version=$(git describe)
+        echo "building version $version"
+        echo "navitia_tag=$version" >> $GITHUB_ENV
+
+
+    - name: Create dockers images and push them
+      run: |
+        docker build -f navitia/docker/${{env.debian_version}}/Dockerfile-master -t navitia/master:${{env.navitia_tag}} .
+
+        components='jormungandr kraken tyr-beat tyr-worker tyr-web instances-configurator mock-kraken eitri'
+        for component in $components; do
+            echo "*********  Building $component ***************"
+            docker build -t navitia/$component:${{env.navitia_tag}} -f  navitia/docker/${{env.debian_version}}/Dockerfile-${component} .
+
+            # add latest tag if navitia_tag != dev
+            if [[ "${{env.navitia_tag}}" != "dev" ]]; then
+                docker tag navitia/$component:${{env.navitia_tag}}  navitia/$component:latest
+            fi
+        done
+
+        docker login -u ${{secrets.docker_user}} -p ${{secrets.docker_password}}
+
+        for component in $components; do
+            echo "*********  Pushing $component ***************"
+            docker push --all-tags navitia/$component:${{env.navitia_tag}}
+        done
+
+
+    - name: Publish Aws images
+      uses: hove-io/navitia/.github/workflows/publish_hove_images_aws.yml@dev
+      with:
+        navitia_tag: ${{env.navitia_tag}}
+
+
+    - name: failure notification
+      if: failure()
+      run: |
+          echo '{"text":":warning: Github Actions: build_dockers for ${{env.navitia_tag}} failed !"}' | http --json POST ${{secrets.SLACK_NAVITIA_CORE_TEAM_URL}}
+
+    - name: success notification on navitia core team
+      if: success()
+      run: |
+          echo '{"text":":octopus: Github Actions: build_dockers succeeded. New navitia ${{env.navitia_tag}} image available.' | http --json POST ${{secrets.SLACK_NAVITIA_CORE_TEAM_URL}}
+
+
+    # - name: new release notification
+    #   if: success() && startsWith(github.ref, 'refs/tags/')
+    #   run: |
+    #       version_number=
+    #       echo '{"text":":information_source: Navitia Github Actions: build_navitia_packages_for_release succeded -' ${{env.navitia_tag}} 'navitia docker images are available"}' | http --json POST ${{secrets.SLACK_NAVITIA_CORE_TEAM_URL}}
+    #       echo '{"text":":octopus: Navitia Release: The version' $${{env.navitia_tag}} 'is available.'"}' | http --json POST ${{secrets.SLACK_NAVITIA_URL}}

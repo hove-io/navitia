@@ -16,6 +16,14 @@ on:
         default: 'dev'
         required: true
 
+  workflow_call:
+    inputs:
+      navitia_tag:
+        description: 'Tag of the Navitia image (dev or v1.2.3)'
+        type: string
+        required: true
+
+
   workflow_run:
     workflows: ["Build Navitia Packages For Release", "Build Navitia Packages For Dev Multi Distributions"]
     branches: [release, dev]
@@ -48,6 +56,15 @@ jobs:
             echo "Workflow triggered manually"
             echo "::set-output name=branch::${{ github.event.inputs.environment }}"
             echo "::set-output name=tag::${{ github.event.inputs.tag }}"
+          elif [[ '${{ github.event_name }}' == 'workflow_call' ]]
+          then
+            echo "Workflow call"
+            if [[ "${{inputs.navitia_tag}}" != "dev" ]]; then
+              echo "::set-output name=branch::release"
+            else :
+              echo "::set-output name=branch::dev"
+            fi
+            echo "::set-output name=tag::${{ inputs.navitia_tag }}"
           else :
             exit 1
           fi
