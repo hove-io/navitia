@@ -1,0 +1,15 @@
+FROM navitia/debian8_dev
+
+# update package list from providers
+RUN apt-get update --fix-missing
+
+# upgrade installed packages
+RUN  apt-get upgrade -y
+
+# install postgresql-client for tyr-beat
+#         netcat for kraken
+#         curl for jormun
+RUN apt-get install -y postgresql-client \
+                        netcat \
+                        curl
+

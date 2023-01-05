@@ -1,0 +1,49 @@
+FROM navitia/master
+
+COPY navitia-common_*.deb navitia-jormungandr_*.deb ./
+
+RUN apt-get update \
+    && apt install -y curl python python-pip git libgeos-c1v5 libpq5 apache2 ./navitia-common_*.deb ./navitia-jormungandr_*.deb \
+    && apt-get clean \
+    && apt-get autoremove \
+    && rm -rf /var/lib/apt/lists/* \
+    && rm -rf navitia-common_*.deb navitia-jormungandr_*.deb
+
+# install jormungandr requirements
+RUN pip install --no-cache-dir -r /usr/share/jormungandr/requirements.txt \
+    && pip install uwsgi
+
+
+# Add apache config
+RUN rm /etc/apache2/sites-available/000-default.conf
+COPY apache/jormungandr.default.conf /etc/apache2/sites-available/000-default.conf
+COPY apache/apache2.conf /etc/apache2/apache2.conf
+COPY apache/envvars /etc/apache2/envvars
+COPY apache/logformat.conf /etc/apache2/conf-available/logformat.conf
+
+# jormungandr wsgi
+COPY jormungandr.wsgi /usr/src/app/jormungandr.wsgi
+COPY run_jormungandr.sh /usr/src/app/run.sh
+
+# Enable site and modes
+RUN a2ensite 000-default.conf \
+    && a2enmod rewrite \
+    && a2enmod proxy \
+    && a2enmod proxy_balancer \
+    && a2enmod proxy_http \
+    && a2enconf logformat.conf
+
+# Redirect apache log output to docker log collector
+RUN ln -sf /proc/self/fd/1 /var/log/apache2/access.log \
+    && ln -sf /proc/self/fd/2 /var/log/apache2/error.log
+
+WORKDIR /usr/src/app/
+
+ENV PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION=cpp
+ENV PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION_VERSION=2
+
+HEALTHCHECK CMD curl -f http://localhost/v1 || exit 1
+
+EXPOSE 80
+
+ENTRYPOINT [ "/usr/src/app/run.sh" ]

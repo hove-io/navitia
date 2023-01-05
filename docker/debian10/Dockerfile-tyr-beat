@@ -1,0 +1,19 @@
+FROM navitia/master
+
+COPY navitia-common_*.deb navitia-tyr_*.deb ./
+COPY run_tyr_beat.sh /
+
+
+RUN apt-get update \
+    && apt install -y python python-pip git postgresql-client libgeos-c1v5 libpq5 ./navitia-common_*.deb ./navitia-tyr_*.deb \
+    && apt-get clean \
+    && rm -rf navitia-common_*.deb navitia-tyr_*.deb
+
+# install tyr requirements
+RUN pip install --no-cache-dir -r /usr/share/tyr/requirements.txt
+
+RUN chmod +x /run_tyr_beat.sh
+
+WORKDIR /usr/share/tyr/
+
+CMD ["sh", "/run_tyr_beat.sh"]

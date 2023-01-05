@@ -1,0 +1,17 @@
+FROM navitia/master
+
+# copy package from context inside the docker
+COPY navitia-kraken_*.deb ./
+
+RUN apt-get update \
+    && apt install -y ./navitia-kraken_*.deb \
+    && apt install -y netcat --autoremove \
+    && apt-get clean \
+    && rm -rf navitia-kraken_*.deb
+
+EXPOSE 30000
+ENV KRAKEN_GENERAL_zmq_socket=tcp://*:30000
+ENV KRAKEN_GENERAL_log_level=INFO
+HEALTHCHECK CMD nc -z localhost 30000 || exit 1
+
+CMD ["/usr/bin/kraken"]

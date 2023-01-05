@@ -1,0 +1,23 @@
+FROM navitia/master
+
+
+# copy package from context inside the docker
+COPY navitia-kraken_*.deb ./
+
+# install navitia-kraken package
+RUN dpkg -i ./navitia-kraken_*.deb
+RUN apt-get install -f -y
+
+
+# put the binary in /srv/kraken
+RUN mkdir -p /srv/kraken
+RUN cp /usr/bin/kraken /srv/kraken/kraken
+
+EXPOSE 30000
+ENV KRAKEN_GENERAL_zmq_socket=tcp://*:30000
+ENV KRAKEN_GENERAL_log_level=INFO
+HEALTHCHECK CMD nc -z localhost 30000 || exit 1
+
+CMD ["/srv/kraken/kraken"]
+
+
