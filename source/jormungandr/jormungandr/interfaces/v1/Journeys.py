@@ -53,6 +53,7 @@ from jormungandr.utils import (
     journeys_absent,
     local_str_date_to_utc,
     UTC_DATETIME_FORMAT,
+    COVERAGE_ANY_BETA,
 )
 from jormungandr.interfaces.v1.serializer import api
 from jormungandr.interfaces.v1.decorators import get_serializer
@@ -736,6 +737,10 @@ class Journeys(JourneyCommon):
     @get_serializer(serpy=api.JourneysSerializer)
     @ManageError()
     def get(self, region=None, lon=None, lat=None, uri=None):
+        # We remove the region any-beta if present. This is a temporary hack and should be removed later
+        if region == COVERAGE_ANY_BETA:
+            region = None
+
         args = self.parsers['get'].parse_args()
         possible_regions = compute_possible_region(region, args)
         logging.getLogger(__name__).debug("Possible regions for the request : {}".format(possible_regions))
@@ -877,20 +882,12 @@ class Journeys(JourneyCommon):
         #  - we add the current_datetime of the request so as to differentiate
         #    the same request made at distinct moments
         def generate_request_id():
-
-            path = str(request.path)
-            args_for_id = dict(request.args)
-            if "_override_scenario" in args_for_id:
-                scenario = str(args_for_id["_override_scenario"][0])
-                args_for_id["_override_scenario"] = ""
+            if "_override_scenario" in args:
+                scenario = str(args["_override_scenario"])
             else:
                 scenario = "new_default"
 
-            json_repr = json.dumps(args_for_id, sort_keys=True, ensure_ascii=True)
-            # we could use the json_repr as an id, but we hash it to have something smaller
-            m = hashlib.sha256()
-            m.update(json_repr.encode("UTF-8"))
-            json_hash = m.hexdigest()
+            json_hash = request.id
 
             now = dt_to_str(datetime.datetime.utcnow())
 

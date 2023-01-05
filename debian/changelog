@@ -1,3 +1,12 @@
+navitia2 (15.25.0) unstable; urgency=low
+
+  * [Jormungandr] Use transient socket for instance, pt planner and asgard, AND remove socket reaper  <https://github.com/hove-io/navitia/pull/3883>
+  * Coverage any-beta should behave as without any coverage  <https://github.com/hove-io/navitia/pull/3891>
+  * Active CORS by parameter  <https://github.com/hove-io/navitia/pull/3888>
+  * [Jormungandr] Enhance logs in distributed  <https://github.com/hove-io/navitia/pull/3887>
+
+ -- Pascal Benchimol <pascal.benchimol@polytechnique.edu>  Thu, 05 Jan 2023 12:01:08 +0100
+
 navitia2 (15.24.0) unstable; urgency=low
 
   * Revert "[ci] ci: allow to release through Github Actions"  <https://github.com/hove-io/navitia/pull/3886>

@@ -127,8 +127,7 @@ class ProximitiesByCrowfly:
         self._value = self._future_manager.create_future(self._do_request)
 
     def wait_and_get(self):
-        with timed_logger(self._logger, 'waiting_for_proximity_by_crowfly', self._request_id):
-            return self._value.wait_and_get()
+        return self._value.wait_and_get()
 
 
 class ProximitiesByCrowflyPool:

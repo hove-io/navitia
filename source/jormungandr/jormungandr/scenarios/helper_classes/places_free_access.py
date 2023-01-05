@@ -99,5 +99,4 @@ class PlacesFreeAccess:
         self._value = self._future_manager.create_future(self._do_request)
 
     def wait_and_get(self):
-        with timed_logger(self._logger, 'waiting_for_places_free_acess', self._request_id):
-            return self._value.wait_and_get()
+        return self._value.wait_and_get()

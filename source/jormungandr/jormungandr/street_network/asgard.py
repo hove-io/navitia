@@ -144,9 +144,9 @@ class Asgard(TransientSocket, Kraken):
         **kwargs
     ):
         super(Asgard, self).__init__(
-            name=instance.name,
+            name="asgard_{}".format(instance.name),
             zmq_context=instance.context,
-            socket_path=app.config.get("ASGARD_ZMQ_SOCKET") or asgard_socket,
+            zmq_socket=app.config.get(str("ASGARD_ZMQ_SOCKET")) or asgard_socket,
             socket_ttl=socket_ttl,
             instance=instance,
             service_url=service_url,
@@ -156,7 +156,6 @@ class Asgard(TransientSocket, Kraken):
             api_key=api_key,
             **kwargs
         )
-        self.asgard_socket = app.config.get("ASGARD_ZMQ_SOCKET") or asgard_socket
         self.timeout = timeout
 
         self.breaker = pybreaker.CircuitBreaker(
@@ -245,7 +244,7 @@ class Asgard(TransientSocket, Kraken):
         if mode == FallbackModes.car_no_park.name:
             req.sn_routing_matrix.mode = FallbackModes.car.name
 
-        res = self._call_asgard(req)
+        res = self._call_asgard(req, request_id)
         self._check_for_error_and_raise(res)
         return res.sn_routing_matrix
 
@@ -410,7 +409,7 @@ class Asgard(TransientSocket, Kraken):
             language,
         )
 
-        response = self._call_asgard(req)
+        response = self._call_asgard(req, request_id)
 
         # car_no_park is interpreted as car for Asgard, we need to overwrite the streetnetwork mode here
         if mode == "car_no_park":
@@ -429,21 +428,13 @@ class Asgard(TransientSocket, Kraken):
     def get_uri_pt_object(self, pt_object):
         return 'coord:{c.lon}:{c.lat}'.format(c=get_pt_object_coord(pt_object))
 
-    def _call_asgard(self, request):
+    def _call_asgard(self, request, request_id):
         def _request():
-            with self.socket() as socket:
-                socket.send(request.SerializeToString())
-                # timeout is in second, we need it on millisecond
-                if socket.poll(timeout=self.timeout * 1000) > 0:
-                    pb = socket.recv()
-                    resp = response_pb2.Response()
-                    resp.ParseFromString(pb)
-                    return resp
-                else:
-                    socket.setsockopt(zmq.LINGER, 0)
-                    socket.close()
-                    self.logger.error('request on %s failed: %s', self.asgard_socket, six.text_type(request))
-                    raise TechnicalError('asgard on {} failed'.format(self.asgard_socket))
+            request.request_id = request_id
+            pb = self.call(request.SerializeToString(), self.timeout)
+            resp = response_pb2.Response()
+            resp.ParseFromString(pb)
+            return resp
 
         try:
             return self.breaker.call(_request)

@@ -393,8 +393,7 @@ class FallbackDurations:
         self._value = self._future_manager.create_future(self._do_request)
 
     def wait_and_get(self):
-        with timed_logger(self._logger, 'waiting_for_routing_matrix', self._request_id):
-            return self._value.wait_and_get() if self._value else None
+        return self._value.wait_and_get() if self._value else None
 
 
 class FallbackDurationsPool(dict):
@@ -467,7 +466,7 @@ class FallbackDurationsPool(dict):
                 max_fallback_duration,
                 self._request,
                 self._speed_switcher,
-                self._request_id,
+                "{}_{}".format(self._request_id, mode),
                 self._direct_path_type,
             )
             self._value[mode] = fallback_durations
