@@ -196,7 +196,8 @@ struct DisruptionDatabaseReader {
             fill_channel(const_it, channel);
             message_ids.insert(const_it["message_id"].template as<std::string>());
         }
-        if (impact && channel && (last_channel_type_id != const_it["channel_type_id"].template as<std::string>())) {
+        if (impact && channel && (channel->id() == const_it["channel_id"].template as<std::string>())
+            && (last_channel_type_id != const_it["channel_type_id"].template as<std::string>())) {
             fill_channel_type(const_it, channel);
             last_channel_type_id = const_it["channel_type_id"].template as<std::string>();
         }
