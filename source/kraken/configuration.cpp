@@ -92,7 +92,9 @@ po::options_description get_options_description(const boost::optional<std::strin
         ("BROKER.vhost", po::value<std::string>()->default_value("/"), "vhost for rabbitmq")
         ("BROKER.exchange", po::value<std::string>()->default_value("navitia"), "exchange used in rabbitmq")
         ("BROKER.rt_topics", po::value<std::vector<std::string>>(), "list of realtime topic for this instance")
-        ("BROKER.timeout", po::value<int>()->default_value(100), "timeout for maintenance worker in millisecond")
+        ("BROKER.timeout", po::value<int>()->default_value(500), "timeout for maintenance worker in millisecond")
+        ("BROKER.max_batch_nb", po::value<int>()->default_value(5000), "max size of the realtime message")
+        ("BROKER.retrieving_timeout", po::value<int>()->default_value(30000), "max duration the worker is going to spend when retrieving messages")
         ("BROKER.sleeptime", po::value<int>()->default_value(1), "sleeptime for maintenance worker in second")
         ("BROKER.reconnect_wait", po::value<int>()->default_value(1), "Wait duration between connection attempts to rabbitmq, in seconds")
         ("BROKER.queue", po::value<std::string>(), "rabbitmq's queue name to be bound")
@@ -230,6 +232,14 @@ std::string Configuration::broker_exchange() const {
 
 int Configuration::broker_timeout() const {
     return vm["BROKER.timeout"].as<int>();
+}
+
+int Configuration::retrieving_timeout() const {
+    return vm["BROKER.retrieving_timeout"].as<int>();
+}
+
+int Configuration::broker_max_batch_nb() const {
+    return vm["BROKER.max_batch_nb"].as<int>();
 }
 
 int Configuration::broker_sleeptime() const {

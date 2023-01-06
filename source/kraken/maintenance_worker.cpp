@@ -1,4 +1,4 @@
-/* Copyright © 2001-2022, Hove and/or its affiliates. All rights reserved.
+/* Copyright �� 2001-2022, Hove and/or its affiliates. All rights reserved.
 
 This file is part of Navitia,
     the software to build cool stuff with public transport.
@@ -43,6 +43,7 @@ www.navitia.io
 #include <boost/algorithm/string/join.hpp>
 #include <boost/optional.hpp>
 #include <boost/thread/thread.hpp>
+#include <boost/range/adaptor/reversed.hpp>
 
 #include <chrono>
 #include <csignal>
@@ -364,7 +365,12 @@ void MaintenanceWorker::handle_rt_in_batch(const std::vector<AmqpClient::Envelop
     pt::ptime begin = pt::microsec_clock::universal_time();
     bool autocomplete_rebuilding_activated = false;
     auto rt_action = RTAction::chaos;
-    for (auto& envelope : envelopes) {
+
+    pt::time_duration clone_duration;
+
+    std::unordered_set<std::string> applied_visited_id;
+
+    for (auto& envelope : boost::adaptors::reverse(envelopes)) {
         const auto routing_key = envelope->RoutingKey();
         LOG4CPLUS_DEBUG(logger, "realtime info received from " << routing_key);
         assert(envelope);
@@ -375,12 +381,16 @@ void MaintenanceWorker::handle_rt_in_batch(const std::vector<AmqpClient::Envelop
         }
         LOG4CPLUS_TRACE(logger, "received entity: " << feed_message.DebugString());
         for (const auto& entity : feed_message.entity()) {
+            auto res = applied_visited_id.insert(entity.id());
+            if (!res.second) {
+                continue;
+            }
             if (!data) {
                 pt::ptime copy_begin = pt::microsec_clock::universal_time();
                 data = data_manager.get_data_clone();
-                auto duration = pt::microsec_clock::universal_time() - copy_begin;
-                this->metrics.observe_data_cloning(duration.total_seconds());
-                LOG4CPLUS_INFO(logger, "data copied (cloned) in " << duration);
+                clone_duration = pt::microsec_clock::universal_time() - copy_begin;
+                this->metrics.observe_data_cloning(clone_duration.total_seconds());
+                LOG4CPLUS_INFO(logger, "data copied (cloned) in " << clone_duration);
             }
             if (entity.is_deleted()) {
                 LOG4CPLUS_DEBUG(logger, "deletion of disruption " << entity.id());
@@ -402,7 +412,18 @@ void MaintenanceWorker::handle_rt_in_batch(const std::vector<AmqpClient::Envelop
             }
         }
     }
+
+    LOG4CPLUS_DEBUG(logger,
+                    "It took " << (pt::microsec_clock::universal_time() - begin - clone_duration).total_milliseconds()
+                               << "ms to inject all disruptions");
+
+    if (data && data->pt_data) {
+        LOG4CPLUS_DEBUG(logger, "Nb vj after applying the disruption:" << data->pt_data->vehicle_journeys.size());
+        LOG4CPLUS_DEBUG(logger, "NB disruptions :" << data->pt_data->disruption_holder.nb_disruptions());
+    }
+
     if (data) {
+        auto data_rebuild_begin = pt::microsec_clock::universal_time();
         LOG4CPLUS_INFO(logger, "rebuilding relations");
         data->build_relations();
         if (autocomplete_rebuilding_activated) {
@@ -418,6 +439,9 @@ void MaintenanceWorker::handle_rt_in_batch(const std::vector<AmqpClient::Envelop
         data->set_last_rt_data_loaded(pt::microsec_clock::universal_time());
         data_manager.set_data(std::move(data));
 
+        LOG4CPLUS_DEBUG(logger, "It took "
+                                    << (pt::microsec_clock::universal_time() - data_rebuild_begin).total_milliseconds()
+                                    << " ms to rebuild data");
         // Feed metrics
         auto duration = pt::microsec_clock::universal_time() - begin;
         if (rt_action == RTAction::deletion) {
@@ -452,7 +476,14 @@ std::vector<AmqpClient::Envelope::ptr_t> MaintenanceWorker::consume_in_batch(con
     std::vector<AmqpClient::Envelope::ptr_t> envelopes;
     envelopes.reserve(max_nb);
     size_t consumed_nb = 0;
-    while (consumed_nb < max_nb) {
+    auto begin = pt::microsec_clock::universal_time();
+
+    auto retrieving_timeout = conf.retrieving_timeout();
+
+    pt::time_duration duration = pt::milliseconds{0};
+
+    while (consumed_nb < max_nb
+           && (pt::microsec_clock::universal_time() - begin).total_milliseconds() < retrieving_timeout) {
         AmqpClient::Envelope::ptr_t envelope{};
 
         /* !
@@ -472,6 +503,8 @@ std::vector<AmqpClient::Envelope::ptr_t> MaintenanceWorker::consume_in_batch(con
             ++consumed_nb;
         }
     }
+    LOG4CPLUS_DEBUG(logger, "It took " << (pt::microsec_clock::universal_time() - begin).total_milliseconds()
+                                       << "ms to retrieve " << envelopes.size() << " message from the broker");
     return envelopes;
 }
 
@@ -499,7 +532,7 @@ void MaintenanceWorker::listen_rabbitmq() {
 
         // Arbitrary Number: we suppose that disruptions can be handled very quickly so that,
         // in theory, we can handle a batch of 5000 disruptions in one time very quickly too.
-        size_t max_batch_nb = 5000;
+        size_t max_batch_nb = conf.broker_max_batch_nb();
 
         try {
             auto rt_envelopes = consume_in_batch(rt_tag, max_batch_nb, timeout_ms, no_ack);

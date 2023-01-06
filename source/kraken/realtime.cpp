@@ -49,6 +49,7 @@ namespace navitia {
 
 namespace nd = type::disruption;
 namespace nt = navitia::type;
+namespace pt = boost::posix_time;
 
 static bool base_vj_exists_the_same_day(const type::Data& data, const transit_realtime::TripUpdate& trip_update) {
     const auto& mvj = *data.pt_data->get_or_create_meta_vehicle_journey(trip_update.trip().trip_id(),
@@ -449,8 +450,8 @@ static const type::disruption::Disruption* create_disruption(const std::string& 
     auto start_first_day_of_impact = bpt::ptime(circulation_date, bpt::time_duration(0, 0, 0, 0));
     const auto& mvj = *data.pt_data->get_or_create_meta_vehicle_journey(trip_update.trip().trip_id(),
                                                                         data.pt_data->get_main_timezone());
-
     delete_disruption(id, *data.pt_data, *data.meta);
+
     auto& disruption = holder.make_disruption(id, type::RTLevel::RealTime);
     disruption.reference = disruption.uri;
     if (trip_update.trip().HasExtension(kirin::contributor)) {
@@ -640,8 +641,11 @@ void handle_realtime(const std::string& id,
                                 << get_wordings(get_trip_effect(trip_update.GetExtension(kirin::effect))));
         return;
     }
-
+    auto begin = pt::microsec_clock::universal_time();
     const auto* disruption = create_disruption(id, timestamp, trip_update, data);
+    LOG4CPLUS_DEBUG(log4cplus::Logger::getInstance("logger"),
+                    "it took " << (pt::microsec_clock::universal_time() - begin).total_milliseconds()
+                               << " ms to create disruption " << id);
 
     if (!disruption || !check_disruption(*disruption)) {
         LOG4CPLUS_INFO(

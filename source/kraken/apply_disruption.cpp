@@ -59,6 +59,7 @@ namespace navitia {
 namespace nt = navitia::type;
 namespace nu = navitia::utils;
 namespace ndtu = navitia::DateTimeUtils;
+namespace pt = boost::posix_time;
 
 namespace {
 
@@ -851,8 +852,12 @@ struct delete_impacts_visitor : public apply_impacts_visitor {
                 }
             }
         }
+        pt::ptime begin = pt::microsec_clock::universal_time();
         // we check if we now have useless vehicle_journeys to cleanup
         mvj->clean_up_useless_vjs(pt_data);
+        LOG4CPLUS_DEBUG(log4cplus::Logger::getInstance("logger"),
+                        "it took " << (pt::microsec_clock::universal_time() - begin).total_milliseconds()
+                                   << " ms to clean up useless vj");
     }
 
     void operator()(nt::StopPoint* stop_point) {
