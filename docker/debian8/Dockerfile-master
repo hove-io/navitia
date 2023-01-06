@@ -1,7 +1,7 @@
 FROM navitia/debian8_dev
 
 # update package list from providers
-RUN apt-get update --fix-missing
+RUN apt-get update --force-yes --fix-missing || exit 0
 
 # upgrade installed packages
 RUN  apt-get upgrade -y --force-yes
@@ -12,10 +12,15 @@ RUN  apt-get upgrade -y --force-yes
 RUN apt-get install -y --force-yes postgresql-client \
         ca-certificates \
         netcat \
+        dh-python \
         curl
 
 COPY navitia/docker/ca-certificates/*.crt /usr/local/share/ca-certificates/
+COPY navitia/docker/build_kraken.sh /build_kraken.sh
+RUN chmod +x /build_kraken.sh
 RUN update-ca-certificates
 # Python 'requests' package handle its own CA certificate list
 # Let's force it to use the OS's list
 ENV REQUESTS_CA_BUNDLE /etc/ssl/certs
+
+ENTRYPOINT /build_kraken.sh

@@ -16,14 +16,6 @@ jobs:
 
     runs-on: ubuntu-latest
 
-    container:
-      image: navitia/debian8_dev
-      volumes:
-         # Mount so we can delete files from docker and free up space (>20GB)
-          - /usr/share/dotnet:/usr/share/dotnet
-          - /usr/local/lib/android:/usr/local/lib/android
-
-
     steps:
     - name: Free up space
       run: |
@@ -34,7 +26,7 @@ jobs:
 
     - name: Install dependencies
       run: |
-        apt update && apt install -y --force-yes zip httpie dh-python
+        apt update && apt install -y --force-yes zip httpie
 
     - name: Checkout core_team_ci_tools
       uses: actions/checkout@v3
@@ -77,13 +69,6 @@ jobs:
       run: |
         wget http://prdownloads.sourceforge.net/libkeepalive/libkeepalive-0.3.tar.gz
 
-    # - name: Restore ccache
-    #   uses: hendrikmuhs/ccache-action@v1.2
-    #   with:
-    #     key: ${{env.debian_version}-package
-    #     max-size: 2000M
-    #     save: ${{ github.event_name == 'push' }}
-
     - name: Checkout navitia
       uses: actions/checkout@v3
       with:
@@ -91,22 +76,32 @@ jobs:
         path: navitia
         fetch-depth: 0
 
-    - name: Build navitia packages
-      working-directory: navitia
+    - name: Restore ccache
+      uses: hendrikmuhs/ccache-action@v1.2
+      with:
+        key: build_dockers
+        max-size: 2000M
+        save: ${{ github.event_name == 'push' }}
+
+    - name: Create master docker
+      run: |
+        docker build -f navitia/docker/${{env.debian_version}}/Dockerfile-master -t navitia/master .
+
+    - name: Build packages in master docker
       # Will build navitia-*.deb packages in folder ../
       run: |
-        DEB_BUILD_OPTIONS=nocheck dpkg-buildpackage -b
+        docker run -v `pwd`:/build/ -w /navitia/ navitia/master
 
 
     # see https://docs.github.com/en/actions/using-workflows/workflow-commands-for-github-actions#setting-an-environment-variable
-    - name: Choose dev navitia tag
-      if: github.event_name == 'push'
+    - name: Choose dev tag
+      if: github.event_name == 'pull_request'
       run: |
         echo "building version dev"
         echo "navitia_tag=dev" >> $GITHUB_ENV
         echo "aws_branch=dev" >> $GITHUB_ENV
 
-    - name: Choose release navitia tag
+    - name: Choose release tag
       if: startsWith(github.ref, 'refs/tags/')
       run: |
         cd navitia
