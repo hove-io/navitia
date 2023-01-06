@@ -3,8 +3,6 @@ FROM navitia/debian8_dev
 # update package list from providers
 RUN apt-get update --force-yes --fix-missing || exit 0
 
-# upgrade installed packages
-RUN  apt-get upgrade -y --force-yes
 
 # install postgresql-client for tyr-beat
 #         netcat for kraken
