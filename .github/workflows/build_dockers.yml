@@ -99,7 +99,9 @@ jobs:
     - name: Choose dev navitia tag
       if: github.event_name == 'push' && github.ref == 'refs/heads/dev'
       run: |
+        echo "building version dev"
         echo "navitia_tag=dev" >> $GITHUB_ENV
+        echo "aws_branch=dev" >> $GITHUB_ENV
 
     - name: Choose release navitia tag
       if: startsWith(github.ref, 'refs/tags/')
@@ -108,7 +110,7 @@ jobs:
         version=$(git describe)
         echo "building version $version"
         echo "navitia_tag=$version" >> $GITHUB_ENV
-
+        echo "aws_branch=release" >> $GITHUB_ENV
 
     - name: Create dockers images and push them
       run: |
@@ -132,11 +134,28 @@ jobs:
             docker push --all-tags navitia/$component:${{env.navitia_tag}}
         done
 
-
-    - name: Publish Aws images
-      uses: hove-io/navitia/.github/workflows/publish_hove_images_aws.yml@dev
+    - name: Generate token for aws images
+      id: app-token
+      uses: getsentry/action-github-app-token@v2.0.0
       with:
-        navitia_tag: ${{env.navitia_tag}}
+        app_id: ${{ secrets.GA_OS_WORKFLOW_TRIGGER_APP_ID }}
+        private_key: ${{ secrets.GA_OS_WORKFLOW_TRIGGER_APP_PEM }}
+
+    - name: Aws Dispatch Backend
+      uses: peter-evans/repository-dispatch@v2
+      with:
+        token: ${{ steps.app-token.outputs.token }}
+        repository: hove-io/core-backend-aws-assets
+        event-type: build-trigger
+        client-payload: '{"branch": "${{ env.aws_branch }}", "tag": "${{ env.navitia_tag }}"}'
+
+    - name: Aws Dispatch Frontend
+      uses: peter-evans/repository-dispatch@v2
+      with:
+        token: ${{ steps.app-token.outputs.token }}
+        repository: hove-io/core-front-aws-assets
+        event-type: build-trigger
+        client-payload: '{"branch": "${{ env.aws_branch }}", "tag": "${{ env.navitia_tag  }}"}'
 
     - name: Run artemis on push to dev
       if: github.event_name == 'push' && github.ref == 'refs/heads/dev'
