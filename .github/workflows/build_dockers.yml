@@ -30,30 +30,9 @@ jobs:
         echo "Free space:"
         df -h
 
-    - name: Restore ccache
-      uses: hendrikmuhs/ccache-action@v1.2
-      with:
-        key: ${{env.debian_version}-package
-        max-size: 2000M
-        save: ${{ github.event_name == 'push' }}
-
-    - name: Checkout navitia
-      uses: actions/checkout@v3
-      with:
-        submodules : recursive
-        path: navitia
-        fetch-depth: 0
-
-    - name: Install build dependencies
+    - name: Install dependencies
       run: |
         apt update && apt install -y --force-yes zip httpie dh-python
-
-    - name: build packages
-      working-directory: navitia
-      # Will build navitia-*.deb packages in folder ../
-      run: |
-        DEB_BUILD_OPTIONS=nocheck dpkg-buildpackage -b
-
 
     - name: Checkout core_team_ci_tools
       uses: actions/checkout@v3
@@ -91,16 +70,26 @@ jobs:
         unzip -qo $cosmogony2cities_package
         rm -f $cosmogony2cities_package
 
+    - name: Restore ccache
+      uses: hendrikmuhs/ccache-action@v1.2
+      with:
+        key: ${{env.debian_version}-package
+        max-size: 2000M
+        save: ${{ github.event_name == 'push' }}
 
-    # - name: create navitia_${{matrix.distribution}}_packages.zip
-    #   run: |
-    #     zip navitia_${{matrix.distribution}}_packages.zip ../navitia-* ../mock-kraken*
+    - name: Checkout navitia
+      uses: actions/checkout@v3
+      with:
+        submodules : recursive
+        path: navitia
+        fetch-depth: 0
 
-    # - name: upload ${{matrix.distribution}} packages
-    #   uses: actions/upload-artifact@v3
-    #   with:
-    #     name: navitia-${{matrix.distribution}}-packages
-    #     path: "navitia_${{matrix.distribution}}_packages.zip"
+    - name: Build navitia packages
+      working-directory: navitia
+      # Will build navitia-*.deb packages in folder ../
+      run: |
+        DEB_BUILD_OPTIONS=nocheck dpkg-buildpackage -b
+
 
     # see https://docs.github.com/en/actions/using-workflows/workflow-commands-for-github-actions#setting-an-environment-variable
     - name: Choose dev navitia tag
