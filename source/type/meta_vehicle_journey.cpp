@@ -93,14 +93,18 @@ void cleanup_useless_vj_link(const nt::VehicleJourney* vj, nt::PT_Data& pt_data)
     LOG4CPLUS_DEBUG(log4cplus::Logger::getInstance("logger"), "we are going to cleanup the vj " << vj->uri);
 
     if (vj->dataset) {
+        LOG4CPLUS_DEBUG(log4cplus::Logger::getInstance("logger"), "cleaning vj in dataset " << vj->uri);
         erase_vj_from_list(vj, vj->dataset->vehiclejourney_list);
     }
     if (vj->physical_mode) {
+        LOG4CPLUS_DEBUG(log4cplus::Logger::getInstance("logger"), "cleaning vj in physical_mode " << vj->uri);
         erase_vj_from_list(vj, vj->physical_mode->vehicle_journey_list);
     }
     if (dynamic_cast<const nt::FrequencyVehicleJourney*>(vj)) {
+        LOG4CPLUS_DEBUG(log4cplus::Logger::getInstance("logger"), "cleaning vj in FrequencyVehicleJourney " << vj->uri);
         erase_vj_from_list(vj, vj->route->frequency_vehicle_journey_list);
     } else if (dynamic_cast<const nt::DiscreteVehicleJourney*>(vj)) {
+        LOG4CPLUS_DEBUG(log4cplus::Logger::getInstance("logger"), "cleaning vj in DiscreteVehicleJourney " << vj->uri);
         erase_vj_from_list(vj, vj->route->discrete_vehicle_journey_list);
     }
 

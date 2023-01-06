@@ -9,7 +9,7 @@ on:
 
 jobs:
   build:
-    if: ${{ github.event.label.name == 'artemis' }}
+    if: ${{ github.event.label.name == 'build_docker' }}
     runs-on: ubuntu-latest
 
     strategy:
