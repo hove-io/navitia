@@ -134,6 +134,13 @@ jobs:
       with:
         navitia_tag: ${{env.navitia_tag}}
 
+    - name: Run artemis on push to dev
+      if: github.event_name == 'push' && github.ref == 'refs/heads/dev'
+      uses: peter-evans/repository-dispatch@v2
+      with:
+        token: ${{ secrets.access_token_github }}
+        repository: hove-io/artemis
+        event-type: run_artemis_ng
 
     - name: failure notification
       if: failure()
