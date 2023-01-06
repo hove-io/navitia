@@ -46,7 +46,7 @@ jobs:
             -o hove-io \
             -r mimirsbrunn \
             -t ${{secrets.access_token_github}} \
-            -w release.yml \
+            -w release7.yml \
             -a $mimirsbrunn_package \
             --output-dir .
         unzip -qo $mimirsbrunn_package
@@ -81,14 +81,13 @@ jobs:
       with:
         key: build_dockers
         max-size: 2000M
-        save: ${{ github.event_name == 'push' }}
 
     - name: Create master docker
       run: |
         docker build -f navitia/docker/${{env.debian_version}}/Dockerfile-master -t navitia/master .
 
     - name: Build packages in master docker
-      # Will build navitia-*.deb packages in folder ../
+      # Will build navitia-*.deb packages in current folder
       run: |
         docker run -v `pwd`:/build/ -w /navitia/ navitia/master
 
@@ -117,8 +116,8 @@ jobs:
             echo "*********  Building $component ***************"
             docker build -t navitia/$component:${{env.navitia_tag}} -f  navitia/docker/${{env.debian_version}}/Dockerfile-${component} .
 
-            # add latest tag if navitia_tag != dev
-            if [[ "${{env.navitia_tag}}" != "dev" ]]; then
+            # add latest tag if we are making a release
+            if [[ "${{env.aws_branch}}" = "release" ]]; then
                 docker tag navitia/$component:${{env.navitia_tag}}  navitia/$component:latest
             fi
         done
@@ -169,4 +168,4 @@ jobs:
     # - name: success notification on navitia core team
     #   if: success()
     #   run: |
-    #       echo '{"text":":octopus: Github Actions: build_dockers succeeded. New navitia ${{env.navitia_tag}} image available.' | http --json POST ${{secrets.SLACK_NAVITIA_CORE_TEAM_URL}}
+    #       echo '{"text":":octopus: Github Actions: build_dockers succeeded. New navitia ${{env.navitia_tag}} images available.' | http --json POST ${{secrets.SLACK_NAVITIA_CORE_TEAM_URL}}
