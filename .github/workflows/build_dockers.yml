@@ -100,7 +100,7 @@ jobs:
 
     # see https://docs.github.com/en/actions/using-workflows/workflow-commands-for-github-actions#setting-an-environment-variable
     - name: Choose dev navitia tag
-      if: github.event_name == 'push' && github.ref == 'refs/heads/dev'
+      if: github.event_name == 'push'
       run: |
         echo "building version dev"
         echo "navitia_tag=dev" >> $GITHUB_ENV
@@ -115,27 +115,27 @@ jobs:
         echo "navitia_tag=$version" >> $GITHUB_ENV
         echo "aws_branch=release" >> $GITHUB_ENV
 
-    # - name: Create dockers images and push them
-    #   run: |
-    #     docker build -f navitia/docker/${{env.debian_version}}/Dockerfile-master -t navitia/master .
+    - name: Create dockers images and push them
+      run: |
+        docker build -f navitia/docker/${{env.debian_version}}/Dockerfile-master -t navitia/master .
 
-    #     components='jormungandr kraken tyr-beat tyr-worker tyr-web instances-configurator mock-kraken eitri'
-    #     for component in $components; do
-    #         echo "*********  Building $component ***************"
-    #         docker build -t navitia/$component:${{env.navitia_tag}} -f  navitia/docker/${{env.debian_version}}/Dockerfile-${component} .
+        components='jormungandr kraken tyr-beat tyr-worker tyr-web instances-configurator mock-kraken eitri'
+        for component in $components; do
+            echo "*********  Building $component ***************"
+            docker build -t navitia/$component:${{env.navitia_tag}} -f  navitia/docker/${{env.debian_version}}/Dockerfile-${component} .
 
-    #         # add latest tag if navitia_tag != dev
-    #         if [[ "${{env.navitia_tag}}" != "dev" ]]; then
-    #             docker tag navitia/$component:${{env.navitia_tag}}  navitia/$component:latest
-    #         fi
-    #     done
+            # add latest tag if navitia_tag != dev
+            if [[ "${{env.navitia_tag}}" != "dev" ]]; then
+                docker tag navitia/$component:${{env.navitia_tag}}  navitia/$component:latest
+            fi
+        done
 
-    #     docker login -u ${{secrets.docker_user}} -p ${{secrets.docker_password}}
+        docker login -u ${{secrets.docker_user}} -p ${{secrets.docker_password}}
 
-    #     for component in $components; do
-    #         echo "*********  Pushing $component ***************"
-    #         docker push --all-tags navitia/$component:${{env.navitia_tag}}
-    #     done
+        # for component in $components; do
+        #     echo "*********  Pushing $component ***************"
+        #     docker push --all-tags navitia/$component:${{env.navitia_tag}}
+        # done
 
     # - name: Generate token for aws images
     #   id: app-token
