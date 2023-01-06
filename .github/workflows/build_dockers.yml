@@ -155,11 +155,3 @@ jobs:
       if: success()
       run: |
           echo '{"text":":octopus: Github Actions: build_dockers succeeded. New navitia ${{env.navitia_tag}} image available.' | http --json POST ${{secrets.SLACK_NAVITIA_CORE_TEAM_URL}}
-
-
-    # - name: new release notification
-    #   if: success() && startsWith(github.ref, 'refs/tags/')
-    #   run: |
-    #       version_number=
-    #       echo '{"text":":information_source: Navitia Github Actions: build_navitia_packages_for_release succeded -' ${{env.navitia_tag}} 'navitia docker images are available"}' | http --json POST ${{secrets.SLACK_NAVITIA_CORE_TEAM_URL}}
-    #       echo '{"text":":octopus: Navitia Release: The version' $${{env.navitia_tag}} 'is available.'"}' | http --json POST ${{secrets.SLACK_NAVITIA_URL}}
