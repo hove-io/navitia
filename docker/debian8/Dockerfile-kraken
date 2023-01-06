@@ -38,7 +38,7 @@ ENV MONITOR_HOST=0.0.0.0
 # which is not customisable via docker-container.
 
 WORKDIR /tmp/libkeepalive
-COPY navitia/docker/libkeepalive-0.3.tar.gz /tmp/libkeepalive/libkeepalive-0.3.tar.gz
+COPY libkeepalive-0.3.tar.gz /tmp/libkeepalive/libkeepalive-0.3.tar.gz
 RUN tar -xf libkeepalive-0.3.tar.gz &&  \
     cd libkeepalive-0.3 &&  \
     make && \

@@ -29,7 +29,7 @@ RUN ln -s /usr/lib/python*/dist-packages/monitor_kraken/app.py monitor_kraken
 
 RUN apt install -y wget build-essential
 WORKDIR /tmp/libkeepalive
-COPY navitia/docker/libkeepalive-0.3.tar.gz /tmp/libkeepalive/libkeepalive-0.3.tar.gz
+COPY libkeepalive-0.3.tar.gz /tmp/libkeepalive/libkeepalive-0.3.tar.gz
 RUN tar -xf libkeepalive-0.3.tar.gz &&  \
     cd libkeepalive-0.3 &&  \
     make && \
