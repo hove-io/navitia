@@ -9,7 +9,7 @@ on:
   pull_request:
 
 env:
-  debian: debian8
+  debian_version: debian8
 
 jobs:
   build:
@@ -17,7 +17,7 @@ jobs:
     runs-on: ubuntu-latest
 
     container:
-      image: navitia/${{ env.debian }}_dev
+      image: navitia/debian8_dev
       volumes:
          # Mount so we can delete files from docker and free up space (>20GB)
           - /usr/share/dotnet:/usr/share/dotnet
@@ -76,12 +76,12 @@ jobs:
       run: |
         wget http://prdownloads.sourceforge.net/libkeepalive/libkeepalive-0.3.tar.gz
 
-    - name: Restore ccache
-      uses: hendrikmuhs/ccache-action@v1.2
-      with:
-        key: ${{env.debian_version}-package
-        max-size: 2000M
-        save: ${{ github.event_name == 'push' }}
+    # - name: Restore ccache
+    #   uses: hendrikmuhs/ccache-action@v1.2
+    #   with:
+    #     key: ${{env.debian_version}-package
+    #     max-size: 2000M
+    #     save: ${{ github.event_name == 'push' }}
 
     - name: Checkout navitia
       uses: actions/checkout@v3
@@ -114,65 +114,65 @@ jobs:
         echo "navitia_tag=$version" >> $GITHUB_ENV
         echo "aws_branch=release" >> $GITHUB_ENV
 
-    - name: Create dockers images and push them
-      run: |
-        docker build -f navitia/docker/${{env.debian_version}}/Dockerfile-master -t navitia/master .
+    # - name: Create dockers images and push them
+    #   run: |
+    #     docker build -f navitia/docker/${{env.debian_version}}/Dockerfile-master -t navitia/master .
 
-        components='jormungandr kraken tyr-beat tyr-worker tyr-web instances-configurator mock-kraken eitri'
-        for component in $components; do
-            echo "*********  Building $component ***************"
-            docker build -t navitia/$component:${{env.navitia_tag}} -f  navitia/docker/${{env.debian_version}}/Dockerfile-${component} .
+    #     components='jormungandr kraken tyr-beat tyr-worker tyr-web instances-configurator mock-kraken eitri'
+    #     for component in $components; do
+    #         echo "*********  Building $component ***************"
+    #         docker build -t navitia/$component:${{env.navitia_tag}} -f  navitia/docker/${{env.debian_version}}/Dockerfile-${component} .
 
-            # add latest tag if navitia_tag != dev
-            if [[ "${{env.navitia_tag}}" != "dev" ]]; then
-                docker tag navitia/$component:${{env.navitia_tag}}  navitia/$component:latest
-            fi
-        done
+    #         # add latest tag if navitia_tag != dev
+    #         if [[ "${{env.navitia_tag}}" != "dev" ]]; then
+    #             docker tag navitia/$component:${{env.navitia_tag}}  navitia/$component:latest
+    #         fi
+    #     done
 
-        docker login -u ${{secrets.docker_user}} -p ${{secrets.docker_password}}
+    #     docker login -u ${{secrets.docker_user}} -p ${{secrets.docker_password}}
 
-        for component in $components; do
-            echo "*********  Pushing $component ***************"
-            docker push --all-tags navitia/$component:${{env.navitia_tag}}
-        done
+    #     for component in $components; do
+    #         echo "*********  Pushing $component ***************"
+    #         docker push --all-tags navitia/$component:${{env.navitia_tag}}
+    #     done
 
-    - name: Generate token for aws images
-      id: app-token
-      uses: getsentry/action-github-app-token@v2.0.0
-      with:
-        app_id: ${{ secrets.GA_OS_WORKFLOW_TRIGGER_APP_ID }}
-        private_key: ${{ secrets.GA_OS_WORKFLOW_TRIGGER_APP_PEM }}
+    # - name: Generate token for aws images
+    #   id: app-token
+    #   uses: getsentry/action-github-app-token@v2.0.0
+    #   with:
+    #     app_id: ${{ secrets.GA_OS_WORKFLOW_TRIGGER_APP_ID }}
+    #     private_key: ${{ secrets.GA_OS_WORKFLOW_TRIGGER_APP_PEM }}
 
-    - name: Aws Dispatch Backend
-      uses: peter-evans/repository-dispatch@v2
-      with:
-        token: ${{ steps.app-token.outputs.token }}
-        repository: hove-io/core-backend-aws-assets
-        event-type: build-trigger
-        client-payload: '{"branch": "${{ env.aws_branch }}", "tag": "${{ env.navitia_tag }}"}'
+    # - name: Aws Dispatch Backend
+    #   uses: peter-evans/repository-dispatch@v2
+    #   with:
+    #     token: ${{ steps.app-token.outputs.token }}
+    #     repository: hove-io/core-backend-aws-assets
+    #     event-type: build-trigger
+    #     client-payload: '{"branch": "${{ env.aws_branch }}", "tag": "${{ env.navitia_tag }}"}'
 
-    - name: Aws Dispatch Frontend
-      uses: peter-evans/repository-dispatch@v2
-      with:
-        token: ${{ steps.app-token.outputs.token }}
-        repository: hove-io/core-front-aws-assets
-        event-type: build-trigger
-        client-payload: '{"branch": "${{ env.aws_branch }}", "tag": "${{ env.navitia_tag  }}"}'
+    # - name: Aws Dispatch Frontend
+    #   uses: peter-evans/repository-dispatch@v2
+    #   with:
+    #     token: ${{ steps.app-token.outputs.token }}
+    #     repository: hove-io/core-front-aws-assets
+    #     event-type: build-trigger
+    #     client-payload: '{"branch": "${{ env.aws_branch }}", "tag": "${{ env.navitia_tag  }}"}'
 
-    - name: Run artemis on push to dev
-      if: github.event_name == 'push' && github.ref == 'refs/heads/dev'
-      uses: peter-evans/repository-dispatch@v2
-      with:
-        token: ${{ secrets.access_token_github }}
-        repository: hove-io/artemis
-        event-type: run_artemis_ng
+    # - name: Run artemis on push to dev
+    #   if: github.event_name == 'push' && github.ref == 'refs/heads/dev'
+    #   uses: peter-evans/repository-dispatch@v2
+    #   with:
+    #     token: ${{ secrets.access_token_github }}
+    #     repository: hove-io/artemis
+    #     event-type: run_artemis_ng
 
-    - name: failure notification
-      if: failure()
-      run: |
-          echo '{"text":":warning: Github Actions: build_dockers for ${{env.navitia_tag}} failed !"}' | http --json POST ${{secrets.SLACK_NAVITIA_CORE_TEAM_URL}}
+    # - name: failure notification
+    #   if: failure()
+    #   run: |
+    #       echo '{"text":":warning: Github Actions: build_dockers for ${{env.navitia_tag}} failed !"}' | http --json POST ${{secrets.SLACK_NAVITIA_CORE_TEAM_URL}}
 
-    - name: success notification on navitia core team
-      if: success()
-      run: |
-          echo '{"text":":octopus: Github Actions: build_dockers succeeded. New navitia ${{env.navitia_tag}} image available.' | http --json POST ${{secrets.SLACK_NAVITIA_CORE_TEAM_URL}}
+    # - name: success notification on navitia core team
+    #   if: success()
+    #   run: |
+    #       echo '{"text":":octopus: Github Actions: build_dockers succeeded. New navitia ${{env.navitia_tag}} image available.' | http --json POST ${{secrets.SLACK_NAVITIA_CORE_TEAM_URL}}
