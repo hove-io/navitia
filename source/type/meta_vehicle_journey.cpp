@@ -111,6 +111,7 @@ void cleanup_useless_vj_link(const nt::VehicleJourney* vj, nt::PT_Data& pt_data)
     pt_data.headsign_handler.forget_vj(vj);
     pt_data.disruption_holder.forget_vj(vj);
 
+    LOG4CPLUS_DEBUG(log4cplus::Logger::getInstance("logger"), "cleaning vj from global list/map " << vj->uri);
     // remove the vj from the global list/map
     erase_vj_from_list(vj, pt_data.vehicle_journeys);
     // afterward, we MUST reindex all vehicle journeys
