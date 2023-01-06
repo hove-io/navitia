@@ -1,0 +1,23 @@
+FROM navitia/master
+
+COPY navitia-common_*.deb navitia-tyr_*.deb ./
+
+RUN apt-get update \
+    && apt install -y curl python python-pip postgresql-client git libgeos-c1v5 ./navitia-common_*.deb ./navitia-tyr_*.deb \
+    && apt-get clean \
+    && rm -rf navitia-common_*.deb navitia-tyr_*.deb
+
+# install tyr requirements
+RUN pip install --no-cache-dir -r /usr/share/tyr/requirements.txt \
+    && pip install uwsgi
+
+WORKDIR /usr/src/app/
+
+RUN cp /usr/bin/manage_tyr.py /usr/src/app/manage_tyr.py
+
+COPY navitia/docker/run_tyr_web.sh /usr/src/app/run.sh
+RUN chmod +x /usr/src/app/run.sh
+
+RUN ln -s /usr/share/tyr/migrations migrations
+
+CMD ["bash", "/usr/src/app/run.sh" ]

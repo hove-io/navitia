@@ -16,6 +16,7 @@ on:
         default: 'dev'
         required: true
 
+
   workflow_run:
     workflows: ["Build Navitia Packages For Release", "Build Navitia Packages For Dev Multi Distributions"]
     branches: [release, dev]

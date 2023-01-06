@@ -1,0 +1,32 @@
+FROM navitia/master
+
+COPY navitia-common_*deb navitia-tyr_*.deb navitia-ed_*.deb navitia-cities_*.deb mimirsbrunn7_buster-*.deb cosmogony2cities_*.deb ./
+
+RUN apt-get update \
+    && apt install -y python python-pip git libgeos-c1v5 libpq5 \
+    ./navitia-common_*.deb ./navitia-tyr_*.deb \
+    ./navitia-ed_*.deb ./navitia-cities_*.deb \
+    ./mimirsbrunn7_buster-*.deb ./cosmogony2cities*.deb \
+    && apt-get clean \
+    && rm -rf ./navitia-common_*.deb ./navitia-tyr_*.deb \
+    ./navitia-ed_*.deb ./navitia-cities_*.deb \
+    ./mimirsbrunn7_buster-*.deb ./cosmogony2cities*.deb
+
+
+# install tyr requirements
+RUN pip install --no-cache-dir -r /usr/share/tyr/requirements.txt
+
+EXPOSE 5000
+
+WORKDIR /usr/src/app/
+RUN cp /usr/bin/manage_tyr.py /usr/src/app/manage_tyr.py
+
+# TODO change the user to remove this ugly C_FORCE_ROOT
+ENV C_FORCE_ROOT=1
+ENV TYR_WORKER_N_PROC=1
+
+COPY navitia/docker/run_tyr_worker.sh /usr/src/app/
+
+RUN chmod +x /usr/src/app/run_tyr_worker.sh
+
+CMD ["bash", "/usr/src/app/run_tyr_worker.sh"]

@@ -1,0 +1,36 @@
+FROM navitia/master
+
+COPY navitia-common_*.deb ./
+COPY navitia-tyr_*.deb ./
+
+RUN apt-get update \
+    && apt install -y --force-yes jq
+
+# used for data migrations
+COPY navitia/source/sql/alembic /usr/share/navitia/ed/alembic
+COPY navitia/source/sql/requirements.txt /tmp/requirements.txt
+COPY navitia/source/cities /usr/share/navitia/cities
+COPY navitia/docker/templates/* /templates/
+
+# install navitia-common package
+RUN dpkg -i ./navitia-common_*.deb || exit 0
+RUN apt-get install -f -y --force-yes
+
+# install navitia-tyr package
+RUN dpkg -i ./navitia-tyr_*.deb || exit 0
+RUN apt-get install -f -y --force-yes
+
+# install ed migrations requirements
+RUN pip install -r /tmp/requirements.txt
+
+# install tyr requirements
+RUN pip install --no-cache-dir -r /usr/share/tyr/requirements.txt
+
+# install postgresql-client
+RUN apt-get install -y --force-yes postgresql-client
+
+COPY navitia/docker/run_tyr_beat.sh /
+RUN chmod +x /run_tyr_beat.sh
+
+WORKDIR /usr/share/tyr/
+CMD ["bash", "/run_tyr_beat.sh"]

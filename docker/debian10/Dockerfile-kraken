@@ -1,0 +1,54 @@
+FROM navitia/master
+
+# copy package from context inside the docker
+COPY navitia-kraken_*.deb navitia-monitor-kraken_*.deb ./
+
+RUN apt-get update \
+    && apt install -y ./navitia-kraken_*.deb \
+    && apt install -y curl python python-pip \
+    && apt install -y ./navitia-monitor-kraken_*.deb \
+    && apt install -y netcat --autoremove \
+    && apt-get clean \
+    && rm -rf navitia-kraken_*.deb \
+    && rm -rf navitia-monitor-kraken_*.deb \
+    && pip install --no-cache-dir -r /usr/share/monitor_kraken/requirements.txt
+
+COPY navitia/docker/run_kraken.sh /usr/src/app/run_kraken.sh
+RUN chmod +x /usr/src/app/run_kraken.sh
+
+WORKDIR /
+RUN ln -s /usr/lib/python*/dist-packages/monitor_kraken/app.py monitor_kraken
+
+# Build libkeepalive https://libkeepalive.sourceforge.net/
+# libkeepalive is a library to keep tcp connection alive. The reason of doing so is that aws LoadBalancer, to which
+# kraken is connected, check the aliveness continuously at regular interval of non-customisable 350s
+# (https://docs.aws.amazon.com/elasticloadbalancing/latest/network/network-load-balancers.html). If nothing happens during
+# this interval, the connection will be dropped. It takes Kraken, by default, 7200s(/proc/sys/net/ipv4/tcp_keepalive_time)
+# to be aware of the disconnection. By using libkeepalive, we can override tcp_keepalive_time,
+# which is not customisable via docker-container.
+
+RUN apt install -y wget build-essential
+WORKDIR /tmp/libkeepalive
+COPY libkeepalive-0.3.tar.gz /tmp/libkeepalive/libkeepalive-0.3.tar.gz
+RUN tar -xf libkeepalive-0.3.tar.gz &&  \
+    cd libkeepalive-0.3 &&  \
+    make && \
+    mkdir /libkeepalive &&  \
+    cp libkeepalive.so /libkeepalive && \
+    rm -rf /tmp/libkeepalive
+RUN apt purge -y wget build-essential
+# User timeout = 300 + 30 * 6 = 480s
+ENV KEEPIDLE=300
+ENV KEEPCNT=6
+ENV KEEPINTVL=30
+# if you are willing to use settings from os, set KEEPALIVE to off
+# ENV KEEPALIVE=Off
+
+EXPOSE 30000
+ENV KRAKEN_GENERAL_zmq_socket=tcp://*:30000
+ENV KRAKEN_GENERAL_log_level=INFO
+HEALTHCHECK CMD nc -z localhost 30000 || exit 1
+
+ENV MONITOR_HOST=0.0.0.0
+
+CMD ["bash", "/usr/src/app/run_kraken.sh"]
