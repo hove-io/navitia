@@ -17,13 +17,6 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Free up space
-      run: |
-        rm -rf /usr/share/dotnet/*
-        rm -rf /usr/local/lib/android/*
-        echo "Free space:"
-        df -h
-
     - name: Install dependencies
       run: |
         apt update && apt install -y --force-yes zip httpie
@@ -112,8 +105,6 @@ jobs:
 
     - name: Create dockers images and push them
       run: |
-        docker build -f navitia/docker/${{env.debian_version}}/Dockerfile-master -t navitia/master .
-
         components='jormungandr kraken tyr-beat tyr-worker tyr-web instances-configurator mock-kraken eitri'
         for component in $components; do
             echo "*********  Building $component ***************"
