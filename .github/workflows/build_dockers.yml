@@ -112,7 +112,7 @@ jobs:
 
     - name: Create dockers images and push them
       run: |
-        docker build -f navitia/docker/${{env.debian_version}}/Dockerfile-master -t navitia/master:${{env.navitia_tag}} .
+        docker build -f navitia/docker/${{env.debian_version}}/Dockerfile-master -t navitia/master .
 
         components='jormungandr kraken tyr-beat tyr-worker tyr-web instances-configurator mock-kraken eitri'
         for component in $components; do
