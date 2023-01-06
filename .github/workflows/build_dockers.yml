@@ -9,7 +9,7 @@ on:
   pull_request:
 
 env:
-  debian_version: debian8
+  debian: debian8
 
 jobs:
   build:
@@ -17,7 +17,7 @@ jobs:
     runs-on: ubuntu-latest
 
     container:
-      image: navitia/${{ env.debian_version }}_dev
+      image: navitia/${{ env.debian }}_dev
       volumes:
          # Mount so we can delete files from docker and free up space (>20GB)
           - /usr/share/dotnet:/usr/share/dotnet
