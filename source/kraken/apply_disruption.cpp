@@ -98,6 +98,14 @@ nt::VehicleJourney* create_vj_from_old_vj(nt::MetaVehicleJourney* mvj,
     return new_vj;
 }
 
+std::string make_new_vj_uri(const std::string& mvj_uri,
+                            nt::RTLevel rt_level,
+                            int nb_rt_vj,
+                            const std::string& disruption_uri) {
+    return "vehicle_journey:" + mvj_uri + ":" + type::get_string_from_rt_level(rt_level) + ":"
+           + std::to_string(nb_rt_vj) + ":" + disruption_uri;
+}
+
 struct apply_impacts_visitor : public boost::static_visitor<> {
     boost::shared_ptr<nt::disruption::Impact> impact;
     nt::PT_Data& pt_data;
@@ -152,7 +160,7 @@ struct apply_impacts_visitor : public boost::static_visitor<> {
         // we cannot ensure that all VJ of a MetaVJ are on the same route,
         // and since we want all actions to operate on MetaVJ, we collect all MetaVJ of the route
         // (but we'll change only the route's vj)
-        std::set<nt::MetaVehicleJourney*> mvjs;
+        std::unordered_set<nt::MetaVehicleJourney*> mvjs;
         route->for_each_vehicle_journey([&mvjs](nt::VehicleJourney& vj) {
             mvjs.insert(vj.meta_vj);
             return true;
@@ -318,8 +326,8 @@ struct add_impacts_visitor : public apply_impacts_visitor {
             }
 
             auto nb_rt_vj = mvj->get_rt_vj().size();
-            std::string new_vj_uri =
-                "vehicle_journey:" + mvj->uri + ":modified:" + std::to_string(nb_rt_vj) + ":" + impact->disruption->uri;
+            auto new_vj_uri = make_new_vj_uri(mvj->uri, rt_level, nb_rt_vj, impact->disruption->uri);
+
             std::vector<type::StopTime> stoptimes;  // we copy all the stoptimes
             for (const auto& stu : impact->aux_info.stop_times) {
                 stoptimes.push_back(stu.stop_time);
@@ -491,8 +499,7 @@ struct add_impacts_visitor : public apply_impacts_visitor {
                 continue;
             }
             auto nb_rt_vj = mvj->get_vjs_at(rt_level).size();
-            std::string new_vj_uri = vj->uri + ":" + type::get_string_from_rt_level(rt_level) + ":"
-                                     + std::to_string(nb_rt_vj) + ":" + impact->disruption->uri;
+            auto new_vj_uri = make_new_vj_uri(mvj->uri, rt_level, nb_rt_vj, impact->disruption->uri);
 
             new_vp.days = new_vp.days & (vj->validity_patterns[rt_level]->days >> vj->shift);
 
@@ -560,8 +567,7 @@ struct add_impacts_visitor : public apply_impacts_visitor {
                 continue;
             }
             auto nb_rt_vj = mvj->get_vjs_at(rt_level).size();
-            std::string new_vj_uri = vj->uri + ":" + type::get_string_from_rt_level(rt_level) + ":"
-                                     + std::to_string(nb_rt_vj) + ":" + impact->disruption->uri;
+            auto new_vj_uri = make_new_vj_uri(mvj->uri, rt_level, nb_rt_vj, impact->disruption->uri);
 
             new_vp.days = new_vp.days & (vj->validity_patterns[rt_level]->days >> vj->shift);
 
@@ -716,8 +722,7 @@ struct add_impacts_visitor : public apply_impacts_visitor {
             mvj->push_unique_impact(impact);
 
             auto nb_rt_vj = mvj->get_vjs_at(rt_level).size();
-            std::string new_vj_uri = "vehicle_journey:" + mvj->uri + ":" + type::get_string_from_rt_level(rt_level)
-                                     + ":" + std::to_string(nb_rt_vj) + concatenate_impact_uris(*mvj);
+            auto new_vj_uri = make_new_vj_uri(mvj->uri, rt_level, nb_rt_vj, impact->disruption->uri);
 
             new_vp.days = new_vp.days & (vj->validity_patterns[rt_level]->days >> vj->shift);
 

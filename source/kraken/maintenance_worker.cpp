@@ -43,6 +43,7 @@ www.navitia.io
 #include <boost/algorithm/string/join.hpp>
 #include <boost/optional.hpp>
 #include <boost/thread/thread.hpp>
+#include <boost/range/adaptor/reversed.hpp>
 
 #include <chrono>
 #include <csignal>
@@ -364,7 +365,9 @@ void MaintenanceWorker::handle_rt_in_batch(const std::vector<AmqpClient::Envelop
     pt::ptime begin = pt::microsec_clock::universal_time();
     bool autocomplete_rebuilding_activated = false;
     auto rt_action = RTAction::chaos;
-    for (auto& envelope : envelopes) {
+
+    std::unordered_set<std::string> applied_visited_id;
+    for (auto& envelope : boost::adaptors::reverse(envelopes)) {
         const auto routing_key = envelope->RoutingKey();
         LOG4CPLUS_DEBUG(logger, "realtime info received from " << routing_key);
         assert(envelope);
@@ -375,6 +378,10 @@ void MaintenanceWorker::handle_rt_in_batch(const std::vector<AmqpClient::Envelop
         }
         LOG4CPLUS_TRACE(logger, "received entity: " << feed_message.DebugString());
         for (const auto& entity : feed_message.entity()) {
+            auto res = applied_visited_id.insert(entity.id());
+            if (!res.second) {
+                continue;
+            }
             if (!data) {
                 pt::ptime copy_begin = pt::microsec_clock::universal_time();
                 data = data_manager.get_data_clone();
@@ -452,7 +459,12 @@ std::vector<AmqpClient::Envelope::ptr_t> MaintenanceWorker::consume_in_batch(con
     std::vector<AmqpClient::Envelope::ptr_t> envelopes;
     envelopes.reserve(max_nb);
     size_t consumed_nb = 0;
-    while (consumed_nb < max_nb) {
+    auto begin = pt::microsec_clock::universal_time();
+
+    auto retrieving_timeout = conf.retrieving_timeout();
+    pt::time_duration duration = pt::milliseconds{0};
+    while (consumed_nb < max_nb
+           && (pt::microsec_clock::universal_time() - begin).total_milliseconds() < retrieving_timeout) {
         AmqpClient::Envelope::ptr_t envelope{};
 
         /* !
@@ -499,7 +511,7 @@ void MaintenanceWorker::listen_rabbitmq() {
 
         // Arbitrary Number: we suppose that disruptions can be handled very quickly so that,
         // in theory, we can handle a batch of 5000 disruptions in one time very quickly too.
-        size_t max_batch_nb = 5000;
+        size_t max_batch_nb = conf.broker_max_batch_nb();
 
         try {
             auto rt_envelopes = consume_in_batch(rt_tag, max_batch_nb, timeout_ms, no_ack);
