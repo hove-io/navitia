@@ -39,8 +39,9 @@ jobs:
     - name: Checkout core_team_ci_tools
       uses: actions/checkout@v3
       with:
-        path: core_team_ci_tools
         repository : 'hove-io/core_team_ci_tools'
+        path: core_team_ci_tools
+        token: ${{ secrets.access_token_github }}
 
     - name: Setup core_team_ci_tools python environment
       run: |
