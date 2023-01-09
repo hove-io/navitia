@@ -125,7 +125,11 @@ jobs:
 
         for component in $components; do
             echo "*********  Pushing $component ***************"
-            docker push --all-tags navitia/$component:${{env.navitia_tag}}
+            docker push navitia/$component:${{env.navitia_tag}}
+
+            if [[ "${{env.aws_branch}}" = "release" ]]; then
+                docker push navitia/$component:latest
+            fi
         done
 
     - name: Generate token for aws images
