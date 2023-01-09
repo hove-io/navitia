@@ -13,7 +13,7 @@ RUN apt-get update \
     && rm -rf navitia-monitor-kraken_*.deb \
     && pip install --no-cache-dir -r /usr/share/monitor_kraken/requirements.txt
 
-COPY navitia/docker/run_kraken.sh /usr/src/app/run_kraken.sh
+COPY docker/run_kraken.sh /usr/src/app/run_kraken.sh
 RUN chmod +x /usr/src/app/run_kraken.sh
 
 WORKDIR /
@@ -51,4 +51,4 @@ HEALTHCHECK CMD nc -z localhost 30000 || exit 1
 
 ENV MONITOR_HOST=0.0.0.0
 
-CMD ["bash", "/usr/src/app/run_kraken.sh"]
+ENTRYPOINT ["bash", "/usr/src/app/run_kraken.sh"]

@@ -25,8 +25,8 @@ RUN cp /usr/bin/manage_tyr.py /usr/src/app/manage_tyr.py
 ENV C_FORCE_ROOT=1
 ENV TYR_WORKER_N_PROC=1
 
-COPY navitia/docker/run_tyr_worker.sh /usr/src/app/
+COPY docker/run_tyr_worker.sh /usr/src/app/
 
 RUN chmod +x /usr/src/app/run_tyr_worker.sh
 
-CMD ["bash", "/usr/src/app/run_tyr_worker.sh"]
+ENTRYPOINT ["bash", "/usr/src/app/run_tyr_worker.sh"]
