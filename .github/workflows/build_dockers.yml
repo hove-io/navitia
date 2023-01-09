@@ -112,7 +112,7 @@ jobs:
         components='jormungandr kraken tyr-beat tyr-worker tyr-web instances-configurator mock-kraken eitri'
         for component in $components; do
             echo "*********  Building $component ***************"
-            docker build -t navitia/$component:${{env.navitia_tag}} -f  navitia/docker/${{env.debian_version}}/Dockerfile-${component} .
+            docker build -t navitia/$component:${{env.navitia_tag}} -f  docker/${{env.debian_version}}/Dockerfile-${component} .
 
             # add latest tag if we are making a release
             if [[ "${{env.aws_branch}}" = "release" ]]; then
