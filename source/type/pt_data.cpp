@@ -1,4 +1,4 @@
-/* Copyright © 2001-2022, Hove and/or its affiliates. All rights reserved.
+/* Copyright �� 2001-2022, Hove and/or its affiliates. All rights reserved.
 
 This file is part of Navitia,
     the software to build cool stuff with public transport.
@@ -49,6 +49,7 @@ www.navitia.io
 #include <boost/range/algorithm/find_if.hpp>
 
 namespace nt = navitia::type;
+namespace pt = boost::posix_time;
 
 namespace navitia {
 namespace type {
@@ -259,11 +260,16 @@ type::MetaVehicleJourney* PT_Data::get_or_create_meta_vehicle_journey(const std:
 }
 
 ValidityPattern* PT_Data::get_or_create_validity_pattern(const ValidityPattern& vp_ref) {
+    pt::ptime begin = pt::microsec_clock::universal_time();
     for (auto vp : validity_patterns) {
         if (vp->days == vp_ref.days && vp->beginning_date == vp_ref.beginning_date) {
             return vp;
         }
     }
+    LOG4CPLUS_DEBUG(log4cplus::Logger::getInstance("log"),
+                    "It took " << (pt::microsec_clock::universal_time() - begin).total_milliseconds()
+                               << "ms to find ValidityPattern");
+
     auto vp = new nt::ValidityPattern();
     vp->idx = validity_patterns.size();
     vp->uri = make_adapted_uri(vp->uri);
@@ -428,9 +434,9 @@ void PT_Data::build_uri() {
     ITERATE_NAVITIA_PT_TYPES(NORMALIZE_EXT_CODE)
 }
 
-/** Foncteur fixe le membre "idx" d'un objet en incrémentant toujours de 1
+/** Foncteur fixe le membre "idx" d'un objet en incr��mentant toujours de 1
  *
- * Cela permet de numéroter tous les objets de 0 à n-1 d'un vecteur de pointeurs
+ * Cela permet de num��roter tous les objets de 0 �� n-1 d'un vecteur de pointeurs
  */
 struct Indexer {
     idx_t idx{0};
