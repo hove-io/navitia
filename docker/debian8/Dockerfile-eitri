@@ -11,4 +11,3 @@ RUN apt-get install -f -y --force-yes
 # install eitri requirements
 RUN pip install --no-cache-dir -r /navitia/source/eitri/requirements.txt
 
-CMD [""]

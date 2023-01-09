@@ -1,0 +1,6 @@
+FROM navitia/master
+
+COPY docker/build_kraken.sh /build_kraken.sh
+RUN chmod +x /build_kraken.sh
+
+CMD ["/build_kraken.sh"]

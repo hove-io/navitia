@@ -68,7 +68,7 @@ jobs:
       run: |
         wget http://prdownloads.sourceforge.net/libkeepalive/libkeepalive-0.3.tar.gz
 
-    - name: Checkout navitia
+    - name: Checkout
       uses: actions/checkout@v3
       with:
         submodules : recursive
@@ -79,15 +79,6 @@ jobs:
       with:
         key: build_dockers
         max-size: 2000M
-
-    - name: Create master docker
-      run: |
-        docker build -f docker/${{env.debian_version}}/Dockerfile-master -t navitia/master .
-
-    - name: Build packages in master docker
-      # Will build navitia-*.deb packages in current folder
-      run: |
-        docker run -v `pwd`:/build/navitia/  navitia/master
 
 
     # see https://docs.github.com/en/actions/using-workflows/workflow-commands-for-github-actions#setting-an-environment-variable
@@ -106,6 +97,16 @@ jobs:
         echo "building version $version"
         echo "navitia_tag=$version" >> $GITHUB_ENV
         echo "aws_branch=release" >> $GITHUB_ENV
+
+    - name: Create master docker
+      run: |
+        docker build -f docker/${{env.debian_version}}/Dockerfile-master -t navitia/master .
+        docker build -f docker/${{env.debian_version}}/Dockerfile-builder -t navitia/builder .
+
+    - name: Build packages in master docker
+      # Will build navitia-*.deb packages in current folder
+      run: |
+        docker run -v `pwd`:/build/navitia/  navitia/builder
 
     - name: Create dockers images and push them
       run: |
