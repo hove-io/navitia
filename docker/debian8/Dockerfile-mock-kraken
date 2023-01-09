@@ -15,3 +15,5 @@ EXPOSE 30000
 ENV KRAKEN_GENERAL_zmq_socket=tcp://*:30000
 ENV KRAKEN_GENERAL_log_level=INFO
 
+CMD [""]
+

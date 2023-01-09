@@ -2,7 +2,7 @@ FROM navitia/master
 
 # copy package from context inside the docker
 COPY navitia-ed_*.deb /
-COPY navitia/source/ /navitia/source/
+COPY source/ /navitia/source/
 
 # install dependencies
 RUN apt-get update \
@@ -13,3 +13,5 @@ RUN apt-get update \
 
 # install eitri requirements
 RUN pip3 install --no-cache-dir -r /navitia/source/eitri/requirements.txt
+
+CMD [""]

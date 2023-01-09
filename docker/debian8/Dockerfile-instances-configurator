@@ -1,15 +1,15 @@
 FROM navitia/master
 
 
-COPY navitia/source/sql/alembic /usr/share/navitia/ed/alembic
-COPY navitia/source/sql/requirements.txt /tmp/requirements.txt
+COPY source/sql/alembic /usr/share/navitia/ed/alembic
+COPY source/sql/requirements.txt /tmp/requirements.txt
 RUN pip install -r /tmp/requirements.txt
 
-COPY navitia/source/cities /usr/share/navitia/cities
+COPY source/cities /usr/share/navitia/cities
 
-COPY navitia/docker/instances_configuration.sh /
-COPY navitia/docker/templates/* /templates/
+COPY docker/instances_configuration.sh /
+COPY docker/templates/* /templates/
 
 
 
-CMD sh -x /instances_configuration.sh
+ENTRYPOINT [ "sh", "-x", "/instances_configuration.sh" ]

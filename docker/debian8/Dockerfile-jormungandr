@@ -21,10 +21,10 @@ RUN pip install --no-cache-dir -r /usr/share/jormungandr/requirements.txt \
 
 # Add apache config
 RUN rm /etc/apache2/sites-available/000-default.conf
-COPY navitia/docker/apache/jormungandr.default.conf /etc/apache2/sites-available/000-default.conf
-COPY navitia/docker/apache/apache2.conf /etc/apache2/apache2.conf
-COPY navitia/docker/apache/envvars /etc/apache2/envvars
-COPY navitia/docker/apache/logformat.conf /etc/apache2/conf-available/logformat.conf
+COPY docker/apache/jormungandr.default.conf /etc/apache2/sites-available/000-default.conf
+COPY docker/apache/apache2.conf /etc/apache2/apache2.conf
+COPY docker/apache/envvars /etc/apache2/envvars
+COPY docker/apache/logformat.conf /etc/apache2/conf-available/logformat.conf
 
 # Enable site and modes
 RUN a2ensite 000-default.conf \
@@ -39,8 +39,8 @@ RUN ln -sf /proc/self/fd/1 /var/log/apache2/access.log \
     && ln -sf /proc/self/fd/2 /var/log/apache2/error.log
 
 # jormungandr wsgi
-COPY navitia/docker/jormungandr.wsgi /usr/src/app/jormungandr.wsgi
-COPY navitia/docker/run_jormungandr.sh /usr/src/app/run.sh
+COPY docker/jormungandr.wsgi /usr/src/app/jormungandr.wsgi
+COPY docker/run_jormungandr.sh /usr/src/app/run.sh
 
 WORKDIR /usr/src/app/
 

@@ -13,12 +13,12 @@ RUN apt-get install -y --force-yes postgresql-client \
         dh-python \
         curl
 
-COPY navitia/docker/ca-certificates/*.crt /usr/local/share/ca-certificates/
-COPY navitia/docker/build_kraken.sh /build_kraken.sh
+COPY docker/ca-certificates/*.crt /usr/local/share/ca-certificates/
+COPY docker/build_kraken.sh /build_kraken.sh
 RUN chmod +x /build_kraken.sh
 RUN update-ca-certificates
 # Python 'requests' package handle its own CA certificate list
 # Let's force it to use the OS's list
 ENV REQUESTS_CA_BUNDLE /etc/ssl/certs
 
-ENTRYPOINT /build_kraken.sh
+CMD ["/build_kraken.sh"]
