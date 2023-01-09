@@ -1,4 +1,4 @@
-/* Copyright © 2001-2022, Hove and/or its affiliates. All rights reserved.
+/* Copyright �� 2001-2022, Hove and/or its affiliates. All rights reserved.
 
 This file is part of Navitia,
     the software to build cool stuff with public transport.
@@ -455,7 +455,7 @@ static const type::disruption::Disruption* create_disruption(const std::string& 
     delete_disruption(id, *data.pt_data, *data.meta);
     LOG4CPLUS_DEBUG(log4cplus::Logger::getInstance("logger"),
                     "it took " << (pt::microsec_clock::universal_time() - delete_begin).total_milliseconds()
-                               << " ms to delete disruption before creating" << id);
+                               << " ms to delete disruption before creating " << id);
 
     auto& disruption = holder.make_disruption(id, type::RTLevel::RealTime);
     disruption.reference = disruption.uri;

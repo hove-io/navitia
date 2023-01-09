@@ -1,4 +1,4 @@
-/* Copyright �� 2001-2022, Hove and/or its affiliates. All rights reserved.
+/* Copyright ������ 2001-2022, Hove and/or its affiliates. All rights reserved.
 
 This file is part of Navitia,
     the software to build cool stuff with public transport.
@@ -263,12 +263,15 @@ ValidityPattern* PT_Data::get_or_create_validity_pattern(const ValidityPattern& 
     pt::ptime begin = pt::microsec_clock::universal_time();
     for (auto vp : validity_patterns) {
         if (vp->days == vp_ref.days && vp->beginning_date == vp_ref.beginning_date) {
+            LOG4CPLUS_DEBUG(log4cplus::Logger::getInstance("log"),
+                            "It took " << (pt::microsec_clock::universal_time() - begin).total_milliseconds()
+                                       << "ms to find ValidityPattern");
             return vp;
         }
     }
     LOG4CPLUS_DEBUG(log4cplus::Logger::getInstance("log"),
                     "It took " << (pt::microsec_clock::universal_time() - begin).total_milliseconds()
-                               << "ms to find ValidityPattern");
+                               << "ms, miss out ValidityPattern ");
 
     auto vp = new nt::ValidityPattern();
     vp->idx = validity_patterns.size();
@@ -434,9 +437,9 @@ void PT_Data::build_uri() {
     ITERATE_NAVITIA_PT_TYPES(NORMALIZE_EXT_CODE)
 }
 
-/** Foncteur fixe le membre "idx" d'un objet en incr��mentant toujours de 1
+/** Foncteur fixe le membre "idx" d'un objet en incr������mentant toujours de 1
  *
- * Cela permet de num��roter tous les objets de 0 �� n-1 d'un vecteur de pointeurs
+ * Cela permet de num������roter tous les objets de 0 ������ n-1 d'un vecteur de pointeurs
  */
 struct Indexer {
     idx_t idx{0};

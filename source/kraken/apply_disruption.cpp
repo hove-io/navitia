@@ -1,4 +1,4 @@
-/* Copyright © 2001-2022, Hove and/or its affiliates. All rights reserved.
+/* Copyright �� 2001-2022, Hove and/or its affiliates. All rights reserved.
 
 This file is part of Navitia,
     the software to build cool stuff with public transport.
@@ -797,9 +797,13 @@ struct delete_impacts_visitor : public apply_impacts_visitor {
 
     ~delete_impacts_visitor() override {
         for (const auto& i : disruptions_collection) {
+            pt::ptime begin = pt::microsec_clock::universal_time();
             if (i) {
                 apply_disruption(*i->disruption, pt_data, meta);
             }
+            LOG4CPLUS_DEBUG(log4cplus::Logger::getInstance("log"),
+                            "It took " << (pt::microsec_clock::universal_time() - begin).total_milliseconds()
+                                       << "ms to reapply all disruptions");
         }
     }
 
@@ -808,33 +812,51 @@ struct delete_impacts_visitor : public apply_impacts_visitor {
     // We set all the validity pattern to the theorical one, we will re-apply
     // other disruptions after
     void operator()(nt::MetaVehicleJourney* mvj, nt::Route* /*r*/ = nullptr) override {
+        pt::ptime begin = pt::microsec_clock::universal_time();
         mvj->remove_impact(impact);
+        LOG4CPLUS_DEBUG(log4cplus::Logger::getInstance("log"),
+                        "It took " << (pt::microsec_clock::universal_time() - begin).total_milliseconds()
+                                   << "ms to remove impact: " << impact->uri);
+
         for (auto& vj : mvj->get_base_vj()) {
             // Time to reset the vj
             // We re-activate base vj for every realtime level by reseting base vj's vp to base
             vj->validity_patterns[type::RTLevel::RealTime] = vj->validity_patterns[type::RTLevel::Adapted] =
                 vj->validity_patterns[type::RTLevel::Base];
         }
+
         auto* empty_vp_ptr = pt_data.get_or_create_validity_pattern({meta.production_date.begin()});
 
         auto set_empty_vp = [empty_vp_ptr](const std::unique_ptr<type::VehicleJourney>& vj) {
             vj->validity_patterns[type::RTLevel::RealTime] = vj->validity_patterns[type::RTLevel::Adapted] =
                 vj->validity_patterns[type::RTLevel::Base] = empty_vp_ptr;
         };
+        begin = pt::microsec_clock::universal_time();
         // We deactivate adapted/realtime vj by setting vp to empty vp
         boost::for_each(mvj->get_adapted_vj(), set_empty_vp);
         boost::for_each(mvj->get_rt_vj(), set_empty_vp);
+        LOG4CPLUS_DEBUG(log4cplus::Logger::getInstance("log"),
+                        "It took " << (pt::microsec_clock::universal_time() - begin).total_milliseconds()
+                                   << "ms to set empty vp for impact: " << impact->uri);
 
         const auto& impact = this->impact;
+        begin = pt::microsec_clock::universal_time();
+
         boost::range::remove_erase_if(mvj->modified_by, [&impact](const boost::weak_ptr<nt::disruption::Impact>& i) {
             auto spt = i.lock();
             return (spt) ? spt == impact : true;
         });
 
+        LOG4CPLUS_DEBUG(log4cplus::Logger::getInstance("log"),
+                        "It took " << (pt::microsec_clock::universal_time() - begin).total_milliseconds()
+                                   << "ms to remove impact from mvj: " << impact->uri);
+
         // add_impacts_visitor populate mvj->modified_by, thus we swap
         // it with an empty vector.
         decltype(mvj->modified_by) modified_by_moved;
         boost::swap(modified_by_moved, mvj->modified_by);
+
+        begin = pt::microsec_clock::universal_time();
 
         for (const auto& wptr : modified_by_moved) {
             if (auto share_ptr = wptr.lock()) {
@@ -857,7 +879,12 @@ struct delete_impacts_visitor : public apply_impacts_visitor {
                 }
             }
         }
-        pt::ptime begin = pt::microsec_clock::universal_time();
+
+        LOG4CPLUS_DEBUG(log4cplus::Logger::getInstance("log"),
+                        "It took " << (pt::microsec_clock::universal_time() - begin).total_milliseconds()
+                                   << "ms to push back impact back to mvj: " << impact->disruption->uri);
+
+        begin = pt::microsec_clock::universal_time();
         // we check if we now have useless vehicle_journeys to cleanup
         mvj->clean_up_useless_vjs(pt_data);
         LOG4CPLUS_DEBUG(log4cplus::Logger::getInstance("logger"),
