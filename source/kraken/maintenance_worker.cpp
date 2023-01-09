@@ -380,7 +380,10 @@ void MaintenanceWorker::handle_rt_in_batch(const std::vector<AmqpClient::Envelop
             return;
         }
         LOG4CPLUS_TRACE(logger, "received entity: " << feed_message.DebugString());
+
         for (const auto& entity : feed_message.entity()) {
+            pt::ptime entity_begin = pt::microsec_clock::universal_time();
+
             auto res = applied_visited_id.insert(entity.id());
             if (!res.second) {
                 continue;
@@ -406,16 +409,20 @@ void MaintenanceWorker::handle_rt_in_batch(const std::vector<AmqpClient::Envelop
                 handle_realtime(entity.id(), navitia::from_posix_timestamp(feed_message.header().timestamp()),
                                 entity.trip_update(), *data, conf.is_realtime_add_enabled(),
                                 conf.is_realtime_add_trip_enabled());
+
                 autocomplete_rebuilding_activated = autocomplete_rebuilding_needed(entity);
+                LOG4CPLUS_DEBUG(logger,
+                                "It took " << (pt::microsec_clock::universal_time() - entity_begin).total_milliseconds()
+                                           << "ms to inject entity: " << entity.id());
+
             } else {
                 LOG4CPLUS_WARN(logger, "unsupported gtfs rt feed");
             }
         }
     }
 
-    LOG4CPLUS_DEBUG(logger,
-                    "It took " << (pt::microsec_clock::universal_time() - begin - clone_duration).total_milliseconds()
-                               << "ms to inject all disruptions");
+    LOG4CPLUS_DEBUG(logger, "It took " << (pt::microsec_clock::universal_time() - begin).total_milliseconds()
+                                       << "ms to inject all disruptions with data cloning");
 
     if (data && data->pt_data) {
         LOG4CPLUS_DEBUG(logger, "Nb vj after applying the disruption:" << data->pt_data->vehicle_journeys.size());

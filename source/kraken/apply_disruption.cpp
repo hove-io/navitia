@@ -327,8 +327,13 @@ struct add_impacts_visitor : public apply_impacts_visitor {
             }
 
             // Create new VJ (default name/headsign is empty)
+            auto create_begin = pt::microsec_clock::universal_time();
             auto* vj = mvj->create_discrete_vj(new_vj_uri, "", "", type::RTLevel::RealTime, canceled_vp, r,
                                                std::move(stoptimes), pt_data);
+            LOG4CPLUS_DEBUG(log4cplus::Logger::getInstance("logger"),
+                            "it took " << (pt::microsec_clock::universal_time() - create_begin).total_milliseconds()
+                                       << " ms to create vj: " << new_vj_uri);
+
             LOG4CPLUS_TRACE(log, "New vj has been created " << vj->uri);
 
             // Add company

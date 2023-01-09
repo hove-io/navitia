@@ -450,7 +450,12 @@ static const type::disruption::Disruption* create_disruption(const std::string& 
     auto start_first_day_of_impact = bpt::ptime(circulation_date, bpt::time_duration(0, 0, 0, 0));
     const auto& mvj = *data.pt_data->get_or_create_meta_vehicle_journey(trip_update.trip().trip_id(),
                                                                         data.pt_data->get_main_timezone());
+
+    auto delete_begin = pt::microsec_clock::universal_time();
     delete_disruption(id, *data.pt_data, *data.meta);
+    LOG4CPLUS_DEBUG(log4cplus::Logger::getInstance("logger"),
+                    "it took " << (pt::microsec_clock::universal_time() - delete_begin).total_milliseconds()
+                               << " ms to delete disruption before creating" << id);
 
     auto& disruption = holder.make_disruption(id, type::RTLevel::RealTime);
     disruption.reference = disruption.uri;
@@ -641,6 +646,7 @@ void handle_realtime(const std::string& id,
                                 << get_wordings(get_trip_effect(trip_update.GetExtension(kirin::effect))));
         return;
     }
+
     auto begin = pt::microsec_clock::universal_time();
     const auto* disruption = create_disruption(id, timestamp, trip_update, data);
     LOG4CPLUS_DEBUG(log4cplus::Logger::getInstance("logger"),
@@ -653,8 +659,11 @@ void handle_realtime(const std::string& id,
         delete_disruption(id, *data.pt_data, *data.meta);
         return;
     }
-
+    auto apply_begin = pt::microsec_clock::universal_time();
     apply_disruption(*disruption, *data.pt_data, *data.meta);
+    LOG4CPLUS_DEBUG(log4cplus::Logger::getInstance("logger"),
+                    "it took " << (pt::microsec_clock::universal_time() - apply_begin).total_milliseconds()
+                               << " ms to apply disruption " << id);
 }
 
 }  // namespace navitia
