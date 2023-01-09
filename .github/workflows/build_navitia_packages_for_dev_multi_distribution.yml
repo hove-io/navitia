@@ -3,7 +3,7 @@ name: Build Navitia Packages For Dev Multi Distributions
 on:
   push:
     branches:
-      - dev
+      - dev_
 
 jobs:
   build:

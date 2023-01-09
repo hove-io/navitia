@@ -6,6 +6,7 @@ on:
       - dev
     tags:
       - '*'
+
 env:
   debian_version: debian8
 
@@ -14,31 +15,24 @@ jobs:
 
     runs-on: ubuntu-latest
 
-    container:
-      image: navitia/${{env.debian_version}}_dev
-      volumes:
-         # Mount so we can delete files from docker and free up space (>20GB)
-          - /usr/share/dotnet:/usr/share/dotnet
-          - /usr/local/lib/android:/usr/local/lib/android
-
-
     steps:
     - name: Free up space
       run: |
-        rm -rf /usr/share/dotnet/*
-        rm -rf /usr/local/lib/android/*
+        sudo rm -rf /usr/share/dotnet/*
+        sudo rm -rf /usr/local/lib/android/*
         echo "Free space:"
         df -h
 
     - name: Install dependencies
       run: |
-        apt update && apt install -y --force-yes zip httpie dh-python
+        sudo apt update && sudo apt install -y --force-yes zip httpie
 
     - name: Checkout core_team_ci_tools
       uses: actions/checkout@v3
       with:
-        path: core_team_ci_tools
         repository : 'hove-io/core_team_ci_tools'
+        path: core_team_ci_tools
+        token: ${{ secrets.access_token_github }}
 
     - name: Setup core_team_ci_tools python environment
       run: |
@@ -51,7 +45,7 @@ jobs:
             -o hove-io \
             -r mimirsbrunn \
             -t ${{secrets.access_token_github}} \
-            -w release.yml \
+            -w release7.yml \
             -a $mimirsbrunn_package \
             --output-dir .
         unzip -qo $mimirsbrunn_package
@@ -74,13 +68,6 @@ jobs:
       run: |
         wget http://prdownloads.sourceforge.net/libkeepalive/libkeepalive-0.3.tar.gz
 
-    - name: Restore ccache
-      uses: hendrikmuhs/ccache-action@v1.2
-      with:
-        key: ${{env.debian_version}-package
-        max-size: 2000M
-        save: ${{ github.event_name == 'push' }}
-
     - name: Checkout navitia
       uses: actions/checkout@v3
       with:
@@ -88,22 +75,31 @@ jobs:
         path: navitia
         fetch-depth: 0
 
-    - name: Build navitia packages
-      working-directory: navitia
-      # Will build navitia-*.deb packages in folder ../
+    - name: Restore ccache
+      uses: hendrikmuhs/ccache-action@v1.2
+      with:
+        key: build_dockers
+        max-size: 2000M
+
+    - name: Create master docker
       run: |
-        DEB_BUILD_OPTIONS=nocheck dpkg-buildpackage -b
+        docker build -f navitia/docker/${{env.debian_version}}/Dockerfile-master -t navitia/master .
+
+    - name: Build packages in master docker
+      # Will build navitia-*.deb packages in current folder
+      run: |
+        docker run -v `pwd`:/build/ -w /navitia/ navitia/master
 
 
     # see https://docs.github.com/en/actions/using-workflows/workflow-commands-for-github-actions#setting-an-environment-variable
-    - name: Choose dev navitia tag
+    - name: Choose dev tag
       if: github.event_name == 'push' && github.ref == 'refs/heads/dev'
       run: |
         echo "building version dev"
         echo "navitia_tag=dev" >> $GITHUB_ENV
         echo "aws_branch=dev" >> $GITHUB_ENV
 
-    - name: Choose release navitia tag
+    - name: Choose release tag
       if: startsWith(github.ref, 'refs/tags/')
       run: |
         cd navitia
@@ -114,15 +110,13 @@ jobs:
 
     - name: Create dockers images and push them
       run: |
-        docker build -f navitia/docker/${{env.debian_version}}/Dockerfile-master -t navitia/master .
-
         components='jormungandr kraken tyr-beat tyr-worker tyr-web instances-configurator mock-kraken eitri'
         for component in $components; do
             echo "*********  Building $component ***************"
             docker build -t navitia/$component:${{env.navitia_tag}} -f  navitia/docker/${{env.debian_version}}/Dockerfile-${component} .
 
-            # add latest tag if navitia_tag != dev
-            if [[ "${{env.navitia_tag}}" != "dev" ]]; then
+            # add latest tag if we are making a release
+            if [[ "${{env.aws_branch}}" = "release" ]]; then
                 docker tag navitia/$component:${{env.navitia_tag}}  navitia/$component:latest
             fi
         done
@@ -173,4 +167,4 @@ jobs:
     - name: success notification on navitia core team
       if: success()
       run: |
-          echo '{"text":":octopus: Github Actions: build_dockers succeeded. New navitia ${{env.navitia_tag}} image available.' | http --json POST ${{secrets.SLACK_NAVITIA_CORE_TEAM_URL}}
+          echo '{"text":":octopus: Github Actions: build_dockers succeeded. New navitia ${{env.navitia_tag}} images available.' | http --json POST ${{secrets.SLACK_NAVITIA_CORE_TEAM_URL}}
