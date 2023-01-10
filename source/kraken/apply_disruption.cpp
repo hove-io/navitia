@@ -813,8 +813,14 @@ struct delete_impacts_visitor : public apply_impacts_visitor {
         pt::ptime begin = pt::microsec_clock::universal_time();
         for (const auto& i : disruptions_collection) {
             if (i) {
+                LOG4CPLUS_DEBUG(log4cplus::Logger::getInstance("log"), "start to appy impact" << i->uri);
+                pt::ptime i_begin = pt::microsec_clock::universal_time();
                 apply_disruption(*i->disruption, pt_data, meta);
+                LOG4CPLUS_DEBUG(log4cplus::Logger::getInstance("log"),
+                                "It took " << (pt::microsec_clock::universal_time() - i_begin).total_milliseconds()
+                                           << "ms to re-apply impact in destructor" << i->uri);
             }
+            pt::ptime begin = pt::microsec_clock::universal_time();
         }
         LOG4CPLUS_DEBUG(log4cplus::Logger::getInstance("log"),
                         "It took " << (pt::microsec_clock::universal_time() - begin).total_milliseconds()
