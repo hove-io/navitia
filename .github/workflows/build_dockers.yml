@@ -89,8 +89,7 @@ jobs:
     - name: Choose release tag
       if: startsWith(github.ref, 'refs/tags/')
       run: |
-        cd navitia
-        version=$(git describe)
+        version=$(git describe --tags)
         echo "building version $version"
         echo "navitia_tag=$version" >> $GITHUB_ENV
         echo "aws_branch=release" >> $GITHUB_ENV
