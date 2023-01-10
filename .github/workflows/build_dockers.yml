@@ -64,10 +64,6 @@ jobs:
         unzip -qo $cosmogony2cities_package
         rm -f $cosmogony2cities_package
 
-    - name: Download libkeepalive
-      run: |
-        wget http://prdownloads.sourceforge.net/libkeepalive/libkeepalive-0.3.tar.gz
-
     - name: Checkout
       uses: actions/checkout@v3
       with:
