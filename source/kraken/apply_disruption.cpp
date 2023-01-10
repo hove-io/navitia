@@ -813,7 +813,9 @@ struct delete_impacts_visitor : public apply_impacts_visitor {
         pt::ptime begin = pt::microsec_clock::universal_time();
         for (const auto& i : disruptions_collection) {
             if (i) {
-                LOG4CPLUS_DEBUG(log4cplus::Logger::getInstance("log"), "start to appy impact" << i->uri);
+                LOG4CPLUS_DEBUG(log4cplus::Logger::getInstance("log"), "start to apply impact in destructor "
+                                                                           << i->uri << "whose disruption id is "
+                                                                           << *i->disruption->uri);
                 pt::ptime i_begin = pt::microsec_clock::universal_time();
                 apply_disruption(*i->disruption, pt_data, meta);
                 LOG4CPLUS_DEBUG(log4cplus::Logger::getInstance("log"),
@@ -1015,11 +1017,11 @@ void apply_disruption(const type::disruption::Disruption& disruption,
     LOG4CPLUS_DEBUG(log4cplus::Logger::getInstance("log"), "applying disruption: " << disruption.uri);
     pt::ptime begin = pt::microsec_clock::universal_time();
     for (const auto& impact : disruption.get_impacts()) {
-        pt::ptime begin = pt::microsec_clock::universal_time();
+        pt::ptime impact_begin = pt::microsec_clock::universal_time();
         apply_impact(impact, pt_data, meta);
         LOG4CPLUS_DEBUG(log4cplus::Logger::getInstance("log"),
-                        "It took " << (pt::microsec_clock::universal_time() - begin).total_milliseconds()
-                                   << "ms to impact in apply_disruption: " << impact->uri);
+                        "It took " << (pt::microsec_clock::universal_time() - impact_begin).total_milliseconds()
+                                   << "ms to impact in apply_impact: " << impact->uri);
     }
     LOG4CPLUS_DEBUG(log4cplus::Logger::getInstance("log"),
                     "It took " << (pt::microsec_clock::universal_time() - begin).total_milliseconds()
