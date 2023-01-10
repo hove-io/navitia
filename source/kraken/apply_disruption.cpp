@@ -907,12 +907,8 @@ struct delete_impacts_visitor : public apply_impacts_visitor {
                        "It took " << (pt::microsec_clock::universal_time() - begin).total_milliseconds()
                                   << "ms to push back impact back to mvj: " << impact->disruption->uri);
 
-        begin = pt::microsec_clock::universal_time();
         // we check if we now have useless vehicle_journeys to cleanup
         mvj->clean_up_useless_vjs(pt_data);
-        LOG4CPLUS_INFO(log4cplus::Logger::getInstance("logger"),
-                       "it took " << (pt::microsec_clock::universal_time() - begin).total_milliseconds()
-                                  << " ms to clean up useless vj");
     }
 
     void operator()(nt::StopPoint* stop_point) {
