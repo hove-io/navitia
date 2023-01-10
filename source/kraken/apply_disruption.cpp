@@ -815,7 +815,7 @@ struct delete_impacts_visitor : public apply_impacts_visitor {
             if (i) {
                 LOG4CPLUS_DEBUG(log4cplus::Logger::getInstance("log"), "start to apply impact in destructor "
                                                                            << i->uri << "whose disruption id is "
-                                                                           << *i->disruption->uri);
+                                                                           << i->disruption->uri);
                 pt::ptime i_begin = pt::microsec_clock::universal_time();
                 apply_disruption(*i->disruption, pt_data, meta);
                 LOG4CPLUS_DEBUG(log4cplus::Logger::getInstance("log"),
