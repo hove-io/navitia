@@ -411,8 +411,8 @@ void MaintenanceWorker::handle_rt_in_batch(const std::vector<AmqpClient::Envelop
                                 conf.is_realtime_add_trip_enabled());
 
                 autocomplete_rebuilding_activated = autocomplete_rebuilding_needed(entity);
-                LOG4CPLUS_DEBUG(logger,
-                                "It took " << (pt::microsec_clock::universal_time() - entity_begin).total_milliseconds()
+                LOG4CPLUS_INFO(logger, "It took "
+                                           << (pt::microsec_clock::universal_time() - entity_begin).total_milliseconds()
                                            << "ms to inject entity: " << entity.id());
 
             } else {
@@ -421,12 +421,12 @@ void MaintenanceWorker::handle_rt_in_batch(const std::vector<AmqpClient::Envelop
         }
     }
 
-    LOG4CPLUS_DEBUG(logger, "It took " << (pt::microsec_clock::universal_time() - begin).total_milliseconds()
-                                       << "ms to inject all disruptions with data cloning");
+    LOG4CPLUS_INFO(logger, "It took " << (pt::microsec_clock::universal_time() - begin).total_milliseconds()
+                                      << "ms to inject all disruptions with data cloning");
 
     if (data && data->pt_data) {
-        LOG4CPLUS_DEBUG(logger, "Nb vj after applying the disruption:" << data->pt_data->vehicle_journeys.size());
-        LOG4CPLUS_DEBUG(logger, "NB disruptions :" << data->pt_data->disruption_holder.nb_disruptions());
+        LOG4CPLUS_INFO(logger, "Nb vj after applying the disruption:" << data->pt_data->vehicle_journeys.size());
+        LOG4CPLUS_INFO(logger, "NB disruptions :" << data->pt_data->disruption_holder.nb_disruptions());
     }
 
     if (data) {
@@ -446,9 +446,9 @@ void MaintenanceWorker::handle_rt_in_batch(const std::vector<AmqpClient::Envelop
         data->set_last_rt_data_loaded(pt::microsec_clock::universal_time());
         data_manager.set_data(std::move(data));
 
-        LOG4CPLUS_DEBUG(logger, "It took "
-                                    << (pt::microsec_clock::universal_time() - data_rebuild_begin).total_milliseconds()
-                                    << " ms to rebuild data");
+        LOG4CPLUS_INFO(logger, "It took "
+                                   << (pt::microsec_clock::universal_time() - data_rebuild_begin).total_milliseconds()
+                                   << " ms to rebuild data");
         // Feed metrics
         auto duration = pt::microsec_clock::universal_time() - begin;
         if (rt_action == RTAction::deletion) {
@@ -510,8 +510,8 @@ std::vector<AmqpClient::Envelope::ptr_t> MaintenanceWorker::consume_in_batch(con
             ++consumed_nb;
         }
     }
-    LOG4CPLUS_DEBUG(logger, "It took " << (pt::microsec_clock::universal_time() - begin).total_milliseconds()
-                                       << "ms to retrieve " << envelopes.size() << " message from the broker");
+    LOG4CPLUS_INFO(logger, "It took " << (pt::microsec_clock::universal_time() - begin).total_milliseconds()
+                                      << "ms to retrieve " << envelopes.size() << " message from the broker");
     return envelopes;
 }
 
