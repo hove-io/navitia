@@ -56,7 +56,6 @@ jobs:
             --output-dir .
         unzip -qo $mimirsbrunn_package
         rm -f $mimirsbrunn_package
-        ls
 
     - name: Download cosmogony2cities package
       run: |
@@ -70,7 +69,6 @@ jobs:
             --output-dir .
         unzip -qo $cosmogony2cities_package
         rm -f $cosmogony2cities_package
-        ls
 
     - name: Restore ccache
       uses: hendrikmuhs/ccache-action@v1.2
