@@ -310,6 +310,7 @@ struct add_impacts_visitor : public apply_impacts_visitor {
             LOG4CPLUS_TRACE(log, "modifying " << mvj->uri);
             auto canceled_vp = compute_base_disrupted_vp(impact->application_periods, meta.production_date);
 
+            auto get_route_begin = pt::microsec_clock::universal_time();
             if (!r) {
                 if (!mvj->get_base_vj().empty()) {
                     r = mvj->get_base_vj().at(0)->route;
@@ -317,6 +318,9 @@ struct add_impacts_visitor : public apply_impacts_visitor {
                     r = get_or_create_route(*impact, pt_data);
                 }
             }
+            LOG4CPLUS_DEBUG(log4cplus::Logger::getInstance("logger"),
+                            "it took " << (pt::microsec_clock::universal_time() - get_route_begin).total_milliseconds()
+                                       << " ms to get route");
 
             auto nb_rt_vj = mvj->get_rt_vj().size();
             std::string new_vj_uri =
@@ -364,6 +368,7 @@ struct add_impacts_visitor : public apply_impacts_visitor {
                 }
             }
 
+            auto add_begin = pt::microsec_clock::universal_time();
             // Add physical mode:
             // Use base-VJ's mode if exists,
             // fallback on impact's mode
@@ -392,6 +397,10 @@ struct add_impacts_visitor : public apply_impacts_visitor {
                 LOG4CPLUS_WARN(log,
                                "[disruption] Associate random physical mode to new VJ because base VJ doesn't exist");
             }
+
+            LOG4CPLUS_DEBUG(log4cplus::Logger::getInstance("logger"),
+                            "it took " << (pt::microsec_clock::universal_time() - add_begin).total_milliseconds()
+                                       << " ms to impact->physical_mode_id");
 
             // Use the corresponding base stop_time for boarding and alighting duration
             for (auto& st : vj->stop_time_list) {
@@ -426,7 +435,12 @@ struct add_impacts_visitor : public apply_impacts_visitor {
             for (auto& stu : impact->aux_info.stop_times) {
                 stu.stop_time.vehicle_journey = vj;
             }
+            auto push_unique_impact_begin = pt::microsec_clock::universal_time();
             mvj->push_unique_impact(impact);
+            LOG4CPLUS_DEBUG(
+                log4cplus::Logger::getInstance("logger"),
+                "it took " << (pt::microsec_clock::universal_time() - push_unique_impact_begin).total_milliseconds()
+                           << " ms to push_unique_impact");
         } else {
             LOG4CPLUS_DEBUG(log, "unhandled action on " << mvj->uri);
         }
@@ -796,15 +810,16 @@ struct delete_impacts_visitor : public apply_impacts_visitor {
     delete_impacts_visitor& operator=(delete_impacts_visitor&&) = delete;
 
     ~delete_impacts_visitor() override {
+        pt::ptime begin = pt::microsec_clock::universal_time();
         for (const auto& i : disruptions_collection) {
-            pt::ptime begin = pt::microsec_clock::universal_time();
             if (i) {
                 apply_disruption(*i->disruption, pt_data, meta);
             }
-            LOG4CPLUS_DEBUG(log4cplus::Logger::getInstance("log"),
-                            "It took " << (pt::microsec_clock::universal_time() - begin).total_milliseconds()
-                                       << "ms to reapply all disruptions");
         }
+        LOG4CPLUS_DEBUG(log4cplus::Logger::getInstance("log"),
+                        "It took " << (pt::microsec_clock::universal_time() - begin).total_milliseconds()
+                                   << "ms to re-apply " << disruptions_collection.size()
+                                   << " disruptions after deleting impact: " << impact->uri);
     }
 
     using apply_impacts_visitor::operator();
@@ -992,9 +1007,17 @@ void apply_disruption(const type::disruption::Disruption& disruption,
                       nt::PT_Data& pt_data,
                       const navitia::type::MetaData& meta) {
     LOG4CPLUS_DEBUG(log4cplus::Logger::getInstance("log"), "applying disruption: " << disruption.uri);
+    pt::ptime begin = pt::microsec_clock::universal_time();
     for (const auto& impact : disruption.get_impacts()) {
+        pt::ptime begin = pt::microsec_clock::universal_time();
         apply_impact(impact, pt_data, meta);
+        LOG4CPLUS_DEBUG(log4cplus::Logger::getInstance("log"),
+                        "It took " << (pt::microsec_clock::universal_time() - begin).total_milliseconds()
+                                   << "ms to impact in apply_disruption: " << impact->uri);
     }
+    LOG4CPLUS_DEBUG(log4cplus::Logger::getInstance("log"),
+                    "It took " << (pt::microsec_clock::universal_time() - begin).total_milliseconds()
+                               << "ms to apply_disruption: " << disruption.uri);
 }
 
 }  // namespace navitia
