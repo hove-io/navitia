@@ -40,8 +40,8 @@ ENV MONITOR_HOST=0.0.0.0
 WORKDIR /tmp/libkeepalive
 COPY docker/libkeepalive-0.3/ /tmp/libkeepalive/
 RUN cd /tmp/libkeepalive/ &&  \
-    make && ls
-RUN mkdir /libkeepalive &&  \
+    make && \
+    mkdir /libkeepalive &&  \
     cp /tmp/libkeepalive/libkeepalive.so /libkeepalive && \
     rm -rf /tmp/libkeepalive
 
