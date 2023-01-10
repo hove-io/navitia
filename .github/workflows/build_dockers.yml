@@ -27,6 +27,12 @@ jobs:
       run: |
         sudo apt update && sudo apt install -y --force-yes zip httpie
 
+    - name: Checkout
+      uses: actions/checkout@v3
+      with:
+        submodules : recursive
+        fetch-depth: 0
+
     - name: Checkout core_team_ci_tools
       uses: actions/checkout@v3
       with:
@@ -64,12 +70,6 @@ jobs:
         unzip -qo $cosmogony2cities_package
         rm -f $cosmogony2cities_package
 
-    - name: Checkout
-      uses: actions/checkout@v3
-      with:
-        submodules : recursive
-        fetch-depth: 0
-
     - name: Restore ccache
       uses: hendrikmuhs/ccache-action@v1.2
       with:
@@ -84,6 +84,7 @@ jobs:
         echo "building version dev"
         echo "navitia_tag=dev" >> $GITHUB_ENV
         echo "aws_branch=dev" >> $GITHUB_ENV
+
 
     - name: Choose release tag
       if: startsWith(github.ref, 'refs/tags/')
@@ -164,7 +165,7 @@ jobs:
       run: |
           echo '{"text":":warning: Github Actions: build_dockers for ${{env.navitia_tag}} failed !"}' | http --json POST ${{secrets.SLACK_NAVITIA_CORE_TEAM_URL}}
 
-    - name: success notification on navitia core team
+    - name: success notification on core team
       if: success()
       run: |
-          echo '{"text":":octopus: Github Actions: build_dockers succeeded. New navitia ${{env.navitia_tag}} images available.' | http --json POST ${{secrets.SLACK_NAVITIA_CORE_TEAM_URL}}
+          echo '{"text":":octopus: Github Actions: build_dockers succeeded. New navitia ${{env.navitia_tag}} images available."}' | http --json POST ${{secrets.SLACK_NAVITIA_CORE_TEAM_URL}}
