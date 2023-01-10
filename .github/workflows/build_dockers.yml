@@ -6,7 +6,6 @@ on:
       - dev
     tags:
       - '*'
-  pull_request:
 
 env:
   debian_version: debian8
@@ -88,13 +87,6 @@ jobs:
         echo "navitia_tag=dev" >> $GITHUB_ENV
         echo "aws_branch=dev" >> $GITHUB_ENV
 
-
-    - name: Choose dev tag
-      if: github.event_name == 'pull_request'
-      run: |
-        echo "building version dev"
-        echo "navitia_tag=dev" >> $GITHUB_ENV
-        echo "aws_branch=dev" >> $GITHUB_ENV
 
     - name: Choose release tag
       if: startsWith(github.ref, 'refs/tags/')
@@ -178,4 +170,4 @@ jobs:
     - name: success notification on navitia core team
       if: success()
       run: |
-          echo '{"text":":octopus: Github Actions: build_dockers succeeded. New navitia ${{env.navitia_tag}} images available.' | http --json POST ${{secrets.SLACK_NAVITIA_CORE_TEAM_URL}}
+          echo '{"text":":octopus: Github Actions: build_dockers succeeded. New navitia ${{env.navitia_tag}} images available."}' | http --json POST ${{secrets.SLACK_NAVITIA_CORE_TEAM_URL}}
