@@ -260,19 +260,11 @@ type::MetaVehicleJourney* PT_Data::get_or_create_meta_vehicle_journey(const std:
 }
 
 ValidityPattern* PT_Data::get_or_create_validity_pattern(const ValidityPattern& vp_ref) {
-    pt::ptime begin = pt::microsec_clock::universal_time();
     for (auto vp : validity_patterns) {
         if (vp->days == vp_ref.days && vp->beginning_date == vp_ref.beginning_date) {
-            LOG4CPLUS_INFO(log4cplus::Logger::getInstance("log"),
-                           "It took " << (pt::microsec_clock::universal_time() - begin).total_milliseconds()
-                                      << "ms to find ValidityPattern");
             return vp;
         }
     }
-    LOG4CPLUS_INFO(log4cplus::Logger::getInstance("log"),
-                   "It took " << (pt::microsec_clock::universal_time() - begin).total_milliseconds()
-                              << "ms, miss out ValidityPattern ");
-
     auto vp = new nt::ValidityPattern();
     vp->idx = validity_patterns.size();
     vp->uri = make_adapted_uri(vp->uri);
