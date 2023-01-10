@@ -461,8 +461,14 @@ class SectionSorter(object):
     def __call__(self, a, b):
         if a.begin_date_time != b.begin_date_time:
             return -1 if a.begin_date_time < b.begin_date_time else 1
-        else:
+        elif a.end_date_time != b.end_date_time:
             return -1 if a.end_date_time < b.end_date_time else 1
+        elif a.destination.uri == b.origin.uri:
+            return -1
+        elif a.origin.uri == b.destination.uri:
+            return 1
+        else:
+            return 0
 
 
 def make_namedtuple(typename, *fields, **fields_with_default):

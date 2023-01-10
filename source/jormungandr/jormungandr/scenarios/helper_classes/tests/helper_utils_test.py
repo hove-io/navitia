@@ -31,10 +31,17 @@
 
 import navitiacommon.response_pb2 as response_pb2
 import navitiacommon.type_pb2 as type_pb2
-from jormungandr.utils import str_to_time_stamp, PeriodExtremity
+from jormungandr.utils import (
+    str_to_time_stamp,
+    PeriodExtremity,
+    SectionSorter,
+    navitia_utcfromtimestamp,
+    dt_to_str,
+)
 from jormungandr.scenarios.helper_classes.helper_utils import _update_fallback_sections
 from jormungandr.street_network.tests.streetnetwork_test_utils import make_pt_object
 from jormungandr.street_network.street_network import StreetNetworkPathType
+from functools import cmp_to_key
 
 
 def add_section(journey, origin, destination, duration, section_begin_date_time, section_type, mode, vj_uri):
@@ -283,3 +290,186 @@ def test_update_fallback_sections_ending_fallback():
     assert journey.sections[4].origin.uri == "stop_point_4"
     assert journey.sections[4].origin == journey.sections[3].destination
     assert journey.sections[4].vias[0].uri == "access_point_toto"
+
+
+def test_sort_sections_crow_fly_first_section():
+    #                       CROW_FLY                           PUBLIC_TRANSPORT                      STREET_NETWORK
+    #       stop_area_1                     stop_point_1                            stop_point_2                      chez:tata
+    #   (06:05:00, 06:05:00)             (06:05:00, 06:05:00)                   (06:05:00, 06:05:00)                (06:05:00, 06:15:00)
+    str_departure_datetime = "20180618T060500"
+    journey = response_pb2.Journey()
+    journey.departure_date_time = str_to_time_stamp(str_departure_datetime)
+    journey.duration = 0
+    journey.nb_transfers = 0
+
+    # PUBLIC_TRANSPORT
+    origin = make_pt_object(type_pb2.STOP_POINT, 2.0, 2.0, "stop_point_1")
+    destination = make_pt_object(type_pb2.STOP_POINT, 3.0, 3.0, "stop_point_2")
+    add_section(
+        journey,
+        origin,
+        destination,
+        0,
+        journey.departure_date_time,
+        response_pb2.PUBLIC_TRANSPORT,
+        None,
+        "vj_toto",
+    )
+
+    # END STREET_NETWORK
+    origin = make_pt_object(type_pb2.STOP_POINT, 3.0, 3.0, "stop_point_2")
+    destination = make_pt_object(type_pb2.ADDRESS, 4.0, 4.0, "chez:tata")
+    add_section(
+        journey,
+        origin,
+        destination,
+        10 * 60,
+        journey.departure_date_time,
+        response_pb2.STREET_NETWORK,
+        None,
+        None,
+    )
+
+    # START CROW_FLY
+    origin = make_pt_object(type_pb2.STOP_AREA, 2.0, 2.0, "stop_area_1")
+    destination = make_pt_object(type_pb2.STOP_POINT, 2.0, 2.0, "stop_point_1")
+    add_section(journey, origin, destination, 0, journey.departure_date_time, response_pb2.CROW_FLY, None, None)
+
+    assert len(journey.sections) == 3
+    # PUBLIC_TRANSPORT
+    assert journey.sections[0].origin.uri == "stop_point_1"
+    assert journey.sections[0].destination.uri == "stop_point_2"
+    assert journey.sections[0].type == response_pb2.PUBLIC_TRANSPORT
+    assert dt_to_str(navitia_utcfromtimestamp(journey.sections[0].begin_date_time)) == str_departure_datetime
+    assert dt_to_str(navitia_utcfromtimestamp(journey.sections[0].end_date_time)) == str_departure_datetime
+
+    # END STREET_NETWORK
+    assert journey.sections[1].origin.uri == "stop_point_2"
+    assert journey.sections[1].destination.uri == "chez:tata"
+    assert journey.sections[1].type == response_pb2.STREET_NETWORK
+    assert dt_to_str(navitia_utcfromtimestamp(journey.sections[1].begin_date_time)) == str_departure_datetime
+    assert dt_to_str(navitia_utcfromtimestamp(journey.sections[1].end_date_time)) == "20180618T061500"
+
+    # START STREET_NETWORK
+    assert journey.sections[2].origin.uri == "stop_area_1"
+    assert journey.sections[2].destination.uri == "stop_point_1"
+    assert journey.sections[2].type == response_pb2.CROW_FLY
+    assert dt_to_str(navitia_utcfromtimestamp(journey.sections[2].begin_date_time)) == str_departure_datetime
+    assert dt_to_str(navitia_utcfromtimestamp(journey.sections[2].end_date_time)) == str_departure_datetime
+
+    # Sort sections
+    journey.sections.sort(key=cmp_to_key(SectionSorter()))
+
+    # START STREET_NETWORK
+    assert journey.sections[0].origin.uri == "stop_area_1"
+    assert journey.sections[0].destination.uri == "stop_point_1"
+    assert journey.sections[0].type == response_pb2.CROW_FLY
+    assert dt_to_str(navitia_utcfromtimestamp(journey.sections[0].begin_date_time)) == str_departure_datetime
+    assert dt_to_str(navitia_utcfromtimestamp(journey.sections[0].end_date_time)) == str_departure_datetime
+
+    # PUBLIC_TRANSPORT
+    assert journey.sections[1].origin.uri == "stop_point_1"
+    assert journey.sections[1].destination.uri == "stop_point_2"
+    assert journey.sections[1].type == response_pb2.PUBLIC_TRANSPORT
+    assert dt_to_str(navitia_utcfromtimestamp(journey.sections[0].begin_date_time)) == str_departure_datetime
+    assert dt_to_str(navitia_utcfromtimestamp(journey.sections[0].end_date_time)) == str_departure_datetime
+
+    # END STREET_NETWORK
+    assert journey.sections[2].origin.uri == "stop_point_2"
+    assert journey.sections[2].destination.uri == "chez:tata"
+    assert journey.sections[2].type == response_pb2.STREET_NETWORK
+    assert dt_to_str(navitia_utcfromtimestamp(journey.sections[2].begin_date_time)) == str_departure_datetime
+    assert dt_to_str(navitia_utcfromtimestamp(journey.sections[2].end_date_time)) == "20180618T061500"
+
+
+def test_sort_sections_crow_fly_last_section():
+    #                       STREET_NETWORK                   PUBLIC_TRANSPORT                           CROW_FLY
+    #       chez:tata                       stop_point_2                            stop_point_1                      stop_area_1
+    #   (06:05:00, 06:05:00)             (06:15:00, 06:15:00)                   (06:05:00, 06:15:00)                (06:15:00, 06:15:00)
+
+    str_departure_datetime = "20180618T060500"
+    journey = response_pb2.Journey()
+    journey.departure_date_time = str_to_time_stamp(str_departure_datetime)
+    journey.duration = 0
+    journey.nb_transfers = 0
+
+    # PUBLIC_TRANSPORT
+    origin = make_pt_object(type_pb2.STOP_POINT, 2.0, 2.0, "stop_point_2")
+    destination = make_pt_object(type_pb2.STOP_POINT, 3.0, 3.0, "stop_point_1")
+    add_section(
+        journey,
+        origin,
+        destination,
+        0,
+        journey.departure_date_time + 10 * 60,
+        response_pb2.PUBLIC_TRANSPORT,
+        None,
+        "vj_toto",
+    )
+
+    # END CROW_FLY
+    origin = make_pt_object(type_pb2.STOP_POINT, 3.0, 3.0, "stop_point_1")
+    destination = make_pt_object(type_pb2.STOP_AREA, 3.0, 3.0, "stop_area_1")
+    add_section(
+        journey, origin, destination, 0, journey.departure_date_time + 10 * 60, response_pb2.CROW_FLY, None, None
+    )
+
+    # START STREET_NETWORK
+    origin = make_pt_object(type_pb2.ADDRESS, 1.0, 1.0, "chez:tata")
+    destination = make_pt_object(type_pb2.STOP_POINT, 2.0, 2.0, "stop_point_2")
+    add_section(
+        journey,
+        origin,
+        destination,
+        10 * 60,
+        journey.departure_date_time,
+        response_pb2.STREET_NETWORK,
+        None,
+        None,
+    )
+
+    assert len(journey.sections) == 3
+    # PUBLIC_TRANSPORT
+    assert journey.sections[0].origin.uri == "stop_point_2"
+    assert journey.sections[0].destination.uri == "stop_point_1"
+    assert journey.sections[0].type == response_pb2.PUBLIC_TRANSPORT
+    assert dt_to_str(navitia_utcfromtimestamp(journey.sections[0].begin_date_time)) == "20180618T061500"
+    assert dt_to_str(navitia_utcfromtimestamp(journey.sections[0].end_date_time)) == "20180618T061500"
+
+    # END CROW_FLY
+    assert journey.sections[1].origin.uri == "stop_point_1"
+    assert journey.sections[1].destination.uri == "stop_area_1"
+    assert journey.sections[1].type == response_pb2.CROW_FLY
+    assert dt_to_str(navitia_utcfromtimestamp(journey.sections[1].begin_date_time)) == "20180618T061500"
+    assert dt_to_str(navitia_utcfromtimestamp(journey.sections[1].end_date_time)) == "20180618T061500"
+
+    # START STREET_NETWORK
+    assert journey.sections[2].origin.uri == "chez:tata"
+    assert journey.sections[2].destination.uri == "stop_point_2"
+    assert journey.sections[2].type == response_pb2.STREET_NETWORK
+    assert dt_to_str(navitia_utcfromtimestamp(journey.sections[2].begin_date_time)) == str_departure_datetime
+    assert dt_to_str(navitia_utcfromtimestamp(journey.sections[2].end_date_time)) == "20180618T061500"
+
+    # Sort sections
+    journey.sections.sort(key=cmp_to_key(SectionSorter()))
+
+    # START STREET_NETWORK
+    assert journey.sections[0].origin.uri == "chez:tata"
+    assert journey.sections[0].destination.uri == "stop_point_2"
+    assert journey.sections[0].type == response_pb2.STREET_NETWORK
+    assert dt_to_str(navitia_utcfromtimestamp(journey.sections[0].begin_date_time)) == str_departure_datetime
+    assert dt_to_str(navitia_utcfromtimestamp(journey.sections[0].end_date_time)) == "20180618T061500"
+
+    # PUBLIC_TRANSPORT
+    assert journey.sections[1].origin.uri == "stop_point_2"
+    assert journey.sections[1].destination.uri == "stop_point_1"
+    assert journey.sections[1].type == response_pb2.PUBLIC_TRANSPORT
+    assert dt_to_str(navitia_utcfromtimestamp(journey.sections[1].begin_date_time)) == "20180618T061500"
+    assert dt_to_str(navitia_utcfromtimestamp(journey.sections[1].end_date_time)) == "20180618T061500"
+
+    # END CROW_FLY
+    assert journey.sections[2].origin.uri == "stop_point_1"
+    assert journey.sections[2].destination.uri == "stop_area_1"
+    assert journey.sections[2].type == response_pb2.CROW_FLY
+    assert dt_to_str(navitia_utcfromtimestamp(journey.sections[2].begin_date_time)) == "20180618T061500"
+    assert dt_to_str(navitia_utcfromtimestamp(journey.sections[2].end_date_time)) == "20180618T061500"
