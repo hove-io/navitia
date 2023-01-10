@@ -1,4 +1,4 @@
-/* Copyright © 2001-2022, Hove and/or its affiliates. All rights reserved.
+/* Copyright �� 2001-2022, Hove and/or its affiliates. All rights reserved.
 
 This file is part of Navitia,
     the software to build cool stuff with public transport.
@@ -37,6 +37,7 @@ www.navitia.io
 #include "utils/serialization_flat_map.h"
 #include "utils/serialization_unordered_map.h"
 #include "utils/serialization_unordered_set.h"
+namespace pt = boost::posix_time;
 
 namespace navitia {
 namespace type {
@@ -51,6 +52,8 @@ void HeadsignHandler::change_name_and_register_as_headsign(VehicleJourney& vj, c
     std::string prev_name = vj.headsign;
     vj.headsign = new_name;
     headsign_mvj[vj.headsign].insert(vj.meta_vj);
+    auto update_headsign_begin = pt::microsec_clock::universal_time();
+
     if (prev_name != vj.headsign) {
         update_headsign_mvj_after_remove(vj, prev_name);
     }

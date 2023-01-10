@@ -310,7 +310,6 @@ struct add_impacts_visitor : public apply_impacts_visitor {
             LOG4CPLUS_TRACE(log, "modifying " << mvj->uri);
             auto canceled_vp = compute_base_disrupted_vp(impact->application_periods, meta.production_date);
 
-            auto get_route_begin = pt::microsec_clock::universal_time();
             if (!r) {
                 if (!mvj->get_base_vj().empty()) {
                     r = mvj->get_base_vj().at(0)->route;
@@ -318,9 +317,6 @@ struct add_impacts_visitor : public apply_impacts_visitor {
                     r = get_or_create_route(*impact, pt_data);
                 }
             }
-            LOG4CPLUS_INFO(log4cplus::Logger::getInstance("logger"),
-                           "it took " << (pt::microsec_clock::universal_time() - get_route_begin).total_milliseconds()
-                                      << " ms to get route");
 
             auto nb_rt_vj = mvj->get_rt_vj().size();
             std::string new_vj_uri =
@@ -330,18 +326,21 @@ struct add_impacts_visitor : public apply_impacts_visitor {
                 stoptimes.push_back(stu.stop_time);
             }
 
+            auto create_discrete_begin = pt::microsec_clock::universal_time();
             // Create new VJ (default name/headsign is empty)
-            auto create_begin = pt::microsec_clock::universal_time();
             auto* vj = mvj->create_discrete_vj(new_vj_uri, "", "", type::RTLevel::RealTime, canceled_vp, r,
                                                std::move(stoptimes), pt_data);
-            LOG4CPLUS_INFO(log4cplus::Logger::getInstance("logger"),
-                           "it took " << (pt::microsec_clock::universal_time() - create_begin).total_milliseconds()
-                                      << " ms to create vj: " << new_vj_uri);
+            LOG4CPLUS_INFO(
+                log4cplus::Logger::getInstance("logger"),
+                "it took " << (pt::microsec_clock::universal_time() - create_discrete_begin).total_milliseconds()
+                           << " ms create_discrete_vj " << impact->uri);
 
             LOG4CPLUS_TRACE(log, "New vj has been created " << vj->uri);
 
             // Add company
             if (!impact->company_id.empty()) {
+                auto add_company_begin = pt::microsec_clock::universal_time();
+
                 nu::make_map_find(pt_data.companies_map, impact->company_id)
                     .if_found([&](navitia::type::Company* c) {
                         vj->company = c;
@@ -356,6 +355,10 @@ struct add_impacts_visitor : public apply_impacts_visitor {
                             log, "[disruption] Associate random company to new VJ. Company doesn't exist with id : "
                                      << impact->company_id);
                     });
+                LOG4CPLUS_INFO(log4cplus::Logger::getInstance("logger"),
+                               "it took "
+                                   << (pt::microsec_clock::universal_time() - add_company_begin).total_milliseconds()
+                                   << " ms add_company  " << impact->uri);
             } else {
                 if (!mvj->get_base_vj().empty()) {
                     vj->company = mvj->get_base_vj().at(0)->company;
@@ -368,7 +371,6 @@ struct add_impacts_visitor : public apply_impacts_visitor {
                 }
             }
 
-            auto add_begin = pt::microsec_clock::universal_time();
             // Add physical mode:
             // Use base-VJ's mode if exists,
             // fallback on impact's mode
@@ -398,9 +400,7 @@ struct add_impacts_visitor : public apply_impacts_visitor {
                                "[disruption] Associate random physical mode to new VJ because base VJ doesn't exist");
             }
 
-            LOG4CPLUS_INFO(log4cplus::Logger::getInstance("logger"),
-                           "it took " << (pt::microsec_clock::universal_time() - add_begin).total_milliseconds()
-                                      << " ms to impact->physical_mode_id");
+            auto stop_time_list_begin = pt::microsec_clock::universal_time();
 
             // Use the corresponding base stop_time for boarding and alighting duration
             for (auto& st : vj->stop_time_list) {
@@ -410,6 +410,12 @@ struct add_impacts_visitor : public apply_impacts_visitor {
                     st.alighting_time = st.arrival_time + base_st->get_alighting_duration();
                 }
             }
+            LOG4CPLUS_INFO(
+                log4cplus::Logger::getInstance("logger"),
+                "it took " << (pt::microsec_clock::universal_time() - stop_time_list_begin).total_milliseconds()
+                           << " ms stop_time_list " << impact->uri);
+
+            auto name_dataset_begin = pt::microsec_clock::universal_time();
 
             // name and dataset
             if (!mvj->get_base_vj().empty()) {
@@ -430,17 +436,19 @@ struct add_impacts_visitor : public apply_impacts_visitor {
                 LOG4CPLUS_WARN(
                     log, "[disruption] Associate random dataset to new VJ doesn't work because base VJ doesn't exist");
             }
+
+            LOG4CPLUS_INFO(
+                log4cplus::Logger::getInstance("logger"),
+                "it took " << (pt::microsec_clock::universal_time() - name_dataset_begin).total_milliseconds()
+                           << " ms name_dataset " << impact->uri);
+
             vj->physical_mode->vehicle_journey_list.push_back(vj);
             // we need to associate the stoptimes to the created vj
             for (auto& stu : impact->aux_info.stop_times) {
                 stu.stop_time.vehicle_journey = vj;
             }
-            auto push_unique_impact_begin = pt::microsec_clock::universal_time();
             mvj->push_unique_impact(impact);
-            LOG4CPLUS_INFO(
-                log4cplus::Logger::getInstance("logger"),
-                "it took " << (pt::microsec_clock::universal_time() - push_unique_impact_begin).total_milliseconds()
-                           << " ms to push_unique_impact");
+
         } else {
             LOG4CPLUS_DEBUG(log, "unhandled action on " << mvj->uri);
         }
