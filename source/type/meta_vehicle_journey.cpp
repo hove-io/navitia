@@ -224,12 +224,8 @@ VJ* MetaVehicleJourney::impl_create_vj(const std::string& uri,
         }
     });
 
-    pt::ptime begin = pt::microsec_clock::universal_time();
     // we clean up all the now useless vehicle journeys
     clean_up_useless_vjs(pt_data);
-    LOG4CPLUS_INFO(log4cplus::Logger::getInstance("logger"),
-                   "it took " << (pt::microsec_clock::universal_time() - begin).total_milliseconds()
-                              << " ms to clean up useless vj");
 
     // inserting the vj in the model
     vj_ptr->idx = pt_data.vehicle_journeys.size();
