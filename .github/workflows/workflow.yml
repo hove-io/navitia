@@ -122,7 +122,7 @@ jobs:
         python-version: '3.8.x'
     - name: install dependencies
       run: |
-        sudo apt update && sudo apt install -y protobuf-compiler clang-format git 2to3
+        sudo apt-get update && sudo apt install -y protobuf-compiler clang-format git 2to3
         pip install -r requirements_pre-commit.txt --upgrade
     - name: get submodule
       run: |
