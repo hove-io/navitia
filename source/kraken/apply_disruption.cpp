@@ -50,6 +50,9 @@ www.navitia.io
 #include <boost/range/algorithm_ext/erase.hpp>
 #include <boost/variant/apply_visitor.hpp>
 #include <boost/variant/static_visitor.hpp>
+#include <boost/uuid/uuid.hpp>
+#include <boost/uuid/uuid_generators.hpp>
+#include <boost/uuid/uuid_io.hpp>
 
 #include <algorithm>
 #include <utility>
@@ -98,12 +101,10 @@ nt::VehicleJourney* create_vj_from_old_vj(nt::MetaVehicleJourney* mvj,
     return new_vj;
 }
 
-std::string make_new_vj_uri(const std::string& mvj_uri,
-                            nt::RTLevel rt_level,
-                            int nb_rt_vj,
-                            const std::string& disruption_uri) {
-    return "vehicle_journey:" + mvj_uri + ":" + type::get_string_from_rt_level(rt_level) + ":"
-           + std::to_string(nb_rt_vj) + ":" + disruption_uri;
+std::string make_new_vj_uri(const nt::MetaVehicleJourney* mvj, nt::RTLevel rt_level) {
+    boost::uuids::random_generator gen;
+    return "vehicle_journey:" + mvj->uri + ":" + type::get_string_from_rt_level(rt_level) + ":"
+           + boost::uuids::to_string(gen());
 }
 
 struct apply_impacts_visitor : public boost::static_visitor<> {
@@ -326,7 +327,7 @@ struct add_impacts_visitor : public apply_impacts_visitor {
             }
 
             auto nb_rt_vj = mvj->get_rt_vj().size();
-            auto new_vj_uri = make_new_vj_uri(mvj->uri, rt_level, nb_rt_vj, impact->disruption->uri);
+            auto new_vj_uri = make_new_vj_uri(mvj, rt_level);
 
             std::vector<type::StopTime> stoptimes;  // we copy all the stoptimes
             for (const auto& stu : impact->aux_info.stop_times) {
@@ -499,7 +500,7 @@ struct add_impacts_visitor : public apply_impacts_visitor {
                 continue;
             }
             auto nb_rt_vj = mvj->get_vjs_at(rt_level).size();
-            auto new_vj_uri = make_new_vj_uri(mvj->uri, rt_level, nb_rt_vj, impact->disruption->uri);
+            auto new_vj_uri = make_new_vj_uri(mvj, rt_level);
 
             new_vp.days = new_vp.days & (vj->validity_patterns[rt_level]->days >> vj->shift);
 
@@ -567,7 +568,7 @@ struct add_impacts_visitor : public apply_impacts_visitor {
                 continue;
             }
             auto nb_rt_vj = mvj->get_vjs_at(rt_level).size();
-            auto new_vj_uri = make_new_vj_uri(mvj->uri, rt_level, nb_rt_vj, impact->disruption->uri);
+            auto new_vj_uri = make_new_vj_uri(mvj, rt_level);
 
             new_vp.days = new_vp.days & (vj->validity_patterns[rt_level]->days >> vj->shift);
 
@@ -722,7 +723,7 @@ struct add_impacts_visitor : public apply_impacts_visitor {
             mvj->push_unique_impact(impact);
 
             auto nb_rt_vj = mvj->get_vjs_at(rt_level).size();
-            auto new_vj_uri = make_new_vj_uri(mvj->uri, rt_level, nb_rt_vj, impact->disruption->uri);
+            auto new_vj_uri = make_new_vj_uri(mvj, rt_level);
 
             new_vp.days = new_vp.days & (vj->validity_patterns[rt_level]->days >> vj->shift);
 

@@ -64,7 +64,7 @@ public:
     bool broker_queue_auto_delete() const;
     int broker_queue_expire() const;
     int broker_timeout() const;
-    int retrieving_timeout() const;
+    int total_retrieving_timeout() const;
     int broker_max_batch_nb() const;
     int broker_sleeptime() const;
     int broker_reconnect_wait() const;

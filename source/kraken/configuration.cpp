@@ -94,7 +94,7 @@ po::options_description get_options_description(const boost::optional<std::strin
         ("BROKER.rt_topics", po::value<std::vector<std::string>>(), "list of realtime topic for this instance")
         ("BROKER.timeout", po::value<int>()->default_value(200), "timeout for maintenance worker in millisecond")
         ("BROKER.max_batch_nb", po::value<int>()->default_value(5000), "max number of realtime messages retrieved in a batch")
-        ("BROKER.retrieving_timeout", po::value<int>()->default_value(10000), "max duration the worker is going to spend when retrieving messages")
+        ("BROKER.total_retrieving_timeout", po::value<int>()->default_value(10000), "max total duration the worker is going to spend when retrieving messages")
         ("BROKER.sleeptime", po::value<int>()->default_value(1), "sleeptime for maintenance worker in second")
         ("BROKER.reconnect_wait", po::value<int>()->default_value(1), "Wait duration between connection attempts to rabbitmq, in seconds")
         ("BROKER.queue", po::value<std::string>(), "rabbitmq's queue name to be bound")
