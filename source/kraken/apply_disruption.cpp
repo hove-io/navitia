@@ -189,18 +189,6 @@ type::ValidityPattern compute_base_disrupted_vp(const std::vector<boost::posix_t
     return vp;
 }
 
-std::string concatenate_impact_uris(const nt::MetaVehicleJourney& mvj) {
-    std::stringstream impacts_uris;
-    for (auto& mvj_impacts : mvj.modified_by) {
-        if (auto i = mvj_impacts.lock()) {
-            if (impacts_uris.str().find(i->disruption->uri) == std::string::npos) {
-                impacts_uris << ":" << i->disruption->uri;
-            }
-        }
-    }
-    return impacts_uris.str();
-}
-
 nt::Route* get_or_create_route(const nt::disruption::Impact& impact, nt::PT_Data& pt_data) {
     nt::Network* network = pt_data.get_or_create_network("network:additional_service", "additional service");
     nt::CommercialMode* comm_mode =
