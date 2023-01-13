@@ -462,7 +462,6 @@ std::vector<AmqpClient::Envelope::ptr_t> MaintenanceWorker::consume_in_batch(con
     auto begin = pt::microsec_clock::universal_time();
 
     auto retrieving_timeout = conf.retrieving_timeout();
-    pt::time_duration duration = pt::milliseconds{0};
     while (consumed_nb < max_nb
            && (pt::microsec_clock::universal_time() - begin).total_milliseconds() < retrieving_timeout) {
         AmqpClient::Envelope::ptr_t envelope{};
