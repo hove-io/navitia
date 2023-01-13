@@ -294,8 +294,8 @@ class GeocodePlacesSerializer(serpy.DictSerializer):
             type_ = geocoding.get('type')
             if not type_ or type_ not in map_serializer:
                 logging.getLogger(__name__).error(
-                    'Place not serialized (unknown type): zone_type={type}, id= {id}'.format(
-                        type=geocoding.get("type"), id=geocoding.get("id")
+                    'Place not serialized (unknown type): type={place_type}, id= {id}'.format(
+                        place_type=geocoding.get("type"), id=geocoding.get("id")
                     )
                 )
                 continue
