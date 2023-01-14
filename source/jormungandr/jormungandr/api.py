@@ -90,19 +90,21 @@ def add_info_newrelic(response, *args, **kwargs):
         record_custom_parameter('navitia-request-id', request.id)
 
         token = get_token()
+        # No log will be added in newrelic if token is absent in the request
         if token:
             user = get_user(token=token, abort_if_no_token=False)
             if user:
                 record_custom_parameter('user_id', str(user.id))
-            # This method verifies database connection and gets object Key only once when cache expires.
-            app_name = get_app_name(token)
-            if app_name:
-                record_custom_parameter('token_name', app_name)
+                # This method verifies database connection and gets object Key only once when cache expires.
+                app_name = get_app_name(token)
+                if app_name:
+                    record_custom_parameter('token_name', app_name)
 
-        record_custom_parameter('version', __version__)
-        coverages = get_used_coverages()
-        if coverages:
-            record_custom_parameter('coverage', coverages[0])
+            record_custom_parameter('version', __version__)
+            # No access to database required
+            coverages = get_used_coverages()
+            if coverages:
+                record_custom_parameter('coverage', coverages[0])
     except:
         logger = logging.getLogger(__name__)
         logger.exception('error while reporting to newrelic:')

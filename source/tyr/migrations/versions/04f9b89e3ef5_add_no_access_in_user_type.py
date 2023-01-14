@@ -20,15 +20,8 @@ tmp_type = sa.Enum(*new_options, name='_user_type')
 
 
 def upgrade():
-    tmp_type.create(op.get_bind(), checkfirst=False)
-    op.execute('ALTER TABLE "user" ALTER COLUMN type DROP DEFAULT')
-    op.execute('ALTER TABLE "user" ALTER COLUMN type TYPE _user_type USING type::text::_user_type')
-    old_type.drop(op.get_bind(), checkfirst=False)
-
-    new_type.create(op.get_bind(), checkfirst=False)
-    op.execute('ALTER TABLE "user" ALTER COLUMN type TYPE user_type USING type::text::user_type')
-    op.execute('ALTER TABLE "user" ALTER COLUMN type SET DEFAULT \'with_free_instances\'')
-    tmp_type.drop(op.get_bind(), checkfirst=False)
+    op.execute("COMMIT")
+    op.execute("ALTER TYPE user_type ADD VALUE 'no_access'")
     op.execute(
         'INSERT INTO "user"(login, email, type) values(\'user_without_access\', \'user_without_access@noreply.com\', \'no_access\')'
     )

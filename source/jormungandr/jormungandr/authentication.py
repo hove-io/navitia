@@ -200,6 +200,7 @@ def uncached_get_user(token):
         # if user doesn't exist for a token, get default token with user_type = no_access
         if not user:
             user = User.get_without_access()
+            logging.getLogger(__name__).warning('Invalid token : {}'.format(token[0:10]))
     except Exception as e:
         logging.getLogger(__name__).error('No access to table User (error: {})'.format(e))
         g.can_connect_to_database = False

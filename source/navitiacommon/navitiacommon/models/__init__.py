@@ -196,7 +196,7 @@ class User(db.Model, TimestampMixin):  # type: ignore
 
     @classmethod
     def get_without_access(cls):
-        query = cls.query.filter(cls.type == 'no_access')
+        query = cls.query.filter(cls.type == 'no_access' and cls.login == 'user_without_access')
         return query.first()
 
     def has_access(self, instance_id, api_name):
