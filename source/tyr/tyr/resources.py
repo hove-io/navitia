@@ -1239,9 +1239,9 @@ class User(flask_restful.Resource):
             type=str,
             required=False,
             default='with_free_instances',
-            help='type of user: [with_free_instances, without_free_instances, super_user, no_access]',
+            help='type of user: [with_free_instances, without_free_instances, super_user]',
             location=('json', 'values'),
-            choices=['with_free_instances', 'without_free_instances', 'super_user', 'no_access'],
+            choices=['with_free_instances', 'without_free_instances', 'super_user'],
         )
         parser.add_argument('shape', type=geojson_argument, required=False, location=('json', 'values'))
         parser.add_argument('default_coord', type=CoordFormat(), required=False, location=('json', 'values'))
