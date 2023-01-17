@@ -472,7 +472,10 @@ class TestRailSections(AbstractTestFixture):
         # stopAA-> stopBB / realtime: No disruption
         r = journeys(_from='stopAA', to='stopBB', data_freshness="realtime")
         assert len(r["journeys"]) == 1
-        assert get_used_vj(r) == [['vehicle_journey:vj:11-1:Adapted:0:rail_section_on_line11']]
+
+        vjs = self.query_region('trips/vj:11-1/vehicle_journeys')['vehicle_journeys']
+        impacted_vjs = [vj for vj in vjs if 'vehicle_journey:vj:11-1:Adapted:' in vj['id']]
+        assert get_used_vj(r) == [[impacted_vjs[0]['id']]]
         d = get_all_element_disruptions(r['journeys'], r)
         assert not impacted_headsigns(d)
         for disruption, result in scenario.items():
@@ -544,7 +547,10 @@ class TestRailSections(AbstractTestFixture):
         # stopAA-> stopFF / realtime: No disruption to display
         r = journeys(_from='stopAA', to='stopGG', data_freshness="realtime")
         assert len(r["journeys"]) == 1
-        assert get_used_vj(r) == [['vehicle_journey:vj:11-1:Adapted:0:rail_section_on_line11']]
+
+        vjs = self.query_region('trips/vj:11-1/vehicle_journeys')['vehicle_journeys']
+        impacted_vjs = [vj for vj in vjs if 'vehicle_journey:vj:11-1:Adapted:' in vj['id']]
+        assert get_used_vj(r) == [[impacted_vjs[0]['id']]]
         d = get_all_element_disruptions(r['journeys'], r)
         assert not impacted_headsigns(d)
         for disruption, result in scenario.items():
@@ -566,7 +572,11 @@ class TestRailSections(AbstractTestFixture):
         # stopCC-> stopFF / realtime: No disruption
         r = journeys(_from='stopCC', to='stopFF', data_freshness="realtime")
         assert len(r["journeys"]) == 1
-        assert get_used_vj(r) == [['vehicle_journey:vj:11-1:Adapted:0:rail_section_on_line11']]
+
+        vjs = self.query_region('trips/vj:11-1/vehicle_journeys')['vehicle_journeys']
+        impacted_vjs = [vj for vj in vjs if 'vehicle_journey:vj:11-1:Adapted:' in vj['id']]
+        assert get_used_vj(r) == [[impacted_vjs[0]['id']]]
+
         d = get_all_element_disruptions(r['journeys'], r)
         assert not impacted_headsigns(d)
         for disruption, result in scenario.items():
@@ -606,7 +616,11 @@ class TestRailSections(AbstractTestFixture):
         # stopGG-> stopII / realtime: No disruption
         r = journeys(_from='stopGG', to='stopII', data_freshness="realtime")
         assert len(r["journeys"]) == 1
-        assert get_used_vj(r) == [['vehicle_journey:vj:11-1:Adapted:0:rail_section_on_line11']]
+
+        vjs = self.query_region('trips/vj:11-1/vehicle_journeys')['vehicle_journeys']
+        impacted_vjs = [vj for vj in vjs if 'vehicle_journey:vj:11-1:Adapted:' in vj['id']]
+        assert get_used_vj(r) == [[impacted_vjs[0]['id']]]
+
         d = get_all_element_disruptions(r['journeys'], r)
         assert not impacted_headsigns(d)
         for disruption, result in scenario.items():
@@ -908,7 +922,11 @@ class TestRailSections(AbstractTestFixture):
         # stopAA-> stopBB / realtime: No disruption
         r = journeys(_from='stopAA', to='stopBB', data_freshness="realtime")
         assert len(r["journeys"]) == 1
-        assert get_used_vj(r) == [['vehicle_journey:vj:11-1:Adapted:1:rail_section_bis_on_line11']]
+
+        vjs = self.query_region('trips/vj:11-1/vehicle_journeys')['vehicle_journeys']
+        impacted_vjs = [vj for vj in vjs if 'vehicle_journey:vj:11-1:Adapted:' in vj['id']]
+        assert get_used_vj(r) == [[impacted_vjs[1]['id']]]
+
         d = get_all_element_disruptions(r['journeys'], r)
         assert not impacted_headsigns(d)
         for disruption, result in scenario.items():
@@ -980,7 +998,11 @@ class TestRailSections(AbstractTestFixture):
         # stopAA-> stopFF / realtime: No disruption to display
         r = journeys(_from='stopAA', to='stopGG', data_freshness="realtime")
         assert len(r["journeys"]) == 1
-        assert get_used_vj(r) == [['vehicle_journey:vj:11-1:Adapted:1:rail_section_bis_on_line11']]
+
+        vjs = self.query_region('trips/vj:11-1/vehicle_journeys')['vehicle_journeys']
+        impacted_vjs = [vj for vj in vjs if 'vehicle_journey:vj:11-1:Adapted:' in vj['id']]
+        assert get_used_vj(r) == [[impacted_vjs[1]['id']]]
+
         d = get_all_element_disruptions(r['journeys'], r)
         assert not impacted_headsigns(d)
         for disruption, result in scenario.items():
@@ -1002,7 +1024,11 @@ class TestRailSections(AbstractTestFixture):
         # stopCC-> stopFF / realtime: No disruption
         r = journeys(_from='stopCC', to='stopFF', data_freshness="realtime")
         assert len(r["journeys"]) == 1
-        assert get_used_vj(r) == [['vehicle_journey:vj:11-1:Adapted:1:rail_section_bis_on_line11']]
+
+        vjs = self.query_region('trips/vj:11-1/vehicle_journeys')['vehicle_journeys']
+        impacted_vjs = [vj for vj in vjs if 'vehicle_journey:vj:11-1:Adapted:' in vj['id']]
+        assert get_used_vj(r) == [[impacted_vjs[1]['id']]]
+
         d = get_all_element_disruptions(r['journeys'], r)
         assert not impacted_headsigns(d)
         for disruption, result in scenario.items():
@@ -1042,7 +1068,11 @@ class TestRailSections(AbstractTestFixture):
         # stopGG-> stopII / realtime: No disruption
         r = journeys(_from='stopGG', to='stopII', data_freshness="realtime")
         assert len(r["journeys"]) == 1
-        assert get_used_vj(r) == [['vehicle_journey:vj:11-1:Adapted:1:rail_section_bis_on_line11']]
+
+        vjs = self.query_region('trips/vj:11-1/vehicle_journeys')['vehicle_journeys']
+        impacted_vjs = [vj for vj in vjs if 'vehicle_journey:vj:11-1:Adapted:' in vj['id']]
+        assert get_used_vj(r) == [[impacted_vjs[1]['id']]]
+
         d = get_all_element_disruptions(r['journeys'], r)
         assert not impacted_headsigns(d)
         for disruption, result in scenario.items():

@@ -337,9 +337,10 @@ struct departure_board_fixture {
                 RTStopTime("stopP3", "20160104T0017"_pts).delay(4_min),
             });
         navitia::handle_realtime("bib", "20160101T1337"_dt, trip_update, *b.data, true, true);
+        const auto* mvj_vjP = b.get_meta_vj("vjP:1");
+        auto* rt_vj_vjP = mvj_vjP->get_rt_vj()[0].get();
 
-        auto* vj = b.data->pt_data->vehicle_journeys_map.at("vehicle_journey:vjP:1:modified:0:bib");
-        b.data->pt_data->codes.add(vj, "source", "vehicle_journey:vjP:1:modified:0:bib");
+        b.data->pt_data->codes.add(rt_vj_vjP, "source", rt_vj_vjP->uri);
 
         //
         //      20160103                    |    20160104
@@ -366,8 +367,11 @@ struct departure_board_fixture {
                 RTStopTime("stopQ3", "20160104T0016"_pts).delay(21_min),
             });
         navitia::handle_realtime("Q", "20160101T1337"_dt, trip_update_q, *b.data, true, true);
-        vj = b.data->pt_data->vehicle_journeys_map.at("vehicle_journey:vjQ:1:modified:0:Q");
-        b.data->pt_data->codes.add(vj, "source", "vehicle_journey:vjQ:1:modified:0:Q");
+
+        const auto* mvj_vjQ = b.get_meta_vj("vjQ:1");
+        auto* rt_vj_vjQ = mvj_vjQ->get_rt_vj()[0].get();
+
+        b.data->pt_data->codes.add(rt_vj_vjQ, "source", rt_vj_vjQ->uri);
 
         b.data->build_raptor();
     }

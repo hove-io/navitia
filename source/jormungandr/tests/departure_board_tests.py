@@ -833,7 +833,7 @@ def check_stop_schedule(response, reference):
 
         for (resp_dt, ref_st) in zip_longest(resp['date_times'], ref.date_times):
             assert get_not_null(resp_dt, 'date_time') == ref_st.dt
-            assert get_not_null(resp_dt, 'links')[0]['id'] == ref_st.vj
+            assert get_not_null(resp_dt, 'links')[0]['id'].find(ref_st.vj) == 0
 
 
 def check_departures(response, reference):
@@ -934,9 +934,9 @@ class TestSchedules(AbstractTestFixture):
                     sp='S1',
                     route='A:0',
                     date_times=[
-                        SchedDT(dt='20160101T090700', vj='vehicle_journey:A:vj1:modified:0:delay_vj1'),
-                        SchedDT(dt='20160101T100700', vj='vehicle_journey:A:vj2:modified:0:delay_vj2'),
-                        SchedDT(dt='20160101T110700', vj='vehicle_journey:A:vj3:modified:0:delay_vj3'),
+                        SchedDT(dt='20160101T090700', vj='vehicle_journey:A:vj1:RealTime:'),
+                        SchedDT(dt='20160101T100700', vj='vehicle_journey:A:vj2:RealTime:'),
+                        SchedDT(dt='20160101T110700', vj='vehicle_journey:A:vj3:RealTime:'),
                     ],
                 ),
                 StopSchedule(
@@ -1016,7 +1016,7 @@ class TestSchedules(AbstractTestFixture):
                 StopSchedule(
                     sp='S1',
                     route='A:0',
-                    date_times=[SchedDT(dt='20160101T090700', vj='vehicle_journey:A:vj1:modified:0:delay_vj1')],
+                    date_times=[SchedDT(dt='20160101T090700', vj='vehicle_journey:A:vj1:RealTime:')],
                 ),
                 StopSchedule(
                     sp='S1', route='B:1', date_times=[SchedDT(dt='20160101T113000', vj='vehicle_journey:B:vj1')]

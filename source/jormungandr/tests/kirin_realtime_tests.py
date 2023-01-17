@@ -327,10 +327,10 @@ class TestKirinOnVJDelay(MockKirinDisruptionsFixture):
         assert len(vjs[0]['codes']) == 2
         assert len(vjs[1]['codes']) == 2
         assert vjs[0]['id'] == 'vehicle_journey:vjA'
-        assert vjs[1]['id'] == 'vehicle_journey:vjA:modified:0:vjA_delayed'
+        assert 'vehicle_journey:vjA:RealTime:' in vjs[1]['id']
 
         vj_ids = [vj['id'] for vj in pt_response['vehicle_journeys']]
-        assert 'vehicle_journey:vjA:modified:0:vjA_delayed' in vj_ids
+        assert vjs[1]['id'] in vj_ids
 
         def _check_train_delay_disruption(dis):
             is_valid_disruption(dis, chaos_disrup=False)
@@ -372,7 +372,9 @@ class TestKirinOnVJDelay(MockKirinDisruptionsFixture):
         # In order to not disturb the test, line M which was added afterwards for shared section tests, is forbidden here
         new_response = self.query_region(journey_basic_query + "&data_freshness=realtime&forbidden_uris[]=M&")
         assert get_arrivals(new_response) == ['20120614T080436', '20120614T080520']
-        assert get_used_vj(new_response) == [[], ['vehicle_journey:vjA:modified:0:vjA_delayed']]
+        used_vjs = get_used_vj(new_response)
+        assert used_vjs[0] == []
+        assert "vehicle_journey:vjA:RealTime:" in used_vjs[1][0]
 
         pt_journey = new_response['journeys'][1]
 
@@ -475,7 +477,7 @@ class TestKirinOnVJDelay(MockKirinDisruptionsFixture):
         assert len(vjs[0]['codes']) == 2
         assert len(vjs[1]['codes']) == 2
         assert vjs[0]['id'] == 'vehicle_journey:vjA'
-        assert vjs[1]['id'] == 'vehicle_journey:vjA:modified:0:vjA_delayed'
+        assert 'vehicle_journey:vjA:RealTime:' in vjs[1]['id']
 
         pt_response = self.query_region('vehicle_journeys/vehicle_journey:vjA?_current_datetime=20120614T1337')
         assert len(pt_response['disruptions']) == 1
@@ -562,7 +564,7 @@ class TestKirinOnVJDelay(MockKirinDisruptionsFixture):
         assert len(vjs[0]['codes']) == 0
         assert len(vjs[1]['codes']) == 0
         assert vjs[0]['id'] == 'vehicle_journey:vjB'
-        assert 'vehicle_journey:vjB:modified' in vjs[1]['id']
+        assert 'vehicle_journey:vjB:RealTime' in vjs[1]['id']
 
         vjA = self.query_region('vehicle_journeys/vehicle_journey:vjA?_current_datetime=20120614T1337')
         # we now have 2 disruption on vjA
@@ -651,7 +653,7 @@ class TestKirinOnVJDelayDayAfter(MockKirinDisruptionsFixture):
         assert len(pt_response['vehicle_journeys']) == (initial_nb_vehicle_journeys + 1)
 
         vj_ids = [vj['id'] for vj in pt_response['vehicle_journeys']]
-        assert 'vehicle_journey:vjA:modified:0:96231_2015-07-28_0' in vj_ids
+        assert any(('vehicle_journey:vjA:RealTime:' in vj_id for vj_id in vj_ids))
 
         # we should see the disruption
         pt_response = self.query_region('vehicle_journeys/vehicle_journey:vjA?_current_datetime=20120614T1337')
@@ -1723,10 +1725,17 @@ class TestKirinStopTimeOnDetourAndArrivesBeforeDeletedAtTheEnd(MockKirinDisrupti
         assert response['physical_modes'][0]['name'] == 'Tramway'
 
         # Check attributes of deleted stop_time in the concerned vehicle_journey
-        vj_query = 'vehicle_journeys/{vj}?_current_datetime={dt}'.format(
-            vj='vehicle_journey:vjA:modified:0:stop_time_with_detour', dt='20120614T080000'
+
+        # since the ids of impacted vjs are random uuid which cannot be know in advance... we have to request all vjs then retrieve the impacted one
+        vjs_query = 'vehicle_journeys/?_current_datetime={dt}'.format(dt='20120614T080000')
+        vjs = self.query_region(vjs_query)['vehicle_journeys']
+
+        impacted_vj = next((vj for vj in vjs if 'vehicle_journey:vjA:RealTime:' in vj['id']))
+        impacted_vj_query = 'vehicle_journeys/{vj}?_current_datetime={dt}'.format(
+            vj=impacted_vj['id'], dt='20120614T080000'
         )
-        response = self.query_region(vj_query)
+        response = self.query_region(impacted_vj_query)
+
         assert has_the_disruption(response, 'stop_time_with_detour')
         assert len(response['vehicle_journeys']) == 1
         assert len(response['vehicle_journeys'][0]['stop_times']) == 3
@@ -1768,13 +1777,13 @@ class TestKirinAddNewTrip(MockKirinDisruptionsFixture):
         response = self.query_region(ptobj_query)
         assert 'pt_objects' not in response
 
-        # Check that no vehicle_journey exists on the future realtime-trip
-        vj_query = 'vehicle_journeys/{vj}?_current_datetime={dt}'.format(
-            vj='vehicle_journey:additional-trip:modified:0:new_trip', dt='20120614T080000'
-        )
-        response, status = self.query_region(vj_query, check=False)
-        assert status == 404
-        assert 'vehicle_journeys' not in response
+        # since the ids of impacted vjs are random uuid which cannot be know in advance... we have to request all vjs then retrieve the impacted one
+        vjs_query = 'vehicle_journeys/?_current_datetime={dt}'.format(dt='20120614T080000')
+        vjs = self.query_region(vjs_query)['vehicle_journeys']
+
+        impacted_vj = next((vj for vj in vjs if 'vehicle_journey:vjA:RealTime:' in vj['id']), None)
+        # No vj has been impacted yet
+        assert impacted_vj is None
 
         # Check that no additional line exists
         line_query = 'lines/{l}?_current_datetime={dt}'.format(l='line:stopC_stopB', dt='20120614T080000')
@@ -1895,6 +1904,15 @@ class TestKirinAddNewTrip(MockKirinDisruptionsFixture):
         assert len([o for o in response['pt_objects'] if o['id'] == 'line:stopC_stopB']) == 1
         assert len([o for o in response['pt_objects'] if o['id'] == 'route:stopC_stopB']) == 1
 
+        vjs_query = 'vehicle_journeys/?_current_datetime={dt}'.format(dt='20120614T080000')
+        vjs = self.query_region(vjs_query)['vehicle_journeys']
+        impacted_vj = next((vj for vj in vjs if 'vehicle_journey:additional-trip:RealTime:' in vj['id']), None)
+        assert impacted_vj
+
+        vj_query = 'vehicle_journeys/{vj}?_current_datetime={dt}'.format(
+            vj=impacted_vj['id'], dt='20120614T080000'
+        )
+
         # Check that the vehicle_journey has been created
         response = self.query_region(vj_query)
         assert has_the_disruption(response, 'new_trip')
@@ -1955,6 +1973,9 @@ class TestKirinAddNewTrip(MockKirinDisruptionsFixture):
         assert status == 404
         assert 'vehicle_journeys' not in response
 
+        network_filter_query = 'vehicle_journeys/{vj}/networks?_current_datetime={dt}'.format(
+            vj=impacted_vj['id'], dt='20120614T080000'
+        )
         response = self.query_region(network_filter_query)
         assert len(response['networks']) == 1
         assert response['networks'][0]['name'] == 'additional service'
@@ -2165,19 +2186,22 @@ class TestPtRefOnAddedTrip(MockKirinDisruptionsFixture):
         resp = self.query_region("lines/line:stopC_stopB/routes")
         assert resp["routes"][0]["id"] == "route:stopC_stopB"
         resp = self.query_region("lines/line:stopC_stopB/vehicle_journeys")
-        assert resp["vehicle_journeys"][0]["id"] == "vehicle_journey:additional-trip:modified:0:new_trip"
+        assert "vehicle_journey:additional-trip:RealTime:" in resp["vehicle_journeys"][0]["id"]
         # Name and headsign are empty
         assert resp["vehicle_journeys"][0]["name"] == ""
         assert resp["vehicle_journeys"][0]["headsign"] == ""
 
         # We should be able to get the line from vehicle_journey recently added
-        resp = self.query_region("vehicle_journeys/vehicle_journey:additional-trip:modified:0:new_trip/lines")
+        vjs_query = 'trips/additional-trip/vehicle_journeys/?_current_datetime={dt}'.format(dt='20120614T080000')
+        vjs = self.query_region(vjs_query)['vehicle_journeys']
+        impacted_vj = next((vj for vj in vjs if 'vehicle_journey:additional-trip:RealTime:' in vj['id']), None)
+        assert impacted_vj
+
+        resp = self.query_region("vehicle_journeys/{vj_id}/lines".format(vj_id=impacted_vj['id']))
         assert resp["lines"][0]["id"] == "line:stopC_stopB"
 
         # We should be able to get the physical_mode sent in gtfs-rt from vehicle_journey recently added
-        resp = self.query_region(
-            "vehicle_journeys/vehicle_journey:additional-trip:modified:0:new_trip/physical_modes"
-        )
+        resp = self.query_region("vehicle_journeys/{vj_id}/physical_modes".format(vj_id=impacted_vj['id']))
         assert resp["physical_modes"][0]["id"] == "physical_mode:Bus"
 
         # The following ptref search should work with a trip added.
@@ -2228,13 +2252,11 @@ class TestPtRefOnAddedTrip(MockKirinDisruptionsFixture):
         assert resp["lines"][7]["id"] == "line:stopC_stopB"
 
         # vehicle_journey <-> company
-        resp = self.query_region(
-            "vehicle_journeys/vehicle_journey:additional-trip:modified:0:new_trip/companies"
-        )
+        resp = self.query_region("vehicle_journeys/{vj_id}/companies".format(vj_id=impacted_vj['id']))
         assert resp["companies"][0]["id"] == "base_company"
         resp = self.query_region("companies/base_company/vehicle_journeys")
         vjs = [vj["id"] for vj in resp["vehicle_journeys"]]
-        assert "vehicle_journey:additional-trip:modified:0:new_trip" in vjs
+        assert impacted_vj['id'] in vjs
 
         # commercial_mode <-> company
         resp = self.query_region("commercial_modes/commercial_mode:additional_service/companies")
@@ -2440,8 +2462,12 @@ class TestKirinUpdateTripWithPhysicalMode(MockKirinDisruptionsFixture):
         assert len(pt_response['vehicle_journeys']) == (initial_nb_vehicle_journeys + 1)
 
         # physical_mode of the newly created vehicle_journey is the base vehicle_journey physical mode (Tramway)
+        vjs = self.query_region('trips/vjA/vehicle_journeys')['vehicle_journeys']
+        impacted_vj = next((vj for vj in vjs if 'vehicle_journey:vjA:RealTime:' in vj['id']), None)
+        assert impacted_vj
+
         pt_response = self.query_region(
-            'vehicle_journeys/vehicle_journey:vjA:modified:0:vjA_delayed/physical_modes'
+            'vehicle_journeys/{vj_id}/physical_modes'.format(vj_id=impacted_vj['id'])
         )
         assert len(pt_response['physical_modes']) == 1
         assert pt_response['physical_modes'][0]['name'] == 'Tramway'
@@ -2513,10 +2539,13 @@ class TestKirinAddTripWithHeadSign(MockKirinDisruptionsFixture):
         assert pt_journey['sections'][0]['display_informations']['headsign'] == 'trip_headsign'
 
         # Check the vehicle_journey created by real-time
-        new_vj = self.query_region('vehicle_journeys/vehicle_journey:additional-trip:modified:0:new_trip')
-        assert len(new_vj['vehicle_journeys']) == 1
-        assert (new_vj['vehicle_journeys'][0]['name']) == 'trip_headsign'
-        assert (new_vj['vehicle_journeys'][0]['headsign']) == 'trip_headsign'
+        vjs = self.query_region('trips/additional-trip/vehicle_journeys')['vehicle_journeys']
+        new_vjs = [vj for vj in vjs if 'vehicle_journey:additional-trip:RealTime:' in vj['id']]
+        assert len(new_vjs) == 1
+
+        new_vj = new_vjs[0]
+        assert new_vj['name'] == 'trip_headsign'
+        assert new_vj['headsign'] == 'trip_headsign'
 
 
 @dataset(MAIN_ROUTING_TEST_SETTING_NO_ADD)
