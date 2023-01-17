@@ -41,6 +41,7 @@ www.navitia.io
 #include "kraken/apply_disruption.h"
 #include "type/chaos.pb.h"
 #include "type/gtfs-realtime.pb.h"
+#include "type/meta_vehicle_journey.h"
 #include <boost/range/algorithm/for_each.hpp>
 #include <boost/range/algorithm/find_if.hpp>
 #include <boost/algorithm/string/predicate.hpp>
@@ -269,29 +270,42 @@ BOOST_AUTO_TEST_CASE(add_impact_and_update_on_stop_area) {
 
     navitia::make_and_apply_disruption(disruption, *b.data->pt_data, *b.data->meta);
     BOOST_REQUIRE_EQUAL(b.data->pt_data->vehicle_journeys.size(), 4);
-    auto vj = b.data->pt_data->vehicle_journeys_map["vehicle_journey:vj:1:Adapted:1:test01"];
-    BOOST_CHECK(vj->base_validity_pattern()->days.none());
-    BOOST_CHECK_MESSAGE(ba::ends_with(vj->adapted_validity_pattern()->days.to_string(), "000110"),
-                        vj->adapted_validity_pattern()->days);
 
-    vj = b.data->pt_data->vehicle_journeys_map["vehicle_journey:vj:2:Adapted:1:test01"];
-    BOOST_CHECK(vj->base_validity_pattern()->days.none());
-    BOOST_CHECK_MESSAGE(ba::ends_with(vj->adapted_validity_pattern()->days.to_string(), "000110"),
-                        vj->adapted_validity_pattern()->days);
+    const navitia::type::MetaVehicleJourney* meta_vj = b.get_meta_vj("vj:1");
+    BOOST_REQUIRE_EQUAL(meta_vj->get_adapted_vj().size(), 1);
+    const auto* adapted_vj = meta_vj->get_adapted_vj()[0].get();
+
+    BOOST_CHECK(adapted_vj->base_validity_pattern()->days.none());
+    BOOST_CHECK_MESSAGE(ba::ends_with(adapted_vj->adapted_validity_pattern()->days.to_string(), "000110"),
+                        adapted_vj->adapted_validity_pattern()->days);
+
+    meta_vj = b.get_meta_vj("vj:2");
+    BOOST_REQUIRE_EQUAL(meta_vj->get_adapted_vj().size(), 1);
+    adapted_vj = meta_vj->get_adapted_vj()[0].get();
+
+    BOOST_CHECK(adapted_vj->base_validity_pattern()->days.none());
+    BOOST_CHECK_MESSAGE(ba::ends_with(adapted_vj->adapted_validity_pattern()->days.to_string(), "000110"),
+                        adapted_vj->adapted_validity_pattern()->days);
     check(*b.data);
 
     navitia::make_and_apply_disruption(disruption, *b.data->pt_data, *b.data->meta);
     BOOST_REQUIRE_EQUAL(b.data->pt_data->vehicle_journeys.size(), 4);
 
-    vj = b.data->pt_data->vehicle_journeys_map["vehicle_journey:vj:1:Adapted:1:test01"];
-    BOOST_CHECK(vj->base_validity_pattern()->days.none());
-    BOOST_CHECK_MESSAGE(ba::ends_with(vj->adapted_validity_pattern()->days.to_string(), "000110"),
-                        vj->adapted_validity_pattern()->days);
+    meta_vj = b.get_meta_vj("vj:1");
+    BOOST_REQUIRE_EQUAL(meta_vj->get_adapted_vj().size(), 1);
+    adapted_vj = meta_vj->get_adapted_vj()[0].get();
 
-    vj = b.data->pt_data->vehicle_journeys_map["vehicle_journey:vj:2:Adapted:1:test01"];
-    BOOST_CHECK(vj->base_validity_pattern()->days.none());
-    BOOST_CHECK_MESSAGE(ba::ends_with(vj->adapted_validity_pattern()->days.to_string(), "000110"),
-                        vj->adapted_validity_pattern()->days);
+    BOOST_CHECK(adapted_vj->base_validity_pattern()->days.none());
+    BOOST_CHECK_MESSAGE(ba::ends_with(adapted_vj->adapted_validity_pattern()->days.to_string(), "000110"),
+                        adapted_vj->adapted_validity_pattern()->days);
+
+    meta_vj = b.get_meta_vj("vj:2");
+    BOOST_REQUIRE_EQUAL(meta_vj->get_adapted_vj().size(), 1);
+    adapted_vj = meta_vj->get_adapted_vj()[0].get();
+
+    BOOST_CHECK(adapted_vj->base_validity_pattern()->days.none());
+    BOOST_CHECK_MESSAGE(ba::ends_with(adapted_vj->adapted_validity_pattern()->days.to_string(), "000110"),
+                        adapted_vj->adapted_validity_pattern()->days);
 
     check(*b.data);
 
@@ -501,21 +515,30 @@ BOOST_AUTO_TEST_CASE(add_impact_on_line_section) {
     BOOST_CHECK_MESSAGE(ba::ends_with(base_vp.to_string(), "100100"), base_vp);
 
     // Check the created vj, they shouldn't have any base validity pattern
-    vj = b.data->pt_data->vehicle_journeys_map["vehicle_journey:vj:1:Adapted:0:dis_ls1"];
-    adapted_vp = vj->adapted_validity_pattern()->days;
-    base_vp = vj->base_validity_pattern()->days;
+    const navitia::type::MetaVehicleJourney* meta_vj = b.get_meta_vj("vj:1");
+    BOOST_REQUIRE_EQUAL(meta_vj->get_adapted_vj().size(), 1);
+    const auto* adapted_vj = meta_vj->get_adapted_vj()[0].get();
+
+    adapted_vp = adapted_vj->adapted_validity_pattern()->days;
+    base_vp = adapted_vj->base_validity_pattern()->days;
     BOOST_CHECK_MESSAGE(ba::ends_with(adapted_vp.to_string(), "000111"), adapted_vp);
     BOOST_CHECK_MESSAGE(ba::ends_with(base_vp.to_string(), "000000"), base_vp);
 
-    vj = b.data->pt_data->vehicle_journeys_map["vehicle_journey:vj:2:Adapted:0:dis_ls1"];
-    adapted_vp = vj->adapted_validity_pattern()->days;
-    base_vp = vj->base_validity_pattern()->days;
+    meta_vj = b.get_meta_vj("vj:2");
+    BOOST_REQUIRE_EQUAL(meta_vj->get_adapted_vj().size(), 1);
+    adapted_vj = meta_vj->get_adapted_vj()[0].get();
+
+    adapted_vp = adapted_vj->adapted_validity_pattern()->days;
+    base_vp = adapted_vj->base_validity_pattern()->days;
     BOOST_CHECK_MESSAGE(ba::ends_with(adapted_vp.to_string(), "000011"), adapted_vp);
     BOOST_CHECK_MESSAGE(ba::ends_with(base_vp.to_string(), "000000"), base_vp);
 
-    vj = b.data->pt_data->vehicle_journeys_map["vehicle_journey:vj:3:Adapted:0:dis_ls1"];
-    adapted_vp = vj->adapted_validity_pattern()->days;
-    base_vp = vj->base_validity_pattern()->days;
+    meta_vj = b.get_meta_vj("vj:3");
+    BOOST_REQUIRE_EQUAL(meta_vj->get_adapted_vj().size(), 1);
+    adapted_vj = meta_vj->get_adapted_vj()[0].get();
+
+    adapted_vp = adapted_vj->adapted_validity_pattern()->days;
+    base_vp = adapted_vj->base_validity_pattern()->days;
     BOOST_CHECK_MESSAGE(ba::ends_with(adapted_vp.to_string(), "000100"), adapted_vp);
     BOOST_CHECK_MESSAGE(ba::ends_with(base_vp.to_string(), "000000"), base_vp);
 

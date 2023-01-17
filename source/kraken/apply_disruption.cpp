@@ -101,6 +101,18 @@ nt::VehicleJourney* create_vj_from_old_vj(nt::MetaVehicleJourney* mvj,
     return new_vj;
 }
 
+std::string concatenate_impact_uris(const nt::MetaVehicleJourney& mvj) {
+    std::stringstream impacts_uris;
+    for (auto& mvj_impacts : mvj.modified_by) {
+        if (auto i = mvj_impacts.lock()) {
+            if (impacts_uris.str().find(i->disruption->uri) == std::string::npos) {
+                impacts_uris << ":" << i->disruption->uri;
+            }
+        }
+    }
+    return impacts_uris.str();
+}
+
 std::string make_new_vj_uri(const nt::MetaVehicleJourney* mvj, nt::RTLevel rt_level) {
     boost::uuids::random_generator gen;
     return "vehicle_journey:" + mvj->uri + ":" + type::get_string_from_rt_level(rt_level) + ":"
@@ -314,7 +326,6 @@ struct add_impacts_visitor : public apply_impacts_visitor {
                 }
             }
 
-            auto nb_rt_vj = mvj->get_rt_vj().size();
             auto new_vj_uri = make_new_vj_uri(mvj, rt_level);
 
             std::vector<type::StopTime> stoptimes;  // we copy all the stoptimes
@@ -487,7 +498,6 @@ struct add_impacts_visitor : public apply_impacts_visitor {
                 mvj->cancel_vj(rt_level, impact->application_periods, pt_data);
                 continue;
             }
-            auto nb_rt_vj = mvj->get_vjs_at(rt_level).size();
             auto new_vj_uri = make_new_vj_uri(mvj, rt_level);
 
             new_vp.days = new_vp.days & (vj->validity_patterns[rt_level]->days >> vj->shift);
@@ -555,7 +565,6 @@ struct add_impacts_visitor : public apply_impacts_visitor {
                 mvj->cancel_vj(rt_level, impact->application_periods, pt_data);
                 continue;
             }
-            auto nb_rt_vj = mvj->get_vjs_at(rt_level).size();
             auto new_vj_uri = make_new_vj_uri(mvj, rt_level);
 
             new_vp.days = new_vp.days & (vj->validity_patterns[rt_level]->days >> vj->shift);
@@ -710,7 +719,6 @@ struct add_impacts_visitor : public apply_impacts_visitor {
             auto mvj = vj->meta_vj;
             mvj->push_unique_impact(impact);
 
-            auto nb_rt_vj = mvj->get_vjs_at(rt_level).size();
             auto new_vj_uri = make_new_vj_uri(mvj, rt_level);
 
             new_vp.days = new_vp.days & (vj->validity_patterns[rt_level]->days >> vj->shift);

@@ -409,6 +409,10 @@ struct builder {
     navitia::georef::Way* add_way(const std::string& name, const std::string& way_type, const bool visible = true);
 
     const navitia::type::Data& get_data() { return *data.get(); }
+
+    const navitia::type::MetaVehicleJourney* get_meta_vj(const std::string& meta_vj_uri) const {
+        return data->pt_data->meta_vjs.get_mut(meta_vj_uri);
+    }
 };
 
 }  // namespace ed
