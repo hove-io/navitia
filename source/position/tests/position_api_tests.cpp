@@ -1,4 +1,4 @@
-/* Copyright © 2001-2022, Hove and/or its affiliates. All rights reserved.
+/* Copyright �� 2001-2022, Hove and/or its affiliates. All rights reserved.
 
 This file is part of Navitia,
     the software to build cool stuff with public transport.
@@ -387,8 +387,8 @@ BOOST_FIXTURE_TEST_CASE(test_one_vehicle_position_is_active_realtime_delay, posi
     BOOST_REQUIRE_EQUAL(vehicle_position.vehicle_journey_positions(0).vehicle_journey().uri(), "vehicle_journey:AA");
     BOOST_REQUIRE_EQUAL(vehicle_position.vehicle_journey_positions(0).vehicle_journey().codes().size(), 0);
 
-    BOOST_REQUIRE_EQUAL(vehicle_position.vehicle_journey_positions(1).vehicle_journey().uri(),
-                        "vehicle_journey:BB:modified:0:bob");
+    BOOST_CHECK(boost::algorithm::contains(vehicle_position.vehicle_journey_positions(1).vehicle_journey().uri(),
+                                           "vehicle_journey:BB:RealTime:"));
     BOOST_REQUIRE_EQUAL(vehicle_position.vehicle_journey_positions(1).vehicle_journey().codes().size(), 0);
 }
 
@@ -424,8 +424,8 @@ VJ: KB:         |***************************************************************
     auto vehicle_position = resp.vehicle_positions(0);
     BOOST_REQUIRE_EQUAL(vehicle_position.line().uri(), "line:stop_area:stop01_stop_area:stop02");
     BOOST_REQUIRE_EQUAL(vehicle_position.vehicle_journey_positions().size(), 1);
-    BOOST_REQUIRE_EQUAL(vehicle_position.vehicle_journey_positions(0).vehicle_journey().uri(),
-                        "vehicle_journey:vj_new_trip:modified:0:bob");
+    BOOST_CHECK(boost::algorithm::contains(vehicle_position.vehicle_journey_positions(0).vehicle_journey().uri(),
+                                           "vehicle_journey:vj_new_trip:RealTime:"));
 
     vehicle_position = resp.vehicle_positions(1);
     BOOST_REQUIRE_EQUAL(vehicle_position.line().uri(), "line:AA");
