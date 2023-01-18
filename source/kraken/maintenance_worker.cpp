@@ -366,8 +366,7 @@ void MaintenanceWorker::handle_rt_in_batch(const std::vector<AmqpClient::Envelop
     bool autocomplete_rebuilding_activated = false;
     auto rt_action = RTAction::chaos;
 
-    std::unordered_set<std::string> applied_visited_id;
-    for (auto& envelope : boost::adaptors::reverse(envelopes)) {
+    for (auto& envelope : envelopes) {
         const auto routing_key = envelope->RoutingKey();
         LOG4CPLUS_DEBUG(logger, "realtime info received from " << routing_key);
         assert(envelope);
@@ -378,10 +377,6 @@ void MaintenanceWorker::handle_rt_in_batch(const std::vector<AmqpClient::Envelop
         }
         LOG4CPLUS_TRACE(logger, "received entity: " << feed_message.DebugString());
         for (const auto& entity : feed_message.entity()) {
-            auto res = applied_visited_id.insert(entity.id());
-            if (!res.second) {
-                continue;
-            }
             if (!data) {
                 pt::ptime copy_begin = pt::microsec_clock::universal_time();
                 data = data_manager.get_data_clone();

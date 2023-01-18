@@ -101,18 +101,6 @@ nt::VehicleJourney* create_vj_from_old_vj(nt::MetaVehicleJourney* mvj,
     return new_vj;
 }
 
-std::string concatenate_impact_uris(const nt::MetaVehicleJourney& mvj) {
-    std::stringstream impacts_uris;
-    for (auto& mvj_impacts : mvj.modified_by) {
-        if (auto i = mvj_impacts.lock()) {
-            if (impacts_uris.str().find(i->disruption->uri) == std::string::npos) {
-                impacts_uris << ":" << i->disruption->uri;
-            }
-        }
-    }
-    return impacts_uris.str();
-}
-
 std::string make_new_vj_uri(const nt::MetaVehicleJourney* mvj, nt::RTLevel rt_level) {
     boost::uuids::random_generator gen;
     return "vehicle_journey:" + mvj->uri + ":" + type::get_string_from_rt_level(rt_level) + ":"
