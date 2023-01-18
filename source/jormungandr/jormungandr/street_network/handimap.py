@@ -192,7 +192,7 @@ class Handimap(AbstractStreetNetworkService):
         handimap_trip = json_response["trip"]
         journey = resp.journeys.add()
         # journey.tags.append(cls.get_geovelo_tag(geovelo_response))
-        journey.duration = int(handimap_trip['summary']["time"])
+        journey.duration = int(round(handimap_trip['summary']["time"]))
         datetime, represents_start_fallback = fallback_extremity
         if represents_start_fallback:
             journey.departure_date_time = datetime
@@ -203,19 +203,19 @@ class Handimap(AbstractStreetNetworkService):
         journey.durations.total = journey.duration
         journey.durations.walking = journey.duration
 
-        journey.distances.walking = int(kilometers_to_meters(handimap_trip['summary']["length"]))
+        journey.distances.walking = int(round(kilometers_to_meters(handimap_trip['summary']["length"])))
 
         previous_section_endtime = journey.departure_date_time
         for index, handimap_leg in enumerate(handimap_trip['legs']):
             section = journey.sections.add()
             section.type = response_pb2.STREET_NETWORK
-            section.duration = int(handimap_leg["summary"]['time'])
+            section.duration = int(round(handimap_leg["summary"]['time']))
             section.begin_date_time = previous_section_endtime
             section.end_date_time = section.begin_date_time + section.duration
             previous_section_endtime = section.end_date_time
 
             section.id = 'section_{}'.format(index)
-            section.length = int(kilometers_to_meters(handimap_leg["summary"]['length']))
+            section.length = int(round(kilometers_to_meters(handimap_leg["summary"]['length'])))
 
             if index == 0:
                 section.origin.CopyFrom(pt_object_origin)
@@ -225,13 +225,13 @@ class Handimap(AbstractStreetNetworkService):
                 section.street_network.duration = section.duration
                 section.street_network.length = section.length
                 section.street_network.mode = response_pb2.Walking
-            for handimap_instruction in itertools.islice(handimap_leg['maneuvers'], 1, sys.maxsize):
+            for handimap_instruction in handimap_leg['maneuvers']:
                 path_item = section.street_network.path_items.add()
                 if handimap_instruction.get("street_names", []):
                     path_item.name = handimap_instruction["street_names"][0]
                 path_item.instruction = handimap_instruction["instruction"]
-                path_item.length = int(kilometers_to_meters(handimap_instruction["length"]))
-                path_item.duration = int(handimap_instruction["time"])
+                path_item.length = int(round(kilometers_to_meters(handimap_instruction["length"])))
+                path_item.duration = int(round(handimap_instruction["time"]))
             shape = decode_polyline(handimap_leg['shape'])
             for sh in shape:
                 section.street_network.coordinates.add(lon=sh[0], lat=sh[1])

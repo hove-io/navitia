@@ -202,8 +202,8 @@ def get_response_handimap_test():
     proto_resp = handimap._get_response(resp_json, origin, destination, fallback_extremity)
 
     assert len(proto_resp.journeys) == 1
-    assert proto_resp.journeys[0].durations.total == 125
-    assert proto_resp.journeys[0].durations.walking == 125
+    assert proto_resp.journeys[0].durations.total == 126
+    assert proto_resp.journeys[0].durations.walking == 126
     assert proto_resp.journeys[0].distances.walking == 412
 
     assert len(proto_resp.journeys[0].sections) == 1
@@ -211,9 +211,16 @@ def get_response_handimap_test():
     assert proto_resp.journeys[0].sections[0].origin.uri == "HandimapStart"
     assert proto_resp.journeys[0].sections[0].destination.uri == "HandimapEnd"
     assert proto_resp.journeys[0].sections[0].street_network.length == 412
-    assert proto_resp.journeys[0].sections[0].street_network.duration == 125
+    assert proto_resp.journeys[0].sections[0].street_network.duration == 126
     assert proto_resp.journeys[0].sections[0].street_network.mode == response_pb2.Walking
 
     assert proto_resp.journeys[0].sections[0].length == 412
-    assert proto_resp.journeys[0].sections[0].duration == 125
-    assert len(proto_resp.journeys[0].sections[0].street_network.path_items) == 6
+    assert proto_resp.journeys[0].sections[0].duration == 126
+    assert len(proto_resp.journeys[0].sections[0].street_network.path_items) == 7
+    assert proto_resp.journeys[0].sections[0].street_network.path_items[0].length == 103
+    assert proto_resp.journeys[0].sections[0].street_network.path_items[0].duration == 33
+    assert (
+        proto_resp.journeys[0].sections[0].street_network.path_items[0].instruction
+        == "Marchez vers l'est sur Rue Ange Blaize."
+    )
+    assert proto_resp.journeys[0].sections[0].street_network.path_items[0].name == "Rue Ange Blaize"
