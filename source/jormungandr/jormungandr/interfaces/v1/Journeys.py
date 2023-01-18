@@ -496,6 +496,20 @@ class Journeys(JourneyCommon):
             help="Here, Active or not the realtime traffic information (True/False)",
         )
         parser_get.add_argument(
+            "_handimap_language",
+            type=OptionValue(
+                [
+                    'english',
+                    'french',
+                ]
+            ),
+            hidden=True,
+            help='Handimap, select a specific language for guidance instruction.\n'
+            'list available:\n'
+            '- english = english\n'
+            '- french = french\n',
+        )
+        parser_get.add_argument(
             "_here_language",
             type=OptionValue(
                 [
