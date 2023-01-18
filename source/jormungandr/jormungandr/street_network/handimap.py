@@ -83,7 +83,6 @@ class Handimap(AbstractStreetNetworkService):
         )
         self.auth = (username, password)
         self.headers = {"Content-Type": "application/json", "Accept": "application/json"}
-        self.directions_options = {'units': 'kilometers'}
         self.timeout = timeout
         self.modes = modes
         self.language = self._get_language(kwargs.get('language', "french"))
