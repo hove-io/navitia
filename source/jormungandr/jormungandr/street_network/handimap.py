@@ -206,7 +206,6 @@ class Handimap(AbstractStreetNetworkService):
         resp.response_type = response_pb2.ITINERARY_FOUND
         handimap_trip = json_response["trip"]
         journey = resp.journeys.add()
-        # journey.tags.append(cls.get_geovelo_tag(geovelo_response))
         journey.duration = int(round(handimap_trip['summary']["time"]))
         datetime, represents_start_fallback = fallback_extremity
         if represents_start_fallback:
