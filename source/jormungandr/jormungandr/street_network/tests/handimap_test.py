@@ -139,8 +139,7 @@ def test_create_handimap_with_config():
         **kwargs
     )
     assert handimap.sn_system_id == "id_handmap"
-    assert handimap.username == "aa"
-    assert handimap.password == "bb"
+    assert handimap.auth == ("aa", "bb")
     assert handimap.timeout == 5
     assert handimap.service_url == "bob.com"
     assert handimap.modes == []
@@ -188,6 +187,20 @@ def check_response_handimap_func_code_invalid():
     with pytest.raises(jormungandr.exceptions.HandimapTechnicalError) as handimap_exception:
         handimap._check_response(resp)
     assert handimap_exception.value.data["message"] == 'Handimap service unavailable, impossible to query'
+
+
+def get_language_handimap_func_language_invalid():
+    instance = MagicMock()
+    handimap = Handimap(instance=instance, service_url='bob.com', username='aa', password="bb")
+    language = handimap._get_language("toto")
+    assert language == "fr-FR"
+
+
+def get_language_handimap_func_language_valid():
+    instance = MagicMock()
+    handimap = Handimap(instance=instance, service_url='bob.com', username='aa', password="bb")
+    language = handimap._get_language("english")
+    assert language == "en-EN"
 
 
 def get_response_handimap_test():

@@ -39,16 +39,13 @@ import six
 import requests as requests
 import ujson
 import json
-import itertools
-import sys
 
 from jormungandr import app
 from jormungandr.street_network.street_network import AbstractStreetNetworkService, StreetNetworkPathKey
 from jormungandr.ptref import FeedPublisher
-from jormungandr.exceptions import HandimapTechnicalError, InvalidArguments, UnableToParse
+from jormungandr.exceptions import HandimapTechnicalError, InvalidArguments
 from jormungandr.utils import get_pt_object_coord, mps_to_kmph, decode_polyline, kilometers_to_meters
 from navitiacommon import response_pb2
-from navitiacommon.response_pb2 import StreetInformation
 
 DEFAULT_HANDIMAP_FEED_PUBLISHER = {
     'id': 'handimap',
@@ -84,11 +81,14 @@ class Handimap(AbstractStreetNetworkService):
         self.log = logging.LoggerAdapter(
             logging.getLogger(__name__), extra={'streetnetwork_id': six.text_type(id)}
         )
-        self.username = username
-        self.password = password
+        self.auth = (username, password)
+        self.headers = {"Content-Type": "application/json", "Accept": "application/json"}
+        self.directions_options = {'units': 'kilometers'}
         self.timeout = timeout
         self.modes = modes
+        self.language = self._get_language(kwargs.get('language', "french"))
         self.verify = kwargs.get('verify', True)
+
         self.breaker = pybreaker.CircuitBreaker(
             fail_max=kwargs.get(
                 'circuit_breaker_max_fail', app.config.get('CIRCUIT_BREAKER_MAX_HANDIMAP_FAIL', 4)
@@ -112,21 +112,31 @@ class Handimap(AbstractStreetNetworkService):
             },
         }
 
-    @classmethod
-    def _make_request_arguments_walking_details(cls, bike_speed_mps, units="kilometers", language="fr-FR"):
-        bike_speed = mps_to_kmph(bike_speed_mps)
+    def _get_language(self, language):
+        try:
+            return Languages[language].value
+        except KeyError:
+            self.log.error('Handimap parameters language={} not exist - force to french'.format(language))
+            return Languages.french.value
 
+    def get_language_parameter(self, request):
+        language = request.get('_handimap_language', None)
+        return self.language if not language else self._get_language(language.lower())
+
+    @classmethod
+    def _make_request_arguments_walking_details(cls, walking_speed, language):
+        walking_speed_km = mps_to_kmph(walking_speed)
         return {
             "costing": "walking",
-            "costing_options": {"walking": {"walking_speed": bike_speed}},
-            "directions_options": {"units": units, "language": language},
+            "costing_options": {"walking": {"walking_speed": walking_speed_km}},
+            "directions_options": {"units": "kilometers", "language": language},
         }
 
     @classmethod
-    def _make_request_arguments_direct_path(cls, origin, destination, walking_speed=3.33):
+    def _make_request_arguments_direct_path(cls, origin, destination, walking_speed, language):
         coord_orig = get_pt_object_coord(origin)
         coord_dest = get_pt_object_coord(destination)
-        walking_details = cls._make_request_arguments_walking_details(walking_speed)
+        walking_details = cls._make_request_arguments_walking_details(walking_speed, language)
         params = {
             'locations': [
                 {'lat': coord_orig.lat, 'lon': coord_orig.lon},
@@ -169,7 +179,12 @@ class Handimap(AbstractStreetNetworkService):
             logging.getLogger(__name__).error('Handimap, mode {} not implemented'.format(mode))
             raise InvalidArguments('Handimap, mode {} not implemented'.format(mode))
 
-        params = self._make_request_arguments_direct_path(pt_object_origin, pt_object_destination)
+        walking_speed = request["walking_speed"]
+        language = self.get_language_parameter(request)
+
+        params = self._make_request_arguments_direct_path(
+            pt_object_origin, pt_object_destination, walking_speed, language
+        )
 
         r = self._call_handimap(
             '{}/route'.format(self.service_url),
@@ -246,8 +261,8 @@ class Handimap(AbstractStreetNetworkService):
                 url,
                 data=json.dumps(data),
                 timeout=self.timeout,
-                auth=(self.username, self.password),
-                headers={"Content-Type": "application/json", "Accept": "application/json"},
+                auth=self.auth,
+                headers=self.headers,
                 verify=self.verify,
             )
         except pybreaker.CircuitBreakerError as e:
