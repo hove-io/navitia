@@ -255,15 +255,19 @@ class Asgard(TransientSocket, Kraken):
 
             return False
 
-        # We have one journey and several sections in direct path
-        for section in response.journeys[0].sections:
-            # do not add cycle_lane_length for bss_rent/bss_return & walking sections
-            if section.type == response_pb2.STREET_NETWORK and section.street_network.mode == response_pb2.Bike:
-                cycle_lane_length = sum(
-                    (s.length for s in section.street_network.street_information if _is_cycle_lane(s))
-                )
-                # Since path.length are doubles and we want an int32 in the proto
-                section.cycle_lane_length = int(cycle_lane_length)
+        # We have multiple journeys and multiple sections in direct path
+        for journey in response.journeys:
+            for section in journey.sections:
+                # do not add cycle_lane_length for bss_rent/bss_return & walking sections
+                if (
+                    section.type == response_pb2.STREET_NETWORK
+                    and section.street_network.mode == response_pb2.Bike
+                ):
+                    cycle_lane_length = sum(
+                        (s.length for s in section.street_network.street_information if _is_cycle_lane(s))
+                    )
+                    # Since path.length are doubles and we want an int32 in the proto
+                    section.cycle_lane_length = int(cycle_lane_length)
 
         return response
 
