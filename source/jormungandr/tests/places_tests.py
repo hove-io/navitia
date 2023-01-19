@@ -499,12 +499,11 @@ class TestPlaces(AbstractTestFixture):
         assert status == 200
         assert "places" not in response
 
-        # Search with 'Gare de'
+        # Upper or lower case shouldn't impact result
         response, status = self.query_region("places?q=Gare du stop", check=False)
         assert status == 200
         assert len(response['places']) == 3
 
-        # Search with 'gare DES'
         response, status = self.query_region("places?q=gare DU stop", check=False)
         assert status == 200
         assert len(response['places']) == 3
