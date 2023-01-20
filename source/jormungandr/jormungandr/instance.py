@@ -65,7 +65,7 @@ from navitiacommon import default_values
 from jormungandr.equipments import EquipmentProviderManager
 from jormungandr.external_services import ExternalServiceManager
 from jormungandr.utils import can_connect_to_database
-from jormungandr import pt_planners_manager, transient_socket
+from jormungandr import pt_planners_manager
 
 type_to_pttype = {
     "stop_area": request_pb2.PlaceCodeRequest.StopArea,  # type: ignore
@@ -101,8 +101,9 @@ def _make_property_getter(attr_name):
     return property(_getter)
 
 
-class Instance(transient_socket.TransientSocket):
+class Instance(object):
     name = None  # type: Text
+    _sockets = None  # type: Deque[Tuple[zmq.Socket, float]]
 
     def __init__(
         self,
@@ -121,15 +122,9 @@ class Instance(transient_socket.TransientSocket):
         ghost_words=None,
         instance_db=None,
     ):
-        super(Instance, self).__init__(
-            name=name,
-            zmq_context=context,
-            zmq_socket=zmq_socket,
-            socket_ttl=app.config.get(str('ZMQ_SOCKET_TTL_SECONDS'), 10),
-        )
-
         self.geom = None
         self.geojson = None
+        self._sockets = deque()
         self.socket_path = zmq_socket
         self._scenario = None
         self._scenario_name = None
@@ -722,6 +717,66 @@ class Instance(transient_socket.TransientSocket):
         instance_db = self.get_models()
         return get_value_or_default('places_proximity_radius', instance_db, self.name)
 
+    def reap_socket(self, ttl):
+        # type: (int) -> None
+        if self.zmq_socket_type != 'transient':
+            return
+        logger = logging.getLogger(__name__)
+        now = time.time()
+
+        def _reap_sockets(connector):
+            while True:
+                try:
+                    socket, t = connector._sockets.popleft()
+                    if now - t > ttl:
+                        logger.debug("closing one socket for %s", connector.name)
+                        socket.setsockopt(zmq.LINGER, 0)
+                        socket.close()
+                    else:
+                        connector._sockets.appendleft((socket, t))
+                        break  # remaining socket are still in "keep alive" state
+                except IndexError:
+                    break
+
+        for _, planner in self._pt_planner_manager.get_all_pt_planners():
+            if planner.is_zmq_socket():
+                _reap_sockets(planner)
+        _reap_sockets(self)
+
+    @contextmanager
+    def socket(self, context):
+        sockets = self._sockets
+        socket_path = self.socket_path
+
+        t = None
+        try:
+            socket, t = sockets.pop()
+        except IndexError:  # there is no socket available: lets create one
+            start = time.time()
+            socket = context.socket(zmq.REQ)
+            socket.connect(socket_path)
+            logging.getLogger(__name__).info(
+                "it took %s ms to open a instance socket of %s during a request",
+                '%.2e' % ((time.time() - start) * 1000),
+                self.name,
+            )
+
+        try:
+            yield socket
+        finally:
+            if not socket.closed:
+                if t is not None and time.time() - t > app.config.get("ZMQ_SOCKET_TTL_SECONDS", 10):
+                    start = time.time()
+                    socket.setsockopt(zmq.LINGER, 0)
+                    socket.close()
+                    logging.getLogger(__name__).info(
+                        "it took %s ms to close a instance socket in %s",
+                        '%.2e' % ((time.time() - start) * 1000),
+                        self.name,
+                    )
+                else:
+                    sockets.append((socket, t or time.time()))
+
     def send_and_receive(self, *args, **kwargs):
         """
         encapsulate all call to kraken in a circuit breaker, this way we don't loose time calling dead instance
@@ -731,25 +786,37 @@ class Instance(transient_socket.TransientSocket):
         except pybreaker.CircuitBreakerError as e:
             raise DeadSocketException(self.name, self.socket_path)
 
-    def _send_and_receive(self, request, timeout=app.config.get('INSTANCE_TIMEOUT', 10), quiet=False, **kwargs):
-        deadline = datetime.utcnow() + timedelta(milliseconds=timeout * 1000)
+    def _send_and_receive(
+        self, request, timeout=app.config.get('INSTANCE_TIMEOUT', 10000), quiet=False, **kwargs
+    ):
+        logger = logging.getLogger(__name__)
+        deadline = datetime.utcnow() + timedelta(milliseconds=timeout)
         request.deadline = deadline.strftime('%Y%m%dT%H%M%S,%f')
 
-        if 'request_id' in kwargs and kwargs['request_id']:
-            request.request_id = kwargs['request_id']
-        else:
-            try:
-                request.request_id = flask.request.id
-            except RuntimeError:
-                # we aren't in a flask context, so there is no request
-                if 'flask_request_id' in kwargs and kwargs['flask_request_id']:
-                    request.request_id = kwargs['flask_request_id']
+        with self.socket(self.context) as socket:
+            if 'request_id' in kwargs and kwargs['request_id']:
+                request.request_id = kwargs['request_id']
+            else:
+                try:
+                    request.request_id = flask.request.id
+                except RuntimeError:
+                    # we aren't in a flask context, so there is no request
+                    if 'flask_request_id' in kwargs and kwargs['flask_request_id']:
+                        request.request_id = kwargs['flask_request_id']
 
-        pb = self.call(request.SerializeToString(), timeout, debug_cb=lambda: six.text_type(request))
-        resp = response_pb2.Response()
-        resp.ParseFromString(pb)
-        self.update_property(resp)
-        return resp
+            socket.send(request.SerializeToString())
+            if socket.poll(timeout=timeout) > 0:
+                pb = socket.recv()
+                resp = response_pb2.Response()
+                resp.ParseFromString(pb)
+                self.update_property(resp)  # we update the timezone and geom of the instances at each request
+                return resp
+            else:
+                socket.setsockopt(zmq.LINGER, 0)
+                socket.close()
+                if not quiet:
+                    logger.error('request on %s failed: %s', self.socket_path, six.text_type(request))
+                raise DeadSocketException(self.name, self.socket_path)
 
     def get_id(self, id_):
         """
@@ -852,7 +919,7 @@ class Instance(transient_socket.TransientSocket):
         request_id = "instance_init"
         try:
             # we use _send_and_receive to avoid the circuit breaker, we don't want fast fail on init :)
-            resp = self._send_and_receive(req, request_id=request_id, timeout=1, quiet=True)
+            resp = self._send_and_receive(req, request_id=request_id, timeout=1000, quiet=True)
             # the instance is automatically updated on a call
             if self.publication_date != pub_date:
                 return True

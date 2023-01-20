@@ -144,9 +144,9 @@ class Asgard(TransientSocket, Kraken):
         **kwargs
     ):
         super(Asgard, self).__init__(
-            name="asgard_{}".format(instance.name),
+            name=instance.name,
             zmq_context=instance.context,
-            zmq_socket=app.config.get(str("ASGARD_ZMQ_SOCKET")) or asgard_socket,
+            socket_path=app.config.get("ASGARD_ZMQ_SOCKET") or asgard_socket,
             socket_ttl=socket_ttl,
             instance=instance,
             service_url=service_url,
@@ -156,6 +156,7 @@ class Asgard(TransientSocket, Kraken):
             api_key=api_key,
             **kwargs
         )
+        self.asgard_socket = app.config.get("ASGARD_ZMQ_SOCKET") or asgard_socket
         self.timeout = timeout
 
         self.breaker = pybreaker.CircuitBreaker(
@@ -430,11 +431,20 @@ class Asgard(TransientSocket, Kraken):
 
     def _call_asgard(self, request, request_id):
         def _request():
-            request.request_id = request_id
-            pb = self.call(request.SerializeToString(), self.timeout)
-            resp = response_pb2.Response()
-            resp.ParseFromString(pb)
-            return resp
+            with self.socket() as socket:
+                request.request_id = request_id
+                socket.send(request.SerializeToString())
+                # timeout is in second, we need it on millisecond
+                if socket.poll(timeout=self.timeout * 1000) > 0:
+                    pb = socket.recv()
+                    resp = response_pb2.Response()
+                    resp.ParseFromString(pb)
+                    return resp
+                else:
+                    socket.setsockopt(zmq.LINGER, 0)
+                    socket.close()
+                    self.logger.error('request on %s failed: %s', self.asgard_socket, six.text_type(request))
+                    raise TechnicalError('asgard on {} failed'.format(self.asgard_socket))
 
         try:
             return self.breaker.call(_request)
