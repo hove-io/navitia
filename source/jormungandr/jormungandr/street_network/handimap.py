@@ -43,7 +43,7 @@ import json
 from jormungandr import app
 from jormungandr.street_network.street_network import AbstractStreetNetworkService, StreetNetworkPathKey
 from jormungandr.ptref import FeedPublisher
-from jormungandr.exceptions import HandimapTechnicalError, InvalidArguments
+from jormungandr.exceptions import HandimapTechnicalError, InvalidArguments, UnableToParse
 from jormungandr.utils import get_pt_object_coord, mps_to_kmph, decode_polyline, kilometers_to_meters
 from navitiacommon import response_pb2
 
@@ -131,19 +131,41 @@ class Handimap(AbstractStreetNetworkService):
             "directions_options": {"units": "kilometers", "language": language},
         }
 
+    def _format_coord(self, pt_object):
+        coord = get_pt_object_coord(pt_object)
+        return {"lat": coord.lat, "lon": coord.lon}
+
     @classmethod
     def _make_request_arguments_direct_path(cls, origin, destination, walking_speed, language):
-        coord_orig = get_pt_object_coord(origin)
-        coord_dest = get_pt_object_coord(destination)
         walking_details = cls._make_request_arguments_walking_details(walking_speed, language)
         params = {
             'locations': [
-                {'lat': coord_orig.lat, 'lon': coord_orig.lon},
-                {'lat': coord_dest.lat, 'lon': coord_dest.lon},
+                cls._format_coord(origin),
+                cls._format_coord(destination),
             ]
         }
         params.update(walking_details)
         return params
+
+    def matrix_payload(self, origins, destinations, walking_speed, language):
+
+        walking_details = self._make_request_arguments_walking_details(walking_speed, language)
+        params = {
+            "sources": [self._format_coord(o) for o in origins],
+            "targets": [self._format_coord(d) for d in destinations],
+        }
+        params.update(walking_details)
+
+        return params
+
+    def post_matrix_request(self, origins, destinations, walking_speed, language):
+        post_data = self.matrix_payload(origins, destinations, walking_speed, language)
+        response = self._call_handimap(
+            'sources_to_targets',
+            post_data,
+        )
+        self._check_response(response)
+        return ujson.loads(response.text)
 
     def make_path_key(self, mode, orig_uri, dest_uri, streetnetwork_path_type, period_extremity):
         """
@@ -158,10 +180,38 @@ class Handimap(AbstractStreetNetworkService):
         """
         return StreetNetworkPathKey(mode, orig_uri, dest_uri, streetnetwork_path_type, None)
 
+    def _create_matrix_response(self, json_response, origins, destinations, max_duration):
+        sources_to_targets = json_response.get('sources_to_targets', [])
+        sn_routing_matrix = response_pb2.StreetNetworkRoutingMatrix()
+        row = sn_routing_matrix.rows.add()
+        for i_o, _ in enumerate(origins):
+            for i_d, _ in enumerate(destinations):
+                sources_to_target = sources_to_targets[i_o][i_d]
+                duration = int(round(sources_to_target["time"]))
+                routing = row.routing_response.add()
+                if duration <= max_duration:
+                    routing.duration = duration
+                    routing.routing_status = response_pb2.reached
+                else:
+                    routing.duration = -1
+                    routing.routing_status = response_pb2.unreached
+        return sn_routing_matrix
+
+    def check_content_response(self, json_respons, origins, destinations):
+        lengths = sum([len(resp) for resp in json_respons.get("sources_to_targets", [])])
+        if lengths != len(origins) * len(destinations):
+            self.log.error('Handimap nb response != nb requested')
+            raise UnableToParse('Handimap nb response != nb requested')
+
     def _get_street_network_routing_matrix(
         self, instance, origins, destinations, street_network_mode, max_duration, request, request_id, **kwargs
     ):
-        return {}
+        walking_speed = request["walking_speed"]
+        language = self.get_language_parameter(request)
+        resp_json = self.post_matrix_request(origins, destinations, walking_speed, language)
+
+        self.check_content_response(resp_json, origins, destinations)
+        return self._create_matrix_response(resp_json, origins, destinations, max_duration)
 
     def _direct_path(
         self,
@@ -175,7 +225,7 @@ class Handimap(AbstractStreetNetworkService):
         request_id,
     ):
         if mode != "walking":
-            logging.getLogger(__name__).error('Handimap, mode {} not implemented'.format(mode))
+            self.log.error('Handimap, mode {} not implemented'.format(mode))
             raise InvalidArguments('Handimap, mode {} not implemented'.format(mode))
 
         walking_speed = request["walking_speed"]
@@ -185,15 +235,11 @@ class Handimap(AbstractStreetNetworkService):
             pt_object_origin, pt_object_destination, walking_speed, language
         )
 
-        r = self._call_handimap(
-            '{}/route'.format(self.service_url),
-            params,
-            requests.post,
+        response = self._call_handimap('route', params)
+        self._check_response(response)
+        return self._get_response(
+            ujson.loads(response.text), pt_object_origin, pt_object_destination, fallback_extremity
         )
-        self._check_response(r)
-        resp_json = ujson.loads(r.text)
-
-        return self._get_response(resp_json, pt_object_origin, pt_object_destination, fallback_extremity)
 
     @classmethod
     def _get_response(cls, json_response, pt_object_origin, pt_object_destination, fallback_extremity):
@@ -251,12 +297,12 @@ class Handimap(AbstractStreetNetworkService):
 
         return resp
 
-    def _call_handimap(self, url, data, method=requests.post):
-        logging.getLogger(__name__).debug('Handimap routing service , call url : {}'.format(url))
+    def _call_handimap(self, api, data):
+        self.log.debug('Handimap routing service , call url : {}'.format(self.service_url))
         try:
             return self.breaker.call(
-                method,
-                url,
+                requests.post,
+                '{url}/{api}'.format(url=self.service_url, api=api),
                 data=json.dumps(data),
                 timeout=self.timeout,
                 auth=self.auth,
@@ -264,23 +310,26 @@ class Handimap(AbstractStreetNetworkService):
                 verify=self.verify,
             )
         except pybreaker.CircuitBreakerError as e:
-            logging.getLogger(__name__).error('Handimap routing service unavailable (error: {})'.format(str(e)))
+            self.log.error('Handimap routing service unavailable (error: {})'.format(str(e)))
             self.record_external_failure('circuit breaker open')
             raise HandimapTechnicalError('Handimap routing service unavailable')
         except requests.Timeout as t:
-            logging.getLogger(__name__).error('Handimap routing service unavailable (error: {})'.format(str(t)))
+            self.log.error('Handimap routing service unavailable (error: {})'.format(str(t)))
             self.record_external_failure('timeout')
             raise HandimapTechnicalError('Handimap routing service unavailable')
         except Exception as e:
-            logging.getLogger(__name__).exception('Handimap routing error: {}'.format(str(e)))
+            self.log.exception('Handimap routing error: {}'.format(str(e)))
             self.record_external_failure(str(e))
             raise HandimapTechnicalError('Handimap routing has encountered unknown error')
 
     @classmethod
     def _check_response(cls, response):
         if response.status_code != 200:
-            logging.getLogger(__name__).error(
+            cls.log.error(
                 'Handimap service unavailable, impossible to query : {}'
                 ' with response : {}'.format(response.url, response.text)
             )
             raise HandimapTechnicalError('Handimap service unavailable, impossible to query')
+
+    def feed_publisher(self):
+        return self._feed_publisher
