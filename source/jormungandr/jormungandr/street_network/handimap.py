@@ -131,7 +131,8 @@ class Handimap(AbstractStreetNetworkService):
             "directions_options": {"units": "kilometers", "language": language},
         }
 
-    def _format_coord(self, pt_object):
+    @classmethod
+    def _format_coord(cls, pt_object):
         coord = get_pt_object_coord(pt_object)
         return {"lat": coord.lat, "lon": coord.lon}
 
@@ -150,6 +151,7 @@ class Handimap(AbstractStreetNetworkService):
     def matrix_payload(self, origins, destinations, walking_speed, language):
 
         walking_details = self._make_request_arguments_walking_details(walking_speed, language)
+
         params = {
             "sources": [self._format_coord(o) for o in origins],
             "targets": [self._format_coord(d) for d in destinations],
