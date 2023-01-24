@@ -54,7 +54,6 @@ from shapely import wkt, geometry
 from shapely.geos import PredicateError, ReadingError, TopologicalError
 from flask import g
 import flask
-import pybreaker
 from jormungandr import georef, schedule, realtime_schedule, ptref, street_network, fallback_modes
 from jormungandr.scenarios.ridesharing.ridesharing_service_manager import RidesharingServiceManager
 import six
@@ -139,10 +138,6 @@ class Instance(transient_socket.TransientSocket):
         self.timezone = None  # timezone will be fetched from the kraken
         self.publication_date = -1
         self.is_initialized = False  # kraken hasn't been called yet we don't have geom nor timezone
-        self.breaker = pybreaker.CircuitBreaker(
-            fail_max=app.config.get(str('CIRCUIT_BREAKER_MAX_INSTANCE_FAIL'), 5),
-            reset_timeout=app.config.get(str('CIRCUIT_BREAKER_INSTANCE_TIMEOUT_S'), 60),
-        )
         self.georef = georef.Kraken(self)
         self._streetnetwork_backend_manager = streetnetwork_backend_manager
 
@@ -722,16 +717,7 @@ class Instance(transient_socket.TransientSocket):
         instance_db = self.get_models()
         return get_value_or_default('places_proximity_radius', instance_db, self.name)
 
-    def send_and_receive(self, *args, **kwargs):
-        """
-        encapsulate all call to kraken in a circuit breaker, this way we don't loose time calling dead instance
-        """
-        try:
-            return self.breaker.call(self._send_and_receive, *args, **kwargs)
-        except pybreaker.CircuitBreakerError as e:
-            raise DeadSocketException(self.name, self.socket_path)
-
-    def _send_and_receive(self, request, timeout=app.config.get('INSTANCE_TIMEOUT', 10), quiet=False, **kwargs):
+    def send_and_receive(self, request, timeout=app.config.get('INSTANCE_TIMEOUT', 10), quiet=False, **kwargs):
         deadline = datetime.utcnow() + timedelta(milliseconds=timeout * 1000)
         request.deadline = deadline.strftime('%Y%m%dT%H%M%S,%f')
 
@@ -851,8 +837,7 @@ class Instance(transient_socket.TransientSocket):
         req.requested_api = type_pb2.METADATAS
         request_id = "instance_init"
         try:
-            # we use _send_and_receive to avoid the circuit breaker, we don't want fast fail on init :)
-            resp = self._send_and_receive(req, request_id=request_id, timeout=1, quiet=True)
+            resp = self.send_and_receive(req, request_id=request_id, timeout=1, quiet=True)
             # the instance is automatically updated on a call
             if self.publication_date != pub_date:
                 return True

@@ -29,7 +29,6 @@
 from __future__ import absolute_import, print_function, unicode_literals, division
 
 import logging
-import pybreaker
 import zmq
 
 from datetime import datetime, timedelta
@@ -60,10 +59,6 @@ class ZmqSocket(TransientSocket):
             name=name, zmq_context=zmq_context, zmq_socket=zmq_socket, socket_ttl=socket_ttl
         )
         self.timeout = timeout
-        self.breaker = pybreaker.CircuitBreaker(
-            fail_max=app.config.get(str('CIRCUIT_BREAKER_MAX_INSTANCE_FAIL'), 5),
-            reset_timeout=app.config.get(str('CIRCUIT_BREAKER_INSTANCE_TIMEOUT_S'), 60),
-        )
 
     def _send_and_receive(self, request, quiet=False, **kwargs):
         deadline = datetime.utcnow() + timedelta(milliseconds=self.timeout * 1000)
@@ -87,13 +82,7 @@ class ZmqSocket(TransientSocket):
         return resp
 
     def send_and_receive(self, *args, **kwargs):
-        """
-        encapsulate all call to kraken in a circuit breaker, this way we don't lose time calling dead instance
-        """
-        try:
-            return self.breaker.call(self._send_and_receive, *args, **kwargs)
-        except pybreaker.CircuitBreakerError:
-            raise DeadSocketException(self.name, self._zmq_socket)
+        return self.call(self._send_and_receive, *args, **kwargs)
 
     def clean_up_zmq_sockets(self):
         for socket in self._sockets:
