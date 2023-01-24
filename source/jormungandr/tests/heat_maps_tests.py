@@ -177,7 +177,8 @@ class TestHeatMap(AbstractTestFixture):
         assert error_code == 403
         assert 'message' in normal_response
         assert (
-            normal_response['message'] == "You don't have the permission to access the requested resource. It is either read-protected or not readable by the server."
+            normal_response['message']
+            == "You don't have the permission to access the requested resource. It is either read-protected or not readable by the server."
         )
 
     def test_heat_maps_invalid_duration(self):

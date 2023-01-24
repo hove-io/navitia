@@ -1466,7 +1466,8 @@ class JourneysNoRegion:
 
         assert 'message' in response
         assert (
-            response['message'] == "You don't have the permission to access the requested resource. It is either read-protected or not readable by the server."
+            response['message']
+            == "You don't have the permission to access the requested resource. It is either read-protected or not readable by the server."
         )
 
     def test_no_region(self):
@@ -1476,7 +1477,8 @@ class JourneysNoRegion:
 
         assert 'message' in response
         assert (
-            response['message'] == "You don't have the permission to access the requested resource. It is either read-protected or not readable by the server."
+            response['message']
+            == "You don't have the permission to access the requested resource. It is either read-protected or not readable by the server."
         )
 
 

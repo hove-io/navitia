@@ -270,7 +270,8 @@ class TestBasicAuthentication(AbstractTestAuthentication):
             assert status == 403
             assert 'message' in r
             assert (
-                r['message'] == "You don't have the permission to access the requested resource. It is either read-protected or not readable by the server."
+                r['message']
+                == "You don't have the permission to access the requested resource. It is either read-protected or not readable by the server."
             )
 
 
