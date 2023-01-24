@@ -251,9 +251,9 @@ class TestBasicAuthentication(AbstractTestAuthentication):
             # stopA and stopB and in main routing test, all is ok
             ('/v1/journeys?from=stopA&to=stopB&datetime=20120614T080000', 200),
             # stop1 is in departure board -> KO
-            ('/v1/journeys?from=stopA&to=stop2&datetime=20120614T080000', 403),
+            ('/v1/journeys?from=stopA&to=stop2&datetime=20120614T080000', 404),
             # stop1 and stop2 are in departure board -> KO
-            ('/v1/journeys?from=stop1&to=stop2&datetime=20120614T080000', 403),
+            ('/v1/journeys?from=stop1&to=stop2&datetime=20120614T080000', 404),
         ]
 
         with user_set(app, FakeUserAuth, 'bob'):
@@ -262,15 +262,15 @@ class TestBasicAuthentication(AbstractTestAuthentication):
 
     def test_unkown_region(self):
         """
-        the authentication process must not mess if the region is not found
+        the authentication process prevails even if the region is not found
         """
         with user_set(app, FakeUserAuth, 'bob'):
             r, status = self.query_no_assert('/v1/coverage/the_marvelous_unknown_region/stop_areas')
 
-            assert status == 404
-            assert 'error' in r
+            assert status == 403
+            assert 'message' in r
             assert (
-                get_not_null(r, 'error')['message'] == "The region the_marvelous_unknown_region doesn't exists"
+                r['message'] == "You don't have the permission to access the requested resource. It is either read-protected or not readable by the server."
             )
 
 
@@ -419,7 +419,7 @@ class TestOverlappingAuthentication(AbstractTestAuthentication):
             response = self.query('/v1/journeys?from=stopA&to=stopB&datetime=20120614T080000')
             assert 'error' not in response
             _, status = self.query_no_assert('/v1/journeys?from=stop1&to=stop2&datetime=20120614T080000')
-            assert status == 403
+            assert status == 404
 
             _, status = self.query_no_assert(
                 '/v1/coverage/empty_routing_test/journeys?from=stop1&to=stop2&datetime=20120614T080000'
@@ -444,9 +444,9 @@ class TestOverlappingAuthentication(AbstractTestAuthentication):
         """
         with user_set(app, FakeUserAuth, 'bobette'):
             response, status = self.query_no_assert('/v1/journeys?from=stopA&to=stopB&datetime=20120614T080000')
-            assert status == 403
+            assert status == 404
             response, status = self.query_no_assert('/v1/journeys?from=stop1&to=stop2&datetime=20120614T080000')
-            assert status == 403
+            assert status == 404
 
             response, status = self.query_no_assert(
                 '/v1/journeys?from={from_coord}&to={to_coord}&datetime={d}'.format(

@@ -303,6 +303,10 @@ class InstanceManager(object):
 
         # fetch all the authorized instances (free + private) using cached function has_access()
         authorized_instances = self._get_authorized_instances(user, api)
+        if not authorized_instances:
+            # user doesn't have access to any of the instances
+            context = 'User has no access to any instance'
+            authentication.abort_request(user=user, context=context)
 
         # Filter instances among instances in authorized_instances
         if name:
@@ -317,7 +321,7 @@ class InstanceManager(object):
         if not valid_instances:
             # user doesn't have access to any of the instances
             context = 'User has no access to any instance or instance doesn' 't exist'
-            authentication.abort_request(user=authentication.get_user(None), context=context)
+            authentication.abort_request(user=user, context=context)
         else:
             return valid_instances
 
