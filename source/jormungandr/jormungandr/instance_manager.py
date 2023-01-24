@@ -219,6 +219,25 @@ class InstanceManager(object):
         if not self.thread_event.is_set():
             self.thread_event.set()
 
+    def _get_free_instances(self):
+        instances = []
+        for name, instance in self.instances.items():
+            instance_db = instance.get_models()
+            if instance_db.is_free:
+                instances.append(instance)
+
+        return instances
+
+    def _get_authorized_instances(self, user, api):
+        authorized_instances = [
+            i for name, i in self.instances.items() if authentication.has_access(name, abort=False, user=user, api=api)
+        ]
+
+        if not authorized_instances:
+            context = 'User has no access to any instance'
+            authentication.abort_request(user, context)
+        return authorized_instances
+
     def _filter_authorized_instances(self, instances, api):
         if not instances:
             return []
@@ -247,6 +266,21 @@ class InstanceManager(object):
             return self._all_keys_of_coord(flon, flat)
         return self._all_keys_of_id(object_id)
 
+    def _find_coverage_by_object_id_in_instances(self, instances, object_id):
+        if object_id.count(";") == 1 or object_id[:6] == "coord:":
+            if object_id.count(";") == 1:
+                lon, lat = object_id.split(";")
+            else:
+                lon, lat = object_id[6:].split(":")
+            try:
+                flon = float(lon)
+                flat = float(lat)
+            except:
+                raise InvalidArguments(object_id)
+            return self._all_keys_of_coord_in_instances(instances, flon, flat)
+
+        return self._all_keys_of_id_in_instances(instances, object_id)
+
     @cache.memoize(app.config[str('CACHE_CONFIGURATION')].get(str('TIMEOUT_PTOBJECTS'), None))
     def _all_keys_of_id(self, object_id):
         instances = []
@@ -259,6 +293,30 @@ class InstanceManager(object):
 
         if not instances:
             raise RegionNotFound(object_id=object_id)
+        return instances
+
+    def _all_keys_of_id_in_instances(self, instances, object_id):
+        valid_instances = []
+        for instance in instances:
+            if self._exists_id_in_instance(instance, object_id):
+                valid_instances.append(instance)
+        if not instances:
+            raise RegionNotFound(object_id=object_id)
+
+        return valid_instances
+
+    @cache.memoize(app.config[str('CACHE_CONFIGURATION')].get(str('TIMEOUT_PTOBJECTS'), None))
+    def _exists_id_in_instance(self, instance, object_id):
+        return instance.has_id(object_id)
+
+    def _all_keys_of_coord_in_instances(self, instances, lon, lat):
+        p = geometry.Point(lon, lat)
+        instances = [i for i in instances if i.has_point(p)]
+        logging.getLogger(__name__).debug(
+            "_all_keys_of_coord_in_instances(self, {}, {}) returns {}".format(lon, lat, instances)
+        )
+        if not instances:
+            raise RegionNotFound(lon=lon, lat=lat)
         return instances
 
     def _all_keys_of_coord(self, lon, lat):
@@ -284,26 +342,23 @@ class InstanceManager(object):
             return [i.name for i in valid_instances]
 
     def get_instances(self, name=None, lon=None, lat=None, object_id=None, api='ALL'):
-        available_instances = []
+        # Request without token or bad token makes a request exception and exits with a message
+        # Get all the coverages for the user
+        # get_user is cached hence access to database only once when cache expires.
+        user = authentication.get_user(token=authentication.get_token())
+        authorized_instances = self._get_authorized_instances(user, api)
         if name:
-            if name in self.instances:
-                available_instances = [self.instances[name]]
+            valid_instances = [i for i in authorized_instances if i.name == name]
         elif lon and lat:
-            available_instances = [
-                self.instances[k] for k in self._all_keys_of_coord(lon, lat) if k in self.instances
-            ]
+            valid_instances = self._all_keys_of_coord_in_instances(authorized_instances, lon, lat)
         elif object_id:
-            instance_keys = self._find_coverage_by_object_id(object_id)
-            if instance_keys is None:
-                available_instances = []
-            else:
-                available_instances = [self.instances[k] for k in instance_keys if k in self.instances]
+            valid_instances = self._find_coverage_by_object_id_in_instances(authorized_instances, object_id)
         else:
-            available_instances = list(self.instances.values())
-        valid_instances = self._filter_authorized_instances(available_instances, api)
-        if available_instances and not valid_instances:
+            valid_instances = authorized_instances
+
+        if not valid_instances:
             # user doesn't have access to any of the instances
-            context = 'User does not have access to any of the instances'
+            context = 'User has no access to any instance or instance doesn''t exist'
             authentication.abort_request(user=authentication.get_user(None), context=context)
         else:
             return valid_instances
