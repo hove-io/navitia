@@ -230,20 +230,6 @@ class InstanceManager(object):
             authentication.abort_request(user, context)
         return authorized_instances
 
-    def _filter_authorized_instances(self, instances, api):
-        if not instances:
-            return []
-        # get_user is cached hence access to database only once when cache expires.
-        user = authentication.get_user(token=authentication.get_token())
-        # has_access returns true if can_connect_to_database = false when cache expires for each coverage
-        valid_instances = [
-            i for i in instances if authentication.has_access(i.name, abort=False, user=user, api=api)
-        ]
-        if not valid_instances:
-            context = 'User has no access to any instance'
-            authentication.abort_request(user, context)
-        return valid_instances
-
     def _find_coverage_by_object_id_in_instances(self, instances, object_id):
         if object_id.count(";") == 1 or object_id[:6] == "coord:":
             if object_id.count(";") == 1:

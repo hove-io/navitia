@@ -1464,11 +1464,8 @@ class JourneysNoRegion:
 
         assert status != 200, "the response should not be valid"
 
-        assert 'message' in response
-        assert (
-            response['message']
-            == "You don't have the permission to access the requested resource. It is either read-protected or not readable by the server."
-        )
+        assert response['error']['id'] == "unknown_object"
+        assert response['error']['message'] == "The region non_existent_region doesn't exists"
 
     def test_no_region(self):
         response, status = self.query_no_assert("v1/" + journey_basic_query)
