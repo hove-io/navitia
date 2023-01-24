@@ -64,7 +64,9 @@ def get_instances_test(manager):
 
 
 def get_instances_by_coord_test(manager, mocker):
-    mock = mocker.patch.object(manager, '_all_keys_of_coord_in_instances', return_value=[manager.instances['paris']])
+    mock = mocker.patch.object(
+        manager, '_all_keys_of_coord_in_instances', return_value=[manager.instances['paris']]
+    )
     with app.test_request_context('/'):
         instances = manager.get_instances(lon=4, lat=3)
         assert len(instances) == 1
