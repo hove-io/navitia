@@ -219,15 +219,6 @@ class InstanceManager(object):
         if not self.thread_event.is_set():
             self.thread_event.set()
 
-    def _get_free_instances(self):
-        instances = []
-        for name, instance in self.instances.items():
-            instance_db = instance.get_models()
-            if instance_db.is_free:
-                instances.append(instance)
-
-        return instances
-
     def _get_authorized_instances(self, user, api):
         authorized_instances = [
             i
@@ -274,7 +265,7 @@ class InstanceManager(object):
         for instance in instances:
             if self._exists_id_in_instance(instance, object_id):
                 valid_instances.append(instance)
-        if not instances:
+        if not valid_instances:
             raise RegionNotFound(object_id=object_id)
 
         return valid_instances
@@ -285,13 +276,13 @@ class InstanceManager(object):
 
     def _all_keys_of_coord_in_instances(self, instances, lon, lat):
         p = geometry.Point(lon, lat)
-        instances = [i for i in instances if i.has_point(p)]
+        valid_instances = [i for i in instances if i.has_point(p)]
         logging.getLogger(__name__).debug(
             "_all_keys_of_coord_in_instances(self, {}, {}) returns {}".format(lon, lat, instances)
         )
-        if not instances:
+        if not valid_instances:
             raise RegionNotFound(lon=lon, lat=lat)
-        return instances
+        return valid_instances
 
     def get_region(self, region_str=None, lon=None, lat=None, object_id=None, api='ALL'):
         return self.get_regions(region_str, lon, lat, object_id, api, only_one=True)
