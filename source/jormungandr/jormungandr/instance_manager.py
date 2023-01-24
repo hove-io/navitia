@@ -41,7 +41,6 @@ from jormungandr.protobuf_to_dict import protobuf_to_dict
 from jormungandr.exceptions import ApiNotFound, RegionNotFound, DeadSocketException, InvalidArguments
 from jormungandr import authentication, cache, app
 from jormungandr.instance import Instance
-from jormungandr.utils import can_connect_to_database
 import gevent
 import os
 
@@ -297,6 +296,9 @@ class InstanceManager(object):
             return [i.name for i in valid_instances]
 
     def get_instances(self, name=None, lon=None, lat=None, object_id=None, api='ALL'):
+        if name and name not in self.instances:
+            raise RegionNotFound(region=name)
+
         # Request without token or bad token makes a request exception and exits with a message
         # get_user is cached hence access to database only once when cache expires.
         user = authentication.get_user(token=authentication.get_token())
@@ -320,7 +322,7 @@ class InstanceManager(object):
 
         if not valid_instances:
             # user doesn't have access to any of the instances
-            context = 'User has no access to any instance or instance doesn' 't exist'
+            context = "User has no access to any instance or instance doesn't exist"
             authentication.abort_request(user=user, context=context)
         else:
             return valid_instances

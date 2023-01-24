@@ -174,12 +174,8 @@ class TestHeatMap(AbstractTestFixture):
         q = "v1/coverage/heat_maps"
         normal_response, error_code = self.query_no_assert(q)
 
-        assert error_code == 403
-        assert 'message' in normal_response
-        assert (
-            normal_response['message']
-            == "You don't have the permission to access the requested resource. It is either read-protected or not readable by the server."
-        )
+        assert error_code == 404
+        assert normal_response['error']['message'] == 'The region heat_maps doesn\'t exists'
 
     def test_heat_maps_invalid_duration(self):
         q = "v1/coverage/main_routing_test/heat_maps?datetime={}&from={}&max_duration={}"

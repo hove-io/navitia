@@ -267,11 +267,10 @@ class TestBasicAuthentication(AbstractTestAuthentication):
         with user_set(app, FakeUserAuth, 'bob'):
             r, status = self.query_no_assert('/v1/coverage/the_marvelous_unknown_region/stop_areas')
 
-            assert status == 403
-            assert 'message' in r
+            assert status == 404
+            assert 'error' in r
             assert (
-                r['message']
-                == "You don't have the permission to access the requested resource. It is either read-protected or not readable by the server."
+                get_not_null(r, 'error')['message'] == "The region the_marvelous_unknown_region doesn't exists"
             )
 
 
