@@ -1472,10 +1472,11 @@ class JourneysNoRegion:
 
         assert status != 200, "the response should not be valid"
 
-        assert response['error']['id'] == "unknown_object"
-
-        error_regexp = re.compile('^No region available for the coordinates.*')
-        assert error_regexp.match(response['error']['message'])
+        assert 'message' in response
+        assert (
+            response['message']
+            == "You don't have the permission to access the requested resource. It is either read-protected or not readable by the server."
+        )
 
 
 @dataset({"basic_routing_test": {}})

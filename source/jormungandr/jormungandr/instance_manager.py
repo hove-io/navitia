@@ -41,7 +41,6 @@ from jormungandr.protobuf_to_dict import protobuf_to_dict
 from jormungandr.exceptions import ApiNotFound, RegionNotFound, DeadSocketException, InvalidArguments
 from jormungandr import authentication, cache, app
 from jormungandr.instance import Instance
-from jormungandr.utils import can_connect_to_database
 import gevent
 import os
 
@@ -154,7 +153,7 @@ class InstanceManager(object):
     def _clear_cache(self):
         logging.getLogger(__name__).info('clear cache')
         try:
-            cache.delete_memoized(self._all_keys_of_id)
+            cache.delete_memoized(self._exists_id_in_instance)
         except:
             # if there is an error with cache, flask want to access to the app, this will fail at startup
             # with a "working outside of application context"
@@ -219,21 +218,19 @@ class InstanceManager(object):
         if not self.thread_event.is_set():
             self.thread_event.set()
 
-    def _filter_authorized_instances(self, instances, api):
-        if not instances:
-            return []
-        # get_user is cached hence access to database only once when cache expires.
-        user = authentication.get_user(token=authentication.get_token())
-        # has_access returns true if can_connect_to_database = false when cache expires for each coverage
-        valid_instances = [
-            i for i in instances if authentication.has_access(i.name, abort=False, user=user, api=api)
+    def _get_authorized_instances(self, user, api):
+        authorized_instances = [
+            i
+            for name, i in self.instances.items()
+            if authentication.has_access(name, abort=False, user=user, api=api)
         ]
-        if not valid_instances:
+
+        if not authorized_instances:
             context = 'User has no access to any instance'
             authentication.abort_request(user, context)
-        return valid_instances
+        return authorized_instances
 
-    def _find_coverage_by_object_id(self, object_id):
+    def _find_coverage_by_object_id_in_instances(self, instances, object_id):
         if object_id.count(";") == 1 or object_id[:6] == "coord:":
             if object_id.count(";") == 1:
                 lon, lat = object_id.split(";")
@@ -244,32 +241,33 @@ class InstanceManager(object):
                 flat = float(lat)
             except:
                 raise InvalidArguments(object_id)
-            return self._all_keys_of_coord(flon, flat)
-        return self._all_keys_of_id(object_id)
+            return self._all_keys_of_coord_in_instances(instances, flon, flat)
+
+        return self._all_keys_of_id_in_instances(instances, object_id)
+
+    def _all_keys_of_id_in_instances(self, instances, object_id):
+        valid_instances = []
+        for instance in instances:
+            if self._exists_id_in_instance(instance, object_id):
+                valid_instances.append(instance)
+        if not valid_instances:
+            raise RegionNotFound(object_id=object_id)
+
+        return valid_instances
 
     @cache.memoize(app.config[str('CACHE_CONFIGURATION')].get(str('TIMEOUT_PTOBJECTS'), None))
-    def _all_keys_of_id(self, object_id):
-        instances = []
-        futures = {}
-        for name, instance in self.instances.items():
-            futures[name] = gevent.spawn(instance.has_id, object_id)
-        for name, future in futures.items():
-            if future.get():
-                instances.append(name)
+    def _exists_id_in_instance(self, instance, object_id):
+        return instance.has_id(object_id)
 
-        if not instances:
-            raise RegionNotFound(object_id=object_id)
-        return instances
-
-    def _all_keys_of_coord(self, lon, lat):
+    def _all_keys_of_coord_in_instances(self, instances, lon, lat):
         p = geometry.Point(lon, lat)
-        instances = [i.name for i in self.instances.values() if i.has_point(p)]
+        valid_instances = [i for i in instances if i.has_point(p)]
         logging.getLogger(__name__).debug(
-            "all_keys_of_coord(self, {}, {}) returns {}".format(lon, lat, instances)
+            "_all_keys_of_coord_in_instances(self, {}, {}) returns {}".format(lon, lat, instances)
         )
-        if not instances:
+        if not valid_instances:
             raise RegionNotFound(lon=lon, lat=lat)
-        return instances
+        return valid_instances
 
     def get_region(self, region_str=None, lon=None, lat=None, object_id=None, api='ALL'):
         return self.get_regions(region_str, lon, lat, object_id, api, only_one=True)
@@ -284,27 +282,34 @@ class InstanceManager(object):
             return [i.name for i in valid_instances]
 
     def get_instances(self, name=None, lon=None, lat=None, object_id=None, api='ALL'):
-        available_instances = []
-        if name:
-            if name in self.instances:
-                available_instances = [self.instances[name]]
-        elif lon and lat:
-            available_instances = [
-                self.instances[k] for k in self._all_keys_of_coord(lon, lat) if k in self.instances
-            ]
-        elif object_id:
-            instance_keys = self._find_coverage_by_object_id(object_id)
-            if instance_keys is None:
-                available_instances = []
-            else:
-                available_instances = [self.instances[k] for k in instance_keys if k in self.instances]
-        else:
-            available_instances = list(self.instances.values())
-        valid_instances = self._filter_authorized_instances(available_instances, api)
-        if available_instances and not valid_instances:
+        if name and name not in self.instances:
+            raise RegionNotFound(region=name)
+
+        # Request without token or bad token makes a request exception and exits with a message
+        # get_user is cached hence access to database only once when cache expires.
+        user = authentication.get_user(token=authentication.get_token())
+
+        # fetch all the authorized instances (free + private) using cached function has_access()
+        authorized_instances = self._get_authorized_instances(user, api)
+        if not authorized_instances:
             # user doesn't have access to any of the instances
-            context = 'User does not have access to any of the instances'
-            authentication.abort_request(user=authentication.get_user(None), context=context)
+            context = 'User has no access to any instance'
+            authentication.abort_request(user=user, context=context)
+
+        # Filter instances among instances in authorized_instances
+        if name:
+            valid_instances = [i for i in authorized_instances if i.name == name]
+        elif lon and lat:
+            valid_instances = self._all_keys_of_coord_in_instances(authorized_instances, lon, lat)
+        elif object_id:
+            valid_instances = self._find_coverage_by_object_id_in_instances(authorized_instances, object_id)
+        else:
+            valid_instances = authorized_instances
+
+        if not valid_instances:
+            # user doesn't have access to any of the instances
+            context = "User has no access to any instance or instance doesn't exist"
+            authentication.abort_request(user=user, context=context)
         else:
             return valid_instances
 
