@@ -137,8 +137,6 @@ AUTOCOMPLETE_SYSTEMS = json.loads(os.getenv('JORMUNGANDR_AUTOCOMPLETE_SYSTEMS', 
 ISOCHRONE_DEFAULT_VALUE = os.getenv('JORMUNGANDR_ISOCHRONE_DEFAULT_VALUE', 1800)  # in s
 
 # circuit breaker parameters.
-CIRCUIT_BREAKER_MAX_INSTANCE_FAIL = 4  # max instance call failures before stopping attempt
-CIRCUIT_BREAKER_INSTANCE_TIMEOUT_S = 60  # the circuit breaker retries after this timeout (in seconds)
 
 CIRCUIT_BREAKER_MAX_TIMEO_FAIL = 4  # max instance call failures before stopping attempt
 CIRCUIT_BREAKER_TIMEO_TIMEOUT_S = 60  # the circuit breaker retries after this timeout (in seconds)
