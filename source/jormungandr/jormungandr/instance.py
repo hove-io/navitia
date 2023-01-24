@@ -717,12 +717,14 @@ class Instance(transient_socket.TransientSocket):
         instance_db = self.get_models()
         return get_value_or_default('places_proximity_radius', instance_db, self.name)
 
-    def send_and_receive(self, request, timeout=app.config.get('INSTANCE_TIMEOUT', 10), quiet=False, **kwargs):
+    def send_and_receive(
+        self, request, timeout=app.config.get('INSTANCE_TIMEOUT', 10), quiet=False, request_id=None, **kwargs
+    ):
         deadline = datetime.utcnow() + timedelta(milliseconds=timeout * 1000)
         request.deadline = deadline.strftime('%Y%m%dT%H%M%S,%f')
 
-        if 'request_id' in kwargs and kwargs['request_id']:
-            request.request_id = kwargs['request_id']
+        if request_id:
+            request.request_id = request_id
         else:
             try:
                 request.request_id = flask.request.id

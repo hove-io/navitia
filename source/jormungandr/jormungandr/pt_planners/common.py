@@ -60,12 +60,12 @@ class ZmqSocket(TransientSocket):
         )
         self.timeout = timeout
 
-    def _send_and_receive(self, request, quiet=False, **kwargs):
+    def send_and_receive(self, request, quiet=False, request_id=None, **kwargs):
         deadline = datetime.utcnow() + timedelta(milliseconds=self.timeout * 1000)
         request.deadline = deadline.strftime('%Y%m%dT%H%M%S,%f')
 
-        if 'request_id' in kwargs and kwargs['request_id']:
-            request.request_id = kwargs['request_id']
+        if request_id:
+            request.request_id = request_id
         else:
             try:
                 request.request_id = flask.request.id
@@ -80,9 +80,6 @@ class ZmqSocket(TransientSocket):
         resp = response_pb2.Response()
         resp.ParseFromString(pb)
         return resp
-
-    def send_and_receive(self, *args, **kwargs):
-        return self.call(self._send_and_receive, *args, **kwargs)
 
     def clean_up_zmq_sockets(self):
         for socket in self._sockets:
