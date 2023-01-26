@@ -166,7 +166,7 @@ class Handimap(AbstractStreetNetworkService):
             'sources_to_targets',
             post_data,
         )
-        self._check_response(response)
+        self.check_response(response)
         return ujson.loads(response.text)
 
     def make_path_key(self, mode, orig_uri, dest_uri, streetnetwork_path_type, period_extremity):
@@ -200,8 +200,10 @@ class Handimap(AbstractStreetNetworkService):
         return sn_routing_matrix
 
     def check_content_response(self, json_respons, origins, destinations):
-        lengths = sum([len(resp) for resp in json_respons.get("sources_to_targets", [])])
-        if lengths != len(origins) * len(destinations):
+        len_origins_destinations = len(origins) * len(destinations)
+        sources_to_targets = json_respons.get("sources_to_targets", [])
+        check_content = [len_origins_destinations == len(resp) for resp in sources_to_targets]
+        if len(sources_to_targets) != len_origins_destinations or not all(check_content):
             self.log.error('Handimap nb response != nb requested')
             raise UnableToParse('Handimap nb response != nb requested')
 
@@ -238,7 +240,7 @@ class Handimap(AbstractStreetNetworkService):
         )
 
         response = self._call_handimap('route', params)
-        self._check_response(response)
+        self.check_response(response)
         return self._get_response(
             ujson.loads(response.text), pt_object_origin, pt_object_destination, fallback_extremity
         )
@@ -324,13 +326,9 @@ class Handimap(AbstractStreetNetworkService):
             self.record_external_failure(str(e))
             raise HandimapTechnicalError('Handimap routing has encountered unknown error')
 
-    @classmethod
-    def _check_response(cls, response):
+    def check_response(self, response):
         if response.status_code != 200:
-            cls.log.error(
-                'Handimap service unavailable, impossible to query : {}'
-                ' with response : {}'.format(response.url, response.text)
-            )
+            self.log.error('Handimap service unavailable, response code: {}'.format(response.status_code))
             raise HandimapTechnicalError('Handimap service unavailable, impossible to query')
 
     def feed_publisher(self):
