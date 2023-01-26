@@ -47,7 +47,7 @@ from navitiacommon import response_pb2, request_pb2, type_pb2
 
 class ZmqSocket(six.with_metaclass(ABCMeta, object)):
     def __init__(
-        self, zmq_context, zmq_socket, zmq_socket_type=None, timeout=app.config.get('INSTANCE_TIMEOUT', 10000)
+        self, zmq_context, zmq_socket, zmq_socket_type=None, timeout=app.config.get('INSTANCE_TIMEOUT', 10)
     ):
         self.zmq_socket = zmq_socket
         self.context = zmq_context
@@ -70,7 +70,7 @@ class ZmqSocket(six.with_metaclass(ABCMeta, object)):
             start = time.time()
             socket = context.socket(zmq.REQ)
             socket.connect(self.zmq_socket)
-            logging.getLogger(__name__).info(
+            logging.getLogger(__name__).debug(
                 "it took %s ms to open a pt_planner socket of %s during a request",
                 '%.2e' % ((time.time() - start) * 1000),
                 self.name,
@@ -83,7 +83,7 @@ class ZmqSocket(six.with_metaclass(ABCMeta, object)):
                     start = time.time()
                     socket.setsockopt(zmq.LINGER, 0)
                     socket.close()
-                    logging.getLogger(__name__).info(
+                    logging.getLogger(__name__).debug(
                         "it took %s ms to close a pt_planner socket of %s during a request",
                         '%.2e' % ((time.time() - start) * 1000),
                         self.name,
@@ -94,7 +94,7 @@ class ZmqSocket(six.with_metaclass(ABCMeta, object)):
 
     def _send_and_receive(self, request, quiet=False, **kwargs):
         logger = logging.getLogger(__name__)
-        deadline = datetime.utcnow() + timedelta(milliseconds=self.timeout)
+        deadline = datetime.utcnow() + timedelta(milliseconds=self.timeout * 1000)
         request.deadline = deadline.strftime('%Y%m%dT%H%M%S,%f')
 
         with self.socket(self.context) as socket:
@@ -109,7 +109,7 @@ class ZmqSocket(six.with_metaclass(ABCMeta, object)):
                         request.request_id = kwargs['flask_request_id']
 
             socket.send(request.SerializeToString())
-            if socket.poll(timeout=self.timeout) > 0:
+            if socket.poll(timeout=self.timeout * 1000) > 0:
                 pb = socket.recv()
                 resp = response_pb2.Response()
                 resp.ParseFromString(pb)

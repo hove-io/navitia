@@ -99,7 +99,7 @@ class TransientSocket(object):
             socket = self._zmq_context.socket(zmq.REQ)
             socket.connect(self._socket_path)
             t = time.time()
-            logging.getLogger(__name__).info(
+            logging.getLogger(__name__).debug(
                 "it took %s ms to open a asgard socket of %s during a request",
                 '%.2e' % ((time.time() - start) * 1000),
                 self.name,
@@ -115,7 +115,7 @@ class TransientSocket(object):
                 if time.time() - t >= self.ttl:
                     start = time.time()
                     self.close_socket(socket, self.name)
-                    logging.getLogger(__name__).info(
+                    logging.getLogger(__name__).debug(
                         "it took %s ms to close a asgard socket of %s during a request",
                         '%.2e' % ((time.time() - start) * 1000),
                         self.name,
@@ -142,13 +142,13 @@ class TransientSocket(object):
         start = time.time()
         for _, socket in sockets_to_be_closed:
             cls.close_socket(socket, o.name)
-        logging.getLogger(__name__).info(
+        logging.getLogger(__name__).debug(
             "it took %s ms to reap all asgard sockets of %s", time.time() - start, o.name
         )
 
     @classmethod
     def _reap_sockets(cls):
-        cls._logger.info("reaping sockets")
+        cls._logger.debug("reaping sockets")
         for o, sockets in six.iteritems(cls._sockets):
             TransientSocket._reap(o, sockets)
 
