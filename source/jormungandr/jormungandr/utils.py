@@ -818,7 +818,7 @@ def create_graphical_isochrones_request(
 
 def remove_ghost_words(query_string, ghost_words):
     for gw in ghost_words:
-        query_string = query_string.replace(gw, '').strip()
+        query_string = re.sub(gw, '', query_string, flags=re.IGNORECASE)
     return query_string
 
 
