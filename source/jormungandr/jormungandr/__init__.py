@@ -123,4 +123,4 @@ def setup_package():
     i_manager.stop()
 
 
-i_manager.is_ready = True
+i_manager.set_ready()

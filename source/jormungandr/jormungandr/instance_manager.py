@@ -29,9 +29,9 @@
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 
+
 from __future__ import absolute_import, print_function, unicode_literals, division
 from flask import json
-
 from shapely import geometry
 from zmq import green as zmq
 from navitiacommon import type_pb2, request_pb2
@@ -43,6 +43,8 @@ from jormungandr import authentication, cache, app
 from jormungandr.instance import Instance
 import gevent
 import os
+import time
+import random
 
 
 def instances_comparator(instance1, instance2):
@@ -100,9 +102,31 @@ class InstanceManager(object):
         self.instances = {}
         self.context = zmq.Context()
         self.is_ready = False
+        now = time.time()
+        min_alive_duration = app.config.get(str('JORMUNGANDR_READY_DURATION_MIN_S'), 3600)
+        delta_max = app.config.get(str('JORMUNGANDR_READY_DURATION_MAX_DELTA_S'), 3600)
+        delta = random.random() * delta_max
+        self.expiration_date = now + min_alive_duration + delta
+
+        logging.getLogger(__name__).warn(
+            "expiration date is %s", time.strftime("%d %b %Y %H:%M:%S UTC", time.gmtime(self.expiration_date))
+        )
 
     def __repr__(self):
         return '<InstanceManager>'
+
+    def set_ready(self):
+        self.is_ready = True
+
+    def ready(self):
+        if self.is_ready is False:
+            return False
+        else:
+            now = time.time()
+            if now < self.expiration_date:
+                return True
+            else:
+                return False
 
     def register_instance(self, config):
         logging.getLogger(__name__).debug("instance configuration: %s", config)
