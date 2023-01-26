@@ -103,8 +103,8 @@ class InstanceManager(object):
         self.context = zmq.Context()
         self.is_ready = False
         now = time.time()
-        min_alive_duration = app.config.get(str('JORMUNGANDR_READY_DURATION_MIN_S'), 3600)
-        delta_max = app.config.get(str('JORMUNGANDR_READY_DURATION_MAX_DELTA_S'), 3600)
+        min_alive_duration = app.config.get(str('JORMUNGANDR_READY_DURATION_MIN_S'), 600)
+        delta_max = app.config.get(str('JORMUNGANDR_READY_DURATION_MAX_DELTA_S'), 600)
         delta = random.random() * delta_max
         self.expiration_date = now + min_alive_duration + delta
 
