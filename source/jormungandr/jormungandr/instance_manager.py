@@ -288,23 +288,27 @@ class InstanceManager(object):
         # Request without token or bad token makes a request exception and exits with a message
         # get_user is cached hence access to database only once when cache expires.
         user = authentication.get_user(token=authentication.get_token())
-
-        # fetch all the authorized instances (free + private) using cached function has_access()
-        authorized_instances = self._get_authorized_instances(user, api)
-        if not authorized_instances:
-            # user doesn't have access to any of the instances
-            context = 'User has no access to any instance'
-            authentication.abort_request(user=user, context=context)
-
-        # Filter instances among instances in authorized_instances
+        valid_instances = []
         if name:
-            valid_instances = [i for i in authorized_instances if i.name == name]
-        elif lon and lat:
-            valid_instances = self._all_keys_of_coord_in_instances(authorized_instances, lon, lat)
-        elif object_id:
-            valid_instances = self._find_coverage_by_object_id_in_instances(authorized_instances, object_id)
+            # Requests with a coverage
+            available_instance = self.instances[name]
+            if authentication.has_access(available_instance.name, abort=False, user=user, api=api):
+                valid_instances = [self.instances[name]]
         else:
-            valid_instances = authorized_instances
+            # Requests without any coverage
+            # fetch all the authorized instances (free + private) using cached function has_access()
+            authorized_instances = self._get_authorized_instances(user, api)
+            if not authorized_instances:
+                # user doesn't have access to any of the instances
+                context = 'User has no access to any instance'
+                authentication.abort_request(user=user, context=context)
+
+            if lon and lat:
+                valid_instances = self._all_keys_of_coord_in_instances(authorized_instances, lon, lat)
+            elif object_id:
+                valid_instances = self._find_coverage_by_object_id_in_instances(authorized_instances, object_id)
+            else:
+                valid_instances = authorized_instances
 
         if not valid_instances:
             # user doesn't have access to any of the instances
