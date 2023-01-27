@@ -145,7 +145,7 @@ class TransientSocket(object):
             # TODO: to remove after tests
             self.count_socket[self.name] = len(self._sockets)
             self.count_socket["total"] = sum([cnt for key, cnt in self.count_socket.items() if key != "total"])
-            self._logger.warning("Socket count: {}".format(self.count_socket))
+            self._logger.info("Socket count: {}".format(self.count_socket))
 
     def close_socket(self, socket):
         try:
