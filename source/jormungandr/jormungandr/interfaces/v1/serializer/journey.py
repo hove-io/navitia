@@ -219,6 +219,7 @@ CYCLEPATHTYPE_TO_STR = {
 class StreetInformationSerializer(PbNestedSerializer):
     geojson_offset = jsonschema.MethodField(schema_type=int, display_none=False)
     cycle_path_type = jsonschema.MethodField(schema_type=str, display_none=False)
+    length = jsonschema.MethodField(schema_type=float, display_none=False)
 
     def get_cycle_path_type(self, obj):
         if obj.HasField(str('cycle_path_type')):
@@ -229,6 +230,12 @@ class StreetInformationSerializer(PbNestedSerializer):
     def get_geojson_offset(self, obj):
         if obj.HasField(str('geojson_offset')):
             return obj.geojson_offset
+        else:
+            return None
+
+    def get_length(self, obj):
+        if obj.HasField(str('length')):
+            return float("{:.2f}".format(obj.length))
         else:
             return None
 
