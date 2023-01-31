@@ -39,6 +39,7 @@ import glob
 import logging
 from jormungandr.protobuf_to_dict import protobuf_to_dict
 from jormungandr.exceptions import ApiNotFound, RegionNotFound, DeadSocketException, InvalidArguments
+from jormungandr.authentication import get_all_available_instances
 from jormungandr import authentication, cache, app
 from jormungandr.instance import Instance
 import gevent
@@ -99,7 +100,7 @@ class InstanceManager(object):
         self.start_ping = start_ping
         self.instances = {}
         self.context = zmq.Context()
-        self.is_ready = False
+        self.is_ready = False  # type: bool
 
     def __repr__(self):
         return '<InstanceManager>'
@@ -297,7 +298,7 @@ class InstanceManager(object):
         else:
             # Requests without any coverage
             # fetch all the authorized instances (free + private) using cached function has_access()
-            authorized_instances = self._get_authorized_instances(user, api)
+            authorized_instances = get_all_available_instances(user)  # self._get_authorized_instances(user, api)
             if not authorized_instances:
                 # user doesn't have access to any of the instances
                 context = 'User has no access to any instance'
