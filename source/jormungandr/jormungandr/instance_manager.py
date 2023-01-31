@@ -41,6 +41,7 @@ from jormungandr.protobuf_to_dict import protobuf_to_dict
 from jormungandr.exceptions import ApiNotFound, RegionNotFound, DeadSocketException, InvalidArguments
 from jormungandr import authentication, cache, app
 from jormungandr.instance import Instance
+from jormungandr.authentication import get_all_available_instances
 import gevent
 import os
 
@@ -297,7 +298,7 @@ class InstanceManager(object):
         else:
             # Requests without any coverage
             # fetch all the authorized instances (free + private) using cached function has_access()
-            authorized_instances = self._get_authorized_instances(user, api)
+            authorized_instances = get_all_available_instances(user)
             if not authorized_instances:
                 # user doesn't have access to any of the instances
                 context = 'User has no access to any instance'
