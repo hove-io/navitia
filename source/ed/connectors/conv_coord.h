@@ -32,7 +32,7 @@ www.navitia.io
 #ifdef PROJ_API_VERSION_MAJOR_6
 #include <proj.h>
 #else
-#include <proj_api.h>
+#include <proj.h>
 #endif
 #include "type/geographical_coord.h"
 
