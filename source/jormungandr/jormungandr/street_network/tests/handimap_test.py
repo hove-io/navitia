@@ -234,7 +234,8 @@ def direct_path_handimap_func_with_mode_invalid_test():
     with pytest.raises(jormungandr.exceptions.InvalidArguments) as handimap_exception:
         handimap._direct_path(instance, "bike", None, None, None, None, None, "123")
     assert (
-        handimap_exception.value.data["message"] == "Invalid arguments Handimap, mode(s) [bike] not implemented"
+        handimap_exception.value.data["message"]
+        == "Invalid arguments Handimap, mode(s) ['bike'] not implemented"
     )
 
 
