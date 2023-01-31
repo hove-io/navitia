@@ -200,10 +200,11 @@ class Handimap(AbstractStreetNetworkService):
         return sn_routing_matrix
 
     def check_content_response(self, json_respons, origins, destinations):
-        len_origins_destinations = len(origins) * len(destinations)
+        len_origins = len(origins)
+        len_destinations = len(destinations)
         sources_to_targets = json_respons.get("sources_to_targets", [])
-        check_content = [len_origins_destinations == len(resp) for resp in sources_to_targets]
-        if len(sources_to_targets) != len_origins_destinations or not all(check_content):
+        check_content = [len_destinations == len(resp) for resp in sources_to_targets]
+        if len_origins != len(sources_to_targets) or not all(check_content):
             self.log.error('Handimap nb response != nb requested')
             raise UnableToParse('Handimap nb response != nb requested')
 

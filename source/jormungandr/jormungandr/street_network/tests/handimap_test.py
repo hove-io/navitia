@@ -43,22 +43,39 @@ from jormungandr.utils import (
 )
 
 
-def matrix_response_valid():
-    return {
-        "sources": [[{"lon": -1.680150, "lat": 48.108770}]],
-        "targets": [[{"lon": -1.679860, "lat": 48.109340}, {"lon": -1.678750, "lat": 48.109390}]],
-        "sources_to_targets": [
-            [
-                {"distance": 0.089, "time": 68, "to_index": 0, "from_index": 0},
-                {"distance": 0.179, "time": 133, "to_index": 1, "from_index": 0},
+def matrix_response_valid(response_id=1):
+    # response_id=0 : len(sources) == len(targets)
+    # response_id=1 : len(sources) < len(targets)
+    # response_id=2 : len(sources) > len(targets)
+    responses = {
+        0: {
+            "sources": [[{"lon": -1.680150, "lat": 48.108770}]],
+            "targets": [[{"lon": -1.679860, "lat": 48.109340}]],
+            "sources_to_targets": [[{"distance": 0.089, "time": 68, "to_index": 0, "from_index": 0}]],
+            "units": "kilometers",
+        },
+        1: {
+            "sources": [[{"lon": -1.680150, "lat": 48.108770}]],
+            "targets": [[{"lon": -1.679860, "lat": 48.109340}, {"lon": -1.678750, "lat": 48.109390}]],
+            "sources_to_targets": [
+                [
+                    {"distance": 0.089, "time": 68, "to_index": 0, "from_index": 0},
+                    {"distance": 0.200, "time": 145, "to_index": 1, "from_index": 0},
+                ]
             ],
-            [
-                {"distance": 0.000, "time": 0, "to_index": 0, "from_index": 1},
-                {"distance": 0.089, "time": 64, "to_index": 1, "from_index": 1},
+            "units": "kilometers",
+        },
+        2: {
+            "sources": [[{"lon": -1.679860, "lat": 48.109340}, {"lon": -1.678750, "lat": 48.109390}]],
+            "targets": [[{"lon": -1.680150, "lat": 48.108770}]],
+            "sources_to_targets": [
+                [{"distance": 0.089, "time": 68, "to_index": 0, "from_index": 0}],
+                [{"distance": 0.200, "time": 145, "to_index": 0, "from_index": 1}],
             ],
-        ],
-        "units": "kilometers",
+            "units": "kilometers",
+        },
     }
+    return responses[response_id]
 
 
 def direct_path_response_valid():
@@ -342,7 +359,7 @@ def create_pt_object(lon, lat, pt_object_type=type_pb2.POI):
 def check_content_response_handimap_func_valid_test():
     instance = MagicMock()
     handimap = Handimap(instance=instance, service_url='bob.com', username='aa', password="bb")
-    resp_json = matrix_response_valid()
+    resp_json = matrix_response_valid(1)
     origins = [create_pt_object(-1.680150, 48.108770)]
     destinations = [create_pt_object(-1.679860, 48.109340), create_pt_object(-1.678750, 48.109390)]
     handimap.check_content_response(resp_json, origins, destinations)
@@ -351,7 +368,7 @@ def check_content_response_handimap_func_valid_test():
 def check_content_response_handimap_func_invalid_test():
     instance = MagicMock()
     handimap = Handimap(instance=instance, service_url='bob.com', username='aa', password="bb")
-    resp_json = matrix_response_valid()
+    resp_json = matrix_response_valid(1)
     origins = [create_pt_object(-1.680150, 48.108770)]
     destinations = [create_pt_object(-1.679860, 48.109340)]
     with pytest.raises(jormungandr.exceptions.UnableToParse) as handimap_exception:
@@ -362,7 +379,7 @@ def check_content_response_handimap_func_invalid_test():
 def create_matrix_response_handimap_test():
     instance = MagicMock()
     handimap = Handimap(instance=instance, service_url='bob.com', username='aa', password="bb")
-    resp_json = matrix_response_valid()
+    resp_json = matrix_response_valid(1)
     origins = [create_pt_object(-1.680150, 48.108770)]
     destinations = [create_pt_object(-1.679860, 48.109340), create_pt_object(-1.678750, 48.109390)]
     sn_matrix = handimap._create_matrix_response(resp_json, origins, destinations, 150)
@@ -370,5 +387,35 @@ def create_matrix_response_handimap_test():
     assert len(sn_matrix.rows[0].routing_response) == 2
     assert sn_matrix.rows[0].routing_response[0].duration == 68
     assert sn_matrix.rows[0].routing_response[0].routing_status == response_pb2.reached
-    assert sn_matrix.rows[0].routing_response[1].duration == 133
+    assert sn_matrix.rows[0].routing_response[1].duration == 145
     assert sn_matrix.rows[0].routing_response[1].routing_status == response_pb2.reached
+
+
+def check_content_response_handimap_func_valid_0_test():
+    # response_id=0 : len(sources) == len(targets)
+    instance = MagicMock()
+    handimap = Handimap(instance=instance, service_url='bob.com', username='aa', password="bb")
+    resp_json = matrix_response_valid(0)
+    origins = [create_pt_object(-1.680150, 48.108770)]
+    destinations = [create_pt_object(-1.679860, 48.109340)]
+    handimap.check_content_response(resp_json, origins, destinations)
+
+
+def check_content_response_handimap_func_valid_1_test():
+    # response_id=1 : len(sources) < len(targets)
+    instance = MagicMock()
+    handimap = Handimap(instance=instance, service_url='bob.com', username='aa', password="bb")
+    resp_json = matrix_response_valid(1)
+    origins = [create_pt_object(-1.680150, 48.108770)]
+    destinations = [create_pt_object(-1.679860, 48.109340), create_pt_object(-1.678750, 48.109390)]
+    handimap.check_content_response(resp_json, origins, destinations)
+
+
+def check_content_response_handimap_func_valid_2_test():
+    # response_id=2 : len(sources) > len(targets)
+    instance = MagicMock()
+    handimap = Handimap(instance=instance, service_url='bob.com', username='aa', password="bb")
+    resp_json = matrix_response_valid(2)
+    origins = [create_pt_object(-1.679860, 48.109340), create_pt_object(-1.678750, 48.109390)]
+    destinations = [create_pt_object(-1.680150, 48.108770)]
+    handimap.check_content_response(resp_json, origins, destinations)
