@@ -152,7 +152,8 @@ def test_create_handimap_with_default_values():
     assert handimap.sn_system_id == "handimap"
     assert handimap.timeout == 10
     assert handimap.service_url == "bob.com"
-    assert handimap.modes == []
+    assert len(handimap.modes) == 1
+    assert handimap.modes[0] == "walking"
     assert handimap.breaker.reset_timeout == 60
     assert handimap.breaker.fail_max == 4
     assert handimap._feed_publisher.name == "handimap"
@@ -177,7 +178,8 @@ def test_create_handimap_with_config_test():
     assert handimap.auth == ("aa", "bb")
     assert handimap.timeout == 5
     assert handimap.service_url == "bob.com"
-    assert handimap.modes == []
+    assert len(handimap.modes) == 1
+    assert handimap.modes[0] == "walking"
     assert handimap.breaker.reset_timeout == 30
     assert handimap.breaker.fail_max == 2
     assert handimap._feed_publisher.name == "handimap"
@@ -231,7 +233,9 @@ def direct_path_handimap_func_with_mode_invalid_test():
     handimap = Handimap(instance=instance, service_url='bob.com', username='aa', password="bb")
     with pytest.raises(jormungandr.exceptions.InvalidArguments) as handimap_exception:
         handimap._direct_path(instance, "bike", None, None, None, None, None, "123")
-    assert handimap_exception.value.data["message"] == "Invalid arguments Handimap, mode bike not implemented"
+    assert (
+        handimap_exception.value.data["message"] == "Invalid arguments Handimap, mode(s) [bike] not implemented"
+    )
 
 
 def check_response_handimap_func_code_invalid_test():

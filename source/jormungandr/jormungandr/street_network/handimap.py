@@ -1,4 +1,4 @@
-#  Copyright (c) 2001-2022, Hove and/or its affiliates. All rights reserved.
+#  Copyright (c) 2001-2023, Hove and/or its affiliates. All rights reserved.
 #
 # This file is part of Navitia,
 #     the software to build cool stuff with public transport.
@@ -67,7 +67,7 @@ class Handimap(AbstractStreetNetworkService):
         service_url,
         username,
         password,
-        modes=[],
+        modes=["walking"],
         id='handimap',
         timeout=10,
         feed_publisher=DEFAULT_HANDIMAP_FEED_PUBLISHER,
@@ -97,6 +97,12 @@ class Handimap(AbstractStreetNetworkService):
             ),
         )
         self._feed_publisher = FeedPublisher(**feed_publisher) if feed_publisher else None
+        self.check_handimap_modes(modes)
+
+    def check_handimap_modes(self, modes):
+        if len(modes) != 1 or "walking" not in modes:
+            self.log.error('Handimap, mode(s) {} not implemented'.format(modes))
+            raise InvalidArguments('Handimap, mode(s) {} not implemented'.format(modes))
 
     def status(self):
         return {
@@ -115,7 +121,11 @@ class Handimap(AbstractStreetNetworkService):
         try:
             return Languages[language].value
         except KeyError:
-            self.log.error('Handimap parameters language={} not exist - force to french'.format(language))
+            self.log.error(
+                'Handimap parameter language={} is not a valid parameter - language is set to french by default'.format(
+                    language
+                )
+            )
             return Languages.french.value
 
     def get_language_parameter(self, request):
@@ -229,10 +239,7 @@ class Handimap(AbstractStreetNetworkService):
         direct_path_type,
         request_id,
     ):
-        if mode != "walking":
-            self.log.error('Handimap, mode {} not implemented'.format(mode))
-            raise InvalidArguments('Handimap, mode {} not implemented'.format(mode))
-
+        self.check_handimap_modes([mode])
         walking_speed = request["walking_speed"]
         language = self.get_language_parameter(request)
 
@@ -285,10 +292,9 @@ class Handimap(AbstractStreetNetworkService):
                 section.origin.CopyFrom(pt_object_origin)
             if index == len(handimap_trip['legs']) - 1:
                 section.destination.CopyFrom(pt_object_destination)
-
-                section.street_network.duration = section.duration
-                section.street_network.length = section.length
-                section.street_network.mode = response_pb2.Walking
+            section.street_network.duration = section.duration
+            section.street_network.length = section.length
+            section.street_network.mode = response_pb2.Walking
             for handimap_instruction in handimap_leg['maneuvers']:
                 path_item = section.street_network.path_items.add()
                 if handimap_instruction.get("street_names", []):
