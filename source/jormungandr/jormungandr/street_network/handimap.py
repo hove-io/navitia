@@ -132,8 +132,8 @@ class Handimap(AbstractStreetNetworkService):
         language = request.get('_handimap_language', None)
         return self.language if not language else self._get_language(language.lower())
 
-    @classmethod
-    def _make_request_arguments_walking_details(cls, walking_speed, language):
+    @staticmethod
+    def _make_request_arguments_walking_details(walking_speed, language):
         walking_speed_km = mps_to_kmph(walking_speed)
         return {
             "costing": "walking",
@@ -141,8 +141,8 @@ class Handimap(AbstractStreetNetworkService):
             "directions_options": {"units": "kilometers", "language": language},
         }
 
-    @classmethod
-    def _format_coord(cls, pt_object):
+    @staticmethod
+    def _format_coord(pt_object):
         coord = get_pt_object_coord(pt_object)
         return {"lat": coord.lat, "lon": coord.lon}
 
@@ -196,8 +196,8 @@ class Handimap(AbstractStreetNetworkService):
         sources_to_targets = json_response.get('sources_to_targets', [])
         sn_routing_matrix = response_pb2.StreetNetworkRoutingMatrix()
         row = sn_routing_matrix.rows.add()
-        for i_o, _ in enumerate(origins):
-            for i_d, _ in enumerate(destinations):
+        for i_o in range(len(origins)):
+            for i_d in range(len(destinations)):
                 sources_to_target = sources_to_targets[i_o][i_d]
                 duration = int(round(sources_to_target["time"]))
                 routing = row.routing_response.add()
@@ -213,7 +213,7 @@ class Handimap(AbstractStreetNetworkService):
         len_origins = len(origins)
         len_destinations = len(destinations)
         sources_to_targets = json_respons.get("sources_to_targets", [])
-        check_content = [len_destinations == len(resp) for resp in sources_to_targets]
+        check_content = (len_destinations == len(resp) for resp in sources_to_targets)
         if len_origins != len(sources_to_targets) or not all(check_content):
             self.log.error('Handimap nb response != nb requested')
             raise UnableToParse('Handimap nb response != nb requested')
@@ -253,8 +253,8 @@ class Handimap(AbstractStreetNetworkService):
             ujson.loads(response.text), pt_object_origin, pt_object_destination, fallback_extremity
         )
 
-    @classmethod
-    def _get_response(cls, json_response, pt_object_origin, pt_object_destination, fallback_extremity):
+    @staticmethod
+    def _get_response(json_response, pt_object_origin, pt_object_destination, fallback_extremity):
         '''
         :param fallback_extremity: is a PeriodExtremity (a datetime and it's meaning on the fallback period)
         '''
@@ -323,11 +323,11 @@ class Handimap(AbstractStreetNetworkService):
         except pybreaker.CircuitBreakerError as e:
             self.log.error('Handimap routing service unavailable (error: {})'.format(str(e)))
             self.record_external_failure('circuit breaker open')
-            raise HandimapTechnicalError('Handimap routing service unavailable')
+            raise HandimapTechnicalError('Handimap routing service unavailable, Circuit breaker is open')
         except requests.Timeout as t:
             self.log.error('Handimap routing service unavailable (error: {})'.format(str(t)))
             self.record_external_failure('timeout')
-            raise HandimapTechnicalError('Handimap routing service unavailable')
+            raise HandimapTechnicalError('Handimap routing service unavailable: Timeout')
         except Exception as e:
             self.log.exception('Handimap routing error: {}'.format(str(e)))
             self.record_external_failure(str(e))

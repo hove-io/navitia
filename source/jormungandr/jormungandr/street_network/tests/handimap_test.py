@@ -215,7 +215,10 @@ def call_handimap_func_with_circuit_breaker_error_test():
     handimap.breaker.call = MagicMock(side_effect=pybreaker.CircuitBreakerError())
     with pytest.raises(jormungandr.exceptions.HandimapTechnicalError) as handimap_exception:
         handimap._call_handimap(handimap.service_url, data={})
-    assert handimap_exception.value.data["message"] == 'Handimap routing service unavailable'
+    assert (
+        handimap_exception.value.data["message"]
+        == 'Handimap routing service unavailable, Circuit breaker is open'
+    )
 
 
 def call_handimap_func_with_unknown_exception_test():
