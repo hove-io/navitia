@@ -148,13 +148,13 @@ def direct_path_response_valid():
 def test_create_handimap_without_service_url():
     instance = MagicMock()
     with pytest.raises(ValueError) as excinfo:
-        Handimap(instance=instance, service_url='', username='aa', password="bb")
+        Handimap(instance=instance, service_url='')
     assert str(excinfo.value) == 'service_url  is not a valid handimap url'
 
 
 def test_create_handimap_with_default_values():
     instance = MagicMock()
-    handimap = Handimap(instance=instance, service_url='bob.com', username='aa', password="bb")
+    handimap = Handimap(instance=instance, service_url='bob.com')
     assert handimap.sn_system_id == "handimap"
     assert handimap.timeout == 10
     assert handimap.service_url == "bob.com"
@@ -216,7 +216,7 @@ def test_create_handimap_status_test():
 
 def call_handimap_func_with_circuit_breaker_error_test():
     instance = MagicMock()
-    handimap = Handimap(instance=instance, service_url='bob.com', username='aa', password="bb")
+    handimap = Handimap(instance=instance, service_url='bob.com')
     handimap.breaker = MagicMock()
     handimap.breaker.call = MagicMock(side_effect=pybreaker.CircuitBreakerError())
     with pytest.raises(jormungandr.exceptions.HandimapTechnicalError) as handimap_exception:
@@ -229,7 +229,7 @@ def call_handimap_func_with_circuit_breaker_error_test():
 
 def call_handimap_func_with_unknown_exception_test():
     instance = MagicMock()
-    handimap = Handimap(instance=instance, service_url='bob.com', username='aa', password="bb")
+    handimap = Handimap(instance=instance, service_url='bob.com')
     handimap.breaker = MagicMock()
     handimap.breaker.call = MagicMock(side_effect=ValueError())
     with pytest.raises(jormungandr.exceptions.HandimapTechnicalError) as handimap_exception:
@@ -239,7 +239,7 @@ def call_handimap_func_with_unknown_exception_test():
 
 def direct_path_handimap_func_with_mode_invalid_test():
     instance = MagicMock()
-    handimap = Handimap(instance=instance, service_url='bob.com', username='aa', password="bb")
+    handimap = Handimap(instance=instance, service_url='bob.com')
     with pytest.raises(jormungandr.exceptions.InvalidArguments) as handimap_exception:
         handimap._direct_path(instance, "bike", None, None, None, None, None, "123")
     assert (
@@ -250,7 +250,7 @@ def direct_path_handimap_func_with_mode_invalid_test():
 
 def check_response_and_get_json_handimap_func_code_invalid_test():
     instance = MagicMock()
-    handimap = Handimap(instance=instance, service_url='bob.com', username='aa', password="bb")
+    handimap = Handimap(instance=instance, service_url='bob.com')
     resp = MockResource(status=401)
     with pytest.raises(jormungandr.exceptions.HandimapTechnicalError) as handimap_exception:
         handimap.check_response_and_get_json(resp)
@@ -259,7 +259,7 @@ def check_response_and_get_json_handimap_func_code_invalid_test():
 
 def check_response_and_get_json_handimap_func_json_invalid_test():
     instance = MagicMock()
-    handimap = Handimap(instance=instance, service_url='bob.com', username='aa', password="bb")
+    handimap = Handimap(instance=instance, service_url='bob.com')
     resp = MockResource(text="toto")
     with pytest.raises(jormungandr.exceptions.UnableToParse) as handimap_exception:
         handimap.check_response_and_get_json(resp)
@@ -271,21 +271,21 @@ def check_response_and_get_json_handimap_func_json_invalid_test():
 
 def get_language_handimap_func_language_invalid_test():
     instance = MagicMock()
-    handimap = Handimap(instance=instance, service_url='bob.com', username='aa', password="bb")
+    handimap = Handimap(instance=instance, service_url='bob.com')
     language = handimap._get_language("toto")
     assert language == "fr-FR"
 
 
 def get_language_handimap_func_language_valid_test():
     instance = MagicMock()
-    handimap = Handimap(instance=instance, service_url='bob.com', username='aa', password="bb")
+    handimap = Handimap(instance=instance, service_url='bob.com')
     language = handimap._get_language("english")
     assert language == "en-EN"
 
 
 def get_language_parameter_handimap_func_language_invalid_test():
     instance = MagicMock()
-    handimap = Handimap(instance=instance, service_url='bob.com', username='aa', password="bb")
+    handimap = Handimap(instance=instance, service_url='bob.com')
     request = {"_handimap_language": "toto"}
     language = handimap.get_language_parameter(request)
     assert language == "fr-FR"
@@ -293,7 +293,7 @@ def get_language_parameter_handimap_func_language_invalid_test():
 
 def get_language_parameter_handimap_func_language_invalid_test():
     instance = MagicMock()
-    handimap = Handimap(instance=instance, service_url='bob.com', username='aa', password="bb")
+    handimap = Handimap(instance=instance, service_url='bob.com')
     request = {"_handimap_language": "english"}
     language = handimap.get_language_parameter(request)
     assert language == "en-EN"
@@ -339,7 +339,7 @@ def format_coord_handimap_func_test():
 
 def get_response_handimap_represents_start_true_test():
     instance = MagicMock()
-    handimap = Handimap(instance=instance, service_url='bob.com', username='aa', password="bb")
+    handimap = Handimap(instance=instance, service_url='bob.com')
     resp_json = direct_path_response_valid()
 
     origin = make_pt_object(type_pb2.ADDRESS, lon=-1.6761174, lat=48.1002462, uri='HandimapStart')
@@ -370,14 +370,14 @@ def get_response_handimap_represents_start_true_test():
     assert proto_resp.journeys[0].sections[0].street_network.path_items[0].duration == 33
     assert (
         proto_resp.journeys[0].sections[0].street_network.path_items[0].instruction
-        == "Marchez vers l'est sur Rue Ange Blaize."
+        == resp_json["trip"]["legs"][0]["maneuvers"][0]["instruction"]
     )
     assert proto_resp.journeys[0].sections[0].street_network.path_items[0].name == "Rue Ange Blaize"
 
 
 def get_response_handimap_represents_start_false_test():
     instance = MagicMock()
-    handimap = Handimap(instance=instance, service_url='bob.com', username='aa', password="bb")
+    handimap = Handimap(instance=instance, service_url='bob.com')
     resp_json = direct_path_response_valid()
 
     origin = make_pt_object(type_pb2.ADDRESS, lon=-1.6761174, lat=48.1002462, uri='HandimapStart')
@@ -423,7 +423,7 @@ def create_pt_object(lon, lat, pt_object_type=type_pb2.POI):
 
 def check_content_response_handimap_func_valid_test():
     instance = MagicMock()
-    handimap = Handimap(instance=instance, service_url='bob.com', username='aa', password="bb")
+    handimap = Handimap(instance=instance, service_url='bob.com')
     resp_json = matrix_response_valid(1)
     origins = [create_pt_object(-1.680150, 48.108770)]
     destinations = [create_pt_object(-1.679860, 48.109340), create_pt_object(-1.678750, 48.109390)]
@@ -432,7 +432,7 @@ def check_content_response_handimap_func_valid_test():
 
 def check_content_response_handimap_func_invalid_test():
     instance = MagicMock()
-    handimap = Handimap(instance=instance, service_url='bob.com', username='aa', password="bb")
+    handimap = Handimap(instance=instance, service_url='bob.com')
     resp_json = matrix_response_valid(1)
     origins = [create_pt_object(-1.680150, 48.108770)]
     destinations = [create_pt_object(-1.679860, 48.109340)]
@@ -443,7 +443,7 @@ def check_content_response_handimap_func_invalid_test():
 
 def create_matrix_response_handimap_test():
     instance = MagicMock()
-    handimap = Handimap(instance=instance, service_url='bob.com', username='aa', password="bb")
+    handimap = Handimap(instance=instance, service_url='bob.com')
     resp_json = matrix_response_valid(1)
     origins = [create_pt_object(-1.680150, 48.108770)]
     destinations = [create_pt_object(-1.679860, 48.109340), create_pt_object(-1.678750, 48.109390)]
@@ -459,7 +459,7 @@ def create_matrix_response_handimap_test():
 def check_content_response_handimap_func_valid_0_test():
     # response_id=0 : len(sources) == len(targets)
     instance = MagicMock()
-    handimap = Handimap(instance=instance, service_url='bob.com', username='aa', password="bb")
+    handimap = Handimap(instance=instance, service_url='bob.com')
     resp_json = matrix_response_valid(0)
     origins = [create_pt_object(-1.680150, 48.108770)]
     destinations = [create_pt_object(-1.679860, 48.109340)]
@@ -469,7 +469,7 @@ def check_content_response_handimap_func_valid_0_test():
 def check_content_response_handimap_func_valid_1_test():
     # response_id=1 : len(sources) < len(targets)
     instance = MagicMock()
-    handimap = Handimap(instance=instance, service_url='bob.com', username='aa', password="bb")
+    handimap = Handimap(instance=instance, service_url='bob.com')
     resp_json = matrix_response_valid(1)
     origins = [create_pt_object(-1.680150, 48.108770)]
     destinations = [create_pt_object(-1.679860, 48.109340), create_pt_object(-1.678750, 48.109390)]
@@ -479,7 +479,7 @@ def check_content_response_handimap_func_valid_1_test():
 def check_content_response_handimap_func_valid_2_test():
     # response_id=2 : len(sources) > len(targets)
     instance = MagicMock()
-    handimap = Handimap(instance=instance, service_url='bob.com', username='aa', password="bb")
+    handimap = Handimap(instance=instance, service_url='bob.com')
     resp_json = matrix_response_valid(2)
     origins = [create_pt_object(-1.679860, 48.109340), create_pt_object(-1.678750, 48.109390)]
     destinations = [create_pt_object(-1.680150, 48.108770)]

@@ -65,9 +65,9 @@ class Handimap(AbstractStreetNetworkService):
         self,
         instance,
         service_url,
-        username,
-        password,
-        modes=["walking"],
+        username="",
+        password="",
+        modes=None,
         id='handimap',
         timeout=10,
         feed_publisher=DEFAULT_HANDIMAP_FEED_PUBLISHER,
@@ -84,7 +84,7 @@ class Handimap(AbstractStreetNetworkService):
         self.auth = (username, password)
         self.headers = {"Content-Type": "application/json", "Accept": "application/json"}
         self.timeout = timeout
-        self.modes = modes
+        self.modes = modes if modes else ["walking"]
         self.language = self._get_language(kwargs.get('language', "french"))
         self.verify = kwargs.get('verify', True)
 
@@ -97,7 +97,7 @@ class Handimap(AbstractStreetNetworkService):
             ),
         )
         self._feed_publisher = FeedPublisher(**feed_publisher) if feed_publisher else None
-        self.check_handimap_modes(modes)
+        self.check_handimap_modes(self.modes)
 
     def check_handimap_modes(self, modes):
         if len(modes) != 1 or "walking" not in modes:
