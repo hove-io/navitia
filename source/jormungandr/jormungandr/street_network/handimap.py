@@ -176,8 +176,7 @@ class Handimap(AbstractStreetNetworkService):
             'sources_to_targets',
             post_data,
         )
-        self.check_response(response)
-        return ujson.loads(response.text)
+        return self.check_response_and_get_json(response)
 
     def make_path_key(self, mode, orig_uri, dest_uri, streetnetwork_path_type, period_extremity):
         """
@@ -248,10 +247,8 @@ class Handimap(AbstractStreetNetworkService):
         )
 
         response = self._call_handimap('route', params)
-        self.check_response(response)
-        return self._get_response(
-            ujson.loads(response.text), pt_object_origin, pt_object_destination, fallback_extremity
-        )
+        json_response = self.check_response_and_get_json(response)
+        return self._get_response(json_response, pt_object_origin, pt_object_destination, fallback_extremity)
 
     @staticmethod
     def _get_response(json_response, pt_object_origin, pt_object_destination, fallback_extremity):
@@ -331,10 +328,16 @@ class Handimap(AbstractStreetNetworkService):
             self.record_external_failure(str(e))
             raise HandimapTechnicalError('Handimap routing has encountered unknown error')
 
-    def check_response(self, response):
+    def check_response_and_get_json(self, response):
         if response.status_code != 200:
             self.log.error('Handimap service unavailable, response code: {}'.format(response.status_code))
             raise HandimapTechnicalError('Handimap service unavailable, impossible to query')
+        try:
+            return ujson.loads(response.text)
+        except Exception as e:
+            msg = 'Handimap unable to parse response, error: {}'.format(str(e))
+            self.log.error(msg)
+            raise UnableToParse(msg)
 
     def feed_publisher(self):
         return self._feed_publisher

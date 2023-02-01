@@ -43,6 +43,12 @@ from jormungandr.utils import (
 )
 
 
+class MockResource(object):
+    def __init__(self, text={}, status=200):
+        self.text = text
+        self.status_code = status
+
+
 def matrix_response_valid(response_id=1):
     # response_id=0 : len(sources) == len(targets)
     # response_id=1 : len(sources) < len(targets)
@@ -242,14 +248,25 @@ def direct_path_handimap_func_with_mode_invalid_test():
     )
 
 
-def check_response_handimap_func_code_invalid_test():
+def check_response_and_get_json_handimap_func_code_invalid_test():
     instance = MagicMock()
     handimap = Handimap(instance=instance, service_url='bob.com', username='aa', password="bb")
-    resp = response_pb2.Response()
-    resp.status_code = 401
+    resp = MockResource(status=401)
     with pytest.raises(jormungandr.exceptions.HandimapTechnicalError) as handimap_exception:
-        handimap.check_response(resp)
+        handimap.check_response_and_get_json(resp)
     assert handimap_exception.value.data["message"] == 'Handimap service unavailable, impossible to query'
+
+
+def check_response_and_get_json_handimap_func_json_invalid_test():
+    instance = MagicMock()
+    handimap = Handimap(instance=instance, service_url='bob.com', username='aa', password="bb")
+    resp = MockResource(text="toto")
+    with pytest.raises(jormungandr.exceptions.UnableToParse) as handimap_exception:
+        handimap.check_response_and_get_json(resp)
+    assert (
+        handimap_exception.value.data["message"]
+        == "Handimap unable to parse response, error: Unexpected character found when decoding 'true'"
+    )
 
 
 def get_language_handimap_func_language_invalid_test():
