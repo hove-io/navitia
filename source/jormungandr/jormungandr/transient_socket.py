@@ -63,7 +63,6 @@ class TransientSocket(object):
     # the sorted list is arranged in a way that the first element is the most recent one and the last element is oldest
     # one.
     _logger = logging.getLogger(__name__)
-    count_socket = {"total": 0}
 
     def __init__(self, name, zmq_context, zmq_socket, socket_ttl, *args, **kwargs):
         super(TransientSocket, self).__init__(*args, **kwargs)
@@ -142,10 +141,6 @@ class TransientSocket(object):
                 else:
                     with self._semaphore:
                         self._sockets.add(timed_socket)
-            # TODO: to remove after tests
-            self.count_socket[self.name] = len(self._sockets)
-            self.count_socket["total"] = sum([cnt for key, cnt in self.count_socket.items() if key != "total"])
-            self._logger.info("Socket count: {}".format(self.count_socket))
 
     def close_socket(self, socket):
         try:
