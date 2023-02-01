@@ -171,17 +171,8 @@ def test_create_handimap_with_default_values():
 def test_create_handimap_with_config_test():
     instance = MagicMock()
     kwargs = {"circuit_breaker_max_fail": 2, "circuit_breaker_reset_timeout": 30}
-    handimap = Handimap(
-        instance=instance,
-        id="id_handmap",
-        service_url='bob.com',
-        username='aa',
-        password="bb",
-        timeout=5,
-        **kwargs
-    )
+    handimap = Handimap(instance=instance, id="id_handmap", service_url='bob.com', timeout=5, **kwargs)
     assert handimap.sn_system_id == "id_handmap"
-    assert handimap.auth == ("aa", "bb")
     assert handimap.timeout == 5
     assert handimap.service_url == "bob.com"
     assert len(handimap.modes) == 1
@@ -198,14 +189,7 @@ def test_create_handimap_status_test():
     instance = MagicMock()
     kwargs = {"circuit_breaker_max_fail": 2, "circuit_breaker_reset_timeout": 30}
     handimap = Handimap(
-        instance=instance,
-        id="id_handmap",
-        service_url='bob.com',
-        username='aa',
-        password="bb",
-        modes=["walking"],
-        timeout=5,
-        **kwargs
+        instance=instance, id="id_handmap", service_url='bob.com', modes=["walking"], timeout=5, **kwargs
     )
     status = handimap.status()
     assert status["id"] == "id_handmap"
