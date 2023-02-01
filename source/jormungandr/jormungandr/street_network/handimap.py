@@ -274,7 +274,7 @@ class Handimap(AbstractStreetNetworkService):
         journey.durations.total = journey.duration
         journey.durations.walking = journey.duration
 
-        journey.distances.walking = int(round(kilometers_to_meters(handimap_trip['summary']["length"])))
+        journey.distances.walking = kilometers_to_meters(handimap_trip['summary']["length"])
 
         previous_section_endtime = journey.departure_date_time
         for index, handimap_leg in enumerate(handimap_trip['legs']):
@@ -286,12 +286,8 @@ class Handimap(AbstractStreetNetworkService):
             previous_section_endtime = section.end_date_time
 
             section.id = 'section_{}'.format(index)
-            section.length = int(round(kilometers_to_meters(handimap_leg["summary"]['length'])))
+            section.length = kilometers_to_meters(handimap_leg["summary"]['length'])
 
-            if index == 0:
-                section.origin.CopyFrom(pt_object_origin)
-            if index == len(handimap_trip['legs']) - 1:
-                section.destination.CopyFrom(pt_object_destination)
             section.street_network.duration = section.duration
             section.street_network.length = section.length
             section.street_network.mode = response_pb2.Walking
@@ -300,11 +296,13 @@ class Handimap(AbstractStreetNetworkService):
                 if handimap_instruction.get("street_names", []):
                     path_item.name = handimap_instruction["street_names"][0]
                 path_item.instruction = handimap_instruction["instruction"]
-                path_item.length = int(round(kilometers_to_meters(handimap_instruction["length"])))
+                path_item.length = kilometers_to_meters(handimap_instruction["length"])
                 path_item.duration = int(round(handimap_instruction["time"]))
             shape = decode_polyline(handimap_leg['shape'])
             for sh in shape:
                 section.street_network.coordinates.add(lon=sh[0], lat=sh[1])
+        journey.sections[0].origin.CopyFrom(pt_object_origin)
+        journey.sections[-1].destination.CopyFrom(pt_object_destination)
 
         return resp
 

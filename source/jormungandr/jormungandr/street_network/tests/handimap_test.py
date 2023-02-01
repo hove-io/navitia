@@ -320,7 +320,7 @@ def format_coord_handimap_func_test():
     assert coords["lat"] == pt_object.poi.coord.lat
 
 
-def get_response_handimap_test():
+def get_response_handimap_represents_start_true_test():
     instance = MagicMock()
     handimap = Handimap(instance=instance, service_url='bob.com', username='aa', password="bb")
     resp_json = direct_path_response_valid()
@@ -343,6 +343,46 @@ def get_response_handimap_test():
     assert proto_resp.journeys[0].sections[0].street_network.length == 412
     assert proto_resp.journeys[0].sections[0].street_network.duration == 126
     assert proto_resp.journeys[0].sections[0].street_network.mode == response_pb2.Walking
+    assert proto_resp.journeys[0].arrival_date_time == str_to_time_stamp('20220503T060206')
+    assert proto_resp.journeys[0].departure_date_time == str_to_time_stamp('20220503T060000')
+
+    assert proto_resp.journeys[0].sections[0].length == 412
+    assert proto_resp.journeys[0].sections[0].duration == 126
+    assert len(proto_resp.journeys[0].sections[0].street_network.path_items) == 7
+    assert proto_resp.journeys[0].sections[0].street_network.path_items[0].length == 103
+    assert proto_resp.journeys[0].sections[0].street_network.path_items[0].duration == 33
+    assert (
+        proto_resp.journeys[0].sections[0].street_network.path_items[0].instruction
+        == "Marchez vers l'est sur Rue Ange Blaize."
+    )
+    assert proto_resp.journeys[0].sections[0].street_network.path_items[0].name == "Rue Ange Blaize"
+
+
+def get_response_handimap_represents_start_false_test():
+    instance = MagicMock()
+    handimap = Handimap(instance=instance, service_url='bob.com', username='aa', password="bb")
+    resp_json = direct_path_response_valid()
+
+    origin = make_pt_object(type_pb2.ADDRESS, lon=-1.6761174, lat=48.1002462, uri='HandimapStart')
+    destination = make_pt_object(type_pb2.ADDRESS, lon=-1.6740057, lat=48.097592, uri='HandimapEnd')
+    fallback_extremity = PeriodExtremity(str_to_time_stamp('20220503T060000'), False)
+
+    proto_resp = handimap._get_response(resp_json, origin, destination, fallback_extremity)
+
+    assert len(proto_resp.journeys) == 1
+    assert proto_resp.journeys[0].durations.total == 126
+    assert proto_resp.journeys[0].durations.walking == 126
+    assert proto_resp.journeys[0].distances.walking == 412
+
+    assert len(proto_resp.journeys[0].sections) == 1
+    assert proto_resp.journeys[0].sections[0].type == response_pb2.STREET_NETWORK
+    assert proto_resp.journeys[0].sections[0].origin.uri == "HandimapStart"
+    assert proto_resp.journeys[0].sections[0].destination.uri == "HandimapEnd"
+    assert proto_resp.journeys[0].sections[0].street_network.length == 412
+    assert proto_resp.journeys[0].sections[0].street_network.duration == 126
+    assert proto_resp.journeys[0].sections[0].street_network.mode == response_pb2.Walking
+    assert proto_resp.journeys[0].arrival_date_time == str_to_time_stamp('20220503T060000')
+    assert proto_resp.journeys[0].departure_date_time == str_to_time_stamp('20220503T055754')
 
     assert proto_resp.journeys[0].sections[0].length == 412
     assert proto_resp.journeys[0].sections[0].duration == 126

@@ -71,8 +71,8 @@ def get_uri_pt_object(pt_object):
 
 
 def kilometers_to_meters(distance):
-    # type: (float) -> float
-    return distance * 1000.0
+    # type: (float) -> int
+    return int(round(distance * 1000.0))
 
 
 class Coords:
