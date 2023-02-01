@@ -29,11 +29,24 @@
 from __future__ import absolute_import, print_function, unicode_literals, division
 from .tests_mechanism import AbstractTestFixture, dataset
 from .check_utils import *
+from jormungandr import app
 import logging
 
 
+class CoverageTestFixture(AbstractTestFixture):
+    def setUp(self):
+        self.old_public_val = app.config['PUBLIC']
+        app.config['PUBLIC'] = True
+        self.old_db_val = app.config['DISABLE_DATABASE']
+        app.config['DISABLE_DATABASE'] = True
+
+
+    def tearDown(self):
+        app.config['PUBLIC'] = self.old_public_val
+        app.config['DISABLE_DATABASE'] = self.old_db_val
+
 @dataset({"main_routing_test": {}, "null_status_test": {}})
-class TestNullStatus(AbstractTestFixture):
+class TestNullStatus(CoverageTestFixture):
     """
     Test with an empty coverage
     """
