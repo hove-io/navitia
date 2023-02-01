@@ -134,6 +134,13 @@ class GeoveloTechnicalError(HTTPException):
         self.code = 500
 
 
+class HandimapTechnicalError(HTTPException):
+    def __init__(self, msg):
+        super(HandimapTechnicalError, self).__init__()
+        self.data = format_error("technical_error", msg)
+        self.code = 500
+
+
 class ConfigException(Exception):
     def __init__(self, arg):
         super(ConfigException, self).__init__(arg)
