@@ -2,6 +2,7 @@
 from datetime import timedelta
 from celery import schedules
 import os
+import json
 from flask_restful.inputs import boolean
 
 # URL for the brokker, by default it's the local rabbitmq
@@ -19,6 +20,11 @@ SQLALCHEMY_DATABASE_URI = os.getenv(
     'TYR_SQLALCHEMY_DATABASE_URI', 'postgresql://navitia:navitia@localhost/jormungandr'
 )
 
+DEFAULT_SQLALCHEMY_ENGINE_OPTIONS = {"connect_args": {"application_name": "Tyr"}}
+
+SQLALCHEMY_ENGINE_OPTIONS = (
+    json.loads(os.getenv('TYR_SQLALCHEMY_ENGINE_OPTIONS', '{}')) or DEFAULT_SQLALCHEMY_ENGINE_OPTIONS
+)
 
 # URI for cities database
 # postgresql://<user>:<password>@<host>:<port>/<dbname>
