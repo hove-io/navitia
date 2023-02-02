@@ -40,7 +40,7 @@ import logging
 from jormungandr.protobuf_to_dict import protobuf_to_dict
 from jormungandr.exceptions import ApiNotFound, RegionNotFound, DeadSocketException, InvalidArguments
 from jormungandr.authentication import abort_request, can_read_user
-from jormungandr import authentication, cache, app
+from jormungandr import authentication, cache, memory_cache, app
 from jormungandr.instance import Instance
 import gevent
 import os
@@ -343,6 +343,8 @@ class InstanceManager(object):
             response['regions'].append(resp_dict)
         return response
 
+    @memory_cache.memoize(app.config[str('MEMORY_CACHE_CONFIGURATION')].get(str('TIMEOUT_AUTHENTICATION'), 30))
+    @cache.memoize(app.config[str('CACHE_CONFIGURATION')].get(str('TIMEOUT_AUTHENTICATION'), 300))
     def get_all_available_instances(self, user):
         result = []
         if app.config.get('PUBLIC', False) or app.config.get('DISABLE_DATABASE', False):
