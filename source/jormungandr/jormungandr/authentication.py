@@ -199,7 +199,7 @@ def uncached_get_user(token):
 
         # if user doesn't exist for a token, get default token with user_type = no_access
         if not user:
-            user = User.get_without_access()
+            user = get_unkown_user()
             logging.getLogger(__name__).warning('Invalid token : {}'.format(token[0:10]))
     except Exception as e:
         logging.getLogger(__name__).error('No access to table User (error: {})'.format(e))
@@ -277,17 +277,22 @@ def get_user(token, abort_if_no_token=True):
                 else:
                     return None
             else:  # for public one we allow unknown user
-                g.user = User(login="unknown_user")
-                g.user.id = 0
+                g.user = get_unkown_user()
         else:
             g.user = cache_get_user(token)
-            if hasattr(g.user, 'type') and g.user.type == 'no_access':
+            if hasattr(g.user, 'login') and g.user.login == "unknown_user":
                 flask_restful.abort(
                     401,
                     message='Token absent in the database You can get one at http://www.navitia.io or contact your support if you’re using the opensource version of Navitia https://github.com/hove-io/navitia',
                 )
 
         return g.user
+
+
+def get_unkown_user():
+    user = User(login="unknown_user")
+    user.id = 0
+    return user
 
 
 def get_app_name(token):
