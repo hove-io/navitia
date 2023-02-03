@@ -197,7 +197,7 @@ def uncached_get_user(token):
     try:
         user = User.get_from_token(token, datetime.datetime.now())
 
-        # if user doesn't exist for a token, get default token with user_type = no_access
+        # if user doesn't exist for a token, create default user with user.login = unknown_user
         if not user:
             user = get_unkown_user()
             logging.getLogger(__name__).warning('Invalid token : {}'.format(token[0:10]))
