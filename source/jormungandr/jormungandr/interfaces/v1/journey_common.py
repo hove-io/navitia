@@ -52,7 +52,7 @@ from navitiacommon.parser_args_type import (
     DescribedOptionValue,
     UnsignedInteger,
     DateTimeFormat,
-    PositiveFloat,
+    IntervalValue,
     SpeedRange,
     FloatRange,
 )
@@ -594,6 +594,138 @@ class JourneyCommon(ResourceUri, ResourceUtc):
             hidden=True,
             default=0,
             help="only available for Asgard: A penalty applied for a country crossing. ",
+        )
+
+        # Advanced parameters for valhalla walking
+        parser_get.add_argument(
+            "walking_walkway_factor",
+            type=float,
+            hidden=True,
+            default=1.0,
+            help="only available for Asgard: "
+            "A factor that modifies (multiplies) the cost when encountering roads classified as footway.",
+        )
+
+        parser_get.add_argument(
+            "walking_sidewalk_factor",
+            type=float,
+            hidden=True,
+            default=1.0,
+            help="only available for Asgard: "
+            "A factor that modifies (multiplies) the cost when encountering roads with dedicated sidewalks.",
+        )
+
+        parser_get.add_argument(
+            "walking_alley_factor",
+            type=float,
+            hidden=True,
+            default=2.0,
+            help="only available for Asgard: "
+            "A factor that modifies (multiplies) the cost when alleys are encountered.",
+        )
+
+        parser_get.add_argument(
+            "walking_driveway_factor",
+            type=float,
+            hidden=True,
+            default=5.0,
+            help="only available for Asgard: "
+            "A factor that modifies (multiplies) the cost when encountering a driveway, "
+            "which is often a private, service road.",
+        )
+
+        parser_get.add_argument(
+            "walking_step_penalty",
+            type=float,
+            hidden=True,
+            default=30.0,
+            help="only available for Asgard: "
+            "A penalty in seconds added to each transition onto a path with steps or stairs.",
+        )
+
+        parser_get.add_argument(
+            "walking_use_ferry",
+            type=float,
+            hidden=True,
+            default=0.5,
+            help="only available for Asgard: "
+            "This value indicates the willingness to take ferries. This is range of values between 0 and 1. "
+            "Values near 0 attempt to avoid ferries and values near 1 will favor ferries.",
+        )
+
+        parser_get.add_argument(
+            "walking_use_living_streets",
+            type=float,
+            hidden=True,
+            default=0.6,
+            help="only available for Asgard: "
+            "This value indicates the willingness to take living streets.It is a range of values between 0 and 1. "
+            "Values near 0 attempt to avoid living streets and values near 1 will favor living streets. ",
+        )
+
+        parser_get.add_argument(
+            "walking_use_tracks",
+            type=float,
+            hidden=True,
+            default=0.5,
+            help="only available for Asgard: "
+            "This value indicates the willingness to take track roads. This is a range of values between 0 and 1. "
+            "Values near 0 attempt to avoid tracks and values near 1 will favor tracks a little bit.",
+        )
+
+        parser_get.add_argument(
+            "walking_use_hills",
+            type=float,
+            hidden=True,
+            default=0.5,
+            help="only available for Asgard: "
+            "This is a range of values from 0 to 1, where 0 attempts to avoid hills and steep grades even if it "
+            "means a longer (time and distance) path, while 1 indicates the pedestrian does not fear hills and "
+            "steeper grades.",
+        )
+
+        parser_get.add_argument(
+            "walking_service_penalty",
+            type=float,
+            hidden=True,
+            default=0,
+            help="only available for Asgard: " "A penalty applied for transition to generic service road.",
+        )
+
+        parser_get.add_argument(
+            "walking_service_factor",
+            type=float,
+            hidden=True,
+            default=1,
+            help="only available for Asgard: "
+            "A factor that modifies (multiplies) the cost when generic service roads are encountered.",
+        )
+
+        parser_get.add_argument(
+            "walking_max_hiking_difficulty",
+            type=IntervalValue(type=int, min_value=0, max_value=6),
+            hidden=True,
+            default=1,
+            help="only available for Asgard: "
+            "This value indicates the maximum difficulty of hiking trails that is allowed. "
+            "Values between 0 and 6 are allowed.",
+        )
+
+        parser_get.add_argument(
+            "walking_shortest",
+            type=BooleanType(),
+            hidden=True,
+            default=False,
+            help="only available for Asgard: "
+            "Changes the metric to quasi-shortest, i.e. purely distance-based costing.",
+        )
+
+        parser_get.add_argument(
+            "walking_ignore_oneways",
+            type=BooleanType(),
+            hidden=True,
+            default=True,
+            help="only available for Asgard: " "Ignore when encountering roads that are oneway.",
         )
 
     def parse_args(self, region=None, uri=None):
