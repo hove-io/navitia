@@ -645,7 +645,7 @@ class JourneyCommon(ResourceUri, ResourceUtc):
 
         parser_get.add_argument(
             "walking_use_ferry",
-            type=float,
+            type=IntervalValue(type=float, min_value=0, max_value=1),
             hidden=True,
             default=0.5,
             help="only available for Asgard: "
@@ -655,7 +655,7 @@ class JourneyCommon(ResourceUri, ResourceUtc):
 
         parser_get.add_argument(
             "walking_use_living_streets",
-            type=float,
+            type=IntervalValue(type=float, min_value=0, max_value=1),
             hidden=True,
             default=0.6,
             help="only available for Asgard: "
@@ -665,7 +665,7 @@ class JourneyCommon(ResourceUri, ResourceUtc):
 
         parser_get.add_argument(
             "walking_use_tracks",
-            type=float,
+            type=IntervalValue(type=float, min_value=0, max_value=1),
             hidden=True,
             default=0.5,
             help="only available for Asgard: "
@@ -675,7 +675,7 @@ class JourneyCommon(ResourceUri, ResourceUtc):
 
         parser_get.add_argument(
             "walking_use_hills",
-            type=float,
+            type=IntervalValue(type=float, min_value=0, max_value=1),
             hidden=True,
             default=0.5,
             help="only available for Asgard: "
@@ -689,7 +689,7 @@ class JourneyCommon(ResourceUri, ResourceUtc):
             type=float,
             hidden=True,
             default=0,
-            help="only available for Asgard: " "A penalty applied for transition to generic service road.",
+            help="only available for Asgard: A penalty applied for transition to generic service road.",
         )
 
         parser_get.add_argument(
