@@ -191,5 +191,5 @@ Navitia is written in C++ / python, here are some alternatives:
 * | `OpenTripPlanner <https://github.com/opentripplanner/OpenTripPlanner/>`_ : written in java.
   | More information here https://github.com/hove-io/navitia/wiki/OpenTripPlanner-and-Navitia-comparison.
 * `rrrr <https://github.com/bliksemlabs/rrrr>`_ : the lightest one, written in python/c
-* `Synthese <https://github.com/Open-Transport/synthese>`_ : full stack, with CMS, written all in C++
+* `Motis <https://github.com/motis-project/motis>`_ : Multi objective algorithm similar to Navitia in its approach
 * `Mumoro <https://github.com/Tristramg/mumoro>`_ : an R&D MUltiModal MUltiObjective ROuting algorithm
