@@ -31,5 +31,5 @@ jobs:
     - name: slack notification (the job has failed)
       if: failure()
       run: |
-          echo '{"text":":warning: Navitia Github Actions: publish_docker_compose_images failed ! (https://github.com/hove-io/navitia/actions?query=workflow%3A%22Publish+Docker+Compose+Images%22)"}' | http --json POST ${{secrets.SLACK_NAVITIA_CORE_TEAM_URL}}
+          echo '{"text":":warning: Navitia Github Actions: publish_docker_compose_images failed ! (https://github.com/hove-io/navitia/actions?query=workflow%3A%22Publish+Docker+Compose+Images%22)"}' | http --json POST ${{secrets.SLACK_NAVITIA_TEAM_URL}}
 
