@@ -56,7 +56,7 @@ jobs:
     - name: slack notification (the job has failed)
       if: failure() && github.event_name == 'push'
       run: |
-          echo '{"text":":warning: Navitia Github Actions: build_navitia_${{matrix.distribution}}_packages_for_dev failed (https://github.com/hove-io/navitia/actions?query=workflow%3A%22Build+Navitia+Packages+For+Dev+Multi+Distributions%22)"}' | http --json POST ${{secrets.SLACK_NAVITIA_CORE_TEAM_URL}}
+          echo '{"text":":warning: Navitia Github Actions: build_navitia_${{matrix.distribution}}_packages_for_dev failed (https://github.com/hove-io/navitia/actions?query=workflow%3A%22Build+Navitia+Packages+For+Dev+Multi+Distributions%22)"}' | http --json POST ${{secrets.SLACK_NAVITIA_TEAM_URL}}
 
 
   docker:
@@ -82,7 +82,7 @@ jobs:
     - name: slack notification (the job has failed)
       if: ${{ failure() && github.event_name == 'push' }}
       run: |
-          echo '{"text":":warning: Navitia Github Actions: publish_docker_compose_images failed ! "}' | http --json POST ${{secrets.SLACK_NAVITIA_CORE_TEAM_URL}}
+          echo '{"text":":warning: Navitia Github Actions: publish_docker_compose_images failed ! "}' | http --json POST ${{secrets.SLACK_NAVITIA_TEAM_URL}}
 
   artemis:
     runs-on: ubuntu-latest
