@@ -99,6 +99,20 @@ class DirectPathProfile(object):
         bike_service_factor=1,
         bike_country_crossing_cost=600,
         bike_country_crossing_penalty=0,
+        walking_walkway_factor=1,
+        walking_sidewalk_factor=1,
+        walking_alley_factor=2,
+        walking_driveway_factor=5,
+        walking_step_penalty=30,
+        walking_use_ferry=0.5,
+        walking_use_living_streets=0.6,
+        walking_use_tracks=1,
+        walking_use_hills=0,
+        walking_service_penalty=0,
+        walking_service_factor=1,
+        walking_max_hiking_difficulty=1,
+        walking_shortest=False,
+        walking_ignore_oneways=True,
         tag=None,
     ):
         self.bike_use_roads = bike_use_roads
@@ -114,6 +128,22 @@ class DirectPathProfile(object):
         self.bike_service_penalty = bike_service_penalty
         self.bike_country_crossing_cost = bike_country_crossing_cost
         self.bike_country_crossing_penalty = bike_country_crossing_penalty
+
+        self.walking_walkway_factor = walking_walkway_factor
+        self.walking_sidewalk_factor = walking_sidewalk_factor
+        self.walking_alley_factor = walking_alley_factor
+        self.walking_driveway_factor = walking_driveway_factor
+        self.walking_step_penalty = walking_step_penalty
+        self.walking_use_ferry = walking_use_ferry
+        self.walking_use_living_streets = walking_use_living_streets
+        self.walking_use_tracks = walking_use_tracks
+        self.walking_use_hills = walking_use_hills
+        self.walking_service_penalty = walking_service_penalty
+        self.walking_service_factor = walking_service_factor
+        self.walking_max_hiking_difficulty = walking_max_hiking_difficulty
+        self.walking_shortest = walking_shortest
+        self.walking_ignore_oneways = walking_ignore_oneways
+
         self.profile_tag = tag
 
 
@@ -327,8 +357,27 @@ class Asgard(TransientSocket, Kraken):
         profile_param.bike_service_factor = dp_profile.bike_service_factor
         profile_param.bike_country_crossing_cost = dp_profile.bike_country_crossing_cost
         profile_param.bike_country_crossing_penalty = dp_profile.bike_country_crossing_penalty
+
+        # Asgard/Valhalla bike
+        profile_param.walking_walkway_factor = dp_profile.walking_walkway_factor
+        profile_param.walking_sidewalk_factor = dp_profile.walking_sidewalk_factor
+        profile_param.walking_alley_factor = dp_profile.walking_alley_factor
+        profile_param.walking_driveway_factor = dp_profile.walking_driveway_factor
+        profile_param.walking_step_penalty = dp_profile.walking_step_penalty
+        profile_param.walking_use_ferry = dp_profile.walking_use_ferry
+        profile_param.walking_use_living_streets = dp_profile.walking_use_living_streets
+        profile_param.walking_use_tracks = dp_profile.walking_use_tracks
+        profile_param.walking_use_hills = dp_profile.walking_use_hills
+        profile_param.walking_service_penalty = dp_profile.walking_service_penalty
+        profile_param.walking_service_factor = dp_profile.walking_service_factor
+        profile_param.walking_max_hiking_difficulty = dp_profile.walking_max_hiking_difficulty
+        profile_param.walking_shortest = dp_profile.walking_shortest
+        profile_param.walking_ignore_oneways = dp_profile.walking_ignore_oneways
+
         if dp_profile.profile_tag is not None:
             profile_param.profile_tag = dp_profile.profile_tag
+
+        # Asgard/Valhalla walking
 
     def _create_direct_path_request(
         self,
@@ -361,6 +410,20 @@ class Asgard(TransientSocket, Kraken):
                 bike_service_factor=request['bike_service_factor'],
                 bike_country_crossing_cost=request['bike_country_crossing_cost'],
                 bike_country_crossing_penalty=request['bike_country_crossing_penalty'],
+                walking_walkway_factor=request['walking_walkway_factor'],
+                walking_sidewalk_factor=request['walking_sidewalk_factor'],
+                walking_alley_factor=request['walking_alley_factor'],
+                walking_driveway_factor=request['walking_driveway_factor'],
+                walking_step_penalty=request['walking_step_penalty'],
+                walking_use_ferry=request['walking_use_ferry'],
+                walking_use_living_streets=request['walking_use_living_streets'],
+                walking_use_tracks=request['walking_use_tracks'],
+                walking_use_hills=request['walking_use_hills'],
+                walking_service_penalty=request['walking_service_penalty'],
+                walking_service_factor=request['walking_service_factor'],
+                walking_max_hiking_difficulty=request['walking_max_hiking_difficulty'],
+                walking_shortest=request['walking_shortest'],
+                walking_ignore_oneways=request['walking_ignore_oneways'],
                 tag=None,
             )
         ]
