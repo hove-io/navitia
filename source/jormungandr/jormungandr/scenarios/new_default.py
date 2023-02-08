@@ -72,7 +72,12 @@ from jormungandr.scenarios.qualifier import (
 )
 import numpy as np
 import collections
-from jormungandr.utils import date_to_timestamp, copy_flask_request_context, copy_context_in_greenlet_stack
+from jormungandr.utils import (
+    date_to_timestamp,
+    copy_flask_request_context,
+    copy_context_in_greenlet_stack,
+    is_stop_point,
+)
 from jormungandr.scenarios.simple import get_pb_data_freshness
 import gevent, gevent.pool
 from jormungandr import app
@@ -1414,8 +1419,16 @@ class Scenario(simple.Scenario):
         return best.arrival_date_time - one_second
 
     def get_entrypoint_detail(self, entrypoint, instance, request_id):
-        logging.debug("calling autocomplete {} for {}".format(instance.autocomplete, entrypoint))
-        detail = instance.autocomplete.get_object_by_uri(entrypoint, instances=[instance], request_id=request_id)
+        if is_stop_point(entrypoint):
+            logging.debug("calling autocomplete Kraken for {}".format(entrypoint))
+            return global_autocomplete.get("kraken").get_object_by_uri(
+                entrypoint, instances=[instance], request_id=request_id
+            )
+        else:
+            logging.debug("calling autocomplete {} for {}".format(instance.autocomplete, entrypoint))
+            detail = instance.autocomplete.get_object_by_uri(
+                entrypoint, instances=[instance], request_id=request_id
+            )
 
         if detail:
             return detail

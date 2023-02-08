@@ -828,3 +828,7 @@ def get_weekday(timestamp):
         return WEEK_DAYS_MAPPING[date_time.weekday()]
     except ValueError:
         return None
+
+
+def is_stop_point(uri):
+    return uri.startswith("stop_point") if uri else False
