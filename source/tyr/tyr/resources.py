@@ -992,6 +992,14 @@ class Instance(flask_restful.Resource):
             default=instance.ghost_words,
         )
 
+        parser.add_argument(
+            'filter_odt_journeys',
+            type=inputs.boolean,
+            help='boolean to activate / deactivate filter on on-demand transport journeys',
+            location=('json', 'values'),
+            default=instance.filter_odt_journeys,
+        )
+
         args = parser.parse_args()
 
         try:
@@ -1088,6 +1096,7 @@ class Instance(flask_restful.Resource):
                         'default_pt_planner',
                         'pt_planners_configurations',
                         'ghost_words',
+                        'filter_odt_journeys',
                     ],
                 ),
                 maxlen=0,
