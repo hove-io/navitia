@@ -57,12 +57,19 @@ log_format = os.getenv(
 log_formatter = os.getenv('JORMUNGANDR_LOG_FORMATTER', 'default')  # default or json
 log_extras = json.loads(os.getenv('JORMUNGANDR_LOG_EXTRAS', '{}'))  # fields to add to the logger
 
+access_log_format = os.getenv(
+    'JORMUNGANDR_ACCESS_LOG_FORMAT',
+    '[%(asctime)s] [%(request_id)s] [%(process)5s] [%(name)10s] %(message)s',
+)
+access_log_formatter = os.getenv('JORMUNGANDR_ACCESS_LOG_FORMATTER', 'access_log')
+
 # logger configuration
 LOGGER = {
     'version': 1,
     'disable_existing_loggers': False,
     'formatters': {
         'default': {'format': log_format},
+        'access_log': {'format': access_log_format},
         'json': {
             '()': 'jormungandr.logging_utils.CustomJsonFormatter',
             'format': log_format,
@@ -76,9 +83,18 @@ LOGGER = {
             'class': 'logging.StreamHandler',
             'formatter': log_formatter,
             'filters': ['IdFilter'],
-        }
+        },
+        'access_log': {
+            'level': 'INFO',
+            'class': 'logging.StreamHandler',
+            'formatter': access_log_formatter,
+            'filters': ['IdFilter'],
+        },
     },
-    'loggers': {'': {'handlers': ['default'], 'level': log_level, 'propagate': True}},
+    'loggers': {
+        '': {'handlers': ['default'], 'level': log_level, 'propagate': True},
+        'jormungandr.access': {'handlers': ['access_log'], 'level': 'INFO', 'propagate': False},
+    },
 }
 
 # Bike self-service configuration
