@@ -995,7 +995,7 @@ class Instance(flask_restful.Resource):
         parser.add_argument(
             'filter_odt_journeys',
             type=inputs.boolean,
-            help='boolean to activate / deactivate filter on odt journeys',
+            help='boolean to activate / deactivate filter on on-demand transport journeys',
             location=('json', 'values'),
             default=instance.filter_odt_journeys,
         )
