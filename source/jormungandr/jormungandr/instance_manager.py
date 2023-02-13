@@ -39,7 +39,8 @@ import glob
 import logging
 from jormungandr.protobuf_to_dict import protobuf_to_dict
 from jormungandr.exceptions import ApiNotFound, RegionNotFound, DeadSocketException, InvalidArguments
-from jormungandr import authentication, cache, app
+from jormungandr.authentication import abort_request, can_read_user
+from jormungandr import authentication, cache, memory_cache, app
 from jormungandr.instance import Instance
 import gevent
 import os
@@ -99,7 +100,7 @@ class InstanceManager(object):
         self.start_ping = start_ping
         self.instances = {}
         self.context = zmq.Context()
-        self.is_ready = False
+        self.is_ready = False  # type: bool
 
     def __repr__(self):
         return '<InstanceManager>'
@@ -297,7 +298,7 @@ class InstanceManager(object):
         else:
             # Requests without any coverage
             # fetch all the authorized instances (free + private) using cached function has_access()
-            authorized_instances = self._get_authorized_instances(user, api)
+            authorized_instances = self.get_all_available_instances(user)
             if not authorized_instances:
                 # user doesn't have access to any of the instances
                 context = 'User has no access to any instance'
@@ -341,3 +342,26 @@ class InstanceManager(object):
             resp_dict['region_id'] = key_region
             response['regions'].append(resp_dict)
         return response
+
+    @memory_cache.memoize(app.config[str('MEMORY_CACHE_CONFIGURATION')].get(str('TIMEOUT_AUTHENTICATION'), 30))
+    @cache.memoize(app.config[str('CACHE_CONFIGURATION')].get(str('TIMEOUT_AUTHENTICATION'), 300))
+    def get_all_available_instances(self, user):
+        result = []
+        if app.config.get('PUBLIC', False) or app.config.get('DISABLE_DATABASE', False):
+            return list(self.instances.values())
+
+        if not user:
+            logging.getLogger(__name__).warning('get all available instances no user')
+            # for not-public navitia a user is mandatory
+            # To manage database error of the following type we should fetch one more time from database
+            # Can connect to database but at least one table/attribute is not accessible due to transaction problem
+            if can_read_user():
+                abort_request(user=user)
+            else:
+                return result
+
+        bdd_instances = user.get_all_available_instances()
+        for bdd_instance in bdd_instances:
+            if bdd_instance.name in self.instances:
+                result.append(self.instances[bdd_instance.name])
+        return result
