@@ -38,6 +38,7 @@ www.navitia.io
 #include "type/meta_data.h"
 #include "type/meta_vehicle_journey.h"
 #include "type/pt_data.h"
+#include "type/dataset.h"
 #include "utils/logger.h"
 #include "utils/map_find.h"
 #include "utils/functions.h"
@@ -396,7 +397,11 @@ struct add_impacts_visitor : public apply_impacts_visitor {
             if (!mvj->get_base_vj().empty()) {
                 vj->name = mvj->get_base_vj().at(0)->name;
                 vj->headsign = mvj->get_base_vj().at(0)->headsign;
-                vj->dataset = mvj->get_base_vj().at(0)->dataset;
+                auto* dataset = mvj->get_base_vj().at(0)->dataset;
+                if (dataset) {
+                    vj->dataset = dataset;
+                    vj->dataset->vehiclejourney_list.insert(vj);
+                }
             } else {
                 // Affect the headsign to vj if present in gtfs-rt
                 if (!impact->headsign.empty()) {
@@ -407,7 +412,12 @@ struct add_impacts_visitor : public apply_impacts_visitor {
 
                 // for protection, use the datasets[0]
                 // TODO : Create default data set
-                vj->dataset = pt_data.datasets[0];
+                if (!pt_data.datasets.empty()) {
+                    if (pt_data.datasets[0]) {
+                        vj->dataset = pt_data.datasets[0];
+                        vj->dataset->vehiclejourney_list.insert(vj);
+                    }
+                }
                 LOG4CPLUS_WARN(
                     log, "[disruption] Associate random dataset to new VJ doesn't work because base VJ doesn't exist");
             }
