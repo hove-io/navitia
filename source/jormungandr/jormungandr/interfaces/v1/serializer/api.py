@@ -70,7 +70,11 @@ from jormungandr.utils import (
     NOT_A_DATE_TIME,
     navitia_utcfromtimestamp,
 )
-from jormungandr.interfaces.v1.serializer.pt import AddressSerializer, AccessPointSerializer, AirPollutantsSerializer
+from jormungandr.interfaces.v1.serializer.pt import (
+    AddressSerializer,
+    AccessPointSerializer,
+    AirPollutantsSerializer,
+)
 from jormungandr.interfaces.v1.serializer import jsonschema
 from jormungandr.interfaces.v1.serializer.status import CoverageErrorSerializer
 

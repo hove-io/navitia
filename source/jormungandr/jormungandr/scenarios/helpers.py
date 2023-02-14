@@ -57,5 +57,5 @@ def get_pollutants_value(distance):
         return None
     return response_pb2.PollutantValues(
         nox=AIR_POLLUTANTS_ESTIMATION_NOX_COEFF * distance / 1000.0,
-        pm10=AIR_POLLUTANTS_ESTIMATION_PM10_COEFF * distance / 1000.0
+        pm10=AIR_POLLUTANTS_ESTIMATION_PM10_COEFF * distance / 1000.0,
     )

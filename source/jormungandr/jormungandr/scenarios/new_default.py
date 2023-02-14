@@ -288,10 +288,10 @@ def fill_air_pollutants(pb_resp, instance, request_id):
     if not pb_resp.journeys:
         return
 
-    is_car_section = (
-        lambda s: s.type in [response_pb2.STREET_NETWORK, response_pb2.CROW_FLY]
-        and s.street_network.mode in [response_pb2.Car, response_pb2.CarNoPark]
-    )
+    is_car_section = lambda s: s.type in [
+        response_pb2.STREET_NETWORK,
+        response_pb2.CROW_FLY,
+    ] and s.street_network.mode in [response_pb2.Car, response_pb2.CarNoPark]
 
     for j in pb_resp.journeys:
         if not {'car', 'car_no_park'} & set(j.tags):
@@ -1306,7 +1306,9 @@ class Scenario(simple.Scenario):
 
         sort_journeys(pb_resp, instance.journey_order, api_request['clockwise'])
         compute_car_co2_emission(pb_resp, api_request, instance, "{}_car_co2".format(request_id))
-        compute_air_pollutants_for_context(pb_resp, api_request, instance, "{}_car_air_pollutants".format(request_id))
+        compute_air_pollutants_for_context(
+            pb_resp, api_request, instance, "{}_car_air_pollutants".format(request_id)
+        )
         tag_journeys(pb_resp)
 
         # Handle ridesharing service
