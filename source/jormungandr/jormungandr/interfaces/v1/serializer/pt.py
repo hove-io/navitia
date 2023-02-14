@@ -835,3 +835,25 @@ class StopDateTimeSerializer(PbNestedSerializer):
     links = PropertiesLinksSerializer(attr="properties")
     data_freshness = EnumField(pb_type=RTLevel)
     departure_occupancy = EnumField(pb_type=OccupancyStatus)
+
+
+class PollutantValueSerializer(PbNestedSerializer):
+    nox = jsonschema.MethodField(schema_type=float, display_none=False)
+    pm10 = jsonschema.MethodField(schema_type=float, display_none=False)
+
+    def get_nox(self, obj):
+        if obj.HasField(str('nox')):
+            return float("{:.4f}".format(obj.nox))
+        else:
+            return None
+
+    def get_pm10(self, obj):
+        if obj.HasField(str('pm10')):
+            return float("{:.4f}".format(obj.pm10))
+        else:
+            return None
+
+
+class AirPollutantsSerializer(PbNestedSerializer):
+    unit = jsonschema.Field(schema_type=str)
+    values = PollutantValueSerializer()
