@@ -30,8 +30,8 @@
 from __future__ import absolute_import, print_function, unicode_literals, division
 from navitiacommon import response_pb2
 
-AIR_POLLUTANTS_ESTIMATION_NOX_COEFF = 1.35
-AIR_POLLUTANTS_ESTIMATION_PM10_COEFF = 184
+AIR_POLLUTANTS_ESTIMATION_NOX_COEFF = 0.44
+AIR_POLLUTANTS_ESTIMATION_PM10_COEFF = 0.056
 AIR_POLLUTANTS_UNIT = 'g'
 
 

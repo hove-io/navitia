@@ -250,12 +250,8 @@ class TestJourneysNewDefault(
 
         assert pytest.approx(52.591, response['context']['car_direct_path']['co2_emission']['value'], 0.001)
         assert response['context']['car_direct_path']['co2_emission']['unit'] == 'gEC'
-        assert pytest.approx(
-            0.2858, response['context']['car_direct_path']['air_pollutants']['values']['nox'], 0.0001
-        )
-        assert pytest.approx(
-            38.9562, response['context']['car_direct_path']['air_pollutants']['values']['pm10'], 0.0001
-        )
+        assert response['context']['car_direct_path']['air_pollutants']['values']['nox'] == 0.0932
+        assert response['context']['car_direct_path']['air_pollutants']['values']['pm10'] == 0.0119
         assert response['context']['car_direct_path']['air_pollutants']['unit'] == 'g'
         for j in response["journeys"]:
             assert "ecologic" in j["tags"]

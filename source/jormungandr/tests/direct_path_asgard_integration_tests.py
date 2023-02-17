@@ -382,9 +382,9 @@ class TestAsgardDirectPath(AbstractTestFixture):
         assert response['journeys'][0]['durations']['total'] == 500
         assert response['journeys'][0]['distances']['car'] == 50
         assert response['journeys'][0]['sections'][0]['co2_emission'] == {'value': 9.2, 'unit': 'gEC'}
-        assert response['journeys'][0]['sections'][0]['air_pollutants']['values'] == {'nox': 0.0675, 'pm10': 9.2}
+        assert response['journeys'][0]['sections'][0]['air_pollutants']['values'] == {'nox': 0.022, 'pm10': 0.0028}
         assert response['journeys'][0]['co2_emission'] == {'value': 9.2, 'unit': 'gEC'}
-        assert response['journeys'][0]['air_pollutants'] == {'values': {'nox': 0.0675, 'pm10': 9.2}, 'unit': 'g'}
+        assert response['journeys'][0]['air_pollutants'] == {'values': {'nox': 0.022, 'pm10': 0.0028}, 'unit': 'g'}
         assert not response['journeys'][0]['sections'][0].get('cycle_lane_length')
 
         # bike direct path from asgard
