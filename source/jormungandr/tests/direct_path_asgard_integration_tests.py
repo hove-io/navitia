@@ -384,11 +384,11 @@ class TestAsgardDirectPath(AbstractTestFixture):
         assert response['journeys'][0]['sections'][0]['co2_emission'] == {'value': 9.2, 'unit': 'gEC'}
         assert response['journeys'][0]['sections'][0]['air_pollutants']['values'] == {
             'nox': 0.022,
-            'pm10': 0.0028,
+            'pm': 0.0028,
         }
         assert response['journeys'][0]['co2_emission'] == {'value': 9.2, 'unit': 'gEC'}
         assert response['journeys'][0]['air_pollutants'] == {
-            'values': {'nox': 0.022, 'pm10': 0.0028},
+            'values': {'nox': 0.022, 'pm': 0.0028},
             'unit': 'g',
         }
         assert not response['journeys'][0]['sections'][0].get('cycle_lane_length')

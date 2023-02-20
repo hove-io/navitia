@@ -839,7 +839,7 @@ class StopDateTimeSerializer(PbNestedSerializer):
 
 class PollutantValueSerializer(PbNestedSerializer):
     nox = jsonschema.MethodField(schema_type=float, display_none=False)
-    pm10 = jsonschema.MethodField(schema_type=float, display_none=False)
+    pm = jsonschema.MethodField(schema_type=float, display_none=False)
 
     def get_nox(self, obj):
         if obj.HasField(str('nox')):
@@ -847,7 +847,7 @@ class PollutantValueSerializer(PbNestedSerializer):
         else:
             return None
 
-    def get_pm10(self, obj):
+    def get_pm(self, obj):
         if obj.HasField(str('pm10')):
             return float("{:.4f}".format(obj.pm10))
         else:
