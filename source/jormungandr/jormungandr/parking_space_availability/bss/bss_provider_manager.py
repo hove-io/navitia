@@ -72,6 +72,8 @@ class BssProviderManager(AbstractProviderManager):
             logger.exception('No access to table bss_provider (error: {})'.format(e))
             # database is not accessible, so let's use the values already present in self._bss_providers and
             # self._bss_providers_legacy
+            # avoid sending query to the database for another update_interval
+            self._last_update = datetime.datetime.utcnow()
             return
 
         if not providers:

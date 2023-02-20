@@ -156,6 +156,8 @@ class StreetNetworkBackendManager(object):
         except Exception as e:
             self.logger.error('No access to table streetnetwork_backend (error: {})'.format(e))
             # database is not accessible, so let's use the values already present in self._streetnetwork_backends
+            # avoid sending query to the database for another update_interval
+            self._last_update = datetime.datetime.utcnow()
             return
 
         if not sn_backends:
