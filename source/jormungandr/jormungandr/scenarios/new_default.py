@@ -77,8 +77,11 @@ from jormungandr.utils import (
     copy_flask_request_context,
     copy_context_in_greenlet_stack,
     is_stop_point,
+    get_lon_lat,
 )
+from jormungandr.utils import Coords
 from jormungandr.scenarios.simple import get_pb_data_freshness
+from jormungandr.street_network.utils import crowfly_distance_between
 import gevent, gevent.pool
 from jormungandr import app
 from jormungandr.autocomplete.geocodejson import GeocodeJson
@@ -281,6 +284,28 @@ def fill_missing_co2_emission(pb_resp, instance, request_id):
             s.co2_emission.CopyFrom(co2_emission)
 
 
+def fill_air_pollutants(pb_resp, instance, request_id):
+    if not pb_resp.journeys:
+        return
+
+    is_car_section = lambda s: s.type in [
+        response_pb2.STREET_NETWORK,
+        response_pb2.CROW_FLY,
+    ] and s.street_network.mode in [response_pb2.Car, response_pb2.CarNoPark]
+
+    for j in pb_resp.journeys:
+        if not {'car', 'car_no_park'} & set(j.tags):
+            continue
+
+        car_sections = (s for s in j.sections if is_car_section(s))
+
+        for s in car_sections:
+            pollutants_values = helpers.get_pollutants_value(s.street_network.length)
+            if pollutants_values:
+                s.air_pollutants.unit = helpers.AIR_POLLUTANTS_UNIT
+                s.air_pollutants.values.CopyFrom(pollutants_values)
+
+
 def compute_car_co2_emission(pb_resp, api_request, instance, request_id):
     if not pb_resp.journeys:
         return
@@ -299,6 +324,16 @@ def compute_car_co2_emission(pb_resp, api_request, instance, request_id):
         # Assign car_co2_emission into the resp, these value will be exposed in the final result
         pb_resp.car_co2_emission.value = car.co2_emission.value
         pb_resp.car_co2_emission.unit = car.co2_emission.unit
+
+
+def compute_air_pollutants_for_context(pb_resp, api_request, instance, request_id):
+    if not pb_resp.journeys:
+        return
+
+    pollutants_values = get_crowfly_air_pollutants(api_request['origin'], api_request['destination'])
+    if pollutants_values:
+        pb_resp.air_pollutants.unit = helpers.AIR_POLLUTANTS_UNIT
+        pb_resp.air_pollutants.values.CopyFrom(pollutants_values)
 
 
 def tag_ecologic(resp):
@@ -403,6 +438,18 @@ def update_total_co2_emission(pb_resp):
     for j in pb_resp.journeys:
         j.co2_emission.value = sum(s.co2_emission.value for s in j.sections)
         j.co2_emission.unit = 'gEC'
+
+
+def update_total_air_pollutants(pb_resp):
+    """
+    update journey.air_pollutants
+    """
+    if not pb_resp.journeys:
+        return
+    for j in pb_resp.journeys:
+        j.air_pollutants.values.nox = sum(s.air_pollutants.values.nox for s in j.sections)
+        j.air_pollutants.values.pm10 = sum(s.air_pollutants.values.pm10 for s in j.sections)
+        j.air_pollutants.unit = helpers.AIR_POLLUTANTS_UNIT
 
 
 def _get_section_id(section):
@@ -984,6 +1031,37 @@ def get_kraken_id(entrypoint_detail):
     return '{};{}'.format(coord['lon'], coord['lat'])
 
 
+def get_object_coord(entrypoint_detail):
+    """
+    returns coordinate from the entrypoint detail
+    """
+    if not entrypoint_detail:
+        # impossible to find the object
+        return None
+
+    emb_type = entrypoint_detail.get('embedded_type')
+    coord = entrypoint_detail.get(emb_type, {}).get('coord')
+
+    return Coords(lon=coord['lon'], lat=coord['lat'])
+
+
+def get_crowfly_air_pollutants(origin, destination):
+    if g.origin_detail:
+        origin_coord = get_object_coord(g.origin_detail)
+    else:
+        lon, lat = get_lon_lat(origin)
+        origin_coord = Coords(lon=lon, lat=lat)
+
+    if g.destination_detail:
+        destination_coord = get_object_coord(g.destination_detail)
+    else:
+        lon, lat = get_lon_lat(destination)
+        destination_coord = Coords(lon=lon, lat=lat)
+
+    crowfly_distance = crowfly_distance_between(origin_coord, destination_coord)
+    return helpers.get_pollutants_value(crowfly_distance)
+
+
 def aggregate_journeys(journeys):
     """
     when building candidates_pool, we should take into count the similarity of journeys, which means, we add a journey
@@ -1228,6 +1306,9 @@ class Scenario(simple.Scenario):
 
         sort_journeys(pb_resp, instance.journey_order, api_request['clockwise'])
         compute_car_co2_emission(pb_resp, api_request, instance, "{}_car_co2".format(request_id))
+        compute_air_pollutants_for_context(
+            pb_resp, api_request, instance, "{}_car_air_pollutants".format(request_id)
+        )
         tag_journeys(pb_resp)
 
         # Handle ridesharing service
@@ -1239,10 +1320,14 @@ class Scenario(simple.Scenario):
 
         # We fill empty co2_emission with estimations for car sections
         fill_missing_co2_emission(pb_resp, instance, "{}_missing_car_co2".format(request_id))
+        # We fill air pollutants with estimations for car sections
+        fill_air_pollutants(pb_resp, instance, "{}_car_air_pollutants".format(request_id))
         # We have to update total duration as some sections could be updated in distributed.
         update_durations(pb_resp)
         # We have to update total co2_emission as some sections could be updated in distributed.
         update_total_co2_emission(pb_resp)
+        # We have to update total api_pollutants in a journey.
+        update_total_air_pollutants(pb_resp)
 
         # need to clean extra tickets after culling journeys
         journey_filter.remove_excess_tickets(pb_resp)

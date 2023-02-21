@@ -70,13 +70,18 @@ from jormungandr.utils import (
     NOT_A_DATE_TIME,
     navitia_utcfromtimestamp,
 )
-from jormungandr.interfaces.v1.serializer.pt import AddressSerializer, AccessPointSerializer
+from jormungandr.interfaces.v1.serializer.pt import (
+    AddressSerializer,
+    AccessPointSerializer,
+    AirPollutantsSerializer,
+)
 from jormungandr.interfaces.v1.serializer import jsonschema
 from jormungandr.interfaces.v1.serializer.status import CoverageErrorSerializer
 
 
 class CO2Serializer(PbNestedSerializer):
     co2_emission = AmountSerializer(attr='car_co2_emission', display_none=False)
+    air_pollutants = AirPollutantsSerializer(display_none=False)
 
 
 class ContextSerializer(PbNestedSerializer):

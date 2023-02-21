@@ -30,6 +30,11 @@
 from __future__ import absolute_import, print_function, unicode_literals, division
 from navitiacommon import response_pb2
 
+# https://www.cerema.fr/fr/actualites/emissions-routieres-polluants-atmospheriques-courbes
+AIR_POLLUTANTS_ESTIMATION_NOX_COEFF = 0.44
+AIR_POLLUTANTS_ESTIMATION_PM_COEFF = 0.056
+AIR_POLLUTANTS_UNIT = 'g'
+
 
 def is_car_direct_path(journey):
     car_seen = False
@@ -46,3 +51,12 @@ def is_car_direct_path(journey):
         ):
             car_seen = True
     return car_seen
+
+
+def get_pollutants_value(distance):
+    if distance <= 0:
+        return None
+    return response_pb2.PollutantValues(
+        nox=AIR_POLLUTANTS_ESTIMATION_NOX_COEFF * distance / 1000.0,
+        pm10=AIR_POLLUTANTS_ESTIMATION_PM_COEFF * distance / 1000.0,
+    )

@@ -93,6 +93,7 @@ class TestJourneysNewDefault(
         context = response['context']
         assert 'car_direct_path' in context
         assert 'co2_emission' in context['car_direct_path']
+        assert 'air_pollutants' in context['car_direct_path']
 
     def test_first_walking_last_walking_section_mode(self):
         query = (
@@ -215,6 +216,7 @@ class TestJourneysNewDefault(
         assert 'context' in response
         assert 'car_direct_path' in response['context']
         assert 'co2_emission' in response['context']['car_direct_path']
+        assert 'air_pollutants' in response['context']['car_direct_path']
         assert len(response["journeys"]) == 3
 
         assert (
@@ -248,6 +250,9 @@ class TestJourneysNewDefault(
 
         assert pytest.approx(52.591, response['context']['car_direct_path']['co2_emission']['value'], 0.001)
         assert response['context']['car_direct_path']['co2_emission']['unit'] == 'gEC'
+        assert response['context']['car_direct_path']['air_pollutants']['values']['nox'] == 0.0932
+        assert response['context']['car_direct_path']['air_pollutants']['values']['pm'] == 0.0119
+        assert response['context']['car_direct_path']['air_pollutants']['unit'] == 'g'
         for j in response["journeys"]:
             assert "ecologic" in j["tags"]
 
