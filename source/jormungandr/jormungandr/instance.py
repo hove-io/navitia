@@ -229,7 +229,7 @@ class Instance(transient_socket.TransientSocket):
         :return: a callable query of external services associated to the current instance in db
         """
         models = self._get_models()
-        result = models.external_services if models else None
+        result = models.external_services if models else []
         return [
             res
             for res in result
@@ -278,7 +278,7 @@ class Instance(transient_socket.TransientSocket):
         try:
             instance_db = models.Instance.get_by_name(self.name)
         except Exception as e:
-            logging.getLogger(__name__).error('No access to table instance (error: {})'.format(e))
+            logging.getLogger(__name__).exception('No access to table instance (error: {})'.format(e))
             g.can_connect_to_database = False
             return self.instance_db
 
