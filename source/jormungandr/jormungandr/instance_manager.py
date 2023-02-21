@@ -298,7 +298,8 @@ class InstanceManager(object):
         else:
             # Requests without any coverage
             # fetch all the authorized instances (free + private) using cached function has_access()
-            authorized_instances = self.get_all_available_instances(user)
+            authorized_instances_name = self.get_all_available_instances(user)
+            authorized_instances = [self.instances[i_name] for i_name in authorized_instances_name]
             if not authorized_instances:
                 # user doesn't have access to any of the instances
                 context = 'User has no access to any instance'
@@ -348,7 +349,7 @@ class InstanceManager(object):
     def get_all_available_instances(self, user):
         result = []
         if app.config.get('PUBLIC', False) or app.config.get('DISABLE_DATABASE', False):
-            return list(self.instances.values())
+            return [key for key in self.instances]
 
         if not user:
             logging.getLogger(__name__).warning('get all available instances no user')
@@ -363,5 +364,5 @@ class InstanceManager(object):
         bdd_instances = user.get_all_available_instances()
         for bdd_instance in bdd_instances:
             if bdd_instance.name in self.instances:
-                result.append(self.instances[bdd_instance.name])
+                result.append(bdd_instance.name)
         return result
