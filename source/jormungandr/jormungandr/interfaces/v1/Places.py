@@ -33,7 +33,7 @@ from __future__ import absolute_import, print_function, unicode_literals, divisi
 from flask_restful import abort
 from flask.globals import g
 import flask
-from jormungandr.authentication import get_all_available_instances
+from jormungandr.authentication import get_all_available_instances_names
 from jormungandr.interfaces.v1.decorators import get_serializer
 from jormungandr.interfaces.v1.serializer.api import PlacesSerializer, PlacesNearbySerializer
 from jormungandr import i_manager, timezone, global_autocomplete, authentication, app
@@ -207,7 +207,8 @@ class Places(ResourceUri):
                 args["q"] = query_string
             response = i_manager.dispatch(args, "places", instance_name=self.region)
         else:
-            available_instances = get_all_available_instances(user, exclude_backend='kraken')
+            available_instances_name = get_all_available_instances_names(user, exclude_backend='kraken')
+            available_instances = [i_manager.instances[name] for name in available_instances_name]
 
             # If no instance available most probably due to database error
             if (not user) and (not available_instances):
@@ -284,7 +285,9 @@ class PlaceUri(ResourceUri):
             response = i_manager.dispatch(args, "place_uri", instance_name=self.region)
         else:
             user = authentication.get_user(token=authentication.get_token(), abort_if_no_token=False)
-            available_instances = get_all_available_instances(user, exclude_backend='kraken')
+
+            available_instances_name = get_all_available_instances_names(user, exclude_backend='kraken')
+            available_instances = [i_manager.instances[name] for name in available_instances_name]
 
             # If no instance available most probably due to database error
             if (not user) and (not available_instances):
