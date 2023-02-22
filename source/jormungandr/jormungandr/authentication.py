@@ -230,7 +230,7 @@ def cache_get_key(token):
     current_app.config[str('MEMORY_CACHE_CONFIGURATION')].get(str('TIMEOUT_AUTHENTICATION'), 30)
 )
 @cache.memoize(current_app.config[str('CACHE_CONFIGURATION')].get(str('TIMEOUT_AUTHENTICATION'), 300))
-def get_all_available_instances(user, exclude_backend=None):
+def get_all_available_instances_names(user, exclude_backend=None):
     """
     get the list of instances that a user can use (for the autocomplete apis)
     if Jormungandr has no authentication set (or no database), the user can use all the instances
@@ -238,10 +238,10 @@ def get_all_available_instances(user, exclude_backend=None):
 
     Note: only users with access to free instances can use global /places
     """
-    if current_app.config.get('PUBLIC', False) or current_app.config.get('DISABLE_DATABASE', False):
-        from jormungandr import i_manager
+    from jormungandr import i_manager
 
-        return list(i_manager.instances.values())
+    if current_app.config.get('PUBLIC', False) or current_app.config.get('DISABLE_DATABASE', False):
+        return [key for key in i_manager.instances]
 
     if not user:
         # for not-public navitia a user is mandatory
@@ -256,7 +256,8 @@ def get_all_available_instances(user, exclude_backend=None):
         # only users with access to opendata can use the global /places
         abort_request(user=user)
 
-    return user.get_all_available_instances(exclude_backend=exclude_backend)
+    bdd_instances = user.get_all_available_instances(exclude_backend=exclude_backend)
+    return [instance.name for instance in bdd_instances if instance.name in i_manager.instances]
 
 
 def get_user(token, abort_if_no_token=True):
