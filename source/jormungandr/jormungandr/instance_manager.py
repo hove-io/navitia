@@ -292,8 +292,7 @@ class InstanceManager(object):
         valid_instances = []
         if name:
             # Requests with a coverage
-            available_instance = self.instances[name]
-            if authentication.has_access(available_instance.name, abort=False, user=user, api=api):
+            if authentication.has_access(name, abort=False, user=user, api=api):
                 valid_instances = [self.instances[name]]
         else:
             # Requests without any coverage

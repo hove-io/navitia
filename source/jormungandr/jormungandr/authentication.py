@@ -120,7 +120,7 @@ def can_read_user():
     try:
         User.query.options(noload('*')).first()
     except Exception as e:
-        logging.getLogger(__name__).error('No access to table User (error: {})'.format(e))
+        logging.getLogger(__name__).exception('No access to table User (error: {})'.format(e))
         g.can_connect_to_database = False
         return False
 
@@ -157,7 +157,7 @@ def has_access(region, api, abort, user):
     try:
         model_instance = Instance.get_by_name(region)
     except Exception as e:
-        logging.getLogger(__name__).error('No access to table Instance (error: {})'.format(e))
+        logging.getLogger(__name__).exception('No access to table Instance (error: {})'.format(e))
         g.can_connect_to_database = False
         return True
 
@@ -202,7 +202,7 @@ def uncached_get_user(token):
             user = get_unkown_user()
             logging.getLogger(__name__).warning('Invalid token : {}'.format(token[0:10]))
     except Exception as e:
-        logging.getLogger(__name__).error('No access to table User (error: {})'.format(e))
+        logging.getLogger(__name__).exception('No access to table User (error: {})'.format(e))
         g.can_connect_to_database = False
         return None
 
@@ -220,7 +220,7 @@ def cache_get_key(token):
     try:
         key = Key.get_by_token(token)
     except Exception as e:
-        logging.getLogger(__name__).error('No access to table key (error: {})'.format(e))
+        logging.getLogger(__name__).exception('No access to table key (error: {})'.format(e))
         g.can_connect_to_database = False
         return None
     return key

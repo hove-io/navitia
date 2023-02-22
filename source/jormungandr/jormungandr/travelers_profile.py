@@ -132,7 +132,7 @@ class TravelerProfile(object):
         try:
             model = models.TravelerProfile.get_by_coverage_and_type(coverage, traveler_type)
         except Exception as e:
-            logging.getLogger(__name__).error('No access to table traveler_profile (error: {})'.format(e))
+            logging.getLogger(__name__).exception('No access to table traveler_profile (error: {})'.format(e))
             # If the table is not accessible return the default traveler profile for given traveler type
             return default_traveler_profiles[traveler_type]
 
