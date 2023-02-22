@@ -80,7 +80,6 @@ class BssProviderManager(AbstractProviderManager):
             self._bss_providers_last_update = {}
             return
 
-        logger.debug('updating with %s', providers)
         for provider in providers:
             # it's a new bss provider or it has been updated, we add it
             if (
@@ -96,11 +95,6 @@ class BssProviderManager(AbstractProviderManager):
 
     def update_provider(self, provider):
         logger = logging.getLogger(__name__)
-        logger.info(
-            'updating/adding %s bss provider with the following configuration: %s',
-            provider.id,
-            provider.full_args(),
-        )
         try:
             self._bss_providers[provider.id] = self._init_class(provider.klass, provider.full_args())
             self._bss_providers_last_update[provider.id] = provider.last_update()
