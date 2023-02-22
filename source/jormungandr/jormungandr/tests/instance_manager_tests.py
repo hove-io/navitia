@@ -55,8 +55,8 @@ def manager():
 def get_instances_test(manager, mocker):
     mock = mocker.patch.object(
         manager,
-        'get_all_available_instances',
-        return_value=[manager.instances['paris'], manager.instances['pdl']],
+        'get_all_available_instances_names',
+        return_value=['paris', 'pdl'],
     )
     with app.test_request_context('/'):
         instances = manager.get_instances()
@@ -74,8 +74,8 @@ def get_instances_by_coord_test(manager, mocker):
     )
     mock = mocker.patch.object(
         manager,
-        'get_all_available_instances',
-        return_value=[manager.instances['paris'], manager.instances['pdl']],
+        'get_all_available_instances_names',
+        return_value=['paris', 'pdl'],
     )
     with app.test_request_context('/'):
         instances = manager.get_instances(lon=4, lat=3)
@@ -88,8 +88,8 @@ def get_instances_by_object_id_test(manager, mocker):
     mock = mocker.patch.object(manager, '_all_keys_of_id_in_instances', return_value=[manager.instances['pdl']])
     mock = mocker.patch.object(
         manager,
-        'get_all_available_instances',
-        return_value=[manager.instances['paris'], manager.instances['pdl']],
+        'get_all_available_instances_names',
+        return_value=['paris', 'pdl'],
     )
     with app.test_request_context('/'):
         instances = manager.get_instances(object_id='sa:pdl')
