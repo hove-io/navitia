@@ -56,6 +56,11 @@ jobs:
       run: |
         docker run -v `pwd`:/navitia/navitia/  navitia/builder
 
-    - name: Create jormungandr image
+    - name: Create dockers images and push them
       run: |
-        docker build -f docker/${{env.debian_version}}/Dockerfile-jormungandr -t navitia/jormungandr .
+        components='jormungandr'
+        for component in $components; do
+            echo "*********  Building $component ***************"
+            docker build -t navitia/$component:${{env.navitia_tag}} -f  docker/${{env.debian_version}}/Dockerfile-${component} .
+        done
+        docker images
