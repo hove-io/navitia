@@ -57,16 +57,9 @@ jobs:
 
     - name: Create dockers images and push them
       run: |
-        components='jormungandr'
-        for component in $components; do
-            echo "*********  Building $component ***************"
-            docker build -t navitia/$component:${{env.navitia_tag}} -f  docker/${{env.debian_version}}/Dockerfile-${component} .
-        done
-        docker images
+        docker build -t navitia/jormungandr:${{env.navitia_tag}} -f  docker/${{env.debian_version}}/Dockerfile-jormungandr .
 
         docker login -u ${{secrets.docker_user}} -p ${{secrets.docker_password}}
 
-        for component in $components; do
-            echo "*********  Pushing $component ***************"
-            docker push navitia/$component:${{env.navitia_tag}}
-        done
+        docker push navitia/jormungandr:${{env.navitia_tag}}
+        docker images
