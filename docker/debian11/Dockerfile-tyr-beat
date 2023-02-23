@@ -5,28 +5,19 @@ WORKDIR /usr/src/app
 COPY ./source/navitiacommon ./navitiacommon
 COPY ./source/tyr ./tyr
 COPY ./docker/ca-certificates/*.crt /usr/local/share/ca-certificates/
+COPY ./docker/run_tyr_beat.sh ./run.sh
 
 RUN apt-get update --fix-missing \
     && apt-get install -y curl libpq5 python3.9-dev python3-pip ca-certificates \
     && update-ca-certificates \
     && (cd navitiacommon && python3 setup.py install) \
     && (cd tyr && python3 setup.py install && pip3 install --no-cache-dir -U -r requirements.txt)\
-    && pip3 install --no-cache-dir uwsgi==2.0.21 \
     && rm -rf navitiacommon tyr \
     && apt-get purge -y \
         python3-pip \
     && apt-get autoremove -y
 
 
-COPY ./docker/run_tyr_web.sh ./run.sh
 
- # Python 'requests' package handle its own CA certificate list
- # Let's force it to use the OS's list
- ENV REQUESTS_CA_BUNDLE /etc/ssl/certs
-
-
-HEALTHCHECK CMD curl -f http://localhost/v1 || exit 1
-
-EXPOSE 80
 
 ENTRYPOINT [ "/usr/src/app/run.sh" ]
