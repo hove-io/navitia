@@ -47,3 +47,11 @@ jobs:
         echo "building version $version"
         echo "navitia_tag=$version" >> $GITHUB_ENV
         echo "aws_branch=release" >> $GITHUB_ENV
+
+    - name: Create builder docker
+      run: |
+        docker build -f docker/${{env.debian_version}}/Dockerfile-builder -t navitia/builder .
+
+    - name: Build navitia in builder docker
+      run: |
+        docker run -v `pwd`:/build/navitia/  navitia/builder
