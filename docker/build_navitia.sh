@@ -2,7 +2,7 @@
 echo "*********************"
 ls /navitia/
 echo "*********************"
-echo /navitia/navitia/
+ls -lt  /navitia/navitia/
 echo "*********************"
 cd /navitia/navitia/
 navitia_build_dir="$navitia_dir"/build_release
