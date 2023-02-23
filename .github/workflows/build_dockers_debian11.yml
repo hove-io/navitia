@@ -57,7 +57,11 @@ jobs:
 
     - name: Create navitia images
       run: |
-        docker build -t navitia/jormungandr:debian11_test -f  docker/${{env.debian_version}}/Dockerfile-jormungandr .
+        components='jormungandr tyr-web'
+        for component in $components; do
+            echo "*********  Building $component ***************"
+            docker build -t navitia/$component:debian11_test -f  docker/${{env.debian_version}}/Dockerfile-${component} .
+        done
 
     - name: Login dockerhub
       run: |
@@ -66,4 +70,8 @@ jobs:
 
     - name: Push navitia images
       run: |
-        docker push navitia/jormungandr:debian11_test
+        components='jormungandr tyr-web'
+        for component in $components; do
+            echo "*********  Pushing $component ***************"
+            docker push navitia/$component:debian11_test
+        done
