@@ -55,7 +55,9 @@ jobs:
     - name: Display contenant
       run: |
         ls -lt
-
+    - name: Current path
+      run: |
+        pwd
     - name: Build navitia in builder docker
       run: |
         docker run -v `pwd`:/build/navitia/  navitia/builder
