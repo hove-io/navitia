@@ -20,7 +20,8 @@ configobj==5.0.6
 itsdangerous==1.1.0
 setuptools==44.1.0 ; python_version == "2.7"
 protobuf==3.15
-psycopg2
+psycopg2 ; python_version < "3.9"
+psycopg2-binary ; python_version >= "3.9"
 pytz==2013.9
 six==1.13.0
 validate-email==1.3
