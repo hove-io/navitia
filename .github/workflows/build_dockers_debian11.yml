@@ -54,7 +54,7 @@ jobs:
 
     - name: Display contenant
       run: |
-        echo ls -lt
+        ls -lt
 
     - name: Build navitia in builder docker
       run: |
