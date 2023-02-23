@@ -1,7 +1,5 @@
 FROM navitia/debian11_dev
 
-RUN apt-get update --fix-missing
-
 COPY docker/build_navitia.sh /build_navitia.sh
 RUN chmod +x /build_navitia.sh
 
