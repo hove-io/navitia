@@ -1,0 +1,49 @@
+name: Build Navitia Dockers debian11
+
+on:
+    pull_request:
+#  push:
+#    branches:
+#      - dev
+#    tags:
+#      - '*'
+
+env:
+  debian_version: debian11
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Free up space
+      run: |
+        sudo rm -rf /usr/share/dotnet/*
+        sudo rm -rf /usr/local/lib/android/*
+        echo "Free space:"
+        df -h
+
+    - name: Install dependencies
+      run: |
+        sudo apt update && sudo apt install -y --force-yes zip httpie
+
+    - name: Checkout
+      uses: actions/checkout@v3
+      with:
+        submodules : recursive
+        fetch-depth: 0
+
+    - name: Restore ccache
+      uses: hendrikmuhs/ccache-action@v1.2
+      with:
+        key: build_dockers
+        max-size: 2000M
+
+    - name: Choose release tag
+      if: startsWith(github.ref, 'refs/tags/')
+      run: |
+        version=$(git describe --tags)
+        echo "building version $version"
+        echo "navitia_tag=$version" >> $GITHUB_ENV
+        echo "aws_branch=release" >> $GITHUB_ENV
