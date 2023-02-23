@@ -51,15 +51,19 @@ jobs:
       run: |
         docker build -f docker/${{env.debian_version}}/Dockerfile-builder -t navitia/builder .
 
-    - name: Build navitia in builder docker
+    - name: Build navitia
       run: |
         docker run -v `pwd`:/navitia/navitia/  navitia/builder
 
-    - name: Create dockers images and push them
+    - name: Create navitia images
       run: |
         docker build -t navitia/jormungandr:debian11_test -f  docker/${{env.debian_version}}/Dockerfile-jormungandr .
 
+    - name: Login dockerhub
+      run: |
         docker login -u ${{secrets.docker_user}} -p ${{secrets.docker_password}}
 
+
+    - name: Push navitia images
+      run: |
         docker push navitia/jormungandr:debian11_test
-        docker images
