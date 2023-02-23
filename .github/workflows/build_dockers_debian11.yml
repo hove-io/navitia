@@ -52,12 +52,10 @@ jobs:
       run: |
         docker build -f docker/${{env.debian_version}}/Dockerfile-builder -t navitia/builder .
 
-    - name: Display contenant
-      run: |
-        ls -lt
-    - name: Current path
-      run: |
-        pwd
     - name: Build navitia in builder docker
       run: |
         docker run -v `pwd`:/navitia/navitia/  navitia/builder
+
+    - name: Create jormungandr image
+      run: |
+        docker build -f docker/${{env.debian_version}}/Dockerfile-jormungandr -t navitia/jormungandr .
