@@ -1,7 +1,6 @@
 #!/bin/bash
 cd /navitia/navitia/
-navitia_build_dir="$navitia_dir"/build_release
-mkdir -p "$navitia_build_dir" && cd "$navitia_build_dir"
+mkdir -p build && cd build
 echo "*********************"
 ls .
 echo "*********************"
