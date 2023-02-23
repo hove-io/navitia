@@ -57,9 +57,9 @@ jobs:
 
     - name: Create dockers images and push them
       run: |
-        docker build -t navitia/jormungandr:${{env.navitia_tag}} -f  docker/${{env.debian_version}}/Dockerfile-jormungandr .
+        docker build -t navitia/jormungandr:debian11_test -f  docker/${{env.debian_version}}/Dockerfile-jormungandr .
 
         docker login -u ${{secrets.docker_user}} -p ${{secrets.docker_password}}
 
-        docker push navitia/jormungandr:${{env.navitia_tag}}
+        docker push navitia/jormungandr:debian11_test
         docker images
