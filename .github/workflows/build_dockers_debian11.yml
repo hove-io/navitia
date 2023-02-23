@@ -60,4 +60,4 @@ jobs:
         pwd
     - name: Build navitia in builder docker
       run: |
-        docker run -v `pwd`:/build/navitia/  navitia/builder
+        docker run -v `pwd`:/navitia/navitia/  navitia/builder

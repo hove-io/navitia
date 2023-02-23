@@ -4,7 +4,7 @@ ls -lt
 echo "*********************"
 echo `pwd`
 echo "*********************"
-cd /build/navitia/
+cd /navitia/navitia/
 navitia_build_dir="$navitia_dir"/build_release
 mkdir -p "$navitia_build_dir" && cd "$navitia_build_dir"
 echo "*********************"
