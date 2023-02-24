@@ -6,7 +6,7 @@ while ! pg_isready --host=${TYR_DATABASE_HOST}; do
     sleep 1;
 done
 
-python /usr/bin/manage_tyr.py db upgrade
+python manage_tyr.py db upgrade
 echo "MIGRATION IS FINISHED"
 
 uwsgi --mount /=tyr:app --http 0.0.0.0:80
