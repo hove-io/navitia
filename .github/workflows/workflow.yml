@@ -5,7 +5,7 @@ on:
     branches:
       - dev
       - auto/clang-tidy
-#  pull_request:
+  pull_request:
   release:
     types:
       - created
