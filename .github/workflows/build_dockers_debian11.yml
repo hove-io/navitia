@@ -83,13 +83,13 @@ jobs:
             docker push navitia/$component:${{env.navitia_tag}}
         done
 
-#    - name: Run artemis on push to dev
-#      if: github.event_name == 'push' && github.ref == 'refs/heads/dev'
-#      uses: peter-evans/repository-dispatch@v2
-#      with:
-#        token: ${{ secrets.access_token_github }}
-#        repository: hove-io/artemis
-#        event-type: run_artemis_ng
+    - name: Run artemis on push to dev
+      if: github.event_name == 'push' && github.ref == 'refs/heads/dev'
+      uses: peter-evans/repository-dispatch@v2
+      with:
+        token: ${{ secrets.access_token_github }}
+        repository: hove-io/artemis
+        event-type: run_artemis_ng_debian11
 
     - name: failure notification
       if: failure()
