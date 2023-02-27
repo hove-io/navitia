@@ -44,7 +44,9 @@ RUN a2ensite 000-default.conf \
 
 # Redirect apache log output to docker log collector
  RUN ln -sf /proc/self/fd/1 /var/log/apache2/access.log \
-     && ln -sf /proc/self/fd/2 /var/log/apache2/error.log
+     && ln -sf /proc/self/fd/2 /var/log/apache2/error.log \
+     && echo "net.ipv4.tcp_tw_reuse=1" >> /etc/sysctl.d/10-ipv4.conf
+
 
 HEALTHCHECK CMD curl -f http://localhost/v1 || exit 1
 
