@@ -10,6 +10,7 @@ on:
 
 env:
   debian_version: debian11
+  navitia_components: 'jormungandr tyr-web'
 
 jobs:
   build:
@@ -57,8 +58,7 @@ jobs:
 
     - name: Create navitia images
       run: |
-        components='jormungandr tyr-web tyr-beat'
-        for component in $components; do
+        for component in ${{env.navitia_components}}; do
             echo "*********  Building $component ***************"
             docker build -t navitia/$component:debian11_test -f  docker/${{env.debian_version}}/Dockerfile-${component} .
         done
@@ -70,8 +70,7 @@ jobs:
 
     - name: Push navitia images
       run: |
-        components='jormungandr tyr-web tyr-beat'
-        for component in $components; do
+        for component in ${{env.navitia_components}}; do
             echo "*********  Pushing $component ***************"
             docker push navitia/$component:debian11_test
         done
