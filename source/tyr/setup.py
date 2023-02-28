@@ -48,6 +48,6 @@ setup(
         ),
         ('/usr/share/tyr/migrations/versions', glob.glob('migrations/versions/*.py')),
         ('/etc/init.d', ['tyr_beat', 'tyr_worker']),
-        ('/usr/share/tyr', ['requirements.txt']),
+        ('/usr/share/tyr', ['requirements.txt', 'manage_tyr.py']),
     ],
 )
