@@ -1,5 +1,5 @@
 GeoAlchemy2==0.2.4
-Mako==0.9.1
+Mako==1.2.2
 SQLAlchemy==1.3.3
 alembic==1.0.11
 psycopg2 ; python_version < "3.9"
