@@ -18,7 +18,7 @@ argparse==1.2.1
 billiard==3.5.0.5 ; python_version < "3.9"
 configobj==5.0.6
 itsdangerous==1.1.0
-setuptools==44.1.0 ; python_version == "2.7"
+setuptools==65.5.1 ; python_version == "2.7"
 protobuf==3.15
 psycopg2 ; python_version < "3.9"
 psycopg2-binary ; python_version >= "3.9"
