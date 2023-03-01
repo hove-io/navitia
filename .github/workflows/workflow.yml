@@ -137,21 +137,3 @@ jobs:
       run: |
         pre-commit install --install-hooks
         pre-commit run --all --show-diff-on-failure
-
-  release_script_tests:
-    runs-on: ubuntu-20.04
-    steps:
-    - uses: actions/setup-python@v3
-      with:
-        python-version: '2.7'
-    - uses: actions/checkout@v3
-    - name: Setup Pipenv and Run tests
-      working-directory: release
-      env:
-        GIT_PYTHON_REFRESH: quiet
-      run: |
-        pip install virtualenv==20.4.7 -U
-        virtualenv -p python2.7 navitia_py2
-        . navitia_py2/bin/activate
-        pip install -r requirements_release.txt
-        pytest

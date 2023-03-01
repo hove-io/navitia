@@ -103,7 +103,7 @@ Metrics::Metrics(const boost::optional<std::string>& endpoint, const std::string
     }
     auto& in_flight_family = prometheus::BuildGauge()
                                  .Name("kraken_request_in_flight")
-                                 .Help("Number of requests currently beeing processed")
+                                 .Help("Number of requests currently being processed")
                                  .Labels({{"coverage", coverage}})
                                  .Register(*registry);
     this->in_flight = &in_flight_family.Add({});
