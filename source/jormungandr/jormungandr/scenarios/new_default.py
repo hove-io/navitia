@@ -78,6 +78,7 @@ from jormungandr.utils import (
     copy_context_in_greenlet_stack,
     is_stop_point,
     get_lon_lat,
+    is_coord,
 )
 from jormungandr.utils import Coords
 from jormungandr.scenarios.simple import get_pb_data_freshness
@@ -1048,18 +1049,24 @@ def get_object_coord(entrypoint_detail):
 def get_crowfly_air_pollutants(origin, destination):
     if g.origin_detail:
         origin_coord = get_object_coord(g.origin_detail)
-    else:
+    elif is_coord(origin):
         lon, lat = get_lon_lat(origin)
         origin_coord = Coords(lon=lon, lat=lat)
+    else:
+        return None
 
     if g.destination_detail:
         destination_coord = get_object_coord(g.destination_detail)
-    else:
+    elif is_coord(destination):
         lon, lat = get_lon_lat(destination)
         destination_coord = Coords(lon=lon, lat=lat)
+    else:
+        return None
 
-    crowfly_distance = crowfly_distance_between(origin_coord, destination_coord)
-    return helpers.get_pollutants_value(crowfly_distance)
+    if origin_coord and destination_coord:
+        crowfly_distance = crowfly_distance_between(origin_coord, destination_coord)
+        return helpers.get_pollutants_value(crowfly_distance)
+    return None
 
 
 def aggregate_journeys(journeys):
