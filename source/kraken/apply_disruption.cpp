@@ -393,10 +393,11 @@ struct add_impacts_visitor : public apply_impacts_visitor {
                 }
             }
 
-            // name and dataset
+            // name, dataset and VehicleProperties (accessibility, AC, etc.)
             if (!mvj->get_base_vj().empty()) {
                 vj->name = mvj->get_base_vj().at(0)->name;
                 vj->headsign = mvj->get_base_vj().at(0)->headsign;
+                vj->_vehicle_properties = mvj->get_base_vj().at(0)->_vehicle_properties;  // otherwise all to default
                 auto* dataset = mvj->get_base_vj().at(0)->dataset;
                 if (dataset) {
                     vj->dataset = dataset;
