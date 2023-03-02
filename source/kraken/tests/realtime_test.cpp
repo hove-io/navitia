@@ -321,6 +321,25 @@ BOOST_AUTO_TEST_CASE(train_delayed) {
     res = compute(nt::RTLevel::RealTime);
     BOOST_REQUIRE_EQUAL(res.size(), 1);
     BOOST_CHECK_EQUAL(res[0].items[0].arrival, "20150928T0910"_dt);
+
+    // testing accessibility on the way, as VJ created is wheelchair-accessible and should stay accessible after
+    // delay application
+    nt::AccessibiliteParams accessibility_params;
+    accessibility_params.properties.set(nt::hasProperties::WHEELCHAIR_BOARDING, true);
+    accessibility_params.vehicle_properties.set(nt::hasVehicleProperties::WHEELCHAIR_ACCESSIBLE, true);
+
+    auto compute_wheelchair = [&](nt::RTLevel level) {
+        return raptor.compute(pt_data->stop_areas_map.at("stop1"), pt_data->stop_areas_map.at("stop2"), "08:00"_t, 0,
+                              navitia::DateTimeUtils::inf, level, 2_min, 2_min, true, accessibility_params);
+    };
+
+    auto res_wheelchair = compute_wheelchair(nt::RTLevel::Base);
+    BOOST_REQUIRE_EQUAL(res_wheelchair.size(), 1);
+    BOOST_CHECK_EQUAL(res_wheelchair[0].items[0].arrival, "20150928T0901"_dt);
+
+    res_wheelchair = compute_wheelchair(nt::RTLevel::RealTime);
+    BOOST_REQUIRE_EQUAL(res_wheelchair.size(), 1);
+    BOOST_CHECK_EQUAL(res_wheelchair[0].items[0].arrival, "20150928T0910"_dt);
 }
 
 BOOST_AUTO_TEST_CASE(train_delayed_vj_cleaned_up) {
