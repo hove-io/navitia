@@ -67,11 +67,12 @@ jobs:
 
     - name: Create navitia images
       run: |
+        docker build -t navitia/jormungandr:debian11_dev -f  docker/debian11/Dockerfile-jormungandr .
 #        for component in ${{env.navitia_components}}; do
 #            echo "*********  Building $component ***************"
 #            docker build -t navitia/$component:${{env.navitia_tag}} -f  docker/${{env.debian_version}}/Dockerfile-${component} .
 #        done
-        docker build -t navitia/jormungandr:debian11_dev -f  docker/debian11/Dockerfile-jormungandr .
+
 
     - name: Login dockerhub
       run: |
