@@ -49,13 +49,13 @@ jobs:
         echo "aws_branch=dev" >> $GITHUB_ENV
 
 
-    - name: Choose release tag
-      if: startsWith(github.ref, 'refs/tags/')
-      run: |
-        version="dev"
-        echo "building version $version"
-        echo "navitia_tag=${{env.debian_version}}_$version" >> $GITHUB_ENV
-        echo "aws_branch=release" >> $GITHUB_ENV
+#    - name: Choose release tag
+#      if: startsWith(github.ref, 'refs/tags/')
+#      run: |
+#        version="dev"
+#        echo "building version $version"
+#        echo "navitia_tag=${{env.debian_version}}_$version" >> $GITHUB_ENV
+#        echo "aws_branch=release" >> $GITHUB_ENV
 
     - name: Create builder docker
       run: |
@@ -67,10 +67,11 @@ jobs:
 
     - name: Create navitia images
       run: |
-        for component in ${{env.navitia_components}}; do
-            echo "*********  Building $component ***************"
-            docker build -t navitia/$component:${{env.navitia_tag}} -f  docker/${{env.debian_version}}/Dockerfile-${component} .
-        done
+#        for component in ${{env.navitia_components}}; do
+#            echo "*********  Building $component ***************"
+#            docker build -t navitia/$component:${{env.navitia_tag}} -f  docker/${{env.debian_version}}/Dockerfile-${component} .
+#        done
+        docker build -t navitia/jormungandr:debian11_dev -f  docker/debian11/Dockerfile-jormungandr .
 
     - name: Login dockerhub
       run: |
@@ -79,25 +80,26 @@ jobs:
 
     - name: Push navitia images
       run: |
-        for component in ${{env.navitia_components}}; do
-            echo "*********  Pushing $component ***************"
-            docker push navitia/$component:${{env.navitia_tag}}
-        done
+#        for component in ${{env.navitia_components}}; do
+#            echo "*********  Pushing $component ***************"
+#            docker push navitia/$component:${{env.navitia_tag}}
+#        done
+         docker push navitia/jormungandr:debian11_dev
 
-    - name: Run artemis on push to dev
-      if: github.event_name == 'push' && github.ref == 'refs/heads/dev'
-      uses: peter-evans/repository-dispatch@v2
-      with:
-        token: ${{ secrets.access_token_github }}
-        repository: hove-io/artemis
-        event-type: run_artemis_ng_debian11
+#    - name: Run artemis on push to dev
+#      if: github.event_name == 'push' && github.ref == 'refs/heads/dev'
+#      uses: peter-evans/repository-dispatch@v2
+#      with:
+#        token: ${{ secrets.access_token_github }}
+#        repository: hove-io/artemis
+#        event-type: run_artemis_ng_debian11
 
-    - name: failure notification
-      if: failure()
-      run: |
-          echo '{"text":":warning: Github Actions: build_dockers for ${{env.navitia_tag}} failed !"}' | http --json POST ${{secrets.SLACK_NAVITIA_TEAM_URL}}
-
-    - name: success notification on core team
-      if: success()
-      run: |
-          echo '{"text":":octopus: Github Actions: build_dockers succeeded. New navitia ${{env.navitia_tag}} images available."}' | http --json POST ${{secrets.SLACK_NAVITIA_TEAM_URL}}
+#    - name: failure notification
+#      if: failure()
+#      run: |
+#          echo '{"text":":warning: Github Actions: build_dockers for ${{env.navitia_tag}} failed !"}' | http --json POST ${{secrets.SLACK_NAVITIA_TEAM_URL}}
+#
+#    - name: success notification on core team
+#      if: success()
+#      run: |
+#          echo '{"text":":octopus: Github Actions: build_dockers succeeded. New navitia ${{env.navitia_tag}} images available."}' | http --json POST ${{secrets.SLACK_NAVITIA_TEAM_URL}}
