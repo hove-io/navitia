@@ -63,11 +63,11 @@ class EquipmentProviderManager(object):
             if key in self.providers_keys and key not in dict(
                 self._equipment_providers, **self._equipment_providers_legacy
             ):
-                self._equipment_providers_legacy[key] = self._init_class(provider['class'], provider['args'])
+                self._equipment_providers_legacy[key] = self._init_class(key, provider['class'], provider['args'])
             else:
                 self.logger.error('impossible to create provider with key: {}'.format(key))
 
-    def _init_class(self, cls, arguments):
+    def _init_class(self, provider_id, cls, arguments):
         """
         Create an instance of a provider according to config
         :param cls: provider class in Jormungandr found in config file
@@ -81,14 +81,14 @@ class EquipmentProviderManager(object):
             module_path, name = cls.rsplit('.', 1)
             module = import_module(module_path)
             attr = getattr(module, name)
-            return attr(**arguments)
+            return attr(provider_id, **arguments)
         except ImportError:
             self.logger.warning('impossible to build, cannot find class: {}'.format(cls))
 
     def _update_provider(self, provider):
         self.logger.info('updating/adding {} equipment provider'.format(provider.id))
         try:
-            self._equipment_providers[provider.id] = self._init_class(provider.klass, provider.args)
+            self._equipment_providers[provider.id] = self._init_class(provider.id, provider.klass, provider.args)
             self._equipment_providers_last_update[provider.id] = provider.last_update()
         except Exception:
             self.logger.exception('impossible to initialize equipments provider')

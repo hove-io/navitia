@@ -46,9 +46,10 @@ class SytralProvider(object):
     Class managing calls to SytralRT webservice, providing real-time equipment details
     """
 
-    def __init__(self, url, timeout=2, code_types=["TCL_ESCALIER", "TCL_ASCENSEUR"], **kwargs):
+    def __init__(self, provider_id, url, timeout=2, code_types=["TCL_ESCALIER", "TCL_ASCENSEUR"], **kwargs):
         self.logger = logging.getLogger(__name__)
         self.url = url
+        self.provider_id = provider_id
         self.timeout = timeout
         self.code_types = code_types
         self.breaker = pybreaker.CircuitBreaker(
