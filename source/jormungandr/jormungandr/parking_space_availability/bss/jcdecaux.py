@@ -136,6 +136,13 @@ class JcdecauxProvider(CommonBssProvider):
     def feed_publisher(self):
         return self._feed_publisher
 
+
     def __repr__(self):
-        # TODO: make this shit python 3 compatible
-        return ('jcdecaux-{}-{}'.format(self.network, self.contract)).encode('utf-8', 'backslashreplace')
+        """
+        used as the cache key. we use the rt_system_id to share the cache between servers in production
+        """
+        try:
+            key = ('jcdecaux-{}-{}'.format(self.network, self.contract)).encode('utf-8', 'backslashreplace')
+            return key if isinstance(key, str) else 'jcdecaux-{}-{}'.format(self.network, self.contract)
+        except:
+            return 'jcdecaux-{}-{}'.format(self.network, self.contract)

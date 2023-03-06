@@ -77,6 +77,17 @@ class SytralProvider(object):
         if data:
             return self._process_for_equipment_reports(data, stop_area_equipments_list)
 
+
+    def __repr__(self):
+        """
+        used as the cache key. we use the rt_system_id to share the cache between servers in production
+        """
+        try:
+            key = self.provider_id.encode('utf-8', 'backslashreplace')
+            return key if isinstance(key, str) else self.provider_id
+        except:
+            return self.provider_id
+
     @cache.memoize(app.config.get(str('CACHE_CONFIGURATION'), {}).get(str('TIMEOUT_SYTRAL'), 30))
     def _call_webservice(self):
         """

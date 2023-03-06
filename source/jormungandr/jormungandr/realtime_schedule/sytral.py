@@ -82,7 +82,8 @@ class Sytral(RealtimeProxy):
         used as the cache key. We use the rt_system_id to share the cache between servers in production
         """
         try:
-            return self.rt_system_id.encode('utf-8', 'backslashreplace')
+            key = self.rt_system_id.encode('utf-8', 'backslashreplace')
+            return key if isinstance(key, str) else self.rt_system_id
         except:
             return self.rt_system_id
 

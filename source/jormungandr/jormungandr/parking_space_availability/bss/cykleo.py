@@ -175,7 +175,14 @@ class CykleoProvider(CommonBssProvider):
         return self._feed_publisher
 
     def __repr__(self):
-        return ('cykleo-{}'.format(self.network)).encode('utf-8', 'backslashreplace')
+        """
+        used as the cache key. we use the rt_system_id to share the cache between servers in production
+        """
+        try:
+            key = ('cykleo-{}'.format(self.network)).encode('utf-8', 'backslashreplace')
+            return key if isinstance(key, str) else 'cykleo-{}'.format(self.network)
+        except:
+            return 'cykleo-{}'.format(self.network)
 
     def _get_informations(self, poi):
         ref = poi.get('properties', {}).get('ref')
