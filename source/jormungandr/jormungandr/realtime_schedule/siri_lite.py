@@ -30,6 +30,7 @@
 # www.navitia.io
 from __future__ import absolute_import, print_function, division
 from jormungandr.realtime_schedule.realtime_proxy import RealtimeProxy, RealtimeProxyError
+from jormungandr.utils import PY3
 import logging
 import pybreaker
 import pytz
@@ -66,9 +67,10 @@ class SiriLite(RealtimeProxy):
         """
         used as the cache key. we use the rt_system_id to share the cache between servers in production
         """
+        if PY3:
+            self.rt_system_id
         try:
-            key = self.rt_system_id.encode('utf-8', 'backslashreplace')
-            return key if isinstance(key, str) else self.rt_system_id
+            return self.rt_system_id.encode('utf-8', 'backslashreplace')
         except:
             return self.rt_system_id
 

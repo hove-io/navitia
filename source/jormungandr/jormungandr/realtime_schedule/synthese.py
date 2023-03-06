@@ -33,6 +33,7 @@ import itertools
 
 from jormungandr.realtime_schedule.realtime_proxy import RealtimeProxy, RealtimeProxyError
 from jormungandr.schedule import RealTimePassage
+from jormungandr.utils import PY3
 import xml.etree.ElementTree as et
 import pytz
 import logging
@@ -133,9 +134,10 @@ class Synthese(RealtimeProxy):
         """
         used as the cache key. we use the rt_system_id to share the cache between servers in production
         """
+        if PY3:
+            return self.rt_system_id
         try:
-            key = self.rt_system_id.encode('utf-8', 'backslashreplace')
-            return key if isinstance(key, str) else self.rt_system_id
+            return self.rt_system_id.encode('utf-8', 'backslashreplace')
         except:
             return self.rt_system_id
 

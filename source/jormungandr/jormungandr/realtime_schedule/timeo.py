@@ -38,6 +38,7 @@ from jormungandr.realtime_schedule.realtime_proxy import RealtimeProxy, Realtime
 from jormungandr.schedule import RealTimePassage
 from datetime import datetime, time
 from navitiacommon.ratelimit import RateLimiter, FakeRateLimiter
+from jormungandr.utils import PY3
 import six
 
 
@@ -122,9 +123,10 @@ class Timeo(RealtimeProxy):
         """
         used as the cache key. we use the rt_system_id to share the cache between servers in production
         """
+        if PY3:
+            return self.rt_system_id
         try:
-            key = self.rt_system_id.encode('utf-8', 'backslashreplace')
-            return key if isinstance(key, str) else self.rt_system_id
+            return self.rt_system_id.encode('utf-8', 'backslashreplace')
         except:
             return self.rt_system_id
 

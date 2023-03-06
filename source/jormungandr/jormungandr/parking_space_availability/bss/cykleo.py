@@ -37,6 +37,7 @@ import requests as requests
 from jormungandr.ptref import FeedPublisher
 from jormungandr.parking_space_availability.bss.stands import Stands, StandsStatus
 from jormungandr.parking_space_availability.bss.common_bss_provider import CommonBssProvider, BssProxyError
+from jormungandr.utils import PY3
 
 
 DEFAULT_CYKLEO_FEED_PUBLISHER = {'id': 'cykleo', 'name': 'cykleo', 'license': 'Private', 'url': 'www.cykleo.fr'}
@@ -178,9 +179,10 @@ class CykleoProvider(CommonBssProvider):
         """
         used as the cache key. we use the rt_system_id to share the cache between servers in production
         """
+        if PY3:
+            return 'cykleo-{}'.format(self.network)
         try:
-            key = ('cykleo-{}'.format(self.network)).encode('utf-8', 'backslashreplace')
-            return key if isinstance(key, str) else 'cykleo-{}'.format(self.network)
+            return ('cykleo-{}'.format(self.network)).encode('utf-8', 'backslashreplace')
         except:
             return 'cykleo-{}'.format(self.network)
 

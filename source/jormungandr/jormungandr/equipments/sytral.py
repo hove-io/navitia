@@ -32,7 +32,7 @@ from __future__ import absolute_import, print_function, unicode_literals, divisi
 from jormungandr import cache, app, new_relic
 from navitiacommon import type_pb2
 from dateutil import parser
-from jormungandr.utils import date_to_timestamp
+from jormungandr.utils import date_to_timestamp, PY3
 
 import pybreaker
 import logging
@@ -81,9 +81,10 @@ class SytralProvider(object):
         """
         used as the cache key. we use the rt_system_id to share the cache between servers in production
         """
+        if PY3:
+            return self.provider_id
         try:
-            key = self.provider_id.encode('utf-8', 'backslashreplace')
-            return key if isinstance(key, str) else self.provider_id
+            return self.provider_id.encode('utf-8', 'backslashreplace')
         except:
             return self.provider_id
 
