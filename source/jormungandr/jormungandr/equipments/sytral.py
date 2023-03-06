@@ -77,7 +77,6 @@ class SytralProvider(object):
         if data:
             return self._process_for_equipment_reports(data, stop_area_equipments_list)
 
-
     def __repr__(self):
         """
         used as the cache key. we use the rt_system_id to share the cache between servers in production

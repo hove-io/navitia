@@ -64,7 +64,9 @@ def equipments_get_information_test():
     """
     Test that 'equipment_details' structure is added to StopPoint proto when conditions are met
     """
-    provider = SytralProvider(provider_id='sytral', url="sytral.url", timeout=3, code_types=["TCL_ASCENSEUR", "TCL_ESCALIER"])
+    provider = SytralProvider(
+        provider_id='sytral', url="sytral.url", timeout=3, code_types=["TCL_ASCENSEUR", "TCL_ESCALIER"]
+    )
     provider._call_webservice = MagicMock(return_value=mock_data)
 
     # stop point has code with correct type and value present in webservice response

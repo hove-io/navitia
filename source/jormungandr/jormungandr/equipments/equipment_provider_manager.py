@@ -63,7 +63,9 @@ class EquipmentProviderManager(object):
             if key in self.providers_keys and key not in dict(
                 self._equipment_providers, **self._equipment_providers_legacy
             ):
-                self._equipment_providers_legacy[key] = self._init_class(key, provider['class'], provider['args'])
+                self._equipment_providers_legacy[key] = self._init_class(
+                    key, provider['class'], provider['args']
+                )
             else:
                 self.logger.error('impossible to create provider with key: {}'.format(key))
 
