@@ -32,6 +32,7 @@ from jormungandr import cache, app
 import pybreaker
 import logging
 from jormungandr.external_services.external_service import AbstractExternalService, ExternalServiceError
+from jormungandr.utils import PY3
 
 
 class VehicleOccupancyProvider(AbstractExternalService):
@@ -39,9 +40,10 @@ class VehicleOccupancyProvider(AbstractExternalService):
     Class managing calls to forseti webservice, providing vehicle_occupancies
     """
 
-    def __init__(self, service_url, timeout=2, **kwargs):
+    def __init__(self, id, service_url, timeout=2, **kwargs):
         self.logger = logging.getLogger(__name__)
         self.service_url = service_url
+        self.id = id
         self.timeout = timeout
         self.breaker = pybreaker.CircuitBreaker(
             fail_max=kwargs.get('circuit_breaker_max_fail', app.config['CIRCUIT_BREAKER_MAX_FORSETI_FAIL']),
@@ -49,6 +51,17 @@ class VehicleOccupancyProvider(AbstractExternalService):
                 'circuit_breaker_reset_timeout', app.config['CIRCUIT_BREAKER_FORSETI_TIMEOUT_S']
             ),
         )
+
+    def __repr__(self):
+        """
+        used as the cache key. we use the rt_system_id to share the cache between servers in production
+        """
+        if PY3:
+            return self.id
+        try:
+            return self.id.encode('utf-8', 'backslashreplace')
+        except:
+            return self.id
 
     @cache.memoize(app.config.get(str('CACHE_CONFIGURATION'), {}).get(str('TIMEOUT_FORSETI'), 10))
     def get_response(self, arguments):

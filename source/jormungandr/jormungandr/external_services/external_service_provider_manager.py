@@ -72,7 +72,7 @@ class ExternalServiceManager(object):
 
             self._external_services_legacy.setdefault(config['navitia_service'], []).append(service)
 
-    def _init_class(self, cls, arguments):
+    def _init_class(self, id, cls, arguments):
         """
         Create an instance of a external service according to config
         :param cls: name of the class configured in the database
@@ -86,7 +86,7 @@ class ExternalServiceManager(object):
             module_path, name = cls.rsplit('.', 1)
             module = import_module(module_path)
             attr = getattr(module, name)
-            return attr(**arguments)
+            return attr(id, **arguments)
         except ImportError:
             self.logger.warning('impossible to build, cannot find class: {}'.format(cls))
 
@@ -146,7 +146,7 @@ class ExternalServiceManager(object):
     def _update_external_service(self, service):
         self.logger.info('adding {} external service'.format(service.id))
         try:
-            service_obj = self._init_class(service.klass, service.args)
+            service_obj = self._init_class(service.id, service.klass, service.args)
             if service_obj not in self._external_services_from_db.get(service.navitia_service, []):
                 self._external_services_from_db.setdefault(service.navitia_service, []).append(service_obj)
             self._external_services_last_update[service.id] = service.last_update()

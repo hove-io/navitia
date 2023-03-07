@@ -71,7 +71,7 @@ def free_floating_get_information_test():
     """
     Test that 'free_floatings'
     """
-    service = FreeFloatingProvider(service_url="free_floating.url", timeout=3)
+    service = FreeFloatingProvider(id="free_floating", service_url="free_floating.url", timeout=3)
     brut_result = service._call_webservice = MagicMock(return_value=mock_data)
     free_floatings = brut_result.return_value.get('free_floatings', [])
     assert len(free_floatings) == 3
