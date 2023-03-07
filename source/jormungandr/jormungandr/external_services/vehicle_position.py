@@ -52,6 +52,7 @@ class VehiclePosition(AbstractExternalService):
                 'circuit_breaker_reset_timeout', app.config['CIRCUIT_BREAKER_FORSETI_TIMEOUT_S']
             ),
         )
+
     def __repr__(self):
         """
         used as the cache key. we use the rt_system_id to share the cache between servers in production
@@ -62,6 +63,7 @@ class VehiclePosition(AbstractExternalService):
             return self.id.encode('utf-8', 'backslashreplace')
         except:
             return self.id
+
     @cache.memoize(app.config.get(str('CACHE_CONFIGURATION'), {}).get(str('TIMEOUT_FORSETI'), 10))
     def get_response(self, arguments):
         """
