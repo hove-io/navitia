@@ -54,7 +54,7 @@ class VehicleOccupancyProvider(AbstractExternalService):
 
     def __repr__(self):
         """
-        used as the cache key. we use the rt_system_id to share the cache between servers in production
+        used as the cache key. we use the id to share the cache between servers in production
         """
         if PY3:
             return self.id
