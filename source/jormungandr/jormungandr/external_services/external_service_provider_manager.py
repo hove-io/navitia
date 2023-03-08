@@ -80,9 +80,6 @@ class ExternalServiceManager(object):
         :return: instance of external service
         """
         try:
-            if '.' not in cls:
-                self.logger.warning('impossible to build, wrongly formated class: {}'.format(cls))
-
             module_path, name = cls.rsplit('.', 1)
             module = import_module(module_path)
             attr = getattr(module, name)
