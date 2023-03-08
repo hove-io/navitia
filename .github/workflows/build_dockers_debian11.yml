@@ -71,9 +71,11 @@ jobs:
             docker build -t navitia/$component:${{env.navitia_tag}} -f  docker/${{env.debian_version}}/Dockerfile-${component} .
         done
 
+
     - name: Login dockerhub
       run: |
         docker login -u ${{secrets.docker_user}} -p ${{secrets.docker_password}}
+
 
 
     - name: Push navitia images

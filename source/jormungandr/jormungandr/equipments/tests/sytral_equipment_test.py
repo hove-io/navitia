@@ -64,7 +64,9 @@ def equipments_get_information_test():
     """
     Test that 'equipment_details' structure is added to StopPoint proto when conditions are met
     """
-    provider = SytralProvider(url="sytral.url", timeout=3, code_types=["TCL_ASCENSEUR", "TCL_ESCALIER"])
+    provider = SytralProvider(
+        provider_id='sytral', url="sytral.url", timeout=3, code_types=["TCL_ASCENSEUR", "TCL_ESCALIER"]
+    )
     provider._call_webservice = MagicMock(return_value=mock_data)
 
     # stop point has code with correct type and value present in webservice response
@@ -92,7 +94,7 @@ def equipments_get_informations_for_reports_not_duplicated():
     we only want 1 equipment_details object that refers to it as we report information per stop area.
     """
     CODE_TYPE = "TCL_ESCALIER"
-    provider = SytralProvider(url="sytral.url", timeout=3, code_types=[CODE_TYPE])
+    provider = SytralProvider(provider_id='sytral', url="sytral.url", timeout=3, code_types=[CODE_TYPE])
     provider._call_webservice = MagicMock(return_value=mock_data)
 
     sae = StopAreaEquipment()

@@ -39,6 +39,7 @@ from jormungandr.parking_space_availability.bss.common_bss_provider import Commo
 from jormungandr.parking_space_availability.bss.stands import Stands, StandsStatus
 from jormungandr.ptref import FeedPublisher
 import datetime
+from jormungandr.utils import PY3
 
 DEFAULT_JCDECAUX_FEED_PUBLISHER = {
     'id': 'jcdecaux',
@@ -137,5 +138,12 @@ class JcdecauxProvider(CommonBssProvider):
         return self._feed_publisher
 
     def __repr__(self):
-        # TODO: make this shit python 3 compatible
-        return ('jcdecaux-{}-{}'.format(self.network, self.contract)).encode('utf-8', 'backslashreplace')
+        """
+        used as the cache key. we use the (network, contract) to share the cache between servers in production
+        """
+        if PY3:
+            return 'jcdecaux-{}-{}'.format(self.network, self.contract)
+        try:
+            return ('jcdecaux-{}-{}'.format(self.network, self.contract)).encode('utf-8', 'backslashreplace')
+        except:
+            return 'jcdecaux-{}-{}'.format(self.network, self.contract)

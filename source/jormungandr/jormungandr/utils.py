@@ -343,6 +343,8 @@ def create_object(configuration):
         )
 
     kwargs = configuration.get('args', {})
+    if "id" in configuration:
+        kwargs["id"] = configuration["id"]
 
     try:
         if '.' not in class_path:

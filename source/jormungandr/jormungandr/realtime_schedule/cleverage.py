@@ -36,6 +36,7 @@ import pytz
 import requests as requests
 from jormungandr import cache, app
 from jormungandr.schedule import RealTimePassage
+from jormungandr.utils import PY3
 from datetime import datetime
 import six
 
@@ -91,6 +92,8 @@ class Cleverage(RealtimeProxy):
         """
         used as the cache key. we use the rt_system_id to share the cache between servers in production
         """
+        if PY3:
+            return self.rt_system_id
         try:
             return self.rt_system_id.encode('utf-8', 'backslashreplace')
         except:

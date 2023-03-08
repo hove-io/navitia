@@ -37,11 +37,13 @@ import gevent
 import gevent.pool
 from jormungandr import cache, app
 from navitiacommon import type_pb2
+from jormungandr.utils import PY3
 
 
 class VehiclePosition(AbstractExternalService):
-    def __init__(self, service_url, timeout=2, **kwargs):
+    def __init__(self, id, service_url, timeout=2, **kwargs):
         self.logger = logging.getLogger(__name__)
+        self.id = id
         self.service_url = service_url
         self.timeout = timeout
         self.breaker = pybreaker.CircuitBreaker(
@@ -50,6 +52,17 @@ class VehiclePosition(AbstractExternalService):
                 'circuit_breaker_reset_timeout', app.config['CIRCUIT_BREAKER_FORSETI_TIMEOUT_S']
             ),
         )
+
+    def __repr__(self):
+        """
+        used as the cache key. we use the io to share the cache between servers in production
+        """
+        if PY3:
+            return self.id
+        try:
+            return self.id.encode('utf-8', 'backslashreplace')
+        except:
+            return self.id
 
     @cache.memoize(app.config.get(str('CACHE_CONFIGURATION'), {}).get(str('TIMEOUT_FORSETI'), 10))
     def get_response(self, arguments):

@@ -57,8 +57,8 @@ class MockObj:
 
 
 class MockVehiclePosition(VehiclePosition):
-    def __init__(self, service_url, timeout=2, **kwargs):
-        VehiclePosition.__init__(self, service_url, timeout, **kwargs)
+    def __init__(self, id, service_url, timeout=2, **kwargs):
+        VehiclePosition.__init__(self, id, service_url, timeout, **kwargs)
 
     def _call_webservice(self, arguments):
         resp = MockObj()

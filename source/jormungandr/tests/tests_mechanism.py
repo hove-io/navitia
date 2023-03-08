@@ -602,7 +602,7 @@ def mock_car_park_providers(pois_supported):
 
 def mock_equipment_providers(equipment_provider_manager, data, code_types_list):
     equipment_provider_manager._equipment_providers = {
-        "sytral": SytralProvider(url="fake.url", timeout=3, code_types=code_types_list)
+        "sytral": SytralProvider(provider_id='sytral', url="fake.url", timeout=3, code_types=code_types_list)
     }
     equipment_provider_manager._equipment_providers["sytral"]._call_webservice = mock.MagicMock(
         return_value=data
