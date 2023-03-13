@@ -74,7 +74,11 @@ def access_log(response, *args, **kwargs):
         'status': response.status_code,
         'external_request_id': request.headers.get('x-request-id'),
     }
-    logger.info(u'"%(method)s %(path)s?%(query_string)s" %(status)s', d, extra=d)
+    if 'readyness' not in request.path:
+        logger.info(u'"%(method)s %(path)s?%(query_string)s" %(status)s', d, extra=d)
+    else:
+        logging.getLogger(__name__).debug(u'"%(method)s %(path)s?%(query_string)s" %(status)s', d, extra=d)
+
     return response
 
 
