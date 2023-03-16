@@ -106,10 +106,10 @@ jobs:
 
     - name: Create dockers images and push them
       run: |
-        components='jormungandr kraken tyr-beat tyr-worker tyr-web instances-configurator mock-kraken eitri'
+        components='jormungandr kraken kraken-opentelemetry tyr-beat tyr-worker tyr-web instances-configurator mock-kraken eitri'
         for component in $components; do
             echo "*********  Building $component ***************"
-            docker build -t navitia/$component:${{env.navitia_tag}} -f  docker/${{env.debian_version}}/Dockerfile-${component} .
+            docker build -t navitia/$component:${{env.navitia_tag}} -f  docker/${{env.debian_version}}/Dockerfile-${component} --build-arg KRAKEN_TAG=${{env.navitia_tag}} .
 
             # add latest tag if we are making a release
             if [[ "${{env.aws_branch}}" = "release" ]]; then

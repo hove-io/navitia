@@ -1,0 +1,13 @@
+ARG KRAKEN_TAG
+FROM navitia/kraken:${KRAKEN_TAG}
+
+## see https://opentelemetry.io/docs/collector/getting-started/#deb-installation
+RUN apt-get update && apt-get install -y wget && rm -rf /var/lib/apt/lists/*
+RUN wget https://github.com/open-telemetry/opentelemetry-collector-releases/releases/download/v0.73.0/otelcol-contrib_0.73.0_linux_amd64.deb
+RUN dpkg -i otelcol-contrib_0.73.0_linux_amd64.deb
+COPY ./docker/opentelemetry_exporter_config.yaml /etc/otelcol/config.yaml
+
+COPY docker/run_kraken_opentelemetry.sh /usr/src/app/run_kraken_opentelemetry.sh
+RUN chmod +x /usr/src/app/run_kraken_opentelemetry.sh
+
+ENTRYPOINT ["bash", "/usr/src/app/run_kraken_opentelemetry.sh"]
