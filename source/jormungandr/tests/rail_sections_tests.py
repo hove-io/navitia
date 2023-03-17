@@ -284,9 +284,7 @@ class TestRailSections(AbstractTestFixture):
 
         # Associated pt_objects of line 'line:1'
         pt_objects = line_report['pt_objects']
-
-
-
+        # To be continued
 
     def test_terminus_schedules_impacted_by_rail_section(self):
         # terminus_schedules on line:1 gives us 3 rail_section impacts
