@@ -553,7 +553,7 @@ class TestDisruptions(AbstractTestFixture):
         response = self.query_region('traffic_reports?_current_datetime=20130427T090000')
 
         impacts = get_impacts(response)
-        assert len(impacts) == 4
+        assert len(impacts) == 5
         assert 'too_bad_route_A:0_and_line' in impacts
 
         traffic_report = get_not_null(response, 'traffic_reports')
@@ -888,36 +888,42 @@ class TestDisruptionsLineSections(AbstractTestFixture):
         is_valid_line_report(line_report)
         line = line_report['line']
         assert line['id'] == 'line:1'
+        # Object line in line_reports has 2 impacts in links
         assert len(line['links']) == 2
         assert line['links'][0]['id'] == 'line_section_on_line_1'
         assert line['links'][1]['id'] == 'line_section_on_line_1_other_effect'
-        # line:1 associated pt_objects
+
+        # Associated pt_objects of line 'line:1'
         pt_objects = line_report['pt_objects']
-        assert len(pt_objects) == 5
+        assert len(pt_objects) == 6
+        # line 'line:1' in pt_objects should also have the same number of disruptions in links as above
+        assert pt_objects[0]['id'] == 'line:1'
+        assert pt_objects[0]['line']['links'][0]['id'] == 'line_section_on_line_1'
+        assert pt_objects[0]['line']['links'][1]['id'] == 'line_section_on_line_1_other_effect'
         # C_1
-        assert pt_objects[0]['id'] == 'C_1'
-        assert [l['id'] for l in pt_objects[0][pt_objects[0]['embedded_type']]['links']] == [
-            'line_section_on_line_1'
-        ]
-        # D_1
-        assert pt_objects[1]['id'] == 'D_1'
+        assert pt_objects[1]['id'] == 'C_1'
         assert [l['id'] for l in pt_objects[1][pt_objects[1]['embedded_type']]['links']] == [
             'line_section_on_line_1'
         ]
-        # D_3
-        assert pt_objects[2]['id'] == 'D_3'
+        # D_1
+        assert pt_objects[2]['id'] == 'D_1'
         assert [l['id'] for l in pt_objects[2][pt_objects[2]['embedded_type']]['links']] == [
             'line_section_on_line_1'
         ]
-        # E_1
-        assert pt_objects[3]['id'] == 'E_1'
+        # D_3
+        assert pt_objects[3]['id'] == 'D_3'
         assert [l['id'] for l in pt_objects[3][pt_objects[3]['embedded_type']]['links']] == [
+            'line_section_on_line_1'
+        ]
+        # E_1
+        assert pt_objects[4]['id'] == 'E_1'
+        assert [l['id'] for l in pt_objects[4][pt_objects[4]['embedded_type']]['links']] == [
             'line_section_on_line_1',
             'line_section_on_line_1_other_effect',
         ]
         # F_1
-        assert pt_objects[4]['id'] == 'F_1'
-        assert [l['id'] for l in pt_objects[4][pt_objects[4]['embedded_type']]['links']] == [
+        assert pt_objects[5]['id'] == 'F_1'
+        assert [l['id'] for l in pt_objects[5][pt_objects[5]['embedded_type']]['links']] == [
             'line_section_on_line_1_other_effect'
         ]
 
@@ -930,15 +936,18 @@ class TestDisruptionsLineSections(AbstractTestFixture):
         assert line['links'][0]['id'] == 'line_section_on_line_2'
         # line:2 associated pt_objects
         pt_objects = line_report['pt_objects']
-        assert len(pt_objects) == 2
+        assert len(pt_objects) == 3
+        # line 'line:2' in pt_objects should also have the same number of disruptions in links as above
+        assert pt_objects[0]['id'] == 'line:2'
+        assert pt_objects[0]['line']['links'][0]['id'] == 'line_section_on_line_2'
         # B_1
-        assert pt_objects[0]['id'] == 'B_1'
-        assert [l['id'] for l in pt_objects[0][pt_objects[0]['embedded_type']]['links']] == [
+        assert pt_objects[1]['id'] == 'B_1'
+        assert [l['id'] for l in pt_objects[1][pt_objects[1]['embedded_type']]['links']] == [
             'line_section_on_line_2'
         ]
         # F_1
-        assert pt_objects[1]['id'] == 'F_1'
-        assert [l['id'] for l in pt_objects[1][pt_objects[1]['embedded_type']]['links']] == [
+        assert pt_objects[2]['id'] == 'F_1'
+        assert [l['id'] for l in pt_objects[2][pt_objects[2]['embedded_type']]['links']] == [
             'line_section_on_line_2'
         ]
 

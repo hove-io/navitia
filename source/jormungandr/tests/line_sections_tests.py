@@ -221,37 +221,41 @@ class TestLineSections(AbstractTestFixture):
         we should be able to find the related line section disruption with /traffic_report
         """
 
-        # line_section_on_line_1
-        scenario = {'A': False, 'B': False, 'C': True, 'D': True, 'E': True, 'F': False}
-
+        # line_section_on_line_1 / line:1 = A - B - C - D - E - F ..
+        scenario = {'A': True, 'B': True, 'C': True, 'D': True, 'E': True, 'F': True}
         for sa, result in scenario.items():
             assert result == self.has_tf_disruption(
                 'stop_areas/{}/traffic_reports'.format(sa), 'line_section_on_line_1'
             )
+        scenario = {'A': False, 'B': False, 'C': True, 'D': True, 'E': True, 'F': False}
+        for sa, result in scenario.items():
             assert result == self.has_tf_linked_disruption(
                 'stop_areas/{}/traffic_reports'.format(sa), 'line_section_on_line_1', ObjGetter('stop_areas', sa)
             )
 
-        # line_section_on_line_1_other_effect
-        scenario = {'A': False, 'B': False, 'C': False, 'D': False, 'E': True, 'F': True}
-
+        # line_section_on_line_1_other_effect / line:1 = A - B - C - D - E - F ..
+        scenario = {'A': True, 'B': True, 'C': True, 'D': True, 'E': True, 'F': True}
         for sa, result in scenario.items():
             assert result == self.has_tf_disruption(
                 'stop_areas/{}/traffic_reports'.format(sa), 'line_section_on_line_1_other_effect'
             )
+
+        scenario = {'A': False, 'B': False, 'C': False, 'D': False, 'E': True, 'F': True}
+        for sa, result in scenario.items():
             assert result == self.has_tf_linked_disruption(
                 'stop_areas/{}/traffic_reports'.format(sa),
                 'line_section_on_line_1_other_effect',
                 ObjGetter('stop_areas', sa),
             )
 
-        # line_section_on_line_2
-        scenario = {'A': False, 'B': True, 'C': False, 'D': False, 'E': False, 'F': True}
-
+        # line_section_on_line_2 / Line line:2 = A - B - F
+        scenario = {'A': True, 'B': True, 'C': False, 'D': False, 'E': False, 'F': True}
         for sa, result in scenario.items():
             assert result == self.has_tf_disruption(
                 'stop_areas/{}/traffic_reports'.format(sa), 'line_section_on_line_2'
             )
+        scenario = {'A': False, 'B': True, 'C': False, 'D': False, 'E': False, 'F': True}
+        for sa, result in scenario.items():
             assert result == self.has_tf_linked_disruption(
                 'stop_areas/{}/traffic_reports'.format(sa), 'line_section_on_line_2', ObjGetter('stop_areas', sa)
             )
@@ -370,10 +374,9 @@ class TestLineSections(AbstractTestFixture):
         # line_section_on_line_1
         scenario = {
             'route:line:1:1': True,
-            'route:line:1:2': False,
-            'route:line:1:3': False,
+            'route:line:1:2': True,
+            'route:line:1:3': True,
             'route:line:2:1': False,
-            # 'route:line:3:1': False,
         }
 
         for route, result in scenario.items():
@@ -382,9 +385,8 @@ class TestLineSections(AbstractTestFixture):
         # line_section_on_line_1_other_effect
         scenario = {
             'route:line:1:1': True,
-            'route:line:1:2': False,
+            'route:line:1:2': True,
             'route:line:1:3': True,
-            # 'route:line:2:1': False,
             'route:line:3:1': False,
         }
 
@@ -395,9 +397,7 @@ class TestLineSections(AbstractTestFixture):
 
         # line_section_on_line_2
         scenario = {
-            # 'route:line:1:1': False,
             'route:line:1:2': False,
-            # 'route:line:1:3': False,
             'route:line:2:1': True,
             'route:line:3:1': False,
         }
@@ -434,12 +434,10 @@ class TestLineSections(AbstractTestFixture):
         # line_section_on_line_1
         scenario = {
             'vehicle_journey:vj:1:1': True,
-            'vehicle_journey:vj:1:2': False,
-            'vehicle_journey:vj:1:3': False,
+            'vehicle_journey:vj:1:2': True,
+            'vehicle_journey:vj:1:3': True,
             'vehicle_journey:vj:2': False,
-            # 'vehicle_journey:vj:3': False,
         }
-
         for vj, result in scenario.items():
             assert result == self.has_dis(
                 'vehicle_journeys/{}/traffic_reports'.format(vj), 'line_section_on_line_1'
@@ -448,12 +446,10 @@ class TestLineSections(AbstractTestFixture):
         # line_section_on_line_1_other_effect
         scenario = {
             'vehicle_journey:vj:1:1': True,
-            'vehicle_journey:vj:1:2': False,
+            'vehicle_journey:vj:1:2': True,
             'vehicle_journey:vj:1:3': True,
-            # 'vehicle_journey:vj:2': False,
             'vehicle_journey:vj:3': False,
         }
-
         for vj, result in scenario.items():
             assert result == self.has_dis(
                 'vehicle_journeys/{}/traffic_reports'.format(vj), 'line_section_on_line_1_other_effect'
@@ -461,13 +457,10 @@ class TestLineSections(AbstractTestFixture):
 
         # line_section_on_line_2
         scenario = {
-            # 'vehicle_journey:vj:1:1': False,
             'vehicle_journey:vj:1:2': False,
-            # 'vehicle_journey:vj:1:3': False,
             'vehicle_journey:vj:2': True,
             'vehicle_journey:vj:3': False,
         }
-
         for vj, result in scenario.items():
             assert result == self.has_dis(
                 'vehicle_journeys/{}/traffic_reports'.format(vj), 'line_section_on_line_2'
@@ -503,6 +496,27 @@ class TestLineSections(AbstractTestFixture):
 
         # line_section_on_line_1
         scenario = {
+            'A_1': True,
+            'A_2': True,
+            'B_1': True,
+            'B_2': True,
+            'C_1': True,
+            'C_2': True,
+            'C_3': False,
+            'D_1': True,
+            'D_2': True,
+            'D_3': True,
+            'E_1': True,
+            'E_2': True,
+            'F_1': True,
+            'F_2': True,
+        }
+        for sp, result in scenario.items():
+            assert result == self.has_tf_disruption(
+                'stop_points/{}/traffic_reports'.format(sp), 'line_section_on_line_1'
+            )
+
+        scenario = {
             'A_1': False,
             'A_2': False,
             'B_1': False,
@@ -518,11 +532,7 @@ class TestLineSections(AbstractTestFixture):
             'F_1': False,
             'F_2': False,
         }
-
         for sp, result in scenario.items():
-            assert result == self.has_tf_disruption(
-                'stop_points/{}/traffic_reports'.format(sp), 'line_section_on_line_1'
-            )
             assert result == self.has_tf_linked_disruption(
                 'stop_points/{}/traffic_reports'.format(sp),
                 'line_section_on_line_1',
@@ -530,6 +540,27 @@ class TestLineSections(AbstractTestFixture):
             )
 
         # line_section_on_line_1_other_effect
+        scenario = {
+            'A_1': True,
+            'A_2': True,
+            'B_1': True,
+            'B_2': True,
+            'C_1': True,
+            'C_2': True,
+            'C_3': False,
+            'D_1': True,
+            'D_2': True,
+            'D_3': True,
+            'E_1': True,
+            'E_2': True,
+            'F_1': True,
+            'F_2': True,
+        }
+
+        for sp, result in scenario.items():
+            assert result == self.has_tf_disruption(
+                'stop_points/{}/traffic_reports'.format(sp), 'line_section_on_line_1_other_effect'
+            )
         scenario = {
             'A_1': False,
             'A_2': False,
@@ -546,11 +577,7 @@ class TestLineSections(AbstractTestFixture):
             'F_1': True,
             'F_2': False,
         }
-
         for sp, result in scenario.items():
-            assert result == self.has_tf_disruption(
-                'stop_points/{}/traffic_reports'.format(sp), 'line_section_on_line_1_other_effect'
-            )
             assert result == self.has_tf_linked_disruption(
                 'stop_points/{}/traffic_reports'.format(sp),
                 'line_section_on_line_1_other_effect',
@@ -558,6 +585,26 @@ class TestLineSections(AbstractTestFixture):
             )
 
         # line_section_on_line_2
+        scenario = {
+            'A_1': True,
+            'A_2': False,
+            'B_1': True,
+            'B_2': False,
+            'C_1': False,
+            'C_2': False,
+            'C_3': False,
+            'D_1': False,
+            'D_2': False,
+            'D_3': False,
+            'E_1': False,
+            'E_2': False,
+            'F_1': True,
+            'F_2': False,
+        }
+        for sp, result in scenario.items():
+            assert result == self.has_tf_disruption(
+                'stop_points/{}/traffic_reports'.format(sp), 'line_section_on_line_2'
+            )
         scenario = {
             'A_1': False,
             'A_2': False,
@@ -574,11 +621,7 @@ class TestLineSections(AbstractTestFixture):
             'F_1': True,
             'F_2': False,
         }
-
         for sp, result in scenario.items():
-            assert result == self.has_tf_disruption(
-                'stop_points/{}/traffic_reports'.format(sp), 'line_section_on_line_2'
-            )
             assert result == self.has_tf_linked_disruption(
                 'stop_points/{}/traffic_reports'.format(sp),
                 'line_section_on_line_2',

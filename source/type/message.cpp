@@ -284,6 +284,7 @@ struct InformedEntitiesLinker : public boost::static_visitor<> {
         auto impacted_vjs = get_impacted_vehicle_journeys(line_section, *impact, production_period, rt_level);
         std::set<type::StopPoint*> impacted_stop_points;
         std::set<type::MetaVehicleJourney*> impacted_meta_vjs;
+        line_section.line->add_impact(impact);
         if (impacted_vjs.empty()) {
             LOG4CPLUS_INFO(log, "line section impact " << impact->uri
                                                        << " does not impact any vj, it will not be linked to anything");
@@ -318,6 +319,7 @@ struct InformedEntitiesLinker : public boost::static_visitor<> {
         auto impacted_vjs = get_impacted_vehicle_journeys(rail_section, *impact, production_period, rt_level);
         std::set<type::StopPoint*> impacted_stop_points;
         std::set<type::MetaVehicleJourney*> impacted_meta_vjs;
+        rail_section.line->add_impact(impact);
         if (impacted_vjs.empty()) {
             LOG4CPLUS_INFO(log, "rail section impact " << impact->uri
                                                        << " does not impact any vj, it will not be linked to anything");
