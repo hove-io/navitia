@@ -272,6 +272,9 @@ class TestRailSections(AbstractTestFixture):
         is_valid_rail_section_disruption(r['disruptions'][4])
         is_valid_rail_section_disruption(r['disruptions'][5])
 
+        # To have more information on lines, routes, stop_areas as well as stop_points impacted, go to
+        # https://github.com/hove-io/navitia/blob/dev/source/kraken/tests/apply_disruption_test.cpp
+        # or https://github.com/hove-io/navitia/blob/dev/source/tests/mock-kraken/rail_sections_test.cpp
         # Verify other elements of line_reports
         line_report = r['line_reports'][0]
         is_valid_line_report(line_report)
@@ -284,7 +287,74 @@ class TestRailSections(AbstractTestFixture):
 
         # Associated pt_objects of line 'line:1'
         pt_objects = line_report['pt_objects']
-        # To be continued
+        assert len(pt_objects) == 15
+
+        # line 'line:1' in pt_objects should also have the same number of disruptions in links as above
+        assert pt_objects[0]['id'] == 'line:1'
+        assert pt_objects[0]['line']['links'][0]['id'] == 'rail_section_on_line1-1'
+        assert pt_objects[0]['line']['links'][1]['id'] == 'rail_section_on_line1-2'
+        assert pt_objects[0]['line']['links'][2]['id'] == 'rail_section_on_line1-3'
+
+        # Stops stopB, stopC and stopD are impacted by two disruptions
+        assert pt_objects[1]['id'] == 'stopB'
+        assert len(pt_objects[1][pt_objects[1]['embedded_type']]['links']) == 2
+        assert [o['id'] for o in pt_objects[1][pt_objects[1]['embedded_type']]['links']] == [
+            'rail_section_on_line1-1',
+            'rail_section_on_line1-2',
+        ]
+        assert pt_objects[2]['id'] == 'stopC'
+        assert len(pt_objects[2][pt_objects[2]['embedded_type']]['links']) == 2
+        assert pt_objects[3]['id'] == 'stopD'
+        assert len(pt_objects[3][pt_objects[3]['embedded_type']]['links']) == 2
+
+        # Stops stopE and stopF are impacted by one disruption 'rail_section_on_line1-1' only
+        assert pt_objects[4]['id'] == 'stopE'
+        assert len(pt_objects[4][pt_objects[4]['embedded_type']]['links']) == 1
+        assert [o['id'] for o in pt_objects[4][pt_objects[4]['embedded_type']]['links']] == [
+            'rail_section_on_line1-1'
+        ]
+        assert pt_objects[5]['id'] == 'stopF'
+        assert len(pt_objects[5][pt_objects[5]['embedded_type']]['links']) == 1
+
+        # Stops stopG, stopH and stopI are impacted by two disruptions
+        assert pt_objects[6]['id'] == 'stopG'
+        assert len(pt_objects[6][pt_objects[6]['embedded_type']]['links']) == 2
+        assert [o['id'] for o in pt_objects[6][pt_objects[6]['embedded_type']]['links']] == [
+            'rail_section_on_line1-1',
+            'rail_section_on_line1-2',
+        ]
+        assert pt_objects[7]['id'] == 'stopH'
+        assert len(pt_objects[7][pt_objects[7]['embedded_type']]['links']) == 2
+        assert pt_objects[8]['id'] == 'stopI'
+        assert len(pt_objects[8][pt_objects[8]['embedded_type']]['links']) == 2
+
+        # Stops stopM, stopN and stopO are impacted by one disruption 'rail_section_on_line1-2' only
+        assert pt_objects[9]['id'] == 'stopM'
+        assert len(pt_objects[9][pt_objects[9]['embedded_type']]['links']) == 1
+        assert [o['id'] for o in pt_objects[9][pt_objects[9]['embedded_type']]['links']] == [
+            'rail_section_on_line1-2'
+        ]
+        assert pt_objects[10]['id'] == 'stopN'
+        assert len(pt_objects[10][pt_objects[10]['embedded_type']]['links']) == 1
+        assert pt_objects[11]['id'] == 'stopO'
+        assert len(pt_objects[11][pt_objects[11]['embedded_type']]['links']) == 1
+        assert [o['id'] for o in pt_objects[11][pt_objects[11]['embedded_type']]['links']] == [
+            'rail_section_on_line1-2'
+        ]
+
+        # Stops stopP, stopQ and stopR are impacted by one disruption 'rail_section_on_line1-3' only
+        assert pt_objects[12]['id'] == 'stopP'
+        assert len(pt_objects[12][pt_objects[12]['embedded_type']]['links']) == 1
+        assert [o['id'] for o in pt_objects[12][pt_objects[12]['embedded_type']]['links']] == [
+            'rail_section_on_line1-3'
+        ]
+        assert pt_objects[13]['id'] == 'stopQ'
+        assert len(pt_objects[13][pt_objects[13]['embedded_type']]['links']) == 1
+        assert pt_objects[14]['id'] == 'stopR'
+        assert len(pt_objects[14][pt_objects[14]['embedded_type']]['links']) == 1
+        assert [o['id'] for o in pt_objects[14][pt_objects[14]['embedded_type']]['links']] == [
+            'rail_section_on_line1-3'
+        ]
 
     def test_terminus_schedules_impacted_by_rail_section(self):
         # terminus_schedules on line:1 gives us 3 rail_section impacts
