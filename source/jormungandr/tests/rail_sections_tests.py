@@ -32,14 +32,13 @@ from .check_utils import (
     ObjGetter,
     has_disruption,
     get_not_null,
-    is_valid_line_section_disruption,
     is_valid_rail_section_disruption,
     get_used_vj,
     get_all_element_disruptions,
     impacted_ids,
     impacted_headsigns,
+    is_valid_line_report,
 )
-import pytest
 
 
 @dataset({"rail_sections_test": {}})
@@ -272,6 +271,90 @@ class TestRailSections(AbstractTestFixture):
         is_valid_rail_section_disruption(r['disruptions'][3])
         is_valid_rail_section_disruption(r['disruptions'][4])
         is_valid_rail_section_disruption(r['disruptions'][5])
+
+        # To have more information on lines, routes, stop_areas as well as stop_points impacted, go to
+        # https://github.com/hove-io/navitia/blob/dev/source/kraken/tests/apply_disruption_test.cpp
+        # or https://github.com/hove-io/navitia/blob/dev/source/tests/mock-kraken/rail_sections_test.cpp
+        # Verify other elements of line_reports
+        line_report = r['line_reports'][0]
+        is_valid_line_report(line_report)
+        line = line_report['line']
+        assert line['id'] == 'line:1'
+        assert len(line['links']) == 3
+        assert line['links'][0]['id'] == 'rail_section_on_line1-1'
+        assert line['links'][1]['id'] == 'rail_section_on_line1-2'
+        assert line['links'][2]['id'] == 'rail_section_on_line1-3'
+
+        # Associated pt_objects of line 'line:1'
+        pt_objects = line_report['pt_objects']
+        assert len(pt_objects) == 15
+
+        # line 'line:1' in pt_objects should also have the same number of disruptions in links as above
+        assert pt_objects[0]['id'] == 'line:1'
+        assert pt_objects[0]['line']['links'][0]['id'] == 'rail_section_on_line1-1'
+        assert pt_objects[0]['line']['links'][1]['id'] == 'rail_section_on_line1-2'
+        assert pt_objects[0]['line']['links'][2]['id'] == 'rail_section_on_line1-3'
+
+        # Stops stopB, stopC and stopD are impacted by two disruptions
+        assert pt_objects[1]['id'] == 'stopB'
+        assert len(pt_objects[1][pt_objects[1]['embedded_type']]['links']) == 2
+        assert [o['id'] for o in pt_objects[1][pt_objects[1]['embedded_type']]['links']] == [
+            'rail_section_on_line1-1',
+            'rail_section_on_line1-2',
+        ]
+        assert pt_objects[2]['id'] == 'stopC'
+        assert len(pt_objects[2][pt_objects[2]['embedded_type']]['links']) == 2
+        assert pt_objects[3]['id'] == 'stopD'
+        assert len(pt_objects[3][pt_objects[3]['embedded_type']]['links']) == 2
+
+        # Stops stopE and stopF are impacted by one disruption 'rail_section_on_line1-1' only
+        assert pt_objects[4]['id'] == 'stopE'
+        assert len(pt_objects[4][pt_objects[4]['embedded_type']]['links']) == 1
+        assert [o['id'] for o in pt_objects[4][pt_objects[4]['embedded_type']]['links']] == [
+            'rail_section_on_line1-1'
+        ]
+        assert pt_objects[5]['id'] == 'stopF'
+        assert len(pt_objects[5][pt_objects[5]['embedded_type']]['links']) == 1
+
+        # Stops stopG, stopH and stopI are impacted by two disruptions
+        assert pt_objects[6]['id'] == 'stopG'
+        assert len(pt_objects[6][pt_objects[6]['embedded_type']]['links']) == 2
+        assert [o['id'] for o in pt_objects[6][pt_objects[6]['embedded_type']]['links']] == [
+            'rail_section_on_line1-1',
+            'rail_section_on_line1-2',
+        ]
+        assert pt_objects[7]['id'] == 'stopH'
+        assert len(pt_objects[7][pt_objects[7]['embedded_type']]['links']) == 2
+        assert pt_objects[8]['id'] == 'stopI'
+        assert len(pt_objects[8][pt_objects[8]['embedded_type']]['links']) == 2
+
+        # Stops stopM, stopN and stopO are impacted by one disruption 'rail_section_on_line1-2' only
+        assert pt_objects[9]['id'] == 'stopM'
+        assert len(pt_objects[9][pt_objects[9]['embedded_type']]['links']) == 1
+        assert [o['id'] for o in pt_objects[9][pt_objects[9]['embedded_type']]['links']] == [
+            'rail_section_on_line1-2'
+        ]
+        assert pt_objects[10]['id'] == 'stopN'
+        assert len(pt_objects[10][pt_objects[10]['embedded_type']]['links']) == 1
+        assert pt_objects[11]['id'] == 'stopO'
+        assert len(pt_objects[11][pt_objects[11]['embedded_type']]['links']) == 1
+        assert [o['id'] for o in pt_objects[11][pt_objects[11]['embedded_type']]['links']] == [
+            'rail_section_on_line1-2'
+        ]
+
+        # Stops stopP, stopQ and stopR are impacted by one disruption 'rail_section_on_line1-3' only
+        assert pt_objects[12]['id'] == 'stopP'
+        assert len(pt_objects[12][pt_objects[12]['embedded_type']]['links']) == 1
+        assert [o['id'] for o in pt_objects[12][pt_objects[12]['embedded_type']]['links']] == [
+            'rail_section_on_line1-3'
+        ]
+        assert pt_objects[13]['id'] == 'stopQ'
+        assert len(pt_objects[13][pt_objects[13]['embedded_type']]['links']) == 1
+        assert pt_objects[14]['id'] == 'stopR'
+        assert len(pt_objects[14][pt_objects[14]['embedded_type']]['links']) == 1
+        assert [o['id'] for o in pt_objects[14][pt_objects[14]['embedded_type']]['links']] == [
+            'rail_section_on_line1-3'
+        ]
 
     def test_terminus_schedules_impacted_by_rail_section(self):
         # terminus_schedules on line:1 gives us 3 rail_section impacts
@@ -1085,7 +1168,7 @@ class TestRailSections(AbstractTestFixture):
 
         # rail_section_on_line1-1
         scenario = {
-            'stopAreaA': False,
+            'stopAreaA': True,
             'stopAreaB': True,
             'stopAreaC': True,
             'stopAreaD': True,
@@ -1095,11 +1178,12 @@ class TestRailSections(AbstractTestFixture):
             'stopAreaH': True,
             'stopAreaI': True,
         }
-
         for sa, result in scenario.items():
             assert result == self.has_tf_disruption(
                 'stop_areas/{}/traffic_reports'.format(sa), 'rail_section_on_line1-1'
             )
+        scenario['stopAreaA'] = False
+        for sa, result in scenario.items():
             assert result == self.has_tf_linked_disruption(
                 'stop_areas/{}/traffic_reports'.format(sa),
                 'rail_section_on_line1-1',
@@ -1108,7 +1192,7 @@ class TestRailSections(AbstractTestFixture):
 
         # rail_section_on_line1-2
         scenario = {
-            'stopAreaA': False,
+            'stopAreaA': True,
             'stopAreaB': True,
             'stopAreaC': True,
             'stopAreaD': True,
@@ -1119,11 +1203,12 @@ class TestRailSections(AbstractTestFixture):
             'stopAreaH': True,
             'stopAreaI': True,
         }
-
         for sa, result in scenario.items():
             assert result == self.has_tf_disruption(
                 'stop_areas/{}/traffic_reports'.format(sa), 'rail_section_on_line1-2'
             )
+        scenario['stopAreaA'] = False
+        for sa, result in scenario.items():
             assert result == self.has_tf_linked_disruption(
                 'stop_areas/{}/traffic_reports'.format(sa),
                 'rail_section_on_line1-2',
@@ -1132,18 +1217,21 @@ class TestRailSections(AbstractTestFixture):
 
         # rail_section_on_line1-3
         scenario = {
-            'stopAreaA': False,
-            'stopAreaB': False,
-            'stopAreaC': False,
+            'stopAreaA': True,
+            'stopAreaB': True,
+            'stopAreaC': True,
             'stopAreaP': True,
             'stopAreaQ': True,
             'stopAreaR': True,
         }
-
         for sa, result in scenario.items():
             assert result == self.has_tf_disruption(
                 'stop_areas/{}/traffic_reports'.format(sa), 'rail_section_on_line1-3'
             )
+        scenario['stopAreaA'] = False
+        scenario['stopAreaB'] = False
+        scenario['stopAreaC'] = False
+        for sa, result in scenario.items():
             assert result == self.has_tf_linked_disruption(
                 'stop_areas/{}/traffic_reports'.format(sa),
                 'rail_section_on_line1-3',
@@ -1152,8 +1240,8 @@ class TestRailSections(AbstractTestFixture):
 
         # rail_section_on_line100
         scenario = {
-            'stopAreaA1': False,
-            'stopAreaB1': False,
+            'stopAreaA1': True,
+            'stopAreaB1': True,
             'stopAreaC1': True,
             'stopAreaD1': True,
             'stopAreaE1': True,
@@ -1162,11 +1250,13 @@ class TestRailSections(AbstractTestFixture):
             'stopAreaH1': True,
             'stopAreaI1': True,
         }
-
         for sa, result in scenario.items():
             assert result == self.has_tf_disruption(
                 'stop_areas/{}/traffic_reports'.format(sa), 'rail_section_on_line100'
             )
+        scenario['stopAreaA1'] = False
+        scenario['stopAreaB1'] = False
+        for sa, result in scenario.items():
             assert result == self.has_tf_linked_disruption(
                 'stop_areas/{}/traffic_reports'.format(sa),
                 'rail_section_on_line100',
@@ -1242,10 +1332,10 @@ class TestRailSections(AbstractTestFixture):
                 assert result == self.has_dis('vehicle_journeys/{}/traffic_reports'.format(vj), disruption_label)
 
         scenario = {
-            'vehicle_journey:vj:1': False,
-            'vehicle_journey:vj:2': False,
-            'vehicle_journey:vj:3': False,
-            'vehicle_journey:vj:4': False,
+            'vehicle_journey:vj:1': True,
+            'vehicle_journey:vj:2': True,
+            'vehicle_journey:vj:3': True,
+            'vehicle_journey:vj:4': True,
             'vehicle_journey:vj:5': True,
             'vehicle_journey:vj:6': True,
         }
@@ -1260,6 +1350,30 @@ class TestRailSections(AbstractTestFixture):
         """
 
         # rail_section_on_line1-1
+        scenario_all_true = {
+            'stopA': True,
+            'stopB': True,
+            'stopC': True,
+            'stopD': True,
+            'stopE': True,
+            'stopF': True,
+            'stopG': True,
+            'stopH': True,
+            'stopI': True,
+            'stopJ': True,
+            'stopK': True,
+            'stopL': True,
+            'stopM': True,
+            'stopN': True,
+            'stopO': True,
+            'stopP': True,
+            'stopQ': True,
+            'stopR': True,
+        }
+        for sp, result in scenario_all_true.items():
+            assert result == self.has_tf_disruption(
+                'stop_points/{}/traffic_reports'.format(sp), 'rail_section_on_line1-1'
+            )
         scenario = {
             'stopA': False,
             'stopB': True,
@@ -1282,9 +1396,6 @@ class TestRailSections(AbstractTestFixture):
         }
         for sp, result in scenario.items():
             sa = sp[0:4] + 'Area' + sp[-1]
-            assert result == self.has_tf_disruption(
-                'stop_points/{}/traffic_reports'.format(sp), 'rail_section_on_line1-1'
-            )
             assert result == self.has_tf_linked_disruption(
                 'stop_points/{}/traffic_reports'.format(sp),
                 'rail_section_on_line1-1',
@@ -1292,6 +1403,10 @@ class TestRailSections(AbstractTestFixture):
             )
 
         # rail_section_on_line1-2
+        for sp, result in scenario_all_true.items():
+            assert result == self.has_tf_disruption(
+                'stop_points/{}/traffic_reports'.format(sp), 'rail_section_on_line1-2'
+            )
         scenario = {
             'stopA': False,
             'stopB': True,
@@ -1314,9 +1429,6 @@ class TestRailSections(AbstractTestFixture):
         }
         for sp, result in scenario.items():
             sa = sp[0:4] + 'Area' + sp[-1]
-            assert result == self.has_tf_disruption(
-                'stop_points/{}/traffic_reports'.format(sp), 'rail_section_on_line1-2'
-            )
             assert result == self.has_tf_linked_disruption(
                 'stop_points/{}/traffic_reports'.format(sp),
                 'rail_section_on_line1-2',
@@ -1324,6 +1436,10 @@ class TestRailSections(AbstractTestFixture):
             )
 
         # rail_section_on_line1-3
+        for sp, result in scenario_all_true.items():
+            assert result == self.has_tf_disruption(
+                'stop_points/{}/traffic_reports'.format(sp), 'rail_section_on_line1-3'
+            )
         scenario = {
             'stopA': False,
             'stopB': False,
@@ -1346,9 +1462,6 @@ class TestRailSections(AbstractTestFixture):
         }
         for sp, result in scenario.items():
             sa = sp[0:4] + 'Area' + sp[-1]
-            assert result == self.has_tf_disruption(
-                'stop_points/{}/traffic_reports'.format(sp), 'rail_section_on_line1-3'
-            )
             assert result == self.has_tf_linked_disruption(
                 'stop_points/{}/traffic_reports'.format(sp),
                 'rail_section_on_line1-3',
@@ -1357,6 +1470,21 @@ class TestRailSections(AbstractTestFixture):
 
         # Impact rail_section_on_line100 with severity NO_SERVICE impacts all the stop_points from
         # rail_section.start_point
+        scenario = {
+            'stopA1': True,
+            'stopB1': True,
+            'stopC1': True,
+            'stopD1': True,
+            'stopE1': True,
+            'stopF1': True,
+            'stopG1': True,
+            'stopH1': True,
+            'stopI1': True,
+        }
+        for sp, result in scenario.items():
+            assert result == self.has_tf_disruption(
+                'stop_points/{}/traffic_reports'.format(sp), 'rail_section_on_line100'
+            )
         scenario = {
             'stopA1': False,
             'stopB1': False,
@@ -1370,9 +1498,6 @@ class TestRailSections(AbstractTestFixture):
         }
         for sp, result in scenario.items():
             sa = sp[0:4] + 'Area' + sp[-2:]
-            assert result == self.has_tf_disruption(
-                'stop_points/{}/traffic_reports'.format(sp), 'rail_section_on_line100'
-            )
             assert result == self.has_tf_linked_disruption(
                 'stop_points/{}/traffic_reports'.format(sp),
                 'rail_section_on_line100',
@@ -1381,6 +1506,21 @@ class TestRailSections(AbstractTestFixture):
 
         # Impact rail_section_on_line11 with severity REDUCED_SERVICE impacts all the stop_points from
         # rail_section.start_point
+        scenario = {
+            'stopAA': True,
+            'stopBB': True,
+            'stopCC': True,
+            'stopDD': True,
+            'stopEE': True,
+            'stopFF': True,
+            'stopGG': True,
+            'stopHH': True,
+            'stopII': True,
+        }
+        for sp, result in scenario.items():
+            assert result == self.has_tf_disruption(
+                'stop_points/{}/traffic_reports'.format(sp), 'rail_section_on_line11'
+            )
         scenario = {
             'stopAA': False,
             'stopBB': False,
@@ -1394,9 +1534,6 @@ class TestRailSections(AbstractTestFixture):
         }
         for sp, result in scenario.items():
             sa = sp[0:4] + 'Area' + sp[-2:]
-            assert result == self.has_tf_disruption(
-                'stop_points/{}/traffic_reports'.format(sp), 'rail_section_on_line11'
-            )
             assert result == self.has_tf_linked_disruption(
                 'stop_points/{}/traffic_reports'.format(sp),
                 'rail_section_on_line11',
@@ -1433,10 +1570,10 @@ class TestRailSections(AbstractTestFixture):
             assert result == self.has_dis('routes/{}/traffic_reports'.format(route), 'rail_section_on_line1-2')
 
         scenario = {
-            'route1': False,
-            'route2': False,
-            'route3': False,
-            'route4': False,
+            'route1': True,
+            'route2': True,
+            'route3': True,
+            'route4': True,
             'route5': True,
             'route6': True,
             'route2-1': False,
