@@ -165,6 +165,13 @@ Metrics::Metrics(const boost::optional<std::string>& endpoint, const std::string
                                                        .Labels({{"coverage", coverage}})
                                                        .Register(*registry)
                                                        .Add({}, create_exponential_buckets(0.5, 2, 10));
+
+    this->applied_rt_entity_number_histogram = &prometheus::BuildHistogram()
+                                                    .Name("kraken_applied_rt_entity_number")
+                                                    .Help("number of applied RT entity from a message batch")
+                                                    .Labels({{"coverage", coverage}})
+                                                    .Register(*registry)
+                                                    .Add({}, create_exponential_buckets(0.5, 2, 10));
 }
 
 InFlightGuard Metrics::start_in_flight() const {
@@ -234,6 +241,13 @@ void Metrics::observe_retrieved_rt_message_number(size_t number) const {
         return;
     }
     this->retrieved_rt_message_number_histogram->Observe(number);
+}
+
+void Metrics::observe_applied_rt_entity_number(size_t number) const {
+    if (!registry) {
+        return;
+    }
+    this->applied_rt_entity_number_histogram->Observe(number);
 }
 
 void Metrics::set_raptor_cache_miss(size_t nb_cache_miss) const {

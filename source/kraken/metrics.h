@@ -76,6 +76,7 @@ protected:
     prometheus::Histogram* delete_disruption_histogram;
     prometheus::Histogram* retrieve_rt_message_duration_histogram;
     prometheus::Histogram* retrieved_rt_message_number_histogram;
+    prometheus::Histogram* applied_rt_entity_number_histogram;
     prometheus::Gauge* next_st_cache_miss;
 
 public:
@@ -90,6 +91,7 @@ public:
     void observe_delete_disruption(double duration) const;
     void observe_retrieve_rt_message_duration(double duration) const;
     void observe_retrieved_rt_message_number(size_t number) const;
+    void observe_applied_rt_entity_number(size_t number) const;
     void set_raptor_cache_miss(size_t nb_cache_miss) const;
 };
 

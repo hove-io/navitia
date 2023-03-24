@@ -366,6 +366,7 @@ void MaintenanceWorker::handle_rt_in_batch(const std::vector<AmqpClient::Envelop
     bool autocomplete_rebuilding_activated = false;
     auto rt_action = RTAction::chaos;
 
+    size_t applied_entity_number = 0u;
     for (auto& envelope : envelopes) {
         const auto routing_key = envelope->RoutingKey();
         LOG4CPLUS_DEBUG(logger, "realtime info received from " << routing_key);
@@ -384,6 +385,7 @@ void MaintenanceWorker::handle_rt_in_batch(const std::vector<AmqpClient::Envelop
                 this->metrics.observe_data_cloning(duration.total_seconds());
                 LOG4CPLUS_INFO(logger, "data copied (cloned) in " << duration);
             }
+            ++applied_entity_number;
             if (entity.is_deleted()) {
                 LOG4CPLUS_DEBUG(logger, "deletion of disruption " << entity.id());
                 rt_action = RTAction::deletion;
@@ -401,8 +403,14 @@ void MaintenanceWorker::handle_rt_in_batch(const std::vector<AmqpClient::Envelop
                 autocomplete_rebuilding_activated = autocomplete_rebuilding_needed(entity);
             } else {
                 LOG4CPLUS_WARN(logger, "unsupported gtfs rt feed");
+                --applied_entity_number;
             }
         }
+    }
+    if (envelopes.size() > 0) {
+        // messages may contain multiple entities, but some may be skipped
+        this->metrics.observe_applied_rt_entity_number(applied_entity_number);
+        LOG4CPLUS_DEBUG(logger, "Number of RT entity really applied in this message batch: " << applied_entity_number);
     }
     if (data) {
         LOG4CPLUS_INFO(logger, "rebuilding relations");
