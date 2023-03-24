@@ -1,5 +1,7 @@
 FROM navitia/debian8_dev
 
+RUN echo "deb http://archive.debian.org/debian/ jessie main"  > /etc/apt/sources.list.d/archive.list
+
 # update package list from providers
 RUN apt-get update --force-yes --fix-missing || exit 0
 
