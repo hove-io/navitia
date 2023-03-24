@@ -151,6 +151,13 @@ Metrics::Metrics(const boost::optional<std::string>& endpoint, const std::string
                                              .Labels({{"coverage", coverage}})
                                              .Register(*registry)
                                              .Add({}, create_exponential_buckets(0.5, 2, 10));
+
+    this->retrieve_rt_message_duration_histogram = &prometheus::BuildHistogram()
+                                                        .Name("kraken_retrieve_rt_message_duration_seconds")
+                                                        .Help("duration of RT messages retrieval from RabbitMQ")
+                                                        .Labels({{"coverage", coverage}})
+                                                        .Register(*registry)
+                                                        .Add({}, create_exponential_buckets(0.5, 2, 10));
 }
 
 InFlightGuard Metrics::start_in_flight() const {
@@ -206,6 +213,13 @@ void Metrics::observe_delete_disruption(double duration) const {
         return;
     }
     this->delete_disruption_histogram->Observe(duration);
+}
+
+void Metrics::observe_retrieve_rt_message_duration(double duration) const {
+    if (!registry) {
+        return;
+    }
+    this->retrieve_rt_message_duration_histogram->Observe(duration);
 }
 
 void Metrics::set_raptor_cache_miss(size_t nb_cache_miss) const {
