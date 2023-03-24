@@ -367,6 +367,10 @@ void MaintenanceWorker::handle_rt_in_batch(const std::vector<AmqpClient::Envelop
     auto rt_action = RTAction::chaos;
 
     size_t applied_entity_number = 0u;
+    boost::optional<pt::ptime> oldest_message_time;
+    boost::optional<pt::ptime> youngest_message_time;
+    uint64_t sum_message_age_until_begin_microseconds = 0u;
+    size_t dated_message_number = 0u;
     for (auto& envelope : envelopes) {
         const auto routing_key = envelope->RoutingKey();
         LOG4CPLUS_DEBUG(logger, "realtime info received from " << routing_key);
@@ -375,6 +379,17 @@ void MaintenanceWorker::handle_rt_in_batch(const std::vector<AmqpClient::Envelop
         if (!feed_message.ParseFromString(envelope->Message()->Body())) {
             LOG4CPLUS_WARN(logger, "protobuf not valid!");
             return;
+        }
+        if (feed_message.header().has_timestamp()) {
+            auto message_time = navitia::from_posix_timestamp(feed_message.header().timestamp());
+            if (!oldest_message_time || oldest_message_time > message_time) {
+                oldest_message_time = message_time;
+            }
+            if (!youngest_message_time || youngest_message_time < message_time) {
+                youngest_message_time = message_time;
+            }
+            ++dated_message_number;
+            sum_message_age_until_begin_microseconds += pt::time_duration(begin - message_time).total_microseconds();
         }
         LOG4CPLUS_TRACE(logger, "received entity: " << feed_message.DebugString());
         for (const auto& entity : feed_message.entity()) {
@@ -429,7 +444,8 @@ void MaintenanceWorker::handle_rt_in_batch(const std::vector<AmqpClient::Envelop
         data_manager.set_data(std::move(data));
 
         // Feed metrics
-        auto duration = pt::microsec_clock::universal_time() - begin;
+        auto end = pt::microsec_clock::universal_time();
+        auto duration = end - begin;
         if (rt_action == RTAction::deletion) {
             this->metrics.observe_delete_disruption(duration.total_milliseconds() / 1000.0);
             LOG4CPLUS_INFO(logger, "Data updated after deleting disruption, "
@@ -442,6 +458,21 @@ void MaintenanceWorker::handle_rt_in_batch(const std::vector<AmqpClient::Envelop
             this->metrics.observe_handle_rt(duration.total_milliseconds() / 1000.0);
             LOG4CPLUS_INFO(logger, "Data updated with realtime from kirin, "
                                        << envelopes.size() << " disruption(s) applied in " << duration);
+        }
+        if (dated_message_number > 0) {
+            auto min_age = end - *youngest_message_time;
+            auto max_age = end - *oldest_message_time;
+            auto sum_message_age_until_end_microseconds =
+                sum_message_age_until_begin_microseconds + (dated_message_number * (end - begin).total_microseconds());
+            auto average_age_microseconds = sum_message_age_until_end_microseconds / dated_message_number;
+            this->metrics.observe_rt_message_age_min(min_age.total_milliseconds() / 1000.0);
+            this->metrics.observe_rt_message_age_max(max_age.total_milliseconds() / 1000.0);
+            this->metrics.observe_rt_message_age_average(average_age_microseconds / 1000000.0);
+            LOG4CPLUS_DEBUG(logger, "Known ages of RT message(s) in batch: min="
+                                        << min_age << ", average=" << pt::microseconds(average_age_microseconds)
+                                        << ", max=" << max_age);
+        } else {
+            LOG4CPLUS_DEBUG(logger, "All ages of RT message(s) in batch are unknown");
         }
     } else if (!envelopes.empty()) {
         // we didn't had to update Data because there is no change but we want to track that realtime data

@@ -172,6 +172,27 @@ Metrics::Metrics(const boost::optional<std::string>& endpoint, const std::string
                                                     .Labels({{"coverage", coverage}})
                                                     .Register(*registry)
                                                     .Add({}, create_exponential_buckets(0.5, 2, 10));
+
+    this->rt_message_age_min_histogram = &prometheus::BuildHistogram()
+                                              .Name("kraken_rt_message_age_min_seconds")
+                                              .Help("Minimum age of RT message from a batch")
+                                              .Labels({{"coverage", coverage}})
+                                              .Register(*registry)
+                                              .Add({}, create_exponential_buckets(0.5, 2, 10));
+
+    this->rt_message_age_average_histogram = &prometheus::BuildHistogram()
+                                                  .Name("kraken_rt_message_age_average_seconds")
+                                                  .Help("Average age of RT message from a batch")
+                                                  .Labels({{"coverage", coverage}})
+                                                  .Register(*registry)
+                                                  .Add({}, create_exponential_buckets(0.5, 2, 10));
+
+    this->rt_message_age_max_histogram = &prometheus::BuildHistogram()
+                                              .Name("kraken_rt_message_age_max_seconds")
+                                              .Help("Maximum age of RT message from a batch")
+                                              .Labels({{"coverage", coverage}})
+                                              .Register(*registry)
+                                              .Add({}, create_exponential_buckets(0.5, 2, 10));
 }
 
 InFlightGuard Metrics::start_in_flight() const {
@@ -248,6 +269,27 @@ void Metrics::observe_applied_rt_entity_number(size_t number) const {
         return;
     }
     this->applied_rt_entity_number_histogram->Observe(number);
+}
+
+void Metrics::observe_rt_message_age_min(double duration) const {
+    if (!registry) {
+        return;
+    }
+    this->rt_message_age_min_histogram->Observe(duration);
+}
+
+void Metrics::observe_rt_message_age_average(double duration) const {
+    if (!registry) {
+        return;
+    }
+    this->rt_message_age_average_histogram->Observe(duration);
+}
+
+void Metrics::observe_rt_message_age_max(double duration) const {
+    if (!registry) {
+        return;
+    }
+    this->rt_message_age_max_histogram->Observe(duration);
 }
 
 void Metrics::set_raptor_cache_miss(size_t nb_cache_miss) const {
