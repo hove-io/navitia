@@ -378,7 +378,7 @@ void MaintenanceWorker::handle_rt_in_batch(const std::vector<AmqpClient::Envelop
         transit_realtime::FeedMessage feed_message;
         if (!feed_message.ParseFromString(envelope->Message()->Body())) {
             LOG4CPLUS_WARN(logger, "protobuf not valid!");
-            return;
+            continue;
         }
         if (feed_message.header().has_timestamp()) {
             auto message_time = navitia::from_posix_timestamp(feed_message.header().timestamp());
