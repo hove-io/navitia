@@ -512,6 +512,7 @@ void MaintenanceWorker::listen_rabbitmq() {
             auto rt_envelopes = consume_in_batch(rt_tag, max_batch_nb, timeout_ms, no_ack);
             auto duration_rt_retieval = pt::microsec_clock::universal_time() - begin_rt_retrieval;
             this->metrics.observe_retrieve_rt_message_duration(duration_rt_retieval.total_milliseconds() / 1000.0);
+            this->metrics.observe_retrieved_rt_message_number(rt_envelopes.size());
             LOG4CPLUS_DEBUG(logger, "Retrieval of RT messages from RabbitMQ, "
                                         << rt_envelopes.size() << " messages(s) retrieved in " << duration_rt_retieval);
             handle_rt_in_batch(rt_envelopes);
