@@ -159,19 +159,19 @@ Metrics::Metrics(const boost::optional<std::string>& endpoint, const std::string
                                                         .Register(*registry)
                                                         .Add({}, create_exponential_buckets(0.5, 2, 10));
 
-    this->retrieved_rt_message_number_histogram = &prometheus::BuildHistogram()
-                                                       .Name("kraken_retrieve_rt_message_number")
-                                                       .Help("number of RT messages retrieved from RabbitMQ")
-                                                       .Labels({{"coverage", coverage}})
-                                                       .Register(*registry)
-                                                       .Add({}, create_exponential_buckets(0.5, 2, 10));
+    this->retrieved_rt_message_count_histogram = &prometheus::BuildHistogram()
+                                                      .Name("kraken_retrieve_rt_message_count")
+                                                      .Help("number of RT messages retrieved from RabbitMQ")
+                                                      .Labels({{"coverage", coverage}})
+                                                      .Register(*registry)
+                                                      .Add({}, create_exponential_buckets(0.5, 2, 10));
 
-    this->applied_rt_entity_number_histogram = &prometheus::BuildHistogram()
-                                                    .Name("kraken_applied_rt_entity_number")
-                                                    .Help("number of applied RT entity from a message batch")
-                                                    .Labels({{"coverage", coverage}})
-                                                    .Register(*registry)
-                                                    .Add({}, create_exponential_buckets(0.5, 2, 10));
+    this->applied_rt_entity_count_histogram = &prometheus::BuildHistogram()
+                                                   .Name("kraken_applied_rt_entity_count")
+                                                   .Help("number of applied RT entity from a message batch")
+                                                   .Labels({{"coverage", coverage}})
+                                                   .Register(*registry)
+                                                   .Add({}, create_exponential_buckets(0.5, 2, 10));
 
     this->rt_message_age_min_histogram = &prometheus::BuildHistogram()
                                               .Name("kraken_rt_message_age_min_seconds")
@@ -257,18 +257,18 @@ void Metrics::observe_retrieve_rt_message_duration(double duration) const {
     this->retrieve_rt_message_duration_histogram->Observe(duration);
 }
 
-void Metrics::observe_retrieved_rt_message_number(size_t number) const {
+void Metrics::observe_retrieved_rt_message_count(size_t count) const {
     if (!registry) {
         return;
     }
-    this->retrieved_rt_message_number_histogram->Observe(number);
+    this->retrieved_rt_message_count_histogram->Observe(double(count));
 }
 
-void Metrics::observe_applied_rt_entity_number(size_t number) const {
+void Metrics::observe_applied_rt_entity_count(size_t count) const {
     if (!registry) {
         return;
     }
-    this->applied_rt_entity_number_histogram->Observe(number);
+    this->applied_rt_entity_count_histogram->Observe(double(count));
 }
 
 void Metrics::observe_rt_message_age_min(double duration) const {

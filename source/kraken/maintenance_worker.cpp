@@ -366,11 +366,11 @@ void MaintenanceWorker::handle_rt_in_batch(const std::vector<AmqpClient::Envelop
     bool autocomplete_rebuilding_activated = false;
     auto rt_action = RTAction::chaos;
 
-    size_t applied_entity_number = 0u;
+    size_t applied_entity_count = 0u;
     boost::optional<pt::ptime> oldest_message_time;
     boost::optional<pt::ptime> youngest_message_time;
     uint64_t sum_message_age_until_begin_microseconds = 0u;
-    size_t dated_message_number = 0u;
+    size_t dated_message_count = 0u;
     for (auto& envelope : envelopes) {
         const auto routing_key = envelope->RoutingKey();
         LOG4CPLUS_DEBUG(logger, "realtime info received from " << routing_key);
@@ -388,7 +388,7 @@ void MaintenanceWorker::handle_rt_in_batch(const std::vector<AmqpClient::Envelop
             if (!youngest_message_time || youngest_message_time < message_time) {
                 youngest_message_time = message_time;
             }
-            ++dated_message_number;
+            ++dated_message_count;
             sum_message_age_until_begin_microseconds += pt::time_duration(begin - message_time).total_microseconds();
         }
         LOG4CPLUS_TRACE(logger, "received entity: " << feed_message.DebugString());
@@ -400,7 +400,7 @@ void MaintenanceWorker::handle_rt_in_batch(const std::vector<AmqpClient::Envelop
                 this->metrics.observe_data_cloning(duration.total_seconds());
                 LOG4CPLUS_INFO(logger, "data copied (cloned) in " << duration);
             }
-            ++applied_entity_number;
+            ++applied_entity_count;
             if (entity.is_deleted()) {
                 LOG4CPLUS_DEBUG(logger, "deletion of disruption " << entity.id());
                 rt_action = RTAction::deletion;
@@ -418,14 +418,14 @@ void MaintenanceWorker::handle_rt_in_batch(const std::vector<AmqpClient::Envelop
                 autocomplete_rebuilding_activated = autocomplete_rebuilding_needed(entity);
             } else {
                 LOG4CPLUS_WARN(logger, "unsupported gtfs rt feed");
-                --applied_entity_number;
+                --applied_entity_count;
             }
         }
     }
-    if (envelopes.size() > 0) {
-        // messages may contain multiple entities, but some may be skipped
-        this->metrics.observe_applied_rt_entity_number(applied_entity_number);
-        LOG4CPLUS_DEBUG(logger, "Number of RT entity really applied in this message batch: " << applied_entity_number);
+    if (!envelopes.empty()) {
+        // messages may contain multiple entities, and some may be skipped
+        this->metrics.observe_applied_rt_entity_count(applied_entity_count);
+        LOG4CPLUS_DEBUG(logger, "Number of RT entity really applied in this message batch: " << applied_entity_count);
     }
     if (data) {
         LOG4CPLUS_INFO(logger, "rebuilding relations");
@@ -459,15 +459,15 @@ void MaintenanceWorker::handle_rt_in_batch(const std::vector<AmqpClient::Envelop
             LOG4CPLUS_INFO(logger, "Data updated with realtime from kirin, "
                                        << envelopes.size() << " disruption(s) applied in " << duration);
         }
-        if (dated_message_number > 0) {
+        if (dated_message_count > 0) {
             auto min_age = end - *youngest_message_time;
             auto max_age = end - *oldest_message_time;
             auto sum_message_age_until_end_microseconds =
-                sum_message_age_until_begin_microseconds + (dated_message_number * (end - begin).total_microseconds());
-            auto average_age_microseconds = sum_message_age_until_end_microseconds / dated_message_number;
-            this->metrics.observe_rt_message_age_min(min_age.total_milliseconds() / 1000.0);
-            this->metrics.observe_rt_message_age_max(max_age.total_milliseconds() / 1000.0);
-            this->metrics.observe_rt_message_age_average(average_age_microseconds / 1000000.0);
+                sum_message_age_until_begin_microseconds + (dated_message_count * (end - begin).total_microseconds());
+            auto average_age_microseconds = sum_message_age_until_end_microseconds / dated_message_count;
+            this->metrics.observe_rt_message_age_min(double(min_age.total_milliseconds()) / 1000.0);
+            this->metrics.observe_rt_message_age_max(double(max_age.total_milliseconds()) / 1000.0);
+            this->metrics.observe_rt_message_age_average(double(average_age_microseconds) / 1000000.0);
             LOG4CPLUS_DEBUG(logger, "Known ages of RT message(s) in batch: min="
                                         << min_age << ", average=" << pt::microseconds(average_age_microseconds)
                                         << ", max=" << max_age);
@@ -549,11 +549,12 @@ void MaintenanceWorker::listen_rabbitmq() {
         try {
             auto begin_rt_retrieval = pt::microsec_clock::universal_time();
             auto rt_envelopes = consume_in_batch(rt_tag, max_batch_nb, timeout_ms, no_ack);
-            auto duration_rt_retieval = pt::microsec_clock::universal_time() - begin_rt_retrieval;
-            this->metrics.observe_retrieve_rt_message_duration(duration_rt_retieval.total_milliseconds() / 1000.0);
-            this->metrics.observe_retrieved_rt_message_number(rt_envelopes.size());
-            LOG4CPLUS_DEBUG(logger, "Retrieval of RT messages from RabbitMQ, "
-                                        << rt_envelopes.size() << " messages(s) retrieved in " << duration_rt_retieval);
+            auto duration_rt_retrieval = pt::microsec_clock::universal_time() - begin_rt_retrieval;
+            this->metrics.observe_retrieve_rt_message_duration(duration_rt_retrieval.total_milliseconds() / 1000.0);
+            this->metrics.observe_retrieved_rt_message_count(rt_envelopes.size());
+            LOG4CPLUS_DEBUG(logger, "Retrieval of RT messages from RabbitMQ, " << rt_envelopes.size()
+                                                                               << " messages(s) retrieved in "
+                                                                               << duration_rt_retrieval);
             handle_rt_in_batch(rt_envelopes);
 
             auto task_envelopes = consume_in_batch(task_tag, 1, timeout_ms, no_ack);
