@@ -77,6 +77,7 @@ protected:
     prometheus::Histogram* retrieve_rt_message_duration_histogram;
     prometheus::Histogram* retrieved_rt_message_count_histogram;
     prometheus::Histogram* applied_rt_entity_count_histogram;
+    prometheus::Histogram* rt_message_age_histogram;
     prometheus::Histogram* rt_message_age_min_histogram;
     prometheus::Histogram* rt_message_age_average_histogram;
     prometheus::Histogram* rt_message_age_max_histogram;
@@ -95,6 +96,7 @@ public:
     void observe_retrieve_rt_message_duration(double duration) const;
     void observe_retrieved_rt_message_count(size_t count) const;
     void observe_applied_rt_entity_count(size_t count) const;
+    void observe_rt_message_age(double duration) const;
     void observe_rt_message_age_min(double duration) const;
     void observe_rt_message_age_average(double duration) const;
     void observe_rt_message_age_max(double duration) const;

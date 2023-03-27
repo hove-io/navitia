@@ -371,6 +371,8 @@ void MaintenanceWorker::handle_rt_in_batch(const std::vector<AmqpClient::Envelop
     pt::ptime youngest_message_time{pt::min_date_time};
     uint64_t sum_message_age_until_begin_microseconds = 0u;
     size_t dated_message_count = 0u;
+    std::vector<pt::ptime> dated_message_times;
+
     for (auto& envelope : envelopes) {
         const auto routing_key = envelope->RoutingKey();
         LOG4CPLUS_DEBUG(logger, "realtime info received from " << routing_key);
@@ -382,6 +384,7 @@ void MaintenanceWorker::handle_rt_in_batch(const std::vector<AmqpClient::Envelop
         }
         if (feed_message.header().has_timestamp()) {
             auto message_time = navitia::from_posix_timestamp(feed_message.header().timestamp());
+            dated_message_times.push_back(message_time);
             oldest_message_time = std::min(oldest_message_time, message_time);
             youngest_message_time = std::max(youngest_message_time, message_time);
             ++dated_message_count;
@@ -454,6 +457,9 @@ void MaintenanceWorker::handle_rt_in_batch(const std::vector<AmqpClient::Envelop
             this->metrics.observe_handle_rt(duration.total_milliseconds() / 1000.0);
             LOG4CPLUS_INFO(logger, "Data updated with realtime from kirin, "
                                        << envelopes.size() << " disruption(s) applied in " << duration);
+        }
+        for (const auto& message_time : dated_message_times) {
+            this->metrics.observe_rt_message_age(double((end - message_time).total_milliseconds()) / 1000.0);
         }
         if (dated_message_count > 0) {
             auto min_age = end - youngest_message_time;
