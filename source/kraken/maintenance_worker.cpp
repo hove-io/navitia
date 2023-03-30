@@ -113,7 +113,6 @@ void MaintenanceWorker::open_channel_to_rabbitmq() {
     if (channel_opened) {
         return;
     }
-    std::string instance_name = conf.instance_name();
     // connection through URI, if URI is provided, it will be used in the first place as other other connection options
     // are neglected
     boost::optional<std::string> broker_uri = conf.broker_uri();
@@ -176,6 +175,23 @@ void MaintenanceWorker::load_data() {
     LOG4CPLUS_INFO(logger, "Loading database duration: " << duration);
 }
 
+std::pair<uint32_t, uint32_t> MaintenanceWorker::declare_queue_with_counts(const std::string& queue_name) {
+    bool passive = false;
+    bool durable = true;
+    bool exclusive = false;
+    bool auto_delete_queue = conf.broker_queue_auto_delete();
+
+    AmqpClient::Table args;
+    args.insert(std::make_pair("x-expires", conf.broker_queue_expire() * 1000));
+
+    boost::uint32_t message_count;
+    boost::uint32_t consumer_count;
+
+    channel->DeclareQueueWithCounts(queue_name, message_count, consumer_count, passive, durable, exclusive,
+                                    auto_delete_queue, args);
+    return {message_count, consumer_count};
+}
+
 void MaintenanceWorker::create_task_queue() {
     if (task_queue_created) {
         return;
@@ -198,16 +214,8 @@ void MaintenanceWorker::create_task_queue() {
     this->channel->DeclareExchange(exchange_name, "topic", false, true, false);
 
     // creation of task queue for this kraken
-    bool passive = false;
-    bool durable = true;
-    bool exclusive = false;
-    bool auto_delete_queue = conf.broker_queue_auto_delete();
-
-    AmqpClient::Table args;
-    args.insert(std::make_pair("x-expires", conf.broker_queue_expire() * 1000));
-
-    channel->DeclareQueue(queue_name_task, passive, durable, exclusive, auto_delete_queue, args);
-    LOG4CPLUS_INFO(logger, "binding queue for tasks: " << this->queue_name_task);
+    declare_queue_with_counts(queue_name_task);
+    LOG4CPLUS_INFO(logger, "binding queue for tasks: " << queue_name_task);
 
     // binding the queue to the exchange for all task for this instance
     channel->BindQueue(queue_name_task, exchange_name, instance_name + ".task.*");
@@ -262,16 +270,8 @@ void MaintenanceWorker::create_realtime_queue() {
     this->channel->DeclareExchange(exchange_name, "topic", false, true, false);
 
     // creation of queues for this kraken
-    bool passive = false;
-    bool durable = true;
-    bool exclusive = false;
-    bool auto_delete_queue = conf.broker_queue_auto_delete();
-
-    AmqpClient::Table args;
-    args.insert(std::make_pair("x-expires", conf.broker_queue_expire() * 1000));
-
-    channel->DeclareQueue(this->queue_name_rt, passive, durable, exclusive, auto_delete_queue, args);
-    LOG4CPLUS_INFO(logger, "queue for disruptions: " << this->queue_name_rt);
+    declare_queue_with_counts(queue_name_rt);
+    LOG4CPLUS_INFO(logger, "queue for disruptions: " << queue_name_rt);
     // binding the queue to the exchange for all tasks for this instance
     LOG4CPLUS_INFO(logger, "subscribing to [" << boost::algorithm::join(conf.rt_topics(), ", ") << "]");
     for (const auto& topic : conf.rt_topics()) {
@@ -492,22 +492,27 @@ std::vector<AmqpClient::Envelope::ptr_t> MaintenanceWorker::consume_in_batch(con
     assert(consume_tag != "");
     assert(max_nb);
 
-    std::vector<AmqpClient::Envelope::ptr_t> envelopes;
-    envelopes.reserve(max_nb);
-    size_t consumed_nb = 0;
-    auto begin = pt::microsec_clock::universal_time();
+    // count messages (redeclare is useless)
+    auto count_messages_consumers = declare_queue_with_counts(queue_name_rt);
+    if (count_messages_consumers.second > 1) {
+        // not deadly but suspicious, and RT would be partial for this kraken
+        LOG4CPLUS_ERROR(logger, "There is more than one consumer on RabbitMQ's RT queue " << queue_name_rt);
+    }
 
+    std::vector<AmqpClient::Envelope::ptr_t> envelopes;
+    // retrieve the number of messages counted in queue before (or max_nb if there are really too much of them)
+    auto nb_message_to_retrieve = std::min(size_t(count_messages_consumers.first), max_nb);
+    envelopes.reserve(nb_message_to_retrieve);
+
+    auto begin = pt::microsec_clock::universal_time();
     auto retrieving_timeout = conf.total_retrieving_timeout();
-    while (consumed_nb < max_nb
+    while (envelopes.size() < nb_message_to_retrieve
            && (pt::microsec_clock::universal_time() - begin).total_milliseconds() < retrieving_timeout) {
         AmqpClient::Envelope::ptr_t envelope{};
 
-        /* !
-         * The emptiness is tested thanks to the timeout. We consider that the queue is empty when
-         * BasicConsumeMessage() timeout.
-         * */
-        bool queue_is_empty = !channel->BasicConsumeMessage(consume_tag, envelope, timeout_ms);
-        if (queue_is_empty) {
+        bool queue_is_empty_or_unreachable = !channel->BasicConsumeMessage(consume_tag, envelope, timeout_ms);
+        if (queue_is_empty_or_unreachable) {
+            // moving along with what was retrieved so far
             break;
         }
 
@@ -516,7 +521,6 @@ std::vector<AmqpClient::Envelope::ptr_t> MaintenanceWorker::consume_in_batch(con
             if (!no_ack) {
                 channel->BasicAck(envelope);
             }
-            ++consumed_nb;
         }
     }
     return envelopes;
