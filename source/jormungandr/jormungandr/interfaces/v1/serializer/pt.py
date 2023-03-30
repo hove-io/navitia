@@ -857,3 +857,7 @@ class PollutantValueSerializer(PbNestedSerializer):
 class AirPollutantsSerializer(PbNestedSerializer):
     unit = jsonschema.Field(schema_type=str)
     values = PollutantValueSerializer()
+
+
+class LowEmissionZoneSerializer(PbNestedSerializer):
+    on_path = jsonschema.Field(schema_type=bool)

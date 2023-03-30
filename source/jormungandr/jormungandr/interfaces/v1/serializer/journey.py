@@ -40,6 +40,7 @@ from jormungandr.interfaces.v1.serializer.pt import (
     StringListField,
     PathWaySerializer,
     AirPollutantsSerializer,
+    LowEmissionZoneSerializer,
 )
 from jormungandr.interfaces.v1.serializer.time import DateTimeField
 from jormungandr.interfaces.v1.serializer.fields import (
@@ -337,7 +338,7 @@ class SectionSerializer(PbNestedSerializer):
     )
     co2_emission = AmountSerializer(display_none=True, default_unit='gEC')
     air_pollutants = AirPollutantsSerializer(display_none=False)
-
+    low_emission_zone = LowEmissionZoneSerializer(display_none=False)
     transfer_type = EnumField(attr='transfer_type', pb_type=TransferType)
     departure_date_time = DateTimeField(
         attr='begin_date_time', description='Departure date and time of the section'
@@ -449,6 +450,7 @@ class JourneySerializer(PbNestedSerializer):
     tags = StringListField(display_none=True)
     co2_emission = AmountSerializer(display_none=True, default_unit='gEC')
     air_pollutants = AirPollutantsSerializer(display_none=False)
+    low_emission_zone = LowEmissionZoneSerializer(display_none=False)
     durations = DurationsSerializer()
     distances = DistancesSerializer()
     fare = FareSerializer(display_none=True)
