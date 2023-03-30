@@ -8,27 +8,27 @@ COPY mimirsbrunn7_*.deb ./
 COPY cosmogony2cities_*.deb ./
 
 # install navitia-common package
-RUN dpkg -i ./navitia-common_*.deb || exit 0
+RUN dpkg -i ./navitia-common_*.deb
 RUN apt-get install -f -y --force-yes
 
 # install navitia-tyr package
-RUN dpkg -i ./navitia-tyr_*.deb || exit 0
+RUN dpkg -i ./navitia-tyr_*.deb
 RUN apt-get install -f -y --force-yes
 
 # install navitia-ed package
-RUN dpkg -i ./navitia-ed_*.deb || exit 0
+RUN dpkg -i ./navitia-ed_*.deb
 RUN apt-get install -f -y --force-yes
 
 # install navitia-cities package
-RUN dpkg -i ./navitia-cities_*.deb || exit 0
+RUN dpkg -i ./navitia-cities_*.deb
 RUN apt-get install -f -y --force-yes
 
 # install navitia-mimirsbrunn package
-RUN dpkg -i ./mimirsbrunn7_jessie-*.deb || exit 0
+RUN dpkg -i ./mimirsbrunn7_jessie-*.deb
 RUN apt-get install -f -y --force-yes
 
 # install cosmogony2cities package
-RUN dpkg -i ./cosmogony2cities*.deb || exit 0
+RUN dpkg -i ./cosmogony2cities*.deb
 RUN apt-get install -f -y --force-yes
 
 # install tyr requirements
