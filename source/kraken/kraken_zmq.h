@@ -106,7 +106,7 @@ inline void doWork(zmq::context_t& context,
                 socket.getsockopt(ZMQ_RCVMORE, &more, &more_size);
             } while (more);
         } catch (const zmq::error_t&) {
-            // on g��re le cas du sighup durant un recv
+            // on gére le cas du sighup durant un recv
             LOG4CPLUS_WARN(logger, "Zmq error occured while receiving. I'll ignore this message.");
             pbnavitia::Response response =
                 create_error_response("zmq error occured while receiving", pbnavitia::Error::internal_error);
