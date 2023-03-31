@@ -85,8 +85,8 @@ class TransientSocket(object):
         # exception.
         # This is very likely due to the fact that jormungandr(client) and kraken(server) are not using the same version
         # of libzmq.
-        # In the recent version (4.3.x), client need to HANDSHAKE with the server the exchange the configuration information
-        # of the socket.
+        # In the recent version (4.3.x), client need to HANDSHAKE with the server the exchange the configuration
+        # information of the socket.
         # Search for ZMQ_HANDSHAKE_IVL on this page: http://api.zeromq.org/4-3:zmq-setsockopt
 
         # When it comes to debian8, on which runs kraken, this option is not existent:
