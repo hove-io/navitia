@@ -112,7 +112,7 @@ class AbstractTestFixture(unittest.TestCase):
                 "--GENERAL.zmq_socket=" + cls._get_zmq_socket_name(kraken_name),
                 "--BROKER.host=" + rabbitmq,
                 "--BROKER.queue=kraken_" + str(cls.uid),
-                "--BROKER.queue_auto_delete=true",
+                # "--BROKER.queue_auto_delete=true",
             ]
             kraken_additional_args = conf.get('kraken_args', [])
             args = [exe] + kraken_main_args + kraken_additional_args

@@ -67,7 +67,7 @@ private:
 
     void handle_task_in_batch(const std::vector<AmqpClient::Envelope::ptr_t>& envelopes);
     void handle_rt_in_batch(const std::vector<AmqpClient::Envelope::ptr_t>& envelopes);
-    std::pair<uint32_t, uint32_t> declare_queue_with_counts(const std::string& queue_name);
+    std::pair<uint32_t, uint32_t> declare_queue_with_counts(const std::string& queue_name, bool passive);
 
     void load_realtime();
 
@@ -81,10 +81,9 @@ private:
      *
      * Since BasicConsumeMessage is non-blocking, this function is non-blocking neither.
      * */
-    std::vector<AmqpClient::Envelope::ptr_t> consume_in_batch(const std::string& consume_tag,
+    std::vector<AmqpClient::Envelope::ptr_t> consume_in_batch(const std::string& queue_name,
                                                               size_t max_nb,
-                                                              size_t timeout_ms,
-                                                              bool no_ack);
+                                                              size_t timeout_ms);
 
 public:
     MaintenanceWorker(DataManager<type::Data>& data_manager, const kraken::Configuration conf, const Metrics& metrics);
