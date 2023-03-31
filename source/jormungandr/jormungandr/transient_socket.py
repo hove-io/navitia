@@ -42,6 +42,11 @@ from jormungandr.exceptions import DeadSocketException
 from datetime import datetime, timedelta
 from navitiacommon import response_pb2
 
+zmq_version = [int(n) for n in zmq.zmq_version().split(".")[:2]]
+
+# ZMQ_HANDSHAKE_IVL is available from 4.1.x
+SET_ZMQ_HANDSHAKE_IVL = zmq_version[0] > 4 or (zmq_version[0] == 4 and zmq_version[1] >= 1)
+
 
 class TransientSocket(object):
     """
@@ -76,6 +81,27 @@ class TransientSocket(object):
     def make_new_socket(self):
         start = time.time()
         socket = self._zmq_context.socket(zmq.REQ)
+        # During the migration to debian 11, the socket was closed by server because of
+        # HANDSHAKE_FAILED_NO_DETAIL exception.
+        # This is very likely due to the fact that jormungandr(client) and kraken(server) are not using the same version
+        # of libzmq.
+        # In recent version (4.3.x), client need to HANDSHAKE with the server the exchange the configuration information
+        # of the socket.
+        # Search for ZMQ_HANDSHAKE_IVL on this page: http://api.zeromq.org/4-3:zmq-setsockopt
+
+        # When it comes to debian8, on which runs kraken, this option is not existent:
+        # https://manpages.debian.org/jessie/libzmq-dev/zmq_setsockopt.3.en.html
+
+        # As to Asgard, no HANDSHAKE_FAILED_NO_DETAIL exception has been encountered since Asgard runs on ubuntu20,
+        # which has a recent version of libzmq
+
+        # The workaround:
+        # since jormungandr renew the zmq socket at the interval of ZMQ_SOCKET_TTL_SECONDS,
+        # we just need to make sure that the socket is renewed before HANDSHAKE_FAILED_NO_DETAIL is raised, hence
+        # setsockopt(zmq.HANDSHAKE_IVL, 0)
+        if SET_ZMQ_HANDSHAKE_IVL:
+            socket.setsockopt(zmq.HANDSHAKE_IVL, 0)
+
         socket.connect(self._zmq_socket)
         self._logger.debug(
             "it took %s ms to open a socket of %s",
