@@ -44,7 +44,7 @@ from navitiacommon import response_pb2
 
 zmq_version = [int(n) for n in zmq.zmq_version().split(".")[:2]]
 
-# ZMQ_HANDSHAKE_IVL is available from 4.1.x
+# ZMQ_HANDSHAKE_IVL is available from 4.2.x
 SET_ZMQ_HANDSHAKE_IVL = zmq_version[0] > 4 or (zmq_version[0] == 4 and zmq_version[1] >= 2)
 
 
