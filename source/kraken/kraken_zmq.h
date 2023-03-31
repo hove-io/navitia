@@ -1,4 +1,4 @@
-/* Copyright © 2001-2022, Hove and/or its affiliates. All rights reserved.
+/* Copyright �� 2001-2022, Hove and/or its affiliates. All rights reserved.
 
 This file is part of Navitia,
     the software to build cool stuff with public transport.
@@ -47,22 +47,22 @@ www.navitia.io
 static void respond(zmq::socket_t& socket,
                     const std::vector<std::string>& client_id,
                     const pbnavitia::Response& response) {
-    zmq::message_t reply(response.ByteSize());
+    zmq::message_t reply(response.ByteSizeLong());
     try {
-        response.SerializeToArray(reply.data(), response.ByteSize());
+        response.SerializeToArray(reply.data(), response.ByteSizeLong());
     } catch (const google::protobuf::FatalException& e) {
         auto logger = log4cplus::Logger::getInstance("worker");
         LOG4CPLUS_ERROR(logger, "failure during serialization: " << e.what());
         pbnavitia::Response error_response;
         error_response.mutable_error()->set_id(pbnavitia::Error::internal_error);
         error_response.mutable_error()->set_message(e.what());
-        reply.rebuild(error_response.ByteSize());
-        error_response.SerializeToArray(reply.data(), error_response.ByteSize());
+        reply.rebuild(error_response.ByteSizeLong());
+        error_response.SerializeToArray(reply.data(), error_response.ByteSizeLong());
     }
     for (const auto& idx : client_id) {
-        z_send(socket, idx, ZMQ_SNDMORE);
+        z_send(socket, idx, zmq::send_flags::sndmore);
     }
-    socket.send(reply);
+    socket.send(reply, zmq::send_flags::none);
 }
 
 static pbnavitia::Response create_error_response(std::string error_message, pbnavitia::Error_error_id error_id) {
@@ -106,7 +106,7 @@ inline void doWork(zmq::context_t& context,
                 socket.getsockopt(ZMQ_RCVMORE, &more, &more_size);
             } while (more);
         } catch (const zmq::error_t&) {
-            // on gére le cas du sighup durant un recv
+            // on g��re le cas du sighup durant un recv
             LOG4CPLUS_WARN(logger, "Zmq error occured while receiving. I'll ignore this message.");
             pbnavitia::Response response =
                 create_error_response("zmq error occured while receiving", pbnavitia::Error::internal_error);
