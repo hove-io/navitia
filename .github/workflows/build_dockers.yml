@@ -47,11 +47,16 @@ jobs:
     - name: Download mimirsbrunn package
       run: |
         mimirsbrunn_package="debian-package-release.zip"
+        if [[ "${{env.aws_branch}}" = "release" ]]; then
+            mimirsbrunn_workflow=release7.yml
+        else
+            mimirsbrunn_workflow=master7.yml
+        fi
         python core_team_ci_tools/github_artifacts/github_artifacts.py \
             -o hove-io \
             -r mimirsbrunn \
             -t ${{secrets.access_token_github}} \
-            -w release7.yml \
+            -w mimirsbrunn_workflow \
             -a $mimirsbrunn_package \
             --output-dir .
         unzip -qo $mimirsbrunn_package
