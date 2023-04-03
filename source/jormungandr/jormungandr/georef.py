@@ -73,10 +73,6 @@ class Kraken(object):
             return None
         return response.car_co2_emission
 
-    @memory_cache.memoize(
-        current_app.config[str('MEMORY_CACHE_CONFIGURATION')].get(str('TIMEOUT_AUTHENTICATION'), 30)
-    )
-    @cache.memoize(current_app.config[str('CACHE_CONFIGURATION')].get(str('TIMEOUT_AUTHENTICATION'), 300))
     def get_physical_mode(self, uri, request_id):
         req = request_pb2.Request()
         req.requested_api = type_pb2.PTREFERENTIAL
@@ -90,15 +86,21 @@ class Kraken(object):
             return res.physical_modes[0]
         return None
 
-    def get_car_co2_emission(self, distance, request_id):
+    def get_car_co2_emission(self, request_id):
         logger = logging.getLogger(__name__)
 
-        car_mode = self.get_physical_mode('physical_mode:Car', request_id)
-        if car_mode is None or not car_mode.HasField('co2_emission_rate'):
-            logger.warning("Cannot compute car co2 emission with the distance {}".format(distance))
-            return response_pb2.Co2Emission(value=0, unit='gEC')
+        @memory_cache.memoize(
+            current_app.config[str('MEMORY_CACHE_CONFIGURATION')].get(str('TIMEOUT_AUTHENTICATION'), 30)
+        )
+        @cache.memoize(current_app.config[str('CACHE_CONFIGURATION')].get(str('TIMEOUT_AUTHENTICATION'), 300))
+        def inner(mode_str):
+            car_mode = self.get_physical_mode(mode_str, request_id)
+            if car_mode is None or not car_mode.HasField('co2_emission_rate'):
+                logger.warning("Cannot compute car co2 emission")
+                return 0
+            return car_mode.co2_emission_rate.value
 
-        return response_pb2.Co2Emission(value=car_mode.co2_emission_rate.value * distance / 1000.0, unit='gEC')
+        return inner('physical_mode:Car')
 
     def get_crow_fly(
         self,
