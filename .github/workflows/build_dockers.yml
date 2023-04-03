@@ -63,7 +63,7 @@ jobs:
 
     - name: Download mimirsbrunn package
       run: |
-        if [[ "${{env.aws_branch}}" = "release" ]]; then
+        if [[ "${{env.aws_branch}}" == "release" ]]; then
             mimirsbrunn_workflow=release7.yml
             mimirsbrunn_package="debian-package-release.zip"
         else
