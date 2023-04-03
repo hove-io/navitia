@@ -33,6 +33,23 @@ jobs:
         submodules : recursive
         fetch-depth: 0
 
+    # see https://docs.github.com/en/actions/using-workflows/workflow-commands-for-github-actions#setting-an-environment-variable
+    - name: Choose dev tag
+      if: github.event_name == 'push' && github.ref == 'refs/heads/dev'
+      run: |
+        echo "building version dev"
+        echo "navitia_tag=dev" >> $GITHUB_ENV
+        echo "aws_branch=dev" >> $GITHUB_ENV
+
+
+    - name: Choose release tag
+      if: startsWith(github.ref, 'refs/tags/')
+      run: |
+        version=$(git describe --tags)
+        echo "building version $version"
+        echo "navitia_tag=$version" >> $GITHUB_ENV
+        echo "aws_branch=release" >> $GITHUB_ENV
+
     - name: Checkout core_team_ci_tools
       uses: actions/checkout@v3
       with:
@@ -82,23 +99,6 @@ jobs:
         key: build_dockers
         max-size: 2000M
 
-
-    # see https://docs.github.com/en/actions/using-workflows/workflow-commands-for-github-actions#setting-an-environment-variable
-    - name: Choose dev tag
-      if: github.event_name == 'push' && github.ref == 'refs/heads/dev'
-      run: |
-        echo "building version dev"
-        echo "navitia_tag=dev" >> $GITHUB_ENV
-        echo "aws_branch=dev" >> $GITHUB_ENV
-
-
-    - name: Choose release tag
-      if: startsWith(github.ref, 'refs/tags/')
-      run: |
-        version=$(git describe --tags)
-        echo "building version $version"
-        echo "navitia_tag=$version" >> $GITHUB_ENV
-        echo "aws_branch=release" >> $GITHUB_ENV
 
     - name: Create master docker
       run: |
