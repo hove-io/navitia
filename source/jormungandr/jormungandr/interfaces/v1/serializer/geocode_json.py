@@ -192,7 +192,9 @@ class PoisSerializer(serpy.Field):
             else:
                 res['zip_code'] = '{}-{}'.format(min(zip_codes), max(zip_codes))
             poi_type = child.get('poi_type', None)
-            res["poi_type"] = PoiTypeSerializer(poi_type).data if isinstance(poi_type, dict) and poi_type else None
+            res["poi_type"] = (
+                PoiTypeSerializer(poi_type).data if isinstance(poi_type, dict) and poi_type else None
+            )
             res["properties"] = {
                 p.get("key"): p.get("value")
                 for p in child.get('properties', {}).get('geocoding', {}).get('properties', [])
