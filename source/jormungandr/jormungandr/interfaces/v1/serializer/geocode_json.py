@@ -47,7 +47,7 @@ from jormungandr.interfaces.v1.serializer.base import (
 )
 from jormungandr.interfaces.v1.serializer.api import ContextSerializer
 from jormungandr.utils import get_house_number
-from jormungandr.autocomplete.geocodejson import create_address_field, get_lon_lat
+from jormungandr.autocomplete.geocodejson import create_address_field, get_lon_lat, format_zip_code
 from jormungandr.interfaces.v1.serializer.jsonschema.fields import MethodField
 
 
@@ -103,7 +103,7 @@ def make_admin(admin):
     elif len(zip_codes) == 1:
         res['zip_code'] = zip_codes[0]
     else:
-        res['zip_code'] = '{}-{}'.format(min(zip_codes), max(zip_codes))
+        res['zip_code'] = format_zip_code(zip_codes)
     return res
 
 
@@ -176,7 +176,7 @@ class PoisSerializer(serpy.Field):
         if not children:
             return None
 
-        def make_children(child):
+        def make_child(child):
             res = {
                 'id': child['id'],
                 'name': child['name'],
@@ -190,7 +190,7 @@ class PoisSerializer(serpy.Field):
             elif len(zip_codes) == 1:
                 res['zip_code'] = zip_codes[0]
             else:
-                res['zip_code'] = '{}-{}'.format(min(zip_codes), max(zip_codes))
+                res['zip_code'] = format_zip_code(zip_codes)
             poi_type = child.get('poi_type', None)
             res["poi_type"] = (
                 PoiTypeSerializer(poi_type).data if isinstance(poi_type, dict) and poi_type else None
@@ -203,7 +203,7 @@ class PoisSerializer(serpy.Field):
             res["administrative_regions"] = [make_admin(admin) for admin in admins]
             return res
 
-        return [make_children(child) for child in children]
+        return [make_child(child) for child in children]
 
 
 class PoiSerializer(serpy.DictSerializer):
