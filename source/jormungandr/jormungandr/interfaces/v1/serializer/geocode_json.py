@@ -96,14 +96,8 @@ def make_admin(admin):
         'label': admin['label'],
         'level': admin['level'],
         'coord': {'lon': str(admin['coord']['lon']), 'lat': str(admin['coord']['lat'])},
+        'zip_code': format_zip_code(admin.get('zip_codes', [])),
     }
-    zip_codes = admin.get('zip_codes', [])
-    if all(zip_code == "" for zip_code in zip_codes):
-        pass
-    elif len(zip_codes) == 1:
-        res['zip_code'] = zip_codes[0]
-    else:
-        res['zip_code'] = format_zip_code(zip_codes)
     return res
 
 
@@ -183,14 +177,8 @@ class PoisSerializer(serpy.Field):
                 'label': child['label'],
                 'coord': {'lon': str(child['coord']['lon']), 'lat': str(child['coord']['lat'])},
                 "type": "poi",
+                'zip_code': format_zip_code(child.get('zip_codes', [])),
             }
-            zip_codes = child.get('zip_codes', [])
-            if all(zip_code == "" for zip_code in zip_codes):
-                pass
-            elif len(zip_codes) == 1:
-                res['zip_code'] = zip_codes[0]
-            else:
-                res['zip_code'] = format_zip_code(zip_codes)
             poi_type = child.get('poi_type', None)
             res["poi_type"] = (
                 PoiTypeSerializer(poi_type).data if isinstance(poi_type, dict) and poi_type else None
