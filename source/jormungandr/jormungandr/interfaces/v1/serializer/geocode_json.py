@@ -88,6 +88,25 @@ class CoordId(jsonschema.Field):
         return None
 
 
+def make_admin(admin):
+    res = {
+        'id': admin['id'],
+        'insee': admin['insee'],
+        'name': admin['name'],
+        'label': admin['label'],
+        'level': admin['level'],
+        'coord': {'lon': str(admin['coord']['lon']), 'lat': str(admin['coord']['lat'])},
+    }
+    zip_codes = admin.get('zip_codes', [])
+    if all(zip_code == "" for zip_code in zip_codes):
+        pass
+    elif len(zip_codes) == 1:
+        res['zip_code'] = zip_codes[0]
+    else:
+        res['zip_code'] = '{}-{}'.format(min(zip_codes), max(zip_codes))
+    return res
+
+
 class AdministrativeRegionsSerializer(serpy.Field):
     def as_getter(self, serializer_field_name, serializer_cls):
         return lambda obj: self.make(obj)
@@ -95,25 +114,6 @@ class AdministrativeRegionsSerializer(serpy.Field):
     def make(self, obj):
         admins = value_by_path(obj, 'properties.geocoding.administrative_regions', [])
         if admins:
-
-            def make_admin(admin):
-                res = {
-                    'id': admin['id'],
-                    'insee': admin['insee'],
-                    'name': admin['name'],
-                    'label': admin['label'],
-                    'level': admin['level'],
-                    'coord': {'lon': str(admin['coord']['lon']), 'lat': str(admin['coord']['lat'])},
-                }
-                zip_codes = admin.get('zip_codes', [])
-                if all(zip_code == "" for zip_code in zip_codes):
-                    pass
-                elif len(zip_codes) == 1:
-                    res['zip_code'] = zip_codes[0]
-                else:
-                    res['zip_code'] = '{}-{}'.format(min(zip_codes), max(zip_codes))
-                return res
-
             return [make_admin(admin) for admin in admins]
         admins = obj.get('properties', {}).get('geocoding', {}).get('admin', {})
         return [
@@ -167,6 +167,43 @@ class PoiTypeSerializer(serpy.DictSerializer):
     name = serpy.StrField(display_none=True)
 
 
+class PoisSerializer(serpy.Field):
+    def as_getter(self, serializer_field_name, serializer_cls):
+        return lambda obj: self.make(obj)
+
+    def make(self, obj):
+        children = value_by_path(obj, 'properties.geocoding.children', [])
+        if not children:
+            return None
+
+        def make_children(child):
+            res = {
+                'id': child['id'],
+                'name': child['name'],
+                'label': child['label'],
+                'coord': {'lon': str(child['coord']['lon']), 'lat': str(child['coord']['lat'])},
+                "type": "poi",
+            }
+            zip_codes = child.get('zip_codes', [])
+            if all(zip_code == "" for zip_code in zip_codes):
+                pass
+            elif len(zip_codes) == 1:
+                res['zip_code'] = zip_codes[0]
+            else:
+                res['zip_code'] = '{}-{}'.format(min(zip_codes), max(zip_codes))
+            poi_type = child.get('poi_type', None)
+            res["poi_type"] = PoiTypeSerializer(poi_type).data if isinstance(poi_type, dict) and poi_type else None
+            res["properties"] = {
+                p.get("key"): p.get("value")
+                for p in child.get('properties', {}).get('geocoding', {}).get('properties', [])
+            }
+            admins = child.get('administrative_regions', [])
+            res["administrative_regions"] = [make_admin(admin) for admin in admins]
+            return res
+
+        return [make_children(child) for child in children]
+
+
 class PoiSerializer(serpy.DictSerializer):
     id = NestedPropertyField(attr='properties.geocoding.id', display_none=True)
     coord = CoordField()
@@ -176,6 +213,7 @@ class PoiSerializer(serpy.DictSerializer):
     poi_type = jsonschema.MethodField(display_none=False)
     properties = jsonschema.MethodField(display_none=False)
     address = jsonschema.MethodField(display_none=False)
+    children = PoisSerializer(display_none=False)
 
     def get_poi_type(self, obj):
         poi_types = obj.get('properties', {}).get('geocoding', {}).get('poi_types', [])
