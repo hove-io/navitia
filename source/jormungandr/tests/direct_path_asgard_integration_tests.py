@@ -420,7 +420,7 @@ class TestAsgardDirectPath(AbstractTestFixture):
         assert response['journeys'][2]['duration'] == 2000
         assert response['journeys'][2]['sections'][0]['co2_emission'] == {'value': 0, 'unit': 'gEC'}
         assert response['journeys'][2]['co2_emission'] == {'value': 0, 'unit': 'gEC'}
-        assert response['journeys'][2]['sections'][0].get('cycle_lane_length')
+        assert not response['journeys'][2]['sections'][0].get('cycle_lane_length')
 
         assert not response.get('feed_publishers')
 
