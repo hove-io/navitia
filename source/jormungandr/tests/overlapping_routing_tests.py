@@ -96,23 +96,34 @@ class TestOverlappingCoverage(AbstractTestFixture):
         # impossible to project the starting/ending point
         assert response['error']['id'] == 'no_origin_nor_destination'
 
-    def test_journeys_on_same_error(self):
+    def test_journeys_on_no_solution(self):
         """
-        if all region gives the same error we should get the error
-
-        there we ask for a journey in 1980, both region should return a date_out_of_bounds
+        there we ask for a journey in 1980,
+        empty_routing_test should return a Public transport is not reachable from origin
+        main_routing_test should return a date is not in data production period
         """
         journey_query = "journeys?from={from_coord}&to={to_coord}&datetime={datetime}".format(
             from_coord="0.0000898312;0.0000898312",  # coordinate of S in the dataset
             to_coord="0.00188646;0.00071865",  # coordinate of R in the dataset
             datetime="19800614T080000",
         )
-        response, error_code = self.query_no_assert("/v1/{q}".format(q=journey_query), display=False)
+        response, error_code = self.query_no_assert("/v1/{q}&debug=true".format(q=journey_query), display=False)
 
         assert not 'journeys' in response or len(response['journeys']) == 0
-        assert error_code == 404
+        assert error_code == 200
         assert 'error' in response
-        assert response['error']['id'] == 'date_out_of_bounds'
+        assert response['error']['id'] == 'no_solution'
+
+        assert 'debug' in response
+        assert 'errors_by_region' in response['debug']
+        assert (
+                response['debug']['errors_by_region']['empty_routing_test']
+                == 'Public transport is not reachable from origin'
+        )
+        assert (
+                response['debug']['errors_by_region']['main_routing_test']
+                == 'date is not in data production period'
+        )
 
     def test_journeys_on_different_error(self):
         """
