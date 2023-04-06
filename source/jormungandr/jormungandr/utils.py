@@ -67,6 +67,8 @@ def get_uri_pt_object(pt_object):
         return "coord:{}:{}".format(coords[0], coords[1])
     if pt_object.embedded_type == type_pb2.ACCESS_POINT:
         return "coord:{}:{}".format(pt_object.access_point.coord.lon, pt_object.access_point.coord.lat)
+    if pt_object.embedded_type == type_pb2.POI:
+        return "coord:{}:{}".format(pt_object.poi.coord.lon, pt_object.poi.coord.lat)
     return pt_object.uri
 
 
@@ -793,7 +795,7 @@ def create_journeys_request(origins, destinations, datetime, clockwise, journey_
         req.journeys.depth = journey_parameters.depth
 
     if journey_parameters.isochrone_center:
-        req.journeys.isochrone_center.place = journey_parameters.isochrone_center
+        req.journeys.isochrone_center.place = journey_parameters.isochrone_center.uri
         req.journeys.isochrone_center.access_duration = 0
         req.requested_api = type_pb2.ISOCHRONE
 
