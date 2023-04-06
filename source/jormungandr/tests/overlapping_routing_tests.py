@@ -138,7 +138,7 @@ class TestOverlappingCoverage(AbstractTestFixture):
         assert 'errors_by_region' in response['debug']
         assert (
             response['debug']['errors_by_region']['empty_routing_test']
-            == 'Public transport is not reachable from origin nor destination'
+            == 'Public transport is not reachable from origin'
         )
         assert (
             response['debug']['errors_by_region']['main_routing_test']
