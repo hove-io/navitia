@@ -11,6 +11,10 @@ Every resource returns a response containing a links object, a paging
 object, and the requested objects, following hypermedia principles.
 That's lots of links. Links allow you to know all accessible uris and services for a given point.
 
+<aside class="notice">
+    Length (in characters) of the URL is limited to 4096 characters.
+</aside>
+
 Paging
 ------
 
