@@ -410,8 +410,10 @@ def get_pt_object_from_json(dict_pt_object):
     obj = map_pt_object.get(embedded_type)
     obj.uri = dict_pt_object[text_embedded_type]["id"]
     obj.name = dict_pt_object[text_embedded_type]["name"]
-    obj.coord.lon = float(dict_pt_object[text_embedded_type]["coord"]["lon"])
-    obj.coord.lat = float(dict_pt_object[text_embedded_type]["coord"]["lat"])
+    coord = Coords(dict_pt_object[text_embedded_type]["coord"]["lat"],
+                   dict_pt_object[text_embedded_type]["coord"]["lon"])
+    obj.coord.lon = coord.lon
+    obj.coord.lat = coord.lat
     return pt_object
 
 
