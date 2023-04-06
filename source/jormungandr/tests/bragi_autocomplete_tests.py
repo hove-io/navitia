@@ -1992,7 +1992,12 @@ class AbstractAutocompletePoiDataset:
         url = 'https://host_of_bragi'
         param_from = "8.98312e-05;8.98312e-05"
         param_to = "8.99312e-05;8.97312e-05"
-        params = {'pt_dataset[]': 'main_routing_test', 'lon': "8.98312e-05", 'lat': "8.98312e-05", 'timeout': 200}
+        params = {
+            'pt_dataset[]': 'main_routing_test',
+            'lon': "8.98312e-05",
+            'lat': "8.98312e-05",
+            'timeout': 200,
+        }
         url += "/reverse?{}".format(urlencode(params, doseq=True))
 
         with requests_mock.Mocker() as m:

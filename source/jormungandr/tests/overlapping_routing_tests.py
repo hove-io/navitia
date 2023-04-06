@@ -117,12 +117,11 @@ class TestOverlappingCoverage(AbstractTestFixture):
         assert 'debug' in response
         assert 'errors_by_region' in response['debug']
         assert (
-                response['debug']['errors_by_region']['empty_routing_test']
-                == 'Public transport is not reachable from origin'
+            response['debug']['errors_by_region']['empty_routing_test']
+            == 'Public transport is not reachable from origin'
         )
         assert (
-                response['debug']['errors_by_region']['main_routing_test']
-                == 'date is not in data production period'
+            response['debug']['errors_by_region']['main_routing_test'] == 'date is not in data production period'
         )
 
     def test_journeys_on_different_error(self):
