@@ -113,6 +113,23 @@ def wait_and_build_crowflies(
     return res
 
 
+def tag_LEZ(journey):
+    tmp_list = [
+        not section.low_emission_zone.on_path
+        for section in journey.sections
+        if section.HasField('low_emission_zone')
+    ]
+    # all([]) == True it's not what we want :(
+    if tmp_list and all(tmp_list):
+        journey.low_emission_zone.on_path = False
+    elif any(
+        section.low_emission_zone.on_path
+        for section in journey.sections
+        if section.HasField('low_emission_zone')
+    ):
+        journey.low_emission_zone.on_path = True
+
+
 def get_journeys_to_complete(responses, context, is_debug):
     """
     Prepare a list of journeys from the response that will be use to compute street-network as a fallback.
@@ -190,6 +207,8 @@ def wait_and_complete_pt_journey(
                 dest_fallback_durations_pool=dest_fallback_durations_pool,
                 request=request,
             )
+            if {pt_element.dep_mode, pt_element.arr_mode} & {'car', 'car_no_park'}:
+                tag_LEZ(pt_element.pt_journeys)
 
     if request['_transfer_path'] is True:
         with timed_logger(logger, 'complete_transfer', request_id):

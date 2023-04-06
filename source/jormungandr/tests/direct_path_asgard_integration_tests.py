@@ -111,7 +111,9 @@ def journey_response(journey, mode):
     elif mode == "car":
         journey.durations.car = duration
         journey.distances.car = distance
+        journey.low_emission_zone.on_path = True
         section.street_network.mode = response_pb2.Car
+        section.low_emission_zone.on_path = True
     else:
         journey.durations.bike = duration
         journey.distances.bike = distance
@@ -381,6 +383,8 @@ class TestAsgardDirectPath(AbstractTestFixture):
         assert response['journeys'][0]['durations']['car'] == 500
         assert response['journeys'][0]['durations']['total'] == 500
         assert response['journeys'][0]['distances']['car'] == 50
+        assert response['journeys'][0]['low_emission_zone']['on_path']
+
         assert response['journeys'][0]['sections'][0]['co2_emission'] == {'value': 9.2, 'unit': 'gEC'}
         assert response['journeys'][0]['sections'][0]['air_pollutants']['values'] == {
             'nox': 0.022,
@@ -392,6 +396,7 @@ class TestAsgardDirectPath(AbstractTestFixture):
             'unit': 'g',
         }
         assert not response['journeys'][0]['sections'][0].get('cycle_lane_length')
+        assert response['journeys'][0]['sections'][0]['low_emission_zone']['on_path']
 
         # bike direct path from asgard
         assert 'bike' in response['journeys'][1]['tags']
@@ -415,7 +420,7 @@ class TestAsgardDirectPath(AbstractTestFixture):
         assert response['journeys'][2]['duration'] == 2000
         assert response['journeys'][2]['sections'][0]['co2_emission'] == {'value': 0, 'unit': 'gEC'}
         assert response['journeys'][2]['co2_emission'] == {'value': 0, 'unit': 'gEC'}
-        assert not response['journeys'][2]['sections'][0].get('cycle_lane_length')
+        assert response['journeys'][2]['sections'][0].get('cycle_lane_length')
 
         assert not response.get('feed_publishers')
 
