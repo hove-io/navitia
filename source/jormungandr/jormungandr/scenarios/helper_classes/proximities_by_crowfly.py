@@ -94,9 +94,6 @@ class ProximitiesByCrowfly:
 
     def _do_request(self):
         logger = logging.getLogger(__name__)
-        logger.debug(
-            "requesting proximities by crowfly from %s in %s", self._requested_place_obj.uri, self._mode
-        )
 
         # When max_duration_to_pt is 0, there is no need to compute the fallback to pt, except if place is a stop_point
         # or a stop_area

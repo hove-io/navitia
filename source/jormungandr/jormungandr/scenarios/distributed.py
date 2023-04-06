@@ -349,7 +349,6 @@ class Distributed(object):
         mode_getter = operator.itemgetter(0 if request['origin'] else 1)
         requested_modes = {mode_getter(call) for call in krakens_call}
 
-        logger.debug('requesting places by uri orig: %s', isochrone_center)
         request_id = request.get("request_id", None)
 
         requested_orig = PlaceByUri(
