@@ -183,27 +183,6 @@ Metrics::Metrics(const boost::optional<std::string>& endpoint, const std::string
                           0,   10,  20,  30,  40,  50,   60,   70,   80,   90,   100,  110,  120,  150, 180,
                           210, 240, 270, 300, 330, 360,  390,  420,  450,  480,  510,  540,  570,  600, 660,
                           720, 780, 840, 900, 960, 1020, 1080, 1140, 1200, 1500, 1800, 2400, 3000, 3600});
-
-    this->rt_message_age_min_histogram = &prometheus::BuildHistogram()
-                                              .Name("kraken_rt_message_age_min_seconds")
-                                              .Help("Minimum age of RT message from a batch")
-                                              .Labels({{"coverage", coverage}})
-                                              .Register(*registry)
-                                              .Add({}, create_exponential_buckets(0.5, 2, 10));
-
-    this->rt_message_age_average_histogram = &prometheus::BuildHistogram()
-                                                  .Name("kraken_rt_message_age_average_seconds")
-                                                  .Help("Average age of RT message from a batch")
-                                                  .Labels({{"coverage", coverage}})
-                                                  .Register(*registry)
-                                                  .Add({}, create_exponential_buckets(0.5, 2, 10));
-
-    this->rt_message_age_max_histogram = &prometheus::BuildHistogram()
-                                              .Name("kraken_rt_message_age_max_seconds")
-                                              .Help("Maximum age of RT message from a batch")
-                                              .Labels({{"coverage", coverage}})
-                                              .Register(*registry)
-                                              .Add({}, create_exponential_buckets(0.5, 2, 10));
 }
 
 InFlightGuard Metrics::start_in_flight() const {
@@ -287,27 +266,6 @@ void Metrics::observe_rt_message_age(double duration) const {
         return;
     }
     this->rt_message_age_histogram->Observe(duration);
-}
-
-void Metrics::observe_rt_message_age_min(double duration) const {
-    if (!registry) {
-        return;
-    }
-    this->rt_message_age_min_histogram->Observe(duration);
-}
-
-void Metrics::observe_rt_message_age_average(double duration) const {
-    if (!registry) {
-        return;
-    }
-    this->rt_message_age_average_histogram->Observe(duration);
-}
-
-void Metrics::observe_rt_message_age_max(double duration) const {
-    if (!registry) {
-        return;
-    }
-    this->rt_message_age_max_histogram->Observe(duration);
 }
 
 void Metrics::set_raptor_cache_miss(size_t nb_cache_miss) const {

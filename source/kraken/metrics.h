@@ -78,9 +78,6 @@ protected:
     prometheus::Histogram* retrieved_rt_message_count_histogram;
     prometheus::Histogram* applied_rt_entity_count_histogram;
     prometheus::Histogram* rt_message_age_histogram;
-    prometheus::Histogram* rt_message_age_min_histogram;
-    prometheus::Histogram* rt_message_age_average_histogram;
-    prometheus::Histogram* rt_message_age_max_histogram;
     prometheus::Gauge* next_st_cache_miss;
 
 public:
@@ -97,9 +94,6 @@ public:
     void observe_retrieved_rt_message_count(size_t count) const;
     void observe_applied_rt_entity_count(size_t count) const;
     void observe_rt_message_age(double duration) const;
-    void observe_rt_message_age_min(double duration) const;
-    void observe_rt_message_age_average(double duration) const;
-    void observe_rt_message_age_max(double duration) const;
     void set_raptor_cache_miss(size_t nb_cache_miss) const;
 };
 

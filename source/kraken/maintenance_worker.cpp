@@ -367,10 +367,6 @@ void MaintenanceWorker::handle_rt_in_batch(const std::vector<AmqpClient::Envelop
     auto rt_action = RTAction::chaos;
 
     size_t applied_entity_count = 0u;
-    pt::ptime oldest_message_time{pt::max_date_time};
-    pt::ptime youngest_message_time{pt::min_date_time};
-    uint64_t sum_message_age_until_begin_microseconds = 0u;
-    size_t dated_message_count = 0u;
     std::vector<pt::ptime> dated_message_times;
 
     for (auto& envelope : envelopes) {
@@ -385,10 +381,6 @@ void MaintenanceWorker::handle_rt_in_batch(const std::vector<AmqpClient::Envelop
         if (feed_message.header().has_timestamp()) {
             auto message_time = navitia::from_posix_timestamp(feed_message.header().timestamp());
             dated_message_times.push_back(message_time);
-            oldest_message_time = std::min(oldest_message_time, message_time);
-            youngest_message_time = std::max(youngest_message_time, message_time);
-            ++dated_message_count;
-            sum_message_age_until_begin_microseconds += pt::time_duration(begin - message_time).total_microseconds();
         }
         LOG4CPLUS_TRACE(logger, "received entity: " << feed_message.DebugString());
         for (const auto& entity : feed_message.entity()) {
@@ -461,19 +453,7 @@ void MaintenanceWorker::handle_rt_in_batch(const std::vector<AmqpClient::Envelop
         for (const auto& message_time : dated_message_times) {
             this->metrics.observe_rt_message_age(double((end - message_time).total_milliseconds()) / 1000.0);
         }
-        if (dated_message_count > 0) {
-            auto min_age = end - youngest_message_time;
-            auto max_age = end - oldest_message_time;
-            auto sum_message_age_until_end_microseconds =
-                sum_message_age_until_begin_microseconds + (dated_message_count * (end - begin).total_microseconds());
-            auto average_age_microseconds = sum_message_age_until_end_microseconds / dated_message_count;
-            this->metrics.observe_rt_message_age_min(double(min_age.total_milliseconds()) / 1000.0);
-            this->metrics.observe_rt_message_age_max(double(max_age.total_milliseconds()) / 1000.0);
-            this->metrics.observe_rt_message_age_average(double(average_age_microseconds) / 1000000.0);
-            LOG4CPLUS_DEBUG(logger, "Known ages of RT message(s) in batch: min="
-                                        << min_age << ", average=" << pt::microseconds(average_age_microseconds)
-                                        << ", max=" << max_age);
-        } else {
+        if (dated_message_times.empty()) {
             LOG4CPLUS_DEBUG(logger, "All ages of RT message(s) in batch are unknown");
         }
     } else if (!envelopes.empty()) {
