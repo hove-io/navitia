@@ -549,6 +549,7 @@ def _build_fallback(
                         fb_duration = getattr(fallback_dp_copy.journeys[0].durations, m)
                         main_duration = getattr(pt_journey.durations, m)
                         setattr(pt_journey.durations, m, fb_duration + main_duration)
+
             # if it's only a non-teleport crowfly fallback, update distances and durations by mode
             else:
                 if fallback_type == StreetNetworkPathType.BEGINNING_FALLBACK:
