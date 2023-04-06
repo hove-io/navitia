@@ -41,15 +41,23 @@ from jormungandr.utils import (
 from jormungandr.scenarios.helper_classes.helper_utils import _update_fallback_sections
 from jormungandr.street_network.tests.streetnetwork_test_utils import make_pt_object
 from jormungandr.street_network.street_network import StreetNetworkPathType
+from jormungandr.scenarios.helper_classes.complete_pt_journey import tag_LEZ
+
 from functools import cmp_to_key
 
 
-def add_section(journey, origin, destination, duration, section_begin_date_time, section_type, mode, vj_uri):
+def add_section(
+    journey, origin, destination, duration, section_begin_date_time, section_type, mode, vj_uri, LEZ_on_path=None
+):
     s = journey.sections.add()
     s.duration = duration
     s.begin_date_time = section_begin_date_time
     s.end_date_time = s.begin_date_time + s.duration
     s.type = section_type
+
+    if LEZ_on_path is not None:
+        s.low_emission_zone.on_path = LEZ_on_path
+
     if origin:
         s.origin.CopyFrom(origin)
     if destination:
@@ -473,3 +481,59 @@ def test_sort_sections_crow_fly_last_section():
     assert journey.sections[2].type == response_pb2.CROW_FLY
     assert dt_to_str(navitia_utcfromtimestamp(journey.sections[2].begin_date_time)) == "20180618T061500"
     assert dt_to_str(navitia_utcfromtimestamp(journey.sections[2].end_date_time)) == "20180618T061500"
+
+
+def test_tag_LEZ():
+    def build_journey(beginning_LEZ, ending_LEZ):
+        journey = response_pb2.Journey()
+        journey.departure_date_time = str_to_time_stamp("20180618T060500")
+        journey.duration = 0
+        journey.nb_transfers = 1
+
+        # Car crow_fly for the beginning fallback
+        origin = make_pt_object(type_pb2.ADDRESS, 0.0, 0.0, "Chez tonton")
+        destination = make_pt_object(type_pb2.ADDRESS, 1.0, 1.0, "Chez tata")
+        add_section(
+            journey,
+            origin,
+            destination,
+            5 * 60,
+            journey.departure_date_time,
+            response_pb2.CROW_FLY,
+            response_pb2.Car,
+            None,
+            LEZ_on_path=beginning_LEZ,
+        )
+
+        add_whole_pt_section(journey, journey.departure_date_time)
+
+        # Car crow_fly for the ending fallback
+        origin = make_pt_object(type_pb2.ADDRESS, 0.0, 0.0, "Chez tonton")
+        destination = make_pt_object(type_pb2.ADDRESS, 1.0, 1.0, "Chez tata")
+        add_section(
+            journey,
+            origin,
+            destination,
+            5 * 60,
+            journey.departure_date_time,
+            response_pb2.CROW_FLY,
+            response_pb2.Car,
+            None,
+            LEZ_on_path=ending_LEZ,
+        )
+        return journey
+
+    no_lez_journey = build_journey(beginning_LEZ=None, ending_LEZ=None)
+    tag_LEZ(no_lez_journey)
+    assert not no_lez_journey.HasField('low_emission_zone')
+
+    lez_not_on_path_journey = build_journey(beginning_LEZ=False, ending_LEZ=False)
+    tag_LEZ(lez_not_on_path_journey)
+    assert lez_not_on_path_journey.HasField('low_emission_zone')
+    assert not lez_not_on_path_journey.low_emission_zone.on_path
+
+    for begin, end in [(True, False), (False, True), (True, True)]:
+        lez_on_path_journey = build_journey(beginning_LEZ=begin, ending_LEZ=end)
+        tag_LEZ(lez_on_path_journey)
+        assert lez_on_path_journey.HasField('low_emission_zone')
+        assert lez_on_path_journey.low_emission_zone.on_path
