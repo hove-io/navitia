@@ -175,6 +175,10 @@ void MaintenanceWorker::load_data() {
     LOG4CPLUS_INFO(logger, "Loading database duration: " << duration);
 }
 
+/**
+ * This function can be called multiple times without creating new queues. The goal is to take advantage
+ * of DeclareQueueWithCounts to get the number of messages remaining (just ready, not unacked) in the queue currently.
+ */
 std::pair<uint32_t, uint32_t> MaintenanceWorker::declare_queue_with_counts(const std::string& queue_name) {
     bool passive = false;
     bool durable = true;
@@ -494,6 +498,7 @@ std::vector<AmqpClient::Envelope::ptr_t> MaintenanceWorker::consume_in_batch(con
     std::vector<AmqpClient::Envelope::ptr_t> envelopes;
 
     // count ready messages (prefetched messages are excluded from this count)
+    // declare_queue_with_counts() is called but no queue is actually created
     auto count_messages_consumers = declare_queue_with_counts(queue_name);
     LOG4CPLUS_DEBUG(logger, "Nb of message(s) ready in queue " << queue_name << ": " << count_messages_consumers.first);
     LOG4CPLUS_DEBUG(logger, "Nb of consumer(s) on queue" << queue_name << ": " << count_messages_consumers.second);
