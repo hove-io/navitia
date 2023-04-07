@@ -44,9 +44,7 @@ class TestIsochrone(AbstractTestFixture):
         # not to use the jormungandr database
         query = "v1/coverage/basic_routing_test/journeys?from={}&datetime={}"
         query = query.format(s_coord, "20120614T080000")
-        response, status_code = self.query_no_assert(query)
-        assert status_code == 404
-        assert response["error"]["id"] == "no_origin_nor_destination"
+        response = self.query(query)
 
     def test_stop_point_isochrone_coord(self):
         # NOTE: we query /v1/coverage/basic_routing_test/journeys and not directly /v1/journeys
@@ -92,9 +90,7 @@ class TestIsochrone(AbstractTestFixture):
     def test_to_isochrone_coord(self):
         query = "v1/coverage/basic_routing_test/journeys?from={}&datetime={}"
         query = query.format(s_coord, "20120614T080000")
-        response, status_code = self.query_no_assert(query)
-        assert status_code == 404
-        assert response["error"]["id"] == "no_origin_nor_destination"
+        response = self.query(query)
 
     # In the previous version, the result contained no_solution with error message : 'several errors occured: \n * '
     # with status code 200.

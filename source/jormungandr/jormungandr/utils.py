@@ -67,8 +67,6 @@ def get_uri_pt_object(pt_object):
         return "coord:{}:{}".format(coords[0], coords[1])
     if pt_object.embedded_type == type_pb2.ACCESS_POINT:
         return "coord:{}:{}".format(pt_object.access_point.coord.lon, pt_object.access_point.coord.lat)
-    if pt_object.embedded_type == type_pb2.POI:
-        return "coord:{}:{}".format(pt_object.poi.coord.lon, pt_object.poi.coord.lat)
     return pt_object.uri
 
 
@@ -397,7 +395,7 @@ def get_pt_object_from_json(dict_pt_object):
         raise InvalidArguments('Invalid embedded_type')
     pt_object = type_pb2.PtObject()
     pt_object.uri = dict_pt_object["id"]
-    pt_object.name = dict_pt_object["name"]
+    pt_object.name = dict_pt_object.get("name", "")
     map_pt_object = {
         type_pb2.STOP_POINT: pt_object.stop_point,
         type_pb2.STOP_AREA: pt_object.stop_area,
@@ -409,7 +407,7 @@ def get_pt_object_from_json(dict_pt_object):
     pt_object.embedded_type = embedded_type
     obj = map_pt_object.get(embedded_type)
     obj.uri = dict_pt_object[text_embedded_type]["id"]
-    obj.name = dict_pt_object[text_embedded_type]["name"]
+    obj.name = dict_pt_object[text_embedded_type].get("name", "")
     coord = Coords(
         dict_pt_object[text_embedded_type]["coord"]["lat"], dict_pt_object[text_embedded_type]["coord"]["lon"]
     )
@@ -417,6 +415,22 @@ def get_pt_object_from_json(dict_pt_object):
     obj.coord.lat = coord.lat
     return pt_object
 
+
+def json_address_from_uri(uri):
+    if is_coord(uri):
+        lon, lat = get_lon_lat(uri)
+        return {
+            "id": uri,
+            "embedded_type": "address",
+            "address": {
+                "id": uri,
+                "coord": {
+                    "lon": "{}".format(lon),
+                    "lat": "{}".format(lat)
+                }
+            }
+        }
+    return None
 
 def get_pt_object_coord(pt_object):
     """

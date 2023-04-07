@@ -80,6 +80,7 @@ from jormungandr.utils import (
     get_lon_lat,
     is_coord,
     get_pt_object_from_json,
+    json_address_from_uri,
 )
 from jormungandr.error import generate_error
 from jormungandr.utils import Coords
@@ -1199,26 +1200,30 @@ class Scenario(simple.Scenario):
         origin_detail = self.get_entrypoint_detail(
             api_request.get('origin'), instance, request_id="{}_origin_detail".format(request_id)
         )
-        if not origin_detail:
-            return generate_error(
-                "Public transport is not reachable from origin",
-                response_pb2.Error.no_origin_nor_destination,
-                404,
-            )
 
         destination_detail = self.get_entrypoint_detail(
             api_request.get('destination'), instance, request_id="{}_dest_detail".format(request_id)
         )
-        if not destination_detail:
-            return generate_error(
-                "Public transport is not reachable from destination",
-                response_pb2.Error.no_origin_nor_destination,
-                404,
-            )
 
         # we store the origin/destination detail in g to be able to use them after the marshall
         g.origin_detail = origin_detail
         g.destination_detail = destination_detail
+        if not origin_detail:
+            origin_detail = json_address_from_uri(api_request.get('origin'))
+            if not origin_detail:
+                return generate_error(
+                    "Public transport is not reachable from origin",
+                    response_pb2.Error.no_origin_nor_destination,
+                    404,
+                )
+        if not destination_detail:
+            destination_detail = json_address_from_uri(api_request.get('destination'))
+            if not destination_detail:
+                return generate_error(
+                    "Public transport is not reachable from destination",
+                    response_pb2.Error.no_origin_nor_destination,
+                    404,
+                )
 
         pt_object_origin = get_pt_object_from_json(origin_detail)
         pt_object_destination = get_pt_object_from_json(destination_detail)

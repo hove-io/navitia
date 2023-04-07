@@ -1992,13 +1992,8 @@ class AbstractAutocompletePoiDataset:
         url = 'https://host_of_bragi'
         param_from = "8.98312e-05;8.98312e-05"
         param_to = "8.99312e-05;8.97312e-05"
-        params = {
-            'pt_dataset[]': 'main_routing_test',
-            'lon': "8.98312e-05",
-            'lat': "8.98312e-05",
-            'timeout': 200,
-        }
-        url += "/reverse?{}".format(urlencode(params, doseq=True))
+        params = {'pt_dataset[]': 'main_routing_test', 'from': param_from, 'to': param_to, 'timeout': 200}
+        url += "/journeys?{}".format(urlencode(params, doseq=True))
 
         with requests_mock.Mocker() as m:
 
@@ -2006,16 +2001,13 @@ class AbstractAutocompletePoiDataset:
             query = 'journeys?from={f}&to={to}&datetime={dt}'.format(
                 f=param_from, to=param_to, dt="20120614T080000"
             )
-            response, status = self.query_region(query, check=False)
+            response = self.query_region(query)
 
             assert m.called
 
             params = m.request_history[0].qs
             assert params
             assert params.get('poi_dataset[]') == ['priv.bob']
-            assert status == 404
-            assert response["error"]["id"] == "no_origin_nor_destination"
-            assert response["error"]["message"] == "Public transport is not reachable from origin"
 
 
 @config({'poi_dataset': 'priv.bob'})
