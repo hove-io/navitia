@@ -67,6 +67,8 @@ def get_uri_pt_object(pt_object):
         return "coord:{}:{}".format(coords[0], coords[1])
     if pt_object.embedded_type == type_pb2.ACCESS_POINT:
         return "coord:{}:{}".format(pt_object.access_point.coord.lon, pt_object.access_point.coord.lat)
+    if pt_object.embedded_type == type_pb2.POI:
+        return "coord:{}:{}".format(pt_object.poi.coord.lon, pt_object.poi.coord.lat)
     return pt_object.uri
 
 
@@ -422,15 +424,10 @@ def json_address_from_uri(uri):
         return {
             "id": uri,
             "embedded_type": "address",
-            "address": {
-                "id": uri,
-                "coord": {
-                    "lon": "{}".format(lon),
-                    "lat": "{}".format(lat)
-                }
-            }
+            "address": {"id": uri, "coord": {"lon": "{}".format(lon), "lat": "{}".format(lat)}},
         }
     return None
+
 
 def get_pt_object_coord(pt_object):
     """
