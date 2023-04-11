@@ -242,7 +242,7 @@ int Configuration::broker_max_batch_nb() const {
 }
 
 int Configuration::broker_total_retrieving_timeout() const {
-    return vm["BROKER.broker_total_retrieving_timeout"].as<int>();
+    return vm["BROKER.total_retrieving_timeout"].as<int>();
 }
 
 int Configuration::broker_prefetch_timeout() const {
