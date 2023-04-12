@@ -69,14 +69,6 @@ MAP_STRING_PTOBJECT_TYPE = {
     "access_point": type_pb2.ACCESS_POINT,
 }
 
-MAP_PTOBJECT_TYPE_PTOBJECT = {
-    type_pb2.STOP_POINT: pt_object.stop_point,
-    type_pb2.STOP_AREA: pt_object.stop_area,
-    type_pb2.ADDRESS: pt_object.address,
-    type_pb2.ADMINISTRATIVE_REGION: pt_object.administrative_region,
-    type_pb2.POI: pt_object.poi,
-    type_pb2.ACCESS_POINT: pt_object.access_point,
-}
 
 def get_uri_pt_object(pt_object):
     if pt_object.embedded_type == type_pb2.ADDRESS:
@@ -409,7 +401,17 @@ def get_pt_object_from_json(dict_pt_object):
     pt_object.name = dict_pt_object.get("name", "")
 
     pt_object.embedded_type = embedded_type
-    obj = MAP_PTOBJECT_TYPE_PTOBJECT.get(embedded_type)
+
+    map_pt_object_type_to_pt_object = {
+        type_pb2.STOP_POINT: pt_object.stop_point,
+        type_pb2.STOP_AREA: pt_object.stop_area,
+        type_pb2.ADDRESS: pt_object.address,
+        type_pb2.ADMINISTRATIVE_REGION: pt_object.administrative_region,
+        type_pb2.POI: pt_object.poi,
+        type_pb2.ACCESS_POINT: pt_object.access_point,
+    }
+
+    obj = map_pt_object_type_to_pt_object.get(embedded_type)
     obj.uri = dict_pt_object[text_embedded_type]["id"]
     obj.name = dict_pt_object[text_embedded_type].get("name", "")
     coord = Coords(
