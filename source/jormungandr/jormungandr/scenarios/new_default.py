@@ -1448,32 +1448,29 @@ class Scenario(simple.Scenario):
 
         pt_object_origin = None
         pt_object_destination = None
-        if request.get('origin'):
+        origin = request.get('origin')
+        if origin:
             origin_detail = self.get_entrypoint_detail(
-                request.get('origin'), instance, request_id="{}_origin_detail".format(request_id)
-            )
+                origin, instance, request_id="{}_origin_detail".format(request_id)
+            ) or json_address_from_uri(origin)
             if not origin_detail:
-                origin_detail = json_address_from_uri(request.get('origin'))
-                if not origin_detail:
-                    return generate_error(
-                        "The entry point: {} is not valid".format(request.get('origin')),
-                        response_pb2.Error.no_origin_nor_destination,
-                        404,
-                    )
+                return generate_error(
+                    "The entry point: {} is not valid".format(origin),
+                    response_pb2.Error.no_origin_nor_destination,
+                    404,
+                )
             pt_object_origin = get_pt_object_from_json(origin_detail)
-
-        if request.get('destination'):
+        destination = request.get('destination')
+        if destination:
             destination_detail = self.get_entrypoint_detail(
-                request.get('destination'), instance, request_id="{}_dest_detail".format(request_id)
-            )
+                destination, instance, request_id="{}_dest_detail".format(request_id)
+            ) or json_address_from_uri(destination)
             if not destination_detail:
-                destination_detail = json_address_from_uri(request.get('destination'))
-                if not destination_detail:
-                    return generate_error(
-                        "The entry point: {} is not valid".format(request.get('destination')),
-                        response_pb2.Error.no_origin_nor_destination,
-                        404,
-                    )
+                return generate_error(
+                    "The entry point: {} is not valid".format(destination),
+                    response_pb2.Error.no_origin_nor_destination,
+                    404,
+                )
             pt_object_destination = get_pt_object_from_json(destination_detail)
 
         resp = merge_responses(

@@ -44,7 +44,7 @@ class TestIsochrone(AbstractTestFixture):
         # not to use the jormungandr database
         query = "v1/coverage/basic_routing_test/journeys?from={}&datetime={}"
         query = query.format(s_coord, "20120614T080000")
-        response = self.query(query)
+        self.query(query)
 
     def test_stop_point_isochrone_coord(self):
         # NOTE: we query /v1/coverage/basic_routing_test/journeys and not directly /v1/journeys

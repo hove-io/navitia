@@ -60,6 +60,23 @@ NOT_A_DATE_TIME = "not-a-date-time"
 WEEK_DAYS_MAPPING = ("monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday")
 COVERAGE_ANY_BETA = "any-beta"
 
+MAP_STRING_PTOBJECT_TYPE = {
+    "stop_point": type_pb2.STOP_POINT,
+    "stop_area": type_pb2.STOP_AREA,
+    "address": type_pb2.ADDRESS,
+    "administrative_region": type_pb2.ADMINISTRATIVE_REGION,
+    "poi": type_pb2.POI,
+    "access_point": type_pb2.ACCESS_POINT,
+}
+
+MAP_PTOBJECT_TYPE_PTOBJECT = {
+    type_pb2.STOP_POINT: pt_object.stop_point,
+    type_pb2.STOP_AREA: pt_object.stop_area,
+    type_pb2.ADDRESS: pt_object.address,
+    type_pb2.ADMINISTRATIVE_REGION: pt_object.administrative_region,
+    type_pb2.POI: pt_object.poi,
+    type_pb2.ACCESS_POINT: pt_object.access_point,
+}
 
 def get_uri_pt_object(pt_object):
     if pt_object.embedded_type == type_pb2.ADDRESS:
@@ -382,32 +399,17 @@ def get_pt_object_from_json(dict_pt_object):
     if not isinstance(dict_pt_object, dict):
         logging.getLogger(__name__).error('Invalid dict_pt_object')
         raise InvalidArguments('Invalid dict_pt_object')
-    map_pt_object_type = {
-        "stop_point": type_pb2.STOP_POINT,
-        "stop_area": type_pb2.STOP_AREA,
-        "address": type_pb2.ADDRESS,
-        "administrative_region": type_pb2.ADMINISTRATIVE_REGION,
-        "poi": type_pb2.POI,
-        "access_point": type_pb2.ACCESS_POINT,
-    }
     text_embedded_type = dict_pt_object.get("embedded_type")
-    embedded_type = map_pt_object_type.get(text_embedded_type)
+    embedded_type = MAP_STRING_PTOBJECT_TYPE.get(text_embedded_type)
     if not embedded_type:
         logging.getLogger(__name__).error('Invalid embedded_type')
         raise InvalidArguments('Invalid embedded_type')
     pt_object = type_pb2.PtObject()
     pt_object.uri = dict_pt_object["id"]
     pt_object.name = dict_pt_object.get("name", "")
-    map_pt_object = {
-        type_pb2.STOP_POINT: pt_object.stop_point,
-        type_pb2.STOP_AREA: pt_object.stop_area,
-        type_pb2.ADDRESS: pt_object.address,
-        type_pb2.ADMINISTRATIVE_REGION: pt_object.administrative_region,
-        type_pb2.POI: pt_object.poi,
-        type_pb2.ACCESS_POINT: pt_object.access_point,
-    }
+
     pt_object.embedded_type = embedded_type
-    obj = map_pt_object.get(embedded_type)
+    obj = MAP_PTOBJECT_TYPE_PTOBJECT.get(embedded_type)
     obj.uri = dict_pt_object[text_embedded_type]["id"]
     obj.name = dict_pt_object[text_embedded_type].get("name", "")
     coord = Coords(
