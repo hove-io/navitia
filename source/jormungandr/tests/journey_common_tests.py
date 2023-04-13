@@ -834,8 +834,8 @@ class JourneyCommon(object):
         )
         response = self.query_region(query, check=False)
         assert response[1] == 404
-        assert response[0]['error']['message'] == 'Public transport is not reachable from origin'
-        assert response[0]['error']['id'] == 'no_origin_nor_destination'
+        assert response[0]['error']['message'] == 'The entry point: stop_area:non_valid is not valid'
+        assert response[0]['error']['id'] == 'unknown_object'
 
     def test_crow_fly_sections(self):
         """

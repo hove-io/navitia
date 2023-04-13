@@ -1212,15 +1212,15 @@ class Scenario(simple.Scenario):
         origin_detail = origin_detail or json_address_from_uri(api_request.get('origin'))
         if not origin_detail:
             return generate_error(
-                "Public transport is not reachable from origin",
-                response_pb2.Error.no_origin_nor_destination,
+                "The entry point: {} is not valid".format(api_request.get('origin')),
+                response_pb2.Error.unknown_object,
                 404,
             )
         destination_detail = destination_detail or json_address_from_uri(api_request.get('destination'))
         if not destination_detail:
             return generate_error(
-                "Public transport is not reachable from destination",
-                response_pb2.Error.no_origin_nor_destination,
+                "The entry point: {} is not valid".format(api_request.get('destination')),
+                response_pb2.Error.unknown_object,
                 404,
             )
 
