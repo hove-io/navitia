@@ -1457,7 +1457,9 @@ class Scenario(simple.Scenario):
         pt_object_destination = None
         origin = request.get('origin')
         if origin:
-            pt_object_origin = self.get_detail_pt_object(origin, request_id="{}_origin_detail".format(request_id))
+            pt_object_origin = self.get_detail_pt_object(
+                origin, request_id="{}_origin_detail".format(request_id)
+            )
             if not pt_object_origin:
                 return generate_error(
                     "The entry point: {} is not valid".format(origin),
@@ -1467,8 +1469,9 @@ class Scenario(simple.Scenario):
 
         destination = request.get('destination')
         if destination:
-            pt_object_destination = self.get_detail_pt_object(destination,
-                                                              request_id="{}_dest_detail".format(request_id))
+            pt_object_destination = self.get_detail_pt_object(
+                destination, request_id="{}_dest_detail".format(request_id)
+            )
             if not pt_object_destination:
                 return generate_error(
                     "The entry point: {} is not valid".format(destination),

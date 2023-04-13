@@ -472,8 +472,9 @@ class Scenario(new_default.Scenario):
         Note that the cleaning process depends on the implementation of futures.
         """
         try:
-            with FutureManager(self.greenlet_pool_size) as future_manager, timed_logger(logger, 'call_kraken',
-                                                                                        request_id):
+            with FutureManager(self.greenlet_pool_size) as future_manager, timed_logger(
+                logger, 'call_kraken', request_id
+            ):
                 if request_type == type_pb2.ISOCHRONE:
                     return self._scenario._compute_isochrone_common(
                         future_manager,
@@ -531,9 +532,7 @@ class Scenario(new_default.Scenario):
     def get_detail_pt_object(self, arg_pt_object, request_id):
         if not arg_pt_object:
             return None
-        detail = self.get_entrypoint_detail(
-            arg_pt_object, instance, request_id="{}".format(request_id)
-        )
+        detail = self.get_entrypoint_detail(arg_pt_object, instance, request_id="{}".format(request_id))
         return get_pt_object_from_json(detail) if detail else None
 
     def graphical_isochrones(self, request, instance):
@@ -564,7 +563,9 @@ class Scenario(new_default.Scenario):
         request_id = request.get("request_id", None)
         origin = request.get('origin')
         if origin:
-            pt_object_origin = self.get_detail_pt_object(origin, request_id="{}_origin_detail".format(request_id))
+            pt_object_origin = self.get_detail_pt_object(
+                origin, request_id="{}_origin_detail".format(request_id)
+            )
             if not pt_object_origin:
                 return generate_error(
                     "The entry point: {} is not valid".format(origin),
@@ -573,8 +574,9 @@ class Scenario(new_default.Scenario):
                 )
         destination = request.get('destination')
         if destination:
-            pt_object_destination = self.get_detail_pt_object(destination,
-                                                              request_id="{}_dest_detail".format(request_id))
+            pt_object_destination = self.get_detail_pt_object(
+                destination, request_id="{}_dest_detail".format(request_id)
+            )
             if not destination_detail:
                 return generate_error(
                     "The entry point: {} is not valid".format(destination),
