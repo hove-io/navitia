@@ -577,7 +577,7 @@ class Scenario(new_default.Scenario):
             pt_object_destination = self.get_detail_pt_object(
                 instance, destination, request_id="{}_dest_detail".format(request_id)
             )
-            if not destination_detail:
+            if not pt_object_destination:
                 return generate_error(
                     "The entry point: {} is not valid".format(destination),
                     response_pb2.Error.unknown_object,
