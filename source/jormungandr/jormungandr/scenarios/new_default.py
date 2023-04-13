@@ -1437,7 +1437,7 @@ class Scenario(simple.Scenario):
     def journeys(self, request, instance):
         return self.__on_journeys(type_pb2.PLANNER, request, instance)
 
-    def get_detail_pt_object(self, instance, arg_pt_object, request_id):
+    def get_pt_object(self, instance, arg_pt_object, request_id):
         if not arg_pt_object:
             return None
         detail = self.get_entrypoint_detail(
@@ -1457,7 +1457,7 @@ class Scenario(simple.Scenario):
         pt_object_destination = None
         origin = request.get('origin')
         if origin:
-            pt_object_origin = self.get_detail_pt_object(
+            pt_object_origin = self.get_pt_object(
                 instance, origin, request_id="{}_origin_detail".format(request_id)
             )
             if not pt_object_origin:
@@ -1469,7 +1469,7 @@ class Scenario(simple.Scenario):
 
         destination = request.get('destination')
         if destination:
-            pt_object_destination = self.get_detail_pt_object(
+            pt_object_destination = self.get_pt_object(
                 instance, destination, request_id="{}_dest_detail".format(request_id)
             )
             if not pt_object_destination:
