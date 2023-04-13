@@ -472,7 +472,8 @@ class Scenario(new_default.Scenario):
         Note that the cleaning process depends on the implementation of futures.
         """
         try:
-            with FutureManager(1) as future_manager, timed_logger(logger, 'call_kraken', request_id):
+            with FutureManager(self.greenlet_pool_size) as future_manager, timed_logger(logger, 'call_kraken',
+                                                                                        request_id):
                 if request_type == type_pb2.ISOCHRONE:
                     return self._scenario._compute_isochrone_common(
                         future_manager,
@@ -527,6 +528,14 @@ class Scenario(new_default.Scenario):
             final_e = FinaliseException(e)
             return [final_e.get()]
 
+    def get_detail_pt_object(self, arg_pt_object, request_id):
+        if not arg_pt_object:
+            return None
+        detail = self.get_entrypoint_detail(
+            arg_pt_object, instance, request_id="{}".format(request_id)
+        )
+        return get_pt_object_from_json(detail) if detail else None
+
     def graphical_isochrones(self, request, instance):
         logger = logging.getLogger(__name__)
         """
@@ -553,29 +562,25 @@ class Scenario(new_default.Scenario):
         pt_object_origin = None
         pt_object_destination = None
         request_id = request.get("request_id", None)
-        if request.get('origin'):
-            origin_detail = self.get_entrypoint_detail(
-                request.get('origin'), instance, request_id="{}_origin_detail".format(request_id)
-            )
-            if not origin_detail:
+        origin = request.get('origin')
+        if origin:
+            pt_object_origin = self.get_detail_pt_object(origin, request_id="{}_origin_detail".format(request_id))
+            if not pt_object_origin:
                 return generate_error(
-                    "The entry point: {} is not valid".format(request.get('origin')),
+                    "The entry point: {} is not valid".format(origin),
                     response_pb2.Error.unknown_object,
                     404,
                 )
-            pt_object_origin = get_pt_object_from_json(origin_detail)
-
-        if request.get('destination'):
-            destination_detail = self.get_entrypoint_detail(
-                request.get('destination'), instance, request_id="{}_dest_detail".format(request_id)
-            )
+        destination = request.get('destination')
+        if destination:
+            pt_object_destination = self.get_detail_pt_object(destination,
+                                                              request_id="{}_dest_detail".format(request_id))
             if not destination_detail:
                 return generate_error(
-                    "The entry point: {} is not valid".format(request.get('destination')),
+                    "The entry point: {} is not valid".format(destination),
                     response_pb2.Error.unknown_object,
                     404,
                 )
-            pt_object_destination = get_pt_object_from_json(destination_detail)
         try:
             with FutureManager(self.greenlet_pool_size) as future_manager:
                 return self._scenario._compute_isochrone_common(

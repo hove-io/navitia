@@ -1208,22 +1208,21 @@ class Scenario(simple.Scenario):
         # we store the origin/destination detail in g to be able to use them after the marshall
         g.origin_detail = origin_detail
         g.destination_detail = destination_detail
+
+        origin_detail = origin_detail or json_address_from_uri(api_request.get('origin'))
         if not origin_detail:
-            origin_detail = json_address_from_uri(api_request.get('origin'))
-            if not origin_detail:
-                return generate_error(
-                    "Public transport is not reachable from origin",
-                    response_pb2.Error.no_origin_nor_destination,
-                    404,
-                )
+            return generate_error(
+                "Public transport is not reachable from origin",
+                response_pb2.Error.no_origin_nor_destination,
+                404,
+            )
+        destination_detail = destination_detail or json_address_from_uri(api_request.get('destination'))
         if not destination_detail:
-            destination_detail = json_address_from_uri(api_request.get('destination'))
-            if not destination_detail:
-                return generate_error(
-                    "Public transport is not reachable from destination",
-                    response_pb2.Error.no_origin_nor_destination,
-                    404,
-                )
+            return generate_error(
+                "Public transport is not reachable from destination",
+                response_pb2.Error.no_origin_nor_destination,
+                404,
+            )
 
         pt_object_origin = get_pt_object_from_json(origin_detail)
         pt_object_destination = get_pt_object_from_json(destination_detail)
@@ -1438,6 +1437,14 @@ class Scenario(simple.Scenario):
     def journeys(self, request, instance):
         return self.__on_journeys(type_pb2.PLANNER, request, instance)
 
+    def get_detail_pt_object(self, arg_pt_object, request_id):
+        if not arg_pt_object:
+            return None
+        detail = self.get_entrypoint_detail(
+            arg_pt_object, instance, request_id="{}".format(request_id)
+        ) or json_address_from_uri(arg_pt_object)
+        return get_pt_object_from_json(detail) if detail else None
+
     def isochrone(self, request, instance):
         updated_request_with_default(request, instance)
         # we don't want to filter anything!
@@ -1450,28 +1457,24 @@ class Scenario(simple.Scenario):
         pt_object_destination = None
         origin = request.get('origin')
         if origin:
-            origin_detail = self.get_entrypoint_detail(
-                origin, instance, request_id="{}_origin_detail".format(request_id)
-            ) or json_address_from_uri(origin)
-            if not origin_detail:
+            pt_object_origin = self.get_detail_pt_object(origin, request_id="{}_origin_detail".format(request_id))
+            if not pt_object_origin:
                 return generate_error(
                     "The entry point: {} is not valid".format(origin),
                     response_pb2.Error.no_origin_nor_destination,
                     404,
                 )
-            pt_object_origin = get_pt_object_from_json(origin_detail)
+
         destination = request.get('destination')
         if destination:
-            destination_detail = self.get_entrypoint_detail(
-                destination, instance, request_id="{}_dest_detail".format(request_id)
-            ) or json_address_from_uri(destination)
-            if not destination_detail:
+            pt_object_destination = self.get_detail_pt_object(destination,
+                                                              request_id="{}_dest_detail".format(request_id))
+            if not pt_object_destination:
                 return generate_error(
                     "The entry point: {} is not valid".format(destination),
                     response_pb2.Error.no_origin_nor_destination,
                     404,
                 )
-            pt_object_destination = get_pt_object_from_json(destination_detail)
 
         resp = merge_responses(
             self.call_kraken(
