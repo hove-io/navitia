@@ -414,13 +414,6 @@ def _tag_bike_in_pt(responses):
             j.tags.extend(['bike_in_pt'])
 
 
-def tag_journeys(resp):
-    """
-    tag the journeys
-    """
-    tag_ecologic(resp)
-
-
 def update_durations(pb_resp):
     """
     update journey.duration and journey.durations.total
@@ -1318,7 +1311,6 @@ class Scenario(simple.Scenario):
         compute_air_pollutants_for_context(
             pb_resp, api_request, instance, "{}_car_air_pollutants".format(request_id)
         )
-        tag_journeys(pb_resp)
 
         # Handle ridesharing service
         self.handle_ridesharing_services(logger, instance, ridesharing_req, pb_resp)
@@ -1337,6 +1329,8 @@ class Scenario(simple.Scenario):
         update_total_co2_emission(pb_resp)
         # We have to update total api_pollutants in a journey.
         update_total_air_pollutants(pb_resp)
+        # Tag ecologic should be done at the end
+        tag_ecologic(pb_resp)
 
         # need to clean extra tickets after culling journeys
         journey_filter.remove_excess_tickets(pb_resp)
