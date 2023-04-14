@@ -54,7 +54,8 @@ from .helper_exceptions import StreetNetworkException
 
 # use dataclass when python3.7 is available
 DurationElement = namedtuple(
-    'DurationElement', ['duration', 'status', 'car_park', 'car_park_crowfly_duration', 'via_access_point']
+    'DurationElement',
+    ['duration', 'status', 'car_park', 'car_park_crowfly_duration', 'via_access_point', 'via_poi_access'],
 )
 
 AccessMapElement = namedtuple('AccessMapElement', ['stop_point_uri', 'access_point'])
@@ -165,7 +166,7 @@ class FallbackDurations:
 
     def _update_fb_durations(self, fb_durations, stop_point, duration, resp):
         if duration < self._max_duration_to_pt:
-            fb_durations[stop_point.uri] = DurationElement(duration, resp.routing_status, None, 0, None)
+            fb_durations[stop_point.uri] = DurationElement(duration, resp.routing_status, None, 0, None, None)
 
     def _update_fb_durations_from_access_point(
         self, fb_durations, access_point, duration, resp, access_points_map
@@ -175,7 +176,7 @@ class FallbackDurations:
             current_duration = fb_durations[sp_uri].duration if sp_uri in fb_durations else float('inf')
             if (duration + ap.access_point.traversal_time) < min(current_duration, self._max_duration_to_pt):
                 fb_durations[sp_uri] = DurationElement(
-                    duration + ap.access_point.traversal_time, resp.routing_status, None, 0, ap
+                    duration + ap.access_point.traversal_time, resp.routing_status, None, 0, ap, None
                 )
 
     def _update_free_access_with_free_radius(self, free_access, proximities_by_crowfly):
@@ -229,7 +230,7 @@ class FallbackDurations:
 
         deque(
             (
-                fallback_durations.update({uri: DurationElement(0, response_pb2.reached, None, 0, None)})
+                fallback_durations.update({uri: DurationElement(0, response_pb2.reached, None, 0, None, None)})
                 for uri in all_free_access
             ),
             maxlen=1,
@@ -243,15 +244,16 @@ class FallbackDurations:
                 None,
                 0,
                 None,
+                None,
             )
 
-    def _determine_origins_and_destinations(self, center_isochrone, places_isochrone):
+    def _determine_origins_and_destinations(self, centers_isochrone, places_isochrone):
         if self._direct_path_type == StreetNetworkPathType.BEGINNING_FALLBACK:
-            origins = [center_isochrone]
+            origins = centers_isochrone
             destinations = places_isochrone
         else:
             origins = places_isochrone
-            destinations = [center_isochrone]
+            destinations = centers_isochrone
 
         return origins, destinations
 
@@ -310,11 +312,27 @@ class FallbackDurations:
                     fallback_durations, pt_object, duration, r, access_points_map
                 )
 
+    def _determine_centers_isochrone(self):
+        result = []
+        if self._requested_place_obj.embedded_type == type_pb2.POI and self._mode in [
+            FallbackModes.walking.name,
+            FallbackModes.bike.name,
+        ] and self._requested_place_obj.poi.children:
+            for ch in self._requested_place_obj.poi.children:
+                # poi object to pt_object
+                pt_object = type_pb2.PtObject()
+                pt_object.uri = ch.uri
+                pt_object.embedded_type = type_pb2.POI
+                pt_object.name = ch.name
+                pt_object.poi.CopyFrom(ch)
+                result.append(pt_object)
+        else:
+            result.append(self._requested_place_obj)
+        return result
+
     def _do_request(self):
         logger = logging.getLogger(__name__)
         logger.debug("requesting fallback durations from %s by %s", self._requested_place_obj.uri, self._mode)
-
-        center_isochrone = self._requested_place_obj
         # we collect all pt_objects (based on the requested mode, the object may be a car park or a stop point) whose
         # beeline to the center_isochrone are smaller than the max duration to pt. aka: max_{mode}_duration_to_pt in
         # "/journeys" parameters
@@ -337,8 +355,48 @@ class FallbackDurations:
             proximities_by_crowfly, all_free_access
         )
 
+        centers_isochrone = self._determine_centers_isochrone()
+        result = []
+        for center_isochrone in centers_isochrone:
+            result.append(
+                self.build_fallback_duration(
+                    center_isochrone, all_free_access, places_isochrone, access_points_map
+                )
+            )
+        if len(result) == 1:
+            return result[0]
+        else:
+            fallback_duration = dict()
+            for place_isochrone in places_isochrone:
+                best_duration = float("inf")
+                best_element = None
+                for index, fallback in enumerate(result):
+                    element = fallback.get(place_isochrone.uri)
+                    if element and element.duration < best_duration:
+                        best_duration = element.duration
+                        best_element = DurationElement(
+                            element.duration,
+                            element.status,
+                            element.car_park,
+                            element.car_park_crowfly_duration,
+                            element.via_access_point,
+                            centers_isochrone[index],
+                        )
+                if best_element:
+                    fallback_duration[place_isochrone.uri] = best_element
+            return fallback_duration
+
+    def _async_request(self):
+        self._value = self._future_manager.create_future(self._do_request)
+
+    def wait_and_get(self):
+        return self._value.wait_and_get() if self._value else None
+
+    def build_fallback_duration(self, center_isochrone, all_free_access, places_isochrone, access_points_map):
+        logger = logging.getLogger(__name__)
+
         # the final result to be returned, which is a map of stop_points.uri vs DurationElement
-        fallback_durations = defaultdict(lambda: DurationElement(float('inf'), None, None, 0, None))
+        fallback_durations = defaultdict(lambda: DurationElement(float('inf'), None, None, 0, None, None))
 
         # Since we have already places that have free access, we add them into the fallback_durations
         self._fill_fallback_durations_with_free_access(fallback_durations, all_free_access)
@@ -353,7 +411,7 @@ class FallbackDurations:
         # based on the fallback type, we choose the origins and destinations
         # if fallback type is beginning, then the street network service should compute a matrix of "one to many"
         # otherwise, the street network service should compute a matrix of "many to one"
-        origins, destinations = self._determine_origins_and_destinations(center_isochrone, places_isochrone)
+        origins, destinations = self._determine_origins_and_destinations([center_isochrone], places_isochrone)
 
         # Launch the computation of fall back durations
         # sn_routing_matrix: a list of response_pb2.RoutingElement, which is arranged in the same order of requested
@@ -388,12 +446,6 @@ class FallbackDurations:
         logger.debug("finish fallback durations from %s by %s", self._requested_place_obj.uri, self._mode)
 
         return fallback_durations
-
-    def _async_request(self):
-        self._value = self._future_manager.create_future(self._do_request)
-
-    def wait_and_get(self):
-        return self._value.wait_and_get() if self._value else None
 
 
 class FallbackDurationsPool(dict):

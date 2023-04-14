@@ -274,6 +274,36 @@ def prepend_path_item_with_access_point(path_items, stop_point, access_point):
         path_items[-1].CopyFrom(tmp_item)
 
 
+def prepend_path_item_with_poi_access(path_items, poi_access):
+    via = path_items.add()
+    via.duration = 0
+    via.length = 0
+    via.name = poi_access.name
+    # Use label in stead of name???
+    via.instruction = u"via {}.".format(poi_access.name)
+    via.via_uri = poi_access.uri
+
+    # we cannot insert an element at the beginning of a list :(
+    # a little algo to move the last element to the beginning
+    tmp_item = response_pb2.PathItem()
+    for i in range(len(path_items)):
+        tmp_item.CopyFrom(path_items[i])
+        path_items[i].CopyFrom(path_items[-1])
+        path_items[-1].CopyFrom(tmp_item)
+
+
+def _extend_with_via_poi_access(fallback_dp, fallback_type, via_poi_access):
+    if via_poi_access is None:
+        return
+
+    dp_journey = fallback_dp.journeys[0]
+    if fallback_type == StreetNetworkPathType.BEGINNING_FALLBACK:
+        prepend_path_item_with_poi_access(dp_journey.sections[-1].street_network.path_items, via_poi_access)
+
+    elif fallback_type == StreetNetworkPathType.ENDING_FALLBACK:
+        prepend_path_item_with_poi_access(dp_journey.sections[0].street_network.path_items, via_poi_access)
+
+
 def _extend_with_via_access_point(fallback_dp, pt_object, fallback_type, via_access_point):
     if via_access_point is None:
         return
@@ -310,7 +340,9 @@ def _extend_with_via_access_point(fallback_dp, pt_object, fallback_type, via_acc
         )
 
 
-def _update_fallback_sections(journey, fallback_dp, fallback_period_extremity, fallback_type, via_access_point):
+def _update_fallback_sections(
+    journey, fallback_dp, fallback_period_extremity, fallback_type, via_access_point, via_poi_access
+):
     """
     Replace journey's fallback sections with the given fallback_dp.
 
@@ -334,6 +366,19 @@ def _update_fallback_sections(journey, fallback_dp, fallback_period_extremity, f
         fallback_sections[-1].destination.CopyFrom(journey.sections[0].origin)
     else:
         fallback_sections[0].origin.CopyFrom(journey.sections[-1].destination)
+
+    if via_poi_access:
+        if fallback_type == StreetNetworkPathType.BEGINNING_FALLBACK:
+            poi_access = fallback_sections[-1].vias.add()
+        else:
+            poi_access = fallback_sections[0].vias.add()
+        poi_access.name = via_poi_access.name
+        poi_access.uri = via_poi_access.uri
+        poi_access.coord.lon = via_poi_access.poi.coord.lon
+        poi_access.coord.lat = via_poi_access.poi.coord.lat
+        poi_access.embedded_type = type_pb2.poi_access_point
+        poi_access.is_exit = True
+        poi_access.is_entrance = True
 
     if (
         isinstance(via_access_point, type_pb2.PtObject)
@@ -488,13 +533,14 @@ def _build_fallback(
     car_park = None
     car_park_crowfly_duration = None
     via_access_point = None
+    via_poi_access = None
 
     if mode == 'car':
-        _, _, car_park, car_park_crowfly_duration, _ = fallback_durations[pt_obj.uri]
+        _, _, car_park, car_park_crowfly_duration, _, _ = fallback_durations[pt_obj.uri]
     else:
         # we retrieve the via_access_point from which the being/end of pt journeys is accessed by asking fallback_durations
         # the via_access_point may be a stop_point or a access_point
-        _, _, _, _, via_access_point = fallback_durations[pt_obj.uri]
+        _, _, _, _, via_access_point, via_poi_access = fallback_durations[pt_obj.uri]
 
     if requested_obj.uri != pt_obj.uri:
         if pt_obj.uri in accessibles_by_crowfly.odt:
@@ -504,7 +550,9 @@ def _build_fallback(
             is_after_pt_sections = fallback_logic.is_after_pt_sections()
             pt_datetime = fallback_logic.get_pt_section_datetime(pt_journey)
             fallback_period_extremity = PeriodExtremity(pt_datetime, is_after_pt_sections)
-            orig, dest = fallback_logic.route_params(requested_obj, car_park or via_access_point or pt_obj)
+            orig, dest = fallback_logic.route_params(
+                via_poi_access or requested_obj, car_park or via_access_point or pt_obj
+            )
 
             real_mode = fallback_durations_pool.get_real_mode(mode, pt_obj.uri)
             fallback_dp = streetnetwork_path_pool.wait_and_get(
@@ -534,9 +582,15 @@ def _build_fallback(
                     )
                 else:
                     _extend_with_via_access_point(fallback_dp_copy, pt_obj, fallback_type, via_access_point)
+                    _extend_with_via_poi_access(fallback_dp_copy, fallback_type, via_poi_access)
 
                 _update_fallback_sections(
-                    pt_journey, fallback_dp_copy, fallback_period_extremity, fallback_type, via_access_point
+                    pt_journey,
+                    fallback_dp_copy,
+                    fallback_period_extremity,
+                    fallback_type,
+                    via_access_point,
+                    via_poi_access,
                 )
 
                 # update distances and durations by mode if it's a proper computed streetnetwork fallback
@@ -634,6 +688,10 @@ def compute_fallback(
                 )
                 real_mode = orig_fallback_durations_pool.get_real_mode(dep_mode, pt_orig.uri)
 
+                from_obj = (
+                    orig_fallback_durations_pool.wait_and_get(dep_mode)[pt_orig.uri].via_poi_access or from_obj
+                )
+
             streetnetwork_path_pool.add_async_request(
                 from_obj,
                 orig_obj,
@@ -661,6 +719,9 @@ def compute_fallback(
                     dest_fallback_durations_pool.wait_and_get(arr_mode)[pt_dest.uri].via_access_point or pt_dest
                 )
                 real_mode = dest_fallback_durations_pool.get_real_mode(arr_mode, pt_dest.uri)
+                to_obj = (
+                    dest_fallback_durations_pool.wait_and_get(arr_mode)[pt_dest.uri].via_poi_access or to_obj
+                )
 
             streetnetwork_path_pool.add_async_request(
                 dest_obj, to_obj, real_mode, fallback_extremity_arr, request, direct_path_type, to_sub_request_id
