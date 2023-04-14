@@ -284,11 +284,11 @@ class FallbackDurations:
                 if durations_sum < min(
                     self._max_duration_to_pt,
                     fallback_durations.get(
-                        sp_nearby.uri, DurationElement(float('inf'), None, None, None, None)
+                        sp_nearby.uri, DurationElement(float('inf'), None, None, None, None, None)
                     ).duration,
                 ):
                     fallback_durations[sp_nearby.uri] = DurationElement(
-                        durations_sum, response_pb2.reached, car_park, duration_to_stop_point, None
+                        durations_sum, response_pb2.reached, car_park, duration_to_stop_point, None, None
                     )
 
     def _update_fallback_durations_for_stop_points_and_access_points(
