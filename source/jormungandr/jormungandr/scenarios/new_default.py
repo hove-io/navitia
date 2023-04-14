@@ -79,7 +79,10 @@ from jormungandr.utils import (
     is_stop_point,
     get_lon_lat,
     is_coord,
+    get_pt_object_from_json,
+    json_address_from_uri,
 )
+from jormungandr.error import generate_error
 from jormungandr.utils import Coords
 from jormungandr.scenarios.simple import get_pb_data_freshness
 from jormungandr.street_network.utils import crowfly_distance_between
@@ -98,6 +101,7 @@ from functools import cmp_to_key
 SECTION_TYPES_TO_RETAIN = {response_pb2.PUBLIC_TRANSPORT, response_pb2.STREET_NETWORK}
 JOURNEY_TYPES_TO_RETAIN = ['best', 'comfort', 'non_pt_walk', 'non_pt_bike', 'non_pt_bss']
 STREET_NETWORK_MODE_TO_RETAIN = {response_pb2.Ridesharing, response_pb2.Car, response_pb2.Bike, response_pb2.Bss}
+TEMPLATE_MSG_UNKNOWN_OBJECT = "The entry point: {} is not valid"
 
 
 def get_kraken_calls(request):
@@ -1196,12 +1200,32 @@ class Scenario(simple.Scenario):
         origin_detail = self.get_entrypoint_detail(
             api_request.get('origin'), instance, request_id="{}_origin_detail".format(request_id)
         )
+
         destination_detail = self.get_entrypoint_detail(
             api_request.get('destination'), instance, request_id="{}_dest_detail".format(request_id)
         )
+
         # we store the origin/destination detail in g to be able to use them after the marshall
         g.origin_detail = origin_detail
         g.destination_detail = destination_detail
+
+        origin_detail = origin_detail or json_address_from_uri(api_request.get('origin'))
+        if not origin_detail:
+            return generate_error(
+                TEMPLATE_MSG_UNKNOWN_OBJECT.format(api_request.get('origin')),
+                response_pb2.Error.unknown_object,
+                404,
+            )
+        destination_detail = destination_detail or json_address_from_uri(api_request.get('destination'))
+        if not destination_detail:
+            return generate_error(
+                TEMPLATE_MSG_UNKNOWN_OBJECT.format(api_request.get('destination')),
+                response_pb2.Error.unknown_object,
+                404,
+            )
+
+        pt_object_origin = get_pt_object_from_json(origin_detail, instance)
+        pt_object_destination = get_pt_object_from_json(destination_detail, instance)
 
         api_request['origin'] = get_kraken_id(origin_detail) or api_request.get('origin')
         api_request['destination'] = get_kraken_id(destination_detail) or api_request.get('destination')
@@ -1256,6 +1280,8 @@ class Scenario(simple.Scenario):
                 request['min_nb_journeys'] = max(0, min_nb_journeys_left)
 
             new_resp = self.call_kraken(
+                pt_object_origin,
+                pt_object_destination,
                 request_type,
                 request,
                 instance,
@@ -1347,7 +1373,17 @@ class Scenario(simple.Scenario):
         self._compute_pagination_links(pb_resp, instance, api_request['clockwise'])
         return pb_resp
 
-    def call_kraken(self, request_type, request, instance, krakens_call, request_id, context=None):
+    def call_kraken(
+        self,
+        pt_object_origin_detail,
+        pt_object_destination_detail,
+        request_type,
+        request,
+        instance,
+        krakens_call,
+        request_id,
+        context=None,
+    ):
         """
         For all krakens_call, call the kraken and aggregate the responses
 
@@ -1401,6 +1437,14 @@ class Scenario(simple.Scenario):
     def journeys(self, request, instance):
         return self.__on_journeys(type_pb2.PLANNER, request, instance)
 
+    def get_pt_object(self, instance, arg_pt_object, request_id):
+        if not arg_pt_object:
+            return None
+        detail = self.get_entrypoint_detail(
+            arg_pt_object, instance, request_id="{}".format(request_id)
+        ) or json_address_from_uri(arg_pt_object)
+        return get_pt_object_from_json(detail, instance) if detail else None
+
     def isochrone(self, request, instance):
         updated_request_with_default(request, instance)
         # we don't want to filter anything!
@@ -1408,9 +1452,43 @@ class Scenario(simple.Scenario):
         # Initialize a context for distributed
         distributed_context = self.get_context()
         request_id = request.get("request_id", None)
+
+        pt_object_origin = None
+        pt_object_destination = None
+        origin = request.get('origin')
+        if origin:
+            pt_object_origin = self.get_pt_object(
+                instance, origin, request_id="{}_origin_detail".format(request_id)
+            )
+            if not pt_object_origin:
+                return generate_error(
+                    TEMPLATE_MSG_UNKNOWN_OBJECT.format(origin),
+                    response_pb2.Error.no_origin_nor_destination,
+                    404,
+                )
+
+        destination = request.get('destination')
+        if destination:
+            pt_object_destination = self.get_pt_object(
+                instance, destination, request_id="{}_dest_detail".format(request_id)
+            )
+            if not pt_object_destination:
+                return generate_error(
+                    TEMPLATE_MSG_UNKNOWN_OBJECT.format(destination),
+                    response_pb2.Error.no_origin_nor_destination,
+                    404,
+                )
+
         resp = merge_responses(
             self.call_kraken(
-                type_pb2.ISOCHRONE, request, instance, krakens_call, request_id, distributed_context
+                pt_object_origin,
+                pt_object_destination,
+                type_pb2.ISOCHRONE,
+                request,
+                instance,
+                krakens_call,
+                request_id,
+                distributed_context,
             ),
             request['debug'],
         )

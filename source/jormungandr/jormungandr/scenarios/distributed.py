@@ -36,7 +36,8 @@ except ImportError:
 import logging, operator
 from jormungandr.scenarios import new_default
 from jormungandr import app
-from jormungandr.utils import PeriodExtremity, get_pt_object_coord
+from jormungandr.utils import PeriodExtremity, get_pt_object_coord, get_pt_object_from_json
+from jormungandr.error import generate_error
 from jormungandr.street_network.street_network import StreetNetworkPathType
 from jormungandr.scenarios.helper_classes import *
 from jormungandr.scenarios.helper_classes.complete_pt_journey import (
@@ -98,7 +99,17 @@ class Distributed(object):
     def is_type_only(direct_path_type):
         return direct_path_type in ("only", "only_with_alternatives")
 
-    def _compute_journeys(self, future_manager, request, instance, krakens_call, context, request_type):
+    def _compute_journeys(
+        self,
+        future_manager,
+        pt_object_origin_detail,
+        pt_object_destination_detail,
+        request,
+        instance,
+        krakens_call,
+        context,
+        request_type,
+    ):
         """
         For all krakens_call, call the kraken and aggregate the responses
 
@@ -131,21 +142,8 @@ class Distributed(object):
         if context.partial_response_is_empty:
             logger.debug('requesting places by uri orig: %s dest %s', request['origin'], request['destination'])
 
-            context.requested_orig = PlaceByUri(
-                future_manager=future_manager,
-                instance=instance,
-                uri=request['origin'],
-                request_id="{}_place_origin".format(request_id),
-            )
-            context.requested_dest = PlaceByUri(
-                future_manager=future_manager,
-                instance=instance,
-                uri=request['destination'],
-                request_id="{}_place_dest".format(request_id),
-            )
-
-            context.requested_orig_obj = get_entry_point_or_raise(context.requested_orig, request['origin'])
-            context.requested_dest_obj = get_entry_point_or_raise(context.requested_dest, request['destination'])
+            context.requested_orig_obj = pt_object_origin_detail
+            context.requested_dest_obj = pt_object_destination_detail
 
             context.streetnetwork_path_pool = StreetNetworkPathPool(
                 future_manager=future_manager, instance=instance
@@ -340,23 +338,25 @@ class Distributed(object):
             request_id="{}_complete_pt_journey".format(request_id),
         )
 
-    def _compute_isochrone_common(self, future_manager, request, instance, krakens_call, request_type):
+    def _compute_isochrone_common(
+        self,
+        future_manager,
+        pt_object_origin_detail,
+        pt_object_destination_detail,
+        request,
+        instance,
+        krakens_call,
+        request_type,
+    ):
         logger = logging.getLogger(__name__)
         logger.debug('request datetime: %s', request['datetime'])
 
-        isochrone_center = request['origin'] or request['destination']
+        requested_obj = pt_object_origin_detail or pt_object_destination_detail
 
         mode_getter = operator.itemgetter(0 if request['origin'] else 1)
         requested_modes = {mode_getter(call) for call in krakens_call}
 
-        logger.debug('requesting places by uri orig: %s', isochrone_center)
         request_id = request.get("request_id", None)
-
-        requested_orig = PlaceByUri(
-            future_manager=future_manager, instance=instance, uri=isochrone_center, request_id=request_id
-        )
-
-        requested_obj = get_entry_point_or_raise(requested_orig, isochrone_center)
 
         direct_paths_by_mode = {}
 
@@ -409,7 +409,7 @@ class Distributed(object):
             "request": request,
             "request_type": request_type,
             "request_id": request_id,
-            "isochrone_center": isochrone_center,
+            "isochrone_center": requested_obj,
         }
         if request['origin']:
             pt_journey_args.update(
@@ -450,7 +450,17 @@ class Scenario(new_default.Scenario):
     def get_context(self):
         return PartialResponseContext()
 
-    def call_kraken(self, request_type, request, instance, krakens_call, request_id, context):
+    def call_kraken(
+        self,
+        pt_object_origin_detail,
+        pt_object_destination_detail,
+        request_type,
+        request,
+        instance,
+        krakens_call,
+        request_id,
+        context=None,
+    ):
         record_custom_parameter('scenario', 'distributed')
         logger = logging.getLogger(__name__)
         """
@@ -467,11 +477,24 @@ class Scenario(new_default.Scenario):
             ):
                 if request_type == type_pb2.ISOCHRONE:
                     return self._scenario._compute_isochrone_common(
-                        future_manager, request, instance, krakens_call, type_pb2.ISOCHRONE
+                        future_manager,
+                        pt_object_origin_detail,
+                        pt_object_destination_detail,
+                        request,
+                        instance,
+                        krakens_call,
+                        type_pb2.ISOCHRONE,
                     )
                 elif request_type == type_pb2.PLANNER:
                     return self._scenario._compute_journeys(
-                        future_manager, request, instance, krakens_call, context, type_pb2.PLANNER
+                        future_manager,
+                        pt_object_origin_detail,
+                        pt_object_destination_detail,
+                        request,
+                        instance,
+                        krakens_call,
+                        context,
+                        type_pb2.PLANNER,
                     )
                 else:
                     abort(400, message="This type of request is not supported with distributed")
@@ -506,6 +529,12 @@ class Scenario(new_default.Scenario):
             final_e = FinaliseException(e)
             return [final_e.get()]
 
+    def get_detail_pt_object(self, instance, arg_pt_object, request_id):
+        if not arg_pt_object:
+            return None
+        detail = self.get_entrypoint_detail(arg_pt_object, instance, request_id=request_id)
+        return get_pt_object_from_json(detail, instance) if detail else None
+
     def graphical_isochrones(self, request, instance):
         logger = logging.getLogger(__name__)
         """
@@ -529,10 +558,41 @@ class Scenario(new_default.Scenario):
             ] = instance.additional_time_after_first_section_taxi
 
         krakens_call = set({(request["origin_mode"][0], request["destination_mode"][0], "indifferent")})
+        pt_object_origin = None
+        pt_object_destination = None
+        request_id = request.get("request_id", None)
+        origin = request.get('origin')
+        if origin:
+            pt_object_origin = self.get_detail_pt_object(
+                instance, origin, request_id="{}_origin_detail".format(request_id)
+            )
+            if not pt_object_origin:
+                return generate_error(
+                    "The entry point: {} is not valid".format(origin),
+                    response_pb2.Error.unknown_object,
+                    404,
+                )
+        destination = request.get('destination')
+        if destination:
+            pt_object_destination = self.get_detail_pt_object(
+                instance, destination, request_id="{}_dest_detail".format(request_id)
+            )
+            if not pt_object_destination:
+                return generate_error(
+                    "The entry point: {} is not valid".format(destination),
+                    response_pb2.Error.unknown_object,
+                    404,
+                )
         try:
             with FutureManager(self.greenlet_pool_size) as future_manager:
                 return self._scenario._compute_isochrone_common(
-                    future_manager, request, instance, krakens_call, type_pb2.graphical_isochrone
+                    future_manager,
+                    pt_object_origin,
+                    pt_object_destination,
+                    request,
+                    instance,
+                    krakens_call,
+                    type_pb2.graphical_isochrone,
                 )
         except PtException as e:
             logger.exception('')

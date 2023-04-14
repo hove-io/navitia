@@ -834,8 +834,8 @@ class JourneyCommon(object):
         )
         response = self.query_region(query, check=False)
         assert response[1] == 404
-        assert response[0]['error']['message'] == u'The entry point: stop_area:non_valid is not valid'
-        assert response[0]['error']['id'] == u'unknown_object'
+        assert response[0]['error']['message'] == 'The entry point: stop_area:non_valid is not valid'
+        assert response[0]['error']['id'] == 'unknown_object'
 
     def test_crow_fly_sections(self):
         """
@@ -1065,7 +1065,7 @@ class JourneyCommon(object):
         )
         response, status = self.query_region(query, check=False)
         assert status == 404
-        assert response['error']['id'] == u'unknown_object'
+        assert response['error']['id'] == u'no_origin_nor_destination'
         assert response['error']['message'] == u'The entry point: vehicle_journey:SNC is not valid'
 
     def test_free_radius_from(self):

@@ -155,6 +155,13 @@ class Kraken(AbstractStreetNetworkService):
         )
 
         response = instance.send_and_receive(req, request_id=request_id)
+        if response and response.journeys and response.journeys[0].sections:
+            # In case of a POI, it might be an access point, but we want the parent POI to be shown on.
+            if pt_object_origin.embedded_type == type_pb2.POI:
+                response.journeys[0].sections[0].origin.CopyFrom(pt_object_origin)
+            if pt_object_destination.embedded_type == type_pb2.POI:
+                response.journeys[0].sections[-1].destination.CopyFrom(pt_object_destination)
+
         if should_invert_journey:
             response = self._reverse_journeys(response)
 

@@ -99,7 +99,6 @@ class TestOverlappingCoverage(AbstractTestFixture):
     def test_journeys_on_same_error(self):
         """
         if all region gives the same error we should get the error
-
         there we ask for a journey in 1980, both region should return a date_out_of_bounds
         """
         journey_query = "journeys?from={from_coord}&to={to_coord}&datetime={datetime}".format(
