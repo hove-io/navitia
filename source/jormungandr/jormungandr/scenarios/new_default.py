@@ -103,6 +103,7 @@ JOURNEY_TYPES_TO_RETAIN = ['best', 'comfort', 'non_pt_walk', 'non_pt_bike', 'non
 STREET_NETWORK_MODE_TO_RETAIN = {response_pb2.Ridesharing, response_pb2.Car, response_pb2.Bike, response_pb2.Bss}
 TEMPLATE_MSG_UNKNOWN_OBJECT = "The entry point: {} is not valid"
 
+
 def get_kraken_calls(request):
     """
     return a list of tuple (departure fallback mode, arrival fallback mode, direct_path_type)
