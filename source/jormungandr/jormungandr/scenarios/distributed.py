@@ -532,8 +532,8 @@ class Scenario(new_default.Scenario):
     def get_detail_pt_object(self, instance, arg_pt_object, request_id):
         if not arg_pt_object:
             return None
-        detail = self.get_entrypoint_detail(arg_pt_object, instance, request_id="{}".format(request_id))
-        return get_pt_object_from_json(detail) if detail else None
+        detail = self.get_entrypoint_detail(arg_pt_object, instance, request_id=request_id)
+        return get_pt_object_from_json(detail, instance) if detail else None
 
     def graphical_isochrones(self, request, instance):
         logger = logging.getLogger(__name__)

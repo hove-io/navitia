@@ -71,13 +71,14 @@ MAP_STRING_PTOBJECT_TYPE = {
 
 
 def get_uri_pt_object(pt_object):
+    coord_format = "coord:{}:{}"
     if pt_object.embedded_type == type_pb2.ADDRESS:
         coords = pt_object.uri.split(';')
-        return "coord:{}:{}".format(coords[0], coords[1])
+        return coord_format.format(coords[0], coords[1])
     if pt_object.embedded_type == type_pb2.ACCESS_POINT:
-        return "coord:{}:{}".format(pt_object.access_point.coord.lon, pt_object.access_point.coord.lat)
+        return coord_format.format(pt_object.access_point.coord.lon, pt_object.access_point.coord.lat)
     if pt_object.embedded_type == type_pb2.POI:
-        return "coord:{}:{}".format(pt_object.poi.coord.lon, pt_object.poi.coord.lat)
+        return coord_format.format(pt_object.poi.coord.lon, pt_object.poi.coord.lat)
     return pt_object.uri
 
 
@@ -387,7 +388,7 @@ def generate_id():
     return shortuuid.uuid()
 
 
-def get_pt_object_from_json(dict_pt_object):
+def get_pt_object_from_json(dict_pt_object, instance):
     if not isinstance(dict_pt_object, dict):
         logging.getLogger(__name__).error('Invalid dict_pt_object')
         raise InvalidArguments('Invalid dict_pt_object')
@@ -396,8 +397,14 @@ def get_pt_object_from_json(dict_pt_object):
     if not embedded_type:
         logging.getLogger(__name__).error('Invalid embedded_type')
         raise InvalidArguments('Invalid embedded_type')
+    uri = dict_pt_object["id"]
+    if embedded_type == type_pb2.ADMINISTRATIVE_REGION:
+        # In this case we need the main_stop_area
+        pt_object = instance.georef.place(uri, request_id=None)
+        if pt_object:
+            return pt_object
     pt_object = type_pb2.PtObject()
-    pt_object.uri = dict_pt_object["id"]
+    pt_object.uri = uri
     pt_object.name = dict_pt_object.get("name", "")
 
     pt_object.embedded_type = embedded_type
@@ -419,6 +426,7 @@ def get_pt_object_from_json(dict_pt_object):
     )
     obj.coord.lon = coord.lon
     obj.coord.lat = coord.lat
+
     return pt_object
 
 

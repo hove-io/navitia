@@ -97,12 +97,11 @@ from six.moves import filter
 from six.moves import range
 from six.moves import zip
 from functools import cmp_to_key
-from jormungandr.scenarios.helper_classes.helper_exceptions import EntryPointException
 
 SECTION_TYPES_TO_RETAIN = {response_pb2.PUBLIC_TRANSPORT, response_pb2.STREET_NETWORK}
 JOURNEY_TYPES_TO_RETAIN = ['best', 'comfort', 'non_pt_walk', 'non_pt_bike', 'non_pt_bss']
 STREET_NETWORK_MODE_TO_RETAIN = {response_pb2.Ridesharing, response_pb2.Car, response_pb2.Bike, response_pb2.Bss}
-
+TEMPLATE_MSG_UNKNOWN_OBJECT = "The entry point: {} is not valid"
 
 def get_kraken_calls(request):
     """
@@ -1212,20 +1211,20 @@ class Scenario(simple.Scenario):
         origin_detail = origin_detail or json_address_from_uri(api_request.get('origin'))
         if not origin_detail:
             return generate_error(
-                "The entry point: {} is not valid".format(api_request.get('origin')),
+                TEMPLATE_MSG_UNKNOWN_OBJECT.format(api_request.get('origin')),
                 response_pb2.Error.unknown_object,
                 404,
             )
         destination_detail = destination_detail or json_address_from_uri(api_request.get('destination'))
         if not destination_detail:
             return generate_error(
-                "The entry point: {} is not valid".format(api_request.get('destination')),
+                TEMPLATE_MSG_UNKNOWN_OBJECT.format(api_request.get('destination')),
                 response_pb2.Error.unknown_object,
                 404,
             )
 
-        pt_object_origin = get_pt_object_from_json(origin_detail)
-        pt_object_destination = get_pt_object_from_json(destination_detail)
+        pt_object_origin = get_pt_object_from_json(origin_detail, instance)
+        pt_object_destination = get_pt_object_from_json(destination_detail, instance)
 
         api_request['origin'] = get_kraken_id(origin_detail) or api_request.get('origin')
         api_request['destination'] = get_kraken_id(destination_detail) or api_request.get('destination')
@@ -1443,7 +1442,7 @@ class Scenario(simple.Scenario):
         detail = self.get_entrypoint_detail(
             arg_pt_object, instance, request_id="{}".format(request_id)
         ) or json_address_from_uri(arg_pt_object)
-        return get_pt_object_from_json(detail) if detail else None
+        return get_pt_object_from_json(detail, instance) if detail else None
 
     def isochrone(self, request, instance):
         updated_request_with_default(request, instance)
@@ -1462,7 +1461,7 @@ class Scenario(simple.Scenario):
             )
             if not pt_object_origin:
                 return generate_error(
-                    "The entry point: {} is not valid".format(origin),
+                    TEMPLATE_MSG_UNKNOWN_OBJECT.format(origin),
                     response_pb2.Error.no_origin_nor_destination,
                     404,
                 )
@@ -1474,7 +1473,7 @@ class Scenario(simple.Scenario):
             )
             if not pt_object_destination:
                 return generate_error(
-                    "The entry point: {} is not valid".format(destination),
+                    TEMPLATE_MSG_UNKNOWN_OBJECT.format(destination),
                     response_pb2.Error.no_origin_nor_destination,
                     404,
                 )
