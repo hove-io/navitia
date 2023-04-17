@@ -198,6 +198,7 @@ class FallbackDurations:
 
     def _build_places_isochrone(self, proximities_by_crowfly, all_free_access):
         places_isochrone = []
+        stop_ponits = []
         # in this map, we store all the information that will be useful where we update the final result
         # since an access point, aka the same access point uri, may be attached to multiple stop points
         # we store access point uri VS a LIST of AccessMapElement which contains:
@@ -207,6 +208,7 @@ class FallbackDurations:
         if self._mode == FallbackModes.car.name or self._request['_access_points'] is False:
             # if a place is freely accessible, there is no need to compute it's access duration in isochrone
             places_isochrone.extend(p for p in proximities_by_crowfly if p.uri not in all_free_access)
+            stop_ponits.extend(p for p in proximities_by_crowfly if p.uri not in all_free_access)
         else:
             for p in proximities_by_crowfly:
                 # if a place is freely accessible, there is no need to compute it's access duration in isochrone
@@ -219,10 +221,11 @@ class FallbackDurations:
                     places_isochrone.append(p)
                 else:
                     self._retrieve_access_points(p.stop_point, access_points_map, places_isochrone)
+                stop_ponits.append(p)
         # places isochrone are filtered according to different connector. ex. In geovelo, we select solely stop_points
         # are more significant.
         places_isochrone = self._streetnetwork_service.filter_places_isochrone(places_isochrone)
-        return places_isochrone, access_points_map
+        return places_isochrone, access_points_map, stop_ponits
 
     def _fill_fallback_durations_with_free_access(self, fallback_durations, all_free_access):
         # Since we have already places that have free access, we add them into the result
@@ -325,10 +328,9 @@ class FallbackDurations:
         ):
             for ch in self._requested_place_obj.poi.children:
                 # poi object to pt_object
-                pt_object = type_pb2.PtObject()
-                pt_object.uri = ch.uri
-                pt_object.embedded_type = type_pb2.POI
-                pt_object.name = ch.name
+                pt_object = type_pb2.PtObject(
+                    name=ch.name, uri=ch.uri, embedded_type=type_pb2.POI
+                )
                 pt_object.poi.CopyFrom(ch)
                 result.append(pt_object)
         else:
@@ -356,7 +358,7 @@ class FallbackDurations:
         # which means, via access point "access_point:toto", on can reach two stop points "stop_point:1" and
         # "stop_point:2", by walking (42 meters, 41 sec) and (43 meters, 44sec) respectively
         # it is a temporary storage that will be used later to update fallback_durations
-        places_isochrone, access_points_map = self._build_places_isochrone(
+        places_isochrone, access_points_map, stop_points = self._build_places_isochrone(
             proximities_by_crowfly, all_free_access
         )
 
@@ -372,7 +374,7 @@ class FallbackDurations:
             return result[0]
         else:
             fallback_duration = dict()
-            for place_isochrone in places_isochrone:
+            for place_isochrone in stop_points:
                 best_duration = float("inf")
                 best_element = None
                 for index, fallback in enumerate(result):
