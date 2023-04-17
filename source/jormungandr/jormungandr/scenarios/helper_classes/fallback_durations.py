@@ -328,9 +328,7 @@ class FallbackDurations:
         ):
             for ch in self._requested_place_obj.poi.children:
                 # poi object to pt_object
-                pt_object = type_pb2.PtObject(
-                    name=ch.name, uri=ch.uri, embedded_type=type_pb2.POI
-                )
+                pt_object = type_pb2.PtObject(name=ch.name, uri=ch.uri, embedded_type=type_pb2.POI)
                 pt_object.poi.CopyFrom(ch)
                 result.append(pt_object)
         else:

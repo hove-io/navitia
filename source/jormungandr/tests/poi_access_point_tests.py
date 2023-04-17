@@ -65,7 +65,7 @@ FROM_POI = {
                             "id": "poi:from:porte1",
                             "label": "Jardin: Porte 1 (City)",
                             "name": "Jardin: Porte 1",
-                            "coord": {"lon": s_lon+0.0000000005, "lat": s_lat+0.0000000005},
+                            "coord": {"lon": s_lon + 0.0000000005, "lat": s_lat + 0.0000000005},
                             "poi_type": {"id": "poi_type:access_point", "name": "Point d'accès"},
                         },
                         {
@@ -73,10 +73,10 @@ FROM_POI = {
                             "id": "poi:from:porte2",
                             "label": "Jardin: Porte 2 (City)",
                             "name": "Jardin: Porte 2",
-                            "coord": {"lon": s_lon+0.0000000008, "lat": s_lat+0.0000000008},
+                            "coord": {"lon": s_lon + 0.0000000008, "lat": s_lat + 0.0000000008},
                             "poi_type": {"id": "poi_type:access_point", "name": "Point d'accès"},
                         },
-                    ]
+                    ],
                 }
             },
         }
@@ -103,7 +103,7 @@ TO_POI = {
                             "id": "poi:to:porte3",
                             "label": "Jardin: Porte 3 (City)",
                             "name": "Jardin: Porte 3",
-                            "coord": {"lon": r_lon+0.0000000005, "lat": r_lat+0.0000000005},
+                            "coord": {"lon": r_lon + 0.0000000005, "lat": r_lat + 0.0000000005},
                             "poi_type": {"id": "poi_type:access_point", "name": "Point d'accès"},
                         },
                         {
@@ -111,10 +111,10 @@ TO_POI = {
                             "id": "poi:to:porte4",
                             "label": "Jardin: Porte 4 (City)",
                             "name": "Jardin: Porte 4",
-                            "coord": {"lon": r_lon+0.0000000008, "lat": r_lat+0.0000000008},
+                            "coord": {"lon": r_lon + 0.0000000008, "lat": r_lat + 0.0000000008},
                             "poi_type": {"id": "poi_type:access_point", "name": "Point d'accès"},
                         },
-                    ]
+                    ],
                 }
             },
         }
@@ -122,52 +122,46 @@ TO_POI = {
 }
 
 FROM_ADDRESS = {
-  "features": [
-    {
-      "type": "Feature",
-      "geometry": {
-        "coordinates": [s_lon, s_lat],
-        "type": "Point"
-      },
-      "properties": {
-        "geocoding": {
-          "id": from_addr_uri,
-          "type": "house",
-          "label": "10 Rue bob (City)",
-          "name": "10 Rue bob",
-          "housenumber": "10",
-          "street": "Rue bob",
-          "postcode": "36500",
-          "city": "City",
+    "features": [
+        {
+            "type": "Feature",
+            "geometry": {"coordinates": [s_lon, s_lat], "type": "Point"},
+            "properties": {
+                "geocoding": {
+                    "id": from_addr_uri,
+                    "type": "house",
+                    "label": "10 Rue bob (City)",
+                    "name": "10 Rue bob",
+                    "housenumber": "10",
+                    "street": "Rue bob",
+                    "postcode": "36500",
+                    "city": "City",
+                }
+            },
         }
-      }
-    }
-  ]
+    ]
 }
 
 
 TO_ADDRESS = {
-  "features": [
-    {
-      "type": "Feature",
-      "geometry": {
-        "coordinates": [r_lon, r_lat],
-        "type": "Point"
-      },
-      "properties": {
-        "geocoding": {
-          "id": to_addr_uri,
-          "type": "house",
-          "label": "10 Rue Victor (City)",
-          "name": "10 Rue Victor",
-          "housenumber": "10",
-          "street": "Rue Victor",
-          "postcode": "36500",
-          "city": "City",
+    "features": [
+        {
+            "type": "Feature",
+            "geometry": {"coordinates": [r_lon, r_lat], "type": "Point"},
+            "properties": {
+                "geocoding": {
+                    "id": to_addr_uri,
+                    "type": "house",
+                    "label": "10 Rue Victor (City)",
+                    "name": "10 Rue Victor",
+                    "housenumber": "10",
+                    "street": "Rue Victor",
+                    "postcode": "36500",
+                    "city": "City",
+                }
+            },
         }
-      }
-    }
-  ]
+    ]
 }
 
 MOCKED_INSTANCE_CONF = {"scenario": "distributed", 'instance_config': {'default_autocomplete': 'bragi'}}
@@ -183,8 +177,9 @@ class TestJourneysDistributedPoiAccessPoint(AbstractTestFixture):
         with requests_mock.Mocker() as m:
             m.get(from_place, json=FROM_POI)
             m.get(to_place, json=TO_ADDRESS)
-            response = self.query_region(template_journey_query.format(place_from=from_poi_uri,
-                                                                       place_to=to_addr_uri), display=True)
+            response = self.query_region(
+                template_journey_query.format(place_from=from_poi_uri, place_to=to_addr_uri), display=True
+            )
             check_best(response)
             journeys = response["journeys"]
             assert len(journeys) == 2
@@ -227,9 +222,11 @@ class TestJourneysDistributedPoiAccessPoint(AbstractTestFixture):
         with requests_mock.Mocker() as m:
             m.get(from_place, json=FROM_POI)
             m.get(to_place, json=TO_ADDRESS)
-            response = self.query_region(template_journey_query.format(place_from=from_poi_uri,
-                                                                       place_to=to_addr_uri) + "&_access_points=true",
-                                         display=True)
+            response = self.query_region(
+                template_journey_query.format(place_from=from_poi_uri, place_to=to_addr_uri)
+                + "&_access_points=true",
+                display=True,
+            )
             check_best(response)
             journeys = response["journeys"]
             assert len(journeys) == 2
@@ -280,8 +277,9 @@ class TestJourneysDistributedPoiAccessPoint(AbstractTestFixture):
         with requests_mock.Mocker() as m:
             m.get(from_place, json=FROM_ADDRESS)
             m.get(to_place, json=TO_POI)
-            response = self.query_region(template_journey_query.format(place_from=from_addr_uri,
-                                                                       place_to=to_poi_uri), display=True)
+            response = self.query_region(
+                template_journey_query.format(place_from=from_addr_uri, place_to=to_poi_uri), display=True
+            )
             check_best(response)
             journeys = response["journeys"]
             assert len(journeys) == 2
@@ -309,7 +307,6 @@ class TestJourneysDistributedPoiAccessPoint(AbstractTestFixture):
             assert path[2]["instruction"] == "via Jardin: Porte 3."
             assert path[2]["via_uri"] == 'poi:to:porte3'
 
-
             last_journey = journeys[1]
             assert len(last_journey["sections"]) == 1
             assert last_journey["sections"][0]["mode"] == "walking"
@@ -326,9 +323,11 @@ class TestJourneysDistributedPoiAccessPoint(AbstractTestFixture):
         with requests_mock.Mocker() as m:
             m.get(from_place, json=FROM_ADDRESS)
             m.get(to_place, json=TO_POI)
-            response = self.query_region(template_journey_query.format(place_from=from_addr_uri,
-                                                                       place_to=to_poi_uri) + "&_access_points=true",
-                                         display=True)
+            response = self.query_region(
+                template_journey_query.format(place_from=from_addr_uri, place_to=to_poi_uri)
+                + "&_access_points=true",
+                display=True,
+            )
             check_best(response)
             journeys = response["journeys"]
             assert len(journeys) == 2
@@ -371,7 +370,6 @@ class TestJourneysDistributedPoiAccessPoint(AbstractTestFixture):
             assert path[3]["instruction"] == "via Jardin: Porte 3."
             assert path[3]["via_uri"] == 'poi:to:porte3'
 
-
             last_journey = journeys[1]
             assert len(last_journey["sections"]) == 1
             assert last_journey["sections"][0]["mode"] == "walking"
@@ -388,8 +386,9 @@ class TestJourneysDistributedPoiAccessPoint(AbstractTestFixture):
         with requests_mock.Mocker() as m:
             m.get(from_place, json=FROM_POI)
             m.get(to_place, json=TO_POI)
-            response = self.query_region(template_journey_query.format(place_from=from_poi_uri,
-                                                                       place_to=to_poi_uri), display=True)
+            response = self.query_region(
+                template_journey_query.format(place_from=from_poi_uri, place_to=to_poi_uri), display=True
+            )
             check_best(response)
             journeys = response["journeys"]
             assert len(journeys) == 2
@@ -442,9 +441,11 @@ class TestJourneysDistributedPoiAccessPoint(AbstractTestFixture):
         with requests_mock.Mocker() as m:
             m.get(from_place, json=FROM_POI)
             m.get(to_place, json=TO_POI)
-            response = self.query_region(template_journey_query.format(place_from=from_poi_uri,
-                                                                       place_to=to_poi_uri) + "&_access_points=true",
-                                         display=True)
+            response = self.query_region(
+                template_journey_query.format(place_from=from_poi_uri, place_to=to_poi_uri)
+                + "&_access_points=true",
+                display=True,
+            )
             check_best(response)
             journeys = response["journeys"]
             assert len(journeys) == 2
