@@ -307,12 +307,12 @@ def _extend_with_via_poi_access(fallback_dp, fallback_type, via_poi_access):
         )
 
 
-def _extend_with_via_access_point(fallback_dp, pt_object, fallback_type, via_access_point):
-    if via_access_point is None:
+def _extend_with_via_pt_access(fallback_dp, pt_object, fallback_type, via_pt_access):
+    if via_pt_access is None:
         return
 
-    traversal_time = via_access_point.access_point.traversal_time
-    length = via_access_point.access_point.length
+    traversal_time = via_pt_access.access_point.traversal_time
+    length = via_pt_access.access_point.length
 
     dp_journey = fallback_dp.journeys[0]
     dp_journey.duration += traversal_time
@@ -329,7 +329,7 @@ def _extend_with_via_access_point(fallback_dp, pt_object, fallback_type, via_acc
         append_path_item_with_access_point(
             dp_journey.sections[-1].street_network.path_items,
             pt_object.stop_point,
-            via_access_point.access_point,
+            via_pt_access.access_point,
         )
 
     elif fallback_type == StreetNetworkPathType.ENDING_FALLBACK:
@@ -339,12 +339,12 @@ def _extend_with_via_access_point(fallback_dp, pt_object, fallback_type, via_acc
         dp_journey.sections[-1].street_network.length += length
 
         prepend_path_item_with_access_point(
-            dp_journey.sections[0].street_network.path_items, pt_object.stop_point, via_access_point.access_point
+            dp_journey.sections[0].street_network.path_items, pt_object.stop_point, via_pt_access.access_point
         )
 
 
 def _update_fallback_sections(
-    journey, fallback_dp, fallback_period_extremity, fallback_type, via_access_point, via_poi_access
+    journey, fallback_dp, fallback_period_extremity, fallback_type, via_pt_access, via_poi_access
 ):
     """
     Replace journey's fallback sections with the given fallback_dp.
@@ -384,13 +384,13 @@ def _update_fallback_sections(
         poi_access.is_entrance = True
 
     if (
-        isinstance(via_access_point, type_pb2.PtObject)
-        and via_access_point.embedded_type == type_pb2.ACCESS_POINT
+        isinstance(via_pt_access, type_pb2.PtObject)
+        and via_pt_access.embedded_type == type_pb2.ACCESS_POINT
     ):
         if fallback_type == StreetNetworkPathType.BEGINNING_FALLBACK:
-            fallback_sections[-1].vias.add().CopyFrom(via_access_point.access_point)
+            fallback_sections[-1].vias.add().CopyFrom(via_pt_access.access_point)
         else:
-            fallback_sections[0].vias.add().CopyFrom(via_access_point.access_point)
+            fallback_sections[0].vias.add().CopyFrom(via_pt_access.access_point)
 
     journey.sections.extend(fallback_sections)
     journey.sections.sort(key=cmp_to_key(SectionSorter()))
@@ -535,15 +535,15 @@ def _build_fallback(
     pt_obj = fallback_logic.get_pt_boundaries(pt_journey)
     car_park = None
     car_park_crowfly_duration = None
-    via_access_point = None
+    via_pt_access = None
     via_poi_access = None
 
     if mode == 'car':
         _, _, car_park, car_park_crowfly_duration, _, _ = fallback_durations[pt_obj.uri]
     else:
-        # we retrieve the via_access_point from which the being/end of pt journeys is accessed by asking fallback_durations
-        # the via_access_point may be a stop_point or a access_point
-        _, _, _, _, via_access_point, via_poi_access = fallback_durations[pt_obj.uri]
+        # we retrieve the via_pt_access from which the being/end of pt journeys is accessed by asking fallback_durations
+        # the via_pt_access may be a stop_point or a access_point
+        _, _, _, _, via_pt_access, via_poi_access = fallback_durations[pt_obj.uri]
 
     if requested_obj.uri != pt_obj.uri:
         if pt_obj.uri in accessibles_by_crowfly.odt:
@@ -554,7 +554,7 @@ def _build_fallback(
             pt_datetime = fallback_logic.get_pt_section_datetime(pt_journey)
             fallback_period_extremity = PeriodExtremity(pt_datetime, is_after_pt_sections)
             orig, dest = fallback_logic.route_params(
-                via_poi_access or requested_obj, car_park or via_access_point or pt_obj
+                via_poi_access or requested_obj, car_park or via_pt_access or pt_obj
             )
 
             real_mode = fallback_durations_pool.get_real_mode(mode, pt_obj.uri)
@@ -584,7 +584,7 @@ def _build_fallback(
                         car_park_crowfly_duration,
                     )
                 else:
-                    _extend_with_via_access_point(fallback_dp_copy, pt_obj, fallback_type, via_access_point)
+                    _extend_with_via_pt_access(fallback_dp_copy, pt_obj, fallback_type, via_pt_access)
                     _extend_with_via_poi_access(fallback_dp_copy, fallback_type, via_poi_access)
 
                 _update_fallback_sections(
@@ -592,7 +592,7 @@ def _build_fallback(
                     fallback_dp_copy,
                     fallback_period_extremity,
                     fallback_type,
-                    via_access_point,
+                    via_pt_access,
                     via_poi_access,
                 )
 
@@ -687,7 +687,7 @@ def compute_fallback(
                 real_mode = orig_fallback_durations_pool.get_real_mode(dep_mode, orig_obj.uri)
             else:
                 orig_obj = (
-                    orig_fallback_durations_pool.wait_and_get(dep_mode)[pt_orig.uri].via_access_point or pt_orig
+                    orig_fallback_durations_pool.wait_and_get(dep_mode)[pt_orig.uri].via_pt_access or pt_orig
                 )
                 real_mode = orig_fallback_durations_pool.get_real_mode(dep_mode, pt_orig.uri)
 
@@ -719,7 +719,7 @@ def compute_fallback(
 
             else:
                 dest_obj = (
-                    dest_fallback_durations_pool.wait_and_get(arr_mode)[pt_dest.uri].via_access_point or pt_dest
+                    dest_fallback_durations_pool.wait_and_get(arr_mode)[pt_dest.uri].via_pt_access or pt_dest
                 )
                 real_mode = dest_fallback_durations_pool.get_real_mode(arr_mode, pt_dest.uri)
                 to_obj = (

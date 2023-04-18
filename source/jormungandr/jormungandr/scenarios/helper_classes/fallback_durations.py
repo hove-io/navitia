@@ -50,12 +50,12 @@ from .helper_exceptions import StreetNetworkException
 #  - status(response_pb2.RoutingStatus): is the stop point reached? unreached?
 #  - car_park(PtObject): the stop point reached via a car park
 #  - car_park_crowfly_duration(int): how long it would take to get to the stop point from the car park
-#  - via_access_point(PtObject):  the stop point reached via an access point
+#  - via_pt_access(PtObject):  the stop point reached via an access point
 
 # use dataclass when python3.7 is available
 DurationElement = namedtuple(
     'DurationElement',
-    ['duration', 'status', 'car_park', 'car_park_crowfly_duration', 'via_access_point', 'via_poi_access'],
+    ['duration', 'status', 'car_park', 'car_park_crowfly_duration', 'via_pt_access', 'via_poi_access'],
 )
 
 AccessMapElement = namedtuple('AccessMapElement', ['stop_point_uri', 'access_point'])
@@ -388,7 +388,7 @@ class FallbackDurations:
                             element.status,
                             element.car_park,
                             element.car_park_crowfly_duration,
-                            element.via_access_point,
+                            element.via_pt_access,
                             centers_isochrone[index],
                         )
                 if best_element:
