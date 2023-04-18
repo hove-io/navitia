@@ -254,7 +254,7 @@ def append_path_item_with_access_point(path_items, stop_point, access_point, lan
             "english_us": u"Then Enter {} via {}.",
             "french": u"Accéder à {} via {}.",
             "spanish": u"acceso a {} vía {}.",
-            "italian": u"accesso alla {} vía {}.",
+            "italian": u"accesso alla {} via {}.",
         }
         return instructions.get(lan, u"Then Enter {} via {}.")
 
