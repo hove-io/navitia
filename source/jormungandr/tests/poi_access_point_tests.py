@@ -37,7 +37,8 @@ from six.moves.urllib.parse import urlencode
 import requests_mock
 from jormungandr.utils import get_lon_lat
 
-template_journey_query = "journeys?from={place_from}&to={place_to}&datetime=20120614T080000"
+template_journey_query_wap = "journeys?from={place_from}&to={place_to}&datetime=20120614T080000"
+template_journey_query = template_journey_query_wap + "&_poi_access_points=true"
 
 s_lon, s_lat = get_lon_lat(s_coord)
 r_lon, r_lat = get_lon_lat(r_coord)
@@ -503,6 +504,37 @@ class TestJourneysDistributedPoiAccessPoint(AbstractTestFixture):
             assert path[3]["name"] == "Jardin: Porte 3"
             assert path[3]["instruction"] == "via Jardin: Porte 3."
             assert path[3]["via_uri"] == 'poi:to:porte3'
+
+            last_journey = journeys[1]
+            assert len(last_journey["sections"]) == 1
+            assert last_journey["sections"][0]["mode"] == "walking"
+            assert last_journey["sections"][0]["type"] == "street_network"
+            assert last_journey["sections"][0]["from"]["id"] == from_poi_uri
+            assert last_journey["sections"][0]["to"]["id"] == to_poi_uri
+            assert "vias" not in last_journey["sections"][0]
+
+    def test_from_poi_to_poi_without_poi_access_points(self):
+        url = 'https://host_of_bragi'
+        params = {'timeout': 200, 'pt_dataset[]': 'main_routing_test'}
+        from_place = "{}/features/{}?{}".format(url, from_poi_uri, urlencode(params, doseq=True))
+        to_place = "{}/features/{}?{}".format(url, to_poi_uri, urlencode(params, doseq=True))
+        with requests_mock.Mocker() as m:
+            m.get(from_place, json=FROM_POI)
+            m.get(to_place, json=TO_POI)
+            response = self.query_region(
+                template_journey_query_wap.format(place_from=from_poi_uri, place_to=to_poi_uri),
+                display=True,
+            )
+            check_best(response)
+            journeys = response["journeys"]
+            assert len(journeys) == 2
+            first_journey = journeys[0]
+            assert len(first_journey["sections"]) == 3
+            assert first_journey["sections"][0]["mode"] == "walking"
+            assert first_journey["sections"][0]["type"] == "street_network"
+            assert first_journey["sections"][0]["from"]["id"] == from_poi_uri
+            assert first_journey["sections"][0]["from"]["name"] == 'Jardin (City)'
+            assert "vias" not in first_journey["sections"][0]
 
             last_journey = journeys[1]
             assert len(last_journey["sections"]) == 1
