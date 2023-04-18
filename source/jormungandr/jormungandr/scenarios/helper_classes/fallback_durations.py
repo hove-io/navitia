@@ -316,10 +316,16 @@ class FallbackDurations:
                 )
 
     def include_poi_access_points(self):
-        return self._requested_place_obj.embedded_type == type_pb2.POI \
-            and self._mode in [FallbackModes.walking.name, FallbackModes.bike.name, ] \
-            and self._requested_place_obj.poi.children \
+        return (
+            self._requested_place_obj.embedded_type == type_pb2.POI
+            and self._mode
+            in [
+                FallbackModes.walking.name,
+                FallbackModes.bike.name,
+            ]
+            and self._requested_place_obj.poi.children
             and self._request.get("_poi_access_points", False)
+        )
 
     def _determine_centers_isochrone(self):
         result = []
