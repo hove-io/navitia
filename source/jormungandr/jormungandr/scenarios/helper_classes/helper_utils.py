@@ -250,12 +250,14 @@ def _extend_with_car_park(
 
 def append_path_item_with_access_point(path_items, stop_point, access_point, language):
     def get_instruction_words(lan):
-        instructions = {"english_us": u"Then Enter {} via {}.",
-                        "french": u"Accéder à {} via {}.",
-                        "spanish": u"acceso a {} vía {}.",
-                        "italian": u"accesso alla {} vía {}.",
-                        }
+        instructions = {
+            "english_us": u"Then Enter {} via {}.",
+            "french": u"Accéder à {} via {}.",
+            "spanish": u"acceso a {} vía {}.",
+            "italian": u"accesso alla {} vía {}.",
+        }
         return instructions.get(lan, u"Then Enter {} via {}.")
+
     via = path_items.add()
     via.duration = access_point.traversal_time
     via.length = access_point.length
@@ -268,12 +270,14 @@ def append_path_item_with_access_point(path_items, stop_point, access_point, lan
 
 def prepend_path_item_with_access_point(path_items, stop_point, access_point, language):
     def get_instruction_words(lan):
-        instructions = {"english_us": u"Exit {} via {}.",
-                        "french": u"Sortir de {} via {}.",
-                        "spanish": u"Salida {} vía {}.",
-                        "italian": u"Uscita {} via {}.",
-                        }
+        instructions = {
+            "english_us": u"Exit {} via {}.",
+            "french": u"Sortir de {} via {}.",
+            "spanish": u"Salida {} vía {}.",
+            "italian": u"Uscita {} via {}.",
+        }
         return instructions.get(lan, u"Exit {} via {}.")
+
     via = path_items.add()
     via.duration = access_point.traversal_time
     via.length = access_point.length
@@ -556,7 +560,9 @@ def _build_fallback(
                         car_park_crowfly_duration,
                     )
                 else:
-                    _extend_with_via_access_point(fallback_dp_copy, pt_obj, fallback_type, via_access_point, language)
+                    _extend_with_via_access_point(
+                        fallback_dp_copy, pt_obj, fallback_type, via_access_point, language
+                    )
 
                 _update_fallback_sections(
                     pt_journey, fallback_dp_copy, fallback_period_extremity, fallback_type, via_access_point
