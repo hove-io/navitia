@@ -274,17 +274,15 @@ def prepend_path_item_with_access_point(path_items, stop_point, access_point):
         path_items[-1].CopyFrom(tmp_item)
 
 
-def prepend_path_item_with_poi_access(fallback_type, path_items, poi_access):
+def add_path_item_with_poi_access(fallback_type, path_items, poi_access):
     via = path_items.add()
     via.duration = 0
     via.length = 0
     via.name = poi_access.name
     via.instruction = u"via {}.".format(poi_access.name)
     via.via_uri = poi_access.uri
-    tmp_item = response_pb2.PathItem()
-    if fallback_type == StreetNetworkPathType.ENDING_FALLBACK:
-        tmp_item.CopyFrom(via)
-    elif fallback_type == StreetNetworkPathType.BEGINNING_FALLBACK:
+    if fallback_type == StreetNetworkPathType.BEGINNING_FALLBACK:
+        tmp_item = response_pb2.PathItem()
         # we cannot insert an element at the beginning of a list :(
         # a little algo to move the last element to the beginning
         for i in range(len(path_items)):
@@ -299,12 +297,12 @@ def _extend_with_via_poi_access(fallback_dp, fallback_type, via_poi_access):
 
     dp_journey = fallback_dp.journeys[0]
     if fallback_type == StreetNetworkPathType.BEGINNING_FALLBACK:
-        prepend_path_item_with_poi_access(
+        add_path_item_with_poi_access(
             fallback_type, dp_journey.sections[-1].street_network.path_items, via_poi_access
         )
 
     elif fallback_type == StreetNetworkPathType.ENDING_FALLBACK:
-        prepend_path_item_with_poi_access(
+        add_path_item_with_poi_access(
             fallback_type, dp_journey.sections[0].street_network.path_items, via_poi_access
         )
 
