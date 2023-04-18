@@ -253,10 +253,10 @@ def append_path_item_with_access_point(path_items, stop_point, access_point, lan
         instructions = {
             "english_us": u"Then Enter {} via {}.",
             "french": u"Accéder à {} via {}.",
-            "spanish": u"acceso a {} vía {}.",
-            "italian": u"accesso alla {} via {}.",
+            "spanish": u"Acceso a {} vía {}.",
+            "italian": u"Accesso alla {} via {}.",
         }
-        return instructions.get(lan, u"Then Enter {} via {}.")
+        return instructions.get(lan, instructions["english_us"])
 
     via = path_items.add()
     via.duration = access_point.traversal_time
@@ -276,7 +276,7 @@ def prepend_path_item_with_access_point(path_items, stop_point, access_point, la
             "spanish": u"Salida {} vía {}.",
             "italian": u"Uscita {} via {}.",
         }
-        return instructions.get(lan, u"Exit {} via {}.")
+        return instructions.get(lan, instructions["english_us"])
 
     via = path_items.add()
     via.duration = access_point.traversal_time

@@ -508,6 +508,19 @@ class TestJourneysDistributed(
         path = pt_journey['sections'][2]['path'][0]
         assert path['instruction'] == "Sortir de stop_point:stopA (Condom) via access_point:A2."
 
+        # Verify some path instructions managed by jormungandr in English as default language
+        query = journey_basic_query + "&_access_points=true&_asgard_language=japanese"
+        response = self.query_region(query)
+        assert len(response['journeys']) == 2
+
+        pt_journey = next((j for j in response['journeys'] if 'non_pt' not in j['tags']), None)
+        assert pt_journey
+        assert len(pt_journey['sections'][0]['vias']) == 1
+        path = pt_journey['sections'][0]['path'][-1]
+        assert path['instruction'] == "Then Enter stop_point:stopB (Condom) via access_point:B1."
+        path = pt_journey['sections'][2]['path'][0]
+        assert path['instruction'] == "Exit stop_point:stopA (Condom) via access_point:A2."
+
     def test_last_and_first_coord_in_geojson(self):
         """
         Test when departure/arrival fallback modes are different
