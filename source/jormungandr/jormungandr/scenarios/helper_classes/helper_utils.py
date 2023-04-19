@@ -329,8 +329,8 @@ def _extend_with_via_poi_access(fallback_dp, fallback_type, via_poi_access):
         )
 
 
-def _extend_with_via_access_point(fallback_dp, pt_object, fallback_type, via_pt_access, language):
-    if via_access_point is None:
+def _extend_with_via_pt_access(fallback_dp, pt_object, fallback_type, via_pt_access, language):
+    if via_pt_access is None:
         return
 
     traversal_time = via_pt_access.access_point.traversal_time
