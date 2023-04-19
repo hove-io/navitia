@@ -248,42 +248,44 @@ def _extend_with_car_park(
     dp_journey.distances.walking += int(walking_speed * car_park_crowfly_duration)
 
 
-def append_path_item_with_access_point(path_items, stop_point, access_point, language):
-    def get_instruction_words(lan):
-        instructions = {
-            "english_us": u"Then Enter {} via {}.",
-            "french": u"Accéder à {} via {}.",
-            "spanish": u"Acceso a {} vía {}.",
-            "italian": u"Accesso alla {} via {}.",
-        }
-        return instructions.get(lan, instructions["english_us"])
+def get_enter_instruction_words(lan):
+    instructions = {
+        "english_us": u"Then Enter {} via {}.",
+        "french": u"Accéder à {} via {}.",
+        "spanish": u"Acceso a {} vía {}.",
+        "italian": u"Accesso alla {} via {}.",
+    }
+    return instructions.get(lan, instructions["english_us"])
 
+
+def get_exit_instruction_words(lan):
+    instructions = {
+        "english_us": u"Exit {} via {}.",
+        "french": u"Sortir de {} via {}.",
+        "spanish": u"Salida {} vía {}.",
+        "italian": u"Uscita {} via {}.",
+    }
+    return instructions.get(lan, instructions["english_us"])
+
+
+def append_path_item_with_access_point(path_items, stop_point, access_point, language):
     via = path_items.add()
     via.duration = access_point.traversal_time
     via.length = access_point.length
     via.name = access_point.name
     # Use label in stead of name???
-    instruction_words = get_instruction_words(language)
+    instruction_words = get_enter_instruction_words(language)
     via.instruction = instruction_words.format(stop_point.label, access_point.name)
     via.via_uri = access_point.uri
 
 
 def prepend_path_item_with_access_point(path_items, stop_point, access_point, language):
-    def get_instruction_words(lan):
-        instructions = {
-            "english_us": u"Exit {} via {}.",
-            "french": u"Sortir de {} via {}.",
-            "spanish": u"Salida {} vía {}.",
-            "italian": u"Uscita {} via {}.",
-        }
-        return instructions.get(lan, instructions["english_us"])
-
     via = path_items.add()
     via.duration = access_point.traversal_time
     via.length = access_point.length
     via.name = access_point.name
     # Use label in stead of name???
-    instruction_words = get_instruction_words(language)
+    instruction_words = get_exit_instruction_words(language)
     via.instruction = instruction_words.format(stop_point.label, access_point.name)
     via.via_uri = access_point.uri
 
@@ -296,14 +298,18 @@ def prepend_path_item_with_access_point(path_items, stop_point, access_point, la
         path_items[-1].CopyFrom(tmp_item)
 
 
-def add_path_item_with_poi_access(fallback_type, path_items, poi_access):
+def add_path_item_with_poi_access(fallback_type, path_items, requested_obj, poi_access, language):
     via = path_items.add()
     via.duration = 0
     via.length = 0
     via.name = poi_access.name
-    via.instruction = u"via {}.".format(poi_access.name)
+    if fallback_type == StreetNetworkPathType.ENDING_FALLBACK:
+        instruction_words = get_enter_instruction_words(language)
+        via.instruction = instruction_words.format(requested_obj.name, poi_access.name)
     via.via_uri = poi_access.uri
     if fallback_type == StreetNetworkPathType.BEGINNING_FALLBACK:
+        instruction_words = get_exit_instruction_words(language)
+        via.instruction = instruction_words.format(requested_obj.name, poi_access.name)
         tmp_item = response_pb2.PathItem()
         # we cannot insert an element at the beginning of a list :(
         # a little algo to move the last element to the beginning
@@ -313,19 +319,19 @@ def add_path_item_with_poi_access(fallback_type, path_items, poi_access):
             path_items[-1].CopyFrom(tmp_item)
 
 
-def _extend_with_via_poi_access(fallback_dp, fallback_type, via_poi_access):
+def _extend_with_via_poi_access(fallback_dp, fallback_type, requested_obj, via_poi_access, language):
     if via_poi_access is None:
         return
 
     dp_journey = fallback_dp.journeys[0]
     if fallback_type == StreetNetworkPathType.BEGINNING_FALLBACK:
         add_path_item_with_poi_access(
-            fallback_type, dp_journey.sections[-1].street_network.path_items, via_poi_access
+            fallback_type, dp_journey.sections[-1].street_network.path_items, requested_obj, via_poi_access, language
         )
 
     elif fallback_type == StreetNetworkPathType.ENDING_FALLBACK:
         add_path_item_with_poi_access(
-            fallback_type, dp_journey.sections[0].street_network.path_items, via_poi_access
+            fallback_type, dp_journey.sections[0].street_network.path_items, requested_obj, via_poi_access, language
         )
 
 
@@ -609,7 +615,7 @@ def _build_fallback(
                     )
                 else:
                     _extend_with_via_pt_access(fallback_dp_copy, pt_obj, fallback_type, via_pt_access, language)
-                    _extend_with_via_poi_access(fallback_dp_copy, fallback_type, via_poi_access)
+                    _extend_with_via_poi_access(fallback_dp_copy, fallback_type, requested_obj, via_poi_access, language)
 
                 _update_fallback_sections(
                     pt_journey,
