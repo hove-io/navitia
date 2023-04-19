@@ -459,7 +459,7 @@ class TestJourneysDistributed(
         assert path['duration'] == 2
         assert path['length'] == 1
         assert path['via_uri'] == "access_point:B1"
-        assert path['instruction'] == "Then Enter stop_point:stopB (Condom) via access_point:B1."
+        assert path['instruction'] == "Then enter stop_point:stopB (Condom) via access_point:B1."
 
         path_sum = sum(p['duration'] for p in pt_journey['sections'][0]['path'])
         assert pt_journey['sections'][0]['duration'] == pytest.approx(path_sum, 1.0)
@@ -491,7 +491,7 @@ class TestJourneysDistributed(
         assert pt_journey
         assert len(pt_journey['sections'][0]['vias']) == 1
         path = pt_journey['sections'][0]['path'][-1]
-        assert path['instruction'] == "Then Enter stop_point:stopB (Condom) via access_point:B1."
+        assert path['instruction'] == "Then enter stop_point:stopB (Condom) via access_point:B1."
         path = pt_journey['sections'][2]['path'][0]
         assert path['instruction'] == "Exit stop_point:stopA (Condom) via access_point:A2."
 
@@ -517,7 +517,7 @@ class TestJourneysDistributed(
         assert pt_journey
         assert len(pt_journey['sections'][0]['vias']) == 1
         path = pt_journey['sections'][0]['path'][-1]
-        assert path['instruction'] == "Then Enter stop_point:stopB (Condom) via access_point:B1."
+        assert path['instruction'] == "Then enter stop_point:stopB (Condom) via access_point:B1."
         path = pt_journey['sections'][2]['path'][0]
         assert path['instruction'] == "Exit stop_point:stopA (Condom) via access_point:A2."
 
@@ -1397,7 +1397,7 @@ class TestRoutingWithTransfer(NewDefaultScenarioAbstractTestFixture):
         assert via['access_point']['coord']['lon'] == '0.01796623963909418'
 
         last_transfer_path = sections[2]['path'][-1]
-        assert last_transfer_path['instruction'] == 'Then Enter stop_point:stopE (Condom) via access_point:E1.'
+        assert last_transfer_path['instruction'] == 'Then enter stop_point:stopE (Condom) via access_point:E1.'
         assert last_transfer_path['name'] == "access_point:E1"
         assert last_transfer_path['via_uri'] == "access_point:E1"
 

@@ -597,6 +597,7 @@ void PbCreator::Filler::fill_pb_object(const ng::Admin* adm, pbnavitia::Administ
 void PbCreator::Filler::create_access_point(const nt::AccessPoint& access_point, pbnavitia::AccessPoint* ap) {
     ap->set_name(access_point.name);
     ap->set_uri(access_point.uri);
+    ap->set_embedded_type(pbnavitia::pt_access_point);
     if (access_point.coord.is_initialized()) {
         ap->mutable_coord()->set_lon(access_point.coord.lon());
         ap->mutable_coord()->set_lat(access_point.coord.lat());

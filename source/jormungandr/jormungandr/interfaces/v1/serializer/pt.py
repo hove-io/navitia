@@ -59,6 +59,7 @@ from navitiacommon.type_pb2 import (
     EquipmentDetails,
     CurrentAvailability,
     OccupancyStatus,
+    AccessPointType,
 )
 
 
@@ -414,6 +415,7 @@ class EquipmentDetailsSerializer(PbNestedSerializer):
 class AccessPointSerializer(PbGenericSerializer):
     coord = CoordSerializer(required=False)
     access_point_code = jsonschema.MethodField(schema_type=str, display_none=False)
+    embedded_type = EnumField(pb_type=AccessPointType, display_none=True)
 
     def get_access_point_code(self, obj):
         return get_proto_attr_or_default(obj, 'stop_code')
