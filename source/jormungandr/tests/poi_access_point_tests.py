@@ -256,7 +256,7 @@ class TestJourneysDistributedPoiAccessPoint(AbstractTestFixture):
             assert first_path["via_uri"] == 'poi:from:porte1'
             assert last_path["length"] == 1
             assert last_path["name"] == 'access_point:B1'
-            assert last_path["instruction"] == 'Then Enter stop_point:stopB (Condom) via access_point:B1.'
+            assert last_path["instruction"] == 'Then enter stop_point:stopB (Condom) via access_point:B1.'
             assert last_path["via_uri"] == 'access_point:B1'
 
             assert first_journey["sections"][2]["mode"] == "walking"
@@ -308,7 +308,7 @@ class TestJourneysDistributedPoiAccessPoint(AbstractTestFixture):
             assert len(path) == 3
             assert path[2]["length"] == 0
             assert path[2]["name"] == "Jardin: Porte 3"
-            assert path[2]["instruction"] == "Then Enter Jardin (City) via Jardin: Porte 3."
+            assert path[2]["instruction"] == "Then enter Jardin (City) via Jardin: Porte 3."
             assert path[2]["via_uri"] == 'poi:to:porte3'
 
             last_journey = journeys[1]
@@ -372,7 +372,7 @@ class TestJourneysDistributedPoiAccessPoint(AbstractTestFixture):
             last_path = path[-1]
             assert last_path["length"] == 0
             assert last_path["name"] == "Jardin: Porte 3"
-            assert last_path["instruction"] == "Then Enter Jardin (City) via Jardin: Porte 3."
+            assert last_path["instruction"] == "Then enter Jardin (City) via Jardin: Porte 3."
             assert last_path["via_uri"] == 'poi:to:porte3'
 
             last_journey = journeys[1]
@@ -427,7 +427,7 @@ class TestJourneysDistributedPoiAccessPoint(AbstractTestFixture):
             assert len(path) == 3
             assert path[2]["length"] == 0
             assert path[2]["name"] == "Jardin: Porte 3"
-            assert path[2]["instruction"] == "Then Enter Jardin (City) via Jardin: Porte 3."
+            assert path[2]["instruction"] == "Then enter Jardin (City) via Jardin: Porte 3."
             assert path[2]["via_uri"] == 'poi:to:porte3'
 
             last_journey = journeys[1]
@@ -479,7 +479,7 @@ class TestJourneysDistributedPoiAccessPoint(AbstractTestFixture):
             assert first_path["via_uri"] == 'poi:from:porte1'
             assert last_path["length"] == 1
             assert last_path["name"] == 'access_point:B1'
-            assert last_path["instruction"] == 'Then Enter stop_point:stopB (Condom) via access_point:B1.'
+            assert last_path["instruction"] == 'Then enter stop_point:stopB (Condom) via access_point:B1.'
             assert last_path["via_uri"] == 'access_point:B1'
 
             assert first_journey["sections"][2]["mode"] == "walking"
@@ -506,7 +506,7 @@ class TestJourneysDistributedPoiAccessPoint(AbstractTestFixture):
             assert first_path["via_uri"] == 'access_point:A2'
             assert last_path["length"] == 0
             assert last_path["name"] == "Jardin: Porte 3"
-            assert last_path["instruction"] == "Then Enter Jardin (City) via Jardin: Porte 3."
+            assert last_path["instruction"] == "Then enter Jardin (City) via Jardin: Porte 3."
             assert last_path["via_uri"] == 'poi:to:porte3'
 
             last_journey = journeys[1]

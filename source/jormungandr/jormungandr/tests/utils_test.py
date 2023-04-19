@@ -232,14 +232,14 @@ def compare_list_of_dicts(sorting_key, first_list, second_list):
 
 def test_get_pt_object_from_json_invalid_json():
     with pytest.raises(InvalidArguments) as error:
-        get_pt_object_from_json("bob", None)
+        get_pt_object_from_json("bob", object())
     assert error.value.data["message"] == "Invalid arguments dict_pt_object"
 
 
 def test_get_pt_object_from_json_invalid_embedded_type():
     pt_object_json = {"embedded_type": "bob", "id": "8.98312e-05;8.98312e-05"}
     with pytest.raises(InvalidArguments) as error:
-        get_pt_object_from_json(pt_object_json, None)
+        get_pt_object_from_json(pt_object_json, object())
     assert error.value.data["message"] == "Invalid arguments embedded_type"
 
 
@@ -270,7 +270,7 @@ def test_get_pt_object_from_json():
             "id": "poi:to",
         },
     }
-    pt_object = get_pt_object_from_json(pt_object_json, None)
+    pt_object = get_pt_object_from_json(pt_object_json, object())
     assert pt_object
     assert pt_object.name == "Jardin (City)"
     assert pt_object.uri == "poi:to"

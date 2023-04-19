@@ -400,7 +400,7 @@ def get_pt_object_from_json(dict_pt_object, instance):
     uri = dict_pt_object["id"]
     if embedded_type == type_pb2.ADMINISTRATIVE_REGION:
         # In this case we need the main_stop_area
-        pt_object = instance.georef.place(uri, request_id=None)
+        pt_object = instance.georef.place(uri)
         if pt_object:
             return pt_object
     pt_object = type_pb2.PtObject()
