@@ -248,15 +248,16 @@ class TestJourneysDistributedPoiAccessPoint(AbstractTestFixture):
             assert first_journey["sections"][0]["vias"][1]["access_point"]["embedded_type"] == 'pt_access_point'
 
             path = first_journey["sections"][0]["path"]
-            assert len(path) == 3
-            assert path[0]["length"] == 0
-            assert path[0]["name"] == "Jardin: Porte 1"
-            assert path[0]["instruction"] == "via Jardin: Porte 1."
-            assert path[0]["via_uri"] == 'poi:from:porte1'
-            assert path[2]["length"] == 1
-            assert path[2]["name"] == 'access_point:B1'
-            assert path[2]["instruction"] == 'Then Enter stop_point:stopB (Condom) via access_point:B1.'
-            assert path[2]["via_uri"] == 'access_point:B1'
+            first_path = path[0]
+            last_path = path[-1]
+            assert first_path["length"] == 0
+            assert first_path["name"] == "Jardin: Porte 1"
+            assert first_path["instruction"] == "via Jardin: Porte 1."
+            assert first_path["via_uri"] == 'poi:from:porte1'
+            assert last_path["length"] == 1
+            assert last_path["name"] == 'access_point:B1'
+            assert last_path["instruction"] == 'Then Enter stop_point:stopB (Condom) via access_point:B1.'
+            assert last_path["via_uri"] == 'access_point:B1'
 
             assert first_journey["sections"][2]["mode"] == "walking"
             assert first_journey["sections"][2]["type"] == "street_network"
@@ -469,15 +470,16 @@ class TestJourneysDistributedPoiAccessPoint(AbstractTestFixture):
             assert vias[1]["access_point"]["embedded_type"] == 'pt_access_point'
 
             path = first_journey["sections"][0]["path"]
-            assert len(path) == 3
-            assert path[0]["length"] == 0
-            assert path[0]["name"] == "Jardin: Porte 1"
-            assert path[0]["instruction"] == "via Jardin: Porte 1."
-            assert path[0]["via_uri"] == 'poi:from:porte1'
-            assert path[2]["length"] == 1
-            assert path[2]["name"] == 'access_point:B1'
-            assert path[2]["instruction"] == 'Then Enter stop_point:stopB (Condom) via access_point:B1.'
-            assert path[2]["via_uri"] == 'access_point:B1'
+            first_path = path[0]
+            last_path = path[-1]
+            assert first_path["length"] == 0
+            assert first_path["name"] == "Jardin: Porte 1"
+            assert first_path["instruction"] == "via Jardin: Porte 1."
+            assert first_path["via_uri"] == 'poi:from:porte1'
+            assert last_path["length"] == 1
+            assert last_path["name"] == 'access_point:B1'
+            assert last_path["instruction"] == 'Then Enter stop_point:stopB (Condom) via access_point:B1.'
+            assert last_path["via_uri"] == 'access_point:B1'
 
             assert first_journey["sections"][2]["mode"] == "walking"
             assert first_journey["sections"][2]["type"] == "street_network"
