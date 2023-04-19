@@ -326,12 +326,20 @@ def _extend_with_via_poi_access(fallback_dp, fallback_type, requested_obj, via_p
     dp_journey = fallback_dp.journeys[0]
     if fallback_type == StreetNetworkPathType.BEGINNING_FALLBACK:
         add_path_item_with_poi_access(
-            fallback_type, dp_journey.sections[-1].street_network.path_items, requested_obj, via_poi_access, language
+            fallback_type,
+            dp_journey.sections[-1].street_network.path_items,
+            requested_obj,
+            via_poi_access,
+            language,
         )
 
     elif fallback_type == StreetNetworkPathType.ENDING_FALLBACK:
         add_path_item_with_poi_access(
-            fallback_type, dp_journey.sections[0].street_network.path_items, requested_obj, via_poi_access, language
+            fallback_type,
+            dp_journey.sections[0].street_network.path_items,
+            requested_obj,
+            via_poi_access,
+            language,
         )
 
 
@@ -615,7 +623,9 @@ def _build_fallback(
                     )
                 else:
                     _extend_with_via_pt_access(fallback_dp_copy, pt_obj, fallback_type, via_pt_access, language)
-                    _extend_with_via_poi_access(fallback_dp_copy, fallback_type, requested_obj, via_poi_access, language)
+                    _extend_with_via_poi_access(
+                        fallback_dp_copy, fallback_type, requested_obj, via_poi_access, language
+                    )
 
                 _update_fallback_sections(
                     pt_journey,
