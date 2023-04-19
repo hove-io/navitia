@@ -391,12 +391,12 @@ def generate_id():
 def get_pt_object_from_json(dict_pt_object, instance):
     if not isinstance(dict_pt_object, dict):
         logging.getLogger(__name__).error('Invalid dict_pt_object')
-        raise InvalidArguments('Invalid dict_pt_object')
+        raise InvalidArguments('dict_pt_object')
     text_embedded_type = dict_pt_object.get("embedded_type")
     embedded_type = MAP_STRING_PTOBJECT_TYPE.get(text_embedded_type)
     if not embedded_type:
         logging.getLogger(__name__).error('Invalid embedded_type')
-        raise InvalidArguments('Invalid embedded_type')
+        raise InvalidArguments('embedded_type')
     uri = dict_pt_object["id"]
     if embedded_type == type_pb2.ADMINISTRATIVE_REGION:
         # In this case we need the main_stop_area

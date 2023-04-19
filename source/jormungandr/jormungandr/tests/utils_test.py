@@ -31,13 +31,13 @@
 from __future__ import absolute_import, unicode_literals
 from contextlib import contextmanager
 from flask import appcontext_pushed, g
-from jormungandr.utils import timestamp_to_datetime, make_namedtuple, walk_dict
+from jormungandr.utils import timestamp_to_datetime, make_namedtuple, walk_dict, get_pt_object_from_json
 import pytz
 from jormungandr import app
 import datetime
 import io
 from operator import itemgetter
-
+from jormungandr.exceptions import InvalidArguments
 from navitiacommon import models
 from navitiacommon.constants import DEFAULT_SHAPE_SCOPE
 import pytest
@@ -228,3 +228,50 @@ def compare_list_of_dicts(sorting_key, first_list, second_list):
     second_list.sort(key=itemgetter(sorting_key))
     assert len(first_list) == len(second_list)
     return all(x == y for x, y in (zip(first_list, second_list)))
+
+
+def test_get_pt_object_from_json_invalid_json():
+    with pytest.raises(InvalidArguments) as error:
+        get_pt_object_from_json("bob", None)
+    assert error.value.data["message"] == "Invalid arguments dict_pt_object"
+
+
+def test_get_pt_object_from_json_invalid_embedded_type():
+    pt_object_json = {"embedded_type": "bob", "id": "8.98312e-05;8.98312e-05"}
+    with pytest.raises(InvalidArguments) as error:
+        get_pt_object_from_json(pt_object_json, None)
+    assert error.value.data["message"] == "Invalid arguments embedded_type"
+
+
+def test_get_pt_object_from_json():
+    pt_object_json = {
+        "embedded_type": "poi",
+        "id": "poi:to",
+        "name": "Jardin (City)",
+        "poi": {
+            "poi_type": {"id": "poi_type:jardin", "name": "Jardin"},
+            "name": "Jardin",
+            "children": [
+                {
+                    "name": "Jardin: Porte 3",
+                    "coord": {"lat": "0.0007186505", "lon": "0.0018864605"},
+                    "type": "poi",
+                    "id": "poi:to:porte3",
+                },
+                {
+                    "name": "Jardin: Porte 4",
+                    "coord": {"lat": "0.0007186508", "lon": "0.0018864608"},
+                    "type": "poi",
+                    "id": "poi:to:porte4",
+                },
+            ],
+            "coord": {"lat": "0.00071865", "lon": "0.00188646"},
+            "label": "Jardin (City)",
+            "id": "poi:to",
+        },
+    }
+    pt_object = get_pt_object_from_json(pt_object_json, None)
+    assert pt_object
+    assert pt_object.name == "Jardin (City)"
+    assert pt_object.uri == "poi:to"
+    assert len(pt_object.poi.children) == 2
