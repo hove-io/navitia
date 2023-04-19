@@ -97,7 +97,7 @@ po::options_description get_options_description(const boost::optional<std::strin
         ("BROKER.total_retrieving_timeout", po::value<int>()->default_value(120000), "max total duration the worker is going to spend when retrieving messages, in milliseconds")
         ("BROKER.prefetch_timeout", po::value<int>()->default_value(100), "RabbitMQ timeout for prefetched messages (maintenance/RT) in millisecond")
         ("BROKER.prefetch_message_count", po::value<int>()->default_value(100), "max number of messages (maintenance/RT) prefetched from RabbitMQ")
-        ("BROKER.broker_prefetch_total_retrieving_timeout", po::value<int>()->default_value(10000), "max total duration the worker is going to spend when retrieving prefetched messages, in milliseconds")
+        ("BROKER.prefetch_total_retrieving_timeout", po::value<int>()->default_value(10000), "max total duration the worker is going to spend when retrieving prefetched messages, in milliseconds")
         ("BROKER.sleeptime", po::value<int>()->default_value(1), "sleeptime for maintenance worker in second")
         ("BROKER.reconnect_wait", po::value<int>()->default_value(1), "Wait duration between connection attempts to rabbitmq, in seconds")
         ("BROKER.queue", po::value<std::string>(), "rabbitmq's queue name to be bound")
@@ -242,7 +242,7 @@ int Configuration::broker_max_batch_nb() const {
 }
 
 int Configuration::broker_total_retrieving_timeout() const {
-    return vm["BROKER.broker_total_retrieving_timeout"].as<int>();
+    return vm["BROKER.total_retrieving_timeout"].as<int>();
 }
 
 int Configuration::broker_prefetch_timeout() const {
@@ -254,7 +254,7 @@ uint16_t Configuration::broker_prefetch_message_count() const {
 }
 
 int Configuration::broker_prefetch_total_retrieving_timeout() const {
-    return vm["BROKER.broker_prefetch_total_retrieving_timeout"].as<int>();
+    return vm["BROKER.prefetch_total_retrieving_timeout"].as<int>();
 }
 
 int Configuration::broker_sleeptime() const {

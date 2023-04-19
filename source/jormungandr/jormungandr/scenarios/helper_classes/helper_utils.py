@@ -1,3 +1,4 @@
+# encoding: utf-8
 # Copyright (c) 2001-2022, Hove and/or its affiliates. All rights reserved.
 #
 # This file is part of Navitia,
@@ -27,7 +28,8 @@
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 
-from __future__ import absolute_import
+from __future__ import absolute_import, unicode_literals
+
 
 from jormungandr.street_network.street_network import StreetNetworkPathType
 from jormungandr.utils import (
@@ -246,23 +248,43 @@ def _extend_with_car_park(
     dp_journey.distances.walking += int(walking_speed * car_park_crowfly_duration)
 
 
-def append_path_item_with_access_point(path_items, stop_point, access_point):
+def append_path_item_with_access_point(path_items, stop_point, access_point, language):
+    def get_instruction_words(lan):
+        instructions = {
+            "english_us": u"Then Enter {} via {}.",
+            "french": u"Accéder à {} via {}.",
+            "spanish": u"Acceso a {} vía {}.",
+            "italian": u"Accesso alla {} via {}.",
+        }
+        return instructions.get(lan, instructions["english_us"])
+
     via = path_items.add()
     via.duration = access_point.traversal_time
     via.length = access_point.length
     via.name = access_point.name
     # Use label in stead of name???
-    via.instruction = u"Then Enter {} via {}.".format(stop_point.label, access_point.name)
+    instruction_words = get_instruction_words(language)
+    via.instruction = instruction_words.format(stop_point.label, access_point.name)
     via.via_uri = access_point.uri
 
 
-def prepend_path_item_with_access_point(path_items, stop_point, access_point):
+def prepend_path_item_with_access_point(path_items, stop_point, access_point, language):
+    def get_instruction_words(lan):
+        instructions = {
+            "english_us": u"Exit {} via {}.",
+            "french": u"Sortir de {} via {}.",
+            "spanish": u"Salida {} vía {}.",
+            "italian": u"Uscita {} via {}.",
+        }
+        return instructions.get(lan, instructions["english_us"])
+
     via = path_items.add()
     via.duration = access_point.traversal_time
     via.length = access_point.length
     via.name = access_point.name
     # Use label in stead of name???
-    via.instruction = u"Exit {} via {}.".format(stop_point.label, access_point.name)
+    instruction_words = get_instruction_words(language)
+    via.instruction = instruction_words.format(stop_point.label, access_point.name)
     via.via_uri = access_point.uri
 
     # we cannot insert an element at the beginning of a list :(
@@ -307,8 +329,8 @@ def _extend_with_via_poi_access(fallback_dp, fallback_type, via_poi_access):
         )
 
 
-def _extend_with_via_pt_access(fallback_dp, pt_object, fallback_type, via_pt_access):
-    if via_pt_access is None:
+def _extend_with_via_access_point(fallback_dp, pt_object, fallback_type, via_pt_access, language):
+    if via_access_point is None:
         return
 
     traversal_time = via_pt_access.access_point.traversal_time
@@ -330,6 +352,7 @@ def _extend_with_via_pt_access(fallback_dp, pt_object, fallback_type, via_pt_acc
             dp_journey.sections[-1].street_network.path_items,
             pt_object.stop_point,
             via_pt_access.access_point,
+            language,
         )
 
     elif fallback_type == StreetNetworkPathType.ENDING_FALLBACK:
@@ -339,7 +362,7 @@ def _extend_with_via_pt_access(fallback_dp, pt_object, fallback_type, via_pt_acc
         dp_journey.sections[-1].street_network.length += length
 
         prepend_path_item_with_access_point(
-            dp_journey.sections[0].street_network.path_items, pt_object.stop_point, via_pt_access.access_point
+            dp_journey.sections[0].street_network.path_items, pt_object.stop_point, via_pt_access.access_point, language
         )
 
 
@@ -537,6 +560,7 @@ def _build_fallback(
     car_park_crowfly_duration = None
     via_pt_access = None
     via_poi_access = None
+    language = request.get('_asgard_language', "english_us")
 
     if mode == 'car':
         _, _, car_park, car_park_crowfly_duration, _, _ = fallback_durations[pt_obj.uri]
@@ -584,7 +608,7 @@ def _build_fallback(
                         car_park_crowfly_duration,
                     )
                 else:
-                    _extend_with_via_pt_access(fallback_dp_copy, pt_obj, fallback_type, via_pt_access)
+                    _extend_with_via_pt_access(fallback_dp_copy, pt_obj, fallback_type, via_pt_access, language)
                     _extend_with_via_poi_access(fallback_dp_copy, fallback_type, via_poi_access)
 
                 _update_fallback_sections(
