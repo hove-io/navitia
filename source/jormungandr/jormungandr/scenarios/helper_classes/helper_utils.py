@@ -362,7 +362,10 @@ def _extend_with_via_access_point(fallback_dp, pt_object, fallback_type, via_pt_
         dp_journey.sections[-1].street_network.length += length
 
         prepend_path_item_with_access_point(
-            dp_journey.sections[0].street_network.path_items, pt_object.stop_point, via_pt_access.access_point, language
+            dp_journey.sections[0].street_network.path_items,
+            pt_object.stop_point,
+            via_pt_access.access_point,
+            language,
         )
 
 
@@ -406,10 +409,7 @@ def _update_fallback_sections(
         poi_access.is_exit = True
         poi_access.is_entrance = True
 
-    if (
-        isinstance(via_pt_access, type_pb2.PtObject)
-        and via_pt_access.embedded_type == type_pb2.ACCESS_POINT
-    ):
+    if isinstance(via_pt_access, type_pb2.PtObject) and via_pt_access.embedded_type == type_pb2.ACCESS_POINT:
         if fallback_type == StreetNetworkPathType.BEGINNING_FALLBACK:
             fallback_sections[-1].vias.add().CopyFrom(via_pt_access.access_point)
         else:
