@@ -216,6 +216,9 @@ transfer_path = False
 # use/disuse access points in journey computations
 access_points = False
 
+# use/disuse poi access points in journey computations
+poi_access_points = False
+
 default_pt_planner = 'kraken'
 
 filter_odt_journeys = False

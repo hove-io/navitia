@@ -230,6 +230,7 @@ instance_fields = {
     'places_proximity_radius': fields.Raw,
     'transfer_path': fields.Boolean,
     'access_points': fields.Boolean,
+    'poi_access_points': fields.Boolean,
     'asgard_language': fields.Raw,
     'default_pt_planner': fields.Raw,
     'pt_planners_configurations': fields.Raw,

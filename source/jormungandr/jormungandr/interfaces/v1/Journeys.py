@@ -850,6 +850,9 @@ class Journeys(JourneyCommon):
             if args.get('_access_points') is None:
                 args['_access_points'] = mod.access_points
 
+            if args.get('_poi_access_points') is None:
+                args['_poi_access_points'] = mod.poi_access_points
+
             if args.get('_pt_planner') is None:
                 args['_pt_planner'] = mod.default_pt_planner
 
