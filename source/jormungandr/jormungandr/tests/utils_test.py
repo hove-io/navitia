@@ -31,7 +31,13 @@
 from __future__ import absolute_import, unicode_literals
 from contextlib import contextmanager
 from flask import appcontext_pushed, g
-from jormungandr.utils import timestamp_to_datetime, make_namedtuple, walk_dict, get_pt_object_from_json
+from jormungandr.utils import (
+    timestamp_to_datetime,
+    make_namedtuple,
+    walk_dict,
+    get_pt_object_from_json,
+    portable_min,
+)
 import pytz
 from jormungandr import app
 import datetime
@@ -275,3 +281,8 @@ def test_get_pt_object_from_json():
     assert pt_object.name == "Jardin (City)"
     assert pt_object.uri == "poi:to"
     assert len(pt_object.poi.children) == 2
+
+
+def test_portable_min():
+    assert portable_min([]) is None
+    assert portable_min((j for j in [])) is None
