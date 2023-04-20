@@ -60,3 +60,17 @@ def get_pollutants_value(distance):
         nox=AIR_POLLUTANTS_ESTIMATION_NOX_COEFF * distance / 1000.0,
         pm10=AIR_POLLUTANTS_ESTIMATION_PM_COEFF * distance / 1000.0,
     )
+
+
+def get_boarding_position_type(bp_str):
+    try:
+        return response_pb2.BoardingPosition.Value(bp_str)
+    except ValueError:
+        return None
+
+
+def fill_best_boarding_position(pb_section, boarding_positions):
+    for bp in boarding_positions:
+        pb_boarding_position_type = get_boarding_position_type(bp)
+        if pb_boarding_position_type:
+            pb_section.best_boarding_positions.append(pb_boarding_position_type)

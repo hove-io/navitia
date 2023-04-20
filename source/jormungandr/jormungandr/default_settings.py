@@ -255,3 +255,5 @@ ASGARD_ZMQ_SOCKET = os.getenv('JORMUNGANDR_ASGARD_ZMQ_SOCKET')
 # https://flask-sqlalchemy.palletsprojects.com/en/2.x/signals/
 # deprecated and slow
 SQLALCHEMY_TRACK_MODIFICATIONS = False
+
+BEST_BOARDING_POSITIONS_DIR = os.getenv('JORMUNGANDR_BEST_BOARDING_POSITIONS_DIR', None)

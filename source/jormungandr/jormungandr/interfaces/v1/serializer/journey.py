@@ -57,7 +57,6 @@ from jormungandr.interfaces.v1.serializer.base import (
     NestedEnumField,
     PbField,
     PbStrField,
-    IntNestedPropertyField,
     PbIntField,
 )
 from flask import g
@@ -68,6 +67,7 @@ from navitiacommon.response_pb2 import (
     StreetNetworkMode,
     SectionType,
     CyclePathType,
+    BoardingPosition,
 )
 import navitiacommon.response_pb2
 from navitiacommon.type_pb2 import RTLevel
@@ -407,6 +407,7 @@ class SectionSerializer(PbNestedSerializer):
     ridesharing_journeys = jsonschema.MethodField(
         schema_type=lambda: JourneySerializer(display_none=False, many=True)
     )
+    best_boarding_positions = EnumListField(attr='best_boarding_positions', pb_type=BoardingPosition)
 
     def get_ridesharing_journeys(self, obj):
         if not hasattr(obj, 'ridesharing_journeys') or not obj.ridesharing_journeys:

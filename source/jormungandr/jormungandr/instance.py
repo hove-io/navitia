@@ -209,6 +209,7 @@ class Instance(transient_socket.TransientSocket):
         self.external_service_provider_manager.init_external_services()
         self.instance_db = instance_db
         self._ghost_words = ghost_words or []
+        self.best_boarding_positions = None
 
     def get_providers_from_db(self):
         """

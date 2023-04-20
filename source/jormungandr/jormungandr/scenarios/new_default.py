@@ -81,6 +81,7 @@ from jormungandr.utils import (
     is_coord,
     get_pt_object_from_json,
     json_address_from_uri,
+    get_best_boarding_position,
 )
 from jormungandr.error import generate_error
 from jormungandr.utils import Coords
@@ -311,6 +312,17 @@ def fill_air_pollutants(pb_resp, instance, request_id):
             if pollutants_values:
                 s.air_pollutants.unit = helpers.AIR_POLLUTANTS_UNIT
                 s.air_pollutants.values.CopyFrom(pollutants_values)
+
+
+def update_best_boarding_positions(pb_resp, instance):
+    if not instance.best_boarding_positions:
+        return
+    for j in pb_resp.journeys:
+        for i in range(len(j.sections)):
+            if i > 0 and j.sections[i - 1].type == response_pb2.PUBLIC_TRANSPORT:
+                boarding_positions = get_best_boarding_position(j.sections[i], instance.best_boarding_positions)
+                if boarding_positions:
+                    helpers.fill_best_boarding_position(j.sections[i-1], boarding_positions)
 
 
 def compute_car_co2_emission(pb_resp, api_request, instance, request_id):
@@ -1357,6 +1369,8 @@ class Scenario(simple.Scenario):
         update_total_air_pollutants(pb_resp)
         # Tag ecologic should be done at the end
         tag_ecologic(pb_resp)
+        # Update best boarding positions in PT sections
+        update_best_boarding_positions(pb_resp, instance)
 
         # need to clean extra tickets after culling journeys
         journey_filter.remove_excess_tickets(pb_resp)

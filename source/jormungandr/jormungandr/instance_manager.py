@@ -42,6 +42,7 @@ from jormungandr.exceptions import ApiNotFound, RegionNotFound, DeadSocketExcept
 from jormungandr.authentication import abort_request, can_read_user
 from jormungandr import authentication, cache, memory_cache, app
 from jormungandr.instance import Instance
+from jormungandr.utils import read_best_boarding_positions
 import gevent
 import os
 
@@ -123,6 +124,11 @@ class InstanceManager(object):
             config.get('pt_planners', {}),
             config.get('ghost_words', []),
         )
+        # The best_boarding_positions files if any
+        # best_boarding_positions_dir = "/home/krishna/projet/debug/positionnement_NAV-1932/support"
+        best_boarding_positions_dir = app.config.get(str('BEST_BOARDING_POSITIONS_DIR'), None)
+        file_path = '{}/{}.csv'.format(best_boarding_positions_dir, instance.name)
+        instance.best_boarding_positions = read_best_boarding_positions(file_path)
         self.instances[instance.name] = instance
 
     def initialization(self):

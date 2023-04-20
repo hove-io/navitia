@@ -50,6 +50,8 @@ from contextlib import contextmanager
 import functools
 import sys
 import six
+import csv
+import os
 
 PY2 = sys.version_info[0] == 2
 PY3 = sys.version_info[0] == 3
@@ -59,6 +61,7 @@ UTC_DATETIME_FORMAT = "%Y-%m-%dT%H:%M:%S%z"
 NOT_A_DATE_TIME = "not-a-date-time"
 WEEK_DAYS_MAPPING = ("monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday")
 COVERAGE_ANY_BETA = "any-beta"
+BEST_BOARDING_POSITION_KEY = "{}-{}"
 
 MAP_STRING_PTOBJECT_TYPE = {
     "stop_point": type_pb2.STOP_POINT,
@@ -899,3 +902,37 @@ def get_weekday(timestamp):
 
 def is_stop_point(uri):
     return uri.startswith("stop_point") if uri else False
+
+
+def read_best_boarding_positions(file_path):
+    if not os.path.exists(file_path):
+        return None
+    try:
+        my_dict = dict()
+        fieldnames = ['from_id', 'to_id', 'positionnement_navitia']
+        with open(file_path) as f:
+            csv_reader = csv.DictReader(f, fieldnames)
+            # skip the header
+            next(csv_reader)
+
+            for line in csv_reader:
+                key = BEST_BOARDING_POSITION_KEY.format(line['from_id'], line['to_id'])
+                value = line['positionnement_navitia']
+                my_dict.setdefault(key, []).append(value)
+
+        return my_dict
+    except:
+        logger = logging.getLogger(__name__)
+        logger.exception('Error while loading best_boarding_positions file: {}'.format(file_path))
+        return None
+
+
+def get_best_boarding_position(section, positions_map):
+    if not positions_map:
+        return None
+    if section.type == response_pb2.TRANSFER:
+        key = BEST_BOARDING_POSITION_KEY.format(section.origin.uri, section.destination.uri)
+        return positions_map.get(key, None)
+    elif section.type == response_pb2.STREET_NETWORK and hasattr(section, 'vias') and section.vias:
+        key = BEST_BOARDING_POSITION_KEY.format(section.origin.uri, section.vias[0].uri)
+        return positions_map.get(key, None)
