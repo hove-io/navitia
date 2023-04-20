@@ -15,7 +15,9 @@ import sqlalchemy as sa
 
 
 def upgrade():
-    op.add_column('instance', sa.Column('poi_access_points', sa.Boolean(), server_default='False', nullable=False))
+    op.add_column(
+        'instance', sa.Column('poi_access_points', sa.Boolean(), server_default='False', nullable=False)
+    )
 
 
 def downgrade():
