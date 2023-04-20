@@ -488,6 +488,14 @@ class JourneyCommon(ResourceUri, ResourceUtc):
             help="use/disuse the entrance/exit in journeys computation",
         )
         parser_get.add_argument(
+            "_poi_access_points",
+            type=BooleanType(),
+            hidden=True,
+            default=False,
+            help="use/disuse the poi entrance/exit in journeys computation",
+        )
+
+        parser_get.add_argument(
             "additional_time_after_first_section_taxi",
             type=int,
             help="the additional time added to the taxi section, right after riding the taxi but before hopping on the public transit",

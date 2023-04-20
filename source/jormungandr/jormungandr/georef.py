@@ -37,7 +37,7 @@ class Kraken(object):
     def __init__(self, instance):
         self.instance = instance
 
-    def place(self, place, request_id):
+    def place(self, place, request_id=None):
         req = request_pb2.Request()
         req.requested_api = type_pb2.place_uri
         req.place_uri.uri = place

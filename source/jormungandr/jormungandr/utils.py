@@ -394,16 +394,16 @@ def generate_id():
 def get_pt_object_from_json(dict_pt_object, instance):
     if not isinstance(dict_pt_object, dict):
         logging.getLogger(__name__).error('Invalid dict_pt_object')
-        raise InvalidArguments('Invalid dict_pt_object')
+        raise InvalidArguments('dict_pt_object')
     text_embedded_type = dict_pt_object.get("embedded_type")
     embedded_type = MAP_STRING_PTOBJECT_TYPE.get(text_embedded_type)
     if not embedded_type:
         logging.getLogger(__name__).error('Invalid embedded_type')
-        raise InvalidArguments('Invalid embedded_type')
+        raise InvalidArguments('embedded_type')
     uri = dict_pt_object["id"]
     if embedded_type == type_pb2.ADMINISTRATIVE_REGION:
         # In this case we need the main_stop_area
-        pt_object = instance.georef.place(uri, request_id=None)
+        pt_object = instance.georef.place(uri)
         if pt_object:
             return pt_object
     pt_object = type_pb2.PtObject()
@@ -429,6 +429,14 @@ def get_pt_object_from_json(dict_pt_object, instance):
     )
     obj.coord.lon = coord.lon
     obj.coord.lat = coord.lat
+    if text_embedded_type == "poi":
+        for ch in dict_pt_object.get("poi", {}).get("children", []):
+            ch_poi = pt_object.poi.children.add()
+            ch_poi.uri = ch["id"]
+            ch_poi.name = ch.get("name", "")
+            coord = Coords(ch["coord"]["lat"], ch["coord"]["lon"])
+            ch_poi.coord.lon = coord.lon
+            ch_poi.coord.lat = coord.lat
 
     return pt_object
 

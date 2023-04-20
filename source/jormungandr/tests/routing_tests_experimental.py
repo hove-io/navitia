@@ -1,3 +1,4 @@
+# encoding: utf-8
 # Copyright (c) 2001-2022, Hove and/or its affiliates. All rights reserved.
 #
 # This file is part of Navitia,
@@ -458,7 +459,7 @@ class TestJourneysDistributed(
         assert path['duration'] == 2
         assert path['length'] == 1
         assert path['via_uri'] == "access_point:B1"
-        assert path['instruction'] == "Then Enter stop_point:stopB (Condom) via access_point:B1."
+        assert path['instruction'] == "Then enter stop_point:stopB (Condom) via access_point:B1."
 
         path_sum = sum(p['duration'] for p in pt_journey['sections'][0]['path'])
         assert pt_journey['sections'][0]['duration'] == pytest.approx(path_sum, 1.0)
@@ -479,6 +480,46 @@ class TestJourneysDistributed(
 
         path_sum = sum(p['duration'] for p in pt_journey['sections'][2]['path'])
         assert pt_journey['sections'][2]['duration'] == pytest.approx(path_sum, 1.0)
+
+    def test_path_instructions(self):
+        # Verify some path instructions managed by jormungandr in English
+        query = journey_basic_query + "&_access_points=true&_asgard_language=english_us"
+        response = self.query_region(query)
+        assert len(response['journeys']) == 2
+
+        pt_journey = next((j for j in response['journeys'] if 'non_pt' not in j['tags']), None)
+        assert pt_journey
+        assert len(pt_journey['sections'][0]['vias']) == 1
+        path = pt_journey['sections'][0]['path'][-1]
+        assert path['instruction'] == "Then enter stop_point:stopB (Condom) via access_point:B1."
+        path = pt_journey['sections'][2]['path'][0]
+        assert path['instruction'] == "Exit stop_point:stopA (Condom) via access_point:A2."
+
+        # Verify some path instructions managed by jormungandr in French
+        query = journey_basic_query + "&_access_points=true&_asgard_language=french"
+        response = self.query_region(query)
+        assert len(response['journeys']) == 2
+
+        pt_journey = next((j for j in response['journeys'] if 'non_pt' not in j['tags']), None)
+        assert pt_journey
+        assert len(pt_journey['sections'][0]['vias']) == 1
+        path = pt_journey['sections'][0]['path'][-1]
+        assert path['instruction'] == "Accéder à stop_point:stopB (Condom) via access_point:B1."
+        path = pt_journey['sections'][2]['path'][0]
+        assert path['instruction'] == "Sortir de stop_point:stopA (Condom) via access_point:A2."
+
+        # Verify some path instructions managed by jormungandr in English as default language
+        query = journey_basic_query + "&_access_points=true&_asgard_language=japanese"
+        response = self.query_region(query)
+        assert len(response['journeys']) == 2
+
+        pt_journey = next((j for j in response['journeys'] if 'non_pt' not in j['tags']), None)
+        assert pt_journey
+        assert len(pt_journey['sections'][0]['vias']) == 1
+        path = pt_journey['sections'][0]['path'][-1]
+        assert path['instruction'] == "Then enter stop_point:stopB (Condom) via access_point:B1."
+        path = pt_journey['sections'][2]['path'][0]
+        assert path['instruction'] == "Exit stop_point:stopA (Condom) via access_point:A2."
 
     def test_last_and_first_coord_in_geojson(self):
         """
@@ -1356,7 +1397,7 @@ class TestRoutingWithTransfer(NewDefaultScenarioAbstractTestFixture):
         assert via['access_point']['coord']['lon'] == '0.01796623963909418'
 
         last_transfer_path = sections[2]['path'][-1]
-        assert last_transfer_path['instruction'] == 'Then Enter stop_point:stopE (Condom) via access_point:E1.'
+        assert last_transfer_path['instruction'] == 'Then enter stop_point:stopE (Condom) via access_point:E1.'
         assert last_transfer_path['name'] == "access_point:E1"
         assert last_transfer_path['via_uri'] == "access_point:E1"
 
