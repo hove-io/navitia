@@ -28,8 +28,9 @@
 # www.navitia.io
 from __future__ import absolute_import, print_function, unicode_literals, division
 from navitiacommon import type_pb2, response_pb2
-from jormungandr.scenarios.helpers import is_car_direct_path
-from jormungandr.scenarios.new_default import _is_bike_in_pt_journey
+from jormungandr.scenarios.helpers import is_car_direct_path, get_boarding_position_type, fill_best_boarding_position
+
+BEST_BOARDING_POSITIONS = ['FRONT', 'MIDDLE']
 
 
 def get_walking_walking_journey():
@@ -494,3 +495,30 @@ def is_car_direct_path_test():
     assert is_car_direct_path(get_car_journey())
     assert not is_car_direct_path(get_bike_car_journey())
     assert not is_car_direct_path(get_bss_car_journey())
+
+
+def get_pt_journey():
+    journey = response_pb2.Journey()
+
+    section = journey.sections.add()
+    section.type = response_pb2.PUBLIC_TRANSPORT
+    section.duration = 15
+    return journey
+
+
+def get_boarding_position_type_test():
+    assert not get_boarding_position_type('toto')
+    assert not get_boarding_position_type('TOTO')
+    assert not get_boarding_position_type('front')
+    assert get_boarding_position_type('FRONT')
+    assert get_boarding_position_type('MIDDLE')
+    assert get_boarding_position_type('BACK')
+
+
+def fill_best_boarding_position_test():
+    journey = get_pt_journey()
+    fill_best_boarding_position(journey.sections[0], BEST_BOARDING_POSITIONS)
+    assert journey.sections[0].best_boarding_positions
+    assert response_pb2.BoardingPosition.FRONT in journey.sections[0].best_boarding_positions
+    assert response_pb2.BoardingPosition.MIDDLE in journey.sections[0].best_boarding_positions
+    assert response_pb2.BoardingPosition.BACK not in journey.sections[0].best_boarding_positions
