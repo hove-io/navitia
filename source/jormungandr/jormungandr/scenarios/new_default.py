@@ -318,7 +318,9 @@ def get_best_boarding_positions(section, instance):
         return instance.get_best_boarding_position(section.origin.uri, section.destination.uri)
     elif section.type == response_pb2.STREET_NETWORK and hasattr(section, 'vias') and section.vias:
         final_values = []
-        boarding_positions = (instance.get_best_boarding_position(section.origin.uri, via.uri) for via in section.vias)
+        boarding_positions = (
+            instance.get_best_boarding_position(section.origin.uri, via.uri) for via in section.vias
+        )
         for value in boarding_positions:
             if value not in final_values:
                 final_values.extend(value)
