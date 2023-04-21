@@ -64,7 +64,7 @@ from datetime import datetime, timedelta
 from navitiacommon import default_values
 from jormungandr.equipments import EquipmentProviderManager
 from jormungandr.external_services import ExternalServiceManager
-from jormungandr.utils import can_connect_to_database
+from jormungandr.utils import can_connect_to_database, BEST_BOARDING_POSITION_KEY
 from jormungandr import pt_planners_manager, transient_socket
 
 type_to_pttype = {
@@ -899,3 +899,9 @@ class Instance(transient_socket.TransientSocket):
         if not autocomplete:
             raise TechnicalError('autocomplete {} not available'.format(requested_autocomplete))
         return autocomplete
+
+    def get_best_boarding_position(self, from_id, to_id):
+        if not self.best_boarding_positions:
+            return None
+        key = BEST_BOARDING_POSITION_KEY.format(from_id, to_id)
+        return self.best_boarding_positions.get(key, None)

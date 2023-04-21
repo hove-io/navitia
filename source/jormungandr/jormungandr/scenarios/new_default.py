@@ -81,7 +81,6 @@ from jormungandr.utils import (
     is_coord,
     get_pt_object_from_json,
     json_address_from_uri,
-    get_best_boarding_position,
 )
 from jormungandr.error import generate_error
 from jormungandr.utils import Coords
@@ -314,13 +313,25 @@ def fill_air_pollutants(pb_resp, instance, request_id):
                 s.air_pollutants.values.CopyFrom(pollutants_values)
 
 
+def get_best_boarding_positions(section, instance):
+    if section.type == response_pb2.TRANSFER:
+        return instance.get_best_boarding_position(section.origin.uri, section.destination.uri)
+    elif section.type == response_pb2.STREET_NETWORK and hasattr(section, 'vias') and section.vias:
+        final_values = []
+        boarding_positions = (instance.get_best_boarding_position(section.origin.uri, via.uri) for via in section.vias)
+        for value in boarding_positions:
+            if value not in final_values:
+                final_values.extend(value)
+        return final_values
+
+
 def update_best_boarding_positions(pb_resp, instance):
     if not instance.best_boarding_positions:
         return
     for j in pb_resp.journeys:
         for i in range(len(j.sections)):
             if i > 0 and j.sections[i - 1].type == response_pb2.PUBLIC_TRANSPORT:
-                boarding_positions = get_best_boarding_position(j.sections[i], instance.best_boarding_positions)
+                boarding_positions = get_best_boarding_positions(j.sections[i], instance)
                 if boarding_positions:
                     helpers.fill_best_boarding_position(j.sections[i - 1], boarding_positions)
 

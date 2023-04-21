@@ -125,7 +125,6 @@ class InstanceManager(object):
             config.get('ghost_words', []),
         )
         # The best_boarding_positions files if any
-        # best_boarding_positions_dir = "/home/krishna/projet/debug/positionnement_NAV-1932/support"
         best_boarding_positions_dir = app.config.get(str('BEST_BOARDING_POSITIONS_DIR'), None)
         file_path = '{}/{}.csv'.format(best_boarding_positions_dir, instance.name)
         instance.best_boarding_positions = read_best_boarding_positions(file_path)

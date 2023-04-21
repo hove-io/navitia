@@ -70,7 +70,5 @@ def get_boarding_position_type(bp_str):
 
 
 def fill_best_boarding_position(pb_section, boarding_positions):
-    for bp in boarding_positions:
-        pb_boarding_position_type = get_boarding_position_type(bp)
-        if pb_boarding_position_type:
-            pb_section.best_boarding_positions.append(pb_boarding_position_type)
+    best_positions = (get_boarding_position_type(bp) for bp in boarding_positions)
+    pb_section.best_boarding_positions.extend((p for p in best_positions))

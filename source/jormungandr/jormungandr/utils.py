@@ -933,14 +933,3 @@ def read_best_boarding_positions(file_path):
         logger = logging.getLogger(__name__)
         logger.exception('Error while loading best_boarding_positions file: {}'.format(file_path))
         return None
-
-
-def get_best_boarding_position(section, positions_map):
-    if not positions_map:
-        return None
-    if section.type == response_pb2.TRANSFER:
-        key = BEST_BOARDING_POSITION_KEY.format(section.origin.uri, section.destination.uri)
-        return positions_map.get(key, None)
-    elif section.type == response_pb2.STREET_NETWORK and hasattr(section, 'vias') and section.vias:
-        key = BEST_BOARDING_POSITION_KEY.format(section.origin.uri, section.vias[0].uri)
-        return positions_map.get(key, None)
