@@ -31,7 +31,11 @@ from __future__ import absolute_import, print_function, unicode_literals, divisi
 import navitiacommon.response_pb2 as response_pb2
 import jormungandr.scenarios.tests.helpers_tests as helpers_tests
 from jormungandr.scenarios import new_default, journey_filter
-from jormungandr.scenarios.new_default import _tag_journey_by_mode, get_kraken_calls, update_best_boarding_positions
+from jormungandr.scenarios.new_default import (
+    _tag_journey_by_mode,
+    get_kraken_calls,
+    update_best_boarding_positions,
+)
 from jormungandr.scenarios.utils import switch_back_to_ridesharing
 from jormungandr.utils import BEST_BOARDING_POSITION_KEY
 from werkzeug.exceptions import HTTPException
