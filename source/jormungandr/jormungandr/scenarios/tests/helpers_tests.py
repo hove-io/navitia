@@ -28,7 +28,11 @@
 # www.navitia.io
 from __future__ import absolute_import, print_function, unicode_literals, division
 from navitiacommon import type_pb2, response_pb2
-from jormungandr.scenarios.helpers import is_car_direct_path, get_boarding_position_type, fill_best_boarding_position
+from jormungandr.scenarios.helpers import (
+    is_car_direct_path,
+    get_boarding_position_type,
+    fill_best_boarding_position,
+)
 
 BEST_BOARDING_POSITIONS = ['FRONT', 'MIDDLE']
 

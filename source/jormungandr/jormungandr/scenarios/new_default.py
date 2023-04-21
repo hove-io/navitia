@@ -322,7 +322,7 @@ def update_best_boarding_positions(pb_resp, instance):
             if i > 0 and j.sections[i - 1].type == response_pb2.PUBLIC_TRANSPORT:
                 boarding_positions = get_best_boarding_position(j.sections[i], instance.best_boarding_positions)
                 if boarding_positions:
-                    helpers.fill_best_boarding_position(j.sections[i-1], boarding_positions)
+                    helpers.fill_best_boarding_position(j.sections[i - 1], boarding_positions)
 
 
 def compute_car_co2_emission(pb_resp, api_request, instance, request_id):
