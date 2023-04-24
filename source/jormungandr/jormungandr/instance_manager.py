@@ -126,8 +126,9 @@ class InstanceManager(object):
         )
         # The best_boarding_positions files if any
         best_boarding_positions_dir = app.config.get(str('BEST_BOARDING_POSITIONS_DIR'), None)
-        file_path = os.path.join(best_boarding_positions_dir, "{}.csv".format(instance.name))
-        instance.best_boarding_positions = read_best_boarding_positions(file_path)
+        if best_boarding_positions_dir is not None:
+            file_path = os.path.join(best_boarding_positions_dir, "{}.csv".format(instance.name))
+            instance.best_boarding_positions = read_best_boarding_positions(file_path)
         self.instances[instance.name] = instance
 
     def initialization(self):
