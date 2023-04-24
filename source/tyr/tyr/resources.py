@@ -967,6 +967,14 @@ class Instance(flask_restful.Resource):
         )
 
         parser.add_argument(
+            'poi_access_points',
+            type=inputs.boolean,
+            help='use/disuse poi access points in journey computations',
+            location=('json', 'values'),
+            default=instance.poi_access_points,
+        )
+
+        parser.add_argument(
             'default_pt_planner',
             type=OptionValue(['kraken', 'loki']),
             help='choose public transport calculator for distributed',
@@ -1089,6 +1097,7 @@ class Instance(flask_restful.Resource):
                         'asgard_language',
                         'transfer_path',
                         'access_points',
+                        'poi_access_points',
                         'bss_return_duration',
                         'bss_rent_duration',
                         'bss_rent_penalty',

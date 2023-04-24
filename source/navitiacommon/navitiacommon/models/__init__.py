@@ -713,6 +713,13 @@ class Instance(db.Model):  # type: ignore
         server_default=str(default_values.access_points),
     )
 
+    poi_access_points = db.Column(
+        db.Boolean,
+        default=default_values.poi_access_points,
+        nullable=False,
+        server_default=str(default_values.poi_access_points),
+    )
+
     default_pt_planner = db.Column(
         db.Text,
         default=default_values.default_pt_planner,
