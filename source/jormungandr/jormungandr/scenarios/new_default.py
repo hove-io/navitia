@@ -313,18 +313,31 @@ def fill_air_pollutants(pb_resp, instance, request_id):
                 s.air_pollutants.values.CopyFrom(pollutants_values)
 
 
+def get_via_of_first_path_item(section):
+    if section.HasField('street_network') and section.street_network.path_items:
+        first_path_item = section.street_network.path_items[0]
+        if first_path_item.HasField('via_uri'):
+            return first_path_item.via_uri
+    return None
+
+
 def get_best_boarding_positions(section, instance):
     if section.type == response_pb2.TRANSFER:
-        return instance.get_best_boarding_position(section.origin.uri, section.destination.uri)
+        # Transfer may contain two different situations
+        # first: a transfer may happen when one transfer from metro to metro, in this case, the transfer section's
+        # origin and destination are used to determine the pathway.
+        # second: a transfer may happen when one transfer from metro to ground transport(bus, tram...), in this case,
+        # we should use the first via in the path item to determin the pathway
+        best_positions = instance.get_best_boarding_position(section.origin.uri, section.destination.uri)
+        if best_positions:
+            return best_positions
+        via_uri = get_via_of_first_path_item(section)
+        if via_uri:
+            return instance.get_best_boarding_position(section.origin.uri, via_uri)
+        return []
     elif section.type == response_pb2.STREET_NETWORK and hasattr(section, 'vias') and section.vias:
-        final_values = []
-        boarding_positions = (
-            instance.get_best_boarding_position(section.origin.uri, via.uri) for via in section.vias
-        )
-        for value in boarding_positions:
-            if value not in final_values:
-                final_values.extend(value)
-        return final_values
+        via_uri = get_via_of_first_path_item(section)
+        return instance.get_best_boarding_position(section.origin.uri, via_uri)
 
 
 def update_best_boarding_positions(pb_resp, instance):

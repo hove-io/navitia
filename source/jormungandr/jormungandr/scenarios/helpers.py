@@ -62,13 +62,5 @@ def get_pollutants_value(distance):
     )
 
 
-def get_boarding_position_type(bp_str):
-    try:
-        return response_pb2.BoardingPosition.Value(bp_str)
-    except ValueError:
-        return None
-
-
 def fill_best_boarding_position(pb_section, boarding_positions):
-    best_positions = (get_boarding_position_type(bp) for bp in boarding_positions)
-    pb_section.best_boarding_positions.extend((p for p in best_positions))
+    pb_section.best_boarding_positions.extend((p for p in boarding_positions))

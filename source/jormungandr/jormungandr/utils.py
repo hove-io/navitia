@@ -29,7 +29,7 @@
 
 from __future__ import absolute_import, print_function, unicode_literals, division
 import calendar
-from collections import deque, namedtuple
+from collections import deque, namedtuple, defaultdict
 from datetime import datetime
 from google.protobuf.descriptor import FieldDescriptor
 import pytz
@@ -915,8 +915,15 @@ def is_stop_point(uri):
 def read_best_boarding_positions(file_path):
     if not os.path.exists(file_path):
         return None
+
+    position_str_to_enum = {
+        'FRONT': response_pb2.BoardingPosition.FRONT,
+        'MIDDLE': response_pb2.BoardingPosition.MIDDLE,
+        'BACK': response_pb2.BoardingPosition.BACK,
+    }
+    logger = logging.getLogger(__name__)
     try:
-        my_dict = dict()
+        my_dict = defaultdict(set)
         fieldnames = ['from_id', 'to_id', 'positionnement_navitia']
         with open(file_path) as f:
             csv_reader = csv.DictReader(f, fieldnames)
@@ -925,11 +932,16 @@ def read_best_boarding_positions(file_path):
 
             for line in csv_reader:
                 key = BEST_BOARDING_POSITION_KEY.format(line['from_id'], line['to_id'])
-                value = line['positionnement_navitia']
-                my_dict.setdefault(key, []).append(value)
+                pos_str = line['positionnement_navitia']
+                pos_enum = position_str_to_enum.get(pos_str)
+                if pos_enum is None:
+                    logger.warning(
+                        "Error occurs when loading best_boarding_positions, wrong position string: ", pos_str
+                    )
+                    continue
+                my_dict[key].add(pos_enum)
 
         return my_dict
     except:
-        logger = logging.getLogger(__name__)
         logger.exception('Error while loading best_boarding_positions file: {}'.format(file_path))
         return None

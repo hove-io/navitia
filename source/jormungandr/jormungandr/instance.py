@@ -904,4 +904,4 @@ class Instance(transient_socket.TransientSocket):
         if not self.best_boarding_positions:
             return None
         key = BEST_BOARDING_POSITION_KEY.format(from_id, to_id)
-        return self.best_boarding_positions.get(key, None)
+        return self.best_boarding_positions.get(key, [])
