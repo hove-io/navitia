@@ -40,6 +40,7 @@ from jormungandr.scenarios.utils import switch_back_to_ridesharing
 from jormungandr.utils import BEST_BOARDING_POSITION_KEY
 from werkzeug.exceptions import HTTPException
 import pytest
+from collections import defaultdict
 
 """
  sections       0   1   2   3   4   5   6   7   8   9   10
@@ -684,24 +685,24 @@ def build_response_with_transfer_and_vias():
     section.origin.uri = 'stop_x'
     via = section.vias.add()
     via.uri = 'stop_y'
-    via = section.vias.add()
-    via.uri = 'stop_z'
+    path_item = section.street_network.path_items.add()
+    path_item.via_uri = 'stop_y'
     return response
 
 
 def update_best_boarding_positions_test():
     def mock_get_best_boarding_position(from_id, to_id):
         my_key = BEST_BOARDING_POSITION_KEY.format(from_id, to_id)
-        return instance.best_boarding_positions.get(my_key, None)
+        return instance.best_boarding_positions.get(my_key, [])
 
     instance = lambda: None
-    instance.best_boarding_positions = dict()
+    instance.best_boarding_positions = defaultdict(set)
     key = BEST_BOARDING_POSITION_KEY.format('stop_a', 'stop_b')
-    instance.best_boarding_positions.setdefault(key, []).append('FRONT')
+    instance.best_boarding_positions[key].add(response_pb2.FRONT)
     key = BEST_BOARDING_POSITION_KEY.format('stop_x', 'stop_y')
-    instance.best_boarding_positions.setdefault(key, []).append('MIDDLE')
+    instance.best_boarding_positions[key].add(response_pb2.MIDDLE)
     key = BEST_BOARDING_POSITION_KEY.format('stop_x', 'stop_z')
-    instance.best_boarding_positions.setdefault(key, []).append('BACK')
+    instance.best_boarding_positions[key].add(response_pb2.BACK)
 
     response = build_response_with_transfer_and_vias()
     instance.get_best_boarding_position = mock_get_best_boarding_position
@@ -716,10 +717,7 @@ def update_best_boarding_positions_test():
     # First PT section with ['FRONT'] calculated from the third section of type TRANSFER
     assert journey.sections[1].best_boarding_positions
     assert len(journey.sections[1].best_boarding_positions) == 1
-    assert response_pb2.BoardingPosition.FRONT in journey.sections[1].best_boarding_positions
-    # Second PT section with '['MIDDLE', 'BACK']' calculated from the last section of STREET_NETWORK with two vias
-    assert journey.sections[3].best_boarding_positions
-    assert len(journey.sections[3].best_boarding_positions) == 2
-    assert response_pb2.BoardingPosition.MIDDLE in journey.sections[3].best_boarding_positions
-    assert response_pb2.BoardingPosition.BACK in journey.sections[3].best_boarding_positions
-    assert response_pb2.BoardingPosition.FRONT not in journey.sections[3].best_boarding_positions
+    assert {response_pb2.BoardingPosition.FRONT} == set(iter(journey.sections[1].best_boarding_positions))
+    # Second PT section with '['MIDDLE']' calculated from the last section of STREET_NETWORK with the via of the first path_item
+    assert len(journey.sections[3].best_boarding_positions) == 1
+    assert {response_pb2.BoardingPosition.MIDDLE} == set(iter(journey.sections[3].best_boarding_positions))
