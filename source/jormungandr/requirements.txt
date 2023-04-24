@@ -53,7 +53,7 @@ kombu==5.0.2  ; python_version >= "3.9"
 redis==2.10.6
 flexpolyline==0.1.0
 newrelic==2.70.0.51 ; python_version <= "3.6"
-newrelic==5.20.1.150 ; python_version >= "3.9"
+newrelic==8.8.0 ; python_version >= "3.9"
 greenlet==0.4.15 ; python_version <= "3.6"
 pickle-mixin==1.0.2
 Flask-Caching==1.7.2
