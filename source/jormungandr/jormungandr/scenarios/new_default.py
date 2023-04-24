@@ -339,16 +339,20 @@ def get_best_boarding_positions(section, instance):
         via_uri = get_via_of_first_path_item(section)
         return instance.get_best_boarding_position(section.origin.uri, via_uri)
 
+    return []
+
 
 def update_best_boarding_positions(pb_resp, instance):
     if not instance.best_boarding_positions:
         return
     for j in pb_resp.journeys:
-        for i in range(len(j.sections)):
-            if i > 0 and j.sections[i - 1].type == response_pb2.PUBLIC_TRANSPORT:
-                boarding_positions = get_best_boarding_positions(j.sections[i], instance)
-                if boarding_positions:
-                    helpers.fill_best_boarding_position(j.sections[i - 1], boarding_positions)
+        prev_iter = iter(j.sections)
+        current_iter = itertools.islice(j.sections, 1, None)
+        for prev, curr in zip(prev_iter, current_iter):
+            if prev.type != response_pb2.PUBLIC_TRANSPORT:
+                continue
+            boarding_positions = get_best_boarding_positions(curr, instance)
+            helpers.fill_best_boarding_position(prev, boarding_positions)
 
 
 def compute_car_co2_emission(pb_resp, api_request, instance, request_id):

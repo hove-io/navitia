@@ -902,6 +902,6 @@ class Instance(transient_socket.TransientSocket):
 
     def get_best_boarding_position(self, from_id, to_id):
         if not self.best_boarding_positions:
-            return None
+            return []
         key = BEST_BOARDING_POSITION_KEY.format(from_id, to_id)
         return self.best_boarding_positions.get(key, [])
