@@ -1,4 +1,20 @@
-FROM debian:bullseye-slim
+FROM arm64v8/python:3.9-slim-bullseye
+
+WORKDIR /
+
+# https://github.com/aws/aws-graviton-getting-started/blob/main/c-c%2B%2B.md
+ENV CPPFLAGS="-mcpu=neoverse-n1 -march=armv8.2-a -moutline-atomics"
+ENV CFLAGS="-mcpu=neoverse-n1 -march=armv8.2-a -moutline-atomics"
+
+RUN apt-get update --fix-missing \
+    && apt-get install -y curl gcc g++ git libpq5 apache2 libxml2-dev  libxslt1-dev libpq-dev libgeos-c1v5 ca-certificates \
+    && CPPFLAGS="-mcpu=neoverse-n1" CFLAGS="-mcpu=neoverse-n1" pip3 install --no-binary :all: --no-cache-dir uwsgi==2.0.21
+
+RUN apt-get install -y zlib1g-dev
+
+# install deps for building Gevent from source
+COPY ./docker/debian11/build_gevent.sh ./build_gevent.sh
+RUN sh build_gevent.sh
 
 WORKDIR /usr/src/app
 
@@ -6,18 +22,14 @@ COPY ./source/navitiacommon ./navitiacommon
 COPY ./source/jormungandr ./jormungandr
 COPY ./docker/ca-certificates/*.crt /usr/local/share/ca-certificates/
 
-RUN apt-get update --fix-missing \
-    && apt-get install -y curl libpq5 apache2 python3.9-dev python3-pip git libgeos-c1v5 ca-certificates \
+RUN (cd navitiacommon && python3 setup.py install) \
+    && (cd jormungandr && python3 setup.py install && CPPFLAGS="-mcpu=neoverse-n1" CFLAGS="-mcpu=neoverse-n1"  pip3 install --no-binary :all: --no-cache-dir -U -r requirements.txt)\
     && update-ca-certificates \
-    && (cd navitiacommon && python3 setup.py install) \
-    && (cd jormungandr && python3 setup.py install && pip3 install --no-cache-dir -U -r requirements.txt)\
-    && pip3 install --no-cache-dir uwsgi==2.0.21 \
     && rm -rf navitiacommon jormungandr \
-    && apt-get purge -y \
-        python3-pip \
-        git \
     && apt-get autoremove -y
 
+RUN pip3 uninstall -y protobuf
+RUN pip3 install protobuf==3.20.3
 
 COPY ./docker/run_jormungandr.sh ./run.sh
 COPY ./docker/jormungandr.wsgi ./jormungandr.wsgi
