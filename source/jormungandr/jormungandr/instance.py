@@ -707,6 +707,7 @@ class Instance(transient_socket.TransientSocket):
 
     transfer_path = _make_property_getter('transfer_path')
     access_points = _make_property_getter('access_points')
+    poi_access_points = _make_property_getter('poi_access_points')
 
     default_pt_planner = _make_property_getter('default_pt_planner')
     pt_planners_configurations = _make_property_getter('pt_planners_configurations')

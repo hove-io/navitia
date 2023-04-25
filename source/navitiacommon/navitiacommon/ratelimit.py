@@ -263,13 +263,13 @@ if __name__ == '__main__':
     rate.add_condition({'requests': 40, 'minutes': 15}, {'requests': 400, 'days': 1})
 
     i = 1
-    for _ in xrange(5):
+    for _ in range(0, 5):
         rate.acquire(key)
         log.info('***************     ping %d     ***************', i)
         i += 1
 
     rate.block(key, seconds=10)
-    for _ in xrange(10):
+    for _ in range(0, 10):
         rate.acquire(key)
         log.info('***************     ping %d     ***************', i)
         i += 1
@@ -277,7 +277,7 @@ if __name__ == '__main__':
     # block all keys
     rate.add_condition(0, 1)
 
-    for _ in xrange(5):
+    for _ in range(0, 5):
         rate(key, block=False)  # alternative interface
         time.sleep(1)
 

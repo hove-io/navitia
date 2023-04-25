@@ -323,6 +323,7 @@ class FallbackDurations:
             in [
                 FallbackModes.walking.name,
                 FallbackModes.bike.name,
+                FallbackModes.bss.name,
             ]
             and self._requested_place_obj.poi.children
         )

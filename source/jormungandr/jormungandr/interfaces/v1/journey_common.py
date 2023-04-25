@@ -491,7 +491,6 @@ class JourneyCommon(ResourceUri, ResourceUtc):
             "_poi_access_points",
             type=BooleanType(),
             hidden=True,
-            default=False,
             help="use/disuse the poi entrance/exit in journeys computation",
         )
 

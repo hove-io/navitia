@@ -733,7 +733,8 @@ def portable_min(*args, **kwargs):
         except Exception:
             raise
     if PY3:
-        return min(*args, **kwargs)
+        default = kwargs.get('default', None)
+        return min(*args, default=default)
 
 
 def mps_to_kmph(speed):
