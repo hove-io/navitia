@@ -918,15 +918,17 @@ def make_best_boarding_position_key(from_id, to_id):
 
 
 def read_best_boarding_positions(file_path):
+    logger = logging.getLogger(__name__)
     if not os.path.exists(file_path):
+        logger.warning("file: %s does not exist", file_path)
         return None
 
+    logger.info("reading best boarding position from file: %s", file_path)
     position_str_to_enum = {
         'front': response_pb2.BoardingPosition.FRONT,
         'middle': response_pb2.BoardingPosition.MIDDLE,
         'back': response_pb2.BoardingPosition.BACK,
     }
-    logger = logging.getLogger(__name__)
     try:
         my_dict = defaultdict(set)
         fieldnames = ['from_id', 'to_id', 'positionnement_navitia']
