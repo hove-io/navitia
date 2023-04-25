@@ -50,6 +50,7 @@ from navitiacommon import models, response_pb2
 from navitiacommon.constants import DEFAULT_SHAPE_SCOPE
 import pytest
 import csv
+import os
 
 
 class MockResponse(object):
@@ -292,8 +293,9 @@ def test_portable_min():
 
 
 def test_read_best_boarding_positions():
-    file_path = '/tmp/best_boarding_postision_test.csv'
-    with open(file_path, 'w') as file:
+    file_name = 'best_boarding_postision_test.csv'
+
+    with open(file_name, 'w+') as file:
         writer = csv.writer(file)
         field = ["from_id", "to_id", "positionnement_navitia"]
 
@@ -309,7 +311,7 @@ def test_read_best_boarding_positions():
         writer.writerow(["b", "a", "BACK"])
         writer.writerow(["b", "a", "front"])
 
-    d = read_best_boarding_positions(file_path)
+    d = read_best_boarding_positions(file_name)
     assert d[make_best_boarding_position_key("a", "b")] == {
         response_pb2.FRONT,
         response_pb2.BACK,
