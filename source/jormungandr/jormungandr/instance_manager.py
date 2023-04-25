@@ -122,7 +122,7 @@ class InstanceManager(object):
             config.get('external_services_providers', []),
             config.get('pt_planners', {}),
             config.get('ghost_words', []),
-            app.config.get(str('BEST_BOARDING_POSITIONS_DIR'), None),
+            best_boarding_positions_dir=app.config.get(str('BEST_BOARDING_POSITIONS_DIR'), None),
         )
 
         self.instances[instance.name] = instance
