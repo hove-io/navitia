@@ -37,7 +37,7 @@ from jormungandr.scenarios.new_default import (
     update_best_boarding_positions,
 )
 from jormungandr.scenarios.utils import switch_back_to_ridesharing
-from jormungandr.utils import BEST_BOARDING_POSITION_KEY
+from jormungandr.utils import make_best_boarding_position_key
 from werkzeug.exceptions import HTTPException
 import pytest
 from collections import defaultdict
@@ -692,16 +692,16 @@ def build_response_with_transfer_and_vias():
 
 def update_best_boarding_positions_test():
     def mock_get_best_boarding_position(from_id, to_id):
-        my_key = BEST_BOARDING_POSITION_KEY.format(from_id, to_id)
+        my_key = make_best_boarding_position_key(from_id, to_id)
         return instance.best_boarding_positions.get(my_key, [])
 
     instance = lambda: None
     instance.best_boarding_positions = defaultdict(set)
-    key = BEST_BOARDING_POSITION_KEY.format('stop_a', 'stop_b')
+    key = make_best_boarding_position_key('stop_a', 'stop_b')
     instance.best_boarding_positions[key].add(response_pb2.FRONT)
-    key = BEST_BOARDING_POSITION_KEY.format('stop_x', 'stop_y')
+    key = make_best_boarding_position_key('stop_x', 'stop_y')
     instance.best_boarding_positions[key].add(response_pb2.MIDDLE)
-    key = BEST_BOARDING_POSITION_KEY.format('stop_x', 'stop_z')
+    key = make_best_boarding_position_key('stop_x', 'stop_z')
     instance.best_boarding_positions[key].add(response_pb2.BACK)
 
     response = build_response_with_transfer_and_vias()

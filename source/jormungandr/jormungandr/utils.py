@@ -912,14 +912,18 @@ def is_stop_point(uri):
     return uri.startswith("stop_point") if uri else False
 
 
+def make_best_boarding_position_key(from_id, to_id):
+    return BEST_BOARDING_POSITION_KEY.format(from_id, to_id)
+
+
 def read_best_boarding_positions(file_path):
     if not os.path.exists(file_path):
         return None
 
     position_str_to_enum = {
-        'FRONT': response_pb2.BoardingPosition.FRONT,
-        'MIDDLE': response_pb2.BoardingPosition.MIDDLE,
-        'BACK': response_pb2.BoardingPosition.BACK,
+        'front': response_pb2.BoardingPosition.FRONT,
+        'middle': response_pb2.BoardingPosition.MIDDLE,
+        'back': response_pb2.BoardingPosition.BACK,
     }
     logger = logging.getLogger(__name__)
     try:
@@ -931,12 +935,12 @@ def read_best_boarding_positions(file_path):
             next(csv_reader)
 
             for line in csv_reader:
-                key = BEST_BOARDING_POSITION_KEY.format(line['from_id'], line['to_id'])
+                key = make_best_boarding_position_key(line['from_id'], line['to_id'])
                 pos_str = line['positionnement_navitia']
-                pos_enum = position_str_to_enum.get(pos_str)
+                pos_enum = position_str_to_enum.get(pos_str.lower())
                 if pos_enum is None:
                     logger.warning(
-                        "Error occurs when loading best_boarding_positions, wrong position string: ", pos_str
+                        "Error occurs when loading best_boarding_positions, wrong position string: %s", pos_str
                     )
                     continue
                 my_dict[key].add(pos_enum)

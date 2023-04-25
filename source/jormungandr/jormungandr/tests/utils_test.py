@@ -31,16 +31,24 @@
 from __future__ import absolute_import, unicode_literals
 from contextlib import contextmanager
 from flask import appcontext_pushed, g
-from jormungandr.utils import timestamp_to_datetime, make_namedtuple, walk_dict, get_pt_object_from_json
+from jormungandr.utils import (
+    timestamp_to_datetime,
+    make_namedtuple,
+    walk_dict,
+    get_pt_object_from_json,
+    read_best_boarding_positions,
+    make_best_boarding_position_key,
+)
 import pytz
 from jormungandr import app
 import datetime
 import io
 from operator import itemgetter
 from jormungandr.exceptions import InvalidArguments
-from navitiacommon import models
+from navitiacommon import models, response_pb2
 from navitiacommon.constants import DEFAULT_SHAPE_SCOPE
 import pytest
+import csv
 
 
 class MockResponse(object):
@@ -275,3 +283,30 @@ def test_get_pt_object_from_json():
     assert pt_object.name == "Jardin (City)"
     assert pt_object.uri == "poi:to"
     assert len(pt_object.poi.children) == 2
+
+
+def test_read_best_boarding_positions():
+    file_path = '/tmp/best_boarding_postision_test.csv'
+    with open(file_path, 'w', newline='') as file:
+        writer = csv.writer(file)
+        field = ["from_id", "to_id", "positionnement_navitia"]
+
+        writer.writerow(field)
+        # the boarding test should be case-insensitive and only one 'front' should be present in the map
+        writer.writerow(["a", "b", "Front"])
+        writer.writerow(["a", "b", "FRONT"])
+
+        writer.writerow(["a", "b", "BACK"])
+        writer.writerow(["a", "b", "middle"])
+        writer.writerow(["a", "b", "WTH???"])
+
+        writer.writerow(["b", "a", "BACK"])
+        writer.writerow(["b", "a", "front"])
+
+    d = read_best_boarding_positions(file_path)
+    assert d[make_best_boarding_position_key("a", "b")] == {
+        response_pb2.FRONT,
+        response_pb2.BACK,
+        response_pb2.MIDDLE,
+    }
+    assert d[make_best_boarding_position_key("b", "a")] == {response_pb2.FRONT, response_pb2.BACK}
