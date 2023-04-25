@@ -60,3 +60,7 @@ def get_pollutants_value(distance):
         nox=AIR_POLLUTANTS_ESTIMATION_NOX_COEFF * distance / 1000.0,
         pm10=AIR_POLLUTANTS_ESTIMATION_PM_COEFF * distance / 1000.0,
     )
+
+
+def fill_best_boarding_position(pb_section, boarding_positions):
+    pb_section.best_boarding_positions.extend((p for p in boarding_positions))

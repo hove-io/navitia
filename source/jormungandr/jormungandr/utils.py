@@ -29,7 +29,7 @@
 
 from __future__ import absolute_import, print_function, unicode_literals, division
 import calendar
-from collections import deque, namedtuple
+from collections import deque, namedtuple, defaultdict
 from datetime import datetime
 from google.protobuf.descriptor import FieldDescriptor
 import pytz
@@ -50,6 +50,8 @@ from contextlib import contextmanager
 import functools
 import sys
 import six
+import csv
+import os
 
 PY2 = sys.version_info[0] == 2
 PY3 = sys.version_info[0] == 3
@@ -59,6 +61,7 @@ UTC_DATETIME_FORMAT = "%Y-%m-%dT%H:%M:%S%z"
 NOT_A_DATE_TIME = "not-a-date-time"
 WEEK_DAYS_MAPPING = ("monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday")
 COVERAGE_ANY_BETA = "any-beta"
+BEST_BOARDING_POSITION_KEY = "{}-{}"
 
 MAP_STRING_PTOBJECT_TYPE = {
     "stop_point": type_pb2.STOP_POINT,
@@ -908,3 +911,46 @@ def get_weekday(timestamp):
 
 def is_stop_point(uri):
     return uri.startswith("stop_point") if uri else False
+
+
+def make_best_boarding_position_key(from_id, to_id):
+    return BEST_BOARDING_POSITION_KEY.format(from_id, to_id)
+
+
+def read_best_boarding_positions(file_path):
+    logger = logging.getLogger(__name__)
+    if not os.path.exists(file_path):
+        logger.warning("file: %s does not exist", file_path)
+        return None
+
+    logger.info("reading best boarding position from file: %s", file_path)
+    position_str_to_enum = {
+        'front': response_pb2.BoardingPosition.FRONT,
+        'middle': response_pb2.BoardingPosition.MIDDLE,
+        'back': response_pb2.BoardingPosition.BACK,
+    }
+    try:
+        my_dict = defaultdict(set)
+        fieldnames = ['from_id', 'to_id', 'positionnement_navitia']
+        with open(file_path) as f:
+            csv_reader = csv.DictReader(f, fieldnames)
+            # skip the header
+            next(csv_reader)
+
+            for line in csv_reader:
+                key = make_best_boarding_position_key(line['from_id'], line['to_id'])
+                pos_str = line['positionnement_navitia']
+                pos_enum = position_str_to_enum.get(pos_str.lower())
+                if pos_enum is None:
+                    logger.warning(
+                        "Error occurs when loading best_boarding_positions, wrong position string: %s", pos_str
+                    )
+                    continue
+                my_dict[key].add(pos_enum)
+
+        return my_dict
+    except Exception as e:
+        logger.exception(
+            'Error while loading best_boarding_positions file: {} with exception: {}'.format(file_path, str(e))
+        )
+        return None

@@ -31,10 +31,16 @@ from __future__ import absolute_import, print_function, unicode_literals, divisi
 import navitiacommon.response_pb2 as response_pb2
 import jormungandr.scenarios.tests.helpers_tests as helpers_tests
 from jormungandr.scenarios import new_default, journey_filter
-from jormungandr.scenarios.new_default import _tag_journey_by_mode, get_kraken_calls
+from jormungandr.scenarios.new_default import (
+    _tag_journey_by_mode,
+    get_kraken_calls,
+    update_best_boarding_positions,
+)
 from jormungandr.scenarios.utils import switch_back_to_ridesharing
+from jormungandr.utils import make_best_boarding_position_key
 from werkzeug.exceptions import HTTPException
 import pytest
+from collections import defaultdict
 
 """
  sections       0   1   2   3   4   5   6   7   8   9   10
@@ -656,3 +662,62 @@ def filter_non_car_tagged_journey_test():
     mocked_request['origin_mode'] = ['car']
     journey_filter.apply_final_journey_filters([mocked_pb_response], instance, mocked_request)
     expected_deleted_non_car_journey(mocked_pb_response.journeys, 1)
+
+
+def build_response_with_transfer_and_vias():
+    response = response_pb2.Response()
+    journey = response.journeys.add()
+
+    section = journey.sections.add()
+    section.type = response_pb2.STREET_NETWORK
+    section.street_network.mode = response_pb2.Ridesharing
+    section = journey.sections.add()
+    section.type = response_pb2.PUBLIC_TRANSPORT
+    section = journey.sections.add()
+    section.type = response_pb2.TRANSFER
+    section.origin.uri = 'stop_a'
+    section.destination.uri = 'stop_b'
+    section = journey.sections.add()
+    section.type = response_pb2.PUBLIC_TRANSPORT
+    section = journey.sections.add()
+    section.type = response_pb2.STREET_NETWORK
+    section.street_network.mode = response_pb2.Walking
+    section.origin.uri = 'stop_x'
+    via = section.vias.add()
+    via.uri = 'stop_y'
+    path_item = section.street_network.path_items.add()
+    path_item.via_uri = 'stop_y'
+    return response
+
+
+def update_best_boarding_positions_test():
+    def mock_get_best_boarding_position(from_id, to_id):
+        my_key = make_best_boarding_position_key(from_id, to_id)
+        return instance.best_boarding_positions.get(my_key, [])
+
+    instance = lambda: None
+    instance.best_boarding_positions = defaultdict(set)
+    key = make_best_boarding_position_key('stop_a', 'stop_b')
+    instance.best_boarding_positions[key].add(response_pb2.FRONT)
+    key = make_best_boarding_position_key('stop_x', 'stop_y')
+    instance.best_boarding_positions[key].add(response_pb2.MIDDLE)
+    key = make_best_boarding_position_key('stop_x', 'stop_z')
+    instance.best_boarding_positions[key].add(response_pb2.BACK)
+
+    response = build_response_with_transfer_and_vias()
+    instance.get_best_boarding_position = mock_get_best_boarding_position
+    assert len(response.journeys) == 1
+    journey = response.journeys[0]
+    assert len(journey.sections) == 5
+    assert journey.sections[1].type == response_pb2.PUBLIC_TRANSPORT
+    assert not journey.sections[1].best_boarding_positions
+    assert journey.sections[3].type == response_pb2.PUBLIC_TRANSPORT
+    assert not journey.sections[3].best_boarding_positions
+    update_best_boarding_positions(response, instance)
+    # First PT section with ['FRONT'] calculated from the third section of type TRANSFER
+    assert journey.sections[1].best_boarding_positions
+    assert len(journey.sections[1].best_boarding_positions) == 1
+    assert {response_pb2.BoardingPosition.FRONT} == set(iter(journey.sections[1].best_boarding_positions))
+    # Second PT section with '['MIDDLE']' calculated from the last section of STREET_NETWORK with the via of the first path_item
+    assert len(journey.sections[3].best_boarding_positions) == 1
+    assert {response_pb2.BoardingPosition.MIDDLE} == set(iter(journey.sections[3].best_boarding_positions))

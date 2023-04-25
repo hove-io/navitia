@@ -64,8 +64,13 @@ from datetime import datetime, timedelta
 from navitiacommon import default_values
 from jormungandr.equipments import EquipmentProviderManager
 from jormungandr.external_services import ExternalServiceManager
-from jormungandr.utils import can_connect_to_database
+from jormungandr.utils import (
+    can_connect_to_database,
+    make_best_boarding_position_key,
+    read_best_boarding_positions,
+)
 from jormungandr import pt_planners_manager, transient_socket
+import os
 
 type_to_pttype = {
     "stop_area": request_pb2.PlaceCodeRequest.StopArea,  # type: ignore
@@ -120,6 +125,7 @@ class Instance(transient_socket.TransientSocket):
         pt_planners_configurations,
         ghost_words=None,
         instance_db=None,
+        best_boarding_positions_dir=None,
     ):
         super(Instance, self).__init__(
             name=name,
@@ -209,6 +215,12 @@ class Instance(transient_socket.TransientSocket):
         self.external_service_provider_manager.init_external_services()
         self.instance_db = instance_db
         self._ghost_words = ghost_words or []
+        self.best_boarding_positions = None
+
+        # Read the best_boarding_positions files if any
+        if best_boarding_positions_dir is not None:
+            file_path = os.path.join(best_boarding_positions_dir, "{}.csv".format(self.name))
+            self.best_boarding_positions = read_best_boarding_positions(file_path)
 
     def get_providers_from_db(self):
         """
@@ -899,3 +911,9 @@ class Instance(transient_socket.TransientSocket):
         if not autocomplete:
             raise TechnicalError('autocomplete {} not available'.format(requested_autocomplete))
         return autocomplete
+
+    def get_best_boarding_position(self, from_id, to_id):
+        if not self.best_boarding_positions:
+            return []
+        key = make_best_boarding_position_key(from_id, to_id)
+        return self.best_boarding_positions.get(key, [])

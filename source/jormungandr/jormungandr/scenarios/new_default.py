@@ -313,6 +313,48 @@ def fill_air_pollutants(pb_resp, instance, request_id):
                 s.air_pollutants.values.CopyFrom(pollutants_values)
 
 
+def get_via_of_first_path_item(section):
+    if section.HasField('street_network') and section.street_network.path_items:
+        first_path_item = section.street_network.path_items[0]
+        if first_path_item.HasField('via_uri'):
+            return first_path_item.via_uri
+    return None
+
+
+def get_best_boarding_positions(section, instance):
+    if section.type == response_pb2.TRANSFER:
+        # Transfer may contain two different situations
+        # first: a transfer may happen when one transfer from metro to metro, in this case, the transfer section's
+        # origin and destination are used to determine the pathway.
+        # second: a transfer may happen when one transfer from metro to ground transport(bus, tram...), in this case,
+        # we should use the first via in the path item to determin the pathway
+        best_positions = instance.get_best_boarding_position(section.origin.uri, section.destination.uri)
+        if best_positions:
+            return best_positions
+        via_uri = get_via_of_first_path_item(section)
+        if via_uri:
+            return instance.get_best_boarding_position(section.origin.uri, via_uri)
+        return []
+    elif section.type == response_pb2.STREET_NETWORK and hasattr(section, 'vias') and section.vias:
+        via_uri = get_via_of_first_path_item(section)
+        return instance.get_best_boarding_position(section.origin.uri, via_uri)
+
+    return []
+
+
+def update_best_boarding_positions(pb_resp, instance):
+    if not instance.best_boarding_positions:
+        return
+    for j in pb_resp.journeys:
+        prev_iter = iter(j.sections)
+        current_iter = itertools.islice(j.sections, 1, None)
+        for prev, curr in zip(prev_iter, current_iter):
+            if prev.type != response_pb2.PUBLIC_TRANSPORT:
+                continue
+            boarding_positions = get_best_boarding_positions(curr, instance)
+            helpers.fill_best_boarding_position(prev, boarding_positions)
+
+
 def compute_car_co2_emission(pb_resp, api_request, instance, request_id):
     if not pb_resp.journeys:
         return
@@ -1357,6 +1399,8 @@ class Scenario(simple.Scenario):
         update_total_air_pollutants(pb_resp)
         # Tag ecologic should be done at the end
         tag_ecologic(pb_resp)
+        # Update best boarding positions in PT sections
+        update_best_boarding_positions(pb_resp, instance)
 
         # need to clean extra tickets after culling journeys
         journey_filter.remove_excess_tickets(pb_resp)

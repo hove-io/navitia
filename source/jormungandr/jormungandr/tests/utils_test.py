@@ -36,6 +36,8 @@ from jormungandr.utils import (
     make_namedtuple,
     walk_dict,
     get_pt_object_from_json,
+    read_best_boarding_positions,
+    make_best_boarding_position_key,
     portable_min,
 )
 import pytz
@@ -44,9 +46,11 @@ import datetime
 import io
 from operator import itemgetter
 from jormungandr.exceptions import InvalidArguments
-from navitiacommon import models
+from navitiacommon import models, response_pb2
 from navitiacommon.constants import DEFAULT_SHAPE_SCOPE
 import pytest
+import csv
+import os
 
 
 class MockResponse(object):
@@ -286,3 +290,33 @@ def test_get_pt_object_from_json():
 def test_portable_min():
     assert portable_min([]) is None
     assert portable_min((j for j in [])) is None
+
+
+def test_read_best_boarding_positions():
+    import shortuuid
+
+    file_name = '{}.csv'.format(shortuuid.uuid())
+
+    with open(file_name, 'w+') as file:
+        writer = csv.writer(file)
+        field = ["from_id", "to_id", "positionnement_navitia"]
+
+        writer.writerow(field)
+        # the boarding test should be case-insensitive and only one 'front' should be present in the map
+        writer.writerow(["a", "b", "Front"])
+        writer.writerow(["a", "b", "FRONT"])
+
+        writer.writerow(["a", "b", "BACK"])
+        writer.writerow(["a", "b", "middle"])
+        writer.writerow(["a", "b", "WTH???"])
+
+        writer.writerow(["b", "a", "BACK"])
+        writer.writerow(["b", "a", "front"])
+
+    d = read_best_boarding_positions(file_name)
+    assert d[make_best_boarding_position_key("a", "b")] == {
+        response_pb2.FRONT,
+        response_pb2.BACK,
+        response_pb2.MIDDLE,
+    }
+    assert d[make_best_boarding_position_key("b", "a")] == {response_pb2.FRONT, response_pb2.BACK}
