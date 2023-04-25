@@ -293,7 +293,7 @@ def test_portable_min():
 
 def test_read_best_boarding_positions():
     file_path = '/tmp/best_boarding_postision_test.csv'
-    with open(file_path, 'w', newline='') as file:
+    with open(file_path, 'w') as file:
         writer = csv.writer(file)
         field = ["from_id", "to_id", "positionnement_navitia"]
 
