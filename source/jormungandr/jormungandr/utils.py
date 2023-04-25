@@ -949,6 +949,8 @@ def read_best_boarding_positions(file_path):
                 my_dict[key].add(pos_enum)
 
         return my_dict
-    except:
-        logger.exception('Error while loading best_boarding_positions file: {}'.format(file_path))
+    except Exception as e:
+        logger.exception(
+            'Error while loading best_boarding_positions file: {} with exception: {}'.format(file_path, str(e))
+        )
         return None

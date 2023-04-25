@@ -293,7 +293,9 @@ def test_portable_min():
 
 
 def test_read_best_boarding_positions():
-    file_name = 'best_boarding_postision_test.csv'
+    import shortuuid
+
+    file_name = '{}.csv'.format(shortuuid.uuid())
 
     with open(file_name, 'w+') as file:
         writer = csv.writer(file)
