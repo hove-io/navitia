@@ -87,7 +87,7 @@ jobs:
         export KRAKEN_RABBITMQ_HOST='rabbitmq'
         ctest --output-on-failure
         deactivate
-    - name: docker_test python 2
+    - name: docker_test python2
       working-directory: ./build
       run: |
         . navitia_py2/bin/activate
