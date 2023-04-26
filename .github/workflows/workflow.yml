@@ -67,7 +67,7 @@ jobs:
     - name: run
       working-directory: ./build
       run: make -j $(nproc)
-    - name: Tests python 2
+    - name: Tests python2
       working-directory: ./build
       run: |
         pip install virtualenv==20.4.7 -U
@@ -77,7 +77,7 @@ jobs:
         export JORMUNGANDR_BROKER_URL='amqp://guest:guest@rabbitmq:5672//'
         export KRAKEN_RABBITMQ_HOST='rabbitmq'
         ctest --output-on-failure
-    - name: Tests python 3
+    - name: Tests python3
       working-directory: ./build
       run: |
         virtualenv -p ${{matrix.os.python_version}} navitia_py3
@@ -100,7 +100,7 @@ jobs:
         NAVITIA_DOCKER_NETWORK: ${{ job.container.network }}
         TYR_CELERY_BROKER_URL: 'amqp://guest:guest@rabbitmq:5672//'
         TYR_REDIS_HOST: 'redis'
-    - name: docker_test python 3
+    - name: docker_test python3
       working-directory: ./build
       run: |
         . navitia_py3/bin/activate
