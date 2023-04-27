@@ -445,8 +445,10 @@ class JourneySerializer(PbNestedSerializer):
         attr="most_serious_disruption_effect",
         display_none=True,
         description='Status from the whole journey taking into account the most '
-        'disturbing information retrieved on every object used '
-        '(can be "NO_SERVICE", "SIGNIFICANT_DELAYS", ...',
+        'disturbing information retrieved on PT object used '
+        '(can be "NO_SERVICE", "SIGNIFICANT_DELAYS", ...).\n'
+        'A base-schedule journey using a stop-time that is deleted in realtime '
+        'will have a NO_SERVICE status (no matter the effect of the disruption causing it).',
     )
     tags = StringListField(display_none=True)
     co2_emission = AmountSerializer(display_none=True, default_unit='gEC')

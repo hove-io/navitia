@@ -379,10 +379,17 @@ class Scenario(object):
         add_link(resp, rel='ridesharing_journeys', **req)
 
     def _add_bypass_disruptions_link(self, resp, params):
-        # find first impact with a NO_SERVICE severity
+        # find first journey with a NO_SERVICE status
         if 'realtime' in params.get('data_freshness', []):
             return
-        found = next((True for impact in resp.impacts if impact.severity.effect == Severity.NO_SERVICE), False)
+        found = next(
+            (
+                True
+                for j in resp.journeys
+                if j.most_serious_disruption_effect == Severity.Effect.Name(Severity.Effect.NO_SERVICE)
+            ),
+            False,
+        )
         if found:
             cloned_params = copy.deepcopy(params)
             cloned_params['data_freshness'] = 'realtime'
