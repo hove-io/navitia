@@ -37,7 +37,7 @@ jobs:
     strategy:
         fail-fast: false
         matrix:
-            os: [{docker_image: navitia/debian8_dev, python_version: python3.6}, {docker_image: navitia/debian10_dev, python_version: python3.9}, {docker_image: navitia/debian11_dev, python_version: python3.9}]
+            os: [{docker_image: navitia/debian8_dev, python_version: python3.6}, {docker_image: navitia/debian11_dev, python_version: python3.9}]
 
     container:
         image: ${{matrix.os.docker_image}}
