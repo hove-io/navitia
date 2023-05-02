@@ -500,6 +500,42 @@ BRAGI_MOCK_BOBETTE_DEPTH_ZERO["features"][0]["geometry"] = {
 BRAGI_MOCK_BOBETTE_DEPTH_ONE = deepcopy(BRAGI_MOCK_BOBETTE_DEPTH_ZERO)
 BRAGI_MOCK_BOBETTE_DEPTH_TWO = deepcopy(BRAGI_MOCK_BOBETTE_DEPTH_ZERO)
 BRAGI_MOCK_BOBETTE_DEPTH_THREE = deepcopy(BRAGI_MOCK_BOBETTE_DEPTH_ZERO)
+BRAGI_MOCK_BOBETTE_WITH_CHILDREN = deepcopy(BRAGI_MOCK_BOBETTE)
+BRAGI_MOCK_BOBETTE_WITH_CHILDREN["features"][0]["properties"]["geocoding"]["children"] = [
+    {
+        "type": "poi",
+        "id": "poi:osm:node:4507085760",
+        "label": "Jardin du Luxembourg: Porte Vavin (Paris)",
+        "name": "Jardin du Luxembourg: Porte Vavin",
+        "coord": {"lon": 2.3324915, "lat": 48.8448854},
+        "administrative_regions": [
+            {
+                "type": "admin",
+                "id": "admin:fr:75056",
+                "insee": "75056",
+                "level": 8,
+                "label": "Paris (75000-75116), Île-de-France, France",
+                "name": "Paris",
+                "weight": 0.0015625185714285715,
+                "coord": {"lon": 2.3483915, "lat": 48.8534951},
+                "administrative_regions": [],
+                "zone_type": "city",
+                "parent_id": "admin:osm:relation:71525",
+                "country_codes": [],
+                "names": {"fr": "Paris"},
+                "labels": {},
+            }
+        ],
+        "weight": 0.0015625185714285715,
+        "zip_codes": [],
+        "poi_type": {"id": "poi_type:access_point", "name": "Point d'accès"},
+        "properties": {},
+        "country_codes": ["FR"],
+        "names": {},
+        "labels": {},
+        "children": [],
+    }
+]
 
 BOB_STREET = {
     "features": [
@@ -1316,6 +1352,24 @@ class TestBragiAutocomplete(AbstractTestFixture):
             assert 'administrative_regions' not in poi
             # Address absent as in kraken
             assert 'address' not in poi
+
+    def test_autocomplete_with_children(self):
+        with mock_bragi_autocomplete_call(BRAGI_MOCK_BOBETTE_WITH_CHILDREN):
+            response = self.query_region(
+                "places?q=bob&pt_dataset[]=main_routing_test&type[]=stop_area"
+                "&type[]=address&type[]=poi&type[]=administrative_region&depth=0"
+            )
+
+            r = response.get('places')
+            assert len(r) == 1
+            assert r[0]['name'] == "bobette's label"
+            assert r[0]['embedded_type'] == "poi"
+            poi = r[0]['poi']
+            assert poi['label'] == "bobette's label"
+            assert len(poi["children"]) == 1
+            assert poi["children"][0]["id"] == 'poi:osm:node:4507085760'
+            assert poi["children"][0]["type"] == 'poi'
+            assert poi["children"][0]["poi_type"]["id"] == 'poi_type:access_point'
 
     def test_autocomplete_call_with_depth_one(self):
         with mock_bragi_autocomplete_call(BRAGI_MOCK_BOBETTE_DEPTH_ONE):
