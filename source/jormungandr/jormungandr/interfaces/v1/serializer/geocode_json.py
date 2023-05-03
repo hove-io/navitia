@@ -187,8 +187,6 @@ class PoisSerializer(serpy.Field):
                 p.get("key"): p.get("value")
                 for p in child.get('properties', {}).get('geocoding', {}).get('properties', [])
             }
-            admins = child.get('administrative_regions', [])
-            res["administrative_regions"] = [make_admin(admin) for admin in admins]
             return res
 
         return [make_child(child) for child in children]

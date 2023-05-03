@@ -1370,6 +1370,7 @@ class TestBragiAutocomplete(AbstractTestFixture):
             assert poi["children"][0]["id"] == 'poi:osm:node:4507085760'
             assert poi["children"][0]["type"] == 'poi'
             assert poi["children"][0]["poi_type"]["id"] == 'poi_type:access_point'
+            assert poi["children"][0].get("administrative_regions") is None
 
     def test_autocomplete_call_with_depth_one(self):
         with mock_bragi_autocomplete_call(BRAGI_MOCK_BOBETTE_DEPTH_ONE):
@@ -2015,10 +2016,12 @@ class AbstractAutocompletePoiDataset:
             assert first_place['poi']["children"][0]["id"] == 'poi:osm:node:4507085760'
             assert first_place['poi']["children"][0]["type"] == 'poi'
             assert first_place['poi']["children"][0]["poi_type"]["id"] == 'poi_type:access_point'
+            assert first_place['poi']["children"][0].get("administrative_regions") is None
 
             assert first_place['poi']["children"][1]["id"] == 'poi:osm:node:790012494'
             assert first_place['poi']["children"][1]["type"] == 'poi'
             assert first_place['poi']["children"][1]["poi_type"]["id"] == 'poi_type:access_point'
+            assert first_place['poi']["children"][1].get("administrative_regions") is None
 
     def test_poi_without_children(self):
 
