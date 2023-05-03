@@ -526,8 +526,11 @@ std::vector<AmqpClient::Envelope::ptr_t> MaintenanceWorker::consume_in_batch(con
 
         bool queue_is_empty_or_unreachable = !channel->BasicConsumeMessage(consume_tag, envelope, single_timeout);
         if (queue_is_empty_or_unreachable) {
-            LOG4CPLUS_ERROR(logger,
-                            "Could not retrieve all the messages counted for RabbitMQ's RT queue " << queue_name);
+            // if it is certain that there was more messages counted, output a warning
+            if (count_messages_consumers.first > 0) {
+                LOG4CPLUS_WARN(logger,
+                               "Could not retrieve all the messages counted for RabbitMQ's RT queue " << queue_name);
+            }
             // going on with what was retrieved so far
             break;
         }
