@@ -39,8 +39,8 @@ from jormungandr.scenarios.ridesharing.ridesharing_service import (
     RsFeedPublisher,
     RidesharingServiceError,
 )
-from jormungandr.utils import get_weekday, make_timestamp_from_str, timestamp_to_date_str, ONE_DAY
-from jormungandr.timezone import get_default_timezone
+from jormungandr.utils import get_weekday, make_timestamp_from_str, timestamp_to_date_str, ONE_DAY, DATE_FORMAT
+from jormungandr.timezone import get_timezone_or_paris
 
 DEFAULT_OUESTGO_FEED_PUBLISHER = {
     'id': 'OUESTGO',
@@ -96,7 +96,7 @@ class Ouestgo(AbstractRidesharingService):
             'network': self.network,
         }
 
-    def _make_response(self, raw_json, request_datetime, from_coord, to_coord, instance_params):
+    def _make_response(self, raw_json, request_datetime, from_coord, to_coord):
         if not raw_json:
             return []
 
@@ -166,7 +166,7 @@ class Ouestgo(AbstractRidesharingService):
 
         return ridesharing_journeys
 
-    def _request_journeys(self, from_coord, to_coord, period_extremity, instance_params, limit=None):
+    def _request_journeys(self, from_coord, to_coord, period_extremity, instance_params=None, limit=None):
         """
 
         :param from_coord: lat,lon ex: '48.109377,-1.682103'
@@ -177,7 +177,7 @@ class Ouestgo(AbstractRidesharingService):
         """
         dep_lat, dep_lon = from_coord.split(',')
         arr_lat, arr_lon = to_coord.split(',')
-        timezone = get_default_timezone()
+        timezone = get_timezone_or_paris()  # using coverage's TZ (or Paris) for mindate and maxdate
         params = {
             'apikey': self.api_key,
             'p[passenger][state]': self.passenger_state,
@@ -189,10 +189,10 @@ class Ouestgo(AbstractRidesharingService):
             'signature': 'toto',
             'timestamp': period_extremity.datetime,
             'p[outward][mindate]': timestamp_to_date_str(
-                period_extremity.datetime, timezone, _format="%Y-%m-%d"
+                period_extremity.datetime, timezone, _format=DATE_FORMAT
             ),
             'p[outward][maxdate]': timestamp_to_date_str(
-                period_extremity.datetime + ONE_DAY, timezone, _format="%Y-%m-%d"
+                period_extremity.datetime + ONE_DAY, timezone, _format=DATE_FORMAT
             ),
         }
 
@@ -210,7 +210,7 @@ class Ouestgo(AbstractRidesharingService):
 
         if resp:
             r = self._make_response(
-                resp.json(), period_extremity.datetime, from_coord, to_coord, instance_params
+                resp.json(), period_extremity.datetime, from_coord, to_coord
             )
             self.record_additional_info('Received ridesharing offers', nb_ridesharing_offers=len(r))
             logging.getLogger('stat.ridesharing.ouestgo').info(

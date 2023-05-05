@@ -83,8 +83,8 @@ def get_timezone():
     return g.timezone
 
 
-def get_default_timezone():
+def get_timezone_or_paris():
     try:
         return get_timezone()
-    except:
+    except Exception as _:
         return pytz.timezone('Europe/Paris')
