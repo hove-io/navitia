@@ -743,11 +743,12 @@ static bt::ptime handle_pt_sections(pbnavitia::Journey* pb_journey,
         pb_creator.fill(vect_p, pb_journey->mutable_calendars(), 0);
     }
 
-    compute_most_serious_disruption(pb_journey, pb_creator);
-    // amending journey status if a disruption in RT prevents from using a PT section in RT
     if (pt_not_served_in_rt) {
+        // journey status is NO_SERVICE if a disruption in RT prevents from using a PT section in RT
         pb_journey->set_most_serious_disruption_effect(
             type::disruption::to_string(type::disruption::Effect::NO_SERVICE));
+    } else {
+        compute_most_serious_disruption(pb_journey, pb_creator);
     }
 
     // fare computation, done at the end for the journey to be complete
