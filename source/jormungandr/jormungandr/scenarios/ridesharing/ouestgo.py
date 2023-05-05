@@ -188,8 +188,12 @@ class Ouestgo(AbstractRidesharingService):
             'p[to][longitude]': arr_lon,
             'signature': 'toto',
             'timestamp': period_extremity.datetime,
-            'p[outward][mindate]': timestamp_to_date_str(period_extremity.datetime, timezone, _format="%Y-%m-%d"),
-            'p[outward][maxdate]': timestamp_to_date_str(period_extremity.datetime + ONE_DAY, timezone, _format="%Y-%m-%d"),
+            'p[outward][mindate]': timestamp_to_date_str(
+                period_extremity.datetime, timezone, _format="%Y-%m-%d"
+            ),
+            'p[outward][maxdate]': timestamp_to_date_str(
+                period_extremity.datetime + ONE_DAY, timezone, _format="%Y-%m-%d"
+            ),
         }
 
         headers = {'Authentication': 'key={}'.format(self.api_key)}
