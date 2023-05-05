@@ -209,9 +209,7 @@ class Ouestgo(AbstractRidesharingService):
             raise RidesharingServiceError('non 200 response', resp.status_code, resp.reason, resp.text)
 
         if resp:
-            r = self._make_response(
-                resp.json(), period_extremity.datetime, from_coord, to_coord
-            )
+            r = self._make_response(resp.json(), period_extremity.datetime, from_coord, to_coord)
             self.record_additional_info('Received ridesharing offers', nb_ridesharing_offers=len(r))
             logging.getLogger('stat.ridesharing.ouestgo').info(
                 'Received ridesharing offers : %s',
