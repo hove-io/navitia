@@ -81,3 +81,10 @@ def get_timezone():
     if not hasattr(g, 'timezone'):
         raise TechnicalError("No timezone set for this API")  # the set_request_timezone has to be called at init
     return g.timezone
+
+
+def get_default_timezone():
+    try:
+        return get_timezone()
+    except:
+        return pytz.timezone('Europe/Paris')

@@ -39,8 +39,8 @@ from jormungandr.scenarios.ridesharing.ridesharing_service import (
     RsFeedPublisher,
     RidesharingServiceError,
 )
-from jormungandr.utils import Coords, get_weekday, make_timestamp_from_str
-from jormungandr.street_network.utils import crowfly_distance_between, get_manhattan_duration
+from jormungandr.utils import get_weekday, make_timestamp_from_str, timestamp_to_date_str, ONE_DAY
+from jormungandr.timezone import get_default_timezone
 
 DEFAULT_OUESTGO_FEED_PUBLISHER = {
     'id': 'OUESTGO',
@@ -123,42 +123,19 @@ class Ouestgo(AbstractRidesharingService):
                 res.ridesharing_ad = offer.get('journeys', {}).get('url')
                 res.duration = offer.get('journeys', {}).get('duration')
 
-                # coord of departure on foot to arrive at ride-sharing point
+                # ride-sharing pick up point is the same as departure
                 lat, lon = from_coord.split(',')
-                departure_coord = Coords(lat=lat, lon=lon)
-
-                # ride-sharing pick up coord
-                pickup_lat = float(offer.get('journeys', {}).get('from', {}).get('latitude'))
-                pickup_lon = float(offer.get('journeys', {}).get('from', {}).get('longitude'))
-                pickup_coord = Coords(lat=pickup_lat, lon=pickup_lon)
-
-                res.pickup_place = rsj.Place(addr='', lat=pickup_lat, lon=pickup_lon)
-
+                res.pickup_place = rsj.Place(addr='', lat=float(lat), lon=float(lon))
                 res.origin_pickup_shape = None  # Not specified
-                res.origin_pickup_distance = int(crowfly_distance_between(departure_coord, pickup_coord))
-                # we choose to calculate with speed=1.12 the average speed for a walker
-                res.origin_pickup_duration = get_manhattan_duration(
-                    res.origin_pickup_distance, instance_params.walking_speed
-                )
+                res.origin_pickup_distance = 0
+                res.origin_pickup_duration = 0
 
-                # ride-sharing drop off coord
-                dropoff_lat = float(offer.get('journeys', {}).get('to', {}).get('latitude'))
-                dropoff_lon = float(offer.get('journeys', {}).get('to', {}).get('longitude'))
-                dropoff_coord = Coords(lat=dropoff_lat, lon=dropoff_lon)
-
-                res.dropoff_place = rsj.Place(addr='', lat=dropoff_lat, lon=dropoff_lon)
-
-                # arrival coord to final destination or any mode of transport
+                # ride-sharing drop off point is same as arrival to final destination or any mode of transport
                 lat, lon = to_coord.split(',')
-                arrival_coord = Coords(lat=lat, lon=lon)
-
+                res.dropoff_place = rsj.Place(addr='', lat=float(lat), lon=float(lon))
                 res.dropoff_dest_shape = None  # Not specified
-                res.dropoff_dest_distance = int(crowfly_distance_between(dropoff_coord, arrival_coord))
-                # we choose to calculate with speed=1.12 the average speed for a walker
-                res.dropoff_dest_duration = get_manhattan_duration(
-                    res.dropoff_dest_distance, instance_params.walking_speed
-                )
-
+                res.dropoff_dest_distance = 0
+                res.dropoff_dest_duration = 0
                 res.shape = None
 
                 res.price = float(offer.get('journeys', {}).get('cost', {}).get('variable')) * 100.0
@@ -200,7 +177,7 @@ class Ouestgo(AbstractRidesharingService):
         """
         dep_lat, dep_lon = from_coord.split(',')
         arr_lat, arr_lon = to_coord.split(',')
-
+        timezone = get_default_timezone()
         params = {
             'apikey': self.api_key,
             'p[passenger][state]': self.passenger_state,
@@ -211,6 +188,8 @@ class Ouestgo(AbstractRidesharingService):
             'p[to][longitude]': arr_lon,
             'signature': 'toto',
             'timestamp': period_extremity.datetime,
+            'p[outward][mindate]': timestamp_to_date_str(period_extremity.datetime, timezone, _format="%Y-%m-%d"),
+            'p[outward][maxdate]': timestamp_to_date_str(period_extremity.datetime + ONE_DAY, timezone, _format="%Y-%m-%d"),
         }
 
         headers = {'Authentication': 'key={}'.format(self.api_key)}

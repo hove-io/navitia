@@ -62,6 +62,8 @@ NOT_A_DATE_TIME = "not-a-date-time"
 WEEK_DAYS_MAPPING = ("monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday")
 COVERAGE_ANY_BETA = "any-beta"
 BEST_BOARDING_POSITION_KEY = "{}-{}"
+ONE_DAY = 86400
+DATE_FORMAT = "%Y-%m-%d"
 
 MAP_STRING_PTOBJECT_TYPE = {
     "stop_point": type_pb2.STOP_POINT,
@@ -221,6 +223,17 @@ def timestamp_to_str(timestamp):
     dt = timestamp_to_datetime(timestamp)
     if dt:
         return dt_to_str(dt)
+    return None
+
+
+def dt_to_date_str(dt, _format=DATE_FORMAT):
+    return dt.strftime(_format)
+
+
+def timestamp_to_date_str(timestamp, tz=None, _format=DATE_FORMAT):
+    dt = timestamp_to_datetime(timestamp, tz=tz)
+    if dt:
+        return dt_to_date_str(dt, _format=_format)
     return None
 
 
