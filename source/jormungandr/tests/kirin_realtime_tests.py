@@ -35,6 +35,8 @@ from copy import deepcopy
 
 from datetime import datetime
 import uuid
+
+from tests.chaos_disruptions_tests import make_mock_chaos_item
 from tests.tests_mechanism import dataset
 from jormungandr.utils import str_to_time_stamp, make_namedtuple
 from tests import gtfs_realtime_pb2, kirin_pb2
@@ -54,6 +56,7 @@ from tests.check_utils import (
     sub_query,
     has_the_disruption,
     get_disruptions_by_id,
+    get_links_dict,
 )
 from tests.rabbitmq_utils import RabbitMQCnxFixture, rt_topic
 from shapely.geometry import asShape
@@ -74,9 +77,22 @@ UpdatedStopTime = make_namedtuple(
 )
 
 
+class MockKirinOrChaosDisruptionsFixture(RabbitMQCnxFixture):
+    """
+    Mock a kirin or a chaos disruption message, in order to check the api
+    """
+
+    def _make_mock_item(self, *args, **kwargs):
+        is_kirin = kwargs.pop('is_kirin', True)
+        if is_kirin:
+            return make_mock_kirin_item(*args, **kwargs)
+        else:
+            return make_mock_chaos_item(*args, **kwargs)
+
+
 class MockKirinDisruptionsFixture(RabbitMQCnxFixture):
     """
-    Mock a chaos disruption message, in order to check the api
+    Mock a kirin disruption message, in order to check the api
     """
 
     def _make_mock_item(self, *args, **kwargs):
@@ -3191,6 +3207,229 @@ class TestKirinDelayOnBasePassMidnightTowardsNextDay(MockKirinDisruptionsFixture
         response = self.query_region(ba_16T23_journey_query)
         assert len(response['journeys']) == 1
         journey_base_schedule_for_next_day(response)
+
+
+RAIL_SECTIONS_TEST_SETTING = {
+    'rail_sections_test': {
+        'kraken_args': [
+            '--BROKER.rt_topics=' + rt_topic,
+            'spawn_maintenance_worker',
+            '--GENERAL.is_realtime_add_enabled=1',
+            '--GENERAL.is_realtime_add_trip_enabled=1',
+        ]
+    }
+}
+
+
+@dataset(RAIL_SECTIONS_TEST_SETTING)
+class TestNoServiceJourney(MockKirinOrChaosDisruptionsFixture):
+    def test_no_service_journey_disruptions(self):
+        # see tests/mock-kraken/rail_sections_test.cpp to detail disruptions already applied and existing VJs
+
+        disruptions_before = self.query_region('disruptions?_current_datetime=20170120T080000')
+        nb_disruptions_before = len(disruptions_before['disruptions'])
+        assert nb_disruptions_before == 9
+
+        vjs_before = self.query_region('vehicle_journeys?count=100')
+        assert len(vjs_before['vehicle_journeys']) == 26
+
+        # Test that a journey affected by a DETOUR rail-section is NO_SERVICE when stop used is deleted
+        journey_AADD_query = (
+            "journeys?from=stopAA&to=stopDD&datetime=20170108T080000&_current_datetime=20170108T080000"
+        )
+        journey_AADD = self.query_region(journey_AADD_query)
+        assert len(journey_AADD['journeys']) == 1
+        assert journey_AADD['journeys'][0]['status'] == 'NO_SERVICE'
+        assert len(journey_AADD['disruptions']) == 1
+        assert journey_AADD['disruptions'][0]['severity']['effect'] == 'DETOUR'
+        links = get_links_dict(journey_AADD)
+        assert 'bypass_disruptions' in links
+
+        # "XFail" test: not mandatory to keep it as-is
+        journey_AADD_after_publish_query = (
+            "journeys?from=stopAA&to=stopDD&datetime=20170108T080000&_current_datetime=20170112T080000"
+        )
+        journey_AADD_after_publish = self.query_region(journey_AADD_after_publish_query)
+        # Out of publication period, journey is still marked as NO_SERVICE
+        assert len(journey_AADD_after_publish['journeys']) == 1
+        assert journey_AADD_after_publish['journeys'][0]['status'] == 'NO_SERVICE'
+        # Meanwhile, disruptions still respect the publication period
+        assert len(journey_AADD_after_publish['disruptions']) == 0
+        links = get_links_dict(journey_AADD)
+        assert 'bypass_disruptions' in links
+
+        # Test that before sending any "Kirin" disruption on a journey, all is fine
+        journey_AC_query = (
+            "journeys?from=stopA&to=stopC&datetime=20170120T080000&_current_datetime=20170120T080000"
+        )
+        journey_AC = self.query_region(journey_AC_query)
+        assert len(journey_AC['journeys']) == 1
+        assert journey_AC['journeys'][0]['status'] == ''
+        assert len(journey_AC['disruptions']) == 0
+        links = get_links_dict(journey_AC)
+        assert 'bypass_disruptions' not in links
+
+        journey_AE_query = (
+            "journeys?from=stopA&to=stopE&datetime=20170120T080000&_current_datetime=20170120T080000"
+        )
+        journey_AE = self.query_region(journey_AE_query)
+        assert len(journey_AE['journeys']) == 1
+        assert journey_AE['journeys'][0]['status'] == ''
+        assert len(journey_AE['disruptions']) == 0
+        links = get_links_dict(journey_AE)
+        assert 'bypass_disruptions' not in links
+
+        # realtime deletes stop-time in stopC (and REDUCED_SERVICE status)
+        self.send_mock(
+            "vj:1",
+            "20170120",
+            'modified',
+            [
+                UpdatedStopTime(
+                    "stopA",
+                    arrival=tstamp("20170120T0800"),
+                    departure=tstamp("20170120T0800"),
+                    arrival_delay=0,
+                    departure_delay=0,
+                ),
+                UpdatedStopTime(
+                    "stopB",
+                    arrival=tstamp("20170120T0805"),
+                    departure=tstamp("20170120T0805"),
+                    arrival_delay=0,
+                    departure_delay=0,
+                ),
+                UpdatedStopTime(
+                    "stopC",
+                    arrival=tstamp("20170120T0810"),
+                    departure=tstamp("20170120T0810"),
+                    message='stop_time deleted',
+                    arrival_skipped=True,
+                    departure_skipped=True,
+                ),
+                UpdatedStopTime(
+                    "stopD",
+                    arrival=tstamp("20170120T0815"),
+                    departure=tstamp("20170120T0815"),
+                    arrival_delay=0,
+                    departure_delay=0,
+                ),
+                UpdatedStopTime(
+                    "stopE",
+                    arrival=tstamp("20170120T0820"),
+                    departure=tstamp("20170120T0820"),
+                    arrival_delay=0,
+                    departure_delay=0,
+                ),
+                UpdatedStopTime(
+                    "stopF",
+                    arrival=tstamp("20170120T0825"),
+                    departure=tstamp("20170120T0825"),
+                    arrival_delay=0,
+                    departure_delay=0,
+                ),
+                UpdatedStopTime(
+                    "stopG",
+                    arrival=tstamp("20170120T0830"),
+                    departure=tstamp("20170120T0830"),
+                    arrival_delay=0,
+                    departure_delay=0,
+                ),
+                UpdatedStopTime(
+                    "stopH",
+                    arrival=tstamp("20170120T0835"),
+                    departure=tstamp("20170120T0835"),
+                    arrival_delay=0,
+                    departure_delay=0,
+                ),
+                UpdatedStopTime(
+                    "stopG",
+                    arrival=tstamp("20170120T0840"),
+                    departure=tstamp("20170120T0840"),
+                    arrival_delay=0,
+                    departure_delay=0,
+                ),
+            ],
+            disruption_id='reduced_service_vj1',
+            effect='reduced_service',
+            is_kirin=True,
+        )
+        disrupts = self.query_region('disruptions?_current_datetime=20170120T080000')
+        assert len(disrupts['disruptions']) == 10
+        assert has_the_disruption(disrupts, 'reduced_service_vj1')
+        last_disrupt = disrupts['disruptions'][-1]
+        assert last_disrupt['severity']['effect'] == 'REDUCED_SERVICE'
+        assert last_disrupt['severity']['name'] == 'reduced service'
+
+        vjs_after = self.query_region('vehicle_journeys?count=100')
+        # we got a new vj due to the disruption, which means the disruption is handled correctly
+        assert len(vjs_after['vehicle_journeys']) == 27
+
+        # After "Kirin" disruption, journey using a deleted stop has its status changed to NO_SERVICE
+        journey_AC = self.query_region(journey_AC_query)
+        assert len(journey_AC['journeys']) == 1
+        assert journey_AC['journeys'][0]['status'] == 'NO_SERVICE'
+        assert len(journey_AC['disruptions']) == 1
+        assert journey_AC['disruptions'][0]['severity']['effect'] == 'REDUCED_SERVICE'
+        links = get_links_dict(journey_AC)
+        assert 'bypass_disruptions' in links
+
+        # Meanwhile, journey using a VJ with deleted stop, but not using that stop keeps its status
+        journey_AE = self.query_region(journey_AE_query)
+        assert len(journey_AE['journeys']) == 1
+        assert journey_AE['journeys'][0]['status'] == 'REDUCED_SERVICE'
+        assert len(journey_AE['disruptions']) == 1
+        assert journey_AE['disruptions'][0]['severity']['effect'] == 'REDUCED_SERVICE'
+        links = get_links_dict(journey_AE)
+        assert 'bypass_disruptions' not in links
+
+        # Test that a stop NO_SERVICE disruption only affects journeys using that stop
+        journey_AB_query = (
+            "journeys?from=stopA&to=stopB&datetime=20170118T080000&_current_datetime=20170118T080000"
+        )
+        journey_AB = self.query_region(journey_AB_query)
+        assert len(journey_AB['journeys']) == 1
+        assert journey_AB['journeys'][0]['status'] == ''
+        assert len(journey_AB['disruptions']) == 0
+        links = get_links_dict(journey_AB)
+        assert 'bypass_disruptions' not in links
+
+        journey_AD_query = (
+            "journeys?from=stopA&to=stopD&datetime=20170118T080000&_current_datetime=20170118T080000"
+        )
+        journey_AD = self.query_region(journey_AD_query)
+        assert len(journey_AD['journeys']) == 1
+        assert journey_AD['journeys'][0]['status'] == ''
+        assert len(journey_AD['disruptions']) == 0
+        links = get_links_dict(journey_AD)
+        assert 'bypass_disruptions' not in links
+
+        self.send_mock(
+            "bob_the_disruption",
+            "stopAreaB",
+            "stop_area",
+            start=None,
+            end=None,
+            blocking=True,
+            start_period="20170117T0000",
+            end_period="20170119T0000",
+            is_kirin=False,
+        )
+
+        journey_AB = self.query_region(journey_AB_query)
+        assert len(journey_AB['journeys']) == 1
+        assert journey_AB['journeys'][0]['status'] == 'NO_SERVICE'
+        assert len(journey_AB['disruptions']) == 1
+        assert journey_AB['disruptions'][0]['severity']['effect'] == 'NO_SERVICE'
+        links = get_links_dict(journey_AB)
+        assert 'bypass_disruptions' in links
+
+        journey_AD = self.query_region(journey_AD_query)
+        assert len(journey_AD['journeys']) == 1
+        assert journey_AD['journeys'][0]['status'] == ''
+        assert len(journey_AD['disruptions']) == 0
+        links = get_links_dict(journey_AD)
+        assert 'bypass_disruptions' not in links
 
 
 def make_mock_kirin_item(

@@ -300,6 +300,17 @@ VehicleJourney* MetaVehicleJourney::get_base_vj_circulating_at_date(const boost:
     return nullptr;
 }
 
+VehicleJourney* MetaVehicleJourney::get_freshest_vj_for_base_date(const boost::gregorian::date& date) const {
+    for (auto l : reverse_enum_range_from<RTLevel>(RTLevel::RealTime)) {
+        for (const auto& vj : rtlevel_to_vjs_map[l]) {
+            if (vj->get_base_canceled_validity_pattern().check(date)) {
+                return vj.get();
+            }
+        }
+    }
+    return nullptr;
+}
+
 bool MetaVehicleJourney::is_already_modified_by(const boost::shared_ptr<disruption::Impact>& impact) {
     return std::any_of(std::begin(modified_by), std::end(modified_by),
                        [&](const boost::weak_ptr<nt::disruption::Impact>& i) { return i.lock() == impact; });

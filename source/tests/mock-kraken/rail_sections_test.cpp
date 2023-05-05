@@ -135,60 +135,60 @@ ed::builder create_complex_data_for_rail_section() {
         b.sa("cdg_area", 0., 55.)("cdg", 0., 55.);
         b.sa("denfert_area", 0., 56.)("denfert", 0., 56.);
 
-        b.vj("line:1", "111111111111", "", true, "vj:1")
+        b.vj("line:1", "111111111111111111111111111111111111", "", true, "vj:1")
             .route("route1")("stopA", "08:00"_t)("stopB", "08:05"_t)("stopC", "08:10"_t)("stopD", "08:15"_t)(
                 "stopE", "08:20"_t)("stopF", "08:25"_t)("stopG", "08:30"_t)("stopH", "08:35"_t)("stopI", "08:40"_t);
-        b.vj("line:1", "111111111111", "", true, "vj:2")
+        b.vj("line:1", "111111111111111111111111111111111111", "", true, "vj:2")
             .route("route2")("stopI", "08:00"_t)("stopH", "08:05"_t)("stopG", "08:10"_t)("stopF", "08:15"_t)(
                 "stopE", "08:20"_t)("stopD", "08:25"_t)("stopC", "08:30"_t)("stopB", "08:35"_t)("stopA", "08:40"_t);
-        b.vj("line:1", "111111111111", "", true, "vj:3")
+        b.vj("line:1", "111111111111111111111111111111111111", "", true, "vj:3")
             .route("route3")("stopA", "08:00"_t)("stopB", "08:05"_t)("stopJ", "08:10"_t)("stopK", "08:15"_t)(
                 "stopL", "08:20"_t)("stopF", "08:25"_t)("stopG", "08:30"_t)("stopH", "08:35"_t)("stopI", "08:40"_t);
-        b.vj("line:1", "111111111111", "", true, "vj:4")
+        b.vj("line:1", "111111111111111111111111111111111111", "", true, "vj:4")
             .route("route4")("stopA", "08:00"_t)("stopB", "08:05"_t)("stopC", "08:10"_t)("stopD", "08:15"_t)(
                 "stopM", "08:20"_t)("stopN", "08:25"_t)("stopO", "08:30"_t)("stopG", "08:35"_t)("stopH", "08:40"_t)(
                 "stopI", "08:40"_t);
-        b.vj("line:1", "111111111111", "", true, "vj:5")
+        b.vj("line:1", "111111111111111111111111111111111111", "", true, "vj:5")
             .route("route5")("stopA", "08:00"_t)("stopB", "08:05"_t)("stopC", "08:10"_t)("stopP", "08:15"_t)(
                 "stopQ", "08:20"_t)("stopR", "08:25"_t);
-        b.vj("line:1", "111111111111", "", true, "vj:6")
+        b.vj("line:1", "111111111111111111111111111111111111", "", true, "vj:6")
             .route("route6")("stopR", "08:00"_t)("stopQ", "08:05"_t)("stopP", "08:10"_t)("stopC", "08:15"_t)(
                 "stopB", "08:20"_t)("stopA", "08:25"_t);
-        b.vj("line:2", "111111111111", "", true, "vj:2-1")
+        b.vj("line:2", "111111111111111111111111111111111111", "", true, "vj:2-1")
             .route("route2-1")("stopW", "08:00"_t)("stopX", "08:05"_t)("stopY", "08:10"_t)("stopZ", "08:15"_t);
 
-        b.vj("line:11", "111111111111", "", true, "vj:11-1")
+        b.vj("line:11", "111111111111111111111111111111111111", "", true, "vj:11-1")
             .route("route11-1")("stopAA", "08:00"_t)("stopBB", "08:05"_t)("stopCC", "08:10"_t)("stopDD", "08:15"_t)(
                 "stopEE", "08:20"_t)("stopFF", "08:25"_t)("stopGG", "08:30"_t)("stopHH", "08:35"_t)("stopII",
                                                                                                     "08:40"_t);
-        b.vj("line:11", "111111111111", "", true, "vj:11-2")
+        b.vj("line:11", "111111111111111111111111111111111111", "", true, "vj:11-2")
             .route("route11-2")("stopII", "08:00"_t)("stopHH", "08:05"_t)("stopGG", "08:10"_t)("stopFF", "08:15"_t)(
                 "stopEE", "08:20"_t)("stopDD", "08:25"_t)("stopCC", "08:30"_t)("stopBB", "08:35"_t)("stopAA",
                                                                                                     "08:40"_t);
 
-        b.vj("line:100", "111111111111", "", true, "vj:100-1")
+        b.vj("line:100", "111111111111111111111111111111111111", "", true, "vj:100-1")
             .route("route100-1")("stopA1", "08:00"_t)("stopB1", "08:05"_t)("stopC1", "08:10"_t)("stopD1", "08:15"_t)(
                 "stopE1", "08:20"_t)("stopF1", "08:25"_t)("stopG1", "08:30"_t)("stopH1", "08:35"_t)("stopI1",
                                                                                                     "08:40"_t);
 
-        b.vj("line:101", "111111111111", "", true, "vj:101-1")
+        b.vj("line:101", "111111111111111111111111111111111111", "", true, "vj:101-1")
             .route("route101-1")("stopP1", "08:00"_t)("stopQ1", "08:05"_t)("stopR1", "08:10"_t)("stopS1", "08:15"_t)(
                 "stopT1", "08:20"_t)("stopU1", "08:25"_t)("stopV1", "08:30"_t)("stopW1", "08:35"_t);
-        b.vj("line:101", "111111", "", true, "vj:101-2")
+        b.vj("line:101", "111111111111111111111111111111111111", "", true, "vj:101-2")
             .route("route101-2")("stopW1", "07:55"_t)("stopV1", "08:00"_t)("stopU1", "08:05"_t)("stopT1", "08:10"_t)(
                 "stopS1", "08:15"_t)("stopR1", "08:20"_t)("stopQ1", "08:25"_t)("stopP1", "08:30"_t);
 
-        b.vj("line:RER-B", "111111111111", "", true, "vj:rer_b_nord")
+        b.vj("line:RER-B", "111111111111111111111111111111111111", "", true, "vj:rer_b_nord")
             .route("route_rer_b_nord")("denfert", "08:00"_t)("port_royal", "08:05"_t)("luxembourg", "08:10"_t)(
                 "chatelet", "08:15"_t)("gare_du_nord", "08:20"_t)("aulnay", "08:25"_t)("villepinte", "08:30"_t)(
                 "parc_des_expos", "08:35"_t)("cdg", "08:40"_t);
-        b.vj("line:RER-B", "111111111111", "", true, "vj:rer_b_sud")
+        b.vj("line:RER-B", "111111111111111111111111111111111111", "", true, "vj:rer_b_sud")
             .route("route_rer_b_sud")("cdg", "08:00"_t)("parc_des_expos", "08:05"_t)("villepinte", "08:10"_t)(
                 "aulnay", "08:15"_t)("gare_du_nord", "08:20"_t)("chatelet", "08:25"_t)("luxembourg", "08:30"_t)(
                 "port_royal", "08:35"_t)("denfert", "08:40"_t);
     });
 
-    b.data->meta->production_date = bg::date_period(bg::date(2017, 1, 1), bg::days(30));
+    b.data->meta->production_date = bg::date_period(bg::date(2017, 1, 1), bg::days(40));
 
     return b;
 }

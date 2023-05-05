@@ -124,6 +124,7 @@ struct StopTime {
 
     bool is_valid_day(u_int32_t day, const bool is_arrival, const RTLevel rt_level) const;
 
+    const StopTime* get_corresponding_stop_time(const VehicleJourney& corresponding_vj) const;
     const StopTime* get_base_stop_time() const;
 
     bool is_in_stop_area(const StopArea* stop_area) const;
