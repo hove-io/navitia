@@ -1,4 +1,4 @@
-FROM navitia/debian11_dev
+FROM --platform=arm64 navitia/debian11_dev
 
 COPY docker/build_navitia.sh /build_navitia.sh
 RUN chmod +x /build_navitia.sh
