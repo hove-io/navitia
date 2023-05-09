@@ -383,6 +383,19 @@ def _extend_with_via_pt_access(fallback_dp, pt_object, fallback_type, via_pt_acc
         )
 
 
+def _add_poi_access_point(fallback_type, via_poi_access, sections):
+    if not via_poi_access:
+        return
+    section = sections[-1] if fallback_type == StreetNetworkPathType.BEGINNING_FALLBACK else sections[0]
+    poi_access = section.vias.add()
+    poi_access.name = via_poi_access.name
+    poi_access.uri = via_poi_access.uri
+    poi_access.coord.lon = via_poi_access.poi.coord.lon
+    poi_access.coord.lat = via_poi_access.poi.coord.lat
+    poi_access.embedded_type = type_pb2.poi_access_point
+    poi_access.is_exit = True
+    poi_access.is_entrance = True
+
 def _update_fallback_sections(
     journey, fallback_dp, fallback_period_extremity, fallback_type, via_pt_access, via_poi_access
 ):
@@ -410,18 +423,7 @@ def _update_fallback_sections(
     else:
         fallback_sections[0].origin.CopyFrom(journey.sections[-1].destination)
 
-    if via_poi_access:
-        if fallback_type == StreetNetworkPathType.BEGINNING_FALLBACK:
-            poi_access = fallback_sections[-1].vias.add()
-        else:
-            poi_access = fallback_sections[0].vias.add()
-        poi_access.name = via_poi_access.name
-        poi_access.uri = via_poi_access.uri
-        poi_access.coord.lon = via_poi_access.poi.coord.lon
-        poi_access.coord.lat = via_poi_access.poi.coord.lat
-        poi_access.embedded_type = type_pb2.poi_access_point
-        poi_access.is_exit = True
-        poi_access.is_entrance = True
+    _add_poi_access_point(fallback_type, via_poi_access, fallback_sections)
 
     if isinstance(via_pt_access, type_pb2.PtObject) and via_pt_access.embedded_type == type_pb2.ACCESS_POINT:
         if fallback_type == StreetNetworkPathType.BEGINNING_FALLBACK:

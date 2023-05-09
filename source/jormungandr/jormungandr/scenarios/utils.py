@@ -448,3 +448,17 @@ def nCr(n, r):
 
     f = math.factorial
     return int(f(n) / f(r) / f(n - r))
+
+
+def include_poi_access_points(request, pt_object, mode):
+    return (
+        request.get("_poi_access_points", False)
+        and pt_object.embedded_type == type_pb2.POI
+        and mode
+        in [
+            FallbackModes.walking.name,
+            FallbackModes.bike.name,
+            FallbackModes.bss.name,
+        ]
+        and pt_object.poi.children
+    )

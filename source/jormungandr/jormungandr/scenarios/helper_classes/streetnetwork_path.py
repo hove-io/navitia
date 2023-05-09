@@ -30,10 +30,16 @@ from __future__ import absolute_import
 from jormungandr import utils, new_relic
 from jormungandr.street_network.street_network import StreetNetworkPathType
 import logging
-from .helper_utils import timed_logger, prepend_first_coord, append_last_coord
+from .helper_utils import timed_logger, prepend_first_coord, append_last_coord, _extend_with_via_poi_access, \
+    _add_poi_access_point, is_valid_direct_path_streetwork
 from navitiacommon import type_pb2, response_pb2
 from jormungandr.exceptions import GeoveloTechnicalError
 from .helper_exceptions import StreetNetworkException
+from jormungandr.scenarios.utils import include_poi_access_points
+from collections import namedtuple
+
+
+Dp_element = namedtuple("Dp_element", "origin, destination, response")
 
 
 class StreetNetworkPath:
@@ -80,26 +86,92 @@ class StreetNetworkPath:
         self._request_id = request_id
         self._async_request()
 
-    @new_relic.distributedEvent("direct_path", "street_network")
-    def _direct_path_with_fp(self):
-        with timed_logger(self._logger, 'direct_path_calling_external_service', self._request_id):
-            try:
-                return self._streetnetwork_service.direct_path_with_fp(
+    def poi_to_pt_object(self, poi):
+        return type_pb2.PtObject(poi=poi, uri=poi.uri, embedded_type=type_pb2.POI, name=poi.name)
+
+    def get_pt_objects(self, entry_point):
+        if include_poi_access_points(self._request, entry_point, self._mode):
+            for o in entry_point.poi.children:
+                yield self.poi_to_pt_object(o)
+        yield entry_point
+
+    def make_poi_access_points(self, fallback_type, best_dp_element):
+        entry_point = self._orig_obj if fallback_type == StreetNetworkPathType.BEGINNING_FALLBACK else self._dest_obj
+        if not include_poi_access_points(self._request, entry_point, self._mode):
+            return
+        via_poi_access = best_dp_element.origin if fallback_type == StreetNetworkPathType.BEGINNING_FALLBACK \
+            else best_dp_element.destination
+        _add_poi_access_point(fallback_type, via_poi_access, best_dp_element.response.journeys[0].sections)
+        _extend_with_via_poi_access(best_dp_element.response, fallback_type, entry_point, via_poi_access,
+                                    self._request.get('_asgard_language', "english_us"))
+        sections = best_dp_element.response.journeys[0].sections
+        sections[0].origin.CopyFrom(self._orig_obj) if fallback_type == StreetNetworkPathType.BEGINNING_FALLBACK \
+            else sections[-1].destination.CopyFrom(self._dest_obj)
+
+    def finalize_direct_path(self, resp_direct_path):
+        if not resp_direct_path or not getattr(resp_direct_path.response, "journeys", None):
+            return None
+        self.make_poi_access_points(StreetNetworkPathType.BEGINNING_FALLBACK, resp_direct_path)
+        self.make_poi_access_points(StreetNetworkPathType.ENDING_FALLBACK, resp_direct_path)
+        return resp_direct_path.response
+
+    def build_direct_path(self):
+        best_direct_path = None
+        for origin in self.get_pt_objects(self._orig_obj):
+            for destination in self.get_pt_objects(self._dest_obj):
+                response = self._streetnetwork_service.direct_path_with_fp(
                     self._instance,
                     self._mode,
-                    self._orig_obj,
-                    self._dest_obj,
+                    origin,
+                    destination,
                     self._fallback_extremity,
                     self._request,
                     self._path_type,
                     self._request_id,
                 )
+                if not is_valid_direct_path_streetwork(response):
+                    continue
+                if not best_direct_path:
+                    best_direct_path = Dp_element(
+                        origin,
+                        destination,
+                        response
+                    )
+                elif response.journeys[0].durations.total < best_direct_path.response.journeys[0].durations.total:
+                    best_direct_path = Dp_element(
+                        origin,
+                        destination,
+                        response
+                    )
+        return self.finalize_direct_path(best_direct_path)
+
+    @new_relic.distributedEvent("direct_path", "street_network")
+    def _direct_path_with_fp(self):
+        with timed_logger(self._logger, 'direct_path_calling_external_service', self._request_id):
+            try:
+                return self.build_direct_path()
             except GeoveloTechnicalError as e:
                 logging.getLogger(__name__).exception('')
                 raise StreetNetworkException(response_pb2.Error.service_unavailable, e.data["message"])
             except Exception:
                 logging.getLogger(__name__).exception('')
                 return None
+
+    def get_origin_or_destination(self, dp, fallback_type):
+        if not is_valid_direct_path_streetwork(dp):
+            return None
+        pt_object = self._orig_obj if fallback_type == StreetNetworkPathType.BEGINNING_FALLBACK else self._dest_obj
+        if not include_poi_access_points(self._request, pt_object, self._mode):
+            return pt_object
+        section = dp.journeys[0].sections[0] if fallback_type == StreetNetworkPathType.BEGINNING_FALLBACK \
+            else dp.journeys[0].sections[-1]
+        for via in section.vias:
+            if via.embedded_type != type_pb2.poi_access_point:
+                continue
+            poi_orig = next((ch for ch in pt_object.poi.children if ch.uri == via.uri), None)
+            if poi_orig:
+                return self.poi_to_pt_object(poi_orig)
+        return None
 
     def _do_request(self):
         self._logger.debug(
@@ -111,8 +183,10 @@ class StreetNetworkPath:
         )
 
         dp = self._direct_path_with_fp(self._streetnetwork_service)
-        prepend_first_coord(dp, self._orig_obj)
-        append_last_coord(dp, self._dest_obj)
+        origin = self.get_origin_or_destination(dp, StreetNetworkPathType.BEGINNING_FALLBACK)
+        destination = self.get_origin_or_destination(dp, StreetNetworkPathType.ENDING_FALLBACK)
+        prepend_first_coord(dp, origin)
+        append_last_coord(dp, destination)
 
         if getattr(dp, "journeys", None):
             dp.journeys[0].internal_id = str(utils.generate_id())
