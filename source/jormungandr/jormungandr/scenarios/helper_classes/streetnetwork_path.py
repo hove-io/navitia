@@ -30,8 +30,14 @@ from __future__ import absolute_import
 from jormungandr import utils, new_relic
 from jormungandr.street_network.street_network import StreetNetworkPathType
 import logging
-from .helper_utils import timed_logger, prepend_first_coord, append_last_coord, _extend_with_via_poi_access, \
-    _add_poi_access_point, is_valid_direct_path_streetwork
+from .helper_utils import (
+    timed_logger,
+    prepend_first_coord,
+    append_last_coord,
+    _extend_with_via_poi_access,
+    _add_poi_access_point,
+    is_valid_direct_path_streetwork,
+)
 from navitiacommon import type_pb2, response_pb2
 from jormungandr.exceptions import GeoveloTechnicalError
 from .helper_exceptions import StreetNetworkException
@@ -96,17 +102,30 @@ class StreetNetworkPath:
         yield entry_point
 
     def make_poi_access_points(self, fallback_type, best_dp_element):
-        entry_point = self._orig_obj if fallback_type == StreetNetworkPathType.BEGINNING_FALLBACK else self._dest_obj
+        entry_point = (
+            self._orig_obj if fallback_type == StreetNetworkPathType.BEGINNING_FALLBACK else self._dest_obj
+        )
         if not include_poi_access_points(self._request, entry_point, self._mode):
             return
-        via_poi_access = best_dp_element.origin if fallback_type == StreetNetworkPathType.BEGINNING_FALLBACK \
+        via_poi_access = (
+            best_dp_element.origin
+            if fallback_type == StreetNetworkPathType.BEGINNING_FALLBACK
             else best_dp_element.destination
+        )
         _add_poi_access_point(fallback_type, via_poi_access, best_dp_element.response.journeys[0].sections)
-        _extend_with_via_poi_access(best_dp_element.response, fallback_type, entry_point, via_poi_access,
-                                    self._request.get('_asgard_language', "english_us"))
+        _extend_with_via_poi_access(
+            best_dp_element.response,
+            fallback_type,
+            entry_point,
+            via_poi_access,
+            self._request.get('_asgard_language', "english_us"),
+        )
         sections = best_dp_element.response.journeys[0].sections
-        sections[0].origin.CopyFrom(self._orig_obj) if fallback_type == StreetNetworkPathType.BEGINNING_FALLBACK \
-            else sections[-1].destination.CopyFrom(self._dest_obj)
+        sections[0].origin.CopyFrom(
+            self._orig_obj
+        ) if fallback_type == StreetNetworkPathType.BEGINNING_FALLBACK else sections[-1].destination.CopyFrom(
+            self._dest_obj
+        )
 
     def finalize_direct_path(self, resp_direct_path):
         if not resp_direct_path or not getattr(resp_direct_path.response, "journeys", None):
@@ -132,17 +151,11 @@ class StreetNetworkPath:
                 if not is_valid_direct_path_streetwork(response):
                     continue
                 if not best_direct_path:
-                    best_direct_path = Dp_element(
-                        origin,
-                        destination,
-                        response
-                    )
-                elif response.journeys[0].durations.total < best_direct_path.response.journeys[0].durations.total:
-                    best_direct_path = Dp_element(
-                        origin,
-                        destination,
-                        response
-                    )
+                    best_direct_path = Dp_element(origin, destination, response)
+                elif (
+                    response.journeys[0].durations.total < best_direct_path.response.journeys[0].durations.total
+                ):
+                    best_direct_path = Dp_element(origin, destination, response)
         return self.finalize_direct_path(best_direct_path)
 
     @new_relic.distributedEvent("direct_path", "street_network")
@@ -160,11 +173,16 @@ class StreetNetworkPath:
     def get_origin_or_destination(self, dp, fallback_type):
         if not is_valid_direct_path_streetwork(dp):
             return None
-        pt_object = self._orig_obj if fallback_type == StreetNetworkPathType.BEGINNING_FALLBACK else self._dest_obj
+        pt_object = (
+            self._orig_obj if fallback_type == StreetNetworkPathType.BEGINNING_FALLBACK else self._dest_obj
+        )
         if not include_poi_access_points(self._request, pt_object, self._mode):
             return pt_object
-        section = dp.journeys[0].sections[0] if fallback_type == StreetNetworkPathType.BEGINNING_FALLBACK \
+        section = (
+            dp.journeys[0].sections[0]
+            if fallback_type == StreetNetworkPathType.BEGINNING_FALLBACK
             else dp.journeys[0].sections[-1]
+        )
         for via in section.vias:
             if via.embedded_type != type_pb2.poi_access_point:
                 continue

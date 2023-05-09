@@ -396,6 +396,7 @@ def _add_poi_access_point(fallback_type, via_poi_access, sections):
     poi_access.is_exit = True
     poi_access.is_entrance = True
 
+
 def _update_fallback_sections(
     journey, fallback_dp, fallback_period_extremity, fallback_type, via_pt_access, via_poi_access
 ):
