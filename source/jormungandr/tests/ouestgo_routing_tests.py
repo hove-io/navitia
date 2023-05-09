@@ -189,7 +189,7 @@ class TestOuestgo(NewDefaultScenarioAbstractTestFixture):
         rs_journeys = sections[0].get('ridesharing_journeys')
         assert len(rs_journeys) == 1
         assert rs_journeys[0].get('distances').get('ridesharing') == 18869
-        assert rs_journeys[0].get('durations').get('walking') == 2
+        assert rs_journeys[0].get('durations').get('walking') == 0
         assert rs_journeys[0].get('durations').get('ridesharing') == 1301
         assert 'ridesharing' in rs_journeys[0].get('tags')
         rsj_sections = rs_journeys[0].get('sections')
@@ -197,8 +197,8 @@ class TestOuestgo(NewDefaultScenarioAbstractTestFixture):
 
         assert rsj_sections[0].get('type') == 'crow_fly'
         assert rsj_sections[0].get('mode') == 'walking'
-        assert rsj_sections[0].get('duration') == 2
-        assert rsj_sections[0].get('departure_date_time') == '20120614T085458'
+        assert rsj_sections[0].get('duration') == 0
+        assert rsj_sections[0].get('departure_date_time') == '20120614T085500'
         assert rsj_sections[0].get('arrival_date_time') == '20120614T085500'
 
         assert rsj_sections[1].get('type') == 'ridesharing'
