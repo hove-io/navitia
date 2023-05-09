@@ -209,13 +209,23 @@ class TestJourneysDistributedPoiAccessPoint(AbstractTestFixture):
             assert first_journey["sections"][2]["to"]["name"] == '10 Rue Victor (City)'
             assert first_journey["sections"][2]["to"]["embedded_type"] == 'address'
 
+            # direct_path
             last_journey = journeys[1]
             assert len(last_journey["sections"]) == 1
             assert last_journey["sections"][0]["mode"] == "walking"
             assert last_journey["sections"][0]["type"] == "street_network"
             assert last_journey["sections"][0]["from"]["id"] == from_poi_uri
             assert last_journey["sections"][0]["to"]["id"] == "{};{}".format(r_lon, r_lat)
-            assert "vias" not in last_journey["sections"][0]
+
+            assert len(last_journey["sections"][0]["vias"]) == 1
+            assert last_journey["sections"][0]["vias"][0]["id"] == 'poi:from:porte1'
+            assert last_journey["sections"][0]["vias"][0]["name"] == 'Jardin: Porte 1'
+            assert last_journey["sections"][0]["vias"][0]["access_point"]["embedded_type"] == 'poi_access_point'
+            first_path = last_journey["sections"][0]["path"][0]
+            assert first_path["length"] == 0
+            assert first_path["name"] == "Jardin: Porte 1"
+            assert first_path["instruction"] == "Exit Jardin (City) via Jardin: Porte 1."
+            assert first_path["via_uri"] == 'poi:from:porte1'
 
     def test_from_poi_to_address_with_pt_access_point(self):
         url = 'https://host_of_bragi'
@@ -265,13 +275,25 @@ class TestJourneysDistributedPoiAccessPoint(AbstractTestFixture):
             assert first_journey["sections"][2]["to"]["name"] == '10 Rue Victor (City)'
             assert first_journey["sections"][2]["to"]["embedded_type"] == 'address'
 
+            # direct path
             last_journey = journeys[1]
             assert len(last_journey["sections"]) == 1
             assert last_journey["sections"][0]["mode"] == "walking"
             assert last_journey["sections"][0]["type"] == "street_network"
             assert last_journey["sections"][0]["from"]["id"] == from_poi_uri
             assert last_journey["sections"][0]["to"]["id"] == "{};{}".format(r_lon, r_lat)
-            assert "vias" not in last_journey["sections"][0]
+
+            assert len(last_journey["sections"][0]["vias"]) == 1
+            assert last_journey["sections"][0]["vias"][0]["id"] == 'poi:from:porte1'
+            assert last_journey["sections"][0]["vias"][0]["name"] == 'Jardin: Porte 1'
+            assert last_journey["sections"][0]["vias"][0]["access_point"]["embedded_type"] == 'poi_access_point'
+
+            path = last_journey["sections"][0]["path"]
+            first_path = path[0]
+            assert first_path["length"] == 0
+            assert first_path["name"] == "Jardin: Porte 1"
+            assert first_path["instruction"] == "Exit Jardin (City) via Jardin: Porte 1."
+            assert first_path["via_uri"] == 'poi:from:porte1'
 
     def test_from_address_to_poi(self):
         url = 'https://host_of_bragi'
@@ -311,13 +333,22 @@ class TestJourneysDistributedPoiAccessPoint(AbstractTestFixture):
             assert path[2]["instruction"] == "Then enter Jardin (City) via Jardin: Porte 3."
             assert path[2]["via_uri"] == 'poi:to:porte3'
 
+            # direct path
             last_journey = journeys[1]
             assert len(last_journey["sections"]) == 1
             assert last_journey["sections"][0]["mode"] == "walking"
             assert last_journey["sections"][0]["type"] == "street_network"
             assert last_journey["sections"][0]["from"]["id"] == "{};{}".format(s_lon, s_lat)
             assert last_journey["sections"][0]["to"]["id"] == to_poi_uri
-            assert "vias" not in last_journey["sections"][0]
+            assert len(last_journey["sections"][0]["vias"]) == 1
+            assert last_journey["sections"][0]["vias"][0]["id"] == 'poi:to:porte3'
+            assert last_journey["sections"][0]["vias"][0]["name"] == 'Jardin: Porte 3'
+            assert last_journey["sections"][0]["vias"][0]["access_point"]["embedded_type"] == 'poi_access_point'
+            last_path = last_journey["sections"][0]["path"][-1]
+            assert last_path["length"] == 0
+            assert last_path["name"] == "Jardin: Porte 3"
+            assert last_path["instruction"] == "Then enter Jardin (City) via Jardin: Porte 3."
+            assert last_path["via_uri"] == 'poi:to:porte3'
 
     def test_from_address_to_poi_with_pt_access_point(self):
         url = 'https://host_of_bragi'
@@ -375,13 +406,25 @@ class TestJourneysDistributedPoiAccessPoint(AbstractTestFixture):
             assert last_path["instruction"] == "Then enter Jardin (City) via Jardin: Porte 3."
             assert last_path["via_uri"] == 'poi:to:porte3'
 
+            # direct path
             last_journey = journeys[1]
             assert len(last_journey["sections"]) == 1
             assert last_journey["sections"][0]["mode"] == "walking"
             assert last_journey["sections"][0]["type"] == "street_network"
             assert last_journey["sections"][0]["from"]["id"] == "{};{}".format(s_lon, s_lat)
             assert last_journey["sections"][0]["to"]["id"] == to_poi_uri
-            assert "vias" not in last_journey["sections"][0]
+            assert len(last_journey["sections"][0]["vias"]) == 1
+
+            vias = last_journey["sections"][0]["vias"]
+            assert vias[0]["id"] == 'poi:to:porte3'
+            assert vias[0]["name"] == 'Jardin: Porte 3'
+            assert vias[0]["access_point"]["embedded_type"] == 'poi_access_point'
+            path = last_journey["sections"][0]["path"]
+            last_path = path[-1]
+            assert last_path["length"] == 0
+            assert last_path["name"] == "Jardin: Porte 3"
+            assert last_path["instruction"] == "Then enter Jardin (City) via Jardin: Porte 3."
+            assert last_path["via_uri"] == 'poi:to:porte3'
 
     def test_from_poi_to_poi(self):
         url = 'https://host_of_bragi'
@@ -430,13 +473,35 @@ class TestJourneysDistributedPoiAccessPoint(AbstractTestFixture):
             assert path[2]["instruction"] == "Then enter Jardin (City) via Jardin: Porte 3."
             assert path[2]["via_uri"] == 'poi:to:porte3'
 
+            # direct path
             last_journey = journeys[1]
             assert len(last_journey["sections"]) == 1
             assert last_journey["sections"][0]["mode"] == "walking"
             assert last_journey["sections"][0]["type"] == "street_network"
             assert last_journey["sections"][0]["from"]["id"] == from_poi_uri
             assert last_journey["sections"][0]["to"]["id"] == to_poi_uri
-            assert "vias" not in last_journey["sections"][0]
+
+            assert len(last_journey["sections"][0]["vias"]) == 2
+            assert last_journey["sections"][0]["vias"][0]["id"] == 'poi:from:porte1'
+            assert last_journey["sections"][0]["vias"][0]["name"] == 'Jardin: Porte 1'
+            assert last_journey["sections"][0]["vias"][0]["access_point"]["embedded_type"] == 'poi_access_point'
+
+            assert last_journey["sections"][0]["vias"][1]["id"] == 'poi:to:porte3'
+            assert last_journey["sections"][0]["vias"][1]["name"] == 'Jardin: Porte 3'
+            assert last_journey["sections"][0]["vias"][1]["access_point"]["embedded_type"] == 'poi_access_point'
+
+            path = last_journey["sections"][0]["path"]
+            first_path = path[0]
+            last_path = path[-1]
+            assert first_path["length"] == 0
+            assert first_path["name"] == "Jardin: Porte 1"
+            assert first_path["instruction"] == "Exit Jardin (City) via Jardin: Porte 1."
+            assert first_path["via_uri"] == 'poi:from:porte1'
+
+            assert last_path["length"] == 0
+            assert last_path["name"] == "Jardin: Porte 3"
+            assert last_path["instruction"] == "Then enter Jardin (City) via Jardin: Porte 3."
+            assert last_path["via_uri"] == 'poi:to:porte3'
 
     def test_from_poi_to_poi_with_pt_access_point(self):
         url = 'https://host_of_bragi'
@@ -509,13 +574,34 @@ class TestJourneysDistributedPoiAccessPoint(AbstractTestFixture):
             assert last_path["instruction"] == "Then enter Jardin (City) via Jardin: Porte 3."
             assert last_path["via_uri"] == 'poi:to:porte3'
 
+            # direct path
             last_journey = journeys[1]
             assert len(last_journey["sections"]) == 1
             assert last_journey["sections"][0]["mode"] == "walking"
             assert last_journey["sections"][0]["type"] == "street_network"
             assert last_journey["sections"][0]["from"]["id"] == from_poi_uri
             assert last_journey["sections"][0]["to"]["id"] == to_poi_uri
-            assert "vias" not in last_journey["sections"][0]
+            assert len(last_journey["sections"][0]["vias"]) == 2
+            assert last_journey["sections"][0]["vias"][0]["id"] == 'poi:from:porte1'
+            assert last_journey["sections"][0]["vias"][0]["name"] == 'Jardin: Porte 1'
+            assert last_journey["sections"][0]["vias"][0]["access_point"]["embedded_type"] == 'poi_access_point'
+
+            assert last_journey["sections"][0]["vias"][1]["id"] == 'poi:to:porte3'
+            assert last_journey["sections"][0]["vias"][1]["name"] == 'Jardin: Porte 3'
+            assert last_journey["sections"][0]["vias"][1]["access_point"]["embedded_type"] == 'poi_access_point'
+
+            path = last_journey["sections"][0]["path"]
+            first_path = path[0]
+            last_path = path[-1]
+            assert first_path["length"] == 0
+            assert first_path["name"] == "Jardin: Porte 1"
+            assert first_path["instruction"] == "Exit Jardin (City) via Jardin: Porte 1."
+            assert first_path["via_uri"] == 'poi:from:porte1'
+
+            assert last_path["length"] == 0
+            assert last_path["name"] == "Jardin: Porte 3"
+            assert last_path["instruction"] == "Then enter Jardin (City) via Jardin: Porte 3."
+            assert last_path["via_uri"] == 'poi:to:porte3'
 
     def test_from_poi_to_poi_without_poi_access_points(self):
         url = 'https://host_of_bragi'
@@ -540,6 +626,7 @@ class TestJourneysDistributedPoiAccessPoint(AbstractTestFixture):
             assert first_journey["sections"][0]["from"]["name"] == 'Jardin (City)'
             assert "vias" not in first_journey["sections"][0]
 
+            # direct path
             last_journey = journeys[1]
             assert len(last_journey["sections"]) == 1
             assert last_journey["sections"][0]["mode"] == "walking"
