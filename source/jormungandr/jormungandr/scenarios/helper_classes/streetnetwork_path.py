@@ -37,6 +37,7 @@ from .helper_utils import (
     _extend_with_via_poi_access,
     _add_poi_access_point,
     is_valid_direct_path_streetwork,
+    is_valid_direct_path,
 )
 from navitiacommon import type_pb2, response_pb2
 from jormungandr.exceptions import GeoveloTechnicalError
@@ -148,7 +149,7 @@ class StreetNetworkPath:
                     self._path_type,
                     self._request_id,
                 )
-                if not is_valid_direct_path_streetwork(response):
+                if not is_valid_direct_path(response):
                     continue
                 if not best_direct_path:
                     best_direct_path = Dp_element(origin, destination, response)

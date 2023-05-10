@@ -885,11 +885,14 @@ def complete_transfer(pt_journey, transfer_pool):
             continue
         transfer_pool.wait_and_complete(section)
 
-
-def is_valid_direct_path_streetwork(dp):
+def is_valid_direct_path(dp):
     if not dp or not dp.journeys or not dp.journeys[0].sections:
         return False
+    return True
 
+def is_valid_direct_path_streetwork(dp):
+    if not is_valid_direct_path(dp):
+        return False
     # a valid journey's must comprise at least two coordinates
     nb_coords = sum((len(sec.street_network.coordinates) for sec in dp.journeys[0].sections))
     if nb_coords < 2:
