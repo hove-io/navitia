@@ -129,7 +129,7 @@ jobs:
       - name: Build Navitia
         run: |
           docker buildx build --platform linux/arm64 --file docker/debian11_arm64/Dockerfile-builder  --tag navitia/builder_arm64:latest --push .
-          docker run -v `pwd`:/navitia/navitia/  navitia/builder_arm64:latest
+          docker run --rm --platform linux/arm64 -v `pwd`:/navitia/navitia/  navitia/builder_arm64:latest
 
       - name: Choose dev tag
         run: |
