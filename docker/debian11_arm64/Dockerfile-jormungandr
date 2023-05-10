@@ -11,7 +11,7 @@ RUN apt-get update --fix-missing \
     && pip3 install --no-binary :all: --no-cache-dir uwsgi==2.0.21
 
 # building gevent from source
-COPY ./docker/debian11/build_gevent.sh ./build_gevent.sh
+COPY ./docker/debian11_arm64/build_gevent.sh ./build_gevent.sh
 RUN sh build_gevent.sh
 
 WORKDIR /usr/src/app
