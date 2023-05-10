@@ -188,11 +188,11 @@ class Geovelo(AbstractStreetNetworkService):
     @staticmethod
     def get_geovelo_tag(geovelo_response):
         if geovelo_response['title'] == 'RECOMMENDED':
-            return 'rapid'
+            return 'balanced'
         elif geovelo_response['title'] == 'FASTER':
             return 'shortest'
         elif geovelo_response['title'] == 'SAFER':
-            return 'balanced'
+            return 'comfort'
         elif geovelo_response['title'] == 'BIS':
             return 'comfort'
         else:
