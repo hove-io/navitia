@@ -129,7 +129,7 @@ class StreetNetworkPath:
 
     def finalize_direct_path(self, resp_direct_path):
         if not resp_direct_path or not getattr(resp_direct_path.response, "journeys", None):
-            return None
+            return response_pb2.Response()
         self.make_poi_access_points(StreetNetworkPathType.BEGINNING_FALLBACK, resp_direct_path)
         self.make_poi_access_points(StreetNetworkPathType.ENDING_FALLBACK, resp_direct_path)
         return resp_direct_path.response
