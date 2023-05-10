@@ -158,6 +158,10 @@ jobs:
           tags: navitia/jormungandr_arm64:${{env.navitia_tag}}
           platforms: linux/arm64
 
+      - name: Install dependencies
+        run: |
+          sudo apt update && sudo apt install -y --force-yes httpie
+
       - name: failure notification
         if: failure()
         run: |
