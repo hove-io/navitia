@@ -124,6 +124,21 @@ jobs:
           docker buildx build --platform linux/arm64 --file docker/debian11_arm64/Dockerfile-builder  --tag navitia/builder_arm64 .
           docker run -v `pwd`:/navitia/navitia/  navitia/builder_arm64
 
+      - name: Choose dev tag
+        if: github.event_name == 'push' && github.ref == 'refs/heads/dev'
+        run: |
+          echo "building version dev"
+          echo "navitia_tag=${{env.debian_version}}_dev" >> $GITHUB_ENV
+          echo "aws_branch=dev" >> $GITHUB_ENV
+
+      - name: Choose release tag
+        if: startsWith(github.ref, 'refs/tags/')
+        run: |
+          version=$(git describe --tags)
+          echo "building version $version"
+          echo "navitia_tag=${{env.debian_version}}_$version" >> $GITHUB_ENV
+          echo "aws_branch=release" >> $GITHUB_ENV
+
       # https://github.com/marketplace/actions/build-and-push-docker-images
       - name: Build and push
         uses: docker/build-push-action@v4
@@ -131,5 +146,5 @@ jobs:
           context: .
           file: docker/debian11_arm64/Dockerfile-jormungandr
           push: true
-          tags: navitia/${{matrix.docker_image_name}}
-          platforms: linux/amd64,linux/arm64
+          tags: navitia/${{matrix.docker_image_name}}_arm64:${{env.navitia_tag}}
+          platforms: linux/arm64
