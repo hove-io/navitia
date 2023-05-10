@@ -108,7 +108,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
+        with:
+          submodules : recursive
+          fetch-depth: 0
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v2
@@ -154,3 +157,14 @@ jobs:
           push: true
           tags: navitia/${{matrix.docker_image_name}}_arm64:${{env.navitia_tag}}
           platforms: linux/arm64
+
+      - name: failure notification
+        if: failure()
+        run: |
+          echo '{"text":":warning: Github Actions: build_dockers on arm64 for ${{env.navitia_tag}} failed !"}' | http --json POST ${{secrets.SLACK_NAVITIA_TEAM_URL}}
+
+      - name: success notification on core team
+        if: success()
+        run: |
+          echo '{"text":":octopus: Github Actions: build_dockers on arm64 has succeeded. New navitia ${{env.navitia_tag}}_arm64 images available."}' | http --json POST ${{secrets.SLACK_NAVITIA_TEAM_URL}}
+
