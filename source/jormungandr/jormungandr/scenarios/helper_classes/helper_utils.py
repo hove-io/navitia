@@ -885,10 +885,12 @@ def complete_transfer(pt_journey, transfer_pool):
             continue
         transfer_pool.wait_and_complete(section)
 
+
 def is_valid_direct_path(dp):
     if not dp or not dp.journeys or not dp.journeys[0].sections:
         return False
     return True
+
 
 def is_valid_direct_path_streetwork(dp):
     if not is_valid_direct_path(dp):
