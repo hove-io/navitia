@@ -875,10 +875,10 @@ def create_journeys_request(origins, destinations, datetime, clockwise, journey_
         req.journeys.criteria = request_pb2.Occupancy
     elif journey_parameters.criteria == "classic":
         req.journeys.criteria = request_pb2.Classic
-    elif journey_parameters.criteria == "arrival_stop_capacity":
-        req.journeys.criteria = request_pb2.ArrivalStopCapacity
-    elif journey_parameters.criteria == "departure_stop_capacity":
-        req.journeys.criteria = request_pb2.DepartureStopCapacity
+    elif journey_parameters.criteria == "arrival_stop_attractivity":
+        req.journeys.criteria = request_pb2.ArrivalStopAttractivity
+    elif journey_parameters.criteria == "departure_stop_attractivity":
+        req.journeys.criteria = request_pb2.DepartureStopAttractivity
 
     return req
 
