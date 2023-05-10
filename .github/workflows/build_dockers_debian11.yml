@@ -149,13 +149,13 @@ jobs:
           echo "aws_branch=release" >> $GITHUB_ENV
 
       # https://github.com/marketplace/actions/build-and-push-docker-images
-      - name: Build and push
+      - name: Build and push jormungandr
         uses: docker/build-push-action@v4
         with:
           context: .
           file: docker/debian11_arm64/Dockerfile-jormungandr
           push: true
-          tags: navitia/${{matrix.docker_image_name}}_arm64:${{env.navitia_tag}}
+          tags: navitia/jormungandr_arm64:${{env.navitia_tag}}
           platforms: linux/arm64
 
       - name: failure notification
