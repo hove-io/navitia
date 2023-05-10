@@ -522,7 +522,7 @@ class JourneyCommon(ResourceUri, ResourceUtc):
                     'departure_stop_attractivity',
                 ]
             ),
-            help="choose the criteria used to compute pt journeys ",
+            help="choose the criteria used to compute pt journeys, feature in beta ",
         )
 
         # Advanced parameters for valhalla bike
