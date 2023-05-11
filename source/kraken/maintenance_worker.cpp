@@ -368,7 +368,6 @@ void MaintenanceWorker::handle_rt_in_batch(const std::vector<AmqpClient::Envelop
     boost::shared_ptr<nt::Data> data{};
     pt::ptime begin = pt::microsec_clock::universal_time();
     bool autocomplete_rebuilding_activated = false;
-    auto rt_action = RTAction::chaos;
 
     size_t applied_entity_count = 0u;
     pt::ptime oldest_message_time{pt::max_date_time};
@@ -408,16 +407,13 @@ void MaintenanceWorker::handle_rt_in_batch(const std::vector<AmqpClient::Envelop
             }
             ++applied_entity_count;
             if (entity.is_deleted()) {
-                LOG4CPLUS_DEBUG(logger, "deletion of disruption " << entity.id());
-                rt_action = RTAction::deletion;
+                LOG4CPLUS_DEBUG(logger, "deletion of Chaos disruption " << entity.id());
                 delete_disruption(entity.id(), *data->pt_data, *data->meta);
             } else if (entity.HasExtension(chaos::disruption)) {
-                LOG4CPLUS_DEBUG(logger, "add/update of disruption " << entity.id());
-                rt_action = RTAction::chaos;
+                LOG4CPLUS_DEBUG(logger, "add/update of Chaos disruption " << entity.id());
                 make_and_apply_disruption(entity.GetExtension(chaos::disruption), *data->pt_data, *data->meta);
             } else if (entity.has_trip_update()) {
-                LOG4CPLUS_DEBUG(logger, "RT trip update" << entity.id());
-                rt_action = RTAction::kirin;
+                LOG4CPLUS_DEBUG(logger, "add/update of Kirin disruption" << entity.id());
                 handle_realtime(entity.id(), navitia::from_posix_timestamp(feed_message.header().timestamp()),
                                 entity.trip_update(), *data, conf.is_realtime_add_enabled(),
                                 conf.is_realtime_add_trip_enabled());
@@ -452,19 +448,9 @@ void MaintenanceWorker::handle_rt_in_batch(const std::vector<AmqpClient::Envelop
         // Feed metrics
         auto end = pt::microsec_clock::universal_time();
         auto duration = end - begin;
-        if (rt_action == RTAction::deletion) {
-            this->metrics.observe_delete_disruption(duration.total_milliseconds() / 1000.0);
-            LOG4CPLUS_INFO(logger, "Data updated after deleting disruption, "
-                                       << envelopes.size() << " disruption(s) applied in " << duration);
-        } else if (rt_action == RTAction::chaos) {
-            this->metrics.observe_handle_disruption(duration.total_milliseconds() / 1000.0);
-            LOG4CPLUS_INFO(logger, "Data updated with disruptions from chaos, "
-                                       << envelopes.size() << " disruption(s) applied in " << duration);
-        } else if (rt_action == RTAction::kirin) {
-            this->metrics.observe_handle_rt(duration.total_milliseconds() / 1000.0);
-            LOG4CPLUS_INFO(logger, "Data updated with realtime from kirin, "
-                                       << envelopes.size() << " disruption(s) applied in " << duration);
-        }
+        this->metrics.observe_handle_rt(duration.total_milliseconds() / 1000.0);
+        LOG4CPLUS_INFO(logger, "Data updated with realtime (add/delete from chaos/kirin): "
+                                   << envelopes.size() << " disruption(s) applied in " << duration);
         if (dated_message_count > 0) {
             auto min_age = end - youngest_message_time;
             auto max_age = end - oldest_message_time;

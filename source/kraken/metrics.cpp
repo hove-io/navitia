@@ -133,24 +133,10 @@ Metrics::Metrics(const boost::optional<std::string>& endpoint, const std::string
 
     this->handle_rt_histogram = &prometheus::BuildHistogram()
                                      .Name("kraken_handle_rt_duration_seconds")
-                                     .Help("duration for handling realtime")
+                                     .Help("duration for handling realtime batch (add(s)/delete(s) from chaos/kirin")
                                      .Labels({{"coverage", coverage}})
                                      .Register(*registry)
                                      .Add({}, create_exponential_buckets(0.5, 2, 10));
-
-    this->handle_disruption_histogram = &prometheus::BuildHistogram()
-                                             .Name("kraken_handle_disruption_duration_seconds")
-                                             .Help("duration for handling disruption")
-                                             .Labels({{"coverage", coverage}})
-                                             .Register(*registry)
-                                             .Add({}, create_exponential_buckets(0.5, 2, 10));
-
-    this->delete_disruption_histogram = &prometheus::BuildHistogram()
-                                             .Name("kraken_delete_disruption_duration_seconds")
-                                             .Help("duration for deleting a disruption")
-                                             .Labels({{"coverage", coverage}})
-                                             .Register(*registry)
-                                             .Add({}, create_exponential_buckets(0.5, 2, 10));
 
     this->retrieve_rt_message_duration_histogram = &prometheus::BuildHistogram()
                                                         .Name("kraken_retrieve_rt_message_duration_seconds")
@@ -234,20 +220,6 @@ void Metrics::observe_handle_rt(double duration) const {
         return;
     }
     this->handle_rt_histogram->Observe(duration);
-}
-
-void Metrics::observe_handle_disruption(double duration) const {
-    if (!registry) {
-        return;
-    }
-    this->handle_disruption_histogram->Observe(duration);
-}
-
-void Metrics::observe_delete_disruption(double duration) const {
-    if (!registry) {
-        return;
-    }
-    this->delete_disruption_histogram->Observe(duration);
 }
 
 void Metrics::observe_retrieve_rt_message_duration(double duration) const {
