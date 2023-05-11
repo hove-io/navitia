@@ -1,7 +1,6 @@
 name: Build Navitia Dockers debian11
 
 on:
-  pull_request:
   push:
     branches:
       - dev
