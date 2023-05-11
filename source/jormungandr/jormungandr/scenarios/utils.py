@@ -457,7 +457,6 @@ def include_poi_access_points(request, pt_object, mode):
         and mode
         in [
             FallbackModes.walking.name,
-            FallbackModes.bike.name,
             FallbackModes.bss.name,
         ]
         and pt_object.poi.children
