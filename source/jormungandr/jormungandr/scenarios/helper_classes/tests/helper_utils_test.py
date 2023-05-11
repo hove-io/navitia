@@ -38,7 +38,11 @@ from jormungandr.utils import (
     navitia_utcfromtimestamp,
     dt_to_str,
 )
-from jormungandr.scenarios.helper_classes.helper_utils import _update_fallback_sections
+from jormungandr.scenarios.helper_classes.helper_utils import (
+    _update_fallback_sections,
+    prepend_first_coord,
+    append_last_coord,
+)
 from jormungandr.street_network.tests.streetnetwork_test_utils import make_pt_object
 from jormungandr.street_network.street_network import StreetNetworkPathType
 from jormungandr.scenarios.helper_classes.complete_pt_journey import tag_LEZ
@@ -537,3 +541,40 @@ def test_tag_LEZ():
         tag_LEZ(lez_on_path_journey)
         assert lez_on_path_journey.HasField('low_emission_zone')
         assert lez_on_path_journey.low_emission_zone.on_path
+
+
+def test_prepend_append_coord_to_alternative_journeys():
+    response = response_pb2.Response()
+
+    def add_journey(r):
+        journey = r.journeys.add()
+        s = journey.sections.add()
+        s.street_network.coordinates.add(lon=1, lat=2)
+        s = journey.sections.add()
+        s.street_network.coordinates.add(lon=3, lat=4)
+
+    # create a response with 3 journeys
+    for _ in range(3):
+        add_journey(response)
+
+    orig_pt_obj = type_pb2.PtObject()
+    orig_pt_obj.embedded_type = type_pb2.POI
+    orig_lon, orig_lat = 41.0, 42.0
+    orig_pt_obj.poi.coord.lon = orig_lon
+    orig_pt_obj.poi.coord.lat = orig_lat
+
+    dest_pt_obj = type_pb2.PtObject()
+    dest_pt_obj.embedded_type = type_pb2.POI
+    dest_lon, dest_lat = 43.0, 44.0
+    dest_pt_obj.poi.coord.lon = dest_lon
+    dest_pt_obj.poi.coord.lat = dest_lat
+
+    prepend_first_coord(response, orig_pt_obj)
+    append_last_coord(response, dest_pt_obj)
+
+    for j in response.journeys:
+        assert j.sections[0].street_network.coordinates[0].lon == orig_lon
+        assert j.sections[0].street_network.coordinates[0].lat == orig_lat
+
+        assert j.sections[-1].street_network.coordinates[-1].lon == dest_lon
+        assert j.sections[-1].street_network.coordinates[-1].lat == dest_lat

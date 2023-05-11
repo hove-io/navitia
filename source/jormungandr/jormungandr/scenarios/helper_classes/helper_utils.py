@@ -901,18 +901,19 @@ def prepend_first_coord(dp, pt_obj):
     if not is_valid_direct_path_streetwork(dp):
         return
 
-    starting_coords = dp.journeys[0].sections[0].street_network.coordinates
-    # we are inserting the coord of the origin at the beginning of the geojson
-    coord = get_pt_object_coord(pt_obj)
-    if starting_coords and coord != starting_coords[0]:
-        starting_coords.add(lon=coord.lon, lat=coord.lat)
-        # we cannot insert an element at the beginning of a list :(
-        # a little algo to move the last element to the beginning
-        tmp = type_pb2.GeographicalCoord()
-        for i in range(len(starting_coords)):
-            tmp.CopyFrom(starting_coords[i])
-            starting_coords[i].CopyFrom(starting_coords[-1])
-            starting_coords[-1].CopyFrom(tmp)
+    for j in dp.journeys:
+        starting_coords = j.sections[0].street_network.coordinates
+        # we are inserting the coord of the origin at the beginning of the geojson
+        coord = get_pt_object_coord(pt_obj)
+        if starting_coords and coord != starting_coords[0]:
+            starting_coords.add(lon=coord.lon, lat=coord.lat)
+            # we cannot insert an element at the beginning of a list :(
+            # a little algo to move the last element to the beginning
+            tmp = type_pb2.GeographicalCoord()
+            for i in range(len(starting_coords)):
+                tmp.CopyFrom(starting_coords[i])
+                starting_coords[i].CopyFrom(starting_coords[-1])
+                starting_coords[-1].CopyFrom(tmp)
 
 
 def append_last_coord(dp, pt_obj):
@@ -922,8 +923,9 @@ def append_last_coord(dp, pt_obj):
     if not is_valid_direct_path_streetwork(dp):
         return
 
-    ending_coords = dp.journeys[0].sections[-1].street_network.coordinates
-    # we are appending the coord of the destination at the end of the geojson
-    coord = get_pt_object_coord(pt_obj)
-    if ending_coords and coord != ending_coords[-1]:
-        ending_coords.add(lon=coord.lon, lat=coord.lat)
+    for j in dp.journeys:
+        ending_coords = j.sections[-1].street_network.coordinates
+        # we are appending the coord of the destination at the end of the geojson
+        coord = get_pt_object_coord(pt_obj)
+        if ending_coords and coord != ending_coords[-1]:
+            ending_coords.add(lon=coord.lon, lat=coord.lat)
