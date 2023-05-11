@@ -323,7 +323,11 @@ def extend_with_via_poi_access(fallback_dp, fallback_type, requested_obj, via_po
     if via_poi_access is None:
         return
     for journey in fallback_dp.journeys:
-        section = journey.sections[-1] if fallback_type == StreetNetworkPathType.BEGINNING_FALLBACK else journey.sections[0]
+        section = (
+            journey.sections[-1]
+            if fallback_type == StreetNetworkPathType.BEGINNING_FALLBACK
+            else journey.sections[0]
+        )
         add_path_item_with_poi_access(
             fallback_type,
             section.street_network.path_items,

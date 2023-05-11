@@ -120,7 +120,9 @@ class StreetNetworkPath:
             add_poi_access_point(fallback_type, via_poi_access, sections)
             sections[0].origin.CopyFrom(
                 self._orig_obj
-            ) if fallback_type == StreetNetworkPathType.BEGINNING_FALLBACK else sections[-1].destination.CopyFrom(
+            ) if fallback_type == StreetNetworkPathType.BEGINNING_FALLBACK else sections[
+                -1
+            ].destination.CopyFrom(
                 self._dest_obj
             )
         extend_with_via_poi_access(
