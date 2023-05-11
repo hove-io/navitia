@@ -1,4 +1,4 @@
-FROM arm64v8/python:3.9-slim-bullseye as build_arm64
+FROM --platform=linux/arm64/v8 python:3.9-slim-bullseye as build_arm64
 
 WORKDIR /
 

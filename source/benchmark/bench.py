@@ -62,7 +62,7 @@ def _call_jormun(url):
     import time
 
     time1 = time.time()
-    r = requests.get(url, headers={'Authorization': TOKEN}, verify=True)
+    r = requests.get(url, headers={'Authorization': TOKEN})
     time2 = time.time()
     elapsed_time = (time2 - time1) * 1000.0
     return r, elapsed_time
