@@ -34,8 +34,8 @@ from .helper_utils import (
     timed_logger,
     prepend_first_coord,
     append_last_coord,
-    extend_with_via_poi_access,
-    add_poi_access_point,
+    extend_path_with_via_poi_access,
+    add_poi_access_point_in_sections,
     is_valid_direct_path_streetwork,
     is_valid_direct_path,
 )
@@ -117,7 +117,7 @@ class StreetNetworkPath:
         )
         for journey in best_dp_element.response.journeys:
             sections = journey.sections
-            add_poi_access_point(fallback_type, via_poi_access, sections)
+            add_poi_access_point_in_sections(fallback_type, via_poi_access, sections)
             sections[0].origin.CopyFrom(
                 self._orig_obj
             ) if fallback_type == StreetNetworkPathType.BEGINNING_FALLBACK else sections[
@@ -125,7 +125,7 @@ class StreetNetworkPath:
             ].destination.CopyFrom(
                 self._dest_obj
             )
-        extend_with_via_poi_access(
+        extend_path_with_via_poi_access(
             best_dp_element.response,
             fallback_type,
             entry_point,

@@ -319,7 +319,7 @@ def add_path_item_with_poi_access(fallback_type, path_items, requested_obj, poi_
             path_items[-1].CopyFrom(tmp_item)
 
 
-def extend_with_via_poi_access(fallback_dp, fallback_type, requested_obj, via_poi_access, language):
+def extend_path_with_via_poi_access(fallback_dp, fallback_type, requested_obj, via_poi_access, language):
     if via_poi_access is None:
         return
     for journey in fallback_dp.journeys:
@@ -377,7 +377,7 @@ def _extend_with_via_pt_access(fallback_dp, pt_object, fallback_type, via_pt_acc
         )
 
 
-def add_poi_access_point(fallback_type, via_poi_access, sections):
+def add_poi_access_point_in_sections(fallback_type, via_poi_access, sections):
     if not via_poi_access:
         return
     section = sections[-1] if fallback_type == StreetNetworkPathType.BEGINNING_FALLBACK else sections[0]
@@ -418,7 +418,7 @@ def _update_fallback_sections(
     else:
         fallback_sections[0].origin.CopyFrom(journey.sections[-1].destination)
 
-    add_poi_access_point(fallback_type, via_poi_access, fallback_sections)
+    add_poi_access_point_in_sections(fallback_type, via_poi_access, fallback_sections)
 
     if isinstance(via_pt_access, type_pb2.PtObject) and via_pt_access.embedded_type == type_pb2.ACCESS_POINT:
         if fallback_type == StreetNetworkPathType.BEGINNING_FALLBACK:
@@ -620,7 +620,7 @@ def _build_fallback(
                     )
                 else:
                     _extend_with_via_pt_access(fallback_dp_copy, pt_obj, fallback_type, via_pt_access, language)
-                    extend_with_via_poi_access(
+                    extend_path_with_via_poi_access(
                         fallback_dp_copy, fallback_type, requested_obj, via_poi_access, language
                     )
 
