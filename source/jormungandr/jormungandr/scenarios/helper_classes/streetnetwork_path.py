@@ -34,8 +34,8 @@ from .helper_utils import (
     timed_logger,
     prepend_first_coord,
     append_last_coord,
-    _extend_with_via_poi_access,
-    _add_poi_access_point,
+    extend_with_via_poi_access,
+    add_poi_access_point,
     is_valid_direct_path_streetwork,
     is_valid_direct_path,
 )
@@ -93,14 +93,16 @@ class StreetNetworkPath:
         self._request_id = request_id
         self._async_request()
 
-    def poi_to_pt_object(self, poi):
+    @staticmethod
+    def poi_to_pt_object(poi):
         return type_pb2.PtObject(poi=poi, uri=poi.uri, embedded_type=type_pb2.POI, name=poi.name)
 
     def get_pt_objects(self, entry_point):
         if include_poi_access_points(self._request, entry_point, self._mode):
             for o in entry_point.poi.children:
                 yield self.poi_to_pt_object(o)
-        yield entry_point
+        else:
+            yield entry_point
 
     def make_poi_access_points(self, fallback_type, best_dp_element):
         entry_point = (
@@ -113,19 +115,20 @@ class StreetNetworkPath:
             if fallback_type == StreetNetworkPathType.BEGINNING_FALLBACK
             else best_dp_element.destination
         )
-        _add_poi_access_point(fallback_type, via_poi_access, best_dp_element.response.journeys[0].sections)
-        _extend_with_via_poi_access(
+        for journey in best_dp_element.response.journeys:
+            sections = journey.sections
+            add_poi_access_point(fallback_type, via_poi_access, sections)
+            sections[0].origin.CopyFrom(
+                self._orig_obj
+            ) if fallback_type == StreetNetworkPathType.BEGINNING_FALLBACK else sections[-1].destination.CopyFrom(
+                self._dest_obj
+            )
+        extend_with_via_poi_access(
             best_dp_element.response,
             fallback_type,
             entry_point,
             via_poi_access,
             self._request.get('_asgard_language', "english_us"),
-        )
-        sections = best_dp_element.response.journeys[0].sections
-        sections[0].origin.CopyFrom(
-            self._orig_obj
-        ) if fallback_type == StreetNetworkPathType.BEGINNING_FALLBACK else sections[-1].destination.CopyFrom(
-            self._dest_obj
         )
 
     def finalize_direct_path(self, resp_direct_path):
@@ -171,25 +174,30 @@ class StreetNetworkPath:
                 logging.getLogger(__name__).exception('')
                 return None
 
-    def get_origin_or_destination(self, dp, fallback_type):
+    def get_pt_object_origin(self, dp):
         if not is_valid_direct_path_streetwork(dp):
             return None
-        pt_object = (
-            self._orig_obj if fallback_type == StreetNetworkPathType.BEGINNING_FALLBACK else self._dest_obj
-        )
-        if not include_poi_access_points(self._request, pt_object, self._mode):
-            return pt_object
-        section = (
-            dp.journeys[0].sections[0]
-            if fallback_type == StreetNetworkPathType.BEGINNING_FALLBACK
-            else dp.journeys[0].sections[-1]
-        )
-        for via in section.vias:
+        if not include_poi_access_points(self._request, self._orig_obj, self._mode):
+            return self._orig_obj
+        for via in dp.journeys[0].sections[0].vias:
             if via.embedded_type != type_pb2.poi_access_point:
                 continue
-            poi_orig = next((ch for ch in pt_object.poi.children if ch.uri == via.uri), None)
-            if poi_orig:
-                return self.poi_to_pt_object(poi_orig)
+            poi_access_point = next((ch for ch in self._orig_obj.poi.children if ch.uri == via.uri), None)
+            if poi_access_point:
+                return self.poi_to_pt_object(poi_access_point)
+        return None
+
+    def get_pt_object_destination(self, dp):
+        if not is_valid_direct_path_streetwork(dp):
+            return None
+        if not include_poi_access_points(self._request, self._dest_obj, self._mode):
+            return self._dest_obj
+        for via in dp.journeys[0].sections[-1].vias:
+            if via.embedded_type != type_pb2.poi_access_point:
+                continue
+            poi_access_point = next((ch for ch in self._dest_obj.poi.children if ch.uri == via.uri), None)
+            if poi_access_point:
+                return self.poi_to_pt_object(poi_access_point)
         return None
 
     def _do_request(self):
@@ -202,8 +210,8 @@ class StreetNetworkPath:
         )
 
         dp = self._direct_path_with_fp(self._streetnetwork_service)
-        origin = self.get_origin_or_destination(dp, StreetNetworkPathType.BEGINNING_FALLBACK)
-        destination = self.get_origin_or_destination(dp, StreetNetworkPathType.ENDING_FALLBACK)
+        origin = self.get_pt_object_origin(dp)
+        destination = self.get_pt_object_destination(dp)
         prepend_first_coord(dp, origin)
         append_last_coord(dp, destination)
 
