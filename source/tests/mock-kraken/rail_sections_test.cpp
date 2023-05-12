@@ -326,8 +326,7 @@ int main(int argc, const char* const argv[]) {
                                   .application_periods(btp("20170101T000000"_dt, "20170105T000000"_dt))
                                   .publish(btp("20170101T000000"_dt, "20170110T000000"_dt))
                                   .on_rail_section("line:100", "stopAreaD1", "stopAreaB1",
-                                                   {std::make_pair("stopAreaC1", 1)},
-                                                   {"route100-2"}, *b.data->pt_data)
+                                                   {std::make_pair("stopAreaC1", 1)}, {"route100-2"}, *b.data->pt_data)
                                   .get_disruption(),
                               *b.data->pt_data, *b.data->meta);
 
