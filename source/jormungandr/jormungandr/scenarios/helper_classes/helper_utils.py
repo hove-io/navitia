@@ -319,24 +319,18 @@ def add_path_item_with_poi_access(fallback_type, path_items, requested_obj, poi_
             path_items[-1].CopyFrom(tmp_item)
 
 
-def _extend_with_via_poi_access(fallback_dp, fallback_type, requested_obj, via_poi_access, language):
+def extend_path_with_via_poi_access(fallback_dp, fallback_type, requested_obj, via_poi_access, language):
     if via_poi_access is None:
         return
-
-    dp_journey = fallback_dp.journeys[0]
-    if fallback_type == StreetNetworkPathType.BEGINNING_FALLBACK:
-        add_path_item_with_poi_access(
-            fallback_type,
-            dp_journey.sections[-1].street_network.path_items,
-            requested_obj,
-            via_poi_access,
-            language,
+    for journey in fallback_dp.journeys:
+        section = (
+            journey.sections[-1]
+            if fallback_type == StreetNetworkPathType.BEGINNING_FALLBACK
+            else journey.sections[0]
         )
-
-    elif fallback_type == StreetNetworkPathType.ENDING_FALLBACK:
         add_path_item_with_poi_access(
             fallback_type,
-            dp_journey.sections[0].street_network.path_items,
+            section.street_network.path_items,
             requested_obj,
             via_poi_access,
             language,
@@ -383,6 +377,20 @@ def _extend_with_via_pt_access(fallback_dp, pt_object, fallback_type, via_pt_acc
         )
 
 
+def add_poi_access_point_in_sections(fallback_type, via_poi_access, sections):
+    if not via_poi_access:
+        return
+    section = sections[-1] if fallback_type == StreetNetworkPathType.BEGINNING_FALLBACK else sections[0]
+    poi_access = section.vias.add()
+    poi_access.name = via_poi_access.name
+    poi_access.uri = via_poi_access.uri
+    poi_access.coord.lon = via_poi_access.poi.coord.lon
+    poi_access.coord.lat = via_poi_access.poi.coord.lat
+    poi_access.embedded_type = type_pb2.poi_access_point
+    poi_access.is_exit = True
+    poi_access.is_entrance = True
+
+
 def _update_fallback_sections(
     journey, fallback_dp, fallback_period_extremity, fallback_type, via_pt_access, via_poi_access
 ):
@@ -410,18 +418,7 @@ def _update_fallback_sections(
     else:
         fallback_sections[0].origin.CopyFrom(journey.sections[-1].destination)
 
-    if via_poi_access:
-        if fallback_type == StreetNetworkPathType.BEGINNING_FALLBACK:
-            poi_access = fallback_sections[-1].vias.add()
-        else:
-            poi_access = fallback_sections[0].vias.add()
-        poi_access.name = via_poi_access.name
-        poi_access.uri = via_poi_access.uri
-        poi_access.coord.lon = via_poi_access.poi.coord.lon
-        poi_access.coord.lat = via_poi_access.poi.coord.lat
-        poi_access.embedded_type = type_pb2.poi_access_point
-        poi_access.is_exit = True
-        poi_access.is_entrance = True
+    add_poi_access_point_in_sections(fallback_type, via_poi_access, fallback_sections)
 
     if isinstance(via_pt_access, type_pb2.PtObject) and via_pt_access.embedded_type == type_pb2.ACCESS_POINT:
         if fallback_type == StreetNetworkPathType.BEGINNING_FALLBACK:
@@ -623,7 +620,7 @@ def _build_fallback(
                     )
                 else:
                     _extend_with_via_pt_access(fallback_dp_copy, pt_obj, fallback_type, via_pt_access, language)
-                    _extend_with_via_poi_access(
+                    extend_path_with_via_poi_access(
                         fallback_dp_copy, fallback_type, requested_obj, via_poi_access, language
                     )
 
@@ -883,10 +880,15 @@ def complete_transfer(pt_journey, transfer_pool):
         transfer_pool.wait_and_complete(section)
 
 
-def is_valid_direct_path_streetwork(dp):
+def is_valid_direct_path(dp):
     if not dp or not dp.journeys or not dp.journeys[0].sections:
         return False
+    return True
 
+
+def is_valid_direct_path_streetwork(dp):
+    if not is_valid_direct_path(dp):
+        return False
     # a valid journey's must comprise at least two coordinates
     nb_coords = sum((len(sec.street_network.coordinates) for sec in dp.journeys[0].sections))
     if nb_coords < 2:
