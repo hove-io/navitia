@@ -525,6 +525,14 @@ class JourneyCommon(ResourceUri, ResourceUtc):
             help="choose the criteria used to compute pt journeys, feature in beta ",
         )
 
+        parser_get.add_argument(
+            "_jo",
+            type=BooleanType(),
+            hidden=True,
+            default=False,
+            help="do not delete journeys tagged for olympics",
+        )
+
         # Advanced parameters for valhalla bike
         parser_get.add_argument(
             "bike_use_roads",
