@@ -1,0 +1,6 @@
+FROM --platform=linux/arm64 navitia/debian11_dev
+
+COPY docker/build_navitia.sh /build_navitia.sh
+RUN chmod +x /build_navitia.sh
+
+ENTRYPOINT ["bash", "/build_navitia.sh" ]

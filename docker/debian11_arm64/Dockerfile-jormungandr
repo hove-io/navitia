@@ -1,0 +1,61 @@
+FROM --platform=linux/arm64/v8 python:3.9-slim-bullseye as build_arm64
+
+WORKDIR /
+
+# https://github.com/aws/aws-graviton-getting-started/blob/main/c-c%2B%2B.md
+ENV CPPFLAGS="-mcpu=neoverse-n1 -march=armv8.2-a -moutline-atomics"
+ENV CFLAGS="-mcpu=neoverse-n1 -march=armv8.2-a -moutline-atomics"
+
+RUN apt-get update --fix-missing \
+    && apt-get install -y curl gcc g++ git libpq5 apache2 libxml2-dev  libxslt1-dev libpq-dev libgeos-c1v5 ca-certificates zlib1g-dev\
+    && pip3 install --no-binary :all: --no-cache-dir uwsgi==2.0.21
+
+# building gevent from source
+COPY ./docker/debian11_arm64/build_gevent.sh ./build_gevent.sh
+RUN sh build_gevent.sh
+
+WORKDIR /usr/src/app
+
+COPY ./source/navitiacommon ./navitiacommon
+COPY ./source/jormungandr ./jormungandr
+COPY ./docker/ca-certificates/*.crt /usr/local/share/ca-certificates/
+
+RUN (cd navitiacommon && python3 setup.py install) \
+    && (cd jormungandr && sed -i '/gevent/d' requirements.txt && python3 setup.py install && pip3 install --no-binary :all: --no-cache-dir -U -r requirements.txt)\
+    && update-ca-certificates \
+    && rm -rf navitiacommon jormungandr \
+    && apt-get autoremove -y
+
+COPY ./docker/run_jormungandr.sh ./run.sh
+COPY ./docker/jormungandr.wsgi ./jormungandr.wsgi
+
+# Add apache config
+RUN rm /etc/apache2/sites-available/000-default.conf /etc/apache2/conf-available/other-vhosts-access-log.conf
+COPY ./docker/apache/jormungandr.default.conf /etc/apache2/sites-available/000-default.conf
+COPY ./docker/apache/apache2.conf /etc/apache2/apache2.conf
+COPY ./docker/apache/envvars /etc/apache2/envvars
+COPY ./docker/apache/logformat.conf /etc/apache2/conf-available/logformat.conf
+COPY ./docker/apache/security.conf /etc/apache2/conf-available/security.conf
+
+RUN a2ensite 000-default.conf \
+    && a2enmod rewrite \
+    && a2enmod proxy \
+    && a2enmod proxy_balancer \
+    && a2enmod proxy_http \
+    && a2enconf logformat.conf \
+    && a2enmod deflate
+
+ # Python 'requests' package handle its own CA certificate list
+ # Let's force it to use the OS's list
+ ENV REQUESTS_CA_BUNDLE /etc/ssl/certs
+
+# Redirect apache log output to docker log collector
+ RUN ln -sf /proc/self/fd/1 /var/log/apache2/access.log \
+     && ln -sf /proc/self/fd/2 /var/log/apache2/error.log
+
+
+HEALTHCHECK CMD curl -f http://localhost/v1 || exit 1
+
+EXPOSE 80
+
+ENTRYPOINT [ "/usr/src/app/run.sh" ]
