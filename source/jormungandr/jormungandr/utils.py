@@ -403,6 +403,7 @@ def generate_id():
 
     return shortuuid.uuid()
 
+
 def add_children(pt_object, dict_pt_object):
     for ch in dict_pt_object.get("poi", {}).get("children", []):
         ch_poi = pt_object.poi.children.add()
@@ -411,11 +412,15 @@ def add_children(pt_object, dict_pt_object):
         coord = Coords(ch["coord"]["lat"], ch["coord"]["lon"])
         ch_poi.coord.lon = coord.lon
         ch_poi.coord.lat = coord.lat
+
+
 def add_properties(pt_object, dict_pt_object):
     for key, value in dict_pt_object.get("poi", {}).get("properties", {}).items():
         property = pt_object.poi.properties.add()
         property.type = key
         property.value = value
+
+
 def get_pt_object_from_json(dict_pt_object, instance):
     if not isinstance(dict_pt_object, dict):
         logging.getLogger(__name__).error('Invalid dict_pt_object')

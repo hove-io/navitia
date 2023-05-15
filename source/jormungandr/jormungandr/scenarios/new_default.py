@@ -1229,6 +1229,7 @@ def is_olympic_site(entry_point, instance):
             return True
     return False
 
+
 def make_olympic_criteria(origin_detail, destination_detail, api_request, instance):
     if not instance.olympic_criteria:
         return
@@ -1241,6 +1242,7 @@ def make_olympic_criteria(origin_detail, destination_detail, api_request, instan
         api_request["forbidden_uris[]"] += instance.olympic_criteria.pt_object_olympic_uris
     else:
         api_request["forbidden_uris[]"] = instance.olympic_criteria.pt_object_olympic_uris
+
 
 class Scenario(simple.Scenario):
     """

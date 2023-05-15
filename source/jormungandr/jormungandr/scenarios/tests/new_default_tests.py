@@ -784,6 +784,7 @@ def make_olympic_criteria_instance_without_origin_test():
     make_olympic_criteria(origin, destination, api_request, instance)
     assert "forbidden_uris[]" not in api_request
 
+
 def make_olympic_criteria_instance_without_destination_test():
     api_request = {"param1": "toto"}
     origin = make_pt_object_poi()
@@ -840,7 +841,6 @@ def make_olympic_criteria_without_poi_property_key_test():
     with pytest.raises(RuntimeError) as exc:
         FakeInstance(criteria=olympic_criteria)
     assert str(exc.value) == 'olympic_criteria: invalid parameter, poi_property_key not found'
-
 
 
 def make_olympic_criteria_without_poi_property_value_test():
