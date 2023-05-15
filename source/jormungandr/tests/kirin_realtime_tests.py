@@ -3228,10 +3228,10 @@ class TestNoServiceJourney(MockKirinOrChaosDisruptionsFixture):
 
         disruptions_before = self.query_region('disruptions?_current_datetime=20170120T080000')
         nb_disruptions_before = len(disruptions_before['disruptions'])
-        assert nb_disruptions_before == 9
+        assert nb_disruptions_before == 10
 
         vjs_before = self.query_region('vehicle_journeys?count=100')
-        assert len(vjs_before['vehicle_journeys']) == 26
+        assert len(vjs_before['vehicle_journeys']) == 27
 
         # Test that a journey affected by a DETOUR rail-section is NO_SERVICE when stop used is deleted
         journey_AADD_query = (
@@ -3355,7 +3355,7 @@ class TestNoServiceJourney(MockKirinOrChaosDisruptionsFixture):
             is_kirin=True,
         )
         disrupts = self.query_region('disruptions?_current_datetime=20170120T080000')
-        assert len(disrupts['disruptions']) == 10
+        assert len(disrupts['disruptions']) == 11
         assert has_the_disruption(disrupts, 'reduced_service_vj1')
         last_disrupt = disrupts['disruptions'][-1]
         assert last_disrupt['severity']['effect'] == 'REDUCED_SERVICE'
@@ -3363,7 +3363,7 @@ class TestNoServiceJourney(MockKirinOrChaosDisruptionsFixture):
 
         vjs_after = self.query_region('vehicle_journeys?count=100')
         # we got a new vj due to the disruption, which means the disruption is handled correctly
-        assert len(vjs_after['vehicle_journeys']) == 27
+        assert len(vjs_after['vehicle_journeys']) == 28
 
         # After "Kirin" disruption, journey using a deleted stop has its status changed to NO_SERVICE
         journey_AC = self.query_region(journey_AC_query)
