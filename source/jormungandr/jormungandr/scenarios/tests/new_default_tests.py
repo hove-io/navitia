@@ -29,13 +29,16 @@
 
 from __future__ import absolute_import, print_function, unicode_literals, division
 import navitiacommon.response_pb2 as response_pb2
+import navitiacommon.type_pb2 as type_pb2
 import jormungandr.scenarios.tests.helpers_tests as helpers_tests
 from jormungandr.scenarios import new_default, journey_filter
 from jormungandr.scenarios.new_default import (
     _tag_journey_by_mode,
     get_kraken_calls,
     update_best_boarding_positions,
+    make_olympic_criteria,
 )
+from jormungandr.instance import Instance
 from jormungandr.scenarios.utils import switch_back_to_ridesharing
 from jormungandr.utils import make_best_boarding_position_key
 from werkzeug.exceptions import HTTPException
@@ -721,3 +724,131 @@ def update_best_boarding_positions_test():
     # Second PT section with '['MIDDLE']' calculated from the last section of STREET_NETWORK with the via of the first path_item
     assert len(journey.sections[3].best_boarding_positions) == 1
     assert {response_pb2.BoardingPosition.MIDDLE} == set(iter(journey.sections[3].best_boarding_positions))
+
+
+class FakeInstance:
+    def __init__(self, name="fake_instance", criteria=None):
+        self.name = name
+        self.olympic_criteria = criteria
+
+
+class FakeInstance(Instance):
+    def __init__(self, name="fake_instance", criteria=None):
+        super(FakeInstance, self).__init__(
+            context=None,
+            name=name,
+            zmq_socket=None,
+            street_network_configurations=[],
+            ridesharing_configurations={},
+            instance_equipment_providers=[],
+            realtime_proxies_configuration=[],
+            pt_planners_configurations={},
+            zmq_socket_type=None,
+            autocomplete_type='kraken',
+            streetnetwork_backend_manager=None,
+            external_service_provider_configurations=[],
+            olympic_criteria=criteria,
+        )
+
+
+DEFAULT_OLYMPIC_CRITERIA = {
+    "pt_object_olympic_uris": ["nt:abc"],
+    "poi_property_key": "olympic",
+    "poi_property_value": "1234",
+}
+
+
+def make_pt_object_poi(property_type="olympic", property_value="1234"):
+    pt_object_poi = type_pb2.PtObject()
+    pt_object_poi.embedded_type = type_pb2.POI
+    property = pt_object_poi.poi.properties.add()
+    property.type = property_type
+    property.value = property_value
+    return pt_object_poi
+
+
+def make_olympic_criteria_instance_without_criteria_test():
+    api_request = {"param1": "toto"}
+    origin = make_pt_object_poi()
+    destination = make_pt_object_poi()
+    instance = FakeInstance()
+    make_olympic_criteria(origin, destination, api_request, instance)
+    assert "forbidden_uris[]" not in api_request
+
+
+def make_olympic_criteria_instance_without_origin_test():
+    api_request = {"param1": "toto"}
+    origin = None
+    destination = make_pt_object_poi()
+    instance = FakeInstance(criteria=DEFAULT_OLYMPIC_CRITERIA)
+    make_olympic_criteria(origin, destination, api_request, instance)
+    assert "forbidden_uris[]" not in api_request
+
+def make_olympic_criteria_instance_without_destination_test():
+    api_request = {"param1": "toto"}
+    origin = make_pt_object_poi()
+    destination = None
+    instance = FakeInstance(criteria=DEFAULT_OLYMPIC_CRITERIA)
+    make_olympic_criteria(origin, destination, api_request, instance)
+    assert "forbidden_uris[]" not in api_request
+
+
+def make_olympic_criteria_instance_test():
+    api_request = {"param1": "toto"}
+    origin = make_pt_object_poi()
+    destination = make_pt_object_poi()
+    instance = FakeInstance(criteria=DEFAULT_OLYMPIC_CRITERIA)
+    make_olympic_criteria(origin, destination, api_request, instance)
+    assert "forbidden_uris[]" in api_request
+    assert len(api_request["forbidden_uris[]"]) == 1
+    assert api_request["forbidden_uris[]"][0] == "nt:kk"
+
+
+def make_olympic_criteria_instance_test():
+    api_request = {"param1": "toto"}
+    origin = make_pt_object_poi(property_value="poi:12")
+    destination = make_pt_object_poi(property_value="poi:12")
+    instance = FakeInstance(criteria=DEFAULT_OLYMPIC_CRITERIA)
+    make_olympic_criteria(origin, destination, api_request, instance)
+    assert "forbidden_uris[]" in api_request
+    assert len(api_request["forbidden_uris[]"]) == 1
+    assert api_request["forbidden_uris[]"][0] == "nt:abc"
+
+
+def make_olympic_criteria_invalid_parameter_test():
+    with pytest.raises(RuntimeError) as exc:
+        FakeInstance(criteria=[DEFAULT_OLYMPIC_CRITERIA])
+    assert str(exc.value) == 'olympic_criteria: invalid parameter type.'
+
+
+def make_olympic_criteria_without_pt_object_olympic_uris_test():
+    olympic_criteria = {
+        "poi_property_key": "olympic",
+        "poi_property_value": "1234",
+    }
+    with pytest.raises(RuntimeError) as exc:
+        FakeInstance(criteria=olympic_criteria)
+    assert str(exc.value) == 'olympic_criteria: invalid parameter, pt_object_olympic_uris not found or invalid'
+
+
+def make_olympic_criteria_without_poi_property_key_test():
+    olympic_criteria = {
+        "pt_object_olympic_uris": ["nt:cc"],
+        "forbidden_uris": ["nt:kk"],
+        "poi_property_value": "1234",
+    }
+    with pytest.raises(RuntimeError) as exc:
+        FakeInstance(criteria=olympic_criteria)
+    assert str(exc.value) == 'olympic_criteria: invalid parameter, poi_property_key not found'
+
+
+
+def make_olympic_criteria_without_poi_property_value_test():
+    olympic_criteria = {
+        "pt_object_olympic_uris": ["nt:cc"],
+        "forbidden_uris": ["nt:kk"],
+        "poi_property_key": "olympic",
+    }
+    with pytest.raises(RuntimeError) as exc:
+        FakeInstance(criteria=olympic_criteria)
+    assert str(exc.value) == 'olympic_criteria: invalid parameter, poi_property_value not found'
