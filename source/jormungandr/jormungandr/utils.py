@@ -403,7 +403,14 @@ def generate_id():
 
     return shortuuid.uuid()
 
-
+def add_children(pt_object, dict_pt_object):
+    for ch in dict_pt_object.get("poi", {}).get("children", []):
+        ch_poi = pt_object.poi.children.add()
+        ch_poi.uri = ch["id"]
+        ch_poi.name = ch.get("name", "")
+        coord = Coords(ch["coord"]["lat"], ch["coord"]["lon"])
+        ch_poi.coord.lon = coord.lon
+        ch_poi.coord.lat = coord.lat
 def get_pt_object_from_json(dict_pt_object, instance):
     if not isinstance(dict_pt_object, dict):
         logging.getLogger(__name__).error('Invalid dict_pt_object')
@@ -443,13 +450,7 @@ def get_pt_object_from_json(dict_pt_object, instance):
     obj.coord.lon = coord.lon
     obj.coord.lat = coord.lat
     if text_embedded_type == "poi":
-        for ch in dict_pt_object.get("poi", {}).get("children", []):
-            ch_poi = pt_object.poi.children.add()
-            ch_poi.uri = ch["id"]
-            ch_poi.name = ch.get("name", "")
-            coord = Coords(ch["coord"]["lat"], ch["coord"]["lon"])
-            ch_poi.coord.lon = coord.lon
-            ch_poi.coord.lat = coord.lat
+        add_children(pt_object, dict_pt_object)
 
     return pt_object
 
