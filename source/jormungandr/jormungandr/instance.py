@@ -58,8 +58,7 @@ import pybreaker
 from jormungandr import georef, schedule, realtime_schedule, ptref, street_network, fallback_modes
 from jormungandr.scenarios.ridesharing.ridesharing_service_manager import RidesharingServiceManager
 import six
-import time
-from collections import deque
+from collections import namedtuple
 from datetime import datetime, timedelta
 from navitiacommon import default_values
 from jormungandr.equipments import EquipmentProviderManager
@@ -82,6 +81,11 @@ type_to_pttype = {
     "stop_point": request_pb2.PlaceCodeRequest.StopPoint,  # type: ignore
     "calendar": request_pb2.PlaceCodeRequest.Calendar,  # type: ignore
 }
+
+OlympicCriteria = namedtuple(
+    'OlympicCriteria',
+    ['pt_object_olympic_uris', 'poi_property_key', 'poi_property_value'],
+)
 
 
 @app.before_request
@@ -106,6 +110,29 @@ def _make_property_getter(attr_name):
     return property(_getter)
 
 
+def parse_and_get_olympic_criteria(dict_olympic_criteria):
+    if not dict_olympic_criteria:
+        return None
+    if not isinstance(dict_olympic_criteria, dict):
+        raise RuntimeError(
+            'olympic_criteria: invalid parameter type.'
+        )
+    if "pt_object_olympic_uris" not in dict_olympic_criteria or not isinstance(dict_olympic_criteria["pt_object_olympic_uris"], list):
+        raise RuntimeError(
+            'olympic_criteria: invalid parameter, pt_object_olympic_uris not found or invalid'
+        )
+    for p in ["poi_property_key", "poi_property_value"]:
+        if p not in dict_olympic_criteria:
+            raise RuntimeError(
+                'olympic_criteria: invalid parameter, {} not found'.format(p)
+            )
+    return OlympicCriteria(
+        pt_object_olympic_uris=dict_olympic_criteria["pt_object_olympic_uris"],
+        poi_property_key=dict_olympic_criteria["poi_property_key"],
+        poi_property_value=dict_olympic_criteria["poi_property_value"],
+    )
+
+
 class Instance(transient_socket.TransientSocket):
     name = None  # type: Text
 
@@ -126,6 +153,7 @@ class Instance(transient_socket.TransientSocket):
         ghost_words=None,
         instance_db=None,
         best_boarding_positions_dir=None,
+        olympic_criteria=None,
     ):
         super(Instance, self).__init__(
             name=name,
@@ -162,6 +190,8 @@ class Instance(transient_socket.TransientSocket):
             self.ridesharing_services_manager = RidesharingServiceManager(
                 self, ridesharing_configurations, self.get_ridesharing_services_from_db
             )
+
+        self.olympic_criteria = parse_and_get_olympic_criteria(olympic_criteria)
 
         self._pt_planner_manager = pt_planners_manager.PtPlannersManager(
             pt_planners_configurations,

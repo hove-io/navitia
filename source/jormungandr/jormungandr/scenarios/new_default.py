@@ -1209,6 +1209,39 @@ def isochrone_common(isochrone, request, instance, journey_req):
     journey_req.streetnetwork_params.destination_mode = isochrone.destination_modes[0]
 
 
+def is_olympic_site(entry_point, instance):
+    if (
+        entry_point
+        and entry_point.embedded_type == type_pb2.POI
+        and hasattr(entry_point.poi, 'properties')
+        and entry_point.poi.properties
+    ):
+        criteria = next(
+            (
+                p
+                for p in entry_point.poi.properties
+                if p.type == instance.olympic_criteria.poi_property_key
+                and p.value == instance.olympic_criteria.poi_property_value
+            ),
+            None,
+        )
+        if criteria:
+            return True
+    return False
+
+def make_olympic_criteria(origin_detail, destination_detail, api_request, instance):
+    if not instance.olympic_criteria:
+        return
+    if is_olympic_site(origin_detail, instance):
+        return
+    if is_olympic_site(destination_detail, instance):
+        return
+
+    if api_request.get("forbidden_uris[]"):
+        api_request["forbidden_uris[]"] += instance.olympic_criteria.pt_object_olympic_uris
+    else:
+        api_request["forbidden_uris[]"] = instance.olympic_criteria.pt_object_olympic_uris
+
 class Scenario(simple.Scenario):
     """
     TODO: a bit of explanation about the new scenario
@@ -1261,6 +1294,8 @@ class Scenario(simple.Scenario):
 
         pt_object_origin = get_pt_object_from_json(origin_detail, instance)
         pt_object_destination = get_pt_object_from_json(destination_detail, instance)
+
+        make_olympic_criteria(pt_object_origin, pt_object_destination, api_request, instance)
 
         api_request['origin'] = get_kraken_id(origin_detail) or api_request.get('origin')
         api_request['destination'] = get_kraken_id(destination_detail) or api_request.get('destination')
