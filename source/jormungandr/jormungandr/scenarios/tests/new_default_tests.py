@@ -800,21 +800,18 @@ def make_olympic_criteria_instance_test():
     destination = make_pt_object_poi()
     instance = FakeInstance(criteria=DEFAULT_OLYMPIC_CRITERIA)
     make_olympic_criteria(origin, destination, api_request, instance)
-    assert "forbidden_uris[]" in api_request
-    assert len(api_request["forbidden_uris[]"]) == 1
-    assert api_request["forbidden_uris[]"][0] == "nt:kk"
+    assert "forbidden_uris[]" not in api_request
 
-
-def make_olympic_criteria_instance_test():
-    api_request = {"param1": "toto"}
+def make_olympic_criteria_instance_query_with_forbidden_uris_test():
+    api_request = {"param1": "toto", "forbidden_uris[]": ["abcd"]}
     origin = make_pt_object_poi(property_value="poi:12")
     destination = make_pt_object_poi(property_value="poi:12")
     instance = FakeInstance(criteria=DEFAULT_OLYMPIC_CRITERIA)
     make_olympic_criteria(origin, destination, api_request, instance)
     assert "forbidden_uris[]" in api_request
-    assert len(api_request["forbidden_uris[]"]) == 1
-    assert api_request["forbidden_uris[]"][0] == "nt:abc"
-
+    assert len(api_request["forbidden_uris[]"]) == 2
+    assert api_request["forbidden_uris[]"][0] == "abcd"
+    assert api_request["forbidden_uris[]"][1] == "nt:abc"
 
 def make_olympic_criteria_invalid_parameter_test():
     with pytest.raises(RuntimeError) as exc:
