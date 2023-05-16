@@ -149,7 +149,7 @@ VJ* MetaVehicleJourney::impl_create_vj(const std::string& uri,
                                        const std::string& name,
                                        const std::string& headsign,
                                        const RTLevel level,
-                                       const ValidityPattern& canceled_vp,
+                                       flat_enum_map<RTLevel, ValidityPattern> canceled_vps_by_level,
                                        Route* route,
                                        std::vector<StopTime> sts,
                                        nt::PT_Data& pt_data) {
@@ -167,16 +167,11 @@ VJ* MetaVehicleJourney::impl_create_vj(const std::string& uri,
         const auto& first_st = navitia::earliest_stop_time(sts);
         vj_ptr->shift = std::min(first_st.boarding_time, first_st.arrival_time) / (ndtu::SECONDS_PER_DAY);
     }
-    ValidityPattern model_new_vp{canceled_vp};
-    model_new_vp.days <<= vj_ptr->shift;  // shift validity pattern
-    auto* new_vp = pt_data.get_or_create_validity_pattern(model_new_vp);
+
     for (const auto l : enum_range<RTLevel>()) {
-        if (l < level) {
-            auto* empty_vp = pt_data.get_or_create_validity_pattern(ValidityPattern(new_vp->beginning_date));
-            vj_ptr->validity_patterns[l] = empty_vp;
-        } else {
-            vj_ptr->validity_patterns[l] = new_vp;
-        }
+        ValidityPattern vp = canceled_vps_by_level[l];
+        vp.days <<= vj_ptr->shift;  // shift validity pattern
+        vj_ptr->validity_patterns[l] = pt_data.get_or_create_validity_pattern(vp);
     }
     vj_ptr->route = route;
     for (auto& st : sts) {
@@ -213,12 +208,11 @@ VJ* MetaVehicleJourney::impl_create_vj(const std::string& uri,
     // TODO: We could also have the same bug for other two levels and hence it has to be checked.
     // We must allow (todo) two VJ from the same trip on the same UTC day (because of DST): this may require
     // 2 distincts meta-VJ in that case, given current implementations.
-    const auto mask = ~canceled_vp.days;
     for_all_vjs([&](VehicleJourney& vj) {
         for (const auto l : enum_range_from(level)) {
             if (l != RTLevel::Base) {
                 auto new_vp = *vj.validity_patterns[l];
-                new_vp.days &= (mask << vj.shift);
+                new_vp.days &= (~canceled_vps_by_level[l].days << vj.shift);
                 vj.validity_patterns[l] = pt_data.get_or_create_validity_pattern(new_vp);
             }
         }
@@ -246,7 +240,15 @@ FrequencyVehicleJourney* MetaVehicleJourney::create_frequency_vj(const std::stri
                                                                  Route* route,
                                                                  std::vector<StopTime> sts,
                                                                  nt::PT_Data& pt_data) {
-    return impl_create_vj<FrequencyVehicleJourney>(uri, name, headsign, level, canceled_vp, route, std::move(sts),
+    navitia::flat_enum_map<nt::RTLevel, nt::ValidityPattern> canceled_vps;
+    for (const auto l : navitia::enum_range<nt::RTLevel>()) {
+        if (l >= level) {
+            canceled_vps[l] = canceled_vp;
+        } else {
+            canceled_vps[l] = nt::ValidityPattern{canceled_vp.beginning_date};  // empty VP
+        }
+    }
+    return impl_create_vj<FrequencyVehicleJourney>(uri, name, headsign, level, canceled_vps, route, std::move(sts),
                                                    pt_data);
 }
 
@@ -258,8 +260,29 @@ DiscreteVehicleJourney* MetaVehicleJourney::create_discrete_vj(const std::string
                                                                Route* route,
                                                                std::vector<StopTime> sts,
                                                                nt::PT_Data& pt_data) {
-    return impl_create_vj<DiscreteVehicleJourney>(uri, name, headsign, level, canceled_vp, route, std::move(sts),
+    navitia::flat_enum_map<nt::RTLevel, nt::ValidityPattern> canceled_vps;
+    for (const auto l : navitia::enum_range<nt::RTLevel>()) {
+        if (l >= level) {
+            canceled_vps[l] = canceled_vp;
+        } else {
+            canceled_vps[l] = nt::ValidityPattern{canceled_vp.beginning_date};  // empty VP
+        }
+    }
+    return impl_create_vj<DiscreteVehicleJourney>(uri, name, headsign, level, canceled_vps, route, std::move(sts),
                                                   pt_data);
+}
+
+DiscreteVehicleJourney* MetaVehicleJourney::create_discrete_vj_with_all_vps(
+    const std::string& uri,
+    const std::string& name,
+    const std::string& headsign,
+    const RTLevel level,
+    flat_enum_map<RTLevel, ValidityPattern> canceled_vps_by_level,
+    Route* route,
+    std::vector<StopTime> sts,
+    nt::PT_Data& pt_data) {
+    return impl_create_vj<DiscreteVehicleJourney>(uri, name, headsign, level, canceled_vps_by_level, route,
+                                                  std::move(sts), pt_data);
 }
 
 void MetaVehicleJourney::cancel_vj(RTLevel level,

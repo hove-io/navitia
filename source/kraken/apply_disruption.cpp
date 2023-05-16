@@ -78,8 +78,17 @@ nt::VehicleJourney* create_vj_from_old_vj(nt::MetaVehicleJourney* mvj,
     auto odt_message = vj->odt_message;
     auto vehicle_properties = vj->_vehicle_properties;
 
-    auto* new_vj = mvj->create_discrete_vj(new_vj_uri, vj->name, vj->headsign, rt_level, canceled_vp, vj->route,
-                                           std::move(new_stop_times), pt_data);
+    flat_enum_map<nt::RTLevel, nt::ValidityPattern> canceled_vps;
+    for (const auto l : enum_range<nt::RTLevel>()) {
+        if (l >= rt_level) {
+            canceled_vps[l] = canceled_vp;
+            canceled_vps[l].days = canceled_vp.days & (vj->validity_patterns[l]->days >> vj->shift);
+        } else {
+            canceled_vps[l] = nt::ValidityPattern{canceled_vp.beginning_date};  // empty VP
+        }
+    }
+    auto* new_vj = mvj->create_discrete_vj_with_all_vps(new_vj_uri, vj->name, vj->headsign, rt_level, canceled_vps,
+                                                        vj->route, std::move(new_stop_times), pt_data);
     vj = nullptr;  // after create_discrete_vj, the vj can have been deleted
 
     new_vj->company = company;
@@ -323,8 +332,17 @@ struct add_impacts_visitor : public apply_impacts_visitor {
             }
 
             // Create new VJ (default name/headsign is empty)
-            auto* vj = mvj->create_discrete_vj(new_vj_uri, "", "", type::RTLevel::RealTime, canceled_vp, r,
-                                               std::move(stoptimes), pt_data);
+            auto rt_level = nt::RTLevel::RealTime;
+            navitia::flat_enum_map<nt::RTLevel, nt::ValidityPattern> canceled_vps;
+            for (const auto l : navitia::enum_range<nt::RTLevel>()) {
+                if (l >= rt_level) {
+                    canceled_vps[l] = canceled_vp;
+                } else {
+                    canceled_vps[l] = nt::ValidityPattern{canceled_vp.beginning_date};  // empty VP
+                }
+            }
+            auto* vj = mvj->create_discrete_vj_with_all_vps(new_vj_uri, "", "", rt_level, canceled_vps, r,
+                                                            std::move(stoptimes), pt_data);
             LOG4CPLUS_TRACE(log, "New vj has been created " << vj->uri);
 
             // Add company
@@ -499,8 +517,6 @@ struct add_impacts_visitor : public apply_impacts_visitor {
             }
             auto new_vj_uri = make_new_vj_uri(mvj, rt_level);
 
-            new_vp.days = new_vp.days & (vj->validity_patterns[rt_level]->days >> vj->shift);
-
             LOG4CPLUS_TRACE(log, "meta_vj : " << mvj->uri << " \n  old_vj: " << vj->uri
                                               << " to be deleted \n new_vj_uri " << new_vj_uri);
             auto* new_vj =
@@ -565,8 +581,6 @@ struct add_impacts_visitor : public apply_impacts_visitor {
                 continue;
             }
             auto new_vj_uri = make_new_vj_uri(mvj, rt_level);
-
-            new_vp.days = new_vp.days & (vj->validity_patterns[rt_level]->days >> vj->shift);
 
             LOG4CPLUS_TRACE(log, "meta_vj : " << mvj->uri << " \n  old_vj: " << vj->uri
                                               << " to be deleted \n new_vj_uri " << new_vj_uri);
@@ -719,8 +733,6 @@ struct add_impacts_visitor : public apply_impacts_visitor {
             mvj->push_unique_impact(impact);
 
             auto new_vj_uri = make_new_vj_uri(mvj, rt_level);
-
-            new_vp.days = new_vp.days & (vj->validity_patterns[rt_level]->days >> vj->shift);
 
             auto* new_vj =
                 create_vj_from_old_vj(mvj, vj, new_vj_uri, rt_level, new_vp, std::move(new_stop_times), pt_data);

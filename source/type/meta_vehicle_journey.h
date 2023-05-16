@@ -87,6 +87,15 @@ struct MetaVehicleJourney : public Header, HasMessages {
                                                Route*,
                                                std::vector<StopTime>,
                                                PT_Data&);
+    DiscreteVehicleJourney* create_discrete_vj_with_all_vps(
+        const std::string& uri,
+        const std::string& name,
+        const std::string& headsign,
+        const RTLevel,
+        flat_enum_map<RTLevel, ValidityPattern> canceled_vps_by_level,
+        Route*,
+        std::vector<StopTime>,
+        PT_Data&);
 
     void clean_up_useless_vjs(PT_Data&);
 
@@ -134,7 +143,7 @@ private:
                        const std::string& name,
                        const std::string& headsign,
                        const RTLevel,
-                       const ValidityPattern& canceled_vp,
+                       flat_enum_map<RTLevel, ValidityPattern> canceled_vps_by_level,
                        Route*,
                        std::vector<StopTime>,
                        PT_Data&);
