@@ -211,7 +211,8 @@ VJ* MetaVehicleJourney::impl_create_vj(const std::string& uri,
     // After the VP cleanup, it can be empty, thus we eliminate the vehicle journey.
     // This elimination provokes some memory error if it's a BaseLevel VJ.
     // TODO: We could also have the same bug for other two levels and hence it has to be checked.
-    // We must allow (todo) two VJ from the same trip on the same UTC day.
+    // We must allow (todo) two VJ from the same trip on the same UTC day (because of DST): this may require
+    // 2 distincts meta-VJ in that case, given current implementations.
     const auto mask = ~canceled_vp.days;
     for_all_vjs([&](VehicleJourney& vj) {
         for (const auto l : enum_range_from(level)) {
