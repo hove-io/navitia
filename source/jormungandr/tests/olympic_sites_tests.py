@@ -61,9 +61,7 @@ FROM_POI = {
                     "name": "Jardin",
                     "city": "Paris",
                     "poi_types": [{"id": "poi_type:jardin", "name": "Jardin"}],
-                    "properties": [
-                        {"key": "olympic", "value": "olympic:site"}
-                    ]
+                    "properties": [{"key": "olympic", "value": "olympic:site"}],
                 }
             },
         }
@@ -84,9 +82,7 @@ TO_POI = {
                     "name": "Jardin",
                     "city": "Paris",
                     "poi_types": [{"id": "poi_type:jardin", "name": "Jardin"}],
-                    "properties": [
-                        {"key": "olympic", "value": "olympic:site"}
-                    ]
+                    "properties": [{"key": "olympic", "value": "olympic:site"}],
                 },
             },
         }
@@ -106,9 +102,7 @@ TO_POI_NOT_OLYMPIC = {
                     "name": "Jardin",
                     "city": "Paris",
                     "poi_types": [{"id": "poi_type:jardin", "name": "Jardin"}],
-                    "properties": [
-                        {"key": "abcd", "value": "olympic:site"}
-                    ]
+                    "properties": [{"key": "abcd", "value": "olympic:site"}],
                 },
             },
         }
@@ -157,62 +151,93 @@ TO_ADDRESS = {
     ]
 }
 
-MOCKED_INSTANCE_CONF = {"scenario": "distributed", 'instance_config': {'default_autocomplete': 'bragi', "olympic_criteria":{"pt_object_olympic_uris": ["physical_mode:0x0"], "poi_property_key": "olympic","poi_property_value": "olympic:site"}}}
+MOCKED_INSTANCE_CONF = {
+    "scenario": "distributed",
+    'instance_config': {
+        'default_autocomplete': 'bragi',
+        "olympic_criteria": {
+            "pt_object_olympic_uris": ["physical_mode:0x0"],
+            "poi_property_key": "olympic",
+            "poi_property_value": "olympic:site",
+        },
+    },
+}
 BARGI_URL = 'https://host_of_bragi'
 BASIC_PARAMS = {'timeout': 200, 'pt_dataset[]': 'main_routing_test'}
 
+
 @dataset({'main_routing_test': MOCKED_INSTANCE_CONF}, global_config={'activate_bragi': True})
 class TestOlympicSites(AbstractTestFixture):
-
     def test_address_to_address_journeys(self):
         # forbidden_uris used :  physical_mode:0x0
-        params = {'timeout': 200, 'pt_dataset[]': 'main_routing_test', 'lon': s_lon,'lat':s_lat}
+        params = {'timeout': 200, 'pt_dataset[]': 'main_routing_test', 'lon': s_lon, 'lat': s_lat}
         from_place = "{}/reverse?{}".format(BARGI_URL, urlencode(params, doseq=True))
         params = {'timeout': 200, 'pt_dataset[]': 'main_routing_test', 'lon': r_lon, 'lat': r_lat}
         to_place = "{}/reverse?{}".format(BARGI_URL, urlencode(params, doseq=True))
         with requests_mock.Mocker() as m:
             m.get(from_place, json=FROM_ADDRESS)
             m.get(to_place, json=TO_ADDRESS)
-            response = self.query_region(template_journey_query.format(place_from=from_addr_uri, place_to=to_addr_uri))
+            response = self.query_region(
+                template_journey_query.format(place_from=from_addr_uri, place_to=to_addr_uri)
+            )
             journeys = [journey for journey in response['journeys']]
             assert len(journeys) == 1
             first_journey = response['journeys'][0]
             assert len(first_journey["sections"]) == 1
-            physical_mode_id =  next((link["id"] for link in first_journey["sections"][0]["links"] if link["type"] == 'physical_mode'), None)
+            physical_mode_id = next(
+                (
+                    link["id"]
+                    for link in first_journey["sections"][0]["links"]
+                    if link["type"] == 'physical_mode'
+                ),
+                None,
+            )
             assert not physical_mode_id
 
     def test_address_to_olympic_poi_journeys(self):
         # forbidden_uris not used :  physical_mode:0x0
-        params = {'timeout': 200, 'pt_dataset[]': 'main_routing_test', 'lon': s_lon,'lat':s_lat}
+        params = {'timeout': 200, 'pt_dataset[]': 'main_routing_test', 'lon': s_lon, 'lat': s_lat}
         from_place = "{}/reverse?{}".format(BARGI_URL, urlencode(params, doseq=True))
         to_place = "{}/features/{}?{}".format(BARGI_URL, to_poi_uri, urlencode(BASIC_PARAMS, doseq=True))
         with requests_mock.Mocker() as m:
             m.get(from_place, json=FROM_ADDRESS)
             m.get(to_place, json=TO_POI)
-            response = self.query_region(template_journey_query.format(place_from=from_addr_uri, place_to=to_poi_uri))
+            response = self.query_region(
+                template_journey_query.format(place_from=from_addr_uri, place_to=to_poi_uri)
+            )
             assert len(response['journeys']) == 2
             first_journey = response['journeys'][0]
             assert len(first_journey["sections"]) == 3
             assert first_journey["sections"][1]["type"] == "public_transport"
-            physical_mode_id =  next(link["id"] for link in first_journey["sections"][1]["links"] if link["type"] == 'physical_mode')
+            physical_mode_id = next(
+                link["id"] for link in first_journey["sections"][1]["links"] if link["type"] == 'physical_mode'
+            )
             assert physical_mode_id == 'physical_mode:0x0'
 
     def test_address_to_not_olympic_poi_journeys(self):
         # forbidden_uris used :  physical_mode:0x0
-        params = {'timeout': 200, 'pt_dataset[]': 'main_routing_test', 'lon': s_lon,'lat':s_lat}
+        params = {'timeout': 200, 'pt_dataset[]': 'main_routing_test', 'lon': s_lon, 'lat': s_lat}
         from_place = "{}/reverse?{}".format(BARGI_URL, urlencode(params, doseq=True))
         to_place = "{}/features/{}?{}".format(BARGI_URL, to_poi_uri, urlencode(BASIC_PARAMS, doseq=True))
         with requests_mock.Mocker() as m:
             m.get(from_place, json=FROM_ADDRESS)
             m.get(to_place, json=TO_POI_NOT_OLYMPIC)
-            response = self.query_region(template_journey_query.format(place_from=from_addr_uri, place_to=to_poi_uri))
+            response = self.query_region(
+                template_journey_query.format(place_from=from_addr_uri, place_to=to_poi_uri)
+            )
             journeys = [journey for journey in response['journeys']]
             assert len(journeys) == 1
             first_journey = response['journeys'][0]
             assert len(first_journey["sections"]) == 1
-            physical_mode_id =  next((link["id"] for link in first_journey["sections"][0]["links"] if link["type"] == 'physical_mode'), None)
+            physical_mode_id = next(
+                (
+                    link["id"]
+                    for link in first_journey["sections"][0]["links"]
+                    if link["type"] == 'physical_mode'
+                ),
+                None,
+            )
             assert not physical_mode_id
-
 
     def test_olympic_poi_to_address_journeys(self):
         # forbidden_uris not used :  physical_mode:0x0
@@ -222,13 +247,17 @@ class TestOlympicSites(AbstractTestFixture):
         with requests_mock.Mocker() as m:
             m.get(from_place, json=FROM_POI)
             m.get(to_place, json=TO_ADDRESS)
-            response = self.query_region(template_journey_query.format(place_from=from_poi_uri, place_to=to_addr_uri))
+            response = self.query_region(
+                template_journey_query.format(place_from=from_poi_uri, place_to=to_addr_uri)
+            )
             journeys = [journey for journey in response['journeys']]
             assert len(journeys) == 2
             first_journey = response['journeys'][0]
             assert len(first_journey["sections"]) == 3
             assert first_journey["sections"][1]["type"] == "public_transport"
-            physical_mode_id =  next(link["id"] for link in first_journey["sections"][1]["links"] if link["type"] == 'physical_mode')
+            physical_mode_id = next(
+                link["id"] for link in first_journey["sections"][1]["links"] if link["type"] == 'physical_mode'
+            )
             assert physical_mode_id == 'physical_mode:0x0'
 
     def test_olympic_poi_to_olympic_poi_journeys(self):
@@ -238,11 +267,15 @@ class TestOlympicSites(AbstractTestFixture):
         with requests_mock.Mocker() as m:
             m.get(from_place, json=FROM_ADDRESS)
             m.get(to_place, json=TO_POI)
-            response = self.query_region(template_journey_query.format(place_from=from_poi_uri, place_to=to_poi_uri))
+            response = self.query_region(
+                template_journey_query.format(place_from=from_poi_uri, place_to=to_poi_uri)
+            )
             journeys = [journey for journey in response['journeys']]
             assert len(journeys) == 2
             first_journey = response['journeys'][0]
             assert len(first_journey["sections"]) == 3
             assert first_journey["sections"][1]["type"] == "public_transport"
-            physical_mode_id =  next(link["id"] for link in first_journey["sections"][1]["links"] if link["type"] == 'physical_mode')
+            physical_mode_id = next(
+                link["id"] for link in first_journey["sections"][1]["links"] if link["type"] == 'physical_mode'
+            )
             assert physical_mode_id == 'physical_mode:0x0'

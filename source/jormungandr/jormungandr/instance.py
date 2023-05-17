@@ -114,14 +114,19 @@ def parse_and_get_olympic_criteria(dict_olympic_criteria):
     if not dict_olympic_criteria:
         return None
     if not isinstance(dict_olympic_criteria, dict):
-        raise RuntimeError('olympic_criteria: invalid parameter type.')
+        logging.getLogger(__name__).error('olympic_criteria: invalid parameter type.')
+        return None
     if "pt_object_olympic_uris" not in dict_olympic_criteria or not isinstance(
         dict_olympic_criteria["pt_object_olympic_uris"], list
     ):
-        raise RuntimeError('olympic_criteria: invalid parameter, pt_object_olympic_uris not found or invalid')
+        logging.getLogger(__name__).error(
+            'olympic_criteria: invalid parameter, pt_object_olympic_uris not found or invalid'
+        )
+        return None
     for p in ["poi_property_key", "poi_property_value"]:
         if p not in dict_olympic_criteria:
-            raise RuntimeError('olympic_criteria: invalid parameter, {} not found'.format(p))
+            logging.getLogger(__name__).error('olympic_criteria: invalid parameter, {} not found'.format(p))
+            return None
     return OlympicCriteria(
         pt_object_olympic_uris=dict_olympic_criteria["pt_object_olympic_uris"],
         poi_property_key=dict_olympic_criteria["poi_property_key"],

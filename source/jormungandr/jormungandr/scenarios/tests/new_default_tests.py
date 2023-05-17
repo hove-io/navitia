@@ -816,9 +816,8 @@ def make_olympic_criteria_instance_query_with_forbidden_uris_test():
 
 
 def make_olympic_criteria_invalid_parameter_test():
-    with pytest.raises(RuntimeError) as exc:
-        FakeInstance(criteria=[DEFAULT_OLYMPIC_CRITERIA])
-    assert str(exc.value) == 'olympic_criteria: invalid parameter type.'
+    instance = FakeInstance(criteria=[DEFAULT_OLYMPIC_CRITERIA])
+    assert not instance.olympic_criteria
 
 
 def make_olympic_criteria_without_pt_object_olympic_uris_test():
@@ -826,9 +825,8 @@ def make_olympic_criteria_without_pt_object_olympic_uris_test():
         "poi_property_key": "olympic",
         "poi_property_value": "1234",
     }
-    with pytest.raises(RuntimeError) as exc:
-        FakeInstance(criteria=olympic_criteria)
-    assert str(exc.value) == 'olympic_criteria: invalid parameter, pt_object_olympic_uris not found or invalid'
+    instance = FakeInstance(criteria=olympic_criteria)
+    assert not instance.olympic_criteria
 
 
 def make_olympic_criteria_without_poi_property_key_test():
@@ -837,9 +835,8 @@ def make_olympic_criteria_without_poi_property_key_test():
         "forbidden_uris": ["nt:kk"],
         "poi_property_value": "1234",
     }
-    with pytest.raises(RuntimeError) as exc:
-        FakeInstance(criteria=olympic_criteria)
-    assert str(exc.value) == 'olympic_criteria: invalid parameter, poi_property_key not found'
+    instance = FakeInstance(criteria=olympic_criteria)
+    assert not instance.olympic_criteria
 
 
 def make_olympic_criteria_without_poi_property_value_test():
@@ -848,6 +845,5 @@ def make_olympic_criteria_without_poi_property_value_test():
         "forbidden_uris": ["nt:kk"],
         "poi_property_key": "olympic",
     }
-    with pytest.raises(RuntimeError) as exc:
-        FakeInstance(criteria=olympic_criteria)
-    assert str(exc.value) == 'olympic_criteria: invalid parameter, poi_property_value not found'
+    instance = FakeInstance(criteria=olympic_criteria)
+    assert not instance.olympic_criteria
