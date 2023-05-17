@@ -50,12 +50,19 @@ jobs:
         echo "navitia_tag=$version" >> $GITHUB_ENV
         echo "aws_branch=release" >> $GITHUB_ENV
 
+    - name: Generate github private access token
+      id: ci-core-app-token
+      uses: getsentry/action-github-app-token@v2.0.0
+      with:
+        app_id: ${{ secrets.CI_CORE_APP_ID }}
+        private_key: ${{ secrets.CI_CORE_APP_PEM }}
+
     - name: Checkout core_team_ci_tools
       uses: actions/checkout@v3
       with:
         repository : 'hove-io/core_team_ci_tools'
         path: core_team_ci_tools
-        token: ${{ secrets.access_token_github }}
+        token: ${{ steps.ci-core-app-token.outputs.token }}
 
     - name: Setup core_team_ci_tools python environment
       run: |
@@ -73,7 +80,7 @@ jobs:
         python core_team_ci_tools/github_artifacts/github_artifacts.py \
             -o hove-io \
             -r mimirsbrunn \
-            -t ${{secrets.access_token_github}} \
+            -t ${{ steps.ci-core-app-token.outputs.token }} \
             -w $mimirsbrunn_workflow \
             -a $mimirsbrunn_package \
             --output-dir .
@@ -86,7 +93,7 @@ jobs:
         python core_team_ci_tools/github_artifacts/github_artifacts.py \
             -o hove-io \
             -r cosmogony2cities \
-            -t  ${{secrets.access_token_github}} \
+            -t ${{ steps.ci-core-app-token.outputs.token }} \
             -w build_package.yml \
             -a $cosmogony2cities_package \
             --output-dir .
@@ -161,7 +168,7 @@ jobs:
       if: github.event_name == 'push' && github.ref == 'refs/heads/dev'
       uses: peter-evans/repository-dispatch@v2
       with:
-        token: ${{ secrets.access_token_github }}
+        token: ${{ steps.ci-core-app-token.outputs.token }}
         repository: hove-io/artemis
         event-type: run_artemis_ng
 
