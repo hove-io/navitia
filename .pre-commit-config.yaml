@@ -18,7 +18,7 @@ repos:
     -   id: check-merge-conflict
     -   id: check-yaml
         args: [--allow-multiple-documents]
--   repo: https://github.com/hove-io/navitia-pre-commit
+-   repo: git@github.com:hove-io/navitia-pre-commit.git # fetch repo through ssh as it is private
     rev: master
     hooks:
     -   id: clang-format
