@@ -91,7 +91,9 @@ struct VehicleJourney : public Header, Nameable, hasVehicleProperties {
 
     RTLevel realtime_level = RTLevel::Base;
     bool is_base_schedule() const { return realtime_level == RTLevel::Base; }
-    // number of days of delay compared to base-vj vp (case of a delayed vj in realtime or adapted)
+    // number of days of delay compared to base-vj vp (case of a delayed vj in realtime or adapted):
+    // * base-schedule VP start-date = realtime's VP start-date - shift
+    // * use get_base_canceled_validity_pattern() to "convert" realtime VP to base VP
     size_t shift = 0;
     // validity pattern for all RTLevel
     flat_enum_map<RTLevel, ValidityPattern*> validity_patterns = {{{nullptr, nullptr, nullptr}}};

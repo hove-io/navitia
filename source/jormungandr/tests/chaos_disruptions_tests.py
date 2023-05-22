@@ -47,6 +47,7 @@ class ChaosDisruptionsFixture(RabbitMQCnxFixture):
         impacted_obj_type,
         start=None,
         end=None,
+        blocked_sa=[],
         message='default_message',
         is_deleted=False,
         blocking=False,
@@ -64,6 +65,7 @@ class ChaosDisruptionsFixture(RabbitMQCnxFixture):
             impacted_obj_type,
             start,
             end,
+            blocked_sa,
             message,
             is_deleted,
             blocking,
@@ -1269,6 +1271,7 @@ def make_mock_chaos_item(
     impacted_obj_type,
     start,
     end,
+    blocked_sa=[],
     message_text='default_message',
     is_deleted=False,
     blocking=False,
@@ -1340,6 +1343,7 @@ def make_mock_chaos_item(
         "stop_area": chaos_pb2.PtObject.stop_area,
         "line": chaos_pb2.PtObject.line,
         "line_section": chaos_pb2.PtObject.line_section,
+        "rail_section": chaos_pb2.PtObject.rail_section,
         "route": chaos_pb2.PtObject.route,
         "stop_point": chaos_pb2.PtObject.stop_point,
     }
@@ -1347,18 +1351,27 @@ def make_mock_chaos_item(
     ptobject = impact.informed_entities.add()
     ptobject.uri = impacted_obj
     ptobject.pt_object_type = type_col.get(impacted_obj_type, chaos_pb2.PtObject.unkown_type)
-    if ptobject.pt_object_type == chaos_pb2.PtObject.line_section:
-        line_section = ptobject.pt_line_section
-        line_section.line.uri = impacted_obj
-        line_section.line.pt_object_type = chaos_pb2.PtObject.line
-        pb_start = line_section.start_point
+    if ptobject.pt_object_type in [chaos_pb2.PtObject.line_section, chaos_pb2.PtObject.rail_section]:
+        disrupted_section = None
+        if ptobject.pt_object_type == chaos_pb2.PtObject.line_section:
+            disrupted_section = ptobject.pt_line_section
+        elif ptobject.pt_object_type == chaos_pb2.PtObject.rail_section:
+            disrupted_section = ptobject.pt_rail_section
+            for idx, sa in enumerate(blocked_sa):
+                pb_sa = disrupted_section.blocked_stop_areas.add()
+                pb_sa.uri = sa
+                pb_sa.order = idx
+
+        disrupted_section.line.uri = impacted_obj
+        disrupted_section.line.pt_object_type = chaos_pb2.PtObject.line
+        pb_start = disrupted_section.start_point
         pb_start.uri = start
         pb_start.pt_object_type = chaos_pb2.PtObject.stop_area
-        pb_end = line_section.end_point
+        pb_end = disrupted_section.end_point
         pb_end.uri = end
         pb_end.pt_object_type = chaos_pb2.PtObject.stop_area
         for route in routes or []:
-            pb_route = line_section.routes.add()
+            pb_route = disrupted_section.routes.add()
             pb_route.pt_object_type = chaos_pb2.PtObject.route
             pb_route.uri = route
 
