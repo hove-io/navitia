@@ -1294,7 +1294,7 @@ class Scenario(simple.Scenario):
         pt_object_origin = get_pt_object_from_json(origin_detail, instance)
         pt_object_destination = get_pt_object_from_json(destination_detail, instance)
 
-        make_olympic_criteria(pt_object_origin, pt_object_destination, api_request, instance)
+        add_olympics_forbidden_uris(pt_object_origin, pt_object_destination, api_request, instance)
 
         api_request['origin'] = get_kraken_id(origin_detail) or api_request.get('origin')
         api_request['destination'] = get_kraken_id(destination_detail) or api_request.get('destination')
