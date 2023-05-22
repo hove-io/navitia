@@ -251,7 +251,7 @@ def _extend_with_car_park(
 def get_enter_instruction_words(lan):
     instructions = {
         "english_us": u"Then enter {} via {}.",
-        "french": u"Accéder à {} via {}.",
+        "french": u"Accédez à {} via {}.",
         "spanish": u"Acceso a {} vía {}.",
         "italian": u"Accesso alla {} via {}.",
     }
@@ -261,7 +261,7 @@ def get_enter_instruction_words(lan):
 def get_exit_instruction_words(lan):
     instructions = {
         "english_us": u"Exit {} via {}.",
-        "french": u"Sortir de {} via {}.",
+        "french": u"Sortez de {} via {}.",
         "spanish": u"Salida {} vía {}.",
         "italian": u"Uscita {} via {}.",
     }
