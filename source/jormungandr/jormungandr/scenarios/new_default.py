@@ -1243,7 +1243,6 @@ def add_olympics_forbidden_uris(origin_detail, destination_detail, api_request, 
         api_request["forbidden_uris[]"] = instance.olympics_forbidden_uris.pt_object_olympics_forbidden_uris
 
 
-
 class Scenario(simple.Scenario):
     """
     TODO: a bit of explanation about the new scenario
