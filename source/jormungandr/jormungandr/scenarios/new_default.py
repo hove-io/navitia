@@ -1237,8 +1237,11 @@ def add_olympics_forbidden_uris(origin_detail, destination_detail, api_request, 
         return
     if is_olympic_site(destination_detail, instance):
         return
-    api_request.setdefault("forbidden_uris[]", [])
-    api_request["forbidden_uris[]"] += instance.olympics_forbidden_uris.pt_object_olympics_forbidden_uris
+    if api_request.get("forbidden_uris[]"):
+        api_request["forbidden_uris[]"] += instance.olympics_forbidden_uris.pt_object_olympics_forbidden_uris
+    else:
+        api_request["forbidden_uris[]"] = instance.olympics_forbidden_uris.pt_object_olympics_forbidden_uris
+
 
 
 class Scenario(simple.Scenario):

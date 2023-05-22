@@ -155,8 +155,8 @@ MOCKED_INSTANCE_CONF = {
     "scenario": "distributed",
     'instance_config': {
         'default_autocomplete': 'bragi',
-        "olympic_criteria": {
-            "pt_object_olympic_uris": ["physical_mode:0x0"],
+        "olympics_forbidden_uris": {
+            "pt_object_olympics_forbidden_uris": ["physical_mode:0x0"],
             "poi_property_key": "olympic",
             "poi_property_value": "olympic:site",
         },
