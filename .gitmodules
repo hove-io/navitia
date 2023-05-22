@@ -9,7 +9,7 @@
 	url = git@github.com:hove-io/SimpleAmqpClient.git
 [submodule "source/third_party/librabbitmq-c"]
 	path = source/third_party/librabbitmq-c
-	url = git@github.com:alanxz/rabbitmq-c.git
+	url = https://github.com/alanxz/rabbitmq-c
 [submodule "source/chaos-proto"]
 	path = source/chaos-proto
 	url = git@github.com:hove-io/chaos-proto.git
