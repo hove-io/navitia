@@ -45,17 +45,16 @@ def delete_journeys(responses, request):
     if request.get('debug', False):
         return
 
-    keep_jo = request.get("_jo", False)
-
-    def to_delete(journey):
-        if keep_jo:
-            return to_be_deleted(journey) and "olympics" not in journey.tags
-        else:
-            return to_be_deleted(journey)
+    keep_olympics_journeys = request.get("_keep_olympics_journeys", False)
 
     nb_deleted = 0
     for r in responses:
-        nb_deleted += pb_del_if(r.journeys, lambda j: to_delete(j))
+        if keep_olympics_journeys:
+            for journey in r.journeys:
+                if 'to_delete' in journey.tags and 'olympics' in journey.tags:
+                    journey.tags.remove("to_delete")
+
+        nb_deleted += pb_del_if(r.journeys, lambda j: to_be_deleted(j))
 
     if nb_deleted:
         logging.getLogger(__name__).info('filtering {} journeys'.format(nb_deleted))

@@ -526,7 +526,7 @@ class JourneyCommon(ResourceUri, ResourceUtc):
         )
 
         parser_get.add_argument(
-            "_jo",
+            "_keep_olympics_journeys",
             type=BooleanType(),
             hidden=True,
             default=False,
