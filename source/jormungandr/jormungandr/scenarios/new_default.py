@@ -1216,32 +1216,29 @@ def is_olympic_site(entry_point, instance):
         and hasattr(entry_point.poi, 'properties')
         and entry_point.poi.properties
     ):
-        criteria = next(
+        olympic_site = next(
             (
                 p
                 for p in entry_point.poi.properties
-                if p.type == instance.olympic_criteria.poi_property_key
-                and p.value == instance.olympic_criteria.poi_property_value
+                if p.type == instance.olympics_forbidden_uris.poi_property_key
+                and p.value == instance.olympics_forbidden_uris.poi_property_value
             ),
             None,
         )
-        if criteria:
+        if olympic_site:
             return True
     return False
 
 
-def make_olympic_criteria(origin_detail, destination_detail, api_request, instance):
-    if not instance.olympic_criteria:
+def add_olympics_forbidden_uris(origin_detail, destination_detail, api_request, instance):
+    if not instance.olympics_forbidden_uris:
         return
     if is_olympic_site(origin_detail, instance):
         return
     if is_olympic_site(destination_detail, instance):
         return
-
-    if api_request.get("forbidden_uris[]"):
-        api_request["forbidden_uris[]"] += instance.olympic_criteria.pt_object_olympic_uris
-    else:
-        api_request["forbidden_uris[]"] = instance.olympic_criteria.pt_object_olympic_uris
+    api_request.setdefault("forbidden_uris[]", [])
+    api_request["forbidden_uris[]"] += instance.olympics_forbidden_uris.pt_object_olympics_forbidden_uris
 
 
 class Scenario(simple.Scenario):

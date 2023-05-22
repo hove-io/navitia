@@ -36,7 +36,7 @@ from jormungandr.scenarios.new_default import (
     _tag_journey_by_mode,
     get_kraken_calls,
     update_best_boarding_positions,
-    make_olympic_criteria,
+    add_olympics_forbidden_uris,
 )
 from jormungandr.instance import Instance
 from jormungandr.scenarios.utils import switch_back_to_ridesharing
@@ -733,7 +733,7 @@ class FakeInstance:
 
 
 class FakeInstance(Instance):
-    def __init__(self, name="fake_instance", criteria=None):
+    def __init__(self, name="fake_instance", olympics_forbidden_uris=None):
         super(FakeInstance, self).__init__(
             context=None,
             name=name,
@@ -747,12 +747,12 @@ class FakeInstance(Instance):
             autocomplete_type='kraken',
             streetnetwork_backend_manager=None,
             external_service_provider_configurations=[],
-            olympic_criteria=criteria,
+            olympics_forbidden_uris=olympics_forbidden_uris,
         )
 
 
-DEFAULT_OLYMPIC_CRITERIA = {
-    "pt_object_olympic_uris": ["nt:abc"],
+DEFAULT_OLYMPICS_FORBIDDEN_URIS = {
+    "pt_object_olympics_forbidden_uris": ["nt:abc"],
     "poi_property_key": "olympic",
     "poi_property_value": "1234",
 }
@@ -767,83 +767,83 @@ def make_pt_object_poi(property_type="olympic", property_value="1234"):
     return pt_object_poi
 
 
-def make_olympic_criteria_instance_without_criteria_test():
+def add_olympics_forbidden_uris_instance_without_criteria_test():
     api_request = {"param1": "toto"}
     origin = make_pt_object_poi()
     destination = make_pt_object_poi()
     instance = FakeInstance()
-    make_olympic_criteria(origin, destination, api_request, instance)
+    add_olympics_forbidden_uris(origin, destination, api_request, instance)
     assert "forbidden_uris[]" not in api_request
 
 
-def make_olympic_criteria_instance_without_origin_test():
+def add_olympics_forbidden_uris_instance_without_origin_test():
     api_request = {"param1": "toto"}
     origin = None
     destination = make_pt_object_poi()
-    instance = FakeInstance(criteria=DEFAULT_OLYMPIC_CRITERIA)
-    make_olympic_criteria(origin, destination, api_request, instance)
+    instance = FakeInstance(olympics_forbidden_uris=DEFAULT_OLYMPICS_FORBIDDEN_URIS)
+    add_olympics_forbidden_uris(origin, destination, api_request, instance)
     assert "forbidden_uris[]" not in api_request
 
 
-def make_olympic_criteria_instance_without_destination_test():
+def add_olympics_forbidden_uris_instance_without_destination_test():
     api_request = {"param1": "toto"}
     origin = make_pt_object_poi()
     destination = None
-    instance = FakeInstance(criteria=DEFAULT_OLYMPIC_CRITERIA)
-    make_olympic_criteria(origin, destination, api_request, instance)
+    instance = FakeInstance(olympics_forbidden_uris=DEFAULT_OLYMPICS_FORBIDDEN_URIS)
+    add_olympics_forbidden_uris(origin, destination, api_request, instance)
     assert "forbidden_uris[]" not in api_request
 
 
-def make_olympic_criteria_instance_test():
+def add_olympics_forbidden_uris_instance_test():
     api_request = {"param1": "toto"}
     origin = make_pt_object_poi()
     destination = make_pt_object_poi()
-    instance = FakeInstance(criteria=DEFAULT_OLYMPIC_CRITERIA)
-    make_olympic_criteria(origin, destination, api_request, instance)
+    instance = FakeInstance(olympics_forbidden_uris=DEFAULT_OLYMPICS_FORBIDDEN_URIS)
+    add_olympics_forbidden_uris(origin, destination, api_request, instance)
     assert "forbidden_uris[]" not in api_request
 
 
-def make_olympic_criteria_instance_query_with_forbidden_uris_test():
+def add_olympics_forbidden_uris_instance_query_with_forbidden_uris_test():
     api_request = {"param1": "toto", "forbidden_uris[]": ["abcd"]}
     origin = make_pt_object_poi(property_value="poi:12")
     destination = make_pt_object_poi(property_value="poi:12")
-    instance = FakeInstance(criteria=DEFAULT_OLYMPIC_CRITERIA)
-    make_olympic_criteria(origin, destination, api_request, instance)
+    instance = FakeInstance(olympics_forbidden_uris=DEFAULT_OLYMPICS_FORBIDDEN_URIS)
+    add_olympics_forbidden_uris(origin, destination, api_request, instance)
     assert "forbidden_uris[]" in api_request
     assert len(api_request["forbidden_uris[]"]) == 2
     assert api_request["forbidden_uris[]"][0] == "abcd"
     assert api_request["forbidden_uris[]"][1] == "nt:abc"
 
 
-def make_olympic_criteria_invalid_parameter_test():
-    instance = FakeInstance(criteria=[DEFAULT_OLYMPIC_CRITERIA])
-    assert not instance.olympic_criteria
+def add_olympics_forbidden_uris_invalid_parameter_test():
+    instance = FakeInstance(olympics_forbidden_uris=[DEFAULT_OLYMPICS_FORBIDDEN_URIS])
+    assert not instance.olympics_forbidden_uris
 
 
-def make_olympic_criteria_without_pt_object_olympic_uris_test():
-    olympic_criteria = {
+def add_olympics_forbidden_uris_without_pt_object_olympic_uris_test():
+    olympics_forbidden_uris = {
         "poi_property_key": "olympic",
         "poi_property_value": "1234",
     }
-    instance = FakeInstance(criteria=olympic_criteria)
-    assert not instance.olympic_criteria
+    instance = FakeInstance(olympics_forbidden_uris=olympics_forbidden_uris)
+    assert not instance.olympics_forbidden_uris
 
 
-def make_olympic_criteria_without_poi_property_key_test():
-    olympic_criteria = {
-        "pt_object_olympic_uris": ["nt:cc"],
+def add_olympics_forbidden_uris_without_poi_property_key_test():
+    olympics_forbidden_uris = {
+        "pt_object_olympics_forbidden_uris": ["nt:cc"],
         "forbidden_uris": ["nt:kk"],
         "poi_property_value": "1234",
     }
-    instance = FakeInstance(criteria=olympic_criteria)
-    assert not instance.olympic_criteria
+    instance = FakeInstance(olympics_forbidden_uris=olympics_forbidden_uris)
+    assert not instance.olympics_forbidden_uris
 
 
-def make_olympic_criteria_without_poi_property_value_test():
-    olympic_criteria = {
-        "pt_object_olympic_uris": ["nt:cc"],
+def add_olympics_forbidden_uris_without_poi_property_value_test():
+    olympics_forbidden_uris = {
+        "pt_object_olympics_forbidden_uris": ["nt:cc"],
         "forbidden_uris": ["nt:kk"],
         "poi_property_key": "olympic",
     }
-    instance = FakeInstance(criteria=olympic_criteria)
-    assert not instance.olympic_criteria
+    instance = FakeInstance(olympics_forbidden_uris=olympics_forbidden_uris)
+    assert not instance.olympics_forbidden_uris

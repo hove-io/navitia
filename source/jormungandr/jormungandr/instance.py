@@ -82,9 +82,9 @@ type_to_pttype = {
     "calendar": request_pb2.PlaceCodeRequest.Calendar,  # type: ignore
 }
 
-OlympicCriteria = namedtuple(
-    'OlympicCriteria',
-    ['pt_object_olympic_uris', 'poi_property_key', 'poi_property_value'],
+OlympicsForbiddenUris = namedtuple(
+    'OlympicsForbiddenUris',
+    ['pt_object_olympics_forbidden_uris', 'poi_property_key', 'poi_property_value'],
 )
 
 
@@ -110,27 +110,27 @@ def _make_property_getter(attr_name):
     return property(_getter)
 
 
-def parse_and_get_olympic_criteria(dict_olympic_criteria):
-    if not dict_olympic_criteria:
+def parse_and_get_olympics_forbidden_uris(dict_olympics_forbidden_uris):
+    if not dict_olympics_forbidden_uris:
         return None
-    if not isinstance(dict_olympic_criteria, dict):
+    if not isinstance(dict_olympics_forbidden_uris, dict):
         logging.getLogger(__name__).error('olympic_criteria: invalid parameter type.')
         return None
-    if "pt_object_olympic_uris" not in dict_olympic_criteria or not isinstance(
-        dict_olympic_criteria["pt_object_olympic_uris"], list
+    if "pt_object_olympics_forbidden_uris" not in dict_olympics_forbidden_uris or not isinstance(
+        dict_olympics_forbidden_uris["pt_object_olympics_forbidden_uris"], list
     ):
         logging.getLogger(__name__).error(
-            'olympic_criteria: invalid parameter, pt_object_olympic_uris not found or invalid'
+            'olympic_criteria: invalid parameter, pt_object_olympics_forbidden_uris not found or invalid'
         )
         return None
     for p in ["poi_property_key", "poi_property_value"]:
-        if p not in dict_olympic_criteria:
+        if p not in dict_olympics_forbidden_uris:
             logging.getLogger(__name__).error('olympic_criteria: invalid parameter, {} not found'.format(p))
             return None
-    return OlympicCriteria(
-        pt_object_olympic_uris=dict_olympic_criteria["pt_object_olympic_uris"],
-        poi_property_key=dict_olympic_criteria["poi_property_key"],
-        poi_property_value=dict_olympic_criteria["poi_property_value"],
+    return OlympicsForbiddenUris(
+        pt_object_olympics_forbidden_uris=dict_olympics_forbidden_uris["pt_object_olympics_forbidden_uris"],
+        poi_property_key=dict_olympics_forbidden_uris["poi_property_key"],
+        poi_property_value=dict_olympics_forbidden_uris["poi_property_value"],
     )
 
 
@@ -154,7 +154,7 @@ class Instance(transient_socket.TransientSocket):
         ghost_words=None,
         instance_db=None,
         best_boarding_positions_dir=None,
-        olympic_criteria=None,
+        olympics_forbidden_uris=None,
     ):
         super(Instance, self).__init__(
             name=name,
@@ -192,7 +192,7 @@ class Instance(transient_socket.TransientSocket):
                 self, ridesharing_configurations, self.get_ridesharing_services_from_db
             )
 
-        self.olympic_criteria = parse_and_get_olympic_criteria(olympic_criteria)
+        self.olympics_forbidden_uris = parse_and_get_olympics_forbidden_uris(olympics_forbidden_uris)
 
         self._pt_planner_manager = pt_planners_manager.PtPlannersManager(
             pt_planners_configurations,

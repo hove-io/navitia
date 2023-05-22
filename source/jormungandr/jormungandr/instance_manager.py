@@ -123,7 +123,7 @@ class InstanceManager(object):
             config.get('pt_planners', {}),
             config.get('ghost_words', []),
             best_boarding_positions_dir=app.config.get(str('BEST_BOARDING_POSITIONS_DIR'), None),
-            olympic_criteria=config.get('olympic_criteria', None),
+            olympics_forbidden_uris=config.get('olympics_forbidden_uris', None),
         )
 
         self.instances[instance.name] = instance
