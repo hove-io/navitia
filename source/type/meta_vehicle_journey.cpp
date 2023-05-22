@@ -149,7 +149,7 @@ VJ* MetaVehicleJourney::impl_create_vj(const std::string& uri,
                                        const std::string& name,
                                        const std::string& headsign,
                                        const RTLevel level,
-                                       flat_enum_map<RTLevel, ValidityPattern> canceled_vps_by_level,
+                                       const flat_enum_map<RTLevel, ValidityPattern>& canceled_vps_by_level,
                                        Route* route,
                                        std::vector<StopTime> sts,
                                        nt::PT_Data& pt_data) {
@@ -277,7 +277,7 @@ DiscreteVehicleJourney* MetaVehicleJourney::create_discrete_vj_with_all_vps(
     const std::string& name,
     const std::string& headsign,
     const RTLevel level,
-    flat_enum_map<RTLevel, ValidityPattern> canceled_vps_by_level,
+    const flat_enum_map<RTLevel, ValidityPattern>& canceled_vps_by_level,
     Route* route,
     std::vector<StopTime> sts,
     nt::PT_Data& pt_data) {

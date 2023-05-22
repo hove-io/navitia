@@ -480,7 +480,7 @@ struct add_impacts_visitor : public apply_impacts_visitor {
         auto impacted_vjs = nt::disruption::get_impacted_vehicle_journeys(rs, *impact, meta.production_date, rt_level);
 
         // Loop on each affected vj
-        for (auto& impacted_vj : impacted_vjs) {
+        for (const auto& impacted_vj : impacted_vjs) {
             std::vector<nt::StopTime> new_stop_times;
             const std::string& vj_uri = impacted_vj.vj_uri;
             LOG4CPLUS_TRACE(log, "Impacted vj : " << vj_uri);
@@ -495,7 +495,6 @@ struct add_impacts_visitor : public apply_impacts_visitor {
             }
 
             nt::VehicleJourney* vj = vj_iterator->second;
-            auto& new_vp = impacted_vj.new_vp;
 
             if (impact->severity->effect == nt::disruption::Effect::REDUCED_SERVICE
                 || impact->severity->effect == nt::disruption::Effect::DETOUR) {
@@ -519,8 +518,8 @@ struct add_impacts_visitor : public apply_impacts_visitor {
 
             LOG4CPLUS_TRACE(log, "meta_vj : " << mvj->uri << " \n  old_vj: " << vj->uri
                                               << " to be deleted \n new_vj_uri " << new_vj_uri);
-            auto* new_vj =
-                create_vj_from_old_vj(mvj, vj, new_vj_uri, rt_level, new_vp, std::move(new_stop_times), pt_data);
+            auto* new_vj = create_vj_from_old_vj(mvj, vj, new_vj_uri, rt_level, impacted_vj.new_vp,
+                                                 std::move(new_stop_times), pt_data);
             vj = nullptr;  // after the call to create_vj, vj may have been deleted :(
 
             LOG4CPLUS_TRACE(log, "new_vj: " << new_vj->uri << " is created");
@@ -546,7 +545,7 @@ struct add_impacts_visitor : public apply_impacts_visitor {
         auto impacted_vjs = nt::disruption::get_impacted_vehicle_journeys(ls, *impact, meta.production_date, rt_level);
 
         // Loop on each affected vj
-        for (auto& impacted_vj : impacted_vjs) {
+        for (const auto& impacted_vj : impacted_vjs) {
             std::vector<nt::StopTime> new_stop_times;
             const std::string& vj_uri = impacted_vj.vj_uri;
             LOG4CPLUS_TRACE(log, "Impacted vj : " << vj_uri);
@@ -556,7 +555,6 @@ struct add_impacts_visitor : public apply_impacts_visitor {
                 continue;
             }
             nt::VehicleJourney* vj = vj_iterator->second;
-            auto& new_vp = impacted_vj.new_vp;
 
             for (const auto& st : vj->stop_time_list) {
                 // We need to get the associated base stop_time to compare its rank
@@ -584,8 +582,8 @@ struct add_impacts_visitor : public apply_impacts_visitor {
 
             LOG4CPLUS_TRACE(log, "meta_vj : " << mvj->uri << " \n  old_vj: " << vj->uri
                                               << " to be deleted \n new_vj_uri " << new_vj_uri);
-            auto* new_vj =
-                create_vj_from_old_vj(mvj, vj, new_vj_uri, rt_level, new_vp, std::move(new_stop_times), pt_data);
+            auto* new_vj = create_vj_from_old_vj(mvj, vj, new_vj_uri, rt_level, impacted_vj.new_vp,
+                                                 std::move(new_stop_times), pt_data);
             vj = nullptr;  // after the call to create_vj, vj may have been deleted :(
 
             LOG4CPLUS_TRACE(log, "new_vj: " << new_vj->uri << " is created");
@@ -716,10 +714,9 @@ struct add_impacts_visitor : public apply_impacts_visitor {
             vj_vp_pairs.emplace_back(vj, new_vp);
         }
 
-        for (auto& vj_vp : vj_vp_pairs) {
+        for (const auto& vj_vp : vj_vp_pairs) {
             std::vector<nt::StopTime> new_stop_times;
             const auto* vj = vj_vp.first;
-            auto& new_vp = vj_vp.second;
 
             for (const auto& st : vj->stop_time_list) {
                 if (st.stop_point == stop_point) {
@@ -735,7 +732,7 @@ struct add_impacts_visitor : public apply_impacts_visitor {
             auto new_vj_uri = make_new_vj_uri(mvj, rt_level);
 
             auto* new_vj =
-                create_vj_from_old_vj(mvj, vj, new_vj_uri, rt_level, new_vp, std::move(new_stop_times), pt_data);
+                create_vj_from_old_vj(mvj, vj, new_vj_uri, rt_level, vj_vp.second, std::move(new_stop_times), pt_data);
             vj = nullptr;  // after the call to create_vj, vj may have been deleted :(
 
             LOG4CPLUS_TRACE(log, "new_vj: " << new_vj->uri << " is created");

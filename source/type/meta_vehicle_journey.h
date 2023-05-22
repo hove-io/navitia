@@ -92,7 +92,7 @@ struct MetaVehicleJourney : public Header, HasMessages {
         const std::string& name,
         const std::string& headsign,
         const RTLevel,
-        flat_enum_map<RTLevel, ValidityPattern> canceled_vps_by_level,
+        const flat_enum_map<RTLevel, ValidityPattern>& canceled_vps_by_level,
         Route*,
         std::vector<StopTime>,
         PT_Data&);
@@ -143,7 +143,7 @@ private:
                        const std::string& name,
                        const std::string& headsign,
                        const RTLevel,
-                       flat_enum_map<RTLevel, ValidityPattern> canceled_vps_by_level,
+                       const flat_enum_map<RTLevel, ValidityPattern>& canceled_vps_by_level,
                        Route*,
                        std::vector<StopTime>,
                        PT_Data&);
