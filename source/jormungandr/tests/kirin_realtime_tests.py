@@ -3433,7 +3433,7 @@ class TestNoServiceJourney(MockKirinOrChaosDisruptionsFixture):
 
 
 @dataset(RAIL_SECTIONS_TEST_SETTING)
-class TestChaosAndKirinJourney(MockKirinOrChaosDisruptionsFixture):
+class TestKirinThenChaosRailSectionJourney(MockKirinOrChaosDisruptionsFixture):
     def test_kirin_then_rail_section_journey_disruptions(self):
         # Mainly testing that applying Chaos (adapted) after Kirin (realtime) keeps realtime unchanged
         # this is really depending on the sorting of disruption's sending
@@ -3709,6 +3709,9 @@ class TestChaosAndKirinJourney(MockKirinOrChaosDisruptionsFixture):
         assert using_vj1(journey_EH_base)
         assert len(journey_EH_base['disruptions']) == 1
 
+
+@dataset(RAIL_SECTIONS_TEST_SETTING)
+class TestChaosRailSectionOnlyJourney(MockKirinOrChaosDisruptionsFixture):
     def test_rail_section_only_journey_disruptions(self):
         # Testing that applying Chaos (adapted) works aas expected on every data_freshness level
 
