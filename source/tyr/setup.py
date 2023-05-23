@@ -36,7 +36,7 @@ setup(
     name='tyr',
     description="Provide an API for managing users and handle data updates",
     author='Hove',
-    author_email='alexandre.jacquin@canaltp.fr',
+    author_email='core@hove.com',
     url='www.navitia.io',
     packages=[str('tyr'), str('tyr.command')],
     requires=['configobj'],

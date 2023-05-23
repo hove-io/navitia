@@ -36,7 +36,7 @@ setup(
     name='jormungandr',
     description='webservice d\'exposition en http de kraken',
     author='Hove',
-    author_email='navitia.pt.core@kisio.com',
+    author_email='core@hove.com',
     url='www.navitia.io',
     packages=find_packages(),
     data_files=[
