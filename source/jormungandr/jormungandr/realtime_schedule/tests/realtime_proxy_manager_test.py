@@ -182,7 +182,7 @@ All_realtime_proxies = [
             "timezone": "Europe/Paris",
             "service_url": "https://clever_age.com",
             "timeout": 1,
-            "service_args": {"X-Keolis-Api-Version": "1.0", "X-Keolis-Api-Key": "KISIO_2021"},
+            "service_args": {"X-Keolis-Api-Version": "1.0", "X-Keolis-Api-Key": "HOVE_2021"},
         },
     },
     {
@@ -202,7 +202,7 @@ def mock_get_realtime_proxies_from_db():
             'service_url': 'https://clever_age.come',
             'timeout': 1,
             "timezone": "Europe/Paris",
-            "service_args": {"X-Keolis-Api-Version": "1.0", "X-Keolis-Api-Key": "KISIO_2021"},
+            "service_args": {"X-Keolis-Api-Version": "1.0", "X-Keolis-Api-Key": "HOVE_2021"},
         },
     }
     rt_proxies["clever_age_TBC"] = ExternalService(id='clever_age_TBC', json=json)

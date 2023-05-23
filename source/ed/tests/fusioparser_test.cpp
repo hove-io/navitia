@@ -71,7 +71,7 @@ BOOST_AUTO_TEST_CASE(parse_small_ntfs_dataset) {
 
     // Check website, license of contributor
     BOOST_REQUIRE_EQUAL(data.contributors.size(), 1);
-    BOOST_REQUIRE_EQUAL(data.contributors[0]->website, "http://www.canaltp.fr");
+    BOOST_REQUIRE_EQUAL(data.contributors[0]->website, "http://www.hove.com");
     BOOST_REQUIRE_EQUAL(data.contributors[0]->license, "LICENSE");
 
     // Check datasets
@@ -206,7 +206,7 @@ BOOST_AUTO_TEST_CASE(parse_small_ntfs_dataset) {
     std::map<std::string, std::string> feed_info_test = {{"feed_start_date", "20150325"},
                                                          {"feed_end_date", "20150826"},
                                                          {"feed_publisher_name", "Ile de France open data"},
-                                                         {"feed_publisher_url", "http://www.canaltp.fr"},
+                                                         {"feed_publisher_url", "http://www.hove.com"},
                                                          {"feed_license", "ODBL"},
                                                          {"feed_creation_datetime", "20150415T153234"}};
     BOOST_CHECK_EQUAL_COLLECTIONS(data.feed_infos.begin(), data.feed_infos.end(), feed_info_test.begin(),
@@ -369,7 +369,7 @@ BOOST_AUTO_TEST_CASE(ntfs_with_feed_start_end_date_1) {
     std::map<std::string, std::string> feed_info_test = {{"feed_start_date", "20150325"},
                                                          {"feed_end_date", "20150826"},
                                                          {"feed_publisher_name", "Ile de France open data"},
-                                                         {"feed_publisher_url", "http://www.canaltp.fr"},
+                                                         {"feed_publisher_url", "http://www.hove.com"},
                                                          {"feed_license", "ODBL"},
                                                          {"feed_creation_datetime", "20150415T153234"}};
     BOOST_CHECK_EQUAL_COLLECTIONS(data.feed_infos.begin(), data.feed_infos.end(), feed_info_test.begin(),
@@ -401,7 +401,7 @@ BOOST_AUTO_TEST_CASE(ntfs_with_feed_start_end_date_2) {
     std::map<std::string, std::string> feed_info_test = {{"feed_start_date", "20150325"},
                                                          {"feed_end_date", "20150826"},
                                                          {"feed_publisher_name", "Ile de France open data"},
-                                                         {"feed_publisher_url", "http://www.canaltp.fr"},
+                                                         {"feed_publisher_url", "http://www.hove.com"},
                                                          {"feed_license", "ODBL"},
                                                          {"feed_creation_datetime", "20150415T153234"}};
     BOOST_CHECK_EQUAL_COLLECTIONS(data.feed_infos.begin(), data.feed_infos.end(), feed_info_test.begin(),

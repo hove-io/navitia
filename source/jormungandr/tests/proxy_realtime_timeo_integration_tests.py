@@ -80,12 +80,12 @@ class MockTimeo(Timeo):
                                 {
                                     "NextStop": "10:00:52",
                                     "Destination": "DIRECTION AA",
-                                    "TerminusSAECode": "Kisio数字_TS_D:sp",
+                                    "TerminusSAECode": "Hove数字_TS_D:sp",
                                 },
                                 {
                                     "NextStop": "10:10:52",
                                     "Destination": "DIRECTION AA",
-                                    "TerminusSAECode": "Kisio数字_TS_D:sp",
+                                    "TerminusSAECode": "Hove数字_TS_D:sp",
                                 },
                             ],
                         },
@@ -206,12 +206,12 @@ class MockTimeo(Timeo):
                                 {
                                     "NextStop": "10:00:52",
                                     "Destination": "DIRECTION AA",
-                                    "TerminusSAECode": "Kisio数字_C:S43",
+                                    "TerminusSAECode": "Hove数字_C:S43",
                                 },
                                 {
                                     "NextStop": "10:13:52",
                                     "Destination": "DIRECTION AA",
-                                    "TerminusSAECode": "Kisio数字_C:S43",
+                                    "TerminusSAECode": "Hove数字_C:S43",
                                 },
                             ],
                         },
@@ -238,14 +238,14 @@ class MockTimeo(Timeo):
                                 {
                                     "NextStop": "10:00:52",
                                     "Destination": "DIRECTION AA",
-                                    "Terminus": "Kisio数字_C:S43",
-                                    "TerminusSAECode": "Kisio数字_C:S43",
+                                    "Terminus": "Hove数字_C:S43",
+                                    "TerminusSAECode": "Hove数字_C:S43",
                                 },
                                 {
                                     "NextStop": "10:13:52",
                                     "Destination": "DIRECTION AA",
-                                    "Terminus": "Kisio数字_C:S43",
-                                    "TerminusSAECode": "Kisio数字_C:S43",
+                                    "Terminus": "Hove数字_C:S43",
+                                    "TerminusSAECode": "Hove数字_C:S43",
                                 },
                             ],
                         },
@@ -272,15 +272,15 @@ class MockTimeo(Timeo):
                                 {
                                     "NextStop": "09:00:52",
                                     "Destination": "DIRECTION AA",
-                                    "Terminus": "Kisio数字_C:S43",
-                                    "TerminusSAECode": "Kisio数字_C:S43",
+                                    "Terminus": "Hove数字_C:S43",
+                                    "TerminusSAECode": "Hove数字_C:S43",
                                     "is_realtime": False,
                                 },
                                 {
                                     "NextStop": "09:13:52",
                                     "Destination": "DIRECTION AA",
-                                    "Terminus": "Kisio数字_C:S43",
-                                    "TerminusSAECode": "Kisio数字_C:S43",
+                                    "Terminus": "Hove数字_C:S43",
+                                    "TerminusSAECode": "Hove数字_C:S43",
                                 },
                             ],
                         },
@@ -307,14 +307,14 @@ class MockTimeo(Timeo):
                                 {
                                     "NextStop": "09:00:52",
                                     "Destination": "DIRECTION AA",
-                                    "Terminus": "Kisio数字_C:S43",
+                                    "Terminus": "Hove数字_C:S43",
                                     "TerminusSAECode": "S43",
                                     "is_realtime": False,
                                 },
                                 {
                                     "NextStop": "09:13:52",
                                     "Destination": "DIRECTION AA",
-                                    "Terminus": "Kisio数字_C:S43",
+                                    "Terminus": "Hove数字_C:S43",
                                     "TerminusSAECode": "S43",
                                     "is_realtime": False,
                                 },
@@ -355,11 +355,11 @@ class MockTimeo(Timeo):
 
 MOCKED_PROXY_CONF = [
     {
-        "object_id_tag": "Kisio数字",
-        "id": "Kisio数字",
+        "object_id_tag": "Hove数字",
+        "id": "Hove数字",
         "class": "tests.proxy_realtime_timeo_integration_tests.MockTimeo",
         "args": {
-            "destination_id_tag": "Kisio数字",
+            "destination_id_tag": "Hove数字",
             "timezone": "Europe/Paris",
             "service_url": "http://XXXX",
             "timeout": 15,

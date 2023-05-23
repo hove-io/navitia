@@ -298,7 +298,7 @@ struct builder {
     builder(const std::string& date,
             std::function<void(builder&)> builder_callback = make_builder,
             bool no_dummy = false,
-            const std::string& publisher_name = "canal tp",
+            const std::string& publisher_name = "hove",
             const std::string& timezone_name = "UTC",
             navitia::type::TimeZoneHandler::dst_periods timezone = {});
 

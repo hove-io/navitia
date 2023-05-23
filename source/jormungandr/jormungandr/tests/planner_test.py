@@ -36,7 +36,7 @@ import navitiacommon.type_pb2 as type_pb2
 
 def check_basic_journeys_request(journeys_req):
     assert len(journeys_req.origin) == 1
-    assert journeys_req.origin[0].place == "Kisio Digital"
+    assert journeys_req.origin[0].place == "Hove"
     assert journeys_req.origin[0].access_duration == 42
 
     assert len(journeys_req.destination) == 1
@@ -76,7 +76,7 @@ def check_graphical_isochrones_request(isochrone_request):
 
 
 def create_journeys_request_test():
-    origin = {"Kisio Digital": 42}
+    origin = {"Hove": 42}
     destination = {"Somewhere": 666}
     journey_parameters = JourneyParameters()
     datetime = str_to_time_stamp("20120614T080000")
@@ -90,7 +90,7 @@ def create_journeys_request_test():
 
 
 def test_journey_request_current_time():
-    origin = {"Kisio Digital": 42}
+    origin = {"Hove": 42}
     destination = {"Somewhere": 666}
     datetime = str_to_time_stamp("20120614T080000")
     journey_parameters = JourneyParameters(current_datetime=123456789)
@@ -100,7 +100,7 @@ def test_journey_request_current_time():
 
 
 def create_graphical_isochrones_request_test():
-    origin = {"Kisio Digital": 42}
+    origin = {"Hove": 42}
     destination = {"Somewhere": 666}
     graphical_isochrones_parameters = GraphicalIsochronesParameters()
     datetime = str_to_time_stamp("20120614T080000")
@@ -114,7 +114,7 @@ def create_graphical_isochrones_request_test():
 
 
 def test_journey_request_tranfer_penalties():
-    origin = {"Kisio Digital": 42}
+    origin = {"Hove": 42}
     destination = {"Somewhere": 666}
     journey_parameters = JourneyParameters(arrival_transfer_penalty=60, walking_transfer_penalty=240)
     datetime = str_to_time_stamp("20120614T080000")

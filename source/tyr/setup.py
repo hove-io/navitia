@@ -35,7 +35,7 @@ import glob
 setup(
     name='tyr',
     description="Provide an API for managing users and handle data updates",
-    author='CanalTP',
+    author='Hove',
     author_email='alexandre.jacquin@canaltp.fr',
     url='www.navitia.io',
     packages=[str('tyr'), str('tyr.command')],

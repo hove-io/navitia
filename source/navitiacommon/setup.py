@@ -34,7 +34,7 @@ from setuptools import setup, find_packages
 setup(
     name='navitiacommon',
     description='module shared between jormungandr and tyr',
-    author='CanalTP',
+    author='Hove',
     author_email='alexandre.jacquin@canaltp.fr',
     url='www.navitia.io',
     packages=find_packages(exclude=['testscommon']),

@@ -38,8 +38,8 @@ from .tests_mechanism import AbstractTestFixture, dataset
 
 MOCKED_PROXY_CONF = [
     {
-        "object_id_tag": "Kisio数字",
-        "id": "Kisio数字",
+        "object_id_tag": "Hove数字",
+        "id": "Hove数字",
         "class": "jormungandr.realtime_schedule.synthese.Synthese",
         "args": {"timezone": "UTC", "service_url": "http://bob.com", "timeout": 15},
     }

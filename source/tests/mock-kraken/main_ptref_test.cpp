@@ -239,7 +239,7 @@ int main(int argc, const char* const argv[]) {
 
     // Date and Time zone
     const std::string date = "20140101";
-    const std::string publisher_name = "canal tp";
+    const std::string publisher_name = "hove";
     const std::string timezone_name = "Europe/Paris";
     const auto begin = boost::gregorian::date_from_iso_string(date);
     const boost::gregorian::date_period production_date = {begin, begin + boost::gregorian::years(1)};

@@ -637,7 +637,7 @@ builder::builder(const std::string& date,
     data->loaded = true;
     data->meta->instance_name = "builder";
     data->meta->publisher_name = publisher_name;
-    data->meta->publisher_url = "www.canaltp.fr";
+    data->meta->publisher_url = "www.hove.com";
     data->meta->license = "ODBL";
 
     // for the moment we can only have one timezone per dataset

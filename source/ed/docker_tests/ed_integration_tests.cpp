@@ -203,7 +203,7 @@ BOOST_FIXTURE_TEST_CASE(fusio_test, ArgsFixture) {
 
     BOOST_REQUIRE_EQUAL(data.pt_data->contributors.size(), 1);
     BOOST_REQUIRE_EQUAL(data.pt_data->contributors[0]->license, "LICENSE");
-    BOOST_REQUIRE_EQUAL(data.pt_data->contributors[0]->website, "http://www.canaltp.fr");
+    BOOST_REQUIRE_EQUAL(data.pt_data->contributors[0]->website, "http://www.hove.com");
 
     // Here we check trip_short_name as well as headsign of some vjs
     const nt::HeadsignHandler& headsigns = data.pt_data->headsign_handler;

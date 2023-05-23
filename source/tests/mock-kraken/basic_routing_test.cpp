@@ -115,7 +115,7 @@ int main(int argc, const char* const argv[]) {
     cr->uri = "base_contributor";
     cr->name = "base contributor";
     cr->license = "L-contributor";
-    cr->website = "www.canaltp.fr";
+    cr->website = "www.hove.com";
     cr->dataset_list.insert(ds);
     ds->contributor = cr;
 

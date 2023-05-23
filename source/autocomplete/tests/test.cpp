@@ -1774,8 +1774,8 @@ BOOST_AUTO_TEST_CASE(synonyms_with_non_ascii) {
     autocomplete_map synonyms{{"fac", "université"}, {"faculté", "université"}, {"embarcadère", "gare maritime"}};
 
     Autocomplete<unsigned int> ac;
-    ac.add_string("université de canaltp", 0, ghostwords, synonyms);
-    ac.add_string("gare maritime de canaltp", 1, ghostwords, synonyms);
+    ac.add_string("université de hove", 0, ghostwords, synonyms);
+    ac.add_string("gare maritime de hove", 1, ghostwords, synonyms);
     ac.build();
 
     auto res0 = ac.find_complete(

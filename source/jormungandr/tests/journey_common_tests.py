@@ -76,7 +76,7 @@ class JourneyCommon(object):
         assert feed_publisher["id"] == "builder"
         assert feed_publisher["name"] == 'routing api data'
         assert feed_publisher["license"] == "ODBL"
-        assert feed_publisher["url"] == "www.canaltp.fr"
+        assert feed_publisher["url"] == "www.hove.com"
 
         self.check_context(response)
 
@@ -1511,7 +1511,7 @@ class OnBasicRouting:
         feed_publisher = next(f for f in feed_publishers if f['id'] == "base_contributor")
         assert feed_publisher["name"] == "base contributor"
         assert feed_publisher["license"] == "L-contributor"
-        assert feed_publisher["url"] == "www.canaltp.fr"
+        assert feed_publisher["url"] == "www.hove.com"
 
         osm = next(f for f in feed_publishers if f['id'] == "osm")
         assert osm["name"] == "openstreetmap"

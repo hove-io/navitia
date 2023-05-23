@@ -451,7 +451,7 @@ class TestBssProvider(AbstractTestFixture):
                 'id': 'builder',
                 'name': 'routing api data',
                 'license': 'ODBL',
-                'url': 'www.canaltp.fr',
+                'url': 'www.hove.com',
             }
             # we check that the feedpublisher of the bss provider has been added
             bss_provider = next(f for f in feeds if f['name'] == 'mock bss provider')
@@ -489,7 +489,7 @@ class TestBssProvider(AbstractTestFixture):
                 'id': 'builder',
                 'name': 'routing api data',
                 'license': 'ODBL',
-                'url': 'www.canaltp.fr',
+                'url': 'www.hove.com',
             }
             # we check that the feedpublisher of the bss providers has been added
             bss_provider_1 = next(f for f in feeds if f['name'] == 'provider 1')

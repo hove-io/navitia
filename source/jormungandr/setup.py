@@ -35,7 +35,7 @@ from setuptools import find_packages
 setup(
     name='jormungandr',
     description='webservice d\'exposition en http de kraken',
-    author='Kisio Digital',
+    author='Hove',
     author_email='navitia.pt.core@kisio.com',
     url='www.navitia.io',
     packages=find_packages(),
