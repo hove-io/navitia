@@ -22,14 +22,19 @@ HTTP/1.1 404 OK
 
 The are two possible 40x http codes:
 
--   Code 404: unable to find an object
+-   Code 404: unable to find an object. 
 
 | Error id                    | Description                                                                	|
 |-----------------------------|-----------------------------------------------------------------------------|
 | date_out_of_bounds          | When the given date is out of bounds of the production dates of the region 	|
-| no_origin                   | Couldn't find an origin for the journeys                                   	|
-| no_destination              | Couldn't find a destination for the journeys                              	|
-| no_origin_nor_destination   | Couldn't find neither origin nor destination for the journeys               |
+| no_departure_this_day       | Some vehicles stop at this point, but none today (for example, it's sunday) |
+| no_active_circulation_this_day | No more vehicles stop for today (for example, it's too late)             |
+| terminus                    | There will never be departures, you're at the terminus of the line          |
+| partial_terminus            | Same as terminus, but be careful, some vehicles are departing from the stop some other days  |
+| active_disruption           | No departure, due to a disruption                                           |
+| no_origin                   | Couldn't find an origin (for the journey service only)                      |
+| no_destination              | Couldn't find a destination (for the journey service only)                  |
+| no_origin_nor_destination   | Couldn't find neither origin nor destination (for the journey service only) |
 | unknown_object              | Couldn't find one of the request parameters. It can be the region, the API or a PT object |
 
 -   Code 400: bad request
@@ -59,8 +64,9 @@ Code 50x
 Ouch. Technical issue :/
 
 | Error id            	| Description                                               				|
-|-----------------------|---------------------------------------------------------------------------------------|
-| internal_error	| Something bad and unexpected has happened internally      				|
-| service_unavailable	| Navitia isn't responding								|
-| dead_socket		| The requested region isn't responding							|
-| technical_error	| An external service (street network back-end or autocomplete)	isn't responding	|
+|-----------------------|---------------------------------------------------------------------------|
+| internal_error	    | Something bad and unexpected has happened internally      				|
+| service_unavailable	| Navitia isn't responding								                    |
+| dead_socket		    | The requested region (coverage) isn't responding							|
+| technical_error	    | An internal service (street network back-end or autocomplete)	isn't responding	|
+
