@@ -22,7 +22,7 @@ HTTP/1.1 404 OK
 
 The are two possible 40x http codes:
 
--   Code 404: unable to find an object. 
+-   Code 404: unable to find an object.
 
 | Error id                    | Description                                                                	|
 |-----------------------------|-----------------------------------------------------------------------------|
