@@ -85,11 +85,18 @@ jobs:
             docker push navitia/$component:${{env.navitia_tag}}
         done
 
+    - name: Generate github private access token
+      id: ci-core-app-token
+      uses: getsentry/action-github-app-token@v2.0.0
+      with:
+        app_id: ${{ secrets.CI_CORE_APP_ID }}
+        private_key: ${{ secrets.CI_CORE_APP_PEM }}
+
     - name: Run artemis on push to dev
       if: github.event_name == 'push' && github.ref == 'refs/heads/dev'
       uses: peter-evans/repository-dispatch@v2
       with:
-        token: ${{ secrets.access_token_github }}
+        token: ${{ steps.ci-core-app-token.outputs.token }}
         repository: hove-io/artemis
         event-type: run_artemis_ng_debian11
 
