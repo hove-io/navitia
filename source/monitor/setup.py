@@ -37,7 +37,7 @@ setup(
     version='0.39.0',
     description="Provide a small api for monitoring kraken",
     author='Hove',
-    author_email='alexandre.jacquin@canaltp.fr',
+    author_email='core@hove.com',
     url='www.navitia.io',
     packages=[str('monitor_kraken')],
     data_files=[('/usr/share/monitor_kraken', ['requirements.txt'])],
