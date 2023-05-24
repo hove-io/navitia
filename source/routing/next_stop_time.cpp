@@ -61,31 +61,43 @@ bool NextStopTimeData::Arrival::is_valid(const type::StopTime& st) const {
 
 template <typename Getter>
 void NextStopTimeData::TimesStopTimes<Getter>::init(const JourneyPattern& jp, const JourneyPatternPoint& jpp) {
+    using StopTimePair = std::pair<const type::StopTime*, const type::StopTime*>;
     // collect the stop times at the given jpp
     const auto jpp_order = jpp.order;
-    stop_times.reserve(jp.discrete_vjs.size());
+    std::vector<StopTimePair> stop_times_and_earliest_stop_time;
+    stop_times_and_earliest_stop_time.reserve(jp.discrete_vjs.size());
     for (const auto& vj : jp.discrete_vjs) {
-        const auto& st = get_corresponding_stop_time(*vj, jpp_order);
+        const type::StopTime& st = get_corresponding_stop_time(*vj, jpp_order);
         if (!getter.is_valid(st)) {
             continue;
         }
-        stop_times.push_back(&st);
+        const type::StopTime& earliest_stop_time = navitia::earliest_stop_time(st.vehicle_journey->stop_time_list);
+        StopTimePair pair = StopTimePair(&st, &earliest_stop_time);
+        stop_times_and_earliest_stop_time.push_back(pair);
     }
 
     // sort the stop times in ascending order
-    boost::sort(stop_times, [&](const type::StopTime* st1, const type::StopTime* st2) {
+    boost::sort(stop_times_and_earliest_stop_time, [&](StopTimePair pair1, StopTimePair pair2) {
+        const type::StopTime* st1 = pair1.first;
+        const type::StopTime* st2 = pair2.first;
         const auto time1 = DateTimeUtils::hour(getter.get_time(*st1));
         const auto time2 = DateTimeUtils::hour(getter.get_time(*st2));
         if (time1 != time2) {
             return time1 < time2;
         }
-        const auto& st1_first = navitia::earliest_stop_time(st1->vehicle_journey->stop_time_list);
-        const auto& st2_first = navitia::earliest_stop_time(st2->vehicle_journey->stop_time_list);
-        if (getter.get_time(st1_first) != getter.get_time(st2_first)) {
-            return getter.get_time(st1_first) < getter.get_time(st2_first);
+        const type::StopTime* st1_first = pair1.second;
+        const type::StopTime* st2_first = pair2.second;
+        auto st1_first_time = getter.get_time(*st1_first);
+        auto st2_first_time = getter.get_time(*st2_first);
+        if (st1_first_time != st2_first_time) {
+            return st1_first_time < st2_first_time;
         }
-        return st1_first.vehicle_journey->idx < st2_first.vehicle_journey->idx;
+        return st1_first->vehicle_journey->idx < st2_first->vehicle_journey->idx;
     });
+    stop_times.reserve(jp.discrete_vjs.size());
+    for (const auto& pair : stop_times_and_earliest_stop_time) {
+        stop_times.push_back(pair.first);
+    }
 
     // collect the corresponding times
     times.reserve(stop_times.size());
