@@ -45,15 +45,8 @@ def delete_journeys(responses, request):
     if request.get('debug', False):
         return
 
-    keep_olympics_journeys = request.get("_keep_olympics_journeys", False)
-
     nb_deleted = 0
     for r in responses:
-        if keep_olympics_journeys:
-            for journey in r.journeys:
-                if 'to_delete' in journey.tags and 'olympics' in journey.tags:
-                    journey.tags.remove("to_delete")
-
         nb_deleted += pb_del_if(r.journeys, lambda j: to_be_deleted(j))
 
     if nb_deleted:
@@ -675,6 +668,8 @@ def apply_final_journey_filters(response_list, instance, request):
         journeys = journey_generator(response_list)
         filter_non_car_tagged_journey(journeys, request)
 
+    keep_olympics_journeys(response_list, request)
+
 
 def filter_non_car_tagged_journey(journeys, request):
     is_debug = request.get('debug', False)
@@ -704,6 +699,17 @@ def apply_final_journey_filters_post_finalize(response_list, request):
         journeys = journey_generator(response_list)
         journey_pairs_pool = itertools.combinations(journeys, 2)
         _filter_similar_line_and_crowfly_journeys(journey_pairs_pool, request)
+
+    keep_olympics_journeys(response_list, request)
+
+
+def keep_olympics_journeys(responses, request):
+    keep_olympics_journeys = request.get("_keep_olympics_journeys", False)
+    if keep_olympics_journeys:
+        for response in responses:
+            for journey in response.journeys:
+                if 'to_delete' in journey.tags and 'olympics' in journey.tags:
+                    journey.tags.remove("to_delete")
 
 
 def replace_bss_tag(journeys):
@@ -746,6 +752,8 @@ def filter_detailed_journeys(responses, request):
     filter_similar_vj_journeys(journey_pairs_pool, request)
 
     replace_bss_tag(journey_generator(responses))
+
+    keep_olympics_journeys(responses, request)
 
 
 def _get_worst_similar(j1, j2, request):
