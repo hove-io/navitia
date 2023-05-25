@@ -72,8 +72,7 @@ void NextStopTimeData::TimesStopTimes<Getter>::init(const JourneyPattern& jp, co
             continue;
         }
         const type::StopTime& earliest_stop_time = navitia::earliest_stop_time(st.vehicle_journey->stop_time_list);
-        StopTimePair pair = StopTimePair(&st, &earliest_stop_time);
-        stop_times_and_earliest_stop_time.push_back(pair);
+        stop_times_and_earliest_stop_time.emplace_back(&st, &earliest_stop_time);
     }
 
     // sort the stop times in ascending order
