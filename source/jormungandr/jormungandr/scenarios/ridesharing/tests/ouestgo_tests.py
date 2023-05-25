@@ -100,8 +100,8 @@ fake_response = """
             "real_time": null,
             "stopped": null,
             "days": {
-                "monday": 0,
-                "tuesday": 1,
+                "monday": 1,
+                "tuesday": 0,
                 "wednesday": 0,
                 "thursday": 0,
                 "friday": 0,
@@ -111,11 +111,11 @@ fake_response = """
             "outward": {
                 "mindate": "2022-11-22",
                 "maxdate": "2022-11-22",
-                "monday": null,
-                "tuesday": {
+                "monday": {
                     "mintime": "08:45:00",
                     "maxtime": "09:15:00"
                 },
+                "tuesday": null,
                 "wednesday": null,
                 "thursday": null,
                 "friday": null,
