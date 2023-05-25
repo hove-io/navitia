@@ -65,8 +65,9 @@ from jormungandr.equipments import EquipmentProviderManager
 from jormungandr.external_services import ExternalServiceManager
 from jormungandr.utils import (
     can_connect_to_database,
-    make_best_boarding_position_key,
+    make_origin_destination_key,
     read_best_boarding_positions,
+    read_od_allowed_ids,
 )
 from jormungandr import pt_planners_manager, transient_socket
 import os
@@ -252,6 +253,12 @@ class Instance(transient_socket.TransientSocket):
         if best_boarding_positions_dir is not None:
             file_path = os.path.join(best_boarding_positions_dir, "{}.csv".format(self.name))
             self.best_boarding_positions = read_best_boarding_positions(file_path)
+
+        # read od_allowed_ids from a file if configured
+        od_allowed_ids_dir = app.config.get('OD_ALLOWED_IDS_DIR')
+        if od_allowed_ids_dir:
+            file_path = os.path.join(od_allowed_ids_dir, "{}_od_allowed_ids.csv".format(self.name))
+            self.od_allowed_ids = read_od_allowed_ids(file_path)
 
     def get_providers_from_db(self):
         """
@@ -946,5 +953,11 @@ class Instance(transient_socket.TransientSocket):
     def get_best_boarding_position(self, from_id, to_id):
         if not self.best_boarding_positions:
             return []
-        key = make_best_boarding_position_key(from_id, to_id)
+        key = make_origin_destination_key(from_id, to_id)
         return self.best_boarding_positions.get(key, [])
+
+    def get_od_allowed_ids(self, origin, destination):
+        if not self.od_allowed_ids:
+            return []
+        key = make_origin_destination_key(origin, destination)
+        return self.od_allowed_ids.get(key, [])

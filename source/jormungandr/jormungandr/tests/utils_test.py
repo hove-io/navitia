@@ -37,7 +37,8 @@ from jormungandr.utils import (
     walk_dict,
     get_pt_object_from_json,
     read_best_boarding_positions,
-    make_best_boarding_position_key,
+    read_od_allowed_ids,
+    make_origin_destination_key,
     portable_min,
 )
 import pytz
@@ -314,9 +315,34 @@ def test_read_best_boarding_positions():
         writer.writerow(["b", "a", "front"])
 
     d = read_best_boarding_positions(file_name)
-    assert d[make_best_boarding_position_key("a", "b")] == {
+    assert d[make_origin_destination_key("a", "b")] == {
         response_pb2.FRONT,
         response_pb2.BACK,
         response_pb2.MIDDLE,
     }
-    assert d[make_best_boarding_position_key("b", "a")] == {response_pb2.FRONT, response_pb2.BACK}
+    assert d[make_origin_destination_key("b", "a")] == {response_pb2.FRONT, response_pb2.BACK}
+
+
+def test_read_od_allowed_ids():
+    import shortuuid
+
+    file_name = '{}.csv'.format(shortuuid.uuid())
+
+    with open(file_name, 'w+') as file:
+        writer = csv.writer(file)
+        field = ['origin', 'destination', 'allowed_id']
+
+        writer.writerow(field)
+        # the od allowed ids test should be case-insensitive
+        writer.writerow(["sa:1", "sa:10", "rer:1"])
+        writer.writerow(["sa:1", "sa:10", "bus:1"])
+        writer.writerow(["sa:1", "sa:10", "metro:1"])
+
+        # Repeated allowed_ids for a same key should not raise an error
+        writer.writerow(["sa:1", "sa:11", "train:2"])
+        writer.writerow(["sa:1", "sa:11", "tram:2"])
+        writer.writerow(["sa:1", "sa:11", "tram:2"])
+
+    d = read_od_allowed_ids(file_name)
+    assert d[make_origin_destination_key("sa:1", "sa:10")] == {"rer:1", "bus:1", "metro:1"}
+    assert d[make_origin_destination_key("sa:1", "sa:11")] == {"train:2", "tram:2"}

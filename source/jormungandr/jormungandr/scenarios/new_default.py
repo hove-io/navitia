@@ -1244,6 +1244,19 @@ def add_olympics_forbidden_uris(origin_detail, destination_detail, api_request, 
         api_request["forbidden_uris[]"] = instance.olympics_forbidden_uris.pt_object_olympics_forbidden_uris
 
 
+def add_additional_parameters(origin_uri, destination_uri, api_request, instance):
+    # Add parameter allowed_id[] in the request if instance.od_allowed_ids exists and allowed_ids found for a key
+    if not instance.od_allowed_ids:
+        return
+    allowed_ids = instance.get_od_allowed_ids(origin_uri, destination_uri)
+    if not allowed_ids:
+        return
+    if api_request.get("allowed_id[]"):
+        api_request["allowed_id[]"] += allowed_ids
+    else:
+        api_request["allowed_id[]"] = allowed_ids
+
+
 class Scenario(simple.Scenario):
     """
     TODO: a bit of explanation about the new scenario
@@ -1298,6 +1311,7 @@ class Scenario(simple.Scenario):
         pt_object_destination = get_pt_object_from_json(destination_detail, instance)
 
         add_olympics_forbidden_uris(pt_object_origin, pt_object_destination, api_request, instance)
+        add_additional_parameters(pt_object_origin.uri, pt_object_destination.uri, api_request, instance)
 
         api_request['origin'] = get_kraken_id(origin_detail) or api_request.get('origin')
         api_request['destination'] = get_kraken_id(destination_detail) or api_request.get('destination')

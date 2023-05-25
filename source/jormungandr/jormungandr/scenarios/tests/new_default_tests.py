@@ -37,10 +37,11 @@ from jormungandr.scenarios.new_default import (
     get_kraken_calls,
     update_best_boarding_positions,
     add_olympics_forbidden_uris,
+    add_additional_parameters,
 )
 from jormungandr.instance import Instance
 from jormungandr.scenarios.utils import switch_back_to_ridesharing
-from jormungandr.utils import make_best_boarding_position_key
+from jormungandr.utils import make_origin_destination_key
 from werkzeug.exceptions import HTTPException
 import pytest
 from collections import defaultdict
@@ -695,16 +696,16 @@ def build_response_with_transfer_and_vias():
 
 def update_best_boarding_positions_test():
     def mock_get_best_boarding_position(from_id, to_id):
-        my_key = make_best_boarding_position_key(from_id, to_id)
+        my_key = make_origin_destination_key(from_id, to_id)
         return instance.best_boarding_positions.get(my_key, [])
 
     instance = lambda: None
     instance.best_boarding_positions = defaultdict(set)
-    key = make_best_boarding_position_key('stop_a', 'stop_b')
+    key = make_origin_destination_key('stop_a', 'stop_b')
     instance.best_boarding_positions[key].add(response_pb2.FRONT)
-    key = make_best_boarding_position_key('stop_x', 'stop_y')
+    key = make_origin_destination_key('stop_x', 'stop_y')
     instance.best_boarding_positions[key].add(response_pb2.MIDDLE)
-    key = make_best_boarding_position_key('stop_x', 'stop_z')
+    key = make_origin_destination_key('stop_x', 'stop_z')
     instance.best_boarding_positions[key].add(response_pb2.BACK)
 
     response = build_response_with_transfer_and_vias()
@@ -847,3 +848,43 @@ def add_olympics_forbidden_uris_without_poi_property_value_test():
     }
     instance = FakeInstance(olympics_forbidden_uris=olympics_forbidden_uris)
     assert not instance.olympics_forbidden_uris
+
+
+def make_od_allowed_ids():
+    my_dict = defaultdict(set)
+    my_dict["sa:1-sa:10"] = ["rer:1", "bus:1", "metro:"]
+    my_dict["sa:1-sa:11"] = ["train:2", "tram:2"]
+    return my_dict
+
+
+def test_od_allowed_ids_absent():
+    api_request = {"param1": "toto"}
+    origin_uri = "sa:1"
+    destination_uri = "sa:10"
+    instance = FakeInstance()
+    instance.od_allowed_ids = None
+    add_additional_parameters(origin_uri, destination_uri, api_request, instance)
+    assert "allowed_id[]" not in api_request
+
+
+def test_od_allowed_ids_present_but_od_absent():
+    api_request = {"param1": "toto"}
+    origin_uri = "sa:1"
+    destination_uri = "sa:toto"
+    instance = FakeInstance()
+    instance.od_allowed_ids = make_od_allowed_ids()
+    add_additional_parameters(origin_uri, destination_uri, api_request, instance)
+    assert "allowed_id[]" not in api_request
+
+
+def test_od_allowed_ids_present_and_od_present():
+    api_request = {"param1": "toto"}
+    origin_uri = "sa:1"
+    destination_uri = "sa:10"
+    instance = FakeInstance()
+    instance.od_allowed_ids = make_od_allowed_ids()
+    add_additional_parameters(origin_uri, destination_uri, api_request, instance)
+    assert "allowed_id[]" in api_request
+    assert api_request["allowed_id[]"][0] == "rer:1"
+    assert api_request["allowed_id[]"][1] == "bus:1"
+    assert api_request["allowed_id[]"][2] == "metro:"
