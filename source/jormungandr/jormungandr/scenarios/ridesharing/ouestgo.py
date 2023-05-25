@@ -208,7 +208,7 @@ class Ouestgo(AbstractRidesharingService):
                 period_extremity.datetime, timezone, _format=DATE_FORMAT
             ),
             'p[outward][maxdate]': timestamp_to_date_str(
-                period_extremity.datetime + ONE_DAY, timezone, _format=DATE_FORMAT
+                period_extremity.datetime, timezone, _format=DATE_FORMAT
             ),
         }
 
