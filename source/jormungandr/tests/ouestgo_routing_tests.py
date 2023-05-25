@@ -106,8 +106,8 @@ OUESTGO_RESPONSE = [
                 "monday": 0,
                 "tuesday": 0,
                 "wednesday": 0,
-                "thursday": 0,
-                "friday": 1,
+                "thursday": 1,
+                "friday": 0,
                 "saturday": 0,
                 "sunday": 0,
             },
@@ -198,13 +198,13 @@ class TestOuestgo(NewDefaultScenarioAbstractTestFixture):
         assert rsj_sections[0].get('type') == 'crow_fly'
         assert rsj_sections[0].get('mode') == 'walking'
         assert rsj_sections[0].get('duration') == 0
-        assert rsj_sections[0].get('departure_date_time') == '20120614T085500'
-        assert rsj_sections[0].get('arrival_date_time') == '20120614T085500'
+        assert rsj_sections[0].get('departure_date_time') == '20120614T090500'
+        assert rsj_sections[0].get('arrival_date_time') == '20120614T090500'
 
         assert rsj_sections[1].get('type') == 'ridesharing'
         assert rsj_sections[1].get('duration') == 1301
-        assert rsj_sections[1].get('departure_date_time') == '20120614T085500'
-        assert rsj_sections[1].get('arrival_date_time') == '20120614T091641'
+        assert rsj_sections[1].get('departure_date_time') == '20120614T090500'
+        assert rsj_sections[1].get('arrival_date_time') == '20120614T092641'
 
         rsj_info = rsj_sections[1].get('ridesharing_informations')
         assert rsj_info.get('network') == 'Super Covoit'
@@ -227,8 +227,8 @@ class TestOuestgo(NewDefaultScenarioAbstractTestFixture):
         assert rsj_sections[2].get('type') == 'crow_fly'
         assert rsj_sections[2].get('mode') == 'walking'
         assert rsj_sections[2].get('duration') == 0
-        assert rsj_sections[2].get('departure_date_time') == '20120614T091641'
-        assert rsj_sections[2].get('arrival_date_time') == '20120614T091641'
+        assert rsj_sections[2].get('departure_date_time') == '20120614T092641'
+        assert rsj_sections[2].get('arrival_date_time') == '20120614T092641'
 
         fps = response['feed_publishers']
         assert len(fps) == 2
