@@ -34,7 +34,6 @@ import pybreaker
 
 from jormungandr import app
 import jormungandr.scenarios.ridesharing.ridesharing_journey as rsj
-from statistics import mean
 from jormungandr.scenarios.ridesharing.ridesharing_service import (
     AbstractRidesharingService,
     RsFeedPublisher,
@@ -43,7 +42,6 @@ from jormungandr.scenarios.ridesharing.ridesharing_service import (
 from jormungandr.utils import (
     get_weekday,
     timestamp_to_date_str,
-    ONE_DAY,
     DATE_FORMAT,
     local_str_date_to_utc,
     date_to_timestamp,
@@ -120,7 +118,7 @@ class Ouestgo(AbstractRidesharingService):
 
         min_datetime = date_to_timestamp(local_str_date_to_utc(min_datetime_str, timezone))
         max_datetime = date_to_timestamp(local_str_date_to_utc(max_datetime_str, timezone))
-        return mean([min_datetime, max_datetime])
+        return int((min_datetime + max_datetime) / 2)
 
     def _make_response(self, raw_json, request_datetime, from_coord, to_coord):
         if not raw_json:
