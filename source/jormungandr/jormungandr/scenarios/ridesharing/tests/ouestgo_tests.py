@@ -255,6 +255,7 @@ def test_request_journeys_should_raise_on_non_200():
         assert 401 in exception_params
         assert '{this is the http response}' in exception_params
 
+
 def ouestgo_status_test():
     with mock.patch('requests.get', mock_get):
 
@@ -268,6 +269,7 @@ def ouestgo_status_test():
         assert resp["id"] == ouestgo.system_id
         assert resp["network"] == ouestgo.network
 
+
 def get_mean_pickup_datetime_empty_json_outward_test():
     ouestgo = Ouestgo(
         service_url='dummyUrl',
@@ -275,8 +277,11 @@ def get_mean_pickup_datetime_empty_json_outward_test():
         network='dummyNetwork',
         feed_publisher=DUMMY_OUESTGO_FEED_PUBLISHER,
     )
-    mean_pickup_datetime = ouestgo.get_mean_pickup_datetime(json_outward={}, circulation_day="wednesday", timezone="toto")
+    mean_pickup_datetime = ouestgo.get_mean_pickup_datetime(
+        json_outward={}, circulation_day="wednesday", timezone="toto"
+    )
     assert not mean_pickup_datetime
+
 
 def get_mean_pickup_datetime_test():
     ouestgo = Ouestgo(
@@ -285,24 +290,24 @@ def get_mean_pickup_datetime_test():
         network='dummyNetwork',
         feed_publisher=DUMMY_OUESTGO_FEED_PUBLISHER,
     )
-    json_outward =  {
+    json_outward = {
         "mindate": "2022-11-22",
         "maxdate": "2022-11-22",
-        "monday": {
-            "mintime": "08:45:00",
-            "maxtime": "09:15:00"
-        },
+        "monday": {"mintime": "08:45:00", "maxtime": "09:15:00"},
         "tuesday": None,
         "wednesday": None,
         "thursday": None,
         "friday": None,
         "saturday": None,
-        "sunday": None
+        "sunday": None,
     }
-    mean_pickup_datetime = ouestgo.get_mean_pickup_datetime(json_outward=json_outward, circulation_day="monday", timezone="Europe/Paris")
+    mean_pickup_datetime = ouestgo.get_mean_pickup_datetime(
+        json_outward=json_outward, circulation_day="monday", timezone="Europe/Paris"
+    )
     res = utils.timestamp_to_datetime(mean_pickup_datetime, pytz.timezone("UTC"))
     assert res.hour == 8
     assert res.minute == 0
+
 
 def make_response_empty_raw_json_test():
     ouestgo = Ouestgo(
@@ -314,6 +319,7 @@ def make_response_empty_raw_json_test():
     resp = ouestgo._make_response([], None, None, None)
     assert not resp
 
+
 def make_response_pikup_datetime_invalid_test():
     ouestgo = Ouestgo(
         service_url='dummyUrl',
@@ -322,6 +328,6 @@ def make_response_pikup_datetime_invalid_test():
         feed_publisher=DUMMY_OUESTGO_FEED_PUBLISHER,
     )
     # Thursday 25 May 2023 12:00:00
-    request_datetime= 1685016000
+    request_datetime = 1685016000
     resp = ouestgo._make_response([{"toto": "tata"}], request_datetime, None, None)
     assert not resp
