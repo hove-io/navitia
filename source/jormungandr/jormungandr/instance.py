@@ -248,6 +248,7 @@ class Instance(transient_socket.TransientSocket):
         self.instance_db = instance_db
         self._ghost_words = ghost_words or []
         self.best_boarding_positions = None
+        self.od_allowed_ids = None
 
         # Read the best_boarding_positions files if any
         if best_boarding_positions_dir is not None:
