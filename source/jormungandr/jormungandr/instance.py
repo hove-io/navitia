@@ -255,7 +255,7 @@ class Instance(transient_socket.TransientSocket):
             self.best_boarding_positions = read_best_boarding_positions(file_path)
 
         # read od_allowed_ids from a file if configured
-        od_allowed_ids_dir = app.config.get('OD_ALLOWED_IDS_DIR')
+        od_allowed_ids_dir = app.config.get(str('OD_ALLOWED_IDS_DIR'))
         if od_allowed_ids_dir:
             file_path = os.path.join(od_allowed_ids_dir, "{}_od_allowed_ids.csv".format(self.name))
             self.od_allowed_ids = read_od_allowed_ids(file_path)
