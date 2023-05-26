@@ -137,6 +137,10 @@ class CarWithPark(AbstractStreetNetworkService):
                 response_pb2.Error.no_solution, "cannot compute the direct path from origin to car park"
             )
 
+        if car_direct_path.journeys[0].sections:
+            car_direct_path.journeys[0].sections[0].origin.CopyFrom(object_origin)
+            car_direct_path.journeys[0].sections[-1].destination.CopyFrom(best_car_park)
+
         walking_extremity = PeriodExtremity(
             datetime=car_direct_path.journeys[0].arrival_date_time + request['_car_park_duration'],
             represents_start=True,
