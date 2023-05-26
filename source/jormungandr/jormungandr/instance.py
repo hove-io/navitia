@@ -727,6 +727,12 @@ class Instance(transient_socket.TransientSocket):
         instance_db = self.get_models()
         return get_value_or_default('ghost_words', instance_db, self.name)
 
+    @property
+    def additional_parameters(self):
+        # type: () -> bool
+        instance_db = self.get_models()
+        return get_value_or_default('additional_parameters', instance_db, self.name)
+
     # TODO: refactorise all properties
     taxi_speed = _make_property_getter('taxi_speed')
     additional_time_after_first_section_taxi = _make_property_getter('additional_time_after_first_section_taxi')
