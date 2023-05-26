@@ -14,6 +14,7 @@ from alembic import op
 import sqlalchemy as sa
 from navitiacommon import default_values
 
+
 def upgrade():
     op.add_column(
         'instance',
