@@ -227,6 +227,7 @@ def test_update_instances(create_instance):
     assert resp['filter_odt_journeys'] is False
     assert resp['additional_parameters'] is False
 
+
 def test_update_instances_is_free(create_instance):
     params = {"is_free": True}
     resp = api_put(
