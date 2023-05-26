@@ -1008,6 +1008,14 @@ class Instance(flask_restful.Resource):
             default=instance.filter_odt_journeys,
         )
 
+        parser.add_argument(
+            'additional_parameters',
+            type=inputs.boolean,
+            help='boolean to activate / deactivate the management of additional parameters for transport journeys',
+            location=('json', 'values'),
+            default=instance.additional_parameters,
+        )
+
         args = parser.parse_args()
 
         try:
@@ -1106,6 +1114,7 @@ class Instance(flask_restful.Resource):
                         'pt_planners_configurations',
                         'ghost_words',
                         'filter_odt_journeys',
+                        'additional_parameters',
                     ],
                 ),
                 maxlen=0,

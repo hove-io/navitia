@@ -743,6 +743,13 @@ class Instance(db.Model):  # type: ignore
 
     ghost_words = db.Column(ARRAY(db.Text), nullable=True, server_default="{}")
 
+    additional_parameters = db.Column(
+        db.Boolean,
+        default=default_values.additional_parameters,
+        nullable=False,
+        server_default=str(default_values.additional_parameters),
+    )
+
     def __init__(self, name=None, is_free=False, authorizations=None, jobs=None):
         self.name = name
         self.is_free = is_free
