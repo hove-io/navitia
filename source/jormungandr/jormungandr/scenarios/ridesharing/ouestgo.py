@@ -107,10 +107,11 @@ class Ouestgo(AbstractRidesharingService):
         }
 
     def get_mean_pickup_datetime(self, json_outward, circulation_day, timezone):
-        if not json_outward.get(circulation_day, {}):
+        json_circulation_day = json_outward.get(circulation_day, {})
+        if not json_circulation_day:
             return None
-        min_time = json_outward.get(circulation_day, {}).get('mintime')
-        max_time = json_outward.get(circulation_day, {}).get('maxtime')
+        min_time = json_circulation_day.get('mintime')
+        max_time = json_circulation_day.get('maxtime')
         min_date = json_outward.get('mindate')
         max_date = json_outward.get('maxdate')
         min_datetime_str = format_str_datetime(min_date, min_time)
