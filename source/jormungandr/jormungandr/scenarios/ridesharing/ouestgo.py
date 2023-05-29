@@ -64,7 +64,6 @@ def parse_timestamp(str_date, str_time, tz):
     return date_to_timestamp(tz.normalize(tz.localize(dt)).astimezone(pytz.utc))
 
 
-
 class Ouestgo(AbstractRidesharingService):
     def __init__(
         self,
@@ -115,8 +114,12 @@ class Ouestgo(AbstractRidesharingService):
         json_circulation_day = json_outward.get(circulation_day, {})
         if not json_circulation_day:
             return None
-        min_datetime = parse_timestamp(json_outward.get('mindate'), json_circulation_day.get('mintime'), timezone)
-        max_datetime = parse_timestamp(json_outward.get('maxdate'), json_circulation_day.get('maxtime'), timezone)
+        min_datetime = parse_timestamp(
+            json_outward.get('mindate'), json_circulation_day.get('mintime'), timezone
+        )
+        max_datetime = parse_timestamp(
+            json_outward.get('maxdate'), json_circulation_day.get('maxtime'), timezone
+        )
         return int((min_datetime + max_datetime) / 2)
 
     def _make_response(self, raw_json, request_datetime, from_coord, to_coord):
