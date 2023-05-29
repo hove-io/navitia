@@ -296,7 +296,7 @@ def test_portable_min():
 def test_read_best_boarding_positions():
     import shortuuid
 
-    file_name = '{}.csv'.format(shortuuid.uuid())
+    file_name = 'best_boarding_positions_test_{}.csv'.format(shortuuid.uuid())
 
     with open(file_name, 'w+') as file:
         writer = csv.writer(file)
@@ -315,6 +315,9 @@ def test_read_best_boarding_positions():
         writer.writerow(["b", "a", "front"])
 
     d = read_best_boarding_positions(file_name)
+    if os.path.exists(file_name):
+        os.remove(file_name)
+
     assert d[make_origin_destination_key("a", "b")] == {
         response_pb2.FRONT,
         response_pb2.BACK,
@@ -326,7 +329,7 @@ def test_read_best_boarding_positions():
 def test_read_od_allowed_ids():
     import shortuuid
 
-    file_name = '{}.csv'.format(shortuuid.uuid())
+    file_name = 'od_allowed_ids_test_{}.csv'.format(shortuuid.uuid())
 
     with open(file_name, 'w+') as file:
         writer = csv.writer(file)
@@ -344,5 +347,8 @@ def test_read_od_allowed_ids():
         writer.writerow(["sa:1", "sa:11", "tram:2"])
 
     d = read_od_allowed_ids(file_name)
+    if os.path.exists(file_name):
+        os.remove(file_name)
+
     assert d[make_origin_destination_key("sa:1", "sa:10")] == {"rer:1", "bus:1", "metro:1"}
     assert d[make_origin_destination_key("sa:1", "sa:11")] == {"train:2", "tram:2"}
