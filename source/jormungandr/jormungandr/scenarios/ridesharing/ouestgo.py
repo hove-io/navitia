@@ -31,7 +31,8 @@ from __future__ import absolute_import, print_function, unicode_literals, divisi
 
 import logging
 import pybreaker
-
+import datetime
+import pytz
 from jormungandr import app
 import jormungandr.scenarios.ridesharing.ridesharing_journey as rsj
 from jormungandr.scenarios.ridesharing.ridesharing_service import (
@@ -56,8 +57,12 @@ DEFAULT_OUESTGO_FEED_PUBLISHER = {
 }
 
 
-def format_str_datetime(str_date, str_time):
-    return '{}T{}'.format(str_date.replace('-', ''), str_time.replace(':', ''))
+def parse_timestamp(str_date, str_time, tz):
+    date = datetime.date.fromisoformat(str_date)
+    time = datetime.time.fromisoformat(str_time)
+    dt = datetime.datetime.combine(date, time)
+    return date_to_timestamp(tz.normalize(tz.localize(dt)).astimezone(pytz.utc))
+
 
 
 class Ouestgo(AbstractRidesharingService):
@@ -110,15 +115,8 @@ class Ouestgo(AbstractRidesharingService):
         json_circulation_day = json_outward.get(circulation_day, {})
         if not json_circulation_day:
             return None
-        min_time = json_circulation_day.get('mintime')
-        max_time = json_circulation_day.get('maxtime')
-        min_date = json_outward.get('mindate')
-        max_date = json_outward.get('maxdate')
-        min_datetime_str = format_str_datetime(min_date, min_time)
-        max_datetime_str = format_str_datetime(max_date, max_time)
-
-        min_datetime = date_to_timestamp(local_str_date_to_utc(min_datetime_str, timezone))
-        max_datetime = date_to_timestamp(local_str_date_to_utc(max_datetime_str, timezone))
+        min_datetime = parse_timestamp(json_outward.get('mindate'), json_circulation_day.get('mintime'), timezone)
+        max_datetime = parse_timestamp(json_outward.get('maxdate'), json_circulation_day.get('maxtime'), timezone)
         return int((min_datetime + max_datetime) / 2)
 
     def _make_response(self, raw_json, request_datetime, from_coord, to_coord):
@@ -130,7 +128,7 @@ class Ouestgo(AbstractRidesharingService):
         for offer in raw_json:
             json_journeys = offer.get('journeys', {})
             pickup_datetime = self.get_mean_pickup_datetime(
-                json_journeys.get('outward', {}), circulation_day, timezone.zone
+                json_journeys.get('outward', {}), circulation_day, timezone
             )
             if not pickup_datetime:
                 continue

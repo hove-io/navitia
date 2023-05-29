@@ -301,12 +301,12 @@ def get_mean_pickup_datetime_test():
         "saturday": None,
         "sunday": None,
     }
+
     mean_pickup_datetime = ouestgo.get_mean_pickup_datetime(
-        json_outward=json_outward, circulation_day="monday", timezone="Europe/Paris"
+        json_outward=json_outward, circulation_day="monday", timezone=pytz.timezone("Europe/Paris")
     )
-    res = utils.timestamp_to_datetime(mean_pickup_datetime, pytz.timezone("UTC"))
-    assert res.hour == 8
-    assert res.minute == 0
+
+    assert utils.dt_to_str(utils.navitia_utcfromtimestamp(mean_pickup_datetime)) == "20221122T080000"
 
 
 def make_response_empty_raw_json_test():
