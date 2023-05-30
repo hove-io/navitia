@@ -104,6 +104,8 @@ jobs:
     - name: docker_test python3
       working-directory: ./build
       run: |
+        virtualenv -p ${{matrix.os.python_version}} navitia_py3
+        . navitia_py3/bin/activate
         . navitia_py3/bin/activate
         pip install -r ../source/tyr/requirements_dev.txt
         pip install -r ../source/sql/requirements.txt
