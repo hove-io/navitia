@@ -14,7 +14,7 @@ jobs:
     runs-on: ubuntu-latest
 
     container:
-        image: navitia/debian10_dev
+        image: navitia/debian11_dev
         volumes:
           - /usr/share/dotnet:/usr/share/dotnet
         # Mount /dotnet so we can delete files from docker and free up space (>20GB)
@@ -46,7 +46,7 @@ jobs:
         wget https://sonarcloud.io/static/cpp/build-wrapper-linux-x86.zip https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-$SONAR_SCANNER_VERSION-linux.zip
         unzip -u build-wrapper-linux-x86.zip
         unzip -u sonar-scanner-cli-$SONAR_SCANNER_VERSION-linux.zip
-    - name: Install dependencies for python2
+    - name: Install dependencies for python3
       run: pip install -r source/jormungandr/requirements_dev.txt
     - name: Cache Sonar
       id: cache-sonar
@@ -60,12 +60,12 @@ jobs:
       run: cmake -DCMAKE_BUILD_TYPE=Profile -DSTRIP_SYMBOLS=ON source
     - name: Build
       run: build-wrapper-linux-x86/build-wrapper-linux-x86-64 --out-dir build-wrapper-output-dir make -j $(nproc)
-    - name: Tests python2
+    - name: Tests python3
       run: |
         export JORMUNGANDR_BROKER_URL='amqp://guest:guest@rabbitmq:5672//'
         export KRAKEN_RABBITMQ_HOST='rabbitmq'
         ctest --output-on-failure
-    - name: docker_test python2
+    - name: docker_test python3
       run: |
         pip install -r source/tyr/requirements_dev.txt
         pip install -r source/sql/requirements.txt
