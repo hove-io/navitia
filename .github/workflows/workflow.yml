@@ -86,6 +86,7 @@ jobs:
         export KRAKEN_RABBITMQ_HOST='rabbitmq'
         ctest --output-on-failure
         deactivate
+        rm -rf navitia_py3
     - name: docker_test python2
       working-directory: ./build
       run: |
@@ -105,7 +106,6 @@ jobs:
       working-directory: ./build
       run: |
         virtualenv -p ${{matrix.os.python_version}} navitia_py3
-        . navitia_py3/bin/activate
         . navitia_py3/bin/activate
         pip install -r ../source/tyr/requirements_dev.txt
         pip install -r ../source/sql/requirements.txt
