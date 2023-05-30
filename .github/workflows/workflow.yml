@@ -77,7 +77,7 @@ jobs:
       run: make -j $(nproc)
     - name: Tests python3
       working-directory: ./build
-      if: ${{ matrix.docker_image == 'navitia/debian11_dev'}}
+      if: ${{ matrix.os.docker_image == 'navitia/debian11_dev'}}
       run: |
         virtualenv -p ${{matrix.os.python_version}} navitia_py3
         . navitia_py3/bin/activate
