@@ -88,6 +88,8 @@ jobs:
     - name: docker_test python2
       working-directory: ./build
       run: |
+        pip install virtualenv==20.4.7 -U
+        virtualenv -p python2.7 navitia_py2
         . navitia_py2/bin/activate
         pip install -r ../source/tyr/requirements_dev.txt
         pip install -r ../source/sql/requirements.txt
