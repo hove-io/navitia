@@ -75,18 +75,9 @@ jobs:
     - name: run
       working-directory: ./build
       run: make -j $(nproc)
-    - name: Tests python2
-      working-directory: ./build
-      run: |
-        pip install virtualenv==20.4.7 -U
-        virtualenv -p python2.7 navitia_py2
-        . navitia_py2/bin/activate
-        pip install -r ../source/jormungandr/requirements_dev.txt
-        export JORMUNGANDR_BROKER_URL='amqp://guest:guest@rabbitmq:5672//'
-        export KRAKEN_RABBITMQ_HOST='rabbitmq'
-        ctest --output-on-failure
     - name: Tests python3
       working-directory: ./build
+      if: ${{ matrix.os.docker_image == 'navitia/debian11_dev'}}
       run: |
         virtualenv -p ${{matrix.os.python_version}} navitia_py3
         . navitia_py3/bin/activate
@@ -95,9 +86,12 @@ jobs:
         export KRAKEN_RABBITMQ_HOST='rabbitmq'
         ctest --output-on-failure
         deactivate
+        rm -rf navitia_py3
     - name: docker_test python2
       working-directory: ./build
       run: |
+        pip install virtualenv==20.4.7 -U
+        virtualenv -p python2.7 navitia_py2
         . navitia_py2/bin/activate
         pip install -r ../source/tyr/requirements_dev.txt
         pip install -r ../source/sql/requirements.txt
@@ -111,6 +105,7 @@ jobs:
     - name: docker_test python3
       working-directory: ./build
       run: |
+        virtualenv -p ${{matrix.os.python_version}} navitia_py3
         . navitia_py3/bin/activate
         pip install -r ../source/tyr/requirements_dev.txt
         pip install -r ../source/sql/requirements.txt
