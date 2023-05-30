@@ -57,7 +57,7 @@ DEFAULT_OUESTGO_FEED_PUBLISHER = {
 }
 
 
-def parse_timestamp(str_date, str_time, tz):
+def build_timestamp(str_date, str_time, tz):
     date = datetime.date.fromisoformat(str_date)
     time = datetime.time.fromisoformat(str_time)
     dt = datetime.datetime.combine(date, time)
@@ -114,10 +114,10 @@ class Ouestgo(AbstractRidesharingService):
         json_circulation_day = json_outward.get(circulation_day, {})
         if not json_circulation_day:
             return None
-        min_datetime = parse_timestamp(
+        min_datetime = build_timestamp(
             json_outward.get('mindate'), json_circulation_day.get('mintime'), timezone
         )
-        max_datetime = parse_timestamp(
+        max_datetime = build_timestamp(
             json_outward.get('maxdate'), json_circulation_day.get('maxtime'), timezone
         )
         return int((min_datetime + max_datetime) / 2)
