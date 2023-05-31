@@ -70,7 +70,7 @@ jobs:
         deactivate
     - name: docker_test python3
       run: |
-	. navitia_py3/bin/activate
+        . navitia_py3/bin/activate
         pip install -r source/tyr/requirements_dev.txt
         pip install -r source/sql/requirements.txt
         export NAVITIA_CHAOS_DUMP_PATH=$(echo $GITHUB_WORKSPACE/source/tests/chaos/chaos_loading.sql.gz | sed -e 's#__w#home/runner/work#')
