@@ -63,6 +63,7 @@ jobs:
       run: |
         virtualenv -p python3.9 navitia_py3
         . navitia_py3/bin/activate
+        pip install -r source/jormungandr/requirements_dev.txt
         export JORMUNGANDR_BROKER_URL='amqp://guest:guest@rabbitmq:5672//'
         export KRAKEN_RABBITMQ_HOST='rabbitmq'
         ctest --output-on-failure
