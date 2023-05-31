@@ -287,7 +287,8 @@ def get_language_parameter_handimap_func_language_invalid_test():
 
 
 def make_request_arguments_walking_details_handimap_func_invalid_test():
-    res = Handimap._make_request_arguments_walking_details(1.5, "en-EN")
+    request = {"walking_speed": 1.5}
+    res = Handimap._make_request_arguments_walking_details(request, "en-EN")
     assert res["costing"] == "walking"
     assert res["costing_options"]["walking"]["walking_speed"] == 5.0
     assert res["directions_options"]["language"] == "en-EN"
@@ -303,7 +304,8 @@ def make_request_arguments_direct_path_handimap_func_test():
     destination.embedded_type = type_pb2.POI
     destination.poi.coord.lon = 32.41
     destination.poi.coord.lat = 31.42
-    arguments_direct_path = Handimap._make_request_arguments_direct_path(origin, destination, 1.5, "en-EN")
+    request = {"walking_speed": 1.5}
+    arguments_direct_path = Handimap._make_request_arguments_direct_path(origin, destination, request, "en-EN")
     assert arguments_direct_path["costing"] == "walking"
     assert arguments_direct_path["directions_options"]["units"] == "kilometers"
     assert arguments_direct_path["directions_options"]["language"] == "en-EN"
@@ -312,6 +314,22 @@ def make_request_arguments_direct_path_handimap_func_test():
     assert arguments_direct_path["locations"][0]["lon"] == origin.poi.coord.lon
     assert arguments_direct_path["locations"][1]["lat"] == destination.poi.coord.lat
     assert arguments_direct_path["locations"][1]["lon"] == destination.poi.coord.lon
+
+    # Request with wheelchair or/and traveler_type in the request
+    request["traveler_type"] = "fast_walker"
+    arguments_direct_path = Handimap._make_request_arguments_direct_path(origin, destination, request, "en-EN")
+    assert arguments_direct_path["costing"] == "walking"
+    request["traveler_type"] = "wheelchair"
+    arguments_direct_path = Handimap._make_request_arguments_direct_path(origin, destination, request, "en-EN")
+    assert arguments_direct_path["costing"] == "wheelchair"
+
+    # parameter wheelchair has priority on parameter  traveler_type
+    request["wheelchair"] = False
+    arguments_direct_path = Handimap._make_request_arguments_direct_path(origin, destination, request, "en-EN")
+    assert arguments_direct_path["costing"] == "walking"
+    request["wheelchair"] = True
+    arguments_direct_path = Handimap._make_request_arguments_direct_path(origin, destination, request, "en-EN")
+    assert arguments_direct_path["costing"] == "wheelchair"
 
 
 def format_coord_handimap_func_test():
