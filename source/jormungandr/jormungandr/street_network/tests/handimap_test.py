@@ -307,6 +307,7 @@ def make_request_arguments_direct_path_handimap_func_test():
     request = {"walking_speed": 1.5}
     arguments_direct_path = Handimap._make_request_arguments_direct_path(origin, destination, request, "en-EN")
     assert arguments_direct_path["costing"] == "walking"
+    assert arguments_direct_path["costing_options"] == {'walking': {'walking_speed': 5.0}}
     assert arguments_direct_path["directions_options"]["units"] == "kilometers"
     assert arguments_direct_path["directions_options"]["language"] == "en-EN"
     assert len(arguments_direct_path["locations"]) == 2

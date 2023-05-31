@@ -135,9 +135,7 @@ class Handimap(AbstractStreetNetworkService):
     @staticmethod
     def _make_request_arguments_walking_details(request, language):
         walking_speed_km = mps_to_kmph(request["walking_speed"])
-        wheelchair = request.get("wheelchair", None)
-        if wheelchair is None:
-            wheelchair = request.get("traveler_type") == "wheelchair"
+        wheelchair = request.get("wheelchair", request.get("traveler_type") == "wheelchair")
         costing_value = "wheelchair" if wheelchair else "walking"
         costing_options = {
             "walking": {"walking_speed": walking_speed_km},
