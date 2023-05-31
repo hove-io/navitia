@@ -319,17 +319,21 @@ def make_request_arguments_direct_path_handimap_func_test():
     request["traveler_type"] = "fast_walker"
     arguments_direct_path = Handimap._make_request_arguments_direct_path(origin, destination, request, "en-EN")
     assert arguments_direct_path["costing"] == "walking"
+    assert arguments_direct_path["costing_options"] == {'walking': {'walking_speed': 5.0}}
     request["traveler_type"] = "wheelchair"
     arguments_direct_path = Handimap._make_request_arguments_direct_path(origin, destination, request, "en-EN")
     assert arguments_direct_path["costing"] == "wheelchair"
+    assert arguments_direct_path["costing_options"] == {'wheelchair': {'travel_speed': 5.0}}
 
     # parameter wheelchair has priority on parameter  traveler_type
     request["wheelchair"] = False
     arguments_direct_path = Handimap._make_request_arguments_direct_path(origin, destination, request, "en-EN")
     assert arguments_direct_path["costing"] == "walking"
+    assert arguments_direct_path["costing_options"] == {'walking': {'walking_speed': 5.0}}
     request["wheelchair"] = True
     arguments_direct_path = Handimap._make_request_arguments_direct_path(origin, destination, request, "en-EN")
     assert arguments_direct_path["costing"] == "wheelchair"
+    assert arguments_direct_path["costing_options"] == {'wheelchair': {'travel_speed': 5.0}}
 
 
 def format_coord_handimap_func_test():

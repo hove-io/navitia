@@ -139,9 +139,13 @@ class Handimap(AbstractStreetNetworkService):
         if wheelchair is None:
             wheelchair = request.get("traveler_type") == "wheelchair"
         costing_value = "wheelchair" if wheelchair else "walking"
+        costing_options = {
+            "walking": {"walking_speed": walking_speed_km},
+            "wheelchair": {"travel_speed": walking_speed_km},
+        }
         return {
             "costing": costing_value,
-            "costing_options": {"walking": {"walking_speed": walking_speed_km}},
+            "costing_options": {costing_value: costing_options.get(costing_value)},
             "directions_options": {"units": "kilometers", "language": language},
         }
 
