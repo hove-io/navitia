@@ -62,16 +62,21 @@ jobs:
       run: build-wrapper-linux-x86/build-wrapper-linux-x86-64 --out-dir build-wrapper-output-dir make -j $(nproc)
     - name: Tests python3
       run: |
+        virtualenv -p python3.9 navitia_py3
+        . navitia_py3/bin/activate
         export JORMUNGANDR_BROKER_URL='amqp://guest:guest@rabbitmq:5672//'
         export KRAKEN_RABBITMQ_HOST='rabbitmq'
         ctest --output-on-failure
+        deactivate
     - name: docker_test python3
       run: |
+	. navitia_py3/bin/activate
         pip install -r source/tyr/requirements_dev.txt
         pip install -r source/sql/requirements.txt
         export NAVITIA_CHAOS_DUMP_PATH=$(echo $GITHUB_WORKSPACE/source/tests/chaos/chaos_loading.sql.gz | sed -e 's#__w#home/runner/work#')
         echo $NAVITIA_CHAOS_DUMP_PATH
         make docker_test
+        deactivate
       env:
         NAVITIA_DOCKER_NETWORK: ${{ job.container.network }}
         TYR_CELERY_BROKER_URL: 'amqp://guest:guest@rabbitmq:5672//'
