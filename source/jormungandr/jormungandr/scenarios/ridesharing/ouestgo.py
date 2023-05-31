@@ -31,7 +31,8 @@ from __future__ import absolute_import, print_function, unicode_literals, divisi
 
 import logging
 import pybreaker
-
+import datetime
+import pytz
 from jormungandr import app
 import jormungandr.scenarios.ridesharing.ridesharing_journey as rsj
 from jormungandr.scenarios.ridesharing.ridesharing_service import (
@@ -39,7 +40,13 @@ from jormungandr.scenarios.ridesharing.ridesharing_service import (
     RsFeedPublisher,
     RidesharingServiceError,
 )
-from jormungandr.utils import get_weekday, make_timestamp_from_str, timestamp_to_date_str, ONE_DAY, DATE_FORMAT
+from jormungandr.utils import (
+    get_weekday,
+    timestamp_to_date_str,
+    DATE_FORMAT,
+    local_str_date_to_utc,
+    date_to_timestamp,
+)
 from jormungandr.timezone import get_timezone_or_paris
 
 DEFAULT_OUESTGO_FEED_PUBLISHER = {
@@ -48,6 +55,13 @@ DEFAULT_OUESTGO_FEED_PUBLISHER = {
     'license': 'Private',
     'url': 'https://www.ouestgo.fr/',
 }
+
+
+def build_timestamp(str_date, str_time, tz):
+    date = datetime.date.fromisoformat(str_date)
+    time = datetime.time.fromisoformat(str_time)
+    dt = datetime.datetime.combine(date, time)
+    return date_to_timestamp(tz.normalize(tz.localize(dt)).astimezone(pytz.utc))
 
 
 class Ouestgo(AbstractRidesharingService):
@@ -96,32 +110,37 @@ class Ouestgo(AbstractRidesharingService):
             'network': self.network,
         }
 
+    def get_mean_pickup_datetime(self, json_outward, circulation_day, timezone):
+        json_circulation_day = json_outward.get(circulation_day, {})
+        if not json_circulation_day:
+            return None
+        min_datetime = build_timestamp(
+            json_outward.get('mindate'), json_circulation_day.get('mintime'), timezone
+        )
+        max_datetime = build_timestamp(
+            json_outward.get('maxdate'), json_circulation_day.get('maxtime'), timezone
+        )
+        return int((min_datetime + max_datetime) / 2)
+
     def _make_response(self, raw_json, request_datetime, from_coord, to_coord):
         if not raw_json:
             return []
-
         ridesharing_journeys = []
+        circulation_day = get_weekday(request_datetime)
+        timezone = get_timezone_or_paris()
         for offer in raw_json:
-            # Verify that the ride-sharing serves the requested day
-            # min_date format: "2022-11-18"
-            min_date = offer.get('journeys', {}).get('outward', {}).get('mindate')
-            # Format datetime value properly to transform into timestamp
-            min_datetime_str = '{}T{}Z'.format(min_date.replace('-', ''), '020000')
-            min_datetime = make_timestamp_from_str(min_datetime_str)
-            circulation_day = get_weekday(min_datetime)
-            if not circulation_day:
+            json_journeys = offer.get('journeys', {})
+            pickup_datetime = self.get_mean_pickup_datetime(
+                json_journeys.get('outward', {}), circulation_day, timezone
+            )
+            if not pickup_datetime:
                 continue
-
-            # min_time format: 09:50:00 probably in utc ?
-            min_time = offer.get('journeys', {}).get('outward', {}).get(circulation_day, {}).get('mintime')
-            pickup_datetime_str = '{}T{}Z'.format(min_date.replace('-', ''), min_time.replace(':', ''))
-            pickup_datetime = make_timestamp_from_str(pickup_datetime_str)
             if pickup_datetime > request_datetime:
                 res = rsj.RidesharingJourney()
                 res.metadata = self.journey_metadata
-                res.distance = offer.get('journeys', {}).get('distance')
-                res.ridesharing_ad = offer.get('journeys', {}).get('url')
-                res.duration = offer.get('journeys', {}).get('duration')
+                res.distance = json_journeys.get('distance')
+                res.ridesharing_ad = json_journeys.get('url')
+                res.duration = json_journeys.get('duration')
 
                 # ride-sharing pick up point is the same as departure
                 lat, lon = from_coord.split(',')
@@ -138,10 +157,11 @@ class Ouestgo(AbstractRidesharingService):
                 res.dropoff_dest_duration = 0
                 res.shape = None
 
-                res.price = float(offer.get('journeys', {}).get('cost', {}).get('variable')) * 100.0
+                res.price = float(json_journeys.get('cost', {}).get('variable')) * 100.0
                 res.currency = "centime"
 
-                res.available_seats = offer.get('journeys', {}).get('driver', {}).get('seats')
+                json_driver = json_journeys.get('driver', {})
+                res.available_seats = json_driver.get('seats')
                 res.total_seats = None
 
                 res.pickup_date_time = pickup_datetime
@@ -150,15 +170,11 @@ class Ouestgo(AbstractRidesharingService):
                 res.arrival_date_time = res.dropoff_date_time + res.dropoff_dest_duration
 
                 gender_map = {'male': rsj.Gender.MALE, 'female': rsj.Gender.FEMALE}
-                driver_gender = offer.get('journeys', {}).get('driver', {}).get('gender')
-                driver_alias = offer.get('journeys', {}).get('driver', {}).get('alias')
-                driver_grade = None
-                driver_image = offer.get('journeys', {}).get('driver', {}).get('image')
                 res.driver = rsj.Individual(
-                    alias=driver_alias,
-                    gender=gender_map.get(driver_gender, rsj.Gender.UNKNOWN),
-                    image=driver_image,
-                    rate=driver_grade,
+                    alias=json_driver.get('alias'),
+                    gender=gender_map.get(json_driver.get('gender'), rsj.Gender.UNKNOWN),
+                    image=json_driver.get('image'),
+                    rate=None,
                     rate_count=None,
                 )
 
@@ -192,7 +208,7 @@ class Ouestgo(AbstractRidesharingService):
                 period_extremity.datetime, timezone, _format=DATE_FORMAT
             ),
             'p[outward][maxdate]': timestamp_to_date_str(
-                period_extremity.datetime + ONE_DAY, timezone, _format=DATE_FORMAT
+                period_extremity.datetime, timezone, _format=DATE_FORMAT
             ),
         }
 

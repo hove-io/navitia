@@ -39,6 +39,7 @@ from jormungandr.scenarios.ridesharing.ridesharing_service import RsFeedPublishe
 import mock
 from jormungandr.tests import utils_test
 from jormungandr import utils
+import pytz
 import json
 import re  # https://stackoverflow.com/a/9312242/1614576
 import requests_mock
@@ -100,8 +101,8 @@ fake_response = """
             "real_time": null,
             "stopped": null,
             "days": {
-                "monday": 0,
-                "tuesday": 1,
+                "monday": 1,
+                "tuesday": 0,
                 "wednesday": 0,
                 "thursday": 0,
                 "friday": 0,
@@ -111,11 +112,11 @@ fake_response = """
             "outward": {
                 "mindate": "2022-11-22",
                 "maxdate": "2022-11-22",
-                "monday": null,
-                "tuesday": {
+                "monday": {
                     "mintime": "08:45:00",
                     "maxtime": "09:15:00"
                 },
+                "tuesday": null,
                 "wednesday": null,
                 "thursday": null,
                 "friday": null,
@@ -253,3 +254,80 @@ def test_request_journeys_should_raise_on_non_200():
         exception_params = e.value.get_params().values()
         assert 401 in exception_params
         assert '{this is the http response}' in exception_params
+
+
+def ouestgo_status_test():
+    with mock.patch('requests.get', mock_get):
+
+        ouestgo = Ouestgo(
+            service_url='dummyUrl',
+            api_key='dummyApiKey',
+            network='dummyNetwork',
+            feed_publisher=DUMMY_OUESTGO_FEED_PUBLISHER,
+        )
+        resp = ouestgo.status()
+        assert resp["id"] == ouestgo.system_id
+        assert resp["network"] == ouestgo.network
+
+
+def get_mean_pickup_datetime_empty_json_outward_test():
+    ouestgo = Ouestgo(
+        service_url='dummyUrl',
+        api_key='dummyApiKey',
+        network='dummyNetwork',
+        feed_publisher=DUMMY_OUESTGO_FEED_PUBLISHER,
+    )
+    mean_pickup_datetime = ouestgo.get_mean_pickup_datetime(
+        json_outward={}, circulation_day="wednesday", timezone="toto"
+    )
+    assert not mean_pickup_datetime
+
+
+def get_mean_pickup_datetime_test():
+    ouestgo = Ouestgo(
+        service_url='dummyUrl',
+        api_key='dummyApiKey',
+        network='dummyNetwork',
+        feed_publisher=DUMMY_OUESTGO_FEED_PUBLISHER,
+    )
+    json_outward = {
+        "mindate": "2022-11-22",
+        "maxdate": "2022-11-22",
+        "monday": {"mintime": "08:45:00", "maxtime": "09:15:00"},
+        "tuesday": None,
+        "wednesday": None,
+        "thursday": None,
+        "friday": None,
+        "saturday": None,
+        "sunday": None,
+    }
+
+    mean_pickup_datetime = ouestgo.get_mean_pickup_datetime(
+        json_outward=json_outward, circulation_day="monday", timezone=pytz.timezone("Europe/Paris")
+    )
+
+    assert utils.dt_to_str(utils.navitia_utcfromtimestamp(mean_pickup_datetime)) == "20221122T080000"
+
+
+def make_response_empty_raw_json_test():
+    ouestgo = Ouestgo(
+        service_url='dummyUrl',
+        api_key='dummyApiKey',
+        network='dummyNetwork',
+        feed_publisher=DUMMY_OUESTGO_FEED_PUBLISHER,
+    )
+    resp = ouestgo._make_response([], None, None, None)
+    assert not resp
+
+
+def make_response_pikup_datetime_invalid_test():
+    ouestgo = Ouestgo(
+        service_url='dummyUrl',
+        api_key='dummyApiKey',
+        network='dummyNetwork',
+        feed_publisher=DUMMY_OUESTGO_FEED_PUBLISHER,
+    )
+    # Thursday 25 May 2023 12:00:00
+    request_datetime = 1685016000
+    resp = ouestgo._make_response([{"toto": "tata"}], request_datetime, None, None)
+    assert not resp
