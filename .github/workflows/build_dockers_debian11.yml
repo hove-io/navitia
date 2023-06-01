@@ -11,105 +11,6 @@ env:
   navitia_components: 'jormungandr tyr-web'
 
 jobs:
-  build:
-
-    runs-on: ubuntu-latest
-
-    steps:
-    - name: Free up space
-      run: |
-        sudo rm -rf /usr/share/dotnet/*
-        sudo rm -rf /usr/local/lib/android/*
-        echo "Free space:"
-        df -h
-
-    - name: Install dependencies
-      run: |
-        sudo apt update && sudo apt install -y --force-yes zip httpie
-
-    - name: Generate github private access token
-      id: ci-core-app-token
-      uses: getsentry/action-github-app-token@v2.0.0
-      with:
-        app_id: ${{ secrets.CI_CORE_APP_ID }}
-        private_key: ${{ secrets.CI_CORE_APP_PEM }}
-
-    - uses: actions/checkout@v3
-      with:
-        submodules: recursive
-        token: ${{ steps.ci-core-app-token.outputs.token }}
-        # we need entire history for tags
-        fetch-depth: 0
-
-    - name: Restore ccache
-      uses: hendrikmuhs/ccache-action@v1.2
-      with:
-        key: build_dockers
-        max-size: 2000M
-
-    # see https://docs.github.com/en/actions/using-workflows/workflow-commands-for-github-actions#setting-an-environment-variable
-    - name: Choose dev tag
-      if: github.event_name == 'push' && github.ref == 'refs/heads/dev'
-      run: |
-        echo "building version dev"
-        echo "navitia_tag=${{env.debian_version}}_dev" >> $GITHUB_ENV
-        echo "aws_branch=dev" >> $GITHUB_ENV
-
-
-    - name: Choose release tag
-      if: startsWith(github.ref, 'refs/tags/')
-      run: |
-        version=$(git describe --tags)
-        echo "building version $version"
-        echo "navitia_tag=${{env.debian_version}}_$version" >> $GITHUB_ENV
-        echo "aws_branch=release" >> $GITHUB_ENV
-
-    - name: Create builder docker
-      run: |
-        docker build -f docker/${{env.debian_version}}/Dockerfile-builder -t navitia/builder .
-
-    - name: Build navitia
-      run: |
-        docker run -v `pwd`:/navitia/navitia/  navitia/builder
-
-    - name: Create navitia images
-      run: |
-        for component in ${{env.navitia_components}}; do
-            echo "*********  Building $component ***************"
-            docker build -t navitia/$component:${{env.navitia_tag}} -f  docker/${{env.debian_version}}/Dockerfile-${component} .
-        done
-
-
-    - name: Login dockerhub
-      run: |
-        docker login -u ${{secrets.docker_user}} -p ${{secrets.docker_password}}
-
-
-
-    - name: Push navitia images
-      run: |
-        for component in ${{env.navitia_components}}; do
-            echo "*********  Pushing $component ***************"
-            docker push navitia/$component:${{env.navitia_tag}}
-        done
-
-    - name: Run artemis on push to dev
-      if: github.event_name == 'push' && github.ref == 'refs/heads/dev'
-      uses: peter-evans/repository-dispatch@v2
-      with:
-        token: ${{ steps.ci-core-app-token.outputs.token }}
-        repository: hove-io/artemis
-        event-type: run_artemis_ng_debian11
-
-    - name: failure notification
-      if: failure()
-      run: |
-          echo '{"text":":warning: Github Actions: build_dockers for ${{env.navitia_tag}} failed !"}' | http --json POST ${{secrets.SLACK_NAVITIA_TEAM_URL}}
-
-    - name: success notification on core team
-      if: success()
-      run: |
-          echo '{"text":":octopus: Github Actions: build_dockers succeeded. New navitia ${{env.navitia_tag}} images available."}' | http --json POST ${{secrets.SLACK_NAVITIA_TEAM_URL}}
 
   build_navitia_arm64:
     runs-on: ubuntu-latest
@@ -153,7 +54,7 @@ jobs:
       - name: Choose dev tag
         run: |
           echo "building version dev"
-          echo "navitia_tag=${{env.debian_version}}_dev" >> $GITHUB_ENV
+          echo "navitia_tag=${{env.debian_version}}" >> $GITHUB_ENV
           echo "aws_branch=dev" >> $GITHUB_ENV
 
       - name: Choose release tag
