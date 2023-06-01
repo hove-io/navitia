@@ -9,7 +9,6 @@ on:
   pull_request:
   workflow_run:
     workflows: ["CI"]
-    branches: [remove_jormun_python27]
     types:
       - completed
 env:

@@ -8,7 +8,6 @@ on:
       - '*'
 env:
   debian_version: debian11
-  navitia_components: 'jormungandr tyr-web'
 
 jobs:
 
