@@ -1,4 +1,4 @@
-name: Build Navitia Dockers debian11
+name: Build Navitia Dockers debian11 (ARM64)
 
 on:
   push:
@@ -53,7 +53,7 @@ jobs:
       - name: Choose dev tag
         run: |
           echo "building version dev"
-          echo "navitia_tag=${{env.debian_version}}" >> $GITHUB_ENV
+          echo "navitia_tag=dev" >> $GITHUB_ENV
           echo "aws_branch=dev" >> $GITHUB_ENV
 
       - name: Choose release tag
@@ -61,7 +61,7 @@ jobs:
         run: |
           version=$(git describe --tags)
           echo "building version $version"
-          echo "navitia_tag=${{env.debian_version}}_$version" >> $GITHUB_ENV
+          echo "navitia_tag=$version" >> $GITHUB_ENV
           echo "aws_branch=release" >> $GITHUB_ENV
 
       # https://github.com/marketplace/actions/build-and-push-docker-images
