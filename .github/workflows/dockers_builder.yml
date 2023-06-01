@@ -136,8 +136,7 @@ jobs:
 
       - name: Build packages in master docker
         # Will build navitia-*.deb packages in current folder
-        run: |
-          docker run -v `pwd`:/build/navitia/  navitia/builder
+        run: docker run -v `pwd`:/build/navitia/  navitia/builder
 
       - name: Create dockers images and push them
         run: |
