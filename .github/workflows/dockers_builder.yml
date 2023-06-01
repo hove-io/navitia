@@ -135,8 +135,9 @@ jobs:
           docker build -f docker/${{env.jessie_version}}/Dockerfile-builder -t navitia/builder .
 
       - name: Build packages in master docker
-        # Will build navitia-*.deb packages in current folder
-        run: docker run -v `pwd`:/build/navitia/  navitia/builder
+#         Will build navitia-*.deb packages in current folder
+        run: |
+          docker run -v `pwd`:/build/navitia/  navitia/builder
 
       - name: Create dockers images and push them
         run: |
