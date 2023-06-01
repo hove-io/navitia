@@ -69,21 +69,7 @@ Depends: python-psycopg2, python-protobuf
 Section: devel
 Priority: optional
 Description: navitia-common
-    python module shared within module of navitia, mostlu navitia-jormungandr and navitia-tyr
-
-Package: navitia-jormungandr
-Build-Depends:
-    dh-python
-    python
-    python-all
-X-Python-Version: >=2.7
-Architecture: all
-Maintainer: Vincent Lara <vincent.lara@canaltp.fr>
-Depends: python-protobuf, python-psycopg2, navitia-common (= ${binary:Version}), ${python:Depends}
-Section: devel
-Priority: optional
-Description: Navitia-Jormungandr
-
+    python module shared within module of navitia, mostlu and navitia-tyr
 
 Package: navitia-kraken-dbg
 Architecture: amd64

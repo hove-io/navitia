@@ -10,7 +10,6 @@ override_dh_auto_configure:
 override_dh_auto_build:
 	dh_auto_build -- -j4
 	cd source/tyr && python2.7 setup.py build
-	cd source/jormungandr && python2.7 setup.py build
 	cd source/navitiacommon && python2.7 setup.py build
 	cd source/monitor && python2.7 setup.py build
 
@@ -18,13 +17,11 @@ override_dh_auto_install:
 	dh_auto_install
 	cd source/tyr && python2.7 setup.py install --root=$(CURDIR)/debian/tmp --install-layout=deb
 	cd source/navitiacommon && python2.7 setup.py install --root=$(CURDIR)/debian/tmp --install-layout=deb
-	cd source/jormungandr && python2.7 setup.py install --root=$(CURDIR)/debian/tmp --install-layout=deb --force
 	cd source/monitor && python2.7 setup.py install --root=$(CURDIR)/debian/tmp --install-layout=deb
 
 override_dh_auto_clean:
 	dh_auto_clean
 	rm -rf source/tyr/build
-	rm -rf source/jormungandr/build
 	rm -rf source/navitiacommon/build
 
 override_dh_strip:
