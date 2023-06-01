@@ -69,7 +69,7 @@ Depends: python-psycopg2, python-protobuf
 Section: devel
 Priority: optional
 Description: navitia-common
-    python module shared within module of navitia, mostlu and navitia-tyr
+    python module shared within module of navitia, mostly navitia-tyr
 
 Package: navitia-kraken-dbg
 Architecture: amd64
