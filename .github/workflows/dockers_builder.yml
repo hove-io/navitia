@@ -1,16 +1,12 @@
 name: Build Navitia Dockers
 
 on:
-#  push:
-#    branches:
-#      - dev
-#    tags:
-#      - '*'
-  pull_request:
-  workflow_run:
-    workflows: ["CI"]
-    types:
-      - completed
+  push:
+    branches:
+      - dev
+    tags:
+      - '*'
+
 env:
   jessie_version: debian8
   jessie_navitia_components: 'kraken tyr-beat tyr-worker tyr-web instances-configurator mock-kraken eitri'
@@ -249,22 +245,22 @@ jobs:
         with:
           app_id: ${{ secrets.GA_OS_WORKFLOW_TRIGGER_APP_ID }}
           private_key: ${{ secrets.GA_OS_WORKFLOW_TRIGGER_APP_PEM }}
-#
-#      - name: Aws Dispatch Backend
-#        uses: peter-evans/repository-dispatch@v2
-#        with:
-#          token: ${{ steps.ci-core-app-token.outputs.token }}
-#          repository: hove-io/core-backend-aws-assets
-#          event-type: build-trigger
-#          client-payload: '{"branch": "${{ needs.common_variables.outputs.AWS_BRANCH }}", "tag": "${{ needs.common_variables.outputs.NAVITIA_TAG }}"}'
-#
-#      - name: Aws Dispatch Frontend
-#        uses: peter-evans/repository-dispatch@v2
-#        with:
-#          token:${{ steps.ci-core-app-token.outputs.token }}
-#          repository: hove-io/core-front-aws-assets
-#          event-type: build-trigger
-#          client-payload: '{"branch": "${{ needs.common_variables.outputs.AWS_BRANCH }}", "tag": "${{ needs.common_variables.outputs.NAVITIA_TAG  }}"}'
+
+      - name: Aws Dispatch Backend
+        uses: peter-evans/repository-dispatch@v2
+        with:
+          token: ${{ steps.ci-core-app-token.outputs.token }}
+          repository: hove-io/core-backend-aws-assets
+          event-type: build-trigger
+          client-payload: '{"branch": "${{ needs.common_variables.outputs.AWS_BRANCH }}", "tag": "${{ needs.common_variables.outputs.NAVITIA_TAG }}"}'
+
+      - name: Aws Dispatch Frontend
+        uses: peter-evans/repository-dispatch@v2
+        with:
+          token: ${{ steps.ci-core-app-token.outputs.token }}
+          repository: hove-io/core-front-aws-assets
+          event-type: build-trigger
+          client-payload: '{"branch": "${{ needs.common_variables.outputs.AWS_BRANCH }}", "tag": "${{ needs.common_variables.outputs.NAVITIA_TAG  }}"}'
 
       - name: failure notification
         if: failure()
@@ -286,13 +282,13 @@ jobs:
           app_id: ${{ secrets.CI_CORE_APP_ID }}
           private_key: ${{ secrets.CI_CORE_APP_PEM }}
 
-#      - name: Run artemis on push to dev
-#        if: github.event_name == 'push' && github.ref == 'refs/heads/dev'
-#        uses: peter-evans/repository-dispatch@v2
-#        with:
-#          token: ${{ steps.ci-core-app-token.outputs.token }}
-#          repository: hove-io/artemis
-#          event-type: run_artemis_ng
+      - name: Run artemis on push to dev
+        if: github.event_name == 'push' && github.ref == 'refs/heads/dev'
+        uses: peter-evans/repository-dispatch@v2
+        with:
+          token: ${{ steps.ci-core-app-token.outputs.token }}
+          repository: hove-io/artemis
+          event-type: run_artemis_ng
 
       - name: failure notification
         if: failure()
