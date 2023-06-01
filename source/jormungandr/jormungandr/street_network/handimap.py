@@ -133,11 +133,17 @@ class Handimap(AbstractStreetNetworkService):
         return self.language if not language else self._get_language(language.lower())
 
     @staticmethod
-    def _make_request_arguments_walking_details(walking_speed, language):
-        walking_speed_km = mps_to_kmph(walking_speed)
+    def _make_request_arguments_walking_details(request, language):
+        walking_speed_km = mps_to_kmph(request["walking_speed"])
+        wheelchair = request.get("wheelchair", request.get("traveler_type") == "wheelchair")
+        costing_value = "wheelchair" if wheelchair else "walking"
+        costing_options = {
+            "walking": {"walking_speed": walking_speed_km},
+            "wheelchair": {"travel_speed": walking_speed_km},
+        }
         return {
-            "costing": "walking",
-            "costing_options": {"walking": {"walking_speed": walking_speed_km}},
+            "costing": costing_value,
+            "costing_options": {costing_value: costing_options.get(costing_value)},
             "directions_options": {"units": "kilometers", "language": language},
         }
 
@@ -147,8 +153,8 @@ class Handimap(AbstractStreetNetworkService):
         return {"lat": coord.lat, "lon": coord.lon}
 
     @classmethod
-    def _make_request_arguments_direct_path(cls, origin, destination, walking_speed, language):
-        walking_details = cls._make_request_arguments_walking_details(walking_speed, language)
+    def _make_request_arguments_direct_path(cls, origin, destination, request, language):
+        walking_details = cls._make_request_arguments_walking_details(request, language)
         params = {
             'locations': [
                 cls._format_coord(origin),
@@ -158,9 +164,8 @@ class Handimap(AbstractStreetNetworkService):
         params.update(walking_details)
         return params
 
-    def matrix_payload(self, origins, destinations, walking_speed, language):
-
-        walking_details = self._make_request_arguments_walking_details(walking_speed, language)
+    def matrix_payload(self, origins, destinations, request, language):
+        walking_details = self._make_request_arguments_walking_details(request, language)
 
         params = {
             "sources": [self._format_coord(o) for o in origins],
@@ -170,8 +175,8 @@ class Handimap(AbstractStreetNetworkService):
 
         return params
 
-    def post_matrix_request(self, origins, destinations, walking_speed, language):
-        post_data = self.matrix_payload(origins, destinations, walking_speed, language)
+    def post_matrix_request(self, origins, destinations, request, language):
+        post_data = self.matrix_payload(origins, destinations, request, language)
         response = self._call_handimap(
             'sources_to_targets',
             post_data,
@@ -220,9 +225,8 @@ class Handimap(AbstractStreetNetworkService):
     def _get_street_network_routing_matrix(
         self, instance, origins, destinations, street_network_mode, max_duration, request, request_id, **kwargs
     ):
-        walking_speed = request["walking_speed"]
         language = self.get_language_parameter(request)
-        resp_json = self.post_matrix_request(origins, destinations, walking_speed, language)
+        resp_json = self.post_matrix_request(origins, destinations, request, language)
 
         self.check_content_response(resp_json, origins, destinations)
         return self._create_matrix_response(resp_json, origins, destinations, max_duration)
@@ -239,11 +243,10 @@ class Handimap(AbstractStreetNetworkService):
         request_id,
     ):
         self.check_handimap_modes([mode])
-        walking_speed = request["walking_speed"]
         language = self.get_language_parameter(request)
 
         params = self._make_request_arguments_direct_path(
-            pt_object_origin, pt_object_destination, walking_speed, language
+            pt_object_origin, pt_object_destination, request, language
         )
 
         response = self._call_handimap('route', params)
