@@ -154,11 +154,11 @@ jobs:
 
           for component in ${{env.jessie_navitia_components}}; do
               echo "*********  Pushing $component ***************"
-#              docker push navitia/$component:${{ needs.common_variables.outputs.NAVITIA_TAG }}
-#
-#              if [[ "${{ needs.common_variables.outputs.AWS_BRANCH }}" = "release" ]]; then
-#                  docker push navitia/$component:latest
-#              fi
+              # docker push navitia/$component:${{ needs.common_variables.outputs.NAVITIA_TAG }}
+
+              # if [[ "${{ needs.common_variables.outputs.AWS_BRANCH }}" = "release" ]]; then
+              #     docker push navitia/$component:latest
+              # fi
           done
       - name: failure notification
         if: failure()
@@ -216,7 +216,7 @@ jobs:
         run: |
           for component in ${{env.bullseye_navitia_components}}; do
               echo "*********  Pushing $component ***************"
-#              docker push navitia/$component:${{ needs.common_variables.outputs.NAVITIA_TAG }}
+              # docker push navitia/$component:${{ needs.common_variables.outputs.NAVITIA_TAG }}
           done
 
       - name: failure notification
