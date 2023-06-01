@@ -26,6 +26,10 @@ jobs:
       NAVITIA_TAG: ${{ steps.choose_navitia_tag.outputs.navitia_tag }}
       AWS_BRANCH: ${{ steps.choose_navitia_tag.outputs.aws_branch }}
     steps:
+      - name: Install dependencies
+        run: |
+          sudo apt update && sudo apt install -y --force-yes httpie
+
       - name: Checkout navitia
         id: checkout_navitia
         uses: actions/checkout@v3
@@ -141,7 +145,7 @@ jobs:
       - name: Create dockers images and push them
         run: |
           for component in ${{env.jessie_navitia_components}}; do
-              echo "*********  Building $component ***************"
+              echo "*********  Building $component Tag: ${{ needs.common_variables.outputs.NAVITIA_TAG }} ***************"
               docker build -t navitia/$component:${{ needs.common_variables.outputs.NAVITIA_TAG }} -f  docker/${{env.jessie_version}}/Dockerfile-${component} .
 
               # add latest tag if we are making a release
@@ -153,7 +157,7 @@ jobs:
           docker login -u ${{secrets.docker_user}} -p ${{secrets.docker_password}}
 
           for component in ${{env.jessie_navitia_components}}; do
-              echo "*********  Pushing $component ***************"
+              echo "*********  Pushing $component Tag: ${{ needs.common_variables.outputs.NAVITIA_TAG }} ***************"
               # docker push navitia/$component:${{ needs.common_variables.outputs.NAVITIA_TAG }}
 
               # if [[ "${{ needs.common_variables.outputs.AWS_BRANCH }}" = "release" ]]; then
@@ -180,7 +184,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          sudo apt update && sudo apt install -y --force-yes zip httpie
+          sudo apt update && sudo apt install -y --force-yes httpie
 
       - name: Checkout
         uses: actions/checkout@v3
@@ -205,7 +209,7 @@ jobs:
       - name: Create navitia images
         run: |
           for component in ${{env.bullseye_navitia_components}}; do
-              echo "*********  Building $component ***************"
+              echo "*********  Building $component Tag: ${{ needs.common_variables.outputs.NAVITIA_TAG }} ***************"
               docker build -t navitia/$component:${{ needs.common_variables.outputs.NAVITIA_TAG }} -f  docker/${{env.bullseye_version}}/Dockerfile-${component} .
           done
 
@@ -216,7 +220,7 @@ jobs:
       - name: Push navitia images
         run: |
           for component in ${{env.bullseye_navitia_components}}; do
-              echo "*********  Pushing $component ***************"
+              echo "*********  Pushing $component Tag: ${{ needs.common_variables.outputs.NAVITIA_TAG }} ***************"
               # docker push navitia/$component:${{ needs.common_variables.outputs.NAVITIA_TAG }}
           done
 
@@ -230,6 +234,9 @@ jobs:
     needs: [common_variables, jessie_builder, bullseye_builder]
     name: Aws Dispatch
     steps:
+      - name: Install dependencies
+        run: |
+          sudo apt update && sudo apt install -y --force-yes httpie
       - name: Generate github private access token
         id: ci-core-app-token
         uses: getsentry/action-github-app-token@v2.0.0
@@ -270,6 +277,9 @@ jobs:
     needs: [common_variables, jessie_builder, bullseye_builder]
     name: Run artemis Dispatch
     steps:
+      - name: Install dependencies
+        run: |
+          sudo apt update && sudo apt install -y --force-yes httpie
       - name: Generate github private access token
         id: ci-core-app-token
         uses: getsentry/action-github-app-token@v2.0.0
