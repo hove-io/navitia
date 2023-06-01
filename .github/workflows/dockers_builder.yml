@@ -25,7 +25,6 @@ jobs:
     outputs:
       NAVITIA_TAG: ${{ steps.choose_navitia_tag.outputs.navitia_tag }}
       AWS_BRANCH: ${{ steps.choose_navitia_tag.outputs.aws_branch }}
-      APP_TOKEN: ${{ steps.ci-core-app-token.outputs.token }}
     steps:
       - name: Checkout navitia
         id: checkout_navitia
@@ -46,13 +45,6 @@ jobs:
             echo "aws_branch=release" >> $GITHUB_OUTPUT
           fi
 
-      - name: Generate github private access token
-        id: ci-core-app-token
-        uses: getsentry/action-github-app-token@v2.0.0
-        with:
-          app_id: ${{ secrets.CI_CORE_APP_ID }}
-          private_key: ${{ secrets.CI_CORE_APP_PEM }}
-
       - name: failure notification
         if: failure()
         run: |
@@ -61,6 +53,7 @@ jobs:
   jessie_builder:
 
     runs-on: ubuntu-latest
+    name: Jessie builder
     needs: common_variables
     steps:
       - name: Free up space
@@ -80,12 +73,19 @@ jobs:
           submodules : recursive
           fetch-depth: 0
 
+      - name: Generate github private access token
+        id: ci-core-app-token
+        uses: getsentry/action-github-app-token@v2.0.0
+        with:
+          app_id: ${{ secrets.CI_CORE_APP_ID }}
+          private_key: ${{ secrets.CI_CORE_APP_PEM }}
+
       - name: Checkout core_team_ci_tools
         uses: actions/checkout@v3
         with:
           repository : 'hove-io/core_team_ci_tools'
           path: core_team_ci_tools
-          token: ${{ needs.common_variables.outputs.APP_TOKEN }}
+          token: ${{ steps.ci-core-app-token.outputs.token }}
 
       - name: Setup core_team_ci_tools python environment
         run: |
@@ -103,7 +103,7 @@ jobs:
           python core_team_ci_tools/github_artifacts/github_artifacts.py \
               -o hove-io \
               -r mimirsbrunn \
-              -t ${{ needs.common_variables.outputs.APP_TOKEN }} \
+              -t ${{ steps.ci-core-app-token.outputs.token }} \
               -w $mimirsbrunn_workflow \
               -a $mimirsbrunn_package \
               --output-dir .
@@ -116,7 +116,7 @@ jobs:
           python core_team_ci_tools/github_artifacts/github_artifacts.py \
               -o hove-io \
               -r cosmogony2cities \
-              -t ${{ needs.common_variables.outputs.APP_TOKEN }} \
+              -t ${{ steps.ci-core-app-token.outputs.token }} \
               -w build_package.yml \
               -a $cosmogony2cities_package \
               --output-dir .
@@ -168,6 +168,7 @@ jobs:
 
   bullseye_builder:
     runs-on: ubuntu-latest
+    name: Bullseye builder
     needs: common_variables
     steps:
       - name: Free up space
@@ -229,6 +230,13 @@ jobs:
     needs: [common_variables, jessie_builder, bullseye_builder]
     name: Aws Dispatch
     steps:
+      - name: Generate github private access token
+        id: ci-core-app-token
+        uses: getsentry/action-github-app-token@v2.0.0
+        with:
+          app_id: ${{ secrets.CI_CORE_APP_ID }}
+          private_key: ${{ secrets.CI_CORE_APP_PEM }}
+
       - name: Generate token for aws images
         id: app-token
         uses: getsentry/action-github-app-token@v2.0.0
@@ -239,7 +247,7 @@ jobs:
 #      - name: Aws Dispatch Backend
 #        uses: peter-evans/repository-dispatch@v2
 #        with:
-#          token: ${{ needs.common_variables.outputs.APP_TOKEN }}
+#          token: ${{ steps.ci-core-app-token.outputs.token }}
 #          repository: hove-io/core-backend-aws-assets
 #          event-type: build-trigger
 #          client-payload: '{"branch": "${{ needs.common_variables.outputs.AWS_BRANCH }}", "tag": "${{ needs.common_variables.outputs.NAVITIA_TAG }}"}'
@@ -247,7 +255,7 @@ jobs:
 #      - name: Aws Dispatch Frontend
 #        uses: peter-evans/repository-dispatch@v2
 #        with:
-#          token:${{ needs.common_variables.outputs.APP_TOKEN }}
+#          token:${{ steps.ci-core-app-token.outputs.token }}
 #          repository: hove-io/core-front-aws-assets
 #          event-type: build-trigger
 #          client-payload: '{"branch": "${{ needs.common_variables.outputs.AWS_BRANCH }}", "tag": "${{ needs.common_variables.outputs.NAVITIA_TAG  }}"}'
@@ -262,12 +270,18 @@ jobs:
     needs: [common_variables, jessie_builder, bullseye_builder]
     name: Run artemis Dispatch
     steps:
+      - name: Generate github private access token
+        id: ci-core-app-token
+        uses: getsentry/action-github-app-token@v2.0.0
+        with:
+          app_id: ${{ secrets.CI_CORE_APP_ID }}
+          private_key: ${{ secrets.CI_CORE_APP_PEM }}
 
 #      - name: Run artemis on push to dev
 #        if: github.event_name == 'push' && github.ref == 'refs/heads/dev'
 #        uses: peter-evans/repository-dispatch@v2
 #        with:
-#          token: ${{ needs.common_variables.outputs.APP_TOKEN }}
+#          token: ${{ steps.ci-core-app-token.outputs.token }}
 #          repository: hove-io/artemis
 #          event-type: run_artemis_ng
 
