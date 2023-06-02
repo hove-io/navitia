@@ -91,6 +91,7 @@ def get_token():
     auth = None
     if 'Authorization' in request.headers:
         auth = request.headers['Authorization']
+    # providing the token via the "key" parameter is deprecated
     elif 'key' in request.args:
         auth = request.args['key']
     if not auth:

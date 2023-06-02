@@ -14,9 +14,6 @@ $ curl https://api.navitia.io/v1/coverage -u 3b036afe-0110-4202-b9ed-99718476c2e
 # using "straight URL"
 $ curl https://3b036afe-0110-4202-b9ed-99718476c2e0@api.navitia.io/v1/coverage
 
-# using "key" parameter
-$ curl https://api.navitia.io/v1/coverage?key=3b036afe-0110-4202-b9ed-99718476c2e0
-
 ```
 
 Authentication is required to use **navitia.io**. When you register we will give you
@@ -38,11 +35,6 @@ or
 or
 
 `curl https://3b036afe-0110-4202-b9ed-99718476c2e0@api.navitia.io/v1/coverage`
-
-or
-
-`curl https://api.navitia.io/v1/coverage?key=3b036afe-0110-4202-b9ed-99718476c2e0`
-
 
 <aside class="notice">
 The token used within this documentation has only access to the "sandbox" coverage.</br>
