@@ -49,7 +49,7 @@ The different journey types are:
 |less_fallback_bss|A journey with less bss|
 |fastest|A journey with minimum duration|
 |ecologic|A friendly journey for Earth|
-|reliable|A realy steady journey|
+|reliable|A really steady journey|
 |bike_in_pt|A journey with bike both at the beginning and the end, and where bike is allowed in public transport used|
 |non_pt_walk|A journey without public transport, only walking|
 |non_pt_bike|A journey without public transport, only biking|
