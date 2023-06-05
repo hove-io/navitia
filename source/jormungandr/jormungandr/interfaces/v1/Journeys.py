@@ -120,6 +120,9 @@ class add_journey_href(object):
             if has_invalid_reponse_code(objects) or journeys_absent(objects):
                 return objects
 
+            # This is a temporary hack to resolve Error introduced during migration to Python3
+            # Instead of using wrongly parsed request.args we use original args to get existing allowed_id[]
+            allowed_id_args = args[0].parsers['get'].parse_args()
             for journey in objects[0]['journeys']:
                 args = dict(request.args)
                 allowed_ids = {
@@ -156,7 +159,8 @@ class add_journey_href(object):
                     args['direct_path'] = 'only' if 'non_pt' in journey['tags'] else 'none'
                     args['min_nb_journeys'] = 5
                     args['is_journey_schedules'] = True
-                    allowed_ids.update(args.get('allowed_id[]', []))
+                    param_values = vars(allowed_id_args).get('allowed_id[]', [])
+                    allowed_ids.update(param_values)
                     args['allowed_id[]'] = list(allowed_ids)
                     args['_type'] = 'journeys'
 
