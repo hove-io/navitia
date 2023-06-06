@@ -37,7 +37,7 @@ from jormungandr.scenarios.new_default import (
     get_kraken_calls,
     update_best_boarding_positions,
     add_olympics_forbidden_uris,
-    add_additional_parameters,
+    apply_origin_destination_rules,
 )
 from jormungandr.instance import Instance
 from jormungandr.scenarios.utils import switch_back_to_ridesharing
@@ -863,7 +863,7 @@ def test_od_allowed_ids_absent():
     destination_uri = "sa:10"
     instance = FakeInstance()
     instance.od_allowed_ids = None
-    add_additional_parameters(origin_uri, destination_uri, api_request, instance)
+    apply_origin_destination_rules(origin_uri, destination_uri, api_request, instance)
     assert "allowed_id[]" not in api_request
 
 
@@ -873,7 +873,7 @@ def test_od_allowed_ids_present_but_od_absent():
     destination_uri = "sa:toto"
     instance = FakeInstance()
     instance.od_allowed_ids = make_od_allowed_ids()
-    add_additional_parameters(origin_uri, destination_uri, api_request, instance)
+    apply_origin_destination_rules(origin_uri, destination_uri, api_request, instance)
     assert "allowed_id[]" not in api_request
 
 
@@ -883,7 +883,7 @@ def test_od_allowed_ids_present_and_od_present():
     destination_uri = "sa:10"
     instance = FakeInstance()
     instance.od_allowed_ids = make_od_allowed_ids()
-    add_additional_parameters(origin_uri, destination_uri, api_request, instance)
+    apply_origin_destination_rules(origin_uri, destination_uri, api_request, instance)
     assert "allowed_id[]" in api_request
     assert api_request["allowed_id[]"][0] == "rer:1"
     assert api_request["allowed_id[]"][1] == "bus:1"

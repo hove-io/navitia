@@ -1244,17 +1244,22 @@ def add_olympics_forbidden_uris(origin_detail, destination_detail, api_request, 
         api_request["forbidden_uris[]"] = instance.olympics_forbidden_uris.pt_object_olympics_forbidden_uris
 
 
-def add_additional_parameters(origin_uri, destination_uri, api_request, instance):
+def apply_origin_destination_rules(origin_uri, destination_uri, api_request, instance):
     # Add parameter allowed_id[] in the request if instance.od_allowed_ids exists and allowed_ids found for a key
-    if not instance.od_allowed_ids:
+    if not (instance.od_allowed_ids or instance.od_additional_parameters):
         return
+
+    # We re-initialize allowed_id[] values ignoring already existing parameter values.
     allowed_ids = instance.get_od_allowed_ids(origin_uri, destination_uri)
-    if not allowed_ids:
-        return
-    if api_request.get("allowed_id[]"):
-        api_request["allowed_id[]"] += allowed_ids
-    else:
+    if allowed_ids:
         api_request["allowed_id[]"] = allowed_ids
+
+    # Apply addition_parameters for an origin_destination present in the file <coverage>_od_additional_parameters.csv
+    additional_parameters = instance.get_od_additional_parameters(origin_uri, destination_uri)
+    for parameter in additional_parameters:
+        param_value = parameter.split('=', 1)
+        if len(param_value) == 2:
+            api_request[param_value[0]] = param_value[1]
 
 
 class Scenario(simple.Scenario):
@@ -1312,7 +1317,7 @@ class Scenario(simple.Scenario):
 
         add_olympics_forbidden_uris(pt_object_origin, pt_object_destination, api_request, instance)
         if instance.additional_parameters:
-            add_additional_parameters(pt_object_origin.uri, pt_object_destination.uri, api_request, instance)
+            apply_origin_destination_rules(pt_object_origin.uri, pt_object_destination.uri, api_request, instance)
 
         api_request['origin'] = get_kraken_id(origin_detail) or api_request.get('origin')
         api_request['destination'] = get_kraken_id(destination_detail) or api_request.get('destination')

@@ -37,7 +37,7 @@ from jormungandr.utils import (
     walk_dict,
     get_pt_object_from_json,
     read_best_boarding_positions,
-    read_od_allowed_ids,
+    read_origin_destination_data,
     make_origin_destination_key,
     portable_min,
 )
@@ -326,7 +326,7 @@ def test_read_best_boarding_positions():
     assert d[make_origin_destination_key("b", "a")] == {response_pb2.FRONT, response_pb2.BACK}
 
 
-def test_read_od_allowed_ids():
+def test_read_origin_destination_data():
     import shortuuid
 
     file_name = 'od_allowed_ids_test_{}.csv'.format(shortuuid.uuid())
@@ -346,7 +346,7 @@ def test_read_od_allowed_ids():
         writer.writerow(["sa:1", "sa:11", "tram:2"])
         writer.writerow(["sa:1", "sa:11", "tram:2"])
 
-    d = read_od_allowed_ids(file_name)
+    d = read_origin_destination_data(file_name)
     if os.path.exists(file_name):
         os.remove(file_name)
 

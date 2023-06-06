@@ -67,7 +67,7 @@ from jormungandr.utils import (
     can_connect_to_database,
     make_origin_destination_key,
     read_best_boarding_positions,
-    read_od_allowed_ids,
+    read_origin_destination_data,
 )
 from jormungandr import pt_planners_manager, transient_socket
 import os
@@ -249,17 +249,21 @@ class Instance(transient_socket.TransientSocket):
         self._ghost_words = ghost_words or []
         self.best_boarding_positions = None
         self.od_allowed_ids = None
+        self.od_additional_parameters = None
 
         # Read the best_boarding_positions files if any
         if best_boarding_positions_dir is not None:
             file_path = os.path.join(best_boarding_positions_dir, "{}.csv".format(self.name))
             self.best_boarding_positions = read_best_boarding_positions(file_path)
 
-        # read od_allowed_ids from a file if configured
-        od_allowed_ids_dir = app.config.get(str('OD_ALLOWED_IDS_DIR'))
-        if od_allowed_ids_dir:
-            file_path = os.path.join(od_allowed_ids_dir, "{}_od_allowed_ids.csv".format(self.name))
-            self.od_allowed_ids = read_od_allowed_ids(file_path)
+        # read od_allowed_ids as well as od_additional_parameters if configured and present
+        origin_destination_dir = app.config.get(str('ORIGIN_DESTINATION_DIR'))
+        if origin_destination_dir:
+            file_path = os.path.join(origin_destination_dir, "{}_od_allowed_ids.csv".format(self.name))
+            self.od_allowed_ids = read_origin_destination_data(file_path)
+
+            file_path = os.path.join(origin_destination_dir, "{}_od_additional_parameters.csv".format(self.name))
+            self.od_additional_parameters = read_origin_destination_data(file_path)
 
     def get_providers_from_db(self):
         """
@@ -968,3 +972,9 @@ class Instance(transient_socket.TransientSocket):
             return []
         key = make_origin_destination_key(origin, destination)
         return self.od_allowed_ids.get(key, [])
+
+    def get_od_additional_parameters(self, origin, destination):
+        if not self.od_additional_parameters:
+            return []
+        key = make_origin_destination_key(origin, destination)
+        return self.od_additional_parameters.get(key, [])
