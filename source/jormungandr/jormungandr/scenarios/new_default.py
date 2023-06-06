@@ -1317,7 +1317,9 @@ class Scenario(simple.Scenario):
 
         add_olympics_forbidden_uris(pt_object_origin, pt_object_destination, api_request, instance)
         if instance.additional_parameters:
-            apply_origin_destination_rules(pt_object_origin.uri, pt_object_destination.uri, api_request, instance)
+            apply_origin_destination_rules(
+                pt_object_origin.uri, pt_object_destination.uri, api_request, instance
+            )
 
         api_request['origin'] = get_kraken_id(origin_detail) or api_request.get('origin')
         api_request['destination'] = get_kraken_id(destination_detail) or api_request.get('destination')
