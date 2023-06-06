@@ -22,20 +22,18 @@ jobs:
   checks:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
     - name: Generate github private access token
       id: ci-core-app-token
       uses: getsentry/action-github-app-token@v2.0.0
       with:
         app_id: ${{ secrets.CI_CORE_APP_ID }}
         private_key: ${{ secrets.CI_CORE_APP_PEM }}
-    - name: Config Github global url for ssh cases (add access token)
-      run: |
-        git config --global url."https://x-access-token:${{ steps.ci-core-app-token.outputs.token }}@github.com/hove-io/".insteadOf "git@github.com:hove-io/"
-    - name: checkout submodules
-      shell: bash
-      run: |
-        git submodule update --init --recursive
+    - uses: actions/checkout@v3
+      with:
+        submodules: recursive
+        token: ${{ steps.ci-core-app-token.outputs.token }}
+        # 'check_submodules.sh' below needs entire history
+        fetch-depth: 0
     - name: check submodules
       run: ./source/scripts/check_submodules.sh
 
@@ -61,9 +59,16 @@ jobs:
         ports:
           - 6379:6379
     steps:
+    - name: Generate github private access token
+      id: ci-core-app-token
+      uses: getsentry/action-github-app-token@v2.0.0
+      with:
+        app_id: ${{ secrets.CI_CORE_APP_ID }}
+        private_key: ${{ secrets.CI_CORE_APP_PEM }}
     - uses: actions/checkout@v3
       with:
-          submodules: 'recursive'
+        submodules: recursive
+        token: ${{ steps.ci-core-app-token.outputs.token }}
     - name: Restore ccache
       uses: hendrikmuhs/ccache-action@v1.2
       with:
@@ -116,16 +121,20 @@ jobs:
         NAVITIA_DOCKER_NETWORK: ${{ job.container.network }}
         TYR_CELERY_BROKER_URL: 'amqp://guest:guest@rabbitmq:5672//'
         TYR_REDIS_HOST: 'redis'
+
   precommit:
     runs-on: ubuntu-20.04
     steps:
-    - uses: actions/checkout@v3
     - name: Generate github private access token
       id: ci-core-app-token
       uses: getsentry/action-github-app-token@v2.0.0
       with:
         app_id: ${{ secrets.CI_CORE_APP_ID }}
         private_key: ${{ secrets.CI_CORE_APP_PEM }}
+    - uses: actions/checkout@v3
+      with:
+        submodules: recursive
+        token: ${{ steps.ci-core-app-token.outputs.token }}
     - name: Config Github global url for ssh cases (add access token)
       run: |
         git config --global url."https://x-access-token:${{ steps.ci-core-app-token.outputs.token }}@github.com/hove-io/".insteadOf "git@github.com:hove-io/"
@@ -136,9 +145,6 @@ jobs:
       run: |
         sudo apt-get update && sudo apt install -y protobuf-compiler clang-format git 2to3
         pip install -r requirements_pre-commit.txt --upgrade
-    - name: get submodule
-      run: |
-        git submodule update --init --recursive
     - name: Build Protobuf
       run: bash source/scripts/build_protobuf.sh
     - name: Pre-commit Run

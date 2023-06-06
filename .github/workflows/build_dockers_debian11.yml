@@ -27,10 +27,18 @@ jobs:
       run: |
         sudo apt update && sudo apt install -y --force-yes zip httpie
 
-    - name: Checkout
-      uses: actions/checkout@v3
+    - name: Generate github private access token
+      id: ci-core-app-token
+      uses: getsentry/action-github-app-token@v2.0.0
       with:
-        submodules : recursive
+        app_id: ${{ secrets.CI_CORE_APP_ID }}
+        private_key: ${{ secrets.CI_CORE_APP_PEM }}
+
+    - uses: actions/checkout@v3
+      with:
+        submodules: recursive
+        token: ${{ steps.ci-core-app-token.outputs.token }}
+        # we need entire history for tags
         fetch-depth: 0
 
     - name: Restore ccache
@@ -85,13 +93,6 @@ jobs:
             docker push navitia/$component:${{env.navitia_tag}}
         done
 
-    - name: Generate github private access token
-      id: ci-core-app-token
-      uses: getsentry/action-github-app-token@v2.0.0
-      with:
-        app_id: ${{ secrets.CI_CORE_APP_ID }}
-        private_key: ${{ secrets.CI_CORE_APP_PEM }}
-
     - name: Run artemis on push to dev
       if: github.event_name == 'push' && github.ref == 'refs/heads/dev'
       uses: peter-evans/repository-dispatch@v2
@@ -113,10 +114,12 @@ jobs:
   build_navitia_arm64:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v3
+      - uses: actions/checkout@v3
         with:
-          submodules : recursive
+          submodules: recursive
+          token: ${{ steps.ci-core-app-token.outputs.token }}
+          # we need entire history for tags
+        # we need entire history for tags
           fetch-depth: 0
 
       - name: Set up QEMU

@@ -20,9 +20,16 @@ jobs:
     container:
       image: navitia/debian11_dev
     steps:
+    - name: Generate github private access token
+      id: ci-core-app-token
+      uses: getsentry/action-github-app-token@v2.0.0
+      with:
+        app_id: ${{ secrets.CI_CORE_APP_ID }}
+        private_key: ${{ secrets.CI_CORE_APP_PEM }}
     - uses: actions/checkout@v3
       with:
-          submodules: 'recursive'
+        submodules: recursive
+        token: ${{ steps.ci-core-app-token.outputs.token }}
     - name : Install dependencies
       run: apt update && apt install -y clang-tools clang-tidy
     - name : Clang-tidy Info
