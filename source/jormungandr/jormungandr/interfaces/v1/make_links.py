@@ -121,7 +121,9 @@ class add_pagination_links(object):
                 data = objects
             pagination = data.get('pagination', None)
             endpoint = request.endpoint
-            kwargs.update(request.args)
+            # Note: request.args is a MultiDict, we want to flatten it by having list as value when needed
+            # From Python3.6 onwards dict(request.args) != request.args.to_dict(flat=False)
+            kwargs.update(request.args.to_dict(flat=False))
 
             # We remove the region any-beta if present. This is a temporary hack and should be removed later
             if kwargs.get('region') == COVERAGE_ANY_BETA:

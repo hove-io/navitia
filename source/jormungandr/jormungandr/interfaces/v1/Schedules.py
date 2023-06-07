@@ -330,7 +330,9 @@ class add_passages_links:
                     max_dt = dt
             if "links" not in response:
                 response["links"] = []
-            kwargs_links = dict(deepcopy(request.args))
+            # request.args is a MultiDict, we want to flatten it by having list as value when needed
+            # From Python3.6 onwards dict(request.args) != request.args.to_dict(flat=False)
+            kwargs_links = deepcopy(request.args).to_dict(flat=False)
             if "region" in kwargs:
                 kwargs_links["region"] = kwargs["region"]
             if "uri" in kwargs:
