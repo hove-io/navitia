@@ -1427,12 +1427,12 @@ class TestLinksDistributed(NewDefaultScenarioAbstractTestFixture):
         assert href_value.count('allowed_id') == 2
 
         query = (
-                sub_query
-                + "&datetime=20120614T080000"
-                + "&first_section_mode[]=walking"
-                + "&last_section_mode[]=walking"
-                + "&allowed_id[]=stop_point:stopA"
-                + "&allowed_id[]=stop_point:stopB"
+            sub_query
+            + "&datetime=20120614T080000"
+            + "&first_section_mode[]=walking"
+            + "&last_section_mode[]=walking"
+            + "&allowed_id[]=stop_point:stopA"
+            + "&allowed_id[]=stop_point:stopB"
         )
 
         response = self.query_region(query)
