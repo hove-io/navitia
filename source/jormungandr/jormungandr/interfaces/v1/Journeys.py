@@ -121,7 +121,9 @@ class add_journey_href(object):
                 return objects
 
             for journey in objects[0]['journeys']:
-                args = dict(request.args)
+                # Note: request.args is a MultiDict, we want to flatten it by having list as value when needed
+                # From Python3.6 onwards dict(request.args) != request.args.to_dict(flat=False)
+                args = request.args.to_dict(flat=False)
                 allowed_ids = {
                     o['stop_point']['id']
                     for s in journey.get('sections', [])

@@ -1402,3 +1402,48 @@ class TestRoutingWithTransfer(NewDefaultScenarioAbstractTestFixture):
         assert last_transfer_path['via_uri'] == "access_point:E1"
 
         assert sections[4]['display_informations']['physical_mode'] == 'RER'
+
+
+@dataset({"main_routing_test": {"scenario": "distributed"}})
+class TestLinksDistributed(NewDefaultScenarioAbstractTestFixture):
+    def test_same_journey_schedules_link(self):
+        query = (
+            sub_query
+            + "&datetime=20120614T080000"
+            + "&first_section_mode[]=walking"
+            + "&last_section_mode[]=walking"
+        )
+
+        response = self.query_region(query)
+        check_best(response)
+        self.is_valid_journey_response(response, query)
+
+        journeys = get_not_null(response, 'journeys')
+        assert len(journeys) == 2
+        assert journeys[0]['links'][0]['rel'] == 'same_journey_schedules'
+        assert journeys[0]['links'][0]['type'] == 'journeys'
+        href_value = journeys[0]['links'][0]['href']
+        assert href_value is not None
+        assert href_value.count('allowed_id') == 2
+
+        query = (
+            sub_query
+            + "&datetime=20120614T080000"
+            + "&first_section_mode[]=walking"
+            + "&last_section_mode[]=walking"
+            + "&allowed_id[]=stop_point:stopA"
+            + "&allowed_id[]=stop_point:stopB"
+        )
+
+        response = self.query_region(query)
+        check_best(response)
+        self.is_valid_journey_response(response, query)
+
+        journeys = get_not_null(response, 'journeys')
+        assert len(journeys) == 2
+        assert journeys[0]['links'][0]['rel'] == 'same_journey_schedules'
+        assert journeys[0]['links'][0]['type'] == 'journeys'
+        href_value = journeys[0]['links'][0]['href']
+        assert href_value is not None
+        # Before correction: assert href_value.count('allowed_id') == 11
+        assert href_value.count('allowed_id') == 2
