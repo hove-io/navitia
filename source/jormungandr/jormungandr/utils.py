@@ -1001,9 +1001,9 @@ def read_origin_destination_data(file_path):
             next(csv_reader)
 
             for line in csv_reader:
-                key = make_origin_destination_key(line['origin'], line['destination'])
                 allowed_id = line['od_value']
                 if allowed_id:
+                    key = make_origin_destination_key(line['origin'], line['destination'])
                     my_dict[key].add(allowed_id)
 
         return my_dict
