@@ -1,12 +1,12 @@
 name: Build Navitia Dockers
 
 on:
-  push:
-    branches:
-      - dev
-    tags:
-      - '*'
-
+#  push:
+#    branches:
+#      - dev
+#    tags:
+#      - '*'
+  pull_request:
 env:
   jessie_version: debian8
   jessie_navitia_components: 'kraken tyr-beat tyr-worker tyr-web instances-configurator mock-kraken eitri'
@@ -25,12 +25,22 @@ jobs:
         run: |
           sudo apt update && sudo apt install -y --force-yes httpie
 
+      - name: Generate github private access token
+        id: ci-core-app-token
+        uses: getsentry/action-github-app-token@v2.0.0
+        with:
+          app_id: ${{ secrets.CI_CORE_APP_ID }}
+          private_key: ${{ secrets.CI_CORE_APP_PEM }}
+
       - name: Checkout navitia
         id: checkout_navitia
         uses: actions/checkout@v3
         with:
-          submodules : recursive
+          submodules: recursive
+          token: ${{ steps.ci-core-app-token.outputs.token }}
+          # we need entire history for tags
           fetch-depth: 0
+
       - name: Choose navitia tag
         id: choose_navitia_tag
         run: |
@@ -66,18 +76,20 @@ jobs:
         run: |
           sudo apt update && sudo apt install -y --force-yes zip httpie
 
-      - name: Checkout
-        uses: actions/checkout@v3
-        with:
-          submodules : recursive
-          fetch-depth: 0
-
       - name: Generate github private access token
         id: ci-core-app-token
         uses: getsentry/action-github-app-token@v2.0.0
         with:
           app_id: ${{ secrets.CI_CORE_APP_ID }}
           private_key: ${{ secrets.CI_CORE_APP_PEM }}
+
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          submodules: recursive
+          token: ${{ steps.ci-core-app-token.outputs.token }}
+          # we need entire history for tags
+          fetch-depth: 0
 
       - name: Checkout core_team_ci_tools
         uses: actions/checkout@v3
@@ -153,11 +165,11 @@ jobs:
 
           for component in ${{env.jessie_navitia_components}}; do
               echo "*********  Pushing $component Tag: ${{ needs.common_variables.outputs.NAVITIA_TAG }} ***************"
-              docker push navitia/$component:${{ needs.common_variables.outputs.NAVITIA_TAG }}
+              #docker push navitia/$component:${{ needs.common_variables.outputs.NAVITIA_TAG }}
 
-              if [[ "${{ needs.common_variables.outputs.AWS_BRANCH }}" = "release" ]]; then
-                  docker push navitia/$component:latest
-              fi
+              #if [[ "${{ needs.common_variables.outputs.AWS_BRANCH }}" = "release" ]]; then
+              #    docker push navitia/$component:latest
+              #fi
           done
       - name: failure notification
         if: failure()
@@ -181,10 +193,19 @@ jobs:
         run: |
           sudo apt update && sudo apt install -y --force-yes httpie
 
+      - name: Generate github private access token
+        id: ci-core-app-token
+        uses: getsentry/action-github-app-token@v2.0.0
+        with:
+          app_id: ${{ secrets.CI_CORE_APP_ID }}
+          private_key: ${{ secrets.CI_CORE_APP_PEM }}
+
       - name: Checkout
         uses: actions/checkout@v3
         with:
-          submodules : recursive
+          submodules: recursive
+          token: ${{ steps.ci-core-app-token.outputs.token }}
+          # we need entire history for tags
           fetch-depth: 0
 
       - name: Restore ccache
@@ -216,7 +237,7 @@ jobs:
         run: |
           for component in ${{env.bullseye_navitia_components}}; do
               echo "*********  Pushing $component Tag: ${{ needs.common_variables.outputs.NAVITIA_TAG }} ***************"
-              docker push navitia/$component:${{ needs.common_variables.outputs.NAVITIA_TAG }}
+              #docker push navitia/$component:${{ needs.common_variables.outputs.NAVITIA_TAG }}
           done
 
       - name: failure notification
@@ -246,21 +267,21 @@ jobs:
           app_id: ${{ secrets.GA_OS_WORKFLOW_TRIGGER_APP_ID }}
           private_key: ${{ secrets.GA_OS_WORKFLOW_TRIGGER_APP_PEM }}
 
-      - name: Aws Dispatch Backend
-        uses: peter-evans/repository-dispatch@v2
-        with:
-          token: ${{ steps.ci-core-app-token.outputs.token }}
-          repository: hove-io/core-backend-aws-assets
-          event-type: build-trigger
-          client-payload: '{"branch": "${{ needs.common_variables.outputs.AWS_BRANCH }}", "tag": "${{ needs.common_variables.outputs.NAVITIA_TAG }}"}'
-
-      - name: Aws Dispatch Frontend
-        uses: peter-evans/repository-dispatch@v2
-        with:
-          token: ${{ steps.ci-core-app-token.outputs.token }}
-          repository: hove-io/core-front-aws-assets
-          event-type: build-trigger
-          client-payload: '{"branch": "${{ needs.common_variables.outputs.AWS_BRANCH }}", "tag": "${{ needs.common_variables.outputs.NAVITIA_TAG  }}"}'
+#      - name: Aws Dispatch Backend
+#        uses: peter-evans/repository-dispatch@v2
+#        with:
+#          token: ${{ steps.ci-core-app-token.outputs.token }}
+#          repository: hove-io/core-backend-aws-assets
+#          event-type: build-trigger
+#          client-payload: '{"branch": "${{ needs.common_variables.outputs.AWS_BRANCH }}", "tag": "${{ needs.common_variables.outputs.NAVITIA_TAG }}"}'
+#
+#      - name: Aws Dispatch Frontend
+#        uses: peter-evans/repository-dispatch@v2
+#        with:
+#          token: ${{ steps.ci-core-app-token.outputs.token }}
+#          repository: hove-io/core-front-aws-assets
+#          event-type: build-trigger
+#          client-payload: '{"branch": "${{ needs.common_variables.outputs.AWS_BRANCH }}", "tag": "${{ needs.common_variables.outputs.NAVITIA_TAG  }}"}'
 
       - name: failure notification
         if: failure()
@@ -282,13 +303,13 @@ jobs:
           app_id: ${{ secrets.CI_CORE_APP_ID }}
           private_key: ${{ secrets.CI_CORE_APP_PEM }}
 
-      - name: Run artemis on push to dev
-        if: github.event_name == 'push' && github.ref == 'refs/heads/dev'
-        uses: peter-evans/repository-dispatch@v2
-        with:
-          token: ${{ steps.ci-core-app-token.outputs.token }}
-          repository: hove-io/artemis
-          event-type: run_artemis_ng
+#      - name: Run artemis on push to dev
+#        if: github.event_name == 'push' && github.ref == 'refs/heads/dev'
+#        uses: peter-evans/repository-dispatch@v2
+#        with:
+#          token: ${{ steps.ci-core-app-token.outputs.token }}
+#          repository: hove-io/artemis
+#          event-type: run_artemis_ng
 
       - name: failure notification
         if: failure()
