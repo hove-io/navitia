@@ -38,6 +38,7 @@ from jormungandr.scenarios.new_default import (
     update_best_boarding_positions,
     add_olympics_forbidden_uris,
     apply_origin_destination_rules,
+    tag_special_event,
 )
 from jormungandr.instance import Instance
 from jormungandr.scenarios.utils import switch_back_to_ridesharing
@@ -344,17 +345,6 @@ def merge_responses_feed_publishers_test():
     # With 'debug=True', the journey to delete is exposed and so is its feed publisher
     merged_response = new_default.merge_responses(r, True)
     assert len(merged_response.feed_publishers) == 2
-
-
-def add_pt_sections(journey):
-    section = journey.sections.add()
-    section.type = response_pb2.STREET_NETWORK
-    section.street_network.mode = response_pb2.Walking
-    section = journey.sections.add()
-    section.type = response_pb2.PUBLIC_TRANSPORT
-    section = journey.sections.add()
-    section.type = response_pb2.STREET_NETWORK
-    section.street_network.mode = response_pb2.Walking
 
 
 def get_kraken_calls_test():
@@ -888,3 +878,85 @@ def test_od_allowed_ids_present_and_od_present():
     assert api_request["allowed_id[]"][0] == "rer:1"
     assert api_request["allowed_id[]"][1] == "bus:1"
     assert api_request["allowed_id[]"][2] == "metro:"
+
+
+def build_response_with_two_pt_and_street_network():
+    response = response_pb2.Response()
+    # Journey One with StreetNetwork Walking + PT + Transfer + PT + StreetNetwork Walking
+    journey = response.journeys.add()
+    section = journey.sections.add()
+    section.type = response_pb2.STREET_NETWORK
+    section.street_network.mode = response_pb2.Walking
+    section.origin.uri = 'address_a'
+    section.destination.uri = 'stop_a'
+    section = journey.sections.add()
+    section.type = response_pb2.PUBLIC_TRANSPORT
+    section.origin.stop_point.stop_area.uri = 'stop_area_a'
+    section.destination.stop_point.stop_area.uri = 'stop_area_b'
+    section = journey.sections.add()
+    section.type = response_pb2.TRANSFER
+    section = journey.sections.add()
+    section.type = response_pb2.PUBLIC_TRANSPORT
+    section.origin.stop_point.stop_area.uri = 'stop_area_p'
+    section.destination.stop_point.stop_area.uri = 'stop_area_q'
+    section = journey.sections.add()
+    section.type = response_pb2.STREET_NETWORK
+    section.street_network.mode = response_pb2.Walking
+    section.origin.uri = 'stop_q'
+    section.destination.uri = 'address_z'
+    return response
+
+
+def build_direct_path_response_with_walking():
+    response = response_pb2.Response()
+    # Journey One with only StreetNetwork Walking (direct_path)
+    journey = response.journeys.add()
+    section = journey.sections.add()
+    section.type = response_pb2.STREET_NETWORK
+    section.street_network.mode = response_pb2.Walking
+    section.origin.stop_point.stop_area.uri = 'stop_area_b'
+    section.destination.stop_point.stop_area.uri = 'stop_area_c'
+    return response
+
+
+def test_tag_special_event():
+    # A journey has two PT sections. The following uris are in od_allowed_ids matrix:
+    # origin.stop_point.stop_area.uri ('stop_area_a') of the first PT section
+    # destination.stop_point.stop_area.uri ('stop_area_q') of the last PT section
+    def _make_od_allowed_ids():
+        my_dict = defaultdict(set)
+        my_dict["stop_area_a-stop_area_c"] = ["rer:1", "bus:1", "metro:"]
+        my_dict["stop_area_c-stop_area_a"] = ["rer:1", "bus:1", "metro:"]
+        my_dict["stop_area_a-stop_area_q"] = ["train:2", "tram:2"]
+        my_dict["stop_area_q-stop_area_a"] = ["train:2", "tram:2"]
+        return my_dict
+
+    def _make_od_additional_parameters():
+        my_dict = defaultdict(set)
+        my_dict["stop_area_b-stop_area_c"] = ["direct_path_mode[]=walking", "direct_path=only"]
+        my_dict["stop_area_c-stop_area_b"] = ["direct_path_mode[]=walking", "direct_path=only"]
+        return my_dict
+
+    instance = FakeInstance()
+    instance.od_allowed_ids = _make_od_allowed_ids()
+    pb_resp = build_response_with_two_pt_and_street_network()
+    tag_special_event(instance, pb_resp)
+    assert 'special_event' in pb_resp.journeys[0].tags
+
+    # If od_allowed_ids is empty or None
+    instance.od_allowed_ids = None
+    pb_resp = build_response_with_two_pt_and_street_network()
+    tag_special_event(instance, pb_resp)
+    assert 'special_event' not in pb_resp.journeys[0].tags
+
+    # A journey has only Walking section with origin and destination present in od_additional_parameters matrix:
+    instance.od_additional_parameters = _make_od_additional_parameters()
+    pb_resp = build_direct_path_response_with_walking()
+    tag_special_event(instance, pb_resp)
+    assert 'special_event' in pb_resp.journeys[0].tags
+
+    # If od_additional_parameters is empty or None
+    instance.od_additional_parameters = None
+    pb_resp = build_direct_path_response_with_walking()
+    tag_special_event(instance, pb_resp)
+    assert 'special_event' not in pb_resp.journeys[0].tags

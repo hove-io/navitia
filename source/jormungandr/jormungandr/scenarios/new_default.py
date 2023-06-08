@@ -398,6 +398,28 @@ def tag_ecologic(resp):
                 j.tags.append('ecologic')
 
 
+def tag_special_event(instance, pb_resp):
+    for j in pb_resp.journeys:
+        origin_in_od = destination_in_od = False
+        for s in j.sections:
+            # Tag only Walking solution proposed by using additional_parameters in the matrix od_additional_parameters
+            if len(j.sections) == 1 and s.type == response_pb2.STREET_NETWORK and s.street_network.mode == response_pb2.Walking:
+                origin = s.origin.stop_point.stop_area.uri
+                des = s.destination.stop_point.stop_area.uri
+                if instance.get_od_additional_parameters(origin, des):
+                    j.tags.append('special_event')
+                continue
+
+            # Solution with more than one sections
+            if s.type == response_pb2.PUBLIC_TRANSPORT:
+                origin = s.origin.stop_point.stop_area.uri
+                des = s.destination.stop_point.stop_area.uri
+                origin_in_od = origin_in_od or instance.sa_present_in_od_allowed_ids_list(origin)
+                destination_in_od = destination_in_od or instance.sa_present_in_od_allowed_ids_list(des)
+        if origin_in_od or destination_in_od:
+            j.tags.append('special_event')
+
+
 def _tag_direct_path(responses):
     street_network_mode_tag_map = {
         response_pb2.Walking: ['non_pt_walking'],
@@ -1458,6 +1480,9 @@ class Scenario(simple.Scenario):
         update_total_air_pollutants(pb_resp)
         # Tag ecologic should be done at the end
         tag_ecologic(pb_resp)
+        # Tag special_event
+        if instance.additional_parameters:
+            tag_special_event(instance, pb_resp)
         # Update best boarding positions in PT sections
         update_best_boarding_positions(pb_resp, instance)
 
