@@ -403,7 +403,11 @@ def tag_special_event(instance, pb_resp):
         origin_in_od = destination_in_od = False
         for s in j.sections:
             # Tag only Walking solution proposed by using additional_parameters in the matrix od_additional_parameters
-            if len(j.sections) == 1 and s.type == response_pb2.STREET_NETWORK and s.street_network.mode == response_pb2.Walking:
+            if (
+                len(j.sections) == 1
+                and s.type == response_pb2.STREET_NETWORK and
+                s.street_network.mode == response_pb2.Walking
+            ):
                 origin = s.origin.stop_point.stop_area.uri
                 des = s.destination.stop_point.stop_area.uri
                 if instance.get_od_additional_parameters(origin, des):
