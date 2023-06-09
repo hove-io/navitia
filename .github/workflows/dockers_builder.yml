@@ -1,0 +1,322 @@
+name: Build Navitia Dockers
+
+on:
+  push:
+    branches:
+      - dev
+    tags:
+      - '*'
+
+env:
+  jessie_version: debian8
+  jessie_navitia_components: 'kraken tyr-beat tyr-worker tyr-web instances-configurator mock-kraken eitri'
+  bullseye_version: debian11
+  bullseye_navitia_components: 'jormungandr'
+
+jobs:
+  common_variables:
+    name: Common variables
+    runs-on: ubuntu-latest
+    outputs:
+      NAVITIA_TAG: ${{ steps.choose_navitia_tag.outputs.navitia_tag }}
+      AWS_BRANCH: ${{ steps.choose_navitia_tag.outputs.aws_branch }}
+    steps:
+      - name: Install dependencies
+        run: |
+          sudo apt update && sudo apt install -y --force-yes httpie
+
+      - name: Generate github private access token
+        id: ci-core-app-token
+        uses: getsentry/action-github-app-token@v2.0.0
+        with:
+          app_id: ${{ secrets.CI_CORE_APP_ID }}
+          private_key: ${{ secrets.CI_CORE_APP_PEM }}
+
+      - name: Checkout navitia
+        id: checkout_navitia
+        uses: actions/checkout@v3
+        with:
+          submodules: recursive
+          token: ${{ steps.ci-core-app-token.outputs.token }}
+          # we need entire history for tags
+          fetch-depth: 0
+
+      - name: Choose navitia tag
+        id: choose_navitia_tag
+        run: |
+          if [[ '${{ github.event_name }}' == 'push' && '${{ github.ref }}' == 'refs/heads/dev' ]]
+          then
+            echo "navitia_tag=dev" >> $GITHUB_OUTPUT
+            echo "aws_branch=dev" >> $GITHUB_OUTPUT
+          else
+            version=$(git describe --tags)
+            echo "navitia_tag=$version" >> $GITHUB_OUTPUT
+            echo "aws_branch=release" >> $GITHUB_OUTPUT
+          fi
+
+      - name: failure notification
+        if: failure()
+        run: |
+          echo '{"text":":warning: Github Actions: workflow dockers_builder Job init common variables failed !"}' | http --json POST ${{secrets.SLACK_NAVITIA_TEAM_URL}}
+
+  jessie_builder:
+
+    runs-on: ubuntu-latest
+    name: Jessie builder
+    needs: common_variables
+    steps:
+      - name: Free up space
+        run: |
+          sudo rm -rf /usr/share/dotnet/*
+          sudo rm -rf /usr/local/lib/android/*
+          echo "Free space:"
+          df -h
+
+      - name: Install dependencies
+        run: |
+          sudo apt update && sudo apt install -y --force-yes zip httpie
+
+      - name: Generate github private access token
+        id: ci-core-app-token
+        uses: getsentry/action-github-app-token@v2.0.0
+        with:
+          app_id: ${{ secrets.CI_CORE_APP_ID }}
+          private_key: ${{ secrets.CI_CORE_APP_PEM }}
+
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          submodules: recursive
+          token: ${{ steps.ci-core-app-token.outputs.token }}
+          # we need entire history for tags
+          fetch-depth: 0
+
+      - name: Checkout core_team_ci_tools
+        uses: actions/checkout@v3
+        with:
+          repository : 'hove-io/core_team_ci_tools'
+          path: core_team_ci_tools
+          token: ${{ steps.ci-core-app-token.outputs.token }}
+
+      - name: Setup core_team_ci_tools python environment
+        run: |
+          pip install -r core_team_ci_tools/github_artifacts/requirements.txt --user
+
+      - name: Download mimirsbrunn package
+        run: |
+          if [[ "${{ needs.common_variables.outputs.AWS_BRANCH }}" = "release" ]]; then
+              mimirsbrunn_workflow=release7.yml
+              mimirsbrunn_package="debian-package-release.zip"
+          else
+              mimirsbrunn_workflow=main7.yml
+              mimirsbrunn_package="debian-package-master.zip"
+          fi
+          python core_team_ci_tools/github_artifacts/github_artifacts.py \
+              -o hove-io \
+              -r mimirsbrunn \
+              -t ${{ steps.ci-core-app-token.outputs.token }} \
+              -w $mimirsbrunn_workflow \
+              -a $mimirsbrunn_package \
+              --output-dir .
+          unzip -qo $mimirsbrunn_package
+          rm -f $mimirsbrunn_package
+
+      - name: Download cosmogony2cities package
+        run: |
+          cosmogony2cities_package="package-${{env.jessie_version}}.zip"
+          python core_team_ci_tools/github_artifacts/github_artifacts.py \
+              -o hove-io \
+              -r cosmogony2cities \
+              -t ${{ steps.ci-core-app-token.outputs.token }} \
+              -w build_package.yml \
+              -a $cosmogony2cities_package \
+              --output-dir .
+          unzip -qo $cosmogony2cities_package
+          rm -f $cosmogony2cities_package
+
+      - name: Restore ccache
+        uses: hendrikmuhs/ccache-action@v1.2
+        with:
+          key: build_dockers
+          max-size: 2000M
+
+      - name: Create master docker
+        run: |
+          docker build -f docker/${{env.jessie_version}}/Dockerfile-master -t navitia/master .
+          docker build -f docker/${{env.jessie_version}}/Dockerfile-builder -t navitia/builder .
+
+      - name: Build packages in master docker
+#         Will build navitia-*.deb packages in current folder
+        run: docker run -v `pwd`:/build/navitia/  navitia/builder
+
+      - name: Create dockers images and push them
+        run: |
+          for component in ${{env.jessie_navitia_components}}; do
+              echo "*********  Building $component Tag: ${{ needs.common_variables.outputs.NAVITIA_TAG }} ***************"
+              docker build -t navitia/$component:${{ needs.common_variables.outputs.NAVITIA_TAG }} -f  docker/${{env.jessie_version}}/Dockerfile-${component} .
+
+              # add latest tag if we are making a release
+              if [[ "${{ needs.common_variables.outputs.AWS_BRANCH }}" = "release" ]]; then
+                  docker tag navitia/$component:${{ needs.common_variables.outputs.NAVITIA_TAG }}  navitia/$component:latest
+              fi
+          done
+
+          docker login -u ${{secrets.docker_user}} -p ${{secrets.docker_password}}
+
+          for component in ${{env.jessie_navitia_components}}; do
+              echo "*********  Pushing $component Tag: ${{ needs.common_variables.outputs.NAVITIA_TAG }} ***************"
+              docker push navitia/$component:${{ needs.common_variables.outputs.NAVITIA_TAG }}
+
+              if [[ "${{ needs.common_variables.outputs.AWS_BRANCH }}" = "release" ]]; then
+                  docker push navitia/$component:latest
+              fi
+          done
+      - name: failure notification
+        if: failure()
+        run: |
+          echo '{"text":":warning: Github Actions: workflow dockers_builder Job jessie_builder is failed !"}' | http --json POST ${{secrets.SLACK_NAVITIA_TEAM_URL}}
+
+
+  bullseye_builder:
+    runs-on: ubuntu-latest
+    name: Bullseye builder
+    needs: common_variables
+    steps:
+      - name: Free up space
+        run: |
+          sudo rm -rf /usr/share/dotnet/*
+          sudo rm -rf /usr/local/lib/android/*
+          echo "Free space:"
+          df -h
+
+      - name: Install dependencies
+        run: |
+          sudo apt update && sudo apt install -y --force-yes httpie
+
+      - name: Generate github private access token
+        id: ci-core-app-token
+        uses: getsentry/action-github-app-token@v2.0.0
+        with:
+          app_id: ${{ secrets.CI_CORE_APP_ID }}
+          private_key: ${{ secrets.CI_CORE_APP_PEM }}
+
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          submodules: recursive
+          token: ${{ steps.ci-core-app-token.outputs.token }}
+          # we need entire history for tags
+          fetch-depth: 0
+
+      - name: Restore ccache
+        uses: hendrikmuhs/ccache-action@v1.2
+        with:
+          key: build_dockers
+          max-size: 2000M
+
+      - name: Create builder docker
+        run: |
+          docker build -f docker/${{env.bullseye_version}}/Dockerfile-builder -t navitia/builder .
+
+      - name: Build navitia
+        run: |
+          docker run -v `pwd`:/navitia/navitia/  navitia/builder
+
+      - name: Create navitia images
+        run: |
+          for component in ${{env.bullseye_navitia_components}}; do
+              echo "*********  Building $component Tag: ${{ needs.common_variables.outputs.NAVITIA_TAG }} ***************"
+              docker build -t navitia/$component:${{ needs.common_variables.outputs.NAVITIA_TAG }} -f  docker/${{env.bullseye_version}}/Dockerfile-${component} .
+          done
+
+      - name: Login dockerhub
+        run: |
+          docker login -u ${{secrets.docker_user}} -p ${{secrets.docker_password}}
+
+      - name: Push navitia images
+        run: |
+          for component in ${{env.bullseye_navitia_components}}; do
+              echo "*********  Pushing $component Tag: ${{ needs.common_variables.outputs.NAVITIA_TAG }} ***************"
+              docker push navitia/$component:${{ needs.common_variables.outputs.NAVITIA_TAG }}
+          done
+
+      - name: failure notification
+        if: failure()
+        run: |
+          echo '{"text":":warning: Github Actions: workflow dockers_builder Job bullseye_builder is failed !"}' | http --json POST ${{secrets.SLACK_NAVITIA_TEAM_URL}}
+
+  publish_aws:
+    runs-on: ubuntu-latest
+    needs: [common_variables, jessie_builder, bullseye_builder]
+    name: Aws Dispatch
+    steps:
+      - name: Install dependencies
+        run: |
+          sudo apt update && sudo apt install -y --force-yes httpie
+      - name: Generate github private access token
+        id: ci-core-app-token
+        uses: getsentry/action-github-app-token@v2.0.0
+        with:
+          app_id: ${{ secrets.CI_CORE_APP_ID }}
+          private_key: ${{ secrets.CI_CORE_APP_PEM }}
+
+      - name: Generate token for aws images
+        id: app-token
+        uses: getsentry/action-github-app-token@v2.0.0
+        with:
+          app_id: ${{ secrets.GA_OS_WORKFLOW_TRIGGER_APP_ID }}
+          private_key: ${{ secrets.GA_OS_WORKFLOW_TRIGGER_APP_PEM }}
+
+      - name: Aws Dispatch Backend
+        uses: peter-evans/repository-dispatch@v2
+        with:
+          token: ${{ steps.ci-core-app-token.outputs.token }}
+          repository: hove-io/core-backend-aws-assets
+          event-type: build-trigger
+          client-payload: '{"branch": "${{ needs.common_variables.outputs.AWS_BRANCH }}", "tag": "${{ needs.common_variables.outputs.NAVITIA_TAG }}"}'
+
+      - name: Aws Dispatch Frontend
+        uses: peter-evans/repository-dispatch@v2
+        with:
+          token: ${{ steps.ci-core-app-token.outputs.token }}
+          repository: hove-io/core-front-aws-assets
+          event-type: build-trigger
+          client-payload: '{"branch": "${{ needs.common_variables.outputs.AWS_BRANCH }}", "tag": "${{ needs.common_variables.outputs.NAVITIA_TAG  }}"}'
+
+      - name: failure notification
+        if: failure()
+        run: |
+          echo '{"text":":warning: Github Actions: dockers_builder the job publish_aws is failed !"}' | http --json POST ${{secrets.SLACK_NAVITIA_TEAM_URL}}
+
+  run_artemis:
+    runs-on: ubuntu-latest
+    needs: [common_variables, jessie_builder, bullseye_builder]
+    name: Run artemis Dispatch
+    steps:
+      - name: Install dependencies
+        run: |
+          sudo apt update && sudo apt install -y --force-yes httpie
+      - name: Generate github private access token
+        id: ci-core-app-token
+        uses: getsentry/action-github-app-token@v2.0.0
+        with:
+          app_id: ${{ secrets.CI_CORE_APP_ID }}
+          private_key: ${{ secrets.CI_CORE_APP_PEM }}
+
+      - name: Run artemis on push to dev
+        if: github.event_name == 'push' && github.ref == 'refs/heads/dev'
+        uses: peter-evans/repository-dispatch@v2
+        with:
+          token: ${{ steps.ci-core-app-token.outputs.token }}
+          repository: hove-io/artemis
+          event-type: run_artemis_ng
+
+      - name: failure notification
+        if: failure()
+        run: |
+          echo '{"text":":warning: Github Actions: workflow dockers_builder Job run_artemis is failed !"}' | http --json POST ${{secrets.SLACK_NAVITIA_TEAM_URL}}
+
+      - name: success notification on core team
+        if: success()
+        run: |
+          echo '{"text":":octopus: Github Actions: workflow build_dockers succeeded. New navitia ${{ needs.common_variables.outputs.NAVITIA_TAG }} images available."}' | http --json POST ${{secrets.SLACK_NAVITIA_TEAM_URL}}
