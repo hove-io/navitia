@@ -253,12 +253,6 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt update && sudo apt install -y --force-yes httpie
-      - name: Generate github private access token
-        id: ci-core-app-token
-        uses: getsentry/action-github-app-token@v2.0.0
-        with:
-          app_id: ${{ secrets.CI_CORE_APP_ID }}
-          private_key: ${{ secrets.CI_CORE_APP_PEM }}
 
       - name: Generate token for aws images
         id: app-token
@@ -270,7 +264,7 @@ jobs:
       - name: Aws Dispatch Backend
         uses: peter-evans/repository-dispatch@v2
         with:
-          token: ${{ steps.ci-core-app-token.outputs.token }}
+          token: ${{ steps.app-token.outputs.token }}
           repository: hove-io/core-backend-aws-assets
           event-type: build-trigger
           client-payload: '{"branch": "${{ needs.common_variables.outputs.AWS_BRANCH }}", "tag": "${{ needs.common_variables.outputs.NAVITIA_TAG }}"}'
@@ -278,7 +272,7 @@ jobs:
       - name: Aws Dispatch Frontend
         uses: peter-evans/repository-dispatch@v2
         with:
-          token: ${{ steps.ci-core-app-token.outputs.token }}
+          token: ${{ steps.app-token.outputs.token }}
           repository: hove-io/core-front-aws-assets
           event-type: build-trigger
           client-payload: '{"branch": "${{ needs.common_variables.outputs.AWS_BRANCH }}", "tag": "${{ needs.common_variables.outputs.NAVITIA_TAG  }}"}'
@@ -296,6 +290,7 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt update && sudo apt install -y --force-yes httpie
+
       - name: Generate github private access token
         id: ci-core-app-token
         uses: getsentry/action-github-app-token@v2.0.0
