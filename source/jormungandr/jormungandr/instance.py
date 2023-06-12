@@ -990,5 +990,3 @@ class Instance(transient_socket.TransientSocket):
             return False
         first_match = next((value for _, value in self.od_allowed_ids.items() if allowed_id in value), None)
         return first_match is not None
-
-
