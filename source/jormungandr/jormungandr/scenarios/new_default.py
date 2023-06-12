@@ -406,21 +406,39 @@ def tag_special_event(instance, pb_resp):
             and j.sections[0].type == response_pb2.STREET_NETWORK
             and j.sections[0].street_network.mode == response_pb2.Walking
         ):
-            origin = j.sections[0].origin.stop_point.stop_area.uri
-            des = j.sections[0].destination.stop_point.stop_area.uri
+            origin = j.sections[0].origin.uri
+            des = j.sections[0].destination.uri
             if instance.get_od_additional_parameters(origin, des):
                 j.tags.append('special_event')
             continue
 
-        origin_in_od = destination_in_od = False
+        one_origin_in_od = one_destination_in_od = False
+        all_allowed_ids_in_od = True
+        do_tag = False
         for s in j.sections:
-            # Solution with more than one sections
+            # Solution with more than one sections:
+            # 1. line.uri as well as destination of at least one PT exist in the matrix od_allowed_ids
+            # OR
+            # 2. line.uri of all as well as origin or destination of one PT should exist in the matrix od_allowed_ids
             if s.type == response_pb2.PUBLIC_TRANSPORT:
                 origin = s.origin.stop_point.stop_area.uri
                 des = s.destination.stop_point.stop_area.uri
-                origin_in_od = origin_in_od or instance.sa_present_in_od_allowed_ids_list(origin)
-                destination_in_od = destination_in_od or instance.sa_present_in_od_allowed_ids_list(des)
-        if origin_in_od or destination_in_od:
+                one_origin_in_od = one_origin_in_od or instance.sa_present_in_od_allowed_ids(origin)
+                destination_in_od = instance.sa_present_in_od_allowed_ids(des)
+                one_destination_in_od = one_destination_in_od or destination_in_od
+
+                line_uri = s.uris.line
+                allowed_id_in_od = instance.value_present_in_od_allowed_ids(line_uri)
+                all_allowed_ids_in_od = all_allowed_ids_in_od and allowed_id_in_od
+                if allowed_id_in_od:
+                    do_tag = do_tag or (allowed_id_in_od and destination_in_od)
+                if do_tag:
+                    break
+
+        if do_tag:
+            j.tags.append('special_event')
+            continue
+        if all_allowed_ids_in_od and (one_origin_in_od or one_destination_in_od):
             j.tags.append('special_event')
 
 

@@ -979,8 +979,16 @@ class Instance(transient_socket.TransientSocket):
         key = make_origin_destination_key(origin, destination)
         return self.od_additional_parameters.get(key, [])
 
-    def sa_present_in_od_allowed_ids_list(self, sa_uri):
+    def sa_present_in_od_allowed_ids(self, sa_uri):
         if not self.od_allowed_ids:
             return False
         first_match = next((value for key, value in self.od_allowed_ids.items() if sa_uri in key), None)
         return first_match is not None
+
+    def value_present_in_od_allowed_ids(self, allowed_id):
+        if not self.od_allowed_ids:
+            return False
+        first_match = next((value for _, value in self.od_allowed_ids.items() if allowed_id in value), None)
+        return first_match is not None
+
+

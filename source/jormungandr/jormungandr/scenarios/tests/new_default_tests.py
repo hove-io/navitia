@@ -893,12 +893,14 @@ def build_response_with_two_pt_and_street_network():
     section.type = response_pb2.PUBLIC_TRANSPORT
     section.origin.stop_point.stop_area.uri = 'stop_area_a'
     section.destination.stop_point.stop_area.uri = 'stop_area_b'
+    section.uris.line = "rer:1"
     section = journey.sections.add()
     section.type = response_pb2.TRANSFER
     section = journey.sections.add()
     section.type = response_pb2.PUBLIC_TRANSPORT
     section.origin.stop_point.stop_area.uri = 'stop_area_p'
     section.destination.stop_point.stop_area.uri = 'stop_area_q'
+    section.uris.line = "bus:1"
     section = journey.sections.add()
     section.type = response_pb2.STREET_NETWORK
     section.street_network.mode = response_pb2.Walking
@@ -914,8 +916,8 @@ def build_direct_path_response_with_walking():
     section = journey.sections.add()
     section.type = response_pb2.STREET_NETWORK
     section.street_network.mode = response_pb2.Walking
-    section.origin.stop_point.stop_area.uri = 'stop_area_b'
-    section.destination.stop_point.stop_area.uri = 'stop_area_c'
+    section.origin.uri = 'stop_area_b'
+    section.destination.uri = 'stop_area_c'
     return response
 
 
@@ -925,8 +927,8 @@ def test_tag_special_event():
     # destination.stop_point.stop_area.uri ('stop_area_q') of the last PT section
     def _make_od_allowed_ids():
         my_dict = defaultdict(set)
-        my_dict["stop_area_a-stop_area_c"] = ["rer:1", "bus:1", "metro:"]
-        my_dict["stop_area_c-stop_area_a"] = ["rer:1", "bus:1", "metro:"]
+        my_dict["stop_area_a-stop_area_c"] = ["rer:1", "bus:1"]
+        my_dict["stop_area_c-stop_area_a"] = ["rer:1", "bus:1"]
         my_dict["stop_area_a-stop_area_q"] = ["train:2", "tram:2"]
         my_dict["stop_area_q-stop_area_a"] = ["train:2", "tram:2"]
         return my_dict
