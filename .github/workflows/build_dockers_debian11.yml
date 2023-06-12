@@ -71,7 +71,7 @@ jobs:
           context: .
           file: docker/debian11_arm64/Dockerfile-jormungandr
           push: true
-          tags: navitia/jormungandr_arm64:${{env.navitia_tag}}
+          tags: navitia/jormungandr:${{env.navitia_tag}}
           platforms: linux/arm64
 
       - name: Install dependencies
@@ -86,5 +86,5 @@ jobs:
       - name: success notification on core team
         if: success()
         run: |
-          echo '{"text":":octopus: Github Actions: build_dockers on arm64 has succeeded. New navitia ${{env.navitia_tag}}_arm64 images available."}' | http --json POST ${{secrets.SLACK_NAVITIA_TEAM_URL}}
+          echo '{"text":":octopus: Github Actions: build_dockers on arm64 has succeeded. New navitia on arm64 for ${{env.navitia_tag}} images available."}' | http --json POST ${{secrets.SLACK_NAVITIA_TEAM_URL}}
 
