@@ -24,18 +24,18 @@ The are two possible 40x http codes:
 
 -   Code 404: unable to find an object.
 
-| Error id                    | Description                                                                	|
-|-----------------------------|-----------------------------------------------------------------------------|
-| date_out_of_bounds          | When the given date is out of bounds of the production dates of the region 	|
-| no_departure_this_day       | Some vehicles stop at this point, but none today (for example, it's sunday) |
-| no_active_circulation_this_day | No more vehicles stop for today (for example, it's too late)             |
-| terminus                    | There will never be departures, you're at the terminus of the line          |
-| partial_terminus            | Same as terminus, but be careful, some vehicles are departing from the stop some other days  |
-| active_disruption           | No departure, due to a disruption                                           |
-| no_origin                   | Couldn't find an origin (for the journey service only)                      |
-| no_destination              | Couldn't find a destination (for the journey service only)                  |
-| no_origin_nor_destination   | Couldn't find neither origin nor destination (for the journey service only) |
-| unknown_object              | Couldn't find one of the request parameters. It can be the region, the API or a PT object |
+| Error id                    | Description                                                                	| Services                  |
+|-----------------------------|-----------------------------------------------------------------------------|---------------------------|
+| date_out_of_bounds          | When the given date is out of bounds of the production dates of the region 	| All services              |
+| no_departure_this_day       | Some vehicles stop at this point, but none today (for example, it's sunday) | /departures /arrivals /stop_schedules /terminus_schedules /route_schedules |
+| no_active_circulation_this_day | No more vehicles stop for today (for example, it's too late)             | /departures /arrivals /stop_schedules /terminus_schedules /route_schedules |
+| terminus                    | There will never be departures, you're at the terminus of the line          | /departures /arrivals /stop_schedules /terminus_schedules /route_schedules |
+| partial_terminus            | Same as terminus, but be careful, some vehicles are departing from the stop some other days  | /departures /arrivals /stop_schedules /terminus_schedules /route_schedules |
+| active_disruption           | No departure, due to a disruption                                           | /departures /arrivals /stop_schedules /terminus_schedules /route_schedules |
+| no_origin                   | Couldn't find an origin                                                     | /journeys                 |
+| no_destination              | Couldn't find a destination                                                 | /journeys                 |
+| no_origin_nor_destination   | Couldn't find neither origin nor destination                                | /journeys                 |
+| unknown_object              | Couldn't find one of the request parameters. It can be the region, the API or a PT object | All services              |
 
 -   Code 400: bad request
 
