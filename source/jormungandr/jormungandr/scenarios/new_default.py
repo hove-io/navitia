@@ -438,7 +438,9 @@ def tag_special_event(instance, pb_resp):
                 # Test if line_uri of each PT are in instance.od_lines
                 all_lines_in_od = all_lines_in_od and line_in_od
                 # Verify that origin or destination of at least one line exists in instance.od_stop_areas
-                any_section_from_to_in_od = any_section_from_to_in_od or destination_in_od or instance.uri_in_od_stop_areas(origin)
+                any_section_from_to_in_od = (
+                    any_section_from_to_in_od or destination_in_od or instance.uri_in_od_stop_areas(origin)
+                )
 
         if do_tag or (all_lines_in_od and any_section_from_to_in_od):
             j.tags.append(SPECIAL_EVENT)
