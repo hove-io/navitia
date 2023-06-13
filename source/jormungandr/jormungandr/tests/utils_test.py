@@ -346,7 +346,7 @@ def test_read_origin_destination_data():
         writer.writerow(["sa:1", "sa:11", "tram:2"])
         writer.writerow(["sa:1", "sa:11", "tram:2"])
 
-    d = read_origin_destination_data(file_name)
+    d, _, _ = read_origin_destination_data(file_name)
     if os.path.exists(file_name):
         os.remove(file_name)
 

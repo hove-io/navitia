@@ -994,6 +994,8 @@ def read_origin_destination_data(file_path):
     logger.info("reading origin destination and allowed ids from file: %s", file_path)
     try:
         my_dict = defaultdict(set)
+        stop_areas = set()
+        allowed_ids = set()
         fieldnames = ['origin', 'destination', 'od_value']
         with open(file_path) as f:
             csv_reader = csv.DictReader(f, fieldnames)
@@ -1006,9 +1008,13 @@ def read_origin_destination_data(file_path):
                     key = make_origin_destination_key(line['origin'], line['destination'])
                     my_dict[key].add(allowed_id)
 
-        return my_dict
+                    stop_areas.add(line['origin'])
+                    stop_areas.add(line['destination'])
+                    allowed_ids.add(allowed_id)
+
+        return my_dict, stop_areas, allowed_ids
     except Exception as e:
         logger.exception(
             'Error while loading od_allowed_ids file: {} with exception: {}'.format(file_path, str(e))
         )
-        return None
+        return None, None, None

@@ -102,6 +102,7 @@ SECTION_TYPES_TO_RETAIN = {response_pb2.PUBLIC_TRANSPORT, response_pb2.STREET_NE
 JOURNEY_TYPES_TO_RETAIN = ['best', 'comfort', 'non_pt_walk', 'non_pt_bike', 'non_pt_bss']
 STREET_NETWORK_MODE_TO_RETAIN = {response_pb2.Ridesharing, response_pb2.Car, response_pb2.Bike, response_pb2.Bss}
 TEMPLATE_MSG_UNKNOWN_OBJECT = "The entry point: {} is not valid"
+SPECIAL_EVENT = "special_event"
 
 
 def get_kraken_calls(request):
@@ -409,11 +410,11 @@ def tag_special_event(instance, pb_resp):
             origin = j.sections[0].origin.uri
             des = j.sections[0].destination.uri
             if instance.get_od_additional_parameters(origin, des):
-                j.tags.append('special_event')
+                j.tags.append(SPECIAL_EVENT)
             continue
 
-        one_origin_in_od = one_destination_in_od = False
-        all_allowed_ids_in_od = True
+        any_section_from_to_in_od = False
+        all_lines_in_od = True
         do_tag = False
         for s in j.sections:
             # Solution with more than one sections:
@@ -423,23 +424,24 @@ def tag_special_event(instance, pb_resp):
             if s.type == response_pb2.PUBLIC_TRANSPORT:
                 origin = s.origin.stop_point.stop_area.uri
                 des = s.destination.stop_point.stop_area.uri
-                one_origin_in_od = one_origin_in_od or instance.sa_present_in_od_allowed_ids(origin)
-                destination_in_od = instance.sa_present_in_od_allowed_ids(des)
-                one_destination_in_od = one_destination_in_od or destination_in_od
-
                 line_uri = s.uris.line
-                allowed_id_in_od = instance.value_present_in_od_allowed_ids(line_uri)
-                all_allowed_ids_in_od = all_allowed_ids_in_od and allowed_id_in_od
-                if allowed_id_in_od:
-                    do_tag = do_tag or (allowed_id_in_od and destination_in_od)
-                if do_tag:
+
+                # Test if destination sa_uri exists in the set instance.od_stop_areas
+                destination_in_od = instance.uri_in_od_stop_areas(des)
+                # Test if line_uri is present in the set instance.od_lines
+                line_in_od = instance.uri_in_od_lines(line_uri)
+                # Tag if line.uri as well as destination sa_uri exist in corresponding lists, do not continue
+                if line_in_od and destination_in_od:
+                    do_tag = True
                     break
 
-        if do_tag:
-            j.tags.append('special_event')
-            continue
-        if all_allowed_ids_in_od and (one_origin_in_od or one_destination_in_od):
-            j.tags.append('special_event')
+                # Test if line_uri of each PT are in instance.od_lines
+                all_lines_in_od = all_lines_in_od and line_in_od
+                # Verify that origin or destination of at least one line exists in instance.od_stop_areas
+                any_section_from_to_in_od = any_section_from_to_in_od or destination_in_od or instance.uri_in_od_stop_areas(origin)
+
+        if do_tag or (all_lines_in_od and any_section_from_to_in_od):
+            j.tags.append(SPECIAL_EVENT)
 
 
 def _tag_direct_path(responses):

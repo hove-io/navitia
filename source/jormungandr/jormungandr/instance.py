@@ -248,8 +248,11 @@ class Instance(transient_socket.TransientSocket):
         self.instance_db = instance_db
         self._ghost_words = ghost_words or []
         self.best_boarding_positions = None
+        # Initialize attributes for additional_parameters
         self.od_allowed_ids = None
         self.od_additional_parameters = None
+        self.od_stop_areas = None
+        self.od_lines = None
 
         # Read the best_boarding_positions files if any
         if best_boarding_positions_dir is not None:
@@ -260,10 +263,10 @@ class Instance(transient_socket.TransientSocket):
         origin_destination_dir = app.config.get(str('ORIGIN_DESTINATION_DIR'))
         if origin_destination_dir:
             file_path = os.path.join(origin_destination_dir, "{}_od_allowed_ids.csv".format(self.name))
-            self.od_allowed_ids = read_origin_destination_data(file_path)
+            self.od_allowed_ids, self.od_stop_areas, self.od_lines = read_origin_destination_data(file_path)
 
             file_path = os.path.join(origin_destination_dir, "{}_od_additional_parameters.csv".format(self.name))
-            self.od_additional_parameters = read_origin_destination_data(file_path)
+            self.od_additional_parameters, _, _ = read_origin_destination_data(file_path)
 
     def get_providers_from_db(self):
         """
@@ -979,14 +982,14 @@ class Instance(transient_socket.TransientSocket):
         key = make_origin_destination_key(origin, destination)
         return self.od_additional_parameters.get(key, [])
 
-    def sa_present_in_od_allowed_ids(self, sa_uri):
-        if not self.od_allowed_ids:
+    # Test if stop_area uri is present in od_stop_areas
+    def uri_in_od_stop_areas(self, sa_uri):
+        if not self.od_stop_areas:
             return False
-        first_match = next((value for key, value in self.od_allowed_ids.items() if sa_uri in key), None)
-        return first_match is not None
+        return sa_uri in self.od_stop_areas
 
-    def value_present_in_od_allowed_ids(self, allowed_id):
-        if not self.od_allowed_ids:
+    # Test if line uri is present in od_lines
+    def uri_in_od_lines(self, line_uri):
+        if not self.od_lines:
             return False
-        first_match = next((value for _, value in self.od_allowed_ids.items() if allowed_id in value), None)
-        return first_match is not None
+        return line_uri in self.od_lines
