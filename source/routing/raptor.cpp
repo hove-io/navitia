@@ -240,7 +240,6 @@ RAPTOR::NEXT_STOPTIME_TYPE RAPTOR::choose_next_stop_time_type(
         return NEXT_STOPTIME_TYPE::CACHED;
     }
     return NEXT_STOPTIME_TYPE::UNCACHED;
-    ;
 }
 
 void RAPTOR::set_next_stop_time(const DateTime& departure_datetime,

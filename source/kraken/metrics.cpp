@@ -113,7 +113,6 @@ Metrics::Metrics(const boost::optional<std::string>& endpoint, const std::string
                                   .Help("Number of cache miss for the next stop_time in raptor")
                                   .Labels({{"coverage", coverage}})
                                   .Register(*registry);
-    ;
     next_st_cache_miss = &cache_miss_family.Add({});
 
     // For the followings with bucket boundaries = {0.5, 1, 2, 4, 8, 16, 32, 64, 128} in seconds

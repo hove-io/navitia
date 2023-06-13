@@ -71,7 +71,7 @@ size_t PT_Data::nb_stop_times() const {
             nb += vj.stop_time_list.size();
             return true;
         });
-    };
+    }
     return nb;
 }
 

@@ -1405,10 +1405,10 @@ void filter_late_journeys(RAPTOR::Journeys& journeys, const NightBusFilter::Para
 // stop is served by `vj_to_skip`
 //
 // returns `true` if the section has been modified
-bool shorten_section_clockwise(navitia::routing::Journey::Section& section,
-                               const std::string& last_stop_area_uri,
-                               const navitia::type::VehicleJourney* last_vj,
-                               const map_stop_point_duration& fallbacks) {
+static bool shorten_section_clockwise(navitia::routing::Journey::Section& section,
+                                      const std::string& last_stop_area_uri,
+                                      const navitia::type::VehicleJourney* last_vj,
+                                      const map_stop_point_duration& fallbacks) {
     log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
 
     // because of stay-ins, we may have several vj in one section, we have to scan the stop times of all vjs
@@ -1450,10 +1450,10 @@ bool shorten_section_clockwise(navitia::routing::Journey::Section& section,
 // stop is served by `vj_to_skip`
 //
 // returns `true` if the section has been modified
-bool shorten_section_anticlockwise(navitia::routing::Journey::Section& section,
-                                   const std::string& first_stop_area_uri,
-                                   const navitia::type::VehicleJourney* first_vj,
-                                   const map_stop_point_duration& fallbacks) {
+static bool shorten_section_anticlockwise(navitia::routing::Journey::Section& section,
+                                          const std::string& first_stop_area_uri,
+                                          const navitia::type::VehicleJourney* first_vj,
+                                          const map_stop_point_duration& fallbacks) {
     log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
 
     // because of stay-ins, we may have several vj in one section, we have to scan the stop times of all vjs

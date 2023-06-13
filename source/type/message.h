@@ -227,7 +227,7 @@ struct RailSection {
           blockeds(blockeds_),
           impacteds(impacted_stop_areas_),
           line(line_),
-          routes(routes_){};
+          routes(routes_) {}
 
     // never null
     StopArea* start;
@@ -273,7 +273,7 @@ boost::optional<RailSection> try_make_rail_section(
     const std::vector<std::string>& routes_uris    // may be empty
 );
 
-std::set<StopPoint*> get_stop_points_section(const RailSection& rs);
+std::set<StopPoint*> get_stop_points_section(const RailSection& rs, const Effect& effect);
 
 using PtObj = boost::variant<UnknownPtObj,
                              Network*,

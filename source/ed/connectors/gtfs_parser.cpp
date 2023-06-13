@@ -326,7 +326,6 @@ void StopsGtfsHandler::finish(Data& data) {
     handle_stop_point_without_area(data);
 
     LOG4CPLUS_TRACE(logger, data.stop_points.size() << " added stop points");
-    ;
     LOG4CPLUS_TRACE(logger, data.stop_areas.size() << " added stop areas");
     LOG4CPLUS_TRACE(logger, ignored << " points ignored because of dupplicates");
 }
@@ -550,7 +549,7 @@ int PathWayGtfsHandler::fill_pathway_field(const csv_row& row, const int key, co
     if (has_col(key, row) && row[key] != "") {
         try {
             return (int)boost::lexical_cast<float>(row[key]);
-        } catch (boost::bad_lexical_cast const& e) {
+        } catch (boost::bad_lexical_cast const&) {
             LOG4CPLUS_ERROR(log4cplus::Logger::getInstance("log"),
                             "impossible to parse " << column_name << ": " << row[key]);
         }
@@ -568,7 +567,6 @@ ed::types::PathWay* PathWayGtfsHandler::handle_line(Data& data, const csv_row& r
     pw->to_stop_id = row[to_stop_id_c];
     pw->pathway_mode = fill_pathway_field(row, pathway_mode_c, "pathway.pathway_mode");
     pw->is_bidirectional = fill_pathway_field(row, is_bidirectional_c, "pathway.is_bidirectional");
-    ;
 
     // Optionnal fields
 
