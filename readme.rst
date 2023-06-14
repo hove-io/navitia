@@ -1,4 +1,4 @@
-.. image:: https://navitia.com/content/uploads/sites/2/2021/10/kraken.png
+.. image:: documentation/diagrams/kraken.jpg
     :alt: navitia
     :align: center
 
