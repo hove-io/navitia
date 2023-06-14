@@ -88,3 +88,18 @@ Component that loads geopal street network data into `ed`.
 Component that loads synonym data into `ed`.
 
 Synonyms are used in the autocomplete to find equivalent words. For example it allows user to find "boulevard" by searching "bd".
+
+## Run tests
+
+Make sure Docker is available localy for user.
+
+You will need to install the eitri dependencies for developements:
+```sh
+# using python 3.9
+pip install -r ../eitri/requirements.txt
+```
+
+From the your build directory, run the command:
+```sh
+$ _VERBOSE=1 make run_test ; echo "Check ./ed/docker_tests/results_ed_integration_test.xml for results"
+```
