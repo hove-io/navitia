@@ -1295,8 +1295,8 @@ def add_olympics_forbidden_uris(origin_detail, destination_detail, api_request, 
 
 def request_in_maintenance_period(datetime):
     # Maintenance work is planned for 2023/08/13 00:00:00 to 2023/08/15 24:00:00 local time
-    start_datetime = str_to_time_stamp('20230812T220000')   # 2023/08/13 00:00:00 local datetime
-    end_datetime = str_to_time_stamp('20230815T220000')   # 2023/08/16 00:00:00 local datetime
+    start_datetime = str_to_time_stamp('20230812T220000')  # 2023/08/13 00:00:00 local datetime
+    end_datetime = str_to_time_stamp('20230815T220000')  # 2023/08/16 00:00:00 local datetime
     return start_datetime <= datetime <= end_datetime
 
 
