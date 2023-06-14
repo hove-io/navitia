@@ -43,7 +43,7 @@ from jormungandr.scenarios.new_default import (
 )
 from jormungandr.instance import Instance
 from jormungandr.scenarios.utils import switch_back_to_ridesharing
-from jormungandr.utils import make_origin_destination_key
+from jormungandr.utils import make_origin_destination_key, str_to_time_stamp
 from werkzeug.exceptions import HTTPException
 import pytest
 from collections import defaultdict
@@ -849,7 +849,8 @@ def make_od_allowed_ids():
 
 
 def test_od_allowed_ids_absent():
-    api_request = {"param1": "toto"}
+    api_request = {"param1": "toto", "datetime": str_to_time_stamp('20230813T150000')}
+
     origin_uri = "sa:1"
     destination_uri = "sa:10"
     instance = FakeInstance()
@@ -859,7 +860,7 @@ def test_od_allowed_ids_absent():
 
 
 def test_od_allowed_ids_present_but_od_absent():
-    api_request = {"param1": "toto"}
+    api_request = {"param1": "toto", "datetime": str_to_time_stamp('20230813T150000')}
     origin_uri = "sa:1"
     destination_uri = "sa:toto"
     instance = FakeInstance()
@@ -869,7 +870,7 @@ def test_od_allowed_ids_present_but_od_absent():
 
 
 def test_od_allowed_ids_present_and_od_present():
-    api_request = {"param1": "toto"}
+    api_request = {"param1": "toto", "datetime": str_to_time_stamp('20230813T150000')}
     origin_uri = "sa:1"
     destination_uri = "sa:10"
     instance = FakeInstance()
@@ -879,6 +880,11 @@ def test_od_allowed_ids_present_and_od_present():
     assert api_request["allowed_id[]"][0] == "rer:1"
     assert api_request["allowed_id[]"][1] == "bus:1"
     assert api_request["allowed_id[]"][2] == "metro:"
+
+    # If request datetime is outside maintenance period, do not apply allowed_id
+    api_request = {"param1": "toto", "datetime": str_to_time_stamp('20230810T100000')}
+    apply_origin_destination_rules(origin_uri, destination_uri, api_request, instance)
+    assert "allowed_id[]" not in api_request
 
 
 def build_response_with_two_pt_ab_pq_and_street_network():

@@ -81,6 +81,7 @@ from jormungandr.utils import (
     is_coord,
     get_pt_object_from_json,
     json_address_from_uri,
+    str_to_time_stamp,
 )
 from jormungandr.error import generate_error
 from jormungandr.utils import Coords
@@ -1292,9 +1293,20 @@ def add_olympics_forbidden_uris(origin_detail, destination_detail, api_request, 
         api_request["forbidden_uris[]"] = instance.olympics_forbidden_uris.pt_object_olympics_forbidden_uris
 
 
+def request_in_maintenance_period(datetime):
+    # Maintenance work is planned for 2023/08/13 00:00:00 to 2023/08/15 24:00:00 local time
+    start_datetime = str_to_time_stamp('20230812T220000')   # 2023/08/13 00:00:00 local datetime
+    end_datetime = str_to_time_stamp('20230815T220000')   # 2023/08/16 00:00:00 local datetime
+    return start_datetime <= datetime <= end_datetime
+
+
 def apply_origin_destination_rules(origin_uri, destination_uri, api_request, instance):
     # Add parameter allowed_id[] in the request if instance.od_allowed_ids exists and allowed_ids found for a key
     if not (instance.od_allowed_ids or instance.od_additional_parameters):
+        return
+
+    # We apply the rule only if the request data_time in within maintenance period
+    if not request_in_maintenance_period(api_request.get('datetime')):
         return
 
     # We re-initialize allowed_id[] values ignoring already existing parameter values.
@@ -1507,7 +1519,7 @@ class Scenario(simple.Scenario):
         # Tag ecologic should be done at the end
         tag_ecologic(pb_resp)
         # Tag special_event
-        if instance.additional_parameters:
+        if instance.additional_parameters and request_in_maintenance_period(api_request.get('datetime')):
             tag_special_event(instance, pb_resp)
         # Update best boarding positions in PT sections
         update_best_boarding_positions(pb_resp, instance)
