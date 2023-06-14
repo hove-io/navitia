@@ -61,7 +61,7 @@ UTC_DATETIME_FORMAT = "%Y-%m-%dT%H:%M:%S%z"
 NOT_A_DATE_TIME = "not-a-date-time"
 WEEK_DAYS_MAPPING = ("monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday")
 COVERAGE_ANY_BETA = "any-beta"
-BEST_BOARDING_POSITION_KEY = "{}-{}"
+ORIGIN_DESTINATION_KEY = "{}-{}"
 ONE_DAY = 86400
 DATE_FORMAT = "%Y-%m-%d"
 
@@ -942,8 +942,8 @@ def is_stop_point(uri):
     return uri.startswith("stop_point") if uri else False
 
 
-def make_best_boarding_position_key(from_id, to_id):
-    return BEST_BOARDING_POSITION_KEY.format(from_id, to_id)
+def make_origin_destination_key(from_id, to_id):
+    return ORIGIN_DESTINATION_KEY.format(from_id, to_id)
 
 
 def read_best_boarding_positions(file_path):
@@ -967,7 +967,7 @@ def read_best_boarding_positions(file_path):
             next(csv_reader)
 
             for line in csv_reader:
-                key = make_best_boarding_position_key(line['from_id'], line['to_id'])
+                key = make_origin_destination_key(line['from_id'], line['to_id'])
                 pos_str = line['positionnement_navitia']
                 pos_enum = position_str_to_enum.get(pos_str.lower())
                 if pos_enum is None:
@@ -983,3 +983,38 @@ def read_best_boarding_positions(file_path):
             'Error while loading best_boarding_positions file: {} with exception: {}'.format(file_path, str(e))
         )
         return None
+
+
+def read_origin_destination_data(file_path):
+    logger = logging.getLogger(__name__)
+    if not os.path.exists(file_path):
+        logger.warning("file: %s does not exist", file_path)
+        return None
+
+    logger.info("reading origin destination and allowed ids from file: %s", file_path)
+    try:
+        my_dict = defaultdict(set)
+        stop_areas = set()
+        allowed_ids = set()
+        fieldnames = ['origin', 'destination', 'od_value']
+        with open(file_path) as f:
+            csv_reader = csv.DictReader(f, fieldnames)
+            # skip the header
+            next(csv_reader)
+
+            for line in csv_reader:
+                allowed_id = line['od_value']
+                if allowed_id:
+                    key = make_origin_destination_key(line['origin'], line['destination'])
+                    my_dict[key].add(allowed_id)
+
+                    stop_areas.add(line['origin'])
+                    stop_areas.add(line['destination'])
+                    allowed_ids.add(allowed_id)
+
+        return my_dict, stop_areas, allowed_ids
+    except Exception as e:
+        logger.exception(
+            'Error while loading od_allowed_ids file: {} with exception: {}'.format(file_path, str(e))
+        )
+        return None, None, None

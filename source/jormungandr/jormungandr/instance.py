@@ -65,8 +65,9 @@ from jormungandr.equipments import EquipmentProviderManager
 from jormungandr.external_services import ExternalServiceManager
 from jormungandr.utils import (
     can_connect_to_database,
-    make_best_boarding_position_key,
+    make_origin_destination_key,
     read_best_boarding_positions,
+    read_origin_destination_data,
 )
 from jormungandr import pt_planners_manager, transient_socket
 import os
@@ -247,11 +248,25 @@ class Instance(transient_socket.TransientSocket):
         self.instance_db = instance_db
         self._ghost_words = ghost_words or []
         self.best_boarding_positions = None
+        # Initialize attributes for additional_parameters
+        self.od_allowed_ids = None
+        self.od_additional_parameters = None
+        self.od_stop_areas = None
+        self.od_lines = None
 
         # Read the best_boarding_positions files if any
         if best_boarding_positions_dir is not None:
             file_path = os.path.join(best_boarding_positions_dir, "{}.csv".format(self.name))
             self.best_boarding_positions = read_best_boarding_positions(file_path)
+
+        # read od_allowed_ids as well as od_additional_parameters if configured and present
+        origin_destination_dir = app.config.get(str('ORIGIN_DESTINATION_DIR'))
+        if origin_destination_dir:
+            file_path = os.path.join(origin_destination_dir, "{}_od_allowed_ids.csv".format(self.name))
+            self.od_allowed_ids, self.od_stop_areas, self.od_lines = read_origin_destination_data(file_path)
+
+            file_path = os.path.join(origin_destination_dir, "{}_od_additional_parameters.csv".format(self.name))
+            self.od_additional_parameters, _, _ = read_origin_destination_data(file_path)
 
     def get_providers_from_db(self):
         """
@@ -719,6 +734,12 @@ class Instance(transient_socket.TransientSocket):
         instance_db = self.get_models()
         return get_value_or_default('ghost_words', instance_db, self.name)
 
+    @property
+    def additional_parameters(self):
+        # type: () -> bool
+        instance_db = self.get_models()
+        return get_value_or_default('additional_parameters', instance_db, self.name)
+
     # TODO: refactorise all properties
     taxi_speed = _make_property_getter('taxi_speed')
     additional_time_after_first_section_taxi = _make_property_getter('additional_time_after_first_section_taxi')
@@ -946,5 +967,29 @@ class Instance(transient_socket.TransientSocket):
     def get_best_boarding_position(self, from_id, to_id):
         if not self.best_boarding_positions:
             return []
-        key = make_best_boarding_position_key(from_id, to_id)
+        key = make_origin_destination_key(from_id, to_id)
         return self.best_boarding_positions.get(key, [])
+
+    def get_od_allowed_ids(self, origin, destination):
+        if not self.od_allowed_ids:
+            return []
+        key = make_origin_destination_key(origin, destination)
+        return self.od_allowed_ids.get(key, [])
+
+    def get_od_additional_parameters(self, origin, destination):
+        if not self.od_additional_parameters:
+            return []
+        key = make_origin_destination_key(origin, destination)
+        return self.od_additional_parameters.get(key, [])
+
+    # Test if stop_area uri is present in od_stop_areas
+    def uri_in_od_stop_areas(self, sa_uri):
+        if not self.od_stop_areas:
+            return False
+        return sa_uri in self.od_stop_areas
+
+    # Test if line uri is present in od_lines
+    def uri_in_od_lines(self, line_uri):
+        if not self.od_lines:
+            return False
+        return line_uri in self.od_lines

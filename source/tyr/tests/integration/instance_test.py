@@ -176,6 +176,7 @@ def test_update_instances(create_instance):
         "pt_planners_configurations": loki_config,
         "ghost_words": GHOST_WORDS,
         "filter_odt_journeys": False,
+        "additional_parameters": False,
     }
     resp = api_get('/v0/instances/{}'.format(create_instance))
     assert resp[0]['access_points'] is False
@@ -224,6 +225,7 @@ def test_update_instances(create_instance):
     assert resp['pt_planners_configurations'] == loki_config
     assert resp['ghost_words'] == GHOST_WORDS
     assert resp['filter_odt_journeys'] is False
+    assert resp['additional_parameters'] is False
 
 
 def test_update_instances_is_free(create_instance):
@@ -541,24 +543,28 @@ def test_update_forgotten_attributs_in_backend(create_instance):
     assert resp[0]['successive_physical_mode_to_limit_id'] == 'physical_mode:Bus'
     assert resp[0]['car_park_provider'] is True
     assert resp[0]['filter_odt_journeys'] is False
+    assert resp[0]['additional_parameters'] is False
 
     params = {
         'max_additional_connections': 3,
         'successive_physical_mode_to_limit_id': 'physical_mode:Train',
         'car_park_provider': False,
         'filter_odt_journeys': True,
+        'additional_parameters': True,
     }
     resp = api_put('/v0/instances/fr', data=json.dumps(params), content_type='application/json')
     assert resp['max_additional_connections'] == 3
     assert resp['successive_physical_mode_to_limit_id'] == 'physical_mode:Train'
     assert resp['car_park_provider'] is False
     assert resp['filter_odt_journeys'] is True
+    assert resp['additional_parameters'] is True
 
     resp = api_get('/v0/instances/fr')
     assert resp[0]['max_additional_connections'] == 3
     assert resp[0]['successive_physical_mode_to_limit_id'] == 'physical_mode:Train'
     assert resp[0]['car_park_provider'] is False
     assert resp[0]['filter_odt_journeys'] is True
+    assert resp[0]['additional_parameters'] is True
 
 
 def test_update_taxi_speed(create_instance):

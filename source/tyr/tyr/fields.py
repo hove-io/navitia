@@ -236,6 +236,7 @@ instance_fields = {
     'pt_planners_configurations': fields.Raw,
     'ghost_words': fields.List(fields.String),
     'filter_odt_journeys': fields.Raw,
+    'additional_parameters': fields.Raw,
 }
 
 api_fields = {'id': fields.Raw, 'name': fields.Raw}
