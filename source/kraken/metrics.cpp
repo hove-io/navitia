@@ -36,6 +36,7 @@ www.navitia.io
 #include <prometheus/counter.h>
 #include <prometheus/exposer.h>
 #include <prometheus/registry.h>
+#include <prometheus/histogram.h>
 
 namespace navitia {
 

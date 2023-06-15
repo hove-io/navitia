@@ -34,12 +34,16 @@ include_directories(SYSTEM "${CMAKE_SOURCE_DIR}/third_party/")
 #
 # prometheus-cpp
 #
+include_directories(SYSTEM "${CMAKE_BINARY_DIR}/third_party/prometheus-cpp/core/include/")
+include_directories(SYSTEM "${CMAKE_BINARY_DIR}/third_party/prometheus-cpp/pull/include/")
 include_directories(SYSTEM "${CMAKE_SOURCE_DIR}/third_party/prometheus-cpp/core/include/")
 include_directories(SYSTEM "${CMAKE_SOURCE_DIR}/third_party/prometheus-cpp/pull/include/")
+link_directories("${CMAKE_BINARY_DIR}/third_party/prometheus-cpp/lib")
 #prometheus-cpp cmake will refuse to build if the CMAKE_INSTALL_PREFIX is empty
 #setting it before will have side effects on how we build packages
 set(ENABLE_PUSH OFF CACHE INTERNAL "" FORCE)
-add_subdirectory(third_party/prometheus-cpp EXCLUDE_FROM_ALL)
+add_subdirectory(third_party/prometheus-cpp)
+
 
 # Reactivate warnings flags
 set(CMAKE_CXX_FLAGS ${TMP_FLAG})
