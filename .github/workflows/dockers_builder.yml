@@ -149,7 +149,7 @@ jobs:
 #         Will build navitia-*.deb packages in current folder
         run: docker run -v `pwd`:/build/navitia/  navitia/builder
 
-      - name: Create dockers images and push them
+      - name: Create dockers images
         run: |
           for component in ${{env.jessie_navitia_components}}; do
               echo "*********  Building $component Tag: ${{ needs.common_variables.outputs.NAVITIA_TAG }} ***************"
@@ -161,16 +161,6 @@ jobs:
               fi
           done
 
-          docker login -u ${{secrets.docker_user}} -p ${{secrets.docker_password}}
-
-          for component in ${{env.jessie_navitia_components}}; do
-              echo "*********  Pushing $component Tag: ${{ needs.common_variables.outputs.NAVITIA_TAG }} ***************"
-              docker push navitia/$component:${{ needs.common_variables.outputs.NAVITIA_TAG }}
-
-              if [[ "${{ needs.common_variables.outputs.AWS_BRANCH }}" = "release" ]]; then
-                  docker push navitia/$component:latest
-              fi
-          done
       - name: failure notification
         if: failure()
         run: |
@@ -227,17 +217,6 @@ jobs:
           for component in ${{env.bullseye_navitia_components}}; do
               echo "*********  Building $component Tag: ${{ needs.common_variables.outputs.NAVITIA_TAG }} ***************"
               docker build -t navitia/$component:${{ needs.common_variables.outputs.NAVITIA_TAG }} -f  docker/${{env.bullseye_version}}/Dockerfile-${component} .
-          done
-
-      - name: Login dockerhub
-        run: |
-          docker login -u ${{secrets.docker_user}} -p ${{secrets.docker_password}}
-
-      - name: Push navitia images
-        run: |
-          for component in ${{env.bullseye_navitia_components}}; do
-              echo "*********  Pushing $component Tag: ${{ needs.common_variables.outputs.NAVITIA_TAG }} ***************"
-              docker push navitia/$component:${{ needs.common_variables.outputs.NAVITIA_TAG }}
           done
 
       - name: failure notification
