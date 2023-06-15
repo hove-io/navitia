@@ -1,6 +1,22 @@
-.. image:: documentation/diagrams/logo_navitia_horizontal_fd_gris_250px.png
+.. image:: documentation/diagrams/kraken.jpg
     :alt: navitia
     :align: center
+
+Cher membre de la communauté Navitia,
+
+Nous vous remercions de l’intérêt que vous portez à nos produits et plus particulièrement à notre plateforme d’information voyageurs.
+
+Nous avons le plaisir de vous informer qu’**une nouvelle version de Navitia sera prochainement disponible**.
+
+Dans le cadre du lancement de cette nouvelle version, nous avons pris la décision de limiter l’accès à notre code source. Cette décision se traduit par la fermeture progressive d’ici à fin septembre de nos répertoires sur Github. Cette décision est avant tout motivée par le désir d’offrir à nos clients une meilleure qualité de services tant sur le plan fonctionnel que sur le plan des performances. Elle répond également à un certain nombre d’exigences en termes de cyber sécurité.
+
+La version historique de Navitia, ouverte en 2014, restera disponible. Cette version est également disponible avec notre offre fremium via https://navitia.io , offre qui évoluera progressivement vers notre nouvelle version Navitia à partir de fin 2023.
+Cette offre vous permet, sous certaines conditions, de disposer d’une assistance.
+
+Notre service commercial sales@hove.com reste bien entendu à votre disposition pour vous étudier avec vous une formule adaptée à vos besoins.
+
+Cordialement,
+Hove
 
 =========
  Navitia
@@ -120,8 +136,6 @@ More information
 * integration documentation https://doc.navitia.io
 * technical documentation https://github.com/hove-io/navitia/tree/dev/documentation/rfc
 * twitter @navitia https://twitter.com/navitia
-* google groups navitia https://groups.google.com/d/forum/navitia
-* channel `#navitia` on matrix/element https://app.element.io/#/room/#navitia:matrix.org
 
 
 Getting started
@@ -137,23 +151,6 @@ Want to test the API?
 For a more friendly interface you can use the API through
 `navitia playground <https://playground.navitia.io/>`_ (no matter the server used).
 
-Want to use your own datasets or infrastructure?
-------------------------------------------------
-
-docker
-~~~~~~
-
-The easiest way to have your own navitia is to use the navitia
-`docker-compose <https://github.com/hove-io/navitia-docker-compose>`_.
-
-fabric
-~~~~~~
-
-| If you don't want to use the prebuilt docker images you can use the
-  `fabric scripts <https://github.com/hove-io/fabric_navitia>`_ we use to deploy to api.navitia.io.
-| :warning: *WARNING* :warning: Those scripts should be usable, but they are not meant to be completely
-  generic and are designed for our own servers architecture.
-| Use this only if the docker does not suit your needs and if you are an experienced user :wink:
 
 Want to dev and contribute to navitia?
 ---------------------------------------
