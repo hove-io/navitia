@@ -47,7 +47,7 @@ jobs:
 
       - name: Build Navitia
         run: |
-          docker buildx build --platform linux/arm64 --file docker/debian11_arm64/Dockerfile-builder  --tag navitia/builder_arm64:latest --push .
+          docker buildx build --platform linux/arm64 --file docker/debian11_arm64/Dockerfile-builder  --tag navitia/builder_arm64:latest .
           docker run --rm --platform linux/arm64 -v `pwd`:/navitia/navitia/  navitia/builder_arm64:latest
 
       - name: Choose dev tag
@@ -70,7 +70,7 @@ jobs:
         with:
           context: .
           file: docker/debian11_arm64/Dockerfile-jormungandr
-          push: true
+          push: false
           tags: navitia/jormungandr_arm64:${{env.navitia_tag}}
           platforms: linux/arm64
 
