@@ -989,7 +989,7 @@ def read_origin_destination_data(file_path):
     logger = logging.getLogger(__name__)
     if not os.path.exists(file_path):
         logger.warning("file: %s does not exist", file_path)
-        return None
+        return None, None, None
 
     logger.info("reading origin destination and allowed ids from file: %s", file_path)
     try:
