@@ -60,7 +60,7 @@ jobs:
             os: [{docker_image: mutable_debian8_dev , python_version: python3.6}, {docker_image: mutable_debian11_dev, python_version: python3.9}]
 
     container:
-        image: ${{env.shared_ecr_registry}}/${{ matrix.os.docker_image }}:latest
+        image: ${{shared_ecr_registry}}/${{ matrix.os.docker_image }}:latest
         credentials:
           username: AWS
           password: ${{ needs.aws_creds.outputs.token }}
