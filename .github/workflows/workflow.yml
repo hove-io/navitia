@@ -11,8 +11,6 @@ on:
       - created
 env:
   REGION: eu-west-1
-  debian11_image: 162230498103.dkr.ecr.eu-west-1.amazonaws.com/mutable_debian11_dev:latest
-  debian8_image: 162230498103.dkr.ecr.eu-west-1.amazonaws.com/mutable_debian8_dev:latest
 
 jobs:
   info:
@@ -57,7 +55,7 @@ jobs:
     strategy:
         fail-fast: false
         matrix:
-            os: [{docker_image: ${{ env.debian8_image }} , python_version: python3.6}, {docker_image: ${{ env.debian11_image }}, python_version: python3.9}]
+            os: [{docker_image: 162230498103.dkr.ecr.eu-west-1.amazonaws.com/mutable_debian8_dev:latest , python_version: python3.6}, {docker_image: 162230498103.dkr.ecr.eu-west-1.amazonaws.com/mutable_debian11_dev:latest, python_version: python3.9}]
 
     container:
         image: ${{matrix.os.docker_image}}
@@ -99,7 +97,7 @@ jobs:
       run: make -j $(nproc)
     - name: Tests python3
       working-directory: ./build
-      if: ${{ matrix.os.docker_image == '${{ env.debian11_image }}'}}
+      if: ${{ matrix.os.docker_image == '162230498103.dkr.ecr.eu-west-1.amazonaws.com/mutable_debian11_dev'}}
       run: |
         virtualenv -p ${{matrix.os.python_version}} navitia_py3
         . navitia_py3/bin/activate
