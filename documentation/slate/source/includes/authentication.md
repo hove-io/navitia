@@ -19,6 +19,10 @@ $ curl https://3b036afe-0110-4202-b9ed-99718476c2e0@api.navitia.io/v1/coverage
 Authentication is required to use **navitia.io**. When you register we will give you
 an authentication key that must accompany each API call you make.
 
+<aside class="notice">
+Your key will be ready to work at most 5 minutes after its creation.
+</aside>
+
 **Navitia.io** uses [Basic HTTP authentication](http://tools.ietf.org/html/rfc2617#section-2)
 for authentication, where the username is the key, and password remains empty.
 
