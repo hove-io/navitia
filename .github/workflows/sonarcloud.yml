@@ -23,7 +23,7 @@ jobs:
           echo token=$(aws ecr get-login-password --region $REGION) >> $GITHUB_OUTPUT
   static_analysis:
     runs-on: [self-hosted, corefront, sandbox]
-
+    needs: aws_creds
     container:
         image: 162230498103.dkr.ecr.eu-west-1.amazonaws.com/mutable-debian11_dev:latest
         credentials:
