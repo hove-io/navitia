@@ -15,7 +15,7 @@ env:
 
 jobs:
   info:
-    runs-on: [self-hosted, core-front, sandbox]
+    runs-on: [self-hosted, corefront, sandbox]
     steps:
     - name: Dump GitHub context
       env:
@@ -24,7 +24,7 @@ jobs:
 
   aws_creds:
     name: Get ECR Access
-    runs-on: [self-hosted, core-front, sandbox]
+    runs-on: [self-hosted, corefront, sandbox]
     outputs:
       token: ${{ steps.ecr_token.outputs.token }}
     steps:
@@ -34,7 +34,7 @@ jobs:
           echo token=$(aws ecr get-login-password --region $REGION) >> $GITHUB_OUTPUT 
 
   checks:
-    runs-on: [self-hosted, core-front, sandbox]
+    runs-on: [self-hosted, corefront, sandbox]
     steps:
     - name: Generate github private access token
       id: ci-core-app-token
@@ -52,7 +52,7 @@ jobs:
       run: ./source/scripts/check_submodules.sh
 
   build:
-    runs-on: [self-hosted, core-front, sandbox]
+    runs-on: [self-hosted, corefront, sandbox]
     strategy:
         fail-fast: false
         matrix:
