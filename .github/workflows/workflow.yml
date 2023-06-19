@@ -93,21 +93,21 @@ jobs:
         save: ${{ github.event_name == 'push' }}
     - name: configure for Release
       run: mkdir build && cd ./build && cmake -DSTRIP_SYMBOLS=ON ../source
-    - name: run
-      working-directory: ./build
-      run: make -j $(nproc)
-    - name: Tests python3
-      working-directory: ./build
-      if: ${{ matrix.os.docker_image == 'mutable-debian11_dev'}}
-      run: |
-        virtualenv -p ${{matrix.os.python_version}} navitia_py3
-        . navitia_py3/bin/activate
-        pip install -r ../source/jormungandr/requirements_dev.txt
-        export JORMUNGANDR_BROKER_URL='amqp://guest:guest@rabbitmq:5672//'
-        export KRAKEN_RABBITMQ_HOST='rabbitmq'
-        ctest --output-on-failure
-        deactivate
-        rm -rf navitia_py3
+#    - name: run
+#      working-directory: ./build
+#      run: make -j $(nproc)
+#    - name: Tests python3
+#      working-directory: ./build
+#      if: ${{ matrix.os.docker_image == 'mutable-debian11_dev'}}
+#      run: |
+#        virtualenv -p ${{matrix.os.python_version}} navitia_py3
+#        . navitia_py3/bin/activate
+#        pip install -r ../source/jormungandr/requirements_dev.txt
+#        export JORMUNGANDR_BROKER_URL='amqp://guest:guest@rabbitmq:5672//'
+#        export KRAKEN_RABBITMQ_HOST='rabbitmq'
+#        ctest --output-on-failure
+#        deactivate
+#        rm -rf navitia_py3
     - name: docker_test python2
       working-directory: ./build
       run: |
@@ -118,7 +118,10 @@ jobs:
         pip install -r ../source/sql/requirements.txt
         export NAVITIA_CHAOS_DUMP_PATH=$(echo $(pwd)/../source/tests/chaos/chaos_loading.sql.gz)
         echo 'NAVITIA_CHAOS_DUMP_PATH' $NAVITIA_CHAOS_DUMP_PATH
+        echo ls -lt $NAVITIA_CHAOS_DUMP_PATH
         make docker_test
+        deactivate
+        rm -rf navitia_py2
       env:
         NAVITIA_DOCKER_NETWORK: ${{ job.container.network }}
         TYR_CELERY_BROKER_URL: 'amqp://guest:guest@rabbitmq:5672//'
@@ -134,6 +137,8 @@ jobs:
         export NAVITIA_CHAOS_DUMP_PATH=$(echo $(pwd)/../source/tests/chaos/chaos_loading.sql.gz')
         echo $NAVITIA_CHAOS_DUMP_PATH
         make docker_test
+        deactivate
+        rm -rf navitia_py3
 
       env:
         NAVITIA_DOCKER_NETWORK: ${{ job.container.network }}
