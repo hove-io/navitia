@@ -38,6 +38,8 @@ import psycopg2
 import subprocess
 
 
+
+
 @pytest.yield_fixture(scope="session")
 def postgres_docker():
     """
@@ -48,7 +50,7 @@ def postgres_docker():
         path = os.getenv("NAVITIA_CHAOS_DUMP_PATH")
     else:
         path = abspath("chaos_loading.sql.gz")
-    sql_mount = docker.types.Mount("/docker-entrypoint-initdb.d/chaos_loading.sql.gz", path, type="bind")
+    sql_mount = docker.types.Mount("/tmp/chaos_loading.sql.gz", path, type="bind")
     with closing(PostgresDocker("chaos_loading", mounts=[sql_mount])) as chaos_docker:
         yield chaos_docker
 
