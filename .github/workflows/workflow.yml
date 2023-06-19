@@ -9,18 +9,33 @@ on:
   release:
     types:
       - created
+env:
+  REGION: eu-west-1
+  debian11_image: 162230498103.dkr.ecr.eu-west-1.amazonaws.com/mutable_debian11_dev:latest
+  debian8_image: 162230498103.dkr.ecr.eu-west-1.amazonaws.com/mutable_debian8_dev:latest
 
 jobs:
   info:
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, core-front, sandbox]
     steps:
     - name: Dump GitHub context
       env:
           GITHUB_CONTEXT: ${{ toJson(github) }}
       run: echo "$GITHUB_CONTEXT"
 
+  aws_creds:
+    name: Get ECR Access
+    runs-on: [self-hosted, core-front, sandbox]
+    outputs:
+      token: ${{ steps.ecr_token.outputs.token }}
+    steps:
+      - id: ecr_token
+        name: Get ECR Token
+        run: |
+          echo token=$(aws ecr get-login-password --region $REGION) >> $GITHUB_OUTPUT 
+
   checks:
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, core-front, sandbox]
     steps:
     - name: Generate github private access token
       id: ci-core-app-token
@@ -38,15 +53,18 @@ jobs:
       run: ./source/scripts/check_submodules.sh
 
   build:
-    runs-on: ubuntu-latest
-
+    runs-on: [self-hosted, core-front, sandbox]
     strategy:
         fail-fast: false
         matrix:
-            os: [{docker_image: navitia/debian8_dev, python_version: python3.6}, {docker_image: navitia/debian11_dev, python_version: python3.9}]
+            os: [{docker_image: ${{ env.debian8_image }} , python_version: python3.6},
+                 {docker_image: ${{ env.debian11_image }}, python_version: python3.9}]
 
     container:
         image: ${{matrix.os.docker_image}}
+        credentials:
+          username: AWS
+          password: ${{ needs.aws_creds.outputs.token }}
 
     services:
       rabbitmq:
@@ -82,7 +100,7 @@ jobs:
       run: make -j $(nproc)
     - name: Tests python3
       working-directory: ./build
-      if: ${{ matrix.os.docker_image == 'navitia/debian11_dev'}}
+      if: ${{ matrix.os.docker_image == '${{ env.debian11_image }}'}}
       run: |
         virtualenv -p ${{matrix.os.python_version}} navitia_py3
         . navitia_py3/bin/activate
@@ -122,35 +140,35 @@ jobs:
         TYR_CELERY_BROKER_URL: 'amqp://guest:guest@rabbitmq:5672//'
         TYR_REDIS_HOST: 'redis'
 
-  precommit:
-    runs-on: ubuntu-20.04
-    steps:
-    - name: Generate github private access token
-      id: ci-core-app-token
-      uses: getsentry/action-github-app-token@v2.0.0
-      with:
-        app_id: ${{ secrets.CI_CORE_APP_ID }}
-        private_key: ${{ secrets.CI_CORE_APP_PEM }}
-    - uses: actions/checkout@v3
-      with:
-        submodules: recursive
-        token: ${{ steps.ci-core-app-token.outputs.token }}
-    - name: Config Github global url for ssh cases (add access token)
-      run: |
-        git config --global url."https://x-access-token:${{ steps.ci-core-app-token.outputs.token }}@github.com/hove-io/".insteadOf "git@github.com:hove-io/"
-    - uses: actions/setup-python@v3
-      with:
-        python-version: '3.8.x'
-    - name: install dependencies
-      run: |
-        sudo apt-get update && sudo apt install -y protobuf-compiler clang-format git 2to3
-        pip install -r requirements_pre-commit.txt --upgrade
-    - name: Build Protobuf
-      run: bash source/scripts/build_protobuf.sh
-    - name: Pre-commit Run
-      env:
-        LC_ALL: C.UTF-8
-        LANG: C.UTF-8
-      run: |
-        pre-commit install --install-hooks
-        pre-commit run --all --show-diff-on-failure
+#  precommit:
+#    runs-on: [self-hosted, core-front, sandbox]
+#    steps:
+#    - name: Generate github private access token
+#      id: ci-core-app-token
+#      uses: getsentry/action-github-app-token@v2.0.0
+#      with:
+#        app_id: ${{ secrets.CI_CORE_APP_ID }}
+#        private_key: ${{ secrets.CI_CORE_APP_PEM }}
+#    - uses: actions/checkout@v3
+#      with:
+#        submodules: recursive
+#        token: ${{ steps.ci-core-app-token.outputs.token }}
+#    - name: Config Github global url for ssh cases (add access token)
+#      run: |
+#        git config --global url."https://x-access-token:${{ steps.ci-core-app-token.outputs.token }}@github.com/hove-io/".insteadOf "git@github.com:hove-io/"
+#    - uses: actions/setup-python@v3
+#      with:
+#        python-version: '3.8.x'
+#    - name: install dependencies
+#      run: |
+#        sudo apt-get update && sudo apt install -y protobuf-compiler clang-format git 2to3
+#        pip install -r requirements_pre-commit.txt --upgrade
+#    - name: Build Protobuf
+#      run: bash source/scripts/build_protobuf.sh
+#    - name: Pre-commit Run
+#      env:
+#        LC_ALL: C.UTF-8
+#        LANG: C.UTF-8
+#      run: |
+#        pre-commit install --install-hooks
+#        pre-commit run --all --show-diff-on-failure
