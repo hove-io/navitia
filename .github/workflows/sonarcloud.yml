@@ -29,8 +29,8 @@ jobs:
         credentials:
           username: AWS
           password: ${{ needs.aws_creds.outputs.token }}
-#        volumes:
-#          - /usr/share/dotnet:/usr/share/dotnet
+        volumes:
+          - /usr/share/dotnet:/usr/share/dotnet
         # Mount /dotnet so we can delete files from docker and free up space (>20GB)
 
     services:
@@ -44,10 +44,10 @@ jobs:
           - 6379:6379
 
     steps:
-#    - name: Free up space
-#      run: rm -rf /usr/share/dotnet/*
-#    - name: Display remaining space
-#      run: df -h
+    - name: Free up space
+      run: rm -rf /usr/share/dotnet/*
+    - name: Display remaining space
+      run: df -h
     - name: Generate github private access token
       id: ci-core-app-token
       uses: getsentry/action-github-app-token@v2.0.0
