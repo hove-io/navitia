@@ -41,7 +41,7 @@ class PlacesFreeAccess:
     stop_points that are accessible freely from a given place: odt, stop_points of a stop_area, etc.
     """
 
-    def __init__(self, future_manager, instance, requested_place_obj, request_id):
+    def __init__(self, future_manager, instance, requested_place_obj, pt_planner_name, request_id):
         """
 
         :param instance: instance of the coverage, all outside services callings pass through it(street network,
@@ -55,6 +55,7 @@ class PlacesFreeAccess:
         self._request_id = request_id
         self._async_request()
         self._logger = logging.getLogger(__name__)
+        self._pt_planner = self._instance.get_pt_planner(pt_planner_name)
 
     @new_relic.distributedEvent("get_stop_points_for_stop_area", "places")
     def _get_stop_points_for_stop_area(self, uri):
@@ -64,7 +65,7 @@ class PlacesFreeAccess:
     @new_relic.distributedEvent("get_odt_stop_points", "places")
     def _get_odt_stop_points(self, coord):
         with timed_logger(self._logger, 'odt_stop_points_calling_external_service', self._request_id):
-            return self._instance.georef.get_odt_stop_points(coord, self._request_id)
+            return self._pt_planner.get_odt_stop_points(coord, self._request_id)
 
     def _do_request(self):
         self._logger.debug("requesting places with free access from %s", self._requested_place_obj.uri)
@@ -85,7 +86,7 @@ class PlacesFreeAccess:
         odt = set()
 
         if coord:
-            odt_sps = self._get_odt_stop_points(self._instance.georef, coord)
+            odt_sps = self._get_odt_stop_points(self._pt_planner, coord)
             [odt.add(stop_point.uri) for stop_point in odt_sps]
 
         self._logger.debug("finish places with free access from %s", self._requested_place_obj.uri)
