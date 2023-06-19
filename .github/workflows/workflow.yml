@@ -11,6 +11,7 @@ on:
       - created
 env:
   REGION: eu-west-1
+  SBX_ECR_REGISTRY: 162230498103.dkr.ecr.eu-west-1.amazonaws.com
 
 jobs:
   info:
@@ -55,10 +56,10 @@ jobs:
     strategy:
         fail-fast: false
         matrix:
-            os: [{docker_image: 162230498103.dkr.ecr.eu-west-1.amazonaws.com/mutable_debian8_dev:latest , python_version: python3.6}, {docker_image: 162230498103.dkr.ecr.eu-west-1.amazonaws.com/mutable_debian11_dev:latest, python_version: python3.9}]
+            os: [{docker_image: mutable_debian8_dev , python_version: python3.6}, {docker_image: mutable_debian11_dev, python_version: python3.9}]
 
     container:
-        image: ${{matrix.os.docker_image}}
+        image: ${SBX_ECR_REGISTRY}/${{matrix.os.docker_image}}:latest
         credentials:
           username: AWS
           password: ${{ needs.aws_creds.outputs.token }}
@@ -97,7 +98,7 @@ jobs:
       run: make -j $(nproc)
     - name: Tests python3
       working-directory: ./build
-      if: ${{ matrix.os.docker_image == '162230498103.dkr.ecr.eu-west-1.amazonaws.com/mutable_debian11_dev'}}
+      if: ${{ matrix.os.docker_image == 'mutable_debian11_dev'}}
       run: |
         virtualenv -p ${{matrix.os.python_version}} navitia_py3
         . navitia_py3/bin/activate
