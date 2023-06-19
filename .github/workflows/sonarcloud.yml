@@ -95,7 +95,7 @@ jobs:
         pip install -r source/jormungandr/requirements_dev.txt
         pip install -r source/tyr/requirements_dev.txt
         pip install -r source/sql/requirements.txt
-        export NAVITIA_CHAOS_DUMP_PATH=$(echo $GITHUB_WORKSPACE/source/tests/chaos/chaos_loading.sql.gz | sed -e 's#__w#home/runner/work#')
+        export NAVITIA_CHAOS_DUMP_PATH=$(echo $(pwd)/../source/tests/chaos/chaos_loading.sql.gz')
         echo $NAVITIA_CHAOS_DUMP_PATH
         make docker_test
         deactivate
