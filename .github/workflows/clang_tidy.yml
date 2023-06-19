@@ -3,8 +3,8 @@ name: Clang-tidy
 on:
   push:
     branches:
-    - clang-tidy
-    - release
+    - _clang-tidy
+    - _release
 
 jobs:
   info:

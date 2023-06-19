@@ -8,15 +8,29 @@ on:
 
 env:
    SONAR_SCANNER_VERSION: 4.7.0.2747
+   REGION: eu-west-1
 
 jobs:
+  aws_creds:
+    name: Get ECR Access
+    runs-on: [ self-hosted, corefront, sandbox ]
+    outputs:
+      token: ${{ steps.ecr_token.outputs.token }}
+    steps:
+      - id: ecr_token
+        name: Get ECR Token
+        run: |
+          echo token=$(aws ecr get-login-password --region $REGION) >> $GITHUB_OUTPUT
   static_analysis:
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, corefront, sandbox]
 
     container:
-        image: navitia/debian11_dev
-        volumes:
-          - /usr/share/dotnet:/usr/share/dotnet
+        image: 162230498103.dkr.ecr.eu-west-1.amazonaws.com/mutable-debian11_dev:latest
+        credentials:
+          username: AWS
+          password: ${{ needs.aws_creds.outputs.token }}
+#        volumes:
+#          - /usr/share/dotnet:/usr/share/dotnet
         # Mount /dotnet so we can delete files from docker and free up space (>20GB)
 
     services:
@@ -30,10 +44,10 @@ jobs:
           - 6379:6379
 
     steps:
-    - name: Free up space
-      run: rm -rf /usr/share/dotnet/*
-    - name: Display remaining space
-      run: df -h
+#    - name: Free up space
+#      run: rm -rf /usr/share/dotnet/*
+#    - name: Display remaining space
+#      run: df -h
     - name: Generate github private access token
       id: ci-core-app-token
       uses: getsentry/action-github-app-token@v2.0.0
