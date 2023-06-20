@@ -89,8 +89,9 @@ jobs:
           LANG: C.UTF-8
         run: |
           NAVITIA_PATH=$(echo $GITHUB_WORKSPACE | sed -e 's#__w#/opt/actions-runner/_work#')
-          git status
           git config --global --add safe.directory ${NAVITIA_PATH}
+          git status
+
           pre-commit install --install-hooks
       - name: Pre-commit run
         env:
