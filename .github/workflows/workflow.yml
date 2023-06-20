@@ -25,7 +25,7 @@ jobs:
         run: |
           echo token=$(aws ecr get-login-password --region $REGION) >> $GITHUB_OUTPUT
 
-  checks submodules and precommit:
+  checks:
     runs-on: [self-hosted, corefront, sandbox]
     needs: credentials
     container:
@@ -119,7 +119,7 @@ jobs:
       run: mkdir build && cd ./build && cmake -DSTRIP_SYMBOLS=ON ../source
     - name: run
       working-directory: ./build
-      run: echo "test" #make -j $(nproc)
+      run: make -j $(nproc)
 #    - name: Tests python3
 #      working-directory: ./build
 #      if: ${{ matrix.os.docker_image == 'mutable-debian11_dev'}}
@@ -171,7 +171,7 @@ jobs:
         NAVITIA_DOCKER_NETWORK: ${{ job.container.network }}
         TYR_CELERY_BROKER_URL: 'amqp://guest:guest@rabbitmq:5672//'
         TYR_REDIS_HOST: 'redis'
-
+#
 #  precommit:
 #    runs-on: [self-hosted, core-front, sandbox]
 #    steps:
