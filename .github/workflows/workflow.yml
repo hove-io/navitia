@@ -86,6 +86,7 @@ jobs:
           LC_ALL: C.UTF-8
           LANG: C.UTF-8
         run: |
+          git --version
           pre-commit install --install-hooks
           pre-commit run --all --show-diff-on-failure
 
