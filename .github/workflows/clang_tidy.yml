@@ -3,14 +3,11 @@ name: Clang-tidy
 on:
   push:
     branches:
-    - _clang-tidy
-    - _release
-  pull_request:
-    branches: [ dev ]
+    - clang-tidy
+    - release
 
 env:
   REGION: eu-west-1
-
 
 jobs:
   aws_creds:
@@ -53,30 +50,30 @@ jobs:
     - name: Clang-tidy
       working-directory: ${{ runner.temp }}
       run: make tidy_fix || echo "Files have been tidied ! Let's commit them"
-#    - name: Commit and push changes
-#      # Handle case with no clang-tidy fix
-#      continue-on-error: true
-#      uses: peter-evans/create-pull-request@v3
-#      with:
-#        token: ${{ secrets.GITHUB_TOKEN }}
-#        commit-message: Clang-tidy the code base
-#        committer: GitHub <noreply@github.com>
-#        author: ${{ github.actor }} <${{ github.actor }}@users.noreply.github.com>
-#        title: '[Clang-Tidy] Code maintenance and modernisation'
-#        body: |
-#          🤖 This is an automatic PR 🤖
-#
-#          Clang-tidy suggests the following changes so far:
-#          - `clang-analyzer-*` : clang Static Analyzer checks.
-#
-#          [#clang-tidy documentation](https://clang.llvm.org/extra/clang-tidy/)
-#        labels: not_in_changelog
-#        team-reviewers: hove-io/coreteam
-#        branch: auto/clang-tidy
-#        base: dev
-#    - name: Check outputs
-#      if: ${{ success() }}
-#      run: |
-#        echo "Pull Request Number - ${{ env.PULL_REQUEST_NUMBER }}"
-#        echo "Pull Request Number - ${{ steps.cpr.outputs.pull-request-number }}"
+    - name: Commit and push changes
+      # Handle case with no clang-tidy fix
+      continue-on-error: true
+      uses: peter-evans/create-pull-request@v3
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+        commit-message: Clang-tidy the code base
+        committer: GitHub <noreply@github.com>
+        author: ${{ github.actor }} <${{ github.actor }}@users.noreply.github.com>
+        title: '[Clang-Tidy] Code maintenance and modernisation'
+        body: |
+          🤖 This is an automatic PR 🤖
+
+          Clang-tidy suggests the following changes so far:
+          - `clang-analyzer-*` : clang Static Analyzer checks.
+
+          [#clang-tidy documentation](https://clang.llvm.org/extra/clang-tidy/)
+        labels: not_in_changelog
+        team-reviewers: hove-io/coreteam
+        branch: auto/clang-tidy
+        base: dev
+    - name: Check outputs
+      if: ${{ success() }}
+      run: |
+        echo "Pull Request Number - ${{ env.PULL_REQUEST_NUMBER }}"
+        echo "Pull Request Number - ${{ steps.cpr.outputs.pull-request-number }}"
 
