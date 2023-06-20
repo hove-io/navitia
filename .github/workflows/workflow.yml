@@ -35,6 +35,7 @@ jobs:
 
   checks:
     runs-on: [self-hosted, corefront, sandbox]
+    needs: credentials
     steps:
     - uses: actions/checkout@v3
       with:
