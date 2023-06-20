@@ -3,9 +3,9 @@ name: Build Navitia Dockers
 on:
   push:
     branches:
-      - _dev
-#    tags:
-#      - '*'
+      - dev
+    tags:
+      - '*'
 
 env:
   jessie_version: debian8

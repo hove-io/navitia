@@ -3,9 +3,9 @@ name: Build Navitia Dockers debian11 (ARM64)
 on:
   push:
     branches:
-      - _dev
-#    tags:
-#      - '*'
+      - dev
+    tags:
+      - '*'
 env:
   debian_version: debian11
 
