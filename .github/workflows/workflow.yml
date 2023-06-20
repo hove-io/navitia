@@ -63,8 +63,6 @@ jobs:
         credentials:
           username: AWS
           password: ${{ needs.aws_creds.outputs.token }}
-        volumes:
-          - /tmp/datachaos:/tmp
 
     services:
       rabbitmq:
@@ -138,9 +136,7 @@ jobs:
         . navitia_py3/bin/activate
         pip install -r ../source/tyr/requirements_dev.txt
         pip install -r ../source/sql/requirements.txt
-        cp ../source/tests/chaos/chaos_loading.sql.gz /tmp/datachaos/chaos_loading.sql.gz
-        #export NAVITIA_CHAOS_DUMP_PATH=$(echo $(pwd)/../source/tests/chaos/chaos_loading.sql.gz)
-        export NAVITIA_CHAOS_DUMP_PATH=/tmp/datachaos/chaos_loading.sql.gz
+        export NAVITIA_CHAOS_DUMP_PATH=$(echo $GITHUB_WORKSPACE/source/tests/chaos/chaos_loading.sql.gz | sed -e 's#__w#/opt/actions-runner/_work#')
         echo $NAVITIA_CHAOS_DUMP_PATH
         ls -lt /tmp
         make docker_test
