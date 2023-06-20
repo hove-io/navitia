@@ -70,6 +70,7 @@ jobs:
         pip install -r requirements_pre-commit.txt --upgrade
         pre-commit install --install-hooks
         pre-commit run --all --show-diff-on-failure
+        cat /github/home/.cache/pre-commit/pre-commit.log
         deactivate
         rm -rf navitia_py3
 
