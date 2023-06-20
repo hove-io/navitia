@@ -31,7 +31,7 @@ jobs:
         uses: getsentry/action-github-app-token@v2.0.0
         with:
           app_id: ${{ secrets.CI_CORE_APP_ID }}
-          private_key: ${{ secrets.CI_CORE_APP_PEM }
+          private_key: ${{ secrets.CI_CORE_APP_PEM }}
 
   checks:
     runs-on: [self-hosted, corefront, sandbox]
