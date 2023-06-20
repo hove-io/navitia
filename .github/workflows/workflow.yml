@@ -86,9 +86,9 @@ jobs:
           LC_ALL: C.UTF-8
           LANG: C.UTF-8
         run: |
-          git --version
-          ls -lt $(pwd)
+          ls -lt $(pwd)/../
           pre-commit install --install-hooks
+          cat /github/home/.cache/pre-commit/pre-commit.log
           pre-commit run --all --show-diff-on-failure
 
   build:
