@@ -78,28 +78,22 @@ jobs:
         run: |
           git config --global url."https://x-access-token:${{ steps.ci-core-app-token.outputs.token }}@github.com/hove-io/".insteadOf "git@github.com:hove-io/"
 
-      - name: install requirements_pre_commit
-        run: |
-          pip3 install -r requirements_pre-commit.txt --upgrade
       - name: Build Protobuf
         run: bash source/scripts/build_protobuf.sh
-      - name: Pre-commit install
-        env:
-          LC_ALL: C.UTF-8
-          LANG: C.UTF-8
-        run: |
-          NAVITIA_PATH=$(echo $GITHUB_WORKSPACE | sed -e 's#__w#/opt/actions-runner/_work#')
-          echo $NAVITIA_PATH
-          git config --global --add safe.directory /__w/navitia/navitia
-          git status
 
-          pre-commit install --install-hooks
       - name: Pre-commit run
         env:
           LC_ALL: C.UTF-8
           LANG: C.UTF-8
         run: |
+          git config --global --add safe.directory /__w/navitia/navitia
+          virtualenv -p ${{matrix.os.python_version}} navitia_py3
+          . navitia_py3/bin/activate
+          pip install -r requirements_pre-commit.txt --upgrade
+          pre-commit install --install-hooks
           pre-commit run --all --show-diff-on-failure
+          deactivate
+          rm -rf navitia_py3
 
   build:
     runs-on: [self-hosted, corefront, sandbox]
