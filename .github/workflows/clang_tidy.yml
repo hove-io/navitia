@@ -21,23 +21,23 @@ jobs:
         run: |
           echo token=$(aws ecr get-login-password --region $REGION) >> $GITHUB_OUTPUT
 
-  info:
-    runs-on: [self-hosted, corefront, sandbox]
-    needs: aws_creds
-    steps:
-    - name : Dump Github Context
-      env:
-        GITHUB_CONTEXT: ${{ toJson(github) }}
-      run: echo $GITHUB_CONTEXT
+#  info:
+#    runs-on: [self-hosted, corefront, sandbox]
+#    needs: aws_creds
+#    steps:
+#    - name : Dump Github Context
+#      env:
+#        GITHUB_CONTEXT: ${{ toJson(github) }}
+#      run: echo $GITHUB_CONTEXT
 
   clang-tidy:
     runs-on: [self-hosted, corefront, sandbox]
     needs: aws_creds
     container:
-      image: 162230498103.dkr.ecr.eu-west-1.amazonaws.com/mutable-debian11_dev:latest
-      credentials:
-        username: AWS
-        password: ${{ needs.aws_creds.outputs.token }}
+        image: 162230498103.dkr.ecr.eu-west-1.amazonaws.com/mutable-debian11_dev:latest
+        credentials:
+          username: AWS
+          password: ${{ needs.aws_creds.outputs.token }}
     steps:
     - name: Generate github private access token
       id: ci-core-app-token
