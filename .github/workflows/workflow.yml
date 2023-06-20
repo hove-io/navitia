@@ -88,8 +88,8 @@ jobs:
           LC_ALL: C.UTF-8
           LANG: C.UTF-8
         run: |
-          git config user.name github-actions
-          git config user.email github-actions@github.com
+          NAVITIA_PATH = $(echo $GITHUB_WORKSPACE | sed -e 's#__w#/opt/actions-runner/_work#')
+          git config --global --add safe.directory NAVITIA_PATH
           pre-commit install --install-hooks
       - name: Pre-commit Run
         env:
