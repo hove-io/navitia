@@ -64,7 +64,7 @@ jobs:
       run: |
         virtualenv -p python3.9 navitia_py3
         . navitia_py3/bin/activate
-        pip install -r requirements_pre-commit.txt --upgrade
+        pip install -r requirements_pre-commit.txt
         pre-commit install --install-hooks
         pre-commit run --all --show-diff-on-failure
         deactivate
