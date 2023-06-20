@@ -92,7 +92,6 @@ jobs:
           git status
           echo ${NAVITIA_PATH}
           echo NAVITIA_PATH
-          git config --global --add safe.directory ${NAVITIA_PATH}
           pre-commit install --install-hooks
       - name: Pre-commit run
         env:
