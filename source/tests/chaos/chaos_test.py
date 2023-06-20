@@ -37,8 +37,6 @@ import pytest
 import subprocess
 
 
-
-
 @pytest.yield_fixture(scope="session")
 def postgres_docker():
     """
