@@ -25,21 +25,22 @@ jobs:
         run: |
           echo token=$(aws ecr get-login-password --region $REGION) >> $GITHUB_OUTPUT
 
-      - name: Generate github private access token
-        id: ci_app_token
-        uses: getsentry/action-github-app-token@v2.0.0
-        with:
-          app_id: ${{ secrets.CI_CORE_APP_ID }}
-          private_key: ${{ secrets.CI_CORE_APP_PEM }}
-
   checks:
     runs-on: [self-hosted, corefront, sandbox]
     needs: credentials
     steps:
+
+    - name: Generate github private access token
+      id: ci-core-app-token
+      uses: getsentry/action-github-app-token@v2.0.0
+      with:
+        app_id: ${{ secrets.CI_CORE_APP_ID }}
+        private_key: ${{ secrets.CI_CORE_APP_PEM }}
+
     - uses: actions/checkout@v3
       with:
         submodules: recursive
-        token: ${{ needs.credentials.outputs.ci_app_token }}
+        token: ${{ steps.ci-core-app-token.outputs.token  }}
         # 'check_submodules.sh' below needs entire history
         fetch-depth: 0
     - name: check submodules
@@ -70,10 +71,17 @@ jobs:
         ports:
           - 6379:6379
     steps:
+    - name: Generate github private access token
+      id: ci-core-app-token
+      uses: getsentry/action-github-app-token@v2.0.0
+      with:
+        app_id: ${{ secrets.CI_CORE_APP_ID }}
+        private_key: ${{ secrets.CI_CORE_APP_PEM }}
+
     - uses: actions/checkout@v3
       with:
         submodules: recursive
-        token:  ${{ needs.credentials.outputs.ci_app_token }}
+        token:  ${{ steps.ci-core-app-token.outputs.token  }}
     - name: Restore ccache
       uses: hendrikmuhs/ccache-action@v1.2
       with:
