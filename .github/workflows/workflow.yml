@@ -25,7 +25,7 @@ jobs:
         run: |
           echo token=$(aws ecr get-login-password --region $REGION) >> $GITHUB_OUTPUT
 
-  checks:
+  checks submodules and precommit:
     runs-on: [self-hosted, corefront, sandbox]
     needs: credentials
     container:
@@ -34,7 +34,6 @@ jobs:
         username: AWS
         password: ${{ needs.credentials.outputs.aws_token }}
     steps:
-
     - name: Generate github private access token
       id: ci-core-app-token
       uses: getsentry/action-github-app-token@v2.0.0
@@ -48,8 +47,31 @@ jobs:
         token: ${{ steps.ci-core-app-token.outputs.token  }}
         # 'check_submodules.sh' below needs entire history
         fetch-depth: 0
+
     - name: check submodules
       run: ./source/scripts/check_submodules.sh
+
+    - name: Config Github global url for ssh cases (add access token)
+      run: |
+        git config --global url."https://x-access-token:${{ steps.ci-core-app-token.outputs.token }}@github.com/hove-io/".insteadOf "git@github.com:hove-io/"
+    - uses: actions/setup-python@v3
+      with:
+        python-version: '3.8.x'
+    - name: install dependencies
+      working-directory: ./navitia
+      run: |
+        sudo apt-get update && sudo apt install -y protobuf-compiler clang-format git 2to3
+        pip install -r requirements_pre-commit.txt --upgrade
+    - name: Build Protobuf
+      run: bash source/scripts/build_protobuf.sh
+    - name: Pre-commit Run
+      env:
+        LC_ALL: C.UTF-8
+        LANG: C.UTF-8
+      run: |
+        pre-commit install --install-hooks
+        pre-commit run --all --show-diff-on-failure
+
 
   build:
     runs-on: [self-hosted, corefront, sandbox]
