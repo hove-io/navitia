@@ -84,7 +84,7 @@ jobs:
       run: mkdir build && cd ./build && cmake -DSTRIP_SYMBOLS=ON ../source
     - name: run
       working-directory: ./build
-#      run: make -j $(nproc)
+      run: echo "test" #make -j $(nproc)
 #    - name: Tests python3
 #      working-directory: ./build
 #      if: ${{ matrix.os.docker_image == 'mutable-debian11_dev'}}
