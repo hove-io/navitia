@@ -53,7 +53,7 @@ jobs:
 
   precommit:
     runs-on: [self-hosted, corefront, sandbox]
-    needs: credentials
+    needs: [credentials]
     container:
       image: 162230498103.dkr.ecr.eu-west-1.amazonaws.com/mutable-debian11_dev:latest
       credentials:
@@ -89,7 +89,7 @@ jobs:
           LANG: C.UTF-8
         run: |
           NAVITIA_PATH = $(echo $GITHUB_WORKSPACE | sed -e 's#__w#/opt/actions-runner/_work#')
-          git config --global --add safe.directory $NAVITIA_PATH
+          git config --global --add safe.directory ${NAVITIA_PATH}
           pre-commit install --install-hooks
       - name: Pre-commit Run
         env:
@@ -100,7 +100,7 @@ jobs:
 #
 #  build:
 #    runs-on: [self-hosted, corefront, sandbox]
-#    needs: credentials
+#    needs: [credentials, checks, precommit]
 #    strategy:
 #        fail-fast: false
 #        matrix:
@@ -165,11 +165,7 @@ jobs:
 #        . navitia_py2/bin/activate
 #        pip install -r ../source/tyr/requirements_dev.txt
 #        pip install -r ../source/sql/requirements.txt
-#        cp ../source/tests/chaos/chaos_loading.sql.gz /tmp/chaos_loading.sql.gz
-#        #export NAVITIA_CHAOS_DUMP_PATH=$(echo $(pwd)/../source/tests/chaos/chaos_loading.sql.gz)
-#        export NAVITIA_CHAOS_DUMP_PATH=/tmp/chaos_loading.sql.gz
-#        echo 'NAVITIA_CHAOS_DUMP_PATH' $NAVITIA_CHAOS_DUMP_PATH
-#        echo ls -lt $NAVITIA_CHAOS_DUMP_PATH
+#        export NAVITIA_CHAOS_DUMP_PATH=$(echo $GITHUB_WORKSPACE/source/tests/chaos/chaos_loading.sql.gz | sed -e 's#__w#/opt/actions-runner/_work#')
 #        make docker_test
 #        deactivate
 #        rm -rf navitia_py2
@@ -177,7 +173,7 @@ jobs:
 #        NAVITIA_DOCKER_NETWORK: ${{ job.container.network }}
 #        TYR_CELERY_BROKER_URL: 'amqp://guest:guest@rabbitmq:5672//'
 #        TYR_REDIS_HOST: 'redis'
-
+#
 #    - name: docker_test python3
 #      working-directory: ./build
 #      run: |
@@ -186,46 +182,11 @@ jobs:
 #        pip install -r ../source/tyr/requirements_dev.txt
 #        pip install -r ../source/sql/requirements.txt
 #        export NAVITIA_CHAOS_DUMP_PATH=$(echo $GITHUB_WORKSPACE/source/tests/chaos/chaos_loading.sql.gz | sed -e 's#__w#/opt/actions-runner/_work#')
-#        echo $NAVITIA_CHAOS_DUMP_PATH
-#        ls -lt /tmp
 #        make docker_test
 #        deactivate
 #        rm -rf navitia_py3
-
+#
 #      env:
 #        NAVITIA_DOCKER_NETWORK: ${{ job.container.network }}
 #        TYR_CELERY_BROKER_URL: 'amqp://guest:guest@rabbitmq:5672//'
 #        TYR_REDIS_HOST: 'redis'
-#
-#  precommit:
-#    runs-on: [self-hosted, core-front, sandbox]
-#    steps:
-#    - name: Generate github private access token
-#      id: ci-core-app-token
-#      uses: getsentry/action-github-app-token@v2.0.0
-#      with:
-#        app_id: ${{ secrets.CI_CORE_APP_ID }}
-#        private_key: ${{ secrets.CI_CORE_APP_PEM }}
-#    - uses: actions/checkout@v3
-#      with:
-#        submodules: recursive
-#        token: ${{ steps.ci-core-app-token.outputs.token }}
-#    - name: Config Github global url for ssh cases (add access token)
-#      run: |
-#        git config --global url."https://x-access-token:${{ steps.ci-core-app-token.outputs.token }}@github.com/hove-io/".insteadOf "git@github.com:hove-io/"
-#    - uses: actions/setup-python@v3
-#      with:
-#        python-version: '3.8.x'
-#    - name: install dependencies
-#      run: |
-#        sudo apt-get update && sudo apt install -y protobuf-compiler clang-format git 2to3
-#        pip install -r requirements_pre-commit.txt --upgrade
-#    - name: Build Protobuf
-#      run: bash source/scripts/build_protobuf.sh
-#    - name: Pre-commit Run
-#      env:
-#        LC_ALL: C.UTF-8
-#        LANG: C.UTF-8
-#      run: |
-#        pre-commit install --install-hooks
-#        pre-commit run --all --show-diff-on-failure
