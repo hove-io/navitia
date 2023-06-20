@@ -84,6 +84,7 @@ jobs:
       - name: Build Protobuf
         run: bash source/scripts/build_protobuf.sh
       - name: Pre-commit Run
+        working-directory: ./navitia
         env:
           LC_ALL: C.UTF-8
           LANG: C.UTF-8
