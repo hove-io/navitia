@@ -3,12 +3,12 @@ repos:
     rev: 22.3.0
     hooks:
     - id: black
-      language_version: python3.8
+      language_version: python3.9
 -   repo: https://github.com/pycqa/flake8
     rev: 3.9.2
     hooks:
     - id: flake8
-      language_version: python3.8
+      language_version: python3.9
 -   repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v4.1.0  # Use the ref you want to point at
     hooks:
@@ -32,5 +32,5 @@ repos:
     -   id: mypy
         args: [--ignore-missing-imports, --py2]
         files: source
-        language_version: python3.8
+        language_version: python3.9
         exclude: /monitor/|/third_party/|/tests/|/sql/|env\.py$|setup\.py$

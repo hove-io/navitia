@@ -56,7 +56,7 @@ jobs:
         git config --global url."https://x-access-token:${{ steps.ci-core-app-token.outputs.token }}@github.com/hove-io/".insteadOf "git@github.com:hove-io/"
     - name: install dependencies
       run: |
-        sudo apt-get update && sudo apt install -y git
+        apt-get update && apt install git
 
     - name: Build Protobuf
       run: bash source/scripts/build_protobuf.sh
