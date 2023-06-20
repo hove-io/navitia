@@ -54,7 +54,7 @@ jobs:
   precommit:
     runs-on: [self-hosted, corefront, sandbox]
     container:
-      image: ubuntu-20.04
+      image: ubuntu:20.04
     steps:
       - name: Generate github private access token
         id: ci-core-app-token
