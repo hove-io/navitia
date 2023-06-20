@@ -57,6 +57,10 @@ def to_be_deleted(journey):
     return 'to_delete' in journey.tags
 
 
+def is_olympics(journey):
+    return 'olympics' in journey.tags
+
+
 def mark_as_dead(journey, is_debug, *reasons):
     journey.tags.append('to_delete')
     if is_debug:
@@ -668,8 +672,6 @@ def apply_final_journey_filters(response_list, instance, request):
         journeys = journey_generator(response_list)
         filter_non_car_tagged_journey(journeys, request)
 
-    keep_olympics_journeys(response_list, request)
-
 
 def filter_non_car_tagged_journey(journeys, request):
     is_debug = request.get('debug', False)
@@ -700,16 +702,10 @@ def apply_final_journey_filters_post_finalize(response_list, request):
         journey_pairs_pool = itertools.combinations(journeys, 2)
         _filter_similar_line_and_crowfly_journeys(journey_pairs_pool, request)
 
-    keep_olympics_journeys(response_list, request)
 
-
-def keep_olympics_journeys(responses, request):
-    keep_olympics_journeys = request.get("_keep_olympics_journeys", False)
-    if keep_olympics_journeys:
-        for response in responses:
-            for journey in response.journeys:
-                if 'to_delete' in journey.tags and 'olympics' in journey.tags:
-                    journey.tags.remove("to_delete")
+def filter_olympics_journeys(responses, request):
+    if not request.get("_keep_olympics_journeys", False):
+        return
 
 
 def replace_bss_tag(journeys):
@@ -753,7 +749,7 @@ def filter_detailed_journeys(responses, request):
 
     replace_bss_tag(journey_generator(responses))
 
-    keep_olympics_journeys(responses, request)
+    filter_olympics_journeys(responses, request)
 
 
 def _get_worst_similar(j1, j2, request):
@@ -891,6 +887,9 @@ def _filter_similar_journeys(journey_pairs_pool, request, *similar_journey_gener
             continue
 
         if to_be_deleted(j1) or to_be_deleted(j2):
+            continue
+
+        if request.get('_keep_olympics_journeys') and is_olympics(j1) or is_olympics(j2):
             continue
 
         if any(compare(j1, j2, generator) for generator in similar_journey_generators):

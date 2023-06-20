@@ -510,7 +510,6 @@ class JourneyCommon(ResourceUri, ResourceUtc):
             hidden=True,
             help="choose which pt engine to compute the pt journey",
         )
-
         parser_get.add_argument(
             "criteria",
             type=OptionValue(
@@ -524,7 +523,6 @@ class JourneyCommon(ResourceUri, ResourceUtc):
             ),
             help="choose the criteria used to compute pt journeys, feature in beta ",
         )
-
         parser_get.add_argument(
             "_keep_olympics_journeys",
             type=BooleanType(),
