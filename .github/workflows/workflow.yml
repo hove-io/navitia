@@ -87,7 +87,7 @@ jobs:
           LANG: C.UTF-8
         run: |
           git config --global --add safe.directory /__w/navitia/navitia
-          virtualenv -p ${{matrix.os.python_version}} navitia_py3
+          virtualenv -p python3.9 navitia_py3
           . navitia_py3/bin/activate
           pip install -r requirements_pre-commit.txt --upgrade
           pre-commit install --install-hooks
