@@ -53,8 +53,12 @@ jobs:
 
   precommit:
     runs-on: [self-hosted, corefront, sandbox]
+    needs: credentials
     container:
-      image: ubuntu:20.04
+      image: 162230498103.dkr.ecr.eu-west-1.amazonaws.com/mutable-debian11_dev:latest
+      credentials:
+        username: AWS
+        password: ${{ needs.credentials.outputs.aws_token }}
     steps:
       - name: Generate github private access token
         id: ci-core-app-token
