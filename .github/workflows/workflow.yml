@@ -87,7 +87,7 @@ jobs:
           LANG: C.UTF-8
         run: |
           git --version
-          echo pwd
+          echo $(pwd)
           pre-commit install --install-hooks
           pre-commit run --all --show-diff-on-failure
 
