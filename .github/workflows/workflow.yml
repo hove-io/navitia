@@ -15,14 +15,14 @@ env:
 jobs:
 
   credentials:
-    name: Get ECR Access
+    name: Init credentials
     runs-on: [self-hosted, corefront, sandbox]
     outputs:
       aws_token: ${{ steps.ecr_token.outputs.token }}
       ci_app_token: ${{ steps.ci-core-app-token.outputs.token }}
     steps:
-      - id: ecr_token
-        name: Get ECR Token
+      - name: Get ECR Token
+        id: ecr_token
         run: |
           echo token=$(aws ecr get-login-password --region $REGION) >> $GITHUB_OUTPUT
 
