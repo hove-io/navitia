@@ -57,7 +57,7 @@ jobs:
     - name: install dependencies
       run: |
         sudo apt-get update && sudo apt install -y git
-        pip install -r requirements_pre-commit.txt --upgrade
+
     - name: Build Protobuf
       run: bash source/scripts/build_protobuf.sh
     - name: Pre-commit Run
@@ -65,8 +65,13 @@ jobs:
         LC_ALL: C.UTF-8
         LANG: C.UTF-8
       run: |
+        virtualenv -p python3.9 navitia_py3
+        . navitia_py3/bin/activate
+        pip install -r requirements_pre-commit.txt --upgrade
         pre-commit install --install-hooks
         pre-commit run --all --show-diff-on-failure
+        deactivate
+        rm -rf navitia_py3
 
 
   build:
