@@ -83,14 +83,17 @@ jobs:
           pip3 install -r requirements_pre-commit.txt --upgrade
       - name: Build Protobuf
         run: bash source/scripts/build_protobuf.sh
+      - name: Install Pre-commit
+        env:
+          LC_ALL: C.UTF-8
+          LANG: C.UTF-8
+        run: |
+          pre-commit install --install-hooks
       - name: Pre-commit Run
         env:
           LC_ALL: C.UTF-8
           LANG: C.UTF-8
         run: |
-          ls -lta $(pwd)
-          pre-commit install --install-hooks
-          cat /github/home/.cache/pre-commit/pre-commit.log
           pre-commit run --all --show-diff-on-failure
 #
 #  build:
