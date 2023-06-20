@@ -83,15 +83,18 @@ jobs:
           pip3 install -r requirements_pre-commit.txt --upgrade
       - name: Build Protobuf
         run: bash source/scripts/build_protobuf.sh
-      - name: Install Pre-commit
+      - name: Pre-commit install
         env:
           LC_ALL: C.UTF-8
           LANG: C.UTF-8
         run: |
           NAVITIA_PATH = $(echo $GITHUB_WORKSPACE | sed -e 's#__w#/opt/actions-runner/_work#')
+          git status
+          echo ${NAVITIA_PATH}
+          echo NAVITIA_PATH
           git config --global --add safe.directory ${NAVITIA_PATH}
           pre-commit install --install-hooks
-      - name: Pre-commit Run
+      - name: Pre-commit run
         env:
           LC_ALL: C.UTF-8
           LANG: C.UTF-8
