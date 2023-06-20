@@ -55,10 +55,7 @@ jobs:
     runs-on: [self-hosted, corefront, sandbox]
     needs: [credentials, checks]
     container:
-      image: 162230498103.dkr.ecr.eu-west-1.amazonaws.com/mutable-debian11_dev:latest
-      credentials:
-        username: AWS
-        password: ${{ needs.credentials.outputs.aws_token }}
+      image: ubuntu:20.04
     steps:
       - name: Generate github private access token
         id: ci-core-app-token
@@ -75,10 +72,13 @@ jobs:
       - name: Config Github global url for ssh cases (add access token)
         run: |
           git config --global url."https://x-access-token:${{ steps.ci-core-app-token.outputs.token }}@github.com/hove-io/".insteadOf "git@github.com:hove-io/"
+      - uses: actions/setup-python@v3
+        with:
+          python-version: '3.8.x'
       - name: install dependencies
         run: |
-          apt-get update && apt-get install -y git
-          pip3 install -r requirements_pre-commit.txt --upgrade
+          apt-get update && apt-get install -y protobuf-compiler clang-format git 2to3
+          pip install -r requirements_pre-commit.txt --upgrade
       - name: Build Protobuf
         run: bash source/scripts/build_protobuf.sh
       - name: Pre-commit run
