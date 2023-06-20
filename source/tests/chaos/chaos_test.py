@@ -34,7 +34,6 @@ from os.path import join, normpath, abspath, isfile
 import os
 import docker
 import pytest
-import psycopg2
 import subprocess
 
 
