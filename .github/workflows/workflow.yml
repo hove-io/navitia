@@ -78,7 +78,7 @@ jobs:
       - name: install dependencies
         run: |
           apt-get update && apt-get install -y git
-          pip install -r requirements_pre-commit.txt --upgrade
+          pip3 install -r requirements_pre-commit.txt --upgrade
       - name: Build Protobuf
         run: bash source/scripts/build_protobuf.sh
       - name: Pre-commit run
