@@ -55,7 +55,6 @@ jobs:
       run: |
         git config --global url."https://x-access-token:${{ steps.ci-core-app-token.outputs.token }}@github.com/hove-io/".insteadOf "git@github.com:hove-io/"
     - name: install dependencies
-      working-directory: ./navitia
       run: |
         sudo apt-get update && sudo apt install -y git
         pip install -r requirements_pre-commit.txt --upgrade
