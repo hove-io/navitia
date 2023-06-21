@@ -110,10 +110,13 @@ jobs:
           max-size: 2000M
 
       - name: Create builder docker
-        run: docker build -f docker/${{env.bullseye_version}}/Dockerfile-builder -t navitia/builder .
+        run: |
+          docker --version
+          docker build -f docker/${{env.bullseye_version}}/Dockerfile-builder -t navitia/builder .
 
       - name: Build navitia
-        run: docker run -v `pwd`:/navitia/navitia/  navitia/builder
+        run: |
+          docker run -v `pwd`:/navitia/navitia/  navitia/builder
 
       - name: Create navitia images
         run: |
