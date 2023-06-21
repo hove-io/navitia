@@ -79,9 +79,29 @@ jobs:
     name: Bullseye builder
     needs: [common_variables, aws_credentials]
 
+    container:
+      image: 162230498103.dkr.ecr.eu-west-1.amazonaws.com/mutable-debian11_dev:latest
+      credentials:
+        username: AWS
+        password: ${{ needs.aws_credentials.outputs.aws_token }}
+
     steps:
       - name: Install dependencies
-        run: sudo apt update && sudo apt install -y httpie
+        run: |
+          apt-get update && apt-get install -y httpie
+
+      - name: Install docker
+        run: |
+          apt-get install -y ca-certificates curl gnupg
+          install -m 0755 -d /etc/apt/keyrings
+          curl -fsSL https://download.docker.com/linux/debian/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gp
+          chmod a+r /etc/apt/keyrings/docker.gpg
+          echo "deb [arch="$(dpkg --print-architecture)" signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/debian \
+            "$(. /etc/os-release && echo "$VERSION_CODENAME")" stable" | \
+            tee /etc/apt/sources.list.d/docker.list > /dev/null
+          apt-get update
+          apt-get install docker-ce docker-ce-cli containerd.io
+          docker --version
 
       - name: Generate github private access token
         id: ci-core-app-token
@@ -106,7 +126,6 @@ jobs:
 
       - name: Create builder docker
         run: |
-          docker --version
           docker build -f docker/${{env.bullseye_version}}/Dockerfile-builder -t navitia/builder .
 
       - name: Build navitia
