@@ -90,12 +90,8 @@ jobs:
         run: |
           apt-get update && apt-get install -y httpie
 
-      - name: Install docker
-        run: |
-          apt-get install -y ca-certificates curl gnupg
-          install -m 0755 -d /etc/apt/keyrings
-          apt-get install docker-ce docker-ce-cli containerd.io
-          docker --version
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
 
       - name: Generate github private access token
         id: ci-core-app-token
