@@ -72,12 +72,9 @@ jobs:
       - name: Config Github global url for ssh cases (add access token)
         run: |
           git config --global url."https://x-access-token:${{ steps.ci-core-app-token.outputs.token }}@github.com/hove-io/".insteadOf "git@github.com:hove-io/"
-      - uses: actions/setup-python@v3
-        with:
-          python-version: '3.8.x'
       - name: install dependencies
         run: |
-          apt-get update && apt-get install -y protobuf-compiler clang-format git 2to3
+          apt-get update && apt-get install -y protobuf-compiler clang-format 2to3 python3.8-dev
           pip install -r requirements_pre-commit.txt --upgrade
       - name: Build Protobuf
         run: bash source/scripts/build_protobuf.sh
