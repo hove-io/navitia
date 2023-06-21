@@ -6,7 +6,6 @@ on:
       - dev
     tags:
       - '*'
-  pull_request:
 
 env:
   jessie_version: debian8
@@ -58,10 +57,10 @@ jobs:
             echo "aws_branch=release" >> $GITHUB_OUTPUT
           fi
 
-#      - name: failure notification
-#        if: failure()
-#        run: |
-#          echo '{"text":":warning: Github Actions: workflow corefront Job init common variables failed !"}' | http --json POST ${{secrets.SLACK_NAVITIA_TEAM_URL}}
+      - name: failure notification
+        if: failure()
+        run: |
+          echo '{"text":":warning: Github Actions: workflow corefront Job init common variables failed !"}' | http --json POST ${{secrets.SLACK_NAVITIA_TEAM_URL}}
 
   jessie_builder:
     runs-on: [self-hosted, corefront, sandbox]
@@ -165,10 +164,10 @@ jobs:
               docker push ${COMPONANT_TAG}
           done
 
-#      - name: failure notification
-#        if: failure()
-#        run: |
-#          echo '{"text":":warning: Github Actions: workflow corefront Job jessie_builder is failed !"}' | http --json POST ${{secrets.SLACK_NAVITIA_TEAM_URL}}
+      - name: failure notification
+        if: failure()
+        run: |
+          echo '{"text":":warning: Github Actions: workflow corefront Job jessie_builder is failed !"}' | http --json POST ${{secrets.SLACK_NAVITIA_TEAM_URL}}
 
 
   bullseye_builder:
@@ -231,12 +230,12 @@ jobs:
               docker push ${COMPONANT_TAG}
           done
 
-#      - name: failure notification
-#        if: failure()
-#        run: |
-#          echo '{"text":":warning: Github Actions: workflow corefront Job bullseye_builder is failed !"}' | http --json POST ${{secrets.SLACK_NAVITIA_TEAM_URL}}
-#
-#      - name: success notification on core team
-#        if: success()
-#        run: |
-#          echo '{"text":":octopus: Github Actions: workflow corefront succeeded. New navitia ${{ needs.common_variables.outputs.NAVITIA_TAG }} images available."}' | http --json POST ${{secrets.SLACK_NAVITIA_TEAM_URL}}
+      - name: failure notification
+        if: failure()
+        run: |
+          echo '{"text":":warning: Github Actions: workflow corefront Job bullseye_builder is failed !"}' | http --json POST ${{secrets.SLACK_NAVITIA_TEAM_URL}}
+
+      - name: success notification on core team
+        if: success()
+        run: |
+          echo '{"text":":octopus: Github Actions: workflow corefront succeeded. New navitia ${{ needs.common_variables.outputs.NAVITIA_TAG }} images available."}' | http --json POST ${{secrets.SLACK_NAVITIA_TEAM_URL}}
