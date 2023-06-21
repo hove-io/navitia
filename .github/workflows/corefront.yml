@@ -13,7 +13,7 @@ env:
   jessie_navitia_components: 'tyr-web instances-configurator'
   bullseye_version: debian11
   bullseye_navitia_components: 'jormungandr'
-
+  REGION: eu-west-1
 jobs:
   aws_credentials:
     name: Init credentials
