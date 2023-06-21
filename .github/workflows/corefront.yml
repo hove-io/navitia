@@ -78,11 +78,6 @@ jobs:
     runs-on: [self-hosted, corefront, sandbox]
     name: Bullseye builder
     needs: [common_variables, aws_credentials]
-    container:
-      image: 162230498103.dkr.ecr.eu-west-1.amazonaws.com/mutable-debian11_dev:latest
-      credentials:
-        username: AWS
-        password: ${{ needs.aws_credentials.outputs.aws_token }}
 
     steps:
       - name: Install dependencies
