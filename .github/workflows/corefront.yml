@@ -106,7 +106,7 @@ jobs:
               mimirsbrunn_workflow=main7.yml
               mimirsbrunn_package="debian-package-master.zip"
           fi
-          python core_team_ci_tools/github_artifacts/github_artifacts.py \
+          python3 core_team_ci_tools/github_artifacts/github_artifacts.py \
               -o hove-io \
               -r mimirsbrunn \
               -t ${{ steps.ci-core-app-token.outputs.token }} \
@@ -119,7 +119,7 @@ jobs:
       - name: Download cosmogony2cities package
         run: |
           cosmogony2cities_package="package-${{env.jessie_version}}.zip"
-          python core_team_ci_tools/github_artifacts/github_artifacts.py \
+          python3 core_team_ci_tools/github_artifacts/github_artifacts.py \
               -o hove-io \
               -r cosmogony2cities \
               -t ${{ steps.ci-core-app-token.outputs.token }} \
