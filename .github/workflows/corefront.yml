@@ -80,15 +80,12 @@ jobs:
     needs: [common_variables, aws_credentials]
 
     container:
-      image: 162230498103.dkr.ecr.eu-west-1.amazonaws.com/mutable-debian11_dev:latest
-      credentials:
-        username: AWS
-        password: ${{ needs.aws_credentials.outputs.aws_token }}
+      image: ubuntu:latest
 
     steps:
       - name: Install dependencies
         run: |
-          apt-get update && apt-get install -y httpie
+          sudo apt update && sudo apt install -y --force-yes httpie
 
       - name: Setup docker
         uses: docker-practice/actions-setup-docker@master
