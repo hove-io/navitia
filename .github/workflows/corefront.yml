@@ -15,20 +15,30 @@ env:
   bullseye_navitia_components: 'jormungandr'
 
 jobs:
+  aws_credentials:
+    name: Init credentials
+    runs-on: [self-hosted, corefront, sandbox]
+    outputs:
+      aws_token: ${{ steps.ecr_token.outputs.token }}
+    steps:
+      - name: Get ECR Token
+        id: ecr_token
+        run: |
+          echo token=$(aws ecr get-login-password --region $REGION) >> $GITHUB_OUTPUT
+
   common_variables:
     name: Common variables
+    needs: aws_credentials
     runs-on: [self-hosted, corefront, sandbox]
-
     container:
       image: 162230498103.dkr.ecr.eu-west-1.amazonaws.com/mutable-debian11_dev:latest
       credentials:
         username: AWS
-        password: ${{ needs.credentials.outputs.AWS_TOKEN }}
+        password: ${{ needs.aws_credentials.outputs.aws_token }}
 
     outputs:
       NAVITIA_TAG: ${{ steps.choose_navitia_tag.outputs.navitia_tag }}
       AWS_BRANCH: ${{ steps.choose_navitia_tag.outputs.aws_branch }}
-      AWS_TOKEN: ${{ steps.ecr_token.outputs.token }}
     steps:
       - name: Install dependencies
         run: apt update && apt install -y httpie
@@ -39,10 +49,6 @@ jobs:
         with:
           app_id: ${{ secrets.CI_CORE_APP_ID }}
           private_key: ${{ secrets.CI_CORE_APP_PEM }}
-
-      - name: Get ECR Token
-        id: ecr_token
-        run: echo token=$(aws ecr get-login-password --region $REGION) >> $GITHUB_OUTPUT
 
       - name: Checkout navitia
         id: checkout_navitia
