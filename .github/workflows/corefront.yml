@@ -41,7 +41,7 @@ jobs:
       AWS_BRANCH: ${{ steps.choose_navitia_tag.outputs.aws_branch }}
     steps:
       - name: Install dependencies
-        run: apt update && apt install -y httpie
+        run: sudo apt update && sudo apt install -y httpie
 
       - name: Generate github private access token
         id: ci-core-app-token
