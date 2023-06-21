@@ -26,7 +26,7 @@ jobs:
     steps:
       - name: Install dependencies
         run: |
-          sudo apt update && sudo apt install -y --force-yes httpie
+          apt update && apt install -y httpie
 
       - name: Generate github private access token
         id: ci-core-app-token
@@ -57,10 +57,10 @@ jobs:
             echo "aws_branch=release" >> $GITHUB_OUTPUT
           fi
 
-      - name: failure notification
-        if: failure()
-        run: |
-          echo '{"text":":warning: Github Actions: workflow dockers_builder Job init common variables failed !"}' | http --json POST ${{secrets.SLACK_NAVITIA_TEAM_URL}}
+#      - name: failure notification
+#        if: failure()
+#        run: |
+#          echo '{"text":":warning: Github Actions: workflow dockers_builder Job init common variables failed !"}' | http --json POST ${{secrets.SLACK_NAVITIA_TEAM_URL}}
 
 
 
