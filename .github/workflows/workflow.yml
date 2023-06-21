@@ -78,8 +78,11 @@ jobs:
 
       - name: install dependencies
         run: |
-          apt-get update && apt-get install -y protobuf-compiler clang-format 2to3
           pip3 install -r requirements_pre-commit.txt --upgrade
+
+      - name: Build Protobuf
+        run: bash source/scripts/build_protobuf.sh
+
       - name: Pre-commit run
         env:
           LC_ALL: C.UTF-8
@@ -88,9 +91,6 @@ jobs:
           git config --global --add safe.directory /__w/navitia/navitia
           pre-commit install --install-hooks
           pre-commit run --all --show-diff-on-failure
-
-      - name: Build Protobuf
-        run: bash source/scripts/build_protobuf.sh
 
   build:
     runs-on: [self-hosted, corefront, sandbox]
