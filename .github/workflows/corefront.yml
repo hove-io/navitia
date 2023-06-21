@@ -73,7 +73,7 @@ jobs:
     steps:
       - name: Install dependencies
         run: |
-          sudo apt update && sudo apt install -y --force-yes httpie
+          apt update && apt install -y httpie
 
       - name: Generate github private access token
         id: ci-core-app-token
