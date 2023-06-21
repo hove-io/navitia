@@ -4,8 +4,8 @@ on:
   push:
     branches:
       - _dev
-    tags:
-      - '*'
+#    tags:
+#      - '*'
 env:
   debian_version: debian11
 

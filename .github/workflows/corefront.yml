@@ -1,0 +1,117 @@
+name: Build corefront dockers
+
+on:
+  push:
+    branches:
+      - dev
+    tags:
+      - '*'
+  pull_request:
+
+env:
+  jessie_version: debian8
+  jessie_navitia_components: 'tyr-web instances-configurator'
+  bullseye_version: debian11
+  bullseye_navitia_components: 'jormungandr'
+
+jobs:
+  common_variables:
+    name: Common variables
+    runs-on: [self-hosted, corefront, sandbox]
+    container:
+      image: ubuntu:latest
+    outputs:
+      NAVITIA_TAG: ${{ steps.choose_navitia_tag.outputs.navitia_tag }}
+      AWS_BRANCH: ${{ steps.choose_navitia_tag.outputs.aws_branch }}
+    steps:
+      - name: Install dependencies
+        run: |
+          sudo apt update && sudo apt install -y --force-yes httpie
+
+      - name: Generate github private access token
+        id: ci-core-app-token
+        uses: getsentry/action-github-app-token@v2.0.0
+        with:
+          app_id: ${{ secrets.CI_CORE_APP_ID }}
+          private_key: ${{ secrets.CI_CORE_APP_PEM }}
+
+      - name: Checkout navitia
+        id: checkout_navitia
+        uses: actions/checkout@v3
+        with:
+          submodules: recursive
+          token: ${{ steps.ci-core-app-token.outputs.token }}
+          # we need entire history for tags
+          fetch-depth: 0
+
+      - name: Choose navitia tag
+        id: choose_navitia_tag
+        run: |
+          if [[ '${{ github.event_name }}' == 'push' && '${{ github.ref }}' == 'refs/heads/dev' ]]
+          then
+            echo "navitia_tag=dev" >> $GITHUB_OUTPUT
+            echo "aws_branch=dev" >> $GITHUB_OUTPUT
+          else
+            version=$(git describe --tags)
+            echo "navitia_tag=$version" >> $GITHUB_OUTPUT
+            echo "aws_branch=release" >> $GITHUB_OUTPUT
+          fi
+
+      - name: failure notification
+        if: failure()
+        run: |
+          echo '{"text":":warning: Github Actions: workflow dockers_builder Job init common variables failed !"}' | http --json POST ${{secrets.SLACK_NAVITIA_TEAM_URL}}
+
+
+
+  bullseye_builder:
+    runs-on: [self-hosted, corefront, sandbox]
+    name: Bullseye builder
+    needs: common_variables
+    container:
+      image: ubuntu:latest
+    steps:
+      - name: Install dependencies
+        run: |
+          sudo apt update && sudo apt install -y --force-yes httpie
+
+      - name: Generate github private access token
+        id: ci-core-app-token
+        uses: getsentry/action-github-app-token@v2.0.0
+        with:
+          app_id: ${{ secrets.CI_CORE_APP_ID }}
+          private_key: ${{ secrets.CI_CORE_APP_PEM }}
+
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          submodules: recursive
+          token: ${{ steps.ci-core-app-token.outputs.token }}
+          # we need entire history for tags
+          fetch-depth: 0
+
+      - name: Restore ccache
+        uses: hendrikmuhs/ccache-action@v1.2
+        with:
+          key: build_dockers
+          max-size: 2000M
+
+      - name: Create builder docker
+        run: |
+          docker build -f docker/${{env.bullseye_version}}/Dockerfile-builder -t navitia/builder .
+
+      - name: Build navitia
+        run: |
+          docker run -v `pwd`:/navitia/navitia/  navitia/builder
+
+      - name: Create navitia images
+        run: |
+          for component in ${{env.bullseye_navitia_components}}; do
+              echo "*********  Building $component Tag: ${{ needs.common_variables.outputs.NAVITIA_TAG }} ***************"
+              docker build -t navitia/$component:${{ needs.common_variables.outputs.NAVITIA_TAG }} -f  docker/${{env.bullseye_version}}/Dockerfile-${component} .
+          done
+
+#      - name: failure notification
+#        if: failure()
+#        run: |
+#          echo '{"text":":warning: Github Actions: workflow dockers_builder Job bullseye_builder is failed !"}' | http --json POST ${{secrets.SLACK_NAVITIA_TEAM_URL}}
