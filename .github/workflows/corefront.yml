@@ -13,22 +13,13 @@ env:
   jessie_navitia_components: 'tyr-web instances-configurator'
   bullseye_version: debian11
   bullseye_navitia_components: 'jormungandr'
-  REGION: eu-west-1
+
+  SBX_ECR_REGISTRY_FRONT: "051314639660.dkr.ecr.eu-west-1.amazonaws.com"
+
 jobs:
-  aws_credentials:
-    name: Init credentials
-    runs-on: [self-hosted, corefront, sandbox]
-    outputs:
-      aws_token: ${{ steps.ecr_token.outputs.token }}
-    steps:
-      - name: Get ECR Token
-        id: ecr_token
-        run: |
-          echo token=$(aws ecr get-login-password --region $REGION) >> $GITHUB_OUTPUT
 
   common_variables:
     name: Common variables
-    needs: aws_credentials
     runs-on: [self-hosted, corefront, sandbox]
 
     outputs:
@@ -72,7 +63,7 @@ jobs:
   bullseye_builder:
     runs-on: [self-hosted, corefront, sandbox]
     name: Bullseye builder
-    needs: [common_variables, aws_credentials]
+    needs: common_variables
 
 
     steps:
@@ -101,10 +92,15 @@ jobs:
           key: build_dockers
           max-size: 2000M
 
-      - name: Login to Amazon ECR Shared
+      - name: Login to Amazon ECR SBX
         uses: aws-actions/amazon-ecr-login@v1
         env:
             AWS_REGION: eu-west-1
+
+      - name: Login to Amazon ECR Shared
+        uses: aws-actions/amazon-ecr-login@v1
+        env:
+          AWS_REGION: eu-west-1
         with:
           registries: "162230498103"
 
@@ -120,5 +116,6 @@ jobs:
         run: |
           for component in ${{env.bullseye_navitia_components}}; do
               echo "*********  Building $component Tag: ${{ needs.common_variables.outputs.NAVITIA_TAG }} ***************"
-              docker build -t navitia/$component:${{ needs.common_variables.outputs.NAVITIA_TAG }} -f  docker/${{env.bullseye_version}}/Dockerfile-${component} .
+              docker build -t ${SBX_ECR_REGISTRY_FRONT}/$component:${{ needs.common_variables.outputs.NAVITIA_TAG }} -f  docker/${{env.bullseye_version}}/Dockerfile-${component} .
+              docker push ${SBX_ECR_REGISTRY_FRONT}/$component:${{ needs.common_variables.outputs.NAVITIA_TAG }}
           done
