@@ -45,6 +45,7 @@ from jormungandr.street_network.street_network import (
     StreetNetworkPathType,
 )
 from jormungandr.utils import get_pt_object_coord, is_url, decode_polyline, mps_to_kmph
+from jormungandr.street_network.utils import add_cycle_lane_length
 from jormungandr.ptref import FeedPublisher
 
 from navitiacommon.response_pb2 import StreetInformation
@@ -353,6 +354,7 @@ class Geovelo(AbstractStreetNetworkService):
                     path_item.direction = map_instructions_direction.get(geovelo_instruction[0], 0)
                     street_info = StreetInformation()
                     street_info.geojson_offset = geovelo_instruction[5]
+                    street_info.length = geovelo_instruction[2]
                     street_info.cycle_path_type = cls.get_geovelo_cycle_path_type(geovelo_instruction[4])
                     section.street_network.street_information.append(street_info)
 
@@ -366,6 +368,9 @@ class Geovelo(AbstractStreetNetworkService):
                     elevation.distance_from_start = geovelo_elevation[0]
                     elevation.elevation = geovelo_elevation[1]
                     elevation.geojson_index = geovelo_elevation[2]
+
+        if resp:
+            resp = add_cycle_lane_length(resp)
 
         return resp
 

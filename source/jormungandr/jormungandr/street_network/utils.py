@@ -31,7 +31,7 @@
 from __future__ import absolute_import, print_function, unicode_literals, division
 
 import math
-from navitiacommon import request_pb2, type_pb2
+from navitiacommon import request_pb2, type_pb2, response_pb2
 from jormungandr.fallback_modes import FallbackModes
 
 N_DEG_TO_RAD = 0.01745329238
@@ -149,3 +149,27 @@ def create_kraken_matrix_request(
     )
 
     return req
+
+
+def add_cycle_lane_length(response):
+    def _is_cycle_lane(path):
+        if path.HasField(str("cycle_path_type")):
+            return path.cycle_path_type != response_pb2.NoCycleLane
+
+        return False
+
+    # We have multiple journeys and multiple sections in direct path
+    for journey in response.journeys:
+        for section in journey.sections:
+            # do not add cycle_lane_length for bss_rent/bss_return & walking sections
+            if (
+                section.type == response_pb2.STREET_NETWORK
+                and section.street_network.mode == response_pb2.Bike
+            ):
+                cycle_lane_length = sum(
+                    (s.length for s in section.street_network.street_information if _is_cycle_lane(s))
+                )
+                # Since path.length are doubles and we want an int32 in the proto
+                section.cycle_lane_length = int(cycle_lane_length)
+
+    return response

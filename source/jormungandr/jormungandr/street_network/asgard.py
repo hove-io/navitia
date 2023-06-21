@@ -39,6 +39,7 @@ from jormungandr.street_network.utils import (
     make_speed_switcher,
     crowfly_distance_between,
     create_kraken_matrix_request,
+    add_cycle_lane_length,
 )
 from jormungandr.street_network.street_network import StreetNetworkPathType
 
@@ -278,29 +279,6 @@ class Asgard(TransientSocket, Kraken):
         self._check_for_error_and_raise(res)
         return res.sn_routing_matrix
 
-    def _add_cycle_lane_length(self, response):
-        def _is_cycle_lane(path):
-            if path.HasField(str("cycle_path_type")):
-                return path.cycle_path_type != response_pb2.NoCycleLane
-
-            return False
-
-        # We have multiple journeys and multiple sections in direct path
-        for journey in response.journeys:
-            for section in journey.sections:
-                # do not add cycle_lane_length for bss_rent/bss_return & walking sections
-                if (
-                    section.type == response_pb2.STREET_NETWORK
-                    and section.street_network.mode == response_pb2.Bike
-                ):
-                    cycle_lane_length = sum(
-                        (s.length for s in section.street_network.street_information if _is_cycle_lane(s))
-                    )
-                    # Since path.length are doubles and we want an int32 in the proto
-                    section.cycle_lane_length = int(cycle_lane_length)
-
-        return response
-
     @staticmethod
     def handle_car_no_park_modes(mode):
         if mode in (FallbackModes.ridesharing.name, FallbackModes.taxi.name, FallbackModes.car_no_park.name):
@@ -488,7 +466,7 @@ class Asgard(TransientSocket, Kraken):
                 raise e
 
         if response and mode in (FallbackModes.bike.name, FallbackModes.bss.name):
-            response = self._add_cycle_lane_length(response)
+            response = add_cycle_lane_length(response)
 
         return response
 
