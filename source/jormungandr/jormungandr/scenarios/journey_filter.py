@@ -703,9 +703,65 @@ def apply_final_journey_filters_post_finalize(response_list, request):
         _filter_similar_line_and_crowfly_journeys(journey_pairs_pool, request)
 
 
+def get_journey_pt_extremity(journey, clockwise):
+    if clockwise:
+        sections = reversed(journey.sections)
+    else:
+        sections = journey.sections
+    extemity_pt_section = next((s for s in sections if s.type == response_pb2.PUBLIC_TRANSPORT), None)
+
+    assert extemity_pt_section
+    if clockwise:
+        return extemity_pt_section.destination
+    return extemity_pt_section.arrival
+
+
+class Interval:
+    def __init__(self, minimum, maximum):
+        self.minimum = minimum
+        self.maximum = maximum
+
+    def includes(self, n):
+        return self.minimum <= n <= self.maximum
+
+
 def filter_olympics_journeys(responses, request):
+
     if not request.get("_keep_olympics_journeys", False):
         return
+
+    intervals = {
+        # 8
+        "stop_point:IDFM:monomodalStopPlace:58498": Interval(0, 2000),
+        # 3
+        "stop_point:IDFM:22041": Interval(2000, 3000),
+        "stop_point:IDFM:463281": Interval(2000, 3000),
+        # 1
+        "stop_point:IDFM:412988": Interval(3000, 5000),
+        "stop_point:IDFM:412987": Interval(3000, 5000),
+        # 0
+        "stop_point:IDFM:24412": Interval(5000, float('inf')),
+        "stop_point:IDFM:24420": Interval(5000, float('inf')),
+    }
+
+    olympics_durations = [j.duration for r in responses for j in r.journeys if 'olympics' in j.tags]
+
+    average_duration = sum(olympics_durations) / len(olympics_durations)
+
+    retained_journeys = []
+    for r in responses:
+        for j in r.journeys:
+            if 'olympics' not in j.tags:
+                continue
+            pt_extremity = get_journey_pt_extremity(j, request.get('clockwise'))
+            interval = intervals.get(pt_extremity.uri)
+            if not interval.includes(average_duration):
+                j.tags.append("to_delete")
+            else:
+                retained_journeys.append(j)
+    retained_journeys.sort(key=lambda j: j.duration)
+    for j in itertools.islice(retained_journeys, 1):
+        j.tags.append("to_delete")
 
 
 def replace_bss_tag(journeys):
