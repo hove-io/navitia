@@ -59,12 +59,114 @@ jobs:
             echo "aws_branch=release" >> $GITHUB_OUTPUT
           fi
 
+  jessie_builder:
+    runs-on: [self-hosted, corefront, sandbox]
+    name: Jessie builder
+    needs: common_variables
+    steps:
+      - name: Install dependencies
+        run: |
+          sudo apt update && sudo apt install -y --force-yes zip httpie
+
+      - name: Generate github private access token
+        id: ci-core-app-token
+        uses: getsentry/action-github-app-token@v2.0.0
+        with:
+          app_id: ${{ secrets.CI_CORE_APP_ID }}
+          private_key: ${{ secrets.CI_CORE_APP_PEM }}
+
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          submodules: recursive
+          token: ${{ steps.ci-core-app-token.outputs.token }}
+          # we need entire history for tags
+          fetch-depth: 0
+
+      - name: Checkout core_team_ci_tools
+        uses: actions/checkout@v3
+        with:
+          repository : 'hove-io/core_team_ci_tools'
+          path: core_team_ci_tools
+          token: ${{ steps.ci-core-app-token.outputs.token }}
+
+      - name: Setup core_team_ci_tools python environment
+        run: |
+          pip install -r core_team_ci_tools/github_artifacts/requirements.txt --user
+
+      - name: Download mimirsbrunn package
+        run: |
+          if [[ "${{ needs.common_variables.outputs.AWS_BRANCH }}" = "release" ]]; then
+              mimirsbrunn_workflow=release7.yml
+              mimirsbrunn_package="debian-package-release.zip"
+          else
+              mimirsbrunn_workflow=main7.yml
+              mimirsbrunn_package="debian-package-master.zip"
+          fi
+          python core_team_ci_tools/github_artifacts/github_artifacts.py \
+              -o hove-io \
+              -r mimirsbrunn \
+              -t ${{ steps.ci-core-app-token.outputs.token }} \
+              -w $mimirsbrunn_workflow \
+              -a $mimirsbrunn_package \
+              --output-dir .
+          unzip -qo $mimirsbrunn_package
+          rm -f $mimirsbrunn_package
+
+      - name: Download cosmogony2cities package
+        run: |
+          cosmogony2cities_package="package-${{env.jessie_version}}.zip"
+          python core_team_ci_tools/github_artifacts/github_artifacts.py \
+              -o hove-io \
+              -r cosmogony2cities \
+              -t ${{ steps.ci-core-app-token.outputs.token }} \
+              -w build_package.yml \
+              -a $cosmogony2cities_package \
+              --output-dir .
+          unzip -qo $cosmogony2cities_package
+          rm -f $cosmogony2cities_package
+
+      - name: Restore ccache
+        uses: hendrikmuhs/ccache-action@v1.2
+        with:
+          key: build_dockers
+          max-size: 2000M
+
+      - name: Login to Amazon ECR SBX
+        uses: aws-actions/amazon-ecr-login@v1
+        env:
+          AWS_REGION: eu-west-1
+
+      - name: Login to Amazon ECR Shared
+        uses: aws-actions/amazon-ecr-login@v1
+        env:
+          AWS_REGION: eu-west-1
+        with:
+          registries: "162230498103"
+
+      - name: Create master docker
+        run: |
+          docker build -f docker/${{env.jessie_version}}/Dockerfile-master -t navitia/master .
+          docker build -f docker/${{env.jessie_version}}/Dockerfile-builder -t navitia/builder .
+
+      - name: Build packages in master docker
+        #         Will build navitia-*.deb packages in current folder
+        run: docker run -v `pwd`:/build/navitia/  navitia/builder
+
+      - name: Create dockers images
+        run: |
+          for component in ${{env.jessie_navitia_components}}; do
+              echo "*********  Building $component Tag: ${{ needs.common_variables.outputs.NAVITIA_TAG }} ***************"
+              COMPONANT_TAG=${SBX_ECR_REGISTRY_FRONT}/$component:${{ needs.common_variables.outputs.NAVITIA_TAG }}
+              docker build -t ${COMPONANT_TAG} -f  docker/${{env.jessie_version}}/Dockerfile-${component} .
+              docker push ${COMPONANT_TAG}
+          done
+
 
   bullseye_builder:
     runs-on: [self-hosted, corefront, sandbox]
     name: Bullseye builder
     needs: common_variables
-
 
     steps:
       - name: Install dependencies
@@ -116,6 +218,7 @@ jobs:
         run: |
           for component in ${{env.bullseye_navitia_components}}; do
               echo "*********  Building $component Tag: ${{ needs.common_variables.outputs.NAVITIA_TAG }} ***************"
-              docker build -t ${SBX_ECR_REGISTRY_FRONT}/$component:${{ needs.common_variables.outputs.NAVITIA_TAG }} -f  docker/${{env.bullseye_version}}/Dockerfile-${component} .
-              docker push ${SBX_ECR_REGISTRY_FRONT}/$component:${{ needs.common_variables.outputs.NAVITIA_TAG }}
+              COMPONANT_TAG=${SBX_ECR_REGISTRY_FRONT}/$component:${{ needs.common_variables.outputs.NAVITIA_TAG }}
+              docker build -t ${COMPONANT_TAG} -f  docker/${{env.bullseye_version}}/Dockerfile-${component} .
+              docker push ${COMPONANT_TAG}
           done

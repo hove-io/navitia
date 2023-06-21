@@ -1,4 +1,4 @@
-FROM navitia/debian8_dev
+FROM 162230498103.dkr.ecr.eu-west-1.amazonaws.com/mutable-debian8_dev:latest
 
 RUN echo "deb http://archive.debian.org/debian/ jessie main"  > /etc/apt/sources.list.d/archive.list
 
