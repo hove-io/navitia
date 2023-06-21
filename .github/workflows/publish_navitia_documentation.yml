@@ -3,8 +3,8 @@ name: Publish Navitia Documentation
 on:
   push:
     branches:
-      - -release
-  #workflow_dispatch:
+      - release
+  workflow_dispatch:
 
 jobs:
   build:
