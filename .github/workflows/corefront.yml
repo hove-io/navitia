@@ -90,8 +90,8 @@ jobs:
         run: |
           apt-get update && apt-get install -y httpie
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v2
+      - name: Setup docker
+        uses: docker-practice/actions-setup-docker@master
 
       - name: Generate github private access token
         id: ci-core-app-token
