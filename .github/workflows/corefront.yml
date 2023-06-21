@@ -82,7 +82,7 @@ jobs:
       image: 162230498103.dkr.ecr.eu-west-1.amazonaws.com/mutable-debian11_dev:latest
       credentials:
         username: AWS
-        password: ${{ needs.credentials.outputs.AWS_TOKEN }}
+        password: ${{ needs.aws_credentials.outputs.aws_token }}
 
     steps:
       - name: Install dependencies
