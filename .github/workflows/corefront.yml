@@ -13,7 +13,6 @@ env:
   jessie_navitia_components: 'tyr-web instances-configurator'
   bullseye_version: debian11
   bullseye_navitia_components: 'jormungandr'
-
   SBX_ECR_REGISTRY_FRONT: "051314639660.dkr.ecr.eu-west-1.amazonaws.com"
 
 jobs:
@@ -59,6 +58,11 @@ jobs:
             echo "aws_branch=release" >> $GITHUB_OUTPUT
           fi
 
+      - name: failure notification
+        if: failure()
+        run: |
+          echo '{"text":":warning: Github Actions: workflow corefront Job init common variables failed !"}' | http --json POST ${{secrets.SLACK_NAVITIA_TEAM_URL}}
+
   jessie_builder:
     runs-on: [self-hosted, corefront, sandbox]
     name: Jessie builder
@@ -66,7 +70,7 @@ jobs:
     steps:
       - name: Install dependencies
         run: |
-          sudo apt update && sudo apt install -y --force-yes zip httpie
+          sudo apt update && sudo apt install -y --force-yes zip httpie python python-pip
 
       - name: Generate github private access token
         id: ci-core-app-token
@@ -162,6 +166,11 @@ jobs:
               docker push ${COMPONANT_TAG}
           done
 
+      - name: failure notification
+        if: failure()
+        run: |
+          echo '{"text":":warning: Github Actions: workflow corefront Job jessie_builder is failed !"}' | http --json POST ${{secrets.SLACK_NAVITIA_TEAM_URL}}       
+
 
   bullseye_builder:
     runs-on: [self-hosted, corefront, sandbox]
@@ -222,3 +231,13 @@ jobs:
               docker build -t ${COMPONANT_TAG} -f  docker/${{env.bullseye_version}}/Dockerfile-${component} .
               docker push ${COMPONANT_TAG}
           done
+
+      - name: failure notification
+        if: failure()
+        run: |
+          echo '{"text":":warning: Github Actions: workflow corefront Job bullseye_builder is failed !"}' | http --json POST ${{secrets.SLACK_NAVITIA_TEAM_URL}}
+
+      - name: success notification on core team
+        if: success()
+        run: |
+          echo '{"text":":octopus: Github Actions: workflow corefront succeeded. New navitia ${{ needs.common_variables.outputs.NAVITIA_TAG }} images available."}' | http --json POST ${{secrets.SLACK_NAVITIA_TEAM_URL}}
