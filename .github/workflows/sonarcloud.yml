@@ -8,13 +8,27 @@ on:
 
 env:
    SONAR_SCANNER_VERSION: 4.7.0.2747
+   REGION: eu-west-1
 
 jobs:
+  aws_creds:
+    name: Get ECR Access
+    runs-on: [ self-hosted, corefront, sandbox ]
+    outputs:
+      token: ${{ steps.ecr_token.outputs.token }}
+    steps:
+      - id: ecr_token
+        name: Get ECR Token
+        run: |
+          echo token=$(aws ecr get-login-password --region $REGION) >> $GITHUB_OUTPUT
   static_analysis:
-    runs-on: ubuntu-latest
-
+    runs-on: [self-hosted, corefront, sandbox]
+    needs: aws_creds
     container:
-        image: navitia/debian11_dev
+        image: 162230498103.dkr.ecr.eu-west-1.amazonaws.com/mutable-debian11_dev:latest
+        credentials:
+          username: AWS
+          password: ${{ needs.aws_creds.outputs.token }}
         volumes:
           - /usr/share/dotnet:/usr/share/dotnet
         # Mount /dotnet so we can delete files from docker and free up space (>20GB)
@@ -81,7 +95,7 @@ jobs:
         pip install -r source/jormungandr/requirements_dev.txt
         pip install -r source/tyr/requirements_dev.txt
         pip install -r source/sql/requirements.txt
-        export NAVITIA_CHAOS_DUMP_PATH=$(echo $GITHUB_WORKSPACE/source/tests/chaos/chaos_loading.sql.gz | sed -e 's#__w#home/runner/work#')
+        export NAVITIA_CHAOS_DUMP_PATH=$(echo $GITHUB_WORKSPACE/source/tests/chaos/chaos_loading.sql.gz | sed -e 's#__w#/opt/actions-runner/_work#')
         echo $NAVITIA_CHAOS_DUMP_PATH
         make docker_test
         deactivate

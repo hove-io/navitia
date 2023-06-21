@@ -6,19 +6,29 @@ on:
     - clang-tidy
     - release
 
+env:
+  REGION: eu-west-1
+
 jobs:
-  info:
-    runs-on: ubuntu-latest
+  aws_creds:
+    name: Get ECR Access
+    runs-on: [ self-hosted, corefront, sandbox ]
+    outputs:
+      token: ${{ steps.ecr_token.outputs.token }}
     steps:
-    - name : Dump Github Context
-      env:
-        GITHUB_CONTEXT: ${{ toJson(github) }}
-      run: echo $GITHUB_CONTEXT
+      - id: ecr_token
+        name: Get ECR Token
+        run: |
+          echo token=$(aws ecr get-login-password --region $REGION) >> $GITHUB_OUTPUT
 
   clang-tidy:
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, corefront, sandbox]
+    needs: aws_creds
     container:
-      image: navitia/debian11_dev
+      image: 162230498103.dkr.ecr.eu-west-1.amazonaws.com/mutable-debian11_dev:latest
+      credentials:
+        username: AWS
+        password: ${{ needs.aws_creds.outputs.token }}
     steps:
     - name: Generate github private access token
       id: ci-core-app-token
