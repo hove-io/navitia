@@ -31,8 +31,7 @@ jobs:
       AWS_TOKEN: ${{ steps.ecr_token.outputs.token }}
     steps:
       - name: Install dependencies
-        run: |
-          apt update && apt install -y httpie
+        run: apt update && apt install -y httpie
 
       - name: Generate github private access token
         id: ci-core-app-token
@@ -41,13 +40,9 @@ jobs:
           app_id: ${{ secrets.CI_CORE_APP_ID }}
           private_key: ${{ secrets.CI_CORE_APP_PEM }}
 
-      - name: Init AWS credentials
-        runs-on: [self-hosted, corefront, sandbox]
-        steps:
-          - name: Get ECR Token
-            id: ecr_token
-            run: |
-              echo token=$(aws ecr get-login-password --region $REGION) >> $GITHUB_OUTPUT
+      - name: Get ECR Token
+        id: ecr_token
+        run: echo token=$(aws ecr get-login-password --region $REGION) >> $GITHUB_OUTPUT
 
       - name: Checkout navitia
         id: checkout_navitia
@@ -71,12 +66,6 @@ jobs:
             echo "aws_branch=release" >> $GITHUB_OUTPUT
           fi
 
-#      - name: failure notification
-#        if: failure()
-#        run: |
-#          echo '{"text":":warning: Github Actions: workflow dockers_builder Job init common variables failed !"}' | http --json POST ${{secrets.SLACK_NAVITIA_TEAM_URL}}
-
-
 
   bullseye_builder:
     runs-on: [self-hosted, corefront, sandbox]
@@ -90,8 +79,7 @@ jobs:
 
     steps:
       - name: Install dependencies
-        run: |
-          apt update && apt install -y httpie
+        run: apt update && apt install -y httpie
 
       - name: Generate github private access token
         id: ci-core-app-token
@@ -115,12 +103,10 @@ jobs:
           max-size: 2000M
 
       - name: Create builder docker
-        run: |
-          docker build -f docker/${{env.bullseye_version}}/Dockerfile-builder -t navitia/builder .
+        run: docker build -f docker/${{env.bullseye_version}}/Dockerfile-builder -t navitia/builder .
 
       - name: Build navitia
-        run: |
-          docker run -v `pwd`:/navitia/navitia/  navitia/builder
+        run: docker run -v `pwd`:/navitia/navitia/  navitia/builder
 
       - name: Create navitia images
         run: |
@@ -128,8 +114,3 @@ jobs:
               echo "*********  Building $component Tag: ${{ needs.common_variables.outputs.NAVITIA_TAG }} ***************"
               docker build -t navitia/$component:${{ needs.common_variables.outputs.NAVITIA_TAG }} -f  docker/${{env.bullseye_version}}/Dockerfile-${component} .
           done
-
-#      - name: failure notification
-#        if: failure()
-#        run: |
-#          echo '{"text":":warning: Github Actions: workflow dockers_builder Job bullseye_builder is failed !"}' | http --json POST ${{secrets.SLACK_NAVITIA_TEAM_URL}}
