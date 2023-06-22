@@ -39,11 +39,11 @@ jobs:
           # we need entire history for tags
           fetch-depth: 0
 
-      - name: Restore ccache
-        uses: hendrikmuhs/ccache-action@v1.2
-        with:
-          key: build_dockers
-          max-size: 2000M
+#      - name: Restore ccache
+#        uses: hendrikmuhs/ccache-action@v1.2
+#        with:
+#          key: build_dockers
+#          max-size: 2000M
 
       - name: Login to Amazon ECR SBX
         uses: aws-actions/amazon-ecr-login@v1
@@ -109,11 +109,11 @@ jobs:
           # we need entire history for tags
           fetch-depth: 0
 
-      - name: Restore ccache
-        uses: hendrikmuhs/ccache-action@v1.2
-        with:
-          key: build_dockers
-          max-size: 2000M
+#      - name: Restore ccache
+#        uses: hendrikmuhs/ccache-action@v1.2
+#        with:
+#          key: build_dockers
+#          max-size: 2000M
 
       - name: Login to Amazon ECR SBX
         uses: aws-actions/amazon-ecr-login@v1
@@ -213,11 +213,11 @@ jobs:
           unzip -qo $cosmogony2cities_package
           rm -f $cosmogony2cities_package
 
-      - name: Restore ccache
-        uses: hendrikmuhs/ccache-action@v1.2
-        with:
-          key: build_dockers
-          max-size: 2000M
+#      - name: Restore ccache
+#        uses: hendrikmuhs/ccache-action@v1.2
+#        with:
+#          key: build_dockers
+#          max-size: 2000M
 
       - name: Login to Amazon ECR SBX
         uses: aws-actions/amazon-ecr-login@v1
