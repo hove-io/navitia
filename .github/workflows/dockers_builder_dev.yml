@@ -159,9 +159,7 @@ jobs:
     steps:
       - name: Install dependencies
         run: |
-          sudo apt update && sudo apt install -y zip httpie curl
-          apt search python3.
-          sudo apt install python3.8-dev python3-pip
+          sudo apt update && sudo apt install -y zip httpie curl python3.8-dev python3-pip
       - name: Generate github private access token
         id: ci-core-app-token
         uses: getsentry/action-github-app-token@v2.0.0
