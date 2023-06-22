@@ -222,6 +222,7 @@ jobs:
               -t ${{ steps.ci-core-app-token.outputs.token }} \
               -w release.yml \
               -a $conf_mimir_package \
+              -b main \
               --output-dir .
           unzip -qo $conf_mimir_package
           rm -f $conf_mimir_package
