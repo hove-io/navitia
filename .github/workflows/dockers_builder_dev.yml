@@ -215,7 +215,7 @@ jobs:
 
       - name: Download mimir-config package
         run: |
-          conf_mimir_package="debian-package-release"
+          conf_mimir_package="debian-package-release.zip"
           python3 core_team_ci_tools/github_artifacts/github_artifacts.py \
               -o hove-io \
               -r mimirsbrunn-config \
