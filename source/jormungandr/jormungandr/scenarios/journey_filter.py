@@ -726,42 +726,73 @@ class Interval:
 
 
 def filter_olympics_journeys(responses, request):
+    if request.get('debug', False):
+        return
 
     if not request.get("_keep_olympics_journeys", False):
         return
 
     intervals = {
-        # 8
-        "stop_point:IDFM:monomodalStopPlace:58498": Interval(0, 2000),
-        # 3
-        "stop_point:IDFM:22041": Interval(2000, 3000),
-        "stop_point:IDFM:463281": Interval(2000, 3000),
-        # 1
-        "stop_point:IDFM:412988": Interval(3000, 5000),
-        "stop_point:IDFM:412987": Interval(3000, 5000),
-        # 0
-        "stop_point:IDFM:24412": Interval(5000, float('inf')),
-        "stop_point:IDFM:24420": Interval(5000, float('inf')),
+        # 9
+        "stop_point:IDFM:monomodalStopPlace:58498": Interval(0, 4240),
+        # 6
+        "stop_point:IDFM:22041": Interval(4240, 5606),
+        "stop_point:IDFM:463281": Interval(4240, 5606),
+        # 4
+        "stop_point:IDFM:412988": Interval(5606, float('inf')),
+        "stop_point:IDFM:412987": Interval(5606, float('inf')),
+    }
+
+    attractivity = {
+        "stop_point:IDFM:monomodalStopPlace:58498": 9,
+        "stop_point:IDFM:22041": 6,
+        "stop_point:IDFM:463281": 6,
+        "stop_point:IDFM:412988": 4,
+        "stop_point:IDFM:412987": 4,
     }
 
     olympics_durations = [j.duration for r in responses for j in r.journeys if 'olympics' in j.tags]
+    average_duration = sum(olympics_durations) / float(len(olympics_durations))
 
-    average_duration = sum(olympics_durations) / len(olympics_durations)
+    retained_journey = None
 
-    retained_journeys = []
+    found_sps = []
     for r in responses:
         for j in r.journeys:
             if 'olympics' not in j.tags:
                 continue
             pt_extremity = get_journey_pt_extremity(j, request.get('clockwise'))
+            if pt_extremity.uri not in found_sps:
+                found_sps.append(pt_extremity.uri)
             interval = intervals.get(pt_extremity.uri)
+            print(pt_extremity.uri, interval, average_duration)
             if not interval.includes(average_duration):
                 j.tags.append("to_delete")
             else:
-                retained_journeys.append(j)
-    retained_journeys.sort(key=lambda j: j.duration)
-    for j in itertools.islice(retained_journeys, 1):
-        j.tags.append("to_delete")
+                if retained_journey is None:
+                    retained_journey = j
+                elif retained_journey.duration > j.duration:
+                    retained_journey.tags.append("to_delete")
+                    retained_journey = j
+                else:
+                    j.tags.append("to_delete")
+
+    if retained_journey is not None:
+        return
+
+    found_sps.sort(key=lambda sp: attractivity[sp])
+    best_attractivity = found_sps[-1]
+    for r in responses:
+        for j in r.journeys:
+            if 'olympics' not in j.tags:
+                continue
+            pt_extremity = get_journey_pt_extremity(j, request.get('clockwise'))
+            if pt_extremity.uri != best_attractivity:
+                continue
+            if retained_journey is None or retained_journey.duration > j.duration:
+                retained_journey = j
+
+    retained_journey.tags.remove("to_delete")
 
 
 def replace_bss_tag(journeys):
