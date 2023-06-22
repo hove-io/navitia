@@ -303,6 +303,14 @@ def direct_path_geovelo_test():
         assert geovelo_resp.journeys[0].sections[0].street_network.elevations[1].elevation == 44
         assert geovelo_resp.journeys[0].sections[0].street_network.elevations[2].distance_from_start == 274
         assert geovelo_resp.journeys[0].sections[0].street_network.elevations[2].elevation == 50
+        assert geovelo_resp.journeys[0].sections[0].cycle_lane_length == 98
+        assert len(geovelo_resp.journeys[0].sections[0].street_network.street_information) == 3
+        assert geovelo_resp.journeys[0].sections[0].street_network.street_information[0].cycle_path_type == 2
+        assert geovelo_resp.journeys[0].sections[0].street_network.street_information[0].length == 58.0
+        assert geovelo_resp.journeys[0].sections[0].street_network.street_information[1].cycle_path_type == 2
+        assert geovelo_resp.journeys[0].sections[0].street_network.street_information[1].length == 40.0
+        assert geovelo_resp.journeys[0].sections[0].street_network.street_information[2].cycle_path_type == 2
+        assert geovelo_resp.journeys[0].sections[0].street_network.street_information[2].length == 0.0
 
 
 def direct_path_geovelo_zero_test():
@@ -339,6 +347,9 @@ def direct_path_geovelo_zero_test():
         assert geovelo_resp.journeys[0].sections[0].street_network.path_items[0].direction == 0
         assert geovelo_resp.journeys[0].sections[0].street_network.path_items[0].length == 0
         assert geovelo_resp.journeys[0].sections[0].street_network.path_items[0].duration == 0
+        assert geovelo_resp.journeys[0].sections[0].cycle_lane_length == 0
+        assert geovelo_resp.journeys[0].sections[0].street_network.street_information[0].length == 0.0
+        assert geovelo_resp.journeys[0].sections[0].street_network.street_information[1].length == 0.0
 
 
 def isochrone_geovelo_test():
