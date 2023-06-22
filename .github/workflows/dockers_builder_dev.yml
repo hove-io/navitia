@@ -20,7 +20,7 @@ env:
 jobs:
   front_bullseye_builder:
     runs-on: [self-hosted, corefront, sandbox]
-    name: [Dev] Front Bullseye builder
+    name: Front Bullseye builder (Dev)
     steps:
       - name: force chown to avoid errors
         run: sudo chown -R $USER:$USER .
@@ -86,7 +86,7 @@ jobs:
 
   front_jessie_builder:
     runs-on: [self-hosted, corefront, sandbox]
-    name: [Dev] Front Jessie builder
+    name: Front Jessie builder (Dev)
     steps:
       - name: force chown to avoid errors
         run: sudo chown -R $USER:$USER .
@@ -157,6 +157,7 @@ jobs:
 
   backend_jessie_builder:
     runs-on: [self-hosted, kraken, sandbox]
+    name: Backend Jessie builder (Dev)
     steps:
       - name: force chown to avoid errors
         run: sudo chown -R $USER:$USER .
@@ -278,7 +279,7 @@ jobs:
 
   publish_aws:
     runs-on: [self-hosted, corefront, sandbox]
-    name: [Dev]  Aws Dispatch
+    name: Aws Dispatch (Dev)
     needs: [front_jessie_builder, front_bullseye_builder, backend_jessie_builder]
     steps:
       - name: Install dependencies
@@ -309,7 +310,7 @@ jobs:
   run_artemis:
     runs-on: [self-hosted, corefront, sandbox]
     needs: [front_jessie_builder, front_bullseye_builder, backend_jessie_builder, publish_aws]
-    name: [Dev]  Run artemis Dispatch
+    name: Run artemis Dispatch (Dev)
     steps:
       - name: Install dependencies
         run: |
