@@ -80,10 +80,10 @@ jobs:
               docker push ${SBX_ECR_REGISTRY_FRONT}/$component:${TAG}
           done
 
-      - name: failure notification
-        if: failure()
-        run: |
-          echo '{"text":":warning: Github Actions: workflow dockers_builder Job front_jessie_builder is failed !"}' | http --json POST ${{secrets.SLACK_NAVITIA_TEAM_URL}}
+#      - name: failure notification
+#        if: failure()
+#        run: |
+#          echo '{"text":":warning: Github Actions: workflow dockers_builder Job front_jessie_builder is failed !"}' | http --json POST ${{secrets.SLACK_NAVITIA_TEAM_URL}}
 
 
   front_bullseye_builder:
@@ -149,10 +149,10 @@ jobs:
               docker push ${SBX_ECR_REGISTRY_FRONT}/$component:${TAG}
           done
 
-      - name: failure notification
-        if: failure()
-        run: |
-          echo '{"text":":warning: Github Actions: workflow dockers_builder Job front_bullseye_builder is failed !"}' | http --json POST ${{secrets.SLACK_NAVITIA_TEAM_URL}}
+#      - name: failure notification
+#        if: failure()
+#        run: |
+#          echo '{"text":":warning: Github Actions: workflow dockers_builder Job front_bullseye_builder is failed !"}' | http --json POST ${{secrets.SLACK_NAVITIA_TEAM_URL}}
 
   backend_jessie_builder:
     runs-on: [self-hosted, kraken, sandbox]
@@ -254,10 +254,10 @@ jobs:
               docker push ${SBX_ECR_REGISTRY_BACKEND}/$component:${TAG}
           done
 
-      - name: failure notification
-        if: failure()
-        run: |
-          echo '{"text":":warning: Github Actions: workflow dockers_builder Job backend_jessie_builder is failed !"}' | http --json POST ${{secrets.SLACK_NAVITIA_TEAM_URL}}
+#      - name: failure notification
+#        if: failure()
+#        run: |
+#          echo '{"text":":warning: Github Actions: workflow dockers_builder Job backend_jessie_builder is failed !"}' | http --json POST ${{secrets.SLACK_NAVITIA_TEAM_URL}}
 
 
   run_artemis:
@@ -283,7 +283,7 @@ jobs:
           repository: hove-io/artemis
           event-type: run_artemis_ng
 
-      - name: failure notification
-        if: failure()
-        run: |
-          echo '{"text":":warning: Github Actions: workflow dockers_builder Job run_artemis is failed !"}' | http --json POST ${{secrets.SLACK_NAVITIA_TEAM_URL}}
+#      - name: failure notification
+#        if: failure()
+#        run: |
+#          echo '{"text":":warning: Github Actions: workflow dockers_builder Job run_artemis is failed !"}' | http --json POST ${{secrets.SLACK_NAVITIA_TEAM_URL}}
