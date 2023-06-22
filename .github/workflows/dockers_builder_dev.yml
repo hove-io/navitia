@@ -11,7 +11,7 @@ env:
   bullseye_version: debian11
   front_jessie_navitia_components: 'tyr-web instances-configurator'
   front_bullseye_navitia_components: 'jormungandr'
-  bakend_jessie_navitia_components: 'kraken tyr-beat tyr-worker mock-kraken eitri'
+  backend_jessie_navitia_components: 'kraken tyr-beat tyr-worker mock-kraken eitri'
   SBX_ECR_REGISTRY_BACKEND: "110444322584.dkr.ecr.eu-west-1.amazonaws.com"
   SBX_ECR_REGISTRY_FRONT: "051314639660.dkr.ecr.eu-west-1.amazonaws.com"
   TAG: 'test'
@@ -223,6 +223,7 @@ jobs:
               -w release.yml \
               -a $conf_mimir_package \
               -b main \
+              --skip-check-artifacts-size \
               --output-dir .
           unzip -qo $conf_mimir_package
           rm -f $conf_mimir_package
@@ -256,14 +257,14 @@ jobs:
 
       - name: Create navitia images
         run: |
-          for component in ${{env.bakend_jessie_navitia_components}}; do
+          for component in ${{env.backend_jessie_navitia_components}}; do
               echo "*********  Building $component ***************"
               docker build -t ${SBX_ECR_REGISTRY_BACKEND}/$component:${TAG} -f  docker/${{env.jessie_version}}/Dockerfile-${component} .
           done
 
       - name: Push images on SBX ECR
         run: |
-          for component in ${{env.bakend_jessie_navitia_components}}; do
+          for component in ${{env.backend_jessie_navitia_components}}; do
               echo "*********  Building $component ***************"
               docker push ${SBX_ECR_REGISTRY_BACKEND}/$component:${TAG}
           done
