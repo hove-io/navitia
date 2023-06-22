@@ -188,6 +188,7 @@ jobs:
 
       - name: Download mimirsbrunn package
         run: |
+          mimirsbrunn_package="debian-package-master.zip"
           python3 core_team_ci_tools/github_artifacts/github_artifacts.py \
               -o hove-io \
               -r mimirsbrunn \
