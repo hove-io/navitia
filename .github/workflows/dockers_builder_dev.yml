@@ -11,7 +11,7 @@ env:
   bullseye_version: debian11
   front_jessie_navitia_components: 'tyr-web instances-configurator'
   front_bullseye_navitia_components: 'jormungandr'
-  bakend_jessie_navitia_components: 'kraken tyr-beat tyr-worker' # mock-kraken eitri'
+  bakend_jessie_navitia_components: 'kraken tyr-beat tyr-worker mock-kraken eitri'
   SBX_ECR_REGISTRY_BACKEND: "110444322584.dkr.ecr.eu-west-1.amazonaws.com"
   SBX_ECR_REGISTRY_FRONT: "051314639660.dkr.ecr.eu-west-1.amazonaws.com"
   TAG: 'test'
@@ -212,6 +212,19 @@ jobs:
               --output-dir .
           unzip -qo $cosmogony2cities_package
           rm -f $cosmogony2cities_package
+
+      - name: Download mimir-config package
+        run: |
+          conf_mimir_package="debian-package-release"
+          python3 core_team_ci_tools/github_artifacts/github_artifacts.py \
+              -o hove-io \
+              -r mimirsbrunn-config \
+              -t ${{ steps.ci-core-app-token.outputs.token }} \
+              -w release.yml \
+              -a $conf_mimir_package \
+              --output-dir .
+          unzip -qo $conf_mimir_package
+          rm -f $conf_mimir_package
 
 #      - name: Restore ccache
 #        uses: hendrikmuhs/ccache-action@v1.2
