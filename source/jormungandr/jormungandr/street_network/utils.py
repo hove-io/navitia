@@ -162,10 +162,7 @@ def add_cycle_lane_length(response):
     for journey in response.journeys:
         for section in journey.sections:
             # do not add cycle_lane_length for bss_rent/bss_return & walking sections
-            if (
-                section.type == response_pb2.STREET_NETWORK
-                and section.street_network.mode == response_pb2.Bike
-            ):
+            if section.type == response_pb2.STREET_NETWORK and section.street_network.mode == response_pb2.Bike:
                 cycle_lane_length = sum(
                     (s.length for s in section.street_network.street_information if _is_cycle_lane(s))
                 )
