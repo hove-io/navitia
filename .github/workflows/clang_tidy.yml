@@ -30,6 +30,8 @@ jobs:
         username: AWS
         password: ${{ needs.aws_creds.outputs.token }}
     steps:
+    - name: force chown to avoid errors
+      run: chown -R $USER:$USER .
     - name: Generate github private access token
       id: ci-core-app-token
       uses: getsentry/action-github-app-token@v2.0.0

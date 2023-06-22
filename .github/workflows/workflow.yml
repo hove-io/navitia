@@ -34,6 +34,8 @@ jobs:
         username: AWS
         password: ${{ needs.credentials.outputs.aws_token }}
     steps:
+    - name: force chown to avoid errors
+      run: chown -R $USER:$USER .
     - name: Generate github private access token
       id: ci-core-app-token
       uses: getsentry/action-github-app-token@v2.0.0
@@ -60,6 +62,8 @@ jobs:
         username: AWS
         password: ${{ needs.credentials.outputs.aws_token }}
     steps:
+      - name: force chown to avoid errors
+        run: chown -R $USER:$USER .
       - name: Generate github private access token
         id: ci-core-app-token
         uses: getsentry/action-github-app-token@v2.0.0
@@ -117,6 +121,8 @@ jobs:
         ports:
           - 6379:6379
     steps:
+    - name: force chown to avoid errors
+      run: chown -R $USER:$USER .
     - name: Generate github private access token
       id: ci-core-app-token
       uses: getsentry/action-github-app-token@v2.0.0
