@@ -17,9 +17,79 @@ env:
   TAG: 'test'
 
 jobs:
+
+  front_bullseye_builder:
+    runs-on: [self-hosted, corefront, sandbox]
+    name: Front Bullseye builder
+    steps:
+      - name: Install dependencies
+        run: |
+          sudo apt update && sudo apt install -y httpie
+
+      - name: Generate github private access token
+        id: ci-core-app-token
+        uses: getsentry/action-github-app-token@v2.0.0
+        with:
+          app_id: ${{ secrets.CI_CORE_APP_ID }}
+          private_key: ${{ secrets.CI_CORE_APP_PEM }}
+
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          submodules: recursive
+          token: ${{ steps.ci-core-app-token.outputs.token }}
+          # we need entire history for tags
+          fetch-depth: 0
+
+      #      - name: Restore ccache
+      #        uses: hendrikmuhs/ccache-action@v1.2
+      #        with:
+      #          key: build_dockers
+      #          max-size: 2000M
+
+      - name: Login to Amazon ECR SBX
+        uses: aws-actions/amazon-ecr-login@v1
+        env:
+          AWS_REGION: eu-west-1
+
+      - name: Login to Amazon ECR Shared
+        uses: aws-actions/amazon-ecr-login@v1
+        env:
+          AWS_REGION: eu-west-1
+        with:
+          registries: "162230498103"
+
+      - name: Create builder docker
+        run: |
+          docker build -f docker/${{env.bullseye_version}}/Dockerfile-builder -t navitia/builder .
+
+      - name: Build navitia
+        run: |
+          docker run -v `pwd`:/navitia/navitia/  navitia/builder
+
+      - name: Create navitia images
+        run: |
+          for component in ${{env.front_bullseye_navitia_components}}; do
+              echo "*********  Building $component ***************"
+              docker build -t ${SBX_ECR_REGISTRY_FRONT}/$component:${TAG} -f  docker/${{env.bullseye_version}}/Dockerfile-${component} .
+          done
+
+      - name: Push images on SBX ECR
+        run: |
+          for component in ${{env.front_bullseye_navitia_components}}; do
+              echo "*********  Building $component ***************"
+              docker push ${SBX_ECR_REGISTRY_FRONT}/$component:${TAG}
+          done
+
+  #      - name: failure notification
+  #        if: failure()
+  #        run: |
+  #          echo '{"text":":warning: Github Actions: workflow dockers_builder Job front_bullseye_builder is failed !"}' | http --json POST ${{secrets.SLACK_NAVITIA_TEAM_URL}}
+
   front_jessie_builder:
     runs-on: [self-hosted, corefront, sandbox]
     name: Front Jessie builder
+    needs: front_bullseye_builder
     steps:
       - name: Install dependencies
         run: |
@@ -85,74 +155,6 @@ jobs:
 #        run: |
 #          echo '{"text":":warning: Github Actions: workflow dockers_builder Job front_jessie_builder is failed !"}' | http --json POST ${{secrets.SLACK_NAVITIA_TEAM_URL}}
 
-
-  front_bullseye_builder:
-    runs-on: [self-hosted, corefront, sandbox]
-    name: Front Bullseye builder
-    steps:
-      - name: Install dependencies
-        run: |
-          sudo apt update && sudo apt install -y httpie
-
-      - name: Generate github private access token
-        id: ci-core-app-token
-        uses: getsentry/action-github-app-token@v2.0.0
-        with:
-          app_id: ${{ secrets.CI_CORE_APP_ID }}
-          private_key: ${{ secrets.CI_CORE_APP_PEM }}
-
-      - name: Checkout
-        uses: actions/checkout@v3
-        with:
-          submodules: recursive
-          token: ${{ steps.ci-core-app-token.outputs.token }}
-          # we need entire history for tags
-          fetch-depth: 0
-
-#      - name: Restore ccache
-#        uses: hendrikmuhs/ccache-action@v1.2
-#        with:
-#          key: build_dockers
-#          max-size: 2000M
-
-      - name: Login to Amazon ECR SBX
-        uses: aws-actions/amazon-ecr-login@v1
-        env:
-          AWS_REGION: eu-west-1
-
-      - name: Login to Amazon ECR Shared
-        uses: aws-actions/amazon-ecr-login@v1
-        env:
-          AWS_REGION: eu-west-1
-        with:
-          registries: "162230498103"
-
-      - name: Create builder docker
-        run: |
-          docker build -f docker/${{env.bullseye_version}}/Dockerfile-builder -t navitia/builder .
-
-      - name: Build navitia
-        run: |
-          docker run -v `pwd`:/navitia/navitia/  navitia/builder
-
-      - name: Create navitia images
-        run: |
-          for component in ${{env.front_bullseye_navitia_components}}; do
-              echo "*********  Building $component ***************"
-              docker build -t ${SBX_ECR_REGISTRY_FRONT}/$component:${TAG} -f  docker/${{env.bullseye_version}}/Dockerfile-${component} .
-          done
-
-      - name: Push images on SBX ECR
-        run: |
-          for component in ${{env.front_bullseye_navitia_components}}; do
-              echo "*********  Building $component ***************"
-              docker push ${SBX_ECR_REGISTRY_FRONT}/$component:${TAG}
-          done
-
-#      - name: failure notification
-#        if: failure()
-#        run: |
-#          echo '{"text":":warning: Github Actions: workflow dockers_builder Job front_bullseye_builder is failed !"}' | http --json POST ${{secrets.SLACK_NAVITIA_TEAM_URL}}
 
   backend_jessie_builder:
     runs-on: [self-hosted, kraken, sandbox]
