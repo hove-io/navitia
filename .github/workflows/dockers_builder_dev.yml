@@ -1,4 +1,4 @@
-name: Build Navitia Dockers
+name: Build Navitia Dockers (Dev)
 
 on:
   push:
@@ -21,7 +21,7 @@ jobs:
 
   front_bullseye_builder:
     runs-on: [self-hosted, corefront, sandbox]
-    name: Front Bullseye builder
+    name: [Dev] Front Bullseye builder
     steps:
       - name: force chown to avoid errors
         run: sudo chown -R $USER:$USER .
@@ -80,15 +80,14 @@ jobs:
           echo "*********  Push Jormungandr ***************"
           docker push ${SBX_ECR_REGISTRY_FRONT}/jormungandr:no_config_${TAG}
 
-  #      - name: failure notification
-  #        if: failure()
-  #        run: |
-  #          echo '{"text":":warning: Github Actions: workflow dockers_builder Job front_bullseye_builder is failed !"}' | http --json POST ${{secrets.SLACK_NAVITIA_TEAM_URL}}
+      - name: failure notification
+        if: failure()
+        run: |
+          echo '{"text":":warning: Github Actions: workflow dockers_builder_dev Job front_bullseye_builder is failed !"}' | http --json POST ${{secrets.SLACK_NAVITIA_TEAM_URL}}
 
   front_jessie_builder:
     runs-on: [self-hosted, corefront, sandbox]
-    name: Front Jessie builder
-    needs: front_bullseye_builder
+    name: [Dev] Front Jessie builder
     steps:
       - name: force chown to avoid errors
         run: sudo chown -R $USER:$USER .
@@ -151,15 +150,14 @@ jobs:
               docker push ${SBX_ECR_REGISTRY_FRONT}/$component:${TAG}
           done
 
-#      - name: failure notification
-#        if: failure()
-#        run: |
-#          echo '{"text":":warning: Github Actions: workflow dockers_builder Job front_jessie_builder is failed !"}' | http --json POST ${{secrets.SLACK_NAVITIA_TEAM_URL}}
+      - name: failure notification
+        if: failure()
+        run: |
+          echo '{"text":":warning: Github Actions: workflow dockers_builder_dev Job front_jessie_builder is failed !"}' | http --json POST ${{secrets.SLACK_NAVITIA_TEAM_URL}}
 
 
   backend_jessie_builder:
     runs-on: [self-hosted, kraken, sandbox]
-    name: Backend Jessie builder
     steps:
       - name: force chown to avoid errors
         run: sudo chown -R $USER:$USER .
@@ -274,14 +272,14 @@ jobs:
               docker push ${SBX_ECR_REGISTRY_BACKEND}/$component:${TAG}
           done
 
-#      - name: failure notification
-#        if: failure()
-#        run: |
-#          echo '{"text":":warning: Github Actions: workflow dockers_builder Job backend_jessie_builder is failed !"}' | http --json POST ${{secrets.SLACK_NAVITIA_TEAM_URL}}
+      - name: failure notification
+        if: failure()
+        run: |
+          echo '{"text":":warning: Github Actions: workflow dockers_builder_dev Job backend_jessie_builder is failed !"}' | http --json POST ${{secrets.SLACK_NAVITIA_TEAM_URL}}
 
   publish_aws:
     runs-on: [self-hosted, corefront, sandbox]
-    name: Aws Dispatch
+    name: [Dev]  Aws Dispatch
     needs: [front_jessie_builder, front_bullseye_builder, backend_jessie_builder]
     steps:
       - name: Install dependencies
@@ -303,36 +301,36 @@ jobs:
           event-type: build-trigger
           client-payload: '{"branch": "dev", "tag": "dev"}'
 
-  #      - name: failure notification
-  #        if: failure()
-  #        run: |
-  #          echo '{"text":":warning: Github Actions: dockers_builder the job publish_aws is failed !"}' | http --json POST ${{secrets.SLACK_NAVITIA_TEAM_URL}}
+      - name: failure notification
+        if: failure()
+        run: |
+          echo '{"text":":warning: Github Actions: dockers_builder_dev the job publish_aws is failed !"}' | http --json POST ${{secrets.SLACK_NAVITIA_TEAM_URL}}
 
 
-#  run_artemis:
-#    runs-on: [self-hosted, corefront, sandbox]
-#    needs: [front_jessie_builder, front_bullseye_builder, backend_jessie_builder, publish_aws]
-#    name: Run artemis Dispatch
-#    steps:
-#      - name: Install dependencies
-#        run: |
-#          sudo apt update && sudo apt install -y httpie
-#
-#      - name: Generate github private access token
-#        id: ci-core-app-token
-#        uses: getsentry/action-github-app-token@v2.0.0
-#        with:
-#          app_id: ${{ secrets.CI_CORE_APP_ID }}
-#          private_key: ${{ secrets.CI_CORE_APP_PEM }}
-#
-#      - name: Run artemis on push to dev
-#        uses: peter-evans/repository-dispatch@v2
-#        with:
-#          token: ${{ steps.ci-core-app-token.outputs.token }}
-#          repository: hove-io/artemis
-#          event-type: run_artemis_ng
+  run_artemis:
+    runs-on: [self-hosted, corefront, sandbox]
+    needs: [front_jessie_builder, front_bullseye_builder, backend_jessie_builder, publish_aws]
+    name: [Dev]  Run artemis Dispatch
+    steps:
+      - name: Install dependencies
+        run: |
+          sudo apt update && sudo apt install -y httpie
 
-#      - name: failure notification
-#        if: failure()
-#        run: |
-#          echo '{"text":":warning: Github Actions: workflow dockers_builder Job run_artemis is failed !"}' | http --json POST ${{secrets.SLACK_NAVITIA_TEAM_URL}}
+      - name: Generate github private access token
+        id: ci-core-app-token
+        uses: getsentry/action-github-app-token@v2.0.0
+        with:
+          app_id: ${{ secrets.CI_CORE_APP_ID }}
+          private_key: ${{ secrets.CI_CORE_APP_PEM }}
+
+      - name: Run artemis on push to dev
+        uses: peter-evans/repository-dispatch@v2
+        with:
+          token: ${{ steps.ci-core-app-token.outputs.token }}
+          repository: hove-io/artemis
+          event-type: run_artemis_ng
+
+      - name: failure notification
+        if: failure()
+        run: |
+          echo '{"text":":warning: Github Actions: workflow dockers_builder_dev Job run_artemis is failed !"}' | http --json POST ${{secrets.SLACK_NAVITIA_TEAM_URL}}
