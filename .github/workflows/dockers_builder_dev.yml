@@ -24,7 +24,7 @@ jobs:
     steps:
       - name:
         run: |
-          chmod -R $USER:$USER .
+          chown -R $USER:$USER .
       - name: Install dependencies
         run: |
           sudo apt update && sudo apt install -y httpie
@@ -96,7 +96,7 @@ jobs:
     steps:
       - name:
         run: |
-          chmod -R $USER:$USER .
+          chown -R $USER:$USER .
       - name: Install dependencies
         run: |
           sudo apt update && sudo apt install -y httpie
@@ -168,7 +168,7 @@ jobs:
     steps:
       - name:
         run: |
-          chmod -R $USER:$USER .
+          chown -R $USER:$USER .
       - name: Install dependencies
         run: |
           sudo apt update && sudo apt install -y zip httpie curl python3 python3-pip
