@@ -159,7 +159,7 @@ jobs:
     steps:
       - name: Install dependencies
         run: |
-          sudo apt update && sudo apt install -y zip httpie curl python3.8-dev python3-pip
+          sudo apt update && sudo apt install -y zip httpie curl python3 python3-pip
       - name: Generate github private access token
         id: ci-core-app-token
         uses: getsentry/action-github-app-token@v2.0.0
@@ -243,14 +243,14 @@ jobs:
         run: |
           for component in ${{env.bakend_jessie_navitia_components}}; do
               echo "*********  Building $component ***************"
-              docker build -t ${SBX_ECR_REGISTRY_BACKEND}/$component:dev -f  docker/${{env.jessie_version}}/Dockerfile-${component} .
+              docker build -t ${SBX_ECR_REGISTRY_BACKEND}/$component:test -f  docker/${{env.jessie_version}}/Dockerfile-${component} .
           done
 
       - name: Push images on SBX ECR
         run: |
           for component in ${{env.bakend_jessie_navitia_components}}; do
               echo "*********  Building $component ***************"
-              docker push ${SBX_ECR_REGISTRY_BACKEND}/$component:dev
+              docker push ${SBX_ECR_REGISTRY_BACKEND}/$component:test
           done
 
       - name: failure notification
