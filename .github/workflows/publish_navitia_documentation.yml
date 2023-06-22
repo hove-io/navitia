@@ -14,7 +14,7 @@ jobs:
     runs-on: [self-hosted, corefront, sandbox]
     steps:
     - name: force chown to avoid errors
-      run: sudo chown -R $USER:$USER .
+      run: chown -R $USER:$USER .
     - name: Checkout
       uses: actions/checkout@v3
     - name: Build website in Slate format

@@ -45,7 +45,7 @@ jobs:
 
     steps:
     - name: force chown to avoid errors
-      run: sudo chown -R $USER:$USER .
+      run: chown -R $USER:$USER .
     - name: Free up space
       run: rm -rf /usr/share/dotnet/*
     - name: Display remaining space
