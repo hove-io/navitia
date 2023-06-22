@@ -1,4 +1,4 @@
-name: [Dev] Build Navitia Dockers
+name: Build Navitia Dockers
 
 on:
   push:
