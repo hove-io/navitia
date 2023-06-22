@@ -875,6 +875,8 @@ def test_od_allowed_ids_present_and_od_present():
     destination_uri = "sa:10"
     instance = FakeInstance()
     instance.od_allowed_ids = make_od_allowed_ids()
+    instance.additional_params_period_start = str_to_time_stamp('20230812T000000')
+    instance.additional_params_period_end = str_to_time_stamp('20230814T215959')
     apply_origin_destination_rules(origin_uri, destination_uri, api_request, instance)
     assert "allowed_id[]" in api_request
     assert api_request["allowed_id[]"][0] == "rer:1"

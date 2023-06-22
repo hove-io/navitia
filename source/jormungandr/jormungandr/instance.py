@@ -68,6 +68,7 @@ from jormungandr.utils import (
     make_origin_destination_key,
     read_best_boarding_positions,
     read_origin_destination_data,
+    str_to_time_stamp,
 )
 from jormungandr import pt_planners_manager, transient_socket
 import os
@@ -156,6 +157,7 @@ class Instance(transient_socket.TransientSocket):
         instance_db=None,
         best_boarding_positions_dir=None,
         olympics_forbidden_uris=None,
+        additional_params_period=None,
     ):
         super(Instance, self).__init__(
             name=name,
@@ -253,6 +255,8 @@ class Instance(transient_socket.TransientSocket):
         self.od_additional_parameters = None
         self.od_stop_areas = None
         self.od_lines = None
+        self.additional_params_period_start = None
+        self.additional_params_period_end = None
 
         # Read the best_boarding_positions files if any
         if best_boarding_positions_dir is not None:
@@ -267,6 +271,10 @@ class Instance(transient_socket.TransientSocket):
 
             file_path = os.path.join(origin_destination_dir, "{}_od_additional_parameters.csv".format(self.name))
             self.od_additional_parameters, _, _ = read_origin_destination_data(file_path)
+
+        if additional_params_period:
+            self.additional_params_period_start = str_to_time_stamp(additional_params_period.get('start'))
+            self.additional_params_period_end = str_to_time_stamp(additional_params_period.get('end'))
 
     def get_providers_from_db(self):
         """
