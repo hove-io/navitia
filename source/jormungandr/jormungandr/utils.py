@@ -145,15 +145,21 @@ def navitia_utcfromtimestamp(timestamp):
         return None
 
 
-def str_to_time_stamp(str):
+def str_to_time_stamp(datetime_str):
     """
     convert a string to a posix timestamp
     the string must be in the YYYYMMDDTHHMMSS format
     like 20170534T124500
     """
-    date = datetime.strptime(str, DATETIME_FORMAT)
+    try:
+        date = datetime.strptime(datetime_str, DATETIME_FORMAT)
 
-    return date_to_timestamp(date)
+        return date_to_timestamp(date)
+    except Exception as e:
+        logging.getLogger(__name__).exception(
+            'Error while converting a string to a posix timestamp with exception: {}'.format(str(e))
+        )
+        return None
 
 
 def str_to_dt(str):

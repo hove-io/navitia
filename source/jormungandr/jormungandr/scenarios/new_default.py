@@ -1292,20 +1292,21 @@ def add_olympics_forbidden_uris(origin_detail, destination_detail, api_request, 
         api_request["forbidden_uris[]"] = instance.olympics_forbidden_uris.pt_object_olympics_forbidden_uris
 
 
-def request_in_maintenance_period(datetime):
-    # Maintenance work is planned for 2023/08/13 00:00:00 to 2023/08/15 24:00:00 local time
-    start_datetime = str_to_time_stamp('20230812T220000')  # 2023/08/13 00:00:00 local datetime
-    end_datetime = str_to_time_stamp('20230815T215959')  # 2023/08/15 23:59:59 local datetime
-    return start_datetime <= datetime <= end_datetime
+def is_origin_destination_rules_applicable(instance, datetime):
+    # At least od_allowed_ids or od_additional_parameters should be present
+    if not (instance.od_allowed_ids or instance.od_additional_parameters):
+        return False
+
+    # We don't apply the rule if additional_parameters_activation_period is absent or present with bad value
+    if not (instance.additional_params_period_start and instance.additional_params_period_end):
+        return False
+
+    # We apply the rule only if the request data_time is in within maintenance period configured
+    return instance.additional_params_period_start <= datetime <= instance.additional_params_period_end
 
 
 def apply_origin_destination_rules(origin_uri, destination_uri, api_request, instance):
-    # Add parameter allowed_id[] in the request if instance.od_allowed_ids exists and allowed_ids found for a key
-    if not (instance.od_allowed_ids or instance.od_additional_parameters):
-        return
-
-    # We apply the rule only if the request data_time in within maintenance period
-    if not request_in_maintenance_period(api_request.get('datetime')):
+    if not is_origin_destination_rules_applicable(instance, api_request.get('datetime')):
         return
 
     # We re-initialize allowed_id[] values ignoring already existing parameter values.
@@ -1517,8 +1518,11 @@ class Scenario(simple.Scenario):
         update_total_air_pollutants(pb_resp)
         # Tag ecologic should be done at the end
         tag_ecologic(pb_resp)
+
         # Tag special_event
-        if instance.additional_parameters and request_in_maintenance_period(api_request.get('datetime')):
+        if instance.additional_parameters and is_origin_destination_rules_applicable(
+            instance, api_request.get('datetime')
+        ):
             tag_special_event(instance, pb_resp)
         # Update best boarding positions in PT sections
         update_best_boarding_positions(pb_resp, instance)

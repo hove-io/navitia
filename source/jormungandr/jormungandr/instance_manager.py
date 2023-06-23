@@ -124,6 +124,7 @@ class InstanceManager(object):
             config.get('ghost_words', []),
             best_boarding_positions_dir=app.config.get(str('BEST_BOARDING_POSITIONS_DIR'), None),
             olympics_forbidden_uris=config.get('olympics_forbidden_uris', None),
+            additional_params_period=config.get('additional_parameters_activation_period', None),
         )
 
         self.instances[instance.name] = instance
