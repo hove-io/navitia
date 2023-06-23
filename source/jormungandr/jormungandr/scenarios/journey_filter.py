@@ -703,8 +703,8 @@ def apply_final_journey_filters_post_finalize(response_list, request):
         _filter_similar_line_and_crowfly_journeys(journey_pairs_pool, request)
 
 
-def get_journey_pt_section(journey, clockwise):
-    if clockwise:
+def get_journey_pt_section(journey, creteria):
+    if creteria == "arrival_stop_attractivity":
         sections = reversed(journey.sections)
     else:
         sections = journey.sections
@@ -714,13 +714,13 @@ def get_journey_pt_section(journey, clockwise):
     return extemity_pt_section
 
 
-def get_journey_pt_extremity(journey, clockwise):
-    extemity_pt_section = get_journey_pt_section(journey, clockwise)
+def get_journey_pt_extremity(journey, criteria):
+    extemity_pt_section = get_journey_pt_section(journey, criteria)
 
     assert extemity_pt_section
-    if clockwise:
+    if criteria == "arrival_stop_attractivity":
         return extemity_pt_section.destination
-    return extemity_pt_section.arrival
+    return extemity_pt_section.origin
 
 
 class Interval:
@@ -753,6 +753,11 @@ def filter_olympics_journeys_v1(responses, request):
     }
 
     olympics_durations = [j.duration for r in responses for j in r.journeys if 'olympics' in j.tags]
+
+    if len(olympics_durations) == 0:
+        logging.error("the length of olympics_durations is 0, which is weird..")
+        return
+
     average_duration = sum(olympics_durations) / float(len(olympics_durations))
 
     retained_journey = None
@@ -762,23 +767,22 @@ def filter_olympics_journeys_v1(responses, request):
         for j in r.journeys:
             if 'olympics' not in j.tags:
                 continue
-            pt_extremity = get_journey_pt_extremity(j, request.get('clockwise'))
+            pt_extremity = get_journey_pt_extremity(j, request.get('criteria'))
             if pt_extremity.uri not in found_sps:
                 found_sps.append(pt_extremity.uri)
             interval = intervals.get(pt_extremity.uri)
-            print(pt_extremity.uri, interval, average_duration)
             if not interval.includes(average_duration):
-                j.tags.append("to_delete")
-            else:
-                if retained_journey is None:
-                    retained_journey = j
-                elif retained_journey.duration > j.duration:
-                    retained_journey.tags.append("to_delete")
-                    retained_journey = j
-                else:
-                    j.tags.append("to_delete")
+                continue
+
+            if retained_journey is None:
+                retained_journey = j
+                continue
+
+            if retained_journey.duration > j.duration:
+                retained_journey = j
 
     if retained_journey is not None:
+        retained_journey.tags.append('best_olympics')
         return
 
     found_sps.sort(key=lambda sp: attractivity[sp])
@@ -787,13 +791,13 @@ def filter_olympics_journeys_v1(responses, request):
         for j in r.journeys:
             if 'olympics' not in j.tags:
                 continue
-            pt_extremity = get_journey_pt_extremity(j, request.get('clockwise'))
+            pt_extremity = get_journey_pt_extremity(j, request.get('criteria'))
             if pt_extremity.uri != best_attractivity:
                 continue
             if retained_journey is None or retained_journey.duration > j.duration:
                 retained_journey = j
 
-    retained_journey.tags.remove("to_delete")
+    retained_journey.tags.append('best_olympics')
 
 
 def filter_olympics_journeys_v2(responses, request):
@@ -812,7 +816,7 @@ def filter_olympics_journeys_v2(responses, request):
         for j in r.journeys:
             if 'olympics' not in j.tags:
                 continue
-            pt_extremity = get_journey_pt_extremity(j, request.get('clockwise'))
+            pt_extremity = get_journey_pt_extremity(j, request.get('criteria'))
             fake_fallback_duration = fake_fallback_durations.get(pt_extremity.uri)
             fake_duration = j.duration - j.sections[-1].duration + fake_fallback_duration
             if best is None:
@@ -820,10 +824,9 @@ def filter_olympics_journeys_v2(responses, request):
                 continue
 
             if best[1] > fake_duration:
-                best[0].tags.append("to_delete")
                 best = (j, fake_duration)
-            else:
-                j.tags.append("to_delete")
+
+    best[0].tags.append('best_olympics')
 
 
 def filter_olympics_journeys(responses, request):
