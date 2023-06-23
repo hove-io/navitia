@@ -292,24 +292,33 @@ jobs:
         #         Will build navitia-*.deb packages in current folder
         run: docker run -v `pwd`:/build/navitia/  navitia/builder
 
-      - name: Create navitia images
+      - name: Create and Push Kraken on PRD ECR
         run: |
-          for component in ${{env.backend_jessie_navitia_components}}; do
-              echo "*********  Building $component ***************"
-              docker build -t ${PRD_ECR_REGISTRY}/$component:${{ needs.common_variables.outputs.NAVITIA_TAG }} -f  docker/${{env.jessie_version}}/Dockerfile-${component} .
-          done
+          # Kraken
+          component_tag=${PRD_ECR_REGISTRY}/navitia-kraken-kraken:${{ needs.common_variables.outputs.NAVITIA_TAG }}
+          docker build -t ${component_tag} -f  docker/${{env.jessie_version}}/Dockerfile-kraken .
 
-      - name: Push Kraken on PRD ECR
-        run: |
-          docker push ${PRD_ECR_REGISTRY}/navitia-kraken-kraken:${{ needs.common_variables.outputs.NAVITIA_TAG }}
+          # Tyr-beat
+          component_tag=${PRD_ECR_REGISTRY}/navitia-tyr-tyrbeat:${{ needs.common_variables.outputs.NAVITIA_TAG }}
+          docker build -t ${component_tag} -f  docker/${{env.jessie_version}}/Dockerfile-tyr-beat .
 
-      - name: Push tyr-beat on PRD ECR
-        run: |
-          docker push ${PRD_ECR_REGISTRY}/navitia-tyr-tyrbeat:${{ needs.common_variables.outputs.NAVITIA_TAG }}
+          # Tyr-worker
+          component_tag=${PRD_ECR_REGISTRY}/navitia-tyr-tyrworker:${{ needs.common_variables.outputs.NAVITIA_TAG }}
+          docker build -t ${component_tag} -f  docker/${{env.jessie_version}}/Dockerfile-tyr-worker .
 
-      - name: Push tyr-worker on PRD ECR
+      - name: Push on PRD ECR
         run: |
-          docker push ${PRD_ECR_REGISTRY}/navitia-tyr-tyrworker:${{ needs.common_variables.outputs.NAVITIA_TAG }}
+          # Kraken
+          component_tag=${PRD_ECR_REGISTRY}/navitia-kraken-kraken:${{ needs.common_variables.outputs.NAVITIA_TAG }}
+          docker push ${component_tag}
+
+          # Tyr-beat
+          component_tag=${PRD_ECR_REGISTRY}/navitia-tyr-tyrbeat:${{ needs.common_variables.outputs.NAVITIA_TAG }}
+          docker push ${component_tag}
+
+          # Tyr-worker
+          component_tag=${PRD_ECR_REGISTRY}/navitia-tyr-tyrworker:${{ needs.common_variables.outputs.NAVITIA_TAG }}
+          docker push ${component_tag}
 
       - name: failure notification
         if: failure()
