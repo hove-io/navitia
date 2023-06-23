@@ -176,15 +176,15 @@ jobs:
         run: |
           for component in ${{env.front_jessie_navitia_components}}; do
               echo "*********  Building $component ***************"
-              docker build -t ${PRD_ECR_REGISTRY}/$component:${{ needs.common_variables.outputs.NAVITIA_TAG }} -f  docker/${{env.jessie_version}}/Dockerfile-${component} .
+              tag=${PRD_ECR_REGISTRY}/navitia-$component-$component:${{ needs.common_variables.outputs.NAVITIA_TAG }}
+              docker build -t ${tag} -f  docker/${{env.jessie_version}}/Dockerfile-${component} .
           done
 
       - name: Push images on PRD ECR
         run: |
-          aws ecr get-login-password --region ${REGION} | docker login --username AWS --password-stdin  ${PRD_ECR_REGISTRY}
           for component in ${{env.front_jessie_navitia_components}}; do
               echo "*********  Building $component ***************"
-              docker push ${PRD_ECR_REGISTRY}/$component:${{ needs.common_variables.outputs.NAVITIA_TAG }}
+              docker push ${PRD_ECR_REGISTRY}/navitia-$component-$component:${{ needs.common_variables.outputs.NAVITIA_TAG }}
           done
 
       - name: failure notification
@@ -299,13 +299,17 @@ jobs:
               docker build -t ${PRD_ECR_REGISTRY}/$component:${{ needs.common_variables.outputs.NAVITIA_TAG }} -f  docker/${{env.jessie_version}}/Dockerfile-${component} .
           done
 
-      - name: Push images on PRD ECR
+      - name: Push Kraken on PRD ECR
         run: |
-          aws ecr get-login-password --region ${REGION} | docker login --username AWS --password-stdin  ${PRD_ECR_REGISTRY}
-          for component in ${{env.backend_jessie_navitia_components}}; do
-              echo "*********  Building $component ***************"
-              docker push ${PRD_ECR_REGISTRY}/$component:${{ needs.common_variables.outputs.NAVITIA_TAG }}
-          done
+          docker push ${PRD_ECR_REGISTRY}/navitia-kraken-kraken:${{ needs.common_variables.outputs.NAVITIA_TAG }}
+
+      - name: Push tyr-beat on PRD ECR
+        run: |
+          docker push ${PRD_ECR_REGISTRY}/navitia-tyr-tyrbeat:${{ needs.common_variables.outputs.NAVITIA_TAG }}
+
+      - name: Push tyr-worker on PRD ECR
+        run: |
+          docker push ${PRD_ECR_REGISTRY}/navitia-tyr-tyrworker:${{ needs.common_variables.outputs.NAVITIA_TAG }}
 
       - name: failure notification
         if: failure()
