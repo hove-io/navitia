@@ -830,11 +830,7 @@ def filter_olympics_journeys_v2(responses, request):
 
 
 def filter_olympics_journeys(responses, request):
-    if request.get('debug', False):
-        return
 
-    if not request.get("_keep_olympics_journeys", False):
-        return
 
     if request.get("_filter_olympics_journeys") == "v1":
         filter_olympics_journeys_v1(responses, request)
