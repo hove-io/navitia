@@ -57,6 +57,10 @@ def to_be_deleted(journey):
     return 'to_delete' in journey.tags
 
 
+def is_olympics(journey):
+    return 'olympics' in journey.tags
+
+
 def mark_as_dead(journey, is_debug, *reasons):
     journey.tags.append('to_delete')
     if is_debug:
@@ -668,8 +672,6 @@ def apply_final_journey_filters(response_list, instance, request):
         journeys = journey_generator(response_list)
         filter_non_car_tagged_journey(journeys, request)
 
-    keep_olympics_journeys(response_list, request)
-
 
 def filter_non_car_tagged_journey(journeys, request):
     is_debug = request.get('debug', False)
@@ -700,16 +702,139 @@ def apply_final_journey_filters_post_finalize(response_list, request):
         journey_pairs_pool = itertools.combinations(journeys, 2)
         _filter_similar_line_and_crowfly_journeys(journey_pairs_pool, request)
 
-    keep_olympics_journeys(response_list, request)
+
+def get_journey_pt_section(journey, criteria):
+    if criteria == "arrival_stop_attractivity":
+        sections = reversed(journey.sections)
+    else:
+        sections = journey.sections
+    extemity_pt_section = next((s for s in sections if s.type == response_pb2.PUBLIC_TRANSPORT), None)
+
+    assert extemity_pt_section
+    return extemity_pt_section
 
 
-def keep_olympics_journeys(responses, request):
-    keep_olympics_journeys = request.get("_keep_olympics_journeys", False)
-    if keep_olympics_journeys:
-        for response in responses:
-            for journey in response.journeys:
-                if 'to_delete' in journey.tags and 'olympics' in journey.tags:
-                    journey.tags.remove("to_delete")
+def get_journey_pt_extremity(journey, criteria):
+    extemity_pt_section = get_journey_pt_section(journey, criteria)
+
+    assert extemity_pt_section
+    if criteria == "arrival_stop_attractivity":
+        return extemity_pt_section.destination
+    return extemity_pt_section.origin
+
+
+class Interval:
+    def __init__(self, minimum, maximum):
+        self.minimum = minimum
+        self.maximum = maximum
+
+    def includes(self, n):
+        return self.minimum <= n <= self.maximum
+
+
+def filter_olympics_journeys_v1(responses, request):
+    intervals = {
+        # 9
+        "stop_point:IDFM:monomodalStopPlace:58498": Interval(0, 4240),
+        # 6
+        "stop_point:IDFM:22041": Interval(4240, 5606),
+        "stop_point:IDFM:463281": Interval(4240, 5606),
+        # 4
+        "stop_point:IDFM:412988": Interval(5606, float('inf')),
+        "stop_point:IDFM:412987": Interval(5606, float('inf')),
+    }
+
+    attractivity = {
+        "stop_point:IDFM:monomodalStopPlace:58498": 9,
+        "stop_point:IDFM:22041": 6,
+        "stop_point:IDFM:463281": 6,
+        "stop_point:IDFM:412988": 4,
+        "stop_point:IDFM:412987": 4,
+    }
+
+    olympics_durations = [j.duration for r in responses for j in r.journeys if 'olympics' in j.tags]
+
+    if len(olympics_durations) == 0:
+        logging.error("the length of olympics_durations is 0, which is weird..")
+        return
+
+    average_duration = sum(olympics_durations) / float(len(olympics_durations))
+
+    retained_journey = None
+
+    found_sps = []
+    for r in responses:
+        for j in r.journeys:
+            if 'olympics' not in j.tags:
+                continue
+            pt_extremity = get_journey_pt_extremity(j, request.get('criteria'))
+            if pt_extremity.uri not in found_sps:
+                found_sps.append(pt_extremity.uri)
+            interval = intervals.get(pt_extremity.uri)
+            if not interval.includes(average_duration):
+                continue
+
+            if retained_journey is None:
+                retained_journey = j
+                continue
+
+            if retained_journey.duration > j.duration:
+                retained_journey = j
+
+    if retained_journey is not None:
+        retained_journey.tags.append('best_olympics')
+        return
+
+    found_sps.sort(key=lambda sp: attractivity[sp])
+    best_attractivity = found_sps[-1]
+    for r in responses:
+        for j in r.journeys:
+            if 'olympics' not in j.tags:
+                continue
+            pt_extremity = get_journey_pt_extremity(j, request.get('criteria'))
+            if pt_extremity.uri != best_attractivity:
+                continue
+            if retained_journey is None or retained_journey.duration > j.duration:
+                retained_journey = j
+
+    retained_journey.tags.append('best_olympics')
+
+
+def filter_olympics_journeys_v2(responses, request):
+    fake_fallback_durations = {
+        # RER E
+        "stop_point:IDFM:monomodalStopPlace:58498": 20,
+        # Metro 12
+        "stop_point:IDFM:22041": 600,
+        "stop_point:IDFM:463281": 600,
+        # T3b
+        "stop_point:IDFM:412988": 1000,
+        "stop_point:IDFM:412987": 1000,
+    }
+    best = None
+    for r in responses:
+        for j in r.journeys:
+            if 'olympics' not in j.tags:
+                continue
+            pt_extremity = get_journey_pt_extremity(j, request.get('criteria'))
+            fake_fallback_duration = fake_fallback_durations.get(pt_extremity.uri)
+            fake_duration = j.duration - j.sections[-1].duration + fake_fallback_duration
+            if best is None:
+                best = (j, fake_duration)
+                continue
+
+            if best[1] > fake_duration:
+                best = (j, fake_duration)
+
+    best[0].tags.append('best_olympics')
+
+
+def filter_olympics_journeys(responses, request):
+
+    if request.get("_filter_olympics_journeys") == "v1":
+        filter_olympics_journeys_v1(responses, request)
+    elif request.get("_filter_olympics_journeys") == "v2":
+        filter_olympics_journeys_v2(responses, request)
 
 
 def replace_bss_tag(journeys):
@@ -753,7 +878,7 @@ def filter_detailed_journeys(responses, request):
 
     replace_bss_tag(journey_generator(responses))
 
-    keep_olympics_journeys(responses, request)
+    filter_olympics_journeys(responses, request)
 
 
 def _get_worst_similar(j1, j2, request):
@@ -891,6 +1016,9 @@ def _filter_similar_journeys(journey_pairs_pool, request, *similar_journey_gener
             continue
 
         if to_be_deleted(j1) or to_be_deleted(j2):
+            continue
+
+        if request.get('_keep_olympics_journeys') and is_olympics(j1) or is_olympics(j2):
             continue
 
         if any(compare(j1, j2, generator) for generator in similar_journey_generators):

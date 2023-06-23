@@ -1216,7 +1216,6 @@ def filter_journeys(responses, new_resp, instance, api_request):
     )
 
     journey_filter.filter_similar_vj_journeys(journey_pairs_pool, api_request)
-    journey_filter.keep_olympics_journeys(new_resp, api_request)
 
 
 def isochrone_common(isochrone, request, instance, journey_req):
