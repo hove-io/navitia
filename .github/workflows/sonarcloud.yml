@@ -2,9 +2,9 @@ name: SonarCloud
 
 on:
   push:
-    branches: [ dev ]
-  pull_request:
-    branches: [ dev ]
+    branches: [ _dev ]
+#  pull_request:
+    branches: [ _dev ]
 
 env:
    SONAR_SCANNER_VERSION: 4.7.0.2747
