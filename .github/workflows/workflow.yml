@@ -53,7 +53,7 @@ jobs:
 
   precommit:
     runs-on: [self-hosted, corefront, sandbox]
-    needs: [credentials, checks]
+    needs: [credentials]
     container:
       image: 162230498103.dkr.ecr.eu-west-1.amazonaws.com/mutable-debian11_dev:latest
       credentials:
@@ -94,7 +94,7 @@ jobs:
 
   build:
     runs-on: [self-hosted, corefront, sandbox]
-    needs: [credentials, checks, precommit]
+    needs: [credentials]
     strategy:
         fail-fast: false
         matrix:
