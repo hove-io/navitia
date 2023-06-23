@@ -1519,6 +1519,7 @@ class Scenario(simple.Scenario):
         update_total_air_pollutants(pb_resp)
         # Tag ecologic should be done at the end
         tag_ecologic(pb_resp)
+
         # Tag special_event
         if instance.additional_parameters and is_origin_destination_rules_applicable(
             instance, api_request.get('datetime')
