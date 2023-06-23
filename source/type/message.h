@@ -218,16 +218,16 @@ struct RailSection {
     RailSection() = default;
     RailSection(StopArea* start_,
                 StopArea* end_,
-                const std::vector<StopArea*>& blockeds_,
-                const std::vector<StopArea*>& impacted_stop_areas_,
+                std::vector<StopArea*> blockeds_,
+                std::vector<StopArea*> impacted_stop_areas_,
                 Line* line_,
-                const std::vector<Route*>& routes_)
+                std::vector<Route*> routes_)
         : start(start_),
           end(end_),
-          blockeds(blockeds_),
-          impacteds(impacted_stop_areas_),
+          blockeds(std::move(blockeds_)),
+          impacteds(std::move(impacted_stop_areas_)),
           line(line_),
-          routes(routes_){};
+          routes(std::move(routes_)){};
 
     // never null
     StopArea* start;
