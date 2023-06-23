@@ -194,7 +194,7 @@ jobs:
               -r mimirsbrunn \
               -t ${{ steps.ci-core-app-token.outputs.token }} \
               -w release7.yml \
-              -a debian-package-master.zip \
+              -a $mimirsbrunn_package \
               --output-dir .
           unzip -qo $mimirsbrunn_package
           rm -f $mimirsbrunn_package
