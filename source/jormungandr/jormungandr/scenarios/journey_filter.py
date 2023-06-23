@@ -703,8 +703,8 @@ def apply_final_journey_filters_post_finalize(response_list, request):
         _filter_similar_line_and_crowfly_journeys(journey_pairs_pool, request)
 
 
-def get_journey_pt_section(journey, creteria):
-    if creteria == "arrival_stop_attractivity":
+def get_journey_pt_section(journey, criteria):
+    if criteria == "arrival_stop_attractivity":
         sections = reversed(journey.sections)
     else:
         sections = journey.sections
@@ -830,7 +830,6 @@ def filter_olympics_journeys_v2(responses, request):
 
 
 def filter_olympics_journeys(responses, request):
-
 
     if request.get("_filter_olympics_journeys") == "v1":
         filter_olympics_journeys_v1(responses, request)
