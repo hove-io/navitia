@@ -1521,7 +1521,7 @@ class Scenario(simple.Scenario):
         tag_ecologic(pb_resp)
         # Tag special_event
         if instance.additional_parameters and is_origin_destination_rules_applicable(
-                instance, api_request.get('datetime')
+            instance, api_request.get('datetime')
         ):
             tag_special_event(instance, pb_resp)
         # Update best boarding positions in PT sections
