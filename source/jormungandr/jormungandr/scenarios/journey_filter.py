@@ -703,12 +703,19 @@ def apply_final_journey_filters_post_finalize(response_list, request):
         _filter_similar_line_and_crowfly_journeys(journey_pairs_pool, request)
 
 
-def get_journey_pt_extremity(journey, clockwise):
+def get_journey_pt_section(journey, clockwise):
     if clockwise:
         sections = reversed(journey.sections)
     else:
         sections = journey.sections
     extemity_pt_section = next((s for s in sections if s.type == response_pb2.PUBLIC_TRANSPORT), None)
+
+    assert extemity_pt_section
+    return extemity_pt_section
+
+
+def get_journey_pt_extremity(journey, clockwise):
+    extemity_pt_section = get_journey_pt_section(journey, clockwise)
 
     assert extemity_pt_section
     if clockwise:
@@ -725,13 +732,7 @@ class Interval:
         return self.minimum <= n <= self.maximum
 
 
-def filter_olympics_journeys(responses, request):
-    if request.get('debug', False):
-        return
-
-    if not request.get("_keep_olympics_journeys", False):
-        return
-
+def filter_olympics_journeys_v1(responses, request):
     intervals = {
         # 9
         "stop_point:IDFM:monomodalStopPlace:58498": Interval(0, 4240),
@@ -793,6 +794,49 @@ def filter_olympics_journeys(responses, request):
                 retained_journey = j
 
     retained_journey.tags.remove("to_delete")
+
+
+def filter_olympics_journeys_v2(responses, request):
+    fake_fallback_durations = {
+        # RER E
+        "stop_point:IDFM:monomodalStopPlace:58498": 20,
+        # Metro 12
+        "stop_point:IDFM:22041": 600,
+        "stop_point:IDFM:463281": 600,
+        # T3b
+        "stop_point:IDFM:412988": 1000,
+        "stop_point:IDFM:412987": 1000,
+    }
+    best = None
+    for r in responses:
+        for j in r.journeys:
+            if 'olympics' not in j.tags:
+                continue
+            pt_extremity = get_journey_pt_extremity(j, request.get('clockwise'))
+            fake_fallback_duration = fake_fallback_durations.get(pt_extremity.uri)
+            fake_duration = j.duration - j.sections[-1].duration + fake_fallback_duration
+            if best is None:
+                best = (j, fake_duration)
+                continue
+
+            if best[1] > fake_duration:
+                best[0].tags.append("to_delete")
+                best = (j, fake_duration)
+            else:
+                j.tags.append("to_delete")
+
+
+def filter_olympics_journeys(responses, request):
+    if request.get('debug', False):
+        return
+
+    if not request.get("_keep_olympics_journeys", False):
+        return
+
+    if request.get("_filter_olympics_journeys") == "v1":
+        filter_olympics_journeys_v1(responses, request)
+    elif request.get("_filter_olympics_journeys") == "v2":
+        filter_olympics_journeys_v2(responses, request)
 
 
 def replace_bss_tag(journeys):

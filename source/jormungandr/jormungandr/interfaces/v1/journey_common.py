@@ -530,7 +530,17 @@ class JourneyCommon(ResourceUri, ResourceUtc):
             default=False,
             help="do not delete journeys tagged for olympics",
         )
-
+        parser_get.add_argument(
+            "_filter_olympics_journeys",
+            type=OptionValue(
+                [
+                    'v1',
+                    'v2',
+                ]
+            ),
+            hidden=True,
+            help="choose which method is used to filter olympics journeys",
+        )
         # Advanced parameters for valhalla bike
         parser_get.add_argument(
             "bike_use_roads",
