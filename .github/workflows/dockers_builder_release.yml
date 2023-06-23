@@ -1,0 +1,304 @@
+name: Build Navitia Dockers (Release)
+
+on:
+  push:
+    tags:
+      - '*'
+
+env:
+  jessie_version: debian8
+  bullseye_version: debian11
+  front_jessie_navitia_components: 'tyr-web'
+  front_bullseye_navitia_components: 'jormungandr'
+  backend_jessie_navitia_components: 'kraken tyr-beat tyr-worker'
+
+  SBX_ECR_REGISTRY_FRONT: "051314639660.dkr.ecr.eu-west-1.amazonaws.com"
+  PRD_ECR_REGISTRY: "162230498103.dkr.ecr.eu-west-1.amazonaws.com"
+
+jobs:
+  front_bullseye_builder:
+    runs-on: [self-hosted, corefront, sandbox]
+    name: Front Bullseye builder (Release)
+    steps:
+      - name: force chown to avoid errors
+        run: sudo chown -R $USER:$USER .
+      - name: Install dependencies
+        run: |
+          sudo apt update && sudo apt install -y httpie
+
+      - name: Generate github private access token
+        id: ci-core-app-token
+        uses: getsentry/action-github-app-token@v2.0.0
+        with:
+          app_id: ${{ secrets.CI_CORE_APP_ID }}
+          private_key: ${{ secrets.CI_CORE_APP_PEM }}
+
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          submodules: recursive
+          token: ${{ steps.ci-core-app-token.outputs.token }}
+          # we need entire history for tags
+          fetch-depth: 0
+
+      #            - name: Restore ccache
+      #              uses: hendrikmuhs/ccache-action@v1.2
+      #              with:
+      #                key: build_dockers
+      #                max-size: 2000M
+
+      - name: Login to Amazon ECR SBX
+        uses: aws-actions/amazon-ecr-login@v1
+        env:
+          AWS_REGION: eu-west-1
+
+      - name: Login to Amazon ECR Shared
+        uses: aws-actions/amazon-ecr-login@v1
+        env:
+          AWS_REGION: eu-west-1
+        with:
+          registries: "162230498103"
+
+      - name: Create builder docker
+        run: |
+          docker build -f docker/${{env.bullseye_version}}/Dockerfile-builder -t navitia/builder .
+
+      - name: Build navitia
+        run: |
+          docker run -v `pwd`:/navitia/navitia/  navitia/builder
+
+      - name: Create navitia images
+        run: |
+          echo "*********  Building Jormungandr ***************"
+          docker build -t ${SBX_ECR_REGISTRY_FRONT}/jormungandr:no_config_${TAG} -f  docker/${{env.bullseye_version}}/Dockerfile-jormungandr .
+
+      - name: Push images on SBX ECR
+        run: |
+          echo "*********  Push Jormungandr ***************"
+          docker push ${SBX_ECR_REGISTRY_FRONT}/jormungandr:no_config_${TAG}
+
+      - name: failure notification
+        if: failure()
+        run: |
+          echo '{"text":":warning: Github Actions: workflow dockers_builder_release Job front_bullseye_builder is failed !"}' | http --json POST ${{secrets.SLACK_NAVITIA_TEAM_URL}}
+
+  front_jessie_builder:
+    runs-on: [self-hosted, corefront, sandbox]
+    name: Front Jessie builder (Release)
+    steps:
+      - name: force chown to avoid errors
+        run: sudo chown -R $USER:$USER .
+      - name: Install dependencies
+        run: |
+          sudo apt update && sudo apt install -y httpie
+      - name: Generate github private access token
+        id: ci-core-app-token
+        uses: getsentry/action-github-app-token@v2.0.0
+        with:
+          app_id: ${{ secrets.CI_CORE_APP_ID }}
+          private_key: ${{ secrets.CI_CORE_APP_PEM }}
+
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          submodules: recursive
+          token: ${{ steps.ci-core-app-token.outputs.token }}
+          # we need entire history for tags
+          fetch-depth: 0
+
+      #      - name: Restore ccache
+      #        uses: hendrikmuhs/ccache-action@v1.2
+      #        with:
+      #          key: build_dockers
+      #          max-size: 2000M
+
+      - name: Login to Amazon ECR Shared
+        uses: aws-actions/amazon-ecr-login@v1
+        env:
+          AWS_REGION: eu-west-1
+        with:
+          registries: "162230498103"
+
+      - name: Create master docker
+        run: |
+          docker build -f docker/${{env.jessie_version}}/Dockerfile-master -t navitia/master .
+          docker build -f docker/${{env.jessie_version}}/Dockerfile-builder -t navitia/builder .
+
+      - name: Build packages in master docker
+        #         Will build navitia-*.deb packages in current folder
+        run: docker run -v `pwd`:/build/navitia/  navitia/builder
+
+      - name: Create navitia images
+        run: |
+          TAG=$(git describe --tags)
+          for component in ${{env.front_jessie_navitia_components}}; do
+              echo "*********  Building $component ***************"
+              docker build -t ${PRD_ECR_REGISTRY}/$component:${TAG} -f  docker/${{env.jessie_version}}/Dockerfile-${component} .
+          done
+
+      - name: Push images on PRD ECR
+        run: |
+          TAG=$(git describe --tags)
+          for component in ${{env.front_jessie_navitia_components}}; do
+              echo "*********  Building $component ***************"
+              docker push ${PRD_ECR_REGISTRY}/$component:${TAG}
+          done
+
+      - name: failure notification
+        if: failure()
+        run: |
+          echo '{"text":":warning: Github Actions: workflow dockers_builder_release Job front_jessie_builder is failed !"}' | http --json POST ${{secrets.SLACK_NAVITIA_TEAM_URL}}
+
+
+  backend_jessie_builder:
+    runs-on: [self-hosted, kraken, sandbox]
+    name: Backend Jessie builder (Release)
+    steps:
+      - name: force chown to avoid errors
+        run: sudo chown -R $USER:$USER .
+      - name: Install dependencies
+        run: |
+          sudo apt update && sudo apt install -y zip httpie curl python3 python3-pip
+      - name: Generate github private access token
+        id: ci-core-app-token
+        uses: getsentry/action-github-app-token@v2.0.0
+        with:
+          app_id: ${{ secrets.CI_CORE_APP_ID }}
+          private_key: ${{ secrets.CI_CORE_APP_PEM }}
+
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          submodules: recursive
+          token: ${{ steps.ci-core-app-token.outputs.token }}
+          # we need entire history for tags
+          fetch-depth: 0
+
+      - name: Checkout core_team_ci_tools
+        uses: actions/checkout@v3
+        with:
+          repository : 'hove-io/core_team_ci_tools'
+          path: core_team_ci_tools
+          token: ${{ steps.ci-core-app-token.outputs.token }}
+
+      - name: Setup core_team_ci_tools python environment
+        run: |
+          pip install -r core_team_ci_tools/github_artifacts/requirements.txt --user
+
+      - name: Download mimirsbrunn package
+        run: |
+          mimirsbrunn_package="debian-package-release.zip"
+          python3 core_team_ci_tools/github_artifacts/github_artifacts.py \
+              -o hove-io \
+              -r mimirsbrunn \
+              -t ${{ steps.ci-core-app-token.outputs.token }} \
+              -w release7.yml \
+              -a debian-package-master.zip \
+              --output-dir .
+          unzip -qo $mimirsbrunn_package
+          rm -f $mimirsbrunn_package
+
+      - name: Download cosmogony2cities package
+        run: |
+          cosmogony2cities_package="package-${{env.jessie_version}}.zip"
+          python3 core_team_ci_tools/github_artifacts/github_artifacts.py \
+              -o hove-io \
+              -r cosmogony2cities \
+              -t ${{ steps.ci-core-app-token.outputs.token }} \
+              -w build_package.yml \
+              -a $cosmogony2cities_package \
+              --output-dir .
+          unzip -qo $cosmogony2cities_package
+          rm -f $cosmogony2cities_package
+
+      - name: Download mimir-config package
+        run: |
+          conf_mimir_package="debian-package-release.zip"
+          python3 core_team_ci_tools/github_artifacts/github_artifacts.py \
+              -o hove-io \
+              -r mimirsbrunn-config \
+              -t ${{ steps.ci-core-app-token.outputs.token }} \
+              -w release.yml \
+              -a $conf_mimir_package \
+              -b main \
+              --skip-check-artifacts-size \
+              --output-dir .
+          unzip -qo $conf_mimir_package
+          rm -f $conf_mimir_package
+
+      #      - name: Restore ccache
+      #        uses: hendrikmuhs/ccache-action@v1.2
+      #        with:
+      #          key: build_dockers
+      #          max-size: 2000M
+
+      - name: Login to Amazon ECR Shared
+        uses: aws-actions/amazon-ecr-login@v1
+        env:
+          AWS_REGION: eu-west-1
+        with:
+          registries: "162230498103"
+
+      - name: Create master docker
+        run: |
+          docker build -f docker/${{env.jessie_version}}/Dockerfile-master -t navitia/master .
+          docker build -f docker/${{env.jessie_version}}/Dockerfile-builder -t navitia/builder .
+
+      - name: Build packages in master docker
+        #         Will build navitia-*.deb packages in current folder
+        run: docker run -v `pwd`:/build/navitia/  navitia/builder
+
+      - name: Create navitia images
+        run: |
+          TAG=$(git describe --tags)
+          for component in ${{env.backend_jessie_navitia_components}}; do
+              echo "*********  Building $component ***************"
+              docker build -t ${PRD_ECR_REGISTRY}/$component:${TAG} -f  docker/${{env.jessie_version}}/Dockerfile-${component} .
+          done
+
+      - name: Push images on PRD ECR
+        run: |
+          TAG=$(git describe --tags)
+          for component in ${{env.backend_jessie_navitia_components}}; do
+              echo "*********  Building $component ***************"
+              docker push ${PRD_ECR_REGISTRY}/$component:${TAG}
+          done
+
+      - name: failure notification
+        if: failure()
+        run: |
+          echo '{"text":":warning: Github Actions: workflow dockers_builder_release Job backend_jessie_builder is failed !"}' | http --json POST ${{secrets.SLACK_NAVITIA_TEAM_URL}}
+      - name: failure notification
+        if: success()
+        run: |
+          TAG=$(git describe --tags)
+          echo '{"text":":octopus: Github Actions: workflow build_dockers succeeded. New navitia ${TAG} images available."}' | http --json POST ${{secrets.SLACK_NAVITIA_TEAM_URL}}
+
+  publish_aws:
+    runs-on: [self-hosted, corefront, sandbox]
+    name: Aws Dispatch (Release)
+    needs: [front_jessie_builder, front_bullseye_builder, backend_jessie_builder]
+    steps:
+      - name: Install dependencies
+        run: |
+          sudo apt update && sudo apt install -y httpie
+
+      - name: Generate token for aws images
+        id: app-token
+        uses: getsentry/action-github-app-token@v2.0.0
+        with:
+          app_id: ${{ secrets.GA_OS_WORKFLOW_TRIGGER_APP_ID }}
+          private_key: ${{ secrets.GA_OS_WORKFLOW_TRIGGER_APP_PEM }}
+
+      - name: Aws Dispatch Frontend
+        uses: peter-evans/repository-dispatch@v2
+        with:
+          token: ${{ steps.app-token.outputs.token }}
+          repository: hove-io/core-front-aws-assets
+          event-type: build-trigger
+          client-payload: '{"branch": "release", "tag": "release"}'
+
+      - name: failure notification
+        if: failure()
+        run: |
+          echo '{"text":":warning: Github Actions: dockers_builder_release the job publish_aws is failed !"}' | http --json POST ${{secrets.SLACK_NAVITIA_TEAM_URL}}
