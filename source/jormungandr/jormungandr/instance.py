@@ -272,6 +272,7 @@ class Instance(transient_socket.TransientSocket):
             file_path = os.path.join(origin_destination_dir, "{}_od_additional_parameters.csv".format(self.name))
             self.od_additional_parameters, _, _ = read_origin_destination_data(file_path)
 
+        # If configured initialize additional parameters activation period values
         if additional_params_period:
             self.additional_params_period_start = str_to_time_stamp(additional_params_period.get('start'))
             self.additional_params_period_end = str_to_time_stamp(additional_params_period.get('end'))
