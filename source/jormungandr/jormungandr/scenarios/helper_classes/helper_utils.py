@@ -468,8 +468,10 @@ class BeginningFallback(object):
         journey.departure_date_time = journey.sections[0].begin_date_time
 
     def update_shape_coord(self, journey, coord):
-        first_coord = self.get_first_non_crowfly_section(journey).shape[0]
-        first_coord.CopyFrom(coord)
+        shape = self.get_first_non_crowfly_section(journey).shape
+        if not shape:
+            return
+        shape[0].CopyFrom(coord)
 
 
 class EndingFallback(object):
@@ -498,8 +500,10 @@ class EndingFallback(object):
         journey.arrival_date_time = journey.sections[-1].end_date_time
 
     def update_shape_coord(self, journey, coord):
-        last_coord = self.get_first_non_crowfly_section(journey).shape[-1]
-        last_coord.CopyFrom(coord)
+        shape = self.get_first_non_crowfly_section(journey).shape
+        if not shape:
+            return
+        shape[-1].CopyFrom(coord)
 
 
 def _build_crowflies(pt_journeys, orig, dest):
