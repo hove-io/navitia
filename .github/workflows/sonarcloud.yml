@@ -117,3 +117,7 @@ jobs:
           sonar-scanner-$SONAR_SCANNER_VERSION-linux/bin/sonar-scanner \
                 -Dsonar.login=$SONAR_TOKEN \
                 -Dsonar.cfamily.threads=$(nproc)
+
+    - name: Clean the runner workspace
+      uses: colpal/actions-clean@v1
+      if: ${{ always() }}

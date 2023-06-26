@@ -79,3 +79,6 @@ jobs:
         echo "Pull Request Number - ${{ env.PULL_REQUEST_NUMBER }}"
         echo "Pull Request Number - ${{ steps.cpr.outputs.pull-request-number }}"
 
+    - name: Clean the runner workspace
+      uses: colpal/actions-clean@v1
+      if: ${{ always() }}

@@ -48,6 +48,10 @@ jobs:
           version=$(git describe --tags)
           echo "navitia_tag=$version" >> $GITHUB_OUTPUT
 
+      - name: Clean the runner workspace
+        uses: colpal/actions-clean@v1
+        if: ${{ always() }}
+
       - name: failure notification
         if: failure()
         run: |
@@ -115,6 +119,10 @@ jobs:
           echo "*********  Push Jormungandr ***************"
           docker push ${SBX_ECR_REGISTRY_FRONT}/jormungandr:no_config_${{ needs.common_variables.outputs.NAVITIA_TAG }}
 
+      - name: Clean the runner workspace
+        uses: colpal/actions-clean@v1
+        if: ${{ always() }}
+
       - name: failure notification
         if: failure()
         run: |
@@ -178,6 +186,10 @@ jobs:
           # Tyr-web
           component_tag=${PRD_ECR_REGISTRY}/navitia-tyr-web-tyr-web:${{ needs.common_variables.outputs.NAVITIA_TAG }}
           docker push ${component_tag}
+
+      - name: Clean the runner workspace
+        uses: colpal/actions-clean@v1
+        if: ${{ always() }}
 
       - name: failure notification
         if: failure()
@@ -312,6 +324,10 @@ jobs:
           component_tag=${PRD_ECR_REGISTRY}/navitia-tyr-tyrworker:${{ needs.common_variables.outputs.NAVITIA_TAG }}
           docker push ${component_tag}
 
+      - name: Clean the runner workspace
+        uses: colpal/actions-clean@v1
+        if: ${{ always() }}
+
       - name: failure notification
         if: failure()
         run: |
@@ -339,21 +355,6 @@ jobs:
         with:
           app_id: ${{ secrets.GA_OS_WORKFLOW_TRIGGER_APP_ID }}
           private_key: ${{ secrets.GA_OS_WORKFLOW_TRIGGER_APP_PEM }}
-
-      - name: Generate github private access token
-        id: ci-core-app-token
-        uses: getsentry/action-github-app-token@v2.0.0
-        with:
-          app_id: ${{ secrets.CI_CORE_APP_ID }}
-          private_key: ${{ secrets.CI_CORE_APP_PEM }}
-
-      - name: Checkout
-        uses: actions/checkout@v3
-        with:
-          submodules: recursive
-          token: ${{ steps.ci-core-app-token.outputs.token }}
-          # we need entire history for tags
-          fetch-depth: 0
 
       - name: Aws Dispatch Frontend
         uses: peter-evans/repository-dispatch@v2

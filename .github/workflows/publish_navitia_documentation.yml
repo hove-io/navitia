@@ -36,6 +36,11 @@ jobs:
         build_dir: documentation/slate/build
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Clean the runner workspace
+      uses: colpal/actions-clean@v1
+      if: ${{ always() }}
+
     - name: slack notification (the job has failed)
       if: failure()
       run: |
