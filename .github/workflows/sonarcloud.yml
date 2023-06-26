@@ -119,5 +119,6 @@ jobs:
                 -Dsonar.cfamily.threads=$(nproc)
 
     - name: Clean the runner workspace
-      uses: colpal/actions-clean@v1
-      if: ${{ always() }}
+      if: always()
+      run: |
+        rm -rf $GITHUB_WORKSPACE

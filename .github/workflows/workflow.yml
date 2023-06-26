@@ -54,8 +54,9 @@ jobs:
       run: ./source/scripts/check_submodules.sh
 
     - name: Clean the runner workspace
-      uses: colpal/actions-clean@v1
-      if: ${{ always() }}
+      if: always()
+      run: |
+        rm -rf $GITHUB_WORKSPACE
 
   precommit:
     runs-on: [self-hosted, corefront, sandbox]
@@ -101,8 +102,9 @@ jobs:
           pre-commit run --all --show-diff-on-failure
 
       - name: Clean the runner workspace
-        uses: colpal/actions-clean@v1
-        if: ${{ always() }}
+        if: always()
+        run: |
+          rm -rf $GITHUB_WORKSPACE
 
   build:
     runs-on: [self-hosted, corefront, sandbox]
@@ -200,5 +202,6 @@ jobs:
         TYR_REDIS_HOST: 'redis'
 
     - name: Clean the runner workspace
-      uses: colpal/actions-clean@v1
-      if: ${{ always() }}
+      if: always()
+      run: |
+        rm -rf $GITHUB_WORKSPACE

@@ -38,8 +38,9 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
     - name: Clean the runner workspace
-      uses: colpal/actions-clean@v1
-      if: ${{ always() }}
+      if: always()
+      run: |
+        rm -rf $GITHUB_WORKSPACE
 
     - name: slack notification (the job has failed)
       if: failure()

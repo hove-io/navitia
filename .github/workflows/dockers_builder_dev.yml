@@ -79,8 +79,9 @@ jobs:
           docker push ${SBX_ECR_REGISTRY_FRONT}/jormungandr:no_config_${TAG}
 
       - name: Clean the runner workspace
-        uses: colpal/actions-clean@v1
-        if: ${{ always() }}
+        if: always()
+        run: |
+          rm -rf $GITHUB_WORKSPACE
 
       - name: failure notification
         if: failure()
@@ -153,8 +154,9 @@ jobs:
           done
 
       - name: Clean the runner workspace
-        uses: colpal/actions-clean@v1
-        if: ${{ always() }}
+        if: always()
+        run: |
+          rm -rf $GITHUB_WORKSPACE
 
       - name: failure notification
         if: failure()
@@ -280,8 +282,9 @@ jobs:
           done
 
       - name: Clean the runner workspace
-        uses: colpal/actions-clean@v1
-        if: ${{ always() }}
+        if: always()
+        run: |
+          rm -rf $GITHUB_WORKSPACE
 
       - name: failure notification
         if: failure()
