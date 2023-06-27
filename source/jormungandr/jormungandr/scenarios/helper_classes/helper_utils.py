@@ -467,6 +467,12 @@ class BeginningFallback(object):
     def set_journey_bound_datetime(self, journey):
         journey.departure_date_time = journey.sections[0].begin_date_time
 
+    def update_shape_coord(self, journey, coord):
+        shape = self.get_first_non_crowfly_section(journey).shape
+        if not shape:
+            return
+        shape[0].CopyFrom(coord)
+
 
 class EndingFallback(object):
     def get_first_non_crowfly_section(self, journey):
@@ -492,6 +498,12 @@ class EndingFallback(object):
 
     def set_journey_bound_datetime(self, journey):
         journey.arrival_date_time = journey.sections[-1].end_date_time
+
+    def update_shape_coord(self, journey, coord):
+        shape = self.get_first_non_crowfly_section(journey).shape
+        if not shape:
+            return
+        shape[-1].CopyFrom(coord)
 
 
 def _build_crowflies(pt_journeys, orig, dest):
@@ -528,6 +540,8 @@ def _build_crowfly(pt_journey, entry_point, mode, places_free_access, fallback_d
 
     if pt_obj.uri in places_free_access.odt:
         pt_obj.CopyFrom(entry_point)
+        # Update first or last coord in the shape
+        fallback_logic.update_shape_coord(pt_journey, get_pt_object_coord(pt_obj))
         return None
 
     section_datetime = fallback_logic.get_pt_section_datetime(pt_journey)
