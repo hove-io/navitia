@@ -117,3 +117,11 @@ jobs:
           sonar-scanner-$SONAR_SCANNER_VERSION-linux/bin/sonar-scanner \
                 -Dsonar.login=$SONAR_TOKEN \
                 -Dsonar.cfamily.threads=$(nproc)
+
+    - name: Clean build directory
+      working-directory: ./build
+      run: |
+        make clean
+
+    - name: clean up workspace
+      run: git clean -xdf

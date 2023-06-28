@@ -48,6 +48,9 @@ jobs:
           version=$(git describe --tags)
           echo "navitia_tag=$version" >> $GITHUB_OUTPUT
 
+      - name: clean up workspace
+        run: sudo git clean -xdf
+
       - name: failure notification
         if: failure()
         run: |
@@ -115,6 +118,9 @@ jobs:
           echo "*********  Push Jormungandr ***************"
           docker push ${SBX_ECR_REGISTRY_FRONT}/jormungandr:no_config_${{ needs.common_variables.outputs.NAVITIA_TAG }}
 
+      - name: clean up workspace
+        run: sudo git clean -xdf
+
       - name: failure notification
         if: failure()
         run: |
@@ -178,6 +184,9 @@ jobs:
           # Tyr-web
           component_tag=${PRD_ECR_REGISTRY}/navitia-tyr-web-tyr-web:${{ needs.common_variables.outputs.NAVITIA_TAG }}
           docker push ${component_tag}
+
+      - name: clean up workspace
+        run: sudo git clean -xdf
 
       - name: failure notification
         if: failure()
@@ -311,6 +320,9 @@ jobs:
           # Tyr-worker
           component_tag=${PRD_ECR_REGISTRY}/navitia-tyr-tyrworker:${{ needs.common_variables.outputs.NAVITIA_TAG }}
           docker push ${component_tag}
+
+      - name: clean up workspace
+        run: sudo git clean -xdf
 
       - name: failure notification
         if: failure()

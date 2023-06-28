@@ -36,6 +36,10 @@ jobs:
         build_dir: documentation/slate/build
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: clean up workspace
+      run: sudo git clean -xdf
+
     - name: slack notification (the job has failed)
       if: failure()
       run: |
