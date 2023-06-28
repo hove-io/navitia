@@ -60,7 +60,11 @@ endif()
 if("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
     # it could be great to remove these warnings, but there is so much :
     # -Wno-shorten-64-to-32 -Wno-sign-conversion -Wno-conversion
-    set(CMAKE_CLANG_WARN_FLAGS "-Weverything -Wno-c++98-compat -Wno-c++98-compat-pedantic -Wno-padded -Wno-global-constructors -Wno-exit-time-destructors -Wno-documentation -Wno-shadow -Wno-covered-switch-default -Wno-switch-enum -Wno-missing-noreturn -Wno-disabled-macro-expansion -Wno-shorten-64-to-32 -Wno-sign-conversion -Wno-conversion -Wno-missing-braces")
+    set(CMAKE_CLANG_WARN_FLAGS "-Weverything -Wno-c++98-compat -Wno-c++98-compat-pedantic -Wno-padded \
+            -Wno-global-constructors -Wno-exit-time-destructors -Wno-documentation -Wno-shadow \
+            -Wno-covered-switch-default -Wno-switch-enum -Wno-missing-noreturn -Wno-disabled-macro-expansion \
+            -Wno-shorten-64-to-32 -Wno-sign-conversion -Wno-conversion -Wno-missing-braces -Wno-shadow-field \
+            -Wno-used-but-marked-unused")
     set(CMAKE_CLANG_COMMON_FLAGS "-std=c++14 -stdlib=libstdc++  -ferror-limit=10 -pthread -ftemplate-depth=1024")
     set(CMAKE_CXX_FLAGS "${CMAKE_CLANG_COMMON_FLAGS} ${CMAKE_CLANG_WARN_FLAGS}")
     set(CMAKE_C_FLAGS "-ferror-limit=10 -I/usr/local/include/c++/v1 -pthread")
@@ -86,15 +90,24 @@ if(USE_SANITIZER)
     set(NAVITIA_ALLOCATOR "")
 endif(USE_SANITIZER)
 
+# Find major version of PROJ lib
 find_file(PROJ_FILE_NAME NAMES proj_api.h)
-if(NOT PROJ_FILE_NAME)
-    message(FATAL_ERROR "-- proj_api.h not found")
+if(PROJ_FILE_NAME)
+    file(STRINGS ${PROJ_FILE_NAME} _PROJ_LIB_VERSION REGEX "^#define PJ_VERSION [0-9][0-9][0-9]$")
+    STRING (REGEX REPLACE "^#define PJ_VERSION " "" _PROJ_LIB_VERSION "${_PROJ_LIB_VERSION}")
+    STRING (REGEX REPLACE "[0-9][0-9]$" "" _PROJ_LIB_VERSION "${_PROJ_LIB_VERSION}")
+else()
+    find_file(PROJ_FILE_NAME NAMES proj.h)
+    if(NOT PROJ_FILE_NAME)
+        message(FATAL_ERROR "-- proj_api.h and proj.h not found")
+    endif()
+    file(STRINGS ${PROJ_FILE_NAME} _PROJ_LIB_VERSION REGEX "^#define PROJ_VERSION_MAJOR [0-9]+$")
+    STRING (REGEX REPLACE "^#define PROJ_VERSION_MAJOR " "" _PROJ_LIB_VERSION "${_PROJ_LIB_VERSION}")
 endif()
-file(STRINGS ${PROJ_FILE_NAME} _PROJ_LIB_VERSION REGEX "^#define PJ_VERSION ([0-9]+)([0-9]+)([0-9]+)")
-STRING (REGEX REPLACE "^#define PJ_VERSION " "" _PROJ_LIB_VERSION "${_PROJ_LIB_VERSION}")
-message("-- Found Proj Library : ${_PROJ_LIB_VERSION}")
-IF("${_PROJ_LIB_VERSION}" LESS 600)
+
+message("-- Found Proj Library major version: ${_PROJ_LIB_VERSION}")
+IF("${_PROJ_LIB_VERSION}" LESS 6)
     add_definitions("-DPROJ_API_VERSION_MAJOR_4")
-ELSEIF("${_PROJ_LIB_VERSION}" GREATER_EQUAL 600)
+ELSE()
     add_definitions("-DPROJ_API_VERSION_MAJOR_6")
 ENDIF()

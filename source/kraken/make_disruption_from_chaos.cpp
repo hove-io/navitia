@@ -40,7 +40,7 @@ namespace bt = boost::posix_time;
 namespace nt = navitia::type;
 namespace bg = boost::gregorian;
 
-auto from_posix = navitia::from_posix_timestamp;
+static auto from_posix = navitia::from_posix_timestamp;
 
 namespace navitia {
 

@@ -876,7 +876,7 @@ struct delete_impacts_visitor : public apply_impacts_visitor {
         for (auto& mvj : pt_data.meta_vjs) {
             if (std::any_of(std::begin(mvj->modified_by), std::end(mvj->modified_by), find_impact)) {
                 (*this)(mvj.get());
-            };
+            }
         }
     }
 
@@ -912,7 +912,7 @@ struct delete_impacts_visitor : public apply_impacts_visitor {
         for (auto& mvj : pt_data.meta_vjs) {
             if (std::any_of(std::begin(mvj->modified_by), std::end(mvj->modified_by), find_impact)) {
                 (*this)(mvj.get());
-            };
+            }
         }
     }
 
@@ -926,7 +926,7 @@ struct delete_impacts_visitor : public apply_impacts_visitor {
         for (auto& mvj : pt_data.meta_vjs) {
             if (std::any_of(std::begin(mvj->modified_by), std::end(mvj->modified_by), find_impact)) {
                 (*this)(mvj.get());
-            };
+            }
         }
     }
 };

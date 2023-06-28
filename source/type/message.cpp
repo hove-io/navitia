@@ -827,7 +827,7 @@ bool RailSection::impacts(const VehicleJourney* vehicle_journey) const {
     return false;
 }
 
-std::set<StopPoint*> get_stop_points_section(const RailSection& rs, const Effect effect) {
+std::set<StopPoint*> get_stop_points_section(const RailSection& rs, const Effect& effect) {
     std::set<StopPoint*> res;
     std::vector<navitia::type::Route*> routes;
     if (rs.routes.empty()) {

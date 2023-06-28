@@ -17,7 +17,9 @@ target_link_libraries(workers
     disruption_api
     calendar_api
     time_tables
+    z
     prometheus-cpp-pull
+    prometheus-cpp-core
     ${Boost_PROGRAM_OPTIONS_LIBRARY}
 )
 

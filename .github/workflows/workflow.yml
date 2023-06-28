@@ -140,6 +140,16 @@ jobs:
         key: ${{matrix.os.docker_image}}-ci
         max-size: 2000M
         save: ${{ github.event_name == 'push' }}
+    - name: Ensure CMake version is recent enough
+      if: ${{ matrix.os.docker_image == 'mutable-debian8_dev'}}
+      run: |
+        apt remove --yes cmake
+        mkdir local_bin
+        cd local_bin
+        wget https://cmake.org/files/v3.18/cmake-3.18.6-Linux-x86_64.tar.gz
+        tar xf cmake-3.18.6-Linux-x86_64.tar.gz
+        echo "`pwd`/cmake-3.18.6-Linux-x86_64/bin" >> $GITHUB_PATH
+        cd ..
     - name: configure for Release
       run: mkdir build && cd ./build && cmake -DSTRIP_SYMBOLS=ON ../source
     - name: run
