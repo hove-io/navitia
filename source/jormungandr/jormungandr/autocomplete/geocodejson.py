@@ -159,16 +159,6 @@ def create_address_field(geocoding, poi_lat=None, poi_lon=None):
         resp['administrative_regions'] = admins
     return resp
 
-
-def get_api_name(uri, instances=None):
-    lon, lat = get_lon_lat_from_id(uri)
-    if lon is None or lat is None:
-        return 'features'
-    if instances and instances[0].use_multi_reverse:
-        return 'multi-reverse'
-    return 'reverse'
-
-
 class GeocodeJson(AbstractAutocomplete):
     """
     Autocomplete with an external service returning geocodejson
