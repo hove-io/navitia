@@ -427,7 +427,7 @@ def add_properties(pt_object, dict_pt_object):
         property.value = value
 
 
-def check_dic_object(dict_pt_object):
+def check_dict_object(dict_pt_object):
     if not isinstance(dict_pt_object, dict):
         logging.getLogger(__name__).error('Invalid dict_pt_object')
         raise InvalidArguments('dict_pt_object')
@@ -467,7 +467,7 @@ def populate_pt_object(pt_object, dict_pt_object):
 
 
 def get_pt_object_from_json(dict_pt_object, instance):
-    check_dic_object(dict_pt_object)
+    check_dict_object(dict_pt_object)
     embedded_type = MAP_STRING_PTOBJECT_TYPE.get(dict_pt_object.get("embedded_type"))
     if embedded_type == type_pb2.ADMINISTRATIVE_REGION:
         # In this case we need the main_stop_area

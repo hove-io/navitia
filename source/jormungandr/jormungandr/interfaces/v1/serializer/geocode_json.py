@@ -340,7 +340,7 @@ class GeocodePlacesSerializer(serpy.DictSerializer):
             if not self._is_valid_geocoding(geocoding, type_, map_serializer):
                 continue
             res.append(map_serializer[type_](feature).data)
-        # Add within in streetor house object
+        # Add within in street or house object
         if obj.get('zones', []) and len(res) < 2:
             res[0]["within_zones"] = []
             for zone in obj.get('zones', []):

@@ -240,7 +240,7 @@ MOCKED_INSTANCE_CONF = {
         },
     },
 }
-BARGI_URL = 'https://host_of_bragi'
+BRAGI_URL = 'https://host_of_bragi'
 BASIC_PARAMS = {'timeout': 200, 'pt_dataset[]': 'main_routing_test'}
 
 
@@ -255,7 +255,7 @@ class TestOlympicSites(AbstractTestFixture):
             'lon': s_lon,
             'lat': s_lat,
         }
-        from_place = "{}/multi-reverse?{}".format(BARGI_URL, urlencode(params, doseq=True))
+        from_place = "{}/multi-reverse?{}".format(BRAGI_URL, urlencode(params, doseq=True))
         params = {
             'reverse_timeout': 200,
             'within_timeout': 200,
@@ -263,7 +263,7 @@ class TestOlympicSites(AbstractTestFixture):
             'lon': r_lon,
             'lat': r_lat,
         }
-        to_place = "{}/multi-reverse?{}".format(BARGI_URL, urlencode(params, doseq=True))
+        to_place = "{}/multi-reverse?{}".format(BRAGI_URL, urlencode(params, doseq=True))
         with requests_mock.Mocker() as m:
             m.get(from_place, json=FROM_ADDRESS_WITH_WITHIN)
             m.get(to_place, json=TO_ADDRESS)
@@ -289,7 +289,7 @@ class TestOlympicSites(AbstractTestFixture):
             'lon': s_lon,
             'lat': s_lat,
         }
-        from_place = "{}/multi-reverse?{}".format(BARGI_URL, urlencode(params, doseq=True))
+        from_place = "{}/multi-reverse?{}".format(BRAGI_URL, urlencode(params, doseq=True))
         params = {
             'reverse_timeout': 200,
             'within_timeout': 200,
@@ -297,7 +297,7 @@ class TestOlympicSites(AbstractTestFixture):
             'lon': r_lon,
             'lat': r_lat,
         }
-        to_place = "{}/multi-reverse?{}".format(BARGI_URL, urlencode(params, doseq=True))
+        to_place = "{}/multi-reverse?{}".format(BRAGI_URL, urlencode(params, doseq=True))
         with requests_mock.Mocker() as m:
             m.get(from_place, json=FROM_ADDRESS_WITH_INVALID_WITHIN)
             m.get(to_place, json=TO_ADDRESS)
@@ -327,7 +327,7 @@ class TestOlympicSites(AbstractTestFixture):
             'lon': s_lon,
             'lat': s_lat,
         }
-        from_place = "{}/multi-reverse?{}".format(BARGI_URL, urlencode(params, doseq=True))
+        from_place = "{}/multi-reverse?{}".format(BRAGI_URL, urlencode(params, doseq=True))
         params = {
             'reverse_timeout': 200,
             'within_timeout': 200,
@@ -335,7 +335,7 @@ class TestOlympicSites(AbstractTestFixture):
             'lon': r_lon,
             'lat': r_lat,
         }
-        to_place = "{}/multi-reverse?{}".format(BARGI_URL, urlencode(params, doseq=True))
+        to_place = "{}/multi-reverse?{}".format(BRAGI_URL, urlencode(params, doseq=True))
         with requests_mock.Mocker() as m:
             m.get(from_place, json=FROM_ADDRESS)
             m.get(to_place, json=TO_ADDRESS)
@@ -365,8 +365,8 @@ class TestOlympicSites(AbstractTestFixture):
             'lon': s_lon,
             'lat': s_lat,
         }
-        from_place = "{}/multi-reverse?{}".format(BARGI_URL, urlencode(params, doseq=True))
-        to_place = "{}/features/{}?{}".format(BARGI_URL, to_poi_uri, urlencode(BASIC_PARAMS, doseq=True))
+        from_place = "{}/multi-reverse?{}".format(BRAGI_URL, urlencode(params, doseq=True))
+        to_place = "{}/features/{}?{}".format(BRAGI_URL, to_poi_uri, urlencode(BASIC_PARAMS, doseq=True))
         with requests_mock.Mocker() as m:
             m.get(from_place, json=FROM_ADDRESS)
             m.get(to_place, json=TO_POI)
@@ -391,8 +391,8 @@ class TestOlympicSites(AbstractTestFixture):
             'lon': s_lon,
             'lat': s_lat,
         }
-        from_place = "{}/multi-reverse?{}".format(BARGI_URL, urlencode(params, doseq=True))
-        to_place = "{}/features/{}?{}".format(BARGI_URL, to_poi_uri, urlencode(BASIC_PARAMS, doseq=True))
+        from_place = "{}/multi-reverse?{}".format(BRAGI_URL, urlencode(params, doseq=True))
+        to_place = "{}/features/{}?{}".format(BRAGI_URL, to_poi_uri, urlencode(BASIC_PARAMS, doseq=True))
         with requests_mock.Mocker() as m:
             m.get(from_place, json=FROM_ADDRESS)
             m.get(to_place, json=TO_POI_NOT_OLYMPIC)
@@ -415,7 +415,7 @@ class TestOlympicSites(AbstractTestFixture):
 
     def test_olympic_poi_to_address_journeys(self):
         # forbidden_uris not used :  physical_mode:0x0
-        from_place = "{}/features/{}?{}".format(BARGI_URL, from_poi_uri, urlencode(BASIC_PARAMS, doseq=True))
+        from_place = "{}/features/{}?{}".format(BRAGI_URL, from_poi_uri, urlencode(BASIC_PARAMS, doseq=True))
         params = {
             'reverse_timeout': 200,
             'within_timeout': 200,
@@ -423,7 +423,7 @@ class TestOlympicSites(AbstractTestFixture):
             'lon': r_lon,
             'lat': r_lat,
         }
-        to_place = "{}/multi-reverse?{}".format(BARGI_URL, urlencode(params, doseq=True))
+        to_place = "{}/multi-reverse?{}".format(BRAGI_URL, urlencode(params, doseq=True))
         with requests_mock.Mocker() as m:
             m.get(from_place, json=FROM_POI)
             m.get(to_place, json=TO_ADDRESS)
@@ -442,8 +442,8 @@ class TestOlympicSites(AbstractTestFixture):
 
     def test_olympic_poi_to_olympic_poi_journeys(self):
         # forbidden_uris not used :  physical_mode:0x0
-        from_place = "{}/features/{}?{}".format(BARGI_URL, from_poi_uri, urlencode(BASIC_PARAMS, doseq=True))
-        to_place = "{}/features/{}?{}".format(BARGI_URL, to_poi_uri, urlencode(BASIC_PARAMS, doseq=True))
+        from_place = "{}/features/{}?{}".format(BRAGI_URL, from_poi_uri, urlencode(BASIC_PARAMS, doseq=True))
+        to_place = "{}/features/{}?{}".format(BRAGI_URL, to_poi_uri, urlencode(BASIC_PARAMS, doseq=True))
         with requests_mock.Mocker() as m:
             m.get(from_place, json=FROM_ADDRESS)
             m.get(to_place, json=TO_POI)
