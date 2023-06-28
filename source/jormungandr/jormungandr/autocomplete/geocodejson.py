@@ -165,8 +165,9 @@ def get_api_name(uri, instances=None):
     if lon is None or lat is None:
         return 'features'
     if instances and instances[0].use_multi_reverse:
-            return 'multi-reverse'
+        return 'multi-reverse'
     return 'reverse'
+
 
 class GeocodeJson(AbstractAutocomplete):
     """
