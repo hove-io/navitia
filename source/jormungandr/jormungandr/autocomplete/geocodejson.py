@@ -162,12 +162,11 @@ def create_address_field(geocoding, poi_lat=None, poi_lon=None):
 
 def get_api_name(uri, instances=None):
     lon, lat = get_lon_lat_from_id(uri)
-    if lon is not None and lat is not None:
-        if instances and instances[0].use_multi_reverse:
-            return 'multi-reverse'
-        return 'reverse'
-    else:
+    if lon is None or lat is None:
         return 'features'
+    if instances and instances[0].use_multi_reverse:
+            return 'multi-reverse'
+    return 'reverse'
 
 
 class GeocodeJson(AbstractAutocomplete):
@@ -258,19 +257,10 @@ class GeocodeJson(AbstractAutocomplete):
                 for k, v in _value.items():
                     _manage_depth(k, v, _depth - 1)
 
-        features = response.get('features')
-        if features:
-            for feature in features:
-                key = 'geocoding'
+        key = 'geocoding'
+        for item in ["features", "zones"]:
+            for feature in response.get(item, []):
                 value = feature.get('properties', {}).get('geocoding')
-                if not value:
-                    continue
-                _manage_depth(key, value, depth)
-        zones = response.get('zones')
-        if zones:
-            for zone in zones:
-                key = 'geocoding'
-                value = zone.get('properties', {}).get('geocoding')
                 if not value:
                     continue
                 _manage_depth(key, value, depth)
@@ -296,7 +286,7 @@ class GeocodeJson(AbstractAutocomplete):
 
     def make_url(self, end_point, uri=None):
 
-        if end_point not in ['autocomplete', 'features', 'reverse', 'multi-reverse']:
+        if end_point not in {'autocomplete', 'features', 'reverse', 'multi-reverse'}:
             raise GeocodeJsonError('Unknown endpoint')
 
         if not self.host:
