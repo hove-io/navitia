@@ -278,6 +278,7 @@ class TestOlympicSites(AbstractTestFixture):
             physical_mode_id = next(
                 link["id"] for link in first_journey["sections"][1]["links"] if link["type"] == 'physical_mode'
             )
+            assert "within_zones" not in first_journey["sections"][0]["from"]
             assert physical_mode_id == 'physical_mode:0x0'
 
     def test_address_with_invalid_within_to_address_journeys(self):

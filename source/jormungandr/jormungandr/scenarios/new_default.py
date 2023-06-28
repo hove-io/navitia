@@ -1365,14 +1365,8 @@ class Scenario(simple.Scenario):
         )
 
         # we store the origin/destination detail in g to be able to use them after the marshall
-        import copy
-
-        g.origin_detail = copy.deepcopy(origin_detail)
-        if isinstance(g.origin_detail, dict) and 'within_zones' in g.origin_detail:
-            del g.origin_detail["within_zones"]
-        g.destination_detail = copy.deepcopy(destination_detail)
-        if isinstance(g.destination_detail, dict) and 'within_zones' in g.destination_detail:
-            del g.destination_detail["within_zones"]
+        g.origin_detail = origin_detail
+        g.destination_detail = destination_detail
 
         origin_detail = origin_detail or json_address_from_uri(api_request.get('origin'))
         if not origin_detail:
