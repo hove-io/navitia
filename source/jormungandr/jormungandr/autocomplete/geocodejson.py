@@ -159,6 +159,7 @@ def create_address_field(geocoding, poi_lat=None, poi_lon=None):
         resp['administrative_regions'] = admins
     return resp
 
+
 class GeocodeJson(AbstractAutocomplete):
     """
     Autocomplete with an external service returning geocodejson
