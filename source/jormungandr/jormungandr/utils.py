@@ -427,25 +427,21 @@ def add_properties(pt_object, dict_pt_object):
         property.value = value
 
 
-def get_pt_object_from_json(dict_pt_object, instance):
+def check_dic_object(dict_pt_object):
     if not isinstance(dict_pt_object, dict):
         logging.getLogger(__name__).error('Invalid dict_pt_object')
         raise InvalidArguments('dict_pt_object')
-    text_embedded_type = dict_pt_object.get("embedded_type")
-    embedded_type = MAP_STRING_PTOBJECT_TYPE.get(text_embedded_type)
+    embedded_type = MAP_STRING_PTOBJECT_TYPE.get(dict_pt_object.get("embedded_type"))
     if not embedded_type:
         logging.getLogger(__name__).error('Invalid embedded_type')
         raise InvalidArguments('embedded_type')
-    uri = dict_pt_object["id"]
-    if embedded_type == type_pb2.ADMINISTRATIVE_REGION:
-        # In this case we need the main_stop_area
-        pt_object = instance.georef.place(uri)
-        if pt_object:
-            return pt_object
-    pt_object = type_pb2.PtObject()
-    pt_object.uri = uri
-    pt_object.name = dict_pt_object.get("name", "")
 
+
+def populate_pt_object(pt_object, dict_pt_object):
+    pt_object.uri = dict_pt_object["id"]
+    pt_object.name = dict_pt_object.get("name", "")
+    text_embedded_type = dict_pt_object.get("embedded_type")
+    embedded_type = MAP_STRING_PTOBJECT_TYPE.get(text_embedded_type)
     pt_object.embedded_type = embedded_type
 
     map_pt_object_type_to_pt_object = {
@@ -465,10 +461,27 @@ def get_pt_object_from_json(dict_pt_object, instance):
     )
     obj.coord.lon = coord.lon
     obj.coord.lat = coord.lat
-    if text_embedded_type == "poi":
+    if embedded_type == type_pb2.POI:
         add_children(pt_object, dict_pt_object)
         add_properties(pt_object, dict_pt_object)
 
+
+def get_pt_object_from_json(dict_pt_object, instance):
+    check_dic_object(dict_pt_object)
+    embedded_type = MAP_STRING_PTOBJECT_TYPE.get(dict_pt_object.get("embedded_type"))
+    if embedded_type == type_pb2.ADMINISTRATIVE_REGION:
+        # In this case we need the main_stop_area
+        pt_object = instance.georef.place(dict_pt_object["id"])
+        if pt_object:
+            return pt_object
+    pt_object = type_pb2.PtObject()
+    populate_pt_object(pt_object, dict_pt_object)
+
+    within_zones = dict_pt_object.get("within_zones", [])
+    if pt_object.embedded_type == type_pb2.ADDRESS and within_zones:
+        for within_zone in within_zones:
+            pt_object_within_zone = pt_object.address.within_zones.add()
+            populate_pt_object(pt_object_within_zone, within_zone)
     return pt_object
 
 

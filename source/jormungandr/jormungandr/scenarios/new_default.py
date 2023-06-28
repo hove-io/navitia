@@ -1258,17 +1258,15 @@ def isochrone_common(isochrone, request, instance, journey_req):
     journey_req.streetnetwork_params.destination_mode = isochrone.destination_modes[0]
 
 
-def is_olympic_site(entry_point, instance):
-    if (
-        entry_point
-        and entry_point.embedded_type == type_pb2.POI
-        and hasattr(entry_point.poi, 'properties')
-        and entry_point.poi.properties
-    ):
+def is_olymbic_poi(pt_object, instance):
+    if pt_object.embedded_type == type_pb2.POI:
+        if not (hasattr(pt_object.poi, 'properties') and pt_object.poi.properties):
+            return False
+    if pt_object.embedded_type == type_pb2.POI:
         olympic_site = next(
             (
                 p
-                for p in entry_point.poi.properties
+                for p in pt_object.poi.properties
                 if p.type == instance.olympics_forbidden_uris.poi_property_key
                 and p.value == instance.olympics_forbidden_uris.poi_property_value
             ),
@@ -1276,6 +1274,22 @@ def is_olympic_site(entry_point, instance):
         )
         if olympic_site:
             return True
+    return False
+
+
+def is_olympic_site(entry_point, instance):
+    if not entry_point:
+        return False
+    if entry_point.embedded_type not in [type_pb2.POI, type_pb2.ADDRESS]:
+        return False
+    if is_olymbic_poi(entry_point, instance):
+        return True
+    if entry_point.embedded_type == type_pb2.ADDRESS:
+        if not (hasattr(entry_point.address, 'within_zones') and entry_point.address.within_zones):
+            return False
+        for within_zone in entry_point.address.within_zones:
+            if is_olymbic_poi(within_zone, instance):
+                return True
     return False
 
 
@@ -1354,8 +1368,14 @@ class Scenario(simple.Scenario):
         )
 
         # we store the origin/destination detail in g to be able to use them after the marshall
-        g.origin_detail = origin_detail
-        g.destination_detail = destination_detail
+        import copy
+
+        g.origin_detail = copy.deepcopy(origin_detail)
+        if isinstance(g.origin_detail, dict) and 'within_zones' in g.origin_detail:
+            del g.origin_detail["within_zones"]
+        g.destination_detail = copy.deepcopy(destination_detail)
+        if isinstance(g.destination_detail, dict) and 'within_zones' in g.destination_detail:
+            del g.destination_detail["within_zones"]
 
         origin_detail = origin_detail or json_address_from_uri(api_request.get('origin'))
         if not origin_detail:

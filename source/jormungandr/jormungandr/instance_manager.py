@@ -125,6 +125,7 @@ class InstanceManager(object):
             best_boarding_positions_dir=app.config.get(str('BEST_BOARDING_POSITIONS_DIR'), None),
             olympics_forbidden_uris=config.get('olympics_forbidden_uris', None),
             additional_params_period=config.get('additional_parameters_activation_period', None),
+            use_multi_reverse=config.get('use_multi_reverse', False),
         )
 
         self.instances[instance.name] = instance

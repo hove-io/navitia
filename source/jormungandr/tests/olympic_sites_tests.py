@@ -151,10 +151,88 @@ TO_ADDRESS = {
     ]
 }
 
+FROM_ADDRESS_WITH_WITHIN = {
+    "features": [
+        {
+            "type": "Feature",
+            "geometry": {"coordinates": [s_lon, s_lat], "type": "Point"},
+            "properties": {
+                "geocoding": {
+                    "id": from_addr_uri,
+                    "type": "house",
+                    "label": "10 Rue bob (City)",
+                    "name": "10 Rue bob",
+                    "housenumber": "10",
+                    "street": "Rue bob",
+                    "postcode": "36500",
+                    "city": "City",
+                }
+            },
+        }
+    ],
+    "zones": [
+        {
+            "type": "zone",
+            "geometry": {"coordinates": [s_lon, s_lat], "type": "Point"},
+            "properties": {
+                "geocoding": {
+                    "id": from_poi_uri,
+                    "type": "poi",
+                    "label": "Jardin (City)",
+                    "name": "Jardin",
+                    "city": "Paris",
+                    "poi_types": [{"id": "poi_type:jardin", "name": "Jardin"}],
+                    "properties": [{"key": "olympic", "value": "olympic:site"}],
+                }
+            },
+        }
+    ],
+}
+
+
+FROM_ADDRESS_WITH_INVALID_WITHIN = {
+    "features": [
+        {
+            "type": "Feature",
+            "geometry": {"coordinates": [s_lon, s_lat], "type": "Point"},
+            "properties": {
+                "geocoding": {
+                    "id": from_addr_uri,
+                    "type": "house",
+                    "label": "10 Rue bob (City)",
+                    "name": "10 Rue bob",
+                    "housenumber": "10",
+                    "street": "Rue bob",
+                    "postcode": "36500",
+                    "city": "City",
+                }
+            },
+        }
+    ],
+    "zones": [
+        {
+            "type": "zone",
+            "geometry": {"coordinates": [s_lon, s_lat], "type": "Point"},
+            "properties": {
+                "geocoding": {
+                    "id": from_poi_uri,
+                    "type": "stop_area",
+                    "label": "Jardin (City)",
+                    "name": "Jardin",
+                    "city": "Paris",
+                    "poi_types": [{"id": "poi_type:jardin", "name": "Jardin"}],
+                    "properties": [{"key": "olympic", "value": "olympic:site"}],
+                }
+            },
+        }
+    ],
+}
+
 MOCKED_INSTANCE_CONF = {
     "scenario": "distributed",
     'instance_config': {
         'default_autocomplete': 'bragi',
+        "use_multi_reverse": True,
         "olympics_forbidden_uris": {
             "pt_object_olympics_forbidden_uris": ["physical_mode:0x0"],
             "poi_property_key": "olympic",
@@ -168,12 +246,96 @@ BASIC_PARAMS = {'timeout': 200, 'pt_dataset[]': 'main_routing_test'}
 
 @dataset({'main_routing_test': MOCKED_INSTANCE_CONF}, global_config={'activate_bragi': True})
 class TestOlympicSites(AbstractTestFixture):
+    def test_address_with_within_to_address_journeys(self):
+        # forbidden_uris used :  physical_mode:0x0
+        params = {
+            'reverse_timeout': 200,
+            'within_timeout': 200,
+            'pt_dataset[]': 'main_routing_test',
+            'lon': s_lon,
+            'lat': s_lat,
+        }
+        from_place = "{}/multi-reverse?{}".format(BARGI_URL, urlencode(params, doseq=True))
+        params = {
+            'reverse_timeout': 200,
+            'within_timeout': 200,
+            'pt_dataset[]': 'main_routing_test',
+            'lon': r_lon,
+            'lat': r_lat,
+        }
+        to_place = "{}/multi-reverse?{}".format(BARGI_URL, urlencode(params, doseq=True))
+        with requests_mock.Mocker() as m:
+            m.get(from_place, json=FROM_ADDRESS_WITH_WITHIN)
+            m.get(to_place, json=TO_ADDRESS)
+            response = self.query_region(
+                template_journey_query.format(place_from=from_addr_uri, place_to=to_addr_uri)
+            )
+            journeys = [journey for journey in response['journeys']]
+            assert len(journeys) == 2
+            first_journey = response['journeys'][0]
+            assert len(first_journey["sections"]) == 3
+            assert first_journey["sections"][1]["type"] == "public_transport"
+            physical_mode_id = next(
+                link["id"] for link in first_journey["sections"][1]["links"] if link["type"] == 'physical_mode'
+            )
+            assert physical_mode_id == 'physical_mode:0x0'
+
+    def test_address_with_invalid_within_to_address_journeys(self):
+        # forbidden_uris used :  physical_mode:0x0
+        params = {
+            'reverse_timeout': 200,
+            'within_timeout': 200,
+            'pt_dataset[]': 'main_routing_test',
+            'lon': s_lon,
+            'lat': s_lat,
+        }
+        from_place = "{}/multi-reverse?{}".format(BARGI_URL, urlencode(params, doseq=True))
+        params = {
+            'reverse_timeout': 200,
+            'within_timeout': 200,
+            'pt_dataset[]': 'main_routing_test',
+            'lon': r_lon,
+            'lat': r_lat,
+        }
+        to_place = "{}/multi-reverse?{}".format(BARGI_URL, urlencode(params, doseq=True))
+        with requests_mock.Mocker() as m:
+            m.get(from_place, json=FROM_ADDRESS_WITH_INVALID_WITHIN)
+            m.get(to_place, json=TO_ADDRESS)
+            response = self.query_region(
+                template_journey_query.format(place_from=from_addr_uri, place_to=to_addr_uri)
+            )
+            journeys = [journey for journey in response['journeys']]
+            assert len(journeys) == 1
+            first_journey = response['journeys'][0]
+            assert len(first_journey["sections"]) == 1
+            physical_mode_id = next(
+                (
+                    link["id"]
+                    for link in first_journey["sections"][0]["links"]
+                    if link["type"] == 'physical_mode'
+                ),
+                None,
+            )
+            assert not physical_mode_id
+
     def test_address_to_address_journeys(self):
         # forbidden_uris used :  physical_mode:0x0
-        params = {'timeout': 200, 'pt_dataset[]': 'main_routing_test', 'lon': s_lon, 'lat': s_lat}
-        from_place = "{}/reverse?{}".format(BARGI_URL, urlencode(params, doseq=True))
-        params = {'timeout': 200, 'pt_dataset[]': 'main_routing_test', 'lon': r_lon, 'lat': r_lat}
-        to_place = "{}/reverse?{}".format(BARGI_URL, urlencode(params, doseq=True))
+        params = {
+            'reverse_timeout': 200,
+            'within_timeout': 200,
+            'pt_dataset[]': 'main_routing_test',
+            'lon': s_lon,
+            'lat': s_lat,
+        }
+        from_place = "{}/multi-reverse?{}".format(BARGI_URL, urlencode(params, doseq=True))
+        params = {
+            'reverse_timeout': 200,
+            'within_timeout': 200,
+            'pt_dataset[]': 'main_routing_test',
+            'lon': r_lon,
+            'lat': r_lat,
+        }
+        to_place = "{}/multi-reverse?{}".format(BARGI_URL, urlencode(params, doseq=True))
         with requests_mock.Mocker() as m:
             m.get(from_place, json=FROM_ADDRESS)
             m.get(to_place, json=TO_ADDRESS)
@@ -196,8 +358,14 @@ class TestOlympicSites(AbstractTestFixture):
 
     def test_address_to_olympic_poi_journeys(self):
         # forbidden_uris not used :  physical_mode:0x0
-        params = {'timeout': 200, 'pt_dataset[]': 'main_routing_test', 'lon': s_lon, 'lat': s_lat}
-        from_place = "{}/reverse?{}".format(BARGI_URL, urlencode(params, doseq=True))
+        params = {
+            'reverse_timeout': 200,
+            'within_timeout': 200,
+            'pt_dataset[]': 'main_routing_test',
+            'lon': s_lon,
+            'lat': s_lat,
+        }
+        from_place = "{}/multi-reverse?{}".format(BARGI_URL, urlencode(params, doseq=True))
         to_place = "{}/features/{}?{}".format(BARGI_URL, to_poi_uri, urlencode(BASIC_PARAMS, doseq=True))
         with requests_mock.Mocker() as m:
             m.get(from_place, json=FROM_ADDRESS)
@@ -216,8 +384,14 @@ class TestOlympicSites(AbstractTestFixture):
 
     def test_address_to_not_olympic_poi_journeys(self):
         # forbidden_uris used :  physical_mode:0x0
-        params = {'timeout': 200, 'pt_dataset[]': 'main_routing_test', 'lon': s_lon, 'lat': s_lat}
-        from_place = "{}/reverse?{}".format(BARGI_URL, urlencode(params, doseq=True))
+        params = {
+            'reverse_timeout': 200,
+            'within_timeout': 200,
+            'pt_dataset[]': 'main_routing_test',
+            'lon': s_lon,
+            'lat': s_lat,
+        }
+        from_place = "{}/multi-reverse?{}".format(BARGI_URL, urlencode(params, doseq=True))
         to_place = "{}/features/{}?{}".format(BARGI_URL, to_poi_uri, urlencode(BASIC_PARAMS, doseq=True))
         with requests_mock.Mocker() as m:
             m.get(from_place, json=FROM_ADDRESS)
@@ -242,8 +416,14 @@ class TestOlympicSites(AbstractTestFixture):
     def test_olympic_poi_to_address_journeys(self):
         # forbidden_uris not used :  physical_mode:0x0
         from_place = "{}/features/{}?{}".format(BARGI_URL, from_poi_uri, urlencode(BASIC_PARAMS, doseq=True))
-        params = {'timeout': 200, 'pt_dataset[]': 'main_routing_test', 'lon': r_lon, 'lat': r_lat}
-        to_place = "{}/reverse?{}".format(BARGI_URL, urlencode(params, doseq=True))
+        params = {
+            'reverse_timeout': 200,
+            'within_timeout': 200,
+            'pt_dataset[]': 'main_routing_test',
+            'lon': r_lon,
+            'lat': r_lat,
+        }
+        to_place = "{}/multi-reverse?{}".format(BARGI_URL, urlencode(params, doseq=True))
         with requests_mock.Mocker() as m:
             m.get(from_place, json=FROM_POI)
             m.get(to_place, json=TO_ADDRESS)
