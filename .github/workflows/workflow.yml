@@ -37,7 +37,9 @@ jobs:
         password: ${{ needs.credentials.outputs.aws_token }}
     steps:
     - name: force chown to avoid errors
-      run: chown -R $USER:$USER ${{ needs.credentials.outputs.workspace }}
+      run: |
+        echo $(pwd)
+        chown -R $USER:$USER ${{ needs.credentials.outputs.workspace }}
     - name: Generate github private access token
       id: ci-core-app-token
       uses: getsentry/action-github-app-token@v2.0.0
