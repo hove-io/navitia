@@ -158,6 +158,7 @@ class Instance(transient_socket.TransientSocket):
         best_boarding_positions_dir=None,
         olympics_forbidden_uris=None,
         additional_params_period=None,
+        use_multi_reverse=False,
     ):
         super(Instance, self).__init__(
             name=name,
@@ -257,6 +258,7 @@ class Instance(transient_socket.TransientSocket):
         self.od_lines = None
         self.additional_params_period_start = None
         self.additional_params_period_end = None
+        self.use_multi_reverse = use_multi_reverse
 
         # Read the best_boarding_positions files if any
         if best_boarding_positions_dir is not None:

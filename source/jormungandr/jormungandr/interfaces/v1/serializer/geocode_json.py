@@ -304,6 +304,25 @@ class GeocodePlacesSerializer(serpy.DictSerializer):
     def get_context(self, obj):
         return ContextSerializer(obj, display_none=False).data
 
+    def _is_valid_geocoding(self, geocoding, type_, map_serializer):
+        if not type_ or type_ not in map_serializer:
+            logging.getLogger(__name__).debug(
+                'Place not serialized (unknown type): type={place_type}, id= {id}'.format(
+                    place_type=geocoding.get("type"), id=geocoding.get("id")
+                )
+            )
+            return False
+        zone_type = geocoding.get('zone_type')
+        # TODO: do something smart with other zone type
+        if type_ == 'zone' and zone_type != 'city':
+            logging.getLogger(__name__).debug(
+                'Place not serialized (invalid zone type): zone_type={zone_type}, id= {id}'.format(
+                    zone_type=geocoding.get("zone_type"), id=geocoding.get("id")
+                )
+            )
+            return False
+        return True
+
     def get_places(self, obj):
         map_serializer = {
             'city': GeocodeAdminSerializer,
@@ -318,23 +337,18 @@ class GeocodePlacesSerializer(serpy.DictSerializer):
         for feature in obj.get('features', []):
             geocoding = feature.get('properties', {}).get('geocoding', {})
             type_ = geocoding.get('type')
-            if not type_ or type_ not in map_serializer:
-                logging.getLogger(__name__).debug(
-                    'Place not serialized (unknown type): type={place_type}, id= {id}'.format(
-                        place_type=geocoding.get("type"), id=geocoding.get("id")
-                    )
-                )
-                continue
-            zone_type = geocoding.get('zone_type')
-            # TODO: do something smart with other zone type
-            if type_ == 'zone' and zone_type != 'city':
-                logging.getLogger(__name__).debug(
-                    'Place not serialized (invalid zone type): zone_type={zone_type}, id= {id}'.format(
-                        zone_type=geocoding.get("zone_type"), id=geocoding.get("id")
-                    )
-                )
+            if not self._is_valid_geocoding(geocoding, type_, map_serializer):
                 continue
             res.append(map_serializer[type_](feature).data)
+        # Add within in street or house object
+        if obj.get('zones', []) and len(res) < 2:
+            res[0]["within_zones"] = []
+            for zone in obj.get('zones', []):
+                geocoding = zone.get('properties', {}).get('geocoding', {})
+                type_ = geocoding.get('type')
+                if not self._is_valid_geocoding(geocoding, type_, map_serializer):
+                    continue
+                res[0]["within_zones"].append(map_serializer[type_](zone).data)
         return res
 
     def get_feed_publishers(self, obj):

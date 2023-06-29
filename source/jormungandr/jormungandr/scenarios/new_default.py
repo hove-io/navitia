@@ -1258,24 +1258,36 @@ def isochrone_common(isochrone, request, instance, journey_req):
     journey_req.streetnetwork_params.destination_mode = isochrone.destination_modes[0]
 
 
+def is_olympic_poi(pt_object, instance):
+    if pt_object.embedded_type != type_pb2.POI:
+        return False
+    if not (hasattr(pt_object.poi, 'properties') and pt_object.poi.properties):
+        return False
+    olympic_site = next(
+        (
+            p
+            for p in pt_object.poi.properties
+            if p.type == instance.olympics_forbidden_uris.poi_property_key
+            and p.value == instance.olympics_forbidden_uris.poi_property_value
+        ),
+        None,
+    )
+    if olympic_site:
+        return True
+    return False
+
+
 def is_olympic_site(entry_point, instance):
-    if (
-        entry_point
-        and entry_point.embedded_type == type_pb2.POI
-        and hasattr(entry_point.poi, 'properties')
-        and entry_point.poi.properties
-    ):
-        olympic_site = next(
-            (
-                p
-                for p in entry_point.poi.properties
-                if p.type == instance.olympics_forbidden_uris.poi_property_key
-                and p.value == instance.olympics_forbidden_uris.poi_property_value
-            ),
-            None,
-        )
-        if olympic_site:
-            return True
+    if not entry_point:
+        return False
+    if is_olympic_poi(entry_point, instance):
+        return True
+    if entry_point.embedded_type == type_pb2.ADDRESS:
+        if not (hasattr(entry_point.address, 'within_zones') and entry_point.address.within_zones):
+            return False
+        for within_zone in entry_point.address.within_zones:
+            if is_olympic_poi(within_zone, instance):
+                return True
     return False
 
 

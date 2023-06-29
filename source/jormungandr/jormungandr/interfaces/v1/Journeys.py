@@ -307,6 +307,11 @@ class rig_journey(object):
     (querying external autocomplete service)
     """
 
+    @staticmethod
+    def clean_global_origin_destination_detail(json_object):
+        if isinstance(json_object, dict) and 'within_zones' in json_object:
+            del json_object["within_zones"]
+
     def __call__(self, f):
         @wraps(f)
         def wrapper(*args, **kwargs):
@@ -331,8 +336,10 @@ class rig_journey(object):
                     )
                 )
                 if g.origin_detail:
+                    self.clean_global_origin_destination_detail(g.origin_detail)
                     j['sections'][0]['from'] = g.origin_detail
                 if g.destination_detail:
+                    self.clean_global_origin_destination_detail(g.destination_detail)
                     j['sections'][-1]['to'] = g.destination_detail
 
             return objects

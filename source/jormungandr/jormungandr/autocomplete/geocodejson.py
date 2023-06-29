@@ -188,6 +188,8 @@ class GeocodeJson(AbstractAutocomplete):
         self.session = requests
         self.timeout_bragi_es = kwargs.get('timeout_bragi_es', self.timeout)
         self.fast_timeout_bragi_es = kwargs.get('fast_timeout_bragi_es', self.fast_timeout)
+        self.fast_reverse_timeout_bragi_es = kwargs.get('fast_reverse_timeout_bragi_es', self.fast_timeout)
+        self.fast_within_timeout_bragi_es = kwargs.get('fast_within_timeout_bragi_es', self.fast_timeout)
 
     def call_bragi(self, url, method, **kwargs):
         try:
@@ -246,15 +248,13 @@ class GeocodeJson(AbstractAutocomplete):
                 for k, v in _value.items():
                     _manage_depth(k, v, _depth - 1)
 
-        features = response.get('features')
-        if features:
-            for feature in features:
-                key = 'geocoding'
+        key = 'geocoding'
+        for item in ["features", "zones"]:
+            for feature in response.get(item, []):
                 value = feature.get('properties', {}).get('geocoding')
                 if not value:
                     continue
                 _manage_depth(key, value, depth)
-
         return response
 
     @classmethod
@@ -277,7 +277,7 @@ class GeocodeJson(AbstractAutocomplete):
 
     def make_url(self, end_point, uri=None):
 
-        if end_point not in ['autocomplete', 'features', 'reverse']:
+        if end_point not in {'autocomplete', 'features', 'reverse', 'multi-reverse'}:
             raise GeocodeJsonError('Unknown endpoint')
 
         if not self.host:
@@ -372,20 +372,31 @@ class GeocodeJson(AbstractAutocomplete):
         """
         return param.split(";")
 
-    def get_by_uri(self, uri, request_id, instances=None, current_datetime=None):
-
-        params = self.basic_params(instances)
-        lon, lat = get_lon_lat_from_id(uri)
-
-        if lon is not None and lat is not None:
-            url = self.make_url('reverse')
-            params.extend([('lon', lon), ('lat', lat)])
+    def extend_params(self, params, api):
+        if api == 'multi-reverse':
+            params.append(("reverse_timeout", int(self.fast_reverse_timeout_bragi_es * 1000)))
+            params.append(("within_timeout", int(self.fast_within_timeout_bragi_es * 1000)))
         else:
-            url = self.make_url('features', uri)
+            params.append(("timeout", int(self.fast_timeout_bragi_es * 1000)))
 
-        params.append(("timeout", int(self.fast_timeout_bragi_es * 1000)))
+    def get_url_params(self, uri, instances=None):
+        lon, lat = get_lon_lat_from_id(uri)
+        params = self.basic_params(instances)
+        if lon is not None and lat is not None:
+            params.extend([('lon', lon), ('lat', lat)])
+            api_name = 'multi-reverse' if instances and instances[0].use_multi_reverse else 'reverse'
+        else:
+            api_name = 'features'
+        self.extend_params(params, api_name)
+        return (
+            (self.make_url(api_name, uri), params)
+            if api_name == 'features'
+            else (self.make_url(api_name), params)
+        )
+
+    def get_by_uri(self, uri, request_id, instances=None, current_datetime=None):
+        url, params = self.get_url_params(uri, instances)
         params.append(("request_id", request_id))
-
         raw_response = self.call_bragi(url, self.session.get, timeout=self.fast_timeout, params=params)
         return self.response_marshaller(raw_response, uri)
 
