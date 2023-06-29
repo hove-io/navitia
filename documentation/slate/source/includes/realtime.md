@@ -1,6 +1,15 @@
 <h1 id="realtime">Real time integration in Navita</h1>
 
-Several endpoints can integrate real time information in their responses. In the response received, a disruption will be present and additional information will be provided if the parameter `data_freshness` is set to `realtime`. If the parameter `data_freshness` is set to `base_schedule`, the disruption is also present in the response for the user information, but it won't be taken into account in the results of the query.
+Several endpoints can integrate real time information in their responses. In the response received, disruptions can be present and additional information can be provided.
+The parameter `data_freshness` can be set to
+<ul>
+    <li>`base_schedule`: disruptions may be present in the response for the user information, but it won't be taken into account in the results of the query.</li>
+    <li>`realtime`: disruptions are taken into account to compute alternative journeys for exemple. In this configuration, every stop times, connexions, delays, or detour can be taken into account.</li>
+</ul>
+
+<aside class="notice">
+`data_freshness=adapted_schedule` is deprecated and must not be providen. It can only be used for debbuging.
+</aside>
 
 <aside class="warning">
 Real time isn't available on every coverage for Navitia. For real time to be available for a client, it needs to provide real time info about its network to Navitia.
