@@ -388,7 +388,11 @@ class GeocodeJson(AbstractAutocomplete):
         else:
             api_name = 'features'
         self.extend_params(params, api_name)
-        return (self.make_url(api_name, uri), params) if api_name== 'features' else (self.make_url(api_name), params)
+        return (
+            (self.make_url(api_name, uri), params)
+            if api_name == 'features'
+            else (self.make_url(api_name), params)
+        )
 
     def get_by_uri(self, uri, request_id, instances=None, current_datetime=None):
         url, params = self.get_url_params(uri, instances)
