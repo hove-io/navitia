@@ -36,7 +36,7 @@ target_link_libraries(fill_disruption_from_database
 
 add_executable(kraken kraken_zmq.cpp)
 target_link_libraries(kraken workers ${NAVITIA_ALLOCATOR} ${Boost_THREAD_LIBRARY})
-add_dependencies(kraken protobuf_files)
+add_dependencies(kraken protobuf_files prometheus-cpp::core prometheus-cpp::pull)
 
 install(TARGETS kraken DESTINATION ${CMAKE_INSTALL_PREFIX}/bin)
 
