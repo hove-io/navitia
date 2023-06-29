@@ -55,8 +55,9 @@ jobs:
 
     - name: clean up workspace
       run: |
-        git config --global --add safe.directory /__w/navitia/navitia
-        git clean -xdf
+        ls -lt $GITHUB_WORKSPACE
+#        git config --global --add safe.directory /__w/navitia/navitia
+#        git clean -xdf
 
   precommit:
     runs-on: [self-hosted, corefront, sandbox]
@@ -102,7 +103,9 @@ jobs:
           pre-commit run --all --show-diff-on-failure
 
       - name: clean up workspace
-        run: git clean -xdf
+        run: |
+          ls -lt $GITHUB_WORKSPACE
+#          git clean -xdf
 
   build:
     runs-on: [self-hosted, corefront, sandbox]
