@@ -424,9 +424,8 @@ struct add_impacts_visitor : public apply_impacts_visitor {
             } else {
                 // Affect the headsign to vj if present in gtfs-rt
                 if (!impact->headsign.empty()) {
-                    vj->headsign = impact->headsign;
                     vj->name = impact->headsign;
-                    pt_data.headsign_handler.change_name_and_register_as_headsign(*vj, impact->headsign);
+                    pt_data.headsign_handler.change_vj_headsign_and_register(*vj, impact->headsign);
                 }
 
                 // for protection, use the datasets[0]
