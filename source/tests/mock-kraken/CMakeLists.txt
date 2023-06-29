@@ -5,6 +5,7 @@ set(ALL_LIBS
     ed
     ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY}
     ${NAVITIA_ALLOCATOR}
+    ${LIB_PROMETHEUS}
 )
 
 # every tests will produce an executable used in jormungandr integration tests

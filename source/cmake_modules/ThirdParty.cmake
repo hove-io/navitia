@@ -43,7 +43,7 @@ link_directories("${CMAKE_BINARY_DIR}/third_party/prometheus-cpp/lib")
 #setting it before will have side effects on how we build packages
 set(ENABLE_PUSH OFF CACHE INTERNAL "" FORCE)
 add_subdirectory(third_party/prometheus-cpp)
-
+set(LIB_PROMETHEUS prometheus-cpp::core prometheus-cpp::pull)
 
 # Reactivate warnings flags
 set(CMAKE_CXX_FLAGS ${TMP_FLAG})
