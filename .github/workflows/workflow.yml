@@ -25,7 +25,7 @@ jobs:
         id: ecr_token
         run: |
           echo token=$(aws ecr get-login-password --region $REGION) >> $GITHUB_OUTPUT
-          echo workspace=/opt/actions-runner >> $GITHUB_OUTPUT
+          echo workspace=/__w >> $GITHUB_OUTPUT
 
   checks:
     runs-on: [self-hosted, corefront, sandbox]
@@ -37,9 +37,7 @@ jobs:
         password: ${{ needs.credentials.outputs.aws_token }}
     steps:
     - name: force chown to avoid errors
-      run: |
-        echo $(pwd)
-        chown -R $USER:$USER ${{ needs.credentials.outputs.workspace }}
+      run: chown -R $USER:$USER ${{ needs.credentials.outputs.workspace }}
     - name: Generate github private access token
       id: ci-core-app-token
       uses: getsentry/action-github-app-token@v2.0.0
