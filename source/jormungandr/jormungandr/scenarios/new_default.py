@@ -1259,9 +1259,10 @@ def isochrone_common(isochrone, request, instance, journey_req):
 
 
 def is_olympic_poi(pt_object, instance):
-    if pt_object.embedded_type == type_pb2.POI:
-        if not (hasattr(pt_object.poi, 'properties') and pt_object.poi.properties):
-            return False
+    if pt_object.embedded_type != type_pb2.POI:
+        return False
+    if not (hasattr(pt_object.poi, 'properties') and pt_object.poi.properties):
+        return False
     olympic_site = next(
         (
             p
