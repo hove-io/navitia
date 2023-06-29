@@ -55,12 +55,12 @@ jobs:
 
     - name: clean up workspace
       run: |
-        git config --global --add safe.directory $GITHUB_WORKSPACE
+        git config --global --add safe.directory /__w/navitia/navitia
         git clean -xdf
 
   precommit:
     runs-on: [self-hosted, corefront, sandbox]
-    needs: [credentials]
+    needs: [credentials, checks]
     container:
       image: 162230498103.dkr.ecr.eu-west-1.amazonaws.com/mutable-debian11_dev:latest
       credentials:
@@ -97,7 +97,7 @@ jobs:
           LC_ALL: C.UTF-8
           LANG: C.UTF-8
         run: |
-          git config --global --add safe.directory $GITHUB_WORKSPACE
+          git config --global --add safe.directory /__w/navitia/navitia
           pre-commit install --install-hooks
           pre-commit run --all --show-diff-on-failure
 
@@ -106,7 +106,7 @@ jobs:
 
   build:
     runs-on: [self-hosted, corefront, sandbox]
-    needs: [credentials]
+    needs: [credentials, checks, precommit]
     strategy:
         fail-fast: false
         matrix:
