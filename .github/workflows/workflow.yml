@@ -54,7 +54,9 @@ jobs:
       run: ./source/scripts/check_submodules.sh
 
     - name: clean up workspace
-      run: git clean -xdf
+      run: |
+        git config --global --add safe.directory $GITHUB_WORKSPACE
+        git clean -xdf
 
   precommit:
     runs-on: [self-hosted, corefront, sandbox]
@@ -95,7 +97,7 @@ jobs:
           LC_ALL: C.UTF-8
           LANG: C.UTF-8
         run: |
-          git config --global --add safe.directory /__w/navitia/navitia
+          git config --global --add safe.directory $GITHUB_WORKSPACE
           pre-commit install --install-hooks
           pre-commit run --all --show-diff-on-failure
 
