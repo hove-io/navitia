@@ -19,11 +19,13 @@ jobs:
     runs-on: [self-hosted, corefront, sandbox]
     outputs:
       aws_token: ${{ steps.ecr_token.outputs.token }}
+      workspace: ${{ steps.ecr_token.outputs.workspace }}
     steps:
       - name: Get ECR Token
         id: ecr_token
         run: |
           echo token=$(aws ecr get-login-password --region $REGION) >> $GITHUB_OUTPUT
+          echo workspace=$(echo $GITHUB_WORKSPACE | sed -e 's#__w#/opt/actions-runner/_work#')
 
   checks:
     runs-on: [self-hosted, corefront, sandbox]
@@ -35,7 +37,7 @@ jobs:
         password: ${{ needs.credentials.outputs.aws_token }}
     steps:
     - name: force chown to avoid errors
-      run: chown -R $USER:$USER .
+      run: chown -R $USER:$USER ${{ needs.credentials.outputs.workspace }}
     - name: Generate github private access token
       id: ci-core-app-token
       uses: getsentry/action-github-app-token@v2.0.0
@@ -53,9 +55,9 @@ jobs:
     - name: check submodules
       run: ./source/scripts/check_submodules.sh
 
-    - name: clean up workspace
-      run: |
-        ls -lt $GITHUB_WORKSPACE
+#    - name: clean up workspace
+#      run: |
+#        ls -lt $GITHUB_WORKSPACE
 #        git config --global --add safe.directory /__w/navitia/navitia
 #        git clean -xdf
 
@@ -69,7 +71,7 @@ jobs:
         password: ${{ needs.credentials.outputs.aws_token }}
     steps:
       - name: force chown to avoid errors
-        run: chown -R $USER:$USER .
+        run: chown -R $USER:$USER ${{ needs.credentials.outputs.workspace }}
       - name: Generate github private access token
         id: ci-core-app-token
         uses: getsentry/action-github-app-token@v2.0.0
@@ -102,9 +104,9 @@ jobs:
           pre-commit install --install-hooks
           pre-commit run --all --show-diff-on-failure
 
-      - name: clean up workspace
-        run: |
-          ls -lt $GITHUB_WORKSPACE
+#      - name: clean up workspace
+#        run: |
+#          ls -lt $GITHUB_WORKSPACE
 #          git clean -xdf
 
   build:
@@ -133,7 +135,7 @@ jobs:
           - 6379:6379
     steps:
     - name: force chown to avoid errors
-      run: chown -R $USER:$USER .
+      run: chown -R $USER:$USER ${{ needs.credentials.outputs.workspace }}
     - name: Generate github private access token
       id: ci-core-app-token
       uses: getsentry/action-github-app-token@v2.0.0
@@ -145,12 +147,12 @@ jobs:
       with:
         submodules: recursive
         token:  ${{ steps.ci-core-app-token.outputs.token  }}
-    - name: Restore ccache
-      uses: hendrikmuhs/ccache-action@v1.2
-      with:
-        key: ${{matrix.os.docker_image}}-ci
-        max-size: 2000M
-        save: ${{ github.event_name == 'push' }}
+#    - name: Restore ccache
+#      uses: hendrikmuhs/ccache-action@v1.2
+#      with:
+#        key: ${{matrix.os.docker_image}}-ci
+#        max-size: 2000M
+#        save: ${{ github.event_name == 'push' }}
     - name: Ensure CMake version is recent enough
       if: ${{ matrix.os.docker_image == 'mutable-debian8_dev'}}
       run: |
@@ -217,5 +219,5 @@ jobs:
         TYR_CELERY_BROKER_URL: 'amqp://guest:guest@rabbitmq:5672//'
         TYR_REDIS_HOST: 'redis'
 
-    - name: clean up workspace
-      run: git clean -xdf
+#    - name: clean up workspace
+#      run: git clean -xdf
