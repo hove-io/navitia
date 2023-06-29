@@ -25,7 +25,7 @@ jobs:
         id: ecr_token
         run: |
           echo token=$(aws ecr get-login-password --region $REGION) >> $GITHUB_OUTPUT
-          echo workspace=$(echo $GITHUB_WORKSPACE | sed -e 's#__w#/opt/actions-runner/_work#') >> $GITHUB_OUTPUT
+          echo workspace=/opt/actions-runner/_work >> $GITHUB_OUTPUT
 
   checks:
     runs-on: [self-hosted, corefront, sandbox]
