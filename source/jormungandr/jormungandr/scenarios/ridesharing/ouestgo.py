@@ -158,9 +158,9 @@ class Ouestgo(AbstractRidesharingService):
                 res.shape = None
 
                 res.price = float(json_journeys.get('cost', {}).get('variable', 0)) * res.distance / 1000.0
-                res.price = ceil_by_half(res.price)
+                res.price = ceil_by_half(res.price) * 100.0
 
-                res.currency = "euro"
+                res.currency = "centime"
 
                 json_driver = json_journeys.get('driver', {})
                 res.available_seats = json_driver.get('seats')
