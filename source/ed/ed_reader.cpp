@@ -1073,7 +1073,7 @@ void EdReader::fill_vehicle_journeys(nt::Data& data, pqxx::work& work) {
             next_vjs.insert(std::make_pair(const_it["next_vj_id"].as<idx_t>(), vj));
         }
 
-        data.pt_data->headsign_handler.change_name_and_register_as_headsign(*vj, vj->headsign);
+        data.pt_data->headsign_handler.change_vj_headsign_and_register(*vj, vj->headsign);
         vehicle_journey_map[vj_id] = vj;
 
         // we check if we have some comments

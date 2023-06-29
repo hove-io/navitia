@@ -42,16 +42,16 @@ www.navitia.io
  * Headsign handler
  *
  * Contains and manages :
- * - headsign at a given stop_time for VJ (default value for headsign at a stop_time is vj.name)
+ * - headsign at a given stop_time for VJ (default value for headsign at a stop_time is vj.headsign)
  * - metaVJ from given headsign (one of the VJ in metaVJ contains given headsign)
  */
 namespace navitia {
 namespace type {
 
 struct HeadsignHandler {
-    // changes vj's name and registers vj under its new name for headsign-to-vj map
-    // (remove previous name from headsign-to-vj map if necessary)
-    void change_name_and_register_as_headsign(VehicleJourney& vj, const std::string& new_name);
+    // changes vj's headsign and registers vj under its new headsign for headsign-to-vj map
+    // (remove previous headsign from headsign-to-vj map if necessary)
+    void change_vj_headsign_and_register(VehicleJourney& vj, const std::string& new_headsign);
     void affect_headsign_to_stop_time(const StopTime& stop_time, const std::string& headsign);
 
     const std::string& get_headsign(const StopTime& stop_time) const;
@@ -70,8 +70,8 @@ protected:
 
     // for each VJ, map containing index of stop time and the new headsign (until next change)
     // as new stop_time might be added in the future, if map_vj_map_stop_time_headsign_change[vj]
-    // exists, last change is always vj.name (and might happen after last stop_time)
-    // This gives following structure (vj.name = A) :
+    // exists, last change is always vj.headsign (and might happen after last stop_time)
+    // This gives following structure (vj.headsign = A) :
     // stop times       : 1 2 3 4 5 6 7 8 (potential 9)
     // headsigns        : A A A B B C B B
     // headsign_changes :       B   C B   A

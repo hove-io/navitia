@@ -196,7 +196,7 @@ nt::VehicleJourney* VJ::make() {
     }
     vj->physical_mode->vehicle_journey_list.push_back(vj);
 
-    pt_data.headsign_handler.change_name_and_register_as_headsign(*vj, vj_headsign);
+    pt_data.headsign_handler.change_vj_headsign_and_register(*vj, vj_headsign);
 
     if (!_block_id.empty()) {
         b.block_vjs.insert(std::make_pair(_block_id, vj));
