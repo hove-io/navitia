@@ -44,8 +44,8 @@ from jormungandr.utils import (
     get_weekday,
     timestamp_to_date_str,
     DATE_FORMAT,
-    local_str_date_to_utc,
     date_to_timestamp,
+    ceil_by_half,
 )
 from jormungandr.timezone import get_timezone_or_paris
 
@@ -157,8 +157,10 @@ class Ouestgo(AbstractRidesharingService):
                 res.dropoff_dest_duration = 0
                 res.shape = None
 
-                res.price = float(json_journeys.get('cost', {}).get('variable')) * 100.0
-                res.currency = "centime"
+                res.price = float(json_journeys.get('cost', {}).get('variable', 0)) * res.distance / 1000.0
+                res.price = ceil_by_half(res.price)
+
+                res.currency = "euro"
 
                 json_driver = json_journeys.get('driver', {})
                 res.available_seats = json_driver.get('seats')
