@@ -200,9 +200,30 @@ type::ValidityPattern compute_base_disrupted_vp(const std::vector<boost::posix_t
 }
 
 nt::Route* get_or_create_route(const nt::disruption::Impact& impact, nt::PT_Data& pt_data) {
-    nt::Network* network = pt_data.get_or_create_network("network:additional_service", "additional service");
-    nt::CommercialMode* comm_mode =
-        pt_data.get_or_create_commercial_mode("commercial_mode:additional_service", "additional service");
+    // If id is present in the impact, it should exist otherwise return nullptr
+    // where as if absent create a default object
+    std::cout << "Network start" << std::endl;
+    nt::Network* network = nullptr;
+    if (!impact.network_id.empty()) {
+        network = pt_data.get_network(impact.network_id);
+        if (network == nullptr) {
+            return nullptr;
+        }
+    } else {
+        network = pt_data.get_or_create_network("network:additional_service", "additional service");
+    }
+    std::cout << "Network done" << std::endl;
+
+    nt::CommercialMode* comm_mode = nullptr;
+    if (!impact.commercial_mode_id.empty()) {
+        comm_mode = pt_data.get_commercial_mode(impact.commercial_mode_id);
+        if (comm_mode == nullptr) {
+            return nullptr;
+        }
+    } else {
+        comm_mode = pt_data.get_or_create_commercial_mode("commercial_mode:additional_service", "additional service");
+    }
+    std::cout << "CommercialMode done" << std::endl;
 
     // We get the first and last stop_area to create route and line
     const auto& st_depart = impact.aux_info.stop_times.front();
@@ -211,10 +232,27 @@ nt::Route* get_or_create_route(const nt::disruption::Impact& impact, nt::PT_Data
     const auto& sa_arrival = st_arrival.stop_time.stop_point->stop_area;
     std::string line_uri = "line:" + sa_depart->uri + "_" + sa_arrival->uri;
     std::string line_name = sa_depart->name + " - " + sa_arrival->name;
-    std::string route_uri = "route:" + sa_depart->uri + "_" + sa_arrival->uri;
-    std::string route_name = sa_depart->name + " - " + sa_arrival->name;
-    nt::Line* line = pt_data.get_or_create_line(line_uri, line_name, network, comm_mode);
-    nt::Route* route = pt_data.get_or_create_route(route_uri, route_name, line, sa_arrival, "forward");
+    nt::Line* line = nullptr;
+    if (!impact.line_id.empty()) {
+        line = pt_data.get_line(impact.line_id);
+        if (line == nullptr) {
+            return nullptr;
+        }
+    } else {
+        line = pt_data.get_or_create_line(line_uri, line_name, network, comm_mode);
+    }
+    std::cout << "Line done" << std::endl;
+
+    nt::Route* route = nullptr;
+    std::string route_uri = "";
+    if (!impact.route_id.empty()) {
+        route_uri = impact.route_id;
+    } else {
+        route_uri = "route:" + line->uri + ":additional_service";
+    }
+    std::string route_name = "Additional service";
+    route = pt_data.get_or_create_route(route_uri, route_name, line, sa_arrival, "outbound");
+    std::cout << "route_id : " << route->uri << std::endl;
 
     return route;
 }
@@ -321,6 +359,9 @@ struct add_impacts_visitor : public apply_impacts_visitor {
                     r = mvj->get_base_vj().at(0)->route;
                 } else {
                     r = get_or_create_route(*impact, pt_data);
+                    if (r == nullptr) {
+                        return;
+                    }
                 }
             }
 
@@ -427,6 +468,11 @@ struct add_impacts_visitor : public apply_impacts_visitor {
                     vj->headsign = impact->headsign;
                     vj->name = impact->headsign;
                     pt_data.headsign_handler.change_name_and_register_as_headsign(*vj, impact->headsign);
+                }
+
+                // Affect the trip_short_name to vj if present in gtfs-rt
+                if (!impact->trip_short_name.empty()) {
+                    vj->name = impact->trip_short_name;
                 }
 
                 // for protection, use the datasets[0]

@@ -118,7 +118,8 @@ SERIALIZABLE(ApplicationPattern)
 template <class Archive>
 void Impact::serialize(Archive& ar, const unsigned int /*unused*/) {
     ar& uri& company_id& physical_mode_id& headsign& created_at& updated_at& application_periods& severity&
-        _informed_entities& messages& disruption& aux_info& application_patterns;
+        _informed_entities& messages& disruption& aux_info& application_patterns& trip_short_name& dataset_id&
+        network_id& commercial_mode_id& line_id& route_id;
 }
 SERIALIZABLE(Impact)
 

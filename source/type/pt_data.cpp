@@ -75,6 +75,14 @@ size_t PT_Data::nb_stop_times() const {
     return nb;
 }
 
+type::Network* PT_Data::get_network(const std::string& uri) {
+    const auto it = networks_map.find(uri);
+    if (it != networks_map.end()) {
+        return it->second;
+    }
+    return nullptr;
+}
+
 type::Network* PT_Data::get_or_create_network(const std::string& uri, const std::string& name, int sort) {
     const auto it = networks_map.find(uri);
     if (it != networks_map.end()) {
@@ -107,6 +115,14 @@ type::Company* PT_Data::get_or_create_company(const std::string& uri, const std:
     companies_map.insert({uri, company});
 
     return company;
+}
+
+type::CommercialMode* PT_Data::get_commercial_mode(const std::string& uri) {
+    const auto it = commercial_modes_map.find(uri);
+    if (it != commercial_modes_map.end()) {
+        return it->second;
+    }
+    return nullptr;
 }
 
 type::CommercialMode* PT_Data::get_or_create_commercial_mode(const std::string& uri, const std::string& name) {
@@ -183,6 +199,14 @@ type::Contributor* PT_Data::get_or_create_contributor(const std::string& uri, co
     contributors_map.insert({contributor->uri, contributor});
 
     return contributor;
+}
+
+type::Line* PT_Data::get_line(const std::string& uri) {
+    const auto it = lines_map.find(uri);
+    if (it != lines_map.end()) {
+        return it->second;
+    }
+    return nullptr;
 }
 
 type::Line* PT_Data::get_or_create_line(const std::string& uri,

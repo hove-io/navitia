@@ -162,6 +162,9 @@ public:
     const type::TimeZoneHandler* get_main_timezone();
     type::MetaVehicleJourney* get_or_create_meta_vehicle_journey(const std::string& uri,
                                                                  const type::TimeZoneHandler* tz);
+    type::Network* get_network(const std::string& uri);
+    type::CommercialMode* get_commercial_mode(const std::string& uri);
+    type::Line* get_line(const std::string& uri);
 
     void clean_weak_impacts();
 
