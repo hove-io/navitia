@@ -1030,14 +1030,14 @@ def read_origin_destination_data(file_path):
 def ceil_by_half(f):
     """Return f ceiled by 0.5.
     >>> ceil_by_half(1.0)
-    1
+    1.0
     >>> ceil_by_half(0.6)
-    1
+    1.0
     >>> ceil_by_half(0.5)
     0.5
     >>> ceil_by_half(0.1)
     0.5
     >>> ceil_by_half(0.0)
-    0
+    0.0
     """
     return 0.5 * math.ceil(2.0 * float(f))
