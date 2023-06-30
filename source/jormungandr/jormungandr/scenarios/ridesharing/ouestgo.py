@@ -230,7 +230,8 @@ class Ouestgo(AbstractRidesharingService):
             raise RidesharingServiceError('non 200 response', resp.status_code, resp.reason, resp.text)
 
         if resp:
-            # Watch out! Here there is no more flask context, which means all parameters store in 'g' are lost
+            # Watch out! Here there is no more flask context, which means all parameters store in 'g' are lost, even though the timezone is previously set in g
+            # it's better the retrieve the timezone from instance_params than relying on the g
             timezone = get_timezone_or_paris() if instance_params is None else instance_params.timezone
             r = self._make_response(resp.json(), period_extremity.datetime, from_coord, to_coord, timezone)
             self.record_additional_info('Received ridesharing offers', nb_ridesharing_offers=len(r))
