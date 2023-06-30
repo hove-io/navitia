@@ -141,7 +141,7 @@ DUMMY_OUESTGO_FEED_PUBLISHER = {'id': '42', 'name': '42', 'license': 'I dunno', 
 class DummyInstance:
     name = ''
     walking_speed = 1.12
-    timezone = 'UTC'
+    timezone = pytz.utc
 
 
 def get_ridesharing_service_test():
