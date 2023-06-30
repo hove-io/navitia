@@ -168,7 +168,7 @@ class TestOuestgo(NewDefaultScenarioAbstractTestFixture):
         tickets = response.get('tickets')
         assert len(tickets) == 1
         assert tickets[0].get('cost').get('currency') == 'centime'
-        assert tickets[0].get('cost').get('value') == '100.0'
+        assert tickets[0].get('cost').get('value') == '1900.0'
         ticket = tickets[0]
 
         ridesharing_kraken = journeys[0]
