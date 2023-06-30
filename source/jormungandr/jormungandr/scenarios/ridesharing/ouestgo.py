@@ -126,10 +126,6 @@ class Ouestgo(AbstractRidesharingService):
         if not raw_json:
             return []
         ridesharing_journeys = []
-        logging.getLogger(__name__).error(
-            'Ouestgo request_datetime %s',
-            request_datetime,
-        )
         circulation_day = get_weekday(request_datetime, timezone)
         for offer in raw_json:
             json_journeys = offer.get('journeys', {})
