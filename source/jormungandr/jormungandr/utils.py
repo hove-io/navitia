@@ -52,6 +52,7 @@ import sys
 import six
 import csv
 import os
+import math
 
 PY2 = sys.version_info[0] == 2
 PY3 = sys.version_info[0] == 3
@@ -1037,3 +1038,19 @@ def read_origin_destination_data(file_path):
             'Error while loading od_allowed_ids file: {} with exception: {}'.format(file_path, str(e))
         )
         return None, None, None
+
+
+def ceil_by_half(f):
+    """Return f ceiled by 0.5.
+    >>> ceil_by_half(1.0)
+    1.0
+    >>> ceil_by_half(0.6)
+    1.0
+    >>> ceil_by_half(0.5)
+    0.5
+    >>> ceil_by_half(0.1)
+    0.5
+    >>> ceil_by_half(0.0)
+    0.0
+    """
+    return 0.5 * math.ceil(2.0 * float(f))

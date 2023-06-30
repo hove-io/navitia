@@ -220,7 +220,7 @@ def ouestgo_basic_test():
         assert ridesharing_journeys[0].dropoff_place.lon == 6.194897
 
         assert ridesharing_journeys[0].shape is None
-        assert ridesharing_journeys[0].price == 5.9649
+        assert ridesharing_journeys[0].price == 350.0
         assert ridesharing_journeys[0].currency == 'centime'
 
         assert ridesharing_journeys[0].total_seats is None
