@@ -55,6 +55,7 @@ from navitiacommon.parser_args_type import (
     IntervalValue,
     SpeedRange,
     FloatRange,
+    KeyValueType,
 )
 from navitiacommon import type_pb2
 
@@ -541,6 +542,14 @@ class JourneyCommon(ResourceUri, ResourceUtc):
             hidden=True,
             help="choose which method is used to filter olympics journeys",
         )
+        parser_get.add_argument(
+            "_olympics_sites_virtual_fallback[]",
+            type=KeyValueType(),
+            action="append",
+            hidden=True,
+            help="virtual fallback duration for olympics sites. The format should be stop_point_id,duration",
+        )
+
         # Advanced parameters for valhalla bike
         parser_get.add_argument(
             "bike_use_roads",
