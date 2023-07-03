@@ -105,7 +105,13 @@ inline transit_realtime::TripUpdate make_trip_update_message(
     const std::string& physical_mode_id = "",
     const std::string& contributor = "",
     const std::string& trip_message = "",
-    const std::string& headsign = "") {
+    const std::string& headsign = "",
+    const std::string& trip_short_name = "",
+    const std::string& dataset_id = "",
+    const std::string& network_id = "",
+    const std::string& commercial_mode_id = "",
+    const std::string& line_id = "",
+    const std::string& route_id = "") {
     transit_realtime::TripUpdate trip_update;
     trip_update.SetExtension(kirin::effect, effect);
     auto trip = trip_update.mutable_trip();
@@ -125,6 +131,24 @@ inline transit_realtime::TripUpdate make_trip_update_message(
     }
     if (headsign != "") {
         trip_update.SetExtension(kirin::headsign, headsign);
+    }
+    if (trip_short_name != "") {
+        trip_update.SetExtension(kirin::trip_short_name, trip_short_name);
+    }
+    if (dataset_id != "") {
+        trip->SetExtension(kirin::dataset_id, dataset_id);
+    }
+    if (network_id != "") {
+        trip->SetExtension(kirin::network_id, network_id);
+    }
+    if (commercial_mode_id != "") {
+        trip->SetExtension(kirin::commercial_mode_id, commercial_mode_id);
+    }
+    if (line_id != "") {
+        trip->SetExtension(kirin::line_id, line_id);
+    }
+    if (route_id != "") {
+        trip->SetExtension(kirin::route_id, route_id);
     }
     // start_date is used to disambiguate trips that are very late, cf:
     // https://github.com/hove-io/chaos-proto/blob/master/gtfs-realtime.proto#L459

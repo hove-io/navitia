@@ -489,6 +489,25 @@ static const type::disruption::Disruption* create_disruption(const std::string& 
         if (trip_update.HasExtension(kirin::headsign)) {
             impact->headsign = trip_update.GetExtension(kirin::headsign);
         }
+        if (trip_update.HasExtension(kirin::trip_short_name)) {
+            impact->trip_short_name = trip_update.GetExtension(kirin::trip_short_name);
+        }
+        if (trip_update.trip().HasExtension(kirin::dataset_id)) {
+            impact->dataset_id = trip_update.trip().GetExtension(kirin::dataset_id);
+        }
+        if (trip_update.trip().HasExtension(kirin::network_id)) {
+            impact->network_id = trip_update.trip().GetExtension(kirin::network_id);
+        }
+        if (trip_update.trip().HasExtension(kirin::commercial_mode_id)) {
+            impact->commercial_mode_id = trip_update.trip().GetExtension(kirin::commercial_mode_id);
+        }
+        if (trip_update.trip().HasExtension(kirin::line_id)) {
+            impact->line_id = trip_update.trip().GetExtension(kirin::line_id);
+        }
+        if (trip_update.trip().HasExtension(kirin::route_id)) {
+            impact->route_id = trip_update.trip().GetExtension(kirin::route_id);
+        }
+
         // TODO: Effect calculated from stoptime_status -> to be removed later
         // when effect completely implemented in trip_update
         nt::disruption::Effect trip_effect = nt::disruption::Effect::UNKNOWN_EFFECT;
