@@ -11,6 +11,7 @@ on:
       - created
 env:
   REGION: eu-west-1
+  WORKSPACE: /__w
 
 jobs:
 
@@ -19,13 +20,11 @@ jobs:
     runs-on: [self-hosted, corefront, sandbox]
     outputs:
       aws_token: ${{ steps.ecr_token.outputs.token }}
-      workspace: ${{ steps.ecr_token.outputs.workspace }}
     steps:
       - name: Get ECR Token
         id: ecr_token
         run: |
           echo token=$(aws ecr get-login-password --region $REGION) >> $GITHUB_OUTPUT
-          echo workspace=/__w >> $GITHUB_OUTPUT
 
   checks:
     runs-on: [self-hosted, corefront, sandbox]
@@ -37,7 +36,7 @@ jobs:
         password: ${{ needs.credentials.outputs.aws_token }}
     steps:
     - name: force chown to avoid errors
-      run: chown -R $USER:$USER ${{ needs.credentials.outputs.workspace }}
+      run: chown -R $USER:$USER $WORKSPACE
     - name: Generate github private access token
       id: ci-core-app-token
       uses: getsentry/action-github-app-token@v2.0.0
@@ -65,7 +64,7 @@ jobs:
         password: ${{ needs.credentials.outputs.aws_token }}
     steps:
       - name: force chown to avoid errors
-        run: chown -R $USER:$USER ${{ needs.credentials.outputs.workspace }}
+        run: chown -R $USER:$USER $WORKSPACE
       - name: Generate github private access token
         id: ci-core-app-token
         uses: getsentry/action-github-app-token@v2.0.0
@@ -124,7 +123,7 @@ jobs:
           - 6379:6379
     steps:
     - name: force chown to avoid errors
-      run: chown -R $USER:$USER ${{ needs.credentials.outputs.workspace }}
+      run: chown -R $USER:$USER $WORKSPACE
     - name: Generate github private access token
       id: ci-core-app-token
       uses: getsentry/action-github-app-token@v2.0.0
@@ -201,7 +200,7 @@ jobs:
     - name: Clean build directory
       working-directory: ./build
       run: |
-        make clean
+        rm -rf ./build
 
       env:
         NAVITIA_DOCKER_NETWORK: ${{ job.container.network }}
