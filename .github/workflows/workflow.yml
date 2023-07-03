@@ -11,7 +11,7 @@ on:
       - created
 env:
   REGION: eu-west-1
-  WORKSPACE: /__w
+  WORKSPACE: .
 
 jobs:
 
@@ -124,6 +124,7 @@ jobs:
     steps:
     - name: force chown to avoid errors
       run: chown -R $USER:$USER $WORKSPACE
+
     - name: Generate github private access token
       id: ci-core-app-token
       uses: getsentry/action-github-app-token@v2.0.0
