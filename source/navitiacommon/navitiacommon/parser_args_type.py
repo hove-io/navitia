@@ -314,3 +314,19 @@ class DateTimeFormat(CustomSchemaType):
 
     def schema(self):
         return TypeSchema(type=str, metadata={'format': 'date-time'})
+
+
+class KeyValueType(CustomSchemaType):
+    def __call__(self, value):
+        try:
+            key, value = value.split(',')
+            value = int(value)
+            if value <= 0:
+                raise ValueError('invalid duration')
+
+            return key, value
+        except ValueError as e:
+            raise ValueError("Unable to evaluate, {}".format(e))
+
+    def schema(self):
+        return TypeSchema(type=str, metadata={'minimum': 1})

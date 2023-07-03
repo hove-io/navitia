@@ -801,23 +801,15 @@ def filter_olympics_journeys_v1(responses, request):
 
 
 def filter_olympics_journeys_v2(responses, request):
-    fake_fallback_durations = {
-        # RER E
-        "stop_point:IDFM:monomodalStopPlace:58498": 20,
-        # Metro 12
-        "stop_point:IDFM:22041": 600,
-        "stop_point:IDFM:463281": 600,
-        # T3b
-        "stop_point:IDFM:412988": 1000,
-        "stop_point:IDFM:412987": 1000,
-    }
+    fictitious_fallback_durations = {}
+    fictitious_fallback_durations.update(request.get("_olympics_sites_fictitious_fallback[]", []))
     best = None
     for r in responses:
         for j in r.journeys:
             if 'olympics' not in j.tags:
                 continue
             pt_extremity = get_journey_pt_extremity(j, request.get('criteria'))
-            fake_fallback_duration = fake_fallback_durations.get(pt_extremity.uri)
+            fake_fallback_duration = fictitious_fallback_durations.get(pt_extremity.uri)
             fake_duration = j.duration - j.sections[-1].duration + fake_fallback_duration
             if best is None:
                 best = (j, fake_duration)
