@@ -801,22 +801,22 @@ def filter_olympics_journeys_v1(responses, request):
 
 
 def filter_olympics_journeys_v2(responses, request):
-    fictitious_fallback_durations = {}
-    fictitious_fallback_durations.update(request.get("_olympics_sites_fictitious_fallback[]", []))
+    virtual_fallback_durations = {}
+    virtual_fallback_durations.update(request.get("_olympics_sites_virtual_fallback[]") or [])
     best = None
     for r in responses:
         for j in r.journeys:
             if 'olympics' not in j.tags:
                 continue
             pt_extremity = get_journey_pt_extremity(j, request.get('criteria'))
-            fictitious_fallback_duration = fictitious_fallback_durations.get(pt_extremity.uri)
-            fictitious_total_duration = j.duration - j.sections[-1].duration + fictitious_fallback_duration
+            virtual_fallback_duration = virtual_fallback_durations.get(pt_extremity.uri) or 0
+            virtual_total_duration = j.duration - j.sections[-1].duration + virtual_fallback_duration
             if best is None:
-                best = (j, fictitious_total_duration)
+                best = (j, virtual_total_duration)
                 continue
 
-            if best[1] > fictitious_total_duration:
-                best = (j, fictitious_total_duration)
+            if best[1] > virtual_total_duration:
+                best = (j, virtual_total_duration)
 
     best[0].tags.append('best_olympics')
 

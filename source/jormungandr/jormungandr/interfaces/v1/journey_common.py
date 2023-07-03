@@ -543,11 +543,11 @@ class JourneyCommon(ResourceUri, ResourceUtc):
             help="choose which method is used to filter olympics journeys",
         )
         parser_get.add_argument(
-            "_olympics_sites_fictitious_fallback[]",
+            "_olympics_sites_virtual_fallback[]",
             type=KeyValueType(),
             action="append",
             hidden=True,
-            help="fictitious fallback duration for olympics sites. The format should be stop_point_id,duration",
+            help="virtual fallback duration for olympics sites. The format should be stop_point_id,duration",
         )
 
         # Advanced parameters for valhalla bike
