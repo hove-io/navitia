@@ -809,14 +809,14 @@ def filter_olympics_journeys_v2(responses, request):
             if 'olympics' not in j.tags:
                 continue
             pt_extremity = get_journey_pt_extremity(j, request.get('criteria'))
-            fake_fallback_duration = fictitious_fallback_durations.get(pt_extremity.uri)
-            fake_duration = j.duration - j.sections[-1].duration + fake_fallback_duration
+            fictitious_fallback_duration = fictitious_fallback_durations.get(pt_extremity.uri)
+            fictitious_total_duration = j.duration - j.sections[-1].duration + fictitious_fallback_duration
             if best is None:
-                best = (j, fake_duration)
+                best = (j, fictitious_total_duration)
                 continue
 
-            if best[1] > fake_duration:
-                best = (j, fake_duration)
+            if best[1] > fictitious_total_duration:
+                best = (j, fictitious_total_duration)
 
     best[0].tags.append('best_olympics')
 
