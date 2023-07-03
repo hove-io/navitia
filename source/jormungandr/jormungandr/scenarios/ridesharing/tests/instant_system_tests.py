@@ -41,6 +41,7 @@ from jormungandr import utils
 import json
 import requests_mock
 import pytest
+import pytz
 
 # https://stackoverflow.com/a/9312242/1614576
 import re
@@ -181,6 +182,7 @@ class DummyInstance:
     walking_speed = 1.12
     greenlet_pool_for_ridesharing_services = True
     ridesharing_greenlet_pool_size = 42
+    timezone = 'UTC'
 
 
 def get_ridesharing_service_test():

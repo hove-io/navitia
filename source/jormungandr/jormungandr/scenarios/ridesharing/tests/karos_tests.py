@@ -30,6 +30,9 @@
 
 
 from __future__ import absolute_import, print_function, unicode_literals, division
+
+import pytz
+
 from jormungandr.scenarios.ridesharing.ridesharing_journey import Gender
 from jormungandr.scenarios.ridesharing.karos import Karos, DEFAULT_KAROS_FEED_PUBLISHER
 from jormungandr.scenarios.ridesharing.ridesharing_service_manager import RidesharingServiceManager
@@ -178,6 +181,7 @@ class DummyInstance:
     walking_speed = 1.12
     greenlet_pool_for_ridesharing_services = True
     ridesharing_greenlet_pool_size = 42
+    timezone = 'UTC'
 
 
 def get_ridesharing_service_test():

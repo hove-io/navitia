@@ -141,6 +141,7 @@ DUMMY_OUESTGO_FEED_PUBLISHER = {'id': '42', 'name': '42', 'license': 'I dunno', 
 class DummyInstance:
     name = ''
     walking_speed = 1.12
+    timezone = pytz.utc
 
 
 def get_ridesharing_service_test():
@@ -316,7 +317,7 @@ def make_response_empty_raw_json_test():
         network='dummyNetwork',
         feed_publisher=DUMMY_OUESTGO_FEED_PUBLISHER,
     )
-    resp = ouestgo._make_response([], None, None, None)
+    resp = ouestgo._make_response([], None, None, None, pytz.timezone("UTC"))
     assert not resp
 
 
@@ -329,5 +330,5 @@ def make_response_pikup_datetime_invalid_test():
     )
     # Thursday 25 May 2023 12:00:00
     request_datetime = 1685016000
-    resp = ouestgo._make_response([{"toto": "tata"}], request_datetime, None, None)
+    resp = ouestgo._make_response([{"toto": "tata"}], request_datetime, None, None, pytz.timezone("UTC"))
     assert not resp

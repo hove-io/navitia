@@ -39,6 +39,7 @@ import mock
 from jormungandr.tests import utils_test
 from jormungandr import utils
 import json
+import pytz
 
 
 fake_response = """
@@ -119,6 +120,7 @@ class DummyInstance:
     walking_speed = 1.12
     greenlet_pool_for_ridesharing_services = True
     ridesharing_greenlet_pool_size = 42
+    timezone = 'UTC'
 
 
 def klaxit_service_config_test():

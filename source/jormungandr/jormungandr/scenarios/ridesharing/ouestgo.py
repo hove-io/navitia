@@ -122,12 +122,11 @@ class Ouestgo(AbstractRidesharingService):
         )
         return int((min_datetime + max_datetime) / 2)
 
-    def _make_response(self, raw_json, request_datetime, from_coord, to_coord):
+    def _make_response(self, raw_json, request_datetime, from_coord, to_coord, timezone):
         if not raw_json:
             return []
         ridesharing_journeys = []
-        circulation_day = get_weekday(request_datetime)
-        timezone = get_timezone_or_paris()
+        circulation_day = get_weekday(request_datetime, timezone)
         for offer in raw_json:
             json_journeys = offer.get('journeys', {})
             pickup_datetime = self.get_mean_pickup_datetime(
@@ -227,7 +226,11 @@ class Ouestgo(AbstractRidesharingService):
             raise RidesharingServiceError('non 200 response', resp.status_code, resp.reason, resp.text)
 
         if resp:
-            r = self._make_response(resp.json(), period_extremity.datetime, from_coord, to_coord)
+            # Watch out! Here there is no more flask context, which means all parameters store in 'g' are lost
+            # EVEN THOUGH the timezone is previously set in g.
+            # We'd better retrieve the timezone from instance_params than relying on the g
+            timezone = get_timezone_or_paris() if instance_params is None else instance_params.timezone
+            r = self._make_response(resp.json(), period_extremity.datetime, from_coord, to_coord, timezone)
             self.record_additional_info('Received ridesharing offers', nb_ridesharing_offers=len(r))
             logging.getLogger('stat.ridesharing.ouestgo').info(
                 'Received ridesharing offers : %s',

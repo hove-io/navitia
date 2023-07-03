@@ -950,9 +950,9 @@ def remove_ghost_words(query_string, ghost_words):
     return query_string
 
 
-def get_weekday(timestamp):
+def get_weekday(timestamp, timezone):
     try:
-        date_time = datetime.fromtimestamp(timestamp)
+        date_time = datetime.fromtimestamp(timestamp, tz=timezone)
         return WEEK_DAYS_MAPPING[date_time.weekday()]
     except ValueError:
         return None

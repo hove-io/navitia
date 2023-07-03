@@ -44,6 +44,7 @@ from jormungandr.scenarios.journey_filter import to_be_deleted
 from jormungandr.scenarios.helper_classes.helper_future import FutureManager
 from importlib import import_module
 from jormungandr.utils import can_connect_to_database
+import pytz
 
 
 class RidesharingServiceManager(object):
@@ -51,6 +52,7 @@ class RidesharingServiceManager(object):
         greenlet_pool_for_ridesharing_services = True
         ridesharing_greenlet_pool_size = 1
         walking_speed = 1.12
+        timezone = pytz.timezone("UTC")
 
         @classmethod
         def make_params(cls, instance):
@@ -58,6 +60,7 @@ class RidesharingServiceManager(object):
             param.greenlet_pool_for_ridesharing_services = instance.greenlet_pool_for_ridesharing_services
             param.ridesharing_greenlet_pool_size = instance.ridesharing_greenlet_pool_size
             param.walking_speed = instance.walking_speed
+            param.timezone = pytz.timezone(instance.timezone)
             return param
 
     def __init__(
