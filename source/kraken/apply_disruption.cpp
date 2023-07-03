@@ -200,21 +200,66 @@ type::ValidityPattern compute_base_disrupted_vp(const std::vector<boost::posix_t
 }
 
 nt::Route* get_or_create_route(const nt::disruption::Impact& impact, nt::PT_Data& pt_data) {
-    nt::Network* network = pt_data.get_or_create_network("network:additional_service", "additional service");
-    nt::CommercialMode* comm_mode =
-        pt_data.get_or_create_commercial_mode("commercial_mode:additional_service", "additional service");
+    log4cplus::Logger logger = log4cplus::Logger::getInstance("log");
+    // If ptobject id is present in the impact (line, network, dataset, commercial_mode), it should exist
+    // otherwise disruption is rejected
+    // whereas if ptobject id is absent, create a default object
+    nt::Network* network = nullptr;
+    if (!impact.network_id.empty()) {
+        network = pt_data.get_network(impact.network_id);
+        if (network == nullptr) {
+            LOG4CPLUS_INFO(logger, "Rejecting impact (" << impact.uri << "): network_id (" << impact.network_id
+                                                        << ") provided is absent");
+            return nullptr;
+        }
+    } else {
+        network = pt_data.get_or_create_network("network:additional_service", "additional service");
+    }
+
+    nt::CommercialMode* comm_mode = nullptr;
+    if (!impact.commercial_mode_id.empty()) {
+        comm_mode = pt_data.get_commercial_mode(impact.commercial_mode_id);
+        if (comm_mode == nullptr) {
+            LOG4CPLUS_INFO(logger, "Rejecting impact (" << impact.uri << "): commercial_mode_id ("
+                                                        << impact.commercial_mode_id << ") provided is absent");
+            return nullptr;
+        }
+    } else {
+        comm_mode = pt_data.get_or_create_commercial_mode("commercial_mode:additional_service", "additional service");
+    }
 
     // We get the first and last stop_area to create route and line
     const auto& st_depart = impact.aux_info.stop_times.front();
     const auto& sa_depart = st_depart.stop_time.stop_point->stop_area;
     const auto& st_arrival = impact.aux_info.stop_times.back();
     const auto& sa_arrival = st_arrival.stop_time.stop_point->stop_area;
-    std::string line_uri = "line:" + sa_depart->uri + "_" + sa_arrival->uri;
-    std::string line_name = sa_depart->name + " - " + sa_arrival->name;
-    std::string route_uri = "route:" + sa_depart->uri + "_" + sa_arrival->uri;
-    std::string route_name = sa_depart->name + " - " + sa_arrival->name;
-    nt::Line* line = pt_data.get_or_create_line(line_uri, line_name, network, comm_mode);
-    nt::Route* route = pt_data.get_or_create_route(route_uri, route_name, line, sa_arrival, "forward");
+    nt::Line* line = nullptr;
+    if (!impact.line_id.empty()) {
+        line = pt_data.get_line(impact.line_id);
+        if (line == nullptr) {
+            LOG4CPLUS_INFO(logger, "Rejecting impact (" << impact.uri << "): line_id (" << impact.line_id
+                                                        << ") provided is absent");
+            return nullptr;
+        }
+    } else {
+        std::string line_uri = "line:" + sa_depart->uri + "_" + sa_arrival->uri;
+        std::string line_name = sa_depart->name + " - " + sa_arrival->name;
+        line = pt_data.get_or_create_line(line_uri, line_name, network, comm_mode);
+    }
+
+    std::string route_uri = "";
+    std::string route_name = "";
+    std::string direction_type = "";
+    if (!impact.route_id.empty()) {
+        route_uri = impact.route_id;
+        route_name = "Additional service";
+        direction_type = "outbound";
+    } else {
+        route_uri = "route:" + sa_depart->uri + "_" + sa_arrival->uri;
+        route_name = sa_depart->name + " - " + sa_arrival->name;
+        direction_type = "forward";
+    }
+    nt::Route* route = pt_data.get_or_create_route(route_uri, route_name, line, sa_arrival, direction_type);
 
     return route;
 }
@@ -321,6 +366,9 @@ struct add_impacts_visitor : public apply_impacts_visitor {
                     r = mvj->get_base_vj().at(0)->route;
                 } else {
                     r = get_or_create_route(*impact, pt_data);
+                    if (r == nullptr) {
+                        return;
+                    }
                 }
             }
 
@@ -428,16 +476,31 @@ struct add_impacts_visitor : public apply_impacts_visitor {
                     pt_data.headsign_handler.change_vj_headsign_and_register(*vj, impact->headsign);
                 }
 
-                // for protection, use the datasets[0]
-                // TODO : Create default data set
-                if (!pt_data.datasets.empty()) {
-                    if (pt_data.datasets[0]) {
-                        vj->dataset = pt_data.datasets[0];
-                        vj->dataset->vehiclejourney_list.insert(vj);
+                // Affect the trip_short_name to vj if present in gtfs-rt
+                if (!impact->trip_short_name.empty()) {
+                    vj->name = impact->trip_short_name;
+                }
+
+                nt::Dataset* dataset = nullptr;
+                if (!impact->dataset_id.empty()) {
+                    dataset = pt_data.get_dataset(impact->dataset_id);
+                    if (dataset == nullptr) {
+                        LOG4CPLUS_INFO(log, "Problem with impact (" << impact->uri << "): dataset_id ("
+                                                                    << impact->dataset_id << ") provided is absent");
                     }
                 }
-                LOG4CPLUS_WARN(
-                    log, "[disruption] Associate random dataset to new VJ doesn't work because base VJ doesn't exist");
+                // for protection, use the datasets[0]
+                // TODO : Create default data set
+                if (dataset == nullptr && !pt_data.datasets.empty() && pt_data.datasets[0]) {
+                    dataset = pt_data.datasets[0];
+                    LOG4CPLUS_INFO(log, "impact ("
+                                            << impact->uri
+                                            << "): associate random dataset to new VJ because base VJ doesn't exist");
+                }
+                if (dataset != nullptr) {
+                    vj->dataset = dataset;
+                    vj->dataset->vehiclejourney_list.insert(vj);
+                }
             }
             vj->physical_mode->vehicle_journey_list.push_back(vj);
             // we need to associate the stoptimes to the created vj

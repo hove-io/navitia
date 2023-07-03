@@ -371,6 +371,12 @@ struct Impact {
     std::string headsign;
     boost::posix_time::ptime created_at;
     boost::posix_time::ptime updated_at;
+    std::string trip_short_name;
+    std::string dataset_id;
+    std::string network_id;
+    std::string commercial_mode_id;
+    std::string line_id;
+    std::string route_id;
 
     // the application period define when the impact happen
     // i.e. the canceled base schedule period for vj
