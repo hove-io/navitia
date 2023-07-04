@@ -323,6 +323,7 @@ class PtJourneyPool:
                 isochrone_center=isochrone_center,
                 current_datetime=date_to_timestamp(request['_current_datetime']),
                 criteria=request.get('criteria', 'classic'),
+                attractivities=request.get('_olympics_sites_attractivities[]') or [],
             )
 
     def _async_request(self):

@@ -835,15 +835,27 @@ def can_connect_to_database():
 def create_journeys_request(origins, destinations, datetime, clockwise, journey_parameters, bike_in_pt):
     req = request_pb2.Request()
     req.requested_api = type_pb2.pt_planner
+
+    def _set_attractivity(stop_point_id, location):
+        attractivity = journey_parameters.attractivities.get(stop_point_id)
+        if attractivity:
+            location.attractivity = attractivity
+
     for stop_point_id, access_duration in origins.items():
         location = req.journeys.origin.add()
         location.place = stop_point_id
         location.access_duration = access_duration
+        if journey_parameters.criteria != 'departure_stop_attractivity':
+            continue
+        _set_attractivity(stop_point_id, location)
 
     for stop_point_id, access_duration in destinations.items():
         location = req.journeys.destination.add()
         location.place = stop_point_id
         location.access_duration = access_duration
+        if journey_parameters.criteria != 'arrival_stop_attractivity':
+            continue
+        _set_attractivity(stop_point_id, location)
 
     req.journeys.night_bus_filter_max_factor = journey_parameters.night_bus_filter_max_factor
     req.journeys.night_bus_filter_base_factor = journey_parameters.night_bus_filter_base_factor

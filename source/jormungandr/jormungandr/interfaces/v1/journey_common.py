@@ -550,6 +550,17 @@ class JourneyCommon(ResourceUri, ResourceUtc):
             help="virtual fallback duration for olympics sites. The format should be stop_point_id,duration",
         )
 
+        parser_get.add_argument(
+            "_olympics_sites_attractivities[]",
+            type=KeyValueType(min_value=0, max_value=255),
+            action="append",
+            hidden=True,
+            help=(
+                "attractivities for olympics sites. The format should be stop_point_id,attractivity,"
+                "the value of attractivity must be in the rage of (0, 255)"
+            ),
+        )
+
         # Advanced parameters for valhalla bike
         parser_get.add_argument(
             "bike_use_roads",

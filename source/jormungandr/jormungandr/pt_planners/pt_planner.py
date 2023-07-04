@@ -69,6 +69,7 @@ class JourneyParameters(object):
         sn_params=None,
         current_datetime=None,
         criteria=None,
+        attractivities=None,
     ):
 
         self.max_duration = max_duration
@@ -90,6 +91,8 @@ class JourneyParameters(object):
         self.arrival_transfer_penalty = arrival_transfer_penalty
         self.walking_transfer_penalty = walking_transfer_penalty
         self.criteria = criteria
+        self.attractivities = {}
+        self.attractivities.update(attractivities or [])
 
 
 # Needed for GraphicalIsochrones
