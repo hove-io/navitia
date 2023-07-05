@@ -2143,8 +2143,7 @@ class TestKirinAddNewTripWithSomeAttributes(MockKirinDisruptionsFixture):
 
         # Check that no stop_schedule exist on the line 'A' and stop_point 'stop_point:stopC'
         ss_on_line_query = (
-            "stop_points/stop_point:stopC/lines/A/"
-            "stop_schedules?_current_datetime=20120614T080000"
+            "stop_points/stop_point:stopC/lines/A/stop_schedules?_current_datetime=20120614T080000"
         )
         stop_schedules, status = self.query_region(ss_on_line_query + '&data_freshness=realtime', check=False)
         assert status == 404
