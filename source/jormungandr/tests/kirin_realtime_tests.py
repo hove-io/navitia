@@ -2123,7 +2123,7 @@ class TestKirinAddNewTripWithSomeAttributes(MockKirinDisruptionsFixture):
         response = self.query_region('commercial_modes?')
         assert len(response['commercial_modes']) == 8
         commercial_mode_id = response['commercial_modes'][0]['id']
-        assert commercial_mode_id == '0x0'
+        assert commercial_mode_id == '0x0'  # Tramway
 
         # Check that no departure exist on stop_point stop_point:stopC for neither base_schedule nor realtime
         departure_query = "stop_points/stop_point:stopC/departures?_current_datetime=20120614T080000"
@@ -2178,9 +2178,11 @@ class TestKirinAddNewTripWithSomeAttributes(MockKirinDisruptionsFixture):
             physical_mode_id='physical_mode:Bus',  # this physical mode exists in kraken
             headsign='trip_headsign',
             trip_short_name='trip_short_name',
+            dataset_id='default:dataset',
             network_id=network_id,
             commercial_mode_id=commercial_mode_id,
             line_id=line_id,
+            route_id="route:{}:additional_service".format(line_id),
         )
 
         # Check new disruption 'additional-trip' to add a new trip
@@ -2239,6 +2241,11 @@ class TestKirinAddNewTripWithSomeAttributes(MockKirinDisruptionsFixture):
         assert response['vehicle_journeys'][0]['stop_times'][0]['drop_off_allowed'] is True
         assert response['vehicle_journeys'][0]['stop_times'][0]['pickup_allowed'] is True
 
+        # check dataset of the newly created vj
+        ds_query = 'vehicle_journeys/{vj}/datasets?'.format(vj=impacted_vj['id'])
+        response = self.query_region(ds_query)
+        assert response['datasets'][0]['id'] == 'default:dataset'
+
         # Check that the newly created vehicle journey are well filtered by &since and &until
         # Note: For backward compatibility parameter &data_freshness with base_schedule is added
         # and works with &since and &until
@@ -2280,10 +2287,10 @@ class TestKirinAddNewTripWithSomeAttributes(MockKirinDisruptionsFixture):
         line = response['lines'][0]
         assert line['id'] == 'A'
         assert len(line['routes']) == 3
-        assert line['routes'][2]['id'] == 'route:stopC_stopB'
-        assert line['routes'][2]['name'] == 'stopC - stopB'
+        assert line['routes'][2]['id'] == 'route:A:additional_service'
+        assert line['routes'][2]['name'] == 'Additional service'
         assert line['routes'][2]['direction']['id'] == 'stopB'
-        assert line['routes'][2]['direction_type'] == 'forward'
+        assert line['routes'][2]['direction_type'] == 'outbound'
 
         response = self.query_region('commercial_modes?')
         assert len(response['commercial_modes']) == 8
