@@ -2077,6 +2077,306 @@ class TestKirinAddNewTrip(MockKirinDisruptionsFixture):
 
 
 @dataset(MAIN_ROUTING_TEST_SETTING)
+class TestKirinAddNewTripWithSomeAttributes(MockKirinDisruptionsFixture):
+    def test_add_new_trip_with_some_attributes(self):
+        """
+        1. create a new trip with some attributes as dataset_id, network_id, commercial_mode_id ... present
+        2. test that journey is possible using this new trip
+        """
+        disruption_query = 'disruptions?_current_datetime={dt}'.format(dt='20120614T080000')
+        disruptions_before = self.query_region(disruption_query)
+        nb_disruptions_before = len(disruptions_before['disruptions'])
+
+        # /journeys before (only direct walk)
+        C_B_query = (
+            "journeys?from={f}&to={to}&data_freshness=realtime&"
+            "datetime={dt}&_current_datetime={dt}".format(
+                f='stop_point:stopC', to='stop_point:stopB', dt='20120614T080000'
+            )
+        )
+        response = self.query_region(C_B_query)
+        assert not has_the_disruption(response, 'new_trip')
+        self.is_valid_journey_response(response, C_B_query)
+        assert len(response['journeys']) == 1
+        assert 'non_pt_walking' in response['journeys'][0]['tags']
+
+        # since the ids of impacted vjs are random uuid which cannot be know in advance... we have to request
+        # all vjs then retrieve the impacted one
+        vjs_query = 'vehicle_journeys/?_current_datetime={dt}'.format(dt='20120614T080000')
+        vjs = self.query_region(vjs_query)['vehicle_journeys']
+
+        impacted_vj = next((vj for vj in vjs if 'vehicle_journey:vjA:RealTime:' in vj['id']), None)
+        # No vj has been impacted yet
+        assert impacted_vj is None
+
+        response = self.query_region('networks?')
+        assert len(response['networks']) == 1
+        network_id = response['networks'][0]['id']
+        assert network_id == 'base_network'
+
+        response = self.query_region('lines?')
+        assert len(response['lines']) == 7
+        assert len(response['lines'][0]['routes']) == 2
+        line_id = response['lines'][0]['id']
+        assert line_id == 'A'
+
+        response = self.query_region('commercial_modes?')
+        assert len(response['commercial_modes']) == 8
+        commercial_mode_id = response['commercial_modes'][0]['id']
+        assert commercial_mode_id == '0x0'  # Tramway
+
+        # Check that no departure exist on stop_point stop_point:stopC for neither base_schedule nor realtime
+        departure_query = "stop_points/stop_point:stopC/departures?_current_datetime=20120614T080000"
+        departures = self.query_region(departure_query + '&data_freshness=base_schedule')
+        assert len(departures['departures']) == 0
+        departures = self.query_region(departure_query + '&data_freshness=realtime')
+        assert len(departures['departures']) == 0
+
+        # Check stop_schedules on stop_point stop_point:stopC for base_schedule and realtime with
+        # Date_times list empty
+        ss_on_sp_query = "stop_points/stop_point:stopC/stop_schedules?_current_datetime=20120614T080000"
+        stop_schedules = self.query_region(ss_on_sp_query + '&data_freshness=realtime')
+        assert len(stop_schedules['stop_schedules']) == 1
+        assert stop_schedules['stop_schedules'][0]['links'][0]['type'] == 'line'
+        assert stop_schedules['stop_schedules'][0]['links'][0]['id'] == 'D'
+        assert len(stop_schedules['stop_schedules'][0]['date_times']) == 0
+
+        # Check that no stop_schedule exist on the line 'A' and stop_point 'stop_point:stopC'
+        ss_on_line_query = (
+            "stop_points/stop_point:stopC/lines/A/stop_schedules?_current_datetime=20120614T080000"
+        )
+        stop_schedules, status = self.query_region(ss_on_line_query + '&data_freshness=realtime', check=False)
+        assert status == 404
+        assert len(stop_schedules['stop_schedules']) == 0
+
+        # New disruption, a new trip with some attributes and with 2 stop_times in realtime
+        self.send_mock(
+            "additional-trip",
+            "20120614",
+            'added',
+            [
+                UpdatedStopTime(
+                    "stop_point:stopC",
+                    arrival_delay=0,
+                    departure_delay=0,
+                    is_added=True,
+                    arrival=tstamp("20120614T080100"),
+                    departure=tstamp("20120614T080100"),
+                    message='on time',
+                ),
+                UpdatedStopTime(
+                    "stop_point:stopB",
+                    arrival_delay=0,
+                    departure_delay=0,
+                    is_added=True,
+                    arrival=tstamp("20120614T080102"),
+                    departure=tstamp("20120614T080102"),
+                ),
+            ],
+            disruption_id='new_trip',
+            effect='additional_service',
+            physical_mode_id='physical_mode:Bus',  # this physical mode exists in kraken
+            headsign='trip_headsign',
+            trip_short_name='trip_short_name',
+            dataset_id='default:dataset',
+            network_id=network_id,
+            commercial_mode_id=commercial_mode_id,
+            line_id=line_id,
+            route_id="route:{}:additional_service".format(line_id),
+        )
+
+        # Check new disruption 'additional-trip' to add a new trip
+        disruptions_after = self.query_region(disruption_query)
+        assert nb_disruptions_before + 1 == len(disruptions_after['disruptions'])
+        new_trip_disruptions = get_disruptions_by_id(disruptions_after, 'new_trip')
+        assert len(new_trip_disruptions) == 1
+        new_trip_disrupt = new_trip_disruptions[0]
+        assert new_trip_disrupt['id'] == 'new_trip'
+        assert new_trip_disrupt['severity']['effect'] == 'ADDITIONAL_SERVICE'
+        assert len(new_trip_disrupt['impacted_objects'][0]['impacted_stops']) == 2
+        assert all(
+            [
+                (s['departure_status'] == 'added' and s['arrival_status'] == 'added')
+                for s in new_trip_disrupt['impacted_objects'][0]['impacted_stops']
+            ]
+        )
+        assert new_trip_disrupt['application_periods'][0]['begin'] == '20120614T080100'
+        assert new_trip_disrupt['application_periods'][0]['end'] == '20120614T080102'
+
+        # Check that a PT journey now exists
+        response = self.query_region(C_B_query)
+        assert has_the_disruption(response, 'new_trip')
+        self.is_valid_journey_response(response, C_B_query)
+        assert len(response['journeys']) == 2
+        pt_journey = response['journeys'][0]
+        assert 'non_pt_walking' not in pt_journey['tags']
+        assert pt_journey['status'] == 'ADDITIONAL_SERVICE'
+        assert pt_journey['sections'][0]['data_freshness'] == 'realtime'
+        assert pt_journey['sections'][0]['display_informations']['commercial_mode'] == 'Tramway'
+        assert pt_journey['sections'][0]['display_informations']['physical_mode'] == 'Bus'
+
+        # Check date_times
+        assert pt_journey['sections'][0]['departure_date_time'] == '20120614T080100'
+        assert pt_journey['sections'][0]['arrival_date_time'] == '20120614T080102'
+        assert pt_journey['sections'][0]['stop_date_times'][0]['arrival_date_time'] == '20120614T080100'
+        assert pt_journey['sections'][0]['stop_date_times'][-1]['arrival_date_time'] == '20120614T080102'
+
+        vjs_query = 'vehicle_journeys/?_current_datetime={dt}'.format(dt='20120614T080000')
+        vjs = self.query_region(vjs_query)['vehicle_journeys']
+        impacted_vj = next((vj for vj in vjs if 'vehicle_journey:additional-trip:RealTime:' in vj['id']), None)
+        assert impacted_vj
+
+        vj_query = 'vehicle_journeys/{vj}?_current_datetime={dt}'.format(
+            vj=impacted_vj['id'], dt='20120614T080000'
+        )
+
+        # Check that the vehicle_journey has been created
+        response = self.query_region(vj_query)
+        assert has_the_disruption(response, 'new_trip')
+        assert len(response['vehicle_journeys']) == 1
+        assert response['vehicle_journeys'][0]['name'] == 'trip_short_name'
+        assert response['vehicle_journeys'][0]['headsign'] == 'trip_headsign'
+        assert response['vehicle_journeys'][0]['disruptions'][0]['id'] == 'new_trip'
+        assert len(response['vehicle_journeys'][0]['stop_times']) == 2
+        assert response['vehicle_journeys'][0]['stop_times'][0]['drop_off_allowed'] is True
+        assert response['vehicle_journeys'][0]['stop_times'][0]['pickup_allowed'] is True
+
+        # check dataset of the newly created vj
+        ds_query = 'vehicle_journeys/{vj}/datasets?'.format(vj=impacted_vj['id'])
+        response = self.query_region(ds_query)
+        assert response['datasets'][0]['id'] == 'default:dataset'
+
+        # Check that the newly created vehicle journey are well filtered by &since and &until
+        # Note: For backward compatibility parameter &data_freshness with base_schedule is added
+        # and works with &since and &until
+        vj_base_query = (
+            'commercial_modes/0x0/vehicle_journeys?'
+            '_current_datetime={dt}&since={sin}&until={un}&data_freshness={df}'
+        )
+        response = self.query_region(
+            vj_base_query.format(
+                dt='20120614T080000', sin='20120614T080100', un='20120614T080102', df='base_schedule'
+            )
+        )
+        assert len(response['vehicle_journeys']) == 4
+
+        response = self.query_region(
+            vj_base_query.format(
+                dt='20120614T080000', sin='20120614T080100', un='20120614T080102', df='realtime'
+            )
+        )
+        assert len(response['vehicle_journeys']) == 5
+
+        response = self.query_region(
+            vj_base_query.format(
+                dt='20120614T080000', sin='20120614T080101', un='20120614T080102', df='realtime'
+            )
+        )
+        assert len(response['vehicle_journeys']) == 1
+
+        network_filter_query = 'vehicle_journeys/{vj}/networks?_current_datetime={dt}'.format(
+            vj=impacted_vj['id'], dt='20120614T080000'
+        )
+        # Verify that the following PTObjects were not created
+        response = self.query_region('networks?')
+        assert len(response['networks']) == 1
+
+        response = self.query_region('lines?')
+        assert len(response['lines']) == 7
+        # Check that the new route has been created with necessary information in the line 'A'
+        line = response['lines'][0]
+        assert line['id'] == 'A'
+        assert len(line['routes']) == 3
+        assert line['routes'][2]['id'] == 'route:A:additional_service'
+        assert line['routes'][2]['name'] == 'Additional service'
+        assert line['routes'][2]['direction']['id'] == 'stopB'
+        assert line['routes'][2]['direction_type'] == 'outbound'
+
+        response = self.query_region('commercial_modes?')
+        assert len(response['commercial_modes']) == 8
+
+        # Check that no departure exist on stop_point 'stop_point:stopC' for base_schedule
+        departures = self.query_region(departure_query + '&data_freshness=base_schedule')
+        assert len(departures['departures']) == 0
+
+        # Check that departures on stop_point 'stop_point:stopC' exists with disruption
+        departures = self.query_region(departure_query + '&data_freshness=realtime')
+        assert len(departures['disruptions']) == 2
+        assert departures['disruptions'][0]['disruption_uri'] == 'disruption_all_lines_at_proper_time'
+        assert departures['disruptions'][1]['disruption_uri'] == 'new_trip'
+        assert departures['departures'][0]['display_informations']['name'] == 'A'
+
+        # Check that stop_schedule on the line 'A' and stop_point 'stop_point:stopC'
+        # for base_schedule date_times list is empty.
+        stop_schedules = self.query_region(ss_on_line_query + '&data_freshness=base_schedule')
+        assert len(stop_schedules['stop_schedules']) == 1
+        assert stop_schedules['stop_schedules'][0]['links'][0]['type'] == 'line'
+        assert stop_schedules['stop_schedules'][0]['links'][0]['id'] == 'A'
+        assert len(stop_schedules['stop_schedules'][0]['date_times']) == 0
+
+        # Check that stop_schedule on the line "A" and stop_point 'stop_point:stopC'
+        # exists with disruption.
+        stop_schedules = self.query_region(ss_on_line_query + '&data_freshness=realtime')
+        assert len(stop_schedules['stop_schedules']) == 1
+        assert stop_schedules['stop_schedules'][0]['links'][0]['id'] == 'A'
+        assert len(stop_schedules['disruptions']) == 2
+        assert stop_schedules['disruptions'][1]['uri'] == 'new_trip'
+        assert len(stop_schedules['stop_schedules'][0]['date_times']) == 1
+        assert stop_schedules['stop_schedules'][0]['date_times'][0]['date_time'] == '20120614T080100'
+        assert stop_schedules['stop_schedules'][0]['date_times'][0]['data_freshness'] == 'realtime'
+
+        # Check stop_schedules on stop_point 'stop_point:stopC' for base_schedule
+        # Date_times list is empty for both stop_schedules
+        stop_schedules = self.query_region(ss_on_sp_query + '&data_freshness=base_schedule')
+        assert len(stop_schedules['stop_schedules']) == 2
+        assert stop_schedules['stop_schedules'][0]['links'][0]['type'] == 'line'
+        assert stop_schedules['stop_schedules'][0]['links'][0]['id'] == 'D'
+        assert len(stop_schedules['stop_schedules'][0]['date_times']) == 0
+        assert stop_schedules['stop_schedules'][1]['links'][0]['type'] == 'line'
+        assert stop_schedules['stop_schedules'][1]['links'][0]['id'] == 'A'
+        assert len(stop_schedules['stop_schedules'][1]['date_times']) == 0
+
+        # Check stop_schedules on stop_point 'stop_point:stopC' for realtime
+        # Date_times list is empty for line 'D' but not for the line 'A'
+        stop_schedules = self.query_region(ss_on_sp_query + '&data_freshness=realtime')
+        assert len(stop_schedules['stop_schedules']) == 2
+        assert stop_schedules['stop_schedules'][0]['links'][0]['type'] == 'line'
+        assert stop_schedules['stop_schedules'][0]['links'][0]['id'] == 'D'
+        assert len(stop_schedules['stop_schedules'][0]['date_times']) == 0
+        assert stop_schedules['stop_schedules'][1]['links'][0]['type'] == 'line'
+        assert stop_schedules['stop_schedules'][1]['links'][0]['id'] == 'A'
+        assert len(stop_schedules['stop_schedules'][1]['date_times']) == 1
+        assert stop_schedules['stop_schedules'][1]['date_times'][0]['date_time'] == '20120614T080100'
+        assert stop_schedules['stop_schedules'][1]['date_times'][0]['data_freshness'] == 'realtime'
+
+        # Check stop_schedules on stop_area 'stopC' for base_schedule
+        # Date_times list is empty for both stop_schedules
+        ss_on_sa_query = "stop_areas/stopC/stop_schedules?_current_datetime=20120614T080000"
+        stop_schedules = self.query_region(ss_on_sa_query + '&data_freshness=base_schedule')
+        assert len(stop_schedules['stop_schedules']) == 2
+        assert stop_schedules['stop_schedules'][0]['links'][0]['type'] == 'line'
+        assert stop_schedules['stop_schedules'][0]['links'][0]['id'] == 'D'
+        assert len(stop_schedules['stop_schedules'][0]['date_times']) == 0
+        assert stop_schedules['stop_schedules'][1]['links'][0]['type'] == 'line'
+        assert stop_schedules['stop_schedules'][1]['links'][0]['id'] == 'A'
+        assert len(stop_schedules['stop_schedules'][1]['date_times']) == 0
+
+        # Check stop_schedules on stop_area stopC for realtime
+        # Date_times list is empty for line 'D' but not for the line 'A'
+        ss_on_sa_query = "stop_areas/stopC/stop_schedules?_current_datetime=20120614T080000"
+        stop_schedules = self.query_region(ss_on_sa_query + '&data_freshness=realtime')
+        assert len(stop_schedules['stop_schedules']) == 2
+        assert stop_schedules['stop_schedules'][0]['links'][0]['type'] == 'line'
+        assert stop_schedules['stop_schedules'][0]['links'][0]['id'] == 'D'
+        assert len(stop_schedules['stop_schedules'][0]['date_times']) == 0
+        assert stop_schedules['stop_schedules'][1]['links'][0]['type'] == 'line'
+        assert stop_schedules['stop_schedules'][1]['links'][0]['id'] == 'A'
+        assert len(stop_schedules['stop_schedules'][1]['date_times']) == 1
+        assert stop_schedules['stop_schedules'][1]['date_times'][0]['date_time'] == '20120614T080100'
+        assert stop_schedules['stop_schedules'][1]['date_times'][0]['data_freshness'] == 'realtime'
+
+
+@dataset(MAIN_ROUTING_TEST_SETTING)
 class TestPtRefOnAddedTrip(MockKirinDisruptionsFixture):
     def test_ptref_on_added_trip(self):
         """
@@ -3876,6 +4176,12 @@ def make_mock_kirin_item(
     effect=None,
     physical_mode_id=None,
     headsign=None,
+    trip_short_name=None,
+    dataset_id=None,
+    network_id=None,
+    commercial_mode_id=None,
+    line_id=None,
+    route_id=None,
 ):
     feed_message = gtfs_realtime_pb2.FeedMessage()
     feed_message.header.gtfs_realtime_version = '1.0'
@@ -3892,6 +4198,18 @@ def make_mock_kirin_item(
     trip.Extensions[kirin_pb2.contributor] = rt_topic
     if headsign:
         trip_update.Extensions[kirin_pb2.headsign] = headsign
+    if trip_short_name:
+        trip_update.Extensions[kirin_pb2.trip_short_name] = trip_short_name
+    if dataset_id:
+        trip.Extensions[kirin_pb2.dataset_id] = dataset_id
+    if network_id:
+        trip.Extensions[kirin_pb2.network_id] = network_id
+    if commercial_mode_id:
+        trip.Extensions[kirin_pb2.commercial_mode_id] = commercial_mode_id
+    if line_id:
+        trip.Extensions[kirin_pb2.line_id] = line_id
+    if route_id:
+        trip.Extensions[kirin_pb2.route_id] = route_id
     if physical_mode_id:
         trip_update.vehicle.Extensions[kirin_pb2.physical_mode_id] = physical_mode_id
     if effect == 'unknown':
