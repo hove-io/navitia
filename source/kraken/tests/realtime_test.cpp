@@ -3622,7 +3622,7 @@ BOOST_FIXTURE_TEST_CASE(line_id_doesnt_exist_in_new_trip, AddTripDataset) {
         return pb_creator.get_response();
     };
 
-    // If the company id doesn't exist inside the data with ADDED type, we reject the new trip
+    // If the line id doesn't exist inside the data with ADDED type, we reject the new trip
     transit_realtime::TripUpdate new_trip =
         ntest::make_trip_update_message("vj_new_trip", "20190101",
                                         {
@@ -3662,7 +3662,7 @@ BOOST_FIXTURE_TEST_CASE(dataset_id_doesnt_exist_in_new_trip, AddTripDataset) {
         return pb_creator.get_response();
     };
 
-    // If the company id doesn't exist inside the data with ADDED type, we reject the new trip
+    // If the dataset id doesn't exist inside the data with ADDED type, we reject the new trip
     transit_realtime::TripUpdate new_trip =
         ntest::make_trip_update_message("vj_new_trip", "20190101",
                                         {
@@ -3702,7 +3702,7 @@ BOOST_FIXTURE_TEST_CASE(network_id_doesnt_exist_in_new_trip, AddTripDataset) {
         return pb_creator.get_response();
     };
 
-    // If the company id doesn't exist inside the data with ADDED type, we reject the new trip
+    // If the network id doesn't exist inside the data with ADDED type, we reject the new trip
     transit_realtime::TripUpdate new_trip = ntest::make_trip_update_message(
         "vj_new_trip", "20190101",
         {
@@ -3741,7 +3741,7 @@ BOOST_FIXTURE_TEST_CASE(commercial_mode_id_doesnt_exist_in_new_trip, AddTripData
         return pb_creator.get_response();
     };
 
-    // If the company id doesn't exist inside the data with ADDED type, we reject the new trip
+    // If the commercial_mode id doesn't exist inside the data with ADDED type, we reject the new trip
     transit_realtime::TripUpdate new_trip =
         ntest::make_trip_update_message("vj_new_trip", "20190101",
                                         {
