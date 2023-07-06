@@ -317,6 +317,26 @@ class DateTimeFormat(CustomSchemaType):
 
 
 class KeyValueType(CustomSchemaType):
+    """
+    >>> k = KeyValueType()
+    >>> k("test,0")
+    ('test', 0)
+    >>> k("test,-1")
+    Traceback (most recent call last):
+      File "<input>", line 1, in <module>
+      File "<input>", line 21, in __call__
+    ValueError: Unable to evaluate invalid value, out of range (0, inf),value must be an integer
+    >>> k = KeyValueType(1, 10)
+    >>> k("test,5")
+    ('test', 5)
+    >>> k("test,0")
+    Traceback (most recent call last):
+      File "<input>", line 1, in <module>
+      File "<input>", line 21, in __call__
+    ValueError: Unable to evaluate invalid value, out of range (1, 10),value must be an integer
+
+    """
+
     def __init__(self, min_value=None, max_value=None):
         super(KeyValueType, self).__init__()
         self.min_value = min_value or 0
