@@ -86,7 +86,7 @@ type_to_pttype = {
 
 OlympicsForbiddenUris = namedtuple(
     'OlympicsForbiddenUris',
-    ['pt_object_olympics_forbidden_uris', 'poi_property_key', 'poi_property_value'],
+    ['pt_object_olympics_forbidden_uris', 'poi_property_key', 'poi_property_value', 'max_duration_wheelchair'],
 )
 
 
@@ -129,10 +129,17 @@ def parse_and_get_olympics_forbidden_uris(dict_olympics_forbidden_uris):
         if p not in dict_olympics_forbidden_uris:
             logging.getLogger(__name__).error('olympic_criteria: invalid parameter, {} not found'.format(p))
             return None
+    if not isinstance(dict_olympics_forbidden_uris.get('max_duration_wheelchair'), int):
+        logging.getLogger(__name__).error(
+            'olympic_criteria: invalid parameter, max_duration_wheelchair not found'
+        )
+        return None
+
     return OlympicsForbiddenUris(
         pt_object_olympics_forbidden_uris=dict_olympics_forbidden_uris["pt_object_olympics_forbidden_uris"],
         poi_property_key=dict_olympics_forbidden_uris["poi_property_key"],
         poi_property_value=dict_olympics_forbidden_uris["poi_property_value"],
+        max_duration_wheelchair=dict_olympics_forbidden_uris["max_duration_wheelchair"],
     )
 
 
