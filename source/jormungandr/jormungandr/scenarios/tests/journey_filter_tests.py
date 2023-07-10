@@ -152,7 +152,7 @@ def filter_odt_journeys_counter_clockwise_test():
 
 class FakeInstance:
     def __init__(self, name='test'):
-        name = name
+        self.name = name
         self.olympics_forbidden_uris = None
 
 
