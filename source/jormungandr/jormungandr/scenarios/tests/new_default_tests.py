@@ -808,6 +808,7 @@ def add_olympics_forbidden_uris_instance_query_with_forbidden_uris_without_max_d
     assert len(api_request["forbidden_uris[]"]) == 1
     assert api_request["forbidden_uris[]"][0] == "abcd"
 
+
 def add_olympics_forbidden_uris_instance_query_with_forbidden_uris_test():
     api_request = {"param1": "toto", "forbidden_uris[]": ["abcd"]}
     origin = make_pt_object_poi(property_value="poi:12")
@@ -820,6 +821,7 @@ def add_olympics_forbidden_uris_instance_query_with_forbidden_uris_test():
     assert len(api_request["forbidden_uris[]"]) == 2
     assert api_request["forbidden_uris[]"][0] == "abcd"
     assert api_request["forbidden_uris[]"][1] == "nt:abc"
+
 
 def add_olympics_forbidden_uris_invalid_parameter_test():
     instance = FakeInstance(olympics_forbidden_uris=[DEFAULT_OLYMPICS_FORBIDDEN_URIS])
