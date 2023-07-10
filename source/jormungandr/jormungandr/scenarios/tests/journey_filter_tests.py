@@ -425,6 +425,7 @@ def filter_olympic_site_origin_olympic_site_to_delete_tag_test():
         section.type = stype
     journey.sections[1].uris.physical_mode = 'physical_mode:Bus'
     journey.sections[1].duration = 40
+    journey.nb_transfers = 2
     instance = FakeInstance()
     instance.olympics_forbidden_uris = OlympicsForbiddenUris(
         pt_object_olympics_forbidden_uris=["network:abc"],
@@ -495,6 +496,7 @@ def filter_olympic_site_destination_olympic_site_to_delete_tag_test():
         section.type = stype
     journey.sections[3].uris.physical_mode = 'physical_mode:Bus'
     journey.sections[3].duration = 40
+    journey.nb_transfers = 2
     instance = FakeInstance()
     instance.olympics_forbidden_uris = OlympicsForbiddenUris(
         pt_object_olympics_forbidden_uris=["network:abc"],
@@ -572,6 +574,89 @@ def filter_olympic_site_destination_olympic_site_journey_tagged_test():
         max_duration_wheelchair=50,
     )
     origin = make_pt_object(type_pb2.POI, lon=1, lat=2, uri='origin:poi')
+    destination = make_pt_object(type_pb2.POI, lon=3, lat=4, uri='destination:poi')
+    property = destination.poi.properties.add()
+    property.type = "sitejo"
+    property.value = "123"
+    journey_filter.filter_olympic_site([response], instance, {"wheelchair": False}, origin, destination)
+    assert len(response.journeys[0].tags) == 1
+    assert response.journeys[0].tags[0] == "to_delete"
+
+
+def filter_olympic_site_destination_olympic_site_test1_test():
+    # STREET_NETWORK -> PUBLIC_TRANSPORT + TRANSFER + PUBLIC_TRANSPORT + STREET_NETWORK
+    #   Walking     ->  physical_mode:Bus -> Transfer -> physical_mode:Bus -> Walking
+    # First section : journey.sections[1].duration < max_duration_wheelchair
+    # Last section : journey.sections[3].duration > max_duration_wheelchair
+    response = response_pb2.Response()
+    journey = response.journeys.add()
+    for stype in (
+        response_pb2.STREET_NETWORK,
+        response_pb2.PUBLIC_TRANSPORT,
+        response_pb2.TRANSFER,
+        response_pb2.PUBLIC_TRANSPORT,
+        response_pb2.STREET_NETWORK,
+    ):
+        section = journey.sections.add()
+        section.type = stype
+    journey.sections[1].uris.physical_mode = 'physical_mode:Bus'
+    journey.sections[1].duration = 30
+    journey.sections[3].uris.physical_mode = 'physical_mode:Bus'
+    journey.sections[3].duration = 60
+
+
+    instance = FakeInstance()
+    instance.olympics_forbidden_uris = OlympicsForbiddenUris(
+        pt_object_olympics_forbidden_uris=["network:abc"],
+        poi_property_key="sitejo",
+        poi_property_value="123",
+        max_duration_wheelchair=50,
+    )
+    origin = make_pt_object(type_pb2.POI, lon=1, lat=2, uri='origin:poi')
+    property = origin.poi.properties.add()
+    property.type = "sitejo"
+    property.value = "123"
+    destination = make_pt_object(type_pb2.POI, lon=3, lat=4, uri='destination:poi')
+    property = destination.poi.properties.add()
+    property.type = "sitejo"
+    property.value = "123"
+    journey_filter.filter_olympic_site([response], instance, {"wheelchair": False}, origin, destination)
+    assert len(response.journeys[0].tags) == 0
+
+
+def filter_olympic_site_destination_olympic_site_test2_test():
+    # STREET_NETWORK -> PUBLIC_TRANSPORT + TRANSFER + PUBLIC_TRANSPORT + STREET_NETWORK
+    #   Walking     ->  physical_mode:Bus -> Transfer -> physical_mode:Bus -> Walking
+    # First section : journey.sections[1].duration < max_duration_wheelchair
+    # Last section : journey.sections[3].duration < max_duration_wheelchair
+    response = response_pb2.Response()
+    journey = response.journeys.add()
+    for stype in (
+        response_pb2.STREET_NETWORK,
+        response_pb2.PUBLIC_TRANSPORT,
+        response_pb2.TRANSFER,
+        response_pb2.PUBLIC_TRANSPORT,
+        response_pb2.STREET_NETWORK,
+    ):
+        section = journey.sections.add()
+        section.type = stype
+    journey.sections[1].uris.physical_mode = 'physical_mode:Bus'
+    journey.sections[1].duration = 30
+    journey.sections[3].uris.physical_mode = 'physical_mode:Bus'
+    journey.sections[3].duration = 30
+    journey.nb_transfers = 2
+
+    instance = FakeInstance()
+    instance.olympics_forbidden_uris = OlympicsForbiddenUris(
+        pt_object_olympics_forbidden_uris=["network:abc"],
+        poi_property_key="sitejo",
+        poi_property_value="123",
+        max_duration_wheelchair=50,
+    )
+    origin = make_pt_object(type_pb2.POI, lon=1, lat=2, uri='origin:poi')
+    property = origin.poi.properties.add()
+    property.type = "sitejo"
+    property.value = "123"
     destination = make_pt_object(type_pb2.POI, lon=3, lat=4, uri='destination:poi')
     property = destination.poi.properties.add()
     property.type = "sitejo"
