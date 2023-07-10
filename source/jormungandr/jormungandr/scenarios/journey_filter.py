@@ -690,17 +690,17 @@ def filter_olympic_site(response_list, instance, request, pt_object_origin, pt_o
         return
     origin_olympic_site = is_olympic_site(pt_object_origin, instance)
     destination_olympic_site = is_olympic_site(pt_object_destination, instance)
-    if origin_olympic_site and destination_olympic_site:
-        logging.getLogger(__name__).warning("Origin and destination is olympic site")
-        return
+    if all((origin_olympic_site, destination_olympic_site)):
+        origin_olympic_site = False
+
     for response in response_list:
         for journey in response.journeys:
             if not journey.sections:
                 continue
             if to_be_deleted(journey):
                 continue
-            section_with_transfer = next((s for s in journey.sections if s.type == response_pb2.TRANSFER), None)
-            if not section_with_transfer:
+            nb_connections = get_nb_connections(journey)
+            if not nb_connections:
                 continue
             section_public_transport = get_first_or_last_pt_section(journey, origin_olympic_site)
             if not section_public_transport:
