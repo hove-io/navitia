@@ -237,7 +237,7 @@ MOCKED_INSTANCE_CONF = {
             "pt_object_olympics_forbidden_uris": ["physical_mode:0x0"],
             "poi_property_key": "olympic",
             "poi_property_value": "olympic:site",
-            "max_pt_duration": 600,
+            "min_pt_duration": 600,
         },
     },
 }

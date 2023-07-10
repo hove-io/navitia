@@ -798,7 +798,7 @@ def add_olympics_forbidden_uris_instance_test():
     assert "forbidden_uris[]" not in api_request
 
 
-def add_olympics_forbidden_uris_instance_query_with_forbidden_uris_without_max_pt_duration_test():
+def add_olympics_forbidden_uris_instance_query_with_forbidden_uris_without_min_pt_duration_test():
     api_request = {"param1": "toto", "forbidden_uris[]": ["abcd"]}
     origin = make_pt_object_poi(property_value="poi:12")
     destination = make_pt_object_poi(property_value="poi:12")
@@ -814,7 +814,7 @@ def add_olympics_forbidden_uris_instance_query_with_forbidden_uris_test():
     origin = make_pt_object_poi(property_value="poi:12")
     destination = make_pt_object_poi(property_value="poi:12")
     olympics_forbidden_uris = copy.deepcopy(DEFAULT_OLYMPICS_FORBIDDEN_URIS)
-    olympics_forbidden_uris["max_pt_duration"] = 5
+    olympics_forbidden_uris["min_pt_duration"] = 5
     instance = FakeInstance(olympics_forbidden_uris=olympics_forbidden_uris)
     add_olympics_forbidden_uris(origin, destination, api_request, instance)
     assert "forbidden_uris[]" in api_request
