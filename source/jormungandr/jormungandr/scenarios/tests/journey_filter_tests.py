@@ -604,7 +604,6 @@ def filter_olympic_site_destination_olympic_site_test1_test():
     journey.sections[3].uris.physical_mode = 'physical_mode:Bus'
     journey.sections[3].duration = 60
 
-
     instance = FakeInstance()
     instance.olympics_forbidden_uris = OlympicsForbiddenUris(
         pt_object_olympics_forbidden_uris=["network:abc"],
