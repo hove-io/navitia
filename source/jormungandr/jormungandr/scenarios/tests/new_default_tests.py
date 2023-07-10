@@ -28,6 +28,9 @@
 # www.navitia.io
 
 from __future__ import absolute_import, print_function, unicode_literals, division
+
+import copy
+
 import navitiacommon.response_pb2 as response_pb2
 import navitiacommon.type_pb2 as type_pb2
 import jormungandr.scenarios.tests.helpers_tests as helpers_tests
@@ -795,17 +798,28 @@ def add_olympics_forbidden_uris_instance_test():
     assert "forbidden_uris[]" not in api_request
 
 
-def add_olympics_forbidden_uris_instance_query_with_forbidden_uris_test():
+def add_olympics_forbidden_uris_instance_query_with_forbidden_uris_without_max_duration_wheelchair_test():
     api_request = {"param1": "toto", "forbidden_uris[]": ["abcd"]}
     origin = make_pt_object_poi(property_value="poi:12")
     destination = make_pt_object_poi(property_value="poi:12")
     instance = FakeInstance(olympics_forbidden_uris=DEFAULT_OLYMPICS_FORBIDDEN_URIS)
     add_olympics_forbidden_uris(origin, destination, api_request, instance)
     assert "forbidden_uris[]" in api_request
+    assert len(api_request["forbidden_uris[]"]) == 1
+    assert api_request["forbidden_uris[]"][0] == "abcd"
+
+def add_olympics_forbidden_uris_instance_query_with_forbidden_uris_test():
+    api_request = {"param1": "toto", "forbidden_uris[]": ["abcd"]}
+    origin = make_pt_object_poi(property_value="poi:12")
+    destination = make_pt_object_poi(property_value="poi:12")
+    olympics_forbidden_uris = copy.deepcopy(DEFAULT_OLYMPICS_FORBIDDEN_URIS)
+    olympics_forbidden_uris["max_duration_wheelchair"] = 5
+    instance = FakeInstance(olympics_forbidden_uris=olympics_forbidden_uris)
+    add_olympics_forbidden_uris(origin, destination, api_request, instance)
+    assert "forbidden_uris[]" in api_request
     assert len(api_request["forbidden_uris[]"]) == 2
     assert api_request["forbidden_uris[]"][0] == "abcd"
     assert api_request["forbidden_uris[]"][1] == "nt:abc"
-
 
 def add_olympics_forbidden_uris_invalid_parameter_test():
     instance = FakeInstance(olympics_forbidden_uris=[DEFAULT_OLYMPICS_FORBIDDEN_URIS])
