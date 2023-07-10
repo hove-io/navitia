@@ -701,9 +701,7 @@ def filter_olympic_site(response_list, instance, request, pt_object_origin, pt_o
             nb_connections = get_nb_connections(j)
             if nb_connections == 0:
                 continue
-            section_public_transport = (
-                get_first_pt_section(j) if origin_olympic_site else get_last_pt_section(j)
-            )
+            section_public_transport = get_first_pt_section(j) if origin_olympic_site else get_last_pt_section(j)
             if not section_public_transport:
                 continue
             if section_public_transport.uris.physical_mode != 'physical_mode:Bus':
