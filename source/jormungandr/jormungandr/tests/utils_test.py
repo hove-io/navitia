@@ -40,7 +40,8 @@ from jormungandr.utils import (
     read_origin_destination_data,
     make_origin_destination_key,
     portable_min,
-    get_first_or_last_pt_section,
+    get_last_pt_section,
+    get_first_pt_section,
 )
 import pytz
 from jormungandr import app
@@ -355,23 +356,39 @@ def test_read_origin_destination_data():
     assert d[make_origin_destination_key("sa:1", "sa:11")] == {"train:2", "tram:2"}
 
 
-def test_get_first_or_last_pt_section_journey_without_sections():
+def test_get_first_pt_section_journey_without_sections():
     response = response_pb2.Response()
     pb_j = response.journeys.add()
-    section = get_first_or_last_pt_section(pb_j)
+    section = get_first_pt_section(pb_j)
     assert not section
 
 
-def test_get_first_or_last_pt_section_journey_only_street_network_section():
+def test_get_last_pt_section_journey_without_sections():
+    response = response_pb2.Response()
+    pb_j = response.journeys.add()
+    section = get_last_pt_section(pb_j)
+    assert not section
+
+
+def test_get_first_pt_section_journey_only_street_network_section():
     response = response_pb2.Response()
     pb_j = response.journeys.add()
     pb_s = pb_j.sections.add()
     pb_s.type = response_pb2.STREET_NETWORK
-    section = get_first_or_last_pt_section(pb_j)
+    section = get_first_pt_section(pb_j)
     assert not section
 
 
-def test_get_first_or_last_pt_section_journey_only_street_network_section():
+def test_get_last_pt_section_journey_only_street_network_section():
+    response = response_pb2.Response()
+    pb_j = response.journeys.add()
+    pb_s = pb_j.sections.add()
+    pb_s.type = response_pb2.STREET_NETWORK
+    section = get_last_pt_section(pb_j)
+    assert not section
+
+
+def test_get_olympic_site_pt_section_journey_only_street_network_section():
     # STREET_NETWORK -> PUBLIC_TRANSPORT + TRANSFER + PUBLIC_TRANSPORT + STREET_NETWORK
     response = response_pb2.Response()
     pb_j = response.journeys.add()
@@ -387,7 +404,7 @@ def test_get_first_or_last_pt_section_journey_only_street_network_section():
         pb_s = pb_j.sections.add()
         pb_s.type = stype
         pb_s.duration = index
-    first_section = get_first_or_last_pt_section(pb_j)
-    last_section = get_first_or_last_pt_section(pb_j, False)
+    first_section = get_first_pt_section(pb_j)
+    last_section = get_last_pt_section(pb_j)
     assert first_section.duration == 1
     assert last_section.duration == 3

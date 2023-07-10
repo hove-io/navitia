@@ -40,7 +40,8 @@ from jormungandr.utils import (
     ComposedFilter,
     portable_min,
     is_olympic_site,
-    get_first_or_last_pt_section,
+    get_first_pt_section,
+    get_last_pt_section,
 )
 from jormungandr.fallback_modes import FallbackModes
 from jormungandr.scenarios.qualifier import get_ASAP_journey
@@ -684,25 +685,25 @@ def filter_olympic_site(response_list, instance, request, pt_object_origin, pt_o
         return
     if not instance.olympics_forbidden_uris:
         return
-    wheelchair = request.get('wheelchair', None)
-    wheelchair = True if wheelchair is None else wheelchair
-    if wheelchair:
+    if request.get('wheelchair', True):
         return
     origin_olympic_site = is_olympic_site(pt_object_origin, instance)
     destination_olympic_site = is_olympic_site(pt_object_destination, instance)
     if all((origin_olympic_site, destination_olympic_site)):
         origin_olympic_site = False
 
-    for response in response_list:
-        for journey in response.journeys:
-            if not journey.sections:
+    for resp in response_list:
+        for j in resp.journeys:
+            if not j.sections:
                 continue
-            if to_be_deleted(journey):
+            if to_be_deleted(j):
                 continue
-            nb_connections = get_nb_connections(journey)
-            if not nb_connections:
+            nb_connections = get_nb_connections(j)
+            if nb_connections == 0:
                 continue
-            section_public_transport = get_first_or_last_pt_section(journey, origin_olympic_site)
+            section_public_transport = (
+                get_first_pt_section(j) if origin_olympic_site else get_last_pt_section(j)
+            )
             if not section_public_transport:
                 continue
             if section_public_transport.uris.physical_mode != 'physical_mode:Bus':
@@ -714,7 +715,7 @@ def filter_olympic_site(response_list, instance, request, pt_object_origin, pt_o
                 continue
             if section_public_transport.duration > instance.olympics_forbidden_uris.min_pt_duration:
                 continue
-            mark_as_dead(journey, request.get('debug'), 'Filtered by min_pt_duration')
+            mark_as_dead(j, request.get('debug'), 'Filtered by min_pt_duration')
 
 
 def filter_non_car_tagged_journey(journeys, request):

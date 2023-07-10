@@ -131,7 +131,7 @@ def parse_and_get_olympics_forbidden_uris(dict_olympics_forbidden_uris):
             return None
     if not isinstance(dict_olympics_forbidden_uris.get('min_pt_duration'), int):
         logging.getLogger(__name__).error(
-            'olympic_criteria: invalid parameter, min_pt_duration not found'
+            'olympic_criteria: invalid parameter, min_pt_duration is not an integer'
         )
         return None
 
