@@ -712,9 +712,9 @@ def filter_olympic_site(response_list, instance, request, pt_object_origin, pt_o
                 in instance.olympics_forbidden_uris.pt_object_olympics_forbidden_uris
             ):
                 continue
-            if section_public_transport.duration > instance.olympics_forbidden_uris.max_duration_wheelchair:
+            if section_public_transport.duration > instance.olympics_forbidden_uris.max_pt_duration:
                 continue
-            mark_as_dead(journey, request.get('debug'), 'Filtered by max_duration_wheelchair')
+            mark_as_dead(journey, request.get('debug'), 'Filtered by max_pt_duration')
 
 
 def filter_non_car_tagged_journey(journeys, request):

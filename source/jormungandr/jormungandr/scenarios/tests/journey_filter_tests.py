@@ -202,7 +202,7 @@ def filter_olympic_site_with_wheelchair_true_test():
         pt_object_olympics_forbidden_uris=["network:abc"],
         poi_property_key="sitejo",
         poi_property_value="123",
-        max_duration_wheelchair=50,
+        max_pt_duration=50,
     )
     origin = make_pt_object(type_pb2.POI, lon=1, lat=2, uri='origin:poi')
     destination = make_pt_object(type_pb2.STOP_AREA, lon=3, lat=4, uri='destination:stop_area')
@@ -233,7 +233,7 @@ def filter_olympic_site_without_wheelchair_test():
         pt_object_olympics_forbidden_uris=["network:abc"],
         poi_property_key="sitejo",
         poi_property_value="123",
-        max_duration_wheelchair=50,
+        max_pt_duration=50,
     )
     origin = make_pt_object(type_pb2.POI, lon=1, lat=2, uri='origin:poi')
     destination = make_pt_object(type_pb2.STOP_AREA, lon=3, lat=4, uri='destination:stop_area')
@@ -264,7 +264,7 @@ def filter_olympic_site_origin_and_destination_test():
         pt_object_olympics_forbidden_uris=["network:abc"],
         poi_property_key="sitejo",
         poi_property_value="123",
-        max_duration_wheelchair=50,
+        max_pt_duration=50,
     )
     origin = make_pt_object(type_pb2.POI, lon=1, lat=2, uri='origin:poi')
     property = origin.poi.properties.add()
@@ -300,7 +300,7 @@ def filter_olympic_site_origin_olympic_site_first_pt_section_metro_test():
         pt_object_olympics_forbidden_uris=["network:abc"],
         poi_property_key="sitejo",
         poi_property_value="123",
-        max_duration_wheelchair=50,
+        max_pt_duration=50,
     )
     origin = make_pt_object(type_pb2.POI, lon=1, lat=2, uri='origin:poi')
     property = origin.poi.properties.add()
@@ -332,7 +332,7 @@ def filter_olympic_site_destination_olympic_site_last_pt_section_tramway_test():
         pt_object_olympics_forbidden_uris=["network:abc"],
         poi_property_key="sitejo",
         poi_property_value="123",
-        max_duration_wheelchair=50,
+        max_pt_duration=50,
     )
     origin = make_pt_object(type_pb2.POI, lon=1, lat=2, uri='origin:poi')
     destination = make_pt_object(type_pb2.POI, lon=3, lat=4, uri='destination:poi')
@@ -364,7 +364,7 @@ def filter_olympic_site_origin_olympic_site_first_pt_section_navette_jo_test():
         pt_object_olympics_forbidden_uris=["network:abc"],
         poi_property_key="sitejo",
         poi_property_value="123",
-        max_duration_wheelchair=50,
+        max_pt_duration=50,
     )
     origin = make_pt_object(type_pb2.POI, lon=1, lat=2, uri='origin:poi')
     property = origin.poi.properties.add()
@@ -397,7 +397,7 @@ def filter_olympic_site_destination_olympic_site_last_pt_section_navette_jo_test
         pt_object_olympics_forbidden_uris=["network:abc"],
         poi_property_key="sitejo",
         poi_property_value="123",
-        max_duration_wheelchair=50,
+        max_pt_duration=50,
     )
     origin = make_pt_object(type_pb2.POI, lon=1, lat=2, uri='origin:poi')
     destination = make_pt_object(type_pb2.POI, lon=3, lat=4, uri='destination:poi')
@@ -411,7 +411,7 @@ def filter_olympic_site_destination_olympic_site_last_pt_section_navette_jo_test
 def filter_olympic_site_origin_olympic_site_to_delete_tag_test():
     # STREET_NETWORK -> PUBLIC_TRANSPORT + TRANSFER + PUBLIC_TRANSPORT + STREET_NETWORK
     #   Walking     ->  physical_mode:Bus -> Transfer -> physical_mode:Tramway -> Walking
-    # journey.sections[1].duration < max_duration_wheelchair
+    # journey.sections[1].duration < max_pt_duration
     response = response_pb2.Response()
     journey = response.journeys.add()
     for stype in (
@@ -431,7 +431,7 @@ def filter_olympic_site_origin_olympic_site_to_delete_tag_test():
         pt_object_olympics_forbidden_uris=["network:abc"],
         poi_property_key="sitejo",
         poi_property_value="123",
-        max_duration_wheelchair=50,
+        max_pt_duration=50,
     )
     origin = make_pt_object(type_pb2.POI, lon=1, lat=2, uri='origin:poi')
     property = origin.poi.properties.add()
@@ -447,7 +447,7 @@ def filter_olympic_site_origin_olympic_site_to_delete_tag_test():
 def filter_olympic_site_origin_olympic_site_without_to_delete_tag_test():
     # STREET_NETWORK -> PUBLIC_TRANSPORT + TRANSFER + PUBLIC_TRANSPORT + STREET_NETWORK
     #   Walking     ->  physical_mode:Bus -> Transfer -> physical_mode:Tramway -> Walking
-    # journey.sections[1].duration > max_duration_wheelchair
+    # journey.sections[1].duration > max_pt_duration
     response = response_pb2.Response()
     journey = response.journeys.add()
     for stype in (
@@ -467,7 +467,7 @@ def filter_olympic_site_origin_olympic_site_without_to_delete_tag_test():
         pt_object_olympics_forbidden_uris=["network:abc"],
         poi_property_key="sitejo",
         poi_property_value="123",
-        max_duration_wheelchair=50,
+        max_pt_duration=50,
     )
     origin = make_pt_object(type_pb2.POI, lon=1, lat=2, uri='origin:poi')
     property = origin.poi.properties.add()
@@ -482,7 +482,7 @@ def filter_olympic_site_origin_olympic_site_without_to_delete_tag_test():
 def filter_olympic_site_destination_olympic_site_to_delete_tag_test():
     # STREET_NETWORK -> PUBLIC_TRANSPORT + TRANSFER + PUBLIC_TRANSPORT + STREET_NETWORK
     #   Walking     ->  physical_mode:Metro -> Transfer -> physical_mode:Bus -> Walking
-    # journey.sections[3].duration < max_duration_wheelchair
+    # journey.sections[3].duration < max_pt_duration
     response = response_pb2.Response()
     journey = response.journeys.add()
     for stype in (
@@ -502,7 +502,7 @@ def filter_olympic_site_destination_olympic_site_to_delete_tag_test():
         pt_object_olympics_forbidden_uris=["network:abc"],
         poi_property_key="sitejo",
         poi_property_value="123",
-        max_duration_wheelchair=50,
+        max_pt_duration=50,
     )
     origin = make_pt_object(type_pb2.POI, lon=1, lat=2, uri='origin:poi')
     destination = make_pt_object(type_pb2.POI, lon=3, lat=4, uri='destination:poi')
@@ -517,7 +517,7 @@ def filter_olympic_site_destination_olympic_site_to_delete_tag_test():
 def filter_olympic_site_destination_olympic_site_without_to_delete_tag_test():
     # STREET_NETWORK -> PUBLIC_TRANSPORT + TRANSFER + PUBLIC_TRANSPORT + STREET_NETWORK
     #   Walking     ->  physical_mode:Metro -> Transfer -> physical_mode:Bus -> Walking
-    # journey.sections[3].duration > max_duration_wheelchair
+    # journey.sections[3].duration > max_pt_duration
     response = response_pb2.Response()
     journey = response.journeys.add()
     for stype in (
@@ -536,7 +536,7 @@ def filter_olympic_site_destination_olympic_site_without_to_delete_tag_test():
         pt_object_olympics_forbidden_uris=["network:abc"],
         poi_property_key="sitejo",
         poi_property_value="123",
-        max_duration_wheelchair=50,
+        max_pt_duration=50,
     )
     origin = make_pt_object(type_pb2.POI, lon=1, lat=2, uri='origin:poi')
     destination = make_pt_object(type_pb2.POI, lon=3, lat=4, uri='destination:poi')
@@ -550,7 +550,7 @@ def filter_olympic_site_destination_olympic_site_without_to_delete_tag_test():
 def filter_olympic_site_destination_olympic_site_journey_tagged_test():
     # STREET_NETWORK -> PUBLIC_TRANSPORT + TRANSFER + PUBLIC_TRANSPORT + STREET_NETWORK
     #   Walking     ->  physical_mode:Metro -> Transfer -> physical_mode:Bus -> Walking
-    # journey.sections[3].duration > max_duration_wheelchair
+    # journey.sections[3].duration > max_pt_duration
     response = response_pb2.Response()
     journey = response.journeys.add()
     for stype in (
@@ -571,7 +571,7 @@ def filter_olympic_site_destination_olympic_site_journey_tagged_test():
         pt_object_olympics_forbidden_uris=["network:abc"],
         poi_property_key="sitejo",
         poi_property_value="123",
-        max_duration_wheelchair=50,
+        max_pt_duration=50,
     )
     origin = make_pt_object(type_pb2.POI, lon=1, lat=2, uri='origin:poi')
     destination = make_pt_object(type_pb2.POI, lon=3, lat=4, uri='destination:poi')
@@ -586,8 +586,8 @@ def filter_olympic_site_destination_olympic_site_journey_tagged_test():
 def filter_olympic_site_destination_olympic_site_test1_test():
     # STREET_NETWORK -> PUBLIC_TRANSPORT + TRANSFER + PUBLIC_TRANSPORT + STREET_NETWORK
     #   Walking     ->  physical_mode:Bus -> Transfer -> physical_mode:Bus -> Walking
-    # First section : journey.sections[1].duration < max_duration_wheelchair
-    # Last section : journey.sections[3].duration > max_duration_wheelchair
+    # First section : journey.sections[1].duration < max_pt_duration
+    # Last section : journey.sections[3].duration > max_pt_duration
     response = response_pb2.Response()
     journey = response.journeys.add()
     for stype in (
@@ -609,7 +609,7 @@ def filter_olympic_site_destination_olympic_site_test1_test():
         pt_object_olympics_forbidden_uris=["network:abc"],
         poi_property_key="sitejo",
         poi_property_value="123",
-        max_duration_wheelchair=50,
+        max_pt_duration=50,
     )
     origin = make_pt_object(type_pb2.POI, lon=1, lat=2, uri='origin:poi')
     property = origin.poi.properties.add()
@@ -626,8 +626,8 @@ def filter_olympic_site_destination_olympic_site_test1_test():
 def filter_olympic_site_destination_olympic_site_test2_test():
     # STREET_NETWORK -> PUBLIC_TRANSPORT + TRANSFER + PUBLIC_TRANSPORT + STREET_NETWORK
     #   Walking     ->  physical_mode:Bus -> Transfer -> physical_mode:Bus -> Walking
-    # First section : journey.sections[1].duration < max_duration_wheelchair
-    # Last section : journey.sections[3].duration < max_duration_wheelchair
+    # First section : journey.sections[1].duration < max_pt_duration
+    # Last section : journey.sections[3].duration < max_pt_duration
     response = response_pb2.Response()
     journey = response.journeys.add()
     for stype in (
@@ -650,7 +650,7 @@ def filter_olympic_site_destination_olympic_site_test2_test():
         pt_object_olympics_forbidden_uris=["network:abc"],
         poi_property_key="sitejo",
         poi_property_value="123",
-        max_duration_wheelchair=50,
+        max_pt_duration=50,
     )
     origin = make_pt_object(type_pb2.POI, lon=1, lat=2, uri='origin:poi')
     property = origin.poi.properties.add()
