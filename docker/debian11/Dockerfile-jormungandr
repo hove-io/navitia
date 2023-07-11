@@ -1,5 +1,5 @@
 ARG JORMUNGANDR_REVISION=local
-ENV git_version=${JORMUNGANDR_REVISION}
+ENV jormungandr_version=${JORMUNGANDR_REVISION}
 
 FROM debian:bullseye-slim
 
@@ -14,7 +14,7 @@ RUN apt-get update --fix-missing \
     && apt-get install -y curl libpq5 apache2 python3.9-dev python3-pip git libgeos-c1v5 ca-certificates \
     && update-ca-certificates \
     && pip3 install --no-cache-dir j2cli==0.3.10 \
-    && GIT_REVISION=${git_version} j2 jormungandr_version.j2 -o ./jormungandr/jormungandr/_version.py \
+    && JORMUNGANDR_REVISION=${jormungandr_version} j2 jormungandr_version.j2 -o ./jormungandr/jormungandr/_version.py \
     && (cd navitiacommon && python3 setup.py install) \
     && (cd jormungandr && python3 setup.py install && pip3 install --no-cache-dir -U -r requirements.txt)\
     && pip3 install --no-cache-dir uwsgi==2.0.21 \
