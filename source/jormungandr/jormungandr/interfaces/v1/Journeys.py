@@ -301,7 +301,9 @@ class add_tad_links(object):
                         from_coord = s.get('from').get(from_embedded_type).get('coord')
                         to_coord = s.get('to').get(to_embedded_type).get('coord')
                         args = dict()
-                        dt_str = local_str_date_to_str_date_with_offset(s.get('departure_date_time'), instance.timezone)
+                        dt_str = local_str_date_to_str_date_with_offset(
+                            s.get('departure_date_time'), instance.timezone
+                        )
                         args['departure_latitude'] = from_coord.get('lat')
                         args['departure_longitude'] = from_coord.get('lon')
                         args['destination_latitude'] = to_coord.get('lat')
