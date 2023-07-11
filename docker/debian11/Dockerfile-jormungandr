@@ -15,13 +15,13 @@ RUN apt-get update --fix-missing \
     && update-ca-certificates \
     && pip3 install --no-cache-dir j2cli==0.3.10 \
     && JORMUNGANDR_REVISION=${jormungandr_version} j2 jormungandr_version.j2 -o ./jormungandr/jormungandr/_version.py \
+    && pip3 uninstall j2cli \
     && (cd navitiacommon && python3 setup.py install) \
     && (cd jormungandr && python3 setup.py install && pip3 install --no-cache-dir -U -r requirements.txt)\
     && pip3 install --no-cache-dir uwsgi==2.0.21 \
     && rm -rf navitiacommon jormungandr \
     && apt-get purge -y \
         python3-pip \
-        j2cli \
         git \
     && apt-get autoremove -y
 
