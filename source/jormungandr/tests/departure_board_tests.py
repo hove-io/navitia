@@ -721,6 +721,7 @@ class TestDepartureBoard(AbstractTestFixture):
         # verify network in links
         assert len(section['links']) == 7
         assert "base_network" in [link['id'] for link in section['links'] if link['type'] == "network"]
+        assert "B" in [link['id'] for link in section['links'] if link['type'] == "line"]
 
         # verify app deep link in links
         deep_link = section['links'][-1]
@@ -729,7 +730,8 @@ class TestDepartureBoard(AbstractTestFixture):
         assert "departure_longitude=0" in deep_link['href']
         assert "destination_latitude=0" in deep_link['href']
         assert "destination_longitude=0" in deep_link['href']
-        assert "requested_departure_time=2012-06-15T11:00:00+0000" in deep_link['href']
+        assert "requested_departure_time=2012-06-15T11%3A00%3A00%2B00%3A00" in deep_link['href']
+        assert "territory=territory:B" in deep_link['href']
         assert deep_link['type'] == "tad_dynamic_link"
         assert deep_link['rel'] == "tad_dynamic_link"
         assert deep_link['templated'] is False

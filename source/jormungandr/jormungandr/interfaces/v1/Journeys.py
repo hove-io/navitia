@@ -51,9 +51,8 @@ from jormungandr.utils import (
     dt_to_str,
     has_invalid_reponse_code,
     journeys_absent,
-    local_str_date_to_utc,
-    UTC_DATETIME_FORMAT,
     COVERAGE_ANY_BETA,
+    local_str_date_to_str_date_with_offset,
 )
 from jormungandr.interfaces.v1.serializer import api
 from jormungandr.interfaces.v1.decorators import get_serializer
@@ -75,6 +74,7 @@ from jormungandr.interfaces.common import add_poi_infos_types, handle_poi_infos
 from jormungandr.fallback_modes import FallbackModes
 from copy import deepcopy
 from jormungandr.travelers_profile import TravelerProfile
+import urllib.parse
 
 
 f_datetime = "%Y%m%dT%H%M%S"
@@ -277,18 +277,38 @@ class add_tad_links(object):
                         if not app_value:
                             continue
 
+                        # Get the territory value for the line used
+                        line_id = next(
+                            (link['id'] for link in s.get('links', []) if link['type'] == "line"), None
+                        )
+                        if line_id:
+                            line_details = instance.ptref.get_objs(
+                                type_pb2.LINE, 'line.uri=\"{}\"'.format(line_id), type_pb2.OdtLevel.all
+                            )
+                            line_dict = protobuf_to_dict(next(line_details))
+                            territory_value = next(
+                                (
+                                    code['value']
+                                    for code in line_dict.get('codes', [])
+                                    if code.get('type') == "territory"
+                                ),
+                                None,
+                            )
+
                         # Prepare parameters for the deeplink of external service
                         from_embedded_type = s.get('from').get('embedded_type')
                         to_embedded_type = s.get('to').get('embedded_type')
                         from_coord = s.get('from').get(from_embedded_type).get('coord')
                         to_coord = s.get('to').get(to_embedded_type).get('coord')
                         args = dict()
-                        date_utc = local_str_date_to_utc(s.get('departure_date_time'), instance.timezone)
+                        dt_str = local_str_date_to_str_date_with_offset(s.get('departure_date_time'), instance.timezone)
                         args['departure_latitude'] = from_coord.get('lat')
                         args['departure_longitude'] = from_coord.get('lon')
                         args['destination_latitude'] = to_coord.get('lat')
                         args['destination_longitude'] = to_coord.get('lon')
-                        args['requested_departure_time'] = dt_to_str(date_utc, _format=UTC_DATETIME_FORMAT)
+                        args['requested_departure_time'] = urllib.parse.quote(dt_str)
+                        if territory_value:
+                            args['territory'] = territory_value
                         url = "{}://home?".format(app_value)
                         tad_link = make_external_service_link(
                             url=url, rel="tad_dynamic_link", _type="tad_dynamic_link", **args

@@ -87,7 +87,7 @@ class PtRef(object):
         )
         return None
 
-    def get_objs(self, pb_type, filter=''):
+    def get_objs(self, pb_type, filter='', odt_level=None):
         """
         iterator on all navitia objects that match a filter
         """
@@ -98,6 +98,8 @@ class PtRef(object):
         req.ptref.start_page = 0
         req.ptref.depth = 1
         req.ptref.filter = filter
+        if odt_level:
+            req.ptref.odt_level = odt_level
 
         while True:
             result = self.instance.send_and_receive(req)
