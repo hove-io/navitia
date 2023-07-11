@@ -89,6 +89,28 @@ def create_journeys_request_test():
     assert req.journeys.arrival_transfer_penalty == 120
 
 
+def create_journeys_request_with_attractivities_test():
+    origin = {"Hove": 42}
+    destination = {"Somewhere": 666}
+    journey_parameters = JourneyParameters(
+        criteria='departure_stop_attractivity', attractivities=[("Hove", 1), ("Somewhere", 2)]
+    )
+    datetime = str_to_time_stamp("20120614T080000")
+
+    req = create_journeys_request(origin, destination, datetime, True, journey_parameters, False)
+    assert req.journeys.origin[0].attractivity == 1
+    assert not req.journeys.destination[0].HasField("attractivity")
+
+    journey_parameters = JourneyParameters(
+        criteria='arrival_stop_attractivity', attractivities=[("Hove", 1), ("Somewhere", 2)]
+    )
+    datetime = str_to_time_stamp("20120614T080000")
+
+    req = create_journeys_request(origin, destination, datetime, True, journey_parameters, False)
+    assert req.journeys.destination[0].attractivity == 2
+    assert not req.journeys.origin[0].HasField("attractivity")
+
+
 def test_journey_request_current_time():
     origin = {"Hove": 42}
     destination = {"Somewhere": 666}

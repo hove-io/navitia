@@ -317,16 +317,41 @@ class DateTimeFormat(CustomSchemaType):
 
 
 class KeyValueType(CustomSchemaType):
+    """
+    >>> k = KeyValueType()
+    >>> k("test,0")
+    ('test', 0)
+    >>> k("test,-1")
+    Traceback (most recent call last):
+      File "<input>", line 1, in <module>
+      File "<input>", line 21, in __call__
+    ValueError: Unable to evaluate invalid value, out of range (0, inf),value must be an integer
+    >>> k = KeyValueType(1, 10)
+    >>> k("test,5")
+    ('test', 5)
+    >>> k("test,0")
+    Traceback (most recent call last):
+      File "<input>", line 1, in <module>
+      File "<input>", line 21, in __call__
+    ValueError: Unable to evaluate invalid value, out of range (1, 10),value must be an integer
+
+    """
+
+    def __init__(self, min_value=None, max_value=None):
+        super(KeyValueType, self).__init__()
+        self.min_value = min_value or 0
+        self.max_value = max_value or float("inf")
+
     def __call__(self, value):
         try:
             key, value = value.split(',')
             value = int(value)
-            if value <= 0:
-                raise ValueError('invalid duration')
+            if not (self.min_value <= value <= self.max_value):
+                raise ValueError('invalid value, out of range {}'.format((self.min_value, self.max_value)))
 
             return key, value
         except ValueError as e:
-            raise ValueError("Unable to evaluate, {}".format(e))
+            raise ValueError("Unable to evaluate {},value must be an integer".format(e))
 
     def schema(self):
-        return TypeSchema(type=str, metadata={'minimum': 1})
+        return TypeSchema(type=str, metadata={'minimum': self.min_value, "maximum": self.max_value})
