@@ -9,7 +9,6 @@ env:
   jessie_version: debian8
   bullseye_version: debian11
   front_jessie_navitia_components: 'tyr-web instances-configurator'
-  front_bullseye_navitia_components: 'jormungandr'
   backend_jessie_navitia_components: 'kraken tyr-beat tyr-worker mock-kraken eitri'
 
   SBX_ECR_REGISTRY_BACKEND: "110444322584.dkr.ecr.eu-west-1.amazonaws.com"
@@ -71,7 +70,7 @@ jobs:
       - name: Create navitia images
         run: |
           echo "*********  Building Jormungandr ***************"
-          docker build -t ${SBX_ECR_REGISTRY_FRONT}/jormungandr:no_config_${TAG} -f  docker/${{env.bullseye_version}}/Dockerfile-jormungandr .
+          docker build -t ${SBX_ECR_REGISTRY_FRONT}/jormungandr:no_config_${TAG} -f  docker/${{env.bullseye_version}}/Dockerfile-jormungandr . --build-arg JORMUNGANDR_REVISION=${TAG}
 
       - name: Push images on SBX ECR
         run: |
