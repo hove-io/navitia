@@ -35,7 +35,14 @@ import abc
 import six
 from jormungandr.scenarios.utils import compare, get_or_default
 from navitiacommon import response_pb2
-from jormungandr.utils import pb_del_if, ComposedFilter, portable_min
+from jormungandr.utils import (
+    pb_del_if,
+    ComposedFilter,
+    portable_min,
+    is_olympic_site,
+    get_first_pt_section,
+    get_last_pt_section,
+)
 from jormungandr.fallback_modes import FallbackModes
 from jormungandr.scenarios.qualifier import get_ASAP_journey
 
@@ -671,6 +678,42 @@ def apply_final_journey_filters(response_list, instance, request):
     if origin_mode == ['car']:
         journeys = journey_generator(response_list)
         filter_non_car_tagged_journey(journeys, request)
+
+
+def filter_olympic_site(response_list, instance, request, pt_object_origin, pt_object_destination):
+    if not response_list:
+        return
+    if not instance.olympics_forbidden_uris:
+        return
+    if request.get('wheelchair', True):
+        return
+    origin_olympic_site = is_olympic_site(pt_object_origin, instance)
+    destination_olympic_site = is_olympic_site(pt_object_destination, instance)
+    if all((origin_olympic_site, destination_olympic_site)):
+        origin_olympic_site = False
+
+    for resp in response_list:
+        for j in resp.journeys:
+            if not j.sections:
+                continue
+            if to_be_deleted(j):
+                continue
+            nb_connections = get_nb_connections(j)
+            if nb_connections == 0:
+                continue
+            section_public_transport = get_first_pt_section(j) if origin_olympic_site else get_last_pt_section(j)
+            if not section_public_transport:
+                continue
+            if section_public_transport.uris.physical_mode != 'physical_mode:Bus':
+                continue
+            if (
+                section_public_transport.uris.network
+                in instance.olympics_forbidden_uris.pt_object_olympics_forbidden_uris
+            ):
+                continue
+            if section_public_transport.duration > instance.olympics_forbidden_uris.min_pt_duration:
+                continue
+            mark_as_dead(j, request.get('debug'), 'Filtered by min_pt_duration')
 
 
 def filter_non_car_tagged_journey(journeys, request):

@@ -534,6 +534,45 @@ def get_pt_object_coord(pt_object):
     return coord
 
 
+def is_olympic_poi(pt_object, instance):
+    if pt_object.embedded_type != type_pb2.POI:
+        return False
+    if not (hasattr(pt_object.poi, 'properties') and pt_object.poi.properties):
+        return False
+    olympic_site = next(
+        (
+            p
+            for p in pt_object.poi.properties
+            if p.type == instance.olympics_forbidden_uris.poi_property_key
+            and p.value == instance.olympics_forbidden_uris.poi_property_value
+        ),
+        None,
+    )
+    return olympic_site
+
+
+def is_olympic_site(entry_point, instance):
+    if not entry_point:
+        return False
+    if is_olympic_poi(entry_point, instance):
+        return True
+    if entry_point.embedded_type == type_pb2.ADDRESS:
+        if not (hasattr(entry_point.address, 'within_zones') and entry_point.address.within_zones):
+            return False
+        for within_zone in entry_point.address.within_zones:
+            if is_olympic_poi(within_zone, instance):
+                return True
+    return False
+
+
+def get_last_pt_section(journey):
+    return next((s for s in reversed(journey.sections) if s.type == response_pb2.PUBLIC_TRANSPORT), None)
+
+
+def get_first_pt_section(journey):
+    return next((s for s in journey.sections if s.type == response_pb2.PUBLIC_TRANSPORT), None)
+
+
 def record_external_failure(message, connector_type, connector_name):
     params = {'{}_system_id'.format(connector_type): six.text_type(connector_name), 'message': message}
     new_relic.record_custom_event('{}_external_failure'.format(connector_type), params)

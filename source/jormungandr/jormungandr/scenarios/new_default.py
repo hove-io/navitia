@@ -81,7 +81,7 @@ from jormungandr.utils import (
     is_coord,
     get_pt_object_from_json,
     json_address_from_uri,
-    str_to_time_stamp,
+    is_olympic_site,
 )
 from jormungandr.error import generate_error
 from jormungandr.utils import Coords
@@ -1258,39 +1258,6 @@ def isochrone_common(isochrone, request, instance, journey_req):
     journey_req.streetnetwork_params.destination_mode = isochrone.destination_modes[0]
 
 
-def is_olympic_poi(pt_object, instance):
-    if pt_object.embedded_type != type_pb2.POI:
-        return False
-    if not (hasattr(pt_object.poi, 'properties') and pt_object.poi.properties):
-        return False
-    olympic_site = next(
-        (
-            p
-            for p in pt_object.poi.properties
-            if p.type == instance.olympics_forbidden_uris.poi_property_key
-            and p.value == instance.olympics_forbidden_uris.poi_property_value
-        ),
-        None,
-    )
-    if olympic_site:
-        return True
-    return False
-
-
-def is_olympic_site(entry_point, instance):
-    if not entry_point:
-        return False
-    if is_olympic_poi(entry_point, instance):
-        return True
-    if entry_point.embedded_type == type_pb2.ADDRESS:
-        if not (hasattr(entry_point.address, 'within_zones') and entry_point.address.within_zones):
-            return False
-        for within_zone in entry_point.address.within_zones:
-            if is_olympic_poi(within_zone, instance):
-                return True
-    return False
-
-
 def add_olympics_forbidden_uris(origin_detail, destination_detail, api_request, instance):
     if not instance.olympics_forbidden_uris:
         return
@@ -1493,6 +1460,11 @@ class Scenario(simple.Scenario):
         logger.debug('nb of call kraken: %i', nb_try)
 
         journey_filter.apply_final_journey_filters(responses, instance, api_request)
+
+        # Filter olympic site: Jira NAV-2130
+        journey_filter.filter_olympic_site(
+            responses, instance, api_request, pt_object_origin, pt_object_destination
+        )
 
         self.finalise_journeys(
             api_request, responses, distributed_context, instance, api_request['debug'], request_id
