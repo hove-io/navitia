@@ -278,6 +278,7 @@ class add_tad_links(object):
                             continue
 
                         # Get the territory value for the line used
+                        territory_value = None
                         line_id = next(
                             (link['id'] for link in s.get('links', []) if link['type'] == "line"), None
                         )
