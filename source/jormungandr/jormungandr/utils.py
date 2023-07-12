@@ -199,6 +199,14 @@ def local_str_date_to_utc(str, tz=None):
     return None
 
 
+def local_str_date_to_str_date_with_offset(str, tz):
+    timezone = tz or get_timezone()
+    dt = str_to_dt(str)
+    local = pytz.timezone(timezone)
+    local_dt = local.localize(dt, is_dst=None)
+    return local_dt.isoformat()
+
+
 def timestamp_to_datetime(timestamp, tz=None):
     """
     Convert a timestamp to datetime
