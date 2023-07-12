@@ -1092,6 +1092,7 @@ def _filter_odt_journeys_clockwise(journeys, debug):
     earliest_arrival_pt_journey = portable_min(
         (j for j in journeys if _contains_pt_section(j) and not _contains_odt(j)),
         key=lambda j: j.arrival_date_time,
+        default=None,
     )
 
     # no pt journey found, so there is nothing to filter
@@ -1117,6 +1118,7 @@ def _filter_odt_journeys_counter_clockwise(journeys, debug):
     latest_departure_pt_journey = portable_min(
         (j for j in journeys if _contains_pt_section(j) and not _contains_odt(j)),
         key=lambda j: -1 * j.departure_date_time,
+        default=None,
     )
 
     # no pt journey found, so there is nothing to filter
