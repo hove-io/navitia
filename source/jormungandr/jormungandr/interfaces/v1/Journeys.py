@@ -302,14 +302,14 @@ class add_tad_links(object):
                         from_coord = s.get('from').get(from_embedded_type).get('coord')
                         to_coord = s.get('to').get(to_embedded_type).get('coord')
                         args = dict()
-                        dt_str = local_str_date_to_str_date_with_offset(
+                        dep_offset_dt_str = local_str_date_to_str_date_with_offset(
                             s.get('departure_date_time'), instance.timezone
                         )
                         args['departure_latitude'] = from_coord.get('lat')
                         args['departure_longitude'] = from_coord.get('lon')
                         args['destination_latitude'] = to_coord.get('lat')
                         args['destination_longitude'] = to_coord.get('lon')
-                        args['requested_departure_time'] = urllib.parse.quote(dt_str)
+                        args['requested_departure_time'] = urllib.parse.quote(dep_offset_dt_str)
                         if territory_value:
                             args['territory'] = territory_value
                         url = "{}://home?".format(app_value)
