@@ -1310,7 +1310,7 @@ def make_mock_chaos_item(
         tag.id = t['id']
         tag.name = t['name']
 
-    if not impacted_obj or not impacted_obj_type:
+    if impacted_obj_type is None or (impacted_obj_type not in ["line_section", "rail_section"] and impacted_obj is None):
         return feed_message.SerializeToString()
 
     # Impacts
@@ -1349,7 +1349,7 @@ def make_mock_chaos_item(
     }
 
     ptobject = impact.informed_entities.add()
-    ptobject.uri = impacted_obj
+    ptobject.uri = impacted_obj or "None"
     ptobject.pt_object_type = type_col.get(impacted_obj_type, chaos_pb2.PtObject.unkown_type)
     if ptobject.pt_object_type in [chaos_pb2.PtObject.line_section, chaos_pb2.PtObject.rail_section]:
         disrupted_section = None
@@ -1362,8 +1362,9 @@ def make_mock_chaos_item(
                 pb_sa.uri = sa
                 pb_sa.order = idx
 
-        disrupted_section.line.uri = impacted_obj
-        disrupted_section.line.pt_object_type = chaos_pb2.PtObject.line
+        if impacted_obj is not None:
+            disrupted_section.line.uri = impacted_obj or "None"
+            disrupted_section.line.pt_object_type = chaos_pb2.PtObject.line
         pb_start = disrupted_section.start_point
         pb_start.uri = start
         pb_start.pt_object_type = chaos_pb2.PtObject.stop_area

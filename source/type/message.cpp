@@ -285,7 +285,9 @@ struct InformedEntitiesLinker : public boost::static_visitor<> {
         auto impacted_vjs = get_impacted_vehicle_journeys(line_section, *impact, production_period, rt_level);
         std::set<type::StopPoint*> impacted_stop_points;
         std::set<type::MetaVehicleJourney*> impacted_meta_vjs;
-        line_section.line->add_impact(impact);
+        if (line_section.line != nullptr) {
+            line_section.line->add_impact(impact);
+        }
         if (impacted_vjs.empty()) {
             LOG4CPLUS_INFO(log, "line section impact " << impact->uri
                                                        << " does not impact any vj, it will not be linked to anything");
@@ -320,7 +322,9 @@ struct InformedEntitiesLinker : public boost::static_visitor<> {
         auto impacted_vjs = get_impacted_vehicle_journeys(rail_section, *impact, production_period, rt_level);
         std::set<type::StopPoint*> impacted_stop_points;
         std::set<type::MetaVehicleJourney*> impacted_meta_vjs;
-        rail_section.line->add_impact(impact);
+        if (rail_section.line != nullptr) {
+            rail_section.line->add_impact(impact);
+        }
         if (impacted_vjs.empty()) {
             LOG4CPLUS_INFO(log, "rail section impact " << impact->uri
                                                        << " does not impact any vj, it will not be linked to anything");
@@ -692,7 +696,6 @@ boost::optional<RailSection> try_make_rail_section(
         routes.push_back(route);
     }
 
-    // find lines
     Line* line = nullptr;
     if (line_uri) {
         const std::unordered_map<std::string, Line*>& lines_map = pt_data.lines_map;
@@ -707,20 +710,23 @@ boost::optional<RailSection> try_make_rail_section(
         if (routes.empty()) {
             routes = line->route_list;
         }
+    }
+
+    if (!routes.empty()) {
         // some routes were given, let's check that they belong to "line"
-        else {
-            for (const Route* route : routes) {
-                if (route->line == nullptr) {
-                    LOG4CPLUS_WARN(logger, "Rail section has line: '"
-                                               << *line_uri << "' but also a route with no line: " << route->uri);
-                    return boost::none;
-                }
-                if (route->line->idx != line->idx) {
-                    LOG4CPLUS_WARN(logger, "Rail section has line: '"
-                                               << *line_uri << "' but also a route: '" << route->uri
-                                               << "' that belongs to a different line: " << route->line->uri);
-                    return boost::none;
-                }
+        for (const Route* route : routes) {
+            if (route->line == nullptr) {
+                LOG4CPLUS_WARN(logger, "Rail section has line: '"
+                                            << *line_uri << "' but also a route with no line: " << route->uri);
+                return boost::none;
+            } else if (line == nullptr) {
+                line = route->line;
+            }
+            if (route->line->idx != line->idx) {
+                LOG4CPLUS_WARN(logger, "Rail section has line (or a route from line): '"
+                                            << *line_uri << "' but also a route: '" << route->uri
+                                            << "' that belongs to a different line: " << route->line->uri);
+                return boost::none;
             }
         }
     }
@@ -747,8 +753,7 @@ boost::optional<RailSection> try_make_rail_section(
         }
     }
 
-    RailSection result(start, end, blockeds, impacteds, line, routes);
-    return result;
+    return RailSection(start, end, blockeds, impacteds, line, routes);
 }
 
 bool RailSection::is_blocked_start_point() const {

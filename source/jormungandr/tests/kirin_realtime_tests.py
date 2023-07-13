@@ -4013,7 +4013,7 @@ class TestKirinThenChaosRailSectionJourney(MockKirinOrChaosDisruptionsFixture):
 @dataset(RAIL_SECTIONS_TEST_SETTING)
 class TestChaosRailSectionOnlyJourney(MockKirinOrChaosDisruptionsFixture):
     def test_rail_section_only_journey_disruptions(self):
-        # Testing that applying Chaos (adapted) works aas expected on every data_freshness level
+        # Testing that applying Chaos (adapted) works as expected on every data_freshness level
 
         def using_vj1(resp):
             return resp['journeys'][0]['sections'][0]['display_informations']['trip_short_name'] == 'vj:1'
@@ -4067,8 +4067,7 @@ class TestChaosRailSectionOnlyJourney(MockKirinOrChaosDisruptionsFixture):
         assert using_vj1(journey_EH_base)
         assert len(journey_EH_base['disruptions']) == 0
 
-        # Send a "Chaos" rail-section disruption: affects only adapted as realtime is already affected by
-        # a kirin disruption (Kirin is prioritary over Chaos)
+        # Send a "Chaos" rail-section disruption: affects adapted and realtime (no Kirin)
         self.send_mock(
             "bobette_the_disruption",
             "line:1",
@@ -4117,6 +4116,162 @@ class TestChaosRailSectionOnlyJourney(MockKirinOrChaosDisruptionsFixture):
         self.send_mock(
             "bobette_the_disruption",
             "line:1",
+            "rail_section",
+            start="stopAreaA",
+            end="stopAreaC",
+            is_deleted=True,
+            is_kirin=False,
+        )
+
+        journey_AE_rt = self.query_region(journey_AE_rt_query)
+        assert len(journey_AE_rt['journeys']) == 1
+        assert journey_AE_rt['journeys'][0]['status'] == ''
+        assert journey_AE_rt['journeys'][0]['arrival_date_time'] == '20170120T082000'
+        assert using_vj1(journey_AE_rt)
+        assert len(journey_AE_rt['disruptions']) == 0
+
+        journey_EH_rt = self.query_region(journey_EH_rt_query)
+        assert len(journey_EH_rt['journeys']) == 1
+        assert journey_EH_rt['journeys'][0]['status'] == ''
+        assert journey_EH_rt['journeys'][0]['arrival_date_time'] == '20170120T083500'
+        assert using_vj1(journey_EH_rt)
+        assert len(journey_EH_rt['disruptions']) == 0
+
+        journey_AE_adapted = self.query_region(journey_AE_adapted_query)
+        assert len(journey_AE_adapted['journeys']) == 1
+        assert journey_AE_adapted['journeys'][0]['status'] == ''
+        assert journey_AE_adapted['journeys'][0]['arrival_date_time'] == '20170120T082000'
+        assert using_vj1(journey_AE_adapted)
+        assert len(journey_AE_adapted['disruptions']) == 0
+
+        journey_EH_adapted = self.query_region(journey_EH_adapted_query)
+        assert len(journey_EH_adapted['journeys']) == 1
+        assert journey_EH_adapted['journeys'][0]['status'] == ''
+        assert journey_EH_adapted['journeys'][0]['arrival_date_time'] == '20170120T083500'
+        assert using_vj1(journey_EH_adapted)
+        assert len(journey_EH_adapted['disruptions']) == 0
+
+        journey_AE_base = self.query_region(journey_AE_base_query)
+        assert len(journey_AE_base['journeys']) == 1
+        assert journey_AE_base['journeys'][0]['status'] == ''
+        assert journey_AE_base['journeys'][0]['arrival_date_time'] == '20170120T082000'
+        assert using_vj1(journey_AE_base)
+        assert len(journey_AE_base['disruptions']) == 0
+
+        journey_EH_base = self.query_region(journey_EH_base_query)
+        assert len(journey_EH_base['journeys']) == 1
+        assert journey_EH_base['journeys'][0]['status'] == ''
+        assert journey_EH_base['journeys'][0]['arrival_date_time'] == '20170120T083500'
+        assert using_vj1(journey_EH_base)
+        assert len(journey_EH_base['disruptions']) == 0
+
+
+@dataset(RAIL_SECTIONS_TEST_SETTING)
+class TestChaosRailSectionWithoutLineJourney(MockKirinOrChaosDisruptionsFixture):
+    def test_rail_section_without_line_journey_disruptions(self):
+        # Test that applying Chaos (adapted) works as expected on every data_freshness level when no line is provided
+
+        def using_vj1(resp):
+            return resp['journeys'][0]['sections'][0]['display_informations']['trip_short_name'] == 'vj:1'
+
+        # Test before any disruption that vj:1 is usable in any freshness level
+        journey_AE_rt_query = "journeys?from=stopA&to=stopE&datetime=20170120T080000&_current_datetime=20170120T080000&data_freshness=realtime"
+        journey_AE_rt = self.query_region(journey_AE_rt_query)
+        assert len(journey_AE_rt['journeys']) == 1
+        assert journey_AE_rt['journeys'][0]['status'] == ''
+        assert journey_AE_rt['journeys'][0]['arrival_date_time'] == '20170120T082000'
+        assert using_vj1(journey_AE_rt)
+        assert len(journey_AE_rt['disruptions']) == 0
+
+        journey_EH_rt_query = "journeys?from=stopE&to=stopH&datetime=20170120T082000&_current_datetime=20170120T082000&data_freshness=realtime"
+        journey_EH_rt = self.query_region(journey_EH_rt_query)
+        assert len(journey_EH_rt['journeys']) == 1
+        assert journey_EH_rt['journeys'][0]['status'] == ''
+        assert journey_EH_rt['journeys'][0]['arrival_date_time'] == '20170120T083500'
+        assert using_vj1(journey_EH_rt)
+        assert len(journey_EH_rt['disruptions']) == 0
+
+        journey_AE_adapted_query = "journeys?from=stopA&to=stopE&datetime=20170120T080000&_current_datetime=20170120T080000&data_freshness=adapted_schedule"
+        journey_AE_adapted = self.query_region(journey_AE_adapted_query)
+        assert len(journey_AE_adapted['journeys']) == 1
+        assert journey_AE_adapted['journeys'][0]['status'] == ''
+        assert journey_AE_adapted['journeys'][0]['arrival_date_time'] == '20170120T082000'
+        assert using_vj1(journey_AE_adapted)
+        assert len(journey_AE_adapted['disruptions']) == 0
+
+        journey_EH_adapted_query = "journeys?from=stopE&to=stopH&datetime=20170120T082000&_current_datetime=20170120T082000&data_freshness=adapted_schedule"
+        journey_EH_adapted = self.query_region(journey_EH_adapted_query)
+        assert len(journey_EH_adapted['journeys']) == 1
+        assert journey_EH_adapted['journeys'][0]['status'] == ''
+        assert journey_EH_adapted['journeys'][0]['arrival_date_time'] == '20170120T083500'
+        assert using_vj1(journey_EH_adapted)
+        assert len(journey_EH_adapted['disruptions']) == 0
+
+        journey_AE_base_query = "journeys?from=stopA&to=stopE&datetime=20170120T080000&_current_datetime=20170120T080000&data_freshness=base_schedule"
+        journey_AE_base = self.query_region(journey_AE_base_query)
+        assert len(journey_AE_base['journeys']) == 1
+        assert journey_AE_base['journeys'][0]['status'] == ''
+        assert journey_AE_base['journeys'][0]['arrival_date_time'] == '20170120T082000'
+        assert using_vj1(journey_AE_base)
+        assert len(journey_AE_base['disruptions']) == 0
+
+        journey_EH_base_query = "journeys?from=stopE&to=stopH&datetime=20170120T082000&_current_datetime=20170120T082000&data_freshness=base_schedule"
+        journey_EH_base = self.query_region(journey_EH_base_query)
+        assert len(journey_EH_base['journeys']) == 1
+        assert journey_EH_base['journeys'][0]['status'] == ''
+        assert journey_EH_base['journeys'][0]['arrival_date_time'] == '20170120T083500'
+        assert using_vj1(journey_EH_base)
+        assert len(journey_EH_base['disruptions']) == 0
+
+        # Send a "Chaos" rail-section disruption: affects adapted and realtime (no Kirin)
+        self.send_mock(
+            "bobette_the_disruption",
+            None,  # no line provided
+            "rail_section",
+            start="stopAreaA",
+            end="stopAreaC",
+            blocked_sa=["stopAreaA", "stopAreaB", "stopAreaC"],
+            routes=["route1"],
+            start_period="20170120T000000",
+            end_period="20170120T220000",
+            blocking=True,
+            is_kirin=False,
+        )
+
+        journey_AE_rt = self.query_region(journey_AE_rt_query)
+        assert "journeys" not in journey_AE_rt
+        assert journey_AE_rt['error']['message'] == 'no solution found for this journey'
+
+        journey_EH_rt = self.query_region(journey_EH_rt_query)
+        assert "journeys" not in journey_EH_rt
+        assert journey_EH_rt['error']['message'] == 'no solution found for this journey'
+
+        journey_AE_adapted = self.query_region(journey_AE_adapted_query)
+        assert "journeys" not in journey_AE_adapted
+        assert journey_AE_adapted['error']['message'] == 'no solution found for this journey'
+
+        journey_EH_adapted = self.query_region(journey_EH_adapted_query)
+        assert "journeys" not in journey_EH_adapted
+        assert journey_EH_adapted['error']['message'] == 'no solution found for this journey'
+
+        journey_AE_base = self.query_region(journey_AE_base_query)
+        assert len(journey_AE_base['journeys']) == 1
+        assert journey_AE_base['journeys'][0]['status'] == 'NO_SERVICE'
+        assert journey_AE_base['journeys'][0]['arrival_date_time'] == '20170120T082000'
+        assert using_vj1(journey_AE_base)
+        assert len(journey_AE_base['disruptions']) == 1
+
+        journey_EH_base = self.query_region(journey_EH_base_query)
+        assert len(journey_EH_base['journeys']) == 1
+        assert journey_EH_base['journeys'][0]['status'] == 'NO_SERVICE'
+        assert journey_EH_base['journeys'][0]['arrival_date_time'] == '20170120T083500'
+        assert using_vj1(journey_EH_base)
+        assert len(journey_EH_base['disruptions']) == 1
+
+        # Delete "Chaos" rail-section disruption: back to no disruption
+        self.send_mock(
+            "bobette_the_disruption",
+            None,
             "rail_section",
             start="stopAreaA",
             end="stopAreaC",
