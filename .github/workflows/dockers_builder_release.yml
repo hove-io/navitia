@@ -108,7 +108,7 @@ jobs:
       - name: Create navitia images
         run: |
           echo "*********  Building Jormungandr ***************"
-          docker build -t ${SBX_ECR_REGISTRY_FRONT}/jormungandr:no_config_${{ needs.common_variables.outputs.NAVITIA_TAG }} -f  docker/${{env.bullseye_version}}/Dockerfile-jormungandr . --build-arg JORMUNGANDR_REVISION=${TAG}
+          docker build -t ${SBX_ECR_REGISTRY_FRONT}/jormungandr:no_config_${{ needs.common_variables.outputs.NAVITIA_TAG }} -f  docker/${{env.bullseye_version}}/Dockerfile-jormungandr .
 
       - name: Push images on SBX ECR
         run: |
