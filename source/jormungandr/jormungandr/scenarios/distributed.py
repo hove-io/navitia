@@ -378,6 +378,7 @@ class Distributed(object):
             future_manager=future_manager,
             instance=instance,
             requested_place_obj=requested_obj,
+            pt_planner_name=request['_pt_planner'],
             request_id=request_id,
         )
 
