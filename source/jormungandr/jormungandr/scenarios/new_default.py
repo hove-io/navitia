@@ -1334,8 +1334,8 @@ class Scenario(simple.Scenario):
         )
 
         # Transform address in from/to to poi with ES
-        origin_detail = transform_entrypoint(origin_detail)
-        destination_detail = transform_entrypoint(destination_detail)
+        origin_detail = transform_entrypoint(origin_detail, api_request.get('origin'))
+        destination_detail = transform_entrypoint(destination_detail, api_request.get('destination'))
 
         # we store the origin/destination detail in g to be able to use them after the marshall
         g.origin_detail = origin_detail

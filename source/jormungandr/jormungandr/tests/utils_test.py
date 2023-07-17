@@ -406,7 +406,7 @@ def test_get_olympic_site_pt_section_journey_only_street_network_section():
 
 
 def test_transform_entrypoint_none_value():
-    res = transform_entrypoint(None)
+    res = transform_entrypoint(None, "123")
     assert res is None
 
 
@@ -423,7 +423,7 @@ def test_transform_entrypoint_embedded_type_not_address():
             "name": "Stop area",
         },
     }
-    res = transform_entrypoint(stop_area)
+    res = transform_entrypoint(stop_area, stop_area["id"])
     assert res["id"] == stop_area["id"]
     assert res["name"] == stop_area["name"]
     assert res["embedded_type"] == stop_area["embedded_type"]
@@ -448,7 +448,7 @@ def test_without_within_zones():
             "name": "58BIS Boulevard Saint-Michel",
         },
     }
-    res = transform_entrypoint(address)
+    res = transform_entrypoint(address, address["id"])
     assert res["id"] == address["id"]
     assert res["name"] == address["name"]
     assert res["embedded_type"] == address["embedded_type"]
@@ -474,7 +474,7 @@ def test_with_empty_within_zones():
         },
         "within_zones": [],
     }
-    res = transform_entrypoint(address)
+    res = transform_entrypoint(address, address["id"])
     assert res["id"] == address["id"]
     assert res["name"] == address["name"]
     assert res["embedded_type"] == address["embedded_type"]
@@ -523,7 +523,7 @@ def test_address_with_within_zones():
         },
         "within_zones": [poi],
     }
-    res = transform_entrypoint(address)
+    res = transform_entrypoint(address, address["id"])
     assert res["id"] == poi["id"]
     assert res["name"] == poi["name"]
     assert res["embedded_type"] == poi["embedded_type"]
