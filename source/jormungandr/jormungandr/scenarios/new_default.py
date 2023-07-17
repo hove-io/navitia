@@ -82,6 +82,7 @@ from jormungandr.utils import (
     get_pt_object_from_json,
     json_address_from_uri,
     is_olympic_site,
+    transform_entrypoint,
 )
 from jormungandr.error import generate_error
 from jormungandr.utils import Coords
@@ -1331,6 +1332,10 @@ class Scenario(simple.Scenario):
         destination_detail = self.get_entrypoint_detail(
             api_request.get('destination'), instance, request_id="{}_dest_detail".format(request_id)
         )
+
+        # Transform address in from/to to poi with ES
+        origin_detail = transform_entrypoint(origin_detail)
+        destination_detail = transform_entrypoint(destination_detail)
 
         # we store the origin/destination detail in g to be able to use them after the marshall
         g.origin_detail = origin_detail

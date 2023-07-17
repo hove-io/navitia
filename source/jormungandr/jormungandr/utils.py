@@ -494,6 +494,27 @@ def get_pt_object_from_json(dict_pt_object, instance):
     return pt_object
 
 
+def transform_entrypoint(dict_pt_object):
+    if not dict_pt_object:
+        return None
+    if MAP_STRING_PTOBJECT_TYPE.get(dict_pt_object.get("embedded_type")) != type_pb2.ADDRESS:
+        return dict_pt_object
+    first_within_zone = next(
+        (
+            wz
+            for wz in dict_pt_object.get("within_zones", [])
+            if MAP_STRING_PTOBJECT_TYPE.get(wz.get("embedded_type")) == type_pb2.POI
+            and wz.get("poi", {}).get("children", [])
+        ),
+        None,
+    )
+    if not first_within_zone:
+        return dict_pt_object
+
+    first_within_zone["poi"]["coord"] = dict_pt_object["address"]["coord"]
+    return first_within_zone
+
+
 def json_address_from_uri(uri):
     if is_coord(uri):
         lon, lat = get_lon_lat(uri)
