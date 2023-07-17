@@ -1,5 +1,9 @@
 FROM 162230498103.dkr.ecr.eu-west-1.amazonaws.com/mutable-debian11_dev:latest
 
+RUN apt-get install -y git
+
+RUN git config --global --add safe.directory /navitia/navitia
+
 COPY docker/build_navitia.sh /build_navitia.sh
 RUN chmod +x /build_navitia.sh
 
