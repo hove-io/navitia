@@ -49,6 +49,9 @@ to_poi_uri = "poi:to"
 from_addr_uri = "addr:{}".format(s_coord)
 to_addr_uri = "addr:{}".format(r_coord)
 
+from_addr_within_zone_uri = "{}".format(s_coord)
+to_addr_within_zone_uri = "{}".format(r_coord)
+
 FROM_POI = {
     "features": [
         {
@@ -145,6 +148,61 @@ FROM_ADDRESS = {
     ]
 }
 
+FROM_ADDRESS_WITH_WITHIN_ZONES = {
+    "features": [
+        {
+            "type": "Feature",
+            "geometry": {"coordinates": [s_lon, s_lat], "type": "Point"},
+            "properties": {
+                "geocoding": {
+                    "id": from_addr_within_zone_uri,
+                    "type": "house",
+                    "label": "10 Rue bob (City)",
+                    "name": "10 Rue bob",
+                    "housenumber": "10",
+                    "street": "Rue bob",
+                    "postcode": "36500",
+                    "city": "City",
+                }
+            },
+        }
+    ],
+    "zones": [
+        {
+            "type": "Zone",
+            "geometry": {"coordinates": [s_lon, s_lat], "type": "Point"},
+            "properties": {
+                "geocoding": {
+                    "id": from_poi_uri,
+                    "type": "poi",
+                    "label": "Jardin (City)",
+                    "name": "Jardin",
+                    "city": "Paris",
+                    "poi_types": [{"id": "poi_type:jardin", "name": "Jardin"}],
+                    "children": [
+                        {
+                            "type": "poi",
+                            "id": "poi:from:porte1",
+                            "label": "Jardin: Porte 1 (City)",
+                            "name": "Jardin: Porte 1",
+                            "coord": {"lon": s_lon + 0.0000000005, "lat": s_lat + 0.0000000005},
+                            "poi_type": {"id": "poi_type:access_point", "name": "Point d'accès"},
+                        },
+                        {
+                            "type": "poi",
+                            "id": "poi:from:porte2",
+                            "label": "Jardin: Porte 2 (City)",
+                            "name": "Jardin: Porte 2",
+                            "coord": {"lon": s_lon + 0.0000000008, "lat": s_lat + 0.0000000008},
+                            "poi_type": {"id": "poi_type:access_point", "name": "Point d'accès"},
+                        },
+                    ],
+                }
+            },
+        }
+    ],
+}
+
 
 TO_ADDRESS = {
     "features": [
@@ -165,6 +223,61 @@ TO_ADDRESS = {
             },
         }
     ]
+}
+
+TO_ADDRESS_WITHIN_ZONES = {
+    "features": [
+        {
+            "type": "Feature",
+            "geometry": {"coordinates": [r_lon, r_lat], "type": "Point"},
+            "properties": {
+                "geocoding": {
+                    "id": to_addr_within_zone_uri,
+                    "type": "house",
+                    "label": "10 Rue Victor (City)",
+                    "name": "10 Rue Victor",
+                    "housenumber": "10",
+                    "street": "Rue Victor",
+                    "postcode": "36500",
+                    "city": "City",
+                }
+            },
+        }
+    ],
+    "zones": [
+        {
+            "type": "Zone",
+            "geometry": {"coordinates": [r_lon, r_lat], "type": "Point"},
+            "properties": {
+                "geocoding": {
+                    "id": to_poi_uri,
+                    "type": "poi",
+                    "label": "Jardin (City)",
+                    "name": "Jardin",
+                    "city": "Paris",
+                    "poi_types": [{"id": "poi_type:jardin", "name": "Jardin"}],
+                    "children": [
+                        {
+                            "type": "poi",
+                            "id": "poi:to:porte3",
+                            "label": "Jardin: Porte 3 (City)",
+                            "name": "Jardin: Porte 3",
+                            "coord": {"lon": r_lon + 0.0000000005, "lat": r_lat + 0.0000000005},
+                            "poi_type": {"id": "poi_type:access_point", "name": "Point d'accès"},
+                        },
+                        {
+                            "type": "poi",
+                            "id": "poi:to:porte4",
+                            "label": "Jardin: Porte 4 (City)",
+                            "name": "Jardin: Porte 4",
+                            "coord": {"lon": r_lon + 0.0000000008, "lat": r_lat + 0.0000000008},
+                            "poi_type": {"id": "poi_type:access_point", "name": "Point d'accès"},
+                        },
+                    ],
+                }
+            },
+        }
+    ],
 }
 
 MOCKED_INSTANCE_CONF = {"scenario": "distributed", 'instance_config': {'default_autocomplete': 'bragi'}}
@@ -634,3 +747,168 @@ class TestJourneysDistributedPoiAccessPoint(AbstractTestFixture):
             assert last_journey["sections"][0]["from"]["id"] == from_poi_uri
             assert last_journey["sections"][0]["to"]["id"] == to_poi_uri
             assert "vias" not in last_journey["sections"][0]
+
+
+MOCKED_INSTANCE_CONF = {
+    "scenario": "distributed",
+    'instance_config': {'use_multi_reverse': True, 'default_autocomplete': 'bragi'},
+}
+
+
+@dataset({'main_routing_test': MOCKED_INSTANCE_CONF}, global_config={'activate_bragi': True})
+class TestJourneysDistributedPoiAccessPointFromToAddress(AbstractTestFixture):
+    def test_from_address_with_within_zones_to_poi(self):
+        url = 'https://host_of_bragi'
+        to_place_params = {'timeout': 200, 'pt_dataset[]': 'main_routing_test'}
+        from_place_params = {'reverse_timeout': 200, 'within_timeout': 200, 'pt_dataset[]': 'main_routing_test'}
+        from_place = "{}/multi-reverse?lon={}&lat={}&{}".format(
+            url, s_lon, s_lat, urlencode(from_place_params, doseq=True)
+        )
+        to_place = "{}/features/{}?{}".format(url, to_poi_uri, urlencode(to_place_params, doseq=True))
+        with requests_mock.Mocker() as m:
+            m.get(from_place, json=FROM_ADDRESS_WITH_WITHIN_ZONES)
+            m.get(to_place, json=TO_POI)
+            response = self.query_region(
+                template_journey_query.format(place_from=from_addr_within_zone_uri, place_to=to_poi_uri),
+                display=True,
+            )
+            check_best(response)
+            journeys = response["journeys"]
+            assert len(journeys) == 2
+            first_journey = journeys[0]
+            assert len(first_journey["sections"]) == 3
+            assert first_journey["sections"][0]["mode"] == "walking"
+            assert first_journey["sections"][0]["type"] == "street_network"
+            assert first_journey["sections"][0]["from"]["id"] == from_poi_uri
+            assert first_journey["sections"][0]["from"]["embedded_type"] == 'poi'
+            assert first_journey["sections"][0]["from"]["name"] == 'Jardin (City)'
+
+            assert first_journey["sections"][2]["mode"] == "walking"
+            assert first_journey["sections"][2]["type"] == "street_network"
+            assert first_journey["sections"][2]["to"]["id"] == to_poi_uri
+            assert first_journey["sections"][2]["to"]["embedded_type"] == 'poi'
+            assert first_journey["sections"][2]["to"]["name"] == 'Jardin (City)'
+            assert len(first_journey["sections"][2]["vias"]) == 1
+            assert first_journey["sections"][2]["vias"][0]["id"] == 'poi:to:porte3'
+            assert first_journey["sections"][2]["vias"][0]["name"] == 'Jardin: Porte 3'
+            assert first_journey["sections"][2]["vias"][0]["access_point"]["embedded_type"] == 'poi_access_point'
+            path = first_journey["sections"][2]["path"]
+            assert len(path) == 3
+            assert path[2]["length"] == 0
+            assert path[2]["name"] == "Jardin: Porte 3"
+            assert path[2]["instruction"] == "Then enter Jardin (City) via Jardin: Porte 3."
+            assert path[2]["via_uri"] == 'poi:to:porte3'
+
+            # direct path
+            last_journey = journeys[1]
+            assert len(last_journey["sections"]) == 1
+            assert last_journey["sections"][0]["mode"] == "walking"
+            assert last_journey["sections"][0]["type"] == "street_network"
+            assert last_journey["sections"][0]["from"]["id"] == from_poi_uri
+            assert last_journey["sections"][0]["to"]["id"] == to_poi_uri
+            vias = last_journey["sections"][0]["vias"]
+            assert len(vias) == 2
+            assert vias[0]["id"] == 'poi:from:porte1'
+            assert vias[0]["name"] == 'Jardin: Porte 1'
+            assert vias[0]["access_point"]["embedded_type"] == 'poi_access_point'
+
+            assert vias[1]["id"] == 'poi:to:porte3'
+            assert vias[1]["name"] == 'Jardin: Porte 3'
+            assert vias[1]["access_point"]["embedded_type"] == 'poi_access_point'
+
+            first_path = last_journey["sections"][0]["path"][0]
+            assert first_path["length"] == 0
+            assert first_path["name"] == "Jardin: Porte 1"
+            assert first_path["instruction"] == 'Exit Jardin (City) via Jardin: Porte 1.'
+            assert first_path["via_uri"] == 'poi:from:porte1'
+
+            last_path = last_journey["sections"][0]["path"][-1]
+            assert last_path["length"] == 0
+            assert last_path["name"] == "Jardin: Porte 3"
+            assert last_path["instruction"] == "Then enter Jardin (City) via Jardin: Porte 3."
+            assert last_path["via_uri"] == 'poi:to:porte3'
+
+    def test_from_poi_to_address_within_zones(self):
+        url = 'https://host_of_bragi'
+        params = {'timeout': 200, 'pt_dataset[]': 'main_routing_test'}
+        from_place = "{}/features/{}?{}".format(url, from_poi_uri, urlencode(params, doseq=True))
+
+        to_place_params = {'reverse_timeout': 200, 'within_timeout': 200, 'pt_dataset[]': 'main_routing_test'}
+        to_place = "{}/multi-reverse?lon={}&lat={}&{}".format(
+            url, r_lon, r_lat, urlencode(to_place_params, doseq=True)
+        )
+
+        with requests_mock.Mocker() as m:
+            m.get(from_place, json=FROM_POI)
+            m.get(to_place, json=TO_ADDRESS_WITHIN_ZONES)
+            response = self.query_region(
+                template_journey_query.format(place_from=from_poi_uri, place_to=to_addr_within_zone_uri)
+                + "&_access_points=true",
+                display=True,
+            )
+            check_best(response)
+            journeys = response["journeys"]
+            assert len(journeys) == 2
+            first_journey = journeys[0]
+            assert len(first_journey["sections"]) == 3
+            first_section = first_journey["sections"][0]
+            assert first_section["mode"] == "walking"
+            assert first_section["type"] == "street_network"
+            assert first_section["from"]["id"] == from_poi_uri
+            assert first_section["from"]["name"] == 'Jardin (City)'
+
+            assert len(first_section["vias"]) == 2
+            assert first_section["vias"][0]["id"] == 'poi:from:porte1'
+            assert first_section["vias"][0]["name"] == 'Jardin: Porte 1'
+            assert first_section["vias"][0]["access_point"]["embedded_type"] == 'poi_access_point'
+            assert first_section["vias"][1]["id"] == 'access_point:B1'
+            assert first_section["vias"][1]["name"] == 'access_point:B1'
+            assert first_section["vias"][1]["access_point"]["embedded_type"] == 'pt_access_point'
+
+            path = first_section["path"]
+            first_path = path[0]
+            last_path = path[-1]
+            assert first_path["length"] == 0
+            assert first_path["name"] == "Jardin: Porte 1"
+            assert first_path["instruction"] == "Exit Jardin (City) via Jardin: Porte 1."
+            assert first_path["via_uri"] == 'poi:from:porte1'
+            assert last_path["length"] == 1
+            assert last_path["name"] == 'access_point:B1'
+            assert last_path["instruction"] == 'Then enter stop_point:stopB (Condom) via access_point:B1.'
+            assert last_path["via_uri"] == 'access_point:B1'
+
+            last_section = first_journey["sections"][2]
+            assert last_section["mode"] == "walking"
+            assert last_section["type"] == "street_network"
+            assert last_section["to"]["id"] == to_poi_uri
+            assert last_section["to"]["name"] == 'Jardin (City)'
+            assert last_section["to"]["embedded_type"] == 'poi'
+
+            assert len(last_section["vias"]) == 2
+            assert last_section["vias"][0]["id"] == 'poi:to:porte3'
+            assert last_section["vias"][0]["name"] == 'Jardin: Porte 3'
+            assert last_section["vias"][0]["access_point"]["embedded_type"] == 'poi_access_point'
+            assert last_section["vias"][1]["id"] == 'access_point:A2'
+            assert last_section["vias"][1]["name"] == 'access_point:A2'
+            assert last_section["vias"][1]["access_point"]["embedded_type"] == 'pt_access_point'
+
+            # direct path
+            last_journey = journeys[1]
+            assert len(last_journey["sections"]) == 1
+            first_section = last_journey["sections"][0]
+            assert first_section["mode"] == "walking"
+            assert first_section["type"] == "street_network"
+            assert first_section["from"]["id"] == from_poi_uri
+            assert first_section["to"]["id"] == to_poi_uri
+
+            assert len(first_section["vias"]) == 2
+            assert first_section["vias"][0]["id"] == 'poi:from:porte1'
+            assert first_section["vias"][0]["name"] == 'Jardin: Porte 1'
+            assert first_section["vias"][0]["access_point"]["embedded_type"] == 'poi_access_point'
+
+            path = last_journey["sections"][0]["path"]
+            first_path = path[0]
+            assert first_path["length"] == 0
+            assert first_path["name"] == "Jardin: Porte 1"
+            assert first_path["instruction"] == "Exit Jardin (City) via Jardin: Porte 1."
+            assert first_path["via_uri"] == 'poi:from:porte1'
