@@ -812,8 +812,16 @@ def portable_min(*args, **kwargs):
     1
     >>> portable_min([], default=42)
     42
+    >>> portable_min([]) # only behavioral change compared to py3's min: default to None (could be reconsidered, forcing caller to provide default)
+
+    >>> portable_min((j for j in [])) # same, default to None
+
+    >>> portable_min((j for j in []), key=lambda j: j) # same, default to None
+
     >>> portable_min(iter(()), default=43) # empty iterable
     43
+    >>> portable_min((j for j in [{"s": 5}, {"s": 9},{"s": 1}]), key=lambda j: j["s"]) # not comparable without key
+    {'s': 1}
 
     """
     if PY2:
@@ -825,8 +833,8 @@ def portable_min(*args, **kwargs):
         except Exception:
             raise
     if PY3:
-        default = kwargs.get('default', None)
-        return min(*args, default=default)
+        kwargs.setdefault('default', None)  # may be changed before really switching to py3's min().
+        return min(*args, **kwargs)
 
 
 def mps_to_kmph(speed):

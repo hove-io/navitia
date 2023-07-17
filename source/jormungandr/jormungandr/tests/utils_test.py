@@ -290,11 +290,6 @@ def test_get_pt_object_from_json():
     assert len(pt_object.poi.children) == 2
 
 
-def test_portable_min():
-    assert portable_min([]) is None
-    assert portable_min((j for j in [])) is None
-
-
 def test_read_best_boarding_positions():
     import shortuuid
 
