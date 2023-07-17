@@ -39,7 +39,6 @@ from jormungandr.utils import (
     read_best_boarding_positions,
     read_origin_destination_data,
     make_origin_destination_key,
-    portable_min,
     get_last_pt_section,
     get_first_pt_section,
 )
