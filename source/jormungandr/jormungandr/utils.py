@@ -510,11 +510,11 @@ def transform_entrypoint(dict_pt_object, uri):
     )
     if not first_within_zone:
         return dict_pt_object
-    lon, lat = get_lon_lat(uri)
-    if lon is None and lat is None:
+    if not is_coord(uri):
         return dict_pt_object
-    first_within_zone["poi"]["coord"]["lon"] = lon
-    first_within_zone["poi"]["coord"]["lat"] = lat
+    lon, lat = get_lon_lat(uri)
+    first_within_zone["poi"]["coord"]["lon"] = "{}".format(lon)
+    first_within_zone["poi"]["coord"]["lat"] = "{}".format(lat)
     return first_within_zone
 
 
