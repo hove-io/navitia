@@ -28,11 +28,10 @@
 # www.navitia.io
 from __future__ import absolute_import, print_function, unicode_literals, division
 
-from jormungandr.pt_planners.common import ZmqSocket, get_crow_fly
+from jormungandr.pt_planners.common import ZmqSocket, get_crow_fly, get_odt_stop_points
 from jormungandr import utils, app
 from .pt_planner import AbstractPtPlanner
-from navitiacommon import type_pb2, request_pb2
-import logging
+from navitiacommon import type_pb2
 
 
 class Kraken(ZmqSocket, AbstractPtPlanner):
@@ -87,3 +86,6 @@ class Kraken(ZmqSocket, AbstractPtPlanner):
             allowed_id,
             **kwargs
         )
+
+    def get_odt_stop_points(self, coord, request_id):
+        return get_odt_stop_points(self, coord, request_id)

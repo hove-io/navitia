@@ -219,12 +219,14 @@ class Distributed(object):
                 future_manager=future_manager,
                 instance=instance,
                 requested_place_obj=context.requested_orig_obj,
+                pt_planner_name=request['_pt_planner'],
                 request_id="{}_places_free_access_orig".format(request_id),
             )
             context.dest_places_free_access = PlacesFreeAccess(
                 future_manager=future_manager,
                 instance=instance,
                 requested_place_obj=context.requested_dest_obj,
+                pt_planner_name=request['_pt_planner'],
                 request_id="{}_places_free_access_dest".format(request_id),
             )
 
@@ -376,6 +378,7 @@ class Distributed(object):
             future_manager=future_manager,
             instance=instance,
             requested_place_obj=requested_obj,
+            pt_planner_name=request['_pt_planner'],
             request_id=request_id,
         )
 
