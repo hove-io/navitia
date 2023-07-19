@@ -267,14 +267,16 @@ class PtJourneyPool:
         self._dest_fallback_durations_pool = dest_fallback_durations_pool
         self._isochrone_center = isochrone_center
         self._request_type = request_type
-        self._journey_params = self._create_parameters(request, self._isochrone_center, self._request_type)
+        self._journey_params = self._create_parameters(
+            instance, request, self._isochrone_center, self._request_type
+        )
         self._request = request
         self._value = []
         self._request_id = request_id
         self._async_request()
 
     @staticmethod
-    def _create_parameters(request, isochrone_center, request_type):
+    def _create_parameters(instance, request, isochrone_center, request_type):
         from jormungandr.pt_planners.pt_planner import (
             JourneyParameters,
             GraphicalIsochronesParameters,
@@ -305,6 +307,9 @@ class PtJourneyPool:
                 boundary_duration=request.get("boundary_duration[]"),
             )
         else:
+            attractivities = copy.deepcopy(instance.stop_points_attractivities or {})
+            attractivities.update(request.get('_olympics_sites_attractivities[]') or [])
+
             return JourneyParameters(
                 max_duration=request['max_duration'],
                 max_transfers=request['max_transfers'],
@@ -323,7 +328,7 @@ class PtJourneyPool:
                 isochrone_center=isochrone_center,
                 current_datetime=date_to_timestamp(request['_current_datetime']),
                 criteria=request.get('criteria', 'classic'),
-                attractivities=request.get('_olympics_sites_attractivities[]') or [],
+                attractivities=attractivities,
             )
 
     def _async_request(self):

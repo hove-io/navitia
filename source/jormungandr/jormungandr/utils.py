@@ -1107,6 +1107,34 @@ def read_origin_destination_data(file_path):
         return None, None, None
 
 
+def read_stop_points_attractivities(file_path):
+    logger = logging.getLogger(__name__)
+    if not os.path.exists(file_path):
+        logger.warning("Reading stop points attractivities, file: %s does not exist", file_path)
+        return None
+
+    logger.info("Reading stop points attractivities from file: %s", file_path)
+    try:
+        stop_points_attractivities = dict()
+        fieldnames = ['stop_point_id', 'attractivity']
+        with open(file_path) as f:
+            csv_reader = csv.DictReader(f, fieldnames)
+            # skip the header
+            next(csv_reader)
+
+            for line in csv_reader:
+                stop_point_id = line['stop_point_id']
+                attractivity = line['attractivity']
+                stop_points_attractivities[stop_point_id] = int(attractivity)
+
+        return stop_points_attractivities
+    except Exception as e:
+        logger.exception(
+            'Error while loading od_allowed_ids file: {} with exception: {}'.format(file_path, str(e))
+        )
+        return None
+
+
 def ceil_by_half(f):
     """Return f ceiled by 0.5.
     >>> ceil_by_half(1.0)

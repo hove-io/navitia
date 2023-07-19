@@ -91,8 +91,7 @@ class JourneyParameters(object):
         self.arrival_transfer_penalty = arrival_transfer_penalty
         self.walking_transfer_penalty = walking_transfer_penalty
         self.criteria = criteria
-        self.attractivities = {}
-        self.attractivities.update(attractivities or [])
+        self.attractivities = attractivities or {}
 
 
 # Needed for GraphicalIsochrones
