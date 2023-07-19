@@ -93,7 +93,7 @@ def create_journeys_request_with_attractivities_test():
     origin = {"Hove": 42}
     destination = {"Somewhere": 666}
     journey_parameters = JourneyParameters(
-        criteria='departure_stop_attractivity', attractivities=[("Hove", 1), ("Somewhere", 2)]
+        criteria='departure_stop_attractivity', attractivities={"Hove": 1, "Somewhere": 2}
     )
     datetime = str_to_time_stamp("20120614T080000")
 
@@ -102,7 +102,7 @@ def create_journeys_request_with_attractivities_test():
     assert not req.journeys.destination[0].HasField("attractivity")
 
     journey_parameters = JourneyParameters(
-        criteria='arrival_stop_attractivity', attractivities=[("Hove", 1), ("Somewhere", 2)]
+        criteria='arrival_stop_attractivity', attractivities={"Hove": 1, "Somewhere": 2}
     )
     datetime = str_to_time_stamp("20120614T080000")
 

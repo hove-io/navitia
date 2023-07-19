@@ -68,6 +68,7 @@ from jormungandr.utils import (
     make_origin_destination_key,
     read_best_boarding_positions,
     read_origin_destination_data,
+    read_stop_points_attractivities,
     str_to_time_stamp,
 )
 from jormungandr import pt_planners_manager, transient_socket
@@ -266,6 +267,7 @@ class Instance(transient_socket.TransientSocket):
         self.additional_params_period_start = None
         self.additional_params_period_end = None
         self.use_multi_reverse = use_multi_reverse
+        self.stop_points_attractivities = None
 
         # Read the best_boarding_positions files if any
         if best_boarding_positions_dir is not None:
@@ -285,6 +287,12 @@ class Instance(transient_socket.TransientSocket):
         if additional_params_period:
             self.additional_params_period_start = str_to_time_stamp(additional_params_period.get('start'))
             self.additional_params_period_end = str_to_time_stamp(additional_params_period.get('end'))
+
+        # load stop_point attractivities, the feature is only available when loki is selected as pt_planner
+        stop_points_attractivities_dir = app.config.get(str('STOP_POINTS_ATTRACTIVITIES_DIR'))
+        if stop_points_attractivities_dir:
+            file_path = os.path.join(stop_points_attractivities_dir, "{}.csv".format(self.name))
+            self.stop_points_attractivities = read_stop_points_attractivities(file_path)
 
     def get_providers_from_db(self):
         """
