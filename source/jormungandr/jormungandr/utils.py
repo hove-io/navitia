@@ -1115,19 +1115,13 @@ def read_stop_points_attractivities(file_path):
 
     logger.info("Reading stop points attractivities from file: %s", file_path)
     try:
-        stop_points_attractivities = dict()
         fieldnames = ['stop_point_id', 'attractivity']
         with open(file_path) as f:
             csv_reader = csv.DictReader(f, fieldnames)
             # skip the header
             next(csv_reader)
+            return {line['stop_point_id']: int(line['attractivity']) for line in csv_reader}
 
-            for line in csv_reader:
-                stop_point_id = line['stop_point_id']
-                attractivity = line['attractivity']
-                stop_points_attractivities[stop_point_id] = int(attractivity)
-
-        return stop_points_attractivities
     except Exception as e:
         logger.exception(
             'Error while loading od_allowed_ids file: {} with exception: {}'.format(file_path, str(e))
