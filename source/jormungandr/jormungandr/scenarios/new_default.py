@@ -82,6 +82,7 @@ from jormungandr.utils import (
     get_pt_object_from_json,
     json_address_from_uri,
     is_olympic_site,
+    entrypoint_uri_refocus,
 )
 from jormungandr.error import generate_error
 from jormungandr.utils import Coords
@@ -1750,14 +1751,17 @@ class Scenario(simple.Scenario):
             )
 
         if detail:
-            return detail
+            # Transform address in (from, to) to poi with ES
+            return entrypoint_uri_refocus(detail, entrypoint)
 
         if not isinstance(instance.autocomplete, GeocodeJson):
             bragi = global_autocomplete.get(app.config.get('DEFAULT_AUTOCOMPLETE_BACKEND', 'bragi'))
             if bragi:
                 # if the instance's autocomplete is not a geocodejson autocomplete, we also check in the
                 # global autocomplete instance
-                return bragi.get_object_by_uri(entrypoint, instances=[instance], request_id=request_id)
+                detail = bragi.get_object_by_uri(entrypoint, instances=[instance], request_id=request_id)
+                # Transform address in (from, to) to poi with ES
+                return entrypoint_uri_refocus(detail, entrypoint)
 
         return None
 

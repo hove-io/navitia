@@ -494,6 +494,36 @@ def get_pt_object_from_json(dict_pt_object, instance):
     return pt_object
 
 
+def replace_address_with_custom_poi(dict_pt_object, uri):
+    new_poi = next(
+        (
+            wz
+            for wz in dict_pt_object.get("within_zones", [])
+            if MAP_STRING_PTOBJECT_TYPE.get(wz.get("embedded_type")) == type_pb2.POI
+            and wz.get("poi", {}).get("children", [])
+        ),
+        None,
+    )
+    if not new_poi:
+        return dict_pt_object
+    if not is_coord(uri):
+        return dict_pt_object
+    lon, lat = get_lon_lat(uri)
+    # We're putting back the coordinate of the end-user, who is in a POI area (with entrypoints).
+    # If we don't, barycenter of the POI area will be displayed which means nothing for the end user.
+    new_poi["poi"]["coord"]["lon"] = "{}".format(lon)
+    new_poi["poi"]["coord"]["lat"] = "{}".format(lat)
+    return new_poi
+
+
+def entrypoint_uri_refocus(dict_pt_object, uri):
+    if not dict_pt_object:
+        return None
+    if MAP_STRING_PTOBJECT_TYPE.get(dict_pt_object.get("embedded_type")) == type_pb2.ADDRESS:
+        return replace_address_with_custom_poi(dict_pt_object, uri)
+    return dict_pt_object
+
+
 def json_address_from_uri(uri):
     if is_coord(uri):
         lon, lat = get_lon_lat(uri)

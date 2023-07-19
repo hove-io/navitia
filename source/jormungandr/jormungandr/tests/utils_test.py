@@ -39,9 +39,9 @@ from jormungandr.utils import (
     read_best_boarding_positions,
     read_origin_destination_data,
     make_origin_destination_key,
-    portable_min,
     get_last_pt_section,
     get_first_pt_section,
+    entrypoint_uri_refocus,
 )
 import pytz
 from jormungandr import app
@@ -403,3 +403,132 @@ def test_get_olympic_site_pt_section_journey_only_street_network_section():
     last_section = get_last_pt_section(pb_j)
     assert first_section.duration == 1
     assert last_section.duration == 3
+
+
+def test_entrypoint_uri_refocus_none_value():
+    res = entrypoint_uri_refocus(None, "123")
+    assert res is None
+
+
+def test_entrypoint_uri_refocus_embedded_type_not_address():
+    stop_area = {
+        "id": "stop_area:123",
+        "name": "Stop area (Paris)",
+        "quality": 0,
+        "embedded_type": "stop_area",
+        "stop_area": {
+            "id": "stop_area:123",
+            "coord": {"lat": "48.845971", "lon": "2.339872"},
+            "label": "Stop area (Paris)",
+            "name": "Stop area",
+        },
+    }
+    res = entrypoint_uri_refocus(stop_area, stop_area["id"])
+    assert res["id"] == stop_area["id"]
+    assert res["name"] == stop_area["name"]
+    assert res["embedded_type"] == stop_area["embedded_type"]
+    assert res["stop_area"]["id"] == stop_area["stop_area"]["id"]
+    assert res["stop_area"]["label"] == stop_area["stop_area"]["label"]
+    assert res["stop_area"]["name"] == stop_area["stop_area"]["name"]
+    assert res["stop_area"]["coord"]["lat"] == stop_area["stop_area"]["coord"]["lat"]
+    assert res["stop_area"]["coord"]["lon"] == stop_area["stop_area"]["coord"]["lon"]
+
+
+def test_without_within_zones():
+    address = {
+        "id": "2.339872;48.845971",
+        "name": "58BIS Boulevard Saint-Michel (Paris)",
+        "quality": 0,
+        "embedded_type": "address",
+        "address": {
+            "id": "2.339872;48.845971",
+            "coord": {"lat": "48.845971", "lon": "2.339872"},
+            "house_number": 58,
+            "label": "58BIS Boulevard Saint-Michel (Paris)",
+            "name": "58BIS Boulevard Saint-Michel",
+        },
+    }
+    res = entrypoint_uri_refocus(address, address["id"])
+    assert res["id"] == address["id"]
+    assert res["name"] == address["name"]
+    assert res["embedded_type"] == address["embedded_type"]
+    assert res["address"]["id"] == address["address"]["id"]
+    assert res["address"]["label"] == address["address"]["label"]
+    assert res["address"]["name"] == address["address"]["name"]
+    assert res["address"]["coord"]["lat"] == address["address"]["coord"]["lat"]
+    assert res["address"]["coord"]["lon"] == address["address"]["coord"]["lon"]
+
+
+def test_with_empty_within_zones():
+    address = {
+        "id": "2.339872;48.845971",
+        "name": "58BIS Boulevard Saint-Michel (Paris)",
+        "quality": 0,
+        "embedded_type": "address",
+        "address": {
+            "id": "2.339872;48.845971",
+            "coord": {"lat": "48.845971", "lon": "2.339872"},
+            "house_number": 58,
+            "label": "58BIS Boulevard Saint-Michel (Paris)",
+            "name": "58BIS Boulevard Saint-Michel",
+        },
+        "within_zones": [],
+    }
+    res = entrypoint_uri_refocus(address, address["id"])
+    assert res["id"] == address["id"]
+    assert res["name"] == address["name"]
+    assert res["embedded_type"] == address["embedded_type"]
+    assert res["address"]["id"] == address["address"]["id"]
+    assert res["address"]["label"] == address["address"]["label"]
+    assert res["address"]["name"] == address["address"]["name"]
+    assert res["address"]["coord"]["lat"] == address["address"]["coord"]["lat"]
+    assert res["address"]["coord"]["lon"] == address["address"]["coord"]["lon"]
+
+
+def test_address_with_within_zones():
+    poi = {
+        "id": "poi:10309",
+        "name": "Jardin du Luxembourg (Paris)",
+        "quality": 0,
+        "embedded_type": "poi",
+        "poi": {
+            "id": "poi:10309",
+            "coord": {"lat": "48.8487134929", "lon": "2.33642846001"},
+            "label": "Jardin du Luxembourg (Paris)",
+            "name": "Jardin du Luxembourg",
+            "poi_type": {"id": "poi_type:jardin", "name": "Jardin"},
+            "children": [
+                {
+                    "id": "poi:osm:node:24908972",
+                    "name": "Porte Saint-Michel",
+                    "label": "Porte Saint-Michel (Paris)",
+                    "coord": {"lon": "2.340268", "lat": "48.8468553"},
+                    "type": "poi",
+                    "poi_type": {"id": "poi_type:access_point", "name": "Point d'accès"},
+                }
+            ],
+        },
+    }
+    address = {
+        "id": "2.339872;48.845971",
+        "name": "58BIS Boulevard Saint-Michel (Paris)",
+        "quality": 0,
+        "embedded_type": "address",
+        "address": {
+            "id": "2.339872;48.845971",
+            "coord": {"lat": "48.845971", "lon": "2.339872"},
+            "house_number": 58,
+            "label": "58BIS Boulevard Saint-Michel (Paris)",
+            "name": "58BIS Boulevard Saint-Michel",
+        },
+        "within_zones": [poi],
+    }
+    res = entrypoint_uri_refocus(address, address["id"])
+    assert res["id"] == poi["id"]
+    assert res["name"] == poi["name"]
+    assert res["embedded_type"] == poi["embedded_type"]
+    assert res["poi"]["id"] == poi["poi"]["id"]
+    assert res["poi"]["label"] == poi["poi"]["label"]
+    assert res["poi"]["name"] == poi["poi"]["name"]
+    assert res["poi"]["coord"]["lat"] == address["address"]["coord"]["lat"]
+    assert res["poi"]["coord"]["lon"] == address["address"]["coord"]["lon"]
