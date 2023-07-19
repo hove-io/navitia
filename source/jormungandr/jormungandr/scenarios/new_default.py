@@ -1333,10 +1333,6 @@ class Scenario(simple.Scenario):
             api_request.get('destination'), instance, request_id="{}_dest_detail".format(request_id)
         )
 
-        # Transform address in from/to to poi with ES
-        origin_detail = transform_entrypoint(origin_detail, api_request.get('origin'))
-        destination_detail = transform_entrypoint(destination_detail, api_request.get('destination'))
-
         # we store the origin/destination detail in g to be able to use them after the marshall
         g.origin_detail = origin_detail
         g.destination_detail = destination_detail
@@ -1755,14 +1751,17 @@ class Scenario(simple.Scenario):
             )
 
         if detail:
-            return detail
+            # Transform address in (from, to) to poi with ES
+            return transform_entrypoint(detail, entrypoint)
 
         if not isinstance(instance.autocomplete, GeocodeJson):
             bragi = global_autocomplete.get(app.config.get('DEFAULT_AUTOCOMPLETE_BACKEND', 'bragi'))
             if bragi:
                 # if the instance's autocomplete is not a geocodejson autocomplete, we also check in the
                 # global autocomplete instance
-                return bragi.get_object_by_uri(entrypoint, instances=[instance], request_id=request_id)
+                detail = bragi.get_object_by_uri(entrypoint, instances=[instance], request_id=request_id)
+                # Transform address in (from, to) to poi with ES
+                return transform_entrypoint(detail, entrypoint)
 
         return None
 
