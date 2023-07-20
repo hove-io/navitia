@@ -36,15 +36,6 @@ jobs:
         username: AWS
         password: ${{ needs.credentials.outputs.aws_token }}
     steps:
-    - name: force chown to avoid errors
-      run: |
-        echo "****************************"
-        echo $(id -u)
-        echo "****************************"
-        # chown -R $USER:$USER $WORKSPACE
-        echo "****************************"
-        ls -lt
-        echo "****************************"
     - name: Generate github private access token
       id: ci-core-app-token
       uses: getsentry/action-github-app-token@v2.0.0
@@ -66,15 +57,6 @@ jobs:
     runs-on: [self-hosted, corefront, sandbox]
     needs: [credentials, checks]
     steps:
-      - name: force chown to avoid errors
-        run: |
-          echo "****************************"
-          echo $(id -u)
-          echo "****************************"
-          # chown -R $USER:$USER $WORKSPACE
-          echo "****************************"
-          ls -lt
-          echo "****************************"
       - name: Generate github private access token
         id: ci-core-app-token
         uses: getsentry/action-github-app-token@v2.0.0
@@ -94,19 +76,11 @@ jobs:
     needs: [credentials, debug, checks]
     container:
       image: 162230498103.dkr.ecr.eu-west-1.amazonaws.com/mutable-debian11_dev:latest
+      options: --user 1000
       credentials:
         username: AWS
         password: ${{ needs.credentials.outputs.aws_token }}
     steps:
-      - name: force chown to avoid errors
-        run: |
-          echo "****************************"
-          echo $(id -u)
-          echo "****************************"
-          # chown -R $USER:$USER $WORKSPACE
-          echo "****************************"
-          ls -lt
-          echo "****************************"
       - name: Generate github private access token
         id: ci-core-app-token
         uses: getsentry/action-github-app-token@v2.0.0
@@ -149,6 +123,7 @@ jobs:
 
     container:
         image: 162230498103.dkr.ecr.eu-west-1.amazonaws.com/${{ matrix.os.docker_image }}:latest
+        options: --user 1000
         credentials:
           username: AWS
           password: ${{ needs.credentials.outputs.aws_token }}
@@ -164,16 +139,6 @@ jobs:
         ports:
           - 6379:6379
     steps:
-    - name: force chown to avoid errors
-      run: |
-        echo "****************************"
-        echo $(id -u)
-        echo "****************************"
-        # chown -R $USER:$USER $WORKSPACE
-        echo "****************************"
-        ls -lt
-        echo "****************************"
-
     - name: Generate github private access token
       id: ci-core-app-token
       uses: getsentry/action-github-app-token@v2.0.0
