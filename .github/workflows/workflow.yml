@@ -31,10 +31,10 @@ jobs:
     needs: credentials
     container:
       image: 162230498103.dkr.ecr.eu-west-1.amazonaws.com/mutable-debian11_dev:latest
+      options: --user 1000
       credentials:
         username: AWS
         password: ${{ needs.credentials.outputs.aws_token }}
-        options: --user 1000
     steps:
     - name: force chown to avoid errors
       run: |
