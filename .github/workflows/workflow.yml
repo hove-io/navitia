@@ -88,14 +88,17 @@ jobs:
       - name: Build Protobuf
         run: bash source/scripts/build_protobuf.sh
 
+      - name: Git config
+        run: git config --global --add safe.directory /__w/navitia/navitia
+
+      - name: Pre-commit install
+        run: pre-commit install --install-hooks
+
       - name: Pre-commit run
         env:
           LC_ALL: C.UTF-8
           LANG: C.UTF-8
-        run: |
-          git config --global --add safe.directory /__w/navitia/navitia
-          pre-commit install --install-hooks
-          pre-commit run --all --show-diff-on-failure
+        run: pre-commit run --all --show-diff-on-failure
 
   build:
     runs-on: [self-hosted, corefront, sandbox]
