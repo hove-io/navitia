@@ -214,7 +214,7 @@ jobs:
         pip install -r ../source/jormungandr/requirements_dev.txt
         export JORMUNGANDR_BROKER_URL='amqp://guest:guest@rabbitmq:5672//'
         export KRAKEN_RABBITMQ_HOST='rabbitmq'
-#        ctest --output-on-failure
+        # ctest --output-on-failure
         deactivate
         rm -rf navitia_py3
     - name: docker_test python2
@@ -226,7 +226,7 @@ jobs:
         pip install -r ../source/tyr/requirements_dev.txt
         pip install -r ../source/sql/requirements.txt
         export NAVITIA_CHAOS_DUMP_PATH=$(echo $GITHUB_WORKSPACE/source/tests/chaos/chaos_loading.sql.gz | sed -e 's#__w#/opt/actions-runner/_work#')
-#        make docker_test
+        # make docker_test
         deactivate
         rm -rf navitia_py2
       env:
@@ -242,7 +242,7 @@ jobs:
         pip install -r ../source/tyr/requirements_dev.txt
         pip install -r ../source/sql/requirements.txt
         export NAVITIA_CHAOS_DUMP_PATH=$(echo $GITHUB_WORKSPACE/source/tests/chaos/chaos_loading.sql.gz | sed -e 's#__w#/opt/actions-runner/_work#')
-#        make docker_test
+        # make docker_test
         deactivate
         rm -rf navitia_py3
 
