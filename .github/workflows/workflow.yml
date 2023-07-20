@@ -36,7 +36,14 @@ jobs:
         password: ${{ needs.credentials.outputs.aws_token }}
     steps:
     - name: force chown to avoid errors
-      run: chown -R $USER:$USER $WORKSPACE
+      run: |
+        echo "****************************"
+        echo $USER
+        echo "****************************"
+        chown -R $USER:$USER $WORKSPACE
+        echo "****************************"
+        ls -lt
+        echo "****************************"
     - name: Generate github private access token
       id: ci-core-app-token
       uses: getsentry/action-github-app-token@v2.0.0
@@ -64,7 +71,14 @@ jobs:
         password: ${{ needs.credentials.outputs.aws_token }}
     steps:
       - name: force chown to avoid errors
-        run: chown -R $USER:$USER $WORKSPACE
+        run: |
+          echo "****************************"
+          echo $USER
+          echo "****************************"
+          chown -R $USER:$USER $WORKSPACE
+          echo "****************************"
+          ls -lt
+          echo "****************************"
       - name: Generate github private access token
         id: ci-core-app-token
         uses: getsentry/action-github-app-token@v2.0.0
@@ -123,7 +137,14 @@ jobs:
           - 6379:6379
     steps:
     - name: force chown to avoid errors
-      run: chown -R $USER:$USER $WORKSPACE
+      run: |
+        echo "****************************"
+        echo $USER
+        echo "****************************"
+        chown -R $USER:$USER $WORKSPACE
+        echo "****************************"
+        ls -lt
+        echo "****************************"
 
     - name: Generate github private access token
       id: ci-core-app-token
