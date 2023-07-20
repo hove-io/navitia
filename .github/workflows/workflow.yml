@@ -18,6 +18,7 @@ jobs:
   credentials:
     name: Init credentials
     runs-on: [self-hosted, corefront, sandbox]
+    container-user-id: 1000
     outputs:
       aws_token: ${{ steps.ecr_token.outputs.token }}
     steps:
@@ -28,6 +29,7 @@ jobs:
 
   checks:
     runs-on: [self-hosted, corefront, sandbox]
+    container-user-id: 1000
     needs: credentials
     container:
       image: 162230498103.dkr.ecr.eu-west-1.amazonaws.com/mutable-debian11_dev:latest
@@ -63,6 +65,7 @@ jobs:
 
   debug:
     runs-on: [self-hosted, corefront, sandbox]
+    container-user-id: 1000
     needs: [credentials, checks]
     steps:
       - name: force chown to avoid errors
@@ -90,6 +93,7 @@ jobs:
 
   precommit:
     runs-on: [self-hosted, corefront, sandbox]
+    container-user-id: 1000
     needs: [credentials, debug, checks]
     container:
       image: 162230498103.dkr.ecr.eu-west-1.amazonaws.com/mutable-debian11_dev:latest
@@ -140,6 +144,7 @@ jobs:
 
   build:
     runs-on: [self-hosted, corefront, sandbox]
+    container-user-id: 1000
     needs: [credentials, checks,debug, precommit]
     strategy:
         fail-fast: false
