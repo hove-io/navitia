@@ -40,7 +40,7 @@ jobs:
         echo "****************************"
         echo $USER
         echo "****************************"
-        chown -R $USER:$USER $WORKSPACE
+        # chown -R $USER:$USER $WORKSPACE
         echo "****************************"
         ls -lt
         echo "****************************"
@@ -70,7 +70,7 @@ jobs:
           echo "****************************"
           echo $USER
           echo "****************************"
-          chown -R $USER:$USER $WORKSPACE
+          # chown -R $USER:$USER $WORKSPACE
           echo "****************************"
           ls -lt
           echo "****************************"
@@ -102,7 +102,7 @@ jobs:
           echo "****************************"
           echo $USER
           echo "****************************"
-          chown -R $USER:$USER $WORKSPACE
+          # chown -R $USER:$USER $WORKSPACE
           echo "****************************"
           ls -lt
           echo "****************************"
@@ -168,7 +168,7 @@ jobs:
         echo "****************************"
         echo $USER
         echo "****************************"
-        chown -R $USER:$USER $WORKSPACE
+        # chown -R $USER:$USER $WORKSPACE
         echo "****************************"
         ls -lt
         echo "****************************"
