@@ -20,6 +20,9 @@ jobs:
     outputs:
       aws_token: ${{ steps.ecr_token.outputs.token }}
     steps:
+      - name: display worspace
+        run: |
+          echo $GITHUB_WORKSPACE
       - name: Get ECR Token
         id: ecr_token
         run: |
@@ -79,7 +82,7 @@ jobs:
 
   precommit:
     runs-on: [self-hosted, corefront, sandbox]
-    needs: [credentials, checks]
+    needs: [credentials,debug, checks]
     container:
       image: 162230498103.dkr.ecr.eu-west-1.amazonaws.com/mutable-debian11_dev:latest
       credentials:
