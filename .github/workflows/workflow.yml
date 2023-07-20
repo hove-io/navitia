@@ -11,7 +11,6 @@ on:
       - created
 env:
   REGION: eu-west-1
-  WORKSPACE: .
 
 jobs:
 
@@ -53,27 +52,9 @@ jobs:
     - name: check submodules
       run: ./source/scripts/check_submodules.sh
 
-  debug:
-    runs-on: [self-hosted, corefront, sandbox]
-    needs: [credentials, checks]
-    steps:
-      - name: Generate github private access token
-        id: ci-core-app-token
-        uses: getsentry/action-github-app-token@v2.0.0
-        with:
-          app_id: ${{ secrets.CI_CORE_APP_ID }}
-          private_key: ${{ secrets.CI_CORE_APP_PEM }}
-
-      - uses: actions/checkout@v3
-        with:
-          submodules: recursive
-          token: ${{ steps.ci-core-app-token.outputs.token }}
-          # 'check_submodules.sh' below needs entire history
-          fetch-depth: 0
-
   precommit:
     runs-on: [self-hosted, corefront, sandbox]
-    needs: [credentials, debug, checks]
+    needs: [credentials, checks]
     container:
       image: 162230498103.dkr.ecr.eu-west-1.amazonaws.com/mutable-debian11_dev:latest
       options: --user 1000
@@ -115,7 +96,7 @@ jobs:
 
   build:
     runs-on: [self-hosted, corefront, sandbox]
-    needs: [credentials, checks,debug, precommit]
+    needs: [credentials, precommit]
     strategy:
         fail-fast: false
         matrix:
@@ -192,7 +173,7 @@ jobs:
         pip install -r ../source/tyr/requirements_dev.txt
         pip install -r ../source/sql/requirements.txt
         export NAVITIA_CHAOS_DUMP_PATH=$(echo $GITHUB_WORKSPACE/source/tests/chaos/chaos_loading.sql.gz | sed -e 's#__w#/opt/actions-runner/_work#')
-        # make docker_test
+        make docker_test
         deactivate
         rm -rf navitia_py2
       env:
@@ -208,7 +189,7 @@ jobs:
         pip install -r ../source/tyr/requirements_dev.txt
         pip install -r ../source/sql/requirements.txt
         export NAVITIA_CHAOS_DUMP_PATH=$(echo $GITHUB_WORKSPACE/source/tests/chaos/chaos_loading.sql.gz | sed -e 's#__w#/opt/actions-runner/_work#')
-        # make docker_test
+        make docker_test
         deactivate
         rm -rf navitia_py3
 
