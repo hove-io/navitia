@@ -20,7 +20,7 @@ jobs:
     outputs:
       aws_token: ${{ steps.ecr_token.outputs.token }}
     steps:
-      - name: display worspace
+      - name: display workspace
         run: |
           echo $GITHUB_WORKSPACE
       - name: Get ECR Token
@@ -33,14 +33,11 @@ jobs:
     needs: credentials
     container:
       image: 162230498103.dkr.ecr.eu-west-1.amazonaws.com/mutable-debian11_dev:latest
+      options: --user 1000
       credentials:
         username: AWS
         password: ${{ needs.credentials.outputs.aws_token }}
     steps:
-      - name: force chown to avoid errors
-        run: |
-          # this is to fix GIT not liking owner of the checkout dir
-          chown -R $(id -u):$(id -g) $GITHUB_WORKSPACE
       - name: Generate github private access token
         id: ci-core-app-token
         uses: getsentry/action-github-app-token@v2.0.0
@@ -57,43 +54,17 @@ jobs:
 
       - name: check submodules
         run: ./source/scripts/check_submodules.sh
-  debug:
-    runs-on: [self-hosted, corefront, sandbox]
-    needs: [checks]
-    steps:
-      - name: force chown to avoid errors
-        run: |
-          # this is to fix GIT not liking owner of the checkout dir
-          chown -R $(id -u):$(id -g) $GITHUB_WORKSPACE
-
-      - name: Generate github private access token
-        id: ci-core-app-token
-        uses: getsentry/action-github-app-token@v2.0.0
-        with:
-          app_id: ${{ secrets.CI_CORE_APP_ID }}
-          private_key: ${{ secrets.CI_CORE_APP_PEM }}
-
-      - uses: actions/checkout@v3
-        with:
-          submodules: recursive
-          token: ${{ steps.ci-core-app-token.outputs.token }}
-          # 'check_submodules.sh' below needs entire history
-          fetch-depth: 0
 
   precommit:
     runs-on: [self-hosted, corefront, sandbox]
-    needs: [credentials,debug, checks]
+    needs: [credentials, checks]
     container:
       image: 162230498103.dkr.ecr.eu-west-1.amazonaws.com/mutable-debian11_dev:latest
+      options: --user 1000
       credentials:
         username: AWS
         password: ${{ needs.credentials.outputs.aws_token }}
     steps:
-      - name: force chown to avoid errors
-        run: |
-          # this is to fix GIT not liking owner of the checkout dir
-          chown -R $(id -u):$(id -g) $GITHUB_WORKSPACE
-
       - name: Generate github private access token
         id: ci-core-app-token
         uses: getsentry/action-github-app-token@v2.0.0
@@ -128,7 +99,7 @@ jobs:
 
   build:
     runs-on: [self-hosted, corefront, sandbox]
-    needs: [credentials, precommit]
+    needs: [credentials, checks, precommit]
     strategy:
         fail-fast: false
         matrix:
@@ -136,6 +107,7 @@ jobs:
 
     container:
         image: 162230498103.dkr.ecr.eu-west-1.amazonaws.com/${{ matrix.os.docker_image }}:latest
+        options: --user 1000
         credentials:
           username: AWS
           password: ${{ needs.credentials.outputs.aws_token }}
@@ -151,10 +123,6 @@ jobs:
         ports:
           - 6379:6379
     steps:
-      - name: force chown to avoid errors
-        run: |
-          # this is to fix GIT not liking owner of the checkout dir
-          chown -R $(id -u):$(id -g) $GITHUB_WORKSPACE
       - name: Generate github private access token
         id: ci-core-app-token
         uses: getsentry/action-github-app-token@v2.0.0

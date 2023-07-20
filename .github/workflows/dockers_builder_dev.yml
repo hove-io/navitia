@@ -20,8 +20,6 @@ jobs:
     runs-on: [self-hosted, corefront, sandbox]
     name: Front Bullseye builder (Dev)
     steps:
-      - name: force chown to avoid errors
-        run: sudo chown -R $USER:$USER .
       - name: Install dependencies
         run: |
           sudo apt update && sudo apt install -y httpie
@@ -89,8 +87,6 @@ jobs:
     runs-on: [self-hosted, corefront, sandbox]
     name: Front Jessie builder (Dev)
     steps:
-      - name: force chown to avoid errors
-        run: sudo chown -R $USER:$USER .
       - name: Install dependencies
         run: |
           sudo apt update && sudo apt install -y httpie
@@ -163,8 +159,6 @@ jobs:
     runs-on: [self-hosted, kraken, sandbox]
     name: Backend Jessie builder (Dev)
     steps:
-      - name: force chown to avoid errors
-        run: sudo chown -R $USER:$USER .
       - name: Install dependencies
         run: |
           sudo apt update && sudo apt install -y zip httpie curl python3 python3-pip

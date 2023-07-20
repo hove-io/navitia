@@ -26,12 +26,11 @@ jobs:
     needs: aws_creds
     container:
       image: 162230498103.dkr.ecr.eu-west-1.amazonaws.com/mutable-debian11_dev:latest
+      options: --user 1000
       credentials:
         username: AWS
         password: ${{ needs.aws_creds.outputs.token }}
     steps:
-    - name: force chown to avoid errors
-      run: chown -R $USER:$USER .
     - name: Generate github private access token
       id: ci-core-app-token
       uses: getsentry/action-github-app-token@v2.0.0
@@ -78,6 +77,3 @@ jobs:
       run: |
         echo "Pull Request Number - ${{ env.PULL_REQUEST_NUMBER }}"
         echo "Pull Request Number - ${{ steps.cpr.outputs.pull-request-number }}"
-
-    - name: clean up workspace
-      run: git clean -xdf

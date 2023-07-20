@@ -3,8 +3,8 @@ name: SonarCloud
 on:
   push:
     branches: [ dev ]
-#  pull_request:
-#    branches: [ dev ]
+  pull_request:
+    branches: [ dev ]
 
 env:
    SONAR_SCANNER_VERSION: 4.7.0.2747
@@ -26,6 +26,7 @@ jobs:
     needs: aws_creds
     container:
         image: 162230498103.dkr.ecr.eu-west-1.amazonaws.com/mutable-debian11_dev:latest
+        options: --user 1000
         credentials:
           username: AWS
           password: ${{ needs.aws_creds.outputs.token }}
@@ -44,8 +45,6 @@ jobs:
           - 6379:6379
 
     steps:
-    - name: force chown to avoid errors
-      run: chown -R $USER:$USER .
     - name: Free up space
       run: rm -rf /usr/share/dotnet/*
     - name: Display remaining space
