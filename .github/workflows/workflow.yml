@@ -34,6 +34,7 @@ jobs:
       credentials:
         username: AWS
         password: ${{ needs.credentials.outputs.aws_token }}
+        options: --user 1000
     steps:
     - name: force chown to avoid errors
       run: |
