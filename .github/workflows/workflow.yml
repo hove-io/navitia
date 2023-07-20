@@ -83,7 +83,7 @@ jobs:
 
       - name: install dependencies
         run: |
-          pip3 install -r requirements_pre-commit.txt --upgrade
+          pip3 install -r requirements_pre-commit.txt --upgrade --user
 
       - name: Build Protobuf
         run: bash source/scripts/build_protobuf.sh
