@@ -716,16 +716,16 @@ boost::optional<RailSection> try_make_rail_section(
         // some routes were given, let's check that they belong to "line"
         for (const Route* route : routes) {
             if (route->line == nullptr) {
-                LOG4CPLUS_WARN(logger, "Rail section has line: '"
-                                            << *line_uri << "' but also a route with no line: " << route->uri);
+                LOG4CPLUS_WARN(logger, "Rail section has line: '" << *line_uri
+                                                                  << "' but also a route with no line: " << route->uri);
                 return boost::none;
             } else if (line == nullptr) {
                 line = route->line;
             }
             if (route->line->idx != line->idx) {
                 LOG4CPLUS_WARN(logger, "Rail section has line (or a route from line): '"
-                                            << *line_uri << "' but also a route: '" << route->uri
-                                            << "' that belongs to a different line: " << route->line->uri);
+                                           << *line_uri << "' but also a route: '" << route->uri
+                                           << "' that belongs to a different line: " << route->line->uri);
                 return boost::none;
             }
         }

@@ -1310,7 +1310,9 @@ def make_mock_chaos_item(
         tag.id = t['id']
         tag.name = t['name']
 
-    if impacted_obj_type is None or (impacted_obj_type not in ["line_section", "rail_section"] and impacted_obj is None):
+    if impacted_obj_type is None or (
+        impacted_obj_type not in ["line_section", "rail_section"] and impacted_obj is None
+    ):
         return feed_message.SerializeToString()
 
     # Impacts
