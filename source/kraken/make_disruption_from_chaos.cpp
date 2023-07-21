@@ -148,7 +148,8 @@ static boost::shared_ptr<nt::disruption::Severity> make_severity(const chaos::Se
 boost::optional<nt::disruption::LineSection> make_line_section(const chaos::PtObject& chaos_section,
                                                                nt::PT_Data& pt_data) {
     if (!chaos_section.has_pt_line_section()) {
-        LOG4CPLUS_WARN(log4cplus::Logger::getInstance("log"), "fill_disruption_from_chaos: LineSection invalid!");
+        LOG4CPLUS_WARN(log4cplus::Logger::getInstance("log"),
+                       "fill_disruption_from_chaos: reject LineSection, invalid!");
         return boost::none;
     }
     const auto& pb_section = chaos_section.pt_line_section();
@@ -157,24 +158,25 @@ boost::optional<nt::disruption::LineSection> make_line_section(const chaos::PtOb
     if (line) {
         line_section.line = line;
     } else {
-        LOG4CPLUS_WARN(log4cplus::Logger::getInstance("log"),
-                       "fill_disruption_from_chaos: line id " << pb_section.line().uri() << " in LineSection invalid!");
+        LOG4CPLUS_WARN(log4cplus::Logger::getInstance("log"), "fill_disruption_from_chaos: reject LineSection, line id "
+                                                                  << pb_section.line().uri()
+                                                                  << " in LineSection invalid!");
         return boost::none;
     }
     if (auto* start = find_or_default(pb_section.start_point().uri(), pt_data.stop_areas_map)) {
         line_section.start_point = start;
     } else {
-        LOG4CPLUS_WARN(log4cplus::Logger::getInstance("log"), "fill_disruption_from_chaos: start_point id "
-                                                                  << pb_section.start_point().uri()
-                                                                  << " in LineSection invalid!");
+        LOG4CPLUS_WARN(log4cplus::Logger::getInstance("log"),
+                       "fill_disruption_from_chaos: reject LineSection, start_point id "
+                           << pb_section.start_point().uri() << " in LineSection invalid!");
         return boost::none;
     }
     if (auto* end = find_or_default(pb_section.end_point().uri(), pt_data.stop_areas_map)) {
         line_section.end_point = end;
     } else {
-        LOG4CPLUS_WARN(log4cplus::Logger::getInstance("log"), "fill_disruption_from_chaos: end_point id "
-                                                                  << pb_section.end_point().uri()
-                                                                  << " in LineSection invalid!");
+        LOG4CPLUS_WARN(log4cplus::Logger::getInstance("log"),
+                       "fill_disruption_from_chaos: reject LineSection, end_point id " << pb_section.end_point().uri()
+                                                                                       << " in LineSection invalid!");
         return boost::none;
     }
     if (!pb_section.routes().empty()) {
@@ -205,7 +207,7 @@ boost::optional<nt::disruption::RailSection> make_rail_section(const chaos::PtOb
                                                                const nt::PT_Data& pt_data) {
     log4cplus::Logger log = log4cplus::Logger::getInstance("log");
     if (!chaos_section.has_pt_rail_section()) {
-        LOG4CPLUS_WARN(log, "fill_disruption_from_chaos: RailSection invalid!");
+        LOG4CPLUS_WARN(log, "fill_disruption_from_chaos: reject RailSection, invalid!");
         return boost::none;
     }
     std::string log_message = "new rail Section disruption received -";

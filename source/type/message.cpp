@@ -645,7 +645,7 @@ boost::optional<RailSection> try_make_rail_section(
     // find start stop area if it exists
     auto find_start = stop_areas_map.find(start_uri);
     if (find_start == stop_areas_map.end()) {
-        LOG4CPLUS_WARN(logger, "Rail section with unknown start stop area: " << start_uri);
+        LOG4CPLUS_WARN(logger, "Rejected rail section with unknown start stop area: " << start_uri);
         return boost::none;
     }
     StopArea* start = stop_areas_map.at(start_uri);
@@ -653,7 +653,7 @@ boost::optional<RailSection> try_make_rail_section(
     // find end_stop_area if it exists
     auto find_end = stop_areas_map.find(end_uri);
     if (find_end == stop_areas_map.end()) {
-        LOG4CPLUS_WARN(logger, "Rail section with unknown end stop area: " << end_uri);
+        LOG4CPLUS_WARN(logger, "Rejected rail section with unknown end stop area: " << end_uri);
         return boost::none;
     }
     StopArea* end = stop_areas_map.at(end_uri);
@@ -671,7 +671,7 @@ boost::optional<RailSection> try_make_rail_section(
         const std::string& blocked_uri = pair.first;
         auto find_blocked = stop_areas_map.find(blocked_uri);
         if (find_blocked == stop_areas_map.end()) {
-            LOG4CPLUS_WARN(logger, "Rail section with unknown blocked stop area : " << blocked_uri);
+            LOG4CPLUS_WARN(logger, "Rejected rail section with unknown blocked stop area : " << blocked_uri);
             return boost::none;
         }
         StopArea* blocked_stop_area = stop_areas_map.at(blocked_uri);
@@ -679,7 +679,7 @@ boost::optional<RailSection> try_make_rail_section(
     }
 
     if (line_uri == nullptr && routes_uris.empty()) {
-        LOG4CPLUS_WARN(logger, "Rail section with no line and empty routes.");
+        LOG4CPLUS_WARN(logger, "Rejected rail section with no line and empty routes.");
         return boost::none;
     }
 
@@ -689,7 +689,7 @@ boost::optional<RailSection> try_make_rail_section(
     for (const auto& route_uri : routes_uris) {
         auto find_route = routes_map.find(route_uri);
         if (find_route == routes_map.end()) {
-            LOG4CPLUS_WARN(logger, "Rail section with unknown route : " << route_uri);
+            LOG4CPLUS_WARN(logger, "Rejected rail section with unknown route : " << route_uri);
             return boost::none;
         }
         Route* route = routes_map.at(route_uri);
@@ -701,7 +701,7 @@ boost::optional<RailSection> try_make_rail_section(
         const std::unordered_map<std::string, Line*>& lines_map = pt_data.lines_map;
         auto find_line = lines_map.find(*line_uri);
         if (find_line == lines_map.end()) {
-            LOG4CPLUS_WARN(logger, "Rail section with unknown line : " << *line_uri);
+            LOG4CPLUS_WARN(logger, "Rejected rail section with unknown line : " << *line_uri);
             return boost::none;
         }
         line = lines_map.at(*line_uri);
@@ -716,14 +716,14 @@ boost::optional<RailSection> try_make_rail_section(
         // some routes were given, let's check that they belong to "line"
         for (const Route* route : routes) {
             if (route->line == nullptr) {
-                LOG4CPLUS_WARN(logger, "Rail section has line: '" << *line_uri
-                                                                  << "' but also a route with no line: " << route->uri);
+                LOG4CPLUS_WARN(logger, "Rejected rail section has line: '"
+                                           << *line_uri << "' but also a route with no line: " << route->uri);
                 return boost::none;
             } else if (line == nullptr) {
                 line = route->line;
             }
             if (route->line->idx != line->idx) {
-                LOG4CPLUS_WARN(logger, "Rail section has line (or a route from line): '"
+                LOG4CPLUS_WARN(logger, "Rejected rail section has line (or a route from line): '"
                                            << *line_uri << "' but also a route: '" << route->uri
                                            << "' that belongs to a different line: " << route->line->uri);
                 return boost::none;
