@@ -29,7 +29,7 @@ The last steps will not work, that's normal, the secrets are not given but the w
 Run this container sharing your folder (this allows to have the same context than in the GitHub Action)
 
 ``` shell
-docker run -it -v $(pwd):/work --entrypoint bash slatedocs/slate:latest
+docker run --rm -it -v $(pwd):/work --entrypoint bash slatedocs/slate:latest
 ```
 
 Then run these commands (same commands are run in the GitHub Action)
