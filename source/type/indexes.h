@@ -31,6 +31,7 @@ www.navitia.io
 #include "type/type_interfaces.h"
 
 #include <boost/container/flat_set.hpp>
+#include <boost/dynamic_bitset.hpp>
 
 #include <set>
 #include <vector>
@@ -64,6 +65,19 @@ Indexes indexes(const boost::container::flat_set<T*>& elements) {
     result.reserve(elements.size());
     for (T* element : elements) {
         result.insert(element->idx);
+    }
+    return result;
+}
+
+// unused?
+template <typename T>
+Indexes indexes(const boost::dynamic_bitset<T>& elements) {
+    Indexes result;
+    result.reserve(elements.count());
+    idx_t idx = elements.find_first();
+    while(idx != boost::dynamic_bitset<T>::npos) {
+        result.insert(idx);
+        idx = elements.find_next(idx);
     }
     return result;
 }

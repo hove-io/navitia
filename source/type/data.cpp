@@ -707,90 +707,95 @@ Indexes Data::get_all_index(Type_e type) const {
     return indexes;
 }
 
-std::set<idx_t> Data::get_target_by_source(Type_e source, Type_e target, const std::set<idx_t>& source_idx) const {
-    std::set<idx_t> result;
-    for (idx_t idx : source_idx) {
-        Indexes tmp = get_target_by_one_source(source, target, idx);
-        // TODO: Use flat_set's merge when we pass to boost 1.62
-        result.insert(tmp.begin(), tmp.end());
+boost::dynamic_bitset<> Data::get_target_by_source(Type_e source, Type_e target, const boost::dynamic_bitset<>& source_idx) const {
+    boost::dynamic_bitset<> result(get_nb_obj(target));
+    idx_t idx = source_idx.find_first();
+    while(idx != boost::dynamic_bitset<>::npos) {
+        // TODO use dynamic_bitset here too
+        get_target_by_one_source(source, target, idx, result);
+        // Indexes tmp = get_target_by_one_source(source, target, idx);
+        // for (idx_t idx_by_one : tmp) {
+        //     result.set(idx);
+        // }
+        idx = source_idx.find_next(idx);
     }
     return result;
 }
 
-Indexes Data::get_target_by_one_source(Type_e source, Type_e target, idx_t source_idx) const {
-    Indexes result;
+void Data::get_target_by_one_source(Type_e source, Type_e target, idx_t source_idx, boost::dynamic_bitset<>& target_idx) const {
     if (source_idx == invalid_idx) {
-        return result;
+        return;
     }
     if (source == target) {
-        result.insert(source_idx);
-        return result;
+        target_idx.set(source_idx);
+        return;
     }
     const auto& jp_container = dataRaptor->jp_container;
     if (target == Type_e::JourneyPattern) {
         switch (source) {
             case Type_e::Route:
                 for (const auto& jpp : jp_container.get_jps_from_route()[routing::RouteIdx(source_idx)]) {
-                    result.insert(jpp.val);  // TODO use bulk insert ?
+                    target_idx.set(jpp.val);
                 }
                 break;
             case Type_e::VehicleJourney:
-                result.insert(jp_container.get_jp_from_vj()[routing::VjIdx(source_idx)].val);
+                target_idx.set(jp_container.get_jp_from_vj()[routing::VjIdx(source_idx)].val);
                 break;
             case Type_e::PhysicalMode:
                 for (const auto& jpp : jp_container.get_jps_from_phy_mode()[routing::PhyModeIdx(source_idx)]) {
-                    result.insert(jpp.val);  // TODO use bulk insert ?
+                    target_idx.set(jpp.val);  // TODO use bulk insert ?
                 }
                 break;
             case Type_e::JourneyPatternPoint:
-                result.insert(jp_container.get(routing::JppIdx(source_idx)).jp_idx.val);
+                target_idx.set(jp_container.get(routing::JppIdx(source_idx)).jp_idx.val);
                 break;
             default:
                 break;
         }
-        return result;
+        return;
     }
     if (target == Type_e::JourneyPatternPoint) {
         switch (source) {
             case Type_e::PhysicalMode:
                 for (const auto& jpp : jp_container.get_jpps_from_phy_mode()[routing::PhyModeIdx(source_idx)]) {
-                    result.insert(jpp.val);
+                    target_idx.set(jpp.val);
                 }
                 break;
             case Type_e::StopPoint:
                 for (const auto& jpp : dataRaptor->jpps_from_sp[routing::SpIdx(source_idx)]) {
-                    result.insert(jpp.idx.val);  // TODO use bulk insert ?
+                    target_idx.set(jpp.idx.val);  // TODO use bulk insert ?
                 }
                 break;
             case Type_e::JourneyPattern:
                 for (const auto& jpp_idx : jp_container.get(routing::JpIdx(source_idx)).jpps) {
-                    result.insert(jpp_idx.val);  // TODO use bulk insert ?
+                    target_idx.set(jpp_idx.val);  // TODO use bulk insert ?
                 }
                 break;
             default:
                 break;
         }
-        return result;
+        return;
     }
+    Indexes result; // TODO get rid of that need
     switch (source) {
         case Type_e::JourneyPattern: {
             const auto& jp = jp_container.get(routing::JpIdx(source_idx));
             switch (target) {
                 case Type_e::Route:
-                    result.insert(jp.route_idx.val);
+                    target_idx.set(jp.route_idx.val);
                     break;
                 case Type_e::JourneyPatternPoint: /* already done */
                     break;
                 case Type_e::VehicleJourney:
                     for (const auto& vj : jp.discrete_vjs) {
-                        result.insert(vj->idx);
+                        target_idx.set(vj->idx);
                     }  // TODO use bulk insert ?
                     for (const auto& vj : jp.freq_vjs) {
-                        result.insert(vj->idx);
+                        target_idx.set(vj->idx);
                     }  // TODO use bulk insert ?
                     break;
                 case Type_e::PhysicalMode:
-                    result.insert(jp.phy_mode_idx.val);
+                    target_idx.set(jp.phy_mode_idx.val);
                     break;
                 default:
                     break;
@@ -802,7 +807,7 @@ Indexes Data::get_target_by_one_source(Type_e source, Type_e target, idx_t sourc
                 case Type_e::JourneyPattern: /* already done */
                     break;
                 case Type_e::StopPoint:
-                    result.insert(jp_container.get(routing::JppIdx(source_idx)).sp_idx.val);
+                    target_idx.set(jp_container.get(routing::JppIdx(source_idx)).sp_idx.val);
                     break;
                 default:
                     break;
@@ -835,7 +840,10 @@ Indexes Data::get_target_by_one_source(Type_e source, Type_e target, idx_t sourc
         default:
             break;
     }
-    return result;
+    for (idx_t idx : result) {
+        target_idx.set(idx);
+    }
+    return;
 }
 
 Type_e Data::get_type_of_id(const std::string& id) const {

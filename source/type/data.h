@@ -41,9 +41,9 @@ www.navitia.io
 #include <boost/serialization/version.hpp>
 #include <boost/format.hpp>
 #include <boost/optional.hpp>
+#include <boost/dynamic_bitset.hpp>
 
 #include <atomic>
-#include <set>
 
 // workaround missing "is_trivially_copyable" in g++ < 5.0
 #if __GNUG__ && __GNUC__ < 5
@@ -171,12 +171,12 @@ public:
     /** Given a list of indexes of 'source' objects
      * returns a list of indexes of 'target' objects
      */
-    std::set<idx_t> get_target_by_source(Type_e source, Type_e target, const std::set<idx_t>& source_idx) const;
+    boost::dynamic_bitset<> get_target_by_source(Type_e source, Type_e target, const boost::dynamic_bitset<>& source_idx) const;
 
     /** Given one index of a 'source' object
      * returns a list of indexes of 'target' objects
      */
-    Indexes get_target_by_one_source(Type_e source, Type_e target, idx_t source_idx) const;
+    void get_target_by_one_source(Type_e source, Type_e target, idx_t source_idx, boost::dynamic_bitset<>& target_idx) const;
 
     bool last_load_succeeded;
     // UTC

@@ -40,6 +40,7 @@ www.navitia.io
 #include "type/static_data.h"
 
 #include <boost/range/algorithm/find.hpp>
+#include <boost/dynamic_bitset.hpp>
 
 #include <string>
 
@@ -87,7 +88,10 @@ Indexes get_corresponding(Indexes indexes, Type_e from, const Type_e to, const D
     }
 
     const std::map<Type_e, Type_e> path = find_path(to);
-    std::set<idx_t> set_idx{indexes.begin(), indexes.end()};
+    boost::dynamic_bitset<> set_idx(data.get_nb_obj(from));
+    for (idx_t i : indexes) {
+        set_idx.set(i);
+    }
     while (path.at(from) != from) {
         set_idx = data.get_target_by_source(from, path.at(from), set_idx);
         from = path.at(from);
@@ -96,7 +100,17 @@ Indexes get_corresponding(Indexes indexes, Type_e from, const Type_e to, const D
         // there was no path to find a requested type
         return Indexes{};
     }
-    return Indexes{boost::container::ordered_unique_range_t(), set_idx.begin(), set_idx.end()};
+
+    Indexes result;
+    // result.reserve(set_idx.count());
+    idx_t idx = set_idx.find_first();
+    while(idx != boost::dynamic_bitset<>::npos) {
+        result.insert(idx);
+        idx = set_idx.find_next(idx);
+    }
+    return result;
+
+    // return Indexes{set_idx};
 }
 
 Type_e type_by_caption(const std::string& type) {

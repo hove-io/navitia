@@ -53,10 +53,15 @@ struct LineReport {
                const boost::posix_time::ptime now,
                const boost::posix_time::time_period& filter_period)
         : line(line) {
+        std::cout << "PEBtrace before" << std::endl;
         add_objects(filter, forbidden_uris, filter_status, d, now, filter_period, networks);
+        std::cout << "PEBtrace networks" << std::endl;
         add_objects(filter, forbidden_uris, filter_status, d, now, filter_period, routes);
+        std::cout << "PEBtrace routes" << std::endl;
         add_objects(filter, forbidden_uris, filter_status, d, now, filter_period, stop_areas);
+        std::cout << "PEBtrace stop_areas" << std::endl;
         add_objects(filter, forbidden_uris, filter_status, d, now, filter_period, stop_points);
+        std::cout << "PEBtrace stop_points" << std::endl;
     }
 
     template <typename T>
@@ -138,6 +143,7 @@ void line_reports(navitia::PbCreator& pb_creator,
         return;
     }
     std::vector<LineReport> line_reports;
+    std::cout << "nb lines=" << line_indices.size() << std::endl;
     for (auto idx : line_indices) {
         auto line_report = LineReport(d.pt_data->lines[idx], filter, forbidden_uris, filter_status, d, pb_creator.now,
                                       pb_creator.action_period);
