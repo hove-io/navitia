@@ -719,10 +719,10 @@ boost::optional<RailSection> try_make_rail_section(
                 LOG4CPLUS_WARN(logger, "Rejected rail section has line: '"
                                            << *line_uri << "' but also a route with no line: " << route->uri);
                 return boost::none;
-            } else if (line == nullptr) {
-                line = route->line;
             }
-            if (route->line->idx != line->idx) {
+            if (line == nullptr) {
+                line = route->line;
+            } else if (route->line->idx != line->idx) {
                 LOG4CPLUS_WARN(logger, "Rejected rail section has line (or a route from line): '"
                                            << *line_uri << "' but also a route: '" << route->uri
                                            << "' that belongs to a different line: " << route->line->uri);
