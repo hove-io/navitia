@@ -126,6 +126,8 @@ class InstanceManager(object):
             olympics_forbidden_uris=config.get('olympics_forbidden_uris', None),
             additional_params_period=config.get('additional_parameters_activation_period', None),
             use_multi_reverse=config.get('use_multi_reverse', False),
+            resp_content_limit_bytes=config.get('resp_content_limit_bytes', None),
+            resp_content_limit_endpoints_whitelist=config.get('resp_content_limit_endpoints_whitelist', None),
         )
 
         self.instances[instance.name] = instance

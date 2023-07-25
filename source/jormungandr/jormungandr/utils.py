@@ -1121,3 +1121,16 @@ def ceil_by_half(f):
     0.0
     """
     return 0.5 * math.ceil(2.0 * float(f))
+
+
+def content_is_too_large(instance, endpoint, response):
+    if not instance:
+        return False
+    if instance.resp_content_limit_bytes is None:
+        return False
+    if endpoint in instance.resp_content_limit_endpoints_whitelist:
+        return False
+    if response.content_length <= instance.resp_content_limit_bytes:
+        return False
+
+    return True

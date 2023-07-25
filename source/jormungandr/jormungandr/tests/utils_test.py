@@ -42,6 +42,7 @@ from jormungandr.utils import (
     portable_min,
     get_last_pt_section,
     get_first_pt_section,
+    content_is_too_large,
 )
 import pytz
 from jormungandr import app
@@ -403,3 +404,41 @@ def test_get_olympic_site_pt_section_journey_only_street_network_section():
     last_section = get_last_pt_section(pb_j)
     assert first_section.duration == 1
     assert last_section.duration == 3
+
+
+def test_content_is_too_large():
+    class DummyInstance:
+        def __init__(self, limit, whitelist):
+            self.resp_content_limit_bytes = limit
+            self.resp_content_limit_endpoints_whitelist = set(whitelist or [])
+
+    class DummyResponse:
+        def __init__(self, length):
+            self.content_length = length
+
+    # instance is None, the check is skipped
+    assert not content_is_too_large(None, "v1.dummy_endpoint", None)
+
+    # if resp_content_limit_bytes is set to None, regardless of the empty white list, the check is skipped
+    instance = DummyInstance(limit=None, whitelist=[])
+    response = DummyResponse(length=42)
+    assert not content_is_too_large(instance, "v1.dummy_endpoint", response)
+
+    # the whitelist is empty, the size of the content is checked
+    instance = DummyInstance(limit=41, whitelist=None)
+    response = DummyResponse(length=42)
+    assert content_is_too_large(instance, "v1.dummy_endpoint", response)
+
+    instance = DummyInstance(limit=43, whitelist=None)
+    response = DummyResponse(length=42)
+    assert not content_is_too_large(instance, "v1.dummy_endpoint", response)
+
+    # the endpoint is in the whitelist, the check is skipped
+    instance = DummyInstance(limit=41, whitelist=["v1.dummy_endpoint"])
+    response = DummyResponse(length=42)
+    assert not content_is_too_large(instance, "v1.dummy_endpoint", response)
+
+    # the endpoint is not in the whitelist, the size of the content is checked
+    instance = DummyInstance(limit=41, whitelist=["v1.another_dummy_endpoint"])
+    response = DummyResponse(length=42)
+    assert content_is_too_large(instance, "v1.dummy_endpoint", response)

@@ -166,6 +166,8 @@ class Instance(transient_socket.TransientSocket):
         olympics_forbidden_uris=None,
         additional_params_period=None,
         use_multi_reverse=False,
+        resp_content_limit_bytes=None,
+        resp_content_limit_endpoints_whitelist=None,
     ):
         super(Instance, self).__init__(
             name=name,
@@ -266,6 +268,9 @@ class Instance(transient_socket.TransientSocket):
         self.additional_params_period_start = None
         self.additional_params_period_end = None
         self.use_multi_reverse = use_multi_reverse
+        self.resp_content_limit_bytes = resp_content_limit_bytes
+        # a list of endpoints that are not affected by the resp_content_limit_bytes
+        self.resp_content_limit_endpoints_whitelist = set(resp_content_limit_endpoints_whitelist or [])
 
         # Read the best_boarding_positions files if any
         if best_boarding_positions_dir is not None:
