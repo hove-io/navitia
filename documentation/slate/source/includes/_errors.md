@@ -64,7 +64,7 @@ Tips to work around this error:
 
 * [paginate](#paging)
 * reduce the value of the parameter `depth`
-* on large `journeys`, reduce the time frames, durations, _etc_
+* on large `journeys`, reduce the `timeframe_duration`, `max_duration` and `min_nb_journeys` values
 
 ### 429: too many requests
 
