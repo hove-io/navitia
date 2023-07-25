@@ -39,9 +39,11 @@ from jormungandr.utils import (
     read_best_boarding_positions,
     read_origin_destination_data,
     make_origin_destination_key,
+    portable_min,
     get_last_pt_section,
     get_first_pt_section,
     entrypoint_uri_refocus,
+    content_is_too_large,
 )
 import pytz
 from jormungandr import app
@@ -532,3 +534,41 @@ def test_address_with_within_zones():
     assert res["poi"]["name"] == poi["poi"]["name"]
     assert res["poi"]["coord"]["lat"] == address["address"]["coord"]["lat"]
     assert res["poi"]["coord"]["lon"] == address["address"]["coord"]["lon"]
+
+
+def test_content_is_too_large():
+    class DummyInstance:
+        def __init__(self, limit, whitelist):
+            self.resp_content_limit_bytes = limit
+            self.resp_content_limit_endpoints_whitelist = set(whitelist or [])
+
+    class DummyResponse:
+        def __init__(self, length):
+            self.content_length = length
+
+    # instance is None, the check is skipped
+    assert not content_is_too_large(None, "v1.dummy_endpoint", None)
+
+    # if resp_content_limit_bytes is set to None, regardless of the empty white list, the check is skipped
+    instance = DummyInstance(limit=None, whitelist=[])
+    response = DummyResponse(length=42)
+    assert not content_is_too_large(instance, "v1.dummy_endpoint", response)
+
+    # the whitelist is empty, the size of the content is checked
+    instance = DummyInstance(limit=41, whitelist=None)
+    response = DummyResponse(length=42)
+    assert content_is_too_large(instance, "v1.dummy_endpoint", response)
+
+    instance = DummyInstance(limit=43, whitelist=None)
+    response = DummyResponse(length=42)
+    assert not content_is_too_large(instance, "v1.dummy_endpoint", response)
+
+    # the endpoint is in the whitelist, the check is skipped
+    instance = DummyInstance(limit=41, whitelist=["v1.dummy_endpoint"])
+    response = DummyResponse(length=42)
+    assert not content_is_too_large(instance, "v1.dummy_endpoint", response)
+
+    # the endpoint is not in the whitelist, the size of the content is checked
+    instance = DummyInstance(limit=41, whitelist=["v1.another_dummy_endpoint"])
+    response = DummyResponse(length=42)
+    assert content_is_too_large(instance, "v1.dummy_endpoint", response)
