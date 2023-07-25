@@ -65,7 +65,7 @@ def check_url(tester, url, might_have_additional_args=False, **kwargs):
         )
     else:
         assert response.status_code == 200, "invalid return code, response : {}".format(
-            json.dumps(json.loads(response.data, encoding='utf-8'), indent=2)
+            json.dumps(json.loads(response.data), indent=2)
         )
     return response
 

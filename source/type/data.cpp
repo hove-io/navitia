@@ -711,7 +711,7 @@ std::set<idx_t> Data::get_target_by_source(Type_e source, Type_e target, const s
     std::set<idx_t> result;
     for (idx_t idx : source_idx) {
         Indexes tmp = get_target_by_one_source(source, target, idx);
-        // TODO: Use flat_set's merge when we pass to boost 1.62
+        // TODO: Use set's merge when we pass to c++17
         result.insert(tmp.begin(), tmp.end());
     }
     return result;
