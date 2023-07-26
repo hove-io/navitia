@@ -572,3 +572,8 @@ def test_content_is_too_large():
     instance = DummyInstance(limit=41, whitelist=["v1.another_dummy_endpoint"])
     response = DummyResponse(length=42)
     assert content_is_too_large(instance, "v1.dummy_endpoint", response)
+
+    # response length could be None
+    instance = DummyInstance(limit=41, whitelist=["v1.another_dummy_endpoint"])
+    response = DummyResponse(length=None)
+    assert not content_is_too_large(instance, "v1.dummy_endpoint", response)
