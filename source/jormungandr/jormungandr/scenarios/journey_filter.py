@@ -860,8 +860,8 @@ def filter_olympics_journeys_v2(responses, request):
 
             if best[1] > virtual_total_duration:
                 best = (j, virtual_total_duration)
-
-    best[0].tags.append('best_olympics')
+    if best:
+        best[0].tags.append('best_olympics')
 
 
 def filter_olympics_journeys(responses, request):

@@ -72,6 +72,7 @@ class ProximitiesByCrowfly:
         self._forbidden_uris = utils.get_poi_params(request['forbidden_uris[]'])
         self._allowed_id = utils.get_poi_params(request['allowed_id[]'])
         self._pt_planner = self._instance.get_pt_planner(request['_pt_planner'])
+        self._request = request
         self._async_request()
 
     @new_relic.distributedEvent("get_crowfly", "street_network")
@@ -115,7 +116,21 @@ class ProximitiesByCrowfly:
             logger.debug(
                 "finish proximities by crowfly from %s in %s", self._requested_place_obj.uri, self._mode
             )
-            return crow_fly
+            new_crow_fly = []
+            allowed_stop_points = set(
+                (
+                    allowed_id
+                    for allowed_id in self._request.get("allowed_id[]") or []
+                    if allowed_id.startswith("stop_point")
+                )
+            )
+            if allowed_stop_points:
+                for cf in crow_fly:
+                    if cf.uri in allowed_stop_points:
+                        new_crow_fly.append(cf)
+            else:
+                new_crow_fly = crow_fly
+            return new_crow_fly
 
         logger.debug("the coord of requested places is not valid: %s", coord)
         return []
