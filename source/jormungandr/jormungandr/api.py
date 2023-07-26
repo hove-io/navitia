@@ -33,13 +33,14 @@
 from __future__ import absolute_import, print_function, unicode_literals, division
 import importlib
 from flask_restful.representations import json
-from flask import request, make_response
-from jormungandr import rest_api, app
+from flask import request, make_response, abort
+from jormungandr import rest_api, app, i_manager
 from jormungandr.index import index
 from jormungandr.modules_loader import ModulesLoader
 import ujson
 import logging
 from jormungandr.new_relic import record_custom_parameter
+from jormungandr.utils import content_is_too_large
 from jormungandr.authentication import get_user, get_token, get_app_name, get_used_coverages
 from jormungandr._version import __version__
 import six
@@ -79,6 +80,16 @@ def access_log(response, *args, **kwargs):
     else:
         logging.getLogger(__name__).debug(u'"%(method)s %(path)s?%(query_string)s" %(status)s', d, extra=d)
 
+    return response
+
+
+@app.after_request
+def check_content_size(response):
+    coverage_names = get_used_coverages()
+    for name in coverage_names:
+        instance = i_manager.instances.get(name)
+        if content_is_too_large(instance, request.endpoint, response):
+            abort(413)
     return response
 
 
