@@ -1130,6 +1130,8 @@ def content_is_too_large(instance, endpoint, response):
         return False
     if endpoint in instance.resp_content_limit_endpoints_whitelist:
         return False
+    if response.content_length is None:
+        return False
     if response.content_length <= instance.resp_content_limit_bytes:
         return False
 
