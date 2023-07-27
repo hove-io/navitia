@@ -127,7 +127,7 @@ struct MetaVehicleJourney : public Header, HasMessages {
                    const Route* filtering_route = nullptr);
 
     VehicleJourney* get_base_vj_circulating_at_date(const boost::gregorian::date& date) const;
-    VehicleJourney* get_freshest_vj_for_base_date(const boost::gregorian::date& date) const;
+    VehicleJourney* get_rt_vj_for_base_date(const boost::gregorian::date& date) const;
 
     const std::string& get_label() const { return uri; }  // for the moment the label is just the uri
 

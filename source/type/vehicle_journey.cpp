@@ -147,7 +147,7 @@ int32_t VehicleJourney::utc_to_local_offset() const {
 }
 
 const VehicleJourney* VehicleJourney::get_corresponding_base() const {
-    auto shifted_vj = get_base_canceled_validity_pattern();
+    auto shifted_vj = get_base_validity_pattern_at_freshness(realtime_level);
     for (const auto& vj : meta_vj->get_base_vj()) {
         // if the validity pattern intersects
         if ((shifted_vj.days & vj->base_validity_pattern()->days).any()) {
@@ -453,10 +453,10 @@ bool VehicleJourney::has_landing() const {
     return false;
 }
 
-ValidityPattern VehicleJourney::get_base_canceled_validity_pattern() const {
-    ValidityPattern base_canceled_vp = *validity_patterns[realtime_level];
-    base_canceled_vp.days >>= shift;
-    return base_canceled_vp;
+ValidityPattern VehicleJourney::get_base_validity_pattern_at_freshness(const RTLevel& data_freshness) const {
+    ValidityPattern base_vp = *validity_patterns[data_freshness];
+    base_vp.days >>= shift;
+    return base_vp;
 }
 
 std::string VehicleJourney::get_direction() const {

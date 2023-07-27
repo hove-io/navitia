@@ -721,14 +721,16 @@ static bt::ptime handle_pt_sections(pbnavitia::Journey* pb_journey,
                 to_pb_realtime_level(item.stop_times.front()->vehicle_journey->realtime_level));
 
             const auto base_vj_start_date = get_base_vj_start_date(item.departure, item.stop_times.front(), true);
-            auto freshest_vj = item.get_vj()->meta_vj->get_freshest_vj_for_base_date(base_vj_start_date);
-            if (freshest_vj != item.get_vj() && freshest_vj != nullptr) {
-                auto freshest_corresponding_dep_st = item.stop_times.front()->get_corresponding_stop_time(*freshest_vj);
-                if (freshest_corresponding_dep_st == nullptr || !freshest_corresponding_dep_st->pick_up_allowed()) {
+            auto rt_vj = item.get_vj()->meta_vj->get_rt_vj_for_base_date(base_vj_start_date);
+            if (rt_vj == nullptr) {
+                pt_not_served_in_rt = true;
+            } else if (rt_vj != item.get_vj()) {
+                auto rt_corresponding_dep_st = item.stop_times.front()->get_corresponding_stop_time(*rt_vj);
+                if (rt_corresponding_dep_st == nullptr || !rt_corresponding_dep_st->pick_up_allowed()) {
                     pt_not_served_in_rt = true;
                 }
-                auto freshest_corresponding_arr_st = item.stop_times.back()->get_corresponding_stop_time(*freshest_vj);
-                if (freshest_corresponding_arr_st == nullptr || !freshest_corresponding_arr_st->drop_off_allowed()) {
+                auto rt_corresponding_arr_st = item.stop_times.back()->get_corresponding_stop_time(*rt_vj);
+                if (rt_corresponding_arr_st == nullptr || !rt_corresponding_arr_st->drop_off_allowed()) {
                     pt_not_served_in_rt = true;
                 }
             }

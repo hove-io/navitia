@@ -324,10 +324,10 @@ VehicleJourney* MetaVehicleJourney::get_base_vj_circulating_at_date(const boost:
     return nullptr;
 }
 
-VehicleJourney* MetaVehicleJourney::get_freshest_vj_for_base_date(const boost::gregorian::date& date) const {
+VehicleJourney* MetaVehicleJourney::get_rt_vj_for_base_date(const boost::gregorian::date& date) const {
     for (auto l : reverse_enum_range_from<RTLevel>(RTLevel::RealTime)) {
         for (const auto& vj : rtlevel_to_vjs_map[l]) {
-            if (vj->get_base_canceled_validity_pattern().check(date)) {
+            if (vj->get_base_validity_pattern_at_freshness(RTLevel::RealTime).check(date)) {
                 return vj.get();
             }
         }

@@ -214,11 +214,13 @@ class TestKirinOnVJDeletion(MockKirinDisruptionsFixture):
         # _current_datetime is needed to make it work
         # assert len(new_base['disruptions']) == 1
 
-        # remove links as the calling url is not the same
+        # remove links as the calling url is not the same and status as it's affected by the disruption
         for j in new_base['journeys']:
             j.pop('links', None)
+            j.pop('status', None)
         for j in response['journeys']:
             j.pop('links', None)
+            j.pop('status', None)
         assert new_base['journeys'] == response['journeys']
 
 

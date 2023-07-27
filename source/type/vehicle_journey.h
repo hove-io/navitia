@@ -93,7 +93,7 @@ struct VehicleJourney : public Header, Nameable, hasVehicleProperties {
     bool is_base_schedule() const { return realtime_level == RTLevel::Base; }
     // number of days of delay compared to base-vj vp (case of a delayed vj in realtime or adapted):
     // * base-schedule VP start-date = realtime's VP start-date - shift
-    // * use get_base_canceled_validity_pattern() to "convert" realtime VP to base VP
+    // * use get_base_validity_pattern_at_freshness() to "convert" realtime VP to base VP
     size_t shift = 0;
     // validity pattern for all RTLevel
     flat_enum_map<RTLevel, ValidityPattern*> validity_patterns = {{{nullptr, nullptr, nullptr}}};
@@ -102,7 +102,7 @@ struct VehicleJourney : public Header, Nameable, hasVehicleProperties {
     ValidityPattern* adapted_validity_pattern() const { return get_validity_pattern_at(RTLevel::Adapted); }
     ValidityPattern* rt_validity_pattern() const { return get_validity_pattern_at(RTLevel::RealTime); }
     // base-schedule validity pattern canceled by this vj (to get corresponding vjs, use meta-vj)
-    ValidityPattern get_base_canceled_validity_pattern() const;
+    ValidityPattern get_base_validity_pattern_at_freshness(const RTLevel& data_freshness) const;
 
     // return the base vj corresponding to this vj, return nullptr if nothing found
     const VehicleJourney* get_corresponding_base() const;
