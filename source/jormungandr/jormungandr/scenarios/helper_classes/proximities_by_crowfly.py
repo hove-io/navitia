@@ -106,34 +106,28 @@ class ProximitiesByCrowfly:
                 return [self._requested_place_obj]
 
         coord = utils.get_pt_object_coord(self._requested_place_obj)
-        if coord.lat and coord.lon:
-            crow_fly = self._get_crow_fly(self._instance.georef)
 
-            if self._mode == fm.FallbackModes.car.name:
-                # pick up only parkings with park_ride = yes
-                crow_fly = jormungandr.street_network.utils.pick_up_park_ride_car_park(crow_fly)
+        if coord.lat is None or coord.lon is None:
+            logger.debug("the coord of requested places is not valid: %s", coord)
+            return []
 
-            logger.debug(
-                "finish proximities by crowfly from %s in %s", self._requested_place_obj.uri, self._mode
+        crow_fly = self._get_crow_fly(self._instance.georef)
+
+        if self._mode == fm.FallbackModes.car.name:
+            # pick up only parkings with park_ride = yes
+            crow_fly = jormungandr.street_network.utils.pick_up_park_ride_car_park(crow_fly)
+
+        logger.debug("finish proximities by crowfly from %s in %s", self._requested_place_obj.uri, self._mode)
+        allowed_stop_points = set(
+            (
+                allowed_id
+                for allowed_id in self._request.get("allowed_id[]") or []
+                if allowed_id.startswith("stop_point")
             )
-            new_crow_fly = []
-            allowed_stop_points = set(
-                (
-                    allowed_id
-                    for allowed_id in self._request.get("allowed_id[]") or []
-                    if allowed_id.startswith("stop_point")
-                )
-            )
-            if allowed_stop_points:
-                for cf in crow_fly:
-                    if cf.uri in allowed_stop_points:
-                        new_crow_fly.append(cf)
-            else:
-                new_crow_fly = crow_fly
-            return new_crow_fly
-
-        logger.debug("the coord of requested places is not valid: %s", coord)
-        return []
+        )
+        if allowed_stop_points:
+            return [cf for cf in crow_fly if cf.uri in allowed_stop_points]
+        return crow_fly
 
     def _async_request(self):
         self._value = self._future_manager.create_future(self._do_request)
