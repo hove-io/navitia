@@ -282,10 +282,16 @@ class TransferPool(object):
             origins,
             destinations,
             FallbackModes.walking.name,
-            section.duration * 2,
+            section.duration * 3,
             self._request,
             sub_request_id,
         )
+
+        if all(
+            matrix.routing_status == response_pb2.unreached for matrix in routing_matrix.rows[0].routing_response
+        ):
+            logging.getLogger(__name__).warning("no access points is reachable in transfer path computation")
+            return None
 
         # now it's time to find the best combo
         # (stop_point -> access_points or access_points -> stop_point)
