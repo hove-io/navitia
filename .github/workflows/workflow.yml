@@ -93,6 +93,7 @@ jobs:
           LANG: C.UTF-8
         run: |
           git config --global --add safe.directory /__w/navitia/navitia
+          git config --global --add safe.directory /__w/navitia/navitia/source/chaos-proto
           pre-commit install --install-hooks
           pre-commit run --all --show-diff-on-failure
 
