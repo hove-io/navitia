@@ -663,3 +663,41 @@ def filter_olympic_site_destination_olympic_site_test2_test():
     journey_filter.filter_olympic_site([response], instance, {"wheelchair": False}, origin, destination)
     assert len(response.journeys[0].tags) == 1
     assert response.journeys[0].tags[0] == "to_delete"
+
+
+def compute_journey_virtual_duration_test():
+    journey = response_pb2.Journey()
+    journey.departure_date_time = 0
+    journey.arrival_date_time = 9600
+
+    beginning_fallback_section = journey.sections.add()
+    beginning_fallback_section.type = response_pb2.STREET_NETWORK
+    beginning_fallback_section.begin_date_time = 0
+    beginning_fallback_section.end_date_time = 3600
+    beginning_fallback_section.origin.uri = "0;0"
+    beginning_fallback_section.destination.uri = "gare de lyon"
+
+    pt_section = journey.sections.add()
+    pt_section.type = response_pb2.PUBLIC_TRANSPORT
+    pt_section.begin_date_time = 3600
+    pt_section.end_date_time = 7200
+    pt_section.origin.uri = "gare de lyon"
+    pt_section.destination.uri = "gare du nord"
+
+    ending_fallback_section = journey.sections.add()
+    ending_fallback_section.type = response_pb2.STREET_NETWORK
+    ending_fallback_section.begin_date_time = 7200
+    ending_fallback_section.end_date_time = 9600
+    ending_fallback_section.origin.uri = "gare du nord"
+    ending_fallback_section.destination.uri = "1;1"
+
+    virtual_fallbacks = {"gare de lyon": 42, "gare du nord": 84}
+    virtual_duration = journey_filter.compute_journey_virtual_duration(
+        journey, "arrival_stop_attractivity", virtual_fallbacks
+    )
+    assert virtual_duration == (9600 - 2400 + 84)
+
+    virtual_duration = journey_filter.compute_journey_virtual_duration(
+        journey, "departure_stop_attractivity", virtual_fallbacks
+    )
+    assert virtual_duration == (9600 - 3600 + 42)
