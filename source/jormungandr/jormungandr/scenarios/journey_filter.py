@@ -871,10 +871,11 @@ def filter_olympics_journeys_v2(responses, request):
 
     if best[0] is not None:
         best[0].tags.append('best_olympics')
+    else:
+        logging.getLogger(__name__).warning("impossible to select the best in filter_olympics_journeys_v2")
 
 
 def filter_olympics_journeys(responses, request):
-
     if request.get("_filter_olympics_journeys") == "v1":
         filter_olympics_journeys_v1(responses, request)
     elif request.get("_filter_olympics_journeys") == "v2":
