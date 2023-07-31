@@ -746,24 +746,34 @@ def apply_final_journey_filters_post_finalize(response_list, request):
         _filter_similar_line_and_crowfly_journeys(journey_pairs_pool, request)
 
 
-def get_journey_pt_section(journey, criteria):
+def get_journey_extremity_pt_section(journey, criteria):
     if criteria == "arrival_stop_attractivity":
         sections = reversed(journey.sections)
     else:
         sections = journey.sections
-    extemity_pt_section = next((s for s in sections if s.type == response_pb2.PUBLIC_TRANSPORT), None)
+    extremity_pt_section = next((s for s in sections if s.type == response_pb2.PUBLIC_TRANSPORT), None)
 
-    assert extemity_pt_section
-    return extemity_pt_section
+    assert extremity_pt_section
+    return extremity_pt_section
 
 
 def get_journey_pt_extremity(journey, criteria):
-    extemity_pt_section = get_journey_pt_section(journey, criteria)
+    extemity_pt_section = get_journey_extremity_pt_section(journey, criteria)
 
     assert extemity_pt_section
     if criteria == "arrival_stop_attractivity":
-        return extemity_pt_section.destination
-    return extemity_pt_section.origin
+        return extemity_pt_section, extemity_pt_section.destination
+    return extemity_pt_section, extemity_pt_section.origin
+
+
+def compute_journey_virtual_duration(journey, criteria, virtual_fallbacks):
+    extremity_pt_section, extremity = get_journey_pt_extremity(journey, criteria)
+    virtual_fallback = virtual_fallbacks.get(extremity.uri) or 0
+
+    if criteria == "arrival_stop_attractivity":
+        return extremity_pt_section.end_date_time - journey.departure_date_time + virtual_fallback
+
+    return journey.arrival_date_time - extremity_pt_section.begin_date_time + virtual_fallback
 
 
 class Interval:
@@ -810,7 +820,7 @@ def filter_olympics_journeys_v1(responses, request):
         for j in r.journeys:
             if 'olympics' not in j.tags:
                 continue
-            pt_extremity = get_journey_pt_extremity(j, request.get('criteria'))
+            _, pt_extremity = get_journey_pt_extremity(j, request.get('criteria'))
             if pt_extremity.uri not in found_sps:
                 found_sps.append(pt_extremity.uri)
             interval = intervals.get(pt_extremity.uri)
@@ -834,7 +844,7 @@ def filter_olympics_journeys_v1(responses, request):
         for j in r.journeys:
             if 'olympics' not in j.tags:
                 continue
-            pt_extremity = get_journey_pt_extremity(j, request.get('criteria'))
+            _, pt_extremity = get_journey_pt_extremity(j, request.get('criteria'))
             if pt_extremity.uri != best_attractivity:
                 continue
             if retained_journey is None or retained_journey.duration > j.duration:
@@ -846,26 +856,26 @@ def filter_olympics_journeys_v1(responses, request):
 def filter_olympics_journeys_v2(responses, request):
     virtual_fallback_durations = {}
     virtual_fallback_durations.update(request.get("_olympics_sites_virtual_fallback[]") or [])
-    best = None
+    best = (None, float('inf'))
     for r in responses:
         for j in r.journeys:
             if 'olympics' not in j.tags:
                 continue
-            pt_extremity = get_journey_pt_extremity(j, request.get('criteria'))
-            virtual_fallback_duration = virtual_fallback_durations.get(pt_extremity.uri) or 0
-            virtual_total_duration = j.duration - j.sections[-1].duration + virtual_fallback_duration
-            if best is None:
-                best = (j, virtual_total_duration)
-                continue
 
-            if best[1] > virtual_total_duration:
-                best = (j, virtual_total_duration)
+            virtual_duration = compute_journey_virtual_duration(
+                j, request.get('criteria'), virtual_fallback_durations
+            )
 
-    best[0].tags.append('best_olympics')
+            if virtual_duration < best[1]:
+                best = (j, virtual_duration)
+
+    if best[0] is not None:
+        best[0].tags.append('best_olympics')
+    else:
+        logging.getLogger(__name__).warning("impossible to select the best in filter_olympics_journeys_v2")
 
 
 def filter_olympics_journeys(responses, request):
-
     if request.get("_filter_olympics_journeys") == "v1":
         filter_olympics_journeys_v1(responses, request)
     elif request.get("_filter_olympics_journeys") == "v2":
