@@ -774,7 +774,7 @@ def compute_journey_virtual_duration(journey, criteria, virtual_fallbacks):
     if criteria == "arrival_stop_attractivity":
         return extremity_pt_section.end_date_time - journey.departure_date_time + virtual_fallback
 
-    return extremity_pt_section.begin_date_time - journey.arrival_date_time + virtual_fallback
+    return journey.arrival_date_time - extremity_pt_section.begin_date_time  + virtual_fallback
 
 
 class Interval:
