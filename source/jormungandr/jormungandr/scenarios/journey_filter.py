@@ -45,6 +45,7 @@ from jormungandr.utils import (
 )
 from jormungandr.fallback_modes import FallbackModes
 from jormungandr.scenarios.qualifier import get_ASAP_journey
+import numpy as np
 
 
 def delete_journeys(responses, request):
@@ -768,7 +769,10 @@ def get_journey_pt_extremity(journey, criteria):
 
 def compute_journey_virtual_duration(journey, criteria, virtual_fallbacks):
     extremity_pt_section, extremity = get_journey_pt_extremity(journey, criteria)
-    virtual_fallback = virtual_fallbacks.get(extremity.uri) or 0
+    virtual_fallback = virtual_fallbacks.get(extremity.uri)
+
+    if virtual_fallback is None:
+        return journey.duration
 
     if criteria == "arrival_stop_attractivity":
         return extremity_pt_section.end_date_time - journey.departure_date_time + virtual_fallback
@@ -853,10 +857,77 @@ def filter_olympics_journeys_v1(responses, request):
     retained_journey.tags.append('best_olympics')
 
 
+virtual = {}
+distribution = {"E": 1, "12": 1, "T3b": 1}
+
+target = {"E": 60, "12": 30, "T3b": 10}
+
+MAX_DISTANCE = sum(v * v for v in target.values())
+
+stop_point_to_line = {
+    "stop_point:IDFM:monomodalStopPlace:58498": "E",
+    "stop_point:IDFM:22041": "12",
+    "stop_point:IDFM:463281": "12",
+    "stop_point:IDFM:412988": "T3b",
+    "stop_point:IDFM:412987": "T3b",
+}
+variations = {"E": 1000, "12": 1000, "T3b": 1000}
+
+
+class D:
+    previous_distance = float("inf")
+
+    def __init__(self):
+        pass
+
+
+d = D()
+
+
+def distance_with_target():
+    total = sum(v for v in distribution.values())
+    distance = 0
+    for d in distribution:
+        distance += (distribution[d] * 100 / total - target[d]) ** 2
+    return distance
+
+
+def get_gradient(var_key):
+    total = sum(v for v in distribution.values())
+    percentage = distribution[var_key] * 100.0 / total
+    return percentage - target[var_key]
+
+
 def filter_olympics_journeys_v2(responses, request):
     virtual_fallback_durations = {}
     virtual_fallback_durations.update(request.get("_olympics_sites_virtual_fallback[]") or [])
     best = (None, float('inf'))
+
+    var_key = ["E", "12", "T3b"][np.random.choice(3, 1)[0]]
+
+    total = sum(v for v in distribution.values())
+    diff = {key: abs(distribution[key] * 100.0 / total - target[key]) for key in variations}
+    var_key = max(diff.keys(), key=lambda key: diff[key])
+    print("distribution: ", distribution)
+    print("diff: ", diff)
+    print("chosen line: ", var_key)
+
+    gradient = get_gradient(var_key)
+    step = range(0, 1000, 100)[int(abs(gradient) / 10)]
+    print("step: ", step)
+    # direction = [-3, -2, -1, 0, 1, 2, 3][np.random.choice(7, 1)[0]]
+    direction = 1 if gradient >= 0 else -1
+    current_distance = distance_with_target()
+
+    for sp, line in stop_point_to_line.items():
+        var = variations[line]
+        if line == var_key:
+            var += step * direction
+        # if virtual_fallback_durations.get(sp, 0) + var < 0:
+        #    direction = 0
+        #    var = 0
+        virtual_fallback_durations[sp] = virtual_fallback_durations.get(sp, 0) + var
+
     for r in responses:
         for j in r.journeys:
             if 'olympics' not in j.tags:
@@ -871,6 +942,16 @@ def filter_olympics_journeys_v2(responses, request):
 
     if best[0] is not None:
         best[0].tags.append('best_olympics')
+        _, extremity = get_journey_pt_extremity(best[0], request.get('criteria'))
+        line = stop_point_to_line[extremity.uri]
+        distribution[line] += 1
+        current_distance = distance_with_target()
+        if current_distance < d.previous_distance:
+            variations[var_key] += step * direction
+        d.previous_distance = current_distance
+        print("current_distance: ", current_distance)
+        print("virtaul fallback: ", variations)
+        print("-----------------------------------------------")
     else:
         logging.getLogger(__name__).warning("impossible to select the best in filter_olympics_journeys_v2")
 
