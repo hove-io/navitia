@@ -858,7 +858,7 @@ def filter_olympics_journeys_v1(responses, request):
 
 
 virtual = {}
-distribution = {"E": 1, "12": 1, "T3b": 1}
+distribution = {"E": 1, "12": 0, "T3b": 0}
 
 target = {"E": 60, "12": 30, "T3b": 10}
 
@@ -897,6 +897,16 @@ def get_gradient(var_key):
     percentage = distribution[var_key] * 100.0 / total
     return percentage - target[var_key]
 
+def get_steps():
+    total = sum(v for v in distribution.values())
+    steps = {}
+    for k,v in distribution.items():
+        diff = v * 100.0 / total - target[k]
+        direction = 1 if diff >= 0 else -1
+        step = (list(range(0, 500, 50)) + list(range(500, 2000, 100)))[int(abs(diff) / 2)]
+        steps[k] = direction * step
+    return steps
+
 
 def filter_olympics_journeys_v2(responses, request):
     virtual_fallback_durations = {}
@@ -909,23 +919,15 @@ def filter_olympics_journeys_v2(responses, request):
     diff = {key: abs(distribution[key] * 100.0 / total - target[key]) for key in variations}
     var_key = max(diff.keys(), key=lambda key: diff[key])
     print("distribution: ", distribution)
-    print("diff: ", diff)
+    print("diff: ", {key: distribution[key] * 100.0 / total - target[key] for key in variations})
     print("chosen line: ", var_key)
 
     gradient = get_gradient(var_key)
-    step = range(0, 1000, 100)[int(abs(gradient) / 10)]
-    print("step: ", step)
-    # direction = [-3, -2, -1, 0, 1, 2, 3][np.random.choice(7, 1)[0]]
-    direction = 1 if gradient >= 0 else -1
-    current_distance = distance_with_target()
+    steps = get_steps()
+    print("steps: ", steps)
 
     for sp, line in stop_point_to_line.items():
-        var = variations[line]
-        if line == var_key:
-            var += step * direction
-        # if virtual_fallback_durations.get(sp, 0) + var < 0:
-        #    direction = 0
-        #    var = 0
+        var = variations[line] + steps[line]
         virtual_fallback_durations[sp] = virtual_fallback_durations.get(sp, 0) + var
 
     for r in responses:
@@ -946,9 +948,11 @@ def filter_olympics_journeys_v2(responses, request):
         line = stop_point_to_line[extremity.uri]
         distribution[line] += 1
         current_distance = distance_with_target()
-        if current_distance < d.previous_distance:
-            variations[var_key] += step * direction
+        for k, v in variations.items():
+            variations[k] = v + steps[k]
+
         d.previous_distance = current_distance
+        print("best line:", line)
         print("current_distance: ", current_distance)
         print("virtaul fallback: ", variations)
         print("-----------------------------------------------")
