@@ -1731,7 +1731,7 @@ class TestKirinStopTimeOnDetourAndArrivesBeforeDeletedAtTheEnd(MockKirinDisrupti
         # as the deleted-for-detour stop should not be displayed
         response = self.query_region(base_journey_query)
         assert len(response['journeys']) == 2
-        assert response['journeys'][0]['status'] == 'DETOUR'
+        assert response['journeys'][0]['status'] == 'MODIFIED_SERVICE'  # using added drop-off
         assert response['journeys'][0]['sections'][0]['type'] == 'public_transport'
         assert len(response['journeys'][0]['sections'][0]['stop_date_times']) == 2
         assert response['journeys'][0]['sections'][0]['data_freshness'] == 'realtime'
@@ -1903,7 +1903,7 @@ class TestKirinAddNewTrip(MockKirinDisruptionsFixture):
         assert len(response['journeys']) == 2
         pt_journey = response['journeys'][0]
         assert 'non_pt_walking' not in pt_journey['tags']
-        assert pt_journey['status'] == 'ADDITIONAL_SERVICE'
+        assert pt_journey['status'] == 'MODIFIED_SERVICE'  # using added pick-up and drop-off
         assert pt_journey['sections'][0]['data_freshness'] == 'realtime'
         assert pt_journey['sections'][0]['display_informations']['commercial_mode'] == 'additional service'
         assert pt_journey['sections'][0]['display_informations']['physical_mode'] == 'Bus'
@@ -2212,7 +2212,7 @@ class TestKirinAddNewTripWithSomeAttributes(MockKirinDisruptionsFixture):
         assert len(response['journeys']) == 2
         pt_journey = response['journeys'][0]
         assert 'non_pt_walking' not in pt_journey['tags']
-        assert pt_journey['status'] == 'ADDITIONAL_SERVICE'
+        assert pt_journey['status'] == 'MODIFIED_SERVICE'  # using added pick-up and drop-off
         assert pt_journey['sections'][0]['data_freshness'] == 'realtime'
         assert pt_journey['sections'][0]['display_informations']['commercial_mode'] == 'Tramway'
         assert pt_journey['sections'][0]['display_informations']['physical_mode'] == 'Bus'
@@ -2717,7 +2717,7 @@ class TestKirinAddNewTripWithoutPhysicalMode(MockKirinDisruptionsFixture):
         assert len(response['journeys']) == 2
         pt_journey = response['journeys'][0]
         assert 'non_pt_walking' not in pt_journey['tags']
-        assert pt_journey['status'] == 'ADDITIONAL_SERVICE'
+        assert pt_journey['status'] == 'MODIFIED_SERVICE'  # using added pick-up and drop-off
         assert pt_journey['sections'][0]['data_freshness'] == 'realtime'
         assert pt_journey['sections'][0]['display_informations']['commercial_mode'] == 'additional service'
         assert pt_journey['sections'][0]['display_informations']['physical_mode'] == 'Tramway'
@@ -2852,7 +2852,7 @@ class TestKirinAddTripWithHeadSign(MockKirinDisruptionsFixture):
         self.is_valid_journey_response(response, C_B_query)
         assert len(response['journeys']) == 2
         pt_journey = response['journeys'][0]
-        assert pt_journey['status'] == 'ADDITIONAL_SERVICE'
+        assert pt_journey['status'] == 'MODIFIED_SERVICE'  # using added pick-up and drop-off
         assert pt_journey['sections'][0]['data_freshness'] == 'realtime'
         assert pt_journey['sections'][0]['display_informations']['headsign'] == 'trip_headsign'
 
@@ -3679,7 +3679,7 @@ class TestNoServiceJourney(MockKirinOrChaosDisruptionsFixture):
         # Meanwhile, journey using a VJ with deleted stop, but not using that stop keeps its status
         journey_AE = self.query_region(journey_AE_query)
         assert len(journey_AE['journeys']) == 1
-        assert journey_AE['journeys'][0]['status'] == 'REDUCED_SERVICE'
+        assert journey_AE['journeys'][0]['status'] == ''  # No delay, no deletion of pick-up or drop-off used
         assert len(journey_AE['disruptions']) == 1
         assert journey_AE['disruptions'][0]['severity']['effect'] == 'REDUCED_SERVICE'
         links = get_links_dict(journey_AE)
@@ -3879,7 +3879,7 @@ class TestKirinThenChaosRailSectionJourney(MockKirinOrChaosDisruptionsFixture):
 
         journey_EH_rt = self.query_region(journey_EH_rt_query)
         assert len(journey_EH_rt['journeys']) == 1
-        assert journey_EH_rt['journeys'][0]['status'] == 'REDUCED_SERVICE'
+        assert journey_EH_rt['journeys'][0]['status'] == ''  # No delay, no deletion of pick-up or drop-off used
         assert journey_EH_rt['journeys'][0]['arrival_date_time'] == '20170120T083500'
         assert using_vj1(journey_EH_rt)
         assert len(journey_EH_rt['disruptions']) == 1
@@ -3893,7 +3893,9 @@ class TestKirinThenChaosRailSectionJourney(MockKirinOrChaosDisruptionsFixture):
 
         journey_EH_adapted = self.query_region(journey_EH_adapted_query)
         assert len(journey_EH_adapted['journeys']) == 1
-        assert journey_EH_adapted['journeys'][0]['status'] == 'REDUCED_SERVICE'
+        assert (
+            journey_EH_adapted['journeys'][0]['status'] == ''
+        )  # No delay, no deletion of pick-up or drop-off used
         assert journey_EH_adapted['journeys'][0]['arrival_date_time'] == '20170120T083500'
         assert using_vj1(journey_EH_adapted)
         assert len(journey_EH_adapted['disruptions']) == 1
@@ -3907,7 +3909,9 @@ class TestKirinThenChaosRailSectionJourney(MockKirinOrChaosDisruptionsFixture):
 
         journey_EH_base = self.query_region(journey_EH_base_query)
         assert len(journey_EH_base['journeys']) == 1
-        assert journey_EH_base['journeys'][0]['status'] == 'REDUCED_SERVICE'
+        assert (
+            journey_EH_base['journeys'][0]['status'] == ''
+        )  # No delay, no deletion of pick-up or drop-off used
         assert journey_EH_base['journeys'][0]['arrival_date_time'] == '20170120T083500'
         assert using_vj1(journey_EH_base)
         assert len(journey_EH_base['disruptions']) == 1
@@ -3934,7 +3938,7 @@ class TestKirinThenChaosRailSectionJourney(MockKirinOrChaosDisruptionsFixture):
 
         journey_EH_rt = self.query_region(journey_EH_rt_query)
         assert len(journey_EH_rt['journeys']) == 1
-        assert journey_EH_rt['journeys'][0]['status'] == 'NO_SERVICE'
+        assert journey_EH_rt['journeys'][0]['status'] == ''  # No delay, no deletion of pick-up or drop-off used
         assert journey_EH_rt['journeys'][0]['arrival_date_time'] == '20170120T083500'
         assert using_vj1(journey_EH_rt)
         assert len(journey_EH_rt['disruptions']) == 2
@@ -3956,7 +3960,9 @@ class TestKirinThenChaosRailSectionJourney(MockKirinOrChaosDisruptionsFixture):
 
         journey_EH_base = self.query_region(journey_EH_base_query)
         assert len(journey_EH_base['journeys']) == 1
-        assert journey_EH_base['journeys'][0]['status'] == 'NO_SERVICE'
+        assert (
+            journey_EH_base['journeys'][0]['status'] == ''
+        )  # No delay, no deletion of pick-up or drop-off used
         assert journey_EH_base['journeys'][0]['arrival_date_time'] == '20170120T083500'
         assert using_vj1(journey_EH_base)
         assert len(journey_EH_base['disruptions']) == 2
@@ -3978,7 +3984,7 @@ class TestKirinThenChaosRailSectionJourney(MockKirinOrChaosDisruptionsFixture):
 
         journey_EH_rt = self.query_region(journey_EH_rt_query)
         assert len(journey_EH_rt['journeys']) == 1
-        assert journey_EH_rt['journeys'][0]['status'] == 'REDUCED_SERVICE'
+        assert journey_EH_rt['journeys'][0]['status'] == ''  # No delay, no deletion of pick-up or drop-off used
         assert journey_EH_rt['journeys'][0]['arrival_date_time'] == '20170120T083500'
         assert using_vj1(journey_EH_rt)
         assert len(journey_EH_rt['disruptions']) == 1
@@ -3992,7 +3998,9 @@ class TestKirinThenChaosRailSectionJourney(MockKirinOrChaosDisruptionsFixture):
 
         journey_EH_adapted = self.query_region(journey_EH_adapted_query)
         assert len(journey_EH_adapted['journeys']) == 1
-        assert journey_EH_adapted['journeys'][0]['status'] == 'REDUCED_SERVICE'
+        assert (
+            journey_EH_adapted['journeys'][0]['status'] == ''
+        )  # No delay, no deletion of pick-up or drop-off used
         assert journey_EH_adapted['journeys'][0]['arrival_date_time'] == '20170120T083500'
         assert using_vj1(journey_EH_adapted)
         assert len(journey_EH_adapted['disruptions']) == 1
@@ -4006,7 +4014,9 @@ class TestKirinThenChaosRailSectionJourney(MockKirinOrChaosDisruptionsFixture):
 
         journey_EH_base = self.query_region(journey_EH_base_query)
         assert len(journey_EH_base['journeys']) == 1
-        assert journey_EH_base['journeys'][0]['status'] == 'REDUCED_SERVICE'
+        assert (
+            journey_EH_base['journeys'][0]['status'] == ''
+        )  # No delay, no deletion of pick-up or drop-off used
         assert journey_EH_base['journeys'][0]['arrival_date_time'] == '20170120T083500'
         assert using_vj1(journey_EH_base)
         assert len(journey_EH_base['disruptions']) == 1

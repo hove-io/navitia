@@ -1984,7 +1984,8 @@ BOOST_AUTO_TEST_CASE(with_information_disruptions) {
     BOOST_REQUIRE_EQUAL(resp.journeys_size(), 1);
 
     const auto& j = resp.journeys(0);
-    BOOST_CHECK_EQUAL(j.most_serious_disruption_effect(), "SIGNIFICANT_DELAYS");
+    BOOST_CHECK_EQUAL(j.most_serious_disruption_effect(),
+                      "");  // the line's and stop's disruptions have no effect on the journey
 
     BOOST_REQUIRE_EQUAL(j.sections_size(), 1);
 }
@@ -2034,7 +2035,7 @@ BOOST_AUTO_TEST_CASE(with_disruptions_on_network) {
 
     const auto& j = resp.journeys(0);
     BOOST_CHECK_EQUAL(j.most_serious_disruption_effect(),
-                      "SIGNIFICANT_DELAYS");  // we should have the network's disruption's effect
+                      "");  // the network's and stop's disruptions have no effect on the journey
 }
 
 BOOST_AUTO_TEST_CASE(journey_with_forbidden) {
