@@ -1188,7 +1188,7 @@ void Worker::dispatch(const pbnavitia::Request& request,
         case pbnavitia::access_points:
             access_points(request.access_points());
             break;
-        case pbnavitia::fare:
+        case pbnavitia::pt_fares:
             fares(request.pt_fares());
             break;
         default:
