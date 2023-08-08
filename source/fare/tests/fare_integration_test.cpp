@@ -31,7 +31,7 @@ www.navitia.io
 #define BOOST_TEST_DYN_LINK
 #define BOOST_TEST_MODULE test_fares
 #include <boost/test/unit_test.hpp>
-#include "fare/fare.h"
+#include "fare/fare_api.h"
 #include "type/data.h"
 #include "routing/raptor_api.h"
 #include "routing/raptor.h"

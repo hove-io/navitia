@@ -44,14 +44,6 @@ www.navitia.io
 #include <utility>
 
 namespace navitia {
-
-namespace type {
-struct StopPoint;
-struct Data;
-}  // namespace type
-
-class PbCreator;
-
 namespace fare {
 
 /**
@@ -400,8 +392,6 @@ private:
 
     log4cplus::Logger logger = log4cplus::Logger::getInstance("fare");
 };
-
-void fill_fares(PbCreator& pb_creator, const pbnavitia::PtFaresRequest& fares);
 
 }  // namespace fare
 }  // namespace navitia

@@ -1,6 +1,7 @@
 SET(FARE_SRC
     fare.h
     fare.cpp
+    fare_api.cpp
 )
 
 add_library(fare ${FARE_SRC})

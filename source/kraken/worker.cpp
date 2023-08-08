@@ -37,6 +37,7 @@ www.navitia.io
 #include "equipment/equipment_api.h"
 #include "access_point/access_point_api.h"
 #include "position/position_api.h"
+#include "fare/fare_api.h"
 #include "proximity_list/proximitylist_api.h"
 #include "ptreferential/ptreferential.h"
 #include "ptreferential/ptreferential_api.h"
@@ -1283,7 +1284,7 @@ void Worker::access_points(const pbnavitia::AccessPointsRequest& access_points) 
 }
 
 void Worker::fares(const pbnavitia::PtFaresRequest& fares) {
-    // auto tickets = fares::
+    navitia::fare::fill_fares(pb_creator, fares);
 }
 
 }  // namespace navitia
