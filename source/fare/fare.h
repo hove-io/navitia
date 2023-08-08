@@ -393,6 +393,9 @@ private:
     /// Retourne le ticket OD qui va bien ou lève une exception no_ticket si on ne trouve pas
     DateTicket get_od(const Label& label, const SectionKey& section) const;
 
+    std::vector<std::vector<Label>> compute_labels(const size_t nb_nodes,
+                                                   const std::vector<std::vector<Label>>& old_labels,
+                                                   const SectionKey& section_key) const;
     void add_default_ticket();
 
     log4cplus::Logger logger = log4cplus::Logger::getInstance("fare");
