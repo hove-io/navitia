@@ -1,4 +1,4 @@
-/* Copyright © 2001-2022, Hove and/or its affiliates. All rights reserved.
+/* Copyright �� 2001-2022, Hove and/or its affiliates. All rights reserved.
 
 This file is part of Navitia,
     the software to build cool stuff with public transport.
@@ -34,6 +34,7 @@ www.navitia.io
 #include "routing/routing.h"
 #include "utils/serialization_vector.h"
 #include "utils/logger.h"
+#include "type/request.pb.h"
 
 #include <boost/graph/adjacency_list.hpp>
 #include <boost/date_time/gregorian/gregorian.hpp>
@@ -43,6 +44,14 @@ www.navitia.io
 #include <utility>
 
 namespace navitia {
+
+namespace type {
+struct StopPoint;
+struct Data;
+}  // namespace type
+
+class PbCreator;
+
 namespace fare {
 
 /**
@@ -234,15 +243,15 @@ struct Condition {
 
 std::ostream& operator<<(std::ostream& ss, const Condition& k);
 
-/// Structure représentant une étiquette
+/// Structure repr��sentant une ��tiquette
 struct Label {
-    Cost cost = 0;  //< Coût cummulé
+    Cost cost = 0;  //< Co��t cummul��
     size_t nb_undefined_sub_cost = 0;
     int start_time = 0;  //< Heure de compostage du billet
-    // int duration;//< durée jusqu'à présent du trajet depuis le dernier ticket
-    int nb_changes = 0;     //< nombre de changement effectués depuis le dernier ticket
+    // int duration;//< dur��e jusqu'�� pr��sent du trajet depuis le dernier ticket
+    int nb_changes = 0;     //< nombre de changement effectu��s depuis le dernier ticket
     std::string stop_area;  //< stop_area d'achat du billet
-                            // std::string dest_stop_area; //< on est obligé de descendre à ce stop_area
+                            // std::string dest_stop_area; //< on est oblig�� de descendre �� ce stop_area
     std::string zone;
     std::string mode;
     std::string line;
@@ -250,8 +259,8 @@ struct Label {
 
     Ticket::ticket_type current_type = Ticket::FlatFare;
 
-    std::vector<Ticket> tickets;  //< Ensemble de billets à acheter pour arriver à cette étiquette
-    /// Constructeur par défaut
+    std::vector<Ticket> tickets;  //< Ensemble de billets �� acheter pour arriver �� cette ��tiquette
+    /// Constructeur par d��faut
     Label() = default;
     bool operator==(const Label& l) const {
         return cost == l.cost && start_time == l.start_time && nb_changes == l.nb_changes && stop_area == l.stop_area
@@ -273,35 +282,41 @@ struct Label {
 
 std::ostream& operator<<(std::ostream& ss, const Label& l);
 
-/// Contient les données retournées par navitia
+/// Contient les donn��es retourn��es par navitia
 struct SectionKey {
-    std::string network;
-    std::string start_stop_area;
-    std::string dest_stop_area;
-    std::string line;
-    uint32_t start_time;
-    uint32_t dest_time;
-    std::string start_zone;
-    std::string dest_zone;
-    std::string mode;
-    boost::gregorian::date date;
-    size_t path_item_idx;
+    std::string network = {};
+    std::string start_stop_area = {};
+    std::string dest_stop_area = {};
+    std::string line = {};
+    uint32_t start_time = {};
+    uint32_t dest_time = {};
+    std::string start_zone = {};
+    std::string dest_zone = {};
+    std::string mode = {};
+    boost::gregorian::date date = {};
+    size_t path_item_idx = 0;
+
+    boost::optional<std::string> section_id;
 
     SectionKey(const routing::PathItem& path_item, const size_t idx);
+    SectionKey(const pbnavitia::PtFaresRequest::PtSection& section,
+               const type::StopPoint& first_stop_point,
+               const type::StopPoint& last_stop_point);
+
     int duration_at_begin(int ticket_start_time) const;
     int duration_at_end(int ticket_start_time) const;
 };
 
 std::ostream& operator<<(std::ostream& ss, const SectionKey& k);
 
-/// Représente un transition possible et l'achat éventuel d'un billet
+/// Repr��sente un transition possible et l'achat ��ventuel d'un billet
 struct Transition {
     enum class GlobalCondition { nothing, exclusive, with_changes };
 
     std::vector<Condition> start_conditions;                      //< condition pour emprunter l'arc
-    std::vector<Condition> end_conditions;                        //< condition à la sortie de l'arc
+    std::vector<Condition> end_conditions;                        //< condition �� la sortie de l'arc
     std::string ticket_key;                                       //< clef vers le tarif correspondant
-    GlobalCondition global_condition = GlobalCondition::nothing;  //< condition telle que exclusivité ou OD
+    GlobalCondition global_condition = GlobalCondition::nothing;  //< condition telle que exclusivit�� ou OD
 
     bool valid(const SectionKey& section, const Label& label) const;
 
@@ -338,7 +353,7 @@ struct results {
     bool not_found = true;
 };
 
-/// Contient l'ensemble du système tarifaire
+/// Contient l'ensemble du syst��me tarifaire
 struct Fare {
     /// Map qui associe les clefs de tarifs aux tarifs
     std::map<std::string, DateTicket> fare_map;
@@ -355,8 +370,9 @@ struct Fare {
     Fare();
 
     /// Effectue la recherche du meilleur tarif
-    /// Retourne une liste de billets à acheter
+    /// Retourne une liste de billets �� acheter
     results compute_fare(const routing::Path& path) const;
+    results compute_fare(const pbnavitia::PtFaresRequest::PtJourney& fares, const type::Data& data) const;
 
     template <class Archive>
     void save(Archive& ar, const unsigned int) const {
@@ -374,13 +390,15 @@ struct Fare {
     size_t nb_transitions() const;
 
 private:
-    /// Retourne le ticket OD qui va bien ou lève une exception no_ticket si on ne trouve pas
+    /// Retourne le ticket OD qui va bien ou l��ve une exception no_ticket si on ne trouve pas
     DateTicket get_od(const Label& label, const SectionKey& section) const;
 
     void add_default_ticket();
 
     log4cplus::Logger logger = log4cplus::Logger::getInstance("fare");
 };
+
+void fill_fares(PbCreator& pb_creator, const pbnavitia::PtFaresRequest& fares);
 
 }  // namespace fare
 }  // namespace navitia

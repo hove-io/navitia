@@ -293,6 +293,8 @@ struct PbCreator {
                               const pt::ptime departure,
                               int max_depth = 1);
 
+    void fill_fare(pbnavitia::Fare* pb_fare, pbnavitia::Journey* pb_journey, const fare::results& fare);
+
     void add_path_item(pbnavitia::StreetNetwork* sn, const ng::PathItem& item, const type::EntryPoint& ori_dest);
 
     void fill_additional_informations(google::protobuf::RepeatedField<int>* infos,
@@ -321,6 +323,7 @@ struct PbCreator {
     pbnavitia::EquipmentReport* add_equipment_reports();
     pbnavitia::VehiclePosition* add_vehicle_positions();
     pbnavitia::AccessPoint* add_access_points();
+    pbnavitia::PtJourneyFare* add_pt_journey_fares();
 
     ::google::protobuf::RepeatedPtrField<pbnavitia::PtObject>* get_mutable_places();
     bool has_error();

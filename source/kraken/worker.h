@@ -1,4 +1,4 @@
-/* Copyright © 2001-2022, Hove and/or its affiliates. All rights reserved.
+/* Copyright �� 2001-2022, Hove and/or its affiliates. All rights reserved.
 
 This file is part of Navitia,
     the software to build cool stuff with public transport.
@@ -145,6 +145,7 @@ private:
     void equipment_reports(const pbnavitia::EquipmentReportsRequest& equipment_reports);
     void vehicle_positions(const pbnavitia::VehiclePositionsRequest& vehcile_positions);
     void access_points(const pbnavitia::AccessPointsRequest& access_points);
+    void fares(const pbnavitia::PtFaresRequest& fares);
 };
 
 type::EntryPoint make_sn_entry_point(const std::string& place,
