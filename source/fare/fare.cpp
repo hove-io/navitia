@@ -507,8 +507,8 @@ DateTicket DateTicket::operator+(const DateTicket& other) const {
     for (size_t i = 0; i < std::min(this->tickets.size(), other.tickets.size()); ++i) {
         if (this->tickets[i].validity_period != other.tickets[i].validity_period)
             LOG4CPLUS_ERROR(log4cplus::Logger::getInstance("fare"),
-                            "Ticket n�� " << i << " doesn't have the same dates; " << this->tickets[i].validity_period
-                                          << " as " << other.tickets[i].validity_period);
+                            "Ticket n° " << i << " doesn't have the same dates; " << this->tickets[i].validity_period
+                                         << " as " << other.tickets[i].validity_period);
         new_ticket.tickets[i].ticket.value = this->tickets[i].ticket.value + other.tickets[i].ticket.value;
     }
     return new_ticket;
