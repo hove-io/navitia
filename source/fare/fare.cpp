@@ -278,7 +278,7 @@ results Fare::compute_fare(const routing::Path& path) const {
 }
 
 results Fare::compute_fare(const pbnavitia::PtFaresRequest::PtJourney& pt_journey, const type::Data& data) const {
-    int nb_nodes = boost::num_vertices(g);
+    size_t nb_nodes = boost::num_vertices(g);
 
     if (nb_nodes < 2) {
         LOG4CPLUS_TRACE(logger, "no fare data loaded, cannot compute fare");
@@ -286,7 +286,7 @@ results Fare::compute_fare(const pbnavitia::PtFaresRequest::PtJourney& pt_journe
     }
     std::vector<std::vector<Label>> labels(nb_nodes);
     // Start label
-    labels[0].push_back(Label());
+    labels[0].emplace_back();
 
     for (const auto& s : pt_journey.pt_sections()) {
         const auto& first_sp_uri = s.first_stop_point_uri();
@@ -324,23 +324,23 @@ SectionKey::SectionKey(const routing::PathItem& path_item, const size_t idx) : p
 
 SectionKey::SectionKey(const pbnavitia::PtFaresRequest::PtSection& section,
                        const type::StopPoint& first_stop_point,
-                       const type::StopPoint& last_stop_point) {
-    network = section.network_uri();
-    start_stop_area = section.start_stop_area_uri();
-    dest_stop_area = section.end_stop_area_uri();
-    line = section.line_uri();
+                       const type::StopPoint& last_stop_point)
+    : network(section.network_uri()),
+      start_stop_area(section.start_stop_area_uri()),
+      dest_stop_area(section.end_stop_area_uri()),
+      line(section.line_uri()),
+      start_zone(first_stop_point.fare_zone),
+      dest_zone(last_stop_point.fare_zone),
+      mode(section.physical_mode()),
+      section_id(section.id())
 
+{
     auto begin_date_time = boost::posix_time::from_time_t(section.begin_date_time());
     date = begin_date_time.date();
     start_time = begin_date_time.time_of_day().total_seconds();
 
     auto end_date_time = boost::posix_time::from_time_t(section.end_date_time());
     dest_time = end_date_time.time_of_day().total_seconds();
-
-    start_zone = first_stop_point.fare_zone;
-    dest_zone = last_stop_point.fare_zone;
-    mode = section.physical_mode();
-    section_id = section.id();
 };
 
 template <class T>

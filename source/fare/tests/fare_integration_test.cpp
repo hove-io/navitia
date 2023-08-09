@@ -223,7 +223,7 @@ BOOST_AUTO_TEST_CASE(test_fare_api) {
     type::EntryPoint destination(type::Type_e::StopArea, "stop5");
 
     georef::StreetNetwork sn_worker(*b.data->geo_ref);
-    auto* data_ptr = b.data.get();
+    const auto* data_ptr = b.data.get();
     navitia::PbCreator pb_creator(data_ptr, boost::gregorian::not_a_date_time, null_time_period);
     make_response(pb_creator, raptor, origin, destination, {test::to_posix_timestamp("20120614T080000")}, true,
                   type::AccessibiliteParams(), {}, {}, sn_worker, type::RTLevel::Base, 2_min);
@@ -238,8 +238,6 @@ BOOST_AUTO_TEST_CASE(test_fare_api) {
 
     auto* pt_fare_journey = pt_fare_request.add_pt_journeys();
     pt_fare_journey->set_id("pt_jourey_1");
-
-    size_t idx = 0;
 
     for (const auto& section : journey.sections()) {
         if (section.type() != pbnavitia::PUBLIC_TRANSPORT) {
@@ -269,8 +267,8 @@ BOOST_AUTO_TEST_CASE(test_fare_api) {
 
     fare::fill_fares(pb_creator_fare, pt_fare_request);
 
-    auto fare_response = pb_creator_fare.get_response();
-    auto pt_journey_fares = fare_response.pt_journey_fares();
+    const auto& fare_response = pb_creator_fare.get_response();
+    const auto& pt_journey_fares = fare_response.pt_journey_fares();
     BOOST_REQUIRE_EQUAL(pt_journey_fares.size(), 1);
     BOOST_REQUIRE_EQUAL(pt_journey_fares.Get(0).journey_id(), "pt_jourey_1");
 
@@ -280,9 +278,9 @@ BOOST_AUTO_TEST_CASE(test_fare_api) {
     BOOST_REQUIRE_EQUAL(pb_fare.ticket_id_size(), 2);
 
     BOOST_REQUIRE_EQUAL(fare_response.tickets_size(), 2);
-    std::map<std::string, pbnavitia::Ticket> ticket;
+    std::unordered_map<std::string, pbnavitia::Ticket> ticket;
     for (int i = 0; i < fare_response.tickets_size(); ++i) {
-        auto t = fare_response.tickets(i);
+        const auto& t = fare_response.tickets(i);
         ticket[t.id()] = t;
     }
     BOOST_CHECK_EQUAL(ticket[pb_fare.ticket_id(0)].name(), "Ticket vj 1");

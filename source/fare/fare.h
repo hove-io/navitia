@@ -280,8 +280,8 @@ struct SectionKey {
     std::string start_stop_area = {};
     std::string dest_stop_area = {};
     std::string line = {};
-    uint32_t start_time = {};
-    uint32_t dest_time = {};
+    long start_time = {};
+    long dest_time = {};
     std::string start_zone = {};
     std::string dest_zone = {};
     std::string mode = {};

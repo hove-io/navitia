@@ -1865,8 +1865,6 @@ void PbCreator::fill_co2_emission(pbnavitia::Section* pb_section, const type::Ve
 
 void PbCreator::fill_fare_section(pbnavitia::Journey* pb_journey, const fare::results& fare) {
     auto pb_fare = pb_journey->mutable_fare();
-
-    size_t cpt_ticket = response.tickets_size();
     fill_fare(pb_fare, pb_journey, fare);
 }
 
