@@ -54,10 +54,11 @@ DEFAULT_HANDIMAP_FEED_PUBLISHER = {
     'url': 'https://www.handimap.fr',
 }
 
-
-class Languages(Enum):
-    french = "fr-FR"
-    english = "en-EN"
+LANGUAGE_TRANSFORMATION_LIST = {
+    "en-US": "en-EN",
+    "en-GB": "en-EN",
+    "fr-FR": "fr-FR"
+}
 
 
 class Handimap(AbstractStreetNetworkService):
@@ -85,7 +86,7 @@ class Handimap(AbstractStreetNetworkService):
         self.headers = {"Content-Type": "application/json", "Accept": "application/json"}
         self.timeout = timeout
         self.modes = modes if modes else ["walking"]
-        self.language = self._get_language(kwargs.get('language', "english"))
+        self.language = self._get_language(kwargs.get('language', "fr-FR"))
         self.verify = kwargs.get('verify', True)
 
         self.breaker = pybreaker.CircuitBreaker(
@@ -117,12 +118,12 @@ class Handimap(AbstractStreetNetworkService):
             },
         }
 
-    def _get_language(self, language):
-        try:
-            return Languages[language].value
-        except KeyError:
-            self.log.error('Here parameters language={} not exist - force to english'.format(language))
-            return Languages.english.value
+    def _get_language(self, language_value):
+        language = LANGUAGE_TRANSFORMATION_LIST.get(language_value)
+        if not language:
+            self.log.error('Handimap parameter language={} Invalid - fallback to english'.format(language_value))
+            language = "en-EN"
+        return language
 
     def get_language_parameter(self, request):
         language = request.get('language', None)

@@ -885,30 +885,31 @@ class Instance(flask_restful.Resource):
             "language",
             type=OptionValue(
                 [
-                    'dutch',
-                    'english',
-                    'french',
-                    'german',
-                    'hindi',
-                    'italian',
-                    'japanese',
-                    'portuguese',
-                    'russian',
-                    'spanish',
+                    'nl-NL',
+                    'en-US',
+                    'en-GB',
+                    'fr-FR',
+                    'de-DE',
+                    'hi-IN',
+                    'it-IT',
+                    'ja-JP',
+                    'pt-PT',
+                    'ru-RU',
+                    'es-ES',
                 ]
             ),
             help='Select a specific language for street network instructions.\n'
             'list available:\n'
-            '- dutch = nl-NL\n'
-            '- english = en-US\n'
-            '- french = fr-FR\n'
-            '- german = de-DE\n'
-            '- hindi = hi-IN\n'
-            '- italian = it-IT\n'
-            '- japanese = ja-JP\n'
-            '- portuguese = pt-PT\n'
-            '- russian = ru-RU\n'
-            '- spanish = es-ES\n',
+            '- nl-NL = dutch\n'
+            '- en-US|en-GB = english\n'
+            '- fr-FR = french\n'
+            '- de-DE = german\n'
+            '- hi-IN = hindi\n'
+            '- it-IT = italian\n'
+            '- ja-JP = japanese\n'
+            '- pt-PT = portuguese\n'
+            '- ru-RU = russian\n'
+            '- es-ES = spanish\n',
             default=instance.language,
         )
 

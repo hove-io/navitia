@@ -33,21 +33,16 @@ Insert into **Jormun** configuration:
 Available optional parameters list:
 * timeout: circuit breaker timeout. By default 10 secs
 * language: the selected language for guidance instruction - list available bellow. By default, english
-    * afrikaans
-    * arabic
-    * chinese
-    * dutch
-    * english
-    * french
-    * german
-    * hebrew
-    * hindi
-    * italian
-    * japanese
-    * nepali
-    * portuguese
-    * russian
-    * spanish
+    * nl-NL = dutch
+    * en-US | en-GB = english
+    * fr-FR = french
+    * de-DE = german
+    * hi-IN = hindi
+    * it-IT = italian
+    * ja-JP = japanese
+    * pt-PT = portuguese
+    * ru-RU = russian
+    * es-ES = spanish
 * max_matrix_points: the max number of allowed matrix points. By default 100 (the maximum)
 * lapse_time_matrix_to_retry: The waiting time between to get request to retreive the matrix response
 
@@ -55,13 +50,13 @@ Available optional parameters list:
 
 You can easily override parameters for tests inside requests.<br>
 List of available API parameters:
-* language: "english" or "french" or "dutch" ...
+* language: "en-US" or "fr-FR" or "nl-NL" ...
 * _here_max_matrix_points: int value [1-100]
 
 Example:
 
 ```
-http://navitia.io/v1/coverage/coverage_name/journeys?from=2.13376%3B48.86333&to=2.33443%3B48.84189&first_section_mode%5B%5D=car&_here_realtime_traffic=true&_here_max_matrix_points=50&language=french
+http://navitia.io/v1/coverage/coverage_name/journeys?from=2.13376%3B48.86333&to=2.33443%3B48.84189&first_section_mode%5B%5D=car&_here_realtime_traffic=true&_here_max_matrix_points=50&language=fr-FR
 ```
 
 ### exclusion areas

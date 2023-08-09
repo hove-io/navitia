@@ -50,22 +50,6 @@ from enum import Enum
 import pybreaker
 
 
-# Possible values implemented. Full languages within the doc:
-# https://valhalla.github.io/valhalla/api/turn-by-turn/api-reference/#supported-language-tags
-# Be careful, the syntax has to be exact
-class Languages(Enum):
-    dutch = "nl-NL"
-    english = "en-US"
-    french = "fr-FR"
-    german = "de-DE"
-    hindi = "hi-IN"
-    italian = "it-IT"
-    japanese = "ja-JP"
-    portuguese_pt = "pt-PT"
-    russian = "ru-RU"
-    spanish = "es-ES"
-
-
 class DirectPathProfile(object):
     def __init__(
         self,
@@ -199,9 +183,7 @@ class Asgard(TransientSocket, Kraken):
         )
 
     def get_language_parameter(self, request):
-        language = request.get('language', "english")
-        language_tag = getattr(Languages, language, Languages.english).value
-        return language_tag
+        return request.get('language', "fr-FR")
 
     def _create_sn_routing_matrix_request(
         self, origins, destinations, street_network_mode, max_duration, speed_switcher, request, **kwargs

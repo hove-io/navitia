@@ -70,18 +70,19 @@ CO2_ESTIMATION_COEFF_2 = 184
 # Possible values implemented. Full languages within the doc:
 # https://developer.here.com/documentation/routing/dev_guide/topics/resource-param-type-languages.html#languages
 # Be careful, the syntax has to be exact
-class Languages(Enum):
-    dutch = "nl-nl"
-    english = "en-us"
-    french = "fr-fr"
-    german = "de-de"
-    hindi = "hi"
-    italian = "it-it"
-    japanese = "ja-jp"
-    portuguese = "pt-pt"
-    russian = "ru-ru"
-    spanish = "es-es"
 
+LANGUAGE_TRANSFORMATION_LIST = {
+    "nl-NL": "nl-nl",
+    "en-US": "en-us",
+    "en-GB": "en-gb",
+    "fr-FR": "fr-fr",
+    "hi-IN": "hi",
+    "it-IT": "it-it",
+    "ja-JP": "ja-jp",
+    "pt-PT": "pt-pt",
+    "ru-RU": "ru-ru",
+    "es-ES": "es-es"
+}
 
 DEFAULT_HERE_FEED_PUBLISHER = {
     'id': 'here',
@@ -89,7 +90,6 @@ DEFAULT_HERE_FEED_PUBLISHER = {
     'license': 'Private',
     'url': 'https://developer.here.com/terms-and-conditions',
 }
-
 
 def _get_coord(pt_object):
     coord = get_pt_object_coord(pt_object)
@@ -132,7 +132,7 @@ class Here(AbstractStreetNetworkService):
         apiKey=None,
         max_matrix_points=MAX_MATRIX_POINTS_VALUES,
         lapse_time_matrix_to_retry=DEFAULT_LAPSE_TIME_MATRIX_TO_RETRY,
-        language="english",
+        language="fr-FR",
         feed_publisher=DEFAULT_HERE_FEED_PUBLISHER,
         **kwargs
     ):
@@ -149,7 +149,7 @@ class Here(AbstractStreetNetworkService):
         self.timeout = timeout
         self.max_matrix_points = self._get_max_matrix_points(max_matrix_points)
         self.lapse_time_matrix_to_retry = self._get_lapse_time_matrix_to_retry(lapse_time_matrix_to_retry)
-        self.language = self._get_language(language.lower())
+        self.language = self._get_language(language)
         self.breaker = pybreaker.CircuitBreaker(
             fail_max=app.config['CIRCUIT_BREAKER_MAX_HERE_FAIL'],
             reset_timeout=app.config['CIRCUIT_BREAKER_HERE_TIMEOUT_S'],
@@ -157,7 +157,7 @@ class Here(AbstractStreetNetworkService):
 
         self.log.debug(
             'Here, load configuration max_matrix_points={} - timeout={} - lapse_time_matrix_to_retry={} - language={}'.format(
-                self.max_matrix_points, self.timeout, self.lapse_time_matrix_to_retry, self.language.value
+                self.max_matrix_points, self.timeout, self.lapse_time_matrix_to_retry, self.language
             )
         )
         self._feed_publisher = FeedPublisher(**feed_publisher) if feed_publisher else None
@@ -170,7 +170,7 @@ class Here(AbstractStreetNetworkService):
             'timeout': self.timeout,
             'max_matrix_points': self.max_matrix_points,
             'lapse_time_matrix_to_retry': self.lapse_time_matrix_to_retry,
-            'language': self.language.value,
+            'language': self.language,
             'circuit_breaker': {
                 'current_state': self.breaker.current_state,
                 'fail_counter': self.breaker.fail_counter,
@@ -388,16 +388,16 @@ class Here(AbstractStreetNetworkService):
                     )
             return {'avoid': boxes}
 
-    def _get_language(self, language):
-        try:
-            return Languages[language]
-        except KeyError:
-            self.log.error('Here parameters language={} not exist - force to english'.format(language))
-            return Languages.english
+    def _get_language(self, language_value):
+        language = LANGUAGE_TRANSFORMATION_LIST.get(language_value)
+        if not language:
+            self.log.error('Here parameter language={} Invalid - fallback to english'.format(language_value))
+            language = "en-EN"
+        return language
 
     def get_language_parameter(self, request):
-        language = request.get('language', 'english')
-        return self.language if not language else self._get_language(language.lower())
+        language = request.get('language', 'fr-FR')
+        return self.language if not language else self._get_language(language)
 
     def _get_max_matrix_points(self, max_matrix_points):
         if max_matrix_points > MAX_MATRIX_POINTS_VALUES:

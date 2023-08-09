@@ -531,31 +531,32 @@ class Journeys(JourneyCommon):
             "language",
             type=OptionValue(
                 [
-                    'dutch',
-                    'english',
-                    'french',
-                    'german',
-                    'hindi',
-                    'italian',
-                    'japanese',
-                    'portuguese',
-                    'russian',
-                    'spanish',
+                    'nl-NL',
+                    'en-US',
+                    'en-GB',
+                    'fr-FR',
+                    'de-DE',
+                    'hi-IN',
+                    'it-IT',
+                    'ja-JP',
+                    'pt-PT',
+                    'ru-RU',
+                    'es-ES',
                 ]
             ),
             hidden=True,
             help='Here, select a specific language for guidance instruction.\n'
             'list available:\n'
-            '- dutch = nl-nl\n'
-            '- english = en-gb\n'
-            '- french = fr-fr\n'
-            '- german = de-de\n'
-            '- hindi = hi\n'
-            '- italian = it-it\n'
-            '- japanese = ja-jp\n'
-            '- portuguese = pt-pt\n'
-            '- russian = ru-ru\n'
-            '- spanish = es-es\n',
+            '- nl-NL = dutch\n'
+            '- en-US | en-GB = english\n'
+            '- fr-FR = french\n'
+            '- de-DE = german\n'
+            '- hi-IN = hindi\n'
+            '- it-IT = italian\n'
+            '- ja-JP = japanese\n'
+            '- pt-PT = portuguese\n'
+            '- ru-RU = russian\n'
+            '- es-ES = spanish\n',
         )
         parser_get.add_argument(
             "_here_matrix_type",

@@ -130,7 +130,7 @@ class StreetNetworkPath:
             fallback_type,
             entry_point,
             via_poi_access,
-            self._request.get('language', "english"),
+            self._request.get('language', "en-US"),
         )
 
     def finalize_direct_path(self, resp_direct_path):
