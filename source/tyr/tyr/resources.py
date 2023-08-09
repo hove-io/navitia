@@ -900,7 +900,7 @@ class Instance(flask_restful.Resource):
             help='Select a specific language for street network instructions.\n'
             'list available:\n'
             '- dutch = nl-NL\n'
-            '- english_gb = en-GB\n'
+            '- english = en-US\n'
             '- french = fr-FR\n'
             '- german = de-DE\n'
             '- hindi = hi-IN\n'

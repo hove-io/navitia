@@ -72,7 +72,7 @@ CO2_ESTIMATION_COEFF_2 = 184
 # Be careful, the syntax has to be exact
 class Languages(Enum):
     dutch = "nl-nl"
-    english = "en-gb"
+    english = "en-us"
     french = "fr-fr"
     german = "de-de"
     hindi = "hi"
@@ -396,7 +396,7 @@ class Here(AbstractStreetNetworkService):
             return Languages.english
 
     def get_language_parameter(self, request):
-        language = request.get('language', None)
+        language = request.get('language', 'english')
         return self.language if not language else self._get_language(language.lower())
 
     def _get_max_matrix_points(self, max_matrix_points):

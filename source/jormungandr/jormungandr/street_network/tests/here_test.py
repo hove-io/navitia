@@ -414,7 +414,7 @@ def status_test():
     assert status['timeout'] == 89
     assert status['max_matrix_points'] == 100
     assert status['lapse_time_matrix_to_retry'] == 0.1
-    assert status['language'] == "en-gb"
+    assert status['language'] == "en-us"
     assert len(status['circuit_breaker']) == 3
     assert status['circuit_breaker']['current_state'] == 'closed'
     assert status['circuit_breaker']['fail_counter'] == 0

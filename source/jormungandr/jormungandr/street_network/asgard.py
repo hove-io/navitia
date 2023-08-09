@@ -51,11 +51,11 @@ import pybreaker
 
 
 # Possible values implemented. Full languages within the doc:
-# https://valhalla.readthedocs.io/en/latest/api/turn-by-turn/api-reference/#supported-language-tags
+# https://valhalla.github.io/valhalla/api/turn-by-turn/api-reference/#supported-language-tags
 # Be careful, the syntax has to be exact
 class Languages(Enum):
     dutch = "nl-NL"
-    english = "en-GB"
+    english = "en-US"
     french = "fr-FR"
     german = "de-DE"
     hindi = "hi-IN"
