@@ -154,7 +154,7 @@ type::PhysicalMode* PT_Data::get_or_create_physical_mode(const std::string& uri,
     mode->name = name;
     mode->uri = uri;
 
-    if (co2_emission >= 0.f)
+    if (co2_emission >= 0.)
         mode->co2_emission = co2_emission;
 
     mode->idx = physical_modes.size();

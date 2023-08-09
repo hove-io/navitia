@@ -3117,7 +3117,7 @@ class TestKirinDelayPassMidnightTowardsNextDay(MockKirinDisruptionsFixture):
         )
 
         # Check journeys in realtime for 20120615(the day of the future disruption) from B to A
-        # vjB circulates everyday with departure at 18:01:00 and arrival at 18:01:02
+        # vjB circulates every day with departure at 18:01:00 and arrival at 18:01:02
         ba_15T18_journey_query = empty_query.format(
             f='stop_point:stopB', to='stop_point:stopA', dt='20120615T180000'
         )
