@@ -683,27 +683,48 @@ class TestKirinOnVJDelayDayAfter(MockKirinDisruptionsFixture):
         new_response = self.query_region(journey_basic_query + "&data_freshness=realtime&forbidden_uris[]=M&")
         assert get_arrivals(new_response) == ['20120614T080436', '20120614T180222']  # pt_walk + vj 18:01
         assert get_used_vj(new_response), [[] == ['vjB']]
+        assert len(new_response['journeys']) == 2
+        assert new_response['journeys'][0]['status'] == ''
+        assert new_response['journeys'][1]['status'] == ''
+        links = get_links_dict(new_response)
+        assert 'bypass_disruptions' not in links
 
         # it should not have changed anything for the base-schedule
         new_base = self.query_region(journey_basic_query + "&data_freshness=base_schedule")
         assert get_arrivals(new_base) == ['20120614T080222', '20120614T080436']
         assert get_used_vj(new_base), [['vjA'] == []]
+        assert len(new_base['journeys']) == 2
+        assert new_base['journeys'][0]['status'] == 'SIGNIFICANT_DELAYS'
+        assert new_base['journeys'][1]['status'] == ''
+        links = get_links_dict(new_base)
+        assert 'bypass_disruptions' in links
+        assert '&data_freshness=realtime' in links['bypass_disruptions']['href']
 
         # the day after, we can use the delayed vj
         journey_day_after_query = "journeys?from={from_coord}&to={to_coord}&datetime={datetime}".format(
             from_coord=s_coord, to_coord=r_coord, datetime="20120615T070000"
         )
-        day_after_response = self.query_region(journey_day_after_query + "&data_freshness=realtime")
-        assert get_arrivals(day_after_response) == [
+        day_after_rt = self.query_region(journey_day_after_query + "&data_freshness=realtime")
+        assert get_arrivals(day_after_rt) == [
             '20120615T070436',
             '20120615T070520',
         ]  # pt_walk + rt 07:02:24
-        assert get_used_vj(day_after_response), [[] == ['vehicle_journey:vjA:modified:0:96231_2015-07-28_0']]
+        assert get_used_vj(day_after_rt), [[] == ['vehicle_journey:vjA:modified:0:96231_2015-07-28_0']]
+        assert len(day_after_rt['journeys']) == 2
+        assert day_after_rt['journeys'][0]['status'] == ''
+        assert day_after_rt['journeys'][1]['status'] == 'SIGNIFICANT_DELAYS'
+        links = get_links_dict(day_after_rt)
+        assert 'bypass_disruptions' not in links
 
         # it should not have changed anything for the theoric the day after
         day_after_base = self.query_region(journey_day_after_query + "&data_freshness=base_schedule")
         assert get_arrivals(day_after_base) == ['20120615T070436', '20120615T080222']
         assert get_used_vj(day_after_base), [[] == ['vjA']]
+        assert len(day_after_base['journeys']) == 2
+        assert day_after_base['journeys'][0]['status'] == ''
+        assert day_after_base['journeys'][1]['status'] == ''
+        links = get_links_dict(day_after_base)
+        assert 'bypass_disruptions' not in links
 
 
 @dataset(MAIN_ROUTING_TEST_SETTING)
@@ -1380,8 +1401,8 @@ class TestKirinOnNewStopTimeAtTheBeginning(MockKirinDisruptionsFixture):
         )
 
         # Query from C to R: the journey doesn't have any public_transport
-        base_journey_query = C_to_R_query + "&data_freshness=realtime&datetime=20120614T080000&walking_speed=0.7"
-        response = self.query_region(base_journey_query)
+        rt_journey_query = C_to_R_query + "&data_freshness=realtime&datetime=20120614T080000&walking_speed=0.7"
+        response = self.query_region(rt_journey_query)
         assert len(response['journeys']) == 1
         assert len(response['journeys'][0]['sections']) == 1
         assert response['journeys'][0]['sections'][0]['type'] == 'street_network'
@@ -1434,13 +1455,14 @@ class TestKirinOnNewStopTimeAtTheBeginning(MockKirinDisruptionsFixture):
         assert last_disruption['severity']['name'] == 'trip delayed'
 
         # Query from C to R: the journey should have a public_transport from C to A
-        response = self.query_region(base_journey_query)
+        response = self.query_region(rt_journey_query)
         assert len(response['journeys']) == 2
         assert len(response['journeys'][1]['sections']) == 1
         assert response['journeys'][0]['sections'][0]['type'] == 'public_transport'
         assert response['journeys'][0]['sections'][0]['data_freshness'] == 'realtime'
         assert response['journeys'][0]['sections'][0]['departure_date_time'] == '20120614T080000'
         assert response['journeys'][0]['sections'][0]['arrival_date_time'] == '20120614T080002'
+        assert response['journeys'][0]['status'] == 'MODIFIED_SERVICE'  # stop-add has priority over delay
         assert response['journeys'][1]['sections'][0]['type'] == 'street_network'
 
         # New disruption with a deleted stop_time recently added at stop_point:stopC
@@ -1474,7 +1496,7 @@ class TestKirinOnNewStopTimeAtTheBeginning(MockKirinDisruptionsFixture):
         assert last_disruption['severity']['effect'] == 'REDUCED_SERVICE'
         assert last_disruption['severity']['name'] == 'reduced service'
 
-        response = self.query_region(base_journey_query)
+        response = self.query_region(rt_journey_query)
         assert len(response['journeys']) == 1
         assert len(response['journeys'][0]['sections']) == 1
         assert response['journeys'][0]['sections'][0]['type'] == 'street_network'
