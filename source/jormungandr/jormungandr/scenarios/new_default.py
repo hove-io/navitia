@@ -1377,7 +1377,7 @@ class Scenario(simple.Scenario):
 
         attractivities = deepcopy(instance.stop_points_attractivities or {})
         attractivities.update(api_request.get('_olympics_sites_attractivities[]') or [])
-        api_request["attractivites"] = attractivities
+        api_request["attractivities"] = attractivities
 
         # We need the original request (api_request) for filtering, but request
         # is modified by create_next_kraken_request function.
