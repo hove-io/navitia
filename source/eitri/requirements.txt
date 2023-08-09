@@ -1,7 +1,8 @@
 future==0.18.3
 docker==3.4.1
 retrying==1.3.3
-psycopg2
+psycopg2==2.9.7 ; python_version < "3.9"
+psycopg2-binary==2.9.7 ; python_version >= "3.9"
 GeoAlchemy2==0.2.4
 SQLAlchemy==1.3.3
 alembic==1.0.11
