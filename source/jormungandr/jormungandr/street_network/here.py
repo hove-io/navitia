@@ -81,7 +81,7 @@ LANGUAGE_TRANSFORMATION_LIST = {
     "ja-JP": "ja-jp",
     "pt-PT": "pt-pt",
     "ru-RU": "ru-ru",
-    "es-ES": "es-es"
+    "es-ES": "es-es",
 }
 
 DEFAULT_HERE_FEED_PUBLISHER = {
@@ -90,6 +90,7 @@ DEFAULT_HERE_FEED_PUBLISHER = {
     'license': 'Private',
     'url': 'https://developer.here.com/terms-and-conditions',
 }
+
 
 def _get_coord(pt_object):
     coord = get_pt_object_coord(pt_object)

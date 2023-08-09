@@ -54,11 +54,7 @@ DEFAULT_HANDIMAP_FEED_PUBLISHER = {
     'url': 'https://www.handimap.fr',
 }
 
-LANGUAGE_TRANSFORMATION_LIST = {
-    "en-US": "en-EN",
-    "en-GB": "en-EN",
-    "fr-FR": "fr-FR"
-}
+LANGUAGE_TRANSFORMATION_LIST = {"en-US": "en-EN", "en-GB": "en-EN", "fr-FR": "fr-FR"}
 
 
 class Handimap(AbstractStreetNetworkService):
