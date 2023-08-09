@@ -585,7 +585,7 @@ def _build_fallback(
     car_park_crowfly_duration = None
     via_pt_access = None
     via_poi_access = None
-    language = request.get('_asgard_language', "english_us")
+    language = request.get('language', "english")
 
     if mode == 'car':
         _, _, car_park, car_park_crowfly_duration, _, _ = fallback_durations[pt_obj.uri]

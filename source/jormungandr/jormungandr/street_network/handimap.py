@@ -85,7 +85,7 @@ class Handimap(AbstractStreetNetworkService):
         self.headers = {"Content-Type": "application/json", "Accept": "application/json"}
         self.timeout = timeout
         self.modes = modes if modes else ["walking"]
-        self.language = self._get_language(kwargs.get('language', "french"))
+        self.language = self._get_language(kwargs.get('language', "english"))
         self.verify = kwargs.get('verify', True)
 
         self.breaker = pybreaker.CircuitBreaker(
@@ -121,15 +121,11 @@ class Handimap(AbstractStreetNetworkService):
         try:
             return Languages[language].value
         except KeyError:
-            self.log.error(
-                'Handimap parameter language={} is not a valid parameter - language is set to french by default'.format(
-                    language
-                )
-            )
-            return Languages.french.value
+            self.log.error('Here parameters language={} not exist - force to english'.format(language))
+            return Languages.english.value
 
     def get_language_parameter(self, request):
-        language = request.get('_handimap_language', None)
+        language = request.get('language', None)
         return self.language if not language else self._get_language(language.lower())
 
     @staticmethod

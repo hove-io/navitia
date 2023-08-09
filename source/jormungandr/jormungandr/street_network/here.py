@@ -66,22 +66,18 @@ MAX_MATRIX_POINTS_VALUES = 100
 CO2_ESTIMATION_COEFF_1 = 1.35
 CO2_ESTIMATION_COEFF_2 = 184
 
+
 # Possible values implemented. Full languages within the doc:
 # https://developer.here.com/documentation/routing/dev_guide/topics/resource-param-type-languages.html#languages
 # Be careful, the syntax has to be exact
 class Languages(Enum):
-    afrikaans = "af"
-    arabic = "ar-sa"
-    chinese = "zh-cn"
     dutch = "nl-nl"
     english = "en-gb"
     french = "fr-fr"
     german = "de-de"
-    hebrew = "he"
     hindi = "hi"
     italian = "it-it"
     japanese = "ja-jp"
-    nepali = "ne-np"
     portuguese = "pt-pt"
     russian = "ru-ru"
     spanish = "es-es"
@@ -400,11 +396,8 @@ class Here(AbstractStreetNetworkService):
             return Languages.english
 
     def get_language_parameter(self, request):
-        _language = request.get('_here_language', None)
-        if _language == None:
-            return self.language
-        else:
-            return self._get_language(_language.lower())
+        language = request.get('language', None)
+        return self.language if not language else self._get_language(language.lower())
 
     def _get_max_matrix_points(self, max_matrix_points):
         if max_matrix_points > MAX_MATRIX_POINTS_VALUES:

@@ -439,7 +439,7 @@ class TestJourneysDistributed(
         assert len(response['journeys'][1]['sections']) == 1
 
     def test_journey_with_access_points(self):
-        query = journey_basic_query + "&_access_points=true"
+        query = journey_basic_query + "&_access_points=true&language=english"
         response = self.query_region(query)
         assert len(response['journeys']) == 2
 
@@ -483,7 +483,7 @@ class TestJourneysDistributed(
 
     def test_path_instructions(self):
         # Verify some path instructions managed by jormungandr in English
-        query = journey_basic_query + "&_access_points=true&_asgard_language=english_us"
+        query = journey_basic_query + "&_access_points=true&language=english"
         response = self.query_region(query)
         assert len(response['journeys']) == 2
 
@@ -496,7 +496,7 @@ class TestJourneysDistributed(
         assert path['instruction'] == "Exit stop_point:stopA (Condom) via access_point:A2."
 
         # Verify some path instructions managed by jormungandr in French
-        query = journey_basic_query + "&_access_points=true&_asgard_language=french"
+        query = journey_basic_query + "&_access_points=true"
         response = self.query_region(query)
         assert len(response['journeys']) == 2
 
@@ -509,7 +509,7 @@ class TestJourneysDistributed(
         assert path['instruction'] == "Sortez de stop_point:stopA (Condom) via access_point:A2."
 
         # Verify some path instructions managed by jormungandr in English as default language
-        query = journey_basic_query + "&_access_points=true&_asgard_language=japanese"
+        query = journey_basic_query + "&_access_points=true&language=japanese"
         response = self.query_region(query)
         assert len(response['journeys']) == 2
 
@@ -1367,7 +1367,8 @@ class TestRoutingWithTransfer(NewDefaultScenarioAbstractTestFixture):
     def test_complete_transfer_path_bus_rer_with_access_points(self):
         query = (
             '/v1/coverage/routing_with_transfer_test/journeys?'
-            'from={}&to={}&datetime=20120614T080000&_override_scenario=distributed&count=1&_transfer_path=true'
+            'from={}&to={}&datetime=20120614T080000&_override_scenario=distributed&count=1&_transfer_path=true&'
+            'language=english'
         ).format("stopA", "stopF")
 
         response = self.query(query)

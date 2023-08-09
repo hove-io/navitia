@@ -248,7 +248,7 @@ def valid_request(request):
             assert params.max_bss_duration_to_pt == 1800
             assert params.car_speed == 11.11
             assert params.max_car_duration_to_pt == 1800
-            assert params.language == "en-US"
+            assert params.language == "fr-FR"
             assert params.car_no_park_speed == (11.11 if params.origin_mode in ("car", "car_no_park") else 0)
             assert params.max_car_no_park_duration_to_pt == (
                 1800 if params.origin_mode in ("car", "car_no_park") else 0
@@ -282,7 +282,7 @@ def valid_request(request):
                 assert params.max_bss_duration_to_pt == 1800
                 assert params.car_speed == 11.11
                 assert params.max_car_duration_to_pt == 1800
-                assert params.language == "en-US"
+                assert params.language == "fr-FR"
                 assert params.car_no_park_speed == (11.11 if params.origin_mode in ("car", "car_no_park") else 0)
                 assert params.max_car_no_park_duration_to_pt == (
                     1800 if params.origin_mode in ("car", "car_no_park") else 0

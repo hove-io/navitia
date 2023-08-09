@@ -55,13 +55,13 @@ Available optional parameters list:
 
 You can easily override parameters for tests inside requests.<br>
 List of available API parameters:
-* _here_language: "english" or "french" or "dutch" ...
+* language: "english" or "french" or "dutch" ...
 * _here_max_matrix_points: int value [1-100]
 
 Example:
 
 ```
-http://navitia.io/v1/coverage/coverage_name/journeys?from=2.13376%3B48.86333&to=2.33443%3B48.84189&first_section_mode%5B%5D=car&_here_realtime_traffic=true&_here_max_matrix_points=50&_here_language=french
+http://navitia.io/v1/coverage/coverage_name/journeys?from=2.13376%3B48.86333&to=2.33443%3B48.84189&first_section_mode%5B%5D=car&_here_realtime_traffic=true&_here_max_matrix_points=50&language=french
 ```
 
 ### exclusion areas

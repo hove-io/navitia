@@ -349,7 +349,7 @@ class TransferPool(object):
 
         # we assume here the transfer street network has only one section, which is in walking mode
         transfer_street_network = transfer_direct_path.journeys[0].sections[0].street_network
-        language = self._request.get('_asgard_language', "english_us")
+        language = self._request.get('language', "english")
 
         if self._is_access_point(transfer_result.origin):
             prepend_path_item_with_access_point(

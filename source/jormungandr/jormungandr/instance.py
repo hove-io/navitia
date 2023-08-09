@@ -797,7 +797,7 @@ class Instance(transient_socket.TransientSocket):
     bss_rent_penalty = _make_property_getter('bss_rent_penalty')
     bss_return_duration = _make_property_getter('bss_return_duration')
     bss_return_penalty = _make_property_getter('bss_rent_penalty')
-    asgard_language = _make_property_getter('asgard_language')
+    language = _make_property_getter('language')
 
     transfer_path = _make_property_getter('transfer_path')
     access_points = _make_property_getter('access_points')

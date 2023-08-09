@@ -260,7 +260,7 @@ def get_language_handimap_func_language_invalid_test():
     instance = MagicMock()
     handimap = Handimap(instance=instance, service_url=fake_service_url)
     language = handimap._get_language("toto")
-    assert language == "fr-FR"
+    assert language == "en-EN"
 
 
 def get_language_handimap_func_language_valid_test():
@@ -273,7 +273,7 @@ def get_language_handimap_func_language_valid_test():
 def get_language_parameter_handimap_func_language_invalid_test():
     instance = MagicMock()
     handimap = Handimap(instance=instance, service_url=fake_service_url)
-    request = {"_handimap_language": "toto"}
+    request = {"language": "toto"}
     language = handimap.get_language_parameter(request)
     assert language == "fr-FR"
 
@@ -281,7 +281,7 @@ def get_language_parameter_handimap_func_language_invalid_test():
 def get_language_parameter_handimap_func_language_invalid_test():
     instance = MagicMock()
     handimap = Handimap(instance=instance, service_url=fake_service_url)
-    request = {"_handimap_language": "english"}
+    request = {"language": "english"}
     language = handimap.get_language_parameter(request)
     assert language == "en-EN"
 
