@@ -753,27 +753,35 @@ def get_journey_extremity_pt_section(journey, criteria):
         sections = journey.sections
     extremity_pt_section = next((s for s in sections if s.type == response_pb2.PUBLIC_TRANSPORT), None)
 
-    assert extremity_pt_section
     return extremity_pt_section
 
 
 def get_journey_pt_extremity(journey, criteria):
-    extemity_pt_section = get_journey_extremity_pt_section(journey, criteria)
+    extremity_pt_section = get_journey_extremity_pt_section(journey, criteria)
 
-    assert extemity_pt_section
+    if extremity_pt_section is None:
+        return None, None
+
     if criteria == "arrival_stop_attractivity":
-        return extemity_pt_section, extemity_pt_section.destination
-    return extemity_pt_section, extemity_pt_section.origin
+        return extremity_pt_section, extremity_pt_section.destination
+    else:
+        return extremity_pt_section, extremity_pt_section.origin
 
 
-def compute_journey_virtual_duration(journey, criteria, virtual_fallbacks):
+def compute_journey_virtual_duration_and_attractivity(journey, criteria, virtual_fallbacks, attractivities):
     extremity_pt_section, extremity = get_journey_pt_extremity(journey, criteria)
+    if extremity_pt_section is None:
+        return journey.duration, 0
+
     virtual_fallback = virtual_fallbacks.get(extremity.uri) or 0
+    attractivity = attractivities.get(extremity.uri) or 0
 
     if criteria == "arrival_stop_attractivity":
-        return extremity_pt_section.end_date_time - journey.departure_date_time + virtual_fallback
-
-    return journey.arrival_date_time - extremity_pt_section.begin_date_time + virtual_fallback
+        virtual_duration = extremity_pt_section.end_date_time - journey.departure_date_time + virtual_fallback
+        return virtual_duration, attractivity
+    else:
+        virtual_duration = journey.arrival_date_time - extremity_pt_section.begin_date_time + virtual_fallback
+        return virtual_duration, attractivity
 
 
 class Interval:
@@ -856,18 +864,19 @@ def filter_olympics_journeys_v1(responses, request):
 def filter_olympics_journeys_v2(responses, request):
     virtual_fallback_durations = {}
     virtual_fallback_durations.update(request.get("_olympics_sites_virtual_fallback[]") or [])
-    best = (None, float('inf'))
+    attractivities = request.get("attractivities", {})
+    best = (None, float('inf'), 0)
     for r in responses:
         for j in r.journeys:
             if 'olympics' not in j.tags:
                 continue
 
-            virtual_duration = compute_journey_virtual_duration(
-                j, request.get('criteria'), virtual_fallback_durations
+            virtual_duration, attractivity = compute_journey_virtual_duration_and_attractivity(
+                j, request.get('criteria'), virtual_fallback_durations, attractivities
             )
 
-            if virtual_duration < best[1]:
-                best = (j, virtual_duration)
+            if virtual_duration < best[1] or (virtual_duration == best[1] and attractivity > best[2]):
+                best = (j, virtual_duration, attractivity)
 
     if best[0] is not None:
         best[0].tags.append('best_olympics')
