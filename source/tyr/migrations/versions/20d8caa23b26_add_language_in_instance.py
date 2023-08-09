@@ -19,8 +19,7 @@ from navitiacommon import default_values
 
 def upgrade():
     op.add_column(
-        'instance',
-        sa.Column('language', sa.Text(), server_default=default_values.language, nullable=False)
+        'instance', sa.Column('language', sa.Text(), server_default=default_values.language, nullable=False)
     )
 
 
