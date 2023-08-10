@@ -874,7 +874,7 @@ def filter_olympics_journeys_v2(responses, request):
             virtual_duration, attractivity = compute_journey_virtual_duration_and_attractivity(
                 j, request.get('criteria'), virtual_fallback_durations, attractivities
             )
-
+            # keep smallest virtual duration, if virtual durations are equal, keep highest attractivity
             if virtual_duration < best[1] or (virtual_duration == best[1] and attractivity > best[2]):
                 best = (j, virtual_duration, attractivity)
 
