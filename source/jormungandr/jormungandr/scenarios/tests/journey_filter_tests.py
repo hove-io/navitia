@@ -692,12 +692,12 @@ def compute_journey_virtual_duration_test():
     ending_fallback_section.destination.uri = "1;1"
 
     virtual_fallbacks = {"gare de lyon": 42, "gare du nord": 84}
-    virtual_duration = journey_filter.compute_journey_virtual_duration(
-        journey, "arrival_stop_attractivity", virtual_fallbacks
+    virtual_duration, _ = journey_filter.compute_journey_virtual_duration_and_attractivity(
+        journey, "arrival_stop_attractivity", virtual_fallbacks, {}
     )
     assert virtual_duration == (9600 - 2400 + 84)
 
-    virtual_duration = journey_filter.compute_journey_virtual_duration(
-        journey, "departure_stop_attractivity", virtual_fallbacks
+    virtual_duration, _ = journey_filter.compute_journey_virtual_duration_and_attractivity(
+        journey, "departure_stop_attractivity", virtual_fallbacks, {}
     )
     assert virtual_duration == (9600 - 3600 + 42)

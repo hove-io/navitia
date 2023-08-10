@@ -307,8 +307,7 @@ class PtJourneyPool:
                 boundary_duration=request.get("boundary_duration[]"),
             )
         else:
-            attractivities = copy.deepcopy(instance.stop_points_attractivities or {})
-            attractivities.update(request.get('_olympics_sites_attractivities[]') or [])
+            attractivities = request.get("attractivities", {})
 
             return JourneyParameters(
                 max_duration=request['max_duration'],
