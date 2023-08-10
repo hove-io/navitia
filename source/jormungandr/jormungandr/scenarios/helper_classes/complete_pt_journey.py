@@ -163,6 +163,7 @@ def wait_and_complete_pt_journey(
     orig_fallback_durations_pool,
     dest_fallback_durations_pool,
     transfer_pool,
+    pt_journey_fare_pool,
     request,
     journeys,
     request_id,
@@ -212,6 +213,14 @@ def wait_and_complete_pt_journey(
 
     if request['_transfer_path'] is True:
         with timed_logger(logger, 'complete_transfer', request_id):
+            for pt_element in journeys:
+                complete_transfer(
+                    pt_journey=pt_element.pt_journeys,
+                    transfer_pool=transfer_pool,
+                )
+
+    if request['_compute_pt_journey_fare'] is True:
+        with timed_logger(logger, 'compute_pt_journey_fare', request_id):
             for pt_element in journeys:
                 complete_transfer(
                     pt_journey=pt_element.pt_journeys,
