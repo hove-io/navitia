@@ -101,6 +101,7 @@ jobs:
         echo $NAVITIA_CHAOS_DUMP_PATH
         make docker_test
         deactivate
+        rm -rf navitia_py3
       env:
         NAVITIA_DOCKER_NETWORK: ${{ job.container.network }}
         TYR_CELERY_BROKER_URL: 'amqp://guest:guest@rabbitmq:5672//'
