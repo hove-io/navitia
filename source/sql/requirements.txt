@@ -2,5 +2,5 @@ GeoAlchemy2==0.2.4
 Mako==0.9.1
 SQLAlchemy==1.3.3
 alembic==1.0.11
-psycopg2==2.8.6 ; python_version < "3.9"
+psycopg2 ; python_version < "3.9"  # keep it free: 2.5.4 is installed on debian 8 images, but doesn't handle PG 13.11 from debian 11
 psycopg2-binary==2.9.7 ; python_version >= "3.9"
