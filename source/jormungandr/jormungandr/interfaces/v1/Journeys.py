@@ -683,6 +683,20 @@ class Journeys(JourneyCommon):
             help="used to adjust the search range in Asgard when computing matrix",
         )
 
+        parser_get.add_argument(
+            "_pt_journey_fare",
+            type=OptionValue(['kraken']),
+            hidden=True,
+            help="choose which pt engine to compute the pt journey's fare",
+        )
+
+        parser_get.add_argument(
+            "_compute_pt_journey_fare",
+            type=BooleanType(),
+            hidden=True,
+            help="whether use external engine to compute pt journey fare",
+        )
+
     @add_tad_links()
     @add_debug_info()
     @add_fare_links()
@@ -813,6 +827,12 @@ class Journeys(JourneyCommon):
 
             if args.get('_filter_odt_journeys') is None:
                 args['_filter_odt_journeys'] = mod.filter_odt_journeys
+
+            if args.get('_pt_journey_fare') is None:
+                args['_pt_journey_fare'] = mod.default_pt_journey_fare
+
+            if args.get('_compute_pt_journey_fare') is None:
+                args['_compute_pt_journey_fare'] = mod.compute_pt_journey_fare
 
         # When computing 'same_journey_schedules'(is_journey_schedules=True), some parameters need to be overridden
         # because they are contradictory to the request

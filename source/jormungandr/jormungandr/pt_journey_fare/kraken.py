@@ -27,16 +27,42 @@
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 from jormungandr.pt_journey_fare.pt_journey_fare import AbstractPtJourneyFare
+from navitiacommon import response_pb2, request_pb2, type_pb2
 
 
 class Kraken(AbstractPtJourneyFare):
     def __init__(self, instance):
         self.instance = instance
 
-    def create_fare_reqeust(self, pt_journey):
+    @staticmethod
+    def _pt_sections(journey):
+        return [s for s in journey.sections if s.type == response_pb2.PUBLIC_TRANSPORT]
 
-        pass
+    def create_fare_reqeust(self, pt_journeys):
+        request = request_pb2.Request()
+        request.requested_api = type_pb2.pt_fares
+        pt_fare_request = request.pt_fares
+        for journey in pt_journeys:
+            pt_sections = self._pt_sections(journey)
+            if not pt_sections:
+                continue
+            pt_journey_request = pt_fare_request.pt_journeys.add(id=journey.internal_id)
+            for s in pt_sections:
+                pt_journey_request.pt_sections.add(
+                    id=s.id,
+                    network_uri=s.uris.network,
+                    start_stop_area_uri=s.origin.stop_point.stop_area.uri,
+                    end_stop_area_uri=s.destination.stop_point.stop_area.uri,
+                    line_uri=s.uris.line,
+                    begin_date_time=s.begin_date_time,
+                    end_date_time=s.end_date_time,
+                    first_stop_point_uri=s.origin.stop_point.uri,
+                    last_stop_point_uri=s.destination.stop_point.uri,
+                    physical_mode=s.uris.physical_mode,
+                )
+        print(request)
+        return request
 
-    def get_pt_journey_fare(self, pt_journey, request_id):
-        fare_request = self.create_fare_reqeust(pt_journey)
-        self.instance.send_and_recieve(fare_request, request_id="{}_fare".format(request_id))
+    def get_pt_journeys_fare(self, pt_journeys, request_id):
+        fare_request = self.create_fare_reqeust(pt_journeys)
+        return self.instance.send_and_receive(fare_request, request_id="{}_fare".format(request_id))

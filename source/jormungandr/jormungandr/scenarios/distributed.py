@@ -330,8 +330,8 @@ class Distributed(object):
                 transfer_pool.async_compute_transfer(journey.pt_journeys.sections)
 
         if request['_compute_pt_journey_fare'] is True:
-            for journey in journeys_to_complete:
-                pt_journey_fare_pool.async_compute_fare(journey.pt_journeys.sections)
+            for response in responses:
+                pt_journey_fare_pool.async_compute_fare(response, request_id)
 
         wait_and_complete_pt_journey(
             requested_orig_obj=context.requested_orig_obj,
@@ -342,11 +342,14 @@ class Distributed(object):
             orig_fallback_durations_pool=context.orig_fallback_durations_pool,
             dest_fallback_durations_pool=context.dest_fallback_durations_pool,
             transfer_pool=transfer_pool,
-            pt_journey_fare_pool=pt_journey_fare_pool,
             request=request,
             journeys=journeys_to_complete,
             request_id="{}_complete_pt_journey".format(request_id),
         )
+        if request['_compute_pt_journey_fare'] is True:
+            wait_and_complete_pt_journey_fare(
+                pt_elements=journeys_to_complete, pt_journey_fare_pool=pt_journey_fare_pool
+            )
 
     def _compute_isochrone_common(
         self,

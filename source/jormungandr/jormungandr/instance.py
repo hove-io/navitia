@@ -312,7 +312,10 @@ class Instance(transient_socket.TransientSocket):
             file_path = os.path.join(stop_points_attractivities_dir, "{}.csv".format(self.name))
             self.stop_points_attractivities = read_stop_points_attractivities(file_path)
 
-        self._pt_journey_fare_backend_manager = PtJourneyFareBackendManager(pt_journey_fare_configurations, None)
+        # TODO: use db
+        self._pt_journey_fare_backend_manager = PtJourneyFareBackendManager(
+            self, pt_journey_fare_configurations, None
+        )
 
     def get_providers_from_db(self):
         """
@@ -830,6 +833,7 @@ class Instance(transient_socket.TransientSocket):
     pt_planners_configurations = _make_property_getter('pt_planners_configurations')
 
     default_pt_journey_fare = _make_property_getter('default_pt_journey_fare')
+    compute_pt_journey_fare = _make_property_getter('compute_pt_journey_fare')
     pt_journey_fare_configurations = _make_property_getter('pt_journey_fare_configurations')
 
     filter_odt_journeys = _make_property_getter('filter_odt_journeys')

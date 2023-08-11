@@ -246,8 +246,9 @@ ghost_words = []  # type: List[str]
 # }
 pt_planners_configurations = dict()  # type: dict
 
-pt_journey_fare = 'kraken'
-
+# pt journey fare
+default_pt_journey_fare = 'kraken'
+compute_pt_journey_fare = False
 pt_journey_fare_configurations = dict()  # type: dict
 
 

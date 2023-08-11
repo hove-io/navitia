@@ -144,7 +144,7 @@ def get_journeys_to_complete(responses, context, is_debug):
         if r is None:
             continue
         for j in r.journeys:
-            if is_debug == False and "to_delete" in j.tags:
+            if is_debug is False and "to_delete" in j.tags:
                 continue
             if j.internal_id in context.journeys_to_modes:
                 journey_modes = context.journeys_to_modes[j.internal_id]
@@ -163,7 +163,6 @@ def wait_and_complete_pt_journey(
     orig_fallback_durations_pool,
     dest_fallback_durations_pool,
     transfer_pool,
-    pt_journey_fare_pool,
     request,
     journeys,
     request_id,
@@ -219,10 +218,8 @@ def wait_and_complete_pt_journey(
                     transfer_pool=transfer_pool,
                 )
 
-    if request['_compute_pt_journey_fare'] is True:
-        with timed_logger(logger, 'compute_pt_journey_fare', request_id):
-            for pt_element in journeys:
-                complete_transfer(
-                    pt_journey=pt_element.pt_journeys,
-                    transfer_pool=transfer_pool,
-                )
+
+def wait_and_complete_pt_journey_fare(pt_elements, pt_journey_fare_pool):
+    journeys_map = {j.pt_journeys.internal_id: j.pt_journeys for j in pt_elements}
+    for res in pt_journey_fare_pool.wait_and_generate():
+        print(res)

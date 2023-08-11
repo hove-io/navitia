@@ -27,6 +27,7 @@
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 import logging
+import gevent
 
 
 class PtJourneyFarePool(object):
@@ -42,11 +43,16 @@ class PtJourneyFarePool(object):
         self._request = request
         self._request_id = request_id
         self._backend = self._instance.get_pt_journey_fare(request['_pt_journey_fare'])
-        self._fares_future = dict()
+        self._futures = []
         self._logger = logging.getLogger(__name__)
 
-    def async_compute_fare(self, pt_journeys, request_id):
-        self._fares_future = self._future_manager.create_future(self._do, pt_journeys, request_id)
+    def async_compute_fare(self, response, request_id):
+        self._futures.append(self._future_manager.create_future(self._do, response, request_id).get_future())
 
-    def _do(self, pt_journeys, _request_id):
-        return self._backend.get_pt_journey_fare(pt_journeys, _request_id)
+    def _do(self, response, request_id):
+        return response, self._backend.get_pt_journeys_fare(response.journeys, request_id)
+
+    def wait_and_generate(self):
+        with gevent.iwait(self._futures) as futures:
+            for f in futures:
+                yield f.get()
