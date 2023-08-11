@@ -123,7 +123,7 @@ class Handimap(AbstractStreetNetworkService):
 
     def get_language_parameter(self, request):
         language = request.get('language')
-        return self.language if not language else self._get_language(language.lower())
+        return self.language if not language else self._get_language(language)
 
     @staticmethod
     def _make_request_arguments_walking_details(request, language):
