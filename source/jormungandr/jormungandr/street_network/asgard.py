@@ -183,7 +183,7 @@ class Asgard(TransientSocket, Kraken):
         )
 
     def get_language_parameter(self, request):
-        return request.get('language', "fr-FR")
+        return request.get('language', self.instance.language)
 
     def _create_sn_routing_matrix_request(
         self, origins, destinations, street_network_mode, max_duration, speed_switcher, request, **kwargs

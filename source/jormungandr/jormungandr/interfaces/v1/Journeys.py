@@ -544,7 +544,6 @@ class Journeys(JourneyCommon):
                     'es-ES',
                 ]
             ),
-            hidden=True,
             help='Here, select a specific language for guidance instruction.\n'
             'list available:\n'
             '- nl-NL = dutch\n'

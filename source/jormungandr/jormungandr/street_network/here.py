@@ -393,11 +393,11 @@ class Here(AbstractStreetNetworkService):
         language = LANGUAGE_TRANSFORMATION_LIST.get(language_value)
         if not language:
             self.log.error('Here parameter language={} Invalid - fallback to english'.format(language_value))
-            language = "en-EN"
+            language = "en-us"
         return language
 
     def get_language_parameter(self, request):
-        language = request.get('language', 'fr-FR')
+        language = request.get('language')
         return self.language if not language else self._get_language(language)
 
     def _get_max_matrix_points(self, max_matrix_points):
