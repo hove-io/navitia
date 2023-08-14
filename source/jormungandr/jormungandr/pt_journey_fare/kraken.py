@@ -60,7 +60,6 @@ class Kraken(AbstractPtJourneyFare):
                     last_stop_point_uri=s.destination.stop_point.uri,
                     physical_mode=s.uris.physical_mode,
                 )
-        print(request)
         return request
 
     def get_pt_journeys_fare(self, pt_journeys, request_id):
