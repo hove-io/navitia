@@ -221,5 +221,15 @@ def wait_and_complete_pt_journey(
 
 def wait_and_complete_pt_journey_fare(pt_elements, pt_journey_fare_pool):
     journeys_map = {j.pt_journeys.internal_id: j.pt_journeys for j in pt_elements}
-    for res in pt_journey_fare_pool.wait_and_generate():
-        print(res)
+    for response, fare_response in pt_journey_fare_pool.wait_and_generate():
+        response.tickets.extend(fare_response.tickets)
+        for f in fare_response.pt_journey_fares:
+            journey = journeys_map.get(f.journey_id)
+            if journey is None:
+                logging.getLogger(__name__).warning(
+                    "something wrong has occurred when completing journey fare: journey {} can't be found".format(
+                        f.journey_id
+                    )
+                )
+                continue
+            journey.fare.CopyFrom(f.fare)
