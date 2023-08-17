@@ -38,7 +38,7 @@ import requests_mock
 from jormungandr.utils import get_lon_lat
 
 template_journey_query_wap = "journeys?from={place_from}&to={place_to}&datetime=20120614T080000"
-template_journey_query = template_journey_query_wap + "&_poi_access_points=true"
+template_journey_query = template_journey_query_wap + "&_poi_access_points=true&language=en-US"
 
 s_lon, s_lat = get_lon_lat(s_coord)
 r_lon, r_lat = get_lon_lat(r_coord)

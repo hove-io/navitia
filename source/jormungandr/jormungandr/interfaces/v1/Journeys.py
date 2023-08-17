@@ -528,58 +528,34 @@ class Journeys(JourneyCommon):
             help="Here, Active or not the realtime traffic information (True/False)",
         )
         parser_get.add_argument(
-            "_handimap_language",
+            "language",
             type=OptionValue(
                 [
-                    'english',
-                    'french',
+                    'nl-NL',
+                    'en-US',
+                    'en-GB',
+                    'fr-FR',
+                    'de-DE',
+                    'hi-IN',
+                    'it-IT',
+                    'ja-JP',
+                    'pt-PT',
+                    'ru-RU',
+                    'es-ES',
                 ]
             ),
-            hidden=True,
-            help='Handimap, select a specific language for guidance instruction.\n'
-            'list available:\n'
-            '- english = english\n'
-            '- french = french\n',
-        )
-        parser_get.add_argument(
-            "_here_language",
-            type=OptionValue(
-                [
-                    'afrikaans',
-                    'arabic',
-                    'chinese',
-                    'dutch',
-                    'english',
-                    'french',
-                    'german',
-                    'hebrew',
-                    'hindi',
-                    'italian',
-                    'japanese',
-                    'nepali',
-                    'portuguese',
-                    'russian',
-                    'spanish',
-                ]
-            ),
-            hidden=True,
             help='Here, select a specific language for guidance instruction.\n'
             'list available:\n'
-            '- afrikaans = af\n'
-            '- arabic = ar-sa\n'
-            '- chinese = zh-cn\n'
-            '- dutch = nl-nl\n'
-            '- english = en-gb\n'
-            '- french = fr-fr\n'
-            '- german = de-de\n'
-            '- hebrew = he\n'
-            '- hindi = hi\n'
-            '- italian = it-it\n'
-            '- japanese = ja-jp\n'
-            '- nepali = ne-np\n'
-            '- portuguese = pt-pt\n'
-            '- russian = ru-ru\n'
-            '- spanish = es-es\n',
+            '- nl-NL = dutch\n'
+            '- en-US | en-GB = english\n'
+            '- fr-FR = french\n'
+            '- de-DE = german\n'
+            '- hi-IN = hindi\n'
+            '- it-IT = italian\n'
+            '- ja-JP = japanese\n'
+            '- pt-PT = portuguese\n'
+            '- ru-RU = russian\n'
+            '- es-ES = spanish\n',
         )
         parser_get.add_argument(
             "_here_matrix_type",
@@ -605,74 +581,6 @@ class Journeys(JourneyCommon):
             'Coord_1!Coord_2 with Coord=lat;lon\n'
             ' - exemple : _here_exclusion_area[]=2.40553;48.84866!2.41453;48.85677\n'
             ' - This is a list, you can add to the maximun 20 _here_exclusion_area[]\n',
-        )
-        parser_get.add_argument(
-            "_asgard_language",
-            type=OptionValue(
-                [
-                    'bulgarian',
-                    'catalan',
-                    'czech',
-                    'danish',
-                    'german',
-                    'greek',
-                    'english_gb',
-                    'english_pirate',
-                    'english_us',
-                    'spanish',
-                    'estonian',
-                    'finnish',
-                    'french',
-                    'hindi',
-                    'hungarian',
-                    'italian',
-                    'japanese',
-                    'bokmal',
-                    'dutch',
-                    'polish',
-                    'portuguese_br',
-                    'portuguese_pt',
-                    'romanian',
-                    'russian',
-                    'slovak',
-                    'slovenian',
-                    'swedish',
-                    'turkish',
-                    'ukrainian',
-                ]
-            ),
-            hidden=True,
-            help='Select a specific language for Asgard guidance instruction.\n'
-            'list available:\n'
-            '- bulgarian = bg-BG\n'
-            '- catalan = ca-ES\n'
-            '- czech = cs-CZ\n'
-            '- danish = da-DK\n'
-            '- german = de-DE\n'
-            '- greek = el-GR\n'
-            '- english_gb = en-GB\n'
-            '- english_pirate = en-US-x-pirate\n'
-            '- english_us = en-US\n'
-            '- spanish = es-ES\n'
-            '- estonian = et-EE\n'
-            '- finnish = fi-FI\n'
-            '- french = fr-FR\n'
-            '- hindi = hi-IN\n'
-            '- hungarian = hu-HU\n'
-            '- italian = it-IT\n'
-            '- japanese = ja-JP\n'
-            '- bokmal = nb-NO\n'
-            '- dutch = nl-NL\n'
-            '- polish = pl-PL\n'
-            '- portuguese_br = pt-BR\n'
-            '- portuguese_pt = pt-PT\n'
-            '- romanian = ro-RO\n'
-            '- russian = ru-RU\n'
-            '- slovak = sk-SK\n'
-            '- slovenian = sl-SI\n'
-            '- swedish = sv-SE\n'
-            '- turkish = tr-TR\n'
-            '- ukrainian = uk-UA\n',
         )
         parser_get.add_argument(
             "equipment_details",
@@ -888,8 +796,8 @@ class Journeys(JourneyCommon):
             if args.get('_pt_planner') is None:
                 args['_pt_planner'] = mod.default_pt_planner
 
-            if args.get('_asgard_language') is None:
-                args['_asgard_language'] = mod.asgard_language
+            if args.get('language') is None:
+                args['language'] = mod.language
 
             if args.get('bss_rent_duration') is None:
                 args['bss_rent_duration'] = mod.bss_rent_duration

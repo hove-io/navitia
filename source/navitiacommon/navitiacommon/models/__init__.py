@@ -662,6 +662,13 @@ class Instance(db.Model):  # type: ignore
         default=default_values.asgard_language,
     )
 
+    language = db.Column(
+        db.Text,
+        nullable=False,
+        default=default_values.language,
+        server_default=default_values.language,
+    )
+
     poi_dataset = db.Column(db.Text, default=None, nullable=True)
 
     stop_points_nearby_duration = db.Column(

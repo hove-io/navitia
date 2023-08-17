@@ -207,8 +207,11 @@ max_taxi_direct_path_distance = 200000  # 200 Km
 # Proximity radius for autocomplete used in /places endpoint
 places_proximity_radius = 20000  # 20 Km
 
+# TODO: Should be deleted after deploying the next release to all the platforms
 # Asgard language by default
 asgard_language = "english_us"
+
+language = "fr-FR"
 
 # Compute pathways using the street_network engine for transfers between surface physical modes
 transfer_path = False

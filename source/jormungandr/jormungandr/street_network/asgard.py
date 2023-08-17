@@ -50,41 +50,6 @@ from enum import Enum
 import pybreaker
 
 
-# Possible values implemented. Full languages within the doc:
-# https://valhalla.readthedocs.io/en/latest/api/turn-by-turn/api-reference/#supported-language-tags
-# Be careful, the syntax has to be exact
-class Languages(Enum):
-    bulgarian = "bg-BG"
-    catalan = "ca-ES"
-    czech = "cs-CZ"
-    danish = "da-DK"
-    german = "de-DE"
-    greek = "el-GR"
-    english_gb = "en-GB"
-    english_pirate = "en-US-x-pirate"
-    english_us = "en-US"
-    spanish = "es-ES"
-    estonian = "et-EE"
-    finnish = "fi-FI"
-    french = "fr-FR"
-    hindi = "hi-IN"
-    hungarian = "hu-HU"
-    italian = "it-IT"
-    japanese = "ja-JP"
-    bokmal = "nb-NO"
-    dutch = "nl-NL"
-    polish = "pl-PL"
-    portuguese_br = "pt-BR"
-    portuguese_pt = "pt-PT"
-    romanian = "ro-RO"
-    russian = "ru-RU"
-    slovak = "sk-SK"
-    slovenian = "sl-SI"
-    swedish = "sv-SE"
-    turkish = "tr-TR"
-    ukrainian = "uk-UA"
-
-
 class DirectPathProfile(object):
     def __init__(
         self,
@@ -208,7 +173,7 @@ class Asgard(TransientSocket, Kraken):
                 'reset_timeout': self.breaker.reset_timeout,
             },
             'zmq_socket_ttl': self.socket_ttl,
-            'language': self.instance.asgard_language,
+            'language': self.instance.language,
         }
 
     def make_location(self, obj):
@@ -218,9 +183,7 @@ class Asgard(TransientSocket, Kraken):
         )
 
     def get_language_parameter(self, request):
-        language = request.get('_asgard_language', "english_us")
-        language_tag = getattr(Languages, language, Languages.english_us).value
-        return language_tag
+        return request.get('language', self.instance.language)
 
     def _create_sn_routing_matrix_request(
         self, origins, destinations, street_network_mode, max_duration, speed_switcher, request, **kwargs

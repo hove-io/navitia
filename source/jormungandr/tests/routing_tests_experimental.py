@@ -439,7 +439,7 @@ class TestJourneysDistributed(
         assert len(response['journeys'][1]['sections']) == 1
 
     def test_journey_with_access_points(self):
-        query = journey_basic_query + "&_access_points=true"
+        query = journey_basic_query + "&_access_points=true&language=en-US"
         response = self.query_region(query)
         assert len(response['journeys']) == 2
 
@@ -483,7 +483,7 @@ class TestJourneysDistributed(
 
     def test_path_instructions(self):
         # Verify some path instructions managed by jormungandr in English
-        query = journey_basic_query + "&_access_points=true&_asgard_language=english_us"
+        query = journey_basic_query + "&_access_points=true&language=en-US"
         response = self.query_region(query)
         assert len(response['journeys']) == 2
 
@@ -496,7 +496,7 @@ class TestJourneysDistributed(
         assert path['instruction'] == "Exit stop_point:stopA (Condom) via access_point:A2."
 
         # Verify some path instructions managed by jormungandr in French
-        query = journey_basic_query + "&_access_points=true&_asgard_language=french"
+        query = journey_basic_query + "&_access_points=true"
         response = self.query_region(query)
         assert len(response['journeys']) == 2
 
@@ -504,12 +504,12 @@ class TestJourneysDistributed(
         assert pt_journey
         assert len(pt_journey['sections'][0]['vias']) == 1
         path = pt_journey['sections'][0]['path'][-1]
-        assert path['instruction'] == "Accédez à stop_point:stopB (Condom) via access_point:B1."
+        assert path['instruction'] == "Then enter stop_point:stopB (Condom) via access_point:B1."
         path = pt_journey['sections'][2]['path'][0]
-        assert path['instruction'] == "Sortez de stop_point:stopA (Condom) via access_point:A2."
+        assert path['instruction'] == "Exit stop_point:stopA (Condom) via access_point:A2."
 
         # Verify some path instructions managed by jormungandr in English as default language
-        query = journey_basic_query + "&_access_points=true&_asgard_language=japanese"
+        query = journey_basic_query + "&_access_points=true&language=ja-JP"
         response = self.query_region(query)
         assert len(response['journeys']) == 2
 
@@ -1367,7 +1367,8 @@ class TestRoutingWithTransfer(NewDefaultScenarioAbstractTestFixture):
     def test_complete_transfer_path_bus_rer_with_access_points(self):
         query = (
             '/v1/coverage/routing_with_transfer_test/journeys?'
-            'from={}&to={}&datetime=20120614T080000&_override_scenario=distributed&count=1&_transfer_path=true'
+            'from={}&to={}&datetime=20120614T080000&_override_scenario=distributed&count=1&_transfer_path=true&'
+            'language=en-US'
         ).format("stopA", "stopF")
 
         response = self.query(query)

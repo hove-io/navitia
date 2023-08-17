@@ -177,12 +177,14 @@ def test_update_instances(create_instance):
         "ghost_words": GHOST_WORDS,
         "filter_odt_journeys": False,
         "additional_parameters": False,
+        "language": "es-ES",
     }
     resp = api_get('/v0/instances/{}'.format(create_instance))
     assert resp[0]['access_points'] is False
     assert resp[0]['poi_access_points'] is False
     assert resp[0]['default_pt_planner'] == 'kraken'
     assert resp[0]['pt_planners_configurations'] == {}
+    assert resp[0]['language'] == 'fr-FR'
 
     resp = api_put('/v0/instances/fr', data=json.dumps(params), content_type='application/json')
     for key, param in params.items():
@@ -226,6 +228,7 @@ def test_update_instances(create_instance):
     assert resp['ghost_words'] == GHOST_WORDS
     assert resp['filter_odt_journeys'] is False
     assert resp['additional_parameters'] is False
+    assert resp['language'] == 'es-ES'
 
 
 def test_update_instances_is_free(create_instance):
@@ -663,3 +666,19 @@ def test_update_streetnetwork_backends(create_instance):
     with pytest.raises(Exception):
         params = {'street_network_car': "unknown"}
         resp = api_put('/v0/instances/fr', data=json.dumps(params), content_type='application/json')
+
+
+def test_update_invalide_language(create_instance):
+    resp = api_get('/v0/instances/fr')
+    assert resp[0]['language'] == "fr-FR"
+
+    params = {'language': 'toto'}
+    resp, status = api_put(
+        '/v0/instances/fr', data=json.dumps(params), content_type='application/json', check=False
+    )
+    assert status == 400
+    assert "message" in resp
+    assert "Select a specific language for street network instructions" in resp['message']['language']
+
+    resp = api_get('/v0/instances/fr')
+    assert resp[0]['language'] == "fr-FR"
