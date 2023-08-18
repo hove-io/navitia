@@ -504,9 +504,9 @@ class TestJourneysDistributed(
         assert pt_journey
         assert len(pt_journey['sections'][0]['vias']) == 1
         path = pt_journey['sections'][0]['path'][-1]
-        assert path['instruction'] == "Then enter stop_point:stopB (Condom) via access_point:B1."
+        assert path['instruction'] == "Accédez à stop_point:stopB (Condom) via access_point:B1."
         path = pt_journey['sections'][2]['path'][0]
-        assert path['instruction'] == "Exit stop_point:stopA (Condom) via access_point:A2."
+        assert path['instruction'] == "Sortez de stop_point:stopA (Condom) via access_point:A2."
 
         # Verify some path instructions managed by jormungandr in English as default language
         query = journey_basic_query + "&_access_points=true&language=ja-JP"

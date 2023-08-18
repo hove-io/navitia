@@ -250,22 +250,22 @@ def _extend_with_car_park(
 
 def get_enter_instruction_words(lan):
     instructions = {
-        "english_us": u"Then enter {} via {}.",
-        "french": u"Accédez à {} via {}.",
-        "spanish": u"Acceso a {} vía {}.",
-        "italian": u"Accesso alla {} via {}.",
+        "en-US": u"Then enter {} via {}.",
+        "fr-FR": u"Accédez à {} via {}.",
+        "es-ES": u"Acceso a {} vía {}.",
+        "it-IT": u"Accesso alla {} via {}.",
     }
-    return instructions.get(lan, instructions["english_us"])
+    return instructions.get(lan, instructions["en-US"])
 
 
 def get_exit_instruction_words(lan):
     instructions = {
-        "english_us": u"Exit {} via {}.",
-        "french": u"Sortez de {} via {}.",
-        "spanish": u"Salida {} vía {}.",
-        "italian": u"Uscita {} via {}.",
+        "en-US": u"Exit {} via {}.",
+        "fr-FR": u"Sortez de {} via {}.",
+        "es-ES": u"Salida {} vía {}.",
+        "it-IT": u"Uscita {} via {}.",
     }
-    return instructions.get(lan, instructions["english_us"])
+    return instructions.get(lan, instructions["en-US"])
 
 
 def append_path_item_with_access_point(path_items, stop_point, access_point, language):
