@@ -437,7 +437,7 @@ class Here(AbstractStreetNetworkService):
             'return': 'summary,polyline,instructions,actions',
             'spans': 'dynamicSpeedInfo',
             'transportMode': 'car',
-            'lang': '{language}'.format(language=language.value),
+            'lang': '{language}'.format(language=language),
             'departureTime': _str_to_dt(datetime),
         }
         exclusion_areas = self.get_exclusion_areas(request)
