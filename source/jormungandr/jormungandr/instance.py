@@ -68,9 +68,9 @@ from jormungandr.utils import (
     make_origin_destination_key,
     read_best_boarding_positions,
     read_origin_destination_data,
-    read_stop_points_attractivities,
     str_to_time_stamp,
 )
+from jormungandr.olympic_site_params_manager import OlympicSiteParamsManager
 from jormungandr import pt_planners_manager, transient_socket
 import os
 
@@ -269,7 +269,7 @@ class Instance(transient_socket.TransientSocket):
         self.additional_params_period_start = None
         self.additional_params_period_end = None
         self.use_multi_reverse = use_multi_reverse
-        self.stop_points_attractivities = None
+        self.olympic_site_params_manager = None
         self.resp_content_limit_bytes = resp_content_limit_bytes
         # a list of endpoints that are not affected by the resp_content_limit_bytes
         self.resp_content_limit_endpoints_whitelist = set(resp_content_limit_endpoints_whitelist or [])
@@ -294,10 +294,10 @@ class Instance(transient_socket.TransientSocket):
             self.additional_params_period_end = str_to_time_stamp(additional_params_period.get('end'))
 
         # load stop_point attractivities, the feature is only available when loki is selected as pt_planner
-        stop_points_attractivities_dir = app.config.get(str('STOP_POINTS_ATTRACTIVITIES_DIR'))
-        if stop_points_attractivities_dir:
-            file_path = os.path.join(stop_points_attractivities_dir, "{}.csv".format(self.name))
-            self.stop_points_attractivities = read_stop_points_attractivities(file_path)
+        self.olympic_site_params_manager = OlympicSiteParamsManager(
+            app.config.get(str('OLYMPIC_SITE_PARAMS_DIR')),
+            self.name
+        )
 
     def get_providers_from_db(self):
         """
