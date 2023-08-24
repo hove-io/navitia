@@ -32,6 +32,7 @@ import navitiacommon.response_pb2 as response_pb2
 import navitiacommon.type_pb2 as type_pb2
 from jormungandr.instance import OlympicsForbiddenUris
 from jormungandr.street_network.tests.streetnetwork_test_utils import make_pt_object
+from jormungandr.olympic_site_params_manager import AttractivityVirtualFallback
 
 
 def remove_excess_terminus_without_item_test():
@@ -691,13 +692,16 @@ def compute_journey_virtual_duration_test():
     ending_fallback_section.origin.uri = "gare du nord"
     ending_fallback_section.destination.uri = "1;1"
 
-    virtual_fallbacks = {"gare de lyon": 42, "gare du nord": 84}
+    #virtual_fallbacks = {"gare de lyon": 42, "gare du nord": 84}
+    attractivities_virtual_fallbacks ={"arrival": {"gare de lyon": AttractivityVirtualFallback(0, 42), "gare du nord": AttractivityVirtualFallback(0, 84)}}
     virtual_duration, _ = journey_filter.compute_journey_virtual_duration_and_attractivity(
-        journey, "arrival_stop_attractivity", virtual_fallbacks, {}
+        journey, attractivities_virtual_fallbacks
     )
     assert virtual_duration == (9600 - 2400 + 84)
 
+    attractivities_virtual_fallbacks = {"departure": {"gare de lyon": AttractivityVirtualFallback(0, 42),
+                                                    "gare du nord": AttractivityVirtualFallback(0, 84)}}
     virtual_duration, _ = journey_filter.compute_journey_virtual_duration_and_attractivity(
-        journey, "departure_stop_attractivity", virtual_fallbacks, {}
+        journey, attractivities_virtual_fallbacks
     )
     assert virtual_duration == (9600 - 3600 + 42)
