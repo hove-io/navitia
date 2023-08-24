@@ -602,6 +602,7 @@ def is_olympic_site(entry_point, instance):
                 return True
     return False
 
+
 def get_olympic_site(entry_point, instance):
     if not instance.olympics_forbidden_uris:
         return None
@@ -616,6 +617,7 @@ def get_olympic_site(entry_point, instance):
             if is_olympic_poi(within_zone, instance):
                 return within_zone
     return None
+
 
 def get_last_pt_section(journey):
     return next((s for s in reversed(journey.sections) if s.type == response_pb2.PUBLIC_TRANSPORT), None)
@@ -936,12 +938,16 @@ def create_journeys_request(origins, destinations, datetime, clockwise, journey_
     req.requested_api = type_pb2.pt_planner
 
     def _set_departure_attractivity(stop_point_id, location):
-        attractivity_virtual_duration = journey_parameters.olympic_site_params.get("departure", {}).get(stop_point_id)
+        attractivity_virtual_duration = journey_parameters.olympic_site_params.get("departure", {}).get(
+            stop_point_id
+        )
         if attractivity_virtual_duration:
             location.attractivity = attractivity_virtual_duration.attractivity
 
     def _set_arrival_attractivity(stop_point_id, location):
-        attractivity_virtual_duration = journey_parameters.olympic_site_params.get("arrival", {}).get(stop_point_id)
+        attractivity_virtual_duration = journey_parameters.olympic_site_params.get("arrival", {}).get(
+            stop_point_id
+        )
         if attractivity_virtual_duration:
             location.attractivity = attractivity_virtual_duration.attractivity
 

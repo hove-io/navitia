@@ -37,6 +37,7 @@ from jormungandr.utils import get_olympic_site
 
 AttractivityVirtualFallback = namedtuple("AttractivityVirtualFallback", "attractivity, virtual_duration")
 
+
 class OlympicSiteParamsManager:
     def __init__(self, file_path, instance_name):
         # {"poi:BCD":{"departure":"default","arrival":"default",
@@ -48,14 +49,16 @@ class OlympicSiteParamsManager:
     def build_olympic_site_params(self, scenario, data):
         if not scenario:
             return {}
-        return {spt_id: AttractivityVirtualFallback(d["attractivity"], d["virtual_fallback"]) for spt_id, d in data.get("scenarios", {}).get(scenario, {}).items()}
+        return {
+            spt_id: AttractivityVirtualFallback(d["attractivity"], d["virtual_fallback"])
+            for spt_id, d in data.get("scenarios", {}).get(scenario, {}).items()
+        }
 
     def get_departure_olympic_site_params(self, poi_uri):
         data = self.olympic_site_params.get(poi_uri)
         if not data:
             return {}
         return self.build_olympic_site_params(data.get("departure"), data)
-
 
     def get_arrival_olympic_site_params(self, poi_uri):
         data = self.olympic_site_params.get(poi_uri)
@@ -70,7 +73,9 @@ class OlympicSiteParamsManager:
             return
         olympic_site_params_file = os.path.join(file_path, "{}.json".format(instance_name))
         if not os.path.exists(olympic_site_params_file):
-            logger.warning("Reading stop points attractivities, file: %s does not exist", olympic_site_params_file)
+            logger.warning(
+                "Reading stop points attractivities, file: %s does not exist", olympic_site_params_file
+            )
             return
 
         logger.info("Reading stop points attractivities from file: %s", olympic_site_params_file)
@@ -79,8 +84,9 @@ class OlympicSiteParamsManager:
                 self.olympic_site_params = json.load(f)
         except Exception as e:
             logger.exception(
-                'Error while loading od_allowed_ids file: {} with exception: {}'.format(olympic_site_params_file,
-                                                                                        str(e))
+                'Error while loading od_allowed_ids file: {} with exception: {}'.format(
+                    olympic_site_params_file, str(e)
+                )
             )
 
     def get_olympic_site_params(self, pt_origin_detail, pt_destination_detail, api_request, instance):
@@ -103,10 +109,14 @@ class OlympicSiteParamsManager:
         if origin_olympic_site and destination_olympic_site:
             origin_olympic_site = None
 
-        departure_olympic_site_params = self.get_departure_olympic_site_params(
-            origin_olympic_site.uri) if origin_olympic_site else {}
-        arrival_olympic_site_params = self.get_arrival_olympic_site_params(
-            destination_olympic_site.uri) if destination_olympic_site else {}
+        departure_olympic_site_params = (
+            self.get_departure_olympic_site_params(origin_olympic_site.uri) if origin_olympic_site else {}
+        )
+        arrival_olympic_site_params = (
+            self.get_arrival_olympic_site_params(destination_olympic_site.uri)
+            if destination_olympic_site
+            else {}
+        )
 
         if departure_olympic_site_params:
             return {"departure": departure_olympic_site_params}

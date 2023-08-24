@@ -94,8 +94,8 @@ def create_journeys_request_with_attractivities_test():
     origin = {"Hove": 42}
     destination = {"Somewhere": 666}
     departure_olympic_site_params = {
-        "departure": {"Hove": AttractivityVirtualFallback(1,2), "Somewhere": AttractivityVirtualFallback(2, 3)},
-        "arrival": {}
+        "departure": {"Hove": AttractivityVirtualFallback(1, 2), "Somewhere": AttractivityVirtualFallback(2, 3)},
+        "arrival": {},
     }
     journey_parameters = JourneyParameters(olympic_site_params=departure_olympic_site_params)
     datetime = str_to_time_stamp("20120614T080000")
@@ -106,7 +106,7 @@ def create_journeys_request_with_attractivities_test():
 
     arrival_olympic_site_params = {
         "departure": {},
-        "arrival": {"Hove": AttractivityVirtualFallback(1,2), "Somewhere": AttractivityVirtualFallback(2, 3)}
+        "arrival": {"Hove": AttractivityVirtualFallback(1, 2), "Somewhere": AttractivityVirtualFallback(2, 3)},
     }
 
     journey_parameters = JourneyParameters(olympic_site_params=arrival_olympic_site_params)

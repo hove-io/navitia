@@ -1271,6 +1271,7 @@ def add_olympics_forbidden_uris(origin_detail, destination_detail, api_request, 
     else:
         api_request["forbidden_uris[]"] = instance.olympics_forbidden_uris.pt_object_olympics_forbidden_uris
 
+
 def is_origin_destination_rules_applicable(instance, datetime):
     # At least od_allowed_ids or od_additional_parameters should be present
     if not (instance.od_allowed_ids or instance.od_additional_parameters):
@@ -1374,9 +1375,9 @@ class Scenario(simple.Scenario):
         # Return the possible combinations (origin_mode ,destination_mode, direct_path_type)
         krakens_call = get_kraken_calls(api_request)
 
-        api_request["olympic_site_params"] = instance.olympic_site_params_manager.get_olympic_site_params(pt_object_origin,
-                                                                                                     pt_object_destination,
-                                                                                                     api_request, instance)
+        api_request["olympic_site_params"] = instance.olympic_site_params_manager.get_olympic_site_params(
+            pt_object_origin, pt_object_destination, api_request, instance
+        )
 
         # We need the original request (api_request) for filtering, but request
         # is modified by create_next_kraken_request function.
