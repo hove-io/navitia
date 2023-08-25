@@ -713,3 +713,15 @@ def compute_journey_virtual_duration_test():
         journey, attractivities_virtual_fallbacks
     )
     assert virtual_duration == (9600 - 3600 + 42)
+
+    # extremity stop_point not exist in attractivities_virtual_fallbacks
+    attractivities_virtual_fallbacks = {
+        "departure": {
+            "gare du nord": AttractivityVirtualFallback(0, 84),
+        }
+    }
+    virtual_duration, attractivity = journey_filter.compute_journey_virtual_duration_and_attractivity(
+        journey, attractivities_virtual_fallbacks
+    )
+    assert attractivity == 0
+    assert virtual_duration == (9600 - 3600 + 0)

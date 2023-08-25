@@ -778,8 +778,8 @@ def compute_journey_virtual_duration_and_attractivity(journey, attractivities_vi
         attractivity_virtual_fallback = attractivities_virtual_fallbacks.get("arrival", {}).get(extremity.uri)
     else:
         attractivity_virtual_fallback = attractivities_virtual_fallbacks.get("departure", {}).get(extremity.uri)
-    virtual_fallback = attractivity_virtual_fallback.virtual_duration or 0
-    attractivity = attractivity_virtual_fallback.attractivity or 0
+    virtual_fallback = attractivity_virtual_fallback.virtual_duration if attractivity_virtual_fallback else 0
+    attractivity = attractivity_virtual_fallback.attractivity if attractivity_virtual_fallback else 0
 
     if attractivities_virtual_fallbacks.get("arrival"):
         virtual_duration = extremity_pt_section.end_date_time - journey.departure_date_time + virtual_fallback
