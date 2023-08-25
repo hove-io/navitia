@@ -121,5 +121,5 @@ class OlympicSiteParamsManager:
         if departure_olympic_site_params:
             return {"departure": departure_olympic_site_params}
         if arrival_olympic_site_params:
-            return {"departure": arrival_olympic_site_params}
+            return {"arrival": arrival_olympic_site_params}
         return {}
