@@ -99,7 +99,7 @@ class OlympicSiteParamsManager:
             for spt_id, attractivity in attractivities.items():
                 virtual_fallback = virtual_duration.get(spt_id, 0)
                 result[spt_id] = AttractivityVirtualFallback(attractivity, virtual_fallback)
-            if api_request["criteria"] == "departure_stop_attractivity":
+            if api_request.get("criteria") == "departure_stop_attractivity":
                 return {"departure": result}
             return {"arrival": result}
 

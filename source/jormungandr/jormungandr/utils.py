@@ -604,7 +604,7 @@ def is_olympic_site(entry_point, instance):
 
 
 def get_olympic_site(entry_point, instance):
-    if not instance.olympics_forbidden_uris:
+    if not instance or not instance.olympics_forbidden_uris:
         return None
     if not entry_point:
         return None
