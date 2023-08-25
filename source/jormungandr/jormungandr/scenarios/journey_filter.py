@@ -698,6 +698,8 @@ def filter_olympic_site(response_list, instance, request, pt_object_origin, pt_o
                 continue
             if to_be_deleted(j):
                 continue
+            if request.get('_keep_olympics_journeys') and is_olympics(j):
+                continue
             nb_connections = get_nb_connections(j)
             if nb_connections == 0:
                 continue
