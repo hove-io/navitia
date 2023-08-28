@@ -7,7 +7,7 @@ on:
     branches: [ dev ]
 
 env:
-   SONAR_SCANNER_VERSION: 4.7.0.2747
+   SONAR_SCANNER_VERSION: 5.0.1.3006
    REGION: eu-west-1
 
 jobs:
