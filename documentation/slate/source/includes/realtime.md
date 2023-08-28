@@ -525,7 +525,7 @@ http://api.navitia.io/v1/coverage/<coverage>/journeys?from=<origin>&to=<destinat
     ]
 ```
 
-The status of the journey is `ADDITIONAL_SERVICE`. This new journey can only be displayed if "data_freshness" is set to "realtime".<br>A list of disruptions impacting the journey is also present at the root level of the response.<br>A link to the concerned disruption can be found in the section "display_informations".
+The status of the journey is `MODIFIED_SERVICE`. This new journey can only be displayed if "data_freshness" is set to "realtime".<br>A list of disruptions impacting the journey is also present at the root level of the response.<br>A link to the concerned disruption can be found in the section "display_informations".
 
 <div></div>
 

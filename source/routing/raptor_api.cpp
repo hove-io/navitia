@@ -333,27 +333,6 @@ void _update_max_impact_severity(boost::optional<type::disruption::Effect>& max,
     }
 }
 
-static void compute_most_serious_disruption(pbnavitia::Journey* pb_journey, const PbCreator& pb_creator) {
-    boost::optional<type::disruption::Effect> max_severity = boost::none;
-
-    for (const auto& section : pb_journey->sections()) {
-        if (section.type() != pbnavitia::PUBLIC_TRANSPORT) {
-            continue;
-        }
-        _update_max_impact_severity(max_severity, section.pt_display_informations(), pb_creator);
-
-        _update_max_impact_severity(max_severity, section.origin().stop_point(), pb_creator);
-        _update_max_impact_severity(max_severity, section.origin().stop_point().stop_area(), pb_creator);
-
-        _update_max_impact_severity(max_severity, section.destination().stop_point(), pb_creator);
-        _update_max_impact_severity(max_severity, section.destination().stop_point().stop_area(), pb_creator);
-    }
-
-    if (max_severity) {
-        pb_journey->set_most_serious_disruption_effect(type::disruption::to_string(*max_severity));
-    }
-}
-
 static void fill_section(PbCreator& pb_creator,
                          pbnavitia::Section* pb_section,
                          const type::VehicleJourney* vj,
@@ -533,6 +512,15 @@ static bt::ptime get_base_dt(const nt::StopTime* st_orig,
     return {validity_pattern_dt_day, boost::posix_time::seconds(hour_of_day_base)};
 }
 
+static bt::ptime get_st_dt(const nt::StopTime* st, const boost::gregorian::date& dt_day_base, bool is_departure) {
+    if (st == nullptr) {
+        return bt::not_a_date_time;
+    }
+    const auto hour_of_day_st = (is_departure ? st->departure_time : st->arrival_time);
+    const auto shift_duration = boost::gregorian::date_duration(st->vehicle_journey->shift);
+    return {dt_day_base + shift_duration, boost::posix_time::seconds(hour_of_day_st)};
+}
+
 static bt::ptime handle_pt_sections(pbnavitia::Journey* pb_journey,
                                     PbCreator& pb_creator,
                                     const navitia::routing::Path& path,
@@ -553,6 +541,8 @@ static bt::ptime handle_pt_sections(pbnavitia::Journey* pb_journey,
 
     // considering only stop-time used in journey that are removed in freshest VJ
     bool pt_not_served_in_rt = false;
+    bool pt_not_served_in_base = false;
+    bool pt_served_at_different_time_in_base_or_in_rt = false;
 
     for (auto path_i = path.items.begin(); path_i < path.items.end(); ++path_i) {
         const auto& item = *path_i;
@@ -711,25 +701,45 @@ static bt::ptime handle_pt_sections(pbnavitia::Journey* pb_journey,
             if (base_dep_st != nullptr) {
                 auto base_dep_dt = get_base_dt(item.stop_times.front(), base_dep_st, item.departure, true);
                 pb_section->set_base_begin_date_time(navitia::to_posix_timestamp(base_dep_dt));
+                if (pb_section->begin_date_time() != pb_section->base_begin_date_time()) {
+                    pt_served_at_different_time_in_base_or_in_rt = true;
+                }
+            }
+            if (base_dep_st == nullptr || !base_dep_st->pick_up_allowed()) {
+                pt_not_served_in_base = true;
             }
             auto base_arr_st = item.stop_times.back()->get_base_stop_time();
             if (base_arr_st != nullptr) {
                 auto base_arr_dt = get_base_dt(item.stop_times.back(), base_arr_st, item.arrival, false);
                 pb_section->set_base_end_date_time(navitia::to_posix_timestamp(base_arr_dt));
+                if (pb_section->end_date_time() != pb_section->base_end_date_time()) {
+                    pt_served_at_different_time_in_base_or_in_rt = true;
+                }
+            }
+            if (base_arr_st == nullptr || !base_arr_st->drop_off_allowed()) {
+                pt_not_served_in_base = true;
             }
             pb_section->set_realtime_level(
                 to_pb_realtime_level(item.stop_times.front()->vehicle_journey->realtime_level));
 
             const auto base_vj_start_date = get_base_vj_start_date(item.departure, item.stop_times.front(), true);
-            auto freshest_vj = item.get_vj()->meta_vj->get_freshest_vj_for_base_date(base_vj_start_date);
-            if (freshest_vj != item.get_vj() && freshest_vj != nullptr) {
-                auto freshest_corresponding_dep_st = item.stop_times.front()->get_corresponding_stop_time(*freshest_vj);
-                if (freshest_corresponding_dep_st == nullptr || !freshest_corresponding_dep_st->pick_up_allowed()) {
+            auto rt_vj = item.get_vj()->meta_vj->get_rt_vj_for_base_date(base_vj_start_date);
+            if (rt_vj == nullptr) {
+                pt_not_served_in_rt = true;
+            } else if (rt_vj != item.get_vj()) {
+                auto rt_corresponding_dep_st = item.stop_times.front()->get_corresponding_stop_time(*rt_vj);
+                if (rt_corresponding_dep_st == nullptr || !rt_corresponding_dep_st->pick_up_allowed()) {
                     pt_not_served_in_rt = true;
+                } else if (navitia::to_posix_timestamp(get_st_dt(rt_corresponding_dep_st, base_vj_start_date, true))
+                           != pb_section->begin_date_time()) {
+                    pt_served_at_different_time_in_base_or_in_rt = true;
                 }
-                auto freshest_corresponding_arr_st = item.stop_times.back()->get_corresponding_stop_time(*freshest_vj);
-                if (freshest_corresponding_arr_st == nullptr || !freshest_corresponding_arr_st->drop_off_allowed()) {
+                auto rt_corresponding_arr_st = item.stop_times.back()->get_corresponding_stop_time(*rt_vj);
+                if (rt_corresponding_arr_st == nullptr || !rt_corresponding_arr_st->drop_off_allowed()) {
                     pt_not_served_in_rt = true;
+                } else if (navitia::to_posix_timestamp(get_st_dt(rt_corresponding_arr_st, base_vj_start_date, false))
+                           != pb_section->end_date_time()) {
+                    pt_served_at_different_time_in_base_or_in_rt = true;
                 }
             }
         }
@@ -747,8 +757,12 @@ static bt::ptime handle_pt_sections(pbnavitia::Journey* pb_journey,
         // journey status is NO_SERVICE if a disruption in RT prevents from using a PT section in RT
         pb_journey->set_most_serious_disruption_effect(
             type::disruption::to_string(type::disruption::Effect::NO_SERVICE));
-    } else {
-        compute_most_serious_disruption(pb_journey, pb_creator);
+    } else if (pt_not_served_in_base) {
+        pb_journey->set_most_serious_disruption_effect(
+            type::disruption::to_string(type::disruption::Effect::MODIFIED_SERVICE));
+    } else if (pt_served_at_different_time_in_base_or_in_rt) {
+        pb_journey->set_most_serious_disruption_effect(
+            type::disruption::to_string(type::disruption::Effect::SIGNIFICANT_DELAYS));
     }
 
     // fare computation, done at the end for the journey to be complete

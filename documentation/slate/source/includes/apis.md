@@ -955,12 +955,15 @@ The [isochrones](#isochrones) service exposes another response structure, which 
 <h3 id="journeys-disruptions">Disruptions</h3>
 
 By default, Navitia only computes journeys without their associated disruption(s), meaning that the journeys in the response will be based on the theoretical schedules. The disruption present in the response is for information only.
-If you want to provide journeys without blocking disruptions, you need to make an other request with the parameter `data_freshness=realtime`.
+In order to get an "undisrupted" journey (consider all disruptions during journey planning), you just have to add a `&data_freshness=realtime` parameter (or use the `bypass_disruptions` link from response).
 
 In a journey's response, different disruptions may have different meanings.
-Each journey has a `status` attribute that indicates the most serious effect affecting the journey.
-A base-schedule journey using a stop-time that is deleted in realtime will have
-a NO_SERVICE status (no matter the effect of the disruption causing it).
+Each journey has a `status` attribute that indicates the actual effect affecting pick-up and drop-off used by
+the journey (no matter the effects of the disruptions attached to the journey).
+A journey using a stop-time pick-up (or drop-off) that is deleted in realtime will have a `NO_SERVICE` status.
+A journey using a stop-time pick-up (or drop-off) that is added in realtime will have a `MODIFIED_SERVICE` status.
+A journey using a stop-time pick-up (or drop-off) that is early or late in realtime will have a `SIGNIFICANT_DELAYS` status.
+All other journeys will have an empty status.
 Disruptions are on the sections, the ones that impact the journey are in the sections's display_informations links  (`sections[].display_informations.links[]`).
 
 You might also have other disruptions in the response. They don't directly impact the journey, but might affect them.
@@ -1101,7 +1104,7 @@ Here is a typical journey, all sections are detailed below
   type                | *enum* string                | Used to qualify a journey. See the [journey-qualification](#journey-qualification-process) section for more information
   fare                | [fare](#fare)                | Fare of the journey (tickets and price)
   tags                | array of string              | List of tags on the journey. The tags add additional information on the journey beside the journey type. See for example [multiple_journeys](#multiple-journeys).
-  status              | *enum*                       | Status of the whole journey taking into acount the disruptions retrieved on PT object used. Can be: <ul><li>NO_SERVICE</li><li>REDUCED_SERVICE</li><li>SIGNIFICANT_DELAYS</li><li>DETOUR</li><li>ADDITIONAL_SERVICE</li><li>MODIFIED_SERVICE</li><li>OTHER_EFFECT</li><li>UNKNOWN_EFFECT</li><li>STOP_MOVED</li></ul> A base-schedule journey using a stop-time that is deleted in realtime will have a NO_SERVICE status (no matter the effect of the disruption causing it).<br>In order to get an "undisrupted" journey (consider all disruptions during journey planning), you just have to add a *&data_freshness=realtime* parameter.
+  status              | *enum*                       | Status of the whole journey taking into acount the actual effect of disruptions retrieved on pick-ups and drop-offs used. See the [journey-disruption](#journeys-disruptions) section for more information.
 
 <aside class="notice">
     When used with just a "from" or a "to" parameter, it will not contain any sections.
