@@ -46,6 +46,8 @@ jobs:
     steps:
     - name: force chown to avoid errors
       run: chown -R $USER:$USER .
+    - name: Add chaos-proto as safe directory
+      run: git config --global --add safe.directory /__w/navitia/navitia/source/chaos-proto
     - name: Free up space
       run: rm -rf /usr/share/dotnet/*
     - name: Display remaining space
