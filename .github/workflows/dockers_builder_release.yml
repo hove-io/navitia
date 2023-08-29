@@ -45,13 +45,15 @@ jobs:
           version=$(git describe --tags)
           echo "navitia_tag=$version" >> $GITHUB_OUTPUT
 
-      - name: clean up workspace
-        run: sudo git clean -xdf
-
       - name: failure notification
         if: failure()
         run: |
           echo '{"text":":warning: Github Actions: workflow dockers_builder_release Job init common variables failed !"}' | http --json POST ${{secrets.SLACK_NAVITIA_TEAM_URL}}
+
+      - name: clean up workspace
+        if: ${{ always() }}
+        run: sudo git clean -xdf
+
 
   front_bullseye_builder:
     runs-on: [self-hosted, corefront, sandbox]
@@ -113,13 +115,14 @@ jobs:
           echo "*********  Push Jormungandr ***************"
           docker push ${SBX_ECR_REGISTRY_FRONT}/jormungandr:no_config_${{ needs.common_variables.outputs.NAVITIA_TAG }}
 
-      - name: clean up workspace
-        run: sudo git clean -xdf
-
       - name: failure notification
         if: failure()
         run: |
           echo '{"text":":warning: Github Actions: workflow dockers_builder_release Job front_bullseye_builder is failed !"}' | http --json POST ${{secrets.SLACK_NAVITIA_TEAM_URL}}
+
+      - name: clean up workspace
+        if: ${{ always() }}
+        run: sudo git clean -xdf
 
   front_jessie_builder:
     runs-on: [self-hosted, corefront, sandbox]
@@ -178,14 +181,14 @@ jobs:
           component_tag=${PRD_ECR_REGISTRY}/navitia-tyr-web-tyr-web:${{ needs.common_variables.outputs.NAVITIA_TAG }}
           docker push ${component_tag}
 
-      - name: clean up workspace
-        run: sudo git clean -xdf
-
       - name: failure notification
         if: failure()
         run: |
           echo '{"text":":warning: Github Actions: workflow dockers_builder_release Job front_jessie_builder is failed !"}' | http --json POST ${{secrets.SLACK_NAVITIA_TEAM_URL}}
 
+      - name: clean up workspace
+        if: ${{ always() }}
+        run: sudo git clean -xdf
 
   backend_jessie_builder:
     runs-on: [self-hosted, kraken, sandbox]
@@ -312,9 +315,6 @@ jobs:
           component_tag=${PRD_ECR_REGISTRY}/navitia-tyr-tyrworker:${{ needs.common_variables.outputs.NAVITIA_TAG }}
           docker push ${component_tag}
 
-      - name: clean up workspace
-        run: sudo git clean -xdf
-
       - name: failure notification
         if: failure()
         run: |
@@ -323,6 +323,11 @@ jobs:
         if: success()
         run: |
           echo '{"text":":octopus: Github Actions: workflow build_dockers succeeded. New navitia ${{ needs.common_variables.outputs.NAVITIA_TAG }} images available."}' | http --json POST ${{secrets.SLACK_NAVITIA_TEAM_URL}}
+
+      - name: clean up workspace
+        if: ${{ always() }}
+        run: sudo git clean -xdf
+
 
   publish_aws:
     runs-on: [self-hosted, corefront, sandbox]
@@ -335,25 +340,10 @@ jobs:
 
       - name: Generate token for aws images
         id: app-token
-        uses: getsentry/action-github-app-token@v2.0.0
+        uses: getsentry/action-github-app-token@v2
         with:
           app_id: ${{ secrets.GA_OS_WORKFLOW_TRIGGER_APP_ID }}
           private_key: ${{ secrets.GA_OS_WORKFLOW_TRIGGER_APP_PEM }}
-
-      - name: Generate github private access token
-        id: ci-core-app-token
-        uses: getsentry/action-github-app-token@v2.0.0
-        with:
-          app_id: ${{ secrets.CI_CORE_APP_ID }}
-          private_key: ${{ secrets.CI_CORE_APP_PEM }}
-
-      - name: Checkout
-        uses: actions/checkout@v3
-        with:
-          submodules: recursive
-          token: ${{ steps.ci-core-app-token.outputs.token }}
-          # we need entire history for tags
-          fetch-depth: 0
 
       - name: Aws Dispatch Frontend
         uses: peter-evans/repository-dispatch@v2

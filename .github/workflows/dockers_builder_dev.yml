@@ -75,13 +75,14 @@ jobs:
           echo "*********  Push Jormungandr ***************"
           docker push ${SBX_ECR_REGISTRY_FRONT}/jormungandr:no_config_${TAG}
 
-      - name: clean up workspace
-        run: sudo git clean -xdf
-
       - name: failure notification
         if: failure()
         run: |
           echo '{"text":":warning: Github Actions: workflow dockers_builder_dev Job front_bullseye_builder is failed !"}' | http --json POST ${{secrets.SLACK_NAVITIA_TEAM_URL}}
+
+      - name: clean up workspace
+        if: ${{ always() }}
+        run: sudo git clean -xdf
 
   front_jessie_builder:
     runs-on: [self-hosted, corefront, sandbox]
@@ -146,13 +147,14 @@ jobs:
               docker push ${SBX_ECR_REGISTRY_FRONT}/$component:${TAG}
           done
 
-      - name: clean up workspace
-        run: sudo git clean -xdf
-
       - name: failure notification
         if: failure()
         run: |
           echo '{"text":":warning: Github Actions: workflow dockers_builder_dev Job front_jessie_builder is failed !"}' | http --json POST ${{secrets.SLACK_NAVITIA_TEAM_URL}}
+
+      - name: clean up workspace
+        if: ${{ always() }}
+        run: sudo git clean -xdf
 
 
   backend_jessie_builder:
@@ -270,13 +272,14 @@ jobs:
               docker push ${SBX_ECR_REGISTRY_BACKEND}/$component:${TAG}
           done
 
-      - name: clean up workspace
-        run: sudo git clean -xdf
-
       - name: failure notification
         if: failure()
         run: |
           echo '{"text":":warning: Github Actions: workflow dockers_builder_dev Job backend_jessie_builder is failed !"}' | http --json POST ${{secrets.SLACK_NAVITIA_TEAM_URL}}
+
+      - name: clean up workspace
+        if: ${{ always() }}
+        run: sudo git clean -xdf
 
   publish_aws:
     runs-on: [self-hosted, corefront, sandbox]

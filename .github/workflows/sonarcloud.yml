@@ -117,10 +117,7 @@ jobs:
                 -Dsonar.login=$SONAR_TOKEN \
                 -Dsonar.cfamily.threads=$(nproc)
 
-    - name: Clean build directory
-      working-directory: ./build
-      run: |
-        make clean
-
     - name: clean up workspace
-      run: git clean -xdf
+      if: ${{ always() }}
+      run: sudo git clean -xdf
+
