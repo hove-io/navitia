@@ -46,6 +46,8 @@ jobs:
     steps:
     - name: force chown to avoid errors
       run: chown -R $USER:$USER .
+    - name: Git config
+      run: git config --global --add safe.directory /__w/navitia/navitia
     - name: Free up space
       run: rm -rf /usr/share/dotnet/*
     - name: Display remaining space
@@ -118,3 +120,10 @@ jobs:
           sonar-scanner-$SONAR_SCANNER_VERSION-linux/bin/sonar-scanner \
                 -Dsonar.login=$SONAR_TOKEN \
                 -Dsonar.cfamily.threads=$(nproc)
+
+    - name: clean up workspace
+      if: ${{ always() }}
+      run: |
+        rm -rf ./*
+        rm -rf ./.??*
+
