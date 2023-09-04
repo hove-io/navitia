@@ -326,7 +326,7 @@ class PtJourneyPool:
                 depth=request['depth'],
                 isochrone_center=isochrone_center,
                 current_datetime=date_to_timestamp(request['_current_datetime']),
-                criteria=request.get('criteria', 'classic'),
+                criteria=request.get('criteria', 'robustness'),
                 attractivities=attractivities,
             )
 
