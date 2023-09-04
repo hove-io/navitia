@@ -35,12 +35,15 @@ www.navitia.io
 #include "type/base_pt_objects.h"
 #include "type/network.h"
 #include "type/physical_mode.h"
+#include "type/data.h"
+#include "type/pb_converter.h"
 
 #include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/case_conv.hpp>
 #include <boost/foreach.hpp>
 #include <boost/lexical_cast.hpp>
 #include <boost/optional.hpp>
+#include <boost/date_time/posix_time/posix_time.hpp>
 
 namespace greg = boost::gregorian;
 
@@ -128,124 +131,105 @@ std::string comp_to_string(const Comp_e comp) {
     }
 }
 
-results Fare::compute_fare(const routing::Path& path) const {
-    results res;
-    int nb_nodes = boost::num_vertices(g);
+std::vector<std::vector<Label>> Fare::compute_labels(const size_t nb_nodes,
+                                                     const std::vector<std::vector<Label>>& previous_labels,
+                                                     const SectionKey& section_key) const {
+    std::vector<std::vector<Label>> new_labels(nb_nodes);
+    try {
+        BOOST_FOREACH (edge_t e, boost::edges(g)) {
+            vertex_t u = boost::source(e, g);
+            vertex_t v = boost::target(e, g);
 
-    LOG4CPLUS_DEBUG(logger, "Computing fare for journey : \n" << path);
+            if (!valid(g[v], section_key)) {
+                continue;
+            }
+            LOG4CPLUS_TRACE(logger, "Trying transition : \n " << g[e] << "\n from node : " << u << "\n  " << g[u]
+                                                              << "\n to node :   " << v << "\n  " << g[v]);
 
-    if (nb_nodes < 2) {
-        LOG4CPLUS_TRACE(logger, "no fare data loaded, cannot compute fare");
-        return res;
-    }
-    std::vector<std::vector<Label>> labels(nb_nodes);
-    // Start label
-    labels[0].push_back(Label());
-    size_t section_idx(0);
-
-    for (const navitia::routing::PathItem& item : path.items) {
-        if (item.type != routing::ItemType::public_transport) {
-            section_idx++;
-            continue;
-        }
-        LOG4CPLUS_TRACE(logger, "In section " << section_idx << " : \n" << item);
-        SectionKey section_key(item, section_idx++);
-
-        std::vector<std::vector<Label>> new_labels(nb_nodes);
-        try {
-            BOOST_FOREACH (edge_t e, boost::edges(g)) {
-                vertex_t u = boost::source(e, g);
-                vertex_t v = boost::target(e, g);
-
-                if (!valid(g[v], section_key)) {
-                    continue;
-                }
-                LOG4CPLUS_TRACE(logger, "Trying transition : \n " << g[e] << "\n from node : " << u << "\n  " << g[u]
-                                                                  << "\n to node :   " << v << "\n  " << g[v]);
-
-                for (const Label& label : labels[u]) {
-                    LOG4CPLUS_TRACE(logger, "Looking at label  : \n" << label);
-                    Ticket ticket;
-                    const Transition& transition = g[e];
-                    if (valid(g[u], label) && transition.valid(section_key, label)) {
-                        LOG4CPLUS_TRACE(logger, " Transition accept this (section, label) \n");
-                        if (!transition.ticket_key.empty()) {
-                            LOG4CPLUS_TRACE(logger, " Transition ticket key is not blank : " << transition.ticket_key);
-                            bool ticket_found = false;  // TODO refactor this, optional is way better
-                            auto it = fare_map.find(transition.ticket_key);
-                            try {
-                                if (it != fare_map.end()) {
-                                    ticket = it->second.get_fare(section_key.date);
-                                    ticket_found = true;
-                                }
-                            } catch (const no_ticket&) {  // the ticket_found bool is still false
-                                LOG4CPLUS_TRACE(logger, " Throw no ticket \n");
+            for (const Label& label : previous_labels[u]) {
+                LOG4CPLUS_TRACE(logger, "Looking at label  : \n" << label);
+                Ticket ticket;
+                const Transition& transition = g[e];
+                if (valid(g[u], label) && transition.valid(section_key, label)) {
+                    LOG4CPLUS_TRACE(logger, " Transition accept this (section, label) \n");
+                    if (!transition.ticket_key.empty()) {
+                        LOG4CPLUS_TRACE(logger, " Transition ticket key is not blank : " << transition.ticket_key);
+                        bool ticket_found = false;  // TODO refactor this, optional is way better
+                        auto it = fare_map.find(transition.ticket_key);
+                        try {
+                            if (it != fare_map.end()) {
+                                ticket = it->second.get_fare(section_key.date);
+                                ticket_found = true;
                             }
-                            if (!ticket_found) {
-                                ticket = make_default_ticket();
-                            }
+                        } catch (const no_ticket&) {  // the ticket_found bool is still false
+                            LOG4CPLUS_TRACE(logger, " Throw no ticket \n");
                         }
-                        if (transition.global_condition == Transition::GlobalCondition::exclusive) {
-                            LOG4CPLUS_TRACE(logger, " Throw Ticket \n");
-
-                            throw ticket;
+                        if (!ticket_found) {
+                            ticket = make_default_ticket();
                         }
-                        if (transition.global_condition == Transition::GlobalCondition::with_changes) {
-                            LOG4CPLUS_TRACE(logger, " ODFare ticket \n");
-
-                            ticket.type = Ticket::ODFare;
-                        }
-                        Label next = next_label(label, ticket, section_key);
-
-                        // we process the OD ticket: case where we'll not use this ticket anymore
-                        if (label.current_type == Ticket::ODFare || ticket.type == Ticket::ODFare) {
-                            try {
-                                Ticket ticket_od;
-                                ticket_od = get_od(next, section_key).get_fare(section_key.date);
-                                if (!label.tickets.empty() && label.current_type == Ticket::ODFare) {
-                                    ticket_od.sections = label.tickets.back().sections;
-                                }
-
-                                ticket_od.sections.push_back(section_key);
-                                Label n = next;
-                                n.cost += ticket_od.value;
-                                n.tickets.back() = ticket_od;
-                                n.current_type = Ticket::FlatFare;
-                                LOG4CPLUS_TRACE(logger, "Adding ODFare label to node 0 : \n" << n);
-                                new_labels[0].push_back(n);
-                            } catch (const no_ticket&) {
-                                LOG4CPLUS_TRACE(logger, "Unable to get the OD ticket SA="
-                                                            << next.stop_area << ", zone=" << next.zone
-                                                            << ", section start_zone=" << section_key.start_zone
-                                                            << ", dest_zone=" << section_key.dest_zone
-                                                            << ", start_sa=" << section_key.start_stop_area
-                                                            << ", dest_sa=" << section_key.dest_stop_area
-                                                            << ", mode=" << section_key.mode);
-                            }
-                        } else {
-                            if (v != 0) {
-                                LOG4CPLUS_TRACE(logger, "Adding label to node 0 : \n" << next);
-                                new_labels[0].push_back(next);
-                            }
-                        }
-                        LOG4CPLUS_TRACE(logger, "Adding label to node " << v << " {" << g[v] << "} : \n" << next);
-                        new_labels[v].push_back(next);
                     }
+                    if (transition.global_condition == Transition::GlobalCondition::exclusive) {
+                        LOG4CPLUS_TRACE(logger, " Throw Ticket \n");
+
+                        throw ticket;
+                    }
+                    if (transition.global_condition == Transition::GlobalCondition::with_changes) {
+                        LOG4CPLUS_TRACE(logger, " ODFare ticket \n");
+
+                        ticket.type = Ticket::ODFare;
+                    }
+                    Label next = next_label(label, ticket, section_key);
+
+                    // we process the OD ticket: case where we'll not use this ticket anymore
+                    if (label.current_type == Ticket::ODFare || ticket.type == Ticket::ODFare) {
+                        try {
+                            Ticket ticket_od;
+                            ticket_od = get_od(next, section_key).get_fare(section_key.date);
+                            if (!label.tickets.empty() && label.current_type == Ticket::ODFare) {
+                                ticket_od.sections = label.tickets.back().sections;
+                            }
+
+                            ticket_od.sections.push_back(section_key);
+                            Label n = next;
+                            n.cost += ticket_od.value;
+                            n.tickets.back() = ticket_od;
+                            n.current_type = Ticket::FlatFare;
+                            LOG4CPLUS_TRACE(logger, "Adding ODFare label to node 0 : \n" << n);
+                            new_labels[0].push_back(n);
+                        } catch (const no_ticket&) {
+                            LOG4CPLUS_TRACE(logger, "Unable to get the OD ticket SA="
+                                                        << next.stop_area << ", zone=" << next.zone
+                                                        << ", section start_zone=" << section_key.start_zone
+                                                        << ", dest_zone=" << section_key.dest_zone
+                                                        << ", start_sa=" << section_key.start_stop_area << ", dest_sa="
+                                                        << section_key.dest_stop_area << ", mode=" << section_key.mode);
+                        }
+                    } else {
+                        if (v != 0) {
+                            LOG4CPLUS_TRACE(logger, "Adding label to node 0 : \n" << next);
+                            new_labels[0].push_back(next);
+                        }
+                    }
+                    LOG4CPLUS_TRACE(logger, "Adding label to node " << v << " {" << g[v] << "} : \n" << next);
+                    new_labels[v].push_back(next);
                 }
             }
         }
-        // exclusive segment, we have to use that ticket
-        catch (const Ticket& ticket) {
-            LOG4CPLUS_TRACE(logger, "\texclusive section for fare");
-            new_labels.clear();
-            new_labels.resize(nb_nodes);
-            for (const Label& label : labels.at(0)) {
-                new_labels.at(0).push_back(next_label(label, ticket, section_key));
-            }
-        }
-        labels = std::move(new_labels);
     }
+    // exclusive segment, we have to use that ticket
+    catch (const Ticket& ticket) {
+        LOG4CPLUS_TRACE(logger, "\texclusive section for fare");
+        new_labels.clear();
+        new_labels.resize(nb_nodes);
+        for (const Label& label : previous_labels.at(0)) {
+            new_labels.at(0).push_back(next_label(label, ticket, section_key));
+        }
+    }
+    return new_labels;
+}
 
+static results find_best_label(const std::vector<std::vector<Label>>& labels, const log4cplus::Logger& logger) {
+    results res;
     // We look for the cheapest label
     // if 2 label have the same cost, we take the one with the least number of tickets
     LOG4CPLUS_DEBUG(logger, "Bests labels : \n");
@@ -262,8 +246,59 @@ results Fare::compute_fare(const routing::Path& path) const {
         }
     }
     LOG4CPLUS_DEBUG(logger, "Result label : \n" << (*best_label));
-
     return res;
+}
+
+results Fare::compute_fare(const routing::Path& path) const {
+    int nb_nodes = boost::num_vertices(g);
+
+    LOG4CPLUS_DEBUG(logger, "Computing fare for journey : \n" << path);
+
+    if (nb_nodes < 2) {
+        LOG4CPLUS_TRACE(logger, "no fare data loaded, cannot compute fare");
+        return {};
+    }
+    std::vector<std::vector<Label>> labels(nb_nodes);
+    // Start label
+    labels[0].push_back(Label());
+    size_t section_idx(0);
+
+    for (const navitia::routing::PathItem& item : path.items) {
+        if (item.type != routing::ItemType::public_transport) {
+            section_idx++;
+            continue;
+        }
+        LOG4CPLUS_TRACE(logger, "In section " << section_idx << " : \n" << item);
+        SectionKey section_key(item, section_idx++);
+
+        labels = compute_labels(nb_nodes, labels, section_key);
+    }
+
+    return find_best_label(labels, logger);
+}
+
+results Fare::compute_fare(const pbnavitia::PtFaresRequest::PtJourney& pt_journey, const type::Data& data) const {
+    size_t nb_nodes = boost::num_vertices(g);
+
+    if (nb_nodes < 2) {
+        LOG4CPLUS_TRACE(logger, "no fare data loaded, cannot compute fare");
+        return {};
+    }
+    std::vector<std::vector<Label>> labels(nb_nodes);
+    // Start label
+    labels[0].emplace_back();
+
+    for (const auto& s : pt_journey.pt_sections()) {
+        const auto& first_sp_uri = s.first_stop_point_uri();
+        const auto& last_sp_uri = s.last_stop_point_uri();
+        const auto* first_stop_point = data.pt_data->stop_points_map.find(first_sp_uri)->second;
+        const auto* last_stop_point = data.pt_data->stop_points_map.find(last_sp_uri)->second;
+        SectionKey section_key{s, *first_stop_point, *last_stop_point};
+
+        labels = compute_labels(nb_nodes, labels, section_key);
+    }
+
+    return find_best_label(labels, logger);
 }
 
 void DateTicket::add(boost::gregorian::date begin, boost::gregorian::date end, const Ticket& ticket) {
@@ -286,6 +321,27 @@ SectionKey::SectionKey(const routing::PathItem& path_item, const size_t idx) : p
     dest_zone = last_sp->fare_zone;
     mode = vj->physical_mode->uri;
 }
+
+SectionKey::SectionKey(const pbnavitia::PtFaresRequest::PtSection& section,
+                       const type::StopPoint& first_stop_point,
+                       const type::StopPoint& last_stop_point)
+    : network(section.network_uri()),
+      start_stop_area(section.start_stop_area_uri()),
+      dest_stop_area(section.end_stop_area_uri()),
+      line(section.line_uri()),
+      start_zone(first_stop_point.fare_zone),
+      dest_zone(last_stop_point.fare_zone),
+      mode(section.physical_mode()),
+      section_id(section.id())
+
+{
+    auto begin_date_time = boost::posix_time::from_time_t(section.begin_date_time());
+    date = begin_date_time.date();
+    start_time = begin_date_time.time_of_day().total_seconds();
+
+    auto end_date_time = boost::posix_time::from_time_t(section.end_date_time());
+    dest_time = end_date_time.time_of_day().total_seconds();
+};
 
 template <class T>
 bool compare(const T& a, const T& b, Comp_e comp) {

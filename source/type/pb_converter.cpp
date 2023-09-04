@@ -1865,7 +1865,10 @@ void PbCreator::fill_co2_emission(pbnavitia::Section* pb_section, const type::Ve
 
 void PbCreator::fill_fare_section(pbnavitia::Journey* pb_journey, const fare::results& fare) {
     auto pb_fare = pb_journey->mutable_fare();
+    fill_fare(pb_fare, pb_journey, fare);
+}
 
+void PbCreator::fill_fare(pbnavitia::Fare* pb_fare, pbnavitia::Journey* pb_journey, const fare::results& fare) {
     size_t cpt_ticket = response.tickets_size();
 
     boost::optional<std::string> currency;
@@ -1903,9 +1906,13 @@ void PbCreator::fill_fare_section(pbnavitia::Journey* pb_journey, const fare::re
             pb_fare->add_ticket_id(pb_ticket->id());
         }
 
-        for (auto section : ticket.sections) {
-            auto section_id = get_section_id(pb_journey, section.path_item_idx);
-            pb_ticket->add_section_id(section_id);
+        for (const auto& section : ticket.sections) {
+            if (section.section_id) {
+                pb_ticket->add_section_id(*section.section_id);
+            } else if (pb_journey) {
+                auto section_id = get_section_id(pb_journey, section.path_item_idx);
+                pb_ticket->add_section_id(section_id);
+            }
         }
     }
     pb_fare->mutable_total()->set_value(fare.total.value);
@@ -2340,6 +2347,10 @@ pbnavitia::VehiclePosition* PbCreator::add_vehicle_positions() {
 
 pbnavitia::AccessPoint* PbCreator::add_access_points() {
     return response.add_access_points();
+}
+
+pbnavitia::PtJourneyFare* PbCreator::add_pt_journey_fares() {
+    return response.add_pt_journey_fares();
 }
 
 bool PbCreator::has_error() {

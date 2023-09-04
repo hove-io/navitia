@@ -37,6 +37,7 @@ www.navitia.io
 #include "equipment/equipment_api.h"
 #include "access_point/access_point_api.h"
 #include "position/position_api.h"
+#include "fare/fare_api.h"
 #include "proximity_list/proximitylist_api.h"
 #include "ptreferential/ptreferential.h"
 #include "ptreferential/ptreferential_api.h"
@@ -1188,6 +1189,9 @@ void Worker::dispatch(const pbnavitia::Request& request,
         case pbnavitia::access_points:
             access_points(request.access_points());
             break;
+        case pbnavitia::pt_fares:
+            fares(request.pt_fares());
+            break;
         default:
             LOG4CPLUS_WARN(logger, "Unknown API : " + API_Name(request.requested_api()));
             this->pb_creator.fill_pb_error(pbnavitia::Error::unknown_api, "Unknown API");
@@ -1277,6 +1281,10 @@ void Worker::access_points(const pbnavitia::AccessPointsRequest& access_points) 
 
     access_point::access_points(this->pb_creator, access_points.filter(), access_points.count(), access_points.depth(),
                                 access_points.start_page(), forbidden_uris);
+}
+
+void Worker::fares(const pbnavitia::PtFaresRequest& fares) {
+    navitia::fare::fill_fares(pb_creator, fares);
 }
 
 }  // namespace navitia
