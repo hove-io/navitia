@@ -571,7 +571,38 @@ class TestDistributedTimeFrameDuration(JourneysTimeFrameDuration, NewDefaultScen
 
 @config({"scenario": "distributed"})
 class TestDistributedJourneyTickets(JourneysTickets, NewDefaultScenarioAbstractTestFixture):
-    pass
+    def test_journey_tickets_pt_journey_fare(self):
+        """
+        test tickets with pt_journey_fare
+        in the first request, we will obtain a journey with default tickets,
+        in the second request, we activate _pt_journey_fare and we will obtain a journey with the same tickets that should
+        appear twice
+        """
+        query = 'journeys?from=2.39592;48.84838&to=2.36381;48.86750&datetime=20180309T080000'
+        response = self.query_region(query)
+        self.is_valid_journey_response(response, query)
+
+        # Tickets
+        default_tickets = response['tickets']
+        assert len(default_tickets) == 2
+        assert default_tickets[0]['name'] == 'A-Ticket name'
+        assert default_tickets[0]['source_id'] == 'A-Ticket'
+        assert default_tickets[0]['comment'] == 'A-Ticket comment'
+        assert default_tickets[1]['name'] == 'B-Ticket name'
+        assert default_tickets[1]['source_id'] == 'B-Ticket'
+        assert default_tickets[1]['comment'] == 'B-Ticket comment'
+        # Links between journeys.fare and journeys.tickets
+        assert default_tickets[0]['id'] == response['journeys'][1]['fare']['links'][0]['id']
+        assert default_tickets[1]['id'] == response['journeys'][0]['fare']['links'][0]['id']
+
+        query_pt_journey_fare = query + "&_pt_journey_fare=kraken&_compute_pt_journey_fare=true"
+        response = self.query_region(query_pt_journey_fare)
+
+        new_tickets = response['tickets']
+        # for each ticket in default_tickets, the ticket should be found twice in new_tickets
+        for ticket in default_tickets:
+            count = sum(int(ticket == new_ticket) for new_ticket in new_tickets)
+            assert count == 2
 
 
 @config({"scenario": "distributed"})
