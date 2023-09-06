@@ -67,6 +67,7 @@ class BssProviderManager(AbstractProviderManager):
         self._last_update = datetime.datetime.utcnow()
 
         try:
+            # BSS provider list form the database (table bss_provider)
             providers = self._providers_getter()
         except Exception as e:
             logger.exception('No access to table bss_provider (error: {})'.format(e))
@@ -119,3 +120,7 @@ class BssProviderManager(AbstractProviderManager):
 
     def get_providers(self):
         return self._get_providers()
+
+    def exist_provider(self):
+        self.update_config()
+        return any((self._bss_providers.values(), self._bss_providers_legacy))

@@ -83,6 +83,15 @@ class ManageParkingPlaces(object):
                         'Error while handling BSS realtime availability',
                     )
 
+                if show_bss_stands and instance and instance.bss_provider_manager.exist_provider():
+                    _handle(
+                        response,
+                        instance.bss_provider_manager,
+                        self.attribute,
+                        self.logger,
+                        'Error while handling BSS realtime availability',
+                    )
+
                 if show_car_park and instance and instance.car_park_provider:
                     _handle(
                         response,
