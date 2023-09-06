@@ -98,7 +98,7 @@ class FakeInstance(Instance):
 def test_get_departure_olympic_site_params():
     osp = OlympicSiteParamsManager("", "idfm")
     osp.olympic_site_params = default_olympic_site_params
-    default_scenario = osp.get_departure_olympic_site_params("poi:BCD")
+    default_scenario = osp.get_dict_scenario("poi:BCD", "departure")
     attractivity_virtual_fallback = default_scenario["stop_point:463685"]
     assert attractivity_virtual_fallback.attractivity == 1
     assert attractivity_virtual_fallback.virtual_duration == 10
@@ -107,7 +107,7 @@ def test_get_departure_olympic_site_params():
     assert attractivity_virtual_fallback.attractivity == 3
     assert attractivity_virtual_fallback.virtual_duration == 150
 
-    default_scenario = osp.get_departure_olympic_site_params("poi:EFG")
+    default_scenario = osp.get_dict_scenario("poi:EFG", "departure")
     attractivity_virtual_fallback = default_scenario["stop_point:463685"]
     assert attractivity_virtual_fallback.attractivity == 11
     assert attractivity_virtual_fallback.virtual_duration == 100
@@ -120,7 +120,7 @@ def test_get_departure_olympic_site_params():
 def test_get_arrival_olympic_site_params():
     osp = OlympicSiteParamsManager("", "idfm")
     osp.olympic_site_params = default_olympic_site_params
-    default_scenario = osp.get_arrival_olympic_site_params("poi:BCD")
+    default_scenario = osp.get_dict_scenario("poi:BCD", "arrival")
     attractivity_virtual_fallback = default_scenario["stop_point:463685"]
     assert attractivity_virtual_fallback.attractivity == 1
     assert attractivity_virtual_fallback.virtual_duration == 10
@@ -129,7 +129,7 @@ def test_get_arrival_olympic_site_params():
     assert attractivity_virtual_fallback.attractivity == 3
     assert attractivity_virtual_fallback.virtual_duration == 150
 
-    default_scenario = osp.get_arrival_olympic_site_params("poi:EFG")
+    default_scenario = osp.get_dict_scenario("poi:EFG", "arrival")
     attractivity_virtual_fallback = default_scenario["stop_point:463685"]
     assert attractivity_virtual_fallback.attractivity == 12
     assert attractivity_virtual_fallback.virtual_duration == 99
@@ -282,5 +282,5 @@ def test_get_olympic_site_params_departure_and_arrival_poi_jo():
 
 def test_build_olympic_site_params_empty_scenario():
     osp = OlympicSiteParamsManager("", "idfm")
-    res = osp.build_olympic_site_params(None, {})
+    res = osp.get_dict_scenario(None, {})
     assert not res

@@ -27,7 +27,6 @@
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 
-from __future__ import absolute_import, print_function, unicode_literals, division
 import os
 import logging
 import json
@@ -40,31 +39,43 @@ AttractivityVirtualFallback = namedtuple("AttractivityVirtualFallback", "attract
 
 class OlympicSiteParamsManager:
     def __init__(self, file_path, instance_name):
-        # {"poi:BCD":{"departure":"default","arrival":"default",
-        # "scenarios":{"default":{"stop_point:463685":{"attractivity":1,"virtual_fallback":10},
-        # "stop_point:463686":{"attractivity":3,"virtual_fallback":150}}}}}
+        """
+        {
+          "poi:BCD": {
+            "departure": "default",
+            "arrival": "default",
+            "scenarios": {
+              "default": {
+                "stop_point:463685": {
+                  "attractivity": 1,
+                  "virtual_fallback": 10
+                },
+                "stop_point:463686": {
+                  "attractivity": 3,
+                  "virtual_fallback": 150
+                }
+              }
+            }
+          }
+        }
+        """
         self.olympic_site_params = dict()
         self.load_olympic_site_params(file_path, instance_name)
 
     def build_olympic_site_params(self, scenario, data):
         if not scenario:
+            logging.getLogger(__name__).warning("Impossible to build olympic_site_params: Empty scenario")
             return {}
         return {
             spt_id: AttractivityVirtualFallback(d["attractivity"], d["virtual_fallback"])
             for spt_id, d in data.get("scenarios", {}).get(scenario, {}).items()
         }
 
-    def get_departure_olympic_site_params(self, poi_uri):
+    def get_dict_scenario(self, poi_uri, key):
         data = self.olympic_site_params.get(poi_uri)
         if not data:
             return {}
-        return self.build_olympic_site_params(data.get("departure"), data)
-
-    def get_arrival_olympic_site_params(self, poi_uri):
-        data = self.olympic_site_params.get(poi_uri)
-        if not data:
-            return {}
-        return self.build_olympic_site_params(data.get("arrival"), data)
+        return self.build_olympic_site_params(data.get(key), data)
 
     def load_olympic_site_params(self, file_path, instance_name):
         logger = logging.getLogger(__name__)
@@ -110,12 +121,10 @@ class OlympicSiteParamsManager:
             origin_olympic_site = None
 
         departure_olympic_site_params = (
-            self.get_departure_olympic_site_params(origin_olympic_site.uri) if origin_olympic_site else {}
+            self.get_dict_scenario(origin_olympic_site.uri, "departure") if origin_olympic_site else {}
         )
         arrival_olympic_site_params = (
-            self.get_arrival_olympic_site_params(destination_olympic_site.uri)
-            if destination_olympic_site
-            else {}
+            self.get_dict_scenario(destination_olympic_site.uri, "arrival") if destination_olympic_site else {}
         )
 
         if departure_olympic_site_params:
