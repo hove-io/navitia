@@ -430,6 +430,7 @@ class FakeInstance(Instance):
             instance_equipment_providers=[],
             streetnetwork_backend_manager=StreetNetworkBackendManager(),
             external_service_provider_configurations=[],
+            pt_journey_fare_configurations={},
         )
 
 
