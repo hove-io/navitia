@@ -36,14 +36,14 @@ from mock import MagicMock
 
 poi = {
     'poi_type': {'name': 'station vls', 'id': 'poi_type:amenity:bicycle_rental'},
-    'coord': {'lat': '48.0981147', 'lon': '-1.6552921'}
+    'coord': {'lat': '48.0981147', 'lon': '-1.6552921'},
 }
 
 BSS_PROVIDER = [
     {
-      "id": "forseti_stations",
-      "class": "jormungandr.parking_space_availability.bss.forseti.ForsetiProvider",
-      "args": {"service_url": "https://gbfs-station.forseti.sbx.aws.private/stations", "timeout": 20},
+        "id": "forseti_stations",
+        "class": "jormungandr.parking_space_availability.bss.forseti.ForsetiProvider",
+        "args": {"service_url": "https://gbfs-station.forseti.sbx.aws.private/stations", "timeout": 20},
     }
   ]
 
