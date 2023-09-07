@@ -40,6 +40,7 @@ from datetime import datetime, time
 from navitiacommon.ratelimit import RateLimiter, FakeRateLimiter
 from jormungandr.utils import PY3
 import six
+from jormungandr import new_relic
 
 
 def _to_duration(hour_str):
@@ -133,6 +134,7 @@ class Timeo(RealtimeProxy):
     def _is_valid_direction(self, direction_uri, passage_direction_uri):
         return direction_uri == passage_direction_uri
 
+    @new_relic.distributedEvent("call_timeo", "timeo")
     @cache.memoize(app.config.get(str('CACHE_CONFIGURATION'), {}).get(str('TIMEOUT_TIMEO'), 60))
     def _call_timeo(self, url):
         """

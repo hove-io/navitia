@@ -39,7 +39,7 @@ import pytz
 import logging
 import pybreaker
 import requests as requests
-from jormungandr import cache, app
+from jormungandr import cache, app, new_relic
 from datetime import datetime
 from navitiacommon.ratelimit import RateLimiter, FakeRateLimiter
 from navitiacommon import type_pb2
@@ -141,6 +141,7 @@ class Synthese(RealtimeProxy):
         except:
             return self.rt_system_id
 
+    @new_relic.distributedEvent("call_synthese", "synthese")
     @cache.memoize(app.config.get(str('CACHE_CONFIGURATION'), {}).get(str('TIMEOUT_SYNTHESE'), 30))
     def _call_synthese(self, url):
         """

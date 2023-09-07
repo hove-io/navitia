@@ -34,7 +34,7 @@ import logging
 import pybreaker
 import pytz
 import requests as requests
-from jormungandr import cache, app
+from jormungandr import cache, app, new_relic
 from jormungandr.schedule import RealTimePassage
 from jormungandr.utils import PY3
 from datetime import datetime
@@ -99,6 +99,7 @@ class Cleverage(RealtimeProxy):
         except:
             return self.rt_system_id
 
+    @new_relic.distributedEvent("call_cleverage", "cleverage")
     @cache.memoize(app.config['CACHE_CONFIGURATION'].get('TIMEOUT_CLEVERAGE', 30))
     def _call_cleverage(self, url):
         """
