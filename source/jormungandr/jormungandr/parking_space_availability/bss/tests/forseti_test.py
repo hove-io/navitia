@@ -45,7 +45,7 @@ BSS_PROVIDER = [
         "class": "jormungandr.parking_space_availability.bss.forseti.ForsetiProvider",
         "args": {"service_url": "https://gbfs-station.forseti.sbx.aws.private/stations", "timeout": 20},
     }
-  ]
+]
 
 
 def parking_space_availability_forseti_support_poi_test():
