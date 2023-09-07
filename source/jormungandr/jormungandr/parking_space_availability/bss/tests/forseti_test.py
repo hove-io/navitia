@@ -43,10 +43,7 @@ BSS_PROVIDER = [
     {
       "id": "forseti_stations",
       "class": "jormungandr.parking_space_availability.bss.forseti.ForsetiProvider",
-      "args": {
-          "service_url": "https://gbfs-station.forseti.sbx.aws.private/stations",
-          "timeout": 20
-      }
+      "args": {"service_url": "https://gbfs-station.forseti.sbx.aws.private/stations", "timeout": 20},
     }
   ]
 
@@ -67,29 +64,13 @@ def parking_space_availability_forseti_get_informations_test():
             {
                 "id": "TAN:Station:18",
                 "name": "018-VIARME",
-                "coord": {
-                    "lat": 48.0981147,
-                    "lon": -1.6552921
-                },
-                "vehicles": [
-                    {
-                        "type": "bicycle",
-                        "count": 9
-                    }
-                ],
-                "docks": {
-                    "available": 4,
-                    "total": 13
-                },
-                "status": "OPEN"
+                "coord": {"lat": 48.0981147, "lon": -1.6552921},
+                "vehicles": [{"type": "bicycle", "count": 9}],
+                "docks": {"available": 4, "total": 13},
+                "status": "OPEN",
             }
         ],
-        "pagination": {
-            "start_page": 0,
-            "items_on_page": 2,
-            "items_per_page": 25,
-            "total_result": 2
-        }
+        "pagination": {"start_page": 0, "items_on_page": 2, "items_per_page": 25, "total_result": 2},
     }
 
     provider = ForsetiProvider('http://forseti')

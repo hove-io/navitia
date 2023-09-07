@@ -38,7 +38,12 @@ from jormungandr.parking_space_availability.bss.stands import Stands, StandsStat
 from jormungandr.parking_space_availability.bss.common_bss_provider import CommonBssProvider, BssProxyError
 import six
 
-DEFAULT_FORSETI_FEED_PUBLISHER = {'id': 'forseti', 'name': 'forseti', 'license': 'Private', 'url': 'www.forseti.fr'}
+DEFAULT_FORSETI_FEED_PUBLISHER = {
+    'id': 'forseti',
+    'name': 'forseti',
+    'license': 'Private',
+    'url': 'www.forseti.fr',
+}
 
 
 class ForsetiProvider(CommonBssProvider):
