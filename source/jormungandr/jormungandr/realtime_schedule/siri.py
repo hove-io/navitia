@@ -33,7 +33,7 @@ from __future__ import absolute_import, print_function, unicode_literals, divisi
 import logging
 import pybreaker
 import requests as requests
-from jormungandr import cache, app, new_relic
+from jormungandr import cache, app
 from jormungandr.realtime_schedule.realtime_proxy import RealtimeProxy, RealtimeProxyError, floor_datetime
 from jormungandr.utils import PY3
 from jormungandr.schedule import RealTimePassage
@@ -261,7 +261,6 @@ class Siri(RealtimeProxy):
 
         return next_passages
 
-    @new_relic.distributedEvent("call_siri", "siri")
     @cache.memoize(app.config.get(str('CACHE_CONFIGURATION'), {}).get(str('TIMEOUT_SIRI'), 60))
     def _call_siri(self, request):
         encoded_request = request.encode('utf-8', 'backslashreplace')

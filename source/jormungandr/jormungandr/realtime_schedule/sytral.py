@@ -39,7 +39,6 @@ from jormungandr import cache, app
 from jormungandr.schedule import RealTimePassage
 import aniso8601
 import six
-from jormungandr import new_relic
 
 
 class Sytral(RealtimeProxy):
@@ -112,7 +111,6 @@ class Sytral(RealtimeProxy):
     def _is_valid_direction(self, direction_uri, passage_direction_uri):
         return direction_uri == passage_direction_uri
 
-    @new_relic.distributedEvent("call_sytral", "sytral")
     @cache.memoize(app.config['CACHE_CONFIGURATION'].get('TIMEOUT_SYTRAL', 30))
     def _call(self, params):
         """

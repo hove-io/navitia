@@ -35,7 +35,7 @@ import logging
 import pybreaker
 import pytz
 import requests as requests
-from jormungandr import cache, app, new_relic
+from jormungandr import cache, app
 from jormungandr.schedule import RealTimePassage
 from datetime import datetime
 import six
@@ -74,7 +74,6 @@ class SiriLite(RealtimeProxy):
         except:
             return self.rt_system_id
 
-    @new_relic.distributedEvent("call_sirilite", "sirilite")
     @cache.memoize(app.config['CACHE_CONFIGURATION'].get('TIMEOUT_SIRILITE', 30))
     def _call(self, url):
         self.log.debug('sirilite RT service, call url: {}'.format(url))

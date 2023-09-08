@@ -56,7 +56,7 @@ class FreeFloatingProvider(AbstractExternalService):
         """
         Get free-floating information from Forseti webservice
         """
-        raw_response = self._call_webservice(arguments)
+        raw_response = self._call_webservice(self, arguments)
 
         return self.response_marshaller(raw_response, arguments)
 
