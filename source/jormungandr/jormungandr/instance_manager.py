@@ -158,18 +158,6 @@ class InstanceManager(object):
         if self.start_ping:
             gevent.spawn(self.thread_ping)
 
-    def _clear_cache(self):
-        logging.getLogger(__name__).info('clear cache')
-        try:
-            cache.delete_memoized(self._exists_id_in_instance)
-        except:
-            # if there is an error with cache, flask want to access to the app, this will fail at startup
-            # with a "working outside of application context"
-            # redis timeout also raise an exception: redis.exceptions.TimeoutError
-            # each backend has it's own exceptions, so we catch everything :(
-            logger = logging.getLogger(__name__)
-            logger.exception('there seem to be some kind of problems with the cache')
-
     def get_instance_scenario_name(self, instance_name, override_scenario):
         if override_scenario:
             return override_scenario
@@ -189,11 +177,8 @@ class InstanceManager(object):
         if not hasattr(scenario, api) or not callable(getattr(scenario, api)):
             raise ApiNotFound(api)
 
-        publication_date = instance.publication_date
         api_func = getattr(scenario, api)
         resp = api_func(arguments, instance)
-        if instance.publication_date != publication_date:
-            self._clear_cache()
         return resp
 
     def init_kraken_instances(self):
@@ -201,17 +186,11 @@ class InstanceManager(object):
         Call all kraken instances (as found in the instances dir) and store it's metadata
         """
         futures = []
-        purge_cache_needed = False
         for instance in self.instances.values():
             if not instance.is_initialized:
                 futures.append(gevent.spawn(instance.init))
 
         gevent.wait(futures)
-        for future in futures:
-            # we check if an instance needs the cache to be purged
-            if future.get():
-                self._clear_cache()
-                break
 
     def thread_ping(self, timer=10):
         """
@@ -256,7 +235,7 @@ class InstanceManager(object):
     def _all_keys_of_id_in_instances(self, instances, object_id):
         valid_instances = []
         for instance in instances:
-            if self._exists_id_in_instance(instance, object_id):
+            if self._exists_id_in_instance(instance.name, instance.publication_date, object_id):
                 valid_instances.append(instance)
         if not valid_instances:
             raise RegionNotFound(object_id=object_id)
@@ -264,7 +243,8 @@ class InstanceManager(object):
         return valid_instances
 
     @cache.memoize(app.config[str('CACHE_CONFIGURATION')].get(str('TIMEOUT_PTOBJECTS'), None))
-    def _exists_id_in_instance(self, instance, object_id):
+    def _exists_id_in_instance(self, instance_name, instance_publication_date, object_id):
+        instance = self.instances[instance_name]
         return instance.has_id(object_id)
 
     def _all_keys_of_coord_in_instances(self, instances, lon, lat):
