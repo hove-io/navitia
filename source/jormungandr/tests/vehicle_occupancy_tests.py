@@ -96,7 +96,6 @@ mock_requests = MockRequests(
         '{}?{}'.format(
             url,
             urlencode({"vehicle_journey_code[]": "vehicle_journey:C:vj1", "stop_point_code[]": "C:S0"}),
-            doseq=True,
         ): (
             RESP_1,
             200,
@@ -104,38 +103,9 @@ mock_requests = MockRequests(
         '{}?{}'.format(
             url,
             urlencode({"vehicle_journey_code[]": "vehicle_journey:M:14", "stop_point_code[]": "S11"}),
-            doseq=True,
         ): (
             RESP_2,
             200,
-        ),
-        '{}?{}'.format(
-            url,
-            urlencode(
-                {"vehicle_journey_code[]": "vehicle_journey:vjP:1:modified:0:bib", "stop_point_code[]": "stopP2"}
-            ),
-            doseq=True,
-        ): (
-            RESP_3,
-            200,
-        ),
-        '{}?{}'.format(
-            url,
-            urlencode(
-                {"vehicle_journey_code[]": "vehicle_journey:vjQ:1:modified:0:Q", "stop_point_code[]": "stopQ2"}
-            ),
-            doseq=True,
-        ): (
-            RESP_4,
-            200,
-        ),
-        '{}?{}'.format(
-            url,
-            urlencode({"vehicle_journey_code[]": "vehicle_journey:vj:freq", "stop_point_code[]": "stopf1"}),
-            doseq=True,
-        ): (
-            RESP_5,
-            503,
         ),
     }
 )
@@ -168,43 +138,90 @@ class TestOccupancy(AbstractTestFixture):
             stop_schedules = response['stop_schedules'][0]['date_times']
             assert len(stop_schedules) == 1
             assert stop_schedules[0]['occupancy'] == "STANDING_ROOM_ONLY"
-
-    def test_occupancy_empty_vehicle(self):
-        query = self.query_template_scs.format(
-            sp='S11', dt='20160101T080000', data_freshness='&data_freshness=realtime'
-        )
-        with mock.patch('requests.get', mock_requests.get):
-            response = self.query_region(query)
-            stop_schedules = response['stop_schedules'][0]['date_times']
-            assert len(stop_schedules) == 1
-            assert stop_schedules[0]['occupancy'] == "EMPTY"
-
-    # def test_occupancy_empty_list_occupancies(self):
+    #
+    # def test_occupancy_empty_vehicle(self):
     #     query = self.query_template_scs.format(
-    #         sp='stopP2', dt='20160103T100000', data_freshness='&data_freshness=realtime'
+    #         sp='S11', dt='20160101T080000', data_freshness='&data_freshness=realtime'
     #     )
     #     with mock.patch('requests.get', mock_requests.get):
     #         response = self.query_region(query)
-    #         date_times = response['stop_schedules'][0]['date_times']
-    #         assert len(date_times) == 1
-    #         assert "occupancy" not in date_times[0]
+    #         stop_schedules = response['stop_schedules'][0]['date_times']
+    #         assert len(stop_schedules) == 1
+    #         assert stop_schedules[0]['occupancy'] == "EMPTY"
+
+    def test_occupancy_empty_list_occupancies(self):
+        query = self.query_template_scs.format(
+            sp='stopP2', dt='20160103T100000', data_freshness='&data_freshness=realtime'
+        )
+        response = self.query_region('vehicle_journeys?headsign=vjP:1')
+        vehicle_journeys = response["vehicle_journeys"]
+        assert len(vehicle_journeys) == 2
+        realtime_vj = next(
+            (vj for vj in vehicle_journeys if vj["id"].startswith("vehicle_journey:vjP:1:RealTime:")), None
+        )
+        assert realtime_vj
+
+        m_requests = {
+            '{}?{}'.format(
+                url,
+                urlencode({"vehicle_journey_code[]": realtime_vj["id"], "stop_point_code[]": "stopP2"}),
+            ): (
+                RESP_3,
+                200,
+            )
+        }
+
+        with mock.patch('requests.get', m_requests.get):
+            response = self.query_region(query)
+            date_times = response['stop_schedules'][0]['date_times']
+            assert len(date_times) == 1
+            assert "occupancy" not in date_times[0]
 
     def test_occupancy_empty_list_occupancies_on_error(self):
         # Test on response = None
-        # query = self.query_template_scs.format(
-        #     sp='stopQ2', dt='20160103T100000', data_freshness='&data_freshness=realtime'
-        # )
-        # with mock.patch('requests.get', mock_requests.get):
-        #     response = self.query_region(query)
-        #     date_times = response['stop_schedules'][0]['date_times']
-        #     assert len(date_times) == 1
-        #     assert "occupancy" not in date_times[0]
+        response = self.query_region('vehicle_journeys?headsign=vjQ:1')
+        vehicle_journeys = response["vehicle_journeys"]
+        assert len(vehicle_journeys) == 2
+        realtime_vj = next(
+            (vj for vj in vehicle_journeys if vj["id"].startswith("vehicle_journey:vjQ:1:RealTime:")), None
+        )
+        assert realtime_vj
+
+        m_requests = {
+            '{}?{}'.format(
+                url,
+                urlencode(
+                    {
+                        "vehicle_journey_code[]": "vehicle_journey:vjQ:1:modified:0:Q",
+                        "stop_point_code[]": "stopQ2",
+                    }
+                ),
+            ): (
+                RESP_4,
+                200,
+            ),
+            '{}?{}'.format(
+                url,
+                urlencode({"vehicle_journey_code[]": "vehicle_journey:vj:freq", "stop_point_code[]": "stopf1"}),
+            ): (
+                RESP_5,
+                503,
+            ),
+        }
+        query = self.query_template_scs.format(
+            sp='stopQ2', dt='20160103T100000', data_freshness='&data_freshness=realtime'
+        )
+        with mock.patch('requests.get', m_requests.get):
+            response = self.query_region(query)
+            date_times = response['stop_schedules'][0]['date_times']
+            assert len(date_times) == 1
+            assert "occupancy" not in date_times[0]
 
         # Test on response.status_code = 503
         query = self.query_template_scs.format(
             sp='stopf1', dt='20160103T100000', data_freshness='&data_freshness=realtime'
         )
-        with mock.patch('requests.get', mock_requests.get):
+        with mock.patch('requests.get', m_requests.get):
             response = self.query_region(query)
             date_times = response['stop_schedules'][0]['date_times']
             assert len(date_times) == 3

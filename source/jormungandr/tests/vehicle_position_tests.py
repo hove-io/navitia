@@ -87,15 +87,15 @@ class TestVehiclePosition(AbstractTestFixture):
         url = "http://wtf/vehicle_positions"
         mock_requests = MockRequests(
             {
-                '{}?{}'.format(url, urlencode({"vehicle_journey_code[]": "vj:l:11"}), doseq=True): (
+                '{}?{}'.format(url, urlencode({"vehicle_journey_code[]": "vj:l:11"})): (
                     RESP_VJ_11,
                     200,
                 ),
-                '{}?{}'.format(url, urlencode({"vehicle_journey_code[]": "vj:l:12"}), doseq=True): (
+                '{}?{}'.format(url, urlencode({"vehicle_journey_code[]": "vj:l:12"})): (
                     RESP_VJ_12,
                     200,
                 ),
-                '{}?{}'.format(url, urlencode({"vehicle_journey_code[]": "vj:l:13"}), doseq=True): (
+                '{}?{}'.format(url, urlencode({"vehicle_journey_code[]": "vj:l:13"})): (
                     RESP_VJ_13,
                     200,
                 ),
