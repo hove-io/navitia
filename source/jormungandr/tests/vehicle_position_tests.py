@@ -55,17 +55,17 @@ MOCKED_INSTANCE_CONF = {
 RESP_VJ_11 = {"vehicle_positions": [{"latitude": 46.0, "longitude": -71.0, "bearing": 214, "speed": 11}]}
 
 RESP_VJ_12 = {
-                "vehicle_positions": [
-                     {
-                         "latitude": 45.0,
-                         "longitude": -72.0,
-                         "bearing": 215,
-                         "speed": 12,
-                         "occupancy": "EMPTY",
-                         "feed_created_at": "2022-01-28T11:51:52Z",
-                     }
-                 ]
-             }
+    "vehicle_positions": [
+        {
+            "latitude": 45.0,
+            "longitude": -72.0,
+            "bearing": 215,
+            "speed": 12,
+            "occupancy": "EMPTY",
+            "feed_created_at": "2022-01-28T11:51:52Z",
+        }
+    ]
+}
 
 RESP_VJ_13 = {
     "vehicle_positions": [
@@ -87,9 +87,18 @@ class TestVehiclePosition(AbstractTestFixture):
         url = "http://wtf/vehicle_positions"
         mock_requests = MockRequests(
             {
-                '{}?{}'.format(url, urlencode({"vehicle_journey_code[]": "vj:l:11"}), doseq=True): (RESP_VJ_11, 200,),
-                '{}?{}'.format(url, urlencode({"vehicle_journey_code[]": "vj:l:12"}), doseq=True): (RESP_VJ_12, 200,),
-                '{}?{}'.format(url, urlencode({"vehicle_journey_code[]": "vj:l:13"}), doseq=True): (RESP_VJ_13, 200,)
+                '{}?{}'.format(url, urlencode({"vehicle_journey_code[]": "vj:l:11"}), doseq=True): (
+                    RESP_VJ_11,
+                    200,
+                ),
+                '{}?{}'.format(url, urlencode({"vehicle_journey_code[]": "vj:l:12"}), doseq=True): (
+                    RESP_VJ_12,
+                    200,
+                ),
+                '{}?{}'.format(url, urlencode({"vehicle_journey_code[]": "vj:l:13"}), doseq=True): (
+                    RESP_VJ_13,
+                    200,
+                ),
             }
         )
 

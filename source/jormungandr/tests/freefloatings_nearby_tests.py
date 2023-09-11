@@ -114,11 +114,10 @@ class TestFreeFloating(AbstractTestFixture):
 
         mock_requests = MockRequests(
             {
-                'http://wtf/free_floatings?type%5B%5D=None&distance=500&count=5&coord=2.37715%3B48.846781&start_page=1':
-                    (
-                        FREE_FLOATINGS_RESPONSE,
-                        200,
-                    )
+                'http://wtf/free_floatings?type%5B%5D=None&distance=500&count=5&coord=2.37715%3B48.846781&start_page=1': (
+                    FREE_FLOATINGS_RESPONSE,
+                    200,
+                )
             }
         )
 
