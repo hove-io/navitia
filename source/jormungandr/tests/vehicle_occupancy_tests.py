@@ -128,16 +128,15 @@ class TestOccupancy(AbstractTestFixture):
             assert len(stop_schedules) == 1
             assert stop_schedules[0]['occupancy'] == "STANDING_ROOM_ONLY"
 
-    #
-    # def test_occupancy_empty_vehicle(self):
-    #     query = self.query_template_scs.format(
-    #         sp='S11', dt='20160101T080000', data_freshness='&data_freshness=realtime'
-    #     )
-    #     with mock.patch('requests.get', mock_requests.get):
-    #         response = self.query_region(query)
-    #         stop_schedules = response['stop_schedules'][0]['date_times']
-    #         assert len(stop_schedules) == 1
-    #         assert stop_schedules[0]['occupancy'] == "EMPTY"
+    def test_occupancy_empty_vehicle(self):
+        query = self.query_template_scs.format(
+            sp='S11', dt='20160101T080000', data_freshness='&data_freshness=realtime'
+        )
+        with mock.patch('requests.get', mock_requests.get):
+            response = self.query_region(query)
+            stop_schedules = response['stop_schedules'][0]['date_times']
+            assert len(stop_schedules) == 1
+            assert stop_schedules[0]['occupancy'] == "EMPTY"
 
     def test_occupancy_empty_list_occupancies(self):
         query = self.query_template_scs.format(
