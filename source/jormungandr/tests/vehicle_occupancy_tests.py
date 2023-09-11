@@ -53,17 +53,6 @@ MOCKED_INSTANCE_CONF = {
     },
 }
 
-VEHICLE_OCCUPANCIES_RESPONSE = {
-    "vehicle_occupancies": [
-        {
-            "vehiclejourney_id": "vehicle_journey:0:123714928-1",
-            "stop_id": "stop_point:0:SP:80:4165",
-            "date_time": "2021-03-03T08:56:00+01:00",
-            "occupancy": "STANDING_ROOM_ONLY",
-        }
-    ]
-}
-
 RESP_1 = {
     "vehicle_occupancies": [
         {
@@ -162,15 +151,17 @@ class TestOccupancy(AbstractTestFixture):
         )
         assert realtime_vj
 
-        m_requests = {
-            '{}?{}'.format(
-                url,
-                urlencode({"vehicle_journey_code[]": realtime_vj["id"], "stop_point_code[]": "stopP2"}),
-            ): (
-                RESP_3,
-                200,
-            )
-        }
+        m_requests = MockRequests(
+            {
+                '{}?{}'.format(
+                    url,
+                    urlencode({"vehicle_journey_code[]": realtime_vj["id"], "stop_point_code[]": "stopP2"}),
+                ): (
+                    RESP_3,
+                    200,
+                )
+            }
+        )
 
         with mock.patch('requests.get', m_requests.get):
             response = self.query_region(query)
@@ -188,27 +179,31 @@ class TestOccupancy(AbstractTestFixture):
         )
         assert realtime_vj
 
-        m_requests = {
-            '{}?{}'.format(
-                url,
-                urlencode(
-                    {
-                        "vehicle_journey_code[]": "vehicle_journey:vjQ:1:modified:0:Q",
-                        "stop_point_code[]": "stopQ2",
-                    }
+        m_requests = MockRequests(
+            {
+                '{}?{}'.format(
+                    url,
+                    urlencode(
+                        {
+                            "vehicle_journey_code[]": realtime_vj["id"],
+                            "stop_point_code[]": "stopQ2",
+                        }
+                    ),
+                ): (
+                    RESP_4,
+                    200,
                 ),
-            ): (
-                RESP_4,
-                200,
-            ),
-            '{}?{}'.format(
-                url,
-                urlencode({"vehicle_journey_code[]": "vehicle_journey:vj:freq", "stop_point_code[]": "stopf1"}),
-            ): (
-                RESP_5,
-                503,
-            ),
-        }
+                '{}?{}'.format(
+                    url,
+                    urlencode(
+                        {"vehicle_journey_code[]": "vehicle_journey:vj:freq", "stop_point_code[]": "stopf1"}
+                    ),
+                ): (
+                    RESP_5,
+                    503,
+                ),
+            }
+        )
         query = self.query_template_scs.format(
             sp='stopQ2', dt='20160103T100000', data_freshness='&data_freshness=realtime'
         )
