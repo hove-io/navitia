@@ -118,7 +118,6 @@ jobs:
         SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
       run: |
           sonar-scanner-$SONAR_SCANNER_VERSION-linux/bin/sonar-scanner \
-                -Dsonar.login=$SONAR_TOKEN \
                 -Dsonar.cfamily.threads=$(nproc)
 
     - name: clean up workspace
