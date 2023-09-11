@@ -31,8 +31,6 @@
 from __future__ import absolute_import, print_function, unicode_literals, division
 from .tests_mechanism import AbstractTestFixture, dataset
 from tests.check_utils import get_not_null
-import pytest
-from jormungandr.tests.utils_test import MockResponse
 import mock
 from jormungandr.tests.utils_test import MockRequests
 
