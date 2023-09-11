@@ -32,6 +32,7 @@ from __future__ import absolute_import, print_function, unicode_literals, divisi
 from .tests_mechanism import AbstractTestFixture, dataset
 from tests.check_utils import get_not_null
 import mock
+from six.moves.urllib.parse import urlencode
 from jormungandr.tests.utils_test import MockRequests
 
 MOCKED_INSTANCE_CONF = {
@@ -100,10 +101,22 @@ class TestFreeFloating(AbstractTestFixture):
         """
         simple freefloatings_nearby call
         """
-
+        " http://wtf/free_floatings?type%5B%5D=None&distance=500&count=5&coord=2.37715%3B48.846781&start_page=1"
+        url = "http://wtf/free_floatings"
         mock_requests = MockRequests(
             {
-                'http://wtf/free_floatings?type%5B%5D=None&distance=500&count=5&coord=2.37715%3B48.846781&start_page=1': (
+                '{}?{}'.format(
+                    url,
+                    urlencode(
+                        {
+                            "type[]": None,
+                            "distance": 500,
+                            "count": 5,
+                            "coord": "2.37715;48.846781",
+                            "start_page": 1,
+                        }
+                    ),
+                ): (
                     FREE_FLOATINGS_RESPONSE,
                     200,
                 )
