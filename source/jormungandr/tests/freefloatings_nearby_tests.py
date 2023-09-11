@@ -89,17 +89,6 @@ FREE_FLOATINGS_RESPONSE = {
     "pagination": {"items_on_page": 3, "items_per_page": 5, "start_page": 1, "total_result": 8},
 }
 
-#
-# def mock_free_floating(_, params):
-#     return MockResponse(FREE_FLOATINGS_RESPONSE, 200)
-#
-#
-# @pytest.fixture(scope="function", autouse=True)
-# def mock_http_free_floating(monkeypatch):
-#     monkeypatch.setattr(
-#         'jormungandr.external_services.free_floating.FreeFloatingProvider._call_webservice', mock_free_floating
-#     )
-
 
 @dataset({'main_routing_test': MOCKED_INSTANCE_CONF})
 class TestFreeFloating(AbstractTestFixture):

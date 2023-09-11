@@ -138,6 +138,7 @@ class TestOccupancy(AbstractTestFixture):
             stop_schedules = response['stop_schedules'][0]['date_times']
             assert len(stop_schedules) == 1
             assert stop_schedules[0]['occupancy'] == "STANDING_ROOM_ONLY"
+
     #
     # def test_occupancy_empty_vehicle(self):
     #     query = self.query_template_scs.format(
