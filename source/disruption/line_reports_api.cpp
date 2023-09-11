@@ -61,7 +61,7 @@ struct LineReport {
                const boost::optional<PreFilteredLineReportSubObjects>& pre_filtered_sub_objects)
         : line(line) {
         const auto network = line->network;
-        if ((!pre_filtered_sub_objects || pre_filtered_sub_objects->networks.contains(network->idx))
+        if ((!pre_filtered_sub_objects || contains(pre_filtered_sub_objects->networks, network->idx))
             && network->has_applicable_message(now, filter_period, filter_status, line)) {
             networks.push_back(network);
         }
@@ -71,8 +71,8 @@ struct LineReport {
         std::set<nt::idx_t> visited_sp;
         for (const auto route : line->route_list) {
             for (const auto sa : route->stop_area_list) {
-                if (!navitia::contains(visited_sa, sa->idx)
-                    && (!pre_filtered_sub_objects || pre_filtered_sub_objects->stop_areas.contains(sa->idx))
+                if (!contains(visited_sa, sa->idx)
+                    && (!pre_filtered_sub_objects || contains(pre_filtered_sub_objects->stop_areas, sa->idx))
                     && sa->has_applicable_message(now, filter_period, filter_status, line)) {
                     stop_areas.push_back(sa);
                 }
@@ -80,15 +80,15 @@ struct LineReport {
             }
 
             for (const auto sp : route->stop_point_list) {
-                if (!navitia::contains(visited_sp, sp->idx)
-                    && (!pre_filtered_sub_objects || pre_filtered_sub_objects->stop_points.contains(sp->idx))
+                if (!contains(visited_sp, sp->idx)
+                    && (!pre_filtered_sub_objects || contains(pre_filtered_sub_objects->stop_points, sp->idx))
                     && sp->has_applicable_message(now, filter_period, filter_status, line)) {
                     stop_points.push_back(sp);
                 }
                 visited_sp.insert(sp->idx);
             }
 
-            if (!pre_filtered_sub_objects || pre_filtered_sub_objects->routes.contains(route->idx)) {
+            if (!pre_filtered_sub_objects || contains(pre_filtered_sub_objects->routes, route->idx)) {
                 // /!\ One could think of processing SA/SP once this prefilter is
                 // applied (because PTRef is stable/propagates correctly).
                 // /!\ But if routes are also prefiltered on having disruptions, then
