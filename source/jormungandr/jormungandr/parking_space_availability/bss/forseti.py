@@ -129,7 +129,9 @@ class ForsetiProvider(CommonBssProvider):
             params_organizations += '&organization[]={}'.format(param)
 
         # /stations?coord=lon%3Blat&distance=self.distance&organization[]=org1&organization[]=org2 ...
-        arguments = 'coord={}%3B{}&distance={}{}'.format(longitude, latitude, self.distance, params_organizations)
+        arguments = 'coord={}%3B{}&distance={}{}'.format(
+            longitude, latitude, self.distance, params_organizations
+        )
         data = self._call_webservice(arguments)
 
         if not data:
