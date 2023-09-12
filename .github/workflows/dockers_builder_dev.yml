@@ -1,7 +1,6 @@
 name: Build Navitia Dockers (Dev)
 
 on:
-  pull_request:
   push:
     branches:
       - dev
@@ -14,7 +13,7 @@ env:
 
   SBX_ECR_REGISTRY_BACKEND: "110444322584.dkr.ecr.eu-west-1.amazonaws.com"
   SBX_ECR_REGISTRY_FRONT: "051314639660.dkr.ecr.eu-west-1.amazonaws.com"
-  TAG: 'nr'
+  TAG: 'dev'
 
 jobs:
   front_bullseye_builder:
