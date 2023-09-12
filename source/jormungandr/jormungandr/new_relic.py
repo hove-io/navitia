@@ -134,7 +134,7 @@ def distributedEvent(call_name, group_name):
                 "call": call_name,
                 "group": group_name,
                 "status": "ok",
-                "az_suffix": app.config.get("DEPLOYMENT_AZ_SUFFIX", "unknown"),
+                "az": app.config.get("DEPLOYMENT_AZ", "unknown"),
             }
 
             start_time = timeit.default_timer()
@@ -173,7 +173,7 @@ def record_streetnetwork_call(call_name, connector_name, mode, coverage_name):
         "mode": mode,
         "coverage": coverage_name,
         "status": "ok",
-        "az_suffix": app.config.get("DEPLOYMENT_AZ_SUFFIX", "unknown"),
+        "az": app.config.get("DEPLOYMENT_AZ", "unknown"),
     }
     start_time = timeit.default_timer()
     try:
