@@ -52,9 +52,18 @@ class ForsetiProvider(CommonBssProvider):
 
     """
 
-    def __init__(self, service_url, feed_publisher=DEFAULT_FORSETI_FEED_PUBLISHER, timeout=2, **kwargs):
+    def __init__(
+        self,
+        service_url,
+        distance=50,
+        organizations=[],
+        feed_publisher=DEFAULT_FORSETI_FEED_PUBLISHER,
+        timeout=2,
+        **kwargs,
+    ):
         self.logger = logging.getLogger(__name__)
         self.service_url = service_url
+        self.distance = distance
         self.timeout = timeout
         self.network = "Forseti"
         self.breaker = pybreaker.CircuitBreaker(
@@ -65,6 +74,10 @@ class ForsetiProvider(CommonBssProvider):
         )
 
         self._feed_publisher = FeedPublisher(**feed_publisher) if feed_publisher else None
+        if not isinstance(organizations, list):
+            self.organizations = organizations.strip('[').strip(']').split(',')
+        else:
+            self.organizations = organizations
 
     def service_caller(self, method, url):
         try:
@@ -111,7 +124,12 @@ class ForsetiProvider(CommonBssProvider):
         if latitude is None or latitude is None:
             return Stands(0, 0, StandsStatus.unavailable)
 
-        arguments = 'coord={}%3B{}&distance=50'.format(longitude, latitude)
+        params_organizations = ''
+        for param in self.organizations:
+            params_organizations += '&organization[]={}'.format(param)
+
+        # /stations?coord=lon%3Blat&distance=self.distance&organization[]=org1&organization[]=org2 ...
+        arguments = 'coord={}%3B{}&distance={}{}'.format(longitude, latitude, self.distance, params_organizations)
         data = self._call_webservice(arguments)
 
         if not data:

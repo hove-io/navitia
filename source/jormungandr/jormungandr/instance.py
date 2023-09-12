@@ -261,10 +261,10 @@ class Instance(transient_socket.TransientSocket):
 
         # Init BSS provider manager from config from external services in bdd
         if disable_database:
-            self.bss_provider_manager = BssProviderManager(app.config['BSS_PROVIDER'])
+            self.bss_provider_manager = BssProviderManager(app.config[str('BSS_PROVIDER')])
         else:
             self.bss_provider_manager = BssProviderManager(
-                app.config['BSS_PROVIDER'], self.get_bss_stations_from_db
+                app.config[str('BSS_PROVIDER')], self.get_bss_stations_from_db
             )
 
         self.external_service_provider_manager.init_external_services()

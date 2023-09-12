@@ -112,10 +112,8 @@ class BssProviderManager(AbstractProviderManager):
                 return provider
         return None
 
-    # TODO use public version everywhere
     def _get_providers(self):
         self.update_config()
-        # providers from the database have priority on legacies providers
         return list(self._bss_providers.values()) + self._bss_providers_legacy
 
     def get_providers(self):
