@@ -244,6 +244,9 @@ class InstanceManager(object):
 
     @cache.memoize(app.config[str('CACHE_CONFIGURATION')].get(str('TIMEOUT_PTOBJECTS'), None))
     def _exists_id_in_instance(self, instance_name, instance_publication_date, object_id):
+        """
+        published_date is used to invalidate the cache when updating the ntfs, poi
+        """
         instance = self.instances[instance_name]
         return instance.has_id(object_id)
 
