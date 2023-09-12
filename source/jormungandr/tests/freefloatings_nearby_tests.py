@@ -43,7 +43,7 @@ MOCKED_INSTANCE_CONF = {
                 "id": "forseti_free_floatings",
                 "navitia_service": "free_floatings",
                 "args": {
-                    "service_url": "http://wtf/free_floatings",
+                    "service_url": "https://wtf/free_floatings",
                     "timeout": 10,
                     "circuit_breaker_max_fail": 4,
                     "circuit_breaker_reset_timeout": 60,
@@ -101,8 +101,8 @@ class TestFreeFloating(AbstractTestFixture):
         """
         simple freefloatings_nearby call
         """
-        " http://wtf/free_floatings?type%5B%5D=None&distance=500&count=5&coord=2.37715%3B48.846781&start_page=1"
-        url = "http://wtf/free_floatings"
+        " https://wtf/free_floatings?type%5B%5D=None&distance=500&count=5&coord=2.37715%3B48.846781&start_page=1"
+        url = "https://wtf/free_floatings"
         mock_requests = MockRequests(
             {
                 '{}?{}'.format(

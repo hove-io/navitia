@@ -42,7 +42,7 @@ MOCKED_INSTANCE_CONF = {
                 "id": "forseti_vehicle_occupancies",
                 "navitia_service": "vehicle_occupancies",
                 "args": {
-                    "service_url": "http://wtf/vehicle_occupancies",
+                    "service_url": "https://wtf/vehicle_occupancies",
                     "timeout": 10,
                     "circuit_breaker_max_fail": 4,
                     "circuit_breaker_reset_timeout": 60,
@@ -79,7 +79,7 @@ RESP_4 = None
 
 RESP_5 = {}
 
-url = "http://wtf/vehicle_occupancies"
+url = "https://wtf/vehicle_occupancies"
 mock_requests = MockRequests(
     {
         '{}?{}'.format(

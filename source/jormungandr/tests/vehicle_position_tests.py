@@ -41,7 +41,7 @@ MOCKED_INSTANCE_CONF = {
                 "id": "forseti_vehicle_positions",
                 "navitia_service": "vehicle_positions",
                 "args": {
-                    "service_url": "http://wtf/vehicle_positions",
+                    "service_url": "https://wtf/vehicle_positions",
                     "timeout": 10,
                     "circuit_breaker_max_fail": 4,
                     "circuit_breaker_reset_timeout": 60,
@@ -84,7 +84,7 @@ RESP_VJ_13 = {
 @dataset({'basic_schedule_test': MOCKED_INSTANCE_CONF})
 class TestVehiclePosition(AbstractTestFixture):
     def test_vehicle_position(self):
-        url = "http://wtf/vehicle_positions"
+        url = "https://wtf/vehicle_positions"
         mock_requests = MockRequests(
             {
                 '{}?{}'.format(url, urlencode({"vehicle_journey_code[]": "vj:l:11"})): (
