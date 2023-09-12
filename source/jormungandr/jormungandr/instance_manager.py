@@ -245,9 +245,12 @@ class InstanceManager(object):
     @cache.memoize(app.config[str('CACHE_CONFIGURATION')].get(str('TIMEOUT_PTOBJECTS'), None))
     def _exists_id_in_instance(self, instance_name, instance_publication_date, object_id):
         """
-        published_date is used to invalidate the cache when updating the ntfs, poi
+        instance's published_date is usually provided as extra_cache_key to invalidate the cache when updating the ntfs
         """
-        instance = self.instances[instance_name]
+        instance = self.instances.get(instance_name)
+        if not instance:
+            logging.getLogger(__name__).error("Instance {} not found".format(instance_name))
+            return False
         return instance.has_id(object_id)
 
     def _all_keys_of_coord_in_instances(self, instances, lon, lat):
