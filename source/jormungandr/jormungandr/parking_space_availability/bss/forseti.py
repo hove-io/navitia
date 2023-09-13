@@ -59,7 +59,7 @@ class ForsetiProvider(CommonBssProvider):
         organizations=[],
         feed_publisher=DEFAULT_FORSETI_FEED_PUBLISHER,
         timeout=2,
-        **kwargs,
+        **kwargs
     ):
         self.logger = logging.getLogger(__name__)
         self.service_url = service_url
