@@ -415,7 +415,7 @@ static void build_datasets(navitia::type::VehicleJourney* vj) {
  *
  * @param vj The vehicle journey to browse
  */
-static void build_route_and_stop_point_relations(navitia::type::VehicleJourney* vj) {
+static void build_route_and_stops_relations(navitia::type::VehicleJourney* vj) {
     for (navitia::type::StopTime& st : vj->stop_time_list) {
         if (st.stop_point) {
             vj->route->stop_point_list.insert(st.stop_point);
@@ -443,7 +443,7 @@ void Data::build_relations() {
     // physical_mode_list of line
     for (auto* vj : pt_data->vehicle_journeys) {
         build_datasets(vj);
-        build_route_and_stop_point_relations(vj);
+        build_route_and_stops_relations(vj);
         if (!vj->physical_mode || !vj->route || !vj->route->line) {
             continue;
         }
