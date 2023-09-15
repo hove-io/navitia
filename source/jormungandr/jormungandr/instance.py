@@ -264,7 +264,9 @@ class Instance(transient_socket.TransientSocket):
         if disable_database:
             self.bss_provider_manager = BssProviderManager(individual_bss_provider)
         else:
-            self.bss_provider_manager = BssProviderManager(individual_bss_provider, self.get_bss_stations_services_from_db)
+            self.bss_provider_manager = BssProviderManager(
+                individual_bss_provider, self.get_bss_stations_services_from_db
+            )
 
         self.external_service_provider_manager.init_external_services()
         self.instance_db = instance_db
