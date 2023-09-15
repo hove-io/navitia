@@ -39,18 +39,6 @@ poi = {
     'coord': {'lat': '48.0981147', 'lon': '-1.6552921'},
 }
 
-BSS_PROVIDER = [
-    {
-        "id": "forseti_stations",
-        "class": "jormungandr.parking_space_availability.bss.forseti.ForsetiProvider",
-        "args": {
-            "service_url": "https://gbfs-station.forseti.sbx.aws.private/stations",
-            "timeout": 20,
-            "distance": 20,
-        },
-    }
-]
-
 
 def parking_space_availability_forseti_support_poi_test():
     """

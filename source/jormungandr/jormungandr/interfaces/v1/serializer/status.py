@@ -204,7 +204,7 @@ class RidesharingServicesSerializer(OutsideServiceCommon):
         return obj.get('arrival_radius')
 
 
-class BSSStationsSerializer(OutsideServiceCommon):
+class BSSStationsServiceSerializer(OutsideServiceCommon):
     id = Field(display_none=True)
     url = Field(display_none=True)
     class_ = Field(schema_type=str, label='class', attr='class')
@@ -261,7 +261,7 @@ class CommonStatusSerializer(NullableDictSerializer):
     publication_date = Field(schema_type=str, display_none=False)
     street_networks = StreetNetworkSerializer(many=True, display_none=False)
     ridesharing_services = RidesharingServicesSerializer(many=True, display_none=False)
-    bss_providers = BSSStationsSerializer(many=True, display_none=False)
+    bss_providers = BSSStationsServiceSerializer(many=True, display_none=False)
     equipment_providers_services = EquipmentProvidersServicesSerializer(display_none=False)
     external_providers_services = ExternalServiceProvidersServicesSerializer(display_none=False)
     start_production_date = Field(schema_type=str, display_none=False)

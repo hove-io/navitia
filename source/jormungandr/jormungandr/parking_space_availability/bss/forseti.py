@@ -42,7 +42,7 @@ DEFAULT_FORSETI_FEED_PUBLISHER = {
     'id': 'forseti',
     'name': 'forseti',
     'license': 'Private',
-    'url': 'www.forseti.fr',
+    'url': 'www.navitia.io',
 }
 
 

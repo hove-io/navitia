@@ -170,6 +170,7 @@ class Instance(transient_socket.TransientSocket):
         use_multi_reverse=False,
         resp_content_limit_bytes=None,
         resp_content_limit_endpoints_whitelist=None,
+        individual_bss_provider=[],
     ):
         super(Instance, self).__init__(
             name=name,
@@ -261,11 +262,9 @@ class Instance(transient_socket.TransientSocket):
 
         # Init BSS provider manager from config from external services in bdd
         if disable_database:
-            self.bss_provider_manager = BssProviderManager(app.config[str('BSS_PROVIDER')])
+            self.bss_provider_manager = BssProviderManager(individual_bss_provider)
         else:
-            self.bss_provider_manager = BssProviderManager(
-                app.config[str('BSS_PROVIDER')], self.get_bss_stations_from_db
-            )
+            self.bss_provider_manager = BssProviderManager(individual_bss_provider, self.get_bss_stations_services_from_db)
 
         self.external_service_provider_manager.init_external_services()
         self.instance_db = instance_db
@@ -343,12 +342,12 @@ class Instance(transient_socket.TransientSocket):
         result = models.external_services if models else None
         return [res for res in result if res.navitia_service == 'realtime_proxies']
 
-    def get_bss_stations_from_db(self):
+    def get_bss_stations_services_from_db(self):
         """
         :return: a callable query of external services associated to the current instance in db
         """
         models = self._get_models()
-        result = models.external_services if models else None
+        result = models.external_services if models else []
         return [res for res in result if res.navitia_service == 'bss_stations']
 
     @property
