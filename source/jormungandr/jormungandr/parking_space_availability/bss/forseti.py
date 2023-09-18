@@ -121,7 +121,7 @@ class ForsetiProvider(CommonBssProvider):
     def _get_informations(self, poi):
         longitude = poi.get('coord', {}).get('lon', None)
         latitude = poi.get('coord', {}).get('lat', None)
-        if latitude is None or latitude is None:
+        if latitude is None or longitude is None:
             return Stands(0, 0, StandsStatus.unavailable)
 
         params_organizations = ''
