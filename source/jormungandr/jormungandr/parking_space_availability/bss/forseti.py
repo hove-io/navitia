@@ -75,7 +75,8 @@ class ForsetiProvider(CommonBssProvider):
 
         self._feed_publisher = FeedPublisher(**feed_publisher) if feed_publisher else None
         if not isinstance(organizations, list):
-            self.organizations = organizations.strip('[').strip(']').split(',')
+            import json
+            self.organizations = json.loads(str(organizations))
         else:
             self.organizations = organizations
 
@@ -140,9 +141,6 @@ class ForsetiProvider(CommonBssProvider):
 
         if not obj_stations:
             return Stands(0, 0, StandsStatus.unavailable)
-        vehicle_count = 0
-        for v in obj_stations[0].get('vehicles'):
-            vehicle_count = vehicle_count + v.get('count', 0)
 
-        stand = Stands(obj_stations[0].get('docks', {}).get('available', 0), vehicle_count, StandsStatus.open)
-        return stand
+        vehicle_count = sum((v.get('count', 0) for v in obj_stations[0].get('vehicles', {})))
+        return Stands(obj_stations[0].get('docks', {}).get('available', 0), vehicle_count, StandsStatus.open)
