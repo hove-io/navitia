@@ -94,7 +94,9 @@ class ManageParkingPlaces(object):
                         instance.bss_provider_manager,
                         self.attribute,
                         self.logger,
-                        'Error while handling individual BSS realtime availability',
+                        'Error while handling individual BSS realtime availability with configuration for instance: {}'.format(
+                            instance
+                        ),
                     )
 
                 if show_car_park and instance and instance.car_park_provider:
@@ -103,7 +105,7 @@ class ManageParkingPlaces(object):
                         car_park_provider_manager,
                         self.attribute,
                         self.logger,
-                        f'Error while handling global car park realtime availability with configuration for instance: {instance}',
+                        'Error while handling global car park realtime availability',
                     )
 
             return response, status, h
