@@ -42,7 +42,7 @@ class PtJourneyFarePool(object):
         self._instance = instance
         self._request = request
         self._request_id = request_id
-        self._backend = self._instance.get_pt_journey_fare(request['_pt_journey_fare'])
+        self._backend = self._instance.get_pt_journey_fare(request['_loki_pt_journey_fare'])
         self._futures = []
         self._logger = logging.getLogger(__name__)
 
@@ -50,7 +50,7 @@ class PtJourneyFarePool(object):
         self._futures.append(self._future_manager.create_future(self._do, response, request_id).get_future())
 
     def _do(self, response, request_id):
-        return response, self._backend.get_pt_journeys_fare(response.journeys, request_id)
+        return response, self._backend.get_pt_journeys_fares(response.journeys, request_id)
 
     def wait_and_generate(self):
         with gevent.iwait(self._futures) as futures:

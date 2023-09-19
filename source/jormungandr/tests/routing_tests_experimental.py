@@ -595,7 +595,7 @@ class TestDistributedJourneyTickets(JourneysTickets, NewDefaultScenarioAbstractT
         assert default_tickets[0]['id'] == response['journeys'][1]['fare']['links'][0]['id']
         assert default_tickets[1]['id'] == response['journeys'][0]['fare']['links'][0]['id']
 
-        query_pt_journey_fare = query + "&_pt_journey_fare=kraken&_compute_pt_journey_fare=true"
+        query_pt_journey_fare = query + "&_loki_pt_journey_fare=kraken&_loki_compute_pt_journey_fare=true"
         response = self.query_region(query_pt_journey_fare)
 
         new_tickets = response['tickets']

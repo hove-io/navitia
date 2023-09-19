@@ -36,5 +36,5 @@ ABC = abc.ABCMeta(str("ABC"), (object,), {})
 
 class AbstractPtJourneyFare(ABC):  # type: ignore
     @abc.abstractmethod
-    def get_pt_journeys_fare(self, pt_journeys, request_id):
-        pass
+    def get_pt_journeys_fares(self, pt_journeys, request_id):
+        raise NotImplementedError("Method not implemented")

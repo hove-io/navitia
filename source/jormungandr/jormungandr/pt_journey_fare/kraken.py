@@ -38,7 +38,7 @@ class Kraken(AbstractPtJourneyFare):
     def _pt_sections(journey):
         return [s for s in journey.sections if s.type == response_pb2.PUBLIC_TRANSPORT]
 
-    def create_fare_reqeust(self, pt_journeys):
+    def create_fare_request(self, pt_journeys):
         request = request_pb2.Request()
         request.requested_api = type_pb2.pt_fares
         pt_fare_request = request.pt_fares
@@ -62,6 +62,6 @@ class Kraken(AbstractPtJourneyFare):
                 )
         return request
 
-    def get_pt_journeys_fare(self, pt_journeys, request_id):
-        fare_request = self.create_fare_reqeust(pt_journeys)
+    def get_pt_journeys_fares(self, pt_journeys, request_id):
+        fare_request = self.create_fare_request(pt_journeys)
         return self.instance.send_and_receive(fare_request, request_id="{}_fare".format(request_id))
