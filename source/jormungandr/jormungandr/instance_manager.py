@@ -121,7 +121,7 @@ class InstanceManager(object):
             self._streetnetwork_backend_manager,
             config.get('external_services_providers', []),
             config.get('pt_planners', {}),
-            config.get('pt_journey_fare', {}),
+            config.get('pt_journey_fares', {}),
             config.get('ghost_words', []),
             best_boarding_positions_dir=app.config.get(str('BEST_BOARDING_POSITIONS_DIR'), None),
             olympics_forbidden_uris=config.get('olympics_forbidden_uris', None),
