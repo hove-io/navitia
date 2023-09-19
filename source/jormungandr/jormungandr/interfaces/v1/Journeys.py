@@ -689,7 +689,7 @@ class Journeys(JourneyCommon):
             default='kraken',
             hidden=True,
             help="only works when loki is selected as pt journey engine, "
-                 "choose which PT-fare engine to compute the journey's PT-fares",
+            "choose which PT-fare engine to compute the journey's PT-fares",
         )
 
         parser_get.add_argument(
@@ -698,7 +698,7 @@ class Journeys(JourneyCommon):
             default=False,
             hidden=True,
             help="only works when loki is selected as pt journey engine, "
-                 "whether to use external engine to compute pt journey fare",
+            "whether to use external engine to compute pt journey fare",
         )
 
     @add_tad_links()
