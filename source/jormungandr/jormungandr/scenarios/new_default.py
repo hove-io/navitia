@@ -104,7 +104,6 @@ SECTION_TYPES_TO_RETAIN = {response_pb2.PUBLIC_TRANSPORT, response_pb2.STREET_NE
 JOURNEY_TYPES_TO_RETAIN = ['best', 'comfort', 'non_pt_walk', 'non_pt_bike', 'non_pt_bss']
 STREET_NETWORK_MODE_TO_RETAIN = {response_pb2.Ridesharing, response_pb2.Car, response_pb2.Bike, response_pb2.Bss}
 TEMPLATE_MSG_UNKNOWN_OBJECT = "The entry point: {} is not valid"
-SPECIAL_EVENT = "special_event"
 
 
 def get_kraken_calls(request):
@@ -399,53 +398,6 @@ def tag_ecologic(resp):
                 continue
             if j.co2_emission.value < resp.car_co2_emission.value * 0.5:
                 j.tags.append('ecologic')
-
-
-def tag_special_event(instance, pb_resp):
-    for j in pb_resp.journeys:
-        # Tag only Walking solution proposed by using additional_parameters in the matrix od_additional_parameters
-        if (
-            len(j.sections) == 1
-            and j.sections[0].type == response_pb2.STREET_NETWORK
-            and j.sections[0].street_network.mode == response_pb2.Walking
-        ):
-            origin = j.sections[0].origin.uri
-            des = j.sections[0].destination.uri
-            if instance.get_od_additional_parameters(origin, des):
-                j.tags.append(SPECIAL_EVENT)
-            continue
-
-        any_section_from_to_in_od = False
-        all_lines_in_od = True
-        do_tag = False
-        for s in j.sections:
-            # Solution with more than one sections:
-            # 1. line.uri as well as destination of at least one PT exist in the matrix od_allowed_ids
-            # OR
-            # 2. line.uri of all as well as origin or destination of one PT should exist in the matrix od_allowed_ids
-            if s.type == response_pb2.PUBLIC_TRANSPORT:
-                origin = s.origin.stop_point.stop_area.uri
-                des = s.destination.stop_point.stop_area.uri
-                line_uri = s.uris.line
-
-                # Test if destination sa_uri exists in the set instance.od_stop_areas
-                destination_in_od = instance.uri_in_od_stop_areas(des)
-                # Test if line_uri is present in the set instance.od_lines
-                line_in_od = instance.uri_in_od_lines(line_uri)
-                # Tag if line.uri as well as destination sa_uri exist in corresponding lists, do not continue
-                if line_in_od and destination_in_od:
-                    do_tag = True
-                    break
-
-                # Test if line_uri of each PT are in instance.od_lines
-                all_lines_in_od = all_lines_in_od and line_in_od
-                # Verify that origin or destination of at least one line exists in instance.od_stop_areas
-                any_section_from_to_in_od = (
-                    any_section_from_to_in_od or destination_in_od or instance.uri_in_od_stop_areas(origin)
-                )
-
-        if do_tag or (all_lines_in_od and any_section_from_to_in_od):
-            j.tags.append(SPECIAL_EVENT)
 
 
 def _tag_direct_path(responses):
@@ -1272,36 +1224,6 @@ def add_olympics_forbidden_uris(origin_detail, destination_detail, api_request, 
         api_request["forbidden_uris[]"] = instance.olympics_forbidden_uris.pt_object_olympics_forbidden_uris
 
 
-def is_origin_destination_rules_applicable(instance, datetime):
-    # At least od_allowed_ids or od_additional_parameters should be present
-    if not (instance.od_allowed_ids or instance.od_additional_parameters):
-        return False
-
-    # We don't apply the rule if additional_parameters_activation_period is absent or present with bad value
-    if not (instance.additional_params_period_start and instance.additional_params_period_end):
-        return False
-
-    # We apply the rule only if the request data_time is in within maintenance period configured
-    return instance.additional_params_period_start <= datetime <= instance.additional_params_period_end
-
-
-def apply_origin_destination_rules(origin_uri, destination_uri, api_request, instance):
-    if not is_origin_destination_rules_applicable(instance, api_request.get('datetime')):
-        return
-
-    # We re-initialize allowed_id[] values ignoring already existing parameter values.
-    allowed_ids = instance.get_od_allowed_ids(origin_uri, destination_uri)
-    if allowed_ids:
-        api_request["allowed_id[]"] = allowed_ids
-
-    # Apply addition_parameters for an origin_destination present in the file <coverage>_od_additional_parameters.csv
-    additional_parameters = instance.get_od_additional_parameters(origin_uri, destination_uri)
-    for parameter in additional_parameters:
-        param_value = parameter.split('=', 1)
-        if len(param_value) == 2:
-            api_request[param_value[0]] = param_value[1]
-
-
 class Scenario(simple.Scenario):
     """
     TODO: a bit of explanation about the new scenario
@@ -1356,11 +1278,6 @@ class Scenario(simple.Scenario):
         pt_object_destination = get_pt_object_from_json(destination_detail, instance)
 
         add_olympics_forbidden_uris(pt_object_origin, pt_object_destination, api_request, instance)
-        if instance.additional_parameters:
-            apply_origin_destination_rules(
-                pt_object_origin.uri, pt_object_destination.uri, api_request, instance
-            )
-
         api_request['origin'] = get_kraken_id(origin_detail) or api_request.get('origin')
         api_request['destination'] = get_kraken_id(destination_detail) or api_request.get('destination')
 
@@ -1508,11 +1425,6 @@ class Scenario(simple.Scenario):
         # Tag ecologic should be done at the end
         tag_ecologic(pb_resp)
 
-        # Tag special_event
-        if instance.additional_parameters and is_origin_destination_rules_applicable(
-            instance, api_request.get('datetime')
-        ):
-            tag_special_event(instance, pb_resp)
         # Update best boarding positions in PT sections
         update_best_boarding_positions(pb_resp, instance)
 

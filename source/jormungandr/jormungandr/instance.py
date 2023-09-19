@@ -68,9 +68,7 @@ from jormungandr.utils import (
     can_connect_to_database,
     make_origin_destination_key,
     read_best_boarding_positions,
-    read_origin_destination_data,
     read_stop_points_attractivities,
-    str_to_time_stamp,
 )
 from jormungandr import pt_planners_manager, transient_socket
 import os
@@ -166,7 +164,6 @@ class Instance(transient_socket.TransientSocket):
         instance_db=None,
         best_boarding_positions_dir=None,
         olympics_forbidden_uris=None,
-        additional_params_period=None,
         use_multi_reverse=False,
         resp_content_limit_bytes=None,
         resp_content_limit_endpoints_whitelist=None,
@@ -272,13 +269,6 @@ class Instance(transient_socket.TransientSocket):
         self.instance_db = instance_db
         self._ghost_words = ghost_words or []
         self.best_boarding_positions = None
-        # Initialize attributes for additional_parameters
-        self.od_allowed_ids = None
-        self.od_additional_parameters = None
-        self.od_stop_areas = None
-        self.od_lines = None
-        self.additional_params_period_start = None
-        self.additional_params_period_end = None
         self.use_multi_reverse = use_multi_reverse
         self.stop_points_attractivities = None
         self.resp_content_limit_bytes = resp_content_limit_bytes
@@ -289,20 +279,6 @@ class Instance(transient_socket.TransientSocket):
         if best_boarding_positions_dir is not None:
             file_path = os.path.join(best_boarding_positions_dir, "{}.csv".format(self.name))
             self.best_boarding_positions = read_best_boarding_positions(file_path)
-
-        # read od_allowed_ids as well as od_additional_parameters if configured and present
-        origin_destination_dir = app.config.get(str('ORIGIN_DESTINATION_DIR'))
-        if origin_destination_dir:
-            file_path = os.path.join(origin_destination_dir, "{}_od_allowed_ids.csv".format(self.name))
-            self.od_allowed_ids, self.od_stop_areas, self.od_lines = read_origin_destination_data(file_path)
-
-            file_path = os.path.join(origin_destination_dir, "{}_od_additional_parameters.csv".format(self.name))
-            self.od_additional_parameters, _, _ = read_origin_destination_data(file_path)
-
-        # If configured initialize additional parameters activation period values
-        if additional_params_period:
-            self.additional_params_period_start = str_to_time_stamp(additional_params_period.get('start'))
-            self.additional_params_period_end = str_to_time_stamp(additional_params_period.get('end'))
 
         # load stop_point attractivities, the feature is only available when loki is selected as pt_planner
         stop_points_attractivities_dir = app.config.get(str('STOP_POINTS_ATTRACTIVITIES_DIR'))
@@ -1022,27 +998,3 @@ class Instance(transient_socket.TransientSocket):
             return []
         key = make_origin_destination_key(from_id, to_id)
         return self.best_boarding_positions.get(key, [])
-
-    def get_od_allowed_ids(self, origin, destination):
-        if not self.od_allowed_ids:
-            return []
-        key = make_origin_destination_key(origin, destination)
-        return self.od_allowed_ids.get(key, [])
-
-    def get_od_additional_parameters(self, origin, destination):
-        if not self.od_additional_parameters:
-            return []
-        key = make_origin_destination_key(origin, destination)
-        return self.od_additional_parameters.get(key, [])
-
-    # Test if stop_area uri is present in od_stop_areas
-    def uri_in_od_stop_areas(self, sa_uri):
-        if not self.od_stop_areas:
-            return False
-        return sa_uri in self.od_stop_areas
-
-    # Test if line uri is present in od_lines
-    def uri_in_od_lines(self, line_uri):
-        if not self.od_lines:
-            return False
-        return line_uri in self.od_lines

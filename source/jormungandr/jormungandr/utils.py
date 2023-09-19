@@ -1102,41 +1102,6 @@ def read_best_boarding_positions(file_path):
         return None
 
 
-def read_origin_destination_data(file_path):
-    logger = logging.getLogger(__name__)
-    if not os.path.exists(file_path):
-        logger.warning("file: %s does not exist", file_path)
-        return None, None, None
-
-    logger.info("reading origin destination and allowed ids from file: %s", file_path)
-    try:
-        my_dict = defaultdict(set)
-        stop_areas = set()
-        allowed_ids = set()
-        fieldnames = ['origin', 'destination', 'od_value']
-        with open(file_path) as f:
-            csv_reader = csv.DictReader(f, fieldnames)
-            # skip the header
-            next(csv_reader)
-
-            for line in csv_reader:
-                allowed_id = line['od_value']
-                if allowed_id:
-                    key = make_origin_destination_key(line['origin'], line['destination'])
-                    my_dict[key].add(allowed_id)
-
-                    stop_areas.add(line['origin'])
-                    stop_areas.add(line['destination'])
-                    allowed_ids.add(allowed_id)
-
-        return my_dict, stop_areas, allowed_ids
-    except Exception as e:
-        logger.exception(
-            'Error while loading od_allowed_ids file: {} with exception: {}'.format(file_path, str(e))
-        )
-        return None, None, None
-
-
 def read_stop_points_attractivities(file_path):
     logger = logging.getLogger(__name__)
     if not os.path.exists(file_path):
