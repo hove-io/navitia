@@ -76,6 +76,7 @@ class ForsetiProvider(CommonBssProvider):
         self._feed_publisher = FeedPublisher(**feed_publisher) if feed_publisher else None
         if not isinstance(organizations, list):
             import json
+
             self.organizations = json.loads(str(organizations))
         else:
             self.organizations = organizations

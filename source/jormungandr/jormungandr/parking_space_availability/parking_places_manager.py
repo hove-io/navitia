@@ -103,7 +103,7 @@ class ManageParkingPlaces(object):
                         car_park_provider_manager,
                         self.attribute,
                         self.logger,
-                        f'Error while handling global car park realtime availability with configuration for instance: {instance}',
+                        'Error while handling global car park realtime availability with configuration for instance: {}'.format(instance),
                     )
 
             return response, status, h
