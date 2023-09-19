@@ -128,6 +128,7 @@ class InstanceManager(object):
             use_multi_reverse=config.get('use_multi_reverse', False),
             resp_content_limit_bytes=config.get('resp_content_limit_bytes', None),
             resp_content_limit_endpoints_whitelist=config.get('resp_content_limit_endpoints_whitelist', None),
+            individual_bss_provider=config.get('individual_bss_provider', []),
         )
 
         self.instances[instance.name] = instance
