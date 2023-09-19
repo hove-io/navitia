@@ -832,9 +832,9 @@ class Instance(transient_socket.TransientSocket):
     default_pt_planner = _make_property_getter('default_pt_planner')
     pt_planners_configurations = _make_property_getter('pt_planners_configurations')
 
-    default_pt_journey_fare = _make_property_getter('default_pt_journey_fare')
-    compute_pt_journey_fare = _make_property_getter('compute_pt_journey_fare')
-    pt_journey_fare_configurations = _make_property_getter('pt_journey_fare_configurations')
+    loki_pt_journey_fare = _make_property_getter('loki_pt_journey_fare')
+    loki_compute_pt_journey_fare = _make_property_getter('loki_compute_pt_journey_fare')
+    loki_pt_journey_fare_configurations = _make_property_getter('loki_pt_journey_fare_configurations')
 
     filter_odt_journeys = _make_property_getter('filter_odt_journeys')
 
