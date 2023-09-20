@@ -92,6 +92,7 @@ class FakeInstance(Instance):
             streetnetwork_backend_manager=None,
             external_service_provider_configurations=[],
             olympics_forbidden_uris=olympics_forbidden_uris,
+            pt_journey_fare_configurations={},
         )
 
 
