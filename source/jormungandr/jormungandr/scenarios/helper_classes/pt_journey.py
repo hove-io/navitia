@@ -307,7 +307,7 @@ class PtJourneyPool:
                 boundary_duration=request.get("boundary_duration[]"),
             )
         else:
-            attractivities = request.get("attractivities", {})
+            olympic_site_params = request.get("olympic_site_params", {})
 
             return JourneyParameters(
                 max_duration=request['max_duration'],
@@ -327,7 +327,7 @@ class PtJourneyPool:
                 isochrone_center=isochrone_center,
                 current_datetime=date_to_timestamp(request['_current_datetime']),
                 criteria=request.get('criteria', 'classic'),
-                attractivities=attractivities,
+                olympic_site_params=olympic_site_params,
             )
 
     def _async_request(self):

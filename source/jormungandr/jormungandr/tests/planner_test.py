@@ -32,6 +32,7 @@ import pytest
 from jormungandr.pt_planners.pt_planner import JourneyParameters, GraphicalIsochronesParameters
 from jormungandr.utils import str_to_time_stamp, create_journeys_request, create_graphical_isochrones_request
 import navitiacommon.type_pb2 as type_pb2
+from jormungandr.olympic_site_params_manager import AttractivityVirtualFallback
 
 
 def check_basic_journeys_request(journeys_req):
@@ -92,18 +93,23 @@ def create_journeys_request_test():
 def create_journeys_request_with_attractivities_test():
     origin = {"Hove": 42}
     destination = {"Somewhere": 666}
-    journey_parameters = JourneyParameters(
-        criteria='departure_stop_attractivity', attractivities={"Hove": 1, "Somewhere": 2}
-    )
+    departure_olympic_site_params = {
+        "departure": {"Hove": AttractivityVirtualFallback(1, 2), "Somewhere": AttractivityVirtualFallback(2, 3)},
+        "arrival": {},
+    }
+    journey_parameters = JourneyParameters(olympic_site_params=departure_olympic_site_params)
     datetime = str_to_time_stamp("20120614T080000")
 
     req = create_journeys_request(origin, destination, datetime, True, journey_parameters, False)
     assert req.journeys.origin[0].attractivity == 1
     assert not req.journeys.destination[0].HasField("attractivity")
 
-    journey_parameters = JourneyParameters(
-        criteria='arrival_stop_attractivity', attractivities={"Hove": 1, "Somewhere": 2}
-    )
+    arrival_olympic_site_params = {
+        "departure": {},
+        "arrival": {"Hove": AttractivityVirtualFallback(1, 2), "Somewhere": AttractivityVirtualFallback(2, 3)},
+    }
+
+    journey_parameters = JourneyParameters(olympic_site_params=arrival_olympic_site_params)
     datetime = str_to_time_stamp("20120614T080000")
 
     req = create_journeys_request(origin, destination, datetime, True, journey_parameters, False)
