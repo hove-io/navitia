@@ -73,6 +73,7 @@ from jormungandr.utils import (
     str_to_time_stamp,
 )
 from jormungandr import pt_planners_manager, transient_socket
+from jormungandr.pt_journey_fare import PtJourneyFareBackendManager
 import os
 
 type_to_pttype = {
@@ -162,6 +163,7 @@ class Instance(transient_socket.TransientSocket):
         streetnetwork_backend_manager,
         external_service_provider_configurations,
         pt_planners_configurations,
+        pt_journey_fare_configurations,
         ghost_words=None,
         instance_db=None,
         best_boarding_positions_dir=None,
@@ -309,6 +311,11 @@ class Instance(transient_socket.TransientSocket):
         if stop_points_attractivities_dir:
             file_path = os.path.join(stop_points_attractivities_dir, "{}.csv".format(self.name))
             self.stop_points_attractivities = read_stop_points_attractivities(file_path)
+
+        # TODO: use db
+        self._pt_journey_fare_backend_manager = PtJourneyFareBackendManager(
+            self, pt_journey_fare_configurations, None
+        )
 
     def get_providers_from_db(self):
         """
@@ -825,11 +832,19 @@ class Instance(transient_socket.TransientSocket):
     default_pt_planner = _make_property_getter('default_pt_planner')
     pt_planners_configurations = _make_property_getter('pt_planners_configurations')
 
+    loki_pt_journey_fare = _make_property_getter('loki_pt_journey_fare')
+    loki_compute_pt_journey_fare = _make_property_getter('loki_compute_pt_journey_fare')
+    loki_pt_journey_fare_configurations = _make_property_getter('loki_pt_journey_fare_configurations')
+
     filter_odt_journeys = _make_property_getter('filter_odt_journeys')
 
     def get_pt_planner(self, pt_planner_id=None):
         pt_planner_id = pt_planner_id or self.default_pt_planner
         return self._pt_planner_manager.get_pt_planner(pt_planner_id)
+
+    def get_pt_journey_fare(self, loki_pt_journey_fare_id=None):
+        pt_journey_fare_id = loki_pt_journey_fare_id or self.loki_pt_journey_fare
+        return self._pt_journey_fare_backend_manager.get_pt_journey_fare(pt_journey_fare_id)
 
     @property
     def places_proximity_radius(self):

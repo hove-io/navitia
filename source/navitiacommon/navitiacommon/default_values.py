@@ -246,6 +246,11 @@ ghost_words = []  # type: List[str]
 # }
 pt_planners_configurations = dict()  # type: dict
 
+# loki pt journey fare
+loki_pt_journey_fare = 'kraken'
+loki_compute_pt_journey_fare = False
+loki_pt_journey_fare_configurations = dict()  # type: dict
+
 
 def get_value_or_default(attr, instance, instance_name):
     if not instance or getattr(instance, attr, None) == None:
