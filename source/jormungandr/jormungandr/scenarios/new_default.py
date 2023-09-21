@@ -1292,9 +1292,9 @@ class Scenario(simple.Scenario):
         # Return the possible combinations (origin_mode ,destination_mode, direct_path_type)
         krakens_call = get_kraken_calls(api_request)
 
-        attractivities = deepcopy(instance.stop_points_attractivities or {})
-        attractivities.update(api_request.get('_olympics_sites_attractivities[]') or [])
-        api_request["attractivities"] = attractivities
+        api_request["olympic_site_params"] = instance.olympic_site_params_manager.get_olympic_site_params(
+            pt_object_origin, pt_object_destination, api_request, instance
+        )
 
         # We need the original request (api_request) for filtering, but request
         # is modified by create_next_kraken_request function.

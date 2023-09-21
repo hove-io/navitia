@@ -69,7 +69,7 @@ class JourneyParameters(object):
         sn_params=None,
         current_datetime=None,
         criteria=None,
-        attractivities=None,
+        olympic_site_params=None,
     ):
 
         self.max_duration = max_duration
@@ -91,7 +91,7 @@ class JourneyParameters(object):
         self.arrival_transfer_penalty = arrival_transfer_penalty
         self.walking_transfer_penalty = walking_transfer_penalty
         self.criteria = criteria
-        self.attractivities = attractivities or {}
+        self.olympic_site_params = olympic_site_params or {}
 
 
 # Needed for GraphicalIsochrones

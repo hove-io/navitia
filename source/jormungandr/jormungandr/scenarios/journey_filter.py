@@ -748,8 +748,8 @@ def apply_final_journey_filters_post_finalize(response_list, request):
         _filter_similar_line_and_crowfly_journeys(journey_pairs_pool, request)
 
 
-def get_journey_extremity_pt_section(journey, criteria):
-    if criteria == "arrival_stop_attractivity":
+def get_journey_extremity_pt_section(journey, attractivities_virtual_fallbacks):
+    if attractivities_virtual_fallbacks.get("arrival"):
         sections = reversed(journey.sections)
     else:
         sections = journey.sections
@@ -758,27 +758,30 @@ def get_journey_extremity_pt_section(journey, criteria):
     return extremity_pt_section
 
 
-def get_journey_pt_extremity(journey, criteria):
-    extremity_pt_section = get_journey_extremity_pt_section(journey, criteria)
+def get_journey_pt_extremity(journey, attractivities_virtual_fallbacks):
+    extremity_pt_section = get_journey_extremity_pt_section(journey, attractivities_virtual_fallbacks)
 
     if extremity_pt_section is None:
         return None, None
 
-    if criteria == "arrival_stop_attractivity":
+    if attractivities_virtual_fallbacks.get("arrival"):
         return extremity_pt_section, extremity_pt_section.destination
     else:
         return extremity_pt_section, extremity_pt_section.origin
 
 
-def compute_journey_virtual_duration_and_attractivity(journey, criteria, virtual_fallbacks, attractivities):
-    extremity_pt_section, extremity = get_journey_pt_extremity(journey, criteria)
+def compute_journey_virtual_duration_and_attractivity(journey, attractivities_virtual_fallbacks):
+    extremity_pt_section, extremity = get_journey_pt_extremity(journey, attractivities_virtual_fallbacks)
     if extremity_pt_section is None:
         return journey.duration, 0
+    if attractivities_virtual_fallbacks.get("arrival"):
+        attractivity_virtual_fallback = attractivities_virtual_fallbacks.get("arrival", {}).get(extremity.uri)
+    else:
+        attractivity_virtual_fallback = attractivities_virtual_fallbacks.get("departure", {}).get(extremity.uri)
+    virtual_fallback = attractivity_virtual_fallback.virtual_duration if attractivity_virtual_fallback else 0
+    attractivity = attractivity_virtual_fallback.attractivity if attractivity_virtual_fallback else 0
 
-    virtual_fallback = virtual_fallbacks.get(extremity.uri) or 0
-    attractivity = attractivities.get(extremity.uri) or 0
-
-    if criteria == "arrival_stop_attractivity":
+    if attractivities_virtual_fallbacks.get("arrival"):
         virtual_duration = extremity_pt_section.end_date_time - journey.departure_date_time + virtual_fallback
         return virtual_duration, attractivity
     else:
@@ -864,9 +867,7 @@ def filter_olympics_journeys_v1(responses, request):
 
 
 def filter_olympics_journeys_v2(responses, request):
-    virtual_fallback_durations = {}
-    virtual_fallback_durations.update(request.get("_olympics_sites_virtual_fallback[]") or [])
-    attractivities = request.get("attractivities", {})
+    attractivities_virtual_fallbacks = request.get("olympic_site_params", {})
     best = (None, float('inf'), 0)
     for r in responses:
         for j in r.journeys:
@@ -874,7 +875,7 @@ def filter_olympics_journeys_v2(responses, request):
                 continue
 
             virtual_duration, attractivity = compute_journey_virtual_duration_and_attractivity(
-                j, request.get('criteria'), virtual_fallback_durations, attractivities
+                j, attractivities_virtual_fallbacks
             )
             # keep smallest virtual duration, if virtual durations are equal, keep highest attractivity
             if virtual_duration < best[1] or (virtual_duration == best[1] and attractivity > best[2]):
