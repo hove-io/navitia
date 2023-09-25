@@ -21,6 +21,8 @@ RUN apt-get update --fix-missing \
 
 COPY ./docker/run_jormungandr.sh ./run.sh
 COPY ./docker/jormungandr.wsgi ./jormungandr.wsgi
+COPY ./docker/uwsgi/jormungandr.ini ./jormungandr.ini
+COPY ./docker/uwsgi/monitor.ini ./monitor.ini
 
 # Add apache config
 RUN rm /etc/apache2/sites-available/000-default.conf /etc/apache2/conf-available/other-vhosts-access-log.conf
@@ -37,7 +39,6 @@ RUN a2ensite 000-default.conf \
     && a2enmod proxy_http \
     && a2enconf logformat.conf \
     && a2enmod deflate
-
  # Python 'requests' package handle its own CA certificate list
  # Let's force it to use the OS's list
  ENV REQUESTS_CA_BUNDLE /etc/ssl/certs
@@ -49,6 +50,7 @@ RUN a2ensite 000-default.conf \
 
 HEALTHCHECK CMD curl -f http://localhost/v1 || exit 1
 
-EXPOSE 80
+EXPOSE 80 9091
+
 
 ENTRYPOINT [ "/usr/src/app/run.sh" ]
