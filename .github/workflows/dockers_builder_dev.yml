@@ -22,6 +22,8 @@ jobs:
     steps:
       - name: force chown to avoid errors
         run: sudo chown -R $USER:$USER .
+      - name: Git config
+        run: git config --global --add safe.directory /__w/navitia/navitia
       - name: Install dependencies
         run: |
           sudo apt update && sudo apt install -y httpie
@@ -82,12 +84,20 @@ jobs:
         run: |
           echo '{"text":":warning: Github Actions: workflow dockers_builder_dev Job front_bullseye_builder is failed !"}' | http --json POST ${{secrets.SLACK_NAVITIA_TEAM_URL}}
 
+      - name: clean up workspace
+        if: ${{ always() }}
+        run: |
+          rm -rf ./*
+          rm -rf ./.??*
+
   front_jessie_builder:
     runs-on: [self-hosted, corefront, sandbox]
     name: Front Jessie builder (Dev)
     steps:
       - name: force chown to avoid errors
         run: sudo chown -R $USER:$USER .
+      - name: Git config
+        run: git config --global --add safe.directory /__w/navitia/navitia
       - name: Install dependencies
         run: |
           sudo apt update && sudo apt install -y httpie
@@ -152,6 +162,11 @@ jobs:
         run: |
           echo '{"text":":warning: Github Actions: workflow dockers_builder_dev Job front_jessie_builder is failed !"}' | http --json POST ${{secrets.SLACK_NAVITIA_TEAM_URL}}
 
+      - name: clean up workspace
+        if: ${{ always() }}
+        run: |
+          rm -rf ./*
+          rm -rf ./.??*
 
   backend_jessie_builder:
     runs-on: [self-hosted, kraken, sandbox]
@@ -159,6 +174,8 @@ jobs:
     steps:
       - name: force chown to avoid errors
         run: sudo chown -R $USER:$USER .
+      - name: Git config
+        run: git config --global --add safe.directory /__w/navitia/navitia
       - name: Install dependencies
         run: |
           sudo apt update && sudo apt install -y zip httpie curl python3 python3-pip
@@ -274,6 +291,12 @@ jobs:
         if: failure()
         run: |
           echo '{"text":":warning: Github Actions: workflow dockers_builder_dev Job backend_jessie_builder is failed !"}' | http --json POST ${{secrets.SLACK_NAVITIA_TEAM_URL}}
+
+      - name: clean up workspace
+        if: ${{ always() }}
+        run: |
+          rm -rf ./*
+          rm -rf ./.??*
 
   publish_aws:
     runs-on: [self-hosted, corefront, sandbox]
