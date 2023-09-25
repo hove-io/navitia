@@ -49,6 +49,6 @@ RUN a2ensite 000-default.conf \
 
 HEALTHCHECK CMD curl -f http://localhost/v1 || exit 1
 
-EXPOSE 80
+EXPOSE 80 9091
 
 ENTRYPOINT [ "/usr/src/app/run.sh" ]
