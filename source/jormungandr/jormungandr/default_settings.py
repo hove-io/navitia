@@ -14,7 +14,7 @@ DEFAULT_SQLALCHEMY_ENGINE_OPTIONS = {
 INSTANCES_DIR = os.getenv('JORMUNGANDR_INSTANCES_DIR', '/etc/jormungandr.d')
 
 
-INSTANCE_TIMEOUT = float(os.getenv('JORMUNGANDR_INSTANCE_TIMEOUT_S', 10))
+INSTANCE_TIMEOUT = float(os.getenv('JORMUNGANDR_COVERAGE_TIMEOUT_S', 10))
 PLACE_FAST_TIMEOUT = float(os.getenv('JORMUNGANDR_PLACE_FAST_TIMEOUT_S', 1))
 
 # Patern that matches Jormungandr configuration files
