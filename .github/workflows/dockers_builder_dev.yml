@@ -87,6 +87,8 @@ jobs:
       - name: clean up workspace
         if: ${{ always() }}
         run: |
+          # some files are created by a docker container
+          sudo chown -R $USER:$USER .
           rm -rf ./*
           rm -rf ./.??*
 
@@ -165,6 +167,8 @@ jobs:
       - name: clean up workspace
         if: ${{ always() }}
         run: |
+          # some files are created by a docker container
+          sudo chown -R $USER:$USER .
           rm -rf ./*
           rm -rf ./.??*
 
@@ -295,6 +299,8 @@ jobs:
       - name: clean up workspace
         if: ${{ always() }}
         run: |
+          # some files are created by a docker container
+          sudo chown -R $USER:$USER .
           rm -rf ./*
           rm -rf ./.??*
 
