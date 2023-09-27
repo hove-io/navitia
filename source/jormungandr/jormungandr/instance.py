@@ -860,7 +860,7 @@ class Instance(transient_socket.TransientSocket):
         except pybreaker.CircuitBreakerError as e:
             raise DeadSocketException(self.name, self.socket_path)
 
-    def _send_and_receive(self, request, timeout=app.config.get('INSTANCE_TIMEOUT', 10), quiet=False, **kwargs):
+    def _send_and_receive(self, request, timeout=app.config.get('INSTANCES_TIMEOUT', 10), quiet=False, **kwargs):
         deadline = datetime.utcnow() + timedelta(milliseconds=timeout * 1000)
         request.deadline = deadline.strftime('%Y%m%dT%H%M%S,%f')
 
