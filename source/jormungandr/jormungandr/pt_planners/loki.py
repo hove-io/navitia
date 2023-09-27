@@ -40,7 +40,7 @@ class PlannerLokiException(Exception):
 
 class Loki(ZmqSocket, AbstractPtPlanner):
     def __init__(
-        self, name, zmq_context, zmq_socket, zmq_socket_type, timeout=app.config.get(str('INSTANCE_TIMEOUT'), 10)
+        self, name, zmq_context, zmq_socket, zmq_socket_type, timeout=app.config.get(str('INSTANCES_TIMEOUT'), 10)
     ):
         super(Loki, self).__init__(
             "pt_planner_loki_{}".format(name), zmq_context, zmq_socket, zmq_socket_type, timeout
