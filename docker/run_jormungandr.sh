@@ -7,17 +7,14 @@ monitor_cache2="name=monitor,items=100"
 
 function show_help() {
     cat << EOF
-Usage: ${0##*/} -a jormungandr-processes -m monitor-processes -r max-requests
-    -a      app-processes number
+Usage: ${0##*/} -m monitor-process -r max-requests
     -m      [0|1] activate monitor-process
     -r      max-requests before reload for jormungandr worker
 EOF
 }
 
-while getopts "a:m:r:h" opt; do
+while getopts "m:r:h" opt; do
     case $opt in
-        a) app_processes=$OPTARG
-            ;;
         m) monitor_processes=$OPTARG
             ;;
         r) app_max_requests=$OPTARG
@@ -55,10 +52,10 @@ fi
 if [ $monitor_processes -eq 1 ]
 then
   echo "!!!!!!!!!!!!!!!!!!!!! Start Jormungandr with monitoring service !!!!!!!!!!!!!!!!!!!!!"
-  uwsgi --cache2 $jormungandr_cache2 $max_requests --http :9090 --stats :5050 --file $file --processes $app_processes & uwsgi --cache2 $monitor_cache2 --http :9091 --file $file --processes 1 --listen 5
+  uwsgi --cache2 $jormungandr_cache2 $max_requests --http :9090 --stats :5050 --file $file & uwsgi --cache2 $monitor_cache2 --http :9091 --file $file --processes 1 --listen 5
 else
   echo "!!!!!!!!!!!!!!!!!!!!! Start Jormungandr without monitoring service !!!!!!!!!!!!!!!!!!!!!"
-  uwsgi  --cache2 $jormungandr_cache2 $max_requests --http :9090 --stats :5050 --file $file --processes $app_processes
+  uwsgi  --cache2 $jormungandr_cache2 $max_requests --http :9090 --stats :5050 --file $file
 fi
 
 if [ $? == 1 ]
