@@ -178,4 +178,8 @@ class TransientSocket(object):
             socket.setsockopt(zmq.LINGER, 0)
             socket.close()
         except:
-            self._logger.exception("Error while closing transient socket")
+            self._logger.exception(
+                'Error while closing transient socket with coverage: %s, zmq_socket: %s',
+                self.name,
+                self._zmq_socket,
+            )
