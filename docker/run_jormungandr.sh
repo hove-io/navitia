@@ -7,7 +7,7 @@ monitor_cache2="name=monitor,items=100"
 
 function show_help() {
     cat << EOF
-Usage: ${0##*/} -m monitor-processes -r max-requests
+Usage: ${0##*/} -m monitor-process -r max-requests
     -m      [0|1] activate monitor-process
     -r      max-requests before reload for jormungandr worker
 EOF
