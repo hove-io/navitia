@@ -52,10 +52,10 @@ fi
 if [ $monitor_processes -eq 1 ]
 then
   echo "!!!!!!!!!!!!!!!!!!!!! Start Jormungandr with monitoring service !!!!!!!!!!!!!!!!!!!!!"
-  uwsgi --cache2 $jormungandr_cache2 $max_requests --http :9090 --stats :5050 --file $file & uwsgi --cache2 $monitor_cache2 --http :9091 --file $file --processes 1 --listen 5
+  uwsgi --cache2 $jormungandr_cache2 $max_requests --http :9090 --stats :5050 --lazy-apps --file $file & uwsgi --cache2 $monitor_cache2 --http :9091 --lazy-apps --file $file --processes 1 --listen 5
 else
   echo "!!!!!!!!!!!!!!!!!!!!! Start Jormungandr without monitoring service !!!!!!!!!!!!!!!!!!!!!"
-  uwsgi  --cache2 $jormungandr_cache2 $max_requests --http :9090 --stats :5050 --file $file
+  uwsgi  --cache2 $jormungandr_cache2 $max_requests --http :9090 --stats :5050 --lazy-apps --file $file
 fi
 
 if [ $? == 1 ]
