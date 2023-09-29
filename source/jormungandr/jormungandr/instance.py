@@ -70,6 +70,7 @@ from jormungandr.utils import (
     read_best_boarding_positions,
     read_origin_destination_data,
     str_to_time_stamp,
+    get_pt_object_coord,
 )
 from jormungandr.olympic_site_params_manager import OlympicSiteParamsManager
 from jormungandr import pt_planners_manager, transient_socket
@@ -897,6 +898,21 @@ class Instance(transient_socket.TransientSocket):
             return len(self.get_id(id_).places) > 0
         except DeadSocketException:
             return False
+
+    def get_coord_by_id(self, id_):
+        """
+        If this instance has this id then get coordinate
+        """
+        try:
+            pt_objects = self.get_id(id_).places
+            pt_object = pt_objects[0] if len(pt_objects) > 0 else None
+            if pt_object:
+                coord = get_pt_object_coord(pt_object)
+                return coord if (coord and coord.lon != 0 and coord.lat != 0) else None
+            else:
+                return None
+        except DeadSocketException:
+            return None
 
     def has_coord(self, lon, lat):
         return self.has_point(geometry.Point(lon, lat))
