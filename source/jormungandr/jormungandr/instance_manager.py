@@ -155,7 +155,7 @@ class InstanceManager(object):
 
         # we fetch the krakens metadata first
         # not on the ping thread to always have the data available (for the tests for example)
-        if app.config.get('INIT_KRAKEN_INSTANCES', True):
+        if app.config.get('INIT_KRAKEN_INSTANCES', False):
             self.init_kraken_instances()
 
         if self.start_ping:
