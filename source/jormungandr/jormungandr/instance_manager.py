@@ -240,7 +240,7 @@ class InstanceManager(object):
     def _all_keys_of_id_in_instances(self, instances, object_id):
         # Get the first occurrence pt_object coordinate and manage as above
         # If no object with coordinate exist among all the authorized instances
-        # Then
+        # Then we will be obliged to call all krakens as before (necessary for test with bad data)
         object_coord = self._get_first_object_coord_in_instances_by_id(instances, object_id)
         if object_coord:
             return self._all_keys_of_coord_in_instances(instances, object_coord.lon, object_coord.lat)
