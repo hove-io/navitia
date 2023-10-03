@@ -46,7 +46,6 @@ import sys
 import kombu
 import six
 import pybreaker
-import retrying
 
 f_datetime = "%Y%m%dT%H%M%S"
 
