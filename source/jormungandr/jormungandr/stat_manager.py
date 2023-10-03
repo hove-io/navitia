@@ -170,11 +170,7 @@ class StatManager(object):
         self.fill_parameters(stat_request)
         self.fill_result(stat_request, call_result)
 
-        retry = retrying.Retrying(
-            stop_max_attempt_number=2,
-            retry_on_exception=lambda e: not isinstance(e, pybreaker.CircuitBreakerError),
-        )
-        retry.call(self.breaker.call, self.publish_request, stat_request.api, stat_request.SerializeToString())
+        self.breaker.call(self.publish_request, stat_request.api, stat_request.SerializeToString())
 
     def fill_info_response(self, stat_info_response, call_result):
         """
