@@ -124,6 +124,10 @@ class StatManager(object):
         self.broker_url = app.config.get('BROKER_URL', None)
         self.exchange_name = app.config.get('EXCHANGE_NAME', None)
         self.connection_timeout = app.config.get('STAT_CONNECTION_TIMEOUT', 1)
+        self.interval_start = app.config.get('STAT_CONNECTION_RETRY_POLICY', {}).get("interval_start", 0)
+        self.interval_step = app.config.get('STAT_CONNECTION_RETRY_POLICY', {}).get("interval_step", 1)
+        self.interval_max = app.config.get('STAT_CONNECTION_RETRY_POLICY', {}).get("interval_max", 1)
+        self.max_retries = app.config.get('STAT_CONNECTION_RETRY_POLICY', {}).get("max_retries", 5)
 
         if self.save_stat:
             try:
@@ -142,7 +146,12 @@ class StatManager(object):
         connection to rabbitmq and initialize queues
         """
         self.connection = kombu.Connection(self.broker_url, connect_timeout=self.connection_timeout)
-        retry_policy = {'interval_start': 0, 'interval_step': 1, 'interval_max': 1, 'max_retries': 5}
+        retry_policy = {
+            'interval_start': self.interval_start,
+            'interval_step': self.interval_step,
+            'interval_max': self.interval_max,
+            'max_retries': self.max_retries,
+        }
 
         self.connection.ensure_connection(**retry_policy)
         self.exchange = kombu.Exchange(self.exchange_name, type="topic", auto_delete=auto_delete)
