@@ -453,10 +453,10 @@ BOOST_FIXTURE_TEST_CASE(line_report_should_return_disruptions_from_tagged_disrup
                              until);
 
     auto& impacts = pb_creator.impacts;
-    BOOST_CHECK_EQUAL(impacts.size(), 1);
+    BOOST_CHECK_EQUAL(impacts.size(), 2);
 
     std::set<std::string> uris = navitia::test::get_impacts_uris(impacts);
-    std::set<std::string> res = {"disrup_line_1"};
+    std::set<std::string> res = {"disrup_line_1", "disrup_network_1"};
     BOOST_CHECK_EQUAL_RANGE(res, uris);
 }
 
