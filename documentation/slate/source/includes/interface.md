@@ -15,34 +15,6 @@ That's lots of links. Links allow you to know all accessible uris and services f
     Length (in characters) of the URL is limited to 4096 characters.
 </aside>
 
-Paging
-------
-
-<aside class="success">
-    The results are paginated to avoid crashing your parser. The parameters to get the next or previous page are within the `links` section of the result.
-</aside>
-
-Every Navitia response contains a paging object
-
-|Key           |Type|Description                           |
-|--------------|----|--------------------------------------|
-|items_per_page|int |Number of items per page              |
-|items_on_page |int |Number of items on this page          |
-|start_page    |int |The page number                       |
-|total_result  |int |Total number of items for this request|
-
-You can navigate through a response using 2 parameters
-
-|Parameter |Type|Description              |
-|----------|----|-------------------------|
-|start_page|int |The page number          |
-|count     |int |Number of items per page |
-
-<aside class="notice">
-    The number of objects returned for a request can <b>not be superior than 200</b>.
-    If you request for more, Navitia will return the first 200, and you will have to paginate to get next 200.
-</aside>
-
 Templated URL
 -------------
 
@@ -123,6 +95,74 @@ That means:
 * you will find a **disruptions** section (**"rel": "disruptions"**)
 * containing some [disruptions](#disruption) objects (**"type": "disruption"**)
 * where you can find the details of your object (**"id": "edc46f3a-ad3d-11e4-a5e1-005056a44da2"**).
+
+Paging
+------
+
+``` shell
+#Retrieving lines collection
+$ curl 'https://api.navitia.io/v1/coverage/sandbox/lines' -H 'Authorization: 3b036afe-0110-4202-b9ed-99718476c2e0'
+
+#You can find "paging" informations, as
+{
+    "pagination": {
+        "items_on_page": 25
+        "items_per_page": 25,
+        "start_page": 1,
+        "total_result": 1921,
+    },
+}
+
+#You can also find "paging" links, prebuilt in the link section
+{
+       {
+            "href": "https://api.navitia.io/v1/coverage/demo/lines?start_page=0",
+            "templated": false
+            "type": "previous",
+        },
+       {
+            "href": "https://api.navitia.io/v1/coverage/demo/lines?start_page=2",
+            "templated": false
+            "type": "next",
+        },
+       {
+            "href": "https://api.navitia.io/v1/coverage/demo/lines?start_page=76",
+            "templated": false
+            "type": "last",
+        },
+       {
+            "href": "https://api.navitia.io/v1/coverage/demo/lines",
+            "templated": false
+            "type": "first",
+        }
+}
+```
+
+
+<aside class="success">
+    The results are paginated to avoid crashing your parser. The parameters to get the next or previous page are within the `links` section of the result.
+</aside>
+
+Every Navitia response contains a paging object
+
+|Key           |Type|Description                           |
+|--------------|----|--------------------------------------|
+|items_per_page|int |Number of items per page              |
+|items_on_page |int |Number of items on this page          |
+|start_page    |int |The page number                       |
+|total_result  |int |Total number of items for this request|
+
+You can navigate through a response using 2 parameters
+
+|Parameter |Type|Description              |
+|----------|----|-------------------------|
+|start_page|int |The page number          |
+|count     |int |Number of items per page |
+
+<aside class="notice">
+    The number of objects returned for a request can <b>not be superior than 200</b>.
+    If you request for more, Navitia will return the first 200, and you will have to paginate to get next 200.
+</aside>
 
 Objects order
 -------------
