@@ -140,7 +140,7 @@ $ curl 'https://api.navitia.io/v1/coverage/sandbox/lines' -H 'Authorization: 3b0
 
 
 <aside class="success">
-    The results are paginated to avoid crashing your parser. The parameters to get the next or previous page are within the `links` section of the result.
+    The results are paginated to avoid too big response size. The parameters to get the next or previous page are within the `links` section of the result.
 </aside>
 
 Every Navitia response contains a paging object
