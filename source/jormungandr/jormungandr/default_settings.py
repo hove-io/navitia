@@ -125,6 +125,7 @@ default_cache = {
     'TIMEOUT_PARAMS': 600,
     'TIMEOUT_TIMEO': 60,
     'TIMEOUT_SYNTHESE': 30,
+    'TIMEOUT_KRAKEN_COVERAGES': 60,
 }
 
 CACHE_CONFIGURATION = json.loads(os.getenv('JORMUNGANDR_CACHE_CONFIGURATION', '{}')) or default_cache

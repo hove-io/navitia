@@ -314,13 +314,9 @@ class InstanceManager(object):
         else:
             return valid_instances
 
-    def regions(self, region=None, lon=None, lat=None, request_id=None):
-        response = {'regions': []}
-        regions = []
-        if region or lon or lat:
-            regions.append(self.get_region(region_str=region, lon=lon, lat=lat))
-        else:
-            regions = self.get_regions()
+    def get_kraken_coverages(self, regions, request_id=None):
+        response = []
+
         for key_region in regions:
             req = request_pb2.Request()
             req.requested_api = type_pb2.METADATAS
@@ -333,10 +329,32 @@ class InstanceManager(object):
                     "status": "dead",
                     "error": {"code": "dead_socket", "value": "The region {} is dead".format(key_region)},
                 }
-            if resp_dict.get('status') == 'no_data' and not region and not lon and not lat:
-                continue
             resp_dict['region_id'] = key_region
-            response['regions'].append(resp_dict)
+            response.append(resp_dict)
+        return response
+
+    def regions(self, region=None, lon=None, lat=None, request_id=None):
+        response = {'regions': []}
+        regions = []
+        if region or lon or lat:
+            regions.append(self.get_region(region_str=region, lon=lon, lat=lat))
+            kraken_coverages = self.get_kraken_coverages(regions, request_id=request_id)
+        else:
+            regions = self.get_regions()
+            if regions:
+                regions.sort()
+
+            @cache.memoize(
+                app.config.get(str('CACHE_CONFIGURATION'), {}).get(str('TIMEOUT_KRAKEN_COVERAGES'), 60)
+            )
+            def get_cached_kraken_coverages(regions_list):
+                return self.get_kraken_coverages(regions_list, request_id=request_id)
+
+            kraken_coverages = get_cached_kraken_coverages(regions)
+        for kraken_coverage in kraken_coverages:
+            if kraken_coverage.get('status') == 'no_data' and not region and not lon and not lat:
+                continue
+            response['regions'].append(kraken_coverage)
         return response
 
     @memory_cache.memoize(app.config[str('MEMORY_CACHE_CONFIGURATION')].get(str('TIMEOUT_AUTHENTICATION'), 30))
