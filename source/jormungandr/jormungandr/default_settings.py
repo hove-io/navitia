@@ -117,6 +117,18 @@ STAT_CIRCUIT_BREAKER_MAX_FAIL = int(os.getenv('JORMUNGANDR_STAT_CIRCUIT_BREAKER_
 # the circuit breaker retries after this timeout (in seconds)
 STAT_CIRCUIT_BREAKER_TIMEOUT_S = int(os.getenv('JORMUNGANDR_STAT_CIRCUIT_BREAKER_TIMEOUT_S', 60))
 
+default_stat_connection_retry_policy = {
+    'interval_start': 0,
+    'interval_step': 1,
+    'interval_max': 1,
+    'max_retries': 5,
+}
+
+STAT_CONNECTION_RETRY_POLICY = (
+    json.loads(os.getenv('JORMUNGANDR_STAT_CONNECTION_RETRY_POLICY', '{}'))
+    or default_stat_connection_retry_policy
+)
+
 # Cache configuration, see https://pythonhosted.org/Flask-Caching/ for more information
 default_cache = {
     'CACHE_TYPE': 'null',  # by default cache is not activated
