@@ -343,7 +343,9 @@ class InstanceManager(object):
             if regions:
                 regions.sort()
 
-            @cache.memoize(app.config.get(str('CACHE_CONFIGURATION'), {}).get(str('TIMEOUT_KRAKEN_COVERAGES'), 60))
+            @cache.memoize(
+                app.config.get(str('CACHE_CONFIGURATION'), {}).get(str('TIMEOUT_KRAKEN_COVERAGES'), 60)
+            )
             def get_cached_kraken_coverages(regions_list):
                 return self.get_kraken_coverages(regions_list, request_id=request_id)
 
