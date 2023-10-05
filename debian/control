@@ -71,25 +71,6 @@ Priority: optional
 Description: navitia-common
     python module shared within module of navitia, mostly navitia-tyr
 
-Package: navitia-kraken-dbg
-Architecture: amd64
-Section: debug
-Priority: extra
-Depends:
-    navitia-kraken (= ${binary:Version}),
-    ${misc:Depends}
-Description: debugging symbols for kraken
-
-
-Package: navitia-ed-dbg
-Architecture: amd64
-Section: debug
-Priority: extra
-Depends:
-    navitia-ed (= ${binary:Version}),
-    ${misc:Depends}
-Description: debugging symbols for ed
-
 Package: navitia-tyr
 Build-Depends:
     dh-python

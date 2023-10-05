@@ -79,3 +79,8 @@ jobs:
         echo "Pull Request Number - ${{ env.PULL_REQUEST_NUMBER }}"
         echo "Pull Request Number - ${{ steps.cpr.outputs.pull-request-number }}"
 
+    - name: clean up workspace
+      if: ${{ always() }}
+      run: |
+        rm -rf ./*
+        rm -rf ./.??*

@@ -14,7 +14,7 @@ DEFAULT_SQLALCHEMY_ENGINE_OPTIONS = {
 INSTANCES_DIR = os.getenv('JORMUNGANDR_INSTANCES_DIR', '/etc/jormungandr.d')
 
 
-INSTANCE_TIMEOUT = float(os.getenv('JORMUNGANDR_INSTANCE_TIMEOUT_S', 10))
+INSTANCES_TIMEOUT = float(os.getenv('JORMUNGANDR_INSTANCES_TIMEOUT_S', 10))
 PLACE_FAST_TIMEOUT = float(os.getenv('JORMUNGANDR_PLACE_FAST_TIMEOUT_S', 1))
 
 # Patern that matches Jormungandr configuration files
@@ -117,6 +117,18 @@ STAT_CIRCUIT_BREAKER_MAX_FAIL = int(os.getenv('JORMUNGANDR_STAT_CIRCUIT_BREAKER_
 # the circuit breaker retries after this timeout (in seconds)
 STAT_CIRCUIT_BREAKER_TIMEOUT_S = int(os.getenv('JORMUNGANDR_STAT_CIRCUIT_BREAKER_TIMEOUT_S', 60))
 
+default_stat_connection_retry_policy = {
+    'interval_start': 0,
+    'interval_step': 1,
+    'interval_max': 1,
+    'max_retries': 5,
+}
+
+STAT_CONNECTION_RETRY_POLICY = (
+    json.loads(os.getenv('JORMUNGANDR_STAT_CONNECTION_RETRY_POLICY', '{}'))
+    or default_stat_connection_retry_policy
+)
+
 # Cache configuration, see https://pythonhosted.org/Flask-Caching/ for more information
 default_cache = {
     'CACHE_TYPE': 'null',  # by default cache is not activated
@@ -125,6 +137,7 @@ default_cache = {
     'TIMEOUT_PARAMS': 600,
     'TIMEOUT_TIMEO': 60,
     'TIMEOUT_SYNTHESE': 30,
+    'TIMEOUT_KRAKEN_COVERAGES': 60,
 }
 
 CACHE_CONFIGURATION = json.loads(os.getenv('JORMUNGANDR_CACHE_CONFIGURATION', '{}')) or default_cache
@@ -155,62 +168,138 @@ AUTOCOMPLETE_SYSTEMS = json.loads(os.getenv('JORMUNGANDR_AUTOCOMPLETE_SYSTEMS', 
 ISOCHRONE_DEFAULT_VALUE = os.getenv('JORMUNGANDR_ISOCHRONE_DEFAULT_VALUE', 1800)  # in s
 
 # circuit breaker parameters.
-CIRCUIT_BREAKER_MAX_INSTANCE_FAIL = 4  # max instance call failures before stopping attempt
-CIRCUIT_BREAKER_INSTANCE_TIMEOUT_S = 60  # the circuit breaker retries after this timeout (in seconds)
+CIRCUIT_BREAKER_MAX_INSTANCE_FAIL = int(
+    os.getenv('JORMUNGANDR_CIRCUIT_BREAKER_MAX_INSTANCE_FAIL', 4)
+)  # max instance call failures before stopping attempt
+CIRCUIT_BREAKER_INSTANCE_TIMEOUT_S = int(
+    os.getenv('JORMUNGANDR_CIRCUIT_BREAKER_INSTANCE_TIMEOUT_S', 60)
+)  # the circuit breaker retries after this timeout (in seconds)
 
-CIRCUIT_BREAKER_MAX_TIMEO_FAIL = 4  # max instance call failures before stopping attempt
-CIRCUIT_BREAKER_TIMEO_TIMEOUT_S = 60  # the circuit breaker retries after this timeout (in seconds)
+CIRCUIT_BREAKER_MAX_TIMEO_FAIL = int(
+    os.getenv('JORMUNGANDR_CIRCUIT_BREAKER_MAX_TIMEO_FAIL', 4)
+)  # max instance call failures before stopping attempt
+CIRCUIT_BREAKER_TIMEO_TIMEOUT_S = int(
+    os.getenv('JORMUNGANDR_CIRCUIT_BREAKER_TIMEO_TIMEOUT_S', 60)
+)  # the circuit breaker retries after this timeout (in seconds)
 
-CIRCUIT_BREAKER_MAX_SYNTHESE_FAIL = 4  # max instance call failures before stopping attempt
-CIRCUIT_BREAKER_SYNTHESE_TIMEOUT_S = 60  # the circuit breaker retries after this timeout (in seconds)
+CIRCUIT_BREAKER_MAX_SYNTHESE_FAIL = int(
+    os.getenv('JORMUNGANDR_CIRCUIT_BREAKER_MAX_SYNTHESE_FAIL', 4)
+)  # max instance call failures before stopping attempt
+CIRCUIT_BREAKER_SYNTHESE_TIMEOUT_S = int(
+    os.getenv('JORMUNGANDR_CIRCUIT_BREAKER_SYNTHESE_TIMEOUT_S', 60)
+)  # the circuit breaker retries after this timeout (in seconds)
 
-CIRCUIT_BREAKER_MAX_JCDECAUX_FAIL = 4  # max instance call failures before stopping attempt
-CIRCUIT_BREAKER_JCDECAUX_TIMEOUT_S = 60  # the circuit breaker retries after this timeout (in seconds)
+CIRCUIT_BREAKER_MAX_JCDECAUX_FAIL = int(
+    os.getenv('JORMUNGANDR_CIRCUIT_BREAKER_MAX_JCDECAUX_FAIL', 4)
+)  # max instance call failures before stopping attempt
+CIRCUIT_BREAKER_JCDECAUX_TIMEOUT_S = int(
+    os.getenv('JORMUNGANDR_CIRCUIT_BREAKER_JCDECAUX_TIMEOUT_S', 60)
+)  # the circuit breaker retries after this timeout (in seconds)
 
-CIRCUIT_BREAKER_MAX_CAR_PARK_FAIL = 4  # max instance call failures before stopping attempt
-CIRCUIT_BREAKER_CAR_PARK_TIMEOUT_S = 60  # the circuit breaker retries after this timeout (in seconds)
+CIRCUIT_BREAKER_MAX_CAR_PARK_FAIL = int(
+    os.getenv('JORMUNGANDR_CIRCUIT_BREAKER_MAX_CAR_PARK_FAIL', 4)
+)  # max instance call failures before stopping attempt
+CIRCUIT_BREAKER_CAR_PARK_TIMEOUT_S = int(
+    os.getenv('JORMUNGANDR_CIRCUIT_BREAKER_CAR_PARK_TIMEOUT_S', 60)
+)  # the circuit breaker retries after this timeout (in seconds)
 
-CIRCUIT_BREAKER_MAX_CLEVERAGE_FAIL = 4  # max instance call failures before stopping attempt
-CIRCUIT_BREAKER_CLEVERAGE_TIMEOUT_S = 60  # the circuit breaker retries after this timeout (in seconds)
+CIRCUIT_BREAKER_MAX_CLEVERAGE_FAIL = int(
+    os.getenv('JORMUNGANDR_CIRCUIT_BREAKER_MAX_CLEVERAGE_FAIL', 4)
+)  # max instance call failures before stopping attempt
+CIRCUIT_BREAKER_CLEVERAGE_TIMEOUT_S = int(
+    os.getenv('JORMUNGANDR_CIRCUIT_BREAKER_CLEVERAGE_TIMEOUT_S', 60)
+)  # the circuit breaker retries after this timeout (in seconds)
 
-CIRCUIT_BREAKER_MAX_SYTRAL_FAIL = 4  # max instance call failures before stopping attempt
-CIRCUIT_BREAKER_SYTRAL_TIMEOUT_S = 60  # the circuit breaker retries after this timeout (in seconds)
+CIRCUIT_BREAKER_MAX_SYTRAL_FAIL = int(
+    os.getenv('JORMUNGANDR_CIRCUIT_BREAKER_MAX_SYTRAL_FAIL', 4)
+)  # max instance call failures before stopping attempt
+CIRCUIT_BREAKER_SYTRAL_TIMEOUT_S = int(
+    os.getenv('JORMUNGANDR_CIRCUIT_BREAKER_SYTRAL_TIMEOUT_S', 60)
+)  # the circuit breaker retries after this timeout (in seconds)
 
-CIRCUIT_BREAKER_MAX_VALHALLA_FAIL = 4  # max instance call failures before stopping attempt
-CIRCUIT_BREAKER_VALHALLA_TIMEOUT_S = 60  # the circuit breaker retries after this timeout (in seconds)
+CIRCUIT_BREAKER_MAX_VALHALLA_FAIL = int(
+    os.getenv('JORMUNGANDR_CIRCUIT_BREAKER_MAX_VALHALLA_FAIL', 4)
+)  # max instance call failures before stopping attempt
+CIRCUIT_BREAKER_VALHALLA_TIMEOUT_S = int(
+    os.getenv('JORMUNGANDR_CIRCUIT_BREAKER_VALHALLA_TIMEOUT_S', 60)
+)  # the circuit breaker retries after this timeout (in seconds)
 
-CIRCUIT_BREAKER_MAX_GEOVELO_FAIL = 4  # max instance call failures before stopping attempt
-CIRCUIT_BREAKER_GEOVELO_TIMEOUT_S = 60  # the circuit breaker retries after this timeout (in seconds)
+CIRCUIT_BREAKER_MAX_GEOVELO_FAIL = int(
+    os.getenv('JORMUNGANDR_CIRCUIT_BREAKER_MAX_GEOVELO_FAIL', 4)
+)  # max instance call failures before stopping attempt
+CIRCUIT_BREAKER_GEOVELO_TIMEOUT_S = int(
+    os.getenv('JORMUNGANDR_CIRCUIT_BREAKER_GEOVELO_TIMEOUT_S', 60)
+)  # the circuit breaker retries after this timeout (in seconds)
 
-CIRCUIT_BREAKER_MAX_HERE_FAIL = 4  # max instance call failures before stopping attempt
-CIRCUIT_BREAKER_HERE_TIMEOUT_S = 60  # the circuit breaker retries after this timeout (in seconds)
+CIRCUIT_BREAKER_MAX_HERE_FAIL = int(
+    os.getenv('JORMUNGANDR_CIRCUIT_BREAKER_MAX_HERE_FAIL', 4)
+)  # max instance call failures before stopping attempt
+CIRCUIT_BREAKER_HERE_TIMEOUT_S = int(
+    os.getenv('JORMUNGANDR_CIRCUIT_BREAKER_HERE_TIMEOUT_S', 60)
+)  # the circuit breaker retries after this timeout (in seconds)
 
-CIRCUIT_BREAKER_MAX_CYKLEO_FAIL = 4  # max instance call failures before stopping attempt
-CIRCUIT_BREAKER_CYKLEO_TIMEOUT_S = 60  # the circuit breaker retries after this timeout (in seconds)
+CIRCUIT_BREAKER_MAX_CYKLEO_FAIL = int(
+    os.getenv('JORMUNGANDR_CIRCUIT_BREAKER_MAX_CYKLEO_FAIL', 4)
+)  # max instance call failures before stopping attempt
+CIRCUIT_BREAKER_CYKLEO_TIMEOUT_S = int(
+    os.getenv('JORMUNGANDR_CIRCUIT_BREAKER_CYKLEO_TIMEOUT_S', 60)
+)  # the circuit breaker retries after this timeout (in seconds)
 
-CIRCUIT_BREAKER_MAX_INSTANT_SYSTEM_FAIL = 4  # max instance call failures before stopping attempt
-CIRCUIT_BREAKER_INSTANT_SYSTEM_TIMEOUT_S = 60  # the circuit breaker retries after this timeout (in seconds)
+CIRCUIT_BREAKER_MAX_INSTANT_SYSTEM_FAIL = int(
+    os.getenv('JORMUNGANDR_CIRCUIT_BREAKER_MAX_INSTANT_SYSTEM_FAIL', 4)
+)  # max instance call failures before stopping attempt
+CIRCUIT_BREAKER_INSTANT_SYSTEM_TIMEOUT_S = int(
+    os.getenv('JORMUNGANDR_CIRCUIT_BREAKER_INSTANT_SYSTEM_TIMEOUT_S', 60)
+)  # the circuit breaker retries after this timeout (in seconds)
 
-CIRCUIT_BREAKER_MAX_BLABLALINES_FAIL = 4  # max instance call failures before stopping attempt
-CIRCUIT_BREAKER_BLABLALINES_TIMEOUT_S = 60  # the circuit breaker retries after this timeout (in seconds)
+CIRCUIT_BREAKER_MAX_BLABLALINES_FAIL = int(
+    os.getenv('JORMUNGANDR_CIRCUIT_BREAKER_MAX_BLABLALINES_FAIL', 4)
+)  # max instance call failures before stopping attempt
+CIRCUIT_BREAKER_BLABLALINES_TIMEOUT_S = int(
+    os.getenv('JORMUNGANDR_CIRCUIT_BREAKER_BLABLALINES_TIMEOUT_S', 60)
+)  # the circuit breaker retries after this timeout (in seconds)
 
-CIRCUIT_BREAKER_MAX_KAROS_FAIL = 4  # max instance call failures before stopping attempt
-CIRCUIT_BREAKER_KAROS_TIMEOUT_S = 60  # the circuit breaker retries after this timeout (in seconds)
+CIRCUIT_BREAKER_MAX_KAROS_FAIL = int(
+    os.getenv('JORMUNGANDR_CIRCUIT_BREAKER_MAX_KAROS_FAIL', 4)
+)  # max instance call failures before stopping attempt
+CIRCUIT_BREAKER_KAROS_TIMEOUT_S = int(
+    os.getenv('JORMUNGANDR_CIRCUIT_BREAKER_KAROS_TIMEOUT_S', 60)
+)  # the circuit breaker retries after this timeout (in seconds)
 
-CIRCUIT_BREAKER_MAX_BRAGI_FAIL = 4  # max instance call failures before stopping attempt
-CIRCUIT_BREAKER_BRAGI_TIMEOUT_S = 60  # the circuit breaker retries after this timeout (in seconds)
+CIRCUIT_BREAKER_MAX_BRAGI_FAIL = int(
+    os.getenv('JORMUNGANDR_CIRCUIT_BREAKER_MAX_BRAGI_FAIL', 4)
+)  # max instance call failures before stopping attempt
+CIRCUIT_BREAKER_BRAGI_TIMEOUT_S = int(
+    os.getenv('JORMUNGANDR_CIRCUIT_BREAKER_BRAGI_TIMEOUT_S', 60)
+)  # the circuit breaker retries after this timeout (in seconds)
 
-CIRCUIT_BREAKER_MAX_ASGARD_FAIL = 4  # max instance call failures before stopping attempt
-CIRCUIT_BREAKER_ASGARD_TIMEOUT_S = 60  # the circuit breaker retries after this timeout (in seconds)
+CIRCUIT_BREAKER_MAX_ASGARD_FAIL = int(
+    os.getenv('JORMUNGANDR_CIRCUIT_BREAKER_MAX_ASGARD_FAIL', 4)
+)  # max instance call failures before stopping attempt
+CIRCUIT_BREAKER_ASGARD_TIMEOUT_S = int(
+    os.getenv('JORMUNGANDR_CIRCUIT_BREAKER_ASGARD_TIMEOUT_S', 60)
+)  # the circuit breaker retries after this timeout (in seconds)
 
-CIRCUIT_BREAKER_MAX_KLAXIT_FAIL = 4  # max instance call failures before stopping attempt
-CIRCUIT_BREAKER_KLAXIT_TIMEOUT_S = 60  # the circuit breaker retries after this timeout (in seconds)
+CIRCUIT_BREAKER_MAX_KLAXIT_FAIL = int(
+    os.getenv('JORMUNGANDR_CIRCUIT_BREAKER_MAX_KLAXIT_FAIL', 4)
+)  # max instance call failures before stopping attempt
+CIRCUIT_BREAKER_KLAXIT_TIMEOUT_S = int(
+    os.getenv('JORMUNGANDR_CIRCUIT_BREAKER_KLAXIT_TIMEOUT_S', 60)
+)  # the circuit breaker retries after this timeout (in seconds)
 
-CIRCUIT_BREAKER_MAX_OUESTGO_FAIL = 4  # max instance call failures before stopping attempt
-CIRCUIT_BREAKER_OUESTGO_TIMEOUT_S = 60  # the circuit breaker retries after this timeout (in seconds)
+CIRCUIT_BREAKER_MAX_OUESTGO_FAIL = int(
+    os.getenv('JORMUNGANDR_CIRCUIT_BREAKER_MAX_OUESTGO_FAIL', 4)
+)  # max instance call failures before stopping attempt
+CIRCUIT_BREAKER_OUESTGO_TIMEOUT_S = int(
+    os.getenv('JORMUNGANDR_CIRCUIT_BREAKER_OUESTGO_TIMEOUT_S', 60)
+)  # the circuit breaker retries after this timeout (in seconds)
 
-CIRCUIT_BREAKER_MAX_FORSETI_FAIL = 4  # max instance call failures before stopping attempt
-CIRCUIT_BREAKER_FORSETI_TIMEOUT_S = 60  # the circuit breaker retries after this timeout (in seconds)
+CIRCUIT_BREAKER_MAX_FORSETI_FAIL = int(
+    os.getenv('JORMUNGANDR_CIRCUIT_BREAKER_MAX_FORSETI_FAIL', 4)
+)  # max instance call failures before stopping attempt
+CIRCUIT_BREAKER_FORSETI_TIMEOUT_S = int(
+    os.getenv('JORMUNGANDR_CIRCUIT_BREAKER_FORSETI_TIMEOUT_S', 60)
+)  # the circuit breaker retries after this timeout (in seconds)
 
 
 # Default region instance
@@ -259,3 +348,6 @@ SQLALCHEMY_TRACK_MODIFICATIONS = False
 BEST_BOARDING_POSITIONS_DIR = os.getenv('JORMUNGANDR_BEST_BOARDING_POSITIONS_DIR', None)
 OLYMPIC_SITE_PARAMS_DIR = os.getenv('JORMUNGANDR_OLYMPIC_SITE_PARAMS_DIR', None)
 DEPLOYMENT_AZ = os.getenv('JORMUNGANDR_DEPLOYMENT_AZ', "unknown")
+
+
+INIT_KRAKEN_INSTANCES = boolean(os.getenv('JORMUNGANDR_INIT_KRAKEN_INSTANCES', False))
