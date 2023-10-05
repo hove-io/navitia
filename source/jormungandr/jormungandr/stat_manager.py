@@ -50,6 +50,10 @@ import pybreaker
 f_datetime = "%Y%m%dT%H%M%S"
 
 
+class StatManagerError(RuntimeError):
+    pass
+
+
 def init_journey(stat_journey):
     stat_journey.requested_date_time = 0
     stat_journey.departure_date_time = 0
@@ -166,9 +170,12 @@ class StatManager(object):
 
         try:
             self._manage_stat(start_time, call_result)
+        except pybreaker.CircuitBreakerError as e:
+            logging.getLogger(__name__).error('RabbitMQ is not reachable (error: {})'.format(e))
+            raise StatManagerError('circuit breaker open')
         except Exception as e:
-            # if stat are not working we don't want jormungandr to stop.
             logging.getLogger(__name__).exception('Error during stat management')
+            raise StatManagerError("Error during stat management: {}".format(e))
 
     def _manage_stat(self, start_time, call_result):
         end_time = time.time()
@@ -557,7 +564,11 @@ class manage_stat_caller:
         def wrapper(*args, **kwargs):
             start_time = time.time()
             call_result = f(*args, **kwargs)
-            self.manager.manage_stat(self, start_time, call_result)
+            try:
+                self.manager.manage_stat(self, start_time, call_result)
+            except (StatManagerError, Exception):
+                # if stat are not working we don't want jormungandr to stop.
+                pass
             return call_result
 
         return wrapper

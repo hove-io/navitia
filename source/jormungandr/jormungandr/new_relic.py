@@ -212,9 +212,7 @@ def statManagerEvent(call_name, group_name):
                 result = func(obj, *args, **kwargs)
             except Exception as e:
                 event_params["status"] = "failed"
-                event_params.update({"exception": e})
-                raise
-
+                event_params.update({"reason": str(e)})
             duration = timeit.default_timer() - start_time
             event_params.update({"duration": duration})
 
