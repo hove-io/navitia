@@ -121,6 +121,15 @@ def background_task(name, group):  # type: (Text, Text) -> Callable
     return wrap
 
 
+def get_common_event_params(service_name, call_name, status="ok"):
+    return {
+        "service": service_name,
+        "call": call_name,
+        "status": status,
+        "az": app.config.get("DEPLOYMENT_AZ", "unknown"),
+    }
+
+
 def distributedEvent(call_name, group_name):
     """
     Custom event that we publish to New Relic for distributed scenario
@@ -129,13 +138,8 @@ def distributedEvent(call_name, group_name):
     def wrap(func):
         @functools.wraps(func)
         def wrapper(obj, service, *args, **kwargs):
-            event_params = {
-                "service": type(service).__name__,
-                "call": call_name,
-                "group": group_name,
-                "status": "ok",
-                "az": app.config.get("DEPLOYMENT_AZ", "unknown"),
-            }
+            event_params = get_common_event_params(type(service).__name__, call_name)
+            event_params.upadet({"group": group_name})
 
             start_time = timeit.default_timer()
             result = None
@@ -166,15 +170,9 @@ def record_streetnetwork_call(call_name, connector_name, mode, coverage_name):
     Asgard, Kraken, Geovelo, Here, etc
     """
     newrelic_service_name = "streetnetwork_call"
-    event_params = {
-        "service": newrelic_service_name,
-        "call": call_name,
-        "connector": connector_name,
-        "mode": mode,
-        "coverage": coverage_name,
-        "status": "ok",
-        "az": app.config.get("DEPLOYMENT_AZ", "unknown"),
-    }
+    event_params = get_common_event_params(newrelic_service_name, call_name)
+    event_params.update({"connector": connector_name, "mode": mode, "coverage": coverage_name})
+
     start_time = timeit.default_timer()
     try:
         yield
@@ -198,13 +196,8 @@ def statManagerEvent(call_name, group_name):
     def wrap(func):
         @functools.wraps(func)
         def wrapper(obj, service, *args, **kwargs):
-            event_params = {
-                "service": type(service).__name__,
-                "call": call_name,
-                "group": group_name,
-                "status": "ok",
-                "az": app.config.get("DEPLOYMENT_AZ", "unknown"),
-            }
+            event_params = get_common_event_params(type(service).__name__, call_name)
+            event_params.upadet({"group": group_name})
 
             start_time = timeit.default_timer()
             result = None
