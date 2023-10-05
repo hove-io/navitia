@@ -200,20 +200,18 @@ def statManagerEvent(call_name, group_name):
             event_params.update({"group": group_name})
 
             start_time = timeit.default_timer()
-            result = None
             try:
-                result = func(obj, *args, **kwargs)
+                return func(obj, *args, **kwargs)
             except Exception as e:
                 event_params["status"] = "failed"
                 event_params.update({"reason": str(e)})
+                raise
             finally:
                 duration = timeit.default_timer() - start_time
                 event_params.update({"duration": duration})
 
                 # Send the custom event to newrelic !
                 record_custom_event("stat_manager", event_params)
-
-            return result
 
         return wrapper
 

@@ -169,7 +169,7 @@ class StatManager(object):
             self._manage_stat(start_time, call_result)
         except pybreaker.CircuitBreakerError as e:
             logging.getLogger(__name__).error('RabbitMQ is not reachable (error: {})'.format(e))
-            raise StatManagerError('circuit breaker open')
+            raise StatManagerError('stat circuit breaker open')
         except Exception as e:
             logging.getLogger(__name__).exception('Error during stat management')
             raise StatManagerError("Error during stat management: {}".format(e))
