@@ -61,6 +61,7 @@ def patch_http(patch_all=False):
     )
 
     from gevent import monkey
+
     if patch_all:
         monkey.patch_all()
     else:
