@@ -563,9 +563,6 @@ class manage_stat_caller:
             call_result = f(*args, **kwargs)
             try:
                 self.manager.manage_stat(self, start_time, call_result)
-            except StatManagerError:
-                # if stat are not working we don't want jormungandr to stop.
-                pass
             except Exception:
                 # if stat are not working we don't want jormungandr to stop.
                 pass

@@ -139,7 +139,7 @@ def distributedEvent(call_name, group_name):
         @functools.wraps(func)
         def wrapper(obj, service, *args, **kwargs):
             event_params = get_common_event_params(type(service).__name__, call_name)
-            event_params.upadet({"group": group_name})
+            event_params.update({"group": group_name})
 
             start_time = timeit.default_timer()
             result = None
@@ -197,7 +197,7 @@ def statManagerEvent(call_name, group_name):
         @functools.wraps(func)
         def wrapper(obj, service, *args, **kwargs):
             event_params = get_common_event_params(type(service).__name__, call_name)
-            event_params.upadet({"group": group_name})
+            event_params.update({"group": group_name})
 
             start_time = timeit.default_timer()
             result = None
