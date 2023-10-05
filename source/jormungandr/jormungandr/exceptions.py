@@ -33,7 +33,6 @@ from werkzeug.exceptions import HTTPException
 import logging
 from jormungandr.new_relic import record_exception
 
-
 __all__ = [
     "RegionNotFound",
     "DeadSocketException",
@@ -41,6 +40,7 @@ __all__ = [
     "InvalidArguments",
     "TechnicalError",
     "GeoveloTechnicalError",
+    "StatManagerError",
 ]
 
 
@@ -162,3 +162,7 @@ def log_exception(sender, exception, **extra):
     else:
         logger.exception(error)
         record_exception()
+
+
+class StatManagerError(RuntimeError):
+    pass

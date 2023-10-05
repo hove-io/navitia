@@ -36,7 +36,8 @@ from navitiacommon import stat_pb2
 import logging
 from jormungandr import app
 from jormungandr.authentication import get_user, get_token, get_app_name, get_used_coverages
-from jormungandr import utils
+from jormungandr.exceptions import StatManagerError
+from jormungandr import utils, new_relic
 import re
 from threading import Lock
 
@@ -156,6 +157,7 @@ class StatManager(object):
         self.exchange = kombu.Exchange(self.exchange_name, type="topic", auto_delete=auto_delete)
         self.producer = self.connection.Producer(exchange=self.exchange)
 
+    @new_relic.statManagerEvent("manage_stat", "stat_manager")
     def manage_stat(self, start_time, call_result):
         """
         Function to fill stat objects (requests, parameters, journeys et sections) sand send them to Broker
@@ -165,9 +167,12 @@ class StatManager(object):
 
         try:
             self._manage_stat(start_time, call_result)
+        except pybreaker.CircuitBreakerError as e:
+            logging.getLogger(__name__).error('RabbitMQ is not reachable (error: {})'.format(e))
+            raise StatManagerError('stat circuit breaker open')
         except Exception as e:
-            # if stat are not working we don't want jormungandr to stop.
             logging.getLogger(__name__).exception('Error during stat management')
+            raise StatManagerError("Error during stat management: {}".format(e))
 
     def _manage_stat(self, start_time, call_result):
         end_time = time.time()
@@ -556,7 +561,11 @@ class manage_stat_caller:
         def wrapper(*args, **kwargs):
             start_time = time.time()
             call_result = f(*args, **kwargs)
-            self.manager.manage_stat(start_time, call_result)
+            try:
+                self.manager.manage_stat(self, start_time, call_result)
+            except Exception:
+                # if stat are not working we don't want jormungandr to stop.
+                pass
             return call_result
 
         return wrapper
