@@ -312,6 +312,8 @@ HEAT_MAP = boolean(os.getenv('JORMUNGANDR_HEAT_MAP', True))
 # These parameters are used to apply gevent's monkey patch
 # The Goal is to activate parallel calling valhalla, without the patch, parallel http and https calling may not work
 PATCH_WITH_GEVENT_SOCKET = bool(os.getenv('JORMUNGANDR_PATCH_WITH_GEVENT_SOCKET', True))
+# PATCH_WITH_GEVENT_SOCKET_LEVEL : values possibles all, thread or socket
+PATCH_WITH_GEVENT_SOCKET_LEVEL = os.getenv('JORMUNGANDR_PATCH_WITH_GEVENT_SOCKET_LEVEL', 'socket')
 
 GREENLET_POOL_SIZE = int(os.getenv('JORMUNGANDR_GEVENT_POOL_SIZE', 10))
 
