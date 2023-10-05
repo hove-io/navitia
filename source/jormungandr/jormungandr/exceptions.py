@@ -40,7 +40,7 @@ __all__ = [
     "InvalidArguments",
     "TechnicalError",
     "GeoveloTechnicalError",
-    "StatManagerError"
+    "StatManagerError",
 ]
 
 
