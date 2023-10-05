@@ -213,11 +213,12 @@ def statManagerEvent(call_name, group_name):
             except Exception as e:
                 event_params["status"] = "failed"
                 event_params.update({"reason": str(e)})
-            duration = timeit.default_timer() - start_time
-            event_params.update({"duration": duration})
+            finally:
+                duration = timeit.default_timer() - start_time
+                event_params.update({"duration": duration})
 
-            # Send the custom event to newrelic !
-            record_custom_event("stat_manager", event_params)
+                # Send the custom event to newrelic !
+                record_custom_event("stat_manager", event_params)
 
             return result
 

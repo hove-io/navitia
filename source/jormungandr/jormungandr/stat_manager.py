@@ -36,6 +36,7 @@ from navitiacommon import stat_pb2
 import logging
 from jormungandr import app
 from jormungandr.authentication import get_user, get_token, get_app_name, get_used_coverages
+from jormungandr.exceptions import StatManagerError
 from jormungandr import utils, new_relic
 import re
 from threading import Lock
@@ -48,10 +49,6 @@ import six
 import pybreaker
 
 f_datetime = "%Y%m%dT%H%M%S"
-
-
-class StatManagerError(RuntimeError):
-    pass
 
 
 def init_journey(stat_journey):
@@ -566,7 +563,10 @@ class manage_stat_caller:
             call_result = f(*args, **kwargs)
             try:
                 self.manager.manage_stat(self, start_time, call_result)
-            except (StatManagerError, Exception):
+            except StatManagerError:
+                # if stat are not working we don't want jormungandr to stop.
+                pass
+            except Exception:
                 # if stat are not working we don't want jormungandr to stop.
                 pass
             return call_result
