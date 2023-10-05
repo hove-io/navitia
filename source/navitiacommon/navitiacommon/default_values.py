@@ -248,7 +248,7 @@ pt_planners_configurations = dict()  # type: dict
 
 # loki pt journey fare
 loki_pt_journey_fare = 'kraken'
-loki_compute_pt_journey_fare = False
+loki_compute_pt_journey_fare = True
 loki_pt_journey_fare_configurations = dict()  # type: dict
 
 

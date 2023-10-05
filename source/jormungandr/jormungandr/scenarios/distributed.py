@@ -329,7 +329,7 @@ class Distributed(object):
             for journey in journeys_to_complete:
                 transfer_pool.async_compute_transfer(journey.pt_journeys.sections)
 
-        if request['_loki_compute_pt_journey_fare'] is True:
+        if request['_loki_compute_pt_journey_fare'] is True and request['_pt_planner'] == "loki":
             for response in responses:
                 pt_journey_fare_pool.async_compute_fare(response, request_id)
 
@@ -346,7 +346,7 @@ class Distributed(object):
             journeys=journeys_to_complete,
             request_id="{}_complete_pt_journey".format(request_id),
         )
-        if request['_loki_compute_pt_journey_fare'] is True:
+        if request['_loki_compute_pt_journey_fare'] is True and request['_pt_planner'] == "loki":
             wait_and_complete_pt_journey_fare(
                 pt_elements=journeys_to_complete, pt_journey_fare_pool=pt_journey_fare_pool
             )
