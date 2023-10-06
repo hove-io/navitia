@@ -872,7 +872,7 @@ void PbCreator::Filler::fill_pb_object(const nt::Route* r, pbnavitia::Route* rou
     }
 
     copy(0, dump_message_options).fill(r->line, route);
-    if ((depth > 0) && (!this->pb_creator.disable_geojson)) {
+    if ((depth > 1) && (!this->pb_creator.disable_geojson)) {
         fill(&r->line->shape, route->mutable_line());
     }
 
