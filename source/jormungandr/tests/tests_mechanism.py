@@ -139,7 +139,16 @@ class AbstractTestFixture(unittest.TestCase):
     @classmethod
     def create_dummy_json(cls):
         for name in cls.krakens_pool:
-            instance_config = {"key": name, "zmq_socket": cls._get_zmq_socket_name(name)}
+            instance_config = {
+                "key": name,
+                "zmq_socket": cls._get_zmq_socket_name(name),
+                "pt_planners": {
+                    "loki": {
+                        "class": "jormungandr.pt_planners.loki.Loki",
+                        "args": {"timeout": 10000, "zmq_socket": "cls._get_zmq_socket_name(name)"},
+                    }
+                },
+            }
             instance_config.update(cls.data_sets[name].get('instance_config', {}))
             with open(os.path.join(krakens_dir, name) + '.json', 'w') as f:
                 logging.debug("writing ini file {} for {}".format(f.name, name))
