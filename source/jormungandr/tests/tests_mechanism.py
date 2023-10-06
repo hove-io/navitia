@@ -145,7 +145,7 @@ class AbstractTestFixture(unittest.TestCase):
                 "pt_planners": {
                     "loki": {
                         "class": "jormungandr.pt_planners.loki.Loki",
-                        "args": {"timeout": 10000, "zmq_socket": "cls._get_zmq_socket_name(name)"},
+                        "args": {"timeout": 10000, "zmq_socket": cls._get_zmq_socket_name(name)},
                     }
                 },
             }
