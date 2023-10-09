@@ -36,6 +36,7 @@ import functools
 from typing import Text, Callable
 from contextlib import contextmanager
 from jormungandr import app
+from functools import wraps
 
 try:
     from newrelic import agent
@@ -216,3 +217,39 @@ def statManagerEvent(call_name, group_name):
         return wrapper
 
     return wrap
+
+
+class TransientSocketEvent:
+    """
+    Custom event that we publish to New Relic for transient_socket
+    """
+
+    def __init__(self, call_name, group_name, enable=False):
+        self.call_name = call_name
+        self.group_name = group_name
+        self.enable = enable
+
+    def __call__(self, func):
+        @wraps(func)
+        def wrapper(obj, service, *args, **kwargs):
+            if not self.enable:
+                return func(obj, *args, **kwargs)
+
+            event_params = get_common_event_params(type(service).__name__, self.call_name)
+            event_params.update({"group": self.group_name})
+
+            start_time = timeit.default_timer()
+            try:
+                return func(obj, *args, **kwargs)
+            except Exception as e:
+                event_params["status"] = "failed"
+                event_params.update({"reason": str(e)})
+                raise
+            finally:
+                duration = timeit.default_timer() - start_time
+                event_params.update({"duration": duration})
+
+                # Send the custom event to newrelic !
+                record_custom_event("transient_socket", event_params)
+
+        return wrapper

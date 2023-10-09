@@ -31,16 +31,14 @@
 
 import zmq
 import time
-from contextlib import contextmanager
 import logging
-import six
-import flask
 from gevent.lock import BoundedSemaphore
 from collections import namedtuple
 from sortedcontainers import SortedList
 from jormungandr.exceptions import DeadSocketException
-from datetime import datetime, timedelta
-from navitiacommon import response_pb2
+from jormungandr.new_relic import TransientSocketEvent
+from jormungandr import app
+from jormungandr.exceptions import CloseSocketError
 
 zmq_version = [int(n) for n in zmq.zmq_version().split(".")[:2]]
 
@@ -78,6 +76,11 @@ class TransientSocket(object):
         self._semaphore = BoundedSemaphore(1)
         self._sockets = SortedList([], key=lambda s: -s.t)
 
+    @TransientSocketEvent(
+        call_name="make_new_socket",
+        group_name="jormungandr_socket",
+        enable=app.config.get(str('SEND_METRIC_TRANSIENT_SOCKET_TO_NEWRELIC'), False),
+    )
     def make_new_socket(self):
         start = time.time()
         socket = self._zmq_context.socket(zmq.REQ)
@@ -111,11 +114,16 @@ class TransientSocket(object):
         t = time.time()
         return TransientSocket.TimedSocket(t, socket)
 
+    @TransientSocketEvent(
+        call_name="get_socket",
+        group_name="jormungandr_socket",
+        enable=app.config.get(str('SEND_METRIC_TRANSIENT_SOCKET_TO_NEWRELIC'), False),
+    )
     def get_socket(self):
 
         with self._semaphore:
             if not self._sockets:
-                return self.make_new_socket()
+                return self.make_new_socket(self)
             # since _sockets is a sorted list, the first element is always the newest socket.
             newest_timed_socket = self._sockets[0]
             now = time.time()
@@ -130,17 +138,17 @@ class TransientSocket(object):
                 self._sockets.clear()
                 start = time.time()
                 for s in sockets_to_be_closed:
-                    self.close_socket(s.socket)
+                    self.close_socket(self, s.socket)
                 self._logger.debug(
                     "it took %s ms to close %s sockets of %s",
                     '%.2e' % ((time.time() - start) * 1000),
                     len(sockets_to_be_closed),
                     self.name,
                 )
-        return self.make_new_socket()
+        return self.make_new_socket(self)
 
     def call(self, content, timeout, debug_cb=lambda: "", quiet=False):
-        timed_socket = self.get_socket()
+        timed_socket = self.get_socket(self)
 
         try:
             timed_socket.socket.send(content)
@@ -153,10 +161,10 @@ class TransientSocket(object):
                 raise DeadSocketException(self.name, self._zmq_socket)
 
         except DeadSocketException as e:
-            self.close_socket(timed_socket.socket)
+            self.close_socket(self, timed_socket.socket)
             raise e
         except:
-            self.close_socket(timed_socket.socket)
+            self.close_socket(self, timed_socket.socket)
             self._logger.exception(
                 'Unexpected transient socket exception with coverage: %s, zmq_socket: %s, debug_info: %s',
                 self.name,
@@ -168,18 +176,30 @@ class TransientSocket(object):
             if not timed_socket.socket.closed:
                 now = time.time()
                 if now - timed_socket.t >= self._ttl:
-                    self.close_socket(timed_socket.socket)
+                    self.close_socket(self, timed_socket.socket)
                 else:
                     with self._semaphore:
                         self._sockets.add(timed_socket)
 
-    def close_socket(self, socket):
+    @TransientSocketEvent(
+        call_name="_close_socket",
+        group_name="jormungandr_socket",
+        enable=app.config.get(str('SEND_METRIC_TRANSIENT_SOCKET_TO_NEWRELIC'), False),
+    )
+    def _close_socket(self, socket):
         try:
             socket.setsockopt(zmq.LINGER, 0)
             socket.close()
-        except:
+        except Exception as e:
             self._logger.exception(
                 'Error while closing transient socket with coverage: %s, zmq_socket: %s',
                 self.name,
                 self._zmq_socket,
             )
+            raise CloseSocketError('Error while closing transient socket with coverage: {}'.format(e))
+
+    def close_socket(self, socket):
+        try:
+            self._close_socket(self, socket)
+        except Exception:
+            pass

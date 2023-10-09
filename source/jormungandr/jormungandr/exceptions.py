@@ -166,3 +166,7 @@ def log_exception(sender, exception, **extra):
 
 class StatManagerError(RuntimeError):
     pass
+
+
+class CloseSocketError(RuntimeError):
+    pass

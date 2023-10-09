@@ -46,6 +46,9 @@ PUBLIC = boolean(os.getenv('JORMUNGANDR_IS_PUBLIC', True))
 HTTP_BASIC_AUTH_REALM = os.getenv('JORMUNGANDR_HTTP_BASIC_AUTH_REALM', 'Token Required')
 
 NEWRELIC_CONFIG_PATH = os.getenv('JORMUNGANDR_NEWRELIC_CONFIG_PATH', None)
+SEND_METRIC_TRANSIENT_SOCKET_TO_NEWRELIC = boolean(
+    os.getenv('JORMUNGANDR_SEND_METRIC_TRANSIENT_SOCKET_TO_NEWRELIC', False)
+)
 
 from jormungandr.logging_utils import IdFilter
 
