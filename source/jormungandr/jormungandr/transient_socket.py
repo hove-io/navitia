@@ -138,7 +138,7 @@ class TransientSocket(object):
                 self._sockets.clear()
                 start = time.time()
                 for s in sockets_to_be_closed:
-                    self.close_socket(self, s.socket)
+                    self.close_socket(s.socket)
                 self._logger.debug(
                     "it took %s ms to close %s sockets of %s",
                     '%.2e' % ((time.time() - start) * 1000),
@@ -161,10 +161,10 @@ class TransientSocket(object):
                 raise DeadSocketException(self.name, self._zmq_socket)
 
         except DeadSocketException as e:
-            self.close_socket(self, timed_socket.socket)
+            self.close_socket(timed_socket.socket)
             raise e
         except:
-            self.close_socket(self, timed_socket.socket)
+            self.close_socket(timed_socket.socket)
             self._logger.exception(
                 'Unexpected transient socket exception with coverage: %s, zmq_socket: %s, debug_info: %s',
                 self.name,
@@ -176,7 +176,7 @@ class TransientSocket(object):
             if not timed_socket.socket.closed:
                 now = time.time()
                 if now - timed_socket.t >= self._ttl:
-                    self.close_socket(self, timed_socket.socket)
+                    self.close_socket(timed_socket.socket)
                 else:
                     with self._semaphore:
                         self._sockets.add(timed_socket)
