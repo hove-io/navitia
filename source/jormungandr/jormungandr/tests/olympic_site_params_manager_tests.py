@@ -30,7 +30,7 @@
 
 from __future__ import absolute_import, unicode_literals
 
-
+import tempfile
 import navitiacommon.type_pb2 as type_pb2
 from jormungandr.olympic_site_params_manager import OlympicSiteParamsManager
 from jormungandr.street_network.tests.streetnetwork_test_utils import make_pt_object
@@ -310,7 +310,21 @@ def test_build_departure_and_arrival_poi_jo():
     assert olympic_site_params["arrival_scenario"]['stop_point:463686'].virtual_duration == 150
 
 
-def test_build_olympic_site_params_empty_scenario():
+def test_get_dict_scenario_empty_scenario():
     osp = OlympicSiteParamsManager("", "idfm")
     res = osp.get_dict_scenario(None, {})
     assert not res
+
+
+def test_build_olympic_site_params_empty_scenario():
+    osp = OlympicSiteParamsManager("", "idfm")
+    res = osp.build_olympic_site_params(None, {})
+    assert not res
+
+
+def test_load_olympic_site_params_empty_path():
+    coverage = "idfm"
+    osp = OlympicSiteParamsManager("", coverage)
+    with tempfile.TemporaryDirectory() as tmp_path:
+        osp.load_olympic_site_params(tmp_path, coverage)
+    assert not osp.olympic_site_params
