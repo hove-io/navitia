@@ -938,14 +938,14 @@ def create_journeys_request(origins, destinations, datetime, clockwise, journey_
     req.requested_api = type_pb2.pt_planner
 
     def _set_departure_attractivity(stop_point_id, location):
-        attractivity_virtual_duration = journey_parameters.olympic_site_params.get("departure", {}).get(
+        attractivity_virtual_duration = journey_parameters.olympic_site_params.get("departure_scenario", {}).get(
             stop_point_id
         )
         if attractivity_virtual_duration:
             location.attractivity = attractivity_virtual_duration.attractivity
 
     def _set_arrival_attractivity(stop_point_id, location):
-        attractivity_virtual_duration = journey_parameters.olympic_site_params.get("arrival", {}).get(
+        attractivity_virtual_duration = journey_parameters.olympic_site_params.get("arrival_scenario", {}).get(
             stop_point_id
         )
         if attractivity_virtual_duration:
