@@ -36,84 +36,80 @@ from .journey_common_tests import *
 
 
 OLYMPIC_SITES = {
-  "poi:BCY": {
-    "name": "Site Olympique JO2024: Arena Bercy (Paris)",
-    "departure_scenario": "scenario a",
-    "arrival_scenario": "scenario a",
-    "strict": True,
-    "scenarios": {
-      "scenario a": {
-        "stop_points" : {
-          "stop_point:IDFM:463685": {
-            "name": "Bercy - Arena (Paris)",
-            "attractivity": 1,
-            "virtual_fallback": 10
-          },
-          "stop_point:IDFM:463686": {
-            "name": "Pont de Tolbiac (Paris)",
-            "attractivity": 3,
-            "virtual_fallback": 150
-          }
-        }
-      },
-      "scenario b": {
-        "stop_points" : {
-          "stop_point:IDFM:463685": {
-            "name": "Bercy - Arena (Paris)",
-            "attractivity": 1,
-            "virtual_fallback": 10
-          },
-          "stop_point:IDFM:463686": {
-            "name": "Pont de Tolbiac (Paris)",
-            "attractivity": 3,
-            "virtual_fallback": 150
-          }
-        }
-      },
-      "scenario c": {
-        "stop_points" : {
-          "stop_point:IDFM:463685": {
-            "name": "Bercy - Arena (Paris)",
-            "attractivity": 1,
-            "virtual_fallback": 10
-          },
-          "stop_point:IDFM:463686": {
-            "name": "Pont de Tolbiac (Paris)",
-            "attractivity": 3,
-            "virtual_fallback": 150
-          }
+    "poi:BCY": {
+        "name": "Site Olympique JO2024: Arena Bercy (Paris)",
+        "departure_scenario": "scenario a",
+        "arrival_scenario": "scenario a",
+        "strict": True,
+        "scenarios": {
+            "scenario a": {
+                "stop_points": {
+                    "stop_point:IDFM:463685": {
+                        "name": "Bercy - Arena (Paris)",
+                        "attractivity": 1,
+                        "virtual_fallback": 10,
+                    },
+                    "stop_point:IDFM:463686": {
+                        "name": "Pont de Tolbiac (Paris)",
+                        "attractivity": 3,
+                        "virtual_fallback": 150,
+                    },
+                }
+            },
+            "scenario b": {
+                "stop_points": {
+                    "stop_point:IDFM:463685": {
+                        "name": "Bercy - Arena (Paris)",
+                        "attractivity": 1,
+                        "virtual_fallback": 10,
+                    },
+                    "stop_point:IDFM:463686": {
+                        "name": "Pont de Tolbiac (Paris)",
+                        "attractivity": 3,
+                        "virtual_fallback": 150,
+                    },
+                }
+            },
+            "scenario c": {
+                "stop_points": {
+                    "stop_point:IDFM:463685": {
+                        "name": "Bercy - Arena (Paris)",
+                        "attractivity": 1,
+                        "virtual_fallback": 10,
+                    },
+                    "stop_point:IDFM:463686": {
+                        "name": "Pont de Tolbiac (Paris)",
+                        "attractivity": 3,
+                        "virtual_fallback": 150,
+                    },
+                },
+                "addtionnal_parameters": {"max_walking_duration_to_pt": 13000},
+            },
         },
-        "addtionnal_parameters": {
-          "max_walking_duration_to_pt": 13000
-        }
-        }
-    }
-  },
-  "poi:BCD": {
-    "name": "Bercy Arena (Paris)",
-    "departure_scenario": "default",
-    "arrival_scenario": "default",
-    "strict": True,
-    "scenarios": {
-      "default": {
-        "stop_points" : {
-          "stop_point:IDFM:463685": {
-            "name": "Bercy - Arena (Paris)",
-            "attractivity": 1,
-            "virtual_fallback": 10
-          },
-          "stop_point:IDFM:463686": {
-            "name": "Pont de Tolbiac (Paris)",
-            "attractivity": 3,
-            "virtual_fallback": 150
-          }
+    },
+    "poi:BCD": {
+        "name": "Bercy Arena (Paris)",
+        "departure_scenario": "default",
+        "arrival_scenario": "default",
+        "strict": True,
+        "scenarios": {
+            "default": {
+                "stop_points": {
+                    "stop_point:IDFM:463685": {
+                        "name": "Bercy - Arena (Paris)",
+                        "attractivity": 1,
+                        "virtual_fallback": 10,
+                    },
+                    "stop_point:IDFM:463686": {
+                        "name": "Pont de Tolbiac (Paris)",
+                        "attractivity": 3,
+                        "virtual_fallback": 150,
+                    },
+                },
+                "additional_parameters": {"max_walking_duration_to_pt": 13000},
+            }
         },
-        "additional_parameters": {
-          "max_walking_duration_to_pt": 13000
-        }
-      }
-    }
-  }
+    },
 }
 
 
