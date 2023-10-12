@@ -122,11 +122,24 @@ default_stat_connection_retry_policy = {
     'interval_step': 1,
     'interval_max': 1,
     'max_retries': 5,
+    'timeout': 1,
 }
 
 STAT_CONNECTION_RETRY_POLICY = (
     json.loads(os.getenv('JORMUNGANDR_STAT_CONNECTION_RETRY_POLICY', '{}'))
     or default_stat_connection_retry_policy
+)
+
+default_stat_transport_options = {
+    'interval_start': 0,
+    'interval_step': 1,
+    'interval_max': 1,
+    'max_retries': 3,
+}
+
+STAT_TRANSPORT_OPTIONS = (
+    json.loads(os.getenv('JORMUNGANDR_STAT_TRANSPORT_OPTIONS', '{}'))
+    or default_stat_transport_options
 )
 
 # Cache configuration, see https://pythonhosted.org/Flask-Caching/ for more information
