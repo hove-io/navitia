@@ -270,7 +270,8 @@ class InstanceManager(object):
     def _get_object_coord_in_instance_by_id(self, instance_name, instance_publication_date, object_id):
         """
         instance's published_date is usually provided as extra_cache_key to invalidate the cache when updating the ntfs
-        As type_pb2.GeographicalCoord() cannot be cached, we should transform it to utils.Coord
+        As type_pb2.GeographicalCoord() cannot be cached due to the fact that objects from protobuf are not 'picklable'
+        we should transform it to utils.Coord
         """
         instance = self.instances.get(instance_name)
         if not instance:
