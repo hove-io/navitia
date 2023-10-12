@@ -138,8 +138,7 @@ default_stat_transport_options = {
 }
 
 STAT_TRANSPORT_OPTIONS = (
-    json.loads(os.getenv('JORMUNGANDR_STAT_TRANSPORT_OPTIONS', '{}'))
-    or default_stat_transport_options
+    json.loads(os.getenv('JORMUNGANDR_STAT_TRANSPORT_OPTIONS', '{}')) or default_stat_transport_options
 )
 
 # Cache configuration, see https://pythonhosted.org/Flask-Caching/ for more information
