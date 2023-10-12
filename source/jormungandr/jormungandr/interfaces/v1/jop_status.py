@@ -36,11 +36,7 @@ class JopStatus(StatedResource):
     def __init__(self, *args, **kwargs):
         super(JopStatus, self).__init__(self, *args, **kwargs)
 
-    def get(self, region):
-        region_str = i_manager.get_region(region, None, None)
-        if not region_str:
-            return {}, 404
+    def get(self, region=None, lon=None, lat=None):
+        region_str = i_manager.get_region(region, lon, lat)
         instance = i_manager.instances[region_str]
-        if not instance:
-            return {}, 404
         return instance.olympic_site_params_manager.olympic_site_params, 200
