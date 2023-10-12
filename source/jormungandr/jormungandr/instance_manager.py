@@ -42,6 +42,7 @@ from jormungandr.exceptions import ApiNotFound, RegionNotFound, DeadSocketExcept
 from jormungandr.authentication import abort_request, can_read_user
 from jormungandr import authentication, cache, memory_cache, app
 from jormungandr.instance import Instance
+from jormungandr.utils import Coords
 import gevent
 import os
 
@@ -258,24 +259,27 @@ class InstanceManager(object):
         """
         fetch first occurrence of object among instances and return coordinate
         """
-        coord = None
         for instance in instances:
             coord = self._get_object_coord_in_instance_by_id(instance.name, instance.publication_date, object_id)
             if coord:
                 return coord
-        return coord
+        return None
 
     @memory_cache.memoize(app.config[str('MEMORY_CACHE_CONFIGURATION')].get(str('TIMEOUT_PTOBJECTS'), 30))
     @cache.memoize(app.config[str('CACHE_CONFIGURATION')].get(str('TIMEOUT_PTOBJECTS'), 300))
     def _get_object_coord_in_instance_by_id(self, instance_name, instance_publication_date, object_id):
         """
         instance's published_date is usually provided as extra_cache_key to invalidate the cache when updating the ntfs
+        As type_pb2.GeographicalCoord() cannot be cached, we should transform it to utils.Coord
         """
         instance = self.instances.get(instance_name)
         if not instance:
             logging.getLogger(__name__).error("Instance {} not found".format(instance_name))
             return None
-        return instance.get_coord_by_id(object_id)
+        pb_coord = instance.get_coord_by_id(object_id)
+        if not pb_coord:
+            return None
+        return Coords(pb_coord.lat, pb_coord.lon)
 
     @memory_cache.memoize(app.config[str('MEMORY_CACHE_CONFIGURATION')].get(str('TIMEOUT_PTOBJECTS'), 30))
     @cache.memoize(app.config[str('CACHE_CONFIGURATION')].get(str('TIMEOUT_PTOBJECTS'), 300))
