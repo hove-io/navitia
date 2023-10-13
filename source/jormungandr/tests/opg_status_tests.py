@@ -114,11 +114,11 @@ OLYMPIC_SITES = {
 
 
 @dataset({"main_routing_test": {}, "departure_board_test": {}})
-class TestJopStatus(AbstractTestFixture):
+class TestOpgStatus(AbstractTestFixture):
     def test_with_olympic_sites(self):
         instance = i_manager.instances["main_routing_test"]
         instance.olympic_site_params_manager.olympic_site_params = OLYMPIC_SITES
-        response = self.query("/v1/coverage/main_routing_test/jop_status")
+        response = self.query("/v1/coverage/main_routing_test/opg_status")
         assert isinstance(response, dict)
         assert len(response) == 2
         assert "poi:BCD" in response
@@ -127,20 +127,20 @@ class TestJopStatus(AbstractTestFixture):
     def test_coord_valid(self):
         instance = i_manager.instances["main_routing_test"]
         instance.olympic_site_params_manager.olympic_site_params = OLYMPIC_SITES
-        response, status_code = self.query_no_assert("/v1/coverage/0.000001;0.000898311281954/jop_status")
+        response, status_code = self.query_no_assert("/v1/coverage/0.000001;0.000898311281954/opg_status")
         assert isinstance(response, dict)
         assert len(response) == 2
         assert "poi:BCD" in response
         assert "poi:BCY" in response
 
     def test_without_olympic_sites(self):
-        response, status_code = self.query_no_assert("/v1/coverage/departure_board_test/jop_status")
+        response, status_code = self.query_no_assert("/v1/coverage/departure_board_test/opg_status")
         assert isinstance(response, dict)
         assert status_code == 200
         assert len(response) == 0
 
     def test_instance_invalid(self):
-        response, status_code = self.query_no_assert("/v1/coverage/aa/jop_status")
+        response, status_code = self.query_no_assert("/v1/coverage/aa/opg_status")
         assert isinstance(response, dict)
         assert status_code == 404
         assert "error" in response
@@ -149,7 +149,7 @@ class TestJopStatus(AbstractTestFixture):
     def test_coord_invalid(self):
         instance = i_manager.instances["main_routing_test"]
         instance.olympic_site_params_manager.olympic_site_params = OLYMPIC_SITES
-        response, status_code = self.query_no_assert("/v1/coverage/10.0;10/jop_status")
+        response, status_code = self.query_no_assert("/v1/coverage/10.0;10/opg_status")
         assert isinstance(response, dict)
         assert status_code == 404
         assert "error" in response

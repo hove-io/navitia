@@ -32,9 +32,9 @@ from jormungandr import i_manager
 from jormungandr.interfaces.v1.StatedResource import StatedResource
 
 
-class JopStatus(StatedResource):
+class OpgStatus(StatedResource):
     def __init__(self, *args, **kwargs):
-        super(JopStatus, self).__init__(self, *args, **kwargs)
+        super(OpgStatus, self).__init__(self, *args, **kwargs)
 
     def get(self, region=None, lon=None, lat=None):
         region_str = i_manager.get_region(region, lon, lat)
