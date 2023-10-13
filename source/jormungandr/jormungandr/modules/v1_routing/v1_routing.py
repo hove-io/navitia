@@ -51,6 +51,7 @@ from jormungandr.interfaces.v1 import (
     VehiclePositions,
     free_floatings,
     users,
+    opg_status,
 )
 from werkzeug.routing import BaseConverter, FloatConverter, PathConverter
 from jormungandr.modules_loader import AModule
@@ -310,6 +311,11 @@ class V1Routing(AModule):
         )
 
         self.add_resource(Status.Status, region + 'status', coord + 'status', endpoint='status')
+
+        self.add_resource(
+            opg_status.OpgStatus, region + 'opg_status', coord + 'opg_status', endpoint='opg_status'
+        )
+
         self.add_resource(
             GeoStatus.GeoStatus, region + '_geo_status', coord + '_geo_status', endpoint='geo_status'
         )
