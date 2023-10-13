@@ -94,8 +94,11 @@ def create_journeys_request_with_attractivities_test():
     origin = {"Hove": 42}
     destination = {"Somewhere": 666}
     departure_olympic_site_params = {
-        "departure": {"Hove": AttractivityVirtualFallback(1, 2), "Somewhere": AttractivityVirtualFallback(2, 3)},
-        "arrival": {},
+        "departure_scenario": {
+            "Hove": AttractivityVirtualFallback(1, 2),
+            "Somewhere": AttractivityVirtualFallback(2, 3),
+        },
+        "arrival_scenario": {},
     }
     journey_parameters = JourneyParameters(olympic_site_params=departure_olympic_site_params)
     datetime = str_to_time_stamp("20120614T080000")
@@ -105,8 +108,11 @@ def create_journeys_request_with_attractivities_test():
     assert not req.journeys.destination[0].HasField("attractivity")
 
     arrival_olympic_site_params = {
-        "departure": {},
-        "arrival": {"Hove": AttractivityVirtualFallback(1, 2), "Somewhere": AttractivityVirtualFallback(2, 3)},
+        "departure_scenario": {},
+        "arrival_scenario": {
+            "Hove": AttractivityVirtualFallback(1, 2),
+            "Somewhere": AttractivityVirtualFallback(2, 3),
+        },
     }
 
     journey_parameters = JourneyParameters(olympic_site_params=arrival_olympic_site_params)

@@ -1292,7 +1292,7 @@ class Scenario(simple.Scenario):
         # Return the possible combinations (origin_mode ,destination_mode, direct_path_type)
         krakens_call = get_kraken_calls(api_request)
 
-        api_request["olympic_site_params"] = instance.olympic_site_params_manager.get_olympic_site_params(
+        instance.olympic_site_params_manager.build(
             pt_object_origin, pt_object_destination, api_request, instance
         )
 

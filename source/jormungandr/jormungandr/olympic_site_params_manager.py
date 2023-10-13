@@ -32,6 +32,7 @@ import logging
 import json
 from collections import namedtuple
 from jormungandr.utils import get_olympic_site
+import glob
 
 
 AttractivityVirtualFallback = namedtuple("AttractivityVirtualFallback", "attractivity, virtual_duration")
@@ -41,18 +42,55 @@ class OlympicSiteParamsManager:
     def __init__(self, file_path, instance_name):
         """
         {
-          "poi:BCD": {
-            "departure": "default",
-            "arrival": "default",
+          "poi:BCY": {
+            "name": "Site Olympique JO2024: Arena Bercy (Paris)",
+            "departure_scenario": "scenario a",
+            "arrival_scenario": "scenario a",
+            "strict": false,
             "scenarios": {
-              "default": {
-                "stop_point:463685": {
-                  "attractivity": 1,
-                  "virtual_fallback": 10
+              "scenario a": {
+                "stop_points": {
+                  "stop_point:IDFM:463685": {
+                    "name": "Bercy - Arena (Paris)",
+                    "attractivity": 1,
+                    "virtual_fallback": 10
+                  },
+                  "stop_point:IDFM:463686": {
+                    "name": "Pont de Tolbiac (Paris)",
+                    "attractivity": 3,
+                    "virtual_fallback": 150
+                  }
+                }
+              },
+              "scenario b": {
+                "stop_points": {
+                  "stop_point:IDFM:463685": {
+                    "name": "Bercy - Arena (Paris)",
+                    "attractivity": 1,
+                    "virtual_fallback": 10
+                  },
+                  "stop_point:IDFM:463686": {
+                    "name": "Pont de Tolbiac (Paris)",
+                    "attractivity": 3,
+                    "virtual_fallback": 150
+                  }
+                }
+              },
+              "scenario c": {
+                "stop_points": {
+                  "stop_point:IDFM:463685": {
+                    "name": "Bercy - Arena (Paris)",
+                    "attractivity": 1,
+                    "virtual_fallback": 10
+                  },
+                  "stop_point:IDFM:463686": {
+                    "name": "Pont de Tolbiac (Paris)",
+                    "attractivity": 3,
+                    "virtual_fallback": 150
+                  }
                 },
-                "stop_point:463686": {
-                  "attractivity": 3,
-                  "virtual_fallback": 150
+                "addtionnal_parameters": {
+                  "max_walking_duration_to_pt": 13000
                 }
               }
             }
@@ -68,7 +106,7 @@ class OlympicSiteParamsManager:
             return {}
         return {
             spt_id: AttractivityVirtualFallback(d["attractivity"], d["virtual_fallback"])
-            for spt_id, d in data.get("scenarios", {}).get(scenario, {}).items()
+            for spt_id, d in data.get("scenarios", {}).get(scenario, {}).get("stop_points", {}).items()
         }
 
     def get_dict_scenario(self, poi_uri, key):
@@ -78,27 +116,48 @@ class OlympicSiteParamsManager:
         return self.build_olympic_site_params(data.get(key), data)
 
     def load_olympic_site_params(self, file_path, instance_name):
+
         logger = logging.getLogger(__name__)
         if not file_path:
-            logger.warning("Reading stop points attractivities, path does not found")
-            return
-        olympic_site_params_file = os.path.join(file_path, "{}.json".format(instance_name))
-        if not os.path.exists(olympic_site_params_file):
-            logger.warning(
-                "Reading stop points attractivities, file: %s does not exist", olympic_site_params_file
-            )
+            logger.debug("Reading stop points attractivities, path is empty")
             return
 
-        logger.info("Reading stop points attractivities from file: %s", olympic_site_params_file)
-        try:
-            with open(olympic_site_params_file) as f:
-                self.olympic_site_params = json.load(f)
-        except Exception as e:
-            logger.exception(
-                'Error while loading od_allowed_ids file: {} with exception: {}'.format(
-                    olympic_site_params_file, str(e)
+        json_pois_file = glob.glob(os.path.join(file_path, instance_name, "*.json"))
+        if not json_pois_file:
+            logger.debug("{} coverage without stop points attractivities".format(instance_name))
+            return
+        for json_poi_file in json_pois_file:
+            logger.debug("Reading stop points attractivities from file: %s", json_poi_file)
+            try:
+                with open(json_poi_file) as f:
+                    self.olympic_site_params.update(json.load(f))
+            except Exception as e:
+                logger.exception(
+                    'Error while loading od_allowed_ids file: {} with exception: {}'.format(
+                        json_poi_file, str(e)
+                    )
                 )
-            )
+
+    def build(self, pt_object_origin, pt_object_destination, api_request, instance):
+        # Warning, the order of functions is important
+        # Order 1 : get_olympic_site_params
+        # Order 2 : add_criteria
+        api_request["olympic_site_params"] = self.get_olympic_site_params(
+            pt_object_origin, pt_object_destination, api_request, instance
+        )
+
+        self.add_criteria(api_request)
+
+    def add_criteria(self, api_request):
+        olympic_site_params = api_request.get("olympic_site_params")
+        if not olympic_site_params:
+            return
+        if api_request.get("criteria") in ["departure_stop_attractivity", "arrival_stop_attractivity"]:
+            return
+        if olympic_site_params.get("departure_scenario"):
+            api_request["criteria"] = "departure_stop_attractivity"
+        elif olympic_site_params.get("arrival_scenario"):
+            api_request["criteria"] = "arrival_stop_attractivity"
 
     def get_olympic_site_params(self, pt_origin_detail, pt_destination_detail, api_request, instance):
         attractivities = dict()
@@ -111,8 +170,8 @@ class OlympicSiteParamsManager:
                 virtual_fallback = virtual_duration.get(spt_id, 0)
                 result[spt_id] = AttractivityVirtualFallback(attractivity, virtual_fallback)
             if api_request.get("criteria") == "departure_stop_attractivity":
-                return {"departure": result}
-            return {"arrival": result}
+                return {"departure_scenario": result}
+            return {"arrival_scenario": result}
 
         origin_olympic_site = get_olympic_site(pt_origin_detail, instance)
         destination_olympic_site = get_olympic_site(pt_destination_detail, instance)
@@ -121,14 +180,16 @@ class OlympicSiteParamsManager:
             origin_olympic_site = None
 
         departure_olympic_site_params = (
-            self.get_dict_scenario(origin_olympic_site.uri, "departure") if origin_olympic_site else {}
+            self.get_dict_scenario(origin_olympic_site.uri, "departure_scenario") if origin_olympic_site else {}
         )
         arrival_olympic_site_params = (
-            self.get_dict_scenario(destination_olympic_site.uri, "arrival") if destination_olympic_site else {}
+            self.get_dict_scenario(destination_olympic_site.uri, "arrival_scenario")
+            if destination_olympic_site
+            else {}
         )
 
         if departure_olympic_site_params:
-            return {"departure": departure_olympic_site_params}
+            return {"departure_scenario": departure_olympic_site_params}
         if arrival_olympic_site_params:
-            return {"arrival": arrival_olympic_site_params}
+            return {"arrival_scenario": arrival_olympic_site_params}
         return {}
