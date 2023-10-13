@@ -119,7 +119,7 @@ class OlympicSiteParamsManager:
 
         logger = logging.getLogger(__name__)
         if not file_path:
-            logger.debug("Reading stop points attractivities, path does not found")
+            logger.debug("Reading stop points attractivities, path is empty")
             return
 
         json_pois_file = glob.glob(os.path.join(file_path, instance_name, "*.json"))
@@ -139,9 +139,13 @@ class OlympicSiteParamsManager:
                 )
 
     def build(self, pt_object_origin, pt_object_destination, api_request, instance):
+        # Warning, the order of functions is important
+        # Order 1 : get_olympic_site_params
+        # Order 2 : add_criteria
         api_request["olympic_site_params"] = self.get_olympic_site_params(
             pt_object_origin, pt_object_destination, api_request, instance
         )
+
         self.add_criteria(api_request)
 
     def add_criteria(self, api_request):
@@ -152,7 +156,7 @@ class OlympicSiteParamsManager:
             return
         if olympic_site_params.get("departure_scenario"):
             api_request["criteria"] = "departure_stop_attractivity"
-        if olympic_site_params.get("arrival_scenario"):
+        elif olympic_site_params.get("arrival_scenario"):
             api_request["criteria"] = "arrival_stop_attractivity"
 
     def get_olympic_site_params(self, pt_origin_detail, pt_destination_detail, api_request, instance):
