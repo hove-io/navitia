@@ -798,75 +798,9 @@ class Interval:
         return self.minimum <= n <= self.maximum
 
 
-def filter_olympics_journeys_v1(responses, request):
-    intervals = {
-        # 9
-        "stop_point:IDFM:monomodalStopPlace:58498": Interval(0, 4240),
-        # 6
-        "stop_point:IDFM:22041": Interval(4240, 5606),
-        "stop_point:IDFM:463281": Interval(4240, 5606),
-        # 4
-        "stop_point:IDFM:412988": Interval(5606, float('inf')),
-        "stop_point:IDFM:412987": Interval(5606, float('inf')),
-    }
-
-    attractivity = {
-        "stop_point:IDFM:monomodalStopPlace:58498": 9,
-        "stop_point:IDFM:22041": 6,
-        "stop_point:IDFM:463281": 6,
-        "stop_point:IDFM:412988": 4,
-        "stop_point:IDFM:412987": 4,
-    }
-
-    olympics_durations = [j.duration for r in responses for j in r.journeys if 'olympics' in j.tags]
-
-    if len(olympics_durations) == 0:
-        logging.error("the length of olympics_durations is 0, which is weird..")
+def filter_olympics_journeys(responses, request):
+    if not request.get("_keep_olympics_journeys"):
         return
-
-    average_duration = sum(olympics_durations) / float(len(olympics_durations))
-
-    retained_journey = None
-
-    found_sps = []
-    for r in responses:
-        for j in r.journeys:
-            if 'olympics' not in j.tags:
-                continue
-            _, pt_extremity = get_journey_pt_extremity(j, request.get('criteria'))
-            if pt_extremity.uri not in found_sps:
-                found_sps.append(pt_extremity.uri)
-            interval = intervals.get(pt_extremity.uri)
-            if not interval.includes(average_duration):
-                continue
-
-            if retained_journey is None:
-                retained_journey = j
-                continue
-
-            if retained_journey.duration > j.duration:
-                retained_journey = j
-
-    if retained_journey is not None:
-        retained_journey.tags.append('best_olympics')
-        return
-
-    found_sps.sort(key=lambda sp: attractivity[sp])
-    best_attractivity = found_sps[-1]
-    for r in responses:
-        for j in r.journeys:
-            if 'olympics' not in j.tags:
-                continue
-            _, pt_extremity = get_journey_pt_extremity(j, request.get('criteria'))
-            if pt_extremity.uri != best_attractivity:
-                continue
-            if retained_journey is None or retained_journey.duration > j.duration:
-                retained_journey = j
-
-    retained_journey.tags.append('best_olympics')
-
-
-def filter_olympics_journeys_v2(responses, request):
     attractivities_virtual_fallbacks = request.get("olympic_site_params", {})
     best = (None, float('inf'), 0)
     for r in responses:
@@ -884,14 +818,7 @@ def filter_olympics_journeys_v2(responses, request):
     if best[0] is not None:
         best[0].tags.append('best_olympics')
     else:
-        logging.getLogger(__name__).warning("impossible to select the best in filter_olympics_journeys_v2")
-
-
-def filter_olympics_journeys(responses, request):
-    if request.get("_filter_olympics_journeys") == "v1":
-        filter_olympics_journeys_v1(responses, request)
-    elif request.get("_filter_olympics_journeys") == "v2":
-        filter_olympics_journeys_v2(responses, request)
+        logging.getLogger(__name__).warning("impossible to select the best in filter_olympics_journeys")
 
 
 def replace_bss_tag(journeys):

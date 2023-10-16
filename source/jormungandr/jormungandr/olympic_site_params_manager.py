@@ -150,30 +150,32 @@ class OlympicSiteParamsManager:
     def build(self, pt_object_origin, pt_object_destination, api_request, instance):
         # Warning, the order of functions is important
         # Order 1 : get_olympic_site_params
-        # Order 2 : add_criteria
-        # Oredr 3 : add_additional_parameters
+        # Order 2 : build_api_request
         api_request["olympic_site_params"] = self.get_olympic_site_params(
             pt_object_origin, pt_object_destination, api_request, instance
         )
 
-        self.add_criteria(api_request)
-        self.add_additional_parameters(api_request)
+        self.build_api_request(api_request)
 
-    def add_criteria(self, api_request):
+    def build_api_request(self, api_request):
         olympic_site_params = api_request.get("olympic_site_params")
         if not olympic_site_params:
             return
+        # Add keep_olympics_journeys parameter
+        if api_request.get("_keep_olympics_journeys") is None and any(
+            [olympic_site_params.get("departure_scenario"), olympic_site_params.get("arrival_scenario")]
+        ):
+            api_request["_keep_olympics_journeys"] = True
+        # Add additional parameters
+        for key, value in olympic_site_params.get("additional_parameters", {}).items():
+            api_request[key] = value
+        # Add criteria
         if api_request.get("criteria") in ["departure_stop_attractivity", "arrival_stop_attractivity"]:
             return
         if olympic_site_params.get("departure_scenario"):
             api_request["criteria"] = "departure_stop_attractivity"
         elif olympic_site_params.get("arrival_scenario"):
             api_request["criteria"] = "arrival_stop_attractivity"
-
-    def add_additional_parameters(self, api_request):
-        additional_parameters = api_request.get("olympic_site_params", {}).get("additional_parameters", {})
-        for key, value in additional_parameters.items():
-            api_request[key] = value
 
     def get_olympic_site_params(self, pt_origin_detail, pt_destination_detail, api_request, instance):
         attractivities = dict()
@@ -188,6 +190,9 @@ class OlympicSiteParamsManager:
             if api_request.get("criteria") == "departure_stop_attractivity":
                 return {"departure_scenario": result}
             return {"arrival_scenario": result}
+
+        if not self.olympic_site_params:
+            return {}
 
         origin_olympic_site = get_olympic_site(pt_origin_detail, instance)
         destination_olympic_site = get_olympic_site(pt_destination_detail, instance)

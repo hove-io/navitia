@@ -528,19 +528,8 @@ class JourneyCommon(ResourceUri, ResourceUtc):
             "_keep_olympics_journeys",
             type=BooleanType(),
             hidden=True,
-            default=False,
+            default=None,
             help="do not delete journeys tagged for olympics",
-        )
-        parser_get.add_argument(
-            "_filter_olympics_journeys",
-            type=OptionValue(
-                [
-                    'v1',
-                    'v2',
-                ]
-            ),
-            hidden=True,
-            help="choose which method is used to filter olympics journeys",
         )
         parser_get.add_argument(
             "_olympics_sites_virtual_fallback[]",
