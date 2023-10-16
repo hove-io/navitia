@@ -693,7 +693,7 @@ def compute_journey_virtual_duration_test():
     ending_fallback_section.destination.uri = "1;1"
 
     attractivities_virtual_fallbacks = {
-        "arrival": {
+        "arrival_scenario": {
             "gare de lyon": AttractivityVirtualFallback(0, 42),
             "gare du nord": AttractivityVirtualFallback(0, 84),
         }
@@ -704,7 +704,7 @@ def compute_journey_virtual_duration_test():
     assert virtual_duration == (9600 - 2400 + 84)
 
     attractivities_virtual_fallbacks = {
-        "departure": {
+        "departure_scenario": {
             "gare de lyon": AttractivityVirtualFallback(0, 42),
             "gare du nord": AttractivityVirtualFallback(0, 84),
         }
@@ -716,7 +716,7 @@ def compute_journey_virtual_duration_test():
 
     # extremity stop_point not exist in attractivities_virtual_fallbacks
     attractivities_virtual_fallbacks = {
-        "departure": {
+        "departure_scenario": {
             "gare du nord": AttractivityVirtualFallback(0, 84),
         }
     }

@@ -749,7 +749,7 @@ def apply_final_journey_filters_post_finalize(response_list, request):
 
 
 def get_journey_extremity_pt_section(journey, attractivities_virtual_fallbacks):
-    if attractivities_virtual_fallbacks.get("arrival"):
+    if attractivities_virtual_fallbacks.get("arrival_scenario"):
         sections = reversed(journey.sections)
     else:
         sections = journey.sections
@@ -764,7 +764,7 @@ def get_journey_pt_extremity(journey, attractivities_virtual_fallbacks):
     if extremity_pt_section is None:
         return None, None
 
-    if attractivities_virtual_fallbacks.get("arrival"):
+    if attractivities_virtual_fallbacks.get("arrival_scenario"):
         return extremity_pt_section, extremity_pt_section.destination
     else:
         return extremity_pt_section, extremity_pt_section.origin
@@ -774,14 +774,18 @@ def compute_journey_virtual_duration_and_attractivity(journey, attractivities_vi
     extremity_pt_section, extremity = get_journey_pt_extremity(journey, attractivities_virtual_fallbacks)
     if extremity_pt_section is None:
         return journey.duration, 0
-    if attractivities_virtual_fallbacks.get("arrival"):
-        attractivity_virtual_fallback = attractivities_virtual_fallbacks.get("arrival", {}).get(extremity.uri)
+    if attractivities_virtual_fallbacks.get("arrival_scenario"):
+        attractivity_virtual_fallback = attractivities_virtual_fallbacks.get("arrival_scenario", {}).get(
+            extremity.uri
+        )
     else:
-        attractivity_virtual_fallback = attractivities_virtual_fallbacks.get("departure", {}).get(extremity.uri)
+        attractivity_virtual_fallback = attractivities_virtual_fallbacks.get("departure_scenario", {}).get(
+            extremity.uri
+        )
     virtual_fallback = attractivity_virtual_fallback.virtual_duration if attractivity_virtual_fallback else 0
     attractivity = attractivity_virtual_fallback.attractivity if attractivity_virtual_fallback else 0
 
-    if attractivities_virtual_fallbacks.get("arrival"):
+    if attractivities_virtual_fallbacks.get("arrival_scenario"):
         virtual_duration = extremity_pt_section.end_date_time - journey.departure_date_time + virtual_fallback
         return virtual_duration, attractivity
     else:
