@@ -38,6 +38,13 @@ namespace nt = navitia::type;
 namespace navitia {
 namespace disruption {
 
+struct PreFilteredLineReportSubObjects {
+    type::Indexes networks;
+    type::Indexes routes;
+    type::Indexes stop_areas;
+    type::Indexes stop_points;
+};
+
 struct LineReport {
     const nt::Line* line;
     std::vector<const nt::Network*> networks;
@@ -45,43 +52,50 @@ struct LineReport {
     std::vector<const nt::StopArea*> stop_areas;
     std::vector<const nt::StopPoint*> stop_points;
 
+    // Using optional on 'pre_filtered_sub_objects' as the filters are most of the time empty.
+    // "none" optional means no filter is applied, and saves costly contains() calls.
     LineReport(const nt::Line* line,
-               const std::string& filter,
-               const std::vector<std::string>& forbidden_uris,
                const std::vector<nt::disruption::ActiveStatus>& filter_status,
-               const type::Data& d,
                const boost::posix_time::ptime now,
-               const boost::posix_time::time_period& filter_period)
+               const boost::posix_time::time_period& filter_period,
+               const boost::optional<PreFilteredLineReportSubObjects>& pre_filtered_sub_objects)
         : line(line) {
-        add_objects(filter, forbidden_uris, filter_status, d, now, filter_period, networks);
-        add_objects(filter, forbidden_uris, filter_status, d, now, filter_period, routes);
-        add_objects(filter, forbidden_uris, filter_status, d, now, filter_period, stop_areas);
-        add_objects(filter, forbidden_uris, filter_status, d, now, filter_period, stop_points);
-    }
-
-    template <typename T>
-    void add_objects(const std::string& filter,
-                     const std::vector<std::string>& forbidden_uris,
-                     const std::vector<nt::disruption::ActiveStatus>& filter_status,
-                     const type::Data& d,
-                     const boost::posix_time::ptime now,
-                     const boost::posix_time::time_period& filter_period,
-                     std::vector<const T*>& objects) {
-        std::string new_filter = "line.uri=" + line->uri;
-        if (!filter.empty()) {
-            new_filter += " and " + filter;
+        const auto network = line->network;
+        if ((!pre_filtered_sub_objects || contains(pre_filtered_sub_objects->networks, network->idx))
+            && network->has_applicable_message(now, filter_period, filter_status, line)) {
+            networks.push_back(network);
         }
 
-        type::Indexes indices;
-        try {
-            indices = ptref::make_query(nt::get_type_e<T>(), new_filter, forbidden_uris, d);
-        } catch (const std::exception&) {
-        }
+        // remember already visited SA & SP to avoid useless checks
+        std::set<nt::idx_t> visited_sa;
+        std::set<nt::idx_t> visited_sp;
+        for (const auto route : line->route_list) {
+            for (const auto sa : route->stop_area_list) {
+                if (!contains(visited_sa, sa->idx)
+                    && (!pre_filtered_sub_objects || contains(pre_filtered_sub_objects->stop_areas, sa->idx))
+                    && sa->has_applicable_message(now, filter_period, filter_status, line)) {
+                    stop_areas.push_back(sa);
+                }
+                visited_sa.insert(sa->idx);
+            }
 
-        for (const auto& idx : indices) {
-            const auto* obj = d.pt_data->collection<T>()[idx];
-            if (obj->has_applicable_message(now, filter_period, filter_status, line)) {
-                objects.push_back(obj);
+            for (const auto sp : route->stop_point_list) {
+                if (!contains(visited_sp, sp->idx)
+                    && (!pre_filtered_sub_objects || contains(pre_filtered_sub_objects->stop_points, sp->idx))
+                    && sp->has_applicable_message(now, filter_period, filter_status, line)) {
+                    stop_points.push_back(sp);
+                }
+                visited_sp.insert(sp->idx);
+            }
+
+            if (!pre_filtered_sub_objects || contains(pre_filtered_sub_objects->routes, route->idx)) {
+                // /!\ One could think of processing SA/SP once this prefilter is
+                // applied (because PTRef is stable/propagates correctly).
+                // /!\ But if routes are also prefiltered on having disruptions, then
+                // responses would be incorrect (not exploring valid SA/SP)
+                if (route->has_applicable_message(now, filter_period, filter_status, line)) {
+                    routes.push_back(route);
+                }
             }
         }
     }
@@ -107,6 +121,18 @@ struct LineReport {
         pb_creator.fill(stop_points, report->mutable_pt_objects(), 0, with_sections);
     }
 };
+
+static type::Indexes safe_filter(const type::Type_e requested_type,
+                                 const std::string& request,
+                                 const std::vector<std::string>& forbidden_uris,
+                                 const type::Data& data) {
+    type::Indexes filtered_indices;
+    try {
+        filtered_indices = ptref::make_query(requested_type, request, forbidden_uris, data);
+    } catch (const std::exception&) {
+    }
+    return filtered_indices;
+}
 
 void line_reports(navitia::PbCreator& pb_creator,
                   const navitia::type::Data& d,
@@ -137,10 +163,20 @@ void line_reports(navitia::PbCreator& pb_creator,
         pb_creator.fill_pb_error(pbnavitia::Error::bad_filter, "ptref : " + ptref_error.more);
         return;
     }
+
+    boost::optional<PreFilteredLineReportSubObjects> pre_filtered_sub_objects;
+    if (!filter.empty() || !forbidden_uris.empty()) {
+        pre_filtered_sub_objects = PreFilteredLineReportSubObjects();
+        pre_filtered_sub_objects->networks = safe_filter(type::Type_e::Network, filter, forbidden_uris, d);
+        pre_filtered_sub_objects->routes = safe_filter(type::Type_e::Route, filter, forbidden_uris, d);
+        pre_filtered_sub_objects->stop_areas = safe_filter(type::Type_e::StopArea, filter, forbidden_uris, d);
+        pre_filtered_sub_objects->stop_points = safe_filter(type::Type_e::StopPoint, filter, forbidden_uris, d);
+    }
+
     std::vector<LineReport> line_reports;
     for (auto idx : line_indices) {
-        auto line_report = LineReport(d.pt_data->lines[idx], filter, forbidden_uris, filter_status, d, pb_creator.now,
-                                      pb_creator.action_period);
+        auto line_report = LineReport(d.pt_data->lines[idx], filter_status, pb_creator.now, pb_creator.action_period,
+                                      pre_filtered_sub_objects);
         if (line_report.has_disruption(pb_creator.now, pb_creator.action_period, filter_status)) {
             line_reports.push_back(line_report);
         }

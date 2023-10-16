@@ -44,6 +44,7 @@ class ExternalServiceError(RuntimeError):
 
 @six.add_metaclass(abc.ABCMeta)
 class AbstractExternalService(object):
+    @new_relic.distributedEvent("call_webservice", "external_service")
     def _call_webservice(self, arguments):
         """
         Call external_services webservice with URL defined in settings

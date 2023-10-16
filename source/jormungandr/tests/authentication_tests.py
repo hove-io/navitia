@@ -165,6 +165,7 @@ mock_instances = {
 
 class AbstractTestAuthentication(AbstractTestFixture):
     def setUp(self):
+        app.config['CIRCUIT_BREAKER_MAX_BRAGI_FAIL'] = 5
         self.old_public_val = app.config['PUBLIC']
         app.config['PUBLIC'] = False
         self.old_db_val = app.config['DISABLE_DATABASE']
@@ -583,7 +584,7 @@ class TestOverlappingAuthentication(AbstractTestAuthentication):
                 r, status = self.query_no_assert('/v1/places?q=bob')
                 assert status == 403
 
-        # tgv has not access to the open_data but can use main_routing_test, it cannot use the global place
+        # tgv has no access to the open_data but can use main_routing_test, it cannot use the global place
         with user_set(app, FakeUserAuth, 'tgv'):
             with requests_mock.Mocker() as m:
                 _, status = self.query_no_assert('/v1/places?q=bob')

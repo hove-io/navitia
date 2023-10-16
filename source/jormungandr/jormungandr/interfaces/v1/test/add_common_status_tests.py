@@ -153,6 +153,7 @@ class FakeInstance(Instance):
             autocomplete_type='kraken',
             streetnetwork_backend_manager=StreetNetworkBackendManager(),
             external_service_provider_configurations=[],
+            pt_journey_fare_configurations={},
         )
         self.disable_database = disable_database
         self.equipment_provider_manager = EquipmentProviderManager(equipment_details_config)

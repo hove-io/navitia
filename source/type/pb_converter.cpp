@@ -793,14 +793,14 @@ void PbCreator::Filler::fill_pb_object(const nt::Line* l, pbnavitia::Line* line)
     }
     fill(l->physical_mode_list, line->mutable_physical_modes());
     fill(l->commercial_mode, line);
+    fill(l->network, line);
 
     if (depth > 0) {
         if (!this->pb_creator.disable_geojson) {
             fill(&l->shape, line);
         }
 
-        fill(l->route_list, line->mutable_routes());
-        fill(l->network, line);
+        copy(0, dump_message_options).fill(l->route_list, line->mutable_routes());
 
         fill(l->line_group_list, line->mutable_line_groups());
     }
@@ -871,7 +871,10 @@ void PbCreator::Filler::fill_pb_object(const nt::Route* r, pbnavitia::Route* rou
         return;
     }
 
-    fill(r->line, route);
+    copy(0, dump_message_options).fill(r->line, route);
+    if ((depth > 1) && (!this->pb_creator.disable_geojson)) {
+        fill(&r->line->shape, route->mutable_line());
+    }
 
     if (!this->pb_creator.disable_geojson) {
         fill(&r->shape, route);

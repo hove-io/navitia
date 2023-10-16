@@ -63,15 +63,16 @@ from datetime import datetime, timedelta
 from navitiacommon import default_values
 from jormungandr.equipments import EquipmentProviderManager
 from jormungandr.external_services import ExternalServiceManager
+from jormungandr.parking_space_availability.bss.bss_provider_manager import BssProviderManager
 from jormungandr.utils import (
     can_connect_to_database,
     make_origin_destination_key,
     read_best_boarding_positions,
-    read_origin_destination_data,
-    read_stop_points_attractivities,
-    str_to_time_stamp,
+    get_pt_object_coord,
 )
+from jormungandr.olympic_site_params_manager import OlympicSiteParamsManager
 from jormungandr import pt_planners_manager, transient_socket
+from jormungandr.pt_journey_fare import PtJourneyFareBackendManager
 import os
 
 type_to_pttype = {
@@ -161,14 +162,15 @@ class Instance(transient_socket.TransientSocket):
         streetnetwork_backend_manager,
         external_service_provider_configurations,
         pt_planners_configurations,
+        pt_journey_fare_configurations,
         ghost_words=None,
         instance_db=None,
         best_boarding_positions_dir=None,
         olympics_forbidden_uris=None,
-        additional_params_period=None,
         use_multi_reverse=False,
         resp_content_limit_bytes=None,
         resp_content_limit_endpoints_whitelist=None,
+        individual_bss_provider=[],
     ):
         super(Instance, self).__init__(
             name=name,
@@ -257,19 +259,21 @@ class Instance(transient_socket.TransientSocket):
             self.external_service_provider_manager = ExternalServiceManager(
                 self, external_service_provider_configurations, self.get_external_service_providers_from_db
             )
+
+        # Init BSS provider manager from config from external services in bdd
+        if disable_database:
+            self.bss_provider_manager = BssProviderManager(individual_bss_provider)
+        else:
+            self.bss_provider_manager = BssProviderManager(
+                individual_bss_provider, self.get_bss_stations_services_from_db
+            )
+
         self.external_service_provider_manager.init_external_services()
         self.instance_db = instance_db
         self._ghost_words = ghost_words or []
         self.best_boarding_positions = None
-        # Initialize attributes for additional_parameters
-        self.od_allowed_ids = None
-        self.od_additional_parameters = None
-        self.od_stop_areas = None
-        self.od_lines = None
-        self.additional_params_period_start = None
-        self.additional_params_period_end = None
         self.use_multi_reverse = use_multi_reverse
-        self.stop_points_attractivities = None
+        self.olympic_site_params_manager = None
         self.resp_content_limit_bytes = resp_content_limit_bytes
         # a list of endpoints that are not affected by the resp_content_limit_bytes
         self.resp_content_limit_endpoints_whitelist = set(resp_content_limit_endpoints_whitelist or [])
@@ -279,25 +283,15 @@ class Instance(transient_socket.TransientSocket):
             file_path = os.path.join(best_boarding_positions_dir, "{}.csv".format(self.name))
             self.best_boarding_positions = read_best_boarding_positions(file_path)
 
-        # read od_allowed_ids as well as od_additional_parameters if configured and present
-        origin_destination_dir = app.config.get(str('ORIGIN_DESTINATION_DIR'))
-        if origin_destination_dir:
-            file_path = os.path.join(origin_destination_dir, "{}_od_allowed_ids.csv".format(self.name))
-            self.od_allowed_ids, self.od_stop_areas, self.od_lines = read_origin_destination_data(file_path)
-
-            file_path = os.path.join(origin_destination_dir, "{}_od_additional_parameters.csv".format(self.name))
-            self.od_additional_parameters, _, _ = read_origin_destination_data(file_path)
-
-        # If configured initialize additional parameters activation period values
-        if additional_params_period:
-            self.additional_params_period_start = str_to_time_stamp(additional_params_period.get('start'))
-            self.additional_params_period_end = str_to_time_stamp(additional_params_period.get('end'))
-
         # load stop_point attractivities, the feature is only available when loki is selected as pt_planner
-        stop_points_attractivities_dir = app.config.get(str('STOP_POINTS_ATTRACTIVITIES_DIR'))
-        if stop_points_attractivities_dir:
-            file_path = os.path.join(stop_points_attractivities_dir, "{}.csv".format(self.name))
-            self.stop_points_attractivities = read_stop_points_attractivities(file_path)
+        self.olympic_site_params_manager = OlympicSiteParamsManager(
+            app.config.get(str('OLYMPIC_SITE_PARAMS_DIR')), self.name
+        )
+
+        # TODO: use db
+        self._pt_journey_fare_backend_manager = PtJourneyFareBackendManager(
+            self, pt_journey_fare_configurations, None
+        )
 
     def get_providers_from_db(self):
         """
@@ -332,6 +326,14 @@ class Instance(transient_socket.TransientSocket):
         models = self._get_models()
         result = models.external_services if models else None
         return [res for res in result if res.navitia_service == 'realtime_proxies']
+
+    def get_bss_stations_services_from_db(self):
+        """
+        :return: a callable query of external services associated to the current instance in db
+        """
+        models = self._get_models()
+        result = models.external_services if models else []
+        return [res for res in result if res.navitia_service == 'bss_stations']
 
     @property
     def autocomplete(self):
@@ -806,11 +808,19 @@ class Instance(transient_socket.TransientSocket):
     default_pt_planner = _make_property_getter('default_pt_planner')
     pt_planners_configurations = _make_property_getter('pt_planners_configurations')
 
+    loki_pt_journey_fare = _make_property_getter('loki_pt_journey_fare')
+    loki_compute_pt_journey_fare = _make_property_getter('loki_compute_pt_journey_fare')
+    loki_pt_journey_fare_configurations = _make_property_getter('loki_pt_journey_fare_configurations')
+
     filter_odt_journeys = _make_property_getter('filter_odt_journeys')
 
     def get_pt_planner(self, pt_planner_id=None):
         pt_planner_id = pt_planner_id or self.default_pt_planner
         return self._pt_planner_manager.get_pt_planner(pt_planner_id)
+
+    def get_pt_journey_fare(self, loki_pt_journey_fare_id=None):
+        pt_journey_fare_id = loki_pt_journey_fare_id or self.loki_pt_journey_fare
+        return self._pt_journey_fare_backend_manager.get_pt_journey_fare(pt_journey_fare_id)
 
     @property
     def places_proximity_radius(self):
@@ -827,7 +837,7 @@ class Instance(transient_socket.TransientSocket):
         except pybreaker.CircuitBreakerError as e:
             raise DeadSocketException(self.name, self.socket_path)
 
-    def _send_and_receive(self, request, timeout=app.config.get('INSTANCE_TIMEOUT', 10), quiet=False, **kwargs):
+    def _send_and_receive(self, request, timeout=app.config.get('INSTANCES_TIMEOUT', 10), quiet=False, **kwargs):
         deadline = datetime.utcnow() + timedelta(milliseconds=timeout * 1000)
         request.deadline = deadline.strftime('%Y%m%dT%H%M%S,%f')
 
@@ -864,6 +874,21 @@ class Instance(transient_socket.TransientSocket):
             return len(self.get_id(id_).places) > 0
         except DeadSocketException:
             return False
+
+    def get_coord_by_id(self, id_):
+        """
+        If this instance has this id then get coordinate
+        """
+        try:
+            pt_objects = self.get_id(id_).places
+            pt_object = pt_objects[0] if len(pt_objects) > 0 else None
+            if pt_object:
+                coord = get_pt_object_coord(pt_object)
+                return coord if (coord and coord.lon != 0 and coord.lat != 0) else None
+            else:
+                return None
+        except DeadSocketException:
+            return None
 
     def has_coord(self, lon, lat):
         return self.has_point(geometry.Point(lon, lat))
@@ -987,6 +1012,9 @@ class Instance(transient_socket.TransientSocket):
     def get_all_ridesharing_services(self):
         return self.ridesharing_services_manager.get_all_ridesharing_services()
 
+    def get_all_bss_providers(self):
+        return self.bss_provider_manager.get_providers()
+
     def get_autocomplete(self, requested_autocomplete):
         if not requested_autocomplete:
             return self.autocomplete
@@ -1000,27 +1028,3 @@ class Instance(transient_socket.TransientSocket):
             return []
         key = make_origin_destination_key(from_id, to_id)
         return self.best_boarding_positions.get(key, [])
-
-    def get_od_allowed_ids(self, origin, destination):
-        if not self.od_allowed_ids:
-            return []
-        key = make_origin_destination_key(origin, destination)
-        return self.od_allowed_ids.get(key, [])
-
-    def get_od_additional_parameters(self, origin, destination):
-        if not self.od_additional_parameters:
-            return []
-        key = make_origin_destination_key(origin, destination)
-        return self.od_additional_parameters.get(key, [])
-
-    # Test if stop_area uri is present in od_stop_areas
-    def uri_in_od_stop_areas(self, sa_uri):
-        if not self.od_stop_areas:
-            return False
-        return sa_uri in self.od_stop_areas
-
-    # Test if line uri is present in od_lines
-    def uri_in_od_lines(self, line_uri):
-        if not self.od_lines:
-            return False
-        return line_uri in self.od_lines

@@ -157,7 +157,12 @@ class TransientSocket(object):
             raise e
         except:
             self.close_socket(timed_socket.socket)
-            self._logger.exception("")
+            self._logger.exception(
+                'Unexpected transient socket exception with coverage: %s, zmq_socket: %s, debug_info: %s',
+                self.name,
+                self._zmq_socket,
+                debug_cb(),
+            )
 
         finally:
             if not timed_socket.socket.closed:
@@ -173,4 +178,8 @@ class TransientSocket(object):
             socket.setsockopt(zmq.LINGER, 0)
             socket.close()
         except:
-            self._logger.exception("")
+            self._logger.exception(
+                'Error while closing transient socket with coverage: %s, zmq_socket: %s',
+                self.name,
+                self._zmq_socket,
+            )

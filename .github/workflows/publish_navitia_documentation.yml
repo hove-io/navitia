@@ -15,6 +15,8 @@ jobs:
     steps:
     - name: force chown to avoid errors
       run: chown -R $USER:$USER .
+    - name: Git config
+      run: git config --global --add safe.directory /__w/navitia/navitia
     - name: Checkout
       uses: actions/checkout@v3
     - name: Build website in Slate format
@@ -40,3 +42,9 @@ jobs:
       if: failure()
       run: |
           echo '{"text":":warning: Navitia Github Actions: publish_navitia_documentation failed ! (https://github.com/hove-io/navitia/actions?query=workflow%3A%22Publish+Navitia+Documentation%22)"}' | http --json POST ${{secrets.SLACK_NAVITIA_TEAM_URL}}
+
+    - name: clean up workspace
+      if: ${{ always() }}
+      run: |
+        rm -rf ./*
+        rm -rf ./.??*

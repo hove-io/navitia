@@ -26,16 +26,17 @@
 # channel `#navitia` on riot https://riot.im/app/#/room/#navitia:matrix.org
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
-from __future__ import absolute_import
-from .places_free_access import PlacesFreeAccess
-from .streetnetwork_path import StreetNetworkPathPool
-from .fallback_durations import FallbackDurationsPool
-from .place_by_uri import PlaceByUri
-from .pt_journey import PtJourneyPool
-from .proximities_by_crowfly import ProximitiesByCrowflyPool
-from .transfer import TransferPool
-from .pt_journey_fare import PtJourneyFarePool
-from .complete_pt_journey import wait_and_complete_pt_journey, wait_and_complete_pt_journey_fare
-from .helper_exceptions import PtException, EntryPointException, FinaliseException, StreetNetworkException
-from .helper_utils import get_entry_point_or_raise, check_final_results_or_raise
-from .helper_future import FutureManager
+
+from __future__ import absolute_import, print_function, unicode_literals, division
+from jormungandr import i_manager
+from jormungandr.interfaces.v1.StatedResource import StatedResource
+
+
+class OpgStatus(StatedResource):
+    def __init__(self, *args, **kwargs):
+        super(OpgStatus, self).__init__(self, *args, **kwargs)
+
+    def get(self, region=None, lon=None, lat=None):
+        region_str = i_manager.get_region(region, lon, lat)
+        instance = i_manager.instances[region_str]
+        return instance.olympic_site_params_manager.olympic_site_params, 200

@@ -80,7 +80,23 @@ class ManageParkingPlaces(object):
                         bss_provider_manager,
                         self.attribute,
                         self.logger,
-                        'Error while handling BSS realtime availability',
+                        'Error while handling global BSS realtime availability',
+                    )
+
+                if (
+                    show_bss_stands
+                    and instance
+                    and instance.bss_provider_manager
+                    and instance.bss_provider_manager.exist_provider()
+                ):
+                    _handle(
+                        response,
+                        instance.bss_provider_manager,
+                        self.attribute,
+                        self.logger,
+                        'Error while handling individual BSS realtime availability with configuration for instance: {}'.format(
+                            instance
+                        ),
                     )
 
                 if show_car_park and instance and instance.car_park_provider:
@@ -89,7 +105,7 @@ class ManageParkingPlaces(object):
                         car_park_provider_manager,
                         self.attribute,
                         self.logger,
-                        'Error while handling car park realtime availability',
+                        'Error while handling global car park realtime availability',
                     )
 
             return response, status, h

@@ -69,7 +69,7 @@ class VehiclePosition(AbstractExternalService):
         """
         Get vehicle_position information from Forseti webservice
         """
-        raw_response = self._call_webservice(arguments)
+        raw_response = self._call_webservice(self, arguments)
 
         # We don't need any further action if raw_response is None
         if raw_response is None:

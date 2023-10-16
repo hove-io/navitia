@@ -1,4 +1,4 @@
-# Copyright (c) 2001-2022, Hove and/or its affiliates. All rights reserved.
+# Copyright (c) 2001-2023, Hove and/or its affiliates. All rights reserved.
 #
 # This file is part of Navitia,
 #     the software to build cool stuff with public transport.
@@ -26,16 +26,33 @@
 # channel `#navitia` on riot https://riot.im/app/#/room/#navitia:matrix.org
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
-from __future__ import absolute_import
-from .places_free_access import PlacesFreeAccess
-from .streetnetwork_path import StreetNetworkPathPool
-from .fallback_durations import FallbackDurationsPool
-from .place_by_uri import PlaceByUri
-from .pt_journey import PtJourneyPool
-from .proximities_by_crowfly import ProximitiesByCrowflyPool
-from .transfer import TransferPool
-from .pt_journey_fare import PtJourneyFarePool
-from .complete_pt_journey import wait_and_complete_pt_journey, wait_and_complete_pt_journey_fare
-from .helper_exceptions import PtException, EntryPointException, FinaliseException, StreetNetworkException
-from .helper_utils import get_entry_point_or_raise, check_final_results_or_raise
-from .helper_future import FutureManager
+import logging
+import gevent
+
+
+class PtJourneyFarePool(object):
+    def __init__(
+        self,
+        future_manager,
+        instance,
+        request,
+        request_id,
+    ):
+        self._future_manager = future_manager
+        self._instance = instance
+        self._request = request
+        self._request_id = request_id
+        self._backend = self._instance.get_pt_journey_fare(request['_loki_pt_journey_fare'])
+        self._futures = []
+        self._logger = logging.getLogger(__name__)
+
+    def async_compute_fare(self, response, request_id):
+        self._futures.append(self._future_manager.create_future(self._do, response, request_id).get_future())
+
+    def _do(self, response, request_id):
+        return response, self._backend.get_pt_journeys_fares(response.journeys, request_id)
+
+    def wait_and_generate(self):
+        with gevent.iwait(self._futures) as futures:
+            for f in futures:
+                yield f.get()

@@ -42,6 +42,7 @@ from jormungandr.exceptions import ApiNotFound, RegionNotFound, DeadSocketExcept
 from jormungandr.authentication import abort_request, can_read_user
 from jormungandr import authentication, cache, memory_cache, app
 from jormungandr.instance import Instance
+from jormungandr.utils import Coords
 import gevent
 import os
 
@@ -121,13 +122,14 @@ class InstanceManager(object):
             self._streetnetwork_backend_manager,
             config.get('external_services_providers', []),
             config.get('pt_planners', {}),
+            config.get('pt_journey_fares', {}),
             config.get('ghost_words', []),
             best_boarding_positions_dir=app.config.get(str('BEST_BOARDING_POSITIONS_DIR'), None),
             olympics_forbidden_uris=config.get('olympics_forbidden_uris', None),
-            additional_params_period=config.get('additional_parameters_activation_period', None),
             use_multi_reverse=config.get('use_multi_reverse', False),
             resp_content_limit_bytes=config.get('resp_content_limit_bytes', None),
             resp_content_limit_endpoints_whitelist=config.get('resp_content_limit_endpoints_whitelist', None),
+            individual_bss_provider=config.get('individual_bss_provider', []),
         )
 
         self.instances[instance.name] = instance
@@ -153,22 +155,11 @@ class InstanceManager(object):
 
         # we fetch the krakens metadata first
         # not on the ping thread to always have the data available (for the tests for example)
-        self.init_kraken_instances()
+        if app.config.get('INIT_KRAKEN_INSTANCES', False):
+            self.init_kraken_instances()
 
         if self.start_ping:
             gevent.spawn(self.thread_ping)
-
-    def _clear_cache(self):
-        logging.getLogger(__name__).info('clear cache')
-        try:
-            cache.delete_memoized(self._exists_id_in_instance)
-        except:
-            # if there is an error with cache, flask want to access to the app, this will fail at startup
-            # with a "working outside of application context"
-            # redis timeout also raise an exception: redis.exceptions.TimeoutError
-            # each backend has it's own exceptions, so we catch everything :(
-            logger = logging.getLogger(__name__)
-            logger.exception('there seem to be some kind of problems with the cache')
 
     def get_instance_scenario_name(self, instance_name, override_scenario):
         if override_scenario:
@@ -189,11 +180,8 @@ class InstanceManager(object):
         if not hasattr(scenario, api) or not callable(getattr(scenario, api)):
             raise ApiNotFound(api)
 
-        publication_date = instance.publication_date
         api_func = getattr(scenario, api)
         resp = api_func(arguments, instance)
-        if instance.publication_date != publication_date:
-            self._clear_cache()
         return resp
 
     def init_kraken_instances(self):
@@ -201,17 +189,11 @@ class InstanceManager(object):
         Call all kraken instances (as found in the instances dir) and store it's metadata
         """
         futures = []
-        purge_cache_needed = False
         for instance in self.instances.values():
             if not instance.is_initialized:
                 futures.append(gevent.spawn(instance.init))
 
         gevent.wait(futures)
-        for future in futures:
-            # we check if an instance needs the cache to be purged
-            if future.get():
-                self._clear_cache()
-                break
 
     def thread_ping(self, timer=10):
         """
@@ -239,6 +221,8 @@ class InstanceManager(object):
         return authorized_instances
 
     def _find_coverage_by_object_id_in_instances(self, instances, object_id):
+        # Request without coverage and coord (from or to)
+        # Get list of instances if the coordinate point exist in instance.geom
         if object_id.count(";") == 1 or object_id[:6] == "coord:":
             if object_id.count(";") == 1:
                 lon, lat = object_id.split(";")
@@ -251,20 +235,63 @@ class InstanceManager(object):
                 raise InvalidArguments(object_id)
             return self._all_keys_of_coord_in_instances(instances, flon, flat)
 
+        # Request without coverage and pt_object id (from or to)
         return self._all_keys_of_id_in_instances(instances, object_id)
 
     def _all_keys_of_id_in_instances(self, instances, object_id):
-        valid_instances = []
+        # Get the first occurrence pt_object coordinate and manage as above
+        # If no object with coordinate exist among all the authorized instances
+        # Then we will be obliged to call all krakens as before (necessary for test with bad data)
+        object_coord = self._get_first_object_coord_in_instances_by_id(instances, object_id)
+        if object_coord:
+            return self._all_keys_of_coord_in_instances(instances, object_coord.lon, object_coord.lat)
+        else:
+            valid_instances = []
+            for instance in instances:
+                if self._exists_id_in_instance(instance.name, instance.publication_date, object_id):
+                    valid_instances.append(instance)
+            if not valid_instances:
+                raise RegionNotFound(object_id=object_id)
+
+            return valid_instances
+
+    def _get_first_object_coord_in_instances_by_id(self, instances, object_id):
+        """
+        fetch first occurrence of object among instances and return coordinate
+        """
         for instance in instances:
-            if self._exists_id_in_instance(instance, object_id):
-                valid_instances.append(instance)
-        if not valid_instances:
-            raise RegionNotFound(object_id=object_id)
+            coord = self._get_object_coord_in_instance_by_id(instance.name, instance.publication_date, object_id)
+            if coord:
+                return coord
+        return None
 
-        return valid_instances
+    @memory_cache.memoize(app.config[str('MEMORY_CACHE_CONFIGURATION')].get(str('TIMEOUT_PTOBJECTS'), 30))
+    @cache.memoize(app.config[str('CACHE_CONFIGURATION')].get(str('TIMEOUT_PTOBJECTS'), 300))
+    def _get_object_coord_in_instance_by_id(self, instance_name, instance_publication_date, object_id):
+        """
+        instance's published_date is usually provided as extra_cache_key to invalidate the cache when updating the ntfs
+        As type_pb2.GeographicalCoord() cannot be cached due to the fact that objects from protobuf are not 'picklable'
+        we should transform it to utils.Coord
+        """
+        instance = self.instances.get(instance_name)
+        if not instance:
+            logging.getLogger(__name__).error("Instance {} not found".format(instance_name))
+            return None
+        pb_coord = instance.get_coord_by_id(object_id)
+        if not pb_coord:
+            return None
+        return Coords(pb_coord.lat, pb_coord.lon)
 
-    @cache.memoize(app.config[str('CACHE_CONFIGURATION')].get(str('TIMEOUT_PTOBJECTS'), None))
-    def _exists_id_in_instance(self, instance, object_id):
+    @memory_cache.memoize(app.config[str('MEMORY_CACHE_CONFIGURATION')].get(str('TIMEOUT_PTOBJECTS'), 30))
+    @cache.memoize(app.config[str('CACHE_CONFIGURATION')].get(str('TIMEOUT_PTOBJECTS'), 300))
+    def _exists_id_in_instance(self, instance_name, instance_publication_date, object_id):
+        """
+        instance's published_date is usually provided as extra_cache_key to invalidate the cache when updating the ntfs
+        """
+        instance = self.instances.get(instance_name)
+        if not instance:
+            logging.getLogger(__name__).error("Instance {} not found".format(instance_name))
+            return False
         return instance.has_id(object_id)
 
     def _all_keys_of_coord_in_instances(self, instances, lon, lat):
@@ -325,13 +352,9 @@ class InstanceManager(object):
         else:
             return valid_instances
 
-    def regions(self, region=None, lon=None, lat=None, request_id=None):
-        response = {'regions': []}
-        regions = []
-        if region or lon or lat:
-            regions.append(self.get_region(region_str=region, lon=lon, lat=lat))
-        else:
-            regions = self.get_regions()
+    def get_kraken_coverages(self, regions, request_id=None):
+        response = []
+
         for key_region in regions:
             req = request_pb2.Request()
             req.requested_api = type_pb2.METADATAS
@@ -344,10 +367,32 @@ class InstanceManager(object):
                     "status": "dead",
                     "error": {"code": "dead_socket", "value": "The region {} is dead".format(key_region)},
                 }
-            if resp_dict.get('status') == 'no_data' and not region and not lon and not lat:
-                continue
             resp_dict['region_id'] = key_region
-            response['regions'].append(resp_dict)
+            response.append(resp_dict)
+        return response
+
+    def regions(self, region=None, lon=None, lat=None, request_id=None):
+        response = {'regions': []}
+        regions = []
+        if region or lon or lat:
+            regions.append(self.get_region(region_str=region, lon=lon, lat=lat))
+            kraken_coverages = self.get_kraken_coverages(regions, request_id=request_id)
+        else:
+            regions = self.get_regions()
+            if regions:
+                regions.sort()
+
+            @cache.memoize(
+                app.config.get(str('CACHE_CONFIGURATION'), {}).get(str('TIMEOUT_KRAKEN_COVERAGES'), 60)
+            )
+            def get_cached_kraken_coverages(regions_list):
+                return self.get_kraken_coverages(regions_list, request_id=request_id)
+
+            kraken_coverages = get_cached_kraken_coverages(regions)
+        for kraken_coverage in kraken_coverages:
+            if kraken_coverage.get('status') == 'no_data' and not region and not lon and not lat:
+                continue
+            response['regions'].append(kraken_coverage)
         return response
 
     @memory_cache.memoize(app.config[str('MEMORY_CACHE_CONFIGURATION')].get(str('TIMEOUT_AUTHENTICATION'), 30))

@@ -603,6 +603,22 @@ def is_olympic_site(entry_point, instance):
     return False
 
 
+def get_olympic_site(entry_point, instance):
+    if not instance or not instance.olympics_forbidden_uris:
+        return None
+    if not entry_point:
+        return None
+    if is_olympic_site(entry_point, instance):
+        return entry_point
+    if entry_point.embedded_type == type_pb2.ADDRESS:
+        if not (hasattr(entry_point.address, 'within_zones') and entry_point.address.within_zones):
+            return None
+        for within_zone in entry_point.address.within_zones:
+            if is_olympic_poi(within_zone, instance):
+                return within_zone
+    return None
+
+
 def get_last_pt_section(journey):
     return next((s for s in reversed(journey.sections) if s.type == response_pb2.PUBLIC_TRANSPORT), None)
 
@@ -921,26 +937,31 @@ def create_journeys_request(origins, destinations, datetime, clockwise, journey_
     req = request_pb2.Request()
     req.requested_api = type_pb2.pt_planner
 
-    def _set_attractivity(stop_point_id, location):
-        attractivity = journey_parameters.attractivities.get(stop_point_id)
-        if attractivity:
-            location.attractivity = attractivity
+    def _set_departure_attractivity(stop_point_id, location):
+        attractivity_virtual_duration = journey_parameters.olympic_site_params.get("departure_scenario", {}).get(
+            stop_point_id
+        )
+        if attractivity_virtual_duration:
+            location.attractivity = attractivity_virtual_duration.attractivity
+
+    def _set_arrival_attractivity(stop_point_id, location):
+        attractivity_virtual_duration = journey_parameters.olympic_site_params.get("arrival_scenario", {}).get(
+            stop_point_id
+        )
+        if attractivity_virtual_duration:
+            location.attractivity = attractivity_virtual_duration.attractivity
 
     for stop_point_id, access_duration in origins.items():
         location = req.journeys.origin.add()
         location.place = stop_point_id
         location.access_duration = access_duration
-        if journey_parameters.criteria != 'departure_stop_attractivity':
-            continue
-        _set_attractivity(stop_point_id, location)
+        _set_departure_attractivity(stop_point_id, location)
 
     for stop_point_id, access_duration in destinations.items():
         location = req.journeys.destination.add()
         location.place = stop_point_id
         location.access_duration = access_duration
-        if journey_parameters.criteria != 'arrival_stop_attractivity':
-            continue
-        _set_attractivity(stop_point_id, location)
+        _set_arrival_attractivity(stop_point_id, location)
 
     req.journeys.night_bus_filter_max_factor = journey_parameters.night_bus_filter_max_factor
     req.journeys.night_bus_filter_base_factor = journey_parameters.night_bus_filter_base_factor
@@ -1098,63 +1119,6 @@ def read_best_boarding_positions(file_path):
     except Exception as e:
         logger.exception(
             'Error while loading best_boarding_positions file: {} with exception: {}'.format(file_path, str(e))
-        )
-        return None
-
-
-def read_origin_destination_data(file_path):
-    logger = logging.getLogger(__name__)
-    if not os.path.exists(file_path):
-        logger.warning("file: %s does not exist", file_path)
-        return None, None, None
-
-    logger.info("reading origin destination and allowed ids from file: %s", file_path)
-    try:
-        my_dict = defaultdict(set)
-        stop_areas = set()
-        allowed_ids = set()
-        fieldnames = ['origin', 'destination', 'od_value']
-        with open(file_path) as f:
-            csv_reader = csv.DictReader(f, fieldnames)
-            # skip the header
-            next(csv_reader)
-
-            for line in csv_reader:
-                allowed_id = line['od_value']
-                if allowed_id:
-                    key = make_origin_destination_key(line['origin'], line['destination'])
-                    my_dict[key].add(allowed_id)
-
-                    stop_areas.add(line['origin'])
-                    stop_areas.add(line['destination'])
-                    allowed_ids.add(allowed_id)
-
-        return my_dict, stop_areas, allowed_ids
-    except Exception as e:
-        logger.exception(
-            'Error while loading od_allowed_ids file: {} with exception: {}'.format(file_path, str(e))
-        )
-        return None, None, None
-
-
-def read_stop_points_attractivities(file_path):
-    logger = logging.getLogger(__name__)
-    if not os.path.exists(file_path):
-        logger.warning("Reading stop points attractivities, file: %s does not exist", file_path)
-        return None
-
-    logger.info("Reading stop points attractivities from file: %s", file_path)
-    try:
-        fieldnames = ['stop_point_id', 'attractivity']
-        with open(file_path) as f:
-            csv_reader = csv.DictReader(f, fieldnames)
-            # skip the header
-            next(csv_reader)
-            return {line['stop_point_id']: int(line['attractivity']) for line in csv_reader}
-
-    except Exception as e:
-        logger.exception(
-            'Error while loading od_allowed_ids file: {} with exception: {}'.format(file_path, str(e))
         )
         return None
 

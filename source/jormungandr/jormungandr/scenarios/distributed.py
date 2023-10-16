@@ -48,7 +48,6 @@ from jormungandr.scenarios.helper_classes.complete_pt_journey import (
 from jormungandr.street_network.utils import crowfly_distance_between
 from jormungandr.scenarios.utils import (
     fill_uris,
-    switch_back_to_ridesharing,
     updated_common_journey_request_with_default,
 )
 from jormungandr.new_relic import record_custom_parameter
@@ -322,9 +321,17 @@ class Distributed(object):
             future_manager=future_manager, instance=instance, request=request, request_id=request_id
         )
 
+        pt_journey_fare_pool = PtJourneyFarePool(
+            future_manager=future_manager, instance=instance, request=request, request_id=request_id
+        )
+
         if request['_transfer_path'] is True:
             for journey in journeys_to_complete:
                 transfer_pool.async_compute_transfer(journey.pt_journeys.sections)
+
+        if request['_loki_compute_pt_journey_fare'] is True and request['_pt_planner'] == "loki":
+            for response in responses:
+                pt_journey_fare_pool.async_compute_fare(response, request_id)
 
         wait_and_complete_pt_journey(
             requested_orig_obj=context.requested_orig_obj,
@@ -339,6 +346,10 @@ class Distributed(object):
             journeys=journeys_to_complete,
             request_id="{}_complete_pt_journey".format(request_id),
         )
+        if request['_loki_compute_pt_journey_fare'] is True and request['_pt_planner'] == "loki":
+            wait_and_complete_pt_journey_fare(
+                pt_elements=journeys_to_complete, pt_journey_fare_pool=pt_journey_fare_pool
+            )
 
     def _compute_isochrone_common(
         self,

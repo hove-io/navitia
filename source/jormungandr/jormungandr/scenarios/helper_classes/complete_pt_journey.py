@@ -144,7 +144,7 @@ def get_journeys_to_complete(responses, context, is_debug):
         if r is None:
             continue
         for j in r.journeys:
-            if is_debug == False and "to_delete" in j.tags:
+            if is_debug is False and "to_delete" in j.tags:
                 continue
             if j.internal_id in context.journeys_to_modes:
                 journey_modes = context.journeys_to_modes[j.internal_id]
@@ -217,3 +217,19 @@ def wait_and_complete_pt_journey(
                     pt_journey=pt_element.pt_journeys,
                     transfer_pool=transfer_pool,
                 )
+
+
+def wait_and_complete_pt_journey_fare(pt_elements, pt_journey_fare_pool):
+    journeys_map = {j.pt_journeys.internal_id: j.pt_journeys for j in pt_elements}
+    for response, fare_response in pt_journey_fare_pool.wait_and_generate():
+        response.tickets.extend(fare_response.tickets)
+        for f in fare_response.pt_journey_fares:
+            journey = journeys_map.get(f.journey_id)
+            if journey is None:
+                logging.getLogger(__name__).warning(
+                    "something wrong has occurred when completing journey fare: journey {} can't be found".format(
+                        f.journey_id
+                    )
+                )
+                continue
+            journey.fare.CopyFrom(f.fare)
