@@ -124,6 +124,12 @@ class OlympicSiteParamsManager:
             return {}
         return data.get("scenarios", {}).get(scenario, {}).get("additional_parameters", {})
 
+    def get_strict_parameter(self, poi_uri):
+        data = self.olympic_site_params.get(poi_uri)
+        if not data:
+            return False
+        return data.get("strict", False)
+
     def load_olympic_site_params(self, file_path, instance_name):
 
         logger = logging.getLogger(__name__)
@@ -210,6 +216,7 @@ class OlympicSiteParamsManager:
                 "additional_parameters": self.get_dict_additional_parameters(
                     origin_olympic_site.uri, "departure_scenario"
                 ),
+                "strict": self.get_strict_parameter(origin_olympic_site.uri) if origin_olympic_site else False,
             }
         if arrival_olympic_site_params:
             return {
@@ -217,5 +224,8 @@ class OlympicSiteParamsManager:
                 "additional_parameters": self.get_dict_additional_parameters(
                     destination_olympic_site.uri, "arrival_scenario"
                 ),
+                "strict": self.get_strict_parameter(destination_olympic_site.uri)
+                if destination_olympic_site
+                else False,
             }
         return {}

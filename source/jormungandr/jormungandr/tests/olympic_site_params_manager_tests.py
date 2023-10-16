@@ -40,6 +40,7 @@ default_olympic_site_params = {
     "poi:BCD": {
         "departure_scenario": "default",
         "arrival_scenario": "default",
+        "strict": True,
         "scenarios": {
             "default": {
                 "stop_points": {
@@ -254,6 +255,7 @@ def test_build_origin_poi_jo():
     assert api_request["criteria"] == "departure_stop_attractivity"
     assert api_request.get("max_walking_duration_to_pt") == 13000
     olympic_site_params = api_request["olympic_site_params"]
+    assert olympic_site_params["strict"]
     assert "arrival_scenario" not in olympic_site_params
     assert "departure_scenario" in olympic_site_params
 
@@ -282,6 +284,7 @@ def test_build_arrival_poi_jo():
     assert api_request.get("max_walking_duration_to_pt") == 13000
     assert api_request["criteria"] == "arrival_stop_attractivity"
     olympic_site_params = api_request["olympic_site_params"]
+    assert olympic_site_params["strict"]
     assert "arrival_scenario" in olympic_site_params
     assert "departure_scenario" not in olympic_site_params
 
@@ -315,6 +318,7 @@ def test_build_departure_and_arrival_poi_jo():
     assert api_request["criteria"] == "arrival_stop_attractivity"
     assert api_request.get("max_walking_duration_to_pt") == 13000
     olympic_site_params = api_request["olympic_site_params"]
+    assert olympic_site_params["strict"]
     assert "arrival_scenario" in olympic_site_params
     assert "departure_scenario" not in olympic_site_params
 

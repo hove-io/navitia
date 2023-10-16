@@ -537,6 +537,8 @@ class Scenario(new_default.Scenario):
                 # At this point, we should have every details on the journeys.
                 # We refilter again(again and again...)
                 journey_filter.filter_detailed_journeys(responses, request)
+                # Filter olympic site (strict): Jira: NAV-2400
+                journey_filter.filter_olympic_site_strict(responses, request)
 
         except Exception as e:
             logger.exception('')
