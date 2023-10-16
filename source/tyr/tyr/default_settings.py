@@ -178,3 +178,7 @@ POST_DATA_TO_TYR = os.getenv('TYR_POST_DATA_TO_TYR', None)
 USE_LOCAL_SYS_LOG = os.getenv('TYR_USE_LOCAL_SYS_LOG', 'true').lower() in ['1', 'true', 'yes']
 
 ENABLE_USER_EVENT = boolean(os.getenv('TYR_ENABLE_USER_EVENT', True))
+
+# Used by the task fusio2s3
+# NTFS is enriched with addresses and administration regions before being sent to S3 for Loki
+BRAGI_URL = os.getenv('TYR_BRAGI_URL', None)
