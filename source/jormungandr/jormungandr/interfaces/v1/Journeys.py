@@ -301,6 +301,8 @@ class add_tad_links(object):
                         to_embedded_type = s.get('to').get('embedded_type')
                         from_coord = s.get('from').get(from_embedded_type).get('coord')
                         to_coord = s.get('to').get(to_embedded_type).get('coord')
+                        from_name = s.get('from').get(from_embedded_type).get('name')
+                        to_name = s.get('to').get(from_embedded_type).get('name')
                         args = dict()
                         dep_offset_dt_str = local_str_date_to_str_date_with_offset(
                             s.get('departure_date_time'), instance.timezone
@@ -309,9 +311,14 @@ class add_tad_links(object):
                         args['departure_longitude'] = from_coord.get('lon')
                         args['destination_latitude'] = to_coord.get('lat')
                         args['destination_longitude'] = to_coord.get('lon')
-                        args['requested_departure_time'] = urllib.parse.quote(dep_offset_dt_str)
+                        args['requested_departure_time'] = dep_offset_dt_str
                         if territory_value:
                             args['territory'] = territory_value
+                        if from_name:
+                            args['departure_display_name'] = from_name
+                        if to_name:
+                            args['arrival_display_name'] = to_name
+
                         url = "{}://home?".format(app_value)
                         tad_link = make_external_service_link(
                             url=url, rel="tad_dynamic_link", _type="tad_dynamic_link", **args

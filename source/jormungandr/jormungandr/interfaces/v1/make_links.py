@@ -38,6 +38,7 @@ from jormungandr.interfaces.v1.converters_collection_type import (
 from flask_restful.utils import unpack
 from jormungandr import app
 from jormungandr.utils import COVERAGE_ANY_BETA
+from six.moves.urllib.parse import urlencode
 
 
 def create_external_link(url, rel, _type=None, templated=False, description=None, **kwargs):
@@ -83,7 +84,7 @@ def create_internal_link(rel, _type, id, templated=False, description=None):
 
 
 def make_external_service_link(url, rel, _type, templated=False, **kwargs):
-    call_params = "&".join(["{}={}".format(key, value) for key, value in kwargs.items()])
+    call_params = urlencode(kwargs, doseq=True)
     return {"href": url + call_params, "rel": rel, "type": _type, "templated": templated}
 
 
