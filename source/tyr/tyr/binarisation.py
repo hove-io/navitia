@@ -1139,12 +1139,18 @@ def enrich_ntfs_with_addresses(filename, job_id, dataset_uid):
     logger = get_instance_logger(instance, task_id=job_id)
     filename = zip_if_needed(filename)
 
+    file_dir = os.path.dirname(filename)
+    file_basename = os.path.basename(filename)
+    output_dir = file_dir + "/enriched_with_addresses"
+    os.makedirs(output_dir, 0o755)
+    output = output_dir + "/" + file_basename
+
     try:
         params = [
             "--input",
             filename,
             "--output",
-            filename,
+            output,
             "--bragi-url",
             current_app.config['BRAGI_URL'],
         ]
@@ -1163,7 +1169,7 @@ def enrich_ntfs_with_addresses(filename, job_id, dataset_uid):
     finally:
         models.db.session.commit()
 
-    return filename
+    return output
 
 
 @celery.task(bind=True)
