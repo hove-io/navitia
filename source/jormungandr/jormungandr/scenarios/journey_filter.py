@@ -64,6 +64,10 @@ def to_be_deleted(journey):
     return 'to_delete' in journey.tags
 
 
+def is_best_olympics(journey):
+    return 'best_olympics' in journey.tags
+
+
 def is_olympics(journey):
     return 'olympics' in journey.tags
 
@@ -678,6 +682,24 @@ def apply_final_journey_filters(response_list, instance, request):
     if origin_mode == ['car']:
         journeys = journey_generator(response_list)
         filter_non_car_tagged_journey(journeys, request)
+
+
+def filter_olympic_site_strict(response_list, request):
+    if not response_list:
+        return
+    if request.get('wheelchair', True):
+        return
+    strict_param = request.get("olympic_site_params", {}).get("strict", False)
+    if not strict_param:
+        return
+    for resp in response_list:
+        for j in resp.journeys:
+            if not j.sections:
+                continue
+            if to_be_deleted(j):
+                continue
+            if not is_best_olympics(j):
+                mark_as_dead(j, request.get('debug'), 'Filtered by strict POI')
 
 
 def filter_olympic_site(response_list, instance, request, pt_object_origin, pt_object_destination):
