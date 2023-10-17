@@ -162,9 +162,7 @@ class OlympicSiteParamsManager:
         if not olympic_site_params:
             return
         # Add keep_olympics_journeys parameter
-        if api_request.get("_keep_olympics_journeys") is None and any(
-            [olympic_site_params.get("departure_scenario"), olympic_site_params.get("arrival_scenario")]
-        ):
+        if api_request.get("_keep_olympics_journeys") is None and olympic_site_params:
             api_request["_keep_olympics_journeys"] = True
         # Add additional parameters
         for key, value in olympic_site_params.get("additional_parameters", {}).items():
