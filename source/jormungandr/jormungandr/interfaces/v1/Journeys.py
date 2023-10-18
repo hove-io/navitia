@@ -74,7 +74,7 @@ from jormungandr.interfaces.common import add_poi_infos_types, handle_poi_infos
 from jormungandr.fallback_modes import FallbackModes
 from copy import deepcopy
 from jormungandr.travelers_profile import TravelerProfile
-import urllib.parse
+from six.moves.urllib.parse import quote
 
 
 f_datetime = "%Y%m%dT%H%M%S"
@@ -309,7 +309,7 @@ class add_tad_links(object):
                         args['departure_longitude'] = from_coord.get('lon')
                         args['destination_latitude'] = to_coord.get('lat')
                         args['destination_longitude'] = to_coord.get('lon')
-                        args['requested_departure_time'] = urllib.parse.quote(dep_offset_dt_str)
+                        args['requested_departure_time'] = quote(dep_offset_dt_str)
                         if territory_value:
                             args['territory'] = territory_value
                         url = "{}://home?".format(app_value)
