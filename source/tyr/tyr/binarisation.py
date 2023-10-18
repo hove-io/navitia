@@ -1160,7 +1160,6 @@ def enrich_ntfs_with_addresses(filename, job_id, dataset_uid):
             res = launch_exec("enrich-ntfs-with-addresses", params, logger)
         if res != 0:
             raise ValueError("enrich-ntfs-with-addresses failed")
-        dataset.state = "done"
     except:
         logger.exception("")
         job.state = "failed"
