@@ -49,6 +49,7 @@ from jormungandr.interfaces.v1.serializer.api import ContextSerializer
 from jormungandr.utils import get_house_number
 from jormungandr.autocomplete.geocodejson import create_address_field, get_lon_lat, format_zip_code
 from jormungandr.interfaces.v1.serializer.jsonschema.fields import MethodField
+from shapely.geometry import shape
 
 
 class CoordField(jsonschema.Field):
@@ -202,10 +203,17 @@ class PoiSerializer(serpy.DictSerializer):
     properties = jsonschema.MethodField(display_none=False)
     address = jsonschema.MethodField(display_none=False)
     children = PoisSerializer(display_none=False)
+    shape = jsonschema.MethodField(display_none=False)
 
     def get_poi_type(self, obj):
         poi_types = obj.get('properties', {}).get('geocoding', {}).get('poi_types', [])
         return PoiTypeSerializer(poi_types[0]).data if isinstance(poi_types, list) and poi_types else None
+
+    def get_shape(self, obj):
+        geojson = obj.get('properties', {}).get('geocoding', {}).get("shape")
+        if geojson:
+            return str(shape(geojson))
+        return None
 
     def get_properties(self, obj):
         return {
