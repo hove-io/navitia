@@ -29,3 +29,13 @@ RUN apt-get remove --yes cmake \
 # Let's force it to use the OS's list
 ENV REQUESTS_CA_BUNDLE /etc/ssl/certs
 
+# install rustup
+ENV RUSTUP_HOME=/usr/local/rustup \
+    CARGO_HOME=/usr/local/cargo
+
+ENV PATH=/usr/local/cargo/bin:${PATH}
+RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --no-modify-path --profile minimal \
+    && chmod -R a+wrX ${RUSTUP_HOME} ${CARGO_HOME} \
+    && rustup --version \
+    && cargo --version \
+    && rustc --version

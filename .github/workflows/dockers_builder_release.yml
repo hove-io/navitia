@@ -275,6 +275,13 @@ jobs:
         with:
           registries: "162230498103"
 
+      - name: Generate github private access token
+        uses: getsentry/action-github-app-token@v2
+        id: ci-core-app-token
+        with:
+          app_id: ${{ secrets.CI_CORE_APP_ID }}
+          private_key: ${{ secrets.CI_CORE_APP_PEM }}
+
       - name: Create master docker
         run: |
           docker build -f docker/${{env.jessie_version}}/Dockerfile-master -t navitia/master .
@@ -296,7 +303,7 @@ jobs:
 
           # Tyr-worker
           component_tag=${PRD_ECR_REGISTRY}/navitia-tyr-tyrworker:${{ needs.common_variables.outputs.NAVITIA_TAG }}
-          docker build -t ${component_tag} -f  docker/${{env.jessie_version}}/Dockerfile-tyr-worker .
+          docker build -t ${component_tag} --build-arg GITHUB_TOKEN=${{ steps.ci-core-app-token.outputs.token }} -f  docker/${{env.jessie_version}}/Dockerfile-tyr-worker .
 
       - name: Push on PRD ECR
         run: |

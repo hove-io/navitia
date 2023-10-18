@@ -1125,7 +1125,50 @@ def poi2mimir(self, instance_name, input, autocomplete_version, job_id=None, dat
 @celery.task(bind=True)
 def fusio2s3(self, instance_config, filename, job_id, dataset_uid):
     """Zip fusio file and launch fusio2s3"""
+    filename = enrich_ntfs_with_addresses(filename, job_id, dataset_uid)
     _inner_2s3(self, "fusio", instance_config, filename, job_id, dataset_uid)
+
+
+def enrich_ntfs_with_addresses(filename, job_id, dataset_uid):
+    """launch enrich-ntfs-with-addresses"""
+
+    job = models.Job.query.get(job_id)
+    dataset = _retrieve_dataset_and_set_state("fusio", job.id)
+    instance = job.instance
+
+    logger = get_instance_logger(instance, task_id=job_id)
+    filename = zip_if_needed(filename)
+
+    file_dir = os.path.dirname(filename)
+    file_basename = os.path.basename(filename)
+    output_dir = file_dir + "/enriched_with_addresses"
+    os.makedirs(output_dir, 0o755)
+    output = output_dir + "/" + file_basename
+
+    try:
+        params = [
+            "--input",
+            filename,
+            "--output",
+            output,
+            "--bragi-url",
+            current_app.config['BRAGI_URL'],
+        ]
+
+        res = None
+        with collect_metric("enrich-ntfs-with-addresses", job, dataset_uid):
+            res = launch_exec("enrich-ntfs-with-addresses", params, logger)
+        if res != 0:
+            raise ValueError("enrich-ntfs-with-addresses failed")
+    except:
+        logger.exception("")
+        job.state = "failed"
+        dataset.state = "failed"
+        raise
+    finally:
+        models.db.session.commit()
+
+    return output
 
 
 @celery.task(bind=True)

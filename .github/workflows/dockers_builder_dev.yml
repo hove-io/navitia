@@ -268,6 +268,13 @@ jobs:
         with:
           registries: "162230498103"
 
+      - name: Generate github private access token
+        uses: getsentry/action-github-app-token@v2
+        id: ci-core-app-token
+        with:
+          app_id: ${{ secrets.CI_CORE_APP_ID }}
+          private_key: ${{ secrets.CI_CORE_APP_PEM }}
+
       - name: Create master docker
         run: |
           docker build -f docker/${{env.jessie_version}}/Dockerfile-master -t navitia/master .
@@ -281,7 +288,7 @@ jobs:
         run: |
           for component in ${{env.backend_jessie_navitia_components}}; do
               echo "*********  Building $component ***************"
-              docker build -t ${SBX_ECR_REGISTRY_BACKEND}/$component:${TAG} -f  docker/${{env.jessie_version}}/Dockerfile-${component} .
+              docker build -t ${SBX_ECR_REGISTRY_BACKEND}/$component:${TAG} --build-arg GITHUB_TOKEN=${{ steps.ci-core-app-token.outputs.token }} -f  docker/${{env.jessie_version}}/Dockerfile-${component} .
           done
 
       - name: Push images on SBX ECR
