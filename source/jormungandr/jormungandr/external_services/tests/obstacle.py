@@ -41,21 +41,21 @@ mock_data = {
             "photo": "https://imgur.com",
             "distance": 200,
         },
-                {
+        {
             "id": "dmVsaWI6U1RBVElPTjoxMjAwOQ==",
             "type": "random",
             "coord": {"lat": 48.84617146118711, "lon": 2.3793068155646324},
             "photo": "https://imgur.com",
             "distance": 200,
         },
-                {
+        {
             "id": "dmVsaWI6U1RBVElPTjoxMjAwOQ==",
             "type": "random",
             "coord": {"lat": 48.84617146118711, "lon": 2.3793068155646324},
             "photo": "https://imgur.com",
             "distance": 200,
         },
-       ]
+    ]
 }
 
 
