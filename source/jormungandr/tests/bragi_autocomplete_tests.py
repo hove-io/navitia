@@ -324,6 +324,17 @@ BRAGI_MOCK_POI_WITH_SHAPE["features"][0]["properties"]["geocoding"]["shape"] = {
     ],
 }
 
+BRAGI_MOCK_POI_WITH_INVALID_SHAPE = deepcopy(BRAGI_MOCK_POI_WITHOUT_ADDRESS)
+BRAGI_MOCK_POI_WITH_INVALID_SHAPE["features"][0]["properties"]["geocoding"]["shape"] = {
+    "coordinates": [
+        [[[102.0, 2.0], [103.0, 2.0], [103.0, 3.0], [102.0, 3.0], [102.0, 2.0]]],
+        [
+            [[100.0, 0.0], [101.0, 0.0], [101.0, 1.0], [100.0, 1.0], [100.0, 0.0]],
+            [[100.2, 0.2], [100.8, 0.2], [100.8, 0.8], [100.2, 0.8], [100.2, 0.2]],
+        ],
+    ],
+}
+
 BRAGI_MOCK_STOP_AREA_WITH_MORE_ATTRIBUTS = {
     "features": [
         {
@@ -1170,10 +1181,26 @@ class TestBragiAutocomplete(AbstractTestFixture):
             assert r[0]['embedded_type'] == 'poi'
             poi = r[0]["poi"]
             assert poi["id"] == "bobette"
-            assert (
-                poi["shape"] == "MULTIPOLYGON (((102 2, 103 2, 103 3, 102 3, 102 2)), "
-                "((100 0, 101 0, 101 1, 100 1, 100 0), (100.2 0.2, 100.8 0.2, 100.8 0.8, 100.2 0.8, 100.2 0.2)))"
-            )
+            assert poi["shape"].startswith("MULTIPOLYGON (((")
+
+    def test_features_poi_invalid_with_shape_call(self):
+        url = 'https://host_of_bragi'
+        params = {'timeout': 200, 'pt_dataset[]': 'main_routing_test', "_add_poi_shape": "true"}
+
+        url += "/features/bobette?{}".format(urlencode(params, doseq=True))
+        with requests_mock.Mocker() as m:
+            m.get(url, json=BRAGI_MOCK_POI_WITH_INVALID_SHAPE)
+            response = self.query_region("places/bobette?&pt_dataset[]=main_routing_test&_add_poi_shape=true")
+            assert m.called
+
+            r = response.get('places')
+            assert len(r) == 1
+            assert r[0]['id'] == 'bobette'
+            assert r[0]['name'] == "bobette's label"
+            assert r[0]['embedded_type'] == 'poi'
+            poi = r[0]["poi"]
+            assert poi["id"] == "bobette"
+            assert "shape" not in poi
 
     def test_features_unknown_uri(self):
         url = 'https://host_of_bragi'

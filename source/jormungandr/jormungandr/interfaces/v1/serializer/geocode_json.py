@@ -212,7 +212,14 @@ class PoiSerializer(serpy.DictSerializer):
     def get_shape(self, obj):
         geojson = obj.get('properties', {}).get('geocoding', {}).get("shape")
         if geojson:
-            return str(shape(geojson))
+            try:
+                return shape(geojson).to_wkt()
+            except Exception as e:
+                logging.getLogger(__name__).error(
+                    'Error while loading boundary shape : object id {}'.format(
+                        obj.get('properties', {}).get('geocoding', {}).get("id")
+                    )
+                )
         return None
 
     def get_properties(self, obj):
