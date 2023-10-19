@@ -731,7 +731,9 @@ class TestDepartureBoard(AbstractTestFixture):
         assert "destination_latitude=0" in deep_link['href']
         assert "destination_longitude=0" in deep_link['href']
         assert "requested_departure_time=2012-06-15T11%3A00%3A00%2B00%3A00" in deep_link['href']
-        assert "territory=territory:B" in deep_link['href']
+        assert "territory=territory%3AB" in deep_link['href']
+        assert "departure_display_name=ODTstop1" in deep_link['href']
+        assert "arrival_display_name=ODTstop2" in deep_link['href']
         assert deep_link['type'] == "tad_dynamic_link"
         assert deep_link['rel'] == "tad_dynamic_link"
         assert deep_link['templated'] is False
