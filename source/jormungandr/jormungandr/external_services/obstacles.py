@@ -1,10 +1,10 @@
-# Copyright (c) 2001-2021, Canal TP and/or its affiliates. All rights reserved.
+# Copyright (c) 2001-2022, Hove and/or its affiliates. All rights reserved.
 #
 # This file is part of Navitia,
 #     the software to build cool stuff with public transport.
 #
 # Hope you'll enjoy and contribute to this project,
-#     powered by Canal TP (www.canaltp.fr).
+#     powered by Hove (www.hove.com).
 # Help us simplify mobility and open public transport:
 #     a non ending quest to the responsive locomotion way of traveling!
 #
@@ -28,22 +28,22 @@
 # www.navitia.io
 
 from __future__ import absolute_import, print_function, unicode_literals, division
-from jormungandr import cache, app, new_relic
+from jormungandr import app
 import pybreaker
 import logging
-import requests as requests
-from six.moves.urllib.parse import urlencode
 from jormungandr.interfaces.v1.serializer.obstacles import ObstaclesSerializer
+from jormungandr.external_services.external_service import AbstractExternalService, ExternalServiceError
 
 
-class ObstacleProvider(object):
+class ObstacleProvider(AbstractExternalService):
     """
-    Class managing calls to forseti webservice, providing external_services
+    Class managing calls to forseti webservice, providing obstacles
     """
 
-    def __init__(self, service_url, timeout=2, **kwargs):
+    def __init__(self, id, service_url, timeout=2, **kwargs):
         self.logger = logging.getLogger(__name__)
         self.service_url = service_url
+        self.id = id
         self.timeout = timeout
         self.breaker = pybreaker.CircuitBreaker(
             fail_max=kwargs.get('circuit_breaker_max_fail', app.config['CIRCUIT_BREAKER_MAX_FORSETI_FAIL']),
@@ -52,75 +52,42 @@ class ObstacleProvider(object):
             ),
         )
 
-    @cache.memoize(app.config.get(str('CACHE_CONFIGURATION'), {}).get(str('TIMEOUT_FORSETI'), 30))
-    def _call_webservice(self, arguments):
+    def get_response(self, arguments):
         """
-        Call external_services webservice with URL defined in settings
-        :return: data received from the webservice
+        Get free-floating information from Forseti webservice
         """
-        logging.getLogger(__name__).debug(
-            'forseti external_services service , call url : {}'.format(self.service_url)
-        )
-        result = None
+        raw_response = self._call_webservice(self, arguments)
+
+        return self.response_marshaller(raw_response, arguments)
+
+    @classmethod
+    def response_marshaller(cls, response, args):
         try:
-            url = "{}?{}".format(self.service_url, urlencode(arguments, doseq=True))
-            result = self.breaker.call(requests.get, url=url, timeout=self.timeout)
-            self.record_call(url=url, status="OK")
-        except pybreaker.CircuitBreakerError as e:
-            logging.getLogger(__name__).error('Service Forseti is dead (error: {})'.format(e))
-            self.record_call(url=url, status='failure', reason='circuit breaker open')
-        except requests.Timeout as t:
-            logging.getLogger(__name__).error('Forseti service timeout (error: {})'.format(t))
-            self.record_call(url=url, status='failure', reason='timeout')
-        except Exception as e:
+            cls._check_response(response)
+        except ExternalServiceError as e:
             logging.getLogger(__name__).exception('Forseti service error: {}'.format(e))
-            self.record_call(url=url, status='failure', reason=str(e))
-        return result
+            return None
 
-    def record_call(self, url, status, **kwargs):
-        """
-        status can be in: ok, failure
-        """
-        params = {'obstacle_service_id': "Forseti", 'status': status, 'obstacle_service_url': url}
-        params.update(kwargs)
-        new_relic.record_custom_event('obstacle_status', params)
-
-    def get_obstacles(self, arguments):
-        """
-        Get obstacle information from Forseti webservice
-        """
-        raw_response = self._call_webservice(arguments)
-
-        return self.response_marshaler(raw_response)
-
-    @classmethod
-    def _check_response(cls, response):
-        if response is None:
-            raise ObstacleError('impossible to access free-floating service')
-        if response.status_code == 503:
-            raise ObstacleUnavailable('forseti responded with 503')
-        if response.status_code != 200:
-            error_msg = 'free-floating request failed with HTTP code {}'.format(response.status_code)
-            if response.text:
-                error_msg += ' ({})'.format(response.text)
-            raise ObstacleError(error_msg)
-
-    @classmethod
-    def response_marshaler(cls, response):
-        cls._check_response(response)
         try:
             json_response = response.json()
+            json_response = cls.build_pagination(json_response, args)
         except ValueError:
             logging.getLogger(__name__).error(
                 "impossible to get json for response %s with body: %s", response.status_code, response.text
             )
-            raise
+            return None
         return ObstaclesSerializer(json_response).data
 
-
-class ObstacleError(RuntimeError):
-    pass
-
-
-class ObstacleUnavailable(RuntimeError):
-    pass
+    @classmethod
+    def build_pagination(cls, resp, args):
+        # Update elements in the pagination if present in the response forseti else create
+        if resp.get('pagination') is None:
+            resp['pagination'] = {}
+        pagination = resp['pagination']
+        resp['pagination']['items_on_page'] = pagination.get(
+            'items_on_page', len(resp.get('obstacles', []))
+        )
+        resp['pagination']['items_per_page'] = pagination.get('items_per_page', args.get('count'))
+        resp['pagination']['start_page'] = pagination.get('start_page', args.get('start_page'))
+        resp['pagination']['total_result'] = pagination.get('total_result', len(resp.get('obstacles', [])))
+        return resp
