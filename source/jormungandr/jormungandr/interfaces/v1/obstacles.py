@@ -54,7 +54,7 @@ class ObstaclesNearby(ResourceUri):
         parser_get = self.parsers["get"]
         parser_get.add_argument("distance", type=int, default=500, help="Distance range of the query in meters")
         parser_get.add_argument("count", type=default_count_arg_type, default=10, help="Elements per page")
-        self.parsers['get'].add_argument(
+        parser_get.add_argument(
             "coord",
             type=CoordFormat(nullable=True),
             help="Coordinates longitude;latitude used to search " "the objects around this coordinate",
