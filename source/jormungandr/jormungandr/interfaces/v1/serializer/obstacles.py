@@ -76,7 +76,7 @@ class ObstacleSerializer(serpy.DictSerializer):
     id = NestedPropertyField(attr='id')
     type = NestedPropertyField(attr='type')
     coord = CoordSerializer(attr='coord')
-    type = NestedPropertyField(attr='photo')
+    photo = NestedPropertyField(attr='photo')
     distance = NestedPropertyField(attr='distance')
 
 

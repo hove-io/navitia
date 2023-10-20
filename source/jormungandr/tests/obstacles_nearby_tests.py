@@ -100,7 +100,6 @@ class TestObstacle(AbstractTestFixture):
                     url,
                     urlencode(
                         {
-                            "type[]": None,
                             "distance": 500,
                             "count": 5,
                             "coord": "2.37715;48.846781",
