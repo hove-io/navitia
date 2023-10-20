@@ -198,6 +198,7 @@ class Scenario(object):
                 request_id=request_id,
                 instances=[instance],
                 current_datetime=request['_current_datetime'],
+                _add_poi_shape=request.get("_add_poi_shape", False),
             )
         except UnknownObject as e:
             # the autocomplete have not found anything
@@ -211,6 +212,7 @@ class Scenario(object):
                     request_id=request_id,
                     instances=[instance],
                     current_datetime=request['_current_datetime'],
+                    _add_poi_shape=request.get("_add_poi_shape", False),
                 )
                 if res.get("places"):
                     return res

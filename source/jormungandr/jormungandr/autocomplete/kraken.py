@@ -92,7 +92,7 @@ class Kraken(AbstractAutocomplete):
         return status
 
     @get_serializer(serpy=api.PlacesSerializer)
-    def get_by_uri(self, uri, request_id, instances=None, current_datetime=None):
+    def get_by_uri(self, uri, request_id, instances=None, current_datetime=None, _add_poi_shape=False):
         if len(instances) != 1:
             raise InvalidArguments('kraken search by uri works only for one (and only one) instance')
         instance = instances[0]

@@ -252,6 +252,9 @@ class PlaceUri(ResourceUri):
             "disable_geojson", type=BooleanType(), default=False, help="remove geojson from the response"
         )
         self.parsers['get'].add_argument(
+            "_add_poi_shape", type=BooleanType(), default=False, hidden=True, help="add shape of POI object"
+        )
+        self.parsers['get'].add_argument(
             "disable_disruption", type=BooleanType(), default=False, help="remove disruptions from the response"
         )
         args = self.parsers["get"].parse_args()
@@ -299,7 +302,12 @@ class PlaceUri(ResourceUri):
             autocomplete = global_autocomplete.get(args["_autocomplete"])
             if not autocomplete:
                 raise TechnicalError('world wide autocompletion service not available')
-            response = autocomplete.get_by_uri(args["uri"], request_id=request_id, instances=available_instances)
+            response = autocomplete.get_by_uri(
+                args["uri"],
+                request_id=request_id,
+                instances=available_instances,
+                _add_poi_shape=args.get("_add_poi_shape", False),
+            )
 
         return response, 200
 

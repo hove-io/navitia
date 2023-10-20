@@ -394,9 +394,14 @@ class GeocodeJson(AbstractAutocomplete):
             else (self.make_url(api_name), params)
         )
 
-    def get_by_uri(self, uri, request_id, instances=None, current_datetime=None):
-        url, params = self.get_url_params(uri, instances)
+    def get_by_uri(self, uri, request_id, instances=None, current_datetime=None, _add_poi_shape=False):
+        url, params = self.get_url_params(
+            uri,
+            instances,
+        )
         params.append(("request_id", request_id))
+        if _add_poi_shape:
+            params.append(("_add_poi_shape", "true"))
         raw_response = self.call_bragi(url, self.session.get, timeout=self.fast_timeout, params=params)
         return self.response_marshaller(raw_response, uri)
 
