@@ -54,7 +54,7 @@ class ObstacleProvider(AbstractExternalService):
 
     def get_response(self, arguments):
         """
-        Get free-floating information from Forseti webservice
+        Get obstacle information from Forseti webservice
         """
         raw_response = self._call_webservice(self, arguments)
 

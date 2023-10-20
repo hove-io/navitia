@@ -88,7 +88,7 @@ class TestObstacle(AbstractTestFixture):
     Test the structure of the obstacles_nearby api
     """
 
-    def test_freefloatings_nearby(self):
+    def test_obstacles_nearby(self):
         """
         simple obstacles_nearby call
         """
