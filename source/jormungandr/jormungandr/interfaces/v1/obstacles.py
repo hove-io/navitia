@@ -41,13 +41,6 @@ from jormungandr.instance import Instance
 from typing import Optional, Dict
 
 
-def build_instance_shape(instance):
-    # type: (Instance) -> Optional[Dict]
-    if instance and instance.geojson:
-        return {"type": "Feature", "properties": {}, "geometry": instance.geojson}
-    return None
-
-
 class ObstaclesNearby(ResourceUri):
     def __init__(self, *args, **kwargs):
         ResourceUri.__init__(self, output_type_serializer=ObstaclesSerializer, *args, **kwargs)
