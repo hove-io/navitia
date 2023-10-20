@@ -56,7 +56,7 @@ MOCKED_INSTANCE_CONF = {
 
 OBSTACLES_RESPONSE = {
     "obstacles": [
-       {
+        {
             "id": "dmVsaWI6U1RBVElPTjoxMjAwOQ==",
             "type": "random",
             "coord": {"lat": 48.84617146118711, "lon": 2.3793068155646324},
@@ -70,13 +70,13 @@ OBSTACLES_RESPONSE = {
             "photo": "https://imgur.com",
             "distance": 200,
         },
-                {
+        {
             "id": "dmVsaWI6U1RBVElPTjoxMjAwOQ==",
             "type": "random",
             "coord": {"lat": 48.84617146118711, "lon": 2.3793068155646324},
             "photo": "https://imgur.com",
             "distance": 200,
-        },       
+        },
     ],
     "pagination": {"items_on_page": 3, "items_per_page": 5, "start_page": 1, "total_result": 8},
 }

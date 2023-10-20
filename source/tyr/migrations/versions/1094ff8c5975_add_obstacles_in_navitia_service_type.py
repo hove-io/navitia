@@ -14,6 +14,7 @@ from alembic import op
 import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
 
+
 def upgrade():
     op.execute("COMMIT")  # See https://bitbucket.org/zzzeek/alembic/issue/123
     op.execute("ALTER TYPE navitia_service_type ADD VALUE 'obstacles'")

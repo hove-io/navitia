@@ -40,5 +40,5 @@ ENUM_EXTERNAL_SERVICE = (
     'realtime_proxies',
     'vehicle_positions',
     'bss_stations',
-    'obstacles'
+    'obstacles',
 )
