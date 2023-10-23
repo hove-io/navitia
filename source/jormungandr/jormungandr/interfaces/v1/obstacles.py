@@ -31,30 +31,23 @@
 
 from __future__ import absolute_import, print_function, unicode_literals, division
 from flask_restful import abort
-from jormungandr.interfaces.v1.serializer.free_floating import FreeFloatingsSerializer
+from jormungandr.interfaces.v1.serializer.obstacles import ObstaclesSerializer
 from jormungandr import i_manager, timezone
 from jormungandr.interfaces.v1.ResourceUri import ResourceUri
 from jormungandr.interfaces.parsers import default_count_arg_type
 from jormungandr.interfaces.v1.transform_id import transform_id
-from jormungandr.scenarios.utils import free_floatings_type
-from navitiacommon.parser_args_type import OptionValue, CoordFormat
+from navitiacommon.parser_args_type import CoordFormat
 from jormungandr.instance import Instance
 from typing import Optional, Dict
 
 
-class FreeFloatingsNearby(ResourceUri):
+class ObstaclesNearby(ResourceUri):
     def __init__(self, *args, **kwargs):
-        ResourceUri.__init__(self, output_type_serializer=FreeFloatingsSerializer, *args, **kwargs)
+        ResourceUri.__init__(self, output_type_serializer=ObstaclesSerializer, *args, **kwargs)
         parser_get = self.parsers["get"]
-        parser_get.add_argument(
-            "type[]",
-            type=OptionValue(free_floatings_type),
-            action="append",
-            help="Type of free-floating objects to return",
-        )
         parser_get.add_argument("distance", type=int, default=500, help="Distance range of the query in meters")
         parser_get.add_argument("count", type=default_count_arg_type, default=10, help="Elements per page")
-        self.parsers['get'].add_argument(
+        parser_get.add_argument(
             "coord",
             type=CoordFormat(nullable=True),
             help="Coordinates longitude;latitude used to search " "the objects around this coordinate",
@@ -71,7 +64,7 @@ class FreeFloatingsNearby(ResourceUri):
         instance = i_manager.instances.get(self.region)
 
         # coord in the form of uri:
-        # /coverage/<coverage name>/coord=<lon;lat>/freefloatings_nearby?...
+        # /coverage/<coverage name>/coord=<lon;lat>/obstacles_nearby?...
         if uri:
             if uri[-1] == '/':
                 uri = uri[:-1]
@@ -80,12 +73,12 @@ class FreeFloatingsNearby(ResourceUri):
                 args["coord"] = transform_id(uris[-1])
             else:
                 abort(404)
-        # coord as parameter: /coverage/<coverage name>/freefloatings_nearby?coord=<lon;lat>&...
+        # coord as parameter: /coverage/<coverage name>/obstacles_nearby?coord=<lon;lat>&...
         else:
             coord = args.get("coord")
             if coord is None:
                 abort(404)
         self._register_interpreted_parameters(args)
-        resp = instance.external_service_provider_manager.manage_free_floatings('free_floatings', args)
+        resp = instance.external_service_provider_manager.manage_obstacles('obstacles', args)
 
         return resp, 200
