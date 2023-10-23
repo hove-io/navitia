@@ -171,18 +171,6 @@ class ExternalServiceManager(object):
         # Return empty object instead of None if error occurs while calling external service.
         return service.get_response(arguments) if service else {'free_floatings': []}
 
-    # Here comes the function to call forseti/obstacles
-    def manage_obstacles(self, navitia_service, arguments):
-        """
-        Get appropriate external service for 'navitia_service' and call it
-        :param navitia_service: external service to be used to query
-        :param arguments: parameters to be added in the query
-        :return: response: external_services json
-        """
-        service = self._get_external_service(navitia_service)
-        # Return empty object instead of None if error occurs while calling external service.
-        return service.get_response(arguments) if service else {'obstacles': []}
-
     # Here comes the function to call forseti/vehicle_positions
     def manage_vehicle_positions(self, instance, response, **kwargs):
 
