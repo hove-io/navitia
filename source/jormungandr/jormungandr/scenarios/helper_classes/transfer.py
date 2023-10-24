@@ -27,6 +27,8 @@
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 from __future__ import absolute_import, print_function, unicode_literals, division
+
+import copy
 from collections import namedtuple
 from navitiacommon import response_pb2, type_pb2
 import itertools
@@ -338,7 +340,7 @@ class TransferPool(object):
         if not self._is_valid(transfer_result):
             return
 
-        transfer_direct_path = transfer_result.direct_path
+        transfer_direct_path = copy.deepcopy(transfer_result.direct_path)
 
         if transfer_result.origin and transfer_result.destination:
             prepend_first_coord(transfer_direct_path, transfer_result.origin)
