@@ -316,7 +316,7 @@ class Instance(transient_socket.TransientSocket):
         return [
             res
             for res in result
-            if res.navitia_service in ['free_floatings', 'vehicle_occupancies', "vehicle_positions"]
+            if res.navitia_service in ['free_floatings', 'vehicle_occupancies', "vehicle_positions", "obstacles"]
         ]
 
     def get_realtime_proxies_from_db(self):
