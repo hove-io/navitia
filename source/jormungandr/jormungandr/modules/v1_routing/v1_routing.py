@@ -50,6 +50,7 @@ from jormungandr.interfaces.v1 import (
     AccessPoints,
     VehiclePositions,
     free_floatings,
+    obstacles,
     users,
     opg_status,
 )
@@ -348,6 +349,17 @@ class V1Routing(AModule):
             '/coord/' + lon_lat + 'freefloatings_nearby',
             '/coords/' + lon_lat + 'freefloatings_nearby',
             endpoint='freefloatings_nearby',
+        )
+
+        self.add_resource(
+            obstacles.ObstaclesNearby,
+            region + 'obstacles_nearby',
+            coord + 'obstacles_nearby',
+            region + '<uri:uri>/obstacles_nearby',
+            coord + '<uri:uri>/obstacles_nearby',
+            '/coord/' + lon_lat + 'obstacles_nearby',
+            '/coords/' + lon_lat + 'obstacles_nearby',
+            endpoint='obstacles_nearby',
         )
 
         self.add_resource(users.User, "/users", endpoint='users')
