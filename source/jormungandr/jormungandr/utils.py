@@ -665,6 +665,7 @@ def decode_polyline(encoded, precision=6):
         # hand back the list of coordinates
     return decoded
 
+
 def encode_polyline(coords, precision=6):
     inv = 10**precision
     encoded = []

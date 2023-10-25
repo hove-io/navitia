@@ -187,23 +187,23 @@ class add_journey_href(object):
                     args['min_nb_journeys'] = 1
                     args['count'] = 1
                     this_journey_link = create_external_link('v1.journeys', **args)
-                    journey['links'] = [same_journey_schedules_link, this_journey_link ]
+                    journey['links'] = [same_journey_schedules_link, this_journey_link]
                     if 'sections' in journey:
                         for section in journey['sections']:
                             if section.get('type') == 'street_network':
-                                args             = request.args.to_dict(flat=False)
+                                args = request.args.to_dict(flat=False)
                                 if 'region' in kwargs:
                                     args['region'] = kwargs['region']
-                                coords           = section.get('geojson').get('coordinates')
-                                coords_bytes     = encode_polyline(coords)
-                                encoded_bytes    = base64.b64encode(coords_bytes.encode('utf-8'))
-                                args["path"]     = encoded_bytes.decode('utf-8')
+                                coords = section.get('geojson').get('coordinates')
+                                coords_bytes = encode_polyline(coords)
+                                encoded_bytes = base64.b64encode(coords_bytes.encode('utf-8'))
+                                args["path"] = encoded_bytes.decode('utf-8')
                                 args["distance"] = 10
-                                args['rel']      = 'obstacles'
+                                args['rel'] = 'obstacles'
 
                                 del args["from"]
                                 del args["to"]
-                                obstacle         = create_external_link('v1.obstacles_nearby', **args)
+                                obstacle = create_external_link('v1.obstacles_nearby', **args)
                                 section['links'].append(obstacle)
 
             return objects
@@ -233,7 +233,6 @@ class add_fare_links(object):
                 if "sections" not in j:
                     continue
                 for s in j['sections']:
-
                     # them we add the link to the different tickets needed
                     for ticket_needed in ticket_by_section[s["id"]]:
                         s['links'].append(create_internal_link(_type="ticket", rel="tickets", id=ticket_needed))
@@ -966,7 +965,6 @@ class Journeys(JourneyCommon):
                 response.response_type = response_pb2.NO_SOLUTION
 
             if response.HasField(str('error')) and len(possible_regions) > 1:
-
                 if args['debug']:
                     # In debug we store all errors
                     if not hasattr(g, 'errors_by_region'):
