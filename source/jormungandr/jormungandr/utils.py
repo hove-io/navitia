@@ -665,6 +665,36 @@ def decode_polyline(encoded, precision=6):
         # hand back the list of coordinates
     return decoded
 
+def encode_polyline(coords, precision=6):
+    inv = 10**precision
+    encoded = []
+    previous = [0, 0]
+
+    for coord in coords:
+        lat = int(round(coord[1] * inv))
+        lon = int(round(coord[0] * inv))
+
+        d_lat = lat - previous[1]
+        d_lon = lon - previous[0]
+
+        # Encode latitudes
+        d_lat = (d_lat << 1) ^ (-(d_lat >> 31))
+        while d_lat >= 0x20:
+            encoded.append(chr((0x20 | (d_lat & 0x1F)) + 63))
+            d_lat >>= 5
+        encoded.append(chr(max(0, min(d_lat + 63, 0x10FFFF))))
+
+        # Encode longitudes
+        d_lon = (d_lon << 1) ^ (-(d_lon >> 31))
+        while d_lon >= 0x20:
+            encoded.append(chr((0x20 | (d_lon & 0x1F)) + 63))
+            d_lon >>= 5
+        encoded.append(chr(max(0, min(d_lon + 63, 0x10FFFF))))
+
+        previous = [lon, lat]
+
+    return ''.join(encoded)
+
 
 # PeriodExtremity is used to provide a datetime and it's meaning
 #     datetime: given datetime (obviously)

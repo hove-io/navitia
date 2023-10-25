@@ -53,6 +53,7 @@ from jormungandr.utils import (
     journeys_absent,
     COVERAGE_ANY_BETA,
     local_str_date_to_str_date_with_offset,
+    encode_polyline,
 )
 from jormungandr.interfaces.v1.serializer import api
 from jormungandr.interfaces.v1.decorators import get_serializer
@@ -75,6 +76,7 @@ from jormungandr.fallback_modes import FallbackModes
 from copy import deepcopy
 from jormungandr.travelers_profile import TravelerProfile
 import urllib.parse
+import base64
 
 
 f_datetime = "%Y%m%dT%H%M%S"
@@ -185,7 +187,25 @@ class add_journey_href(object):
                     args['min_nb_journeys'] = 1
                     args['count'] = 1
                     this_journey_link = create_external_link('v1.journeys', **args)
-                    journey['links'] = [same_journey_schedules_link, this_journey_link]
+                    journey['links'] = [same_journey_schedules_link, this_journey_link ]
+                    if 'sections' in journey:
+                        for section in journey['sections']:
+                            if section.get('type') == 'street_network':
+                                args             = request.args.to_dict(flat=False)
+                                if 'region' in kwargs:
+                                    args['region'] = kwargs['region']
+                                coords           = section.get('geojson').get('coordinates')
+                                coords_bytes     = encode_polyline(coords)
+                                encoded_bytes    = base64.b64encode(coords_bytes.encode('utf-8'))
+                                args["path"]     = encoded_bytes.decode('utf-8')
+                                args["distance"] = 10
+                                args['rel']      = 'obstacles'
+
+                                del args["from"]
+                                del args["to"]
+                                obstacle         = create_external_link('v1.obstacles_nearby', **args)
+                                section['links'].append(obstacle)
+
             return objects
 
         return wrapper
