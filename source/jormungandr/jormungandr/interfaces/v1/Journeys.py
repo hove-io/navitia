@@ -191,6 +191,8 @@ class add_journey_href(object):
                     if 'sections' in journey and 'region' in kwargs:
                         args = request.args.to_dict(flat=False)
                         args['region'] = kwargs['region']
+                        del args["data_freshness"]
+                        del args["datetime"]
                         del args["from"]
                         del args["to"]
                         for section in journey['sections']:
