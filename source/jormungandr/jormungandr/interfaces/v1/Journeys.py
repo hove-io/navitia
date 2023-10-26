@@ -194,16 +194,17 @@ class add_journey_href(object):
                         del args["from"]
                         del args["to"]
                         for section in journey['sections']:
-                            if section.get('type') == 'street_network':
-                                coords = section.get('geojson').get('coordinates', [])
-                                coords_bytes = encode_polyline(coords)
-                                encoded_bytes = base64.b64encode(coords_bytes.encode('utf-8'))
-                                args["path"] = encoded_bytes.decode('utf-8')
-                                args["distance"] = 10
-                                args['rel'] = 'obstacles'
+                            if section.get('type') != 'street_network':
+                                continue
+                            coords = section.get('geojson').get('coordinates')
+                            coords_bytes = encode_polyline(coords)
+                            encoded_bytes = base64.b64encode(coords_bytes.encode('utf-8'))
+                            args["path"] = encoded_bytes.decode('utf-8')
+                            args["distance"] = 10
+                            args['rel'] = 'obstacles'
 
-                                obstacle = create_external_link('v1.obstacles_nearby', **args)
-                                section['links'].append(obstacle)
+                            obstacle = create_external_link('v1.obstacles_nearby', **args)
+                            section['links'].append(obstacle)
 
             return objects
 
