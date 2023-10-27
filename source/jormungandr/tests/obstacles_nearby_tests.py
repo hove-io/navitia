@@ -92,7 +92,7 @@ class TestObstacle(AbstractTestFixture):
         """
         simple obstacles_nearby call
         """
-        " https://wtf/obstacles?type%5B%5D=None&distance=500&count=5&coord=2.37715%3B48.846781&start_page=1"
+        "https://wtf/obstacles?path=None&distance=500&count=5&coord=2.37715%3B48.846781&start_page=1"
         url = "https://wtf/obstacles"
         mock_requests = MockRequests(
             {
@@ -100,6 +100,7 @@ class TestObstacle(AbstractTestFixture):
                     url,
                     urlencode(
                         {
+                            "path": "None",
                             "distance": 500,
                             "count": 5,
                             "coord": "2.37715;48.846781",

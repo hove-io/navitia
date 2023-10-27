@@ -45,6 +45,7 @@ class ObstaclesNearby(ResourceUri):
     def __init__(self, *args, **kwargs):
         ResourceUri.__init__(self, output_type_serializer=ObstaclesSerializer, *args, **kwargs)
         parser_get = self.parsers["get"]
+        parser_get.add_argument("path", type=str, help="A geojson in polyline path as base64")
         parser_get.add_argument("distance", type=int, default=500, help="Distance range of the query in meters")
         parser_get.add_argument("count", type=default_count_arg_type, default=10, help="Elements per page")
         parser_get.add_argument(
@@ -76,7 +77,8 @@ class ObstaclesNearby(ResourceUri):
         # coord as parameter: /coverage/<coverage name>/obstacles_nearby?coord=<lon;lat>&...
         else:
             coord = args.get("coord")
-            if coord is None:
+            path = args.get("path")
+            if coord is None and path is None:
                 abort(404)
         self._register_interpreted_parameters(args)
         resp = instance.external_service_provider_manager.manage_obstacles('obstacles', args)
