@@ -78,6 +78,17 @@ class MinioWrapper:
         )
         client.fput_object(self.bucket_name, file_key, filename, metadata=metadata, content_type=content_type)
 
+    def get_file(self, object_name, file_path):
+        if self.use_iam_provider:
+            self.retrieve_credentials()
+        client = Minio(
+            endpoint=self.endpoint,
+            access_key=self.access_key,
+            secret_key=self.secret_key,
+            session_token=self.session_token,
+        )
+        return client.fget_object(self.bucket_name, object_name, file_path)
+
     def retrieve_credentials(self):
         """Retrieve credentials from ECS IAM Role"""
 

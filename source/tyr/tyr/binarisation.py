@@ -1125,11 +1125,11 @@ def poi2mimir(self, instance_name, input, autocomplete_version, job_id=None, dat
 @celery.task(bind=True)
 def fusio2s3(self, instance_config, filename, job_id, dataset_uid):
     """Zip fusio file and launch fusio2s3"""
-    filename = enrich_ntfs_with_addresses(filename, job_id, dataset_uid)
+    filename = enrich_ntfs_with_addresses("fusio", instance_config, filename, job_id, dataset_uid)
     _inner_2s3(self, "fusio", instance_config, filename, job_id, dataset_uid)
 
 
-def enrich_ntfs_with_addresses(filename, job_id, dataset_uid):
+def enrich_ntfs_with_addresses(dataset_type, instance_config, filename, job_id, dataset_uid):
     """launch enrich-ntfs-with-addresses"""
 
     job = models.Job.query.get(job_id)
@@ -1141,9 +1141,22 @@ def enrich_ntfs_with_addresses(filename, job_id, dataset_uid):
 
     file_dir = os.path.dirname(filename)
     file_basename = os.path.basename(filename)
-    output_dir = file_dir + "/enriched_with_addresses"
+    output_dir = file_dir + "/for_loki"
     os.makedirs(output_dir, 0o755)
     output = output_dir + "/" + file_basename
+
+    previous_ntfs_path = output_dir + "/previous_ntfs.zip"
+
+    file_key = "{coverage}/{dataset_type}.zip".format(coverage=instance_config.name, dataset_type=dataset_type)
+
+    use_previous_ntfs = True
+
+    try:
+        minio_wrapper = MinioWrapper()
+        minio_wrapper.get_file(file_key, previous_ntfs_path)
+    except:
+        logger.warning("no previous ntfs found")
+        use_previous_ntfs = False
 
     try:
         params = [
@@ -1154,6 +1167,9 @@ def enrich_ntfs_with_addresses(filename, job_id, dataset_uid):
             "--bragi-url",
             current_app.config['BRAGI_URL'],
         ]
+
+        if use_previous_ntfs:
+            params.extend(["--previous-ntfs", previous_ntfs_path])
 
         res = None
         with collect_metric("enrich-ntfs-with-addresses", job, dataset_uid):
