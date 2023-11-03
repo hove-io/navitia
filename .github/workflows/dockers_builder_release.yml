@@ -359,7 +359,7 @@ jobs:
         uses: peter-evans/repository-dispatch@v2
         with:
           token: ${{ steps.app-token.outputs.token }}
-          repository: hove-io/core-front-aws-assets
+          repository: hove-io/corefront-aws-assets
           event-type: build-trigger
           client-payload: '{"branch": "release", "tag": "${{ needs.common_variables.outputs.NAVITIA_TAG }}"}'
 
