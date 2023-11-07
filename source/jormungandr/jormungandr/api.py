@@ -1,3 +1,6 @@
+
+from flask import jsonify
+
 #!/usr/bin/env python
 # coding=utf-8
 
@@ -59,9 +62,12 @@ def output_jsonp(data, code, headers=None):
 @rest_api.representation("text/json")
 @rest_api.representation("application/json")
 def output_json(data, code, headers=None):
-    resp = make_response(ujson.dumps(data), code)
+    resp = jsonify(data)
+    resp.status_code = code
     resp.headers.extend(headers or {})
     return resp
+
+
 
 
 @app.after_request
@@ -129,10 +135,12 @@ def add_info_newrelic(response, *args, **kwargs):
 # If modules are configured, then load and run them
 if 'MODULES' in rest_api.app.config:
     rest_api.module_loader = ModulesLoader(rest_api)
+    whitelist = ['module1', 'module2', 'module3']  # define your whitelist here
     for prefix, module_info in rest_api.app.config['MODULES'].items():
-        module_file = importlib.import_module(module_info['import_path'])
-        module = getattr(module_file, module_info['class_name'])
-        rest_api.module_loader.load(module(rest_api, prefix))
+        if module_info['import_path'] in whitelist:
+            module_file = importlib.import_module(module_info['import_path'])
+            module = getattr(module_file, module_info['class_name'])
+            rest_api.module_loader.load(module(rest_api, prefix))
     rest_api.module_loader.run()
 else:
     rest_api.app.logger.warning(
@@ -148,6 +156,8 @@ if rest_api.app.config.get('ACTIVATE_PROFILING'):
     import profile
 
     from werkzeug.contrib.profiler import ProfilerMiddleware
+
+
 
     rest_api.app.config['PROFILE'] = True
     f = open('/tmp/profiler.log', 'a')
