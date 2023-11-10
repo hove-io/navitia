@@ -193,7 +193,7 @@ class add_journey_href(object):
                     args = request.args.to_dict(flat=False)
                     args['region'] = kwargs['region']
                     for param in ["from", "to", "data_freshness", "datetime"]:
-                       if param in args:
+                        if param in args:
                             del args[param]
                     for section in journey['sections']:
                         if section.get('type') != 'street_network':
