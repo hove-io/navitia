@@ -156,7 +156,7 @@ class OlympicSiteParamsManager:
             return
         bucket_name = app.config.get('OLYMPIC_SITE_PARAMS_BUCKET', {}).get("name")
         if not bucket_name:
-            logger.debug("Reading stop points attractivities, undefined bucket".format(self.instance_name))
+            logger.debug("Reading stop points attractivities, undefined bucket")
             return
         folder = app.config.get('OLYMPIC_SITE_PARAMS_BUCKET', {}).get("folder", "olympic_site_params")
         try:
