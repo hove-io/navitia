@@ -722,7 +722,7 @@ class Journeys(JourneyCommon):
         parser_get.add_argument(
             "_loki_compute_pt_journey_fare",
             type=BooleanType(),
-            default=False,
+            default=True,
             hidden=True,
             help="only works when loki is selected as pt journey engine, "
             "whether to use external engine to compute pt journey fare",
