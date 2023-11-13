@@ -104,7 +104,9 @@ class OlympicSiteParamsManager:
     def get_s3_resource(self):
         bucket_params = app.config.get('OLYMPIC_SITE_PARAMS_BUCKET')
         if bucket_params:
-            args = bucket_params.get("args", {"connect_timeout": 2, "read_timeout": 2, "retries": {'max_attempts': 0}})
+            args = bucket_params.get(
+                "args", {"connect_timeout": 2, "read_timeout": 2, "retries": {'max_attempts': 0}}
+            )
             return boto3.Session().resource('s3', config=Config(**args))
         return None
 
