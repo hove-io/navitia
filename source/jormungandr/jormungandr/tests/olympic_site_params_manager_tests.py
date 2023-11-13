@@ -107,7 +107,7 @@ class FakeInstance(Instance):
 
 
 def test_get_departure_olympic_site_params():
-    osp = OlympicSiteParamsManager("", "idfm")
+    osp = OlympicSiteParamsManager("idfm")
     osp.olympic_site_params = default_olympic_site_params
     default_scenario = osp.get_dict_scenario("poi:BCD", "departure_scenario")
     attractivity_virtual_fallback = default_scenario["stop_point:463685"]
@@ -129,7 +129,7 @@ def test_get_departure_olympic_site_params():
 
 
 def test_get_arrival_olympic_site_params():
-    osp = OlympicSiteParamsManager("", "idfm")
+    osp = OlympicSiteParamsManager("idfm")
     osp.olympic_site_params = default_olympic_site_params
     default_scenario = osp.get_dict_scenario("poi:BCD", "arrival_scenario")
     attractivity_virtual_fallback = default_scenario["stop_point:463685"]
@@ -151,7 +151,7 @@ def test_get_arrival_olympic_site_params():
 
 
 def test_build_with_request_params_and_without_criteria_without_keep_olympics_journeys():
-    osp = OlympicSiteParamsManager("", "idfm")
+    osp = OlympicSiteParamsManager("idfm")
     osp.olympic_site_params = default_olympic_site_params
     api_request = dict()
     api_request["_olympics_sites_attractivities[]"] = [('stop_point:24113', 3), ('stop_point:24131', 30)]
@@ -177,7 +177,7 @@ def test_build_with_request_params_and_without_criteria_without_keep_olympics_jo
 
 
 def test_build_with_request_params_and_without_criteria_with_keep_olympics_journeys():
-    osp = OlympicSiteParamsManager("", "idfm")
+    osp = OlympicSiteParamsManager("idfm")
     osp.olympic_site_params = default_olympic_site_params
     api_request = dict()
     api_request["_olympics_sites_attractivities[]"] = [('stop_point:24113', 3), ('stop_point:24131', 30)]
@@ -203,7 +203,7 @@ def test_build_with_request_params_and_without_criteria_with_keep_olympics_journ
 
 
 def test_build_with_request_params_and_departure_criteria():
-    osp = OlympicSiteParamsManager("", "idfm")
+    osp = OlympicSiteParamsManager("idfm")
     osp.olympic_site_params = default_olympic_site_params
     api_request = dict()
     api_request["_olympics_sites_attractivities[]"] = [('stop_point:24113', 3), ('stop_point:24131', 30)]
@@ -230,7 +230,7 @@ def test_build_with_request_params_and_departure_criteria():
 
 
 def test_build_with_request_params_and_arrival_criteria():
-    osp = OlympicSiteParamsManager("", "idfm")
+    osp = OlympicSiteParamsManager("idfm")
     osp.olympic_site_params = default_olympic_site_params
     api_request = dict()
     api_request["_olympics_sites_attractivities[]"] = [('stop_point:24113', 3), ('stop_point:24131', 30)]
@@ -257,7 +257,7 @@ def test_build_with_request_params_and_arrival_criteria():
 
 
 def test_build_without_request_params():
-    osp = OlympicSiteParamsManager("", "idfm")
+    osp = OlympicSiteParamsManager("idfm")
     osp.olympic_site_params = default_olympic_site_params
     api_request = dict()
 
@@ -273,7 +273,7 @@ def test_build_without_request_params():
 
 
 def test_build_origin_poi_jo():
-    osp = OlympicSiteParamsManager("", "idfm")
+    osp = OlympicSiteParamsManager("idfm")
     osp.olympic_site_params = default_olympic_site_params
     api_request = dict()
     pt_origin_detail = make_pt_object(type_pb2.POI, 2, 3, "poi:BCD")
@@ -303,7 +303,7 @@ def test_build_origin_poi_jo():
 
 
 def test_build_arrival_poi_jo():
-    osp = OlympicSiteParamsManager("", "idfm")
+    osp = OlympicSiteParamsManager("idfm")
     osp.olympic_site_params = default_olympic_site_params
     api_request = dict()
     pt_origin_detail = make_pt_object(type_pb2.ADDRESS, 1, 2, "SA:BCD")
@@ -334,7 +334,7 @@ def test_build_arrival_poi_jo():
 
 
 def test_build_departure_and_arrival_poi_jo():
-    osp = OlympicSiteParamsManager("", "idfm")
+    osp = OlympicSiteParamsManager("idfm")
     osp.olympic_site_params = default_olympic_site_params
     api_request = dict()
 
@@ -370,20 +370,12 @@ def test_build_departure_and_arrival_poi_jo():
 
 
 def test_get_dict_scenario_empty_scenario():
-    osp = OlympicSiteParamsManager("", "idfm")
+    osp = OlympicSiteParamsManager("idfm")
     res = osp.get_dict_scenario(None, {})
     assert not res
 
 
 def test_build_olympic_site_params_empty_scenario():
-    osp = OlympicSiteParamsManager("", "idfm")
+    osp = OlympicSiteParamsManager("idfm")
     res = osp.build_olympic_site_params(None, {})
     assert not res
-
-
-def test_load_olympic_site_params_empty_path():
-    coverage = "idfm"
-    osp = OlympicSiteParamsManager("", coverage)
-    with tempfile.TemporaryDirectory() as tmp_path:
-        osp.load_olympic_site_params(tmp_path, coverage)
-    assert not osp.olympic_site_params

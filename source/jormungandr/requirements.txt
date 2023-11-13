@@ -58,3 +58,4 @@ newrelic==6.8.0.163 ; python_version >= "3.9"
 greenlet==0.4.15 ; python_version <= "3.6"
 pickle-mixin==1.0.2
 Flask-Caching==1.7.2
+boto3==1.28.82

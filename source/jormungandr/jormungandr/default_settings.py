@@ -348,7 +348,19 @@ ASGARD_ZMQ_SOCKET = os.getenv('JORMUNGANDR_ASGARD_ZMQ_SOCKET')
 SQLALCHEMY_TRACK_MODIFICATIONS = False
 
 BEST_BOARDING_POSITIONS_DIR = os.getenv('JORMUNGANDR_BEST_BOARDING_POSITIONS_DIR', None)
-OLYMPIC_SITE_PARAMS_DIR = os.getenv('JORMUNGANDR_OLYMPIC_SITE_PARAMS_DIR', None)
+# Example:
+# OLYMPIC_SITE_PARAMS_BUCKET = {
+#     "name": "aa",
+#     "folder": "olympic_site_params",
+#     "args": {
+#         "connect_timeout": 2,
+#         "read_timeout": 2,
+#         "retries": {
+#             'max_attempts': 0
+#         }
+#     }
+# }
+OLYMPIC_SITE_PARAMS_BUCKET = json.loads(os.getenv('JORMUNGANDR_OLYMPIC_SITE_PARAMS_BUCKET', '{}'))
 DEPLOYMENT_AZ = os.getenv('JORMUNGANDR_DEPLOYMENT_AZ', "unknown")
 
 
