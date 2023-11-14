@@ -101,15 +101,6 @@ class OlympicSiteParamsManager:
         self.olympic_site_params = dict()
         self.instance_name = instance_name
 
-    def get_s3_resource(self):
-        bucket_params = app.config.get('OLYMPIC_SITE_PARAMS_BUCKET')
-        if bucket_params:
-            args = bucket_params.get(
-                "args", {"connect_timeout": 2, "read_timeout": 2, "retries": {'max_attempts': 0}}
-            )
-            return boto3.Session().resource('s3', config=Config(**args))
-        return None
-
     def build_olympic_site_params(self, scenario, data):
         if not scenario:
             logging.getLogger(__name__).warning("Impossible to build olympic_site_params: Empty scenario")
@@ -151,13 +142,18 @@ class OlympicSiteParamsManager:
 
     def fill_olympic_site_params_from_s3(self):
         logger = logging.getLogger(__name__)
-        s3_resource = self.get_s3_resource()
-        if not s3_resource:
+        bucket_params = app.config.get('OLYMPIC_SITE_PARAMS_BUCKET', {})
+        if not bucket_params:
+            logger.debug("Reading stop points attractivities, undefined bucket_params")
             return
-        bucket_name = app.config.get('OLYMPIC_SITE_PARAMS_BUCKET', {}).get("name")
+        bucket_name = bucket_params.get("name")
         if not bucket_name:
-            logger.debug("Reading stop points attractivities, undefined bucket")
+            logger.debug("Reading stop points attractivities, undefined bucket_name")
             return
+
+        args = bucket_params.get("args", {"connect_timeout": 2, "read_timeout": 2, "retries": {'max_attempts': 0}})
+        s3_resource = boto3.resource('s3', config=Config(**args))
+
         folder = app.config.get('OLYMPIC_SITE_PARAMS_BUCKET', {}).get("folder", "olympic_site_params")
         try:
             my_bucket = s3_resource.Bucket(bucket_name)
