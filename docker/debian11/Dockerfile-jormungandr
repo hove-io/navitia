@@ -41,6 +41,7 @@ RUN a2ensite 000-default.conf \
  # Python 'requests' package handle its own CA certificate list
  # Let's force it to use the OS's list
  ENV REQUESTS_CA_BUNDLE /etc/ssl/certs
+ ENV AWS_CA_BUNDLE /etc/ssl/certs
 
 # Redirect apache log output to docker log collector
  RUN ln -sf /proc/self/fd/1 /var/log/apache2/access.log \
