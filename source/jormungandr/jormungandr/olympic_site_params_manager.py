@@ -151,7 +151,9 @@ class OlympicSiteParamsManager:
             logger.debug("Reading stop points attractivities, undefined bucket_name")
             return
 
-        args = bucket_params.get("args", {"connect_timeout": 2, "read_timeout": 2, "retries": {'max_attempts': 0}})
+        args = bucket_params.get(
+            "args", {"connect_timeout": 2, "read_timeout": 2, "retries": {'max_attempts': 0}}
+        )
         s3_resource = boto3.resource('s3', config=Config(**args))
 
         folder = app.config.get('OLYMPIC_SITE_PARAMS_BUCKET', {}).get("folder", "olympic_site_params")
