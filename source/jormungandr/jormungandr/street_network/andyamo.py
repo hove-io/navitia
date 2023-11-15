@@ -52,6 +52,7 @@ DEFAULT_ANDYAMO_FEED_PUBLISHER = {
     'url': 'https://www.andyamo.fr',
 }
 
+
 class Andyamo(AbstractStreetNetworkService):
     def __init__(
         self,
@@ -68,8 +69,8 @@ class Andyamo(AbstractStreetNetworkService):
     ):
         self.instance = instance
         self.sn_system_id = id
-        self.token = token    
-        self.zone = zone        
+        self.token = token
+        self.zone = zone
         service_backup["args"]["instance"] = instance
         self.asgard = utils.create_object(service_backup)
 
@@ -79,7 +80,7 @@ class Andyamo(AbstractStreetNetworkService):
         self.log = logging.LoggerAdapter(
             logging.getLogger(__name__), extra={'streetnetwork_id': six.text_type(id)}
         )
-        
+
         self.headers = {"Content-Type": "application/json", "Accept": "application/json"}
         if self.token:
             self.headers['Authorization'] = 'apiKey {}'.format(self.token)
@@ -108,15 +109,17 @@ class Andyamo(AbstractStreetNetworkService):
 
         from_point_coords = (from_coords["lon"], from_coords["lat"])
         to_point_coords = (to_coords["lon"], to_coords["lat"])
-        
+
         shapely_polygon = Polygon(self.zone)
         shapely_from_point = Point(from_point_coords)
         shapely_to_point = Point(to_point_coords)
-        return self.is_point_inside_polygon(shapely_from_point, shapely_polygon) and self.is_point_inside_polygon(shapely_to_point, shapely_polygon)
+        return self.is_point_inside_polygon(
+            shapely_from_point, shapely_polygon
+        ) and self.is_point_inside_polygon(shapely_to_point, shapely_polygon)
 
     def not_in_andyamo_zone(self, from_point, to_point):
         return not self.are_both_points_inside_zone(from_point, to_point)
-        
+
     def mapping_inside_outside(self, from_point, to_point):
         inside_zone_combinations = []
         outside_zone_combinations = []
@@ -135,12 +138,12 @@ class Andyamo(AbstractStreetNetworkService):
 
         andyamo = {
             'origins': [pair[0] for pair in inside_zone_combinations],
-            'destinations': [pair[1] for pair in inside_zone_combinations]
+            'destinations': [pair[1] for pair in inside_zone_combinations],
         }
 
         asgard = {
             'origins': [pair[0] for pair in outside_zone_combinations],
-            'destinations': [pair[1] for pair in outside_zone_combinations]
+            'destinations': [pair[1] for pair in outside_zone_combinations],
         }
 
         return {'andyamo': andyamo, 'asgard': asgard}
@@ -180,7 +183,7 @@ class Andyamo(AbstractStreetNetworkService):
             "sourceLatitude": source["lat"],
             "sourceLongitude": source["lon"],
             "targetLatitude": target["lat"],
-            "targetLongitude": target["lon"]
+            "targetLongitude": target["lon"],
         }
 
         return params
@@ -239,14 +242,25 @@ class Andyamo(AbstractStreetNetworkService):
         andyamo = result['andyamo']
         asgard = result['asgard']
 
-        asgard_output = self.asgard._get_street_network_routing_matrix(instance, asgard['origins'], asgard['destinations'], street_network_mode, max_duration, request, request_id, **kwargs)
+        asgard_output = self.asgard._get_street_network_routing_matrix(
+            instance,
+            asgard['origins'],
+            asgard['destinations'],
+            street_network_mode,
+            max_duration,
+            request,
+            request_id,
+            **kwargs
+        )
         if not wheelchair:
             return asgard_output
 
         resp_json = self.post_matrix_request(andyamo['origins'], andyamo['destinations'], request)
         self.check_content_response(resp_json, andyamo['origins'], destinations)
 
-        andyamo_output = self._create_matrix_response(resp_json, andyamo['origins'], andyamo['destinations'], max_duration)
+        andyamo_output = self._create_matrix_response(
+            resp_json, andyamo['origins'], andyamo['destinations'], max_duration
+        )
         andyamo_output.rows = andyamo_output.rows + asgard_output.rows
 
         return andyamo_output
@@ -277,9 +291,7 @@ class Andyamo(AbstractStreetNetworkService):
 
         self.check_andyamo_modes([mode])
 
-        params = self._make_request_arguments_direct_path(
-            pt_object_origin, pt_object_destination, request
-        )
+        params = self._make_request_arguments_direct_path(pt_object_origin, pt_object_destination, request)
         response = self._call_andyamo('route', params)
         json_response = self.check_response_and_get_json(response)
         return self._get_response(json_response, pt_object_origin, pt_object_destination, fallback_extremity)
