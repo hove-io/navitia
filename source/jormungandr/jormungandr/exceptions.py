@@ -140,6 +140,11 @@ class HandimapTechnicalError(HTTPException):
         self.data = format_error("technical_error", msg)
         self.code = 500
 
+class AndyamoTechnicalError(HTTPException):
+    def __init__(self, msg):
+        super(AndyamoTechnicalError, self).__init__()
+        self.data = format_error("technical_error", msg)
+        self.code = 500
 
 class ConfigException(Exception):
     def __init__(self, arg):
