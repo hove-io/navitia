@@ -85,6 +85,10 @@ def get_uri_pt_object(pt_object):
         return coord_format.format(pt_object.access_point.coord.lon, pt_object.access_point.coord.lat)
     if pt_object.embedded_type == type_pb2.POI:
         return coord_format.format(pt_object.poi.coord.lon, pt_object.poi.coord.lat)
+    if pt_object.embedded_type == type_pb2.ADMINISTRATIVE_REGION:
+        return coord_format.format(
+            pt_object.administrative_region.coord.lon, pt_object.administrative_region.coord.lat
+        )
     return pt_object.uri
 
 
