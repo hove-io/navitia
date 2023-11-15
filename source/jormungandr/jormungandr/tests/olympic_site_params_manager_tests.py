@@ -106,6 +106,11 @@ class FakeInstance(Instance):
         )
 
 
+class FakeS3Object:
+    def __init__(self, key="file.json"):
+        self.key = key
+
+
 def test_get_departure_olympic_site_params():
     osp = OlympicSiteParamsManager("idfm")
     osp.olympic_site_params = default_olympic_site_params
@@ -378,4 +383,33 @@ def test_get_dict_scenario_empty_scenario():
 def test_build_olympic_site_params_empty_scenario():
     osp = OlympicSiteParamsManager("idfm")
     res = osp.build_olympic_site_params(None, {})
+    assert not res
+
+
+def test_get_dict_additional_parameters_invalid_poi():
+    osp = OlympicSiteParamsManager("idfm")
+    osp.olympic_site_params = default_olympic_site_params
+    res = osp.get_dict_additional_parameters("poi:id", "default")
+    assert not res
+
+
+def test_get_dict_additional_parameters_invalid_scenario():
+    osp = OlympicSiteParamsManager("idfm")
+    osp.olympic_site_params = default_olympic_site_params
+    res = osp.get_dict_additional_parameters("poi:BCD", "abc")
+    assert not res
+
+
+def test_get_strict_parameter_invalid_poi():
+    osp = OlympicSiteParamsManager("idfm")
+    osp.olympic_site_params = default_olympic_site_params
+    res = osp.get_strict_parameter("poi:id")
+    assert not res
+
+
+def test_get_json_content_invalid_s3_object():
+    osp = OlympicSiteParamsManager("idfm")
+    osp.olympic_site_params = default_olympic_site_params
+    fake_s3_object = FakeS3Object()
+    res = osp.get_json_content(fake_s3_object)
     assert not res
