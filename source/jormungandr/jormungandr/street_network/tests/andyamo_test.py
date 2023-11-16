@@ -42,10 +42,12 @@ from jormungandr.utils import (
     PeriodExtremity,
 )
 
+
 class MockResource(object):
     def __init__(self, text=None, status=200):
         self.text = text
         self.status_code = status
+
 
 def matrix_response_valid(response_id=1):
     # response_id=0 : len(sources) == len(targets)
@@ -147,12 +149,10 @@ fake_service_url = "andyamo.com"
 fake_asgard_url = "asgard.andyamo.com"
 fake_asgard_socket = "tcp://socket.andyamo.com:666"
 service_backup = {
-    "args": {                
-        "service_url": fake_asgard_url,
-        "asgard_socket": fake_asgard_socket
-    },
-    "class": "jormungandr.street_network.asgard.Asgard"
+    "args": {"service_url": fake_asgard_url, "asgard_socket": fake_asgard_socket},
+    "class": "jormungandr.street_network.asgard.Asgard",
 }
+
 
 def test_create_andyamo_without_service_backup():
     instance = MagicMock()
@@ -160,11 +160,13 @@ def test_create_andyamo_without_service_backup():
         Andyamo(instance=instance, service_url=fake_service_url, service_backup='', zone='')
     assert str(excinfo.value) == 'service_backup  is not define cant forward to asgard'
 
+
 def test_create_andyamo_without_service_url():
     instance = MagicMock()
     with pytest.raises(ValueError) as excinfo:
         Andyamo(instance=instance, service_url='', service_backup=service_backup, zone='')
     assert str(excinfo.value) == 'service_url  is not a valid andyamo url'
+
 
 def test_create_andyamo_with_default_values():
     instance = MagicMock()
@@ -186,7 +188,15 @@ def test_create_andyamo_with_default_values():
 def test_create_andyamo_with_config_test():
     instance = MagicMock()
     kwargs = {"circuit_breaker_max_fail": 2, "circuit_breaker_reset_timeout": 30}
-    andyamo = Andyamo(instance=instance, id="id_handmap", service_url=fake_service_url, service_backup=service_backup, zone='', timeout=5, **kwargs)
+    andyamo = Andyamo(
+        instance=instance,
+        id="id_handmap",
+        service_url=fake_service_url,
+        service_backup=service_backup,
+        zone='',
+        timeout=5,
+        **kwargs
+    )
     assert andyamo.sn_system_id == "id_handmap"
     assert andyamo.timeout == 5
     assert andyamo.service_url == fake_service_url
@@ -204,7 +214,14 @@ def test_create_andyamo_status_test():
     instance = MagicMock()
     kwargs = {"circuit_breaker_max_fail": 2, "circuit_breaker_reset_timeout": 30}
     andyamo = Andyamo(
-        instance=instance, id="id_handmap", service_url=fake_service_url, modes=["walking"], service_backup=service_backup, zone='', timeout=5, **kwargs
+        instance=instance,
+        id="id_handmap",
+        service_url=fake_service_url,
+        modes=["walking"],
+        service_backup=service_backup,
+        zone='',
+        timeout=5,
+        **kwargs
     )
     status = andyamo.status()
     assert status["id"] == "id_handmap"
@@ -215,20 +232,19 @@ def test_create_andyamo_status_test():
 
 def call_andyamo_func_with_circuit_breaker_error_test():
     instance = MagicMock()
-    andyamo = Andyamo(instance=instance, service_url=fake_service_url,service_backup=service_backup, zone='')
+    andyamo = Andyamo(instance=instance, service_url=fake_service_url, service_backup=service_backup, zone='')
     andyamo.breaker = MagicMock()
     andyamo.breaker.call = MagicMock(side_effect=pybreaker.CircuitBreakerError())
     with pytest.raises(jormungandr.exceptions.AndyamoTechnicalError) as andyamo_exception:
         andyamo._call_andyamo(andyamo.service_url, data={})
     assert (
-        andyamo_exception.value.data["message"]
-        == 'andyamo routing service unavailable, Circuit breaker is open'
+        andyamo_exception.value.data["message"] == 'andyamo routing service unavailable, Circuit breaker is open'
     )
 
 
 def call_andyamo_func_with_unknown_exception_test():
     instance = MagicMock()
-    andyamo = Andyamo(instance=instance, service_url=fake_service_url,service_backup=service_backup, zone='')
+    andyamo = Andyamo(instance=instance, service_url=fake_service_url, service_backup=service_backup, zone='')
     andyamo.breaker = MagicMock()
     andyamo.breaker.call = MagicMock(side_effect=ValueError())
     with pytest.raises(jormungandr.exceptions.AndyamoTechnicalError) as andyamo_exception:
@@ -238,18 +254,17 @@ def call_andyamo_func_with_unknown_exception_test():
 
 def direct_path_andyamo_func_with_mode_invalid_test():
     instance = MagicMock()
-    andyamo = Andyamo(instance=instance, service_url=fake_service_url,service_backup=service_backup, zone='')
+    andyamo = Andyamo(instance=instance, service_url=fake_service_url, service_backup=service_backup, zone='')
     with pytest.raises(jormungandr.exceptions.InvalidArguments) as andyamo_exception:
         andyamo._direct_path(instance, "bike", None, None, None, None, None, "123")
     assert (
-        andyamo_exception.value.data["message"]
-        == "Invalid arguments Andyamo, mode(s) ['bike'] not implemented"
+        andyamo_exception.value.data["message"] == "Invalid arguments Andyamo, mode(s) ['bike'] not implemented"
     )
 
 
 def check_response_and_get_json_andyamo_func_code_invalid_test():
     instance = MagicMock()
-    andyamo = Andyamo(instance=instance, service_url=fake_service_url,service_backup=service_backup, zone='')
+    andyamo = Andyamo(instance=instance, service_url=fake_service_url, service_backup=service_backup, zone='')
     resp = MockResource(status=401)
     with pytest.raises(jormungandr.exceptions.AndyamoTechnicalError) as andyamo_exception:
         andyamo.check_response_and_get_json(resp)
@@ -258,7 +273,7 @@ def check_response_and_get_json_andyamo_func_code_invalid_test():
 
 def check_response_and_get_json_andyamo_func_json_invalid_test():
     instance = MagicMock()
-    andyamo = Andyamo(instance=instance, service_url=fake_service_url,service_backup=service_backup, zone='')
+    andyamo = Andyamo(instance=instance, service_url=fake_service_url, service_backup=service_backup, zone='')
     resp = MockResource(text="toto")
     with pytest.raises(jormungandr.exceptions.UnableToParse) as andyamo_exception:
         andyamo.check_response_and_get_json(resp)
@@ -270,21 +285,21 @@ def check_response_and_get_json_andyamo_func_json_invalid_test():
 
 def get_language_andyamo_func_language_invalid_test():
     instance = MagicMock()
-    andyamo = Andyamo(instance=instance, service_url=fake_service_url,service_backup=service_backup, zone='')
+    andyamo = Andyamo(instance=instance, service_url=fake_service_url, service_backup=service_backup, zone='')
     language = andyamo._get_language("toto")
     assert language == "en-US"
 
 
 def get_language_andyamo_func_language_valid_test():
     instance = MagicMock()
-    andyamo = Andyamo(instance=instance, service_url=fake_service_url,service_backup=service_backup, zone='')
+    andyamo = Andyamo(instance=instance, service_url=fake_service_url, service_backup=service_backup, zone='')
     language = andyamo._get_language("english")
     assert language == "en-US"
 
 
 def get_language_parameter_andyamo_func_language_invalid_test():
     instance = MagicMock()
-    andyamo = Andyamo(instance=instance, service_url=fake_service_url,service_backup=service_backup, zone='')
+    andyamo = Andyamo(instance=instance, service_url=fake_service_url, service_backup=service_backup, zone='')
     request = {"language": "toto"}
     language = andyamo.get_language_parameter(request)
     assert language == "en-US"
@@ -353,7 +368,7 @@ def format_coord_andyamo_func_test():
 
 def get_response_andyamo_represents_start_true_test():
     instance = MagicMock()
-    andyamo = Andyamo(instance=instance, service_url=fake_service_url,service_backup=service_backup, zone='')
+    andyamo = Andyamo(instance=instance, service_url=fake_service_url, service_backup=service_backup, zone='')
     resp_json = direct_path_response_valid()
 
     origin = make_pt_object(type_pb2.ADDRESS, lon=-1.6761174, lat=48.1002462, uri='AndyamoStart')
@@ -394,7 +409,7 @@ def get_response_andyamo_represents_start_true_test():
 
 def get_response_andyamo_represents_start_false_test():
     instance = MagicMock()
-    andyamo = Andyamo(instance=instance, service_url=fake_service_url,service_backup=service_backup, zone='')
+    andyamo = Andyamo(instance=instance, service_url=fake_service_url, service_backup=service_backup, zone='')
     resp_json = direct_path_response_valid()
 
     origin = make_pt_object(type_pb2.ADDRESS, lon=-1.6761174, lat=48.1002462, uri='AndyamoStart')
@@ -443,7 +458,7 @@ def create_pt_object(lon, lat, pt_object_type=type_pb2.POI):
 
 def check_content_response_andyamo_func_valid_test():
     instance = MagicMock()
-    andyamo = Andyamo(instance=instance, service_url=fake_service_url,service_backup=service_backup, zone='')
+    andyamo = Andyamo(instance=instance, service_url=fake_service_url, service_backup=service_backup, zone='')
     resp_json = matrix_response_valid(1)
     origins = [create_pt_object(-1.680150, 48.108770)]
     destinations = [create_pt_object(-1.679860, 48.109340), create_pt_object(-1.678750, 48.109390)]
@@ -452,7 +467,7 @@ def check_content_response_andyamo_func_valid_test():
 
 def check_content_response_andyamo_func_invalid_test():
     instance = MagicMock()
-    andyamo = Andyamo(instance=instance, service_url=fake_service_url,service_backup=service_backup, zone='')
+    andyamo = Andyamo(instance=instance, service_url=fake_service_url, service_backup=service_backup, zone='')
     resp_json = matrix_response_valid(1)
     origins = [create_pt_object(-1.680150, 48.108770)]
     destinations = [create_pt_object(-1.679860, 48.109340)]
@@ -463,7 +478,7 @@ def check_content_response_andyamo_func_invalid_test():
 
 def create_matrix_response_andyamo_test():
     instance = MagicMock()
-    andyamo = Andyamo(instance=instance, service_url=fake_service_url,service_backup=service_backup, zone='')
+    andyamo = Andyamo(instance=instance, service_url=fake_service_url, service_backup=service_backup, zone='')
     resp_json = matrix_response_valid(1)
     origins = [create_pt_object(-1.680150, 48.108770)]
     destinations = [create_pt_object(-1.679860, 48.109340), create_pt_object(-1.678750, 48.109390)]
@@ -479,7 +494,7 @@ def create_matrix_response_andyamo_test():
 def check_content_response_andyamo_func_valid_0_test():
     # response_id=0 : len(sources) == len(targets)
     instance = MagicMock()
-    andyamo = Andyamo(instance=instance, service_url=fake_service_url,service_backup=service_backup, zone='')
+    andyamo = Andyamo(instance=instance, service_url=fake_service_url, service_backup=service_backup, zone='')
     resp_json = matrix_response_valid(0)
     origins = [create_pt_object(-1.680150, 48.108770)]
     destinations = [create_pt_object(-1.679860, 48.109340)]
@@ -489,7 +504,7 @@ def check_content_response_andyamo_func_valid_0_test():
 def check_content_response_andyamo_func_valid_1_test():
     # response_id=1 : len(sources) < len(targets)
     instance = MagicMock()
-    andyamo = Andyamo(instance=instance, service_url=fake_service_url,service_backup=service_backup, zone='')
+    andyamo = Andyamo(instance=instance, service_url=fake_service_url, service_backup=service_backup, zone='')
     resp_json = matrix_response_valid(1)
     origins = [create_pt_object(-1.680150, 48.108770)]
     destinations = [create_pt_object(-1.679860, 48.109340), create_pt_object(-1.678750, 48.109390)]
@@ -499,7 +514,7 @@ def check_content_response_andyamo_func_valid_1_test():
 def check_content_response_andyamo_func_valid_2_test():
     # response_id=2 : len(sources) > len(targets)
     instance = MagicMock()
-    andyamo = Andyamo(instance=instance, service_url=fake_service_url,service_backup=service_backup, zone='')
+    andyamo = Andyamo(instance=instance, service_url=fake_service_url, service_backup=service_backup, zone='')
     resp_json = matrix_response_valid(2)
     origins = [create_pt_object(-1.679860, 48.109340), create_pt_object(-1.678750, 48.109390)]
     destinations = [create_pt_object(-1.680150, 48.108770)]
