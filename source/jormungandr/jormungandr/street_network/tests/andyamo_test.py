@@ -140,7 +140,6 @@ def direct_path_response_valid():
             "status_message": "Found route between points",
             "status": 0,
             "units": "kilometers",
-            "language": "fr-FR",
         }
     }
 
@@ -281,6 +280,7 @@ def check_response_and_get_json_andyamo_func_json_invalid_test():
         andyamo_exception.value.data["message"]
         == "Andyamo unable to parse response, error: Unexpected character found when decoding 'true'"
     )
+
 
 def make_request_arguments_direct_path_andyamo_func_test():
     origin = type_pb2.PtObject()
