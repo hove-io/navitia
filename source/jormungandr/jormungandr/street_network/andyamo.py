@@ -75,7 +75,7 @@ class Andyamo(AbstractStreetNetworkService):
             raise ValueError('service_backup {} is not define cant forward to asgard'.format(service_backup))
 
         service_backup["args"]["instance"] = instance
-        self.asgard = utils.create_object(service_backup)
+        self.service_backup = utils.create_object(service_backup)
 
         if not service_url:
             raise ValueError('service_url {} is not a valid andyamo url'.format(service_url))
@@ -103,9 +103,6 @@ class Andyamo(AbstractStreetNetworkService):
         self._feed_publisher = FeedPublisher(**feed_publisher) if feed_publisher else None
         self.check_andyamo_modes(self.modes)
 
-    def is_point_inside_polygon(self, point, polygon):
-        return polygon.contains(point)
-
     def are_both_points_inside_zone(self, from_point, to_point):
         from_coords = self._format_coord(from_point)
         to_coords = self._format_coord(to_point)
@@ -116,9 +113,7 @@ class Andyamo(AbstractStreetNetworkService):
         shapely_polygon = Polygon(self.zone)
         shapely_from_point = Point(from_point_coords)
         shapely_to_point = Point(to_point_coords)
-        return self.is_point_inside_polygon(
-            shapely_from_point, shapely_polygon
-        ) and self.is_point_inside_polygon(shapely_to_point, shapely_polygon)
+        return shapely_polygon.contains(shapely_from_point) and shapely_polygon.contains(shapely_to_point)
 
     def not_in_andyamo_zone(self, from_point, to_point):
         return not self.are_both_points_inside_zone(from_point, to_point)
@@ -242,7 +237,7 @@ class Andyamo(AbstractStreetNetworkService):
         andyamo = result['andyamo']
         asgard = result['asgard']
 
-        asgard_output = self.asgard._get_street_network_routing_matrix(
+        asgard_output = self.service_backup._get_street_network_routing_matrix(
             instance,
             asgard['origins'],
             asgard['destinations'],
@@ -278,7 +273,7 @@ class Andyamo(AbstractStreetNetworkService):
     ):
         wheelchair = self.get_wheelchair_parameter(request)
         if self.not_in_andyamo_zone(pt_object_origin, pt_object_destination) or not wheelchair:
-            return self.asgard._direct_path(
+            return self.service_backup._direct_path(
                 instance,
                 mode,
                 pt_object_origin,

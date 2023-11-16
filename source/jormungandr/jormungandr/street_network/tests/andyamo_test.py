@@ -316,7 +316,7 @@ def make_request_arguments_direct_path_andyamo_func_test():
     destination.poi.coord.lon = 32.41
     destination.poi.coord.lat = 31.42
     request = {"walking_speed": 1.5}
-    arguments_direct_path = Andyamo._make_request_arguments_direct_path(origin, destination, request, "en-EN")
+    arguments_direct_path = Andyamo._make_request_arguments_direct_path(origin, destination, request)
     assert arguments_direct_path["costing"] == "walking"
     assert arguments_direct_path["costing_options"] == {'walking': {'walking_speed': 5.0}}
     assert arguments_direct_path["directions_options"]["units"] == "kilometers"
@@ -329,21 +329,21 @@ def make_request_arguments_direct_path_andyamo_func_test():
 
     # Request with wheelchair or/and traveler_type in the request
     request["traveler_type"] = "fast_walker"
-    arguments_direct_path = Andyamo._make_request_arguments_direct_path(origin, destination, request, "en-EN")
+    arguments_direct_path = Andyamo._make_request_arguments_direct_path(origin, destination, request)
     assert arguments_direct_path["costing"] == "walking"
     assert arguments_direct_path["costing_options"] == {'walking': {'walking_speed': 5.0}}
     request["traveler_type"] = "wheelchair"
-    arguments_direct_path = Andyamo._make_request_arguments_direct_path(origin, destination, request, "en-EN")
+    arguments_direct_path = Andyamo._make_request_arguments_direct_path(origin, destination, request)
     assert arguments_direct_path["costing"] == "wheelchair"
     assert arguments_direct_path["costing_options"] == {'wheelchair': {'travel_speed': 5.0}}
 
     # parameter wheelchair has priority on parameter  traveler_type
     request["wheelchair"] = False
-    arguments_direct_path = Andyamo._make_request_arguments_direct_path(origin, destination, request, "en-EN")
+    arguments_direct_path = Andyamo._make_request_arguments_direct_path(origin, destination, request)
     assert arguments_direct_path["costing"] == "walking"
     assert arguments_direct_path["costing_options"] == {'walking': {'walking_speed': 5.0}}
     request["wheelchair"] = True
-    arguments_direct_path = Andyamo._make_request_arguments_direct_path(origin, destination, request, "en-EN")
+    arguments_direct_path = Andyamo._make_request_arguments_direct_path(origin, destination, request)
     assert arguments_direct_path["costing"] == "wheelchair"
     assert arguments_direct_path["costing_options"] == {'wheelchair': {'travel_speed': 5.0}}
 
