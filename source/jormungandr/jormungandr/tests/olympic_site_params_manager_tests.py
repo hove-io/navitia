@@ -417,6 +417,7 @@ def test_get_json_content_invalid_s3_object():
 
 def test_fill_olympic_site_params_from_s3_without_bucket_name():
     from jormungandr import app
+
     osp = OlympicSiteParamsManager("idfm")
     app.config["OLYMPIC_SITE_PARAMS_BUCKET"] = {"test": "test"}
     osp.fill_olympic_site_params_from_s3()
@@ -425,6 +426,7 @@ def test_fill_olympic_site_params_from_s3_without_bucket_name():
 
 def test_fill_olympic_site_params_from_s3_invalid_access():
     from jormungandr import app
+
     osp = OlympicSiteParamsManager("idfm")
     app.config["OLYMPIC_SITE_PARAMS_BUCKET"] = {"name": "test"}
     osp.fill_olympic_site_params_from_s3()
