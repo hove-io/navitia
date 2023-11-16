@@ -282,29 +282,6 @@ def check_response_and_get_json_andyamo_func_json_invalid_test():
         == "Andyamo unable to parse response, error: Unexpected character found when decoding 'true'"
     )
 
-
-def get_language_andyamo_func_language_invalid_test():
-    instance = MagicMock()
-    andyamo = Andyamo(instance=instance, service_url=fake_service_url, service_backup=service_backup, zone='')
-    language = andyamo._get_language("toto")
-    assert language == "en-US"
-
-
-def get_language_andyamo_func_language_valid_test():
-    instance = MagicMock()
-    andyamo = Andyamo(instance=instance, service_url=fake_service_url, service_backup=service_backup, zone='')
-    language = andyamo._get_language("english")
-    assert language == "en-US"
-
-
-def get_language_parameter_andyamo_func_language_invalid_test():
-    instance = MagicMock()
-    andyamo = Andyamo(instance=instance, service_url=fake_service_url, service_backup=service_backup, zone='')
-    request = {"language": "toto"}
-    language = andyamo.get_language_parameter(request)
-    assert language == "en-US"
-
-
 def make_request_arguments_direct_path_andyamo_func_test():
     origin = type_pb2.PtObject()
     origin.embedded_type = type_pb2.POI
@@ -320,7 +297,6 @@ def make_request_arguments_direct_path_andyamo_func_test():
     assert arguments_direct_path["costing"] == "walking"
     assert arguments_direct_path["costing_options"] == {'walking': {'walking_speed': 5.0}}
     assert arguments_direct_path["directions_options"]["units"] == "kilometers"
-    assert arguments_direct_path["directions_options"]["language"] == "en-EN"
     assert len(arguments_direct_path["locations"]) == 2
     assert arguments_direct_path["locations"][0]["lat"] == origin.poi.coord.lat
     assert arguments_direct_path["locations"][0]["lon"] == origin.poi.coord.lon
