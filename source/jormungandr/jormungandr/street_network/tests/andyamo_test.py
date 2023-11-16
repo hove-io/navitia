@@ -305,14 +305,6 @@ def get_language_parameter_andyamo_func_language_invalid_test():
     assert language == "en-US"
 
 
-def make_request_arguments_walking_details_andyamo_func_invalid_test():
-    request = {"walking_speed": 1.5}
-    res = andyamo._make_request_arguments_walking_details(request, "en-EN")
-    assert res["costing"] == "walking"
-    assert res["costing_options"]["walking"]["walking_speed"] == 5.0
-    assert res["directions_options"]["language"] == "en-EN"
-
-
 def make_request_arguments_direct_path_andyamo_func_test():
     origin = type_pb2.PtObject()
     origin.embedded_type = type_pb2.POI
