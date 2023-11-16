@@ -71,6 +71,9 @@ class Andyamo(AbstractStreetNetworkService):
         self.sn_system_id = id
         self.token = token
         self.zone = zone
+        if not service_backup:
+            raise ValueError('service_backup {} is not define cant forward to asgard'.format(service_backup))
+
         service_backup["args"]["instance"] = instance
         self.asgard = utils.create_object(service_backup)
 
@@ -198,10 +201,7 @@ class Andyamo(AbstractStreetNetworkService):
 
     def post_matrix_request(self, origins, destinations, request):
         post_data = self.matrix_payload(origins, destinations, request)
-        response = self._call_andyamo(
-            'matrix',
-            post_data,
-        )
+        response = self._call_andyamo('matrix', post_data)
         return self.check_response_and_get_json(response)
 
     def make_path_key(self, mode, orig_uri, dest_uri, streetnetwork_path_type, period_extremity):
