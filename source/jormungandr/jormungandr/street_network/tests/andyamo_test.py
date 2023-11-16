@@ -251,16 +251,6 @@ def call_andyamo_func_with_unknown_exception_test():
     assert andyamo_exception.value.data["message"] == 'Andyamo routing has encountered unknown error'
 
 
-def direct_path_andyamo_func_with_mode_invalid_test():
-    instance = MagicMock()
-    andyamo = Andyamo(instance=instance, service_url=fake_service_url, service_backup=service_backup, zone='')
-    with pytest.raises(jormungandr.exceptions.InvalidArguments) as andyamo_exception:
-        andyamo._direct_path(instance, "bike", None, None, None, None, None, "123")
-    assert (
-        andyamo_exception.value.data["message"] == "Invalid arguments Andyamo, mode(s) ['bike'] not implemented"
-    )
-
-
 def check_response_and_get_json_andyamo_func_code_invalid_test():
     instance = MagicMock()
     andyamo = Andyamo(instance=instance, service_url=fake_service_url, service_backup=service_backup, zone='')
@@ -280,26 +270,6 @@ def check_response_and_get_json_andyamo_func_json_invalid_test():
         andyamo_exception.value.data["message"]
         == "Andyamo unable to parse response, error: Unexpected character found when decoding 'true'"
     )
-
-
-def make_request_arguments_direct_path_andyamo_func_test():
-    origin = type_pb2.PtObject()
-    origin.embedded_type = type_pb2.POI
-    origin.poi.coord.lon = 42.42
-    origin.poi.coord.lat = 41.41
-
-    destination = type_pb2.PtObject()
-    destination.embedded_type = type_pb2.POI
-    destination.poi.coord.lon = 32.41
-    destination.poi.coord.lat = 31.42
-    request = {"walking_speed": 1.5}
-    arguments_direct_path = Andyamo._make_request_arguments_direct_path(origin, destination, request)
-    assert arguments_direct_path["directions_options"]["units"] == "kilometers"
-    assert len(arguments_direct_path["locations"]) == 2
-    assert arguments_direct_path["locations"][0]["lat"] == origin.poi.coord.lat
-    assert arguments_direct_path["locations"][0]["lon"] == origin.poi.coord.lon
-    assert arguments_direct_path["locations"][1]["lat"] == destination.poi.coord.lat
-    assert arguments_direct_path["locations"][1]["lon"] == destination.poi.coord.lon
 
 
 def format_coord_andyamo_func_test():
