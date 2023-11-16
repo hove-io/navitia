@@ -165,6 +165,8 @@ class Andyamo(AbstractStreetNetworkService):
         }
 
     def get_wheelchair_parameter(self, request):
+        if request is None:
+            return False
         return request.get('wheelchair', False)
 
     @staticmethod

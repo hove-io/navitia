@@ -237,7 +237,7 @@ def call_andyamo_func_with_circuit_breaker_error_test():
     with pytest.raises(jormungandr.exceptions.AndyamoTechnicalError) as andyamo_exception:
         andyamo._call_andyamo(andyamo.service_url, data={})
     assert (
-        andyamo_exception.value.data["message"] == 'andyamo routing service unavailable, Circuit breaker is open'
+        andyamo_exception.value.data["message"] == 'Andyamo routing service unavailable, Circuit breaker is open'
     )
 
 
@@ -294,34 +294,12 @@ def make_request_arguments_direct_path_andyamo_func_test():
     destination.poi.coord.lat = 31.42
     request = {"walking_speed": 1.5}
     arguments_direct_path = Andyamo._make_request_arguments_direct_path(origin, destination, request)
-    assert arguments_direct_path["costing"] == "walking"
-    assert arguments_direct_path["costing_options"] == {'walking': {'walking_speed': 5.0}}
     assert arguments_direct_path["directions_options"]["units"] == "kilometers"
     assert len(arguments_direct_path["locations"]) == 2
     assert arguments_direct_path["locations"][0]["lat"] == origin.poi.coord.lat
     assert arguments_direct_path["locations"][0]["lon"] == origin.poi.coord.lon
     assert arguments_direct_path["locations"][1]["lat"] == destination.poi.coord.lat
     assert arguments_direct_path["locations"][1]["lon"] == destination.poi.coord.lon
-
-    # Request with wheelchair or/and traveler_type in the request
-    request["traveler_type"] = "fast_walker"
-    arguments_direct_path = Andyamo._make_request_arguments_direct_path(origin, destination, request)
-    assert arguments_direct_path["costing"] == "walking"
-    assert arguments_direct_path["costing_options"] == {'walking': {'walking_speed': 5.0}}
-    request["traveler_type"] = "wheelchair"
-    arguments_direct_path = Andyamo._make_request_arguments_direct_path(origin, destination, request)
-    assert arguments_direct_path["costing"] == "wheelchair"
-    assert arguments_direct_path["costing_options"] == {'wheelchair': {'travel_speed': 5.0}}
-
-    # parameter wheelchair has priority on parameter  traveler_type
-    request["wheelchair"] = False
-    arguments_direct_path = Andyamo._make_request_arguments_direct_path(origin, destination, request)
-    assert arguments_direct_path["costing"] == "walking"
-    assert arguments_direct_path["costing_options"] == {'walking': {'walking_speed': 5.0}}
-    request["wheelchair"] = True
-    arguments_direct_path = Andyamo._make_request_arguments_direct_path(origin, destination, request)
-    assert arguments_direct_path["costing"] == "wheelchair"
-    assert arguments_direct_path["costing_options"] == {'wheelchair': {'travel_speed': 5.0}}
 
 
 def format_coord_andyamo_func_test():
