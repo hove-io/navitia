@@ -284,9 +284,9 @@ class Instance(transient_socket.TransientSocket):
             self.best_boarding_positions = read_best_boarding_positions(file_path)
 
         # load stop_point attractivities, the feature is only available when loki is selected as pt_planner
-        self.olympic_site_params_manager = OlympicSiteParamsManager(
-            app.config.get(str('OLYMPIC_SITE_PARAMS_DIR')), self.name
-        )
+        self.olympic_site_params_manager = OlympicSiteParamsManager(self.name)
+        if self.olympics_forbidden_uris:
+            self.olympic_site_params_manager.fill_olympic_site_params_from_s3()
 
         # TODO: use db
         self._pt_journey_fare_backend_manager = PtJourneyFareBackendManager(

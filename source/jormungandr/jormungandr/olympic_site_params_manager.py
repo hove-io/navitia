@@ -27,19 +27,20 @@
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 
-import os
 import logging
 import json
 from collections import namedtuple
 from jormungandr.utils import get_olympic_site
-import glob
+import boto3
+from jormungandr import app
+from botocore.client import Config
 
 
 AttractivityVirtualFallback = namedtuple("AttractivityVirtualFallback", "attractivity, virtual_duration")
 
 
 class OlympicSiteParamsManager:
-    def __init__(self, file_path, instance_name):
+    def __init__(self, instance_name):
         """
         {
           "poi:BCY": {
@@ -98,7 +99,7 @@ class OlympicSiteParamsManager:
         }
         """
         self.olympic_site_params = dict()
-        self.load_olympic_site_params(file_path, instance_name)
+        self.instance_name = instance_name
 
     def build_olympic_site_params(self, scenario, data):
         if not scenario:
@@ -130,28 +131,40 @@ class OlympicSiteParamsManager:
             return False
         return data.get("strict", False)
 
-    def load_olympic_site_params(self, file_path, instance_name):
-
+    def get_json_content(self, s3_object):
         logger = logging.getLogger(__name__)
-        if not file_path:
-            logger.debug("Reading stop points attractivities, path is empty")
+        try:
+            file_content = s3_object.get()['Body'].read().decode('utf-8')
+            return json.loads(file_content)
+        except Exception:
+            logger.exception('Error while loading file: {}'.format(s3_object.key))
+            return {}
+
+    def fill_olympic_site_params_from_s3(self):
+        logger = logging.getLogger(__name__)
+        bucket_params = app.config.get('OLYMPIC_SITE_PARAMS_BUCKET', {})
+        if not bucket_params:
+            logger.debug("Reading stop points attractivities, undefined bucket_params")
+            return
+        bucket_name = bucket_params.get("name")
+        if not bucket_name:
+            logger.debug("Reading stop points attractivities, undefined bucket_name")
             return
 
-        json_pois_file = glob.glob(os.path.join(file_path, instance_name, "*.json"))
-        if not json_pois_file:
-            logger.debug("{} coverage without stop points attractivities".format(instance_name))
-            return
-        for json_poi_file in json_pois_file:
-            logger.debug("Reading stop points attractivities from file: %s", json_poi_file)
-            try:
-                with open(json_poi_file) as f:
-                    self.olympic_site_params.update(json.load(f))
-            except Exception as e:
-                logger.exception(
-                    'Error while loading od_allowed_ids file: {} with exception: {}'.format(
-                        json_poi_file, str(e)
-                    )
-                )
+        args = bucket_params.get(
+            "args", {"connect_timeout": 2, "read_timeout": 2, "retries": {'max_attempts': 0}}
+        )
+        s3_resource = boto3.resource('s3', config=Config(**args))
+
+        folder = app.config.get('OLYMPIC_SITE_PARAMS_BUCKET', {}).get("folder", "olympic_site_params")
+        try:
+            my_bucket = s3_resource.Bucket(bucket_name)
+            for obj in my_bucket.objects.filter(Prefix="{}/{}/".format(folder, self.instance_name)):
+                if obj.key.endswith('.json'):
+                    json_content = self.get_json_content(obj)
+                    self.olympic_site_params.update(json_content)
+        except Exception:
+            logger.exception("Error on OlympicSiteParamsManager")
 
     def build(self, pt_object_origin, pt_object_destination, api_request, instance):
         # Warning, the order of functions is important
