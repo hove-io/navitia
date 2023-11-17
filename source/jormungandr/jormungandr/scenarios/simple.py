@@ -306,7 +306,14 @@ class Scenario(object):
             req.ptref.until_datetime = request['until']
         req.ptref.realtime_level = get_pb_data_freshness(request)
         req.disable_disruption = request["disable_disruption"]
-        resp = instance.send_and_receive(req)
+
+        # We call Loki's disruptions only if _pt_planner=loki
+        if request["_pt_planner"] == "loki":
+            pt_planner = instance.get_pt_planner(request["_pt_planner"])
+            resp = pt_planner.send_and_receive(req)
+        else:
+            resp = instance.send_and_receive(req)
+
         build_pagination(request, resp)
         return resp
 
