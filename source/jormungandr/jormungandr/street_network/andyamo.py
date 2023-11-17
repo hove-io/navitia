@@ -75,6 +75,9 @@ class Andyamo(AbstractStreetNetworkService):
             raise ValueError('service_backup {} is not define cant forward to asgard'.format(service_backup))
 
         service_backup["args"]["instance"] = instance
+        if 'service_url' not in service_backup['args']:
+            service_backup['args'].update({'service_url': None})
+
         self.service_backup = utils.create_object(service_backup)
 
         if not service_url:
