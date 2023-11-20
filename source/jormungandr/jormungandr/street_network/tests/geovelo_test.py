@@ -458,7 +458,7 @@ def sort_by_mode_test():
     points[5].uri = 'ref_Bus'
     points[6].uri = 'ref_NoMode'
     # Default mode_weight
-    assert list(geovelo.mode_weight.keys()) == 6
+    assert len(list(geovelo.mode_weight.keys())) == 6
     for mode in [
         'physical_mode:Train',
         'physical_mode:RapidTransit',
@@ -482,6 +482,6 @@ def mode_weight_test():
             'physical_mode:RapidTransit': 2,
         },
     )
-    assert list(geovelo.mode_weight.keys()) == 2
+    assert len(list(geovelo.mode_weight.keys())) == 2
     for mode in ['physical_mode:Train', 'physical_mode:RapidTransit']:
         assert mode in geovelo.mode_weight
