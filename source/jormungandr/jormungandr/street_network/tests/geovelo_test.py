@@ -485,3 +485,47 @@ def mode_weight_test():
     assert len(list(geovelo.mode_weight.keys())) == 2
     for mode in ['physical_mode:Train', 'physical_mode:RapidTransit']:
         assert mode in geovelo.mode_weight
+
+
+def mode_weight_none_test():
+    geovelo = Geovelo(
+        instance=None,
+        service_url='http://bob.com',
+        id="abcd",
+        modes=["walking", "bike", "car"],
+        timeout=56,
+        mode_weight=None,
+    )
+    # Default mode_weight
+    assert len(list(geovelo.mode_weight.keys())) == 6
+    for mode in [
+        'physical_mode:Train',
+        'physical_mode:RapidTransit',
+        'physical_mode:Metro',
+        'physical_mode:Tramway',
+        'physical_mode:Car',
+        'physical_mode:Bus',
+    ]:
+        assert mode in geovelo.mode_weight
+
+
+def mode_weight_empty_test():
+    geovelo = Geovelo(
+        instance=None,
+        service_url='http://bob.com',
+        id="abcd",
+        modes=["walking", "bike", "car"],
+        timeout=56,
+        mode_weight={},
+    )
+    # Default mode_weight
+    assert len(list(geovelo.mode_weight.keys())) == 6
+    for mode in [
+        'physical_mode:Train',
+        'physical_mode:RapidTransit',
+        'physical_mode:Metro',
+        'physical_mode:Tramway',
+        'physical_mode:Car',
+        'physical_mode:Bus',
+    ]:
+        assert mode in geovelo.mode_weight

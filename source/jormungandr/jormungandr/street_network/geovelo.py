@@ -96,7 +96,7 @@ class Geovelo(AbstractStreetNetworkService):
         )
         self._feed_publisher = FeedPublisher(**feed_publisher) if feed_publisher else None
         self.verify = verify
-        self.mode_weight = kwargs.get("mode_weight", DEFAULT_MODE_WEIGHT)
+        self.mode_weight = kwargs.get("mode_weight") or DEFAULT_MODE_WEIGHT
 
     def status(self):
         return {
