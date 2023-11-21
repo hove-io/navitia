@@ -133,7 +133,7 @@ class Andyamo(AbstractStreetNetworkService):
                     outside_zone_combinations.append((f_point, t_point))
 
         return inside_zone_combinations, outside_zone_combinations
-    
+
     def get_unic_objects(self, list_object):
         used = set()
         result = []
@@ -143,7 +143,7 @@ class Andyamo(AbstractStreetNetworkService):
             result.append(obj)
             used.add(obj.uri)
         return result
-    
+
     def dispatch(self, origins, destinations):
         inside_zone_combinations, outside_zone_combinations = self.mapping_inside_outside(origins, destinations)
 
@@ -241,7 +241,6 @@ class Andyamo(AbstractStreetNetworkService):
     def _get_street_network_routing_matrix(
         self, instance, origins, destinations, street_network_mode, max_duration, request, request_id, **kwargs
     ):
-
         wheelchair = self.get_wheelchair_parameter(request)
         result = self.dispatch(origins, destinations)
         andyamo = result['andyamo']
