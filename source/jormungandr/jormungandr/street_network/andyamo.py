@@ -138,13 +138,13 @@ class Andyamo(AbstractStreetNetworkService):
         inside_zone_combinations, outside_zone_combinations = self.mapping_inside_outside(origins, destinations)
 
         andyamo = {
-            'origins': [pair[0] for pair in inside_zone_combinations],
-            'destinations': [pair[1] for pair in inside_zone_combinations],
+            'origins': set([pair[0] for pair in inside_zone_combinations]),
+            'destinations': set([pair[1] for pair in inside_zone_combinations]),
         }
 
         asgard = {
-            'origins': [pair[0] for pair in outside_zone_combinations],
-            'destinations': [pair[1] for pair in outside_zone_combinations],
+            'origins': set([pair[0] for pair in outside_zone_combinations]),
+            'destinations': set([pair[1] for pair in outside_zone_combinations]),
         }
 
         return {'andyamo': andyamo, 'asgard': asgard}
@@ -252,7 +252,8 @@ class Andyamo(AbstractStreetNetworkService):
             request_id,
             **kwargs
         )
-        if not wheelchair:
+
+        if not wheelchair or len(andyamo['origins']) == 0 or len(andyamo['destinations']) == 0:
             return asgard_output
 
         resp_json = self.post_matrix_request(andyamo['origins'], andyamo['destinations'], request)
