@@ -133,18 +133,28 @@ class Andyamo(AbstractStreetNetworkService):
                     outside_zone_combinations.append((f_point, t_point))
 
         return inside_zone_combinations, outside_zone_combinations
-
+    
+    def get_unic_objects(self, list_object):
+        used = set()
+        result = []
+        for obj in list_object:
+            if obj.uri in used:
+                continue
+            result.append(obj)
+            used.add(obj.uri)
+        return result
+    
     def dispatch(self, origins, destinations):
         inside_zone_combinations, outside_zone_combinations = self.mapping_inside_outside(origins, destinations)
 
         andyamo = {
-            'origins': set([pair[0] for pair in inside_zone_combinations]),
-            'destinations': set([pair[1] for pair in inside_zone_combinations]),
+            'origins': self.get_unic_objects([pair[0] for pair in inside_zone_combinations]),
+            'destinations': self.get_unic_objects([pair[1] for pair in inside_zone_combinations]),
         }
 
         asgard = {
-            'origins': set([pair[0] for pair in outside_zone_combinations]),
-            'destinations': set([pair[1] for pair in outside_zone_combinations]),
+            'origins': self.get_unic_objects([pair[0] for pair in outside_zone_combinations]),
+            'destinations': self.get_unic_objects([pair[1] for pair in outside_zone_combinations]),
         }
 
         return {'andyamo': andyamo, 'asgard': asgard}
