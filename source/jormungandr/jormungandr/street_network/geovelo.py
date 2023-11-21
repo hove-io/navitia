@@ -57,6 +57,17 @@ DEFAULT_GEOVELO_FEED_PUBLISHER = {
     'url': 'https://geovelo.fr/a-propos/cgu/',
 }
 
+# Filter matrix points with modes having priority order:
+# Train', 'RapidTransit', 'Metro', 'Tramway', Car, Bus
+DEFAULT_MODE_WEIGHT = {
+    'physical_mode:Train': 1,
+    'physical_mode:RapidTransit': 2,
+    'physical_mode:Metro': 3,
+    'physical_mode:Tramway': 4,
+    'physical_mode:Car': 5,
+    'physical_mode:Bus': 6,
+}
+
 
 class Geovelo(AbstractStreetNetworkService):
     def __init__(
@@ -85,6 +96,7 @@ class Geovelo(AbstractStreetNetworkService):
         )
         self._feed_publisher = FeedPublisher(**feed_publisher) if feed_publisher else None
         self.verify = verify
+        self.mode_weight = kwargs.get("mode_weight") or DEFAULT_MODE_WEIGHT
 
     def status(self):
         return {
@@ -114,23 +126,13 @@ class Geovelo(AbstractStreetNetworkService):
             'averageSpeed': bike_speed,  # in km/h, BEGINNER sets it to 13
         }
 
-    @classmethod
-    def sort_by_mode(cls, points):
-        # Filter matrix points with modes having priority order:
-        # Train', 'RapidTransit', 'Metro', 'Tramway', Car, Bus
-        mode_weight = {
-            'physical_mode:Train': 1,
-            'physical_mode:RapidTransit': 2,
-            'physical_mode:Metro': 3,
-            'physical_mode:Tramway': 4,
-            'physical_mode:Car': 5,
-            'physical_mode:Bus': 6,
-        }
-
+    def sort_by_mode(self, points):
         def key_func(point):
             if len(point.stop_point.physical_modes) == 0:
                 return float('inf')
-            return min((mode_weight.get(mode.uri, float('inf')) for mode in point.stop_point.physical_modes))
+            return min(
+                (self.mode_weight.get(mode.uri, float('inf')) for mode in point.stop_point.physical_modes)
+            )
 
         return sorted(points, key=key_func)
 

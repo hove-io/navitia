@@ -40,6 +40,7 @@ import pytest
 import jormungandr.exceptions
 
 MOCKED_REQUEST = {'walking_speed': 1, 'bike_speed': 3.33}
+MOCKED_SERVICE_URL = 'https://bob.com'
 
 
 def direct_path_response_valid():
@@ -236,7 +237,7 @@ def make_data_test():
 
 def call_geovelo_func_with_circuit_breaker_error_test():
     instance = MagicMock()
-    geovelo = Geovelo(instance=instance, service_url='http://bob.com')
+    geovelo = Geovelo(instance=instance, service_url=MOCKED_SERVICE_URL)
     geovelo.breaker = MagicMock()
     geovelo.breaker.call = MagicMock(side_effect=pybreaker.CircuitBreakerError())
     with pytest.raises(jormungandr.exceptions.GeoveloTechnicalError):
@@ -245,7 +246,7 @@ def call_geovelo_func_with_circuit_breaker_error_test():
 
 def call_geovelo_func_with_unknown_exception_test():
     instance = MagicMock()
-    geovelo = Geovelo(instance=instance, service_url='http://bob.com')
+    geovelo = Geovelo(instance=instance, service_url=MOCKED_SERVICE_URL)
     geovelo.breaker = MagicMock()
     geovelo.breaker.call = MagicMock(side_effect=ValueError())
     with pytest.raises(jormungandr.exceptions.GeoveloTechnicalError):
@@ -263,7 +264,7 @@ def get_matrix_test():
 
 def direct_path_geovelo_test():
     instance = MagicMock()
-    geovelo = Geovelo(instance=instance, service_url='http://bob.com')
+    geovelo = Geovelo(instance=instance, service_url=MOCKED_SERVICE_URL)
     resp_json = direct_path_response_valid()
 
     origin = make_pt_object(type_pb2.ADDRESS, lon=2, lat=48.2, uri='refStart1')
@@ -271,8 +272,8 @@ def direct_path_geovelo_test():
     fallback_extremity = PeriodExtremity(str_to_time_stamp('20161010T152000'), False)
     with requests_mock.Mocker() as req:
         req.post(
-            'http://bob.com/api/v2/computedroutes?instructions=true&elevations=true&geometry=true'
-            '&single_result=true&bike_stations=false&objects_as_ids=true&',
+            '{}/api/v2/computedroutes?instructions=true&elevations=true&geometry=true'
+            '&single_result=true&bike_stations=false&objects_as_ids=true&'.format(MOCKED_SERVICE_URL),
             json=resp_json,
         )
         geovelo_resp = geovelo.direct_path_with_fp(
@@ -315,7 +316,7 @@ def direct_path_geovelo_test():
 
 def direct_path_geovelo_zero_test():
     instance = MagicMock()
-    geovelo = Geovelo(instance=instance, service_url='http://bob.com')
+    geovelo = Geovelo(instance=instance, service_url=MOCKED_SERVICE_URL)
     resp_json = direct_path_response_zero()
 
     origin = make_pt_object(type_pb2.ADDRESS, lon=2, lat=48, uri='refStart1')
@@ -323,8 +324,8 @@ def direct_path_geovelo_zero_test():
     fallback_extremity = PeriodExtremity(str_to_time_stamp('20161010T152000'), False)
     with requests_mock.Mocker() as req:
         req.post(
-            'http://bob.com/api/v2/computedroutes?instructions=true&elevations=true&geometry=true'
-            '&single_result=true&bike_stations=false&objects_as_ids=true&',
+            '{}/api/v2/computedroutes?instructions=true&elevations=true&geometry=true'
+            '&single_result=true&bike_stations=false&objects_as_ids=true&'.format(MOCKED_SERVICE_URL),
             json=resp_json,
         )
         geovelo_resp = geovelo.direct_path_with_fp(
@@ -354,7 +355,7 @@ def direct_path_geovelo_zero_test():
 
 def isochrone_geovelo_test():
     instance = MagicMock()
-    geovelo = Geovelo(instance=instance, service_url='http://bob.com')
+    geovelo = Geovelo(instance=instance, service_url=MOCKED_SERVICE_URL)
     resp_json = isochrone_response_valid()
 
     origins = [make_pt_object(type_pb2.ADDRESS, lon=2, lat=48.2, uri='refStart1')]
@@ -364,7 +365,7 @@ def isochrone_geovelo_test():
     ]
 
     with requests_mock.Mocker() as req:
-        req.post('http://bob.com/api/v2/routes_m2m', json=resp_json, status_code=200)
+        req.post('{}/api/v2/routes_m2m'.format(MOCKED_SERVICE_URL), json=resp_json, status_code=200)
         geovelo_response = geovelo.get_street_network_routing_matrix(
             instance, origins, destinations, 'bike', 13371337, MOCKED_REQUEST, None
         )
@@ -379,7 +380,7 @@ def distances_durations_test():
     Check that the response from geovelo is correctly formatted with 'distances' and 'durations' sections
     """
     instance = MagicMock()
-    geovelo = Geovelo(instance=instance, service_url='http://bob.com')
+    geovelo = Geovelo(instance=instance, service_url=MOCKED_SERVICE_URL)
     resp_json = direct_path_response_valid()
 
     origin = make_pt_object(type_pb2.ADDRESS, lon=2, lat=48.2, uri='refStart1')
@@ -397,7 +398,7 @@ def make_request_arguments_bike_details_test():
     Check that the bikeDetails is well formatted for the request with right averageSpeed value
     """
     instance = MagicMock()
-    geovelo = Geovelo(instance=instance, service_url='http://bob.com')
+    geovelo = Geovelo(instance=instance, service_url=MOCKED_SERVICE_URL)
     data = geovelo._make_request_arguments_bike_details(bike_speed_mps=3.33)
     assert ujson.loads(ujson.dumps(data)) == ujson.loads(
         '''{"profile": "MEDIAN", "averageSpeed": 12,
@@ -414,7 +415,7 @@ def make_request_arguments_bike_details_test():
 def status_test():
     geovelo = Geovelo(
         instance=None,
-        service_url='http://bob.com',
+        service_url=MOCKED_SERVICE_URL,
         id=u"tata-é$~#@\"*!'`§èû",
         modes=["walking", "bike", "car"],
         timeout=56,
@@ -442,7 +443,14 @@ def sort_by_mode_test():
         make_pt_object_with_sp_mode(lon=7, lat=48.7, uri='ref_Train', mode_uri='physical_mode:Train'),
         make_pt_object_with_sp_mode(lon=8, lat=48.8, uri='ref_Rapid', mode_uri='physical_mode:RapidTransit'),
     ]
-    points = Geovelo.sort_by_mode(points)
+    geovelo = Geovelo(
+        instance=None,
+        service_url=MOCKED_SERVICE_URL,
+        id=u"tata-é$~#@\"*!'`§èû",
+        modes=["walking", "bike", "car"],
+        timeout=56,
+    )
+    points = geovelo.sort_by_mode(points)
     points[0].uri = 'ref_Train'
     points[1].uri = 'ref_Rapid'
     points[2].uri = 'ref_Metro'
@@ -450,3 +458,75 @@ def sort_by_mode_test():
     points[4].uri = 'ref_Car'
     points[5].uri = 'ref_Bus'
     points[6].uri = 'ref_NoMode'
+    # Default mode_weight
+    assert len(list(geovelo.mode_weight.keys())) == 6
+    for mode in [
+        'physical_mode:Train',
+        'physical_mode:RapidTransit',
+        'physical_mode:Metro',
+        'physical_mode:Tramway',
+        'physical_mode:Car',
+        'physical_mode:Bus',
+    ]:
+        assert mode in geovelo.mode_weight
+
+
+def mode_weight_test():
+    geovelo = Geovelo(
+        instance=None,
+        service_url=MOCKED_SERVICE_URL,
+        id=u"tata-é$~#@\"*!'`§èû",
+        modes=["walking", "bike", "car"],
+        timeout=56,
+        mode_weight={
+            'physical_mode:Train': 1,
+            'physical_mode:RapidTransit': 2,
+        },
+    )
+    assert len(list(geovelo.mode_weight.keys())) == 2
+    for mode in ['physical_mode:Train', 'physical_mode:RapidTransit']:
+        assert mode in geovelo.mode_weight
+
+
+def mode_weight_none_test():
+    geovelo = Geovelo(
+        instance=None,
+        service_url=MOCKED_SERVICE_URL,
+        id="abcd",
+        modes=["walking", "bike", "car"],
+        timeout=56,
+        mode_weight=None,
+    )
+    # Default mode_weight
+    assert len(list(geovelo.mode_weight.keys())) == 6
+    for mode in [
+        'physical_mode:Train',
+        'physical_mode:RapidTransit',
+        'physical_mode:Metro',
+        'physical_mode:Tramway',
+        'physical_mode:Car',
+        'physical_mode:Bus',
+    ]:
+        assert mode in geovelo.mode_weight
+
+
+def mode_weight_empty_test():
+    geovelo = Geovelo(
+        instance=None,
+        service_url=MOCKED_SERVICE_URL,
+        id="abcd",
+        modes=["walking", "bike", "car"],
+        timeout=56,
+        mode_weight={},
+    )
+    # Default mode_weight
+    assert len(list(geovelo.mode_weight.keys())) == 6
+    for mode in [
+        'physical_mode:Train',
+        'physical_mode:RapidTransit',
+        'physical_mode:Metro',
+        'physical_mode:Tramway',
+        'physical_mode:Car',
+        'physical_mode:Bus',
+    ]:
+        assert mode in geovelo.mode_weight
