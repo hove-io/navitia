@@ -34,3 +34,4 @@ source/compile_commands.json
 *.gcov
 .mypy_cache
 .pytest_cache
+.DS_Store
