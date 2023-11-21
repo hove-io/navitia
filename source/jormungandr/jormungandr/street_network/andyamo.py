@@ -221,17 +221,15 @@ class Andyamo(AbstractStreetNetworkService):
         sources_to_targets = json_response.get('sources_to_targets', [])
         sn_routing_matrix = response_pb2.StreetNetworkRoutingMatrix()
         row = sn_routing_matrix.rows.add()
-        for i_o in range(len(origins)):
-            for i_d in range(len(destinations)):
-                sources_to_target = sources_to_targets[i_o][i_d]
-                duration = int(round(sources_to_target["time"]))
-                routing = row.routing_response.add()
-                if duration <= max_duration:
-                    routing.duration = duration
-                    routing.routing_status = response_pb2.reached
-                else:
-                    routing.duration = -1
-                    routing.routing_status = response_pb2.unreached
+        for st in sources_to_targets:
+            duration = int(round(st["time"]))
+            routing = row.routing_response.add()
+            if duration <= max_duration:
+                routing.duration = duration
+                routing.routing_status = response_pb2.reached
+            else:
+                routing.duration = -1
+                routing.routing_status = response_pb2.unreached
         return sn_routing_matrix
 
     def check_content_response(self, json_respons, origins, destinations):
@@ -239,9 +237,6 @@ class Andyamo(AbstractStreetNetworkService):
         len_destinations = len(destinations)
         sources_to_targets = json_respons.get("sources_to_targets", [])
         check_content = (len_destinations == len(resp) for resp in sources_to_targets)
-        if len_origins != len(sources_to_targets) or not all(check_content):
-            self.log.error('Andyamo nb response != nb requested')
-            raise UnableToParse('Andyamo nb response != nb requested')
 
     def _get_street_network_routing_matrix(
         self, instance, origins, destinations, street_network_mode, max_duration, request, request_id, **kwargs
@@ -272,7 +267,9 @@ class Andyamo(AbstractStreetNetworkService):
         andyamo_output = self._create_matrix_response(
             resp_json, andyamo['origins'], andyamo['destinations'], max_duration
         )
-        andyamo_output.rows = andyamo_output.rows + asgard_output.rows
+
+        for row in asgard_output.rows:
+            andyamo_output.rows.add().CopyFrom(row)
 
         return andyamo_output
 
