@@ -36,6 +36,7 @@ from navitiacommon import response_pb2
 import navitiacommon.type_pb2 as type_pb2
 from jormungandr.street_network.tests.streetnetwork_test_utils import make_pt_object
 import jormungandr.exceptions
+from jormungandr.exceptions import UnableToParse
 from jormungandr.street_network.andyamo import Andyamo
 from jormungandr.utils import (
     str_to_time_stamp,
@@ -49,10 +50,10 @@ class MockResource(object):
         self.status_code = status
 
 
-def matrix_response_valid(response_id=1):
-    # response_id=0 : len(sources) == len(targets)
-    # response_id=1 : len(sources) < len(targets)
-    # response_id=2 : len(sources) > len(targets)
+def matrix_response_valid(response_id=0):
+    # response_id=0 : len(sources) == len(targets) # Error
+    # response_id=1 : len(sources) > len(targets)  # Error
+    # response_id=2 : len(sources) < len(targets)  # Valid
     responses = {
         0: {
             "sources_to_targets": [
@@ -66,7 +67,11 @@ def matrix_response_valid(response_id=1):
                     {"lat": 45.75817, "lon": 4.833374},
                     {"lat": 45.758923, "lon": 4.833948},
                 ],
-                "sources": [{"lat": 45.75843, "lon": 4.83307}],
+                "sources": [
+                    {"lat": 45.75843, "lon": 4.83307},
+                    {"lat": 45.75843, "lon": 4.83307},
+                    {"lat": 45.75843, "lon": 4.83307},
+                ],
             },
         },
         1: {
@@ -79,9 +84,12 @@ def matrix_response_valid(response_id=1):
                 "targets": [
                     {"lat": 45.758373, "lon": 4.833177},
                     {"lat": 45.75817, "lon": 4.833374},
-                    {"lat": 45.758923, "lon": 4.833948},
                 ],
-                "sources": [{"lat": 45.75843, "lon": 4.83307}],
+                "sources": [
+                    {"lat": 45.75843, "lon": 4.83307},
+                    {"lat": 45.75843, "lon": 4.83307},
+                    {"lat": 45.75843, "lon": 4.83307},
+                ],
             },
         },
         2: {
@@ -96,7 +104,9 @@ def matrix_response_valid(response_id=1):
                     {"lat": 45.75817, "lon": 4.833374},
                     {"lat": 45.758923, "lon": 4.833948},
                 ],
-                "sources": [{"lat": 45.75843, "lon": 4.83307}],
+                "sources": [
+                    {"lat": 45.75843, "lon": 4.83307},
+                ],
             },
         },
     }
@@ -361,10 +371,13 @@ def create_pt_object(lon, lat, pt_object_type=type_pb2.POI):
 def check_content_response_andyamo_func_valid_test():
     instance = MagicMock()
     andyamo = Andyamo(instance=instance, service_url=fake_service_url, service_backup=service_backup, zone='')
-    resp_json = matrix_response_valid(1)
-    origins = [create_pt_object(-1.680150, 48.108770)]
-    destinations = [create_pt_object(-1.679860, 48.109340), create_pt_object(-1.678750, 48.109390)]
-
+    resp_json = matrix_response_valid(2)
+    origins = [create_pt_object(4.83307, 45.75843)]
+    destinations = [
+        create_pt_object(4.833177, 45.758373),
+        create_pt_object(4.833374, 45.75817),
+        create_pt_object(4.833948, 45.758923),
+    ]
     # Assuming check_content_response is a method of Andyamo that does not return a value but raises an exception if invalid
     try:
         andyamo.check_content_response(resp_json, origins, destinations)
@@ -394,28 +407,30 @@ def create_matrix_response_andyamo_test():
     assert len(sn_matrix.rows[0].routing_response) == 3
 
 
-def check_content_response_andyamo_func_valid_0_test():
-    # response_id=0 : len(sources) == len(targets)
+def check_content_response_andyamo_func_fail_0_test():
+    # response_id=0 : len(sources) == len(targets) # Expected to fail
     instance = MagicMock()
     andyamo = Andyamo(instance=instance, service_url=fake_service_url, service_backup=service_backup, zone='')
     resp_json = matrix_response_valid(0)
     origins = [create_pt_object(-1.680150, 48.108770)]
     destinations = [create_pt_object(-1.679860, 48.109340)]
-    try:
+
+    # Le test doit maintenant s'attendre à une exception
+    with pytest.raises(UnableToParse):
         andyamo.check_content_response(resp_json, origins, destinations)
-        assert True  # Pass the test if no exception is raised
-    except Exception as e:
-        pytest.fail(f"Unexpected exception raised: {e}")
 
 
 def check_content_response_andyamo_func_valid_1_test():
-    # response_id=1 : len(sources) < len(targets)
+    # response_id=1 : len(sources) > len(targets)
     instance = MagicMock()
     andyamo = Andyamo(instance=instance, service_url=fake_service_url, service_backup=service_backup, zone='')
     resp_json = matrix_response_valid(1)
-    origins = [create_pt_object(-1.680150, 48.108770)]
-    destinations = [create_pt_object(-1.679860, 48.109340), create_pt_object(-1.678750, 48.109390)]
-
+    origins = [
+        create_pt_object(4.83307, 45.75843),
+        create_pt_object(4.83307, 45.75843),
+        create_pt_object(4.83307, 45.75843),
+    ]
+    destinations = [create_pt_object(4.833177, 45.758373), create_pt_object(4.833374, 45.75817)]
     # Assuming check_content_response is a method of Andyamo that does not return a value but raises an exception if invalid
     try:
         andyamo.check_content_response(resp_json, origins, destinations)
@@ -425,12 +440,16 @@ def check_content_response_andyamo_func_valid_1_test():
 
 
 def check_content_response_andyamo_func_valid_2_test():
-    # response_id=2 : len(sources) > len(targets)
+    # response_id=2 : len(sources) < len(targets)
     instance = MagicMock()
     andyamo = Andyamo(instance=instance, service_url=fake_service_url, service_backup=service_backup, zone='')
     resp_json = matrix_response_valid(2)
-    origins = [create_pt_object(-1.679860, 48.109340), create_pt_object(-1.678750, 48.109390)]
-    destinations = [create_pt_object(-1.680150, 48.108770)]
+    origins = [create_pt_object(-1.679860, 48.109340)]
+    destinations = [
+        create_pt_object(-1.680150, 48.108770),
+        create_pt_object(-1.678750, 48.109390),
+        create_pt_object(-1.678750, 48.109390),
+    ]
 
     # Assuming check_content_response is a method of Andyamo that does not return a value but raises an exception if invalid
     try:
