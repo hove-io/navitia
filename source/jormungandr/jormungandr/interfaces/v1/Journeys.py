@@ -191,7 +191,7 @@ class add_journey_href(object):
 
                 if 'sections' in journey and 'region' in kwargs:
                     instance = i_manager.instances.get(kwargs['region'])
-                    if instance.external_service_provider_manager.is_unable_external_service("obstacles"):
+                    if instance and instance.external_service_provider_manager.is_unable_external_service("obstacles"):
                         args = request.args.to_dict(flat=False)
                         args['region'] = kwargs['region']
                         for param in ["from", "to", "data_freshness", "datetime"]:
