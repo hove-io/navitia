@@ -236,7 +236,15 @@ class Andyamo(AbstractStreetNetworkService):
         len_origins = len(origins)
         len_destinations = len(destinations)
         sources_to_targets = json_respons.get("sources_to_targets", [])
-        check_content = (len_destinations == len(resp) for resp in sources_to_targets)
+        check_content = (isinstance(resp, dict) for resp in sources_to_targets)
+        locations = json_respons.get("locations", {})
+        if (
+            len_origins != len(locations.get("sources"))
+            or len_destinations != len(locations.get("targets"))
+            or not all(check_content)
+        ):
+            self.log.error('Andyamo nb response != nb requested')
+            raise UnableToParse('Andyamo nb response != nb requested')
 
     def _get_street_network_routing_matrix(
         self, instance, origins, destinations, street_network_mode, max_duration, request, request_id, **kwargs
