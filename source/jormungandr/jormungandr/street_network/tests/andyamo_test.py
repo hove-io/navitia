@@ -355,7 +355,6 @@ def create_pt_object(lon, lat, pt_object_type=type_pb2.POI):
     elif pt_object_type == type_pb2.ADDRESS:
         pt_object.address.coord.lon = lon
         pt_object.address.coord.lat = lat
-    # Ajouter des cas pour d'autres types si nécessaire
     return pt_object
 
 
@@ -381,8 +380,6 @@ def call_andyamo_func_with_circuit_breaker_error_test():
     andyamo.breaker.call = MagicMock(side_effect=pybreaker.CircuitBreakerError())
     with pytest.raises(jormungandr.exceptions.AndyamoTechnicalError) as andyamo_exception:
         andyamo._call_andyamo(andyamo.service_url, data={})
-
-    # Vérifiez que le message de l'exception contient la chaîne attendue
     assert '500 Internal Server Error: None' in str(andyamo_exception.value)
 
 
@@ -394,9 +391,7 @@ def create_matrix_response_andyamo_test():
     destinations = [create_pt_object(-1.679860, 48.109340), create_pt_object(-1.678750, 48.109390)]
     sn_matrix = andyamo._create_matrix_response(resp_json, origins, destinations, 150)
     assert len(sn_matrix.rows) == 1
-    assert (
-        len(sn_matrix.rows[0].routing_response) == 3
-    )  # Ajusté pour correspondre au nombre de réponses attendues
+    assert len(sn_matrix.rows[0].routing_response) == 3
 
 
 def check_content_response_andyamo_func_valid_0_test():
