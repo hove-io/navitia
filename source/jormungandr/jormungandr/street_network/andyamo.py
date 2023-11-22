@@ -122,15 +122,22 @@ class Andyamo(AbstractStreetNetworkService):
         return not self.are_both_points_inside_zone(from_point, to_point)
 
     def mapping_inside_outside(self, from_point, to_point):
-        inside_zone_combinations = []
-        outside_zone_combinations = []
+        inside_zone = False
 
         for f_point in from_point:
             for t_point in to_point:
                 if self.are_both_points_inside_zone(f_point, t_point):
-                    inside_zone_combinations.append((f_point, t_point))
-                else:
-                    outside_zone_combinations.append((f_point, t_point))
+                    inside_zone = True
+                    break
+            if inside_zone:
+                break
+
+        if inside_zone:
+            inside_zone_combinations = [(f, t) for f in from_point for t in to_point]
+            outside_zone_combinations = []
+        else:
+            outside_zone_combinations = [(f, t) for f in from_point for t in to_point]
+            inside_zone_combinations = []
 
         return inside_zone_combinations, outside_zone_combinations
 
