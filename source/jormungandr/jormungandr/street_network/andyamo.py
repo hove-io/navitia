@@ -71,6 +71,10 @@ class Andyamo(AbstractStreetNetworkService):
         self.sn_system_id = id
         self.token = token
         self.zone = zone
+        self.polygon_zone = None
+        if zone != "":
+            self.polygon_zone = Polygon(zone)
+
         if not service_backup:
             raise ValueError('service_backup {} is not define cant forward to asgard'.format(service_backup))
 
@@ -113,39 +117,59 @@ class Andyamo(AbstractStreetNetworkService):
         from_point_coords = (from_coords["lon"], from_coords["lat"])
         to_point_coords = (to_coords["lon"], to_coords["lat"])
 
-        shapely_polygon = Polygon(self.zone)
         shapely_from_point = Point(from_point_coords)
         shapely_to_point = Point(to_point_coords)
-        return shapely_polygon.contains(shapely_from_point) and shapely_polygon.contains(shapely_to_point)
+        return self.polygon_zone.contains(shapely_from_point) and self.polygon_zone.contains(shapely_to_point)
 
     def not_in_andyamo_zone(self, from_point, to_point):
         return not self.are_both_points_inside_zone(from_point, to_point)
 
     def mapping_inside_outside(self, from_point, to_point):
-        inside_zone_combinations = []
-        outside_zone_combinations = []
+        inside_zone = False
 
         for f_point in from_point:
             for t_point in to_point:
                 if self.are_both_points_inside_zone(f_point, t_point):
-                    inside_zone_combinations.append((f_point, t_point))
-                else:
-                    outside_zone_combinations.append((f_point, t_point))
+                    inside_zone = True
+                    break
+            if inside_zone:
+                break
+
+        if inside_zone:
+            inside_zone_combinations = [(f, t) for f in from_point for t in to_point]
+            outside_zone_combinations = []
+        else:
+            outside_zone_combinations = [(f, t) for f in from_point for t in to_point]
+            inside_zone_combinations = []
 
         return inside_zone_combinations, outside_zone_combinations
 
-    def dispatch(self, origins, destinations):
+    def get_unic_objects(self, list_object):
+        used = set()
+        result = []
+        for obj in list_object:
+            if obj.uri in used:
+                continue
+            result.append(obj)
+            used.add(obj.uri)
+        return result
+
+    def dispatch(self, origins, destinations, wheelchair):
         inside_zone_combinations, outside_zone_combinations = self.mapping_inside_outside(origins, destinations)
 
         andyamo = {
-            'origins': [pair[0] for pair in inside_zone_combinations],
-            'destinations': [pair[1] for pair in inside_zone_combinations],
+            'origins': self.get_unic_objects([pair[0] for pair in inside_zone_combinations]),
+            'destinations': self.get_unic_objects([pair[1] for pair in inside_zone_combinations]),
         }
 
         asgard = {
-            'origins': [pair[0] for pair in outside_zone_combinations],
-            'destinations': [pair[1] for pair in outside_zone_combinations],
+            'origins': self.get_unic_objects([pair[0] for pair in outside_zone_combinations]),
+            'destinations': self.get_unic_objects([pair[1] for pair in outside_zone_combinations]),
         }
+
+        if not wheelchair and len(andyamo['origins']) > 0:
+            # reverse in wheelchair
+            return {'andyamo': asgard, 'asgard': andyamo}
 
         return {'andyamo': andyamo, 'asgard': asgard}
 
@@ -211,48 +235,50 @@ class Andyamo(AbstractStreetNetworkService):
         sources_to_targets = json_response.get('sources_to_targets', [])
         sn_routing_matrix = response_pb2.StreetNetworkRoutingMatrix()
         row = sn_routing_matrix.rows.add()
-        for i_o in range(len(origins)):
-            for i_d in range(len(destinations)):
-                sources_to_target = sources_to_targets[i_o][i_d]
-                duration = int(round(sources_to_target["time"]))
-                routing = row.routing_response.add()
-                if duration <= max_duration:
-                    routing.duration = duration
-                    routing.routing_status = response_pb2.reached
-                else:
-                    routing.duration = -1
-                    routing.routing_status = response_pb2.unreached
+        for st in sources_to_targets:
+            duration = int(round(st["time"]))
+            routing = row.routing_response.add()
+            if duration <= max_duration:
+                routing.duration = duration
+                routing.routing_status = response_pb2.reached
+            else:
+                routing.duration = -1
+                routing.routing_status = response_pb2.unreached
         return sn_routing_matrix
 
     def check_content_response(self, json_respons, origins, destinations):
         len_origins = len(origins)
         len_destinations = len(destinations)
         sources_to_targets = json_respons.get("sources_to_targets", [])
-        check_content = (len_destinations == len(resp) for resp in sources_to_targets)
-        if len_origins != len(sources_to_targets) or not all(check_content):
+        check_content = (isinstance(resp, dict) for resp in sources_to_targets)
+        locations = json_respons.get("locations", {})
+        if (
+            len_origins != len(locations.get("sources"))
+            or len_destinations != len(locations.get("targets"))
+            or not all(check_content)
+        ):
             self.log.error('Andyamo nb response != nb requested')
             raise UnableToParse('Andyamo nb response != nb requested')
 
     def _get_street_network_routing_matrix(
         self, instance, origins, destinations, street_network_mode, max_duration, request, request_id, **kwargs
     ):
-
         wheelchair = self.get_wheelchair_parameter(request)
-        result = self.dispatch(origins, destinations)
+        result = self.dispatch(origins, destinations, wheelchair)
         andyamo = result['andyamo']
         asgard = result['asgard']
 
-        asgard_output = self.service_backup._get_street_network_routing_matrix(
-            instance,
-            asgard['origins'],
-            asgard['destinations'],
-            street_network_mode,
-            max_duration,
-            request,
-            request_id,
-            **kwargs
-        )
-        if not wheelchair:
+        if len(andyamo["origins"]) == 0:
+            asgard_output = self.service_backup._get_street_network_routing_matrix(
+                instance,
+                asgard['origins'],
+                asgard['destinations'],
+                street_network_mode,
+                max_duration,
+                request,
+                request_id,
+                **kwargs
+            )
             return asgard_output
 
         resp_json = self.post_matrix_request(andyamo['origins'], andyamo['destinations'], request)
@@ -261,7 +287,6 @@ class Andyamo(AbstractStreetNetworkService):
         andyamo_output = self._create_matrix_response(
             resp_json, andyamo['origins'], andyamo['destinations'], max_duration
         )
-        andyamo_output.rows = andyamo_output.rows + asgard_output.rows
 
         return andyamo_output
 
