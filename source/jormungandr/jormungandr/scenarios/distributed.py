@@ -364,6 +364,8 @@ class Distributed(object):
         logger = logging.getLogger(__name__)
         logger.debug('request datetime: %s', request['datetime'])
 
+        request["_pt_planner"] = "kraken"
+
         requested_obj = pt_object_origin_detail or pt_object_destination_detail
 
         mode_getter = operator.itemgetter(0 if request['origin'] else 1)
