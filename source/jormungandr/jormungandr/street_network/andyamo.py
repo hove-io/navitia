@@ -151,7 +151,7 @@ class Andyamo(AbstractStreetNetworkService):
             used.add(obj.uri)
         return result
 
-    def dispatch(self, origins, destinations):
+    def dispatch(self, origins, destinations, wheelchair):
         inside_zone_combinations, outside_zone_combinations = self.mapping_inside_outside(origins, destinations)
 
         andyamo = {
@@ -163,6 +163,10 @@ class Andyamo(AbstractStreetNetworkService):
             'origins': self.get_unic_objects([pair[0] for pair in outside_zone_combinations]),
             'destinations': self.get_unic_objects([pair[1] for pair in outside_zone_combinations]),
         }
+
+        if not wheelchair and len(andyamo['origins']) > 0:
+            # reverse in wheelchair
+            return {'andyamo': asgard, 'asgard': andyamo}
 
         return {'andyamo': andyamo, 'asgard': asgard}
 
@@ -257,22 +261,21 @@ class Andyamo(AbstractStreetNetworkService):
         self, instance, origins, destinations, street_network_mode, max_duration, request, request_id, **kwargs
     ):
         wheelchair = self.get_wheelchair_parameter(request)
-        result = self.dispatch(origins, destinations)
+        result = self.dispatch(origins, destinations, wheelchair)
         andyamo = result['andyamo']
         asgard = result['asgard']
 
-        asgard_output = self.service_backup._get_street_network_routing_matrix(
-            instance,
-            asgard['origins'],
-            asgard['destinations'],
-            street_network_mode,
-            max_duration,
-            request,
-            request_id,
-            **kwargs
-        )
-
-        if not wheelchair or len(andyamo['origins']) == 0 or len(andyamo['destinations']) == 0:
+        if len(andyamo["origins"]) == 0:
+            asgard_output = self.service_backup._get_street_network_routing_matrix(
+                instance,
+                asgard['origins'],
+                asgard['destinations'],
+                street_network_mode,
+                max_duration,
+                request,
+                request_id,
+                **kwargs
+            )
             return asgard_output
 
         resp_json = self.post_matrix_request(andyamo['origins'], andyamo['destinations'], request)
@@ -281,9 +284,6 @@ class Andyamo(AbstractStreetNetworkService):
         andyamo_output = self._create_matrix_response(
             resp_json, andyamo['origins'], andyamo['destinations'], max_duration
         )
-
-        for row in asgard_output.rows:
-            andyamo_output.rows.add().CopyFrom(row)
 
         return andyamo_output
 
