@@ -71,7 +71,10 @@ class Andyamo(AbstractStreetNetworkService):
         self.sn_system_id = id
         self.token = token
         self.zone = zone
-        self.polygon_zone = Polygon(zone)
+        self.polygon_zone = None
+        if zone != "":
+            self.polygon_zone = Polygon(zone)
+
         if not service_backup:
             raise ValueError('service_backup {} is not define cant forward to asgard'.format(service_backup))
 
