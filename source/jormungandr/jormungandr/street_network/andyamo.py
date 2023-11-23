@@ -71,6 +71,7 @@ class Andyamo(AbstractStreetNetworkService):
         self.sn_system_id = id
         self.token = token
         self.zone = zone
+        self.polygon_zone = Polygon(zone)
         if not service_backup:
             raise ValueError('service_backup {} is not define cant forward to asgard'.format(service_backup))
 
@@ -113,10 +114,9 @@ class Andyamo(AbstractStreetNetworkService):
         from_point_coords = (from_coords["lon"], from_coords["lat"])
         to_point_coords = (to_coords["lon"], to_coords["lat"])
 
-        shapely_polygon = Polygon(self.zone)
         shapely_from_point = Point(from_point_coords)
         shapely_to_point = Point(to_point_coords)
-        return shapely_polygon.contains(shapely_from_point) and shapely_polygon.contains(shapely_to_point)
+        return self.polygon_zone.contains(shapely_from_point) and self.polygon_zone.contains(shapely_to_point)
 
     def not_in_andyamo_zone(self, from_point, to_point):
         return not self.are_both_points_inside_zone(from_point, to_point)
