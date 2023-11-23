@@ -192,6 +192,9 @@ class ExternalServiceManager(object):
         # Return empty object instead of None if error occurs while calling external service.
         return service.update_response(instance, response, **kwargs)
 
+    def is_unable_external_service(self, navitia_service):
+        return True if self._get_external_service(navitia_service) else False
+
     def _get_external_service(self, navitia_service):
         # Make sure we update the external services list from the database before returning them
         self.update_config()
