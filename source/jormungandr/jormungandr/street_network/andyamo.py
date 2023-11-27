@@ -370,9 +370,9 @@ class Andyamo(AbstractStreetNetworkService):
                     path.direction = 0
 
                 if path.direction == 10:  ## means right turn as defined in Valhalla (See link above)
-                    path.direction = 90 
-                elif path.direction == 15: ## means left turn as defined in Valhalla (See link above)
-                    path.direction = -90 
+                    path.direction = 90
+                elif path.direction == 15:  ## means left turn as defined in Valhalla (See link above)
+                    path.direction = -90
 
                 if andyamo_instruction.get("street_names", []):
                     path_item.name = andyamo_instruction["street_names"][0]
