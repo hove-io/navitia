@@ -361,18 +361,18 @@ class Andyamo(AbstractStreetNetworkService):
             section.street_network.mode = response_pb2.Walking
             for andyamo_instruction in andyamo_leg['maneuvers']:
                 path_item = section.street_network.path_items.add()
-                path.direction = andyamo_instruction.get("type", 0)
+                path_item.direction = andyamo_instruction.get("type", 0)
                 try:
                     # Attempt to cast to an int
-                    path.direction = int(path.direction)
+                    path_item.direction = int(path_item.direction)
                 except (ValueError, TypeError):
                     # If casting fails, default to 0
-                    path.direction = 0
+                    path_item.direction = 0
 
-                if path.direction == 10:  ## means right turn as defined in Valhalla (See link above)
-                    path.direction = 90
-                elif path.direction == 15:  ## means left turn as defined in Valhalla (See link above)
-                    path.direction = -90
+                if path_item.direction == 10:  ## means right turn as defined in Valhalla (See link above)
+                    path_item.direction = 90
+                elif path_item.direction == 15:  ## means left turn as defined in Valhalla (See link above)
+                    path_item.direction = -90
 
                 if andyamo_instruction.get("street_names", []):
                     path_item.name = andyamo_instruction["street_names"][0]
