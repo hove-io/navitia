@@ -118,15 +118,31 @@ STAT_CIRCUIT_BREAKER_MAX_FAIL = int(os.getenv('JORMUNGANDR_STAT_CIRCUIT_BREAKER_
 STAT_CIRCUIT_BREAKER_TIMEOUT_S = int(os.getenv('JORMUNGANDR_STAT_CIRCUIT_BREAKER_TIMEOUT_S', 60))
 
 default_stat_connection_retry_policy = {
+    # First retry immediately
     'interval_start': 0,
+    # then increase by 1s for every retry
     'interval_step': 1,
+    # but don't exceed 1s between retries.
     'interval_max': 1,
+    # give up after 5 tries.
     'max_retries': 5,
+    'timeout': 1,
 }
 
 STAT_CONNECTION_RETRY_POLICY = (
     json.loads(os.getenv('JORMUNGANDR_STAT_CONNECTION_RETRY_POLICY', '{}'))
     or default_stat_connection_retry_policy
+)
+
+default_stat_transport_options = {
+    'interval_start': 0,
+    'interval_step': 1,
+    'interval_max': 1,
+    'max_retries': 3,
+}
+
+STAT_TRANSPORT_OPTIONS = (
+    json.loads(os.getenv('JORMUNGANDR_STAT_TRANSPORT_OPTIONS', '{}')) or default_stat_transport_options
 )
 
 # Cache configuration, see https://pythonhosted.org/Flask-Caching/ for more information
