@@ -361,10 +361,9 @@ class Andyamo(AbstractStreetNetworkService):
             section.street_network.mode = response_pb2.Walking
             for andyamo_instruction in andyamo_leg['maneuvers']:
                 path_item = section.street_network.path_items.add()
-                path_item.direction = andyamo_instruction.get("type", 0)
                 try:
                     # Attempt to cast to an int
-                    path_item.direction = int(path_item.direction)
+                    path_item.direction = int(andyamo_instruction.get("type", 0))
                 except (ValueError, TypeError):
                     # If casting fails, default to 0
                     path_item.direction = 0
