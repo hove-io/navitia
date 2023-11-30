@@ -1,0 +1,1639 @@
+<h1 id='objects'>Objects</h1><h2 id='standard-objects'>Standard Objects</h2><h3 id='coord'>Coord</h3>
+<p>Lots of object are geographically localized:</p>
+
+<table><thead>
+<tr>
+<th>Field</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead><tbody>
+<tr>
+<td>lon</td>
+<td>float</td>
+<td>Longitude</td>
+</tr>
+<tr>
+<td>lat</td>
+<td>float</td>
+<td>Latitude</td>
+</tr>
+</tbody></table>
+<h3 id='iso-date-time'>Iso-date-time</h3>
+<p>Navitia</p>
+
+<ul>
+<li>  exposes every date times as local times of the coverage via an ISO 8601 &quot;YYYYMMDDThhmmss&quot; string</li>
+<li>  can be requested using local times of the coverage via ISO 8601 as &quot;YYYYMMDDThhmmss&quot; or &quot;YYYY-MM-DDThh:mm:ss&quot;</li>
+<li>  can be requested using UTC relative times via ISO 8601 as &quot;YYYYMMDDThhmmss+HHMM&quot; or &quot;YYYY-MM-DDThh:mm:ss+HH:MM&quot;</li>
+<li>  can be requested using UTC times via ISO 8601 as &quot;YYYYMMDDThhmmssZ&quot; or &quot;YYYY-MM-DDThh:mm:ssZ&quot;</li>
+</ul>
+
+<p><a href="#context">Context</a> object provides the Timezone, useful to interpret datetimes of the response.</p>
+
+<p>For example:</p>
+
+<ul>
+<li><a href="https://api.navitia.io/v1/journeys?from=bob&to=bobette&datetime=20140425T1337">https://api.navitia.io/v1/journeys?from=bob&amp;to=bobette&amp;datetime=20140425T1337</a></li>
+<li><a href="https://api.navitia.io/v1/journeys?from=bob&to=bobette&datetime=2014-04-25T13:37+02:00">https://api.navitia.io/v1/journeys?from=bob&amp;to=bobette&amp;datetime=2014-04-25T13:37+02:00</a></li>
+<li><a href="https://api.navitia.io/v1/journeys?from=bob&to=bobette&datetime=2014-04-25T13:37:42Z">https://api.navitia.io/v1/journeys?from=bob&amp;to=bobette&amp;datetime=2014-04-25T13:37:42Z</a></li>
+</ul>
+
+<p>There are lots of ISO 8601 libraries in every kind of language that you should use before breaking down <a href="https://youtu.be/-5wpm-gesOY">https://youtu.be/-5wpm-gesOY</a></p>
+<h3 id='iso-date'>Iso-date</h3>
+<p>The date are represented in ISO 8601 &quot;YYYYMMDD&quot; string.</p>
+<h2 id='public-transport-objects'>Public transport objects</h2><h3 id='network'><a name="network"></a>Network</h3><div class="highlight"><pre class="highlight json tab-json"><code><span class="p">{</span><span class="w">
+    </span><span class="nl">"id"</span><span class="p">:</span><span class="s2">"network:RAT:1"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"name"</span><span class="p">:</span><span class="s2">"RATP"</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre></div>
+<p>Networks are fed by agencies in GTFS format.</p>
+
+<table><thead>
+<tr>
+<th>Field</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead><tbody>
+<tr>
+<td>id</td>
+<td>string</td>
+<td>Identifier of the network</td>
+</tr>
+<tr>
+<td>name</td>
+<td>string</td>
+<td>Name of the network</td>
+</tr>
+</tbody></table>
+<h3 id='line'><a name="line"></a>Line</h3><div class="highlight"><pre class="highlight json tab-json"><code><span class="p">{</span><span class="w">
+    </span><span class="nl">"id"</span><span class="p">:</span><span class="s2">"line:RAT:M6"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"name"</span><span class="p">:</span><span class="s2">"Nation - Charles de Gaule Etoile"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"code"</span><span class="p">:</span><span class="s2">"6"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"color"</span><span class="p">:</span><span class="s2">"79BB92"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"opening_time"</span><span class="p">:</span><span class="s2">"053000"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"closing_time"</span><span class="p">:</span><span class="s2">"013600"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"routes"</span><span class="p">:[</span><span class="w">
+        </span><span class="p">{</span><span class="nl">"..."</span><span class="p">:</span><span class="w"> </span><span class="s2">"..."</span><span class="p">}</span><span class="w">
+    </span><span class="p">],</span><span class="w">
+    </span><span class="nl">"commercial_mode"</span><span class="p">:{</span><span class="w">
+        </span><span class="nl">"id"</span><span class="p">:</span><span class="s2">"commercial_mode:Metro"</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"name"</span><span class="p">:</span><span class="s2">"Metro"</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+    </span><span class="nl">"physical_modes"</span><span class="p">:[</span><span class="w">
+        </span><span class="p">{</span><span class="w">
+            </span><span class="nl">"name"</span><span class="p">:</span><span class="s2">"Métro"</span><span class="p">,</span><span class="w">
+            </span><span class="nl">"id"</span><span class="p">:</span><span class="s2">"physical_mode:Metro"</span><span class="w">
+        </span><span class="p">}</span><span class="w">
+    </span><span class="p">]</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre></div>
+<table><thead>
+<tr>
+<th>Field</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead><tbody>
+<tr>
+<td>id</td>
+<td>string</td>
+<td>Identifier of the line</td>
+</tr>
+<tr>
+<td>name</td>
+<td>string</td>
+<td>Name of the line</td>
+</tr>
+<tr>
+<td>code</td>
+<td>string</td>
+<td>Code name of the line</td>
+</tr>
+<tr>
+<td>color</td>
+<td>string</td>
+<td>Color of the line</td>
+</tr>
+<tr>
+<td>opening_time</td>
+<td>string</td>
+<td>Opening hour at format HHMMSS</td>
+</tr>
+<tr>
+<td>closing_time</td>
+<td>string</td>
+<td>Closing hour at format HHMMSS</td>
+</tr>
+<tr>
+<td>routes</td>
+<td>array of <a href="#route">route</a></td>
+<td>Routes of the line</td>
+</tr>
+<tr>
+<td>commercial_mode</td>
+<td><a href="#commercial-mode">commercial_mode</a></td>
+<td>Commercial mode of the line</td>
+</tr>
+<tr>
+<td>physical_modes</td>
+<td>array of <a href="#physical-mode">physical_mode</a></td>
+<td>Physical modes of the line</td>
+</tr>
+</tbody></table>
+<h3 id='route'><a name="route"></a>Route</h3><div class="highlight"><pre class="highlight json tab-json"><code><span class="p">{</span><span class="w">
+    </span><span class="nl">"id"</span><span class="p">:</span><span class="s2">"route:RAT:M6"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"name"</span><span class="p">:</span><span class="s2">"Nation - Charles de Gaule Etoile"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"is_frequence"</span><span class="p">:</span><span class="s2">"False"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"line"</span><span class="p">:{</span><span class="w">
+        </span><span class="nl">"id"</span><span class="p">:</span><span class="s2">"line:RAT:M6"</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"name"</span><span class="p">:</span><span class="s2">"Nation - Charles de Gaule Etoile"</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"..."</span><span class="p">:</span><span class="w"> </span><span class="s2">"..."</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+    </span><span class="nl">"direction"</span><span class="p">:{</span><span class="w">
+        </span><span class="nl">"id"</span><span class="p">:</span><span class="s2">"stop_area:RAT:SA:GAUET"</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"name"</span><span class="p">:</span><span class="s2">"Charles de Gaulle - Etoile (Paris)"</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"..."</span><span class="p">:</span><span class="w"> </span><span class="s2">"..."</span><span class="w">
+    </span><span class="p">}</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre></div>
+<table><thead>
+<tr>
+<th>Field</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead><tbody>
+<tr>
+<td>id</td>
+<td>string</td>
+<td>Identifier of the route</td>
+</tr>
+<tr>
+<td>name</td>
+<td>string</td>
+<td>Name of the route</td>
+</tr>
+<tr>
+<td>is_frequence</td>
+<td>enum</td>
+<td>If the route has frequency or not. Can only be &quot;False&quot;, but may be &quot;True&quot; in the future</td>
+</tr>
+<tr>
+<td>line</td>
+<td><a href="#line">line</a></td>
+<td>The line of this route</td>
+</tr>
+<tr>
+<td>direction</td>
+<td><a href="#place">place</a></td>
+<td>The direction of this route</td>
+</tr>
+</tbody></table>
+
+<p>As &quot;direction&quot; is a <a href="#place">place</a> , it can be a poi in some data.</p>
+<h3 id='stop-point'><a name="stop-point"></a>Stop Point</h3><div class="highlight"><pre class="highlight json tab-json"><code><span class="p">{</span><span class="w">
+    </span><span class="nl">"id"</span><span class="p">:</span><span class="s2">"stop_point:RAT:SP:GARIB2"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"name"</span><span class="p">:</span><span class="s2">"Garibaldi"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"label"</span><span class="p">:</span><span class="s2">"Garibaldi (Saint-Ouen)"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"coord"</span><span class="p">:{</span><span class="w">
+        </span><span class="nl">"lat"</span><span class="p">:</span><span class="s2">"48.906032"</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"lon"</span><span class="p">:</span><span class="s2">"2.331733"</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+    </span><span class="nl">"administrative_regions"</span><span class="p">:[{</span><span class="nl">"..."</span><span class="p">:</span><span class="w"> </span><span class="s2">"..."</span><span class="p">}],</span><span class="w">
+    </span><span class="nl">"equipments"</span><span class="p">:[{</span><span class="nl">"..."</span><span class="p">:</span><span class="w"> </span><span class="s2">"..."</span><span class="p">}],</span><span class="w">
+    </span><span class="nl">"stop_area"</span><span class="p">:{</span><span class="nl">"..."</span><span class="p">:</span><span class="w"> </span><span class="s2">"..."</span><span class="p">}</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre></div>
+<table><thead>
+<tr>
+<th>Field</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead><tbody>
+<tr>
+<td>id</td>
+<td>string</td>
+<td>Identifier of the stop point</td>
+</tr>
+<tr>
+<td>name</td>
+<td>string</td>
+<td>Name of the stop point</td>
+</tr>
+<tr>
+<td>coord</td>
+<td><a href="#coord">coord</a></td>
+<td>Coordinates of the stop point</td>
+</tr>
+<tr>
+<td>administrative_regions</td>
+<td>array of <a href="#admin">admin</a></td>
+<td>Administrative regions of the stop point in which is the stop point</td>
+</tr>
+<tr>
+<td>equipments</td>
+<td>array of string</td>
+<td>list of <a href="#equipment">equipment</a> of the stop point</td>
+</tr>
+<tr>
+<td>stop_area</td>
+<td><a href="#stop-area">stop_area</a></td>
+<td>Stop Area containing this stop point</td>
+</tr>
+</tbody></table>
+<h3 id='stop-area'><a name="stop-area"></a>Stop Area</h3><div class="highlight"><pre class="highlight json tab-json"><code><span class="p">{</span><span class="w">
+    </span><span class="nl">"id"</span><span class="p">:</span><span class="s2">"stop_area:RAT:SA:GAUET"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"name"</span><span class="p">:</span><span class="s2">"Charles de Gaulle - Etoile"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"label"</span><span class="p">:</span><span class="s2">"Charles de Gaulle - Etoile (Paris)"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"coord"</span><span class="p">:{</span><span class="w">
+        </span><span class="nl">"lat"</span><span class="p">:</span><span class="s2">"48.874408"</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"lon"</span><span class="p">:</span><span class="s2">"2.295763"</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+    </span><span class="nl">"administrative_regions"</span><span class="p">:[</span><span class="w">
+        </span><span class="p">{</span><span class="nl">"..."</span><span class="p">:</span><span class="w"> </span><span class="s2">"..."</span><span class="p">}</span><span class="w">
+    </span><span class="p">]</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre></div>
+<table><thead>
+<tr>
+<th>Field</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead><tbody>
+<tr>
+<td>id</td>
+<td>string</td>
+<td>Identifier of the stop area</td>
+</tr>
+<tr>
+<td>name</td>
+<td>string</td>
+<td>Name of the stop area</td>
+</tr>
+<tr>
+<td>label</td>
+<td>string</td>
+<td>Label of the stop area. The name is directly taken from the data whereas the label is something we compute for better traveler information. If you don&#39;t know what to display, display the label.</td>
+</tr>
+<tr>
+<td>coord</td>
+<td><a href="#coord">coord</a></td>
+<td>Coordinates of the stop area</td>
+</tr>
+<tr>
+<td>administrative_regions</td>
+<td>array of <a href="#admin">admin</a></td>
+<td>Administrative regions of the stop area in which is the stop area</td>
+</tr>
+<tr>
+<td>stop_points</td>
+<td>array of <a href="#stop-point">stop_point</a></td>
+<td>Stop points contained in this stop area</td>
+</tr>
+</tbody></table>
+<h3 id='commercial-mode'><a name="commercial-mode"></a>Commercial Mode</h3><div class="highlight"><pre class="highlight json tab-json"><code><span class="p">{</span><span class="w">
+    </span><span class="nl">"id"</span><span class="p">:</span><span class="s2">"commercial_mode:Metro"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"name"</span><span class="p">:</span><span class="s2">"Metro"</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre></div>
+<table><thead>
+<tr>
+<th>Field</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead><tbody>
+<tr>
+<td>id</td>
+<td>string</td>
+<td>Identifier of the commercial mode</td>
+</tr>
+<tr>
+<td>name</td>
+<td>string</td>
+<td>Name of the commercial mode</td>
+</tr>
+<tr>
+<td>physical_modes</td>
+<td>array of <a href="#physical-mode">physical_mode</a></td>
+<td>Physical modes of this commercial mode</td>
+</tr>
+</tbody></table>
+
+<p>Commercial modes are close from physical modes, but not normalized and can refer to a brand,
+something that can be specific to a network, and known to the traveler.
+Examples: RER in Paris, Busway in Nantes, and also of course Bus, Métro, etc.</p>
+
+<p>Integrators should mainly use that value for text output to the traveler.</p>
+<h3 id='physical-mode'><a name="physical-mode"></a>Physical Mode</h3><div class="highlight"><pre class="highlight json tab-json"><code><span class="p">{</span><span class="w">
+    </span><span class="nl">"id"</span><span class="p">:</span><span class="s2">"physical_mode:Tramway"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"name"</span><span class="p">:</span><span class="s2">"Tramway"</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre></div>
+<table><thead>
+<tr>
+<th>Field</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead><tbody>
+<tr>
+<td>id</td>
+<td>string</td>
+<td>Identifier of the physical mode</td>
+</tr>
+<tr>
+<td>name</td>
+<td>string</td>
+<td>Name of the physical mode</td>
+</tr>
+<tr>
+<td>commercial_modes</td>
+<td>array of <a href="#commercial-mode">commercial_mode</a></td>
+<td>Commercial modes of this physical mode</td>
+</tr>
+</tbody></table>
+
+<p>Physical modes are fastened and normalized (though the list can -rarely- be extended).
+So it&#39;s easier for integrators to map it to a pictogram, but prefer <a href="#commercial-mode">commercial_mode</a> for a text output.</p>
+
+<p>The idea is to use physical modes when building a request to Navitia,
+and commercial modes when building an output to the traveler.</p>
+
+<p>Example: If you want to propose modes filter in your application, you should use <a href="#physical-mode">physical_mode</a> rather than
+<a href="#commercial-mode">commercial_mode</a>.</p>
+
+<p>Here is the valid id list:</p>
+
+<ul>
+<li>  physical_mode:Air</li>
+<li>  physical_mode:Boat</li>
+<li>  physical_mode:Bus</li>
+<li>  physical_mode:BusRapidTransit</li>
+<li>  physical_mode:Coach</li>
+<li>  physical_mode:Ferry</li>
+<li>  physical_mode:Funicular</li>
+<li>  physical_mode:LocalTrain</li>
+<li>  physical_mode:LongDistanceTrain</li>
+<li>  physical_mode:Metro</li>
+<li>  physical_mode:RailShuttle</li>
+<li>  physical_mode:RapidTransit</li>
+<li>  physical_mode:Shuttle</li>
+<li>  physical_mode:SuspendedCableCar</li>
+<li>  physical_mode:Taxi</li>
+<li>  physical_mode:Train</li>
+<li>  physical_mode:Tramway</li>
+</ul>
+
+<p>You can use these ids in the forbidden_uris[] parameter from
+<a href="#journeys-parameters">journeys parameters</a> for example.</p>
+<h3 id='company'><a name="company"></a>Company</h3><div class="highlight"><pre class="highlight json tab-json"><code><span class="p">{</span><span class="w">
+    </span><span class="nl">"id"</span><span class="p">:</span><span class="w"> </span><span class="s2">"company:RAT:1"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"RATP"</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre></div>
+<table><thead>
+<tr>
+<th>Field</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead><tbody>
+<tr>
+<td>id</td>
+<td>string</td>
+<td>Identifier of the company</td>
+</tr>
+<tr>
+<td>name</td>
+<td>string</td>
+<td>Name of the company</td>
+</tr>
+</tbody></table>
+<h3 id='place'><a name="place"></a>Place</h3>
+<p>A container containing either a <a href="#admin">admin</a>, <a href="#poi">poi</a>, <a href="#address">address</a>, <a href="#stop-area">stop_area</a> or
+<a href="#stop-point">stop_point</a></p>
+<div class="highlight"><pre class="highlight json tab-json"><code><span class="p">{</span><span class="w">
+    </span><span class="nl">"id"</span><span class="p">:</span><span class="w"> </span><span class="s2">"admin:2191338"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Quartier des Épinettes (75017)"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"quality"</span><span class="p">:</span><span class="w"> </span><span class="mi">70</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"embedded_type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"administrative_region"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"administrative_region"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="nl">"..."</span><span class="p">:</span><span class="w"> </span><span class="s2">"..."</span><span class="w">
+    </span><span class="p">}</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre></div>
+<table><thead>
+<tr>
+<th>Field</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead><tbody>
+<tr>
+<td>id</td>
+<td>string</td>
+<td>The id of the embedded object</td>
+</tr>
+<tr>
+<td>name</td>
+<td>string</td>
+<td>The name of the embedded object</td>
+</tr>
+<tr>
+<td>quality</td>
+<td>integer</td>
+<td>The quality of the place</td>
+</tr>
+<tr>
+<td>embedded_type</td>
+<td><a href="#place-embedded-type">place embedded_type</a></td>
+<td>The type of the embedded object</td>
+</tr>
+<tr>
+<td>administrative_region</td>
+<td><a href="#admin">admin</a></td>
+<td>Embedded administrative region</td>
+</tr>
+<tr>
+<td>stop_area</td>
+<td><a href="#stop-area">stop_area</a></td>
+<td>Embedded Stop area</td>
+</tr>
+<tr>
+<td>poi</td>
+<td><a href="#poi">poi</a></td>
+<td>Embedded poi</td>
+</tr>
+<tr>
+<td>address</td>
+<td><a href="#address">address</a></td>
+<td>Embedded address</td>
+</tr>
+<tr>
+<td>stop_point</td>
+<td><a href="#stop-point">stop_point</a></td>
+<td>Embedded Stop point</td>
+</tr>
+</tbody></table>
+<h3 id='trip'><a name="trip"></a>Trip</h3>
+<p>A trip corresponds to a scheduled vehicle circulation (and all its linked real-time and disrupted routes).</p>
+
+<p>Example: a train, routing a Paris to Lyon itinerary every day at 06h29, is the &quot;Trip&quot; named &quot;6641&quot;.</p>
+<div class="highlight"><pre class="highlight json tab-json"><code><span class="p">{</span><span class="w">
+    </span><span class="nl">"id"</span><span class="p">:</span><span class="w"> </span><span class="s2">"OIF:67308746-10-1"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"67308746"</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre></div>
+<table><thead>
+<tr>
+<th>Field</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead><tbody>
+<tr>
+<td>id</td>
+<td>string</td>
+<td>The id of the trip</td>
+</tr>
+<tr>
+<td>name</td>
+<td>string</td>
+<td>The name of the trip</td>
+</tr>
+</tbody></table>
+
+<p>It encapsulates many instances of vehicle_journey.</p>
+<h3 id='vehicle-journey'><a name="vehicle-journey"></a>Vehicle-journey</h3>
+<p>A vehicle-journey describes a scheduled vehicle circulation, the days on which it circulates according to base-schedule,
+the days it circulates according to realtime information.</p>
+
+<p>Note that multiple vehicle-journeys are often associated with the same trip for technical and logical
+reasons (to model the daylight saving time, for the changes after applying realtime disruptions, etc.).</p>
+
+<p>The collection is accessible with the url:</p>
+
+<p><code>https://api.navitia.io/v1/coverage/sandbox/trips/{trip.id}/vehicle_journeys</code>.</p>
+
+<p>Note: this collection is mostly used for debug and technical purposes.</p>
+<h3 id='pt_object'><a name="pt-object"></a>Pt_object</h3>
+<p>A container containing either a <a href="#network">network</a>, <a href="#commercial-mode">commercial_mode</a>, <a href="#line">line</a>, <a href="#route">route</a>,
+<a href="#stop-point">stop_point</a>, <a href="#stop-area">stop_area</a>, <a href="#trip">trip</a></p>
+<div class="highlight"><pre class="highlight json tab-json"><code><span class="p">{</span><span class="w">
+    </span><span class="nl">"id"</span><span class="p">:</span><span class="w"> </span><span class="s2">"OCE:SN009862F01013"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"OCE:SN009862F01013"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"quality"</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"embedded_type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"trip"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"trip"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="nl">"id"</span><span class="p">:</span><span class="w"> </span><span class="s2">"OCE:SN009862F01013"</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"9862"</span><span class="w">
+    </span><span class="p">}</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre></div>
+<table><thead>
+<tr>
+<th>Field</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead><tbody>
+<tr>
+<td>id</td>
+<td>string</td>
+<td>The id of the embedded object</td>
+</tr>
+<tr>
+<td>name</td>
+<td>string</td>
+<td>The name of the embedded object</td>
+</tr>
+<tr>
+<td>quality</td>
+<td>integer</td>
+<td>The quality of the object</td>
+</tr>
+<tr>
+<td>embedded_type</td>
+<td><a href="#pt-object-embedded-type">pt-object embedded_type</a></td>
+<td>The type of the embedded object</td>
+</tr>
+<tr>
+<td>stop_area</td>
+<td><a href="#stop-area">stop_area</a></td>
+<td>Embedded Stop area</td>
+</tr>
+<tr>
+<td>stop_point</td>
+<td><a href="#stop-point">stop_point</a></td>
+<td>Embedded Stop point</td>
+</tr>
+<tr>
+<td>network</td>
+<td><a href="#network">network</a></td>
+<td>Embedded network</td>
+</tr>
+<tr>
+<td>commercial_mode</td>
+<td><a href="#commercial-mode">commercial_mode</a></td>
+<td>Embedded commercial_mode</td>
+</tr>
+<tr>
+<td>stop_area</td>
+<td><a href="#stop-area">stop_area</a></td>
+<td>Embedded Stop area</td>
+</tr>
+<tr>
+<td>line</td>
+<td><a href="#line">line</a></td>
+<td>Embedded line</td>
+</tr>
+<tr>
+<td>route</td>
+<td><a href="#route">route</a></td>
+<td>Embedded route</td>
+</tr>
+<tr>
+<td>trip</td>
+<td><a href="#trip">trip</a></td>
+<td>Embedded trip</td>
+</tr>
+</tbody></table>
+<h2 id='real-time-and-disruption-objects'>Real time and disruption objects</h2><h3 id='disruption'><a name="disruption"></a>Disruption</h3><div class="highlight"><pre class="highlight json tab-json"><code><span class="p">{</span><span class="w">
+    </span><span class="nl">"id"</span><span class="p">:</span><span class="w"> </span><span class="s2">"ce7e265d-5762-45b6-ab4d-a1df643dd48d"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"status"</span><span class="p">:</span><span class="w"> </span><span class="s2">"active"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"disruption_id"</span><span class="p">:</span><span class="w"> </span><span class="s2">"ce7e265d-5762-45b6-ab4d-a1df643dd48d"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"impact_id"</span><span class="p">:</span><span class="w"> </span><span class="s2">"ce7e265d-5762-45b6-ab4d-a1df643dd48d"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"severity"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="nl">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"trip delayed"</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"effect"</span><span class="p">:</span><span class="w"> </span><span class="s2">"SIGNIFICANT_DELAYS"</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+    </span><span class="nl">"application_periods"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+        </span><span class="p">{</span><span class="w">
+            </span><span class="nl">"begin"</span><span class="p">:</span><span class="w"> </span><span class="s2">"20160608T215400"</span><span class="p">,</span><span class="w">
+            </span><span class="nl">"end"</span><span class="p">:</span><span class="w"> </span><span class="s2">"20160608T230959"</span><span class="w">
+        </span><span class="p">}</span><span class="w">
+    </span><span class="p">],</span><span class="w">
+    </span><span class="nl">"messages"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+        </span><span class="p">{</span><span class="nl">"text"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Strike"</span><span class="p">}</span><span class="w">
+    </span><span class="p">],</span><span class="w">
+    </span><span class="nl">"updated_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"20160617T132624"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"impacted_objects"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+        </span><span class="p">{</span><span class="nl">"..."</span><span class="p">:</span><span class="w"> </span><span class="s2">"..."</span><span class="p">}</span><span class="w">
+    </span><span class="p">],</span><span class="w">
+    </span><span class="nl">"cause"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Cause..."</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"category"</span><span class="p">:</span><span class="w"> </span><span class="s2">"incident"</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre></div>
+<table><thead>
+<tr>
+<th>Field</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead><tbody>
+<tr>
+<td>id</td>
+<td>string</td>
+<td>Id of the disruption</td>
+</tr>
+<tr>
+<td>status</td>
+<td>between: &quot;past&quot;, &quot;active&quot; or &quot;future&quot;</td>
+<td>state of the disruption. The state is computed using the application_periods of the disruption and the current time of the query.</td>
+</tr>
+<tr>
+<td>disruption_id</td>
+<td>string</td>
+<td>for traceability: Id of original input disruption</td>
+</tr>
+<tr>
+<td>impact_id</td>
+<td>string</td>
+<td>for traceability: Id of original input impact</td>
+</tr>
+<tr>
+<td>severity</td>
+<td><a href="#severity">severity</a></td>
+<td>gives some categorization element</td>
+</tr>
+<tr>
+<td>application_periods</td>
+<td>array of <a href="#period">period</a></td>
+<td>dates where the current disruption is active</td>
+</tr>
+<tr>
+<td>messages</td>
+<td>array of <a href="#message">message</a></td>
+<td>texts to provide to the traveler</td>
+</tr>
+<tr>
+<td>updated_at</td>
+<td><a href="#iso-date-time">iso-date-time</a></td>
+<td>date_time of last modifications</td>
+</tr>
+<tr>
+<td>impacted_objects</td>
+<td>array of <a href="#impacted-object">impacted_object</a></td>
+<td>The list of public transport objects which are affected by the disruption</td>
+</tr>
+<tr>
+<td>cause</td>
+<td>string</td>
+<td>why is there such a disruption?</td>
+</tr>
+<tr>
+<td>category</td>
+<td>string</td>
+<td>The category of the disruption, such as &quot;construction works&quot; or &quot;incident&quot;</td>
+</tr>
+<tr>
+<td>contributor</td>
+<td>string</td>
+<td>The source from which Navitia received the disruption</td>
+</tr>
+<tr>
+<td>uri</td>
+<td>string</td>
+<td>deprecated</td>
+</tr>
+<tr>
+<td>disruption_uri</td>
+<td>string</td>
+<td>deprecated</td>
+</tr>
+</tbody></table>
+<h3 id='impacted_object'><a name="impacted-object"></a>Impacted_object</h3><div class="highlight"><pre class="highlight json tab-json"><code><span class="p">{</span><span class="w">
+    </span><span class="nl">"pt_object"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="nl">"id"</span><span class="p">:</span><span class="w"> </span><span class="s2">"id_of_the_line"</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"name of a lne"</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"embedded_type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"line"</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"line"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+            </span><span class="nl">"..."</span><span class="p">:</span><span class="w"> </span><span class="s2">"..."</span><span class="w">
+        </span><span class="p">}</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+    </span><span class="nl">"impacted_section"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="nl">"..."</span><span class="p">:</span><span class="w"> </span><span class="s2">"..."</span><span class="w">
+    </span><span class="p">}</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre></div>
+<table><thead>
+<tr>
+<th>Field</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead><tbody>
+<tr>
+<td>pt_object</td>
+<td><a href="#pt-object">pt_object</a></td>
+<td>The impacted public transport object</td>
+</tr>
+<tr>
+<td>impacted_section</td>
+<td><a href="#impacted-section">impacted_section</a></td>
+<td>Only for line section impact, the impacted section</td>
+</tr>
+<tr>
+<td>impacted_stops</td>
+<td>array of <a href="#impacted-stop">impacted_stop</a></td>
+<td>Only for <a href="#trip">trip</a> delay, the list of delays, stop by stop</td>
+</tr>
+</tbody></table>
+<h3 id='impacted_section'><a name="impacted-section"></a>Impacted_section</h3><div class="highlight"><pre class="highlight json tab-json"><code><span class="p">{</span><span class="w">
+    </span><span class="nl">"from"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="nl">"embedded_type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"stop_area"</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"id"</span><span class="p">:</span><span class="w"> </span><span class="s2">"C"</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"C"</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"stop_area"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+            </span><span class="nl">"..."</span><span class="p">:</span><span class="w"> </span><span class="s2">"..."</span><span class="w">
+        </span><span class="p">}</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+    </span><span class="nl">"to"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="nl">"embedded_type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"stop_area"</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"id"</span><span class="p">:</span><span class="w"> </span><span class="s2">"E"</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"E"</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"stop_area"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+            </span><span class="nl">"..."</span><span class="p">:</span><span class="w"> </span><span class="s2">"..."</span><span class="w">
+        </span><span class="p">}</span><span class="w">
+    </span><span class="p">}</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre></div>
+<table><thead>
+<tr>
+<th>Field</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead><tbody>
+<tr>
+<td>from</td>
+<td><a href="#pt-object">pt_object</a></td>
+<td>The beginning of the section</td>
+</tr>
+<tr>
+<td>to</td>
+<td><a href="#pt-object">pt_object</a></td>
+<td>The end of the section. This can be the same as <code>from</code> when only one point is impacted</td>
+</tr>
+<tr>
+<td>routes</td>
+<td><a href="#route">route</a></td>
+<td>The list of impacted routes by the impacted_section</td>
+</tr>
+</tbody></table>
+<h3 id='impacted_stop'><a name="impacted-stop"></a>Impacted_stop</h3><div class="highlight"><pre class="highlight json tab-json"><code><span class="p">{</span><span class="w">
+    </span><span class="nl">"stop_point"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="nl">"..."</span><span class="p">:</span><span class="w"> </span><span class="s2">"..."</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+    </span><span class="nl">"amended_departure_time"</span><span class="p">:</span><span class="w"> </span><span class="s2">"073600"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"base_arrival_time"</span><span class="p">:</span><span class="w"> </span><span class="s2">"073600"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"base_departure_time"</span><span class="p">:</span><span class="w"> </span><span class="s2">"073600"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"cause"</span><span class="p">:</span><span class="w"> </span><span class="s2">""</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"stop_time_effect"</span><span class="p">:</span><span class="w"> </span><span class="s2">"delayed"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"departure_status"</span><span class="p">:</span><span class="w"> </span><span class="s2">"delayed"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"arrival_status"</span><span class="p">:</span><span class="w"> </span><span class="s2">"deleted"</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre></div>
+<table><thead>
+<tr>
+<th>Field</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead><tbody>
+<tr>
+<td>stop_point</td>
+<td><a href="#stop-point">stop_point</a></td>
+<td>The impacted stop point of the trip</td>
+</tr>
+<tr>
+<td>amended_departure_time</td>
+<td>string</td>
+<td>New departure hour (format HHMMSS) of the trip on this stop point</td>
+</tr>
+<tr>
+<td>amended_arrival_time</td>
+<td>string</td>
+<td>New arrival hour (format HHMMSS) of the trip on this stop point</td>
+</tr>
+<tr>
+<td>base_departure_time</td>
+<td>string</td>
+<td>Base departure hour (format HHMMSS) of the trip on this stop point</td>
+</tr>
+<tr>
+<td>base_arrival_time</td>
+<td>string</td>
+<td>Base arrival hour (format HHMMSS) of the trip on this stop point</td>
+</tr>
+<tr>
+<td>cause</td>
+<td>string</td>
+<td>Cause of the modification</td>
+</tr>
+<tr>
+<td>stop_time_effect</td>
+<td>Enum</td>
+<td>Can be: &quot;added&quot;, &quot;deleted&quot;, &quot;delayed&quot; or &quot;unchanged&quot;. <em>Deprecated</em>, consider the more accurate departure_status and arrival_status</td>
+</tr>
+<tr>
+<td>arrival_status</td>
+<td>Enum</td>
+<td>Can be: &quot;added&quot;, &quot;deleted&quot;, &quot;delayed&quot; or &quot;unchanged&quot;.</td>
+</tr>
+<tr>
+<td>departure_status</td>
+<td>Enum</td>
+<td>Can be: &quot;added&quot;, &quot;deleted&quot;, &quot;delayed&quot; or &quot;unchanged&quot;.</td>
+</tr>
+</tbody></table>
+<h3 id='message'>Message</h3><div class="highlight"><pre class="highlight json tab-json"><code><span class="p">{</span><span class="w">
+    </span><span class="nl">"text"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Strike"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"channel"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="nl">"..."</span><span class="p">:</span><span class="w"> </span><span class="s2">"..."</span><span class="w">
+    </span><span class="p">}</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre></div>
+<table><thead>
+<tr>
+<th>Field</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead><tbody>
+<tr>
+<td>text</td>
+<td>string</td>
+<td>a message to bring to a traveler</td>
+</tr>
+<tr>
+<td>channel</td>
+<td><a href="#channel">channel</a></td>
+<td>destination media. Be careful, no normalized enum for now</td>
+</tr>
+</tbody></table>
+<h3 id='severity'>Severity</h3>
+<p>Severity object can be used to make visual grouping.</p>
+<div class="highlight"><pre class="highlight json tab-json"><code><span class="p">{</span><span class="w">
+    </span><span class="nl">"color"</span><span class="p">:</span><span class="w"> </span><span class="s2">"#FF0000"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"priority"</span><span class="p">:</span><span class="w"> </span><span class="mi">42</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"trip delayed"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"effect"</span><span class="p">:</span><span class="w"> </span><span class="s2">"SIGNIFICANT_DELAYS"</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre></div>
+<table><thead>
+<tr>
+<th>Field</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead><tbody>
+<tr>
+<td>color</td>
+<td>string</td>
+<td>HTML color for classification</td>
+</tr>
+<tr>
+<td>priority</td>
+<td>integer</td>
+<td>given by the agency: 0 is strongest priority. it can be null</td>
+</tr>
+<tr>
+<td>name</td>
+<td>string</td>
+<td>name of severity</td>
+</tr>
+<tr>
+<td>effect</td>
+<td>Enum</td>
+<td>Normalized value of the effect on the public transport object. See the GTFS RT documentation at <a href="https://gtfs.org/reference/realtime/v2/#enum-effect">https://gtfs.org/reference/realtime/v2/#enum-effect</a>. See also <a href="#realtime">realtime</a> section.</td>
+</tr>
+</tbody></table>
+<h3 id='channel'>Channel</h3><div class="highlight"><pre class="highlight json tab-json"><code><span class="p">{</span><span class="w">
+    </span><span class="nl">"id"</span><span class="p">:</span><span class="w"> </span><span class="s2">"rt"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"content_type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"text/html"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"rt"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"types"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+        </span><span class="s2">"web"</span><span class="p">,</span><span class="w">
+        </span><span class="s2">"mobile"</span><span class="w">
+    </span><span class="p">]</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre></div>
+<table><thead>
+<tr>
+<th>Field</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead><tbody>
+<tr>
+<td>id</td>
+<td>string</td>
+<td>Identifier of the address</td>
+</tr>
+<tr>
+<td>content_type</td>
+<td>string</td>
+<td>Like text/html, you know? Otherwise, take a look at <a href="http://www.w3.org/Protocols/rfc1341/4_Content-Type.html">http://www.w3.org/Protocols/rfc1341/4_Content-Type.html</a></td>
+</tr>
+<tr>
+<td>name</td>
+<td>string</td>
+<td>name of the Channel</td>
+</tr>
+</tbody></table>
+<h3 id='period'>Period</h3><div class="highlight"><pre class="highlight json tab-json"><code><span class="p">{</span><span class="w">
+    </span><span class="nl">"begin"</span><span class="p">:</span><span class="w"> </span><span class="s2">"20160608T215400"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"end"</span><span class="p">:</span><span class="w"> </span><span class="s2">"20160608T230959"</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre></div>
+<table><thead>
+<tr>
+<th>Field</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead><tbody>
+<tr>
+<td>begin</td>
+<td><a href="#iso-date-time">iso-date-time</a></td>
+<td>Beginning date and time of an activity period</td>
+</tr>
+<tr>
+<td>end</td>
+<td><a href="#iso-date-time">iso-date-time</a></td>
+<td>Closing date and time of an activity period</td>
+</tr>
+</tbody></table>
+<h2 id='street-network-objects'>Street network objects</h2><h3 id='poi-type'>Poi Type</h3><div class="highlight"><pre class="highlight shell tab-shell"><code><span class="c">#request</span>
+<span class="nv">$ </span>curl <span class="s1">'https://api.navitia.io/v1/coverage/sandbox/poi_types'</span> <span class="nt">-H</span> <span class="s1">'Authorization: 3b036afe-0110-4202-b9ed-99718476c2e0'</span>
+</code></pre></div>
+<p><code>/poi_types</code> lists groups of point of interest. You will find classifications as theater, offices or bicycle rental station for example.</p>
+
+<table><thead>
+<tr>
+<th>Field</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead><tbody>
+<tr>
+<td>id</td>
+<td>string</td>
+<td>Identifier of the poi type</td>
+</tr>
+<tr>
+<td>name</td>
+<td>string</td>
+<td>Name of the poi type</td>
+</tr>
+</tbody></table>
+<h3 id='stands'>Stands</h3>
+<p>A description of the number of stands/places and vehicles available at a bike sharing station.</p>
+
+<table><thead>
+<tr>
+<th>Field</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead><tbody>
+<tr>
+<td>available_places</td>
+<td>int</td>
+<td>Number of places where one can park</td>
+</tr>
+<tr>
+<td>available_bikes</td>
+<td>int</td>
+<td>Number of bikes available</td>
+</tr>
+<tr>
+<td>total_stands</td>
+<td>int</td>
+<td>Total number of stands (occupied or not, with or without special equipment)</td>
+</tr>
+<tr>
+<td>status</td>
+<td>enum</td>
+<td>Information about the station itself:<ul><li><code>unavailable</code>: Navitia is not able to obtain information about the station</li><li><code>open</code>: The station is open</li><li><code>closed</code>: The station is closed</li></ul></td>
+</tr>
+</tbody></table>
+<h3 id='poi'><a name="poi"></a>Poi</h3><div class="highlight"><pre class="highlight shell tab-shell"><code><span class="c">#useless request, with huge response</span>
+<span class="nv">$ </span>curl <span class="s1">'https://api.navitia.io/v1/coverage/sandbox/pois'</span> <span class="nt">-H</span> <span class="s1">'Authorization: 3b036afe-0110-4202-b9ed-99718476c2e0'</span>
+
+<span class="c">#inverted geocoding request, more usable</span>
+<span class="nv">$ </span>curl <span class="s1">'https://api.navitia.io/v1/coverage/sandbox/coords/2.377310;48.847002/pois'</span> <span class="nt">-H</span> <span class="s1">'Authorization: 3b036afe-0110-4202-b9ed-99718476c2e0'</span>
+
+<span class="c">#very smart request</span>
+<span class="c">#combining filters to get some specific POIs, as bicycle rental stations,</span>
+<span class="c">#nearby a coordinate</span>
+<span class="nv">$ </span>curl <span class="s1">'https://api.navitia.io/v1/coverage/sandbox/poi_types/poi_type:amenity:bicycle_rental/coords/2.377310;48.847002/pois'</span> <span class="nt">-H</span> <span class="s1">'Authorization: 3b036afe-0110-4202-b9ed-99718476c2e0'</span>
+</code></pre></div>
+<p>Poi = Point Of Interest</p>
+
+<table><thead>
+<tr>
+<th>Field</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead><tbody>
+<tr>
+<td>id</td>
+<td>string</td>
+<td>Identifier of the poi</td>
+</tr>
+<tr>
+<td>name</td>
+<td>string</td>
+<td>Name of the poi</td>
+</tr>
+<tr>
+<td>label</td>
+<td>string</td>
+<td>Label of the poi. The name is directly taken from the data whereas the label is something we compute for better traveler information. If you don&#39;t know what to display, display the label.</td>
+</tr>
+<tr>
+<td>poi_type</td>
+<td><a href="#poi-type">poi_type</a></td>
+<td>Type of the poi</td>
+</tr>
+<tr>
+<td>stands</td>
+<td><a href="#stands">stands</a></td>
+<td>Information on the spots available, for BSS stations</td>
+</tr>
+</tbody></table>
+<h3 id='access_point'><a name="access-point"></a>Access_point</h3><div class="highlight"><pre class="highlight shell tab-shell"><code><span class="nv">$ </span>curl <span class="s1">'https://api.navitia.io/v1/coverage/sandbox/access_points'</span> <span class="nt">-H</span> <span class="s1">'Authorization: 3b036afe-0110-4202-b9ed-99718476c2e0'</span>
+</code></pre></div>
+<p>Access_point = point of access from the pavement to a station, a multimodal area.</p>
+
+<table><thead>
+<tr>
+<th>Field</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead><tbody>
+<tr>
+<td>id</td>
+<td>string</td>
+<td>Identifier of the access point</td>
+</tr>
+<tr>
+<td>name</td>
+<td>string</td>
+<td>Name of the access point</td>
+</tr>
+<tr>
+<td>coord</td>
+<td><a href="#coord">coord</a></td>
+<td>Coordinates of the access point</td>
+</tr>
+<tr>
+<td>access_point_code</td>
+<td>string</td>
+<td>Identifies the well-known code for the access_point</td>
+</tr>
+</tbody></table>
+
+<p>You should labelized the access-point using &quot;access_point_code&quot; and &quot;name&quot;.
+For example: &quot;follow the <code>access_point_code</code> - <code>name</code> to exit from <code>parent_station</code> &quot;</p>
+<h3 id='pathway'><a name="pathway"></a>Pathway</h3>
+<p>Pathway = indoor way from a stop point to an access point. It could be an entrance, an exit or both.</p>
+
+<table><thead>
+<tr>
+<th>Field</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead><tbody>
+<tr>
+<td>id</td>
+<td>string</td>
+<td>Identifier of the access point</td>
+</tr>
+<tr>
+<td>name</td>
+<td>string</td>
+<td>Name of the access point</td>
+</tr>
+<tr>
+<td>is_entrance</td>
+<td>boolean</td>
+<td>Identifies whether the path is an entrance</td>
+</tr>
+<tr>
+<td>is_exit</td>
+<td>boolean</td>
+<td>Identifies whether the path is an exit</td>
+</tr>
+<tr>
+<td>length</td>
+<td>int</td>
+<td>Length of the path</td>
+</tr>
+<tr>
+<td>traversal_time</td>
+<td>int</td>
+<td>Duration to walk the path when it&#39;s known</td>
+</tr>
+</tbody></table>
+
+<p>You can find pathways in <a href="#journeys">journeys</a> service, where there is some &quot;vias&quot; in walking sections. &quot;Vias&quot; are &quot;pathways&quot; in navitia.</p>
+<h3 id='address'>Address</h3>
+<table><thead>
+<tr>
+<th>Field</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead><tbody>
+<tr>
+<td>id</td>
+<td>string</td>
+<td>Identifier of the address</td>
+</tr>
+<tr>
+<td>name</td>
+<td>string</td>
+<td>Name of the address</td>
+</tr>
+<tr>
+<td>label</td>
+<td>string</td>
+<td>Label of the address. The name is directly taken from the data whereas the label is something we compute for better traveler information. If you don&#39;t know what to display, display the label.</td>
+</tr>
+<tr>
+<td>coord</td>
+<td><a href="#coord">coord</a></td>
+<td>Coordinates of the address</td>
+</tr>
+<tr>
+<td>house_number</td>
+<td>int</td>
+<td>House number of the address</td>
+</tr>
+<tr>
+<td>administrative_regions</td>
+<td>array of <a href="#admin">admin</a></td>
+<td>Administrative regions of the address in which is the stop area</td>
+</tr>
+</tbody></table>
+<h3 id='administrative-region'><a name="admin"></a>Administrative region</h3>
+<table><thead>
+<tr>
+<th>Field</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead><tbody>
+<tr>
+<td>id</td>
+<td>string</td>
+<td>Identifier of the address</td>
+</tr>
+<tr>
+<td>name</td>
+<td>string</td>
+<td>Name of the address</td>
+</tr>
+<tr>
+<td>label</td>
+<td>string</td>
+<td>Label of the administrative region. The name is directly taken from the data whereas the label is something we compute for better traveler information. If you don&#39;t know what to display, display the label.</td>
+</tr>
+<tr>
+<td>coord</td>
+<td><a href="#coord">coord</a></td>
+<td>Coordinates of the address</td>
+</tr>
+<tr>
+<td>level</td>
+<td>int</td>
+<td>Level of the admin</td>
+</tr>
+<tr>
+<td>zip_code</td>
+<td>string</td>
+<td>Zip code of the admin</td>
+</tr>
+</tbody></table>
+
+<p>Cities are mainly on the 8 level, dependant on the country
+(<a href="http://wiki.openstreetmap.org/wiki/Tag:boundary%3Dadministrative">http://wiki.openstreetmap.org/wiki/Tag:boundary%3Dadministrative</a>)</p>
+<h3 id='equipment-reports'><a name="equipment-reports"></a>Equipment reports</h3><div class="highlight"><pre class="highlight json tab-json"><code><span class="nl">"equipment_reports"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+    </span><span class="p">{</span><span class="w">
+        </span><span class="nl">"line"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="err">...</span><span class="p">},</span><span class="w">
+        </span><span class="nl">"stop_area_equipments"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="err">...</span><span class="p">]</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+    </span><span class="err">...</span><span class="w">
+</span><span class="p">]</span><span class="w">
+</span></code></pre></div>
+<p>A list of objects that maps each line with its associated stop area equipments.</p>
+
+<table><thead>
+<tr>
+<th>Field</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead><tbody>
+<tr>
+<td>line</td>
+<td><a href="#line">line</a></td>
+<td>The line to which equipments are associated</td>
+</tr>
+<tr>
+<td>stop_area_equipments</td>
+<td><a href="#stop-area-equipments">stop area equipments</a></td>
+<td>A list of objects that describes equipments for each stop area</td>
+</tr>
+</tbody></table>
+<h3 id='stop-area-equipments'><a name="stop-area-equipments"></a>Stop area equipments</h3><div class="highlight"><pre class="highlight json tab-json"><code><span class="nl">"stop_area_equipments"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+    </span><span class="p">{</span><span class="w">
+        </span><span class="nl">"equipment_details"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="err">...</span><span class="p">],</span><span class="w">
+        </span><span class="nl">"stop_area"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="err">...</span><span class="p">},</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+    </span><span class="err">...</span><span class="w">
+</span><span class="p">]</span><span class="w">
+</span></code></pre></div>
+<p>A list of objects that maps equipments details for each stop area.</p>
+
+<table><thead>
+<tr>
+<th>Field</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead><tbody>
+<tr>
+<td>equipment_details</td>
+<td><a href="#equipment-details">Equipment details</a></td>
+<td>The equipment details associated with the stop area</td>
+</tr>
+<tr>
+<td>stop_area</td>
+<td><a href="#stop-area">Stop Area</a></td>
+<td>The stop area to which the <code>equipment_details</code> is associated</td>
+</tr>
+</tbody></table>
+<h3 id='equipment-details'><a name="equipment-details"></a>Equipment details</h3><div class="highlight"><pre class="highlight json tab-json"><code><span class="nl">"equipment_details"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+    </span><span class="p">{</span><span class="w">
+        </span><span class="nl">"current_availability"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="err">...</span><span class="p">},</span><span class="w">
+        </span><span class="nl">"embedded_type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"escalator"</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"id"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2702"</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Escalator 2702, for platform 3"</span><span class="p">,</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+    </span><span class="err">...</span><span class="w">
+</span><span class="p">]</span><span class="w">
+</span></code></pre></div>
+<table><thead>
+<tr>
+<th>Field</th>
+<th>Type</th>
+<th>Occurrence</th>
+<th>Description</th>
+</tr>
+</thead><tbody>
+<tr>
+<td>current_availability</td>
+<td><a href="#equipment-availability">Equipment availability</a></td>
+<td>always</td>
+<td>Describes equipments information like: status, name, id etc...</td>
+</tr>
+<tr>
+<td>embedded_type</td>
+<td>string</td>
+<td>always</td>
+<td>Define the equipment type: <code>escalator</code>, <code>elevator</code></td>
+</tr>
+<tr>
+<td>id</td>
+<td>string</td>
+<td>always</td>
+<td>The equipment&#39;s unique identifier</td>
+</tr>
+<tr>
+<td>name</td>
+<td>string</td>
+<td>optional</td>
+<td>the equipment&#39;s name/description</td>
+</tr>
+</tbody></table>
+<h3 id='equipment-availability'><a name="equipment-availability"></a>Equipment availability</h3><div class="highlight"><pre class="highlight json tab-json"><code><span class="nl">"current_availability"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="nl">"cause"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="nl">"label"</span><span class="p">:</span><span class="w"> </span><span class="s2">"engineering work in progress"</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+    </span><span class="nl">"effect"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="nl">"label"</span><span class="p">:</span><span class="w"> </span><span class="s2">"platform 3 available via stairs only"</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+    </span><span class="nl">"periods"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+        </span><span class="p">{</span><span class="w">
+            </span><span class="nl">"begin"</span><span class="p">:</span><span class="w"> </span><span class="s2">"20190216T000000"</span><span class="p">,</span><span class="w">
+            </span><span class="nl">"end"</span><span class="p">:</span><span class="w"> </span><span class="s2">"20190601T220000"</span><span class="w">
+        </span><span class="p">}</span><span class="w">
+    </span><span class="p">],</span><span class="w">
+    </span><span class="nl">"status"</span><span class="p">:</span><span class="w"> </span><span class="s2">"unavailable"</span><span class="p">,</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre></div>
+<table><thead>
+<tr>
+<th>Field</th>
+<th>Type</th>
+<th>Required</th>
+<th>Description</th>
+</tr>
+</thead><tbody>
+<tr>
+<td>status</td>
+<td>string</td>
+<td>always</td>
+<td>Equipment status: <ul><li><code>unknown</code>: no realtime information available</li><li><code>unavailable</code>: equipment is known to be unavailable with details provided below </li></ul></td>
+</tr>
+<tr>
+<td>cause</td>
+<td>label</td>
+<td>optional</td>
+<td>If status is <code>unavailable</code>, gives you the cause in a label</td>
+</tr>
+<tr>
+<td>effect</td>
+<td>label</td>
+<td>optional</td>
+<td>If status is <code>unavailable</code>, gives you the effect in a label</td>
+</tr>
+<tr>
+<td>periods</td>
+<td>period</td>
+<td>optional</td>
+<td>If status is <code>unavailable</code>, gives the affected period (with a <code>begin</code> &amp; <code>end</code> datetime attributes)</td>
+</tr>
+</tbody></table>
+<h2 id='other-objects'>Other objects</h2><h3 id='context'><a name="context"></a>context</h3><div class="highlight"><pre class="highlight shell tab-shell"><code><span class="c">#links between objects in a traffic_reports response</span>
+<span class="o">{</span>
+    <span class="s2">"context"</span>: <span class="o">{</span>
+        <span class="s2">"timezone"</span>: <span class="s2">"Europe</span><span class="se">\/</span><span class="s2">Paris"</span>,
+        <span class="s2">"current_datetime"</span>: <span class="s2">"20171201T120114"</span>,
+        <span class="s2">"car_direct_path"</span>: <span class="o">{</span>
+            <span class="s2">"co2_emission"</span>: <span class="o">{</span>
+                <span class="s2">"value"</span>: 857.951371579,
+                <span class="s2">"unit"</span>: <span class="s2">"gEC"</span>
+            <span class="o">}</span>
+        <span class="o">}</span>
+    <span class="o">}</span>,
+    <span class="s2">"journeys"</span>: <span class="o">[</span> ... <span class="o">]</span>
+<span class="o">}</span>
+</code></pre></div>
+<p>context object is a complex object provided in any endpoint&#39;s response.
+It serves several goals:</p>
+
+<ul>
+<li>  <code>timezone</code> provides timezone of any datetime in the response.</li>
+<li>  <code>current_datetime</code> provides the time the call was made.<br>It is precious to compute the waiting time until next passages (journeys, departures, etc.), as when no datetime is provided at call, Navitia uses that &quot;current_datetime&quot; as reference time.</li>
+<li>  <code>car_direct_path</code> can also be provided in journeys to help compare ecological footprint of transport.</li>
+</ul>
+<h3 id='pt-date-time'><a name="pt-date-time"></a>pt-date-time</h3>
+<p>pt-date-time (pt stands for &quot;public transport&quot;) is a complex date time object to manage the difference between stop and leaving times at a stop.</p>
+
+<table><thead>
+<tr>
+<th>Field</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead><tbody>
+<tr>
+<td>additional_informations</td>
+<td>Array of String</td>
+<td>Other information: TODO enum</td>
+</tr>
+<tr>
+<td>departure_date_time</td>
+<td><a href="#iso-date-time">iso-date-time</a></td>
+<td>A date time</td>
+</tr>
+<tr>
+<td>arrival_date_time</td>
+<td><a href="#iso-date-time">iso-date-time</a></td>
+<td>A date time</td>
+</tr>
+<tr>
+<td>links</td>
+<td>Array of <a href="#link">link</a></td>
+<td>internal links to notes</td>
+</tr>
+</tbody></table>
+<h3 id='note'>note</h3>
+<table><thead>
+<tr>
+<th>Field</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead><tbody>
+<tr>
+<td>id</td>
+<td>String</td>
+<td>id of the note</td>
+</tr>
+<tr>
+<td>value</td>
+<td>String</td>
+<td>The content of the note</td>
+</tr>
+</tbody></table>
+<h3 id='stop_date_time'><a name="stop-date-time"></a>stop_date_time</h3>
+<table><thead>
+<tr>
+<th>Field</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead><tbody>
+<tr>
+<td>date_time</td>
+<td><a href="#pt-date-time">pt-date-time</a></td>
+<td>A public transport date time</td>
+</tr>
+<tr>
+<td>stop_point</td>
+<td><a href="#stop-point">stop_point</a></td>
+<td>A stop point</td>
+</tr>
+</tbody></table>
+<h3 id='place-embedded-type'><a name="place-embedded-type"></a>Place embedded type</h3>
+<p>Enum used to identify what kind of objects <em><a href="#places">/places</a></em> and <em><a href="#places-nearby-api">/places_nearby</a></em> services are managing.
+It&#39;s also used inside different responses (journeys, ...).</p>
+
+<table><thead>
+<tr>
+<th>Value</th>
+<th>Description</th>
+</tr>
+</thead><tbody>
+<tr>
+<td><a href="#administrative-region">administrative_region</a></td>
+<td>a city, a district, a neighborhood</td>
+</tr>
+<tr>
+<td><a href="#stop-area">stop_area</a></td>
+<td>a nameable zone, where there are some stop points</td>
+</tr>
+<tr>
+<td><a href="#stop-point">stop_point</a></td>
+<td>a location where vehicles can pickup or drop off passengers</td>
+</tr>
+<tr>
+<td><a href="#address">address</a></td>
+<td>a point located in a street</td>
+</tr>
+<tr>
+<td><a href="#poi">poi</a></td>
+<td>a point of interest</td>
+</tr>
+</tbody></table>
+<h3 id='pt-object-embedded-type'><a name="pt-object-embedded-type"></a>PT-object embedded type</h3>
+<p>Enum used to identify what kind of objects <em><a href="#pt-objects">/pt_objects</a></em> service is managing.
+It&#39;s also used inside different responses (disruptions, ...).</p>
+
+<table><thead>
+<tr>
+<th>Value</th>
+<th>Description</th>
+</tr>
+</thead><tbody>
+<tr>
+<td><a href="#network">network</a></td>
+<td>a public transport network</td>
+</tr>
+<tr>
+<td><a href="#commercial-mode">commercial_mode</a></td>
+<td>a public transport branded mode</td>
+</tr>
+<tr>
+<td><a href="#line">line</a></td>
+<td>a public transport line</td>
+</tr>
+<tr>
+<td><a href="#route">route</a></td>
+<td>a public transport route</td>
+</tr>
+<tr>
+<td><a href="#stop-area">stop_area</a></td>
+<td>a nameable zone, where there are some stop points</td>
+</tr>
+<tr>
+<td><a href="#stop-point">stop_point</a></td>
+<td>a location where vehicles can pickup or drop off passengers</td>
+</tr>
+<tr>
+<td><a href="#trip">trip</a></td>
+<td>a trip</td>
+</tr>
+</tbody></table>
+<h3 id='equipment'>equipment</h3>
+<p>Enum from</p>
+
+<ul>
+<li>  has_wheelchair_accessibility</li>
+<li>  has_bike_accepted</li>
+<li>  has_air_conditioned</li>
+<li>  has_visual_announcement</li>
+<li>  has_audible_announcement</li>
+<li>  has_appropriate_escort</li>
+<li>  has_appropriate_signage</li>
+<li>  has_school_vehicle</li>
+<li>  has_wheelchair_boarding</li>
+<li>  has_sheltered</li>
+<li>  has_elevator</li>
+<li>  has_escalator</li>
+<li>  has_bike_depot</li>
+</ul>
+<h3 id='display-informations'>display informations</h3>
+<table><thead>
+<tr>
+<th>Field</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead><tbody>
+<tr>
+<td>network</td>
+<td>String</td>
+<td>The name of the network</td>
+</tr>
+<tr>
+<td>physical_mode</td>
+<td>String</td>
+<td>The <a href="#physical-mode">physical_mode</a>. Physical mode are standardized</td>
+</tr>
+<tr>
+<td>commercial_mode</td>
+<td>String</td>
+<td>The <a href="#commercial-mode">commercial_mode</a>. Commercial mode are not standardized</td>
+</tr>
+<tr>
+<td>code</td>
+<td>String</td>
+<td>The code of the line</td>
+</tr>
+<tr>
+<td>color</td>
+<td>String</td>
+<td>Hexadecimal color code for the line logo</td>
+</tr>
+<tr>
+<td>text_color</td>
+<td>String</td>
+<td>Hexadecimal color code of the text for the line logo</td>
+</tr>
+<tr>
+<td>direction</td>
+<td>String</td>
+<td>Direction of the trip used in a &quot;journey&quot; section</td>
+</tr>
+<tr>
+<td>headsign</td>
+<td>String</td>
+<td>Text that appears on vehicle signage identifying the trip&#39;s destination for example</td>
+</tr>
+<tr>
+<td>label</td>
+<td>String</td>
+<td>The label of the object</td>
+</tr>
+<tr>
+<td>name</td>
+<td>String</td>
+<td>Full name of the line</td>
+</tr>
+<tr>
+<td>trip_short_name</td>
+<td>String</td>
+<td>Short name of the route</td>
+</tr>
+<tr>
+<td>equipments</td>
+<td>Array of String</td>
+<td>list of <a href="#equipment">equipment</a> of the object</td>
+</tr>
+<tr>
+<td>description</td>
+<td>String</td>
+<td>An optionnal description</td>
+</tr>
+</tbody></table>
+<h3 id='link'>link</h3>
+<p>See <a href="#interface">interface</a> section.</p>
+<h2 id='special-parameters'>Special Parameters</h2><h3 id='datetime'>datetime</h3>
+<p>A date time with the format YYYYMMDDThhmmss, considered local to the coverage being used.</p>
+<h4 id='depth'>depth</h4>
+<p>This tiny parameter can expand Navitia power by making it more wordy. As it is valuable on every API, take a look at <a href="#depth">depth</a></p>

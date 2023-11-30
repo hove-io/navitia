@@ -1,0 +1,418 @@
+<h1 id='misc-mechanisms-and-few-boring-stuff'>Misc mechanisms (and few boring stuff)</h1><h2 id='multiple-journeys'>Multiple journeys</h2>
+<p>Navitia can compute several kind of journeys with a journey query.</p>
+
+<p>The
+<a href="http://research.microsoft.com/apps/pubs/default.aspx?id=156567">RAPTOR</a>
+algorithm used in Navitia is a multi-objective algorithm. Thus it might
+return multiple journeys if it cannot know that one is better than the
+other. For example it cannot decide that a one hour journey with no
+connection is better than a 45 minutes journey with one connection
+(it is called the <a href="http://en.wikipedia.org/wiki/Pareto_efficiency">pareto front</a>).
+The 3 objectives Navitia uses are roughly the arrival datetime, the number of transfers
+and the duration of &quot;walking&quot; (transfers and fallback).</p>
+
+<p>If the user asks for more journeys than the number of journeys given by
+RAPTOR (with the parameter <code>min_nb_journeys</code> or <code>count</code>), Navitia will
+ask RAPTOR again, but for the following journeys (or the previous ones
+if the user asked with <code>datetime_represents=arrival</code>).</p>
+
+<p>Those journeys have the <code>next</code> (or <code>previous</code>) value in their tags.</p>
+<h2 id='journey-qualification-process'>Journey qualification process</h2>
+<p>Since Navitia can return several journeys, it tags them to help the user
+choose the best one that matches their needs.
+Here are some tagging rules:
+- there is only one &quot;best&quot; itinerary
+- itineraries with other types are displayed <strong>only if they are relevant</strong>
+- and for a specific type, you may find many relevant itinerary</p>
+
+<p>For example, for a specific request, you can find the &quot;best&quot; itinerary, 2 &quot;less_fallback_walk&quot; ones
+(with less walking, but taking more time) and no &quot;comfort&quot; (the &quot;best&quot; one is the same as the &quot;comfort&quot; one for example).</p>
+
+<p>The different journey types are:</p>
+
+<table><thead>
+<tr>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead><tbody>
+<tr>
+<td>best</td>
+<td>The best journey if you have to display only one.</td>
+</tr>
+<tr>
+<td>rapid</td>
+<td>A good trade off between duration, changes and constraint respect</td>
+</tr>
+<tr>
+<td>comfort</td>
+<td>A journey with less changes and walking</td>
+</tr>
+<tr>
+<td>car</td>
+<td>A journey with car to get to the public transport</td>
+</tr>
+<tr>
+<td>less_fallback_walk</td>
+<td>A journey with less walking</td>
+</tr>
+<tr>
+<td>less_fallback_bike</td>
+<td>A journey with less biking</td>
+</tr>
+<tr>
+<td>less_fallback_bss</td>
+<td>A journey with less bss</td>
+</tr>
+<tr>
+<td>fastest</td>
+<td>A journey with minimum duration</td>
+</tr>
+<tr>
+<td>ecologic</td>
+<td>A friendly journey for Earth</td>
+</tr>
+<tr>
+<td>reliable</td>
+<td>A really steady journey</td>
+</tr>
+<tr>
+<td>bike_in_pt</td>
+<td>A journey with bike both at the beginning and the end, and where bike is allowed in public transport used</td>
+</tr>
+<tr>
+<td>non_pt_walk</td>
+<td>A journey without public transport, only walking</td>
+</tr>
+<tr>
+<td>non_pt_bike</td>
+<td>A journey without public transport, only biking</td>
+</tr>
+<tr>
+<td>non_pt_bss</td>
+<td>A journey without public transport, only bike sharing</td>
+</tr>
+</tbody></table>
+
+<h2 id=Service-translation>Service Translation</h2>
+
+<p>When specifying a service in the data through <code>calendar.txt</code> and <code>calendar_dates.txt</code>, you might get surprised to see a different result from Navitia&#39;s response.</p>
+<div class="highlight"><pre class="highlight shell tab-shell"><code><span class="c"># Navitia's interpreted service response</span>
+<span class="o">{</span>
+    <span class="s2">"calendars"</span>: <span class="o">[</span>
+       <span class="o">{</span>
+            <span class="s2">"active_periods"</span>: <span class="o">[</span>
+                <span class="o">{</span>
+                    <span class="s2">"begin"</span>: <span class="s2">"20200101"</span>,
+                    <span class="s2">"end"</span>: <span class="s2">"20200130"</span>
+                <span class="o">}</span>
+            <span class="o">]</span>,
+            <span class="s2">"week_pattern"</span>: <span class="o">{</span>
+                <span class="s2">"monday"</span>: <span class="nb">false</span>,
+                <span class="s2">"tuesday"</span>: <span class="nb">false</span>,
+                <span class="s2">"wednesday"</span>: <span class="nb">false</span>,
+                <span class="s2">"thursday"</span>: <span class="nb">false</span>,
+                <span class="s2">"friday"</span>: <span class="nb">false</span>,
+                <span class="s2">"saturday"</span>: <span class="nb">true</span>,
+                <span class="s2">"sunday"</span>: <span class="nb">true</span>
+            <span class="o">}</span>,
+            <span class="s2">"exceptions"</span>: <span class="o">[</span>
+                <span class="o">{</span>
+                    <span class="s2">"type"</span>: <span class="s2">"remove"</span>,
+                    <span class="s2">"datetime"</span>: <span class="s2">"20200127"</span>
+                <span class="o">}</span>
+            <span class="o">]</span>
+        <span class="o">}</span>
+    <span class="o">]</span>
+</code></pre></div>
+<p>For instance, if you have a trip that:</p>
+
+<ul>
+<li>  occurs every Saturday of January 2020 (in your <code>calendar.txt</code>)</li>
+<li>  has 3 exceptions that <code>add</code> the service the first 3 Sundays (<code>calendar_dates.txt</code>)</li>
+</ul>
+
+<p>You might expect to have that same exact representation for your <code>/vehicle_journeys</code>, but instead you find something different.</p>
+
+<p>You expected to have 3 <code>add</code> exceptions but you only have 1 <code>remove</code>. Also, the week pattern is set to <code>true</code> on Sunday even though your <code>calendar.txt</code> said Saturday only.</p>
+
+<p>This is due to a re-interpretation of the service pattern, with one specific goal:</p>
+
+<aside class="notice">
+ Navitia analyzes the input service and computes an equivalent pair of (week_pattern, exceptions) with the **smallest** number of exceptions
+</aside>
+
+<p>This means that Navitia will re-organise the input data, to produce a smaller and more comprehensive response that respects the semantics of the input data.</p>
+
+<p>For more information about the algorithm (in French): <a href="https://github.com/TeXitoi/pinot2015presenter/blob/master/pres/pinot2015presenter-pres.pdf">https://github.com/TeXitoi/pinot2015presenter/blob/master/pres/pinot2015presenter-pres.pdf</a></p>
+
+<h2 id="ridesharing-stuff">Ridesharing</h2>
+<div class="highlight"><pre class="highlight shell tab-shell"><code>simplified output
+
+<span class="o">{</span>
+    <span class="s2">"journeys"</span>: <span class="o">[</span>
+        <span class="o">{</span>
+            <span class="s2">"requested_date_time"</span>: <span class="s2">"20180101T070000"</span>,
+            <span class="s2">"sections"</span>: <span class="o">[</span>
+                <span class="o">{</span>
+                    <span class="s2">"type"</span>: <span class="s2">"street_network"</span>,
+                    <span class="s2">"mode"</span>: <span class="s2">"ridesharing"</span>,
+                    <span class="s2">"from"</span>: <span class="s2">"A"</span>,
+                    <span class="s2">"to"</span>: <span class="s2">"B"</span>,
+                    <span class="s2">"departure_date_time"</span>: <span class="s2">"20180101T070000"</span>,
+                    <span class="s2">"arrival_date_time"</span>: <span class="s2">"20180101T090000"</span>,
+                    <span class="s2">"ridesharing_journeys"</span>: <span class="o">[</span>
+                        <span class="o">{</span>
+                            <span class="s2">"sections"</span>:[
+                                <span class="o">{</span>
+                                    <span class="s2">"from"</span>: <span class="s2">"A"</span>,
+                                    <span class="s2">"to"</span>: <span class="s2">"A1"</span>,
+                                    <span class="s2">"departure_date_time"</span>: <span class="s2">"20180101T063000"</span>,
+                                    <span class="s2">"arrival_date_time"</span>: <span class="s2">"20180101T063000"</span>,
+                                    <span class="s2">"type"</span>: <span class="s2">"crow_fly"</span>,
+                                    <span class="s2">"mode"</span>: <span class="s2">"walking"</span>
+                                <span class="o">}</span>,
+                                <span class="o">{</span>
+                                    <span class="s2">"from"</span>: <span class="s2">"A1"</span>,
+                                    <span class="s2">"to"</span>: <span class="s2">"A2"</span>,
+                                    <span class="s2">"departure_date_time"</span>: <span class="s2">"20180101T063000"</span>,
+                                    <span class="s2">"arrival_date_time"</span>: <span class="s2">"20180101T093000"</span>,
+                                    <span class="s2">"type"</span>: <span class="s2">"ridesharing"</span>
+                                <span class="o">}</span>,
+                                <span class="o">{</span>
+                                    <span class="s2">"from"</span>: <span class="s2">"A2"</span>,
+                                    <span class="s2">"to"</span>: <span class="s2">"B"</span>,
+                                    <span class="s2">"departure_date_time"</span>: <span class="s2">"20180101T093000"</span>,
+                                    <span class="s2">"arrival_date_time"</span>: <span class="s2">"20180101T093000"</span>,
+                                    <span class="s2">"type"</span>: <span class="s2">"crow_fly"</span>,
+                                    <span class="s2">"mode"</span>: <span class="s2">"walking"</span>
+                                <span class="o">}</span>
+                            <span class="o">]</span>
+                        <span class="o">}</span>,
+                        <span class="o">{</span>
+                            ...
+                        <span class="o">}</span>
+                    <span class="o">]</span>
+                <span class="o">}</span>,
+                <span class="o">{</span>
+                    <span class="s2">"from"</span>: <span class="s2">"B"</span>,
+                    <span class="s2">"to"</span>: <span class="s2">"C"</span>,
+                    <span class="s2">"departure_date_time"</span>: <span class="s2">"20180101T090000"</span>,
+                    <span class="s2">"arrival_date_time"</span>: <span class="s2">"20180101T100000"</span>,
+                    <span class="s2">"type"</span>: <span class="s2">"public_transport"</span>
+                <span class="o">}</span>
+            <span class="o">]</span>
+        <span class="o">}</span>,
+        <span class="o">{</span>
+            ...
+        <span class="o">}</span>
+    <span class="o">]</span>
+<span class="o">}</span>
+</code></pre></div>
+<p>When requesting a journey, it is possible to request for a ridesharing fallback,
+using <code>first_section_mode</code> or <code>last_section_mode</code>.
+This may also be used to obtain a direct ridesharing journey (using <code>max_ridesharing_duration_to_pt=0</code>).</p>
+
+<p>This returns a journey only when one or multiple ridesharing ads are found, matching the request.</p>
+
+<aside class="warning">
+    This feature requires a specific configuration and an agreement from a ridesharing service provider.
+    Therefore this service is available only for a few clients.
+</aside>
+
+<p>The journey from Navitia will then contain a section using the ridesharing mode.
+Inside this section an attribute ridesharing_journeys contains one or multiple journeys
+depicting specifically the ridesharing ads that could match the above section
+and that could be proposed to the user.</p>
+
+<h2 id="taxi-stuff">Taxi</h2>
+
+<aside class="warning">
+    This feature is not available on all coverages, as it is dependent on other parameters of the coverage (how journeys are computed).
+</aside>
+
+<p>With this mode, your journey may contain taxi sections(fallback or direct path). The journey you will obtain is basically the same as a journey by car. The only difference is that with taxi as fallback mode, a buffer time (section &quot;waiting&quot;, defaulted to 5 min) will appear into the journey. The buffer time won&#39;t appear if the journey is a direct path. Depending on the calculator, the journey may pick up ways that are reserved for taxis on not.</p>
+
+<h2 id="odt">On demand transportation</h2>
+
+<p>Some transit agencies force travelers to call them to arrange a pickup at a particular place or stop point.</p>
+
+<p>Besides, some stop times can be &quot;estimated&quot; <em>in data by design</em>:</p>
+
+<ul>
+<li>A standard GTFS contains only regular time: that means transport agencies should arrive on time :)</li>
+<li>But navitia can be fed with more specific data, where &quot;estimated time&quot; means that there will be
+no guarantee on time respect by the agency. It often occurs in suburban or rural zone.</li>
+</ul>
+
+<p>After all, the stop points can be standard (such as bus stop or railway station)
+or &quot;zonal&quot; (where agency can pick you up you anywhere, like a cab).</p>
+
+<p>That&#39;s some kind of &quot;responsive locomotion&quot; (ɔ).</p>
+
+<p>So public transport lines can mix different methods to pickup travelers:</p>
+
+<ul>
+<li>  regular
+
+<ul>
+<li>  line does not contain any estimated stop times, nor zonal stop point location.</li>
+<li>  No need to call too.</li>
+</ul></li>
+<li>  odt_with_stop_time
+
+<ul>
+<li>  line does not contain any estimated stop times, nor zonal stop point location.</li>
+<li>  But you will have to call to take it.</li>
+</ul></li>
+<li>  odt_with_stop_point
+
+<ul>
+<li>  line can contain some estimated stop times, but no zonal stop point location.</li>
+<li>  And you will have to call to take it.</li>
+</ul></li>
+<li>  odt_with_zone
+
+<ul>
+<li>  line can contain some estimated stop times, and zonal stop point location.</li>
+<li>  And you will have to call to take it</li>
+<li>  well, not really a public transport line, more a cab...</li>
+</ul></li>
+</ul>
+
+<h2 id="disruptions">Disruptions</h2>
+
+<p>In this paragraph, we will explain how the disruptions are displayed in the different APIs.</p>
+<h3 id='publication-period-of-a-disruption'>publication period of a disruption</h3>
+<p>The publication period of a disruption is the period on which we want to display the disruption in navitia.</p>
+
+<p>The creator of the disruption might not want the traveller to know of a disruption before a certain date (because it&#39;s too uncertain, secret, ...)
+The publication period is the way to control this.</p>
+<h3 id='application-periods-of-a-disruption'>application periods of a disruption</h3>
+<p>The application periods are the list of periods on which the disruption is active.
+For example it&#39;s the actual period when railworks are done and train circulation is cut.</p>
+<h3 id='request-date'>Request date</h3>
+<p>The request date represents datetime for Journeys API, from_datetime for  Schedules API or now for the others APIs.
+The default value is now.</p>
+<h3 id='summary'>Summary</h3>
+<p>To sum up we display an impact if &#39;now&#39; is in the publication period.</p>
+
+<p>The status of the impact depends only of &#39;now&#39; and is:</p>
+
+<ul>
+<li>&#39;active&#39; if &#39;now&#39; is inside an application period</li>
+<li>&#39;future&#39; if &#39;now&#39; is not inside an application period and there is an application period after &#39;now&#39;</li>
+<li>&#39;past&#39; otherwise</li>
+</ul>
+
+<table>
+  <thead>
+    <tr>
+      <th align="center" colspan="2"></th>
+      <th align="center"> </th>
+      <th align="center" colspan="3">Show impacts </th>
+      <th align="center"> </th>
+    </tr>
+    <tr>
+      <th align="center">publication period </th>
+      <th>Application period </th>
+      <th align="center">Request date</th>
+      <th align="center">disruptions API</th>
+      <th align="center">traffic_reports & PtRef API</th>
+      <th align="center">Journeys & Schedules API</th>
+      <th align="center">Status</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td align="center"> </td>
+      <td align="center"> </td>
+      <td align="center"> </td>
+      <td align="center"> </td>
+      <td align="center"> </td>
+      <td align="center"> </td>
+      <td align="center"> </td>
+    </tr>
+    <tr>
+      <td align="center"> </td>
+      <td align="center"> </td>
+      <td align="center">date1 </td>
+      <td align="center"><strong>Yes</strong> </td>
+      <td align="center">- </td>
+      <td align="center">- </td>
+      <td align="center">future </td>
+    </tr>
+    <tr>
+      <td align="center">T </td>
+      <td align="center"> </td>
+      <td align="center"> </td>
+      <td align="center"> </td>
+      <td align="center"> </td>
+      <td align="center"> </td>
+      <td align="center"> </td>
+    </tr>
+    <tr>
+      <td align="center">| </td>
+      <td align="center"> </td>
+      <td align="center">date2 </td>
+      <td align="center"><strong>Yes</strong> </td>
+      <td align="center"><strong>Yes</strong> </td>
+      <td align="center"> </td>
+      <td align="center">future </td>
+    </tr>
+    <tr>
+      <td align="center">| </td>
+      <td align="center">T </td>
+      <td align="center"> </td>
+      <td align="center"> </td>
+      <td align="center"> </td>
+      <td align="center"> </td>
+      <td align="center"> </td>
+    </tr>
+    <tr>
+      <td align="center">| </td>
+      <td align="center">| </td>
+      <td align="center">date3 </td>
+      <td align="center"><strong>Yes</strong> </td>
+      <td align="center"><strong>Yes</strong> </td>
+      <td align="center"><strong>Yes</strong> </td>
+      <td align="center">active </td>
+    </tr>
+    <tr>
+      <td align="center">| </td>
+      <td align="center">⊥ </td>
+      <td align="center"> </td>
+      <td align="center"> </td>
+      <td align="center"> </td>
+      <td align="center"> </td>
+      <td align="center"> </td>
+    </tr>
+    <tr>
+      <td align="center">| </td>
+      <td> </td>
+      <td align="center">date4 </td>
+      <td align="center"><strong>Yes</strong> </td>
+      <td align="center"><strong>Yes</strong> </td>
+      <td align="center"> </td>
+      <td align="center">passed </td>
+    </tr>
+    <tr>
+      <td align="center">⊥ </td>
+      <td> </td>
+      <td align="center"> </td>
+      <td align="center"> </td>
+      <td align="center"> </td>
+      <td align="center"> </td>
+      <td align="center"> </td>
+    </tr>
+    <tr>
+      <td align="center"> </td>
+      <td> </td>
+      <td align="center">date5 </td>
+      <td align="center"><strong>Yes</strong> </td>
+      <td align="center">- </td>
+      <td align="center">- </td>
+      <td align="center">passed </td>
+    </tr>
+  </tbody>
+</table>

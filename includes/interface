@@ -1,0 +1,217 @@
+<h1 id='interface'>Interface</h1>
+<p>The base URL for <strong>navitia.io</strong> is:
+<a href="https://api.navitia.io/v1/">https://api.navitia.io/v1/</a></p>
+
+<p>We aim to implement <a href="http://en.wikipedia.org/wiki/HATEOAS">HATEOAS</a>
+concept with Navitia.</p>
+
+<p>Every resource returns a response containing a links object, a paging
+object, and the requested objects, following hypermedia principles.
+That&#39;s lots of links. Links allow you to know all accessible uris and services for a given point.</p>
+
+<aside class="notice">
+    Length (in characters) of the URL is limited to 4096 characters.
+</aside>
+<h2 id='templated-url'>Templated URL</h2>
+<blockquote>
+<p>From every object collection</p>
+</blockquote>
+<div class="highlight"><pre class="highlight shell tab-shell"><code><span class="c">#first request</span>
+
+<span class="nv">$ </span>curl <span class="s1">'https://api.navitia.io/v1/coverage/sandbox/lines'</span> <span class="nt">-H</span> <span class="s1">'Authorization: 3b036afe-0110-4202-b9ed-99718476c2e0'</span>
+
+<span class="c">#response</span>
+HTTP/1.1 200 OK
+
+<span class="c">#first line is like:</span>
+
+<span class="o">{</span>
+    <span class="s2">"lines"</span>: <span class="o">[</span>
+        <span class="o">{</span>
+            <span class="s2">"id"</span>: <span class="s2">"line:RAT:M1"</span>,
+            <span class="s2">"code"</span>: <span class="s2">"1"</span>,
+            <span class="s2">"name"</span>: <span class="s2">"Château de Vincennes - La Défense"</span>,
+            <span class="s2">"..."</span>: <span class="s2">"..."</span>
+        <span class="o">}</span>,
+        <span class="o">{</span>...<span class="o">}</span>
+        <span class="o">]</span>,
+    ...,
+
+<span class="c">#and a templated link from the example above:</span>
+
+    <span class="s2">"links"</span>: <span class="o">[</span>
+        <span class="o">{</span>
+            <span class="s2">"href"</span>: <span class="s2">"https://api.navitia.io/v1/coverage/sandbox/lines/{lines.id}/stop_schedules"</span>,
+            <span class="s2">"rel"</span>: <span class="s2">"stop_schedules"</span>,
+            <span class="s2">"templated"</span>: <span class="nb">true</span>
+        <span class="o">}</span>,
+        <span class="o">{</span>...<span class="o">}</span>
+    <span class="o">]</span>
+<span class="o">}</span>
+
+<span class="c">#you can then request for "stop_schedules" service using templating</span>
+<span class="c">#be careful, without any filter, the response can be huge</span>
+
+<span class="c">#second request</span>
+<span class="c">#{line.id} has to be replaced by "line:RAT:M1"</span>
+<span class="nv">$ </span>curl <span class="s1">'https://api.navitia.io/v1/coverage/sandbox/lines/line:RAT:M1/stop_schedules'</span> <span class="nt">-H</span> <span class="s1">'Authorization: 3b036afe-0110-4202-b9ed-99718476c2e0'</span>
+
+<span class="c">#here is a smarter request for a line AND a stop_area</span>
+<span class="nv">$ </span>curl <span class="s1">'https://api.navitia.io/v1/coverage/sandbox/lines/line:RAT:M1/stop_areas/stop_area:RAT:SA:PLROY/stop_schedules'</span> <span class="nt">-H</span> <span class="s1">'Authorization: 3b036afe-0110-4202-b9ed-99718476c2e0'</span>
+</code></pre></div>
+<p>Under some link sections, you will find a &quot;templated&quot; property.</p>
+
+<p>If &quot;templated&quot; is true, then you will have to format the link with your right id as describe in the example.
+In order to do that, you will have to</p>
+
+<ul>
+<li>take the id from the object you want to get the linked service</li>
+<li>replace {lines.id} in the url as the example</li>
+</ul>
+<h2 id='inner-references'>Inner references</h2><div class="highlight"><pre class="highlight shell tab-shell"><code><span class="c">#You may find "disruptions" link, as</span>
+
+<span class="o">{</span>
+    <span class="s2">"internal"</span>: <span class="nb">true</span>,
+    <span class="s2">"type"</span>: <span class="s2">"disruption"</span>,
+    <span class="s2">"id"</span>: <span class="s2">"edc46f3a-ad3d-11e4-a5e1-005056a44da2"</span>,
+    <span class="s2">"rel"</span>: <span class="s2">"disruptions"</span>,
+    <span class="s2">"templated"</span>: <span class="nb">false</span>
+<span class="o">}</span>
+</code></pre></div>
+<p>Some link sections holds disruption links. These links are templated.</p>
+
+<p>That means:</p>
+
+<ul>
+<li>inside the self stream (<strong>&quot;internal&quot;: true</strong>)</li>
+<li>you will find a <strong>disruptions</strong> section (<strong>&quot;rel&quot;: &quot;disruptions&quot;</strong>)</li>
+<li>containing some <a href="#disruption">disruptions</a> objects (<strong>&quot;type&quot;: &quot;disruption&quot;</strong>)</li>
+<li>where you can find the details of your object (<strong>&quot;id&quot;: &quot;edc46f3a-ad3d-11e4-a5e1-005056a44da2&quot;</strong>).</li>
+</ul>
+<h2 id='paging'>Paging</h2><div class="highlight"><pre class="highlight shell tab-shell"><code><span class="c">#Retrieving lines collection</span>
+<span class="nv">$ </span>curl <span class="s1">'https://api.navitia.io/v1/coverage/sandbox/lines'</span> <span class="nt">-H</span> <span class="s1">'Authorization: 3b036afe-0110-4202-b9ed-99718476c2e0'</span>
+
+<span class="c">#You can find "paging" informations, as</span>
+<span class="o">{</span>
+    <span class="s2">"pagination"</span>: <span class="o">{</span>
+        <span class="s2">"items_on_page"</span>: 25
+        <span class="s2">"items_per_page"</span>: 25,
+        <span class="s2">"start_page"</span>: 1,
+        <span class="s2">"total_result"</span>: 1921,
+    <span class="o">}</span>,
+<span class="o">}</span>
+
+<span class="c">#You can also find "paging" links, prebuilt in the link section</span>
+<span class="o">{</span>
+       <span class="o">{</span>
+            <span class="s2">"href"</span>: <span class="s2">"https://api.navitia.io/v1/coverage/demo/lines?start_page=0"</span>,
+            <span class="s2">"templated"</span>: <span class="nb">false</span>
+            <span class="s2">"type"</span>: <span class="s2">"previous"</span>,
+        <span class="o">}</span>,
+       <span class="o">{</span>
+            <span class="s2">"href"</span>: <span class="s2">"https://api.navitia.io/v1/coverage/demo/lines?start_page=2"</span>,
+            <span class="s2">"templated"</span>: <span class="nb">false</span>
+            <span class="s2">"type"</span>: <span class="s2">"next"</span>,
+        <span class="o">}</span>,
+       <span class="o">{</span>
+            <span class="s2">"href"</span>: <span class="s2">"https://api.navitia.io/v1/coverage/demo/lines?start_page=76"</span>,
+            <span class="s2">"templated"</span>: <span class="nb">false</span>
+            <span class="s2">"type"</span>: <span class="s2">"last"</span>,
+        <span class="o">}</span>,
+       <span class="o">{</span>
+            <span class="s2">"href"</span>: <span class="s2">"https://api.navitia.io/v1/coverage/demo/lines"</span>,
+            <span class="s2">"templated"</span>: <span class="nb">false</span>
+            <span class="s2">"type"</span>: <span class="s2">"first"</span>,
+        <span class="o">}</span>
+<span class="o">}</span>
+</code></pre></div>
+<aside class="success">
+    The results are paginated to avoid too big response size. The parameters to get the next or previous page are within the `links` section of the result.
+</aside>
+
+<p>Every Navitia response contains a paging object</p>
+
+<table><thead>
+<tr>
+<th>Key</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead><tbody>
+<tr>
+<td>items_per_page</td>
+<td>int</td>
+<td>Number of items per page</td>
+</tr>
+<tr>
+<td>items_on_page</td>
+<td>int</td>
+<td>Number of items on this page</td>
+</tr>
+<tr>
+<td>start_page</td>
+<td>int</td>
+<td>The page number</td>
+</tr>
+<tr>
+<td>total_result</td>
+<td>int</td>
+<td>Total number of items for this request</td>
+</tr>
+</tbody></table>
+
+<p>You can navigate through a response using 2 parameters</p>
+
+<table><thead>
+<tr>
+<th>Parameter</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead><tbody>
+<tr>
+<td>start_page</td>
+<td>int</td>
+<td>The page number</td>
+</tr>
+<tr>
+<td>count</td>
+<td>int</td>
+<td>Number of items per page</td>
+</tr>
+</tbody></table>
+
+<aside class="notice">
+    The number of objects returned for a request can <b>not be superior than 200</b>.
+    If you request for more, Navitia will return the first 200, and you will have to paginate to get next 200.
+</aside>
+<h2 id='objects-order'>Objects order</h2>
+<p>Unless specified, objects lists are not sorted and stability of objects&#39; order is not guaranteed.<br>This is also true for the ordering of the attributes of objects.</p>
+
+<p>Examples of sorted objects tables:</p>
+
+<ul>
+<li>journeys in a <code>/journeys</code> response</li>
+<li><code>/departures</code> and <code>/arrivals</code></li>
+<li><code>/stop_schedules</code></li>
+<li><code>/terminus_schedules</code></li>
+<li>stop_points in <code>/routes/{route_id}?depth=3</code></li>
+<li><code>/places_nearby</code></li>
+<li><code>/places</code></li>
+</ul>
+
+<p>Examples of unsorted responses:</p>
+
+<ul>
+<li>stop_points in <code>/lines/{line_id}/stop_points</code></li>
+<li>pretty much everything else...</li>
+</ul>
+<h2 id='objects-attributes'>Objects attributes</h2>
+<p>Like almost any API, objects are subject to adaptations.<br>Please be warned that we allow Navitia to add new attributes to objects, and it will never be considered a breaking change.</p>
+
+<p>We also allow Navitia to add values to enum, so be prepared to that. For example <a href="#section">section&#39;s</a> type of journeys are regularly evolving.</p>
+<h2 id='lifetime-of-id'>Lifetime of id</h2>
+<p>The way id (or uri) of an object is generated is not garanteed stable, nor are the data processed.
+So we advise to limit to the minimum storing ids/uris of objects.
+We recommend to use as much as possible a previous call to <strong><a href="#places">Places</a></strong> and <strong><a href="#pt-objects">PT_objects</a></strong>.
+Also, be resilient if one of those ids/uris disappears.</p>

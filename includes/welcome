@@ -1,0 +1,143 @@
+<h1 id='getting-started'>Getting started</h1><h2 id='overview'>Overview</h2>
+<p><strong>Navitia</strong> (<em>pronounce [navi-sia]</em>) is the open API for building cool stuff with mobility data.</p>
+
+<p>It provides the following services:</p>
+
+<ul>
+<li>multi-modal journeys computation</li>
+<li>line schedules</li>
+<li>next departures</li>
+<li>exploration of public transport data</li>
+<li>search &amp; autocomplete on places</li>
+<li>and sexy things such as isochrones</li>
+</ul>
+
+<p>Have a look at the <a href="#some-examples">examples below</a> to learn what services we provide and how to use them.</p>
+<h3 id='approach'> Approach</h3>
+<p>Navitia is an open-source web API, <strong>initially</strong> built to provide traveler information on urban transportation networks.<br>Its main purpose is to provide day-to-day informations to travelers.<br>Over time, Navitia has been able to do way more, <em>sometimes</em> for technical and debuging purpose <em>or</em> because other functional needs fit quite well in what Navitia can do <em>or</em> just because it was quite easy and super cool.</p>
+
+<p>Technically, Navitia is a <a href="https://en.wikipedia.org/wiki/HATEOAS">HATEOAS</a> API that returns JSON formated results.</p>
+<h3 id='who-39-s-who'> Who&#39;s who</h3>
+<p>Navitia is instanciated and exposed publicly through <a href="https://api.navitia.io">api.navitia.io</a>.<br>Developments on Navitia are lead by Hove (previously Kisio Digital and CanalTP).<br>Hove is a subsidiary of Keolis (itself a subsidiary of SNCF, French national railway company).</p>
+<h3 id='about-quot-sandbox-quot-coverage'>About &quot;sandbox&quot; coverage</h3>
+<aside class="notice">
+Every example is based on fake data. Sandbox data is made up of few fake metro lines from a single network on the area of Paris only. If you want to play with real data, use your token and explore the world!
+</aside>
+
+<aside class="notice">
+A fake token is used in examples below: be aware that this token is really limited ("sandbox" coverage only).</br>
+You have to use yours to get real services on real data (your token has no access to "sandbox" coverage).
+</aside>
+<h2 id='first-step'>First step</h2>
+<blockquote>
+<p>Your token is available on your <a href="https://navitia.io/se-connecter/">navitia.io account page</a>.</p>
+
+<p>It sounds like &quot;3b036afe-0110-4202-b9ed-99718476c2e0&quot;</p>
+</blockquote>
+
+<p>Get a token here <a href="https://navitia.io/inscription/">https://navitia.io/inscription/</a>. We need your mail to stay in touch when Navitia changes.</p>
+
+<aside class="notice">
+The token obtained is private, you should avoid sharing it publicly (beware if you share code examples, url or screenshot).</br>
+This will avoid having someone use your request quota.
+</aside>
+<h2 id='second-step'>Second step</h2><div class="highlight"><pre class="highlight shell tab-shell"><code><span class="c"># You can use curl to request Navitia</span>
+<span class="nv">$ </span>curl <span class="s1">'https://api.navitia.io/v1/'</span>
+</code></pre></div>
+<p>Go to the API <a href="https://api.navitia.io">https://api.navitia.io</a></p>
+
+<p>The simpliest way is to use a web browser.
+Our humble opinion is that <a href="https://www.getfirefox.com">firefox browser</a> and a json viewer extension like <a href="https://addons.mozilla.org/fr/firefox/addon/json-lite/">JSON Lite</a> is a good setup.</p>
+<h2 id='third-step'>Third step</h2><div class="highlight"><pre class="highlight shell tab-shell"><code><span class="c"># In a curl way, with our fake token</span>
+<span class="nv">$ </span>curl <span class="s1">'https://api.navitia.io/v1/coverage/sandbox/'</span> <span class="nt">-H</span> <span class="s1">'Authorization: 3b036afe-0110-4202-b9ed-99718476c2e0'</span>
+</code></pre></div>
+<p>Use the token: if you use a modern web browser, you only have to <strong>paste it</strong> in the <strong>user name area</strong>,
+with <strong>no password</strong>.</p>
+
+<p><img src="/images/firefox_token-aa369f75.png" alt="Put token in Firefox browser" /></p>
+
+<p>Or, in a simplier way, you can add your token in the address bar like:</p>
+
+<aside class="success">
+<a href="https://3b036afe-0110-4202-b9ed-99718476c2e0@api.navitia.io/v1/coverage/sandbox/lines">https://3b036afe-0110-4202-b9ed-99718476c2e0@api.navitia.io/v1/coverage/sandbox/lines</a>
+</aside>
+
+<p>See <a href="#authentication">authentication</a> section to find out more details on <strong>how to use your token</strong> when coding.</p>
+<h4 id='then'>Then,</h4>
+<p>use the API! The easiest is probably to jump to <a href="#some-examples">Examples</a> below.</p>
+
+<p>At some point you will want to read <a href="#lexicon">transport public lexicon</a>.</p>
+<h2 id='navitia-for-humans'>Navitia for humans</h2>
+<blockquote>
+<p><a href="https://playground.navitia.io/play.html?request=https%3A%2F%2Fapi.navitia.io%2Fv1%2Fcoverage%2Fsandbox&amp;token=3b036afe-0110-4202-b9ed-99718476c2e0">Try a basic request on Navitia playground</a></p>
+
+<p><a href="https://playground.navitia.io/play.html?request=https%3A%2F%2Fapi.navitia.io%2Fv1%2Fcoverage%2Fsandbox%2Fjourneys%3Ffrom%3D2.3749036%253B48.8467927%26to%3D2.2922926%253B48.8583736%26&amp;token=3b036afe-0110-4202-b9ed-99718476c2e0">Try a journey request on Navitia playground</a></p>
+</blockquote>
+
+<aside class="success">
+if you only want to challenge Navitia functionality, take your token and go to the <a href="https://playground.navitia.io">navitia playground website </a>.
+</aside>
+
+<p><img src="/images/navitia_playground-3ea4d4e5.png" alt="Try Navitia playgroung" /></p>
+<h2 id='wrappers'>Wrappers</h2>
+<p>To help you in the building of your project, there are some wrappers implemented (by Hove or not) to query the API Navitia:</p>
+
+<table><thead>
+<tr>
+<th>Language / Framework</th>
+<th>Plugin</th>
+</tr>
+</thead><tbody>
+<tr>
+<td>PHP5</td>
+<td><a href="https://github.com/hove-io/NavitiaComponent">https://github.com/hove-io/NavitiaComponent</a></td>
+</tr>
+<tr>
+<td>Symfony 2 or 3</td>
+<td><a href="https://github.com/hove-io/NavitiaBundle">https://github.com/hove-io/NavitiaBundle</a></td>
+</tr>
+<tr>
+<td>Python</td>
+<td><a href="https://github.com/leonardbinet/navitia_client">https://github.com/leonardbinet/navitia_client</a></td>
+</tr>
+<tr>
+<td>Python</td>
+<td><a href="https://github.com/hove-io/navitia_python_wrapper">https://github.com/hove-io/navitia_python_wrapper</a></td>
+</tr>
+</tbody></table>
+
+<h2 id="about-data">About the data</h2>
+
+<p>The street network is extracted from <a href="https://www.openstreetmap.org">OpenStreetMap</a>. The public transport data are provided by networks that provide their timetables as open data. Some data improvements are achieved by Hove and are published back there <a href="https://navitia.opendatasoft.com">https://navitia.opendatasoft.com</a>.</p>
+
+<p>Want to know if your city is in Navitia? Know if a special contributor is used? You can either search in <a href="#datasets">datasets</a> of the different <a href="#coverage">coverages</a>. Or use the filter provided on our data catalog <a href="https://navitia.opendatasoft.com">https://navitia.opendatasoft.com</a>.</p>
+
+<aside class="success">
+    We are gradually supporting more and more cities. If your city has open public transport data and is missing,
+    check our googlegroup and drop us a note at <a href="mailto:navitia@googlegroups.com">navitia@googlegroups.com</a>.
+    </br>
+    We will try to add it to navitia.io
+</aside>
+
+<aside class="notice">
+    Please note that the creation of a new coverage on our servers requires resources,
+    so on some data integrations we try to make sure that the amount of requests justifies the use of those resources.
+    </br>
+    Your feedback and requests are very welcome so we choose the most useful new coverages depending on available resources.
+</aside>
+<h2 id='getting-help'>Getting help</h2>
+<blockquote>
+<p><a href="https://api.navitia.io/v1/schema">Try openAPI / swagger</a></p>
+</blockquote>
+
+<p>All available functions are documented in <a href="#interface">integration part</a>.
+If you want to go further, there is an Swagger-openAPI documentation at <a href="https://api.navitia.io/v1/schema">https://api.navitia.io/v1/schema</a></p>
+
+<p>A mailing list is available to ask questions or request <a href="#about-data">new data</a> integrations: <a href="mailto:navitia@googlegroups.com">navitia@googlegroups.com</a></p>
+
+<p>In order to report bug and make feature requests please use our github navitia project
+<a href="https://github.com/hove-io/navitia/issues">https://github.com/hove-io/navitia/issues</a>.</p>
+
+<p>Stay tuned on twitter <a href="https://twitter.com/navitia">@navitia</a>.</p>
+
+<p>At last, we are present on the network <code>matrix.org</code>, channel <a href="https://riot.im/app/#/room/#navitia:matrix.org"><code>#navitia:matrix.org</code></a>.</p>

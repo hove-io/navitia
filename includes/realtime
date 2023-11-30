@@ -1,0 +1,575 @@
+<h1 id="realtime">Real time integration in Navita</h1>
+
+<p>Several endpoints can integrate real time information in their responses. In the response received, disruptions can be present and additional information can be provided.
+The parameter <code>data_freshness</code> can be set to
+<ul>
+    <li><code>base_schedule</code>: disruptions may be present in the response for the user information, but it won&#39;t be taken into account in the results of the query.</li>
+    <li><code>realtime</code>: disruptions are taken into account to compute alternative journeys for exemple. In this configuration, every stop times, connexions, delays, or detour can be taken into account.</li>
+</ul></p>
+
+<aside class="notice">
+`data_freshness=adapted_schedule` is deprecated and must not be providen. It can only be used for debbuging.
+</aside>
+
+<aside class="warning">
+Real time isn't available on every coverage for Navitia. For real time to be available for a client, it needs to provide real time info about its network to Navitia.
+</aside>
+
+<p>The effect of a disruption can be among the following:
+<ul>
+    <li><a href="#SIGNIFICANT_DELAYS">SIGNIFICANT_DELAYS</a></li>
+    <li><a href="#REDUCED_SERVICE">REDUCED_SERVICE</a></li>
+    <li><a href="#NO_SERVICE">NO_SERVICE</a></li>
+    <li><a href="#MODIFIED_SERVICE">MODIFIED_SERVICE</a></li>
+    <li><a href="#ADDITIONAL_SERVICE">ADDITIONAL_SERVICE</a></li>
+    <li><a href="#UNKNOWN_EFFECT">UNKNOWN_EFFECT</a></li>
+    <li><a href="#MODIFIED_SERVICE">DETOUR</a></li>
+    <li><a href="#OTHER_EFFECT">OTHER_EFFECT</a></li>
+</ul></p>
+
+<p>This list follows the GTFS RT values documented at <a href="https://gtfs.org/reference/realtime/v2/#enum-effect">https://gtfs.org/reference/realtime/v2/#enum-effect</a>.</p>
+
+<p>For each one of these effects, here&#39;s how the Navitia responses will be affected over the different endpoints.</p>
+
+<aside class="notice">
+A disruption is present in the response of the endpoints described if the request is made during its application period.
+</aside>
+
+<h2 id="PT_object_collections_data_freshness">Public transport object collections</h2>
+
+<p>Several public transport objects have separate collections for <code>base_schedule</code> and <code>realtime</code>.<br>So the data_freshness parameter may affect the number of objects returned depending on the request.</p>
+
+<p>For example when looking for a specific circulation with the collection vehicle_journey using the request:<br><code>http://api.navitia.io/v1/coverage/&lt;toto&gt;/vehicle_journeys?since=20191008T100000&amp;until=20191008T200000&amp;data_freshness=base_schedule</code>.</p>
+
+<p>A vehicle_journey circulating between since and until that is <strong>fully deleted</strong> (NO_SERVICE) by a disruption will
+of course be <strong>visible</strong> if <code>data_freshness=base_schedule</code>.<br>But it <strong>will not appear</strong> with the parameter <code>data_freshness=realtime</code> as it does not exist in that collection.</p>
+
+<p>On the other hand, a vehicle_journey that is <strong>created</strong> by a realtime feed will only be <strong>visible</strong> if
+<code>data_freshness=realtime</code> on that same request.<br>And it will <strong>not appear</strong> if <code>data_freshness=base_schedule</code>.</p>
+
+<h2 id="OTHER_EFFECT">Other effect</h2>
+
+<p>There is no known effect related to this disruption. You only have to show the message to your traveler...</p>
+
+<h2 id="SIGNIFICANT_DELAYS">Trip delayed</h2>
+
+<p><img src="/images/delay-f0390b1e.png" alt="image" /></p>
+<div class="highlight"><pre class="highlight shell tab-shell"><code><span class="c"># Extract of an impacted stop from /disruptions</span>
+<span class="o">{</span>
+    <span class="s2">"amended_arrival_time"</span>: <span class="s2">"194700"</span>,
+    <span class="s2">"amended_departure_time"</span>: <span class="s2">"194900"</span>,
+    <span class="s2">"arrival_status"</span>: <span class="s2">"delayed"</span>,
+    <span class="s2">"base_arrival_time"</span>: <span class="s2">"193200"</span>,
+    <span class="s2">"base_departure_time"</span>: <span class="s2">"193400"</span>,
+    <span class="s2">"cause"</span>: <span class="s2">"Panne d'un aiguillage"</span>,
+    <span class="s2">"departure_status"</span>: <span class="s2">"delayed"</span>,
+    <span class="s2">"stop_point"</span>: ⊕<span class="o">{</span>7 items<span class="o">}</span>,
+    <span class="s2">"stop_time_effect"</span>: <span class="s2">"delayed"</span>,
+<span class="o">}</span>
+</code></pre></div>
+<p>The effect of the disruption is <code>SIGNIFICANT_DELAYS</code>. It means that the train will arrive late at one or more stations in its journey.</p>
+
+<p>In the disruption, the delay can be found in the list of &quot;impacted_stops&quot; with the departure/arrival status set to &quot;delayed&quot;.</p>
+
+<ul>
+<li>&quot;base_arrival_time&quot;/&quot;base_departure_time&quot; represent the scheduled arrival/departure time without taking into account the delay</li>
+<li>whereas &quot;amended_arrival_time&quot;/&quot;amended_departure_time&quot; are the actual arrival/departure time, after the delay is applied</li>
+</ul>
+
+<p>See the <a href="#disruption">disruption</a> objects section for its full content and description.</p>
+
+<div></div>
+<h3 id='journeys'>Journeys</h3><div class="highlight"><pre class="highlight shell tab-shell"><code><span class="c"># Request example for /journeys</span>
+http://api.navitia.io/v1/coverage/&lt;coverage&gt;/journeys?from<span class="o">=</span>&lt;origin&gt;&amp;to<span class="o">=</span>&lt;destination&gt;&amp;data_freshness<span class="o">=</span>realtime
+</code></pre></div><div class="highlight"><pre class="highlight shell tab-shell"><code><span class="c"># Extract of the public transport section from the response /journeys</span>
+
+    <span class="s2">"sections"</span>: ⊖[
+       ⊖<span class="o">{</span>
+            <span class="s2">"additional_informations"</span>: ⊕[1 item],
+            <span class="s2">"arrival_date_time"</span>: <span class="s2">"20190529T205000"</span>,
+            <span class="s2">"base_arrival_date_time"</span>: <span class="s2">"20190529T204500"</span>,
+            <span class="s2">"base_departure_date_time"</span>: <span class="s2">"20190529T160000"</span>,
+            <span class="s2">"co2_emission"</span>: ⊕<span class="o">{</span>2 items<span class="o">}</span>,
+            <span class="s2">"data_freshness"</span>: <span class="s2">"realtime"</span>,
+            <span class="s2">"departure_date_time"</span>: <span class="s2">"20190529T160000"</span>,
+            <span class="s2">"display_informations"</span>: ⊖<span class="o">{</span>
+                <span class="s2">"code"</span>: <span class="s2">""</span>,
+                <span class="s2">"color"</span>: <span class="s2">"000000"</span>,
+                <span class="s2">"commercial_mode"</span>: <span class="s2">"TGV INOUI"</span>,
+                <span class="s2">"description"</span>: <span class="s2">""</span>
+                <span class="s2">"direction"</span>: <span class="s2">"Nice Ville (Nice)"</span>,
+                <span class="s2">"equipments"</span>: <span class="o">[]</span>,
+                <span class="s2">"headsign"</span>: <span class="s2">"847520"</span>,
+                <span class="s2">"label"</span>: <span class="s2">"Paris - Nice"</span>,
+                <span class="s2">"links"</span>: ⊖[
+                   ⊖<span class="o">{</span>
+                        <span class="s2">"id"</span>: <span class="s2">"b59bdab8-3560-4cfe-8009-b0461f74c417"</span>,
+                        <span class="s2">"internal"</span>: <span class="nb">true</span>,
+                        <span class="s2">"rel"</span>: <span class="s2">"disruptions"</span>,
+                        <span class="s2">"templated"</span>: <span class="nb">false</span>
+                        <span class="s2">"type"</span>: <span class="s2">"disruption"</span>,
+                    <span class="o">}</span>
+                <span class="o">]</span>,
+                <span class="s2">"name"</span>: <span class="s2">"Paris - Nice"</span>,
+                <span class="s2">"network"</span>: <span class="s2">"SNCF"</span>,
+                <span class="s2">"physical_mode"</span>: <span class="s2">"Train grande vitesse"</span>,
+                <span class="s2">"text_color"</span>: <span class="s2">""</span>,
+            <span class="o">}</span>,
+            <span class="s2">"duration"</span>: 21180,
+            <span class="s2">"from"</span>: ⊕<span class="o">{</span>5 items<span class="o">}</span>,
+            <span class="s2">"geojson"</span>: ⊕<span class="o">{</span>3 items<span class="o">}</span>,
+            <span class="s2">"id"</span>: <span class="s2">"section_0_0"</span>,
+            <span class="s2">"links"</span>: ⊕[6 items],
+            <span class="s2">"stop_date_times"</span>: ⊖[
+               ⊕<span class="o">{</span>7 items<span class="o">}</span>,
+               ⊖<span class="o">{</span>
+                    <span class="s2">"additional_informations"</span>: <span class="o">[]</span>,
+                    <span class="s2">"arrival_date_time"</span>: <span class="s2">"20190605T194700"</span>,
+                    <span class="s2">"base_arrival_date_time"</span>: <span class="s2">"20190605T193200"</span>,
+                    <span class="s2">"base_departure_date_time"</span>: <span class="s2">"20190605T193400"</span>
+                    <span class="s2">"departure_date_time"</span>: <span class="s2">"20190605T194900"</span>,
+                    <span class="s2">"links"</span>: <span class="o">[]</span>,
+                    <span class="s2">"stop_point"</span>: ⊕<span class="o">{</span>7 items<span class="o">}</span>,
+                <span class="o">}</span>,
+               ⊕<span class="o">{</span>7 items<span class="o">}</span>,
+               ⊕<span class="o">{</span>7 items<span class="o">}</span>,
+            <span class="o">]</span>
+            <span class="s2">"to"</span>: ⊕<span class="o">{</span>5 items<span class="o">}</span>,
+            <span class="s2">"type"</span>: <span class="s2">"public_transport"</span>,
+        <span class="o">}</span>
+    <span class="o">]</span>
+</code></pre></div>
+<p>The status of the journey is <code>SIGNIFICANT_DELAYS</code>.</p>
+
+<p>In a public transport section of the response:</p>
+
+<ul>
+<li>&quot;base_arrival_date_time&quot;/&quot;base_departure_date_time&quot; represent the scheduled arrival/departure time without taking into account the delay</li>
+<li>whereas &quot;arrival_date_time&quot;/&quot;departure_date_time&quot; are the actual arrival/departure time, after the delay is applied</li>
+</ul>
+
+<p>The delay can also be observed for every stop point of the journey with the same parameters in &quot;stop_date_times&quot;.<br>If the parameter &quot;data_freshness&quot; is set to &quot;base_schedule&quot;, then &quot;base_arrival_date_time&quot;/&quot;base_departure_date_time&quot; = &quot;arrival_date_time&quot;/&quot;departure_date_time&quot;.</p>
+
+<p>A list of the disruptions impacting the journey is also present at the root level of the response.<br>A link to the concerned disruption can be found in the section &quot;display_informations&quot;.</p>
+
+<div></div>
+<h3 id='departures'>Departures</h3><div class="highlight"><pre class="highlight shell tab-shell"><code><span class="c"># Request example for /departures (data_freshness=realtime by default)</span>
+http://api.navitia.io/v1/coverage/&lt;coverage&gt;/physical_modes/&lt;physical_mode&gt;/stop_areas/&lt;stop_area&gt;/departures?from_datetime<span class="o">=</span>&lt;from_date&gt;&amp;data_freshness<span class="o">=</span>realtime
+</code></pre></div><div class="highlight"><pre class="highlight shell tab-shell"><code><span class="c"># Extract of an impacted departure object from the response /departures</span>
+
+<span class="o">{</span>
+    <span class="s2">"display_informations"</span>: ⊖<span class="o">{</span>
+        <span class="s2">"code"</span>: <span class="s2">""</span>,
+        <span class="s2">"color"</span>: <span class="s2">"000000"</span>,
+        <span class="s2">"commercial_mode"</span>: <span class="s2">"TGV INOUI"</span>,
+        <span class="s2">"description"</span>: <span class="s2">""</span>
+        <span class="s2">"direction"</span>: <span class="s2">"Nice Ville (Nice)"</span>,
+        <span class="s2">"equipments"</span>: <span class="o">[]</span>,
+        <span class="s2">"headsign"</span>: <span class="s2">"847520"</span>,
+        <span class="s2">"label"</span>: <span class="s2">"Paris - Nice"</span>,
+        <span class="s2">"links"</span>: ⊖[
+           ⊖<span class="o">{</span>
+                <span class="s2">"id"</span>: <span class="s2">"b59bdab8-3560-4cfe-8009-b0461f74c417"</span>,
+                <span class="s2">"internal"</span>: <span class="nb">true</span>,
+                <span class="s2">"rel"</span>: <span class="s2">"disruptions"</span>,
+                <span class="s2">"templated"</span>: <span class="nb">false</span>
+                <span class="s2">"type"</span>: <span class="s2">"disruption"</span>,
+            <span class="o">}</span>
+        <span class="o">]</span>,
+        <span class="s2">"name"</span>: <span class="s2">"Paris - Nice"</span>,
+        <span class="s2">"network"</span>: <span class="s2">"SNCF"</span>,
+        <span class="s2">"physical_mode"</span>: <span class="s2">"Train grande vitesse"</span>,
+        <span class="s2">"text_color"</span>: <span class="s2">""</span>,
+    <span class="o">}</span>,
+    <span class="s2">"links"</span>: ⊕[6 items],
+    <span class="s2">"route"</span>: ⊕<span class="o">{</span>9 items<span class="o">}</span>,
+    <span class="s2">"stop_date_time"</span>: ⊖<span class="o">{</span>
+        <span class="s2">"additional_informations"</span>: <span class="o">[]</span>,
+        <span class="s2">"arrival_date_time"</span>: <span class="s2">"20190605T194700"</span>,
+        <span class="s2">"base_arrival_date_time"</span>: <span class="s2">"20190605T193200"</span>,
+        <span class="s2">"base_departure_date_time"</span>: <span class="s2">"20190605T193400"</span>,
+        <span class="s2">"stop_date_time"</span>: <span class="s2">"realtime"</span>
+        <span class="s2">"departure_date_time"</span>: <span class="s2">"20190605T194900"</span>,
+        <span class="s2">"links"</span>: <span class="o">[]</span>,
+    <span class="o">}</span>
+    <span class="s2">"stop_point"</span>: ⊕<span class="o">{</span>11 items<span class="o">}</span>,
+<span class="o">}</span>
+</code></pre></div>
+<p>In the &quot;stop_date_time&quot; section of the response, the parameter &quot;stop_date_time&quot; is &quot;realtime&quot; and the fields &quot;arrival_date_time&quot;/&quot;departure_date_time&quot; take the delay into account, whereas &quot;base_arrival_date_time&quot;/&quot;base_departure_date_time&quot; show the base-schedule departure/arrival datetime.</p>
+
+<p>A list of the disruptions impacting the departures is also present at the root level of the response.<br>A link to the concerned disruption can be found in the section &quot;display_informations&quot;.</p>
+
+<div></div>
+<h3 id='stop-schedules'>Stop Schedules</h3><div class="highlight"><pre class="highlight shell tab-shell"><code><span class="c"># Request example for /stop_schedules (data_freshness=realtime by default)</span>
+http://api.navitia.io/v1/coverage/&lt;coverage&gt;/physical_modes/&lt;physical_mode&gt;/lines/&lt;line&gt;/stop_areas/&lt;stop_area&gt;/stop_schedules?from_datetime<span class="o">=</span>&lt;from_date&gt;&amp;data_freshness<span class="o">=</span>realtime
+</code></pre></div><div class="highlight"><pre class="highlight shell tab-shell"><code><span class="c"># Extract of an impacted stop_schedules object from the response /stop_schedules</span>
+
+<span class="o">{</span>
+    <span class="s2">"additional_informations"</span>: null,
+    <span class="s2">"date_times"</span>: ⊖[
+       ⊕<span class="o">{</span>5 items<span class="o">}</span>,
+       ⊖<span class="o">{</span>
+            <span class="s2">"additional_informations"</span>: <span class="o">[]</span>,
+            <span class="s2">"base_date_time"</span>: <span class="s2">"20190605T193400"</span>,
+            <span class="s2">"data_freshness"</span>: <span class="s2">"realtime"</span>,
+            <span class="s2">"date_time"</span>: <span class="s2">"20190605T194900"</span>,
+            <span class="s2">"links"</span>: ⊖[
+               ⊕<span class="o">{</span>4 items<span class="o">}</span>,
+               ⊖<span class="o">{</span>
+                    <span class="s2">"id"</span>: <span class="s2">"b59bdab8-3560-4cfe-8009-b0461f74c417"</span>,
+                    <span class="s2">"internal"</span>: <span class="nb">true</span>,
+                    <span class="s2">"rel"</span>: <span class="s2">"disruptions"</span>,
+                    <span class="s2">"templated"</span>: <span class="nb">false</span>
+                    <span class="s2">"type"</span>: <span class="s2">"disruption"</span>,
+                <span class="o">}</span>
+            <span class="o">]</span>
+        <span class="o">}</span>,
+       ⊕<span class="o">{</span>5 items<span class="o">}</span>,
+    <span class="o">]</span>,
+    <span class="s2">"display_informations"</span>: ⊕<span class="o">{</span>9 items<span class="o">}</span>,
+    <span class="s2">"first_datetime"</span>: ⊕<span class="o">{</span>5 items<span class="o">}</span>
+    <span class="s2">"last_datetime"</span>: ⊕<span class="o">{</span>5 items<span class="o">}</span>,
+    <span class="s2">"links"</span>: ⊕[4 items],
+    <span class="s2">"route"</span>: ⊕<span class="o">{</span>8 items<span class="o">}</span>,
+    <span class="s2">"stop_point"</span>: ⊕<span class="o">{</span>11 items<span class="o">}</span>,
+<span class="o">}</span>
+</code></pre></div>
+<p>In the list of &quot;date_times&quot; available in the response, the parameter &quot;data_freshness&quot; is &quot;realtime&quot; and the field &quot;date_time&quot; takes the delay into account, whereas &quot;base_date_time&quot; shows the base-schedule departure datetime.</p>
+
+<p>A list of the disruptions impacting the stop schedules is also present at the root level of the response.<br>A link to the concerned disruption can be found in the in the &quot;date_times&quot; object itself.</p>
+
+<h2 id="REDUCED_SERVICE">Reduced service</h2>
+
+<p><img src="/images/reduced_service-8131f38a.png" alt="image" /></p>
+<div class="highlight"><pre class="highlight shell tab-shell"><code><span class="c"># Extract of an impacted stop from /disruptions</span>
+<span class="o">{</span>
+    <span class="s2">"arrival_status"</span>: <span class="s2">"deleted"</span>,
+    <span class="s2">"cause"</span>: <span class="s2">""</span>,
+    <span class="s2">"departure_status"</span>: <span class="s2">"deleted"</span>,
+    <span class="s2">"stop_point"</span>: ⊕<span class="o">{</span>7 items<span class="o">}</span>,
+    <span class="s2">"stop_time_effect"</span>: <span class="s2">"deleted"</span>,
+<span class="o">}</span>
+</code></pre></div>
+<p>The effect of the disruption is <code>REDUCED_SERVICE</code>. It means that the train won&#39;t be serving one or more stations in its journey.</p>
+
+<p>In the disruption, the deleted stations can be found in the list of &quot;impacted_stops&quot; with the departure/arrival status set to &quot;deleted&quot;.<br>See the <a href="#disruption">disruption</a> objects section for its full content and description.</p>
+
+<div></div>
+<h3 id='journeys-2'>Journeys</h3>
+<p>If the stop deleted is the origin/destination of a section of the journey, Navitia will compute a different itinerary to the requested station.<br>If not (deleting intermediate stop), the journey won&#39;t be affected.<br>Either way, a link to this disruption can be found in the section &quot;display_informations&quot; like for other disruptions.</p>
+<h3 id='departures-amp-stop-schedules'>Departures &amp; Stop Schedules</h3>
+<p>At the deleted stop area, the departure time of the train with a reduced service simply won&#39;t be displayed in the list of departures/stop_schedules if &quot;data_freshness&quot; is set to &quot;realtime&quot;.</p>
+
+<p>If &quot;data_freshness&quot; is &quot;base_schedule&quot;, then the depature time is displayed.<br>In that case, a link to this disruption can be found in the section &quot;display_informations&quot; for departures, in the &quot;date_times&quot; object itself for stop_schedules.</p>
+
+<h2 id="NO_SERVICE">No service</h2>
+
+<p><img src="/images/no_service-dac53f43.png" alt="image" /></p>
+<div class="highlight"><pre class="highlight shell tab-shell"><code><span class="c"># Extract of an impacted trip from /disruptions</span>
+<span class="o">{</span>
+    <span class="s2">"application_periods"</span>: ⊖[
+       ⊖<span class="o">{</span>
+            <span class="s2">"begin"</span>: <span class="s2">"20191210T183100"</span>,
+            <span class="s2">"end"</span>: <span class="s2">"20191210T194459"</span>
+        <span class="o">}</span>
+    <span class="o">]</span>,
+    <span class="s2">"impacted_objects"</span>: ⊖[
+       ⊖<span class="o">{</span>
+            <span class="s2">"pt_object"</span>: ⊖<span class="o">{</span>
+                <span class="s2">"embedded_type"</span>: <span class="s2">"trip"</span>,
+                <span class="s2">"id"</span>: <span class="s2">"OCE:BOA017534OCESNF-20191210"</span>,
+                <span class="s2">"name"</span>: <span class="s2">"OCE:BOA017534OCESNF-20191210"</span>,
+                <span class="s2">"trip"</span>: ⊕<span class="o">{</span>2 items<span class="o">}</span>
+            <span class="o">}</span>
+        <span class="o">}</span>
+    <span class="o">]</span>,
+    <span class="s2">"severity"</span>: ⊖<span class="o">{</span>
+        <span class="s2">"effect"</span>: <span class="s2">"NO_SERVICE"</span>
+        <span class="s2">"name"</span>: <span class="s2">"trip canceled"</span>,
+    <span class="o">}</span>,
+<span class="o">}</span>
+</code></pre></div>
+<p>The effect of the disruption is <code>NO_SERVICE</code>. It means that the train won&#39;t be circulating at all.</p>
+
+<p>In the disruption, the deleted trip can be found in the &quot;impacted_objects&quot; list with the
+&quot;application_periods&quot; describing the period(s) of unavailability for the trip.<br>See the <a href="#disruption">disruption</a> objects section for its full content and description.</p>
+
+<div></div>
+<h3 id='journeys-3'>Journeys</h3>
+<p>If the deleted trip is used by a section of the <code>base_schedule</code> journey, Navitia will compute a different
+itinerary to the requested station in <code>realtime</code>, or a later one (without using that trip).<br>A link to this disruption can be found in the section &quot;display_informations&quot; like for other disruptions, on a <code>base_schedule</code> journey.</p>
+<h3 id='departures-amp-stop-schedules-2'>Departures &amp; Stop Schedules</h3>
+<p>At the deleted stop area, the departure time of the cancelled train simply won&#39;t be displayed in the list of departures/stop_schedules if &quot;data_freshness&quot; is set to &quot;realtime&quot;.</p>
+
+<p>If &quot;data_freshness&quot; is &quot;base_schedule&quot;, then the depature time is displayed.<br>In that case, a link to this disruption can be found in the section &quot;display_informations&quot; for departures, in the &quot;date_times&quot; object itself for stop_schedules.</p>
+
+<h2 id="MODIFIED_SERVICE">Modified service</h2>
+
+<p><img src="/images/modified_service-4e276e79.png" alt="image" /></p>
+<div class="highlight"><pre class="highlight shell tab-shell"><code><span class="c"># Extract of an impacted stop from /disruptions</span>
+<span class="o">{</span>
+    <span class="s2">"amended_arrival_time"</span>: <span class="s2">"185500"</span>,
+    <span class="s2">"amended_departure_time"</span>: <span class="s2">"190000"</span>,
+    <span class="s2">"arrival_status"</span>: <span class="s2">"added"</span>
+    <span class="s2">"cause"</span>: <span class="s2">"Ajout d'une desserte"</span>,
+    <span class="s2">"departure_status"</span>: <span class="s2">"added"</span>,
+    <span class="s2">"stop_point"</span>: ⊕<span class="o">{</span>7 items<span class="o">}</span>,
+    <span class="s2">"stop_time_effect"</span>: <span class="s2">"added"</span>,
+<span class="o">}</span>,
+</code></pre></div>
+<p>The effect of the disruption is <code>MODIFIED_SERVICE</code>. It means that there is one or several stop points added into the trip. This can be at any position in the trip (origin and destination included).</p>
+
+<p>In the disruption, new stop points can be found in the list of &quot;impacted_stops&quot; with the departure/arrival status set to &quot;added&quot;. The scheduled arrival/departure at the new stop point can be found in &quot;amended_arrival_time&quot;/&quot;amended_departure_time&quot;.<br>See the <a href="#disruption">disruption</a> objects section for its full content and description.</p>
+
+<div></div>
+<h3 id='journeys-4'>Journeys</h3><div class="highlight"><pre class="highlight shell tab-shell"><code><span class="c"># Request example for /journeys</span>
+http://api.navitia.io/v1/coverage/&lt;coverage&gt;/journeys?from<span class="o">=</span>&lt;origin&gt;&amp;to<span class="o">=</span>&lt;destination&gt;&amp;data_freshness<span class="o">=</span>realtime
+</code></pre></div><div class="highlight"><pre class="highlight shell tab-shell"><code><span class="c"># Extract of the public transport section from the response /journeys</span>
+
+    <span class="s2">"sections"</span>: ⊖[
+       ⊖<span class="o">{</span>
+            <span class="s2">"additional_informations"</span>: ⊕[1 item],
+            <span class="s2">"arrival_date_time"</span>: <span class="s2">"20190605T204500"</span>,
+            <span class="s2">"base_arrival_date_time"</span>: <span class="s2">"20190605T204500"</span>,
+            <span class="s2">"co2_emission"</span>: ⊕<span class="o">{</span>2 items<span class="o">}</span>,
+            <span class="s2">"data_freshness"</span>: <span class="s2">"realtime"</span>,
+            <span class="s2">"departure_date_time"</span>: <span class="s2">"20190605T160000"</span>,
+            <span class="s2">"display_informations"</span>: ⊖<span class="o">{</span>
+                <span class="s2">"code"</span>: <span class="s2">""</span>,
+                <span class="s2">"color"</span>: <span class="s2">"000000"</span>,
+                <span class="s2">"commercial_mode"</span>: <span class="s2">"TGV INOUI"</span>,
+                <span class="s2">"description"</span>: <span class="s2">""</span>
+                <span class="s2">"direction"</span>: <span class="s2">"Nice Ville (Nice)"</span>,
+                <span class="s2">"equipments"</span>: <span class="o">[]</span>,
+                <span class="s2">"headsign"</span>: <span class="s2">"847520"</span>,
+                <span class="s2">"label"</span>: <span class="s2">"Paris - Nice"</span>,
+                <span class="s2">"links"</span>: ⊖[
+                   ⊖<span class="o">{</span>
+                        <span class="s2">"id"</span>: <span class="s2">"b59bdab8-3560-4cfe-8009-b0461f74c418"</span>,
+                        <span class="s2">"internal"</span>: <span class="nb">true</span>,
+                        <span class="s2">"rel"</span>: <span class="s2">"disruptions"</span>,
+                        <span class="s2">"templated"</span>: <span class="nb">false</span>
+                        <span class="s2">"type"</span>: <span class="s2">"disruption"</span>,
+                    <span class="o">}</span>
+                <span class="o">]</span>,
+                <span class="s2">"name"</span>: <span class="s2">"Paris - Nice"</span>,
+                <span class="s2">"network"</span>: <span class="s2">"SNCF"</span>,
+                <span class="s2">"physical_mode"</span>: <span class="s2">"Train grande vitesse"</span>,
+                <span class="s2">"text_color"</span>: <span class="s2">""</span>,
+            <span class="o">}</span>,
+            <span class="s2">"duration"</span>: 28560,
+            <span class="s2">"from"</span>: ⊕<span class="o">{</span>5 items<span class="o">}</span>,
+            <span class="s2">"geojson"</span>: ⊕<span class="o">{</span>3 items<span class="o">}</span>,
+            <span class="s2">"id"</span>: <span class="s2">"section_1_0"</span>,
+            <span class="s2">"links"</span>: ⊕[6 items],
+            <span class="s2">"stop_date_times"</span>: ⊖[
+                ⊕<span class="o">{</span>7 items<span class="o">}</span>,
+                ⊖<span class="o">{</span>
+                     <span class="s2">"additional_informations"</span>: <span class="o">[]</span>,
+                     <span class="s2">"arrival_date_time"</span>: <span class="s2">"20190605T185500"</span>,
+                     <span class="s2">"departure_date_time"</span>: <span class="s2">"20190605T190000"</span>,
+                     <span class="s2">"links"</span>: <span class="o">[]</span>
+                     <span class="s2">"stop_point"</span>: ⊕<span class="o">{</span>7 items<span class="o">}</span>,
+                 <span class="o">}</span>,
+                ⊕<span class="o">{</span>7 items<span class="o">}</span>,
+            <span class="o">]</span>
+            <span class="s2">"to"</span>: ⊕<span class="o">{</span>5 items<span class="o">}</span>,
+            <span class="s2">"type"</span>: <span class="s2">"public_transport"</span>,
+        <span class="o">}</span>,
+    <span class="o">]</span>
+</code></pre></div>
+<p>The status of the journey is <code>MODIFIED_SERVICE</code>. In a public transport section of the response, &quot;arrival_date_time&quot;/&quot;departure_date_time&quot; are the arrival/departure times of an added stop point. New stop points are only used when the &quot;data_freshness&quot; parameter is set to &quot;realtime&quot;.</p>
+
+<p>A list of the disruptions impacting the journey is also present at the root level of the response.<br>A link to the concerned disruption can be found in the section &quot;display_informations&quot;.</p>
+
+<div></div>
+<h3 id='departures-amp-stop-schedules-3'>Departures &amp; Stop Schedules</h3>
+<p>At the added stop area, the departure time of the train with a modified service is displayed if &quot;data_freshness&quot; is set to &quot;realtime&quot;.<br>In that case, a link to this disruption can be found in the section &quot;display_informations&quot; for departures, in the &quot;date_times&quot; object itself for stop_schedules.</p>
+
+<p>The departure time of the train with a modified service simply won&#39;t be displayed in the list of departures/stop_schedules if &quot;data_freshness&quot; is set to &quot;base_schedule&quot;.</p>
+
+<h2 id="ADDITIONAL_SERVICE">Additional service</h2>
+
+<p><img src="/images/additional-d2cc499b.png" alt="image" /></p>
+<div class="highlight"><pre class="highlight shell tab-shell"><code><span class="c"># Extract of an impacted stop from /disruptions</span>
+<span class="o">{</span>
+    <span class="s2">"amended_arrival_time"</span>: <span class="s2">"193200"</span>,
+    <span class="s2">"amended_departure_time"</span>: <span class="s2">"193400"</span>,
+    <span class="s2">"arrival_status"</span>: <span class="s2">"added"</span>
+    <span class="s2">"cause"</span>: <span class="s2">""</span>,
+    <span class="s2">"departure_status"</span>: <span class="s2">"added"</span>,
+    <span class="s2">"is_detour"</span>: <span class="nb">false</span>,
+    <span class="s2">"stop_point"</span>: ⊕<span class="o">{</span>7 items<span class="o">}</span>,
+    <span class="s2">"stop_time_effect"</span>: <span class="s2">"added"</span>,
+<span class="o">}</span>
+</code></pre></div>
+<p>The effect of the disruption is <code>ADDITIONAL_SERVICE</code>. It means that a new trip has been scheduled.</p>
+
+<p>In the disruption, every stops served by the new train can be found in the list of &quot;impacted_stops&quot; with the departure/arrival status set to &quot;added&quot;. The scheduled arrival/departure at the new stop point can be found in &quot;amended_arrival_time&quot;/&quot;amended_departure_time&quot;.<br>See the <a href="#disruption">disruption</a> objects section for its full content and description.</p>
+
+<div></div>
+<h3 id='journeys-5'>Journeys</h3><div class="highlight"><pre class="highlight shell tab-shell"><code><span class="c"># Request example for /journeys</span>
+http://api.navitia.io/v1/coverage/&lt;coverage&gt;/journeys?from<span class="o">=</span>&lt;origin&gt;&amp;to<span class="o">=</span>&lt;destination&gt;&amp;data_freshness<span class="o">=</span>realtime
+</code></pre></div><div class="highlight"><pre class="highlight shell tab-shell"><code><span class="c"># Extract of the public transport section from the response /journeys</span>
+
+<span class="s2">"sections"</span>: ⊖[
+       ⊕<span class="o">{</span>10 items<span class="o">}</span>,
+       ⊖<span class="o">{</span>
+            <span class="s2">"additional_informations"</span>: ⊕[1 item],
+            <span class="s2">"arrival_date_time"</span>: <span class="s2">"20190710T204500"</span>,
+            <span class="s2">"co2_emission"</span>: ⊕<span class="o">{</span>2 items<span class="o">}</span>,
+            <span class="s2">"data_freshness"</span>: <span class="s2">"realtime"</span>,
+            <span class="s2">"departure_date_time"</span>: <span class="s2">"20190710T160000"</span>,
+            <span class="s2">"display_informations"</span>: ⊖<span class="o">{</span>
+                <span class="s2">"code"</span>: <span class="s2">""</span>,
+                <span class="s2">"color"</span>: <span class="s2">"000000"</span>,
+                <span class="s2">"commercial_mode"</span>: <span class="s2">"additional service"</span>,
+                <span class="s2">"description"</span>: <span class="s2">""</span>
+                <span class="s2">"direction"</span>: <span class="s2">"Nice Ville (Nice)"</span>,
+                <span class="s2">"equipments"</span>: <span class="o">[]</span>,
+                <span class="s2">"headsign"</span>: <span class="s2">"20470"</span>,
+                <span class="s2">"label"</span>: <span class="s2">"Paris - Nice"</span>,
+                <span class="s2">"links"</span>: ⊖[
+                   ⊖<span class="o">{</span>
+                        <span class="s2">"id"</span>: <span class="s2">"1ec4266c-e7f7-4212-a2df-f61c2b56ce91"</span>,
+                        <span class="s2">"internal"</span>: <span class="nb">true</span>,
+                        <span class="s2">"rel"</span>: <span class="s2">"disruptions"</span>,
+                        <span class="s2">"templated"</span>: <span class="nb">false</span>
+                        <span class="s2">"type"</span>: <span class="s2">"disruption"</span>,
+                    <span class="o">}</span>
+                <span class="o">]</span>,
+                <span class="s2">"name"</span>: <span class="s2">"Paris - Nice"</span>,
+                <span class="s2">"network"</span>: <span class="s2">"additional service"</span>,
+                <span class="s2">"physical_mode"</span>: <span class="s2">"Train grande vitesse"</span>,
+                <span class="s2">"text_color"</span>: <span class="s2">"FFFFFF"</span>,
+            <span class="o">}</span>,
+            <span class="s2">"duration"</span>: 28560,
+            <span class="s2">"from"</span>: ⊕<span class="o">{</span>5 items<span class="o">}</span>,
+            <span class="s2">"geojson"</span>: ⊕<span class="o">{</span>3 items<span class="o">}</span>,
+            <span class="s2">"id"</span>: <span class="s2">"section_6_0"</span>,
+            <span class="s2">"links"</span>: ⊕[6 items],
+            <span class="s2">"stop_date_times"</span>: ⊖[
+               ⊖<span class="o">{</span>
+                    <span class="s2">"additional_informations"</span>: <span class="o">[]</span>,
+                    <span class="s2">"arrival_date_time"</span>: <span class="s2">"20190710T160000"</span>,
+                    <span class="s2">"departure_date_time"</span>: <span class="s2">"20190710T160000"</span>,
+                    <span class="s2">"links"</span>: <span class="o">[]</span>
+                    <span class="s2">"stop_point"</span>: ⊕<span class="o">{</span>7 items<span class="o">}</span>,
+                <span class="o">}</span>,
+               ⊕<span class="o">{</span>5 items<span class="o">}</span>,
+               ⊕<span class="o">{</span>5 items<span class="o">}</span>,
+               ⊕<span class="o">{</span>5 items<span class="o">}</span>
+            <span class="o">]</span>
+            <span class="s2">"to"</span>: ⊕<span class="o">{</span>5 items<span class="o">}</span>,
+            <span class="s2">"type"</span>: <span class="s2">"public_transport"</span>,
+        <span class="o">}</span>,
+       ⊕<span class="o">{</span>10 items<span class="o">}</span>
+    <span class="o">]</span>
+</code></pre></div>
+<p>The status of the journey is <code>MODIFIED_SERVICE</code>. This new journey can only be displayed if &quot;data_freshness&quot; is set to &quot;realtime&quot;.<br>A list of disruptions impacting the journey is also present at the root level of the response.<br>A link to the concerned disruption can be found in the section &quot;display_informations&quot;.</p>
+
+<div></div>
+<h3 id='departures-amp-stop-schedules-4'>Departures &amp; Stop Schedules</h3>
+<p>At one of the added stop area from the additional trip, the departure time of the added train is displayed if &quot;data_freshness&quot; is set to &quot;realtime&quot;.<br>In that case, a link to this disruption can be found in the section &quot;display_informations&quot; for departures, in the &quot;date_times&quot; object itself for stop_schedules.</p>
+
+<p>The departure time of the train with an additional service simply won&#39;t be displayed in the list of departures/stop_schedules if &quot;data_freshness&quot; is set to &quot;base_schedule&quot;.</p>
+
+<h2 id="UNKNOWN_EFFECT">Unknown effect aka "Back to normal"</h2>
+<div class="highlight"><pre class="highlight shell tab-shell"><code><span class="c"># Extract of an impacted stop from /disruptions</span>
+<span class="o">{</span>
+    <span class="s2">"amended_arrival_time"</span>: <span class="s2">"193200"</span>,
+    <span class="s2">"amended_departure_time"</span>: <span class="s2">"193400"</span>,
+    <span class="s2">"arrival_status"</span>: <span class="s2">"unchanged"</span>
+    <span class="s2">"base_arrival_time"</span>: <span class="s2">"193200"</span>,
+    <span class="s2">"base_departure_time"</span>: <span class="s2">"193400"</span>,
+    <span class="s2">"cause"</span>: <span class="s2">""</span>,
+    <span class="s2">"departure_status"</span>: <span class="s2">"unchanged"</span>,
+    <span class="s2">"is_detour"</span>: <span class="nb">false</span>,
+    <span class="s2">"stop_point"</span>: ⊕<span class="o">{</span>7 items<span class="o">}</span>,
+    <span class="s2">"stop_time_effect"</span>: <span class="s2">"unchanged"</span>,
+<span class="o">}</span>,
+</code></pre></div>
+<p>The effect of the disruption is <code>UNKNOWN_EFFECT</code>. It means that the disruption affecting the journey is no longer effective, and the trip is back to its theoritical schedule.<br>In the list of &quot;impacted_stops&quot; in the disruption, the &quot;arrival_status&quot;/&quot;departure_status&quot; is set to &quot;unchanged&quot;.<br>See the <a href="#disruption">disruption</a> objects section for its full content and description.</p>
+
+<div></div>
+<h3 id='journeys-6'>Journeys</h3>
+<p>When requesting a journey that was previously disrupted and is now back to normal, the journey response will be the same with the parameter &quot;data_freshness&quot; set to &quot;realtime&quot; or to &quot;base_schedule&quot;.<br>In this case, no disruption is present in the response.</p>
+
+<div></div>
+<h3 id='departures-2'>Departures</h3><div class="highlight"><pre class="highlight shell tab-shell"><code><span class="c"># Request example for /departures (data_freshness=realtime by default)</span>
+http://api.navitia.io/v1/coverage/&lt;coverage&gt;/physical_modes/&lt;physical_mode&gt;/stop_areas/&lt;stop_area&gt;/departures?from_datetime<span class="o">=</span>&lt;from_date&gt;&amp;data_freshness<span class="o">=</span>realtime
+</code></pre></div><div class="highlight"><pre class="highlight shell tab-shell"><code><span class="c"># Extract of an impacted departure object from the response /departures</span>
+
+<span class="o">{</span>
+    <span class="s2">"display_informations"</span>: ⊖<span class="o">{</span>
+        <span class="s2">"code"</span>: <span class="s2">""</span>,
+        <span class="s2">"color"</span>: <span class="s2">"000000"</span>,
+        <span class="s2">"commercial_mode"</span>: <span class="s2">"TGV INOUI"</span>,
+        <span class="s2">"description"</span>: <span class="s2">""</span>
+        <span class="s2">"direction"</span>: <span class="s2">"Nice Ville (Nice)"</span>,
+        <span class="s2">"equipments"</span>: <span class="o">[]</span>,
+        <span class="s2">"headsign"</span>: <span class="s2">"847520"</span>,
+        <span class="s2">"label"</span>: <span class="s2">"Paris - Nice"</span>,
+        <span class="s2">"links"</span>: <span class="o">[]</span>,
+        <span class="s2">"name"</span>: <span class="s2">"Paris - Nice"</span>,
+        <span class="s2">"network"</span>: <span class="s2">"SNCF"</span>,
+        <span class="s2">"physical_mode"</span>: <span class="s2">"Train grande vitesse"</span>,
+        <span class="s2">"text_color"</span>: <span class="s2">""</span>,
+    <span class="o">}</span>,
+    <span class="s2">"links"</span>: ⊕[6 items],
+    <span class="s2">"route"</span>: ⊕<span class="o">{</span>9 items<span class="o">}</span>,
+    <span class="s2">"stop_date_time"</span>: ⊖<span class="o">{</span>
+        <span class="s2">"additional_informations"</span>: <span class="o">[]</span>,
+        <span class="s2">"arrival_date_time"</span>: <span class="s2">"20190605T193200"</span>,
+        <span class="s2">"base_arrival_date_time"</span>: <span class="s2">"20190605T193200"</span>,
+        <span class="s2">"base_departure_date_time"</span>: <span class="s2">"20190605T193400"</span>,
+        <span class="s2">"stop_date_time"</span>: <span class="s2">"realtime"</span>
+        <span class="s2">"departure_date_time"</span>: <span class="s2">"20190605T193400"</span>,
+        <span class="s2">"links"</span>: <span class="o">[]</span>,
+    <span class="o">}</span>
+    <span class="s2">"stop_point"</span>: ⊕<span class="o">{</span>11 items<span class="o">}</span>,
+<span class="o">}</span>
+</code></pre></div>
+<p>In the &quot;stop_date_time&quot; section of the response, the field &quot;stop_date_time&quot; is &quot;realtime&quot; and the fields &quot;arrival_date_time&quot;/&quot;departure_date_time&quot; are equal to the fields &quot;base_arrival_date_time&quot;/&quot;base_departure_date_time&quot;.</p>
+
+<p>No disruption is present at the root level of the response and so, in the section &quot;display_informations&quot;, there&#39;s no link to any disruption.</p>
+
+<div></div>
+<h3 id='stop-schedules-2'>Stop Schedules</h3><div class="highlight"><pre class="highlight shell tab-shell"><code><span class="c"># Request example for /stop_schedules (data_freshness=realtime by default)</span>
+http://api.navitia.io/v1/coverage/&lt;coverage&gt;/physical_modes/&lt;physical_mode&gt;/lines/&lt;line&gt;/stop_areas/&lt;stop_area&gt;/stop_schedules?from_datetime<span class="o">=</span>&lt;from_date&gt;&amp;data_freshness<span class="o">=</span>realtime
+</code></pre></div><div class="highlight"><pre class="highlight shell tab-shell"><code><span class="c"># Extract of an impacted stop_schedules object from the response /stop_schedules</span>
+
+<span class="o">{</span>
+    <span class="s2">"additional_informations"</span>: null,
+    <span class="s2">"date_times"</span>: ⊖[
+       ⊕<span class="o">{</span>5 items<span class="o">}</span>,
+       ⊖<span class="o">{</span>
+            <span class="s2">"additional_informations"</span>: <span class="o">[]</span>,
+            <span class="s2">"base_date_time"</span>: <span class="s2">"20190605T193400"</span>,
+            <span class="s2">"data_freshness"</span>: <span class="s2">"realtime"</span>,
+            <span class="s2">"date_time"</span>: <span class="s2">"20190605T193400"</span>,
+            <span class="s2">"links"</span>: <span class="o">[]</span>,
+        <span class="o">}</span>,
+       ⊕<span class="o">{</span>5 items<span class="o">}</span>,
+    <span class="o">]</span>,
+    <span class="s2">"display_informations"</span>: ⊕<span class="o">{</span>9 items<span class="o">}</span>,
+    <span class="s2">"first_datetime"</span>: ⊕<span class="o">{</span>5 items<span class="o">}</span>
+    <span class="s2">"last_datetime"</span>: ⊕<span class="o">{</span>5 items<span class="o">}</span>,
+    <span class="s2">"links"</span>: ⊕[4 items],
+    <span class="s2">"route"</span>: ⊕<span class="o">{</span>8 items<span class="o">}</span>,
+    <span class="s2">"stop_point"</span>: ⊕<span class="o">{</span>11 items<span class="o">}</span>,
+<span class="o">}</span>
+</code></pre></div>
+<p>In the list of &quot;date_times&quot; available in the response, the field &quot;data_freshness&quot; is &quot;realtime&quot; and the field &quot;date_time&quot; is equal to the field &quot;base_date_time&quot;.</p>
+
+<p>No disruption is present at the root level of the response and so, in the sections &quot;date_times&quot; and &quot;display_informations&quot;, there&#39;s no link to any disruption.</p>
+
+<div></div>
+<h3 id='terminus-schedules'>Terminus Schedules</h3><div class="highlight"><pre class="highlight shell tab-shell"><code><span class="c"># Request example for /terminus_schedules (data_freshness=base_schedule by default)</span>
+http://api.navitia.io/v1/coverage/&lt;coverage&gt;/physical_modes/&lt;physical_mode&gt;/lines/&lt;line&gt;/stop_areas/&lt;stop_area&gt;/terminus_schedules?from_datetime<span class="o">=</span>&lt;from_date&gt;&amp;data_freshness<span class="o">=</span>realtime
+</code></pre></div><div class="highlight"><pre class="highlight shell tab-shell"><code><span class="c"># Extract of an impacted terminus_schedules object from the response /terminus_schedules</span>
+Same elements as <span class="k">in </span>stop_scedule object.
+</code></pre></div>
+<p>In the list of &quot;date_times&quot; available in the response, the field &quot;data_freshness&quot; is &quot;realtime&quot; and the field &quot;date_time&quot; is equal to the field &quot;base_date_time&quot;.</p>
+
+<p>No disruption is present at the root level of the response and so, in the sections &quot;date_times&quot; and &quot;display_informations&quot;, there&#39;s no link to any disruption.</p>

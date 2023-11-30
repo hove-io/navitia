@@ -1,0 +1,43 @@
+<h1 id='authentication'>Authentication</h1>
+<blockquote>
+<p>4 ways to request Navitia</p>
+</blockquote>
+<div class="highlight"><pre class="highlight shell tab-shell"><code>
+<span class="c"># using "headers"</span>
+<span class="nv">$ </span>curl <span class="s1">'https://api.navitia.io/v1/coverage'</span> <span class="nt">-H</span> <span class="s1">'Authorization: 3b036afe-0110-4202-b9ed-99718476c2e0'</span>
+
+<span class="c"># using "users": don't forget ":" at the end of line!</span>
+<span class="nv">$ </span>curl https://api.navitia.io/v1/coverage <span class="nt">-u</span> 3b036afe-0110-4202-b9ed-99718476c2e0:
+
+<span class="c"># using "straight URL"</span>
+<span class="nv">$ </span>curl https://3b036afe-0110-4202-b9ed-99718476c2e0@api.navitia.io/v1/coverage
+
+</code></pre></div>
+<p>Authentication is required to use <strong>navitia.io</strong>. When you register we will give you
+an authentication key that must accompany each API call you make.</p>
+
+<aside class="notice">
+Your key will be ready to work at most 5 minutes after its creation.
+</aside>
+
+<p><strong>Navitia.io</strong> uses <a href="http://tools.ietf.org/html/rfc2617#section-2">Basic HTTP authentication</a>
+for authentication, where the username is the key, and password remains empty.</p>
+
+<p>For example, in a <a href="https://en.wikipedia.org/wiki/CURL">Curl</a> way, you can request either (using the fake sandbox token):</p>
+
+<p><code>curl &#39;https://api.navitia.io/v1/coverage&#39; -H &#39;Authorization: 3b036afe-0110-4202-b9ed-99718476c2e0&#39;</code></p>
+
+<p>or</p>
+
+<p><code>curl https://api.navitia.io/v1/coverage -u 3b036afe-0110-4202-b9ed-99718476c2e0:</code></p>
+
+<p>(don&#39;t forget <code>:</code> after the key)</p>
+
+<p>or</p>
+
+<p><code>curl https://3b036afe-0110-4202-b9ed-99718476c2e0@api.navitia.io/v1/coverage</code></p>
+
+<aside class="notice">
+The token used within this documentation has only access to the "sandbox" coverage.</br>
+The private token obtained on https://navitia.io has access to other coverages, but not to "sandbox".
+</aside>
