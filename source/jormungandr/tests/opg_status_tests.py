@@ -33,14 +33,41 @@ from __future__ import absolute_import, print_function, unicode_literals, divisi
 
 from .tests_mechanism import AbstractTestFixture
 from .journey_common_tests import *
+from copy import deepcopy
 
 
 OLYMPIC_SITES = {
     "poi:BCY": {
         "name": "Site Olympique JO2024: Arena Bercy (Paris)",
-        "departure_scenario": "scenario a",
-        "arrival_scenario": "scenario a",
-        "strict": True,
+        "departure_scenario": [
+            {
+                "event": "100 m haies",
+                "from_datetime": "20230714T100000",
+                "to_datetime": "20230714T120000",
+                "scenario": "scenario a",
+            },
+            {
+                "event": "400 m haies",
+                "from_datetime": "20230714T120000",
+                "to_datetime": "20230714T160000",
+                "scenario": "scenario b",
+            },
+        ],
+        "arrival_scenario": [
+            {
+                "event": "100 m haies",
+                "from_datetime": "20230714T100000",
+                "to_datetime": "20230714T120000",
+                "scenario": "scenario a",
+            },
+            {
+                "event": "400 m haies",
+                "from_datetime": "20230714T120000",
+                "to_datetime": "20230714T160000",
+                "scenario": "scenario b",
+            },
+        ],
+        "strict": False,
         "scenarios": {
             "scenario a": {
                 "stop_points": {
@@ -86,30 +113,7 @@ OLYMPIC_SITES = {
                 "addtionnal_parameters": {"max_walking_duration_to_pt": 13000},
             },
         },
-    },
-    "poi:BCD": {
-        "name": "Bercy Arena (Paris)",
-        "departure_scenario": "default",
-        "arrival_scenario": "default",
-        "strict": True,
-        "scenarios": {
-            "default": {
-                "stop_points": {
-                    "stop_point:IDFM:463685": {
-                        "name": "Bercy - Arena (Paris)",
-                        "attractivity": 1,
-                        "virtual_fallback": 10,
-                    },
-                    "stop_point:IDFM:463686": {
-                        "name": "Pont de Tolbiac (Paris)",
-                        "attractivity": 3,
-                        "virtual_fallback": 150,
-                    },
-                },
-                "additional_parameters": {"max_walking_duration_to_pt": 13000},
-            }
-        },
-    },
+    }
 }
 
 
@@ -117,20 +121,26 @@ OLYMPIC_SITES = {
 class TestOpgStatus(AbstractTestFixture):
     def test_with_olympic_sites(self):
         instance = i_manager.instances["main_routing_test"]
-        instance.olympic_site_params_manager.olympic_site_params = OLYMPIC_SITES
+
+        instance.olympic_site_params_manager.olympic_site_params = deepcopy(OLYMPIC_SITES)
+        instance.olympic_site_params_manager.str_datetime_time_stamp(
+            instance.olympic_site_params_manager.olympic_site_params
+        )
+
         response = self.query("/v1/coverage/main_routing_test/opg_status")
         assert isinstance(response, dict)
-        assert len(response) == 2
-        assert "poi:BCD" in response
+        assert len(response) == 1
         assert "poi:BCY" in response
 
     def test_coord_valid(self):
         instance = i_manager.instances["main_routing_test"]
-        instance.olympic_site_params_manager.olympic_site_params = OLYMPIC_SITES
+        instance.olympic_site_params_manager.olympic_site_params = deepcopy(OLYMPIC_SITES)
+        instance.olympic_site_params_manager.str_datetime_time_stamp(
+            instance.olympic_site_params_manager.olympic_site_params
+        )
         response, status_code = self.query_no_assert("/v1/coverage/0.000001;0.000898311281954/opg_status")
         assert isinstance(response, dict)
-        assert len(response) == 2
-        assert "poi:BCD" in response
+        assert len(response) == 1
         assert "poi:BCY" in response
 
     def test_without_olympic_sites(self):
@@ -148,7 +158,10 @@ class TestOpgStatus(AbstractTestFixture):
 
     def test_coord_invalid(self):
         instance = i_manager.instances["main_routing_test"]
-        instance.olympic_site_params_manager.olympic_site_params = OLYMPIC_SITES
+        instance.olympic_site_params_manager.olympic_site_params = deepcopy(OLYMPIC_SITES)
+        instance.olympic_site_params_manager.str_datetime_time_stamp(
+            instance.olympic_site_params_manager.olympic_site_params
+        )
         response, status_code = self.query_no_assert("/v1/coverage/10.0;10/opg_status")
         assert isinstance(response, dict)
         assert status_code == 404

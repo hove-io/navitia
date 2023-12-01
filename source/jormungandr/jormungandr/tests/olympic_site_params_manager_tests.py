@@ -30,43 +30,98 @@
 
 from __future__ import absolute_import, unicode_literals
 
+import tempfile
 import navitiacommon.type_pb2 as type_pb2
 from jormungandr.olympic_site_params_manager import OlympicSiteParamsManager
 from jormungandr.street_network.tests.streetnetwork_test_utils import make_pt_object
 from jormungandr.instance import Instance
+from copy import deepcopy
 
 default_olympic_site_params = {
     "poi:BCD": {
-        "departure_scenario": "default",
-        "arrival_scenario": "default",
+        "departure_scenario": [
+            {
+                "event": "100 m haies",
+                "from_datetime": "20230714T100000",
+                "to_datetime": "20230714T120000",
+                "scenario": "scenario a",
+            },
+            {
+                "event": "400 m haies",
+                "from_datetime": "20230714T120000",
+                "to_datetime": "20230714T160000",
+                "scenario": "scenario b",
+            },
+        ],
+        "arrival_scenario": [
+            {
+                "event": "100 m haies",
+                "from_datetime": "20230715T100000",
+                "to_datetime": "20230715T120000",
+                "scenario": "scenario a",
+            },
+            {
+                "event": "400 m haies",
+                "from_datetime": "20230715T120000",
+                "to_datetime": "20230715T160000",
+                "scenario": "scenario b",
+            },
+        ],
         "strict": True,
         "scenarios": {
-            "default": {
+            "scenario a": {
                 "stop_points": {
                     "stop_point:463685": {"attractivity": 1, "virtual_fallback": 10},
                     "stop_point:463686": {"attractivity": 3, "virtual_fallback": 150},
                 },
                 "additional_parameters": {"max_walking_duration_to_pt": 13000},
-            }
+            },
+            "scenario b": {
+                "stop_points": {
+                    "stop_point:463685": {"attractivity": 1, "virtual_fallback": 15},
+                    "stop_point:463686": {"attractivity": 3, "virtual_fallback": 130},
+                },
+                "additional_parameters": {"max_walking_duration_to_pt": 12000},
+            },
         },
     },
     "poi:EFG": {
-        "departure_scenario": "departure_scenario",
-        "arrival_scenario": "arrival_scenario",
-        "scenarios": {
-            "default": {
-                "stop_points": {
-                    "stop_point:463685": {"attractivity": 1, "virtual_fallback": 10},
-                    "stop_point:463686": {"attractivity": 3, "virtual_fallback": 150},
-                }
+        "departure_scenario": [
+            {
+                "event": "100 m haies",
+                "from_datetime": "20230714T100000",
+                "to_datetime": "20230714T120000",
+                "scenario": "scenario a",
             },
-            "departure_scenario": {
+            {
+                "event": "400 m haies",
+                "from_datetime": "20230714T120000",
+                "to_datetime": "20230714T160000",
+                "scenario": "scenario b",
+            },
+        ],
+        "arrival_scenario": [
+            {
+                "event": "100 m haies",
+                "from_datetime": "20230713T100000",
+                "to_datetime": "20230713T120000",
+                "scenario": "scenario a",
+            },
+            {
+                "event": "400 m haies",
+                "from_datetime": "20230713T120000",
+                "to_datetime": "20230713T160000",
+                "scenario": "scenario b",
+            },
+        ],
+        "scenarios": {
+            "scenario a": {
                 "stop_points": {
                     "stop_point:463685": {"attractivity": 11, "virtual_fallback": 100},
                     "stop_point:463686": {"attractivity": 30, "virtual_fallback": 15},
                 }
             },
-            "arrival_scenario": {
+            "scenario b": {
                 "stop_points": {
                     "stop_point:463685": {"attractivity": 12, "virtual_fallback": 99},
                     "stop_point:463686": {"attractivity": 29, "virtual_fallback": 50},
@@ -112,8 +167,11 @@ class FakeS3Object:
 
 def test_get_departure_olympic_site_params():
     osp = OlympicSiteParamsManager("idfm")
-    osp.olympic_site_params = default_olympic_site_params
-    default_scenario = osp.get_dict_scenario("poi:BCD", "departure_scenario")
+    osp.olympic_site_params = deepcopy(default_olympic_site_params)
+    osp.str_datetime_time_stamp(osp.olympic_site_params)
+    default_scenario = osp.get_dict_scenario(
+        "poi:BCD", "departure_scenario", datetime=osp.get_timestamp('20230714T110000')
+    )
     attractivity_virtual_fallback = default_scenario["stop_point:463685"]
     assert attractivity_virtual_fallback.attractivity == 1
     assert attractivity_virtual_fallback.virtual_duration == 10
@@ -122,7 +180,9 @@ def test_get_departure_olympic_site_params():
     assert attractivity_virtual_fallback.attractivity == 3
     assert attractivity_virtual_fallback.virtual_duration == 150
 
-    default_scenario = osp.get_dict_scenario("poi:EFG", "departure_scenario")
+    default_scenario = osp.get_dict_scenario(
+        "poi:EFG", "departure_scenario", datetime=osp.get_timestamp('20230714T110000')
+    )
     attractivity_virtual_fallback = default_scenario["stop_point:463685"]
     assert attractivity_virtual_fallback.attractivity == 11
     assert attractivity_virtual_fallback.virtual_duration == 100
@@ -134,8 +194,11 @@ def test_get_departure_olympic_site_params():
 
 def test_get_arrival_olympic_site_params():
     osp = OlympicSiteParamsManager("idfm")
-    osp.olympic_site_params = default_olympic_site_params
-    default_scenario = osp.get_dict_scenario("poi:BCD", "arrival_scenario")
+    osp.olympic_site_params = deepcopy(default_olympic_site_params)
+    osp.str_datetime_time_stamp(osp.olympic_site_params)
+    default_scenario = osp.get_dict_scenario(
+        "poi:BCD", "arrival_scenario", datetime=osp.get_timestamp('20230715T110000')
+    )
     attractivity_virtual_fallback = default_scenario["stop_point:463685"]
     assert attractivity_virtual_fallback.attractivity == 1
     assert attractivity_virtual_fallback.virtual_duration == 10
@@ -144,7 +207,9 @@ def test_get_arrival_olympic_site_params():
     assert attractivity_virtual_fallback.attractivity == 3
     assert attractivity_virtual_fallback.virtual_duration == 150
 
-    default_scenario = osp.get_dict_scenario("poi:EFG", "arrival_scenario")
+    default_scenario = osp.get_dict_scenario(
+        "poi:EFG", "arrival_scenario", datetime=osp.get_timestamp('20230713T130000')
+    )
     attractivity_virtual_fallback = default_scenario["stop_point:463685"]
     assert attractivity_virtual_fallback.attractivity == 12
     assert attractivity_virtual_fallback.virtual_duration == 99
@@ -156,7 +221,8 @@ def test_get_arrival_olympic_site_params():
 
 def test_build_with_request_params_and_without_criteria_without_keep_olympics_journeys():
     osp = OlympicSiteParamsManager("idfm")
-    osp.olympic_site_params = default_olympic_site_params
+    osp.olympic_site_params = deepcopy(default_olympic_site_params)
+    osp.str_datetime_time_stamp(osp.olympic_site_params)
     api_request = dict()
     api_request["_olympics_sites_attractivities[]"] = [('stop_point:24113', 3), ('stop_point:24131', 30)]
     api_request["_olympics_sites_virtual_fallback[]"] = [('stop_point:24113', 800), ('stop_point:24131', 820)]
@@ -303,7 +369,8 @@ def test_build_without_request_params():
 
 def test_build_origin_poi_jo():
     osp = OlympicSiteParamsManager("idfm")
-    osp.olympic_site_params = default_olympic_site_params
+    osp.olympic_site_params = deepcopy(default_olympic_site_params)
+    osp.str_datetime_time_stamp(osp.olympic_site_params)
     api_request = dict()
     pt_origin_detail = make_pt_object(type_pb2.POI, 2, 3, "poi:BCD")
     property = pt_origin_detail.poi.properties.add()
@@ -315,6 +382,7 @@ def test_build_origin_poi_jo():
     assert not api_request.get("criteria")
     assert not api_request.get("max_walking_duration_to_pt")
     assert "_keep_olympics_journeys" not in api_request
+    api_request["datetime"] = osp.get_timestamp('20230714T110000')
     osp.build(pt_origin_detail, pt_destination_detail, api_request, instance)
     assert api_request["_keep_olympics_journeys"]
     assert api_request["criteria"] == "departure_stop_attractivity"
@@ -333,7 +401,8 @@ def test_build_origin_poi_jo():
 
 def test_build_arrival_poi_jo():
     osp = OlympicSiteParamsManager("idfm")
-    osp.olympic_site_params = default_olympic_site_params
+    osp.olympic_site_params = deepcopy(default_olympic_site_params)
+    osp.str_datetime_time_stamp(osp.olympic_site_params)
     api_request = dict()
     pt_origin_detail = make_pt_object(type_pb2.ADDRESS, 1, 2, "SA:BCD")
 
@@ -346,6 +415,7 @@ def test_build_arrival_poi_jo():
     assert not api_request.get("criteria")
     assert not api_request.get("max_walking_duration_to_pt")
     assert "_keep_olympics_journeys" not in api_request
+    api_request["datetime"] = osp.get_timestamp('20230715T110000')
     osp.build(pt_origin_detail, pt_destination_detail, api_request, instance)
     assert api_request["_keep_olympics_journeys"]
     assert api_request.get("max_walking_duration_to_pt") == 13000
@@ -364,7 +434,8 @@ def test_build_arrival_poi_jo():
 
 def test_build_departure_and_arrival_poi_jo():
     osp = OlympicSiteParamsManager("idfm")
-    osp.olympic_site_params = default_olympic_site_params
+    osp.olympic_site_params = deepcopy(default_olympic_site_params)
+    osp.str_datetime_time_stamp(osp.olympic_site_params)
     api_request = dict()
 
     pt_origin_detail = make_pt_object(type_pb2.POI, 1, 2, "poi:EFG")
@@ -382,6 +453,7 @@ def test_build_departure_and_arrival_poi_jo():
     assert not api_request.get("criteria")
     assert not api_request.get("max_walking_duration_to_pt")
     assert "_keep_olympics_journeys" not in api_request
+    api_request["datetime"] = osp.get_timestamp('20230715T110000')
     osp.build(pt_origin_detail, pt_destination_detail, api_request, instance)
     assert api_request["_keep_olympics_journeys"]
     assert api_request["criteria"] == "arrival_stop_attractivity"
@@ -400,7 +472,7 @@ def test_build_departure_and_arrival_poi_jo():
 
 def test_get_dict_scenario_empty_scenario():
     osp = OlympicSiteParamsManager("idfm")
-    res = osp.get_dict_scenario(None, {})
+    res = osp.get_dict_scenario(None, {}, datetime=osp.get_timestamp('20230715T110000'))
     assert not res
 
 
@@ -413,14 +485,14 @@ def test_build_olympic_site_params_empty_scenario():
 def test_get_dict_additional_parameters_invalid_poi():
     osp = OlympicSiteParamsManager("idfm")
     osp.olympic_site_params = default_olympic_site_params
-    res = osp.get_dict_additional_parameters("poi:id", "default")
+    res = osp.get_dict_additional_parameters("poi:id", "default", datetime=osp.get_timestamp('20230715T110000'))
     assert not res
 
 
 def test_get_dict_additional_parameters_invalid_scenario():
     osp = OlympicSiteParamsManager("idfm")
     osp.olympic_site_params = default_olympic_site_params
-    res = osp.get_dict_additional_parameters("poi:BCD", "abc")
+    res = osp.get_dict_additional_parameters("poi:BCD", "abc", datetime=osp.get_timestamp('20230715T110000'))
     assert not res
 
 
@@ -452,6 +524,9 @@ def test_fill_olympic_site_params_from_s3_invalid_access():
     from jormungandr import app
 
     osp = OlympicSiteParamsManager("idfm")
-    app.config["OLYMPIC_SITE_PARAMS_BUCKET"] = {"name": "test"}
+    app.config["OLYMPIC_SITE_PARAMS_BUCKET"] = {
+        "name": "test",
+        "args": {"connect_timeout": 0.01, "read_timeout": 0.01, "retries": {'max_attempts': 0}},
+    }
     osp.fill_olympic_site_params_from_s3()
     assert not osp.olympic_site_params
