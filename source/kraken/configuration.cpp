@@ -80,6 +80,7 @@ po::options_description get_options_description(const boost::optional<std::strin
         ("GENERAL.log_format", po::value<std::string>()->default_value("[%D{%y-%m-%d %H:%M:%S,%q}] [%p] [%x] - %m %b:%L  %n"), "log format")
 
         ("GENERAL.enable_request_deadline", po::value<bool>()->default_value(true), "enable deadline of request")
+        ("GENERAL.enable_aggressive_memory_decommit", po::value<bool>()->default_value(false), "enable tamalloc aggresive decommit")
         ("GENERAL.metrics_binding", po::value<std::string>(), "IP:PORT to serving metrics in http")
         ("GENERAL.core_file_size_limit", po::value<int>()->default_value(0), "ulimit that define the maximum size of a core file")
 
@@ -309,6 +310,10 @@ int Configuration::slow_request_duration() const {
 bool Configuration::enable_request_deadline() const {
     return vm["GENERAL.enable_request_deadline"].as<bool>();
 }
+
+bool Configuration::enable_aggressive_memory_decommit() const {
+    return vm["GENERAL.enable_aggressive_memory_decommit"].as<bool>();
+};
 
 size_t Configuration::raptor_cache_size() const {
     if (!vm.count("GENERAL.raptor_cache_size")) {
