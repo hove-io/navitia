@@ -262,9 +262,13 @@ class OlympicSiteParamsManager:
 
         # Add forbidden_uri
         if api_request.get("forbidden_uris[]"):
-            api_request["forbidden_uris[]"] += self.instance.olympics_forbidden_uris.pt_object_olympics_forbidden_uris
+            api_request[
+                "forbidden_uris[]"
+            ] += self.instance.olympics_forbidden_uris.pt_object_olympics_forbidden_uris
         else:
-            api_request["forbidden_uris[]"] = self.instance.olympics_forbidden_uris.pt_object_olympics_forbidden_uris
+            api_request[
+                "forbidden_uris[]"
+            ] = self.instance.olympics_forbidden_uris.pt_object_olympics_forbidden_uris
 
         # Add criteria
         if api_request.get("criteria") in ["departure_stop_attractivity", "arrival_stop_attractivity"]:

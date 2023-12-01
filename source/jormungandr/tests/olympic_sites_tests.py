@@ -324,6 +324,7 @@ def get_olympic_site_params_manager(instance):
     osp.str_datetime_time_stamp(osp.olympic_site_params)
     return osp
 
+
 @dataset({'main_routing_test': MOCKED_INSTANCE_CONF}, global_config={'activate_bragi': True})
 class TestOlympicSites(AbstractTestFixture):
     def test_address_with_within_to_address_journeys(self):
@@ -343,9 +344,7 @@ class TestOlympicSites(AbstractTestFixture):
             'lon': r_lon,
             'lat': r_lat,
         }
-        instance = i_manager.instances[
-            "main_routing_test"
-        ]
+        instance = i_manager.instances["main_routing_test"]
         instance.olympic_site_params_manager = get_olympic_site_params_manager(instance)
         to_place = "{}/multi-reverse?{}".format(BRAGI_URL, urlencode(params, doseq=True))
         with requests_mock.Mocker() as m:
@@ -383,9 +382,7 @@ class TestOlympicSites(AbstractTestFixture):
             'lat': r_lat,
         }
         to_place = "{}/multi-reverse?{}".format(BRAGI_URL, urlencode(params, doseq=True))
-        instance = i_manager.instances[
-            "main_routing_test"
-        ]
+        instance = i_manager.instances["main_routing_test"]
         instance.olympic_site_params_manager = get_olympic_site_params_manager(instance)
         with requests_mock.Mocker() as m:
             m.get(from_place, json=FROM_ADDRESS_WITH_INVALID_WITHIN)
@@ -425,9 +422,7 @@ class TestOlympicSites(AbstractTestFixture):
             'lat': r_lat,
         }
         to_place = "{}/multi-reverse?{}".format(BRAGI_URL, urlencode(params, doseq=True))
-        instance = i_manager.instances[
-            "main_routing_test"
-        ]
+        instance = i_manager.instances["main_routing_test"]
         instance.olympic_site_params_manager = get_olympic_site_params_manager(instance)
         with requests_mock.Mocker() as m:
             m.get(from_place, json=FROM_ADDRESS)
@@ -460,9 +455,7 @@ class TestOlympicSites(AbstractTestFixture):
         }
         from_place = "{}/multi-reverse?{}".format(BRAGI_URL, urlencode(params, doseq=True))
         to_place = "{}/features/{}?{}".format(BRAGI_URL, to_poi_uri, urlencode(BASIC_PARAMS, doseq=True))
-        instance = i_manager.instances[
-            "main_routing_test"
-        ]
+        instance = i_manager.instances["main_routing_test"]
         instance.olympic_site_params_manager = get_olympic_site_params_manager(instance)
         with requests_mock.Mocker() as m:
             m.get(from_place, json=FROM_ADDRESS)
@@ -486,9 +479,7 @@ class TestOlympicSites(AbstractTestFixture):
         }
         from_place = "{}/multi-reverse?{}".format(BRAGI_URL, urlencode(params, doseq=True))
         to_place = "{}/features/{}?{}".format(BRAGI_URL, to_poi_uri, urlencode(BASIC_PARAMS, doseq=True))
-        instance  = i_manager.instances[
-            "main_routing_test"
-        ]
+        instance = i_manager.instances["main_routing_test"]
         instance.olympic_site_params_manager = get_olympic_site_params_manager(instance)
         with requests_mock.Mocker() as m:
             m.get(from_place, json=FROM_ADDRESS)
@@ -521,9 +512,7 @@ class TestOlympicSites(AbstractTestFixture):
             'lat': r_lat,
         }
         to_place = "{}/multi-reverse?{}".format(BRAGI_URL, urlencode(params, doseq=True))
-        instance = i_manager.instances[
-            "main_routing_test"
-        ]
+        instance = i_manager.instances["main_routing_test"]
         instance.olympic_site_params_manager = get_olympic_site_params_manager(instance)
         with requests_mock.Mocker() as m:
             m.get(from_place, json=FROM_POI)
@@ -541,9 +530,7 @@ class TestOlympicSites(AbstractTestFixture):
         # forbidden_uris used :  physical_mode:0x0
         from_place = "{}/features/{}?{}".format(BRAGI_URL, from_poi_uri, urlencode(BASIC_PARAMS, doseq=True))
         to_place = "{}/features/{}?{}".format(BRAGI_URL, to_poi_uri, urlencode(BASIC_PARAMS, doseq=True))
-        instance = i_manager.instances[
-            "main_routing_test"
-        ]
+        instance = i_manager.instances["main_routing_test"]
         instance.olympic_site_params_manager = get_olympic_site_params_manager(instance)
         with requests_mock.Mocker() as m:
             m.get(from_place, json=FROM_ADDRESS)

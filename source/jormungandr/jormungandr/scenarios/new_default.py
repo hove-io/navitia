@@ -1277,9 +1277,7 @@ class Scenario(simple.Scenario):
         # Return the possible combinations (origin_mode ,destination_mode, direct_path_type)
         krakens_call = get_kraken_calls(api_request)
 
-        instance.olympic_site_params_manager.build(
-            pt_object_origin, pt_object_destination, api_request
-        )
+        instance.olympic_site_params_manager.build(pt_object_origin, pt_object_destination, api_request)
 
         # We need the original request (api_request) for filtering, but request
         # is modified by create_next_kraken_request function.
