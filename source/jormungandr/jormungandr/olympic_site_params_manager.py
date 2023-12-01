@@ -195,6 +195,15 @@ class OlympicSiteParamsManager:
             api_request["criteria"] = "arrival_stop_attractivity"
 
     def get_olympic_site_params(self, pt_origin_detail, pt_destination_detail, api_request, instance):
+        origin_olympic_site = get_olympic_site(pt_origin_detail, instance)
+        destination_olympic_site = get_olympic_site(pt_destination_detail, instance)
+
+        if not origin_olympic_site and not destination_olympic_site:
+            return {}
+
+        if origin_olympic_site and destination_olympic_site:
+            origin_olympic_site = None
+
         attractivities = dict()
         virtual_duration = dict()
         attractivities.update(api_request.get('_olympics_sites_attractivities[]') or [])
@@ -204,18 +213,12 @@ class OlympicSiteParamsManager:
             for spt_id, attractivity in attractivities.items():
                 virtual_fallback = virtual_duration.get(spt_id, 0)
                 result[spt_id] = AttractivityVirtualFallback(attractivity, virtual_fallback)
-            if api_request.get("criteria") == "departure_stop_attractivity":
+            if origin_olympic_site:
                 return {"departure_scenario": result}
             return {"arrival_scenario": result}
 
         if not self.olympic_site_params:
             return {}
-
-        origin_olympic_site = get_olympic_site(pt_origin_detail, instance)
-        destination_olympic_site = get_olympic_site(pt_destination_detail, instance)
-
-        if origin_olympic_site and destination_olympic_site:
-            origin_olympic_site = None
 
         departure_olympic_site_params = (
             self.get_dict_scenario(origin_olympic_site.uri, "departure_scenario") if origin_olympic_site else {}
