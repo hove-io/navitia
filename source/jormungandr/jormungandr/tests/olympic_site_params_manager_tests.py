@@ -30,7 +30,6 @@
 
 from __future__ import absolute_import, unicode_literals
 
-import tempfile
 import navitiacommon.type_pb2 as type_pb2
 from jormungandr.olympic_site_params_manager import OlympicSiteParamsManager
 from jormungandr.street_network.tests.streetnetwork_test_utils import make_pt_object
@@ -165,7 +164,14 @@ def test_build_with_request_params_and_without_criteria_without_keep_olympics_jo
     assert not api_request.get("criteria")
     assert "_keep_olympics_journeys" not in api_request
     assert not api_request.get("max_walking_duration_to_pt")
-    osp.build(None, None, api_request, None)
+    pt_destination_detail = make_pt_object(type_pb2.POI, 2, 3, "poi:BCD")
+    property = pt_destination_detail.poi.properties.add()
+    property.type = DEFAULT_OLYMPICS_FORBIDDEN_URIS["poi_property_key"]
+    property.value = DEFAULT_OLYMPICS_FORBIDDEN_URIS["poi_property_value"]
+    pt_origin_detail = make_pt_object(type_pb2.ADDRESS, 1, 2, "SA:BCD")
+    instance = FakeInstance(olympics_forbidden_uris=DEFAULT_OLYMPICS_FORBIDDEN_URIS)
+
+    osp.build(pt_origin_detail, pt_destination_detail, api_request, instance)
     assert api_request["criteria"] == "arrival_stop_attractivity"
     assert api_request["_keep_olympics_journeys"]
     assert not api_request.get("max_walking_duration_to_pt")
@@ -191,7 +197,13 @@ def test_build_with_request_params_and_without_criteria_with_keep_olympics_journ
 
     assert not api_request.get("criteria")
     assert not api_request.get("max_walking_duration_to_pt")
-    osp.build(None, None, api_request, None)
+    pt_destination_detail = make_pt_object(type_pb2.POI, 2, 3, "poi:BCD")
+    property = pt_destination_detail.poi.properties.add()
+    property.type = DEFAULT_OLYMPICS_FORBIDDEN_URIS["poi_property_key"]
+    property.value = DEFAULT_OLYMPICS_FORBIDDEN_URIS["poi_property_value"]
+    pt_origin_detail = make_pt_object(type_pb2.ADDRESS, 1, 2, "SA:BCD")
+    instance = FakeInstance(olympics_forbidden_uris=DEFAULT_OLYMPICS_FORBIDDEN_URIS)
+    osp.build(pt_origin_detail, pt_destination_detail, api_request, instance)
     assert api_request["criteria"] == "arrival_stop_attractivity"
     assert not api_request["_keep_olympics_journeys"]
     assert not api_request.get("max_walking_duration_to_pt")
@@ -218,7 +230,13 @@ def test_build_with_request_params_and_departure_criteria():
     assert api_request["criteria"] == "departure_stop_attractivity"
     assert not api_request.get("max_walking_duration_to_pt")
     assert "_keep_olympics_journeys" not in api_request
-    osp.build(None, None, api_request, None)
+    pt_origin_detail = make_pt_object(type_pb2.POI, 2, 3, "poi:BCD")
+    property = pt_origin_detail.poi.properties.add()
+    property.type = DEFAULT_OLYMPICS_FORBIDDEN_URIS["poi_property_key"]
+    property.value = DEFAULT_OLYMPICS_FORBIDDEN_URIS["poi_property_value"]
+    pt_destination_detail = make_pt_object(type_pb2.ADDRESS, 1, 2, "SA:BCD")
+    instance = FakeInstance(olympics_forbidden_uris=DEFAULT_OLYMPICS_FORBIDDEN_URIS)
+    osp.build(pt_origin_detail, pt_destination_detail, api_request, instance)
     assert api_request["_keep_olympics_journeys"]
     assert api_request["criteria"] == "departure_stop_attractivity"
     assert not api_request.get("max_walking_duration_to_pt")
@@ -245,7 +263,13 @@ def test_build_with_request_params_and_arrival_criteria():
     assert api_request["criteria"] == "arrival_stop_attractivity"
     assert not api_request.get("max_walking_duration_to_pt")
     assert "_keep_olympics_journeys" not in api_request
-    osp.build(None, None, api_request, None)
+    pt_destination_detail = make_pt_object(type_pb2.POI, 2, 3, "poi:BCD")
+    property = pt_destination_detail.poi.properties.add()
+    property.type = DEFAULT_OLYMPICS_FORBIDDEN_URIS["poi_property_key"]
+    property.value = DEFAULT_OLYMPICS_FORBIDDEN_URIS["poi_property_value"]
+    pt_origin_detail = make_pt_object(type_pb2.ADDRESS, 1, 2, "SA:BCD")
+    instance = FakeInstance(olympics_forbidden_uris=DEFAULT_OLYMPICS_FORBIDDEN_URIS)
+    osp.build(pt_origin_detail, pt_destination_detail, api_request, instance)
     assert api_request["_keep_olympics_journeys"]
     assert api_request["criteria"] == "arrival_stop_attractivity"
     assert not api_request.get("max_walking_duration_to_pt")
