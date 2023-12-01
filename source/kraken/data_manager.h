@@ -81,11 +81,10 @@ private:
     std::unique_ptr<boost::shared_mutex> write = std::make_unique<boost::shared_mutex>();
 
 public:
-    DataManager(bool aggressive_memory_decommit = false) : current_data(create_data(0)) {
+    DataManager(bool aggressive_memory_decommit = false) : current_data(create_data(0)), data_identifier(0) {
         if (aggressive_memory_decommit) {
             MallocExtension::instance()->SetNumericProperty("tcmalloc.aggressive_memory_decommit", 1);
         }
-        data_identifier = 0;
     }
 
     void set_data(const Data* d) { set_data(create_ptr(d)); }
