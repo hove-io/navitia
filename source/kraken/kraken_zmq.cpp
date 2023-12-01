@@ -110,7 +110,7 @@ int main(int argn, char** argv) {
         navitia::init_logger(conf_file);
     }
 
-    DataManager<navitia::type::Data> data_manager;
+    DataManager<navitia::type::Data> data_manager{conf.enable_aggressive_memory_decommit()};
 
     auto logger = log4cplus::Logger::getInstance("startup");
     LOG4CPLUS_INFO(logger, "starting kraken: " << navitia::config::project_version);

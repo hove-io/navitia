@@ -84,6 +84,7 @@ public:
     boost::optional<std::string> log_format() const;
     boost::optional<std::string> metrics_binding() const;
     bool enable_request_deadline() const;
+    bool enable_aggressive_memory_decommit() const;
 
     std::vector<std::string> rt_topics() const;
 };
