@@ -166,7 +166,9 @@ class FakeS3Object:
 
 
 def test_get_departure_olympic_site_params():
-    osp = OlympicSiteParamsManager("idfm")
+
+    instance = FakeInstance(olympics_forbidden_uris=DEFAULT_OLYMPICS_FORBIDDEN_URIS)
+    osp = OlympicSiteParamsManager(instance)
     osp.olympic_site_params = deepcopy(default_olympic_site_params)
     osp.str_datetime_time_stamp(osp.olympic_site_params)
     default_scenario = osp.get_dict_scenario(
@@ -193,7 +195,8 @@ def test_get_departure_olympic_site_params():
 
 
 def test_get_arrival_olympic_site_params():
-    osp = OlympicSiteParamsManager("idfm")
+    instance = FakeInstance(olympics_forbidden_uris=DEFAULT_OLYMPICS_FORBIDDEN_URIS)
+    osp = OlympicSiteParamsManager(instance)
     osp.olympic_site_params = deepcopy(default_olympic_site_params)
     osp.str_datetime_time_stamp(osp.olympic_site_params)
     default_scenario = osp.get_dict_scenario(
@@ -220,7 +223,8 @@ def test_get_arrival_olympic_site_params():
 
 
 def test_build_with_request_params_and_without_criteria_without_keep_olympics_journeys():
-    osp = OlympicSiteParamsManager("idfm")
+    instance = FakeInstance(olympics_forbidden_uris=DEFAULT_OLYMPICS_FORBIDDEN_URIS)
+    osp = OlympicSiteParamsManager(instance)
     osp.olympic_site_params = deepcopy(default_olympic_site_params)
     osp.str_datetime_time_stamp(osp.olympic_site_params)
     api_request = dict()
@@ -235,9 +239,8 @@ def test_build_with_request_params_and_without_criteria_without_keep_olympics_jo
     property.type = DEFAULT_OLYMPICS_FORBIDDEN_URIS["poi_property_key"]
     property.value = DEFAULT_OLYMPICS_FORBIDDEN_URIS["poi_property_value"]
     pt_origin_detail = make_pt_object(type_pb2.ADDRESS, 1, 2, "SA:BCD")
-    instance = FakeInstance(olympics_forbidden_uris=DEFAULT_OLYMPICS_FORBIDDEN_URIS)
 
-    osp.build(pt_origin_detail, pt_destination_detail, api_request, instance)
+    osp.build(pt_origin_detail, pt_destination_detail, api_request)
     assert api_request["criteria"] == "arrival_stop_attractivity"
     assert api_request["_keep_olympics_journeys"]
     assert not api_request.get("max_walking_duration_to_pt")
@@ -254,7 +257,8 @@ def test_build_with_request_params_and_without_criteria_without_keep_olympics_jo
 
 
 def test_build_with_request_params_and_without_criteria_with_keep_olympics_journeys():
-    osp = OlympicSiteParamsManager("idfm")
+    instance = FakeInstance(olympics_forbidden_uris=DEFAULT_OLYMPICS_FORBIDDEN_URIS)
+    osp = OlympicSiteParamsManager(instance)
     osp.olympic_site_params = default_olympic_site_params
     api_request = dict()
     api_request["_olympics_sites_attractivities[]"] = [('stop_point:24113', 3), ('stop_point:24131', 30)]
@@ -268,8 +272,7 @@ def test_build_with_request_params_and_without_criteria_with_keep_olympics_journ
     property.type = DEFAULT_OLYMPICS_FORBIDDEN_URIS["poi_property_key"]
     property.value = DEFAULT_OLYMPICS_FORBIDDEN_URIS["poi_property_value"]
     pt_origin_detail = make_pt_object(type_pb2.ADDRESS, 1, 2, "SA:BCD")
-    instance = FakeInstance(olympics_forbidden_uris=DEFAULT_OLYMPICS_FORBIDDEN_URIS)
-    osp.build(pt_origin_detail, pt_destination_detail, api_request, instance)
+    osp.build(pt_origin_detail, pt_destination_detail, api_request)
     assert api_request["criteria"] == "arrival_stop_attractivity"
     assert not api_request["_keep_olympics_journeys"]
     assert not api_request.get("max_walking_duration_to_pt")
@@ -286,7 +289,8 @@ def test_build_with_request_params_and_without_criteria_with_keep_olympics_journ
 
 
 def test_build_with_request_params_and_departure_criteria():
-    osp = OlympicSiteParamsManager("idfm")
+    instance = FakeInstance(olympics_forbidden_uris=DEFAULT_OLYMPICS_FORBIDDEN_URIS)
+    osp = OlympicSiteParamsManager(instance)
     osp.olympic_site_params = default_olympic_site_params
     api_request = dict()
     api_request["_olympics_sites_attractivities[]"] = [('stop_point:24113', 3), ('stop_point:24131', 30)]
@@ -301,8 +305,7 @@ def test_build_with_request_params_and_departure_criteria():
     property.type = DEFAULT_OLYMPICS_FORBIDDEN_URIS["poi_property_key"]
     property.value = DEFAULT_OLYMPICS_FORBIDDEN_URIS["poi_property_value"]
     pt_destination_detail = make_pt_object(type_pb2.ADDRESS, 1, 2, "SA:BCD")
-    instance = FakeInstance(olympics_forbidden_uris=DEFAULT_OLYMPICS_FORBIDDEN_URIS)
-    osp.build(pt_origin_detail, pt_destination_detail, api_request, instance)
+    osp.build(pt_origin_detail, pt_destination_detail, api_request)
     assert api_request["_keep_olympics_journeys"]
     assert api_request["criteria"] == "departure_stop_attractivity"
     assert not api_request.get("max_walking_duration_to_pt")
@@ -319,7 +322,8 @@ def test_build_with_request_params_and_departure_criteria():
 
 
 def test_build_with_request_params_and_arrival_criteria():
-    osp = OlympicSiteParamsManager("idfm")
+    instance = FakeInstance(olympics_forbidden_uris=DEFAULT_OLYMPICS_FORBIDDEN_URIS)
+    osp = OlympicSiteParamsManager(instance)
     osp.olympic_site_params = default_olympic_site_params
     api_request = dict()
     api_request["_olympics_sites_attractivities[]"] = [('stop_point:24113', 3), ('stop_point:24131', 30)]
@@ -334,8 +338,7 @@ def test_build_with_request_params_and_arrival_criteria():
     property.type = DEFAULT_OLYMPICS_FORBIDDEN_URIS["poi_property_key"]
     property.value = DEFAULT_OLYMPICS_FORBIDDEN_URIS["poi_property_value"]
     pt_origin_detail = make_pt_object(type_pb2.ADDRESS, 1, 2, "SA:BCD")
-    instance = FakeInstance(olympics_forbidden_uris=DEFAULT_OLYMPICS_FORBIDDEN_URIS)
-    osp.build(pt_origin_detail, pt_destination_detail, api_request, instance)
+    osp.build(pt_origin_detail, pt_destination_detail, api_request)
     assert api_request["_keep_olympics_journeys"]
     assert api_request["criteria"] == "arrival_stop_attractivity"
     assert not api_request.get("max_walking_duration_to_pt")
@@ -352,14 +355,15 @@ def test_build_with_request_params_and_arrival_criteria():
 
 
 def test_build_without_request_params():
-    osp = OlympicSiteParamsManager("idfm")
+    instance = FakeInstance(olympics_forbidden_uris=DEFAULT_OLYMPICS_FORBIDDEN_URIS)
+    osp = OlympicSiteParamsManager(instance)
     osp.olympic_site_params = default_olympic_site_params
     api_request = dict()
 
     assert not api_request.get("criteria")
     assert not api_request.get("max_walking_duration_to_pt")
     assert "_keep_olympics_journeys" not in api_request
-    osp.build(None, None, api_request, None)
+    osp.build(None, None, api_request)
     assert "_keep_olympics_journeys" not in api_request
     assert not api_request.get("max_walking_duration_to_pt")
     olympic_site_params = api_request["olympic_site_params"]
@@ -368,7 +372,8 @@ def test_build_without_request_params():
 
 
 def test_build_origin_poi_jo():
-    osp = OlympicSiteParamsManager("idfm")
+    instance = FakeInstance(olympics_forbidden_uris=DEFAULT_OLYMPICS_FORBIDDEN_URIS)
+    osp = OlympicSiteParamsManager(instance)
     osp.olympic_site_params = deepcopy(default_olympic_site_params)
     osp.str_datetime_time_stamp(osp.olympic_site_params)
     api_request = dict()
@@ -377,13 +382,12 @@ def test_build_origin_poi_jo():
     property.type = DEFAULT_OLYMPICS_FORBIDDEN_URIS["poi_property_key"]
     property.value = DEFAULT_OLYMPICS_FORBIDDEN_URIS["poi_property_value"]
     pt_destination_detail = make_pt_object(type_pb2.ADDRESS, 1, 2, "SA:BCD")
-    instance = FakeInstance(olympics_forbidden_uris=DEFAULT_OLYMPICS_FORBIDDEN_URIS)
 
     assert not api_request.get("criteria")
     assert not api_request.get("max_walking_duration_to_pt")
     assert "_keep_olympics_journeys" not in api_request
     api_request["datetime"] = osp.get_timestamp('20230714T110000')
-    osp.build(pt_origin_detail, pt_destination_detail, api_request, instance)
+    osp.build(pt_origin_detail, pt_destination_detail, api_request)
     assert api_request["_keep_olympics_journeys"]
     assert api_request["criteria"] == "departure_stop_attractivity"
     assert api_request.get("max_walking_duration_to_pt") == 13000
@@ -400,7 +404,8 @@ def test_build_origin_poi_jo():
 
 
 def test_build_arrival_poi_jo():
-    osp = OlympicSiteParamsManager("idfm")
+    instance = FakeInstance(olympics_forbidden_uris=DEFAULT_OLYMPICS_FORBIDDEN_URIS)
+    osp = OlympicSiteParamsManager(instance)
     osp.olympic_site_params = deepcopy(default_olympic_site_params)
     osp.str_datetime_time_stamp(osp.olympic_site_params)
     api_request = dict()
@@ -410,13 +415,12 @@ def test_build_arrival_poi_jo():
     property = pt_destination_detail.poi.properties.add()
     property.type = DEFAULT_OLYMPICS_FORBIDDEN_URIS["poi_property_key"]
     property.value = DEFAULT_OLYMPICS_FORBIDDEN_URIS["poi_property_value"]
-    instance = FakeInstance(olympics_forbidden_uris=DEFAULT_OLYMPICS_FORBIDDEN_URIS)
 
     assert not api_request.get("criteria")
     assert not api_request.get("max_walking_duration_to_pt")
     assert "_keep_olympics_journeys" not in api_request
     api_request["datetime"] = osp.get_timestamp('20230715T110000')
-    osp.build(pt_origin_detail, pt_destination_detail, api_request, instance)
+    osp.build(pt_origin_detail, pt_destination_detail, api_request)
     assert api_request["_keep_olympics_journeys"]
     assert api_request.get("max_walking_duration_to_pt") == 13000
     assert api_request["criteria"] == "arrival_stop_attractivity"
@@ -433,7 +437,8 @@ def test_build_arrival_poi_jo():
 
 
 def test_build_departure_and_arrival_poi_jo():
-    osp = OlympicSiteParamsManager("idfm")
+    instance = FakeInstance(olympics_forbidden_uris=DEFAULT_OLYMPICS_FORBIDDEN_URIS)
+    osp = OlympicSiteParamsManager(instance)
     osp.olympic_site_params = deepcopy(default_olympic_site_params)
     osp.str_datetime_time_stamp(osp.olympic_site_params)
     api_request = dict()
@@ -448,13 +453,11 @@ def test_build_departure_and_arrival_poi_jo():
     property.type = DEFAULT_OLYMPICS_FORBIDDEN_URIS["poi_property_key"]
     property.value = DEFAULT_OLYMPICS_FORBIDDEN_URIS["poi_property_value"]
 
-    instance = FakeInstance(olympics_forbidden_uris=DEFAULT_OLYMPICS_FORBIDDEN_URIS)
-
     assert not api_request.get("criteria")
     assert not api_request.get("max_walking_duration_to_pt")
     assert "_keep_olympics_journeys" not in api_request
     api_request["datetime"] = osp.get_timestamp('20230715T110000')
-    osp.build(pt_origin_detail, pt_destination_detail, api_request, instance)
+    osp.build(pt_origin_detail, pt_destination_detail, api_request)
     assert api_request["_keep_olympics_journeys"]
     assert api_request["criteria"] == "arrival_stop_attractivity"
     assert api_request.get("max_walking_duration_to_pt") == 13000
@@ -471,41 +474,51 @@ def test_build_departure_and_arrival_poi_jo():
 
 
 def test_get_dict_scenario_empty_scenario():
-    osp = OlympicSiteParamsManager("idfm")
+    instance = FakeInstance(olympics_forbidden_uris=DEFAULT_OLYMPICS_FORBIDDEN_URIS)
+    osp = OlympicSiteParamsManager(instance)
     res = osp.get_dict_scenario(None, {}, datetime=osp.get_timestamp('20230715T110000'))
     assert not res
 
 
 def test_build_olympic_site_params_empty_scenario():
-    osp = OlympicSiteParamsManager("idfm")
+    instance = FakeInstance(olympics_forbidden_uris=DEFAULT_OLYMPICS_FORBIDDEN_URIS)
+    osp = OlympicSiteParamsManager(instance)
     res = osp.build_olympic_site_params(None, {})
     assert not res
 
 
 def test_get_dict_additional_parameters_invalid_poi():
-    osp = OlympicSiteParamsManager("idfm")
-    osp.olympic_site_params = default_olympic_site_params
+    instance = FakeInstance(olympics_forbidden_uris=DEFAULT_OLYMPICS_FORBIDDEN_URIS)
+    osp = OlympicSiteParamsManager(instance)
+    osp.olympic_site_params = deepcopy(default_olympic_site_params)
+    osp.str_datetime_time_stamp(osp.olympic_site_params)
     res = osp.get_dict_additional_parameters("poi:id", "default", datetime=osp.get_timestamp('20230715T110000'))
     assert not res
 
 
 def test_get_dict_additional_parameters_invalid_scenario():
-    osp = OlympicSiteParamsManager("idfm")
-    osp.olympic_site_params = default_olympic_site_params
+    instance = FakeInstance(olympics_forbidden_uris=DEFAULT_OLYMPICS_FORBIDDEN_URIS)
+    osp = OlympicSiteParamsManager(instance)
+    osp.olympic_site_params = deepcopy(default_olympic_site_params)
+    osp.str_datetime_time_stamp(osp.olympic_site_params)
     res = osp.get_dict_additional_parameters("poi:BCD", "abc", datetime=osp.get_timestamp('20230715T110000'))
     assert not res
 
 
 def test_get_strict_parameter_invalid_poi():
-    osp = OlympicSiteParamsManager("idfm")
-    osp.olympic_site_params = default_olympic_site_params
+    instance = FakeInstance(olympics_forbidden_uris=DEFAULT_OLYMPICS_FORBIDDEN_URIS)
+    osp = OlympicSiteParamsManager(instance)
+    osp.olympic_site_params = deepcopy(default_olympic_site_params)
+    osp.str_datetime_time_stamp(osp.olympic_site_params)
     res = osp.get_strict_parameter("poi:id")
     assert not res
 
 
 def test_get_json_content_invalid_s3_object():
-    osp = OlympicSiteParamsManager("idfm")
-    osp.olympic_site_params = default_olympic_site_params
+    instance = FakeInstance(olympics_forbidden_uris=DEFAULT_OLYMPICS_FORBIDDEN_URIS)
+    osp = OlympicSiteParamsManager(instance)
+    osp.olympic_site_params = deepcopy(default_olympic_site_params)
+    osp.str_datetime_time_stamp(osp.olympic_site_params)
     fake_s3_object = FakeS3Object()
     res = osp.get_json_content(fake_s3_object)
     assert not res
@@ -513,8 +526,8 @@ def test_get_json_content_invalid_s3_object():
 
 def test_fill_olympic_site_params_from_s3_without_bucket_name():
     from jormungandr import app
-
-    osp = OlympicSiteParamsManager("idfm")
+    instance = FakeInstance(olympics_forbidden_uris=DEFAULT_OLYMPICS_FORBIDDEN_URIS)
+    osp = OlympicSiteParamsManager(instance)
     app.config["OLYMPIC_SITE_PARAMS_BUCKET"] = {"test": "test"}
     osp.fill_olympic_site_params_from_s3()
     assert not osp.olympic_site_params
@@ -523,7 +536,8 @@ def test_fill_olympic_site_params_from_s3_without_bucket_name():
 def test_fill_olympic_site_params_from_s3_invalid_access():
     from jormungandr import app
 
-    osp = OlympicSiteParamsManager("idfm")
+    instance = FakeInstance(olympics_forbidden_uris=DEFAULT_OLYMPICS_FORBIDDEN_URIS)
+    osp = OlympicSiteParamsManager(instance)
     app.config["OLYMPIC_SITE_PARAMS_BUCKET"] = {
         "name": "test",
         "args": {"connect_timeout": 0.01, "read_timeout": 0.01, "retries": {'max_attempts': 0}},

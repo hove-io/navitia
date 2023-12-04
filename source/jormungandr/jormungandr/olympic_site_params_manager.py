@@ -280,8 +280,8 @@ class OlympicSiteParamsManager:
 
     def get_olympic_site_params(self, pt_origin_detail, pt_destination_detail, api_request):
 
-        origin_olympic_site = get_olympic_site(pt_origin_detail, instance)
-        destination_olympic_site = get_olympic_site(pt_destination_detail, instance)
+        origin_olympic_site = get_olympic_site(pt_origin_detail, self.instance)
+        destination_olympic_site = get_olympic_site(pt_destination_detail, self.instance)
 
         if not origin_olympic_site and not destination_olympic_site:
             return {}

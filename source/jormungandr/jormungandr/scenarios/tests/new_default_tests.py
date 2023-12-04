@@ -29,8 +29,6 @@
 
 from __future__ import absolute_import, print_function, unicode_literals, division
 
-import copy
-
 import navitiacommon.response_pb2 as response_pb2
 import navitiacommon.type_pb2 as type_pb2
 import jormungandr.scenarios.tests.helpers_tests as helpers_tests
@@ -39,7 +37,6 @@ from jormungandr.scenarios.new_default import (
     _tag_journey_by_mode,
     get_kraken_calls,
     update_best_boarding_positions,
-    add_olympics_forbidden_uris,
 )
 from jormungandr.instance import Instance
 from jormungandr.scenarios.utils import switch_back_to_ridesharing
