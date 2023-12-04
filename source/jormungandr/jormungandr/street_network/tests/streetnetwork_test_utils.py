@@ -58,16 +58,17 @@ def make_pt_object(embedded_type, lon, lat, uri=None):
     return pt_object
 
 
-def make_pt_object_with_sp_mode(lon, lat, uri, mode_uri=None):
+def make_pt_object_with_sp_mode(lon, lat, uri, mode_uris=None):
     pt_object = type_pb2.PtObject()
     pt_object.embedded_type = type_pb2.STOP_POINT
     if uri:
         pt_object.uri = uri
     pt_object.stop_point.coord.lat = lat
     pt_object.stop_point.coord.lon = lon
-    if mode_uri:
-        physical_mode = pt_object.stop_point.physical_modes.add()
-        physical_mode.uri = mode_uri
+    if mode_uris:
+        for mode_uri in mode_uris:
+            physical_mode = pt_object.stop_point.physical_modes.add()
+            physical_mode.uri = mode_uri
     return pt_object
 
 

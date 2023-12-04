@@ -97,6 +97,7 @@ class Geovelo(AbstractStreetNetworkService):
         self._feed_publisher = FeedPublisher(**feed_publisher) if feed_publisher else None
         self.verify = verify
         self.mode_weight = kwargs.get("mode_weight") or DEFAULT_MODE_WEIGHT
+        self.mode_weight_keys = set(self.mode_weight.keys())
 
     def status(self):
         return {
@@ -441,4 +442,8 @@ class Geovelo(AbstractStreetNetworkService):
 
     def filter_places_isochrone(self, places_isochrone):
         ordered_isochrone = self.sort_by_mode(places_isochrone)
-        return ordered_isochrone[:50]
+        result = []
+        for p in ordered_isochrone[:50]:
+            if self.mode_weight_keys & set((pm.uri for pm in p.stop_point.physical_modes)):
+                result.append(p)
+        return result
