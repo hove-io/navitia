@@ -442,11 +442,11 @@ class Geovelo(AbstractStreetNetworkService):
         return self._feed_publisher
 
     def filter_places_isochrone(self, places_isochrone):
-        ordered_isochrone = self.sort_by_mode(places_isochrone)
-        result = []
-        for p in ordered_isochrone[:50]:
-            if self.mode_weight_keys & set((pm.uri for pm in p.stop_point.physical_modes)):
-                result.append(p)
-            else:
-                break
-        return result
+        result = (
+            p
+            for p in places_isochrone
+            if self.mode_weight_keys & set((pm.uri for pm in p.stop_point.physical_modes))
+        )
+        ordered_isochrone = self.sort_by_mode(result)
+
+        return ordered_isochrone[:50]
