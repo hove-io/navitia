@@ -61,11 +61,12 @@ DEFAULT_GEOVELO_FEED_PUBLISHER = {
 # Train', 'RapidTransit', 'Metro', 'Tramway', Car, Bus
 DEFAULT_MODE_WEIGHT = {
     'physical_mode:Train': 1,
-    'physical_mode:RapidTransit': 2,
-    'physical_mode:Metro': 3,
-    'physical_mode:Tramway': 4,
-    'physical_mode:Car': 5,
-    'physical_mode:Bus': 6,
+    'physical_mode:LocalTrain': 2,
+    'physical_mode:RapidTransit': 3,
+    'physical_mode:Metro': 4,
+    'physical_mode:Tramway': 5,
+    'physical_mode:Car': 6,
+    'physical_mode:Bus': 7,
 }
 
 
