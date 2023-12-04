@@ -459,9 +459,10 @@ def sort_by_mode_test():
     assert points[5].uri == 'ref_Bus'
     assert points[6].uri == 'ref_NoMode'
     # Default mode_weight
-    assert len(list(geovelo.mode_weight.keys())) == 6
+    assert len(list(geovelo.mode_weight.keys())) == 7
     for mode in [
         'physical_mode:Train',
+        'physical_mode:LocalTrain',
         'physical_mode:RapidTransit',
         'physical_mode:Metro',
         'physical_mode:Tramway',
@@ -498,9 +499,10 @@ def mode_weight_none_test():
         mode_weight=None,
     )
     # Default mode_weight
-    assert len(list(geovelo.mode_weight.keys())) == 6
+    assert len(list(geovelo.mode_weight.keys())) == 7
     for mode in [
         'physical_mode:Train',
+        'physical_mode:LocalTrain',
         'physical_mode:RapidTransit',
         'physical_mode:Metro',
         'physical_mode:Tramway',
@@ -520,9 +522,10 @@ def mode_weight_empty_test():
         mode_weight={},
     )
     # Default mode_weight
-    assert len(list(geovelo.mode_weight.keys())) == 6
+    assert len(list(geovelo.mode_weight.keys())) == 7
     for mode in [
         'physical_mode:Train',
+        'physical_mode:LocalTrain',
         'physical_mode:RapidTransit',
         'physical_mode:Metro',
         'physical_mode:Tramway',
