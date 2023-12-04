@@ -446,4 +446,6 @@ class Geovelo(AbstractStreetNetworkService):
         for p in ordered_isochrone[:50]:
             if self.mode_weight_keys & set((pm.uri for pm in p.stop_point.physical_modes)):
                 result.append(p)
+            else:
+                break
         return result
