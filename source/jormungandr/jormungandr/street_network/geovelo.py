@@ -61,11 +61,12 @@ DEFAULT_GEOVELO_FEED_PUBLISHER = {
 # Train', 'RapidTransit', 'Metro', 'Tramway', Car, Bus
 DEFAULT_MODE_WEIGHT = {
     'physical_mode:Train': 1,
-    'physical_mode:RapidTransit': 2,
-    'physical_mode:Metro': 3,
-    'physical_mode:Tramway': 4,
-    'physical_mode:Car': 5,
-    'physical_mode:Bus': 6,
+    'physical_mode:LocalTrain': 2,
+    'physical_mode:RapidTransit': 3,
+    'physical_mode:Metro': 4,
+    'physical_mode:Tramway': 5,
+    'physical_mode:Car': 6,
+    'physical_mode:Bus': 7,
 }
 
 
@@ -97,6 +98,7 @@ class Geovelo(AbstractStreetNetworkService):
         self._feed_publisher = FeedPublisher(**feed_publisher) if feed_publisher else None
         self.verify = verify
         self.mode_weight = kwargs.get("mode_weight") or DEFAULT_MODE_WEIGHT
+        self.mode_weight_keys = set(self.mode_weight.keys())
 
     def status(self):
         return {
@@ -440,5 +442,11 @@ class Geovelo(AbstractStreetNetworkService):
         return self._feed_publisher
 
     def filter_places_isochrone(self, places_isochrone):
-        ordered_isochrone = self.sort_by_mode(places_isochrone)
+        result = (
+            p
+            for p in places_isochrone
+            if self.mode_weight_keys & set((pm.uri for pm in p.stop_point.physical_modes))
+        )
+        ordered_isochrone = self.sort_by_mode(result)
+
         return ordered_isochrone[:50]
