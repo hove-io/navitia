@@ -117,7 +117,7 @@ jobs:
     strategy:
         fail-fast: false
         matrix:
-            os: [{docker_image: mutable-debian8_dev , python_version: python3.6}, {docker_image: mutable-debian11_dev, python_version: python3.9}]
+            os: [{docker_image: mutable-debian8_dev , python_version: python3.6}, {docker_image: mutable-debian11_dev, python_version: python3.11}]
 
     container:
         image: 162230498103.dkr.ecr.eu-west-1.amazonaws.com/${{ matrix.os.docker_image }}:latest
