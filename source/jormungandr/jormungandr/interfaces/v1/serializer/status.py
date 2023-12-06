@@ -210,6 +210,11 @@ class BSSStationsServiceSerializer(OutsideServiceCommon):
     class_ = Field(schema_type=str, label='class', attr='class')
 
 
+class CarParkingServiceSerializer(OutsideServiceCommon):
+    id = Field(display_none=True)
+    url = Field(display_none=True)
+    class_ = Field(schema_type=str, label='class', attr='class')
+
 class EquipmentProvidersSerializer(NullableDictSerializer):
     key = Field(schema_type=str, display_none=False)
     codes_types = Field(schema_type=str, many=True, display_none=True)
@@ -262,6 +267,7 @@ class CommonStatusSerializer(NullableDictSerializer):
     street_networks = StreetNetworkSerializer(many=True, display_none=False)
     ridesharing_services = RidesharingServicesSerializer(many=True, display_none=False)
     bss_providers = BSSStationsServiceSerializer(many=True, display_none=False)
+    car_parking_providers = CarParkingServiceSerializer(many=True, display_none=False)
     equipment_providers_services = EquipmentProvidersServicesSerializer(display_none=False)
     external_providers_services = ExternalServiceProvidersServicesSerializer(display_none=False)
     start_production_date = Field(schema_type=str, display_none=False)

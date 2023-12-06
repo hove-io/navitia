@@ -42,6 +42,7 @@ class ParkingPlaces(object):
         available_electric_vehicle=None,
         occupied_electric_vehicle=None,
         state=None,
+        availability=None,
     ):
         if available is not None:
             self.available = available
@@ -63,7 +64,8 @@ class ParkingPlaces(object):
             self.occupied_electric_vehicle = occupied_electric_vehicle
         if state is not None:
             self.state = state
-
+        if availability is not None:
+            self.availability = availability
         if not total_places and any(n is not None for n in [available, occupied, available_PRM, occupied_PRM]):
             self.total_places = (available or 0) + (occupied or 0) + (available_PRM or 0) + (occupied_PRM or 0)
 
@@ -79,6 +81,7 @@ class ParkingPlaces(object):
             "available_electric_vehicle",
             "occupied_electric_vehicle",
             "state",
+            "availability",
             "total_places",
         ]:
             if hasattr(other, item):

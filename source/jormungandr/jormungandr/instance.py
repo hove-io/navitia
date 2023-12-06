@@ -64,6 +64,7 @@ from navitiacommon import default_values
 from jormungandr.equipments import EquipmentProviderManager
 from jormungandr.external_services import ExternalServiceManager
 from jormungandr.parking_space_availability.bss.bss_provider_manager import BssProviderManager
+from jormungandr.parking_space_availability.car.car_park_provider_manager import CarParkingProviderManager
 from jormungandr.utils import (
     can_connect_to_database,
     make_origin_destination_key,
@@ -171,6 +172,7 @@ class Instance(transient_socket.TransientSocket):
         resp_content_limit_bytes=None,
         resp_content_limit_endpoints_whitelist=None,
         individual_bss_provider=[],
+        individual_car_parking_provider=[],
     ):
         super(Instance, self).__init__(
             name=name,
@@ -268,6 +270,14 @@ class Instance(transient_socket.TransientSocket):
                 individual_bss_provider, self.get_bss_stations_services_from_db
             )
 
+        # Init CAR provider manager from config from external services in bdd
+        if disable_database:
+            self.car_parking_provider_manager = CarParkingProviderManager(individual_car_parking_provider)
+        else:
+            self.car_parking_provider_manager = CarParkingProviderManager(
+                individual_car_parking_provider, self.get_car_parking_services_from_db
+            )
+
         self.external_service_provider_manager.init_external_services()
         self.instance_db = instance_db
         self._ghost_words = ghost_words or []
@@ -334,6 +344,14 @@ class Instance(transient_socket.TransientSocket):
         models = self._get_models()
         result = models.external_services if models else []
         return [res for res in result if res.navitia_service == 'bss_stations']
+
+    def get_car_parking_services_from_db(self):
+        """
+        :return: a callable query of external services associated to the current instance in db
+        """
+        models = self._get_models()
+        result = models.external_services if models else []
+        return [res for res in result if res.navitia_service == 'car_parkings']
 
     @property
     def autocomplete(self):
@@ -1014,6 +1032,9 @@ class Instance(transient_socket.TransientSocket):
 
     def get_all_bss_providers(self):
         return self.bss_provider_manager.get_providers()
+
+    def get_all_car_parking_providers(self):
+        return self.car_parking_provider_manager.get_providers()
 
     def get_autocomplete(self, requested_autocomplete):
         if not requested_autocomplete:
