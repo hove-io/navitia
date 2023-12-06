@@ -212,8 +212,8 @@ class IntervalValue(CustomSchemaType):
 def geojson_argument(value):
     def is_geometry_valid(geometry):
         geometry_str = ujson.dumps(geometry)
-        valid = geojson.is_valid(geojson.loads(geometry_str))
-        return 'valid' in valid and (valid['valid'] == 'yes' or valid['valid'] == '')
+        geometry = geojson.loads(geometry_str)
+        return geometry.is_valid
 
     if value:
         if not isinstance(value, dict):
