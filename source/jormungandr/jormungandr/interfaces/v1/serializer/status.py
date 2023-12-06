@@ -215,6 +215,7 @@ class CarParkingServiceSerializer(OutsideServiceCommon):
     url = Field(display_none=True)
     class_ = Field(schema_type=str, label='class', attr='class')
 
+
 class EquipmentProvidersSerializer(NullableDictSerializer):
     key = Field(schema_type=str, display_none=False)
     codes_types = Field(schema_type=str, many=True, display_none=True)

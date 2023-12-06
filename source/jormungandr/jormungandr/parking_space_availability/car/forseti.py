@@ -47,18 +47,12 @@ class ForsetiProvider(CommonCarParkProvider):
     """
 
     def __init__(
-        self,
-        service_url,
-        distance=50,
-        timeout=2,
-        feed_publisher=DEFAULT_FORSETI_FEED_PUBLISHER,
-        **kwargs
+        self, service_url, distance=50, timeout=2, feed_publisher=DEFAULT_FORSETI_FEED_PUBLISHER, **kwargs
     ):
         self.provider_name = "FORSETI"
         self.service_url = service_url
         self.distance = distance
         super(ForsetiProvider, self).__init__(service_url, [], [], timeout, feed_publisher, **kwargs)
-
 
     def status(self):
         return {
@@ -84,5 +78,5 @@ class ForsetiProvider(CommonCarParkProvider):
         for parking in data.get('parkings', []):
             parking_coord = Coords(parking.get('coord').get('lat'), parking.get('coord').get('lon'))
             distance = crowfly_distance_between(poi_coord, parking_coord)
-            if distance  < self.distance:
+            if distance < self.distance:
                 return ParkingPlaces(availability=parking.get('availability'))
