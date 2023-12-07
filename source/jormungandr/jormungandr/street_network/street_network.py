@@ -84,6 +84,9 @@ class AbstractStreetNetworkService(ABC):  # type: ignore
         """
         return places_isochrone
 
+    def is_reached_by_physical_mode(self, place):
+        return True
+
     def direct_path_with_fp(
         self,
         instance,

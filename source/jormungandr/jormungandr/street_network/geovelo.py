@@ -36,7 +36,7 @@ import six
 
 import itertools
 import sys
-from navitiacommon import response_pb2
+from navitiacommon import response_pb2, type_pb2
 from jormungandr import app
 from jormungandr.exceptions import GeoveloTechnicalError, InvalidArguments, UnableToParse
 from jormungandr.street_network.street_network import (
@@ -441,12 +441,20 @@ class Geovelo(AbstractStreetNetworkService):
     def feed_publisher(self):
         return self._feed_publisher
 
+    def get_physical_modes_uris(self, entry_point):
+        if entry_point.embedded_type == type_pb2.ACCESS_POINT:
+            return set((pm.uri for pm in entry_point.access_point.parent_station.physical_modes))
+        if entry_point.embedded_type == type_pb2.STOP_POINT:
+            return set((pm.uri for pm in entry_point.stop_point.physical_modes))
+        return set()
+
+    def is_reached_by_physical_mode(self, place):
+        if not place:
+            return False
+        return True if self.mode_weight_keys & self.get_physical_modes_uris(place) else False
+
     def filter_places_isochrone(self, places_isochrone):
-        result = (
-            p
-            for p in places_isochrone
-            if self.mode_weight_keys & set((pm.uri for pm in p.stop_point.physical_modes))
-        )
+        result = (p for p in places_isochrone if self.is_reached_by_physical_mode(p))
         ordered_isochrone = self.sort_by_mode(result)
 
         return ordered_isochrone[:50]

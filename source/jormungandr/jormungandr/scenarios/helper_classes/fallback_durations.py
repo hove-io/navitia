@@ -148,7 +148,10 @@ class FallbackDurations:
                 self._logger.exception("Exception':{}".format(str(e)))
                 return None
 
-    def _retrieve_access_points(self, stop_point, access_points_map, places_isochrone):
+    def _retrieve_access_points(self, pt_object, access_points_map, places_isochrone):
+        if not self._streetnetwork_service.is_reached_by_physical_mode(pt_object):
+            return
+        stop_point = pt_object.stop_point
         if self._direct_path_type == StreetNetworkPathType.BEGINNING_FALLBACK:
             access_points = (ap for ap in stop_point.access_points if ap.is_entrance)
         else:
@@ -159,6 +162,7 @@ class FallbackDurations:
             pt_object_ap = type_pb2.PtObject(
                 name=ap.name, uri=ap.uri, embedded_type=type_pb2.ACCESS_POINT, access_point=ap
             )
+
             if ap.uri not in access_points_map:
                 # every object in place_isochrone has a type of PtObject. We convert the AccessPoint into PtObject
                 places_isochrone.append(pt_object_ap)
@@ -213,7 +217,6 @@ class FallbackDurations:
         else:
             for p in proximities_by_crowfly:
                 # if a place is freely accessible, there is no need to compute it's access duration in isochrone
-
                 if p.uri in all_free_access:
                     continue
                 # what we are looking to compute, is not the stop_point, but the entrance and exit of a stop_point
@@ -221,7 +224,7 @@ class FallbackDurations:
                 if not p.stop_point.access_points:
                     places_isochrone.append(p)
                 else:
-                    self._retrieve_access_points(p.stop_point, access_points_map, places_isochrone)
+                    self._retrieve_access_points(p, access_points_map, places_isochrone)
                 stop_points.append(p)
         # places isochrone are filtered according to different connector. ex. In geovelo, we select solely stop_points
         # are more significant.
