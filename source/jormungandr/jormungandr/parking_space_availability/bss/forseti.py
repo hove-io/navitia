@@ -110,7 +110,6 @@ class ForsetiProvider(CommonBssProvider):
         return True
 
     def status(self):
-        # return {'network': self.network, 'operators': self.operators}
         return {
             'id': six.text_type(self.network),
             'url': self.service_url,

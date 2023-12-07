@@ -130,6 +130,7 @@ class InstanceManager(object):
             resp_content_limit_bytes=config.get('resp_content_limit_bytes', None),
             resp_content_limit_endpoints_whitelist=config.get('resp_content_limit_endpoints_whitelist', None),
             individual_bss_provider=config.get('individual_bss_provider', []),
+            individual_car_parking_provider=config.get('individual_car_parking_provider', []),
         )
 
         self.instances[instance.name] = instance

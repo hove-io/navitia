@@ -334,6 +334,7 @@ class CarParkSerializer(PbNestedSerializer):
     available_electric_vehicle = jsonschema.IntField()
     occupied_electric_vehicle = jsonschema.IntField()
     state = jsonschema.Field(schema_type=str)
+    availability = jsonschema.Field(schema_type=bool, display_none=True)
 
 
 class AdminSerializer(SortedGenericSerializer, PbGenericSerializer):

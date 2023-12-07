@@ -114,7 +114,7 @@ class ProximitiesByCrowfly:
             crow_fly = self._get_crow_fly(self._instance.georef)
 
             if self._mode == fm.FallbackModes.car.name:
-                # pick up only parkings with park_ride = yes
+                # pick up only sytral_parkings with park_ride = yes
                 crow_fly = jormungandr.street_network.utils.pick_up_park_ride_car_park(crow_fly)
 
             logger.debug(

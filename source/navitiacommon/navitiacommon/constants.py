@@ -41,4 +41,5 @@ ENUM_EXTERNAL_SERVICE = (
     'vehicle_positions',
     'bss_stations',
     'obstacles',
+    'car_parkings',
 )
