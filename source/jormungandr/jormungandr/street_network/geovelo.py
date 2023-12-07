@@ -453,8 +453,11 @@ class Geovelo(AbstractStreetNetworkService):
             return False
         return True if self.mode_weight_keys & self.get_physical_modes_uris(place) else False
 
+    def get_truncated_places_isochrone(self, places_isochrone):
+        return places_isochrone[:50]
+
     def filter_places_isochrone(self, places_isochrone):
         result = (p for p in places_isochrone if self.is_reached_by_physical_mode(p))
         ordered_isochrone = self.sort_by_mode(result)
 
-        return ordered_isochrone[:50]
+        return self.get_truncated_places_isochrone(ordered_isochrone)

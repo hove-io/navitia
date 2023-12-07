@@ -148,10 +148,7 @@ class FallbackDurations:
                 self._logger.exception("Exception':{}".format(str(e)))
                 return None
 
-    def _retrieve_access_points(self, pt_object, access_points_map, places_isochrone):
-        if not self._streetnetwork_service.is_reached_by_physical_mode(pt_object):
-            return
-        stop_point = pt_object.stop_point
+    def _retrieve_access_points(self, stop_point, access_points_map, places_isochrone):
         if self._direct_path_type == StreetNetworkPathType.BEGINNING_FALLBACK:
             access_points = (ap for ap in stop_point.access_points if ap.is_entrance)
         else:
@@ -214,7 +211,9 @@ class FallbackDurations:
             # if a place is freely accessible, there is no need to compute it's access duration in isochrone
             places_isochrone.extend(p for p in proximities_by_crowfly if p.uri not in all_free_access)
             stop_points.extend(p for p in proximities_by_crowfly if p.uri not in all_free_access)
+            places_isochrone = self._streetnetwork_service.filter_places_isochrone(places_isochrone)
         else:
+            proximities_by_crowfly = self._streetnetwork_service.filter_places_isochrone(proximities_by_crowfly)
             for p in proximities_by_crowfly:
                 # if a place is freely accessible, there is no need to compute it's access duration in isochrone
                 if p.uri in all_free_access:
@@ -224,11 +223,12 @@ class FallbackDurations:
                 if not p.stop_point.access_points:
                     places_isochrone.append(p)
                 else:
-                    self._retrieve_access_points(p, access_points_map, places_isochrone)
+                    self._retrieve_access_points(p.stop_point, access_points_map, places_isochrone)
                 stop_points.append(p)
-        # places isochrone are filtered according to different connector. ex. In geovelo, we select solely stop_points
-        # are more significant.
-        places_isochrone = self._streetnetwork_service.filter_places_isochrone(places_isochrone)
+            # places isochrone are filtered according to different connector. ex. In geovelo, we select solely stop_points
+            # are more significant.
+            places_isochrone = self._streetnetwork_service.get_truncated_places_isochrone(places_isochrone)
+
         return places_isochrone, access_points_map, stop_points
 
     def _fill_fallback_durations_with_free_access(self, fallback_durations, all_free_access):
