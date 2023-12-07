@@ -441,11 +441,9 @@ class Geovelo(AbstractStreetNetworkService):
     def feed_publisher(self):
         return self._feed_publisher
 
-    def get_physical_modes_uris(self, entry_point):
-        if entry_point.embedded_type == type_pb2.ACCESS_POINT:
-            return set((pm.uri for pm in entry_point.access_point.parent_station.physical_modes))
-        if entry_point.embedded_type == type_pb2.STOP_POINT:
-            return set((pm.uri for pm in entry_point.stop_point.physical_modes))
+    def get_physical_modes_uris(self, place):
+        if place.embedded_type == type_pb2.STOP_POINT:
+            return set((pm.uri for pm in place.stop_point.physical_modes))
         return set()
 
     def is_reached_by_physical_mode(self, place):

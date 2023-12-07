@@ -616,3 +616,62 @@ def filter_places_isochrone_modes_multiple_modes_test():
     assert len(list(geovelo.mode_weight.keys())) == 3
     for mode in ['physical_mode:Train', 'physical_mode:RapidTransit', 'physical_mode:LocalTrain']:
         assert mode in geovelo.mode_weight
+
+
+def is_reached_by_physical_mode_test():
+    place = make_pt_object_with_sp_mode(lon=3, lat=48.3, uri='ref_Bus', mode_uris=['physical_mode:Bus'])
+    geovelo = Geovelo(
+        instance=None,
+        service_url=MOCKED_SERVICE_URL,
+        id=u"tata-é$~#@\"*!'`§èû",
+        modes=["walking", "bike", "car"],
+        timeout=56,
+        mode_weight={"physical_mode:Train": 3, "physical_mode:RapidTransit": 2, "physical_mode:LocalTrain": 1},
+    )
+    res = geovelo.is_reached_by_physical_mode(place)
+    assert not res
+
+
+def is_reached_by_physical_mode_empt__place_test():
+    geovelo = Geovelo(
+        instance=None,
+        service_url=MOCKED_SERVICE_URL,
+        id=u"tata-é$~#@\"*!'`§èû",
+        modes=["walking", "bike", "car"],
+        timeout=56,
+        mode_weight={"physical_mode:Train": 3, "physical_mode:RapidTransit": 2, "physical_mode:LocalTrain": 1},
+    )
+    res = geovelo.is_reached_by_physical_mode(None)
+    assert not res
+
+
+def get_physical_modes_uris_test():
+    point = make_pt_object_with_sp_mode(
+            lon=3, lat=48.3, uri='ref_bus_train', mode_uris=['physical_mode:Bus', 'physical_mode:Train']
+        )
+    geovelo = Geovelo(
+        instance=None,
+        service_url=MOCKED_SERVICE_URL,
+        id=u"tata-é$~#@\"*!'`§èû",
+        modes=["walking", "bike", "car"],
+        timeout=56,
+        mode_weight={"physical_mode:Train": 3, "physical_mode:RapidTransit": 2, "physical_mode:LocalTrain": 1},
+    )
+    uris = list(geovelo.get_physical_modes_uris(point))
+    assert len(uris) == 2
+
+
+def get_physical_modes_uris_empty_list_test():
+    point = make_pt_object_with_sp_mode(
+            lon=3, lat=48.3, uri='ref_bus_train', mode_uris=[]
+        )
+    geovelo = Geovelo(
+        instance=None,
+        service_url=MOCKED_SERVICE_URL,
+        id=u"tata-é$~#@\"*!'`§èû",
+        modes=["walking", "bike", "car"],
+        timeout=56,
+        mode_weight={"physical_mode:Train": 3, "physical_mode:RapidTransit": 2, "physical_mode:LocalTrain": 1},
+    )
+    uris = list(geovelo.get_physical_modes_uris(point))
+    assert len(uris) == 0
