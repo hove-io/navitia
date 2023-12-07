@@ -647,8 +647,8 @@ def is_reached_by_physical_mode_empt__place_test():
 
 def get_physical_modes_uris_test():
     point = make_pt_object_with_sp_mode(
-            lon=3, lat=48.3, uri='ref_bus_train', mode_uris=['physical_mode:Bus', 'physical_mode:Train']
-        )
+        lon=3, lat=48.3, uri='ref_bus_train', mode_uris=['physical_mode:Bus', 'physical_mode:Train']
+    )
     geovelo = Geovelo(
         instance=None,
         service_url=MOCKED_SERVICE_URL,
@@ -662,9 +662,7 @@ def get_physical_modes_uris_test():
 
 
 def get_physical_modes_uris_empty_list_test():
-    point = make_pt_object_with_sp_mode(
-            lon=3, lat=48.3, uri='ref_bus_train', mode_uris=[]
-        )
+    point = make_pt_object_with_sp_mode(lon=3, lat=48.3, uri='ref_bus_train', mode_uris=[])
     geovelo = Geovelo(
         instance=None,
         service_url=MOCKED_SERVICE_URL,
