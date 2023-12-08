@@ -38,7 +38,6 @@ from jormungandr.utils import (
     get_pt_object_from_json,
     read_best_boarding_positions,
     make_origin_destination_key,
-    portable_min,
     get_last_pt_section,
     get_first_pt_section,
     entrypoint_uri_refocus,
