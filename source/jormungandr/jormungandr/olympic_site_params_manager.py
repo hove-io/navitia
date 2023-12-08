@@ -64,9 +64,9 @@ class OlympicSiteParamsManager:
         data = self.olympic_site_params.get(poi_uri)
         if not data:
             return {}
-        scanario_name = self.get_valid_scenario_name(data.get("events", []), key, datetime)
-        if scanario_name:
-            return self.build_olympic_site_params(scanario_name, data)
+        scenario_name = self.get_valid_scenario_name(data.get("events", []), key, datetime)
+        if scenario_name:
+            return self.build_olympic_site_params(scenario_name, data)
         return {}
 
     def get_dict_additional_parameters(self, poi_uri, key, datetime):
