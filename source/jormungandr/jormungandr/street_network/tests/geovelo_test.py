@@ -39,6 +39,7 @@ import ujson
 import pytest
 import jormungandr.exceptions
 
+
 MOCKED_REQUEST = {'walking_speed': 1, 'bike_speed': 3.33}
 MOCKED_SERVICE_URL = 'https://bob.com'
 
@@ -673,3 +674,31 @@ def get_physical_modes_uris_empty_list_test():
     )
     uris = list(geovelo.get_physical_modes_uris(point))
     assert len(uris) == 0
+
+
+def get_physical_modes_uris_not_stop_point_object_type_test():
+    point = make_pt_object(type_pb2.ADDRESS, lon=1.12, lat=13.15, uri='toto')
+    geovelo = Geovelo(
+        instance=None,
+        service_url=MOCKED_SERVICE_URL,
+        id=u"tata-é$~#@\"*!'`§èû",
+        modes=["walking", "bike", "car"],
+        timeout=56,
+        mode_weight={"physical_mode:Train": 3, "physical_mode:RapidTransit": 2, "physical_mode:LocalTrain": 1},
+    )
+    uris = list(geovelo.get_physical_modes_uris(point))
+    assert len(uris) == 0
+
+
+def direct_path_invalid_mode_test():
+    point = make_pt_object(type_pb2.ADDRESS, lon=1.12, lat=13.15, uri='toto')
+    geovelo = Geovelo(
+        instance=None,
+        service_url=MOCKED_SERVICE_URL,
+        id=u"tata-é$~#@\"*!'`§èû",
+        modes=["walking", "bike", "car"],
+        timeout=56,
+        mode_weight={"physical_mode:Train": 3, "physical_mode:RapidTransit": 2, "physical_mode:LocalTrain": 1},
+    )
+    with pytest.raises(jormungandr.exceptions.InvalidArguments):
+        geovelo._direct_path(None, "walking", point, point, None, {}, None, "")
