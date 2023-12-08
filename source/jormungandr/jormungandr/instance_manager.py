@@ -131,6 +131,7 @@ class InstanceManager(object):
             resp_content_limit_endpoints_whitelist=config.get('resp_content_limit_endpoints_whitelist', None),
             individual_bss_provider=config.get('individual_bss_provider', []),
             individual_car_parking_provider=config.get('individual_car_parking_provider', []),
+            timezone=config.get("timezone", "Europe/Paris"),
         )
 
         self.instances[instance.name] = instance

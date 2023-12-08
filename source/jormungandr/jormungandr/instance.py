@@ -44,7 +44,7 @@ import copy
 from jormungandr.exceptions import TechnicalError
 from navitiacommon import response_pb2, request_pb2, type_pb2
 from navitiacommon.default_values import get_value_or_default
-from jormungandr.timezone import set_request_instance_timezone
+from jormungandr.timezone import set_request_instance_timezone, get_instance_str_timezone
 import logging
 from jormungandr.exceptions import DeadSocketException
 from navitiacommon import models
@@ -173,6 +173,7 @@ class Instance(transient_socket.TransientSocket):
         resp_content_limit_endpoints_whitelist=None,
         individual_bss_provider=[],
         individual_car_parking_provider=[],
+        timezone=None,
     ):
         super(Instance, self).__init__(
             name=name,
@@ -189,7 +190,7 @@ class Instance(transient_socket.TransientSocket):
         self.lock = Lock()
         self.context = context
         self.name = name
-        self.timezone = None  # timezone will be fetched from the kraken
+        self.timezone = get_instance_str_timezone(timezone, name)
         self.publication_date = -1
         self.is_initialized = False  # kraken hasn't been called yet we don't have geom nor timezone
         self.breaker = pybreaker.CircuitBreaker(

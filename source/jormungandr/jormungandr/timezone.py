@@ -44,6 +44,25 @@ def set_request_timezone(region):
     set_request_instance_timezone(instance)
 
 
+def get_instance_str_timezone(timezone, instance_name, default_timezone="Europe/Paris"):
+    logger = logging.getLogger(__name__)
+    if not timezone:
+        logger.warning(
+            "Empty timezone for region {}, default timezone {} used.".format(instance_name, default_timezone)
+        )
+        return default_timezone
+    try:
+        if pytz.timezone(timezone):
+            return timezone
+    except Exception:
+        logger.warning(
+            "impossible to find timezone: '{}' for region {}, default timezone {} used.".format(
+                timezone, instance_name, default_timezone
+            )
+        )
+    return default_timezone
+
+
 def set_request_instance_timezone(instance):
     logger = logging.getLogger(__name__)
 
