@@ -196,13 +196,11 @@ class OlympicSiteParamsManager:
             return {}
 
     def clean_and_get_olympic_site_params(self):
-
         result = deepcopy(self.olympic_site_params)
         for key, value in result.items():
-            for scenario in ["departure_scenario", "arrival_scenario"]:
-                for dict_scenario in value.get(scenario, []):
-                    del dict_scenario["start"]
-                    del dict_scenario["end"]
+            for event in value.get("events", []):
+                del event["start"]
+                del event["end"]
         return result
 
     def fill_olympic_site_params_from_s3(self):
