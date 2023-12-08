@@ -449,7 +449,7 @@ class Geovelo(AbstractStreetNetworkService):
     def is_reached_by_physical_mode(self, place):
         if not place:
             return False
-        return True if self.mode_weight_keys & self.get_physical_modes_uris(place) else False
+        return self.mode_weight_keys & self.get_physical_modes_uris(place)
 
     def get_truncated_places_isochrone(self, places_isochrone):
         return places_isochrone[:50]
