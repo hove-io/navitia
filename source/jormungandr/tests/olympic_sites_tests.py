@@ -50,20 +50,20 @@ to_poi_uri = "poi:to"
 
 DEFAULT_OLYMPIC_SITE_PARAMS = {
     "poi:from": {
-        "departure_scenario": [
+        "events": [
             {
-                "event": "event 1",
+                "event": "20120614",
                 "from_datetime": "20120614T070000",
                 "to_datetime": "20120614T080000",
-                "scenario": "scenario a",
-            }
-        ],
-        "arrival_scenario": [
+                "departure_scenario": "scenario a",
+                "arrival_scenario": "scenario b"
+            },
             {
-                "event": "event 2",
-                "from_datetime": "20120614T070000",
-                "to_datetime": "20120614T080000",
-                "scenario": "scenario b",
+                "event": "20120615",
+                "from_datetime": "20120615T070000",
+                "to_datetime": "20120615T080000",
+                "departure_scenario": "scenario aa",
+                "arrival_scenario": "scenario bb"
             }
         ],
         "strict": False,
@@ -82,23 +82,30 @@ DEFAULT_OLYMPIC_SITE_PARAMS = {
                 },
                 "additional_parameters": {"max_walking_duration_to_pt": 12000},
             },
+            "scenario aa": {
+                "stop_points": {
+                    "stop_point:463685": {"attractivity": 11, "virtual_fallback": 101},
+                    "stop_point:463686": {"attractivity": 31, "virtual_fallback": 1150},
+                },
+                "additional_parameters": {"max_walking_duration_to_pt": 13001},
+            },
+            "scenario bb": {
+                "stop_points": {
+                    "stop_point:463685": {"attractivity": 11, "virtual_fallback": 151},
+                    "stop_point:463686": {"attractivity": 31, "virtual_fallback": 1130},
+                },
+                "additional_parameters": {"max_walking_duration_to_pt": 12001},
+            },
         },
     },
     "poi:to": {
-        "departure_scenario": [
+        "events": [
             {
-                "event": "event 1",
+                "event": "20120614",
                 "from_datetime": "20120614T070000",
                 "to_datetime": "20120614T080000",
-                "scenario": "scenario a",
-            }
-        ],
-        "arrival_scenario": [
-            {
-                "event": "event 2",
-                "from_datetime": "20120614T070000",
-                "to_datetime": "20120614T080000",
-                "scenario": "scenario b",
+                "departure_scenario": "scenario a",
+                "arrival_scenario": "scenario b"
             }
         ],
         "scenarios": {

@@ -137,17 +137,17 @@ class OlympicSiteParamsManager:
             for spt_id, d in data.get("scenarios", {}).get(scenario, {}).get("stop_points", {}).items()
         }
 
-    def get_valid_scenario_name(self, scenario_list, datetime):
-        for scenario in scenario_list:
-            if scenario["start"] <= datetime <= scenario["end"]:
-                return scenario.get("scenario")
+    def get_valid_scenario_name(self, scenario_list, key, datetime):
+        for event in scenario_list:
+            if event["start"] <= datetime <= event["end"]:
+                return event.get(key)
         return None
 
     def get_dict_scenario(self, poi_uri, key, datetime):
         data = self.olympic_site_params.get(poi_uri)
         if not data:
             return {}
-        scanario_name = self.get_valid_scenario_name(data.get(key, []), datetime)
+        scanario_name = self.get_valid_scenario_name(data.get("events", []), key, datetime)
         if scanario_name:
             return self.build_olympic_site_params(scanario_name, data)
         return {}
@@ -156,12 +156,9 @@ class OlympicSiteParamsManager:
         data = self.olympic_site_params.get(poi_uri)
         if not data:
             return {}
-        scenario = data.get(key)
-        if not scenario:
-            return {}
-        scanario_name = self.get_valid_scenario_name(data.get(key, []), datetime)
-        if scanario_name:
-            return data.get("scenarios", {}).get(scanario_name, {}).get("additional_parameters", {})
+        scenario_name = self.get_valid_scenario_name(data.get("events", []), key, datetime)
+        if scenario_name:
+            return data.get("scenarios", {}).get(scenario_name, {}).get("additional_parameters", {})
         return {}
 
     def get_strict_parameter(self, poi_uri):
@@ -181,15 +178,13 @@ class OlympicSiteParamsManager:
         """
         transform from_datetime, to_datetime to time_stamp
         """
-
         for key, value in json_data.items():
-            for scenario in ["departure_scenario", "arrival_scenario"]:
-                for dict_scenario in value.get(scenario, []):
-                    str_from_datetime = dict_scenario.get("from_datetime")
-                    str_to_datetime = dict_scenario.get("to_datetime")
-                    if str_from_datetime and str_to_datetime:
-                        dict_scenario["start"] = self.get_timestamp(str_from_datetime)
-                        dict_scenario["end"] = self.get_timestamp(str_to_datetime)
+            for event in value.get("events", []):
+                str_from_datetime = event.get("from_datetime")
+                str_to_datetime = event.get("to_datetime")
+                if str_from_datetime and str_to_datetime:
+                    event["start"] = self.get_timestamp(str_from_datetime)
+                    event["end"] = self.get_timestamp(str_to_datetime)
 
     def get_json_content(self, s3_object):
         logger = logging.getLogger(__name__)
