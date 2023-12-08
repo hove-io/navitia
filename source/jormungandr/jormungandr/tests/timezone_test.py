@@ -49,5 +49,8 @@ def get_instance_str_timezone_invalid_timezone_default_timezone_test():
 
 
 def get_instance_str_timezone_valid_timezone_default_timezone_test():
-    str_timezone = get_instance_str_timezone("Asia/Kathmandu", "toto", )
+    str_timezone = get_instance_str_timezone(
+        "Asia/Kathmandu",
+        "toto",
+    )
     assert str_timezone == "Asia/Kathmandu"
