@@ -56,15 +56,15 @@ DEFAULT_OLYMPIC_SITE_PARAMS = {
                 "from_datetime": "20120614T070000",
                 "to_datetime": "20120614T080000",
                 "departure_scenario": "scenario a",
-                "arrival_scenario": "scenario b"
+                "arrival_scenario": "scenario b",
             },
             {
                 "event": "20120615",
                 "from_datetime": "20120615T070000",
                 "to_datetime": "20120615T080000",
                 "departure_scenario": "scenario aa",
-                "arrival_scenario": "scenario bb"
-            }
+                "arrival_scenario": "scenario bb",
+            },
         ],
         "strict": False,
         "scenarios": {
@@ -105,7 +105,7 @@ DEFAULT_OLYMPIC_SITE_PARAMS = {
                 "from_datetime": "20120614T070000",
                 "to_datetime": "20120614T080000",
                 "departure_scenario": "scenario a",
-                "arrival_scenario": "scenario b"
+                "arrival_scenario": "scenario b",
             }
         ],
         "scenarios": {

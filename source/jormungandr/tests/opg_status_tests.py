@@ -45,7 +45,7 @@ OLYMPIC_SITES = {
                 "from_datetime": "20230714T100000",
                 "to_datetime": "20230714T120000",
                 "departure_scenario": "scenario a",
-              "arrival_scenario": "scenario a"
+                "arrival_scenario": "scenario a",
             },
             {
                 "event": "400 m haies",
@@ -53,8 +53,8 @@ OLYMPIC_SITES = {
                 "to_datetime": "20230714T160000",
                 "departure_scenario": "scenario b",
                 "to_datetime": "20230714T160000",
-                "arrival_scenario": "scenario b"
-            }
+                "arrival_scenario": "scenario b",
+            },
         ],
         "strict": False,
         "scenarios": {
@@ -63,13 +63,13 @@ OLYMPIC_SITES = {
                     "stop_point:IDFM:463685": {
                         "name": "Bercy - Arena (Paris)",
                         "attractivity": 1,
-                        "virtual_fallback": 10
+                        "virtual_fallback": 10,
                     },
                     "stop_point:IDFM:463686": {
                         "name": "Pont de Tolbiac (Paris)",
                         "attractivity": 3,
-                        "virtual_fallback": 150
-                    }
+                        "virtual_fallback": 150,
+                    },
                 }
             },
             "scenario b": {
@@ -77,13 +77,13 @@ OLYMPIC_SITES = {
                     "stop_point:IDFM:463685": {
                         "name": "Bercy - Arena (Paris)",
                         "attractivity": 1,
-                        "virtual_fallback": 10
+                        "virtual_fallback": 10,
                     },
                     "stop_point:IDFM:463686": {
                         "name": "Pont de Tolbiac (Paris)",
                         "attractivity": 3,
-                        "virtual_fallback": 150
-                    }
+                        "virtual_fallback": 150,
+                    },
                 }
             },
             "scenario c": {
@@ -91,17 +91,17 @@ OLYMPIC_SITES = {
                     "stop_point:IDFM:463685": {
                         "name": "Bercy - Arena (Paris)",
                         "attractivity": 1,
-                        "virtual_fallback": 10
+                        "virtual_fallback": 10,
                     },
                     "stop_point:IDFM:463686": {
                         "name": "Pont de Tolbiac (Paris)",
                         "attractivity": 3,
-                        "virtual_fallback": 150
-                    }
+                        "virtual_fallback": 150,
+                    },
                 },
-                "addtionnal_parameters": {"max_walking_duration_to_pt": 13000}
-            }
-        }
+                "addtionnal_parameters": {"max_walking_duration_to_pt": 13000},
+            },
+        },
     }
 }
 
