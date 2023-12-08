@@ -429,9 +429,9 @@ def test_build_arrival_poi_jo():
 def test_build_departure_and_arrival_poi_jo():
     instance = FakeInstance(olympics_forbidden_uris=DEFAULT_OLYMPICS_FORBIDDEN_URIS)
     osp = OlympicSiteParamsManager(instance)
+    api_request = dict()
     osp.olympic_site_params = deepcopy(default_olympic_site_params)
     osp.str_datetime_time_stamp(osp.olympic_site_params)
-    api_request = dict()
 
     pt_origin_detail = make_pt_object(type_pb2.POI, 1, 2, "poi:EFG")
     property = pt_origin_detail.poi.properties.add()
@@ -535,3 +535,85 @@ def test_fill_olympic_site_params_from_s3_invalid_access():
     }
     osp.fill_olympic_site_params_from_s3()
     assert not osp.olympic_site_params
+
+
+def test_build_departure_and_arrival_poi_jo_empty_olympic_site_params():
+    instance = FakeInstance(olympics_forbidden_uris=DEFAULT_OLYMPICS_FORBIDDEN_URIS)
+    osp = OlympicSiteParamsManager(instance)
+
+    pt_origin_detail = make_pt_object(type_pb2.POI, 1, 2, "poi:EFG")
+    property = pt_origin_detail.poi.properties.add()
+    property.type = DEFAULT_OLYMPICS_FORBIDDEN_URIS["poi_property_key"]
+    property.value = DEFAULT_OLYMPICS_FORBIDDEN_URIS["poi_property_value"]
+
+    pt_destination_detail = make_pt_object(type_pb2.POI, 2, 3, "poi:BCD")
+    property = pt_destination_detail.poi.properties.add()
+    property.type = DEFAULT_OLYMPICS_FORBIDDEN_URIS["poi_property_key"]
+    property.value = DEFAULT_OLYMPICS_FORBIDDEN_URIS["poi_property_value"]
+
+    api_request = {}
+
+    assert not api_request.get("criteria")
+    assert not api_request.get("max_walking_duration_to_pt")
+    assert "_keep_olympics_journeys" not in api_request
+    api_request["datetime"] = osp.get_timestamp('20230715T110000')
+    osp.build(pt_origin_detail, pt_destination_detail, api_request)
+    assert not api_request["olympic_site_params"]
+
+
+def test_build_departure_and_arrival_poi_jo_add_forbidden_uris():
+    instance = FakeInstance(olympics_forbidden_uris=DEFAULT_OLYMPICS_FORBIDDEN_URIS)
+    osp = OlympicSiteParamsManager(instance)
+    osp.olympic_site_params = deepcopy(default_olympic_site_params)
+    osp.str_datetime_time_stamp(osp.olympic_site_params)
+
+    pt_origin_detail = make_pt_object(type_pb2.POI, 1, 2, "poi:EFG")
+    property = pt_origin_detail.poi.properties.add()
+    property.type = DEFAULT_OLYMPICS_FORBIDDEN_URIS["poi_property_key"]
+    property.value = DEFAULT_OLYMPICS_FORBIDDEN_URIS["poi_property_value"]
+
+    pt_destination_detail = make_pt_object(type_pb2.POI, 2, 3, "poi:BCD")
+    property = pt_destination_detail.poi.properties.add()
+    property.type = DEFAULT_OLYMPICS_FORBIDDEN_URIS["poi_property_key"]
+    property.value = DEFAULT_OLYMPICS_FORBIDDEN_URIS["poi_property_value"]
+
+    api_request = {"forbidden_uris[]": ["uri1", "uri2"]}
+
+    assert not api_request.get("criteria")
+    assert not api_request.get("max_walking_duration_to_pt")
+    assert "_keep_olympics_journeys" not in api_request
+    api_request["datetime"] = osp.get_timestamp('20230715T110000')
+    osp.build(pt_origin_detail, pt_destination_detail, api_request)
+    assert api_request["olympic_site_params"]
+    assert len(api_request["forbidden_uris[]"]) == 3
+
+
+def test_get_dict_scenario_invalid_scanario_name():
+    instance = FakeInstance(olympics_forbidden_uris=DEFAULT_OLYMPICS_FORBIDDEN_URIS)
+    osp = OlympicSiteParamsManager(instance)
+    osp.olympic_site_params = deepcopy(default_olympic_site_params)
+    osp.str_datetime_time_stamp(osp.olympic_site_params)
+
+    pt_origin_detail = make_pt_object(type_pb2.POI, 1, 2, "poi:EFG")
+    property = pt_origin_detail.poi.properties.add()
+    property.type = DEFAULT_OLYMPICS_FORBIDDEN_URIS["poi_property_key"]
+    property.value = DEFAULT_OLYMPICS_FORBIDDEN_URIS["poi_property_value"]
+
+    pt_destination_detail = make_pt_object(type_pb2.POI, 2, 3, "poi:BCD")
+    property = pt_destination_detail.poi.properties.add()
+    property.type = DEFAULT_OLYMPICS_FORBIDDEN_URIS["poi_property_key"]
+    property.value = DEFAULT_OLYMPICS_FORBIDDEN_URIS["poi_property_value"]
+
+    api_request = dict()
+
+    assert not api_request.get("criteria")
+    assert not api_request.get("max_walking_duration_to_pt")
+    assert "_keep_olympics_journeys" not in api_request
+    api_request["datetime"] = osp.get_timestamp('20230715T110000')
+    osp.build(pt_origin_detail, pt_destination_detail, api_request)
+    assert api_request["olympic_site_params"]
+    assert len(api_request["forbidden_uris[]"]) == 3
+    scenario_name = osp.get_valid_scenario_name("poi:BCD", "departure_scenario", osp.get_timestamp('20230720T110000'))
+    assert not scenario_name
+    scenario = osp.get_dict_scenario("poi:BCD", "departure_scenario", osp.get_timestamp('20230720T110000'))
+    assert not scenario
