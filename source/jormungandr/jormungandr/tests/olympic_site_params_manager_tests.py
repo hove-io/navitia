@@ -612,9 +612,9 @@ def test_get_dict_scenario_invalid_scanario_name():
     api_request["datetime"] = osp.get_timestamp('20230715T110000')
     osp.build(pt_origin_detail, pt_destination_detail, api_request)
     assert api_request["olympic_site_params"]
-    assert len(api_request["forbidden_uris[]"]) == 3
+    assert len(api_request["forbidden_uris[]"]) == 1
     scenario_name = osp.get_valid_scenario_name(
-        "poi:BCD", "departure_scenario", osp.get_timestamp('20230720T110000')
+        osp.olympic_site_params["poi:BCD"]["events"], "departure_scenario", osp.get_timestamp('20230720T110000')
     )
     assert not scenario_name
     scenario = osp.get_dict_scenario("poi:BCD", "departure_scenario", osp.get_timestamp('20230720T110000'))
