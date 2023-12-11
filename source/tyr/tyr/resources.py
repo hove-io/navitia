@@ -60,6 +60,7 @@ from werkzeug.exceptions import BadRequest
 
 from tyr import api
 from tyr.fields import *
+import tyr.fields
 from tyr.formats import (
     poi_type_conf_format,
     parse_error,
@@ -124,7 +125,7 @@ class Status(flask_restful.Resource):
 
 
 class Job(flask_restful.Resource):
-    @marshal_with(jobs_fields)
+    @marshal_with(tyr.fields.jobs_fields)
     def get(self, instance_name=None, id=None):
         query = models.Job.query
         if instance_name:
@@ -331,7 +332,7 @@ class Instance(flask_restful.Resource):
     def __init__(self):
         pass
 
-    @marshal_with(instance_fields)
+    @marshal_with(tyr.fields.instance_fields)
     def _get(self, id, name):
         parser = reqparse.RequestParser()
         parser.add_argument(
@@ -979,6 +980,22 @@ class Instance(flask_restful.Resource):
             default=instance.additional_parameters,
         )
 
+        parser.add_argument(
+            'co2_emission_car_value',
+            type=float,
+            help='co2 emission car value, per 1Km ',
+            location=('json', 'values'),
+            default=instance.co2_emission_car_value,
+        )
+
+        parser.add_argument(
+            'co2_emission_car_unit',
+            type=str,
+            help='co2 emission car value',
+            location=('json', 'values'),
+            default=instance.co2_emission_car_unit,
+        )
+
         args = parser.parse_args()
 
         try:
@@ -1078,6 +1095,8 @@ class Instance(flask_restful.Resource):
                         'ghost_words',
                         'filter_odt_journeys',
                         'additional_parameters',
+                        'co2_emission_car_value',
+                        'co2_emission_car_unit',
                     ],
                 ),
                 maxlen=0,
@@ -2384,7 +2403,7 @@ def check_cities_db():
         cities_db.dispose()
 
 
-@marshal_with(job_fields)
+@marshal_with(tyr.fields.job_fields)
 def check_cities_job():
     """
     Check status of cities job in Tyr db
@@ -2468,7 +2487,7 @@ class Cities(flask_restful.Resource):
 
 
 class BssProvider(flask_restful.Resource):
-    @marshal_with(bss_provider_list_fields)
+    @marshal_with(tyr.fields.bss_provider_list_fields)
     def get(self, id=None):
         if id:
             try:
@@ -2534,7 +2553,7 @@ class BssProvider(flask_restful.Resource):
 
 
 class EquipmentsProvider(flask_restful.Resource):
-    @marshal_with(equipment_provider_list_fields)
+    @marshal_with(tyr.fields.equipment_provider_list_fields)
     def get(self, id=None):
         if id:
             try:

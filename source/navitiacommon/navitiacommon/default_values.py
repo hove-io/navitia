@@ -251,6 +251,9 @@ loki_pt_journey_fare = 'kraken'
 loki_compute_pt_journey_fare = True
 loki_pt_journey_fare_configurations = dict()  # type: dict
 
+co2_emission_car_value = 184.0  # gEC by Km
+co2_emission_car_unit = 'gEC'
+
 
 def get_value_or_default(attr, instance, instance_name):
     if not instance or getattr(instance, attr, None) == None:

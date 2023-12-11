@@ -757,6 +757,20 @@ class Instance(db.Model):  # type: ignore
         server_default=str(default_values.additional_parameters),
     )
 
+    co2_emission_car_value = db.Column(
+        db.Float,
+        default=default_values.co2_emission_car_value,
+        nullable=False,
+        server_default=str(default_values.co2_emission_car_value),
+    )
+
+    co2_emission_car_unit = db.Column(
+        db.Text,
+        default=default_values.co2_emission_car_unit,
+        nullable=False,
+        server_default=str(default_values.co2_emission_car_unit),
+    )
+
     def __init__(self, name=None, is_free=False, authorizations=None, jobs=None):
         self.name = name
         self.is_free = is_free

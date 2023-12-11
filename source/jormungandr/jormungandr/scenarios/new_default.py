@@ -83,6 +83,7 @@ from jormungandr.utils import (
     json_address_from_uri,
     is_olympic_site,
     entrypoint_uri_refocus,
+    get_pt_object_coord,
 )
 from jormungandr.error import generate_error
 from jormungandr.utils import Coords
@@ -104,6 +105,9 @@ SECTION_TYPES_TO_RETAIN = {response_pb2.PUBLIC_TRANSPORT, response_pb2.STREET_NE
 JOURNEY_TYPES_TO_RETAIN = ['best', 'comfort', 'non_pt_walk', 'non_pt_bike', 'non_pt_bss']
 STREET_NETWORK_MODE_TO_RETAIN = {response_pb2.Ridesharing, response_pb2.Car, response_pb2.Bike, response_pb2.Bss}
 TEMPLATE_MSG_UNKNOWN_OBJECT = "The entry point: {} is not valid"
+
+# https://github.com/hove-io/navitia/blob/dev/source/kraken/worker.cpp#L61
+CO2_ESTIMATION_COEFF = 1.35
 
 
 def get_kraken_calls(request):
@@ -357,20 +361,21 @@ def update_best_boarding_positions(pb_resp, instance):
             helpers.fill_best_boarding_position(prev, boarding_positions)
 
 
-def compute_car_co2_emission(pb_resp, api_request, instance, request_id):
+def compute_car_co2_emission(pb_resp, pt_object_origin, pt_object_destination, instance):
     if not pb_resp.journeys:
         return
     car = next((j for j in pb_resp.journeys if helpers.is_car_direct_path(j)), None)
     if car is None or not car.HasField('co2_emission'):
-        # if there is no car journey found, we request kraken to give us an estimation of
-        # co2 emission
-        co2_estimation = instance.georef.get_car_co2_emission_on_crow_fly(
-            api_request['origin'], api_request['destination'], request_id
+        orig_coord = get_pt_object_coord(pt_object_origin)
+        dest_coord = get_pt_object_coord(pt_object_destination)
+
+        crowfly_distance = crowfly_distance_between(orig_coord, dest_coord)
+
+        # Assign car_co2_emission into the resp, these value will be exposed in the final result
+        pb_resp.car_co2_emission.value = (
+            crowfly_distance / 1000.0 * CO2_ESTIMATION_COEFF * instance.co2_emission_car_value
         )
-        if co2_estimation:
-            # Assign car_co2_emission into the resp, these value will be exposed in the final result
-            pb_resp.car_co2_emission.value = co2_estimation.value
-            pb_resp.car_co2_emission.unit = co2_estimation.unit
+        pb_resp.car_co2_emission.unit = instance.co2_emission_car_unit
     else:
         # Assign car_co2_emission into the resp, these value will be exposed in the final result
         pb_resp.car_co2_emission.value = car.co2_emission.value
@@ -1400,7 +1405,7 @@ class Scenario(simple.Scenario):
         pb_resp = merge_responses(responses, api_request['debug'])
 
         sort_journeys(pb_resp, instance.journey_order, api_request['clockwise'])
-        compute_car_co2_emission(pb_resp, api_request, instance, "{}_car_co2".format(request_id))
+        compute_car_co2_emission(pb_resp, pt_object_origin, pt_object_destination, instance)
         compute_air_pollutants_for_context(
             pb_resp, api_request, instance, "{}_car_air_pollutants".format(request_id)
         )
