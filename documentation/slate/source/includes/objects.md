@@ -803,7 +803,7 @@ pt-date-time (pt stands for "public transport") is a complex date time object to
 |type|String|"notes" or "notes"|
 |value|String|The content of the note|
 
-On stop_scehdules and terminus_schedules services, you will find the main terminus in the `display_information.direction` property. You can find also a `terminus` typed note when a vehicle journey does not stop on this main `display_information.direction` terminus.
+On stop_schedules and terminus_schedules services, you will find the main terminus in the `display_information.direction` property. You can find also a `terminus` typed note when a vehicle journey does not stop on this main `display_information.direction` terminus.
 
 ### <a name="stop-date-time"></a>stop_date_time
 
