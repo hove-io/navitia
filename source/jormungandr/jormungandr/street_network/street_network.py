@@ -84,6 +84,9 @@ class AbstractStreetNetworkService(ABC):  # type: ignore
         """
         return places_isochrone
 
+    def get_truncated_places_isochrone(self, places_isochrone):
+        return places_isochrone
+
     def direct_path_with_fp(
         self,
         instance,
