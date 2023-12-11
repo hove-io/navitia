@@ -157,6 +157,14 @@ class OlympicSiteParamsManager:
 
         self.build_api_request(api_request)
 
+    def manage_forbidden_uris(self, api_request, forbidden_uris):
+        if not forbidden_uris:
+            return
+        if api_request.get("forbidden_uris[]"):
+            api_request["forbidden_uris[]"] += forbidden_uris
+        else:
+            api_request["forbidden_uris[]"] = forbidden_uris
+
     def build_api_request(self, api_request):
         olympic_site_params = api_request.get("olympic_site_params")
         if not olympic_site_params:
@@ -168,17 +176,15 @@ class OlympicSiteParamsManager:
 
         # Add additional parameters
         for key, value in olympic_site_params.get("additional_parameters", {}).items():
-            api_request[key] = value
+            if key == "forbidden_uris":
+                self.manage_forbidden_uris(api_request, value)
+            else:
+                api_request[key] = value
 
         # Add forbidden_uri
-        if api_request.get("forbidden_uris[]"):
-            api_request[
-                "forbidden_uris[]"
-            ] += self.instance.olympics_forbidden_uris.pt_object_olympics_forbidden_uris
-        else:
-            api_request[
-                "forbidden_uris[]"
-            ] = self.instance.olympics_forbidden_uris.pt_object_olympics_forbidden_uris
+        self.manage_forbidden_uris(
+            api_request, self.instance.olympics_forbidden_uris.pt_object_olympics_forbidden_uris
+        )
 
         # Add criteria
         if api_request.get("criteria") in ["departure_stop_attractivity", "arrival_stop_attractivity"]:
