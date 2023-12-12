@@ -81,7 +81,6 @@ from jormungandr.utils import (
     is_coord,
     get_pt_object_from_json,
     json_address_from_uri,
-    is_olympic_site,
     entrypoint_uri_refocus,
 )
 from jormungandr.error import generate_error
@@ -1211,19 +1210,6 @@ def isochrone_common(isochrone, request, instance, journey_req):
     journey_req.streetnetwork_params.destination_mode = isochrone.destination_modes[0]
 
 
-def add_olympics_forbidden_uris(origin_detail, destination_detail, api_request, instance):
-    if not instance.olympics_forbidden_uris:
-        return
-    if is_olympic_site(origin_detail, instance):
-        return
-    if is_olympic_site(destination_detail, instance):
-        return
-    if api_request.get("forbidden_uris[]"):
-        api_request["forbidden_uris[]"] += instance.olympics_forbidden_uris.pt_object_olympics_forbidden_uris
-    else:
-        api_request["forbidden_uris[]"] = instance.olympics_forbidden_uris.pt_object_olympics_forbidden_uris
-
-
 class Scenario(simple.Scenario):
     """
     TODO: a bit of explanation about the new scenario
@@ -1277,7 +1263,6 @@ class Scenario(simple.Scenario):
         pt_object_origin = get_pt_object_from_json(origin_detail, instance)
         pt_object_destination = get_pt_object_from_json(destination_detail, instance)
 
-        add_olympics_forbidden_uris(pt_object_origin, pt_object_destination, api_request, instance)
         api_request['origin'] = get_kraken_id(origin_detail) or api_request.get('origin')
         api_request['destination'] = get_kraken_id(destination_detail) or api_request.get('destination')
 
@@ -1292,9 +1277,7 @@ class Scenario(simple.Scenario):
         # Return the possible combinations (origin_mode ,destination_mode, direct_path_type)
         krakens_call = get_kraken_calls(api_request)
 
-        instance.olympic_site_params_manager.build(
-            pt_object_origin, pt_object_destination, api_request, instance
-        )
+        instance.olympic_site_params_manager.build(pt_object_origin, pt_object_destination, api_request)
 
         # We need the original request (api_request) for filtering, but request
         # is modified by create_next_kraken_request function.
