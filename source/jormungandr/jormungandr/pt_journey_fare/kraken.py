@@ -32,7 +32,7 @@ from jormungandr import exceptions
 from jormungandr import app
 
 import logging
-from retrying import retry
+from retrying import retry, RetryError
 
 
 class Kraken(AbstractPtJourneyFare):
@@ -72,7 +72,11 @@ class Kraken(AbstractPtJourneyFare):
         def retry_if_dead_socket(exception):
             return isinstance(exception, exceptions.DeadSocketException)
 
-        @retry(stop_max_attempt_number=2, retry_on_exception=retry_if_dead_socket)
+        @retry(
+            stop_max_attempt_number=app.config.get(str('de'), 2),
+            retry_on_exception=retry_if_dead_socket,
+            wrap_exception=True,
+        )
         def do():
             fare_request = self.create_fare_request(pt_journeys)
             return self.instance._send_and_receive(
@@ -83,7 +87,7 @@ class Kraken(AbstractPtJourneyFare):
 
         try:
             return do()
-        except exceptions.DeadSocketException:
-            self.logger.exception('')
+        except RetryError as e:
+            self.logger.exception(e)
 
         return None
