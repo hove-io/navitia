@@ -178,6 +178,8 @@ def test_update_instances(create_instance):
         "filter_odt_journeys": False,
         "additional_parameters": False,
         "language": "es-ES",
+        "co2_emission_car_value": 4242.0,
+        "co2_emission_car_unit": "UNITY",
     }
     resp = api_get('/v0/instances/{}'.format(create_instance))
     assert resp[0]['access_points'] is False
@@ -229,6 +231,8 @@ def test_update_instances(create_instance):
     assert resp['filter_odt_journeys'] is False
     assert resp['additional_parameters'] is False
     assert resp['language'] == 'es-ES'
+    assert resp['co2_emission_car_value'] == 4242.0
+    assert resp['co2_emission_car_unit'] == 'UNITY'
 
 
 def test_update_instances_is_free(create_instance):

@@ -237,6 +237,8 @@ instance_fields = {
     'ghost_words': fields.List(fields.String),
     'filter_odt_journeys': fields.Raw,
     'additional_parameters': fields.Raw,
+    'co2_emission_car_value': fields.Raw,
+    'co2_emission_car_unit': fields.Raw,
 }
 
 api_fields = {'id': fields.Raw, 'name': fields.Raw}
