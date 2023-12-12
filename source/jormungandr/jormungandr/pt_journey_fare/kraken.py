@@ -28,11 +28,17 @@
 # www.navitia.io
 from jormungandr.pt_journey_fare.pt_journey_fare import AbstractPtJourneyFare
 from navitiacommon import response_pb2, request_pb2, type_pb2
+from jormungandr import exceptions
+from jormungandr import app
+
+import logging
+from retrying import retry
 
 
 class Kraken(AbstractPtJourneyFare):
     def __init__(self, instance):
         self.instance = instance
+        self.logger = logging.getLogger(__name__)
 
     @staticmethod
     def _pt_sections(journey):
@@ -63,5 +69,21 @@ class Kraken(AbstractPtJourneyFare):
         return request
 
     def get_pt_journeys_fares(self, pt_journeys, request_id):
-        fare_request = self.create_fare_request(pt_journeys)
-        return self.instance.send_and_receive(fare_request, request_id="{}_fare".format(request_id))
+        def retry_if_dead_socket(exception):
+            return isinstance(exception, exceptions.DeadSocketException)
+
+        @retry(stop_max_attempt_number=2, retry_on_exception=retry_if_dead_socket)
+        def do():
+            fare_request = self.create_fare_request(pt_journeys)
+            return self.instance._send_and_receive(
+                fare_request,
+                timeout=app.config.get(str('PT_FARES_KRAKEN_TIMEOUT'), 0.1),
+                request_id="{}_fare".format(request_id),
+            )
+
+        try:
+            return do()
+        except exceptions.DeadSocketException:
+            self.logger.exception('')
+
+        return None
