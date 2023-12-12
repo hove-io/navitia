@@ -34,7 +34,6 @@ from jormungandr.utils import get_olympic_site, local_str_date_to_utc, date_to_t
 import boto3
 from jormungandr import app
 from botocore.client import Config
-from copy import deepcopy
 
 
 AttractivityVirtualFallback = namedtuple("AttractivityVirtualFallback", "attractivity, virtual_duration")
@@ -56,7 +55,7 @@ class OlympicSiteParamsManager:
 
     def get_valid_scenario_name(self, scenario_list, key, datetime):
         for event in scenario_list:
-            if event["start"] <= datetime <= event["end"]:
+            if event["from_timestamp"] <= datetime <= event["to_timestamp"]:
                 return event.get(key)
         return None
 
@@ -100,8 +99,8 @@ class OlympicSiteParamsManager:
                 str_from_datetime = event.get("from_datetime")
                 str_to_datetime = event.get("to_datetime")
                 if str_from_datetime and str_to_datetime:
-                    event["start"] = self.get_timestamp(str_from_datetime)
-                    event["end"] = self.get_timestamp(str_to_datetime)
+                    event["from_timestamp"] = self.get_timestamp(str_from_datetime)
+                    event["to_timestamp"] = self.get_timestamp(str_to_datetime)
 
     def get_json_content(self, s3_object):
         logger = logging.getLogger(__name__)
@@ -111,14 +110,6 @@ class OlympicSiteParamsManager:
         except Exception:
             logger.exception('Error while loading file: {}'.format(s3_object.key))
             return {}
-
-    def clean_and_get_olympic_site_params(self):
-        result = deepcopy(self.olympic_site_params)
-        for key, value in result.items():
-            for event in value.get("events", []):
-                del event["start"]
-                del event["end"]
-        return result
 
     def fill_olympic_site_params_from_s3(self):
         logger = logging.getLogger(__name__)
