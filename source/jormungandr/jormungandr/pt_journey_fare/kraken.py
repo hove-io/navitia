@@ -75,7 +75,9 @@ class Kraken(AbstractPtJourneyFare):
         @retry(
             stop_max_attempt_number=app.config.get(str('PT_FARES_KRAKEN_ATTEMPT_NUMBER'), 2),
             retry_on_exception=retry_if_dead_socket,
-            wrap_exception=True,  # the inner exception is wrapper into RetryError, the RetryError can give a little bit more about the exception, ex. how many times it has attempted before giving up
+            # the inner exception(DeadSocket) is wrapped into RetryError, the RetryError can give a little bit more
+            # about the context, ex. how many times it has attempted before giving up
+            wrap_exception=True,
         )
         def do():
             fare_request = self.create_fare_request(pt_journeys)
