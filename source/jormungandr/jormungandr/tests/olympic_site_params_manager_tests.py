@@ -134,6 +134,8 @@ DEFAULT_OLYMPICS_FORBIDDEN_URIS = {
     "min_pt_duration": 15,
 }
 
+DEFAULT_OLYMPIC_SITE_PARAMS_BUCKET = {"name": "aa", "folder": "olympic_site_params"}
+
 
 class FakeInstance(Instance):
     def __init__(self, name="fake_instance", olympics_forbidden_uris=None):
@@ -160,12 +162,18 @@ class FakeS3Object:
         self.key = key
 
 
+class FakeOlympicSiteParamsManager(OlympicSiteParamsManager):
+    def fetch_and_get_data(self, instance_name, bucket_name, folder, **kwargs):
+        result = deepcopy(default_olympic_site_params)
+        self.str_datetime_time_stamp(result)
+        return result
+
+
 def test_get_departure_olympic_site_params():
 
     instance = FakeInstance(olympics_forbidden_uris=DEFAULT_OLYMPICS_FORBIDDEN_URIS)
-    osp = OlympicSiteParamsManager(instance)
-    osp.olympic_site_params = deepcopy(default_olympic_site_params)
-    osp.str_datetime_time_stamp(osp.olympic_site_params)
+    osp = FakeOlympicSiteParamsManager(instance, DEFAULT_OLYMPIC_SITE_PARAMS_BUCKET)
+    osp.fill_olympic_site_params_from_s3()
     default_scenario = osp.get_dict_scenario(
         "poi:BCD", "departure_scenario", datetime=osp.get_timestamp('20230714T110000')
     )
@@ -191,9 +199,8 @@ def test_get_departure_olympic_site_params():
 
 def test_get_arrival_olympic_site_params():
     instance = FakeInstance(olympics_forbidden_uris=DEFAULT_OLYMPICS_FORBIDDEN_URIS)
-    osp = OlympicSiteParamsManager(instance)
-    osp.olympic_site_params = deepcopy(default_olympic_site_params)
-    osp.str_datetime_time_stamp(osp.olympic_site_params)
+    osp = FakeOlympicSiteParamsManager(instance, DEFAULT_OLYMPIC_SITE_PARAMS_BUCKET)
+    osp.fill_olympic_site_params_from_s3()
     default_scenario = osp.get_dict_scenario(
         "poi:BCD", "arrival_scenario", datetime=osp.get_timestamp('20230716T110000')
     )
@@ -219,9 +226,8 @@ def test_get_arrival_olympic_site_params():
 
 def test_build_with_request_params_and_without_criteria_without_keep_olympics_journeys():
     instance = FakeInstance(olympics_forbidden_uris=DEFAULT_OLYMPICS_FORBIDDEN_URIS)
-    osp = OlympicSiteParamsManager(instance)
-    osp.olympic_site_params = deepcopy(default_olympic_site_params)
-    osp.str_datetime_time_stamp(osp.olympic_site_params)
+    osp = FakeOlympicSiteParamsManager(instance, DEFAULT_OLYMPIC_SITE_PARAMS_BUCKET)
+    osp.fill_olympic_site_params_from_s3()
     api_request = dict()
     api_request["_olympics_sites_attractivities[]"] = [('stop_point:24113', 3), ('stop_point:24131', 30)]
     api_request["_olympics_sites_virtual_fallback[]"] = [('stop_point:24113', 800), ('stop_point:24131', 820)]
@@ -253,8 +259,8 @@ def test_build_with_request_params_and_without_criteria_without_keep_olympics_jo
 
 def test_build_with_request_params_and_without_criteria_with_keep_olympics_journeys():
     instance = FakeInstance(olympics_forbidden_uris=DEFAULT_OLYMPICS_FORBIDDEN_URIS)
-    osp = OlympicSiteParamsManager(instance)
-    osp.olympic_site_params = default_olympic_site_params
+    osp = FakeOlympicSiteParamsManager(instance, DEFAULT_OLYMPIC_SITE_PARAMS_BUCKET)
+    osp.fill_olympic_site_params_from_s3()
     api_request = dict()
     api_request["_olympics_sites_attractivities[]"] = [('stop_point:24113', 3), ('stop_point:24131', 30)]
     api_request["_olympics_sites_virtual_fallback[]"] = [('stop_point:24113', 800), ('stop_point:24131', 820)]
@@ -285,8 +291,8 @@ def test_build_with_request_params_and_without_criteria_with_keep_olympics_journ
 
 def test_build_with_request_params_and_departure_criteria():
     instance = FakeInstance(olympics_forbidden_uris=DEFAULT_OLYMPICS_FORBIDDEN_URIS)
-    osp = OlympicSiteParamsManager(instance)
-    osp.olympic_site_params = default_olympic_site_params
+    osp = FakeOlympicSiteParamsManager(instance, DEFAULT_OLYMPIC_SITE_PARAMS_BUCKET)
+    osp.fill_olympic_site_params_from_s3()
     api_request = dict()
     api_request["_olympics_sites_attractivities[]"] = [('stop_point:24113', 3), ('stop_point:24131', 30)]
     api_request["_olympics_sites_virtual_fallback[]"] = [('stop_point:24113', 800), ('stop_point:24131', 820)]
@@ -318,8 +324,8 @@ def test_build_with_request_params_and_departure_criteria():
 
 def test_build_with_request_params_and_arrival_criteria():
     instance = FakeInstance(olympics_forbidden_uris=DEFAULT_OLYMPICS_FORBIDDEN_URIS)
-    osp = OlympicSiteParamsManager(instance)
-    osp.olympic_site_params = default_olympic_site_params
+    osp = FakeOlympicSiteParamsManager(instance, DEFAULT_OLYMPIC_SITE_PARAMS_BUCKET)
+    osp.fill_olympic_site_params_from_s3()
     api_request = dict()
     api_request["_olympics_sites_attractivities[]"] = [('stop_point:24113', 3), ('stop_point:24131', 30)]
     api_request["_olympics_sites_virtual_fallback[]"] = [('stop_point:24113', 800), ('stop_point:24131', 820)]
@@ -351,8 +357,8 @@ def test_build_with_request_params_and_arrival_criteria():
 
 def test_build_without_request_params():
     instance = FakeInstance(olympics_forbidden_uris=DEFAULT_OLYMPICS_FORBIDDEN_URIS)
-    osp = OlympicSiteParamsManager(instance)
-    osp.olympic_site_params = default_olympic_site_params
+    osp = FakeOlympicSiteParamsManager(instance, DEFAULT_OLYMPIC_SITE_PARAMS_BUCKET)
+    osp.fill_olympic_site_params_from_s3()
     api_request = dict()
 
     assert not api_request.get("criteria")
@@ -368,9 +374,8 @@ def test_build_without_request_params():
 
 def test_build_origin_poi_jo():
     instance = FakeInstance(olympics_forbidden_uris=DEFAULT_OLYMPICS_FORBIDDEN_URIS)
-    osp = OlympicSiteParamsManager(instance)
-    osp.olympic_site_params = deepcopy(default_olympic_site_params)
-    osp.str_datetime_time_stamp(osp.olympic_site_params)
+    osp = FakeOlympicSiteParamsManager(instance, DEFAULT_OLYMPIC_SITE_PARAMS_BUCKET)
+    osp.fill_olympic_site_params_from_s3()
     api_request = dict()
     pt_origin_detail = make_pt_object(type_pb2.POI, 2, 3, "poi:BCD")
     property = pt_origin_detail.poi.properties.add()
@@ -400,9 +405,8 @@ def test_build_origin_poi_jo():
 
 def test_build_arrival_poi_jo():
     instance = FakeInstance(olympics_forbidden_uris=DEFAULT_OLYMPICS_FORBIDDEN_URIS)
-    osp = OlympicSiteParamsManager(instance)
-    osp.olympic_site_params = deepcopy(default_olympic_site_params)
-    osp.str_datetime_time_stamp(osp.olympic_site_params)
+    osp = FakeOlympicSiteParamsManager(instance, DEFAULT_OLYMPIC_SITE_PARAMS_BUCKET)
+    osp.fill_olympic_site_params_from_s3()
     api_request = dict()
     pt_origin_detail = make_pt_object(type_pb2.ADDRESS, 1, 2, "SA:BCD")
 
@@ -433,10 +437,9 @@ def test_build_arrival_poi_jo():
 
 def test_build_departure_and_arrival_poi_jo():
     instance = FakeInstance(olympics_forbidden_uris=DEFAULT_OLYMPICS_FORBIDDEN_URIS)
-    osp = OlympicSiteParamsManager(instance)
+    osp = FakeOlympicSiteParamsManager(instance, DEFAULT_OLYMPIC_SITE_PARAMS_BUCKET)
+    osp.fill_olympic_site_params_from_s3()
     api_request = dict()
-    osp.olympic_site_params = deepcopy(default_olympic_site_params)
-    osp.str_datetime_time_stamp(osp.olympic_site_params)
 
     pt_origin_detail = make_pt_object(type_pb2.POI, 1, 2, "poi:EFG")
     property = pt_origin_detail.poi.properties.add()
@@ -473,50 +476,48 @@ def test_build_departure_and_arrival_poi_jo():
 
 def test_get_dict_scenario_empty_scenario():
     instance = FakeInstance(olympics_forbidden_uris=DEFAULT_OLYMPICS_FORBIDDEN_URIS)
-    osp = OlympicSiteParamsManager(instance)
+    osp = FakeOlympicSiteParamsManager(instance, DEFAULT_OLYMPIC_SITE_PARAMS_BUCKET)
+    osp.fill_olympic_site_params_from_s3()
     res = osp.get_dict_scenario(None, {}, datetime=osp.get_timestamp('20230715T110000'))
     assert not res
 
 
 def test_build_olympic_site_params_empty_scenario():
     instance = FakeInstance(olympics_forbidden_uris=DEFAULT_OLYMPICS_FORBIDDEN_URIS)
-    osp = OlympicSiteParamsManager(instance)
+    osp = FakeOlympicSiteParamsManager(instance, DEFAULT_OLYMPIC_SITE_PARAMS_BUCKET)
+    osp.fill_olympic_site_params_from_s3()
     res = osp.build_olympic_site_params(None, {})
     assert not res
 
 
 def test_get_dict_additional_parameters_invalid_poi():
     instance = FakeInstance(olympics_forbidden_uris=DEFAULT_OLYMPICS_FORBIDDEN_URIS)
-    osp = OlympicSiteParamsManager(instance)
-    osp.olympic_site_params = deepcopy(default_olympic_site_params)
-    osp.str_datetime_time_stamp(osp.olympic_site_params)
+    osp = FakeOlympicSiteParamsManager(instance, DEFAULT_OLYMPIC_SITE_PARAMS_BUCKET)
+    osp.fill_olympic_site_params_from_s3()
     res = osp.get_dict_additional_parameters("poi:id", "default", datetime=osp.get_timestamp('20230715T110000'))
     assert not res
 
 
 def test_get_dict_additional_parameters_invalid_scenario():
     instance = FakeInstance(olympics_forbidden_uris=DEFAULT_OLYMPICS_FORBIDDEN_URIS)
-    osp = OlympicSiteParamsManager(instance)
-    osp.olympic_site_params = deepcopy(default_olympic_site_params)
-    osp.str_datetime_time_stamp(osp.olympic_site_params)
+    osp = FakeOlympicSiteParamsManager(instance, DEFAULT_OLYMPIC_SITE_PARAMS_BUCKET)
+    osp.fill_olympic_site_params_from_s3()
     res = osp.get_dict_additional_parameters("poi:BCD", "abc", datetime=osp.get_timestamp('20230715T110000'))
     assert not res
 
 
 def test_get_strict_parameter_invalid_poi():
     instance = FakeInstance(olympics_forbidden_uris=DEFAULT_OLYMPICS_FORBIDDEN_URIS)
-    osp = OlympicSiteParamsManager(instance)
-    osp.olympic_site_params = deepcopy(default_olympic_site_params)
-    osp.str_datetime_time_stamp(osp.olympic_site_params)
+    osp = FakeOlympicSiteParamsManager(instance, DEFAULT_OLYMPIC_SITE_PARAMS_BUCKET)
+    osp.fill_olympic_site_params_from_s3()
     res = osp.get_strict_parameter("poi:id")
     assert not res
 
 
 def test_get_json_content_invalid_s3_object():
     instance = FakeInstance(olympics_forbidden_uris=DEFAULT_OLYMPICS_FORBIDDEN_URIS)
-    osp = OlympicSiteParamsManager(instance)
-    osp.olympic_site_params = deepcopy(default_olympic_site_params)
-    osp.str_datetime_time_stamp(osp.olympic_site_params)
+    osp = FakeOlympicSiteParamsManager(instance, DEFAULT_OLYMPIC_SITE_PARAMS_BUCKET)
+    osp.fill_olympic_site_params_from_s3()
     fake_s3_object = FakeS3Object()
     res = osp.get_json_content(fake_s3_object)
     assert not res
@@ -526,28 +527,16 @@ def test_fill_olympic_site_params_from_s3_without_bucket_name():
     from jormungandr import app
 
     instance = FakeInstance(olympics_forbidden_uris=DEFAULT_OLYMPICS_FORBIDDEN_URIS)
-    osp = OlympicSiteParamsManager(instance)
+    osp = FakeOlympicSiteParamsManager(instance, {"folder": "olympic_site_params"})
+    osp.fill_olympic_site_params_from_s3()
     app.config["OLYMPIC_SITE_PARAMS_BUCKET"] = {"test": "test"}
     osp.fill_olympic_site_params_from_s3()
     assert not osp.olympic_site_params
 
 
-def test_fill_olympic_site_params_from_s3_invalid_access():
-    from jormungandr import app
-
-    instance = FakeInstance(olympics_forbidden_uris=DEFAULT_OLYMPICS_FORBIDDEN_URIS)
-    osp = OlympicSiteParamsManager(instance)
-    app.config["OLYMPIC_SITE_PARAMS_BUCKET"] = {
-        "name": "test",
-        "args": {"connect_timeout": 0.01, "read_timeout": 0.01, "retries": {'max_attempts': 0}},
-    }
-    osp.fill_olympic_site_params_from_s3()
-    assert not osp.olympic_site_params
-
-
 def test_build_departure_and_arrival_poi_jo_empty_olympic_site_params():
-    instance = FakeInstance(olympics_forbidden_uris=DEFAULT_OLYMPICS_FORBIDDEN_URIS)
-    osp = OlympicSiteParamsManager(instance)
+    instance = FakeInstance(olympics_forbidden_uris={})
+    osp = FakeOlympicSiteParamsManager(instance, DEFAULT_OLYMPIC_SITE_PARAMS_BUCKET)
 
     pt_origin_detail = make_pt_object(type_pb2.POI, 1, 2, "poi:EFG")
     property = pt_origin_detail.poi.properties.add()
@@ -571,9 +560,8 @@ def test_build_departure_and_arrival_poi_jo_empty_olympic_site_params():
 
 def test_build_departure_and_arrival_poi_jo_add_forbidden_uris():
     instance = FakeInstance(olympics_forbidden_uris=DEFAULT_OLYMPICS_FORBIDDEN_URIS)
-    osp = OlympicSiteParamsManager(instance)
-    osp.olympic_site_params = deepcopy(default_olympic_site_params)
-    osp.str_datetime_time_stamp(osp.olympic_site_params)
+    osp = FakeOlympicSiteParamsManager(instance, DEFAULT_OLYMPIC_SITE_PARAMS_BUCKET)
+    osp.fill_olympic_site_params_from_s3()
 
     pt_origin_detail = make_pt_object(type_pb2.POI, 1, 2, "poi:EFG")
     property = pt_origin_detail.poi.properties.add()
@@ -598,9 +586,8 @@ def test_build_departure_and_arrival_poi_jo_add_forbidden_uris():
 
 def test_get_dict_scenario_invalid_scanario_name():
     instance = FakeInstance(olympics_forbidden_uris=DEFAULT_OLYMPICS_FORBIDDEN_URIS)
-    osp = OlympicSiteParamsManager(instance)
-    osp.olympic_site_params = deepcopy(default_olympic_site_params)
-    osp.str_datetime_time_stamp(osp.olympic_site_params)
+    osp = FakeOlympicSiteParamsManager(instance, DEFAULT_OLYMPIC_SITE_PARAMS_BUCKET)
+    osp.fill_olympic_site_params_from_s3()
 
     pt_origin_detail = make_pt_object(type_pb2.POI, 1, 2, "poi:EFG")
     property = pt_origin_detail.poi.properties.add()
@@ -631,7 +618,8 @@ def test_get_dict_scenario_invalid_scanario_name():
 
 def test_manage_forbidden_uris_empty_list():
     instance = FakeInstance(olympics_forbidden_uris=DEFAULT_OLYMPICS_FORBIDDEN_URIS)
-    osp = OlympicSiteParamsManager(instance)
+    osp = FakeOlympicSiteParamsManager(instance, DEFAULT_OLYMPIC_SITE_PARAMS_BUCKET)
+    osp.fill_olympic_site_params_from_s3()
     api_request = {"forbidden_uris[]": ["uri1", "uri2"]}
     osp.manage_forbidden_uris(api_request, [])
     assert len(api_request["forbidden_uris[]"]) == 2
@@ -639,7 +627,8 @@ def test_manage_forbidden_uris_empty_list():
 
 def test_manage_forbidden_uris():
     instance = FakeInstance(olympics_forbidden_uris=DEFAULT_OLYMPICS_FORBIDDEN_URIS)
-    osp = OlympicSiteParamsManager(instance)
+    osp = FakeOlympicSiteParamsManager(instance, DEFAULT_OLYMPIC_SITE_PARAMS_BUCKET)
+    osp.fill_olympic_site_params_from_s3()
     api_request = {"forbidden_uris[]": ["uri1", "uri2"]}
     osp.manage_forbidden_uris(api_request, ["ab"])
     assert len(api_request["forbidden_uris[]"]) == 3

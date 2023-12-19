@@ -324,12 +324,14 @@ MOCKED_INSTANCE_CONF = {
 BRAGI_URL = 'https://host_of_bragi'
 BASIC_PARAMS = {'timeout': 200, 'pt_dataset[]': 'main_routing_test'}
 
+DEFAULT_OLYMPIC_SITE_PARAMS_BUCKET = {"name": "aa", "folder": "olympic_site_params"}
 
-def get_olympic_site_params_manager(instance):
-    osp = OlympicSiteParamsManager(instance)
-    osp.olympic_site_params = deepcopy(DEFAULT_OLYMPIC_SITE_PARAMS)
-    osp.str_datetime_time_stamp(osp.olympic_site_params)
-    return osp
+
+class FakeOlympicSiteParamsManager(OlympicSiteParamsManager):
+    def fetch_and_get_data(self, instance_name, bucket_name, folder, **kwargs):
+        result = deepcopy(DEFAULT_OLYMPIC_SITE_PARAMS)
+        self.str_datetime_time_stamp(result)
+        return result
 
 
 @dataset({'main_routing_test': MOCKED_INSTANCE_CONF}, global_config={'activate_bragi': True})
@@ -352,7 +354,9 @@ class TestOlympicSites(AbstractTestFixture):
             'lat': r_lat,
         }
         instance = i_manager.instances["main_routing_test"]
-        instance.olympic_site_params_manager = get_olympic_site_params_manager(instance)
+        instance.olympic_site_params_manager = FakeOlympicSiteParamsManager(
+            instance, DEFAULT_OLYMPIC_SITE_PARAMS_BUCKET
+        )
         to_place = "{}/multi-reverse?{}".format(BRAGI_URL, urlencode(params, doseq=True))
         with requests_mock.Mocker() as m:
             m.get(from_place, json=FROM_ADDRESS_WITH_WITHIN)
@@ -390,7 +394,9 @@ class TestOlympicSites(AbstractTestFixture):
         }
         to_place = "{}/multi-reverse?{}".format(BRAGI_URL, urlencode(params, doseq=True))
         instance = i_manager.instances["main_routing_test"]
-        instance.olympic_site_params_manager = get_olympic_site_params_manager(instance)
+        instance.olympic_site_params_manager = FakeOlympicSiteParamsManager(
+            instance, DEFAULT_OLYMPIC_SITE_PARAMS_BUCKET
+        )
         with requests_mock.Mocker() as m:
             m.get(from_place, json=FROM_ADDRESS_WITH_INVALID_WITHIN)
             m.get(to_place, json=TO_ADDRESS)
@@ -430,7 +436,9 @@ class TestOlympicSites(AbstractTestFixture):
         }
         to_place = "{}/multi-reverse?{}".format(BRAGI_URL, urlencode(params, doseq=True))
         instance = i_manager.instances["main_routing_test"]
-        instance.olympic_site_params_manager = get_olympic_site_params_manager(instance)
+        instance.olympic_site_params_manager = FakeOlympicSiteParamsManager(
+            instance, DEFAULT_OLYMPIC_SITE_PARAMS_BUCKET
+        )
         with requests_mock.Mocker() as m:
             m.get(from_place, json=FROM_ADDRESS)
             m.get(to_place, json=TO_ADDRESS)
@@ -463,7 +471,9 @@ class TestOlympicSites(AbstractTestFixture):
         from_place = "{}/multi-reverse?{}".format(BRAGI_URL, urlencode(params, doseq=True))
         to_place = "{}/features/{}?{}".format(BRAGI_URL, to_poi_uri, urlencode(BASIC_PARAMS, doseq=True))
         instance = i_manager.instances["main_routing_test"]
-        instance.olympic_site_params_manager = get_olympic_site_params_manager(instance)
+        instance.olympic_site_params_manager = FakeOlympicSiteParamsManager(
+            instance, DEFAULT_OLYMPIC_SITE_PARAMS_BUCKET
+        )
         with requests_mock.Mocker() as m:
             m.get(from_place, json=FROM_ADDRESS)
             m.get(to_place, json=TO_POI)
@@ -487,7 +497,9 @@ class TestOlympicSites(AbstractTestFixture):
         from_place = "{}/multi-reverse?{}".format(BRAGI_URL, urlencode(params, doseq=True))
         to_place = "{}/features/{}?{}".format(BRAGI_URL, to_poi_uri, urlencode(BASIC_PARAMS, doseq=True))
         instance = i_manager.instances["main_routing_test"]
-        instance.olympic_site_params_manager = get_olympic_site_params_manager(instance)
+        instance.olympic_site_params_manager = FakeOlympicSiteParamsManager(
+            instance, DEFAULT_OLYMPIC_SITE_PARAMS_BUCKET
+        )
         with requests_mock.Mocker() as m:
             m.get(from_place, json=FROM_ADDRESS)
             m.get(to_place, json=TO_POI_NOT_OLYMPIC)
@@ -520,7 +532,9 @@ class TestOlympicSites(AbstractTestFixture):
         }
         to_place = "{}/multi-reverse?{}".format(BRAGI_URL, urlencode(params, doseq=True))
         instance = i_manager.instances["main_routing_test"]
-        instance.olympic_site_params_manager = get_olympic_site_params_manager(instance)
+        instance.olympic_site_params_manager = FakeOlympicSiteParamsManager(
+            instance, DEFAULT_OLYMPIC_SITE_PARAMS_BUCKET
+        )
         with requests_mock.Mocker() as m:
             m.get(from_place, json=FROM_POI)
             m.get(to_place, json=TO_ADDRESS)
@@ -538,7 +552,9 @@ class TestOlympicSites(AbstractTestFixture):
         from_place = "{}/features/{}?{}".format(BRAGI_URL, from_poi_uri, urlencode(BASIC_PARAMS, doseq=True))
         to_place = "{}/features/{}?{}".format(BRAGI_URL, to_poi_uri, urlencode(BASIC_PARAMS, doseq=True))
         instance = i_manager.instances["main_routing_test"]
-        instance.olympic_site_params_manager = get_olympic_site_params_manager(instance)
+        instance.olympic_site_params_manager = FakeOlympicSiteParamsManager(
+            instance, DEFAULT_OLYMPIC_SITE_PARAMS_BUCKET
+        )
         with requests_mock.Mocker() as m:
             m.get(from_place, json=FROM_ADDRESS)
             m.get(to_place, json=TO_POI)
