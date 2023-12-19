@@ -154,6 +154,7 @@ default_cache = {
     'TIMEOUT_TIMEO': 60,
     'TIMEOUT_SYNTHESE': 30,
     'TIMEOUT_KRAKEN_COVERAGES': 60,
+    'FETCH_S3_DATA_TIMEOUT': 120,
 }
 
 CACHE_CONFIGURATION = json.loads(os.getenv('JORMUNGANDR_CACHE_CONFIGURATION', '{}')) or default_cache
