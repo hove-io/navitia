@@ -296,7 +296,7 @@ class Instance(transient_socket.TransientSocket):
 
         # load stop_point attractivities, the feature is only available when loki is selected as pt_planner
         self.olympic_site_params_manager = OlympicSiteParamsManager(
-            self, app.config.get("OLYMPIC_SITE_PARAMS_BUCKET", {})
+            self, app.config.get(str('OLYMPIC_SITE_PARAMS_BUCKET'), {})
         )
         self.olympic_site_params_manager.fill_olympic_site_params_from_s3()
 
