@@ -132,7 +132,12 @@ class OlympicSiteParamsManager:
                     result.update(json_content)
         except Exception:
             logger.exception("Error on OlympicSiteParamsManager")
+        logger.debug("**** The number of files loaded from S3 is {} ****".format(len(result.keys())))
         return result
+
+    def get_opg_params(self):
+        self.fill_olympic_site_params_from_s3()
+        return self.olympic_site_params
 
     def fill_olympic_site_params_from_s3(self):
         if not self.instance.olympics_forbidden_uris:
