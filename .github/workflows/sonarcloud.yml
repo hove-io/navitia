@@ -117,7 +117,7 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
       run: |
-          sonar-scanner-$SONAR_SCANNER_VERSION-linux/bin/sonar-scanner -X \
+          sonar-scanner-$SONAR_SCANNER_VERSION-linux/bin/sonar-scanner \
                 -Dsonar.cfamily.threads=$(nproc)
 
     - name: clean up workspace
