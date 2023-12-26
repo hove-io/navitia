@@ -310,11 +310,11 @@ FROM_ADDRESS_WITH_INVALID_WITHIN = {
 }
 
 DEFAULT_FORBIDDEN_URIS = {
-            "pt_object_olympics_forbidden_uris": ["physical_mode:0x0"],
-            "poi_property_key": "olympic",
-            "poi_property_value": "olympic:site",
-            "min_pt_duration": 600,
-        }
+    "pt_object_olympics_forbidden_uris": ["physical_mode:0x0"],
+    "poi_property_key": "olympic",
+    "poi_property_value": "olympic:site",
+    "min_pt_duration": 600,
+}
 
 MOCKED_INSTANCE_CONF = {
     "scenario": "distributed",
