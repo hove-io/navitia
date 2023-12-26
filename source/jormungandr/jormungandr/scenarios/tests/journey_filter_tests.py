@@ -706,7 +706,7 @@ def filter_filter_olympic_site_strict_with_wheelchair_false_test():
     api_request = {"olympic_site_params": {"strict": True}, "wheelchair": False}
     assert len(response.journeys[0].tags) == 1
     assert len(response.journeys[1].tags) == 1
-    journey_filter.filter_olympic_site([response], api_request)
+    journey_filter.filter_olympic_site_strict([response], api_request)
     assert len(response.journeys[0].tags) == 1
     assert len(response.journeys[1].tags) == 2
     assert "to_delete" in response.journeys[1].tags
@@ -726,7 +726,7 @@ def filter_filter_olympic_site_strict_with_wheelchair_true_test():
     api_request = {"olympic_site_params": {"strict": True}, "wheelchair": True}
     assert len(response.journeys[0].tags) == 1
     assert len(response.journeys[1].tags) == 1
-    journey_filter.filter_olympic_site([response], api_request)
+    journey_filter.filter_olympic_site_strict([response], api_request)
     assert len(response.journeys[0].tags) == 1
     assert len(response.journeys[1].tags) == 1
     for j in response.journeys:
@@ -747,7 +747,7 @@ def filter_filter_olympic_site_strict_with_strict_false_test():
     api_request = {"olympic_site_params": {"strict": False}, "wheelchair": False}
     assert len(response.journeys[0].tags) == 1
     assert len(response.journeys[1].tags) == 1
-    journey_filter.filter_olympic_site([response], api_request)
+    journey_filter.filter_olympic_site_strict([response], api_request)
     assert len(response.journeys[0].tags) == 1
     assert len(response.journeys[1].tags) == 1
     for j in response.journeys:
@@ -768,7 +768,7 @@ def filter_filter_olympic_site_strict_with_strict_true_test():
     api_request = {"olympic_site_params": {"strict": True}, "wheelchair": False}
     assert len(response.journeys[0].tags) == 1
     assert len(response.journeys[1].tags) == 1
-    journey_filter.filter_olympic_site([response], api_request)
+    journey_filter.filter_olympic_site_strict([response], api_request)
     assert len(response.journeys[0].tags) == 1
     assert len(response.journeys[1].tags) == 2
     assert "to_delete" in response.journeys[1].tags
@@ -788,11 +788,59 @@ def filter_filter_olympic_site_strict_without_wheelchair_test():
     api_request = {"olympic_site_params": {"strict": True}}
     assert len(response.journeys[0].tags) == 1
     assert len(response.journeys[1].tags) == 1
-    journey_filter.filter_olympic_site([response], api_request)
+    journey_filter.filter_olympic_site_strict([response], api_request)
     assert len(response.journeys[0].tags) == 1
     assert len(response.journeys[1].tags) == 1
     for j in response.journeys:
         assert "to_delete" not in j.tags
+
+
+def filter_filter_only_olympic_site_best_olympics_test():
+    # arrival_
+    response = response_pb2.Response()
+    for i in range(2):
+        journey = response.journeys.add()
+        for stype in (response_pb2.STREET_NETWORK, response_pb2.PUBLIC_TRANSPORT, response_pb2.TRANSFER):
+            section = journey.sections.add()
+            section.type = stype
+    assert len(response.journeys) == 2
+    response.journeys[0].tags.append('best_olympics')
+    response.journeys[1].tags.append("another_tag")
+    api_request = {"_keep_olympics_journeys": True, "debug": True}
+    assert len(response.journeys[0].tags) == 1
+    assert len(response.journeys[1].tags) == 1
+    journey_filter.filter_only_olympic_site([response], api_request)
+    assert len(response.journeys) == 2
+    assert len(response.journeys[0].tags) == 1
+    assert "to_delete" not in response.journeys[0].tags
+    assert "best_olympics" in response.journeys[0].tags
+    assert len(response.journeys[1].tags) == 3
+    assert 'to_delete' in response.journeys[1].tags
+    assert 'deleted_because_Filtered by only_olympic_site' in response.journeys[1].tags
+
+
+def filter_filter_only_olympic_site_best_olympics_and_olympics_test():
+    # arrival_
+    response = response_pb2.Response()
+    for i in range(2):
+        journey = response.journeys.add()
+        for stype in (response_pb2.STREET_NETWORK, response_pb2.PUBLIC_TRANSPORT, response_pb2.TRANSFER):
+            section = journey.sections.add()
+            section.type = stype
+    assert len(response.journeys) == 2
+    response.journeys[0].tags.append('best_olympics')
+    response.journeys[1].tags.append("olympics")
+    api_request = {"_keep_olympics_journeys": True, "debug": True}
+    assert len(response.journeys[0].tags) == 1
+    assert len(response.journeys[1].tags) == 1
+    journey_filter.filter_only_olympic_site([response], api_request)
+    assert len(response.journeys) == 2
+    assert len(response.journeys[0].tags) == 1
+    assert "to_delete" not in response.journeys[0].tags
+    assert "best_olympics" in response.journeys[0].tags
+    assert len(response.journeys[1].tags) == 1
+    assert "to_delete" not in response.journeys[1].tags
+    assert "olympics" in response.journeys[1].tags
 
 
 def compute_journey_virtual_duration_test():

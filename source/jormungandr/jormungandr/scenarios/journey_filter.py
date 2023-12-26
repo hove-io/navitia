@@ -684,7 +684,20 @@ def apply_final_journey_filters(response_list, instance, request):
         filter_non_car_tagged_journey(journeys, request)
 
 
-def filter_olympic_site(response_list, request):
+def filter_only_olympic_site(response_list, request):
+    if not request.get('_keep_olympics_journeys'):
+        return
+    for resp in response_list:
+        for j in resp.journeys:
+            if not j.sections:
+                continue
+            if to_be_deleted(j):
+                continue
+            if not any([is_olympics(j), is_best_olympics(j)]):
+                mark_as_dead(j, request.get('debug'), 'Filtered by only_olympic_site')
+
+
+def filter_olympic_site_strict(response_list, request):
     if not response_list:
         return
     if request.get('wheelchair', True):
