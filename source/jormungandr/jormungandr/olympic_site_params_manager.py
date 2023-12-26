@@ -30,13 +30,30 @@
 import logging
 import json
 from collections import namedtuple
-from jormungandr.utils import get_olympic_site, local_str_date_to_utc, date_to_timestamp, str_to_dt
+from jormungandr.utils import (
+    get_olympic_site,
+    local_str_date_to_utc,
+    date_to_timestamp,
+    str_to_dt,
+    dt_to_date_str,
+)
 import boto3
-from jormungandr import app, cache
+from jormungandr import app, memory_cache, cache
 from botocore.client import Config
 
 
 AttractivityVirtualFallback = namedtuple("AttractivityVirtualFallback", "attractivity, virtual_duration")
+
+
+class ResourceS3Object:
+    def __init__(self, s3_object, instance_name):
+        self.s3_object = s3_object
+        self.instance_name = instance_name
+
+    def __repr__(self):
+        return "{}-{}-{}".format(
+            self.instance_name, self.s3_object.key, dt_to_date_str(self.s3_object.last_modified)
+        )
 
 
 class OlympicSiteParamsManager:
@@ -118,7 +135,15 @@ class OlympicSiteParamsManager:
             logger.exception('Error while loading file: {}'.format(s3_object.key))
             return {}
 
-    @cache.memoize(app.config[str('CACHE_CONFIGURATION')].get(str('FETCH_S3_DATA_TIMEOUT'), 2 * 60))
+    @cache.memoize(app.config[str('CACHE_CONFIGURATION')].get(str('FETCH_S3_DATA_TIMEOUT'), 24 * 60))
+    def load_data(self, resource_s3_object):
+        json_content = self.get_json_content(resource_s3_object.s3_object)
+        self.str_datetime_time_stamp(json_content)
+        return json_content
+
+    @memory_cache.memoize(
+        app.config[str('MEMORY_CACHE_CONFIGURATION')].get(str('FETCH_S3_DATA_TIMEOUT'), 2 * 60)
+    )
     def fetch_and_get_data(self, instance_name, bucket_name, folder, **kwargs):
         result = dict()
         logger = logging.getLogger(__name__)
@@ -127,12 +152,11 @@ class OlympicSiteParamsManager:
             my_bucket = s3_resource.Bucket(bucket_name)
             for obj in my_bucket.objects.filter(Prefix="{}/{}/".format(folder, instance_name)):
                 if obj.key.endswith('.json'):
-                    json_content = self.get_json_content(obj)
-                    self.str_datetime_time_stamp(json_content)
+                    resource_s3_object = ResourceS3Object(obj, instance_name)
+                    json_content = self.load_data(resource_s3_object)
                     result.update(json_content)
         except Exception:
             logger.exception("Error on OlympicSiteParamsManager")
-        logger.debug("**** The number of files loaded from S3 is {} ****".format(len(result.keys())))
         return result
 
     def get_opg_params(self):
@@ -155,7 +179,6 @@ class OlympicSiteParamsManager:
         # Warning, the order of functions is important
         # Order 1 : get_olympic_site_params
         # Order 2 : build_api_request
-        self.fill_olympic_site_params_from_s3()
         api_request["olympic_site_params"] = self.get_olympic_site_params(
             pt_object_origin, pt_object_destination, api_request
         )
@@ -206,6 +229,8 @@ class OlympicSiteParamsManager:
 
         if not origin_olympic_site and not destination_olympic_site:
             return {}
+
+        self.fill_olympic_site_params_from_s3()
 
         if origin_olympic_site and destination_olympic_site:
             origin_olympic_site = None
