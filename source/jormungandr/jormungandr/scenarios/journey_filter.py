@@ -684,7 +684,7 @@ def apply_final_journey_filters(response_list, instance, request):
         filter_non_car_tagged_journey(journeys, request)
 
 
-def filter_olympic_site_strict(response_list, request):
+def filter_olympic_site(response_list, request):
     if not response_list:
         return
     if request.get('wheelchair', True):
@@ -702,7 +702,9 @@ def filter_olympic_site_strict(response_list, request):
                 mark_as_dead(j, request.get('debug'), 'Filtered by strict POI')
 
 
-def filter_olympic_site(response_list, instance, request, pt_object_origin, pt_object_destination):
+def filter_olympic_site_by_min_pt_duration(
+    response_list, instance, request, pt_object_origin, pt_object_destination
+):
     if not response_list:
         return
     if not instance.olympics_forbidden_uris:

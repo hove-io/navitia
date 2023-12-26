@@ -1372,7 +1372,7 @@ class Scenario(simple.Scenario):
         journey_filter.apply_final_journey_filters(responses, instance, api_request)
 
         # Filter olympic site: Jira NAV-2130
-        journey_filter.filter_olympic_site(
+        journey_filter.filter_olympic_site_by_min_pt_duration(
             responses, instance, api_request, pt_object_origin, pt_object_destination
         )
 
