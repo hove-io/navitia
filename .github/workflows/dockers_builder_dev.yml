@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - dev
+  pull_request:
 
 env:
   jessie_version: debian8
