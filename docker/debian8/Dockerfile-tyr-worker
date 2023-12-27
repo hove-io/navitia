@@ -12,7 +12,7 @@ RUN cd tartare-tools \
     && cd .. \
     && rm -rf tartare-tools
 
-COPY navitia-common_*deb tyr_*.deb navitia-ed_*.deb  navitia-cities_*.deb  mimirsbrunn7_jessie-*.deb  cosmogony2cities_*.deb  mimirsbrunn-config-*.deb ./
+COPY navitia-common_*deb navitia-tyr_*.deb navitia-ed_*.deb  navitia-cities_*.deb  mimirsbrunn7_jessie-*.deb  cosmogony2cities_*.deb  mimirsbrunn-config-*.deb ./
 
 # install navitia-common package
 RUN dpkg -i ./navitia-common_*.deb || exit 0
@@ -35,14 +35,13 @@ RUN dpkg -i ./mimirsbrunn7_jessie-*.deb \
 
 RUN apt-get install -f -y --force-yes
 
-RUN rm navitia-common_*.deb  \
+RUN rm navitia-common_*deb \
     navitia-tyr_*.deb \
     navitia-cities_*.deb \
     navitia-ed_*.deb \
     mimirsbrunn-config-*.deb \
     mimirsbrunn7_jessie-*.deb \
     cosmogony2cities_*.deb
-
 
 # install tyr requirements
 RUN pip install --no-cache-dir -r /usr/share/tyr/requirements.txt
