@@ -12,41 +12,29 @@ RUN cd tartare-tools \
     && cd .. \
     && rm -rf tartare-tools
 
-COPY navitia-common_*deb ./
-COPY navitia-tyr_*.deb ./
-COPY navitia-ed_*.deb ./
-COPY navitia-cities_*.deb ./
-COPY mimirsbrunn7_*.deb ./
-COPY cosmogony2cities_*.deb ./
-COPY mimirsbrunn-config-*.deb ./
+COPY navitia-common_*deb tyr_*.deb navitia-ed_*.deb  navitia-cities_*.deb  mimirsbrunn7_jessie-*.deb  cosmogony2cities_*.deb  mimirsbrunn-config-*.deb ./
 
 # install navitia-common package
 RUN dpkg -i ./navitia-common_*.deb || exit 0
-RUN apt-get install -f -y --force-yes
 
 # install navitia-tyr package
 RUN dpkg -i ./navitia-tyr_*.deb || exit 0
-RUN apt-get install -f -y --force-yes
 
 # install navitia-ed package
 RUN dpkg -i ./navitia-ed_*.deb || exit 0
-RUN apt-get install -f -y --force-yes
 
 # install navitia-cities package
 RUN dpkg -i ./navitia-cities_*.deb || exit 0
-RUN apt-get install -f -y --force-yes
 
 # install navitia-mimirsbrunn package
-RUN dpkg -i ./mimirsbrunn7_jessie-*.deb
+RUN dpkg -i ./mimirsbrunn7_jessie-*.deb \
+        # install cosmogony2cities package
+        ./cosmogony2cities*.deb \
+        # install conf mimir package
+        ./mimirsbrunn-config-*.deb
+
 RUN apt-get install -f -y --force-yes
 
-# install cosmogony2cities package
-RUN dpkg -i ./cosmogony2cities*.deb
-RUN apt-get install -f -y --force-yes
-
-# install conf mimir package
-RUN dpkg -i ./mimirsbrunn-config-*.deb
-RUN apt-get install -f -y --force-yes
 RUN rm navitia-common_*.deb  \
     navitia-tyr_*.deb \
     navitia-cities_*.deb \
