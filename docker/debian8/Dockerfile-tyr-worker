@@ -47,6 +47,14 @@ RUN apt-get install -f -y --force-yes
 # install conf mimir package
 RUN dpkg -i ./mimirsbrunn-config-*.deb
 RUN apt-get install -f -y --force-yes
+RUN rm navitia-common_*.deb  \
+    navitia-tyr_*.deb \
+    navitia-cities_*.deb \
+    navitia-ed_*.deb \
+    mimirsbrunn-config-*.deb \
+    mimirsbrunn7_jessie-*.deb \
+    cosmogony2cities_*.deb
+
 
 # install tyr requirements
 RUN pip install --no-cache-dir -r /usr/share/tyr/requirements.txt

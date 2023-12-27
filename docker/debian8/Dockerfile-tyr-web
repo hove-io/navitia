@@ -11,6 +11,9 @@ RUN apt-get install -f -y --force-yes
 RUN dpkg -i ./navitia-tyr_*.deb || exit 0
 RUN apt-get install -f -y --force-yes
 
+RUN rm navitia-common_*.deb  \
+    navitia-tyr_*.deb
+
 # install postgresql-client
 RUN apt-get install -y --force-yes postgresql-client
 
