@@ -9,8 +9,8 @@ RUN git clone -b ${TARTARE_TOOLS_VERSION} --depth 1 https://x-access-token:${GIT
 RUN cd tartare-tools \
     && cargo build --release -p enrich-ntfs-with-addresses \
     && cp target/release/enrich-ntfs-with-addresses /usr/bin/ \
-    && rm -rf tartare-tools \
-    && cd ..
+    && cd .. \
+    && rm -rf tartare-tools
 
 COPY navitia-common_*deb ./
 COPY navitia-tyr_*.deb ./
