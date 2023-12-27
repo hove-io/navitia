@@ -12,4 +12,3 @@ RUN rm navitia-ed_*.deb
 
 # install eitri requirements
 RUN pip install --no-cache-dir -r /navitia/source/eitri/requirements.txt
-

@@ -13,10 +13,10 @@ COPY docker/templates/* /templates/
 
 # install navitia-common package
 RUN dpkg -i ./navitia-common_*.deb || exit 0
-RUN apt-get install -f -y --force-yes
 
 # install navitia-tyr package
 RUN dpkg -i ./navitia-tyr_*.deb || exit 0
+
 RUN apt-get install -f -y --force-yes
 
 RUN rm navitia-common_*.deb  \

@@ -7,6 +7,8 @@ COPY mock-kraken_*.deb ./
 RUN dpkg -i ./mock-kraken_*.deb
 RUN apt-get install -f -y --force-yes
 
+RUN rm mock-kraken_*.deb
+
 RUN mkdir -p /srv/kraken
 RUN cp /usr/bin/main_routing_test /srv/kraken/
 RUN cp /usr/bin/departure_board_test /srv/kraken/
