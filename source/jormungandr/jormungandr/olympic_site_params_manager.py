@@ -30,7 +30,12 @@
 import logging
 import json
 from collections import namedtuple
-from jormungandr.utils import is_olympic_poi, local_str_date_to_utc, date_to_timestamp, str_to_dt
+from jormungandr.utils import (
+    is_olympic_poi,
+    local_str_date_to_utc,
+    date_to_timestamp,
+    str_to_dt,
+)
 import boto3
 from jormungandr import app
 from navitiacommon import type_pb2
