@@ -60,7 +60,7 @@ class PlacesFreeAccess:
     @new_relic.distributedEvent("get_stop_points_for_stop_area", "places")
     def _get_stop_points_for_stop_area(self, uri):
         with timed_logger(self._logger, 'stop_points_for_stop_area_calling_external_service', self._request_id):
-            return self._instance.georef.get_stop_points_for_stop_area(uri, self._request_id)
+            return self._pt_planner.get_stop_points_for_stop_area(uri, self._request_id)
 
     @new_relic.distributedEvent("get_odt_stop_points", "places")
     def _get_odt_stop_points(self, coord):
