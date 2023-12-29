@@ -40,10 +40,13 @@ namespace fare {
 
 void fill_fares(PbCreator& pb_creator, const pbnavitia::PtFaresRequest& fares) {
     for (const pbnavitia::PtFaresRequest::PtJourney& pt_journey : fares.pt_journeys()) {
+        auto tickets = pb_creator.data->fare->compute_fare(pt_journey, *pb_creator.data);
+        if (tickets.not_found) {
+            continue;
+        }
         pbnavitia::PtJourneyFare* pb_journey_fare = pb_creator.add_pt_journey_fares();
         pb_journey_fare->set_journey_id(pt_journey.id());
 
-        auto tickets = pb_creator.data->fare->compute_fare(pt_journey, *pb_creator.data);
         pb_creator.fill_fare(pb_journey_fare->mutable_fare(), nullptr, tickets);
     }
 }
