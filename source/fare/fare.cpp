@@ -291,8 +291,20 @@ results Fare::compute_fare(const pbnavitia::PtFaresRequest::PtJourney& pt_journe
     for (const auto& s : pt_journey.pt_sections()) {
         const auto& first_sp_uri = s.first_stop_point_uri();
         const auto& last_sp_uri = s.last_stop_point_uri();
-        const auto* first_stop_point = data.pt_data->stop_points_map.find(first_sp_uri)->second;
-        const auto* last_stop_point = data.pt_data->stop_points_map.find(last_sp_uri)->second;
+
+        const auto first_it = data.pt_data->stop_points_map.find(first_sp_uri);
+        if (first_it == data.pt_data->stop_points_map.cend()) {
+            LOG4CPLUS_ERROR(logger, "stop point uri cannot be found %s" << first_sp_uri);
+            return {};
+        }
+        const auto last_it = data.pt_data->stop_points_map.find(last_sp_uri);
+        if (last_it == data.pt_data->stop_points_map.cend()) {
+            LOG4CPLUS_ERROR(logger, "stop point uri cannot be found %s" << last_sp_uri);
+            return {};
+        }
+
+        const auto* first_stop_point = first_it->second;
+        const auto* last_stop_point = last_it->second;
         SectionKey section_key{s, *first_stop_point, *last_stop_point};
 
         labels = compute_labels(nb_nodes, labels, section_key);
