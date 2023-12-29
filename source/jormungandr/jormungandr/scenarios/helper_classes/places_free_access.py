@@ -69,18 +69,15 @@ class PlacesFreeAccess:
 
     def _do_request(self):
         self._logger.debug("requesting places with free access from %s", self._requested_place_obj.uri)
-
-        stop_points = []
+        crowfly = set()
         place = self._requested_place_obj
 
         if place.embedded_type == type_pb2.STOP_AREA:
-            stop_points = self._get_stop_points_for_stop_area(self._instance.georef, place.uri)
+            crowfly = self._get_stop_points_for_stop_area(self._instance.georef, place.uri)
         elif place.embedded_type == type_pb2.ADMINISTRATIVE_REGION:
-            stop_points = [sp for sa in place.administrative_region.main_stop_areas for sp in sa.stop_points]
+            crowfly = {sp.uri for sa in place.administrative_region.main_stop_areas for sp in sa.stop_points}
         elif place.embedded_type == type_pb2.STOP_POINT:
-            stop_points = [place.stop_point]
-
-        crowfly = {stop_point.uri for stop_point in stop_points}
+            crowfly = {place.stop_point.uri}
 
         coord = utils.get_pt_object_coord(place)
         odt = set()
