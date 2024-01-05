@@ -1857,7 +1857,7 @@ std::string PbCreator::get_section_id(pbnavitia::Journey* j, size_t section_idx)
 
 std::string PbCreator::get_translated_message(std::vector<type::disruption::Translation> translations,
                                               const std::string& language) {
-    for (const auto& t: translations) {
+    for (const auto& t : translations) {
         if (!t.text.empty() && (t.language == language)) {
             return t.text;
         }

@@ -44,7 +44,7 @@ ENUM_LANGUAGE = [
     'ja-JP',
     'pt-PT',
     'ru-RU',
-    'es-ES'
+    'es-ES',
 ]
 ENUM_EXTERNAL_SERVICE = (
     'free_floatings',
