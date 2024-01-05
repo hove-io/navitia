@@ -42,6 +42,7 @@ from jormungandr.interfaces.common import split_uri
 from jormungandr.resources_utils import ResourceUtc
 from jormungandr.utils import date_to_timestamp
 from navitiacommon.type_pb2 import ActiveStatus
+from navitiacommon.constants import ENUM_LANGUAGE
 from flask.globals import g
 from datetime import datetime
 import six
@@ -96,6 +97,11 @@ class LineReports(ResourceUri, ResourceUtc):
             default=[],
             action="append",
             schema_metadata={'format': 'pt-object'},
+        )
+        parser_get.add_argument(
+            "language",
+            type=OptionValue(ENUM_LANGUAGE),
+            help="Here, select a specific language for disruption message",
         )
 
         self.collection = 'line_reports'

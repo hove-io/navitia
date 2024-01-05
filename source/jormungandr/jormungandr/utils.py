@@ -971,6 +971,7 @@ def can_connect_to_database():
 def create_journeys_request(origins, destinations, datetime, clockwise, journey_parameters, bike_in_pt):
     req = request_pb2.Request()
     req.requested_api = type_pb2.pt_planner
+    req.language = journey_parameters.language
 
     def _set_departure_attractivity(stop_point_id, location):
         attractivity_virtual_duration = journey_parameters.olympic_site_params.get("departure_scenario", {}).get(

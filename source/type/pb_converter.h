@@ -205,6 +205,7 @@ struct PbCreator {
     bool disable_geojson = false;
     bool disable_feedpublisher = false;
     bool disable_disruption = false;
+    std::string language = "fr-FR";
     // Raptor api
     size_t nb_sections = 0;
     std::map<std::pair<pbnavitia::Journey*, size_t>, std::string> routing_section_map;
@@ -216,26 +217,30 @@ struct PbCreator {
               const pt::time_period action_period,
               const bool disable_geojson = false,
               const bool disable_feedpublisher = false,
-              const bool disable_disruption = false)
+              const bool disable_disruption = false,
+              std::string language = "fr-FR")
         : data(data),
           now(now),
           action_period(action_period),
           disable_geojson(disable_geojson),
           disable_feedpublisher(disable_feedpublisher),
-          disable_disruption(disable_disruption) {}
+          disable_disruption(disable_disruption),
+          language(language){}
 
     void init(const nt::Data* data,
               const pt::ptime now,
               const pt::time_period action_period,
               const bool disable_geojson = false,
               const bool disable_feedpublisher = false,
-              const bool disable_disruption = false) {
+              const bool disable_disruption = false,
+              const std::string language = "fr-FR") {
         this->data = data;
         this->now = now;
         this->action_period = action_period;
         this->disable_geojson = disable_geojson;
         this->disable_feedpublisher = disable_feedpublisher;
         this->disable_disruption = disable_disruption;
+        this->language = language;
         this->nb_sections = 0;
 
         this->contributors.clear();
@@ -276,6 +281,7 @@ struct PbCreator {
     const std::string& register_section(pbnavitia::Journey* j, size_t section_idx);
     std::string register_section();
     std::string get_section_id(pbnavitia::Journey* j, size_t section_idx);
+    std::string get_translated_message(std::vector<type::disruption::Translation> translations, const std::string& language);
     void fill_co2_emission(pbnavitia::Section* pb_section, const type::VehicleJourney* vehicle_journey);
     void fill_co2_emission_by_mode(pbnavitia::Section* pb_section, const std::string& mode_uri);
     void fill_fare_section(pbnavitia::Journey* pb_journey, const fare::results& fare);

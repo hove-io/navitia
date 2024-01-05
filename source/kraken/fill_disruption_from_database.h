@@ -76,6 +76,7 @@ struct DisruptionDatabaseReader {
     chaos::Pattern* pattern = nullptr;
 
     std::string last_channel_type_id = "";
+    std::string last_translation_language = "";
 
     std::set<std::string> message_ids;
     std::set<std::tuple<std::string, std::string, std::string>> properties;
@@ -108,6 +109,7 @@ struct DisruptionDatabaseReader {
         if (disruption && (!impact || impact->id() != const_it["impact_id"].template as<std::string>())) {
             fill_impact(const_it);
             last_channel_type_id = "";
+            last_translation_language = "";
             message = nullptr;
             channel = nullptr;
             pt_object = nullptr;
@@ -196,11 +198,21 @@ struct DisruptionDatabaseReader {
             fill_channel(const_it, channel);
             message_ids.insert(const_it["message_id"].template as<std::string>());
         }
+
         if (impact && channel && (channel->id() == const_it["channel_id"].template as<std::string>())
             && (last_channel_type_id != const_it["channel_type_id"].template as<std::string>())) {
             fill_channel_type(const_it, channel);
             last_channel_type_id = const_it["channel_type_id"].template as<std::string>();
         }
+
+        // Fill tranlations related to this message
+        if (impact && message && !const_it["translation_language"].is_null()
+            && (last_translation_language != const_it["translation_language"].template as<std::string>())) {
+            auto* translation = message->add_translations();
+            fill_translation(const_it, translation);
+            last_translation_language = const_it["translation_language"].template as<std::string>();
+        }
+
     }
 
     void finalize();
@@ -411,6 +423,13 @@ struct DisruptionDatabaseReader {
         FILL_REQUIRED(message, text, std::string)
         FILL_NULLABLE(message, created_at, uint64_t)
         FILL_NULLABLE(message, updated_at, uint64_t)
+    }
+
+    template <typename T>
+    void fill_translation(T const_it, chaos::Translation* translation) {
+        FILL_REQUIRED(translation, text, std::string)
+        FILL_NULLABLE(translation, language, std::string)
+        FILL_NULLABLE(translation, url_audio, std::string)
     }
 
     template <typename T>

@@ -132,6 +132,9 @@ void fill_disruption_from_database(const std::string& connection_string,
                  "     m.id as message_id, m.text as message_text,"
                  "     extract(epoch from m.created_at  AT TIME ZONE 'UTC') :: bigint as message_created_at,"
                  "     extract(epoch from m.updated_at  AT TIME ZONE 'UTC') :: bigint as message_updated_at,"
+                 // Translation fields
+                 "     tr.language as translation_language, tr.text as translation_text, "
+                 "     tr.url_audio as translation_url_audio,"
                  // Channel fields
                  "     ch.id as channel_id, ch.name as channel_name,"
                  "     ch.content_type as channel_content_type, ch.max_size as channel_max_size,"
@@ -177,6 +180,7 @@ void fill_disruption_from_database(const std::string& connection_string,
                  "     LEFT JOIN pt_object AS rs_route"
                  "         ON associate_rail_section_route_object.route_object_id = rs_route.id"
                  "     LEFT JOIN message AS m ON m.impact_id = i.id"
+                 "     LEFT JOIN translation AS tr ON m.id = tr.message_id"
                  "     LEFT JOIN channel AS ch ON m.channel_id = ch.id"
                  "     LEFT JOIN channel_type as cht on ch.id = cht.channel_id"
                  "     LEFT JOIN associate_disruption_property adp ON adp.disruption_id = d.id"

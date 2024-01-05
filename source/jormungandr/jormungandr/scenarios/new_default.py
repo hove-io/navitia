@@ -176,6 +176,7 @@ def create_pb_request(requested_type, request, dep_mode, arr_mode, direct_path_t
     req = request_pb2.Request()
     req.requested_api = requested_type
     req._current_datetime = date_to_timestamp(request['_current_datetime'])
+    req.language = request['language']
 
     if "origin" in request and request["origin"]:
         if requested_type != type_pb2.NMPLANNER:

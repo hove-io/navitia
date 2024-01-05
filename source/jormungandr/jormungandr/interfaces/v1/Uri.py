@@ -50,6 +50,7 @@ from jormungandr.interfaces.v1.decorators import get_obj_serializer
 from jormungandr.interfaces.v1.serializer import api
 import six
 from navitiacommon.parser_args_type import BooleanType, OptionValue, DateTimeFormat, DepthArgument
+from navitiacommon.constants import ENUM_LANGUAGE
 
 
 class Uri(ResourceUri, ResourceUtc):
@@ -157,6 +158,11 @@ class Uri(ResourceUri, ResourceUtc):
             type=OptionValue(['kraken', 'loki']),
             hidden=True,
             help="choose which pt engine to compute the pt journey",
+        )
+        parser.add_argument(
+            "language",
+            type=OptionValue(ENUM_LANGUAGE),
+            help="Here, select a specific language for disruption message",
         )
         self.collection = collection
         self.get_decorators.insert(0, ManageError())

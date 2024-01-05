@@ -75,6 +75,7 @@ from jormungandr.interfaces.common import add_poi_infos_types, handle_poi_infos
 from jormungandr.fallback_modes import FallbackModes
 from copy import deepcopy
 from jormungandr.travelers_profile import TravelerProfile
+from navitiacommon.constants import ENUM_LANGUAGE
 import urllib.parse
 import base64
 
@@ -560,21 +561,7 @@ class Journeys(JourneyCommon):
         )
         parser_get.add_argument(
             "language",
-            type=OptionValue(
-                [
-                    'nl-NL',
-                    'en-US',
-                    'en-GB',
-                    'fr-FR',
-                    'de-DE',
-                    'hi-IN',
-                    'it-IT',
-                    'ja-JP',
-                    'pt-PT',
-                    'ru-RU',
-                    'es-ES',
-                ]
-            ),
+            type=OptionValue(ENUM_LANGUAGE),
             help='Here, select a specific language for guidance instruction.\n'
             'list available:\n'
             '- nl-NL = dutch\n'
@@ -971,7 +958,7 @@ class Journeys(JourneyCommon):
 
             if response.HasField(str('error')) and len(possible_regions) > 1:
                 if args['debug']:
-                    # In debug we store all errors
+                    # In debug, we store all errors
                     if not hasattr(g, 'errors_by_region'):
                         g.errors_by_region = {}
                     g.errors_by_region[r] = response.error
@@ -985,7 +972,7 @@ class Journeys(JourneyCommon):
                 args = base_args
                 continue
 
-            # If every journeys found doesn't use PT, request the next possible region
+            # If every journey found doesn't use PT, request the next possible region
             non_pt_types = ("non_pt_walk", "non_pt_bike", "non_pt_bss", "car")
             if all(j.type in non_pt_types for j in response.journeys) or all(
                 "non_pt" in j.tags for j in response.journeys

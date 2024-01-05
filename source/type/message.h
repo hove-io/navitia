@@ -287,6 +287,15 @@ using PtObj = boost::variant<UnknownPtObj,
 
 PtObj make_pt_obj(Type_e type, const std::string& uri, PT_Data& pt_data);
 
+struct Translation {
+    std::string text;
+    std::string language;
+    std::string url_audio;
+
+    template <class Archive>
+    void serialize(Archive& ar, const unsigned int);
+};
+
 struct Message {
     std::string text;
     std::string channel_id;
@@ -297,6 +306,7 @@ struct Message {
     boost::posix_time::ptime updated_at;
 
     std::set<ChannelType> channel_types;
+    std::vector<Translation> translations;
 
     template <class Archive>
     void serialize(Archive& ar, const unsigned int);

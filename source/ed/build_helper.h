@@ -250,7 +250,10 @@ struct Impacter {
                               const std::vector<std::string>& route_uris,
                               nt::PT_Data& pt_data);
     Impacter& msg(nt::disruption::Message);
-    Impacter& msg(const std::string& text, nt::disruption::ChannelType = nt::disruption::ChannelType::email);
+    Impacter& msg(const std::string& text,
+                  nt::disruption::ChannelType = nt::disruption::ChannelType::email,
+                  const std::string& translated_text = "",
+                  const std::string& language = "");
     Impacter& publish(const boost::posix_time::time_period& p);
 };
 

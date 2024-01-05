@@ -396,7 +396,8 @@ void Worker::init_worker_data(const navitia::type::Data* data,
                               const pt::time_period action_period,
                               const bool disable_geojson,
                               const bool disable_feedpublisher,
-                              const bool disable_disruption) {
+                              const bool disable_disruption,
+                              const std::string language) {
     //@TODO should be done in data_manager
     if (data->data_identifier != this->last_data_identifier || !planner) {
         planner = std::make_unique<routing::RAPTOR>(*data);
@@ -404,7 +405,7 @@ void Worker::init_worker_data(const navitia::type::Data* data,
         this->last_data_identifier = data->data_identifier;
         LOG4CPLUS_INFO(logger, "Instanciate planner");
     }
-    this->pb_creator.init(data, now, action_period, disable_geojson, disable_feedpublisher, disable_disruption);
+    this->pb_creator.init(data, now, action_period, disable_geojson, disable_feedpublisher, disable_disruption, language);
 }
 
 void Worker::autocomplete(const pbnavitia::PlacesRequest& request) {
@@ -1090,7 +1091,7 @@ void Worker::dispatch(const pbnavitia::Request& request,
     bool disable_geojson = get_geojson_state(request);
     boost::posix_time::ptime current_datetime = bt::from_time_t(request._current_datetime());
     this->init_worker_data(&data, current_datetime, null_time_period, disable_geojson, request.disable_feedpublisher(),
-                           request.disable_disruption());
+                           request.disable_disruption(), request.language());
     if (deadline) {
         deadline->check();
     }
