@@ -212,7 +212,6 @@ struct DisruptionDatabaseReader {
             fill_translation(const_it, translation);
             last_translation_language = const_it["translation_language"].template as<std::string>();
         }
-
     }
 
     void finalize();

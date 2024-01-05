@@ -281,9 +281,9 @@ static std::vector<nt::disruption::PtObj> make_pt_objects(
 }
 
 static std::vector<nt::disruption::Translation> make_translations(
-        const google::protobuf::RepeatedPtrField<chaos::Translation>& chaos_translations) {
+    const google::protobuf::RepeatedPtrField<chaos::Translation>& chaos_translations) {
     std::vector<nt::disruption::Translation> res;
-    for (const auto& chaos_trans: chaos_translations) {
+    for (const auto& chaos_trans : chaos_translations) {
         res.push_back({chaos_trans.text(), chaos_trans.language(), chaos_trans.url_audio()});
     }
     return res;

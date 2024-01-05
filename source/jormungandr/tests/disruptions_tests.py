@@ -220,7 +220,6 @@ class TestDisruptions(AbstractTestFixture):
         assert stop_disrupt[0]['disruption_id'] == 'disruption_on_stop_A'
         assert stop_disrupt[0]['uri'] == 'too_bad'
 
-
     def test_disruption_message_translations(self):
         """
         We test messages with/without translations in different end points related to disruptions
@@ -287,7 +286,6 @@ class TestDisruptions(AbstractTestFixture):
         assert impacts["later_impact"]["messages"][0]["text"] == "sad message"
         assert impacts["later_impact"]["messages"][1]["text"] == "too sad message in de"
 
-
         response = self.query_region(
             'disruptions/later_impact/traffic_reports?_current_datetime=20120828T090000'
         )
@@ -302,9 +300,7 @@ class TestDisruptions(AbstractTestFixture):
         assert impacts["later_impact"]["messages"][0]["text"] == "sad message"
         assert impacts["later_impact"]["messages"][1]["text"] == "too sad message in de"
 
-        response = self.query_region(
-            'disruptions/later_impact/line_reports?_current_datetime=20120828T090000'
-        )
+        response = self.query_region('disruptions/later_impact/line_reports?_current_datetime=20120828T090000')
         impacts = get_impacts(response)
         assert impacts["later_impact"]["messages"][1]["text"] == "too sad message"
 

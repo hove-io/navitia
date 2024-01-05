@@ -545,7 +545,10 @@ class TestChaosDisruptions2(ChaosDisruptionsFixture):
         and we should get it
         """
         # we create a list with every 'to' section to the stop B (the one we added the disruption on)
-        translations = [{'text': 'message in en-US', 'language': 'en-US'},{'text': 'message in de-DE', 'language': 'de-DE'}]
+        translations = [
+            {'text': 'message in en-US', 'language': 'en-US'},
+            {'text': 'message in de-DE', 'language': 'de-DE'}
+        ]
         self.send_mock("bob_the_disruption", "stopB", "stop_area", blocking=True, translations=translations)
         query = journey_basic_query + '&_current_datetime=20160314T144100'
         response = self.query_region(query)

@@ -405,7 +405,8 @@ void Worker::init_worker_data(const navitia::type::Data* data,
         this->last_data_identifier = data->data_identifier;
         LOG4CPLUS_INFO(logger, "Instanciate planner");
     }
-    this->pb_creator.init(data, now, action_period, disable_geojson, disable_feedpublisher, disable_disruption, language);
+    this->pb_creator.init(data, now, action_period, disable_geojson, disable_feedpublisher, disable_disruption,
+                          language);
 }
 
 void Worker::autocomplete(const pbnavitia::PlacesRequest& request) {
