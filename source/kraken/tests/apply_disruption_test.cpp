@@ -1869,7 +1869,7 @@ BOOST_AUTO_TEST_CASE(update_impact) {
 
     auto original_disruption_text = "message disruption 1";
     auto disruption_message_1 =
-            navitia::type::disruption::Message{original_disruption_text, "", "", "", {}, {}, {}, {}};
+        navitia::type::disruption::Message{original_disruption_text, "", "", "", {}, {}, {}, {}};
     const auto& disruption_1 = b.impact(nt::RTLevel::Adapted, "stop3_closed")
                                    .severity(nt::disruption::Effect::NO_SERVICE)
                                    .msg(disruption_message_1)
