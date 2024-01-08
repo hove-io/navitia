@@ -816,7 +816,7 @@ def filter_filter_only_olympic_site_best_olympics_test():
     assert "best_olympics" in response.journeys[0].tags
     assert len(response.journeys[1].tags) == 3
     assert 'to_delete' in response.journeys[1].tags
-    assert 'deleted_because_Filtered by only_olympic_site' in response.journeys[1].tags
+    assert 'deleted_because_not_olympic_journey' in response.journeys[1].tags
 
 
 def filter_filter_only_olympic_site_best_olympics_and_olympics_test():

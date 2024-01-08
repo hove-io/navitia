@@ -41,7 +41,7 @@ from jormungandr.olympic_site_params_manager import OlympicSiteParamsManager
 from jormungandr.instance import parse_and_get_olympics_forbidden_uris
 
 
-template_journey_query = "journeys?from={place_from}&to={place_to}&datetime=20120614T080000&debug=true"
+template_journey_query = "journeys?from={place_from}&to={place_to}&datetime=20120614T080000"
 
 s_lon, s_lat = get_lon_lat(s_coord)
 r_lon, r_lat = get_lon_lat(r_coord)
@@ -568,10 +568,8 @@ class TestOlympicSites(AbstractTestFixture):
             assert len(journeys) == 2
             first_journey = response['journeys'][0]
             assert len(first_journey["sections"]) == 3
-            assert "to_delete" in first_journey["tags"]
-            assert 'deleted_because_Filtered by only_olympic_site' in first_journey["tags"]
+            assert "to_delete" not in first_journey["tags"]
 
             last_journey = response['journeys'][1]
             assert len(last_journey["sections"]) == 1
-            assert "to_delete" in first_journey["tags"]
-            assert 'deleted_because_Filtered by only_olympic_site' in first_journey["tags"]
+            assert "to_delete" not in first_journey["tags"]

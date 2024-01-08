@@ -68,6 +68,13 @@ def is_best_olympics(journey):
     return 'best_olympics' in journey.tags
 
 
+def remove_to_delete_tag(journey, is_debug, *reasons):
+    journey.tags.remove("to_delete")
+    if is_debug:
+        for reason in reasons:
+            journey.tags.remove("deleted_because_{}".format(reason))
+
+
 def is_olympics(journey):
     return 'olympics' in journey.tags
 
@@ -685,16 +692,23 @@ def apply_final_journey_filters(response_list, instance, request):
 
 
 def filter_only_olympic_site(response_list, request):
+    not_olympic_journeys = list()
     if not request.get('_keep_olympics_journeys'):
         return
-    for resp in response_list:
-        for j in resp.journeys:
-            if not j.sections:
-                continue
-            if to_be_deleted(j):
-                continue
-            if not any([is_olympics(j), is_best_olympics(j)]):
-                mark_as_dead(j, request.get('debug'), 'Filtered by only_olympic_site')
+    all_journeys = [j for resp in response_list for j in resp.journeys]
+    for j in all_journeys:
+        if not j.sections:
+            continue
+        if to_be_deleted(j):
+            continue
+        if not any([is_olympics(j), is_best_olympics(j)]):
+            not_olympic_journeys.append(j)
+            mark_as_dead(j, request.get('debug'), 'not_olympic_journey')
+    if not_olympic_journeys:
+        to_delete_count = [j for j in all_journeys if to_be_deleted(j)]
+        if len(to_delete_count) == len(all_journeys):
+            for j in not_olympic_journeys:
+                remove_to_delete_tag(j, request.get('debug'), "not_olympic_journey")
 
 
 def filter_olympic_site_strict(response_list, request):
