@@ -38,8 +38,8 @@ from jormungandr.utils import (
     dt_to_date_str,
 )
 import boto3
-from jormungandr import app, memory_cache, cache
 from botocore.client import Config
+from jormungandr import app, memory_cache, cache
 
 
 AttractivityVirtualFallback = namedtuple("AttractivityVirtualFallback", "attractivity, virtual_duration")
