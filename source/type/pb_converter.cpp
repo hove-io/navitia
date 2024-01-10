@@ -1343,7 +1343,6 @@ void PbCreator::Filler::fill_pb_object(const nd::Impact* impact, pbnavitia::Impa
     for (const auto& m : impact->messages) {
         auto pb_m = pb_impact->add_messages();
         pb_m->set_text(m.text);
-        const auto language = this->pb_creator.language;
 
         auto translated_text = this->pb_creator.get_translated_message(m.translations, this->pb_creator.language);
         if (!translated_text.empty()) {
@@ -1855,7 +1854,7 @@ std::string PbCreator::get_section_id(pbnavitia::Journey* j, size_t section_idx)
     return it->second;
 }
 
-std::string PbCreator::get_translated_message(std::vector<type::disruption::Translation> translations,
+std::string PbCreator::get_translated_message(const std::vector<type::disruption::Translation>& translations,
                                               const std::string& language) {
     for (const auto& t : translations) {
         if (!t.text.empty() && (t.language == language)) {

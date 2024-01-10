@@ -281,7 +281,7 @@ struct PbCreator {
     const std::string& register_section(pbnavitia::Journey* j, size_t section_idx);
     std::string register_section();
     std::string get_section_id(pbnavitia::Journey* j, size_t section_idx);
-    std::string get_translated_message(std::vector<type::disruption::Translation> translations,
+    std::string get_translated_message(const std::vector<type::disruption::Translation>& translations,
                                        const std::string& language);
     void fill_co2_emission(pbnavitia::Section* pb_section, const type::VehicleJourney* vehicle_journey);
     void fill_co2_emission_by_mode(pbnavitia::Section* pb_section, const std::string& mode_uri);
