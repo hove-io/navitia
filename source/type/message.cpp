@@ -91,9 +91,15 @@ SERIALIZABLE(StopTimeUpdate)
 
 template <class Archive>
 void Message::serialize(Archive& ar, const unsigned int /*unused*/) {
-    ar& text& created_at& updated_at& channel_id& channel_name& channel_content_type& channel_types;
+    ar& text& created_at& updated_at& channel_id& channel_name& channel_content_type& channel_types& translations;
 }
 SERIALIZABLE(Message)
+
+template <class Archive>
+void Translation::serialize(Archive& ar, const unsigned int /*unused*/) {
+    ar& text& language& url_audio;
+}
+SERIALIZABLE(Translation)
 
 namespace detail {
 template <class Archive>

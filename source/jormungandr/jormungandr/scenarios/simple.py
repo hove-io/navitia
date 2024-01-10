@@ -99,6 +99,7 @@ class Scenario(object):
         req.traffic_reports.count = request['count']
         req.traffic_reports.start_page = request['start_page']
         req._current_datetime = date_to_timestamp(request['_current_datetime'])
+        req.language = request.get("language", '')
 
         if request["forbidden_uris[]"]:
             for forbidden_uri in request["forbidden_uris[]"]:
@@ -122,6 +123,7 @@ class Scenario(object):
         req.line_reports.count = request['count']
         req.line_reports.start_page = request['start_page']
         req._current_datetime = date_to_timestamp(request['_current_datetime'])
+        req.language = request.get("language", '')
 
         if request["forbidden_uris[]"]:
             for forbidden_uri in request["forbidden_uris[]"]:
@@ -306,6 +308,7 @@ class Scenario(object):
             req.ptref.until_datetime = request['until']
         req.ptref.realtime_level = get_pb_data_freshness(request)
         req.disable_disruption = request["disable_disruption"]
+        req.language = request.get("language", '')
 
         # We call Loki's disruptions only if _pt_planner=loki
         if request["_pt_planner"] == "loki":

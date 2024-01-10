@@ -300,6 +300,7 @@ class PtJourneyPool:
                 allowed_id=request['allowed_id[]'],
                 isochrone_center=isochrone_center,
                 sn_params=sn_params,
+                language=request['language'],
             )
             return GraphicalIsochronesParameters(
                 journeys_parameters=journey_parameters,
@@ -328,6 +329,7 @@ class PtJourneyPool:
                 current_datetime=date_to_timestamp(request['_current_datetime']),
                 criteria=request.get('criteria', 'robustness'),
                 olympic_site_params=olympic_site_params,
+                language=request['language'],
             )
 
     def _async_request(self):

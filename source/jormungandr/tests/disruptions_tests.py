@@ -220,6 +220,96 @@ class TestDisruptions(AbstractTestFixture):
         assert stop_disrupt[0]['disruption_id'] == 'disruption_on_stop_A'
         assert stop_disrupt[0]['uri'] == 'too_bad'
 
+    def test_disruption_message_translations(self):
+        """
+        We test messages with/without translations in different end points related to disruptions
+        1. Appel without parameter language -> parameter language=fr-FR added
+        2. Appel with parameter language ->
+            a: message.text is replaced by message.translations[i].text
+            where message.translations[i].language==language.
+            b: No action on message.text if message doesn't contain any object Translation
+            c: No action on message.text if message contains translations but not with language
+        """
+        # Messages do not contain any Translation
+        response = self.query_region('disruptions/too_bad/')
+        impacts = get_impacts(response)
+        assert len(impacts) == 1
+        assert impacts["too_bad"]["messages"][0]["text"] == "no luck"
+        assert impacts["too_bad"]["messages"][1]["text"] == "try again"
+
+        response = self.query_region('disruptions/too_bad/?language=fr-FR')
+        impacts = get_impacts(response)
+        assert impacts["too_bad"]["messages"][0]["text"] == "no luck"
+        assert impacts["too_bad"]["messages"][1]["text"] == "try again"
+
+        response = self.query_region('disruptions/too_bad/?language=en-US')
+        impacts = get_impacts(response)
+        assert impacts["too_bad"]["messages"][0]["text"] == "no luck"
+        assert impacts["too_bad"]["messages"][1]["text"] == "try again"
+
+        # First message contains a translation {"triste message", "fr-FR"}
+        response = self.query_region('disruptions/too_bad_again/')
+        impacts = get_impacts(response)
+        assert len(impacts) == 1
+        assert impacts["too_bad_again"]["messages"][0]["text"] == "triste message"
+        assert impacts["too_bad_again"]["messages"][1]["text"] == "too sad message"
+
+        response = self.query_region('disruptions/too_bad_again/?language=fr-FR')
+        impacts = get_impacts(response)
+        assert impacts["too_bad_again"]["messages"][0]["text"] == "triste message"
+        assert impacts["too_bad_again"]["messages"][1]["text"] == "too sad message"
+
+        response = self.query_region('disruptions/too_bad_again/?language=en-US')
+        impacts = get_impacts(response)
+        assert impacts["too_bad_again"]["messages"][0]["text"] == "sad message"
+        assert impacts["too_bad_again"]["messages"][1]["text"] == "too sad message"
+
+        # Second message contains a translation {"too sad message in de", "de-DE"}
+        response = self.query_region('disruptions/later_impact/')
+        impacts = get_impacts(response)
+        assert len(impacts) == 1
+        assert impacts["later_impact"]["messages"][0]["text"] == "sad message"
+        assert impacts["later_impact"]["messages"][1]["text"] == "too sad message"
+
+        response = self.query_region('disruptions/later_impact/?language=fr-FR')
+        impacts = get_impacts(response)
+        assert impacts["later_impact"]["messages"][0]["text"] == "sad message"
+        assert impacts["later_impact"]["messages"][1]["text"] == "too sad message"
+
+        response = self.query_region('disruptions/later_impact/?language=en-US')
+        impacts = get_impacts(response)
+        assert impacts["later_impact"]["messages"][0]["text"] == "sad message"
+        assert impacts["later_impact"]["messages"][1]["text"] == "too sad message"
+
+        response = self.query_region('disruptions/later_impact/?language=de-DE')
+        impacts = get_impacts(response)
+        assert impacts["later_impact"]["messages"][0]["text"] == "sad message"
+        assert impacts["later_impact"]["messages"][1]["text"] == "too sad message in de"
+
+        response = self.query_region(
+            'disruptions/later_impact/traffic_reports?_current_datetime=20120828T090000'
+        )
+        impacts = get_impacts(response)
+        assert impacts["later_impact"]["messages"][0]["text"] == "sad message"
+        assert impacts["later_impact"]["messages"][1]["text"] == "too sad message"
+
+        response = self.query_region(
+            'disruptions/later_impact/traffic_reports?_current_datetime=20120828T090000&language=de-DE'
+        )
+        impacts = get_impacts(response)
+        assert impacts["later_impact"]["messages"][0]["text"] == "sad message"
+        assert impacts["later_impact"]["messages"][1]["text"] == "too sad message in de"
+
+        response = self.query_region('disruptions/later_impact/line_reports?_current_datetime=20120828T090000')
+        impacts = get_impacts(response)
+        assert impacts["later_impact"]["messages"][1]["text"] == "too sad message"
+
+        response = self.query_region(
+            'disruptions/later_impact/line_reports?_current_datetime=20120828T090000&language=de-DE'
+        )
+        impacts = get_impacts(response)
+        assert impacts["later_impact"]["messages"][1]["text"] == "too sad message in de"
+
     def test_disruption_with_stop_areas(self):
         """
         when calling the pt object stopA, we should get its disruptions

@@ -177,7 +177,8 @@ class InstanceManager(object):
             raise RegionNotFound(instance_name)
 
         instance = self.instances[instance_name]
-
+        if not arguments.get('language'):
+            arguments['language'] = instance.language
         scenario = instance.scenario(arguments.get('_override_scenario'))
         if not hasattr(scenario, api) or not callable(getattr(scenario, api)):
             raise ApiNotFound(api)
