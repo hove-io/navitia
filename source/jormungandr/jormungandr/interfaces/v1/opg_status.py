@@ -39,4 +39,4 @@ class OpgStatus(StatedResource):
     def get(self, region=None, lon=None, lat=None):
         region_str = i_manager.get_region(region, lon, lat)
         instance = i_manager.instances[region_str]
-        return instance.olympic_site_params_manager.olympic_site_params, 200
+        return instance.olympic_site_params_manager.opg_params, 200

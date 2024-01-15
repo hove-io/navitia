@@ -40,15 +40,43 @@ import boto3
 from jormungandr import app
 from navitiacommon import type_pb2
 from botocore.client import Config
+from jormungandr import app, memory_cache, cache
 
 
 AttractivityVirtualFallback = namedtuple("AttractivityVirtualFallback", "attractivity, virtual_duration")
 
 
+class ResourceS3Object:
+    def __init__(self, s3_object, instance_name):
+        self.s3_object = s3_object
+        self.instance_name = instance_name
+
+    def __repr__(self):
+        return "{}-{}-{}".format(self.instance_name, self.s3_object.key, self.s3_object.e_tag)
+
+
 class OlympicSiteParamsManager:
-    def __init__(self, instance):
+    def __init__(self, instance, config):
         self.olympic_site_params = dict()
+        self.map_filename_last_modified = dict()
         self.instance = instance
+        self.bucket_name = config.get("name")
+        self.folder = config.get("folder", "olympic_site_params")
+        self.args = config.get("args", {"connect_timeout": 2, "read_timeout": 2, "retries": {'max_attempts': 0}})
+
+        self.check_conf()
+
+    def check_conf(self):
+        logger = logging.getLogger(__name__)
+        if not self.bucket_name:
+            logger.warning(
+                "Reading stop points attractivities, undefined bucket_name for instance {}".format(
+                    self.instance.name
+                )
+            )
+
+    def __repr__(self):
+        return "opg-{}".format(self.instance.name)
 
     def build_olympic_site_params(self, scenario, data):
         if not scenario:
@@ -117,32 +145,49 @@ class OlympicSiteParamsManager:
             logger.exception('Error while loading file: {}'.format(s3_object.key))
             return {}
 
-    def fill_olympic_site_params_from_s3(self):
+    @cache.memoize(app.config[str('CACHE_CONFIGURATION')].get(str('FETCH_S3_DATA_TIMEOUT'), 24 * 60))
+    def load_data(self, resource_s3_object):
+        """
+        the POI conf is hidden in REDIS by the instance name, file name and Etag of the S3 object
+        """
+        json_content = self.get_json_content(resource_s3_object.s3_object)
+        self.str_datetime_time_stamp(json_content)
+        return json_content
+
+    @memory_cache.memoize(
+        app.config[str('MEMORY_CACHE_CONFIGURATION')].get(str('FETCH_S3_DATA_TIMEOUT'), 2 * 60)
+    )
+    def fetch_and_get_data(self, instance_name, bucket_name, folder, **kwargs):
+        result = dict()
         logger = logging.getLogger(__name__)
-        bucket_params = app.config.get('OLYMPIC_SITE_PARAMS_BUCKET', {})
-        if not bucket_params:
-            logger.debug("Reading stop points attractivities, undefined bucket_params")
+        s3_resource = boto3.resource('s3', config=Config(**kwargs))
+        try:
+            my_bucket = s3_resource.Bucket(bucket_name)
+            for obj in my_bucket.objects.filter(Prefix="{}/{}/".format(folder, instance_name)):
+                if obj.key.endswith('.json'):
+                    resource_s3_object = ResourceS3Object(obj, instance_name)
+                    json_content = self.load_data(resource_s3_object)
+                    result.update(json_content)
+        except Exception:
+            logger.exception("Error on OlympicSiteParamsManager")
+        return result
+
+    @property
+    def opg_params(self):
+        self.fill_olympic_site_params_from_s3()
+        return self.olympic_site_params
+
+    def fill_olympic_site_params_from_s3(self):
+        if not self.instance.olympics_forbidden_uris:
             return
-        bucket_name = bucket_params.get("name")
-        if not bucket_name:
+        logger = logging.getLogger(__name__)
+        if not self.bucket_name:
             logger.debug("Reading stop points attractivities, undefined bucket_name")
             return
 
-        args = bucket_params.get(
-            "args", {"connect_timeout": 2, "read_timeout": 2, "retries": {'max_attempts': 0}}
+        self.olympic_site_params = self.fetch_and_get_data(
+            instance_name=self.instance.name, bucket_name=self.bucket_name, folder=self.folder, **self.args
         )
-        s3_resource = boto3.resource('s3', config=Config(**args))
-
-        folder = app.config.get('OLYMPIC_SITE_PARAMS_BUCKET', {}).get("folder", "olympic_site_params")
-        try:
-            my_bucket = s3_resource.Bucket(bucket_name)
-            for obj in my_bucket.objects.filter(Prefix="{}/{}/".format(folder, self.instance.name)):
-                if obj.key.endswith('.json'):
-                    json_content = self.get_json_content(obj)
-                    self.str_datetime_time_stamp(json_content)
-                    self.olympic_site_params.update(json_content)
-        except Exception:
-            logger.exception("Error on OlympicSiteParamsManager")
 
     def build(self, pt_object_origin, pt_object_destination, api_request):
         # Warning, the order of functions is important
@@ -213,6 +258,8 @@ class OlympicSiteParamsManager:
 
         if not origin_olympic_site and not destination_olympic_site:
             return {}
+
+        self.fill_olympic_site_params_from_s3()
 
         if origin_olympic_site and destination_olympic_site:
             origin_olympic_site = None
