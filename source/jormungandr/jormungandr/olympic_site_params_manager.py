@@ -147,6 +147,9 @@ class OlympicSiteParamsManager:
 
     @cache.memoize(app.config[str('CACHE_CONFIGURATION')].get(str('FETCH_S3_DATA_TIMEOUT'), 24 * 60))
     def load_data(self, resource_s3_object):
+        """
+        the POI conf is hidden in REDIS by the instance name, file name and Etag of the S3 object
+        """
         json_content = self.get_json_content(resource_s3_object.s3_object)
         self.str_datetime_time_stamp(json_content)
         return json_content
