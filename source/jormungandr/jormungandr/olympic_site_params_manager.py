@@ -62,6 +62,17 @@ class OlympicSiteParamsManager:
         self.folder = config.get("folder", "olympic_site_params")
         self.args = config.get("args", {"connect_timeout": 2, "read_timeout": 2, "retries": {'max_attempts': 0}})
 
+        self.check_conf()
+
+    def check_conf(self):
+        logger = logging.getLogger(__name__)
+        if not self.bucket_name:
+            logger.warning(
+                "Reading stop points attractivities, undefined bucket_name for instance {}".format(
+                    self.instance.name
+                )
+            )
+
     def __repr__(self):
         return "opg-{}".format(self.instance.name)
 
