@@ -176,7 +176,7 @@ def filter_olympic_site_without_olympics_forbidden_uris_test():
     instance = FakeInstance()
     origin = make_pt_object(type_pb2.POI, lon=1, lat=2, uri='origin:poi')
     destination = make_pt_object(type_pb2.STOP_AREA, lon=3, lat=4, uri='destination:poi')
-    journey_filter.filter_olympic_site([response], instance, {}, origin, destination)
+    journey_filter.filter_olympic_site_by_min_pt_duration([response], instance, {}, origin, destination)
     assert len(response.journeys[0].tags) == 0
 
 
@@ -207,7 +207,9 @@ def filter_olympic_site_with_wheelchair_true_test():
     )
     origin = make_pt_object(type_pb2.POI, lon=1, lat=2, uri='origin:poi')
     destination = make_pt_object(type_pb2.STOP_AREA, lon=3, lat=4, uri='destination:stop_area')
-    journey_filter.filter_olympic_site([response], instance, {"wheelchair": True}, origin, destination)
+    journey_filter.filter_olympic_site_by_min_pt_duration(
+        [response], instance, {"wheelchair": True}, origin, destination
+    )
     assert len(response.journeys[0].tags) == 0
 
 
@@ -238,7 +240,7 @@ def filter_olympic_site_without_wheelchair_test():
     )
     origin = make_pt_object(type_pb2.POI, lon=1, lat=2, uri='origin:poi')
     destination = make_pt_object(type_pb2.STOP_AREA, lon=3, lat=4, uri='destination:stop_area')
-    journey_filter.filter_olympic_site([response], instance, {}, origin, destination)
+    journey_filter.filter_olympic_site_by_min_pt_duration([response], instance, {}, origin, destination)
     assert len(response.journeys[0].tags) == 0
 
 
@@ -277,7 +279,9 @@ def filter_olympic_site_origin_and_destination_test():
     property.type = "sitejo"
     property.value = "123"
 
-    journey_filter.filter_olympic_site([response], instance, {"wheelchair": False}, origin, destination)
+    journey_filter.filter_olympic_site_by_min_pt_duration(
+        [response], instance, {"wheelchair": False}, origin, destination
+    )
     assert len(response.journeys[0].tags) == 0
 
 
@@ -309,7 +313,9 @@ def filter_olympic_site_origin_olympic_site_first_pt_section_metro_test():
     property.value = "123"
 
     destination = make_pt_object(type_pb2.POI, lon=3, lat=4, uri='destination:poi')
-    journey_filter.filter_olympic_site([response], instance, {"wheelchair": False}, origin, destination)
+    journey_filter.filter_olympic_site_by_min_pt_duration(
+        [response], instance, {"wheelchair": False}, origin, destination
+    )
     assert len(response.journeys[0].tags) == 0
 
 
@@ -340,7 +346,9 @@ def filter_olympic_site_destination_olympic_site_last_pt_section_tramway_test():
     property = destination.poi.properties.add()
     property.type = "sitejo"
     property.value = "123"
-    journey_filter.filter_olympic_site([response], instance, {"wheelchair": False}, origin, destination)
+    journey_filter.filter_olympic_site_by_min_pt_duration(
+        [response], instance, {"wheelchair": False}, origin, destination
+    )
     assert len(response.journeys[0].tags) == 0
 
 
@@ -373,7 +381,9 @@ def filter_olympic_site_origin_olympic_site_first_pt_section_navette_jo_test():
     property.value = "123"
 
     destination = make_pt_object(type_pb2.POI, lon=3, lat=4, uri='destination:poi')
-    journey_filter.filter_olympic_site([response], instance, {"wheelchair": False}, origin, destination)
+    journey_filter.filter_olympic_site_by_min_pt_duration(
+        [response], instance, {"wheelchair": False}, origin, destination
+    )
     assert len(response.journeys[0].tags) == 0
 
 
@@ -405,7 +415,9 @@ def filter_olympic_site_destination_olympic_site_last_pt_section_navette_jo_test
     property = destination.poi.properties.add()
     property.type = "sitejo"
     property.value = "123"
-    journey_filter.filter_olympic_site([response], instance, {"wheelchair": False}, origin, destination)
+    journey_filter.filter_olympic_site_by_min_pt_duration(
+        [response], instance, {"wheelchair": False}, origin, destination
+    )
     assert len(response.journeys[0].tags) == 0
 
 
@@ -440,7 +452,9 @@ def filter_olympic_site_origin_olympic_site_to_delete_tag_test():
     property.value = "123"
     destination = make_pt_object(type_pb2.POI, lon=3, lat=4, uri='destination:poi')
 
-    journey_filter.filter_olympic_site([response], instance, {"wheelchair": False}, origin, destination)
+    journey_filter.filter_olympic_site_by_min_pt_duration(
+        [response], instance, {"wheelchair": False}, origin, destination
+    )
     assert len(response.journeys[0].tags) == 1
     assert response.journeys[0].tags[0] == "to_delete"
 
@@ -476,7 +490,9 @@ def filter_olympic_site_origin_olympic_site_without_to_delete_tag_test():
     property.value = "123"
 
     destination = make_pt_object(type_pb2.POI, lon=3, lat=4, uri='destination:poi')
-    journey_filter.filter_olympic_site([response], instance, {"wheelchair": False}, origin, destination)
+    journey_filter.filter_olympic_site_by_min_pt_duration(
+        [response], instance, {"wheelchair": False}, origin, destination
+    )
     assert len(response.journeys[0].tags) == 0
 
 
@@ -510,7 +526,9 @@ def filter_olympic_site_destination_olympic_site_to_delete_tag_test():
     property = destination.poi.properties.add()
     property.type = "sitejo"
     property.value = "123"
-    journey_filter.filter_olympic_site([response], instance, {"wheelchair": False}, origin, destination)
+    journey_filter.filter_olympic_site_by_min_pt_duration(
+        [response], instance, {"wheelchair": False}, origin, destination
+    )
     assert len(response.journeys[0].tags) == 1
     assert response.journeys[0].tags[0] == "to_delete"
 
@@ -544,7 +562,9 @@ def filter_olympic_site_destination_olympic_site_without_to_delete_tag_test():
     property = destination.poi.properties.add()
     property.type = "sitejo"
     property.value = "123"
-    journey_filter.filter_olympic_site([response], instance, {"wheelchair": False}, origin, destination)
+    journey_filter.filter_olympic_site_by_min_pt_duration(
+        [response], instance, {"wheelchair": False}, origin, destination
+    )
     assert len(response.journeys[0].tags) == 0
 
 
@@ -579,7 +599,9 @@ def filter_olympic_site_destination_olympic_site_journey_tagged_test():
     property = destination.poi.properties.add()
     property.type = "sitejo"
     property.value = "123"
-    journey_filter.filter_olympic_site([response], instance, {"wheelchair": False}, origin, destination)
+    journey_filter.filter_olympic_site_by_min_pt_duration(
+        [response], instance, {"wheelchair": False}, origin, destination
+    )
     assert len(response.journeys[0].tags) == 1
     assert response.journeys[0].tags[0] == "to_delete"
 
@@ -620,7 +642,9 @@ def filter_olympic_site_destination_olympic_site_test1_test():
     property = destination.poi.properties.add()
     property.type = "sitejo"
     property.value = "123"
-    journey_filter.filter_olympic_site([response], instance, {"wheelchair": False}, origin, destination)
+    journey_filter.filter_olympic_site_by_min_pt_duration(
+        [response], instance, {"wheelchair": False}, origin, destination
+    )
     assert len(response.journeys[0].tags) == 0
 
 
@@ -661,7 +685,9 @@ def filter_olympic_site_destination_olympic_site_test2_test():
     property = destination.poi.properties.add()
     property.type = "sitejo"
     property.value = "123"
-    journey_filter.filter_olympic_site([response], instance, {"wheelchair": False}, origin, destination)
+    journey_filter.filter_olympic_site_by_min_pt_duration(
+        [response], instance, {"wheelchair": False}, origin, destination
+    )
     assert len(response.journeys[0].tags) == 1
     assert response.journeys[0].tags[0] == "to_delete"
 
@@ -767,6 +793,54 @@ def filter_filter_olympic_site_strict_without_wheelchair_test():
     assert len(response.journeys[1].tags) == 1
     for j in response.journeys:
         assert "to_delete" not in j.tags
+
+
+def filter_filter_only_olympic_site_best_olympics_test():
+    # arrival_
+    response = response_pb2.Response()
+    for i in range(2):
+        journey = response.journeys.add()
+        for stype in (response_pb2.STREET_NETWORK, response_pb2.PUBLIC_TRANSPORT, response_pb2.TRANSFER):
+            section = journey.sections.add()
+            section.type = stype
+    assert len(response.journeys) == 2
+    response.journeys[0].tags.append('best_olympics')
+    response.journeys[1].tags.append("another_tag")
+    api_request = {"_keep_olympics_journeys": True, "debug": True}
+    assert len(response.journeys[0].tags) == 1
+    assert len(response.journeys[1].tags) == 1
+    journey_filter.filter_only_olympic_site([response], api_request)
+    assert len(response.journeys) == 2
+    assert len(response.journeys[0].tags) == 1
+    assert "to_delete" not in response.journeys[0].tags
+    assert "best_olympics" in response.journeys[0].tags
+    assert len(response.journeys[1].tags) == 3
+    assert 'to_delete' in response.journeys[1].tags
+    assert 'deleted_because_not_olympic_journey' in response.journeys[1].tags
+
+
+def filter_filter_only_olympic_site_best_olympics_and_olympics_test():
+    # arrival_
+    response = response_pb2.Response()
+    for i in range(2):
+        journey = response.journeys.add()
+        for stype in (response_pb2.STREET_NETWORK, response_pb2.PUBLIC_TRANSPORT, response_pb2.TRANSFER):
+            section = journey.sections.add()
+            section.type = stype
+    assert len(response.journeys) == 2
+    response.journeys[0].tags.append('best_olympics')
+    response.journeys[1].tags.append("olympics")
+    api_request = {"_keep_olympics_journeys": True, "debug": True}
+    assert len(response.journeys[0].tags) == 1
+    assert len(response.journeys[1].tags) == 1
+    journey_filter.filter_only_olympic_site([response], api_request)
+    assert len(response.journeys) == 2
+    assert len(response.journeys[0].tags) == 1
+    assert "to_delete" not in response.journeys[0].tags
+    assert "best_olympics" in response.journeys[0].tags
+    assert len(response.journeys[1].tags) == 1
+    assert "to_delete" not in response.journeys[1].tags
+    assert "olympics" in response.journeys[1].tags
 
 
 def compute_journey_virtual_duration_test():

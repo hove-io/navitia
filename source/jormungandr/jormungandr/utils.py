@@ -607,22 +607,6 @@ def is_olympic_site(entry_point, instance):
     return False
 
 
-def get_olympic_site(entry_point, instance):
-    if not instance or not instance.olympics_forbidden_uris:
-        return None
-    if not entry_point:
-        return None
-    if is_olympic_site(entry_point, instance):
-        return entry_point
-    if entry_point.embedded_type == type_pb2.ADDRESS:
-        if not (hasattr(entry_point.address, 'within_zones') and entry_point.address.within_zones):
-            return None
-        for within_zone in entry_point.address.within_zones:
-            if is_olympic_poi(within_zone, instance):
-                return within_zone
-    return None
-
-
 def get_last_pt_section(journey):
     return next((s for s in reversed(journey.sections) if s.type == response_pb2.PUBLIC_TRANSPORT), None)
 

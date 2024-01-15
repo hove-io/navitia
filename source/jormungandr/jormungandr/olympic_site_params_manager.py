@@ -30,9 +30,15 @@
 import logging
 import json
 from collections import namedtuple
-from jormungandr.utils import get_olympic_site, local_str_date_to_utc, date_to_timestamp, str_to_dt
+from jormungandr.utils import (
+    is_olympic_poi,
+    local_str_date_to_utc,
+    date_to_timestamp,
+    str_to_dt,
+)
 import boto3
 from jormungandr import app
+from navitiacommon import type_pb2
 from botocore.client import Config
 
 
@@ -185,10 +191,25 @@ class OlympicSiteParamsManager:
         elif olympic_site_params.get("arrival_scenario"):
             api_request["criteria"] = "arrival_stop_attractivity"
 
+    def get_olympic_site(self, entry_point):
+        if not self.instance or not self.instance.olympics_forbidden_uris:
+            return None
+        if not entry_point:
+            return None
+        if is_olympic_poi(entry_point, self.instance):
+            return entry_point
+        if entry_point.embedded_type == type_pb2.ADDRESS:
+            if not (hasattr(entry_point.address, 'within_zones') and entry_point.address.within_zones):
+                return None
+            for within_zone in entry_point.address.within_zones:
+                if is_olympic_poi(within_zone, self.instance):
+                    return within_zone
+        return None
+
     def get_olympic_site_params(self, pt_origin_detail, pt_destination_detail, api_request):
 
-        origin_olympic_site = get_olympic_site(pt_origin_detail, self.instance)
-        destination_olympic_site = get_olympic_site(pt_destination_detail, self.instance)
+        origin_olympic_site = self.get_olympic_site(pt_origin_detail)
+        destination_olympic_site = self.get_olympic_site(pt_destination_detail)
 
         if not origin_olympic_site and not destination_olympic_site:
             return {}
