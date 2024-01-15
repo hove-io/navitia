@@ -176,6 +176,7 @@ def create_pb_request(requested_type, request, dep_mode, arr_mode, direct_path_t
     req = request_pb2.Request()
     req.requested_api = requested_type
     req._current_datetime = date_to_timestamp(request['_current_datetime'])
+    req.language = request['language']
 
     if "origin" in request and request["origin"]:
         if requested_type != type_pb2.NMPLANNER:
@@ -1372,7 +1373,7 @@ class Scenario(simple.Scenario):
         journey_filter.apply_final_journey_filters(responses, instance, api_request)
 
         # Filter olympic site: Jira NAV-2130
-        journey_filter.filter_olympic_site(
+        journey_filter.filter_olympic_site_by_min_pt_duration(
             responses, instance, api_request, pt_object_origin, pt_object_destination
         )
 

@@ -158,21 +158,30 @@ class Kraken(object):
             logger.error("feed publisher not empty: expect performance regression!")
         return res.places_nearby
 
-    def get_stop_points_for_stop_area(self, uri, request_id):
+    def get_stop_points_uris_for_stop_area(self, stop_area_uri, request_id):
         req = request_pb2.Request()
         req.requested_api = type_pb2.PTREFERENTIAL
         req.ptref.requested_type = type_pb2.STOP_POINT
         req.ptref.count = 100
         req.ptref.start_page = 0
         req.ptref.depth = 0
-        req.ptref.filter = 'stop_area.uri = {uri}'.format(uri=uri)
+        req.ptref.filter = 'stop_area.uri = {uri}'.format(uri=stop_area_uri)
+        return self.instance.send_and_receive(req, request_id=request_id)
 
-        result = self.instance.send_and_receive(req, request_id=request_id)
-        if not result.stop_points:
-            logging.getLogger(__name__).info(
-                'PtRef, Unable to find stop_point with filter {}'.format(req.ptref.filter)
-            )
-        return result.stop_points
+    def get_stop_points_for_stop_area(self, uri, request_id):
+        @memory_cache.memoize(
+            current_app.config[str('MEMORY_CACHE_CONFIGURATION')].get(str('TIMEOUT_PTOBJECTS'), 30)
+        )
+        @cache.memoize(current_app.config[str('CACHE_CONFIGURATION')].get(str('TIMEOUT_PTOBJECTS'), 300))
+        def inner(stop_area_uri, instance_publication_date):
+            result = self.get_stop_points_uris_for_stop_area(stop_area_uri, request_id)
+            if not result:
+                logging.getLogger(__name__).info(
+                    'PtRef, Unable to find stop_point with filter {}'.format(stop_area_uri)
+                )
+            return {sp.uri for sp in result.stop_points}
+
+        return inner(uri, self.instance.publication_date)
 
     def get_stop_points_from_uri(self, uri, request_id, depth=0):
         req = request_pb2.Request()

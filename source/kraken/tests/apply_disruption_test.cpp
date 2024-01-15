@@ -1868,7 +1868,8 @@ BOOST_AUTO_TEST_CASE(update_impact) {
     b.data->meta->production_date = bg::date_period(bg::date(2012, 6, 14), bg::days(7));
 
     auto original_disruption_text = "message disruption 1";
-    auto disruption_message_1 = navitia::type::disruption::Message{original_disruption_text, "", "", "", {}, {}, {}};
+    auto disruption_message_1 =
+        navitia::type::disruption::Message{original_disruption_text, "", "", "", {}, {}, {}, {}};
     const auto& disruption_1 = b.impact(nt::RTLevel::Adapted, "stop3_closed")
                                    .severity(nt::disruption::Effect::NO_SERVICE)
                                    .msg(disruption_message_1)

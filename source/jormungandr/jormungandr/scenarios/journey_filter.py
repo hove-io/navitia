@@ -68,6 +68,13 @@ def is_best_olympics(journey):
     return 'best_olympics' in journey.tags
 
 
+def remove_to_delete_tag(journey, is_debug, *reasons):
+    journey.tags.remove("to_delete")
+    if is_debug:
+        for reason in reasons:
+            journey.tags.remove("deleted_because_{}".format(reason))
+
+
 def is_olympics(journey):
     return 'olympics' in journey.tags
 
@@ -684,6 +691,26 @@ def apply_final_journey_filters(response_list, instance, request):
         filter_non_car_tagged_journey(journeys, request)
 
 
+def filter_only_olympic_site(response_list, request):
+    not_olympic_journeys = list()
+    if not request.get('_keep_olympics_journeys'):
+        return
+    all_journeys = [j for resp in response_list for j in resp.journeys]
+    for j in all_journeys:
+        if not j.sections:
+            continue
+        if to_be_deleted(j):
+            continue
+        if not any([is_olympics(j), is_best_olympics(j)]):
+            not_olympic_journeys.append(j)
+            mark_as_dead(j, request.get('debug'), 'not_olympic_journey')
+    if not_olympic_journeys:
+        to_delete_count = [j for j in all_journeys if to_be_deleted(j)]
+        if len(to_delete_count) == len(all_journeys):
+            for j in not_olympic_journeys:
+                remove_to_delete_tag(j, request.get('debug'), "not_olympic_journey")
+
+
 def filter_olympic_site_strict(response_list, request):
     if not response_list:
         return
@@ -702,7 +729,9 @@ def filter_olympic_site_strict(response_list, request):
                 mark_as_dead(j, request.get('debug'), 'Filtered by strict POI')
 
 
-def filter_olympic_site(response_list, instance, request, pt_object_origin, pt_object_destination):
+def filter_olympic_site_by_min_pt_duration(
+    response_list, instance, request, pt_object_origin, pt_object_destination
+):
     if not response_list:
         return
     if not instance.olympics_forbidden_uris:

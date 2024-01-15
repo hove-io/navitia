@@ -541,6 +541,8 @@ class Scenario(new_default.Scenario):
                 journey_filter.filter_detailed_journeys(responses, request)
                 # Filter olympic site (strict): Jira: NAV-2400
                 journey_filter.filter_olympic_site_strict(responses, request)
+                # Filter only olympic site: Jira: NAV-2616
+                journey_filter.filter_only_olympic_site(responses, request)
 
         except Exception as e:
             logger.exception('')

@@ -58,6 +58,7 @@ class ChaosDisruptionsFixture(RabbitMQCnxFixture):
         routes=None,
         properties=None,
         tags=None,
+        translations=None,
     ):
         return make_mock_chaos_item(
             disruption_name,
@@ -76,6 +77,7 @@ class ChaosDisruptionsFixture(RabbitMQCnxFixture):
             routes=routes,
             properties=properties,
             tags=tags,
+            translations=translations,
         )
 
 
@@ -543,7 +545,11 @@ class TestChaosDisruptions2(ChaosDisruptionsFixture):
         and we should get it
         """
         # we create a list with every 'to' section to the stop B (the one we added the disruption on)
-        self.send_mock("bob_the_disruption", "stopB", "stop_area", blocking=True)
+        translations = [
+            {'text': 'message in en-US', 'language': 'en-US'},
+            {'text': 'message in de-DE', 'language': 'de-DE'},
+        ]
+        self.send_mock("bob_the_disruption", "stopB", "stop_area", blocking=True, translations=translations)
         query = journey_basic_query + '&_current_datetime=20160314T144100'
         response = self.query_region(query)
 
@@ -554,6 +560,36 @@ class TestChaosDisruptions2(ChaosDisruptionsFixture):
         links = get_links_dict(response)
         assert 'bypass_disruptions' in links
         assert '&data_freshness=realtime' in links['bypass_disruptions']['href']
+
+        disruptions = get_not_null(response, 'disruptions')
+        assert len(disruptions) == 3
+        disruption = get_disruption(disruptions, 'impact_bob_the_disruption_1')
+        message = get_not_null(disruption, 'messages')
+        assert message[0]['text'] == 'default_message'
+        assert message[1]['text'] == 'default_message'
+        assert message[2]['text'] == 'default_message'
+
+        query = journey_basic_query + '&_current_datetime=20160314T144100&language=en-US'
+        response = self.query_region(query)
+        self.is_valid_journey_response(response, query)
+        disruptions = get_not_null(response, 'disruptions')
+        assert len(disruptions) == 3
+        disruption = get_disruption(disruptions, 'impact_bob_the_disruption_1')
+        message = get_not_null(disruption, 'messages')
+        assert message[0]['text'] == 'message in en-US'
+        assert message[1]['text'] == 'message in en-US'
+        assert message[2]['text'] == 'default_message'
+
+        query = journey_basic_query + '&_current_datetime=20160314T144100&language=de-DE'
+        response = self.query_region(query)
+        self.is_valid_journey_response(response, query)
+        disruptions = get_not_null(response, 'disruptions')
+        assert len(disruptions) == 3
+        disruption = get_disruption(disruptions, 'impact_bob_the_disruption_1')
+        message = get_not_null(disruption, 'messages')
+        assert message[0]['text'] == 'message in de-DE'
+        assert message[1]['text'] == 'message in de-DE'
+        assert message[2]['text'] == 'default_message'
 
         # We call journey with realtime data_freshness
         # We should not receive bypass_disruptions link
@@ -1282,6 +1318,7 @@ def make_mock_chaos_item(
     routes=None,
     properties=None,
     tags=None,
+    translations=None,
 ):
     feed_message = gtfs_realtime_pb2.FeedMessage()
     feed_message.header.gtfs_realtime_version = '1.0'
@@ -1387,6 +1424,12 @@ def make_mock_chaos_item(
     message.channel.content_type = "text"
     message.channel.types.append(chaos_pb2.Channel.sms)
 
+    # Add translations if exist in the message
+    for t in translations or []:
+        translation = message.translations.add()
+        translation.text = t['text']
+        translation.language = t['language']
+
     # Message with one channel and two channel types: web and email
     message = impact.messages.add()
     message.text = message_text
@@ -1396,6 +1439,12 @@ def make_mock_chaos_item(
     message.channel.content_type = "html"
     message.channel.types.append(chaos_pb2.Channel.web)
     message.channel.types.append(chaos_pb2.Channel.email)
+
+    # Add translations if exist in the message
+    for t in translations or []:
+        translation = message.translations.add()
+        translation.text = t['text']
+        translation.language = t['language']
 
     # message with one channel and four channel types: web, mobile, title and beacon
     message = impact.messages.add()

@@ -280,6 +280,15 @@ static std::vector<nt::disruption::PtObj> make_pt_objects(
     return res;
 }
 
+static std::vector<nt::disruption::Translation> make_translations(
+    const google::protobuf::RepeatedPtrField<chaos::Translation>& chaos_translations) {
+    std::vector<nt::disruption::Translation> res;
+    for (const auto& chaos_trans : chaos_translations) {
+        res.push_back({chaos_trans.text(), chaos_trans.language(), chaos_trans.url_audio()});
+    }
+    return res;
+}
+
 static std::set<nt::disruption::ChannelType> create_channel_types(const chaos::Channel& chaos_channel) {
     std::set<navitia::type::disruption::ChannelType> res;
     for (const auto channel_type : chaos_channel.types()) {
@@ -371,10 +380,12 @@ static boost::shared_ptr<nt::disruption::Impact> make_impact(const chaos::Impact
     }
     for (const auto& chaos_message : chaos_impact.messages()) {
         const auto& channel = chaos_message.channel();
+        const auto& chaos_translations = chaos_message.translations();
+        auto translations = make_translations(chaos_translations);
         auto channel_types = create_channel_types(channel);
         impact->messages.push_back({chaos_message.text(), channel.id(), channel.name(), channel.content_type(),
                                     from_posix(chaos_message.created_at()), from_posix(chaos_message.updated_at()),
-                                    channel_types});
+                                    channel_types, translations});
     }
 
     return impact;

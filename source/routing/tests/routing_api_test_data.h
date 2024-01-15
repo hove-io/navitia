@@ -709,7 +709,7 @@ struct routing_api_data {
             .severity("disruption")
             .on(nt::Type_e::Line, "A", *b.data->pt_data)
             .on(nt::Type_e::Network, "base_network", *b.data->pt_data)
-            .msg("sad message", nt::disruption::ChannelType::sms)
+            .msg("sad message", nt::disruption::ChannelType::sms, "triste message", "fr-FR")
             .msg("too sad message", nt::disruption::ChannelType::sms);
 
         // we create another disruption on line A, but with
@@ -748,7 +748,7 @@ struct routing_api_data {
             .on(nt::Type_e::Line, "A", *b.data->pt_data)
             .on(nt::Type_e::Network, "base_network", *b.data->pt_data)
             .msg("sad message", nt::disruption::ChannelType::sms)
-            .msg("too sad message", nt::disruption::ChannelType::sms);
+            .msg("too sad message", nt::disruption::ChannelType::sms, "too sad message in de", "de-DE");
 
         // we create another disruption on line A, but not publish at the same date as the other ones
         // this one is published from the 28th
@@ -792,14 +792,16 @@ struct routing_api_data {
                   "content type",
                   default_date,
                   default_date,
-                  {ChannelType::web, ChannelType::sms}})
+                  {ChannelType::web, ChannelType::sms},
+                  {}})
             .msg({"try again",
                   "email",
                   "email",
                   "content type",
                   default_date,
                   default_date,
-                  {ChannelType::web, ChannelType::email}});
+                  {ChannelType::web, ChannelType::email},
+                  {}});
 
         // we create one disruption on route A:0
         auto dis_maker_period = boost::posix_time::time_period("20130426T060000"_dt, "20130430T120000"_dt);
@@ -820,7 +822,8 @@ struct routing_api_data {
                   "content type",
                   default_date,
                   default_date,
-                  {ChannelType::web, ChannelType::title, ChannelType::beacon}});
+                  {ChannelType::web, ChannelType::title, ChannelType::beacon},
+                  {}});
 
         disruption_maker.impact()
             .uri("too_bad_line_B")

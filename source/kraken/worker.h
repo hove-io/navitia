@@ -104,7 +104,8 @@ private:
                           const pt::time_period action_period,
                           const bool disable_geojson = false,
                           const bool disable_feedpublisher = false,
-                          const bool disable_disruption = false);
+                          const bool disable_disruption = false,
+                          const std::string language = "fr-FR");
 
     void metadatas();
     void feed_publisher();

@@ -1,7 +1,6 @@
 FROM navitia/master
 
-COPY navitia-common_*.deb ./
-COPY navitia-tyr_*.deb ./
+COPY navitia-common_*.deb navitia-tyr_*.deb ./
 
 RUN apt-get update \
     && apt install -y --force-yes jq
@@ -14,11 +13,14 @@ COPY docker/templates/* /templates/
 
 # install navitia-common package
 RUN dpkg -i ./navitia-common_*.deb || exit 0
-RUN apt-get install -f -y --force-yes
 
 # install navitia-tyr package
 RUN dpkg -i ./navitia-tyr_*.deb || exit 0
+
 RUN apt-get install -f -y --force-yes
+
+RUN rm navitia-common_*.deb  \
+    navitia-tyr_*.deb
 
 # install ed migrations requirements
 RUN pip install -r /tmp/requirements.txt
