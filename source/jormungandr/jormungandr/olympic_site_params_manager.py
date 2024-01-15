@@ -35,7 +35,6 @@ from jormungandr.utils import (
     local_str_date_to_utc,
     date_to_timestamp,
     str_to_dt,
-    dt_to_date_str,
 )
 import boto3
 from botocore.client import Config
@@ -51,9 +50,7 @@ class ResourceS3Object:
         self.instance_name = instance_name
 
     def __repr__(self):
-        return "{}-{}-{}".format(
-            self.instance_name, self.s3_object.key, dt_to_date_str(self.s3_object.last_modified)
-        )
+        return "{}-{}-{}".format(self.instance_name, self.s3_object.key, self.s3_object.e_tag)
 
 
 class OlympicSiteParamsManager:
@@ -159,7 +156,8 @@ class OlympicSiteParamsManager:
             logger.exception("Error on OlympicSiteParamsManager")
         return result
 
-    def get_opg_params(self):
+    @property
+    def opg_params(self):
         self.fill_olympic_site_params_from_s3()
         return self.olympic_site_params
 
