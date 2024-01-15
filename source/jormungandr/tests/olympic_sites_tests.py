@@ -573,7 +573,9 @@ class TestOlympicSites(AbstractTestFixture):
         forbidden_uris = deepcopy(DEFAULT_FORBIDDEN_URIS)
         forbidden_uris.update({"pt_object_olympics_forbidden_uris": ["physical_mode:axb"]})
         instance.olympics_forbidden_uris = parse_and_get_olympics_forbidden_uris(forbidden_uris)
-        instance.olympic_site_params_manager = get_olympic_site_params_manager(instance)
+        instance.olympic_site_params_manager = FakeOlympicSiteParamsManager(
+            instance, DEFAULT_OLYMPIC_SITE_PARAMS_BUCKET
+        )
         with requests_mock.Mocker() as m:
             m.get(from_place, json=FROM_ADDRESS)
             m.get(to_place, json=TO_POI)
