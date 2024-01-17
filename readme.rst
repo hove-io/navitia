@@ -28,7 +28,7 @@ Hove
     :target: https://github.com/hove-io/navitia/releases
     :alt: version
 
-..  |Build Status| image:: https://img.shields.io/github/workflow/status/hove-io/navitia/Build%20Navitia%20Packages%20For%20Release?logo=github&style=flat-square
+..  |Build Status| image:: https://img.shields.io/github/actions/workflow/status/hove-io/navitia/dockers_builder_release.yml?logo=github&style=flat-square
     :target: https://github.com/hove-io/navitia/actions?query=workflow%3A%22Build+Navitia+Packages+For+Release%22
     :alt: Last build
 
