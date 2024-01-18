@@ -73,7 +73,7 @@ def parking_space_availability_forseti_get_informations_test():
         currency='USD',
         start_time='2019-04-01T00:00:00Z',
         end_time='2019-04-01T23:59:59Z',
-        amount=6000
+        amount=6000,
     )
     provider = ForsetiProvider('http://forseti')
     provider._call_webservice = MagicMock(return_value=webservice_response)
