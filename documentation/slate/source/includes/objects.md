@@ -6,7 +6,7 @@ Standard Objects
 
 ### Coord
 
-Lots of object are geographically localized:
+Lots of object are geographically localized :
 
 |Field|Type|Description|
 |-----|----|-----------|
