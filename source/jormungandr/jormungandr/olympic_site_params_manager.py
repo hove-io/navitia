@@ -156,7 +156,7 @@ class OlympicSiteParamsManager:
             for key, value in json_content.items():
                 value["metadata"] = {
                     "last_load_at": str_datetime_utc_to_local(None, self.instance.timezone),
-                    "filename": filename
+                    "filename": filename,
                 }
 
     @cache.memoize(app.config[str('CACHE_CONFIGURATION')].get(str('FETCH_S3_DATA_TIMEOUT'), 24 * 60))
