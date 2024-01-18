@@ -84,10 +84,6 @@ class ParkingPlaces(object):
     def __eq__(self, other):
         for item in [
             "available",
-            "currency",
-            "amount",
-            "start_time",
-            "end_time",
             "occupied",
             "total_places",
             "available_PRM",
@@ -98,6 +94,10 @@ class ParkingPlaces(object):
             "occupied_electric_vehicle",
             "state",
             "availability",
+            "currency",
+            "amount",
+            "start_time",
+            "end_time",
             "total_places",
         ]:
             if hasattr(other, item):
