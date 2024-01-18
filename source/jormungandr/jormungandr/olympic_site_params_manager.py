@@ -35,6 +35,7 @@ from jormungandr.utils import (
     local_str_date_to_utc,
     date_to_timestamp,
     str_to_dt,
+    str_datetime_utc_to_local,
 )
 import boto3
 from jormungandr import app
@@ -145,6 +146,15 @@ class OlympicSiteParamsManager:
             logger.exception('Error while loading file: {}'.format(s3_object.key))
             return {}
 
+    def add_metadata(self, json_content, s3_object):
+        if s3_object and s3_object.HasField("key"):
+            for key, value in json_content.items():
+                filename = s3_object.key.split("/")
+                value["metadata"] = {
+                    "last_load_at": str_datetime_utc_to_local(None, self.instance.timezone),
+                    "filename": filename[-1] if filename else ""
+                }
+
     @cache.memoize(app.config[str('CACHE_CONFIGURATION')].get(str('FETCH_S3_DATA_TIMEOUT'), 24 * 60))
     def load_data(self, resource_s3_object):
         """
@@ -152,6 +162,7 @@ class OlympicSiteParamsManager:
         """
         json_content = self.get_json_content(resource_s3_object.s3_object)
         self.str_datetime_time_stamp(json_content)
+        self.add_metadata(json_content, resource_s3_object.s3_object)
         return json_content
 
     @memory_cache.memoize(
