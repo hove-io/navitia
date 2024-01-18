@@ -33,6 +33,10 @@ class ParkingPlaces(object):
     def __init__(
         self,
         available=None,
+        currency=None,
+        start_time=None,
+        end_time=None,
+        amount=None,
         occupied=None,
         available_PRM=None,
         occupied_PRM=None,
@@ -66,12 +70,20 @@ class ParkingPlaces(object):
             self.state = state
         if availability is not None:
             self.availability = availability
+            self.currency = currency
+            self.amount = amount
+            self.start_time = start_time
+            self.end_time = end_time
         if not total_places and any(n is not None for n in [available, occupied, available_PRM, occupied_PRM]):
             self.total_places = (available or 0) + (occupied or 0) + (available_PRM or 0) + (occupied_PRM or 0)
 
     def __eq__(self, other):
         for item in [
             "available",
+            "currency",
+            "amount",
+            "start_time",
+            "end_time",
             "occupied",
             "total_places",
             "available_PRM",
