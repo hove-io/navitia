@@ -147,12 +147,16 @@ class OlympicSiteParamsManager:
             return {}
 
     def add_metadata(self, json_content, s3_object):
-        if s3_object and s3_object.HasField("key"):
+        if s3_object:
+            filename = ""
+            try:
+                filename = s3_object.key.split("/")[-1]
+            except Exception:
+                pass
             for key, value in json_content.items():
-                filename = s3_object.key.split("/")
                 value["metadata"] = {
                     "last_load_at": str_datetime_utc_to_local(None, self.instance.timezone),
-                    "filename": filename[-1] if filename else ""
+                    "filename": filename
                 }
 
     @cache.memoize(app.config[str('CACHE_CONFIGURATION')].get(str('FETCH_S3_DATA_TIMEOUT'), 24 * 60))
