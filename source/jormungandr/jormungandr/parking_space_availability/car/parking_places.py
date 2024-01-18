@@ -70,9 +70,13 @@ class ParkingPlaces(object):
             self.state = state
         if availability is not None:
             self.availability = availability
+        if currency is not None:
             self.currency = currency
+        if amount is not None:
             self.amount = amount
+        if start_time is not None:
             self.start_time = start_time
+        if end_time is not None:
             self.end_time = end_time
         if not total_places and any(n is not None for n in [available, occupied, available_PRM, occupied_PRM]):
             self.total_places = (available or 0) + (occupied or 0) + (available_PRM or 0) + (occupied_PRM or 0)
