@@ -79,4 +79,10 @@ class ForsetiProvider(CommonCarParkProvider):
             parking_coord = Coords(parking.get('coord').get('lat'), parking.get('coord').get('lon'))
             distance = crowfly_distance_between(poi_coord, parking_coord)
             if distance < self.distance:
-                return ParkingPlaces(availability=parking.get('availability'))
+                return ParkingPlaces(
+                    availability=parking.get('availability'),
+                    currency=parking.get('currency'),
+                    amount=parking.get('amount'),
+                    start_time=parking.get('startTime'),
+                    end_time=parking.get('endTime'),
+                )
