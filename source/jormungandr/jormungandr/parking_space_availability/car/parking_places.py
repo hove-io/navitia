@@ -33,10 +33,6 @@ class ParkingPlaces(object):
     def __init__(
         self,
         available=None,
-        currency=None,
-        start_time=None,
-        end_time=None,
-        amount=None,
         occupied=None,
         available_PRM=None,
         occupied_PRM=None,
@@ -47,6 +43,10 @@ class ParkingPlaces(object):
         occupied_electric_vehicle=None,
         state=None,
         availability=None,
+        currency=None,
+        start_time=None,
+        end_time=None,
+        amount=None,
     ):
         if available is not None:
             self.available = available

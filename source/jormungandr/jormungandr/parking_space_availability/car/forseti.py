@@ -82,7 +82,7 @@ class ForsetiProvider(CommonCarParkProvider):
                 return ParkingPlaces(
                     availability=parking.get('availability'),
                     currency=parking.get('currency'),
+                    amount=parking.get('amount'),
                     start_time=parking.get('startTime'),
                     end_time=parking.get('endTime'),
-                    amount=parking.get('amount'),
                 )

@@ -60,8 +60,8 @@ def parking_space_availability_forseti_get_informations_test():
                 "coord": {"lat": 42.368227, "lon": -83.0779357},
                 "availability": True,
                 "currency": "USD",
-                "start_time": "2019-04-01T00:00:00Z",
-                "end_time": "2019-04-01T23:59:59Z",
+                "startTime": "2019-04-01T00:00:00Z",
+                "endTime": "2019-04-01T23:59:59Z",
                 "amount": 6000,
             }
         ],
