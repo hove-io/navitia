@@ -30,6 +30,24 @@ from __future__ import absolute_import, print_function, unicode_literals, divisi
 
 
 class ParkingPlaces(object):
+    class Price(object):
+        # Price constructor
+        # Initializes the price details for a parking place
+        #
+        # Parameters:
+        # - currency: str, The currency used for pricing
+        # - amount: float, The price amount
+        # - start_time: datetime, The start time for the pricing
+        # - end_time: datetime, The end time for the pricing
+        #
+        # Returns:
+        # - None
+        def __init__(self, currency=None, amount=None, start_time=None, end_time=None):
+            self.currency = currency
+            self.amount = amount
+            self.start_time = start_time
+            self.end_time = end_time
+
     def __init__(
         self,
         available=None,
@@ -43,6 +61,7 @@ class ParkingPlaces(object):
         occupied_electric_vehicle=None,
         state=None,
         availability=None,
+        price=None,
     ):
         if available is not None:
             self.available = available
@@ -66,6 +85,8 @@ class ParkingPlaces(object):
             self.state = state
         if availability is not None:
             self.availability = availability
+        if price is not None:
+            self.price = price
         if not total_places and any(n is not None for n in [available, occupied, available_PRM, occupied_PRM]):
             self.total_places = (available or 0) + (occupied or 0) + (available_PRM or 0) + (occupied_PRM or 0)
 
@@ -82,6 +103,7 @@ class ParkingPlaces(object):
             "occupied_electric_vehicle",
             "state",
             "availability",
+            "price",
             "total_places",
         ]:
             if hasattr(other, item):
