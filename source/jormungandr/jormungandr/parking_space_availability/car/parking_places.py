@@ -61,10 +61,6 @@ class ParkingPlaces(object):
         occupied_electric_vehicle=None,
         state=None,
         availability=None,
-        currency=None,
-        start_time=None,
-        end_time=None,
-        amount=None,
         price=None,
     ):
         if available is not None:
@@ -90,13 +86,7 @@ class ParkingPlaces(object):
         if availability is not None:
             self.availability = availability
         if price is not None:
-            self.price = (
-                price
-                if price
-                else ParkingPlaces.Price(
-                    currency=currency, amount=amount, start_time=start_time, end_time=end_time
-                )
-            )
+            self.price = price
         if not total_places and any(n is not None for n in [available, occupied, available_PRM, occupied_PRM]):
             self.total_places = (available or 0) + (occupied or 0) + (available_PRM or 0) + (occupied_PRM or 0)
 
