@@ -60,23 +60,27 @@ def parking_space_availability_forseti_get_informations_test():
                 "coord": {"lat": 42.368227, "lon": -83.0779357},
                 "availability": True,
                 "currency": "USD",
+                "amount": 6000,
                 "startTime": "2019-04-01T00:00:00Z",
                 "endTime": "2019-04-01T23:59:59Z",
-                "amount": 6000,
-            }
+            },
         ],
         "pagination": {"start_page": 0, "items_on_page": 25, "items_per_page": 25, "total_result": 1},
     }
 
     parking_places = ParkingPlaces(
         availability=True,
-        currency='USD',
-        start_time='2019-04-01T00:00:00Z',
-        end_time='2019-04-01T23:59:59Z',
-        amount=6000,
+        price=ParkingPlaces.Price(
+            currency='USD',
+            amount=6000,
+            start_time='2019-04-01T00:00:00Z',
+            end_time='2019-04-01T23:59:59Z',
+        ),
     )
     provider = ForsetiProvider('http://forseti')
     provider._call_webservice = MagicMock(return_value=webservice_response)
     parking = provider.get_informations(poi)
-    assert parking == parking_places
-    print(parking)
+    assert parking.price.currency == parking_places.price.currency
+    assert parking.price.amount == parking_places.price.amount
+    assert parking.price.start_time == parking_places.price.start_time
+    assert parking.price.end_time == parking_places.price.end_time

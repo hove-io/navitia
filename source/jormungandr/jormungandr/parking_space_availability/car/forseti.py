@@ -81,8 +81,10 @@ class ForsetiProvider(CommonCarParkProvider):
             if distance < self.distance:
                 return ParkingPlaces(
                     availability=parking.get('availability'),
-                    currency=parking.get('currency'),
-                    amount=parking.get('amount'),
-                    start_time=parking.get('startTime'),
-                    end_time=parking.get('endTime'),
+                    price=ParkingPlaces.Price(
+                        currency=parking.get('currency'),
+                        amount=parking.get('amount'),
+                        start_time=parking.get('startTime'),
+                        end_time=parking.get('endTime'),
+                    ),
                 )
