@@ -128,15 +128,15 @@ class Geovelo(AbstractStreetNetworkService):
             'averageSpeed': bike_speed,  # in km/h, BEGINNER sets it to 13
         }
 
-    def sort_by_mode(self, points):
-        def key_func(point):
+    def sort_places_by_physical_mode_and_distance(self, points):
+        def priority_by_mode(point):
             if len(point.stop_point.physical_modes) == 0:
                 return float('inf')
             return min(
                 (self.mode_weight.get(mode.uri, float('inf')) for mode in point.stop_point.physical_modes)
             )
 
-        return sorted(points, key=key_func)
+        return sorted(points, key=lambda point: (priority_by_mode(point), point.distance))
 
     @classmethod
     def _make_request_arguments_isochrone(cls, origins, destinations, bike_speed_mps=3.33):
@@ -456,6 +456,6 @@ class Geovelo(AbstractStreetNetworkService):
 
     def filter_places_isochrone(self, places_isochrone):
         result = (p for p in places_isochrone if self.is_reached_by_physical_mode(p))
-        ordered_isochrone = self.sort_by_mode(result)
+        ordered_isochrone = self.sort_places_by_physical_mode_and_distance(result)
 
         return self.get_truncated_places_isochrone(ordered_isochrone)
