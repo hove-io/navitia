@@ -336,7 +336,7 @@ class Asgard(TransientSocket, Kraken):
         req.direct_path.destination.CopyFrom(self.make_location(pt_object_destination))
         req.direct_path.datetime = fallback_extremity.datetime
         req.direct_path.clockwise = fallback_extremity.represents_start
-
+        req.direct_path.datetime = request["datetime"]
         profiles = [
             DirectPathProfile(
                 bike_use_roads=request['bike_use_roads'],
