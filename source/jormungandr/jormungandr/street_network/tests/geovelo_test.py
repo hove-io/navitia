@@ -451,7 +451,7 @@ def sort_by_mode_test():
         modes=["walking", "bike", "car"],
         timeout=56,
     )
-    points = geovelo.sort_by_mode(points)
+    points = geovelo.sort_places_by_physical_mode_and_distance(points)
     assert points[0].uri == 'ref_Train'
     assert points[1].uri == 'ref_Rapid'
     assert points[2].uri == 'ref_Metro'
@@ -613,6 +613,89 @@ def filter_places_isochrone_modes_multiple_modes_test():
     assert points[0].uri == 'ref_car_rapid'
     assert points[1].uri == 'ref_bus_train'
 
+    # Default mode_weight
+    assert len(list(geovelo.mode_weight.keys())) == 3
+    for mode in ['physical_mode:Train', 'physical_mode:RapidTransit', 'physical_mode:LocalTrain']:
+        assert mode in geovelo.mode_weight
+
+
+def filter_places_isochrone_modes_distance_test():
+    points = [
+        make_pt_object_with_sp_mode(
+            lon=3,
+            lat=48.3,
+            uri='ref_bus_LocalTrain_d_14',
+            mode_uris=['physical_mode:Bus', 'physical_mode:LocalTrain'],
+            distance=14,
+        ),
+        make_pt_object_with_sp_mode(
+            lon=3,
+            lat=48.3,
+            uri='ref_bus_LocalTrain_d_12',
+            mode_uris=['physical_mode:Bus', 'physical_mode:LocalTrain'],
+            distance=12,
+        ),
+        make_pt_object_with_sp_mode(
+            lon=3,
+            lat=48.3,
+            uri='ref_bus_LocalTrain_d_15',
+            mode_uris=['physical_mode:Bus', 'physical_mode:LocalTrain'],
+            distance=15,
+        ),
+        make_pt_object_with_sp_mode(
+            lon=4, lat=48.4, uri='ref_Train_d_5', mode_uris=['physical_mode:Train'], distance=5
+        ),
+        make_pt_object_with_sp_mode(
+            lon=4, lat=48.4, uri='ref_Train_d_17', mode_uris=['physical_mode:Train'], distance=17
+        ),
+        make_pt_object_with_sp_mode(
+            lon=4, lat=48.4, uri='ref_Train_d_7', mode_uris=['physical_mode:Train'], distance=7
+        ),
+        make_pt_object_with_sp_mode(
+            lon=6,
+            lat=48.6,
+            uri='ref_car_rapid_d_15',
+            mode_uris=['physical_mode:Car', 'physical_mode:RapidTransit'],
+            distance=15,
+        ),
+        make_pt_object_with_sp_mode(
+            lon=6,
+            lat=48.6,
+            uri='ref_car_rapid_d_3',
+            mode_uris=['physical_mode:Car', 'physical_mode:RapidTransit'],
+            distance=3,
+        ),
+        make_pt_object_with_sp_mode(
+            lon=6,
+            lat=48.6,
+            uri='ref_car_rapid_d_16',
+            mode_uris=['physical_mode:Car', 'physical_mode:RapidTransit'],
+            distance=16,
+        ),
+    ]
+    geovelo = Geovelo(
+        instance=None,
+        service_url=MOCKED_SERVICE_URL,
+        id=u"tata-é$~#@\"*!'`§èû",
+        modes=["walking", "bike", "car"],
+        timeout=56,
+        mode_weight={"physical_mode:Train": 2, "physical_mode:RapidTransit": 2, "physical_mode:LocalTrain": 1},
+    )
+    points = geovelo.filter_places_isochrone(points)
+    result = [
+        "ref_bus_LocalTrain_d_12",
+        "ref_bus_LocalTrain_d_14",
+        "ref_bus_LocalTrain_d_15",
+        "ref_car_rapid_d_3",
+        "ref_Train_d_5",
+        "ref_Train_d_7",
+        "ref_car_rapid_d_15",
+        "ref_car_rapid_d_16",
+        "ref_Train_d_17",
+    ]
+    assert len(points) == len(result)
+    for index, uri in enumerate(result):
+        assert points[index].uri == uri
     # Default mode_weight
     assert len(list(geovelo.mode_weight.keys())) == 3
     for mode in ['physical_mode:Train', 'physical_mode:RapidTransit', 'physical_mode:LocalTrain']:
