@@ -58,8 +58,9 @@ def make_pt_object(embedded_type, lon, lat, uri=None):
     return pt_object
 
 
-def make_pt_object_with_sp_mode(lon, lat, uri, mode_uris=None):
+def make_pt_object_with_sp_mode(lon, lat, uri, mode_uris=None, distance=0):
     pt_object = type_pb2.PtObject()
+    pt_object.distance = distance
     pt_object.embedded_type = type_pb2.STOP_POINT
     if uri:
         pt_object.uri = uri
