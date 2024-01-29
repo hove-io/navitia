@@ -699,7 +699,7 @@ void PbCreator::Filler::fill_pb_object(const nt::StopPoint* sp, pbnavitia::StopP
         fill(sp->admin_list, stop_point->mutable_administrative_regions());
     }
     // access points
-    if (depth > 2) {
+    if (depth > 1) {
         fill_access_points(sp->access_points, stop_point);
     }
 

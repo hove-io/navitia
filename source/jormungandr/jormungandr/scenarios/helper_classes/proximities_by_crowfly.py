@@ -182,10 +182,8 @@ class ProximitiesByCrowflyPool:
         for mode in self._modes:
             object_type = type_pb2.STOP_POINT
             filter = None
-            # if access_point is true, access points are filled in stop points
-            depth = 3 if self._request["_access_points"] else 2
+            depth = 2
             if mode == fm.FallbackModes.car.name:
-                depth = 2
                 object_type = type_pb2.POI
                 filter = "poi_type.uri=\"poi_type:amenity:parking\""
 
