@@ -337,6 +337,7 @@ class Asgard(TransientSocket, Kraken):
         req.direct_path.datetime = fallback_extremity.datetime
         req.direct_path.clockwise = fallback_extremity.represents_start
         req.direct_path.datetime = request["datetime"]
+        req.direct_path.use_excluded_zones = request["_use_excluded_zones"]
         profiles = [
             DirectPathProfile(
                 bike_use_roads=request['bike_use_roads'],
