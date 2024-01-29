@@ -768,6 +768,15 @@ class JourneyCommon(ResourceUri, ResourceUtc):
             help="only available for Asgard: " "Ignore when encountering roads that are oneway.",
         )
 
+        parser_get.add_argument(
+            "_use_excluded_zones",
+            type=BooleanType(),
+            hidden=True,
+            default=False,
+            help="only available for Asgard so far: take into account excluded zones pre-defined in Asgard, "
+            "Warning: this feature may be performance impacting.",
+        )
+
     def parse_args(self, region=None, uri=None):
         args = self.parsers['get'].parse_args()
 
