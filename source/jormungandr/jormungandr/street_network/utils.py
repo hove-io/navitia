@@ -148,8 +148,6 @@ def create_kraken_matrix_request(
     req.sn_routing_matrix.streetnetwork_params.car_no_park_speed = speed_switcher.get(
         "car_no_park", kwargs.get("car_no_park")
     )
-    req.sn_routing_matrix.datetime = request["datetime"]
-    req.sn_routing_matrix.use_excluded_zones = request["_use_excluded_zones"]
     return req
 
 

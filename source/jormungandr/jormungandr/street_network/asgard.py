@@ -193,6 +193,9 @@ class Asgard(TransientSocket, Kraken):
             self, origins, destinations, street_network_mode, max_duration, speed_switcher, request, **kwargs
         )
 
+        req.sn_routing_matrix.datetime = request["datetime"]
+        req.sn_routing_matrix.use_excluded_zones = request["_use_excluded_zones"]
+
         # Asgard/Valhalla bike
         req.sn_routing_matrix.streetnetwork_params.bike_use_roads = request['bike_use_roads']
         req.sn_routing_matrix.streetnetwork_params.bike_use_hills = request['bike_use_hills']
@@ -336,7 +339,6 @@ class Asgard(TransientSocket, Kraken):
         req.direct_path.destination.CopyFrom(self.make_location(pt_object_destination))
         req.direct_path.datetime = fallback_extremity.datetime
         req.direct_path.clockwise = fallback_extremity.represents_start
-        req.direct_path.datetime = request["datetime"]
         req.direct_path.use_excluded_zones = request["_use_excluded_zones"]
         profiles = [
             DirectPathProfile(
