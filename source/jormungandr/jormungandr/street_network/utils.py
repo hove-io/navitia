@@ -96,7 +96,6 @@ def create_kraken_direct_path_request(
     req.direct_path.origin.CopyFrom(connector.make_location(pt_object_origin))
     req.direct_path.destination.CopyFrom(connector.make_location(pt_object_destination))
     req.direct_path.datetime = fallback_extremity.datetime
-    req.direct_path.use_excluded_zones = request['_use_excluded_zones']
     req.direct_path.clockwise = fallback_extremity.represents_start
     req.direct_path.streetnetwork_params.origin_mode = connector.handle_car_no_park_modes(mode)
     req.direct_path.streetnetwork_params.destination_mode = connector.handle_car_no_park_modes(mode)
