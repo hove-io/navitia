@@ -123,7 +123,7 @@ def create_kraken_direct_path_request(
 
 
 def create_kraken_matrix_request(
-    connector, origins, destinations, street_network_mode, max_duration, speed_switcher, _, **kwargs
+    connector, origins, destinations, street_network_mode, max_duration, speed_switcher, request, **kwargs
 ):
     req = request_pb2.Request()
     req.requested_api = type_pb2.street_network_routing_matrix
@@ -147,7 +147,6 @@ def create_kraken_matrix_request(
     req.sn_routing_matrix.streetnetwork_params.car_no_park_speed = speed_switcher.get(
         "car_no_park", kwargs.get("car_no_park")
     )
-
     return req
 
 

@@ -856,6 +856,9 @@ class Journeys(JourneyCommon):
             if args.get('_loki_compute_pt_journey_fare') is None:
                 args['_loki_compute_pt_journey_fare'] = mod.loki_compute_pt_journey_fare
 
+            if args.get('_use_excluded_zones') is None:
+                args['_use_excluded_zones'] = app.config['USE_EXCLUDED_ZONES']
+
         # When computing 'same_journey_schedules'(is_journey_schedules=True), some parameters need to be overridden
         # because they are contradictory to the request
         if args.get("is_journey_schedules"):
