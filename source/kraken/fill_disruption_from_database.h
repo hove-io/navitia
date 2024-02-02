@@ -76,9 +76,10 @@ struct DisruptionDatabaseReader {
     chaos::Pattern* pattern = nullptr;
 
     std::string last_channel_type_id = "";
-    std::string last_translation_language = "";
 
     std::set<std::string> message_ids;
+    // message_id + translation_language
+    std::set<std::string> message_translate_ids;
     std::set<std::tuple<std::string, std::string, std::string>> properties;
     std::set<std::string> application_periods_ids;
     std::set<std::string> pattern_ids;
@@ -109,11 +110,11 @@ struct DisruptionDatabaseReader {
         if (disruption && (!impact || impact->id() != const_it["impact_id"].template as<std::string>())) {
             fill_impact(const_it);
             last_channel_type_id = "";
-            last_translation_language = "";
             message = nullptr;
             channel = nullptr;
             pt_object = nullptr;
             message_ids.clear();
+            message_translate_ids.clear();
             application_periods_ids.clear();
             line_section_route_set.clear();
             rail_section_route_set.clear();
@@ -204,13 +205,15 @@ struct DisruptionDatabaseReader {
             fill_channel_type(const_it, channel);
             last_channel_type_id = const_it["channel_type_id"].template as<std::string>();
         }
-
         // Fill tranlations related to this message
-        if (impact && message && !const_it["translation_language"].is_null()
-            && (last_translation_language != const_it["translation_language"].template as<std::string>())) {
-            auto* translation = message->add_translations();
-            fill_translation(const_it, translation);
-            last_translation_language = const_it["translation_language"].template as<std::string>();
+        if (impact && message && !const_it["translation_language"].is_null()) {
+            std::string message_translate_id = const_it["message_id"].template as<std::string>()
+                                               + const_it["translation_language"].template as<std::string>();
+            if (!message_translate_ids.count(message_translate_id)) {
+                auto* translation = message->add_translations();
+                fill_translation(const_it, translation);
+                message_translate_ids.insert(message_translate_id);
+            }
         }
     }
 
