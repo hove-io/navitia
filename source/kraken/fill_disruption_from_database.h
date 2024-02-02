@@ -207,7 +207,8 @@ struct DisruptionDatabaseReader {
         }
         // Fill tranlations related to this message
         if (impact && message && !const_it["translation_language"].is_null()) {
-            std::string message_translate_id = const_it["message_id"].template as<std::string>() + const_it["translation_language"].template as<std::string>();
+            std::string message_translate_id = const_it["message_id"].template as<std::string>()
+                                               + const_it["translation_language"].template as<std::string>();
             if (!message_translate_ids.count(message_translate_id)) {
                 auto* translation = message->add_translations();
                 fill_translation(const_it, translation);
