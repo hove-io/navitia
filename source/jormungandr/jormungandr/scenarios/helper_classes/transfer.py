@@ -169,7 +169,7 @@ class TransferPool(object):
 
     def _get_access_points(self, stop_point_uri, access_point_filter=lambda x: x):
         sub_request_id = "{}_transfer_start_{}".format(self._request_id, stop_point_uri)
-        stop_points = self._instance.georef.get_stop_points_from_uri(stop_point_uri, sub_request_id, depth=3)
+        stop_points = self._instance.georef.get_stop_points_from_uri(stop_point_uri, sub_request_id, depth=2)
         if not stop_points:
             return None
 
