@@ -98,6 +98,7 @@ class Geovelo(AbstractStreetNetworkService):
         self._feed_publisher = FeedPublisher(**feed_publisher) if feed_publisher else None
         self.verify = verify
         self.mode_weight = kwargs.get("mode_weight") or DEFAULT_MODE_WEIGHT
+        self.places_count = kwargs.get("places_count", 125)
         self.mode_weight_keys = set(self.mode_weight.keys())
 
     def status(self):
@@ -452,7 +453,7 @@ class Geovelo(AbstractStreetNetworkService):
         return self.mode_weight_keys & self.get_physical_modes_uris(place)
 
     def get_truncated_places_isochrone(self, places_isochrone):
-        return places_isochrone[:125]
+        return places_isochrone[:self.places_count]
 
     def filter_places_isochrone(self, places_isochrone):
         result = (p for p in places_isochrone if self.is_reached_by_physical_mode(p))
