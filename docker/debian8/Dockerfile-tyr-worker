@@ -1,14 +1,16 @@
 FROM navitia/master
 
-# Install binary enrich-ntfs-with-addresses from tartare-tools
-ENV TARTARE_TOOLS_VERSION="v0.39.0"
+# Install some binaries from tartare-tools
+ENV TARTARE_TOOLS_VERSION="v0.42.0"
 ARG GITHUB_TOKEN
 RUN git config --global url."https://x-access-token:${GITHUB_TOKEN}@github.com/hove-io/".insteadOf "ssh://git@github.com/hove-io/"
 RUN git clone -b ${TARTARE_TOOLS_VERSION} --depth 1 https://x-access-token:${GITHUB_TOKEN}@github.com/hove-io/tartare-tools
 
 RUN cd tartare-tools \
     && cargo build --release -p enrich-ntfs-with-addresses \
+    && cargo build --release -p split-trip-geometries \
     && cp target/release/enrich-ntfs-with-addresses /usr/bin/ \
+    && cp target/release/split-trip-geometries /usr/bin/ \
     && cd .. \
     && rm -rf tartare-tools
 
