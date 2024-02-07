@@ -38,6 +38,7 @@ import zipfile
 import datetime
 import shutil
 from functools import wraps
+import subprocess
 
 from flask import current_app
 from shapely.geometry import MultiPolygon
@@ -57,6 +58,8 @@ from redis.exceptions import ConnectionError
 import retrying
 
 from tyr.minio import MinioWrapper
+
+from tyr.poi_to_excluded_zones import poi_to_excluded_zones
 
 
 def unzip_if_needed(filename):
@@ -1231,6 +1234,46 @@ def split_trip_geometries(loki_dir, filename, job_id, dataset_uid):
 def gtfs2s3(self, instance_config, filename, job_id, dataset_uid):
     """Zip fusio file and launch gtfs2s3"""
     _inner_2s3(self, "gtfs", instance_config, filename, job_id, dataset_uid)
+
+
+@celery.task(bind=True)
+def poi2asgard(self, instance_config, filename, job_id, dataset_uid):
+    """Extract excluded zones and synchronize with"""
+    job = models.Job.query.get(job_id)
+    dataset = _retrieve_dataset_and_set_state("poi", job.id)
+    instance = job.instance
+    logger = get_instance_logger(instance, task_id=job_id)
+
+    excluded_zone_dir = "excluded_zones"
+    if os.path.isdir(excluded_zone_dir):
+        shutil.rmtree(excluded_zone_dir)
+
+    os.mkdir(excluded_zone_dir)
+    poi_to_excluded_zones(filename, excluded_zone_dir, instance.name)
+
+    try:
+        with collect_metric("poi2Asgard", job, dataset_uid):
+            asgard_bucket = current_app.config.get('MINIO_ASGARD_BUCKET_NAME', None)
+            if not asgard_bucket:
+                raise Exception("Asgard Bucket is None")
+
+            bash_command = (
+                "env REQUESTS_CA_BUNDLE=/etc/ssl/certs/ca-certificates.crt "
+                "aws s3 sync ./{excluded_zone_dir} s3://{asgard_bucket}/excluded_zones".format(
+                    excluded_zone_dir=excluded_zone_dir, asgard_bucket=asgard_bucket
+                )
+            )
+            process = subprocess.Popen(bash_command.split(), stdout=subprocess.PIPE)
+            output, error = process.communicate()
+            if error:
+                raise Exception("Error occurred when putting excluded zones to asgard: {}".format(error))
+    except:
+        logger.exception("")
+        job.state = "failed"
+        dataset.state = "failed"
+        raise
+    finally:
+        models.db.session.commit()
 
 
 def _inner_2s3(self, dataset_type, instance_config, filename, job_id, dataset_uid):
