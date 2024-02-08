@@ -308,24 +308,29 @@ class TransferPool(object):
             )
         return None, None, None
 
+    def add_attribute(self, pp_object, json_data, attributes):
+        for attribute in attributes:
+            if attribute in json_data:
+                setattr(pp_object, attribute, json_data.get(attribute))
+
     def pb_object_from_json(self, json_object):
         pb_object = type_pb2.PtObject()
         str_embedded_type = json_object.get("embedded_type")
         pb_embedded_type = MAP_STRING_PTOBJECT_TYPE.get(str_embedded_type)
         str_embedded_type = str_embedded_type.lower()
         pb_object.embedded_type = pb_embedded_type
-        for attribute in ["uri", "name"]:
-            setattr(pb_object, attribute, json_object.get(attribute))
+        self.add_attribute(pb_object, json_object, ["uri", "name"])
         pb_attr = getattr(pb_object, str_embedded_type)
         json_data = json_object.get(str_embedded_type, {})
-        for attribute in ["uri", "name", "label"]:
-            if attribute in json_data:
-                setattr(pb_attr, attribute, json_data.get(attribute))
+        self.add_attribute(pb_attr, json_object, ["uri", "name", "label"])
         pb_attr.coord.lon = json_data.get("coord", {}).get("lon")
         pb_attr.coord.lat = json_data.get("coord", {}).get("lat")
         if pb_embedded_type == type_pb2.ACCESS_POINT:
-            for attribute in ["is_entrance", "is_exit", "pathway_mode", "length", "traversal_time", "stop_code"]:
-                setattr(pb_attr, attribute, json_data.get(attribute))
+            self.add_attribute(
+                pb_attr,
+                json_data,
+                ["is_entrance", "is_exit", "pathway_mode", "length", "traversal_time", "stop_code"],
+            )
             pb_attr.embedded_type = type_pb2.pt_access_point
         return pb_object
 
@@ -342,9 +347,9 @@ class TransferPool(object):
                 street_network = json_section.get("street_network", {})
                 for item in street_network.get("path_items", []):
                     path_item = section.street_network.path_items.add()
-                    for attribute in ["name", "length", "direction", "duration", "instruction"]:
-                        if attribute in item:
-                            setattr(path_item, attribute, item.get(attribute))
+                    self.add_attribute(
+                        path_item, item, ["name", "length", "direction", "duration", "instruction"]
+                    )
                     instruction_start_coordinate = item.get("instruction_start_coordinate")
                     if instruction_start_coordinate:
                         path_item.instruction_start_coordinate.lon = instruction_start_coordinate.get("lon")
