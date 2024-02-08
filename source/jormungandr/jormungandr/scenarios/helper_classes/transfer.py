@@ -367,7 +367,7 @@ class TransferPool(object):
 
         return resp
 
-    @cache.memoize(app.config[str('CACHE_CONFIGURATION')].get(str('TIMEOUT_TRANSFER_PATH'), 10 * 60))
+    @cache.memoize(app.config[str('CACHE_CONFIGURATION')].get(str('TIMEOUT_TRANSFER_PATH'), 24 * 60 * 60))
     def get_cached_transfer_path(self, transfer_path_args):
         access_points = self.get_underlying_access_points(
             transfer_path_args.section,
