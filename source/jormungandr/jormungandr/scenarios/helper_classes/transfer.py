@@ -31,7 +31,6 @@ from __future__ import absolute_import, print_function, unicode_literals, divisi
 import copy
 from collections import namedtuple
 from navitiacommon import response_pb2, type_pb2
-from jormungandr.protobuf_to_dict import protobuf_to_dict
 from jormungandr import app, cache
 import itertools
 import logging
@@ -61,19 +60,7 @@ ACCESS_POINTS_PHYSICAL_MODES = (
     "physical_mode:Metro",
 )
 
-MAP_STRING_PTOBJECT_TYPE = {
-    "STOP_POINT": type_pb2.STOP_POINT,
-    "ACCESS_POINT": type_pb2.ACCESS_POINT,
-    "ADDRESS": type_pb2.ADDRESS,
-}
 
-
-MAP_CYCLEPATHTYPE = {
-    "NoCycleLane": response_pb2.NoCycleLane,
-    "SharedCycleWay": response_pb2.SharedCycleWay,
-    "DedicatedCycleWay": response_pb2.DedicatedCycleWay,
-    "SeparatedCycleWay": response_pb2.SeparatedCycleWay,
-}
 # if `(physical_mode:A, physical_mode:B) in NO_ACCESS_POINTS_TRANSFER` then it means that a transfer
 # where we get out of a vehicle of  `physical_mode:A` and then get in a vehicle of `physical_mode:B`
 # **will not** go through an access point
@@ -302,70 +289,11 @@ class TransferPool(object):
         )
         if direct_path and direct_path.journeys:
             return (
-                protobuf_to_dict(direct_path, use_enum_labels=True),
-                protobuf_to_dict(origin, use_enum_labels=True),
-                protobuf_to_dict(destination, use_enum_labels=True),
+                direct_path.SerializeToString(),
+                origin.SerializeToString(),
+                destination.SerializeToString(),
             )
         return None, None, None
-
-    def add_attribute(self, pp_object, json_data, attributes):
-        for attribute in attributes:
-            if attribute in json_data:
-                setattr(pp_object, attribute, json_data.get(attribute))
-
-    def pb_object_from_json(self, json_object):
-        pb_object = type_pb2.PtObject()
-        str_embedded_type = json_object.get("embedded_type")
-        pb_embedded_type = MAP_STRING_PTOBJECT_TYPE.get(str_embedded_type)
-        str_embedded_type = str_embedded_type.lower()
-        pb_object.embedded_type = pb_embedded_type
-        self.add_attribute(pb_object, json_object, ["uri", "name"])
-        pb_attr = getattr(pb_object, str_embedded_type)
-        json_data = json_object.get(str_embedded_type, {})
-        self.add_attribute(pb_attr, json_object, ["uri", "name", "label"])
-        pb_attr.coord.lon = json_data.get("coord", {}).get("lon")
-        pb_attr.coord.lat = json_data.get("coord", {}).get("lat")
-        if pb_embedded_type == type_pb2.ACCESS_POINT:
-            self.add_attribute(
-                pb_attr,
-                json_data,
-                ["is_entrance", "is_exit", "pathway_mode", "length", "traversal_time", "stop_code"],
-            )
-            pb_attr.embedded_type = type_pb2.pt_access_point
-        return pb_object
-
-    def pb_transfer_path(self, json_transfer_path):
-        resp = response_pb2.Response()
-        resp.status_code = 200
-        resp.response_type = response_pb2.ITINERARY_FOUND
-        for json_journey in json_transfer_path.get("journeys", []):
-            journey = resp.journeys.add()
-            for json_section in json_journey.get("sections", []):
-                section = journey.sections.add()
-                section.type = response_pb2.STREET_NETWORK
-                section.street_network.mode = response_pb2.Walking
-                street_network = json_section.get("street_network", {})
-                for item in street_network.get("path_items", []):
-                    path_item = section.street_network.path_items.add()
-                    self.add_attribute(
-                        path_item, item, ["name", "length", "direction", "duration", "instruction"]
-                    )
-                    instruction_start_coordinate = item.get("instruction_start_coordinate")
-                    if instruction_start_coordinate:
-                        path_item.instruction_start_coordinate.lon = instruction_start_coordinate.get("lon")
-                        path_item.instruction_start_coordinate.lat = instruction_start_coordinate.get("lat")
-                    if "cycle_path_type" in item:
-                        path_item.cycle_path_type = MAP_CYCLEPATHTYPE.get(item["cycle_path_type"])
-
-                for coord in street_network.get("coordinates", []):
-                    section.street_network.coordinates.add(lon=coord.get("lon"), lat=coord.get("lat"))
-                for st_info in street_network.get("street_information", []):
-                    pb_street_information = section.street_network.street_information.add()
-                    pb_street_information.geojson_offset = st_info.get("geojson_offset")
-                    pb_street_information.cycle_path_type = MAP_CYCLEPATHTYPE[st_info.get("cycle_path_type")]
-                    pb_street_information.length = st_info.get("length")
-
-        return resp
 
     @cache.memoize(app.config[str('CACHE_CONFIGURATION')].get(str('TIMEOUT_TRANSFER_PATH'), 24 * 60 * 60))
     def get_cached_transfer_path(self, transfer_path_args):
@@ -430,9 +358,15 @@ class TransferPool(object):
         )
         if not path:
             return None
-        pb_origin = self.pb_object_from_json(origin)
-        pb_destination = self.pb_object_from_json(destination)
-        pb_path = self.pb_transfer_path(path)
+        pb_path = response_pb2.Response()
+        pb_path.ParseFromString(path)
+
+        pb_origin = type_pb2.PtObject()
+        pb_origin.ParseFromString(origin)
+
+        pb_destination = type_pb2.PtObject()
+        pb_destination.ParseFromString(destination)
+
         return TransferResult(pb_path, pb_origin, pb_destination)
 
     def _aysnc_access_point_transfer(self, section, prev_section_mode, next_section_mode):
