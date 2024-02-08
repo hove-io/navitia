@@ -60,6 +60,7 @@ from tyr.binarisation import (
     fusio2s3,
     gtfs2s3,
     zip_if_needed,
+    poi2asgard,
 )
 from tyr.binarisation import reload_data, move_to_backupdirectory
 from tyr import celery
@@ -207,7 +208,8 @@ def import_data(
                                 loki_data_source, instance.name
                             )
                         )
-
+            if dataset.type == "poi":
+                actions.append(poi2asgard.si(instance_config, filename, dataset_uid=dataset.uid))
             actions.append(task[dataset.type].si(instance_config, filename, dataset_uid=dataset.uid))
         else:
             # unknown type, we skip it

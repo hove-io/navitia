@@ -27,7 +27,7 @@ RUN apt-get remove --yes cmake \
 
 # Python 'requests' package handle its own CA certificate list
 # Let's force it to use the OS's list
-ENV REQUESTS_CA_BUNDLE /etc/ssl/certs
+ENV REQUESTS_CA_BUNDLE /etc/ssl/certs/ca-certificates.crt
 
 # install rustup
 ENV RUSTUP_HOME=/usr/local/rustup \
