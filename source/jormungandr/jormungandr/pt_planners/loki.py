@@ -62,6 +62,13 @@ class Loki(ZmqSocket, AbstractPtPlanner):
     ):
         raise NotImplementedError("Too bad, you cannot ask loki for graphical isochrones :)")
 
+    def get_access_points(self, pt_object, access_point_filter, request_id):
+        return [
+            type_pb2.PtObject(name=ap.name, uri=ap.uri, embedded_type=type_pb2.ACCESS_POINT, access_point=ap)
+            for ap in pt_object.stop_point.access_points
+            if access_point_filter(ap)
+        ]
+
     def get_crow_fly(
         self,
         origin,

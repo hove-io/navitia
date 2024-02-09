@@ -46,6 +46,10 @@ class AbstractPtPlanner(six.with_metaclass(ABCMeta, object)):  # type: ignore
     ):
         pass
 
+    @abstractmethod
+    def get_access_points(self, pt_object, access_point_filter, request_id):
+        raise NotImplementedError()
+
 
 class JourneyParameters(object):
     def __init__(

@@ -318,7 +318,11 @@ class Distributed(object):
         journeys_to_complete = get_journeys_to_complete(responses, context, is_debug)
 
         transfer_pool = TransferPool(
-            future_manager=future_manager, instance=instance, request=request, request_id=request_id
+            future_manager=future_manager,
+            instance=instance,
+            request=request,
+            request_id=request_id,
+            pt_planner_name=request['_pt_planner'],
         )
 
         pt_journey_fare_pool = PtJourneyFarePool(

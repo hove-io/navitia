@@ -101,6 +101,7 @@ class TransferPool(object):
         instance,
         request,
         request_id,
+        pt_planner_name,
     ):
         self._future_manager = future_manager
         self._instance = instance
@@ -109,6 +110,7 @@ class TransferPool(object):
         self._streetnetwork_service = self._instance.get_street_network(FallbackModes.walking.name, request)
         self._transfers_future = dict()
         self._logger = logging.getLogger(__name__)
+        self._pt_planner = self._instance.get_pt_planner(pt_planner_name)
 
     def __repr__(self):
         return "{name}:{language}:{publication_date}".format(
@@ -192,39 +194,27 @@ class TransferPool(object):
     def _aysnc_no_access_point_transfer(self, section):
         return self._future_manager.create_future(self._do_no_access_point_transfer, section)
 
-    def _get_access_points(self, pt_object, access_point_filter=lambda x: x):
-        if self._request.get("_pt_planner") == "loki":
-            return [
-                type_pb2.PtObject(name=ap.name, uri=ap.uri, embedded_type=type_pb2.ACCESS_POINT, access_point=ap)
-                for ap in pt_object.stop_point.access_points
-                if access_point_filter(ap)
-            ]
-
-        sub_request_id = "{}_transfer_start_{}".format(self._request_id, pt_object.uri)
-        stop_points = self._instance.georef.get_stop_points_from_uri(pt_object.uri, sub_request_id, depth=2)
-        if not stop_points:
-            return None
-
-        return [
-            type_pb2.PtObject(name=ap.name, uri=ap.uri, embedded_type=type_pb2.ACCESS_POINT, access_point=ap)
-            for ap in stop_points[0].access_points
-            if access_point_filter(ap)
-        ]
-
     def get_underlying_access_points(self, section, prev_section_mode, next_section_mode):
         """
         find out based on with extremity of the section the access points are calculated and request the georef for
         access_points of the underlying stop_point
         return: access_points
         """
+
         if prev_section_mode in ACCESS_POINTS_PHYSICAL_MODES:
-            return self._get_access_points(
-                section.origin, access_point_filter=lambda access_point: access_point.is_exit
+            sub_request_id = "{}_transfer_start_{}".format(self._request_id, section.origin.uri)
+            return self._pt_planner.get_access_points(
+                section.origin,
+                access_point_filter=lambda access_point: access_point.is_exit,
+                request_id=sub_request_id,
             )
 
         if next_section_mode in ACCESS_POINTS_PHYSICAL_MODES:
-            return self._get_access_points(
-                section.destination, access_point_filter=lambda access_point: access_point.is_entrance
+            sub_request_id = "{}_transfer_start_{}".format(self._request_id, section.destination.uri)
+            return self._pt_planner.get_access_points(
+                section.destination,
+                access_point_filter=lambda access_point: access_point.is_entrance,
+                request_id=sub_request_id,
             )
 
         return None
