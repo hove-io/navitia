@@ -20,7 +20,7 @@ RUN apt-get install -y --force-yes postgresql-client
 RUN pip install --no-cache-dir -r /usr/share/tyr/requirements.txt
 
 # install uwsgi
-RUN pip install uwsgi
+RUN pip install uwsgi==2.0.22
 
 WORKDIR /usr/src/app/
 RUN cp /usr/bin/manage_tyr.py /usr/src/app/manage_tyr.py
