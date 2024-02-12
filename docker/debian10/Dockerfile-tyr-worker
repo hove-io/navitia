@@ -13,6 +13,12 @@ RUN apt-get update \
     ./mimirsbrunn7_buster-*.deb ./cosmogony2cities*.deb
 
 
+
+RUN apt install -y --force-yes unzip
+RUN curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+RUN unzip awscliv2.zip
+RUN ./aws/install
+
 # install tyr requirements
 RUN pip install --no-cache-dir -r /usr/share/tyr/requirements.txt
 
