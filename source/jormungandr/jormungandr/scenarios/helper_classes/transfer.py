@@ -31,6 +31,7 @@ from __future__ import absolute_import, print_function, unicode_literals, divisi
 import copy
 from collections import namedtuple
 from navitiacommon import response_pb2, type_pb2
+from jormungandr import app, cache
 import itertools
 import logging
 from jormungandr.street_network.street_network import StreetNetworkPathType
@@ -59,6 +60,7 @@ ACCESS_POINTS_PHYSICAL_MODES = (
     "physical_mode:Metro",
 )
 
+
 # if `(physical_mode:A, physical_mode:B) in NO_ACCESS_POINTS_TRANSFER` then it means that a transfer
 # where we get out of a vehicle of  `physical_mode:A` and then get in a vehicle of `physical_mode:B`
 # **will not** go through an access point
@@ -74,8 +76,22 @@ ACCESS_POINTS_TRANSFER = set(
     itertools.product(ACCESS_POINTS_PHYSICAL_MODES, NO_ACCESS_POINTS_PHYSICAL_MODES)
 ) | set(itertools.product(NO_ACCESS_POINTS_PHYSICAL_MODES, ACCESS_POINTS_PHYSICAL_MODES))
 
-
 TransferResult = namedtuple('TransferResult', ['direct_path', 'origin', 'destination'])
+
+
+class TransferPathArgs:
+    def __init__(self, section, prev_section_mode, next_section_mode):
+        self.prev_section_mode = prev_section_mode
+        self.next_section_mode = next_section_mode
+        self.section = section
+
+    def __repr__(self):
+        return "{origin}:{destination}:{prev_section_mode}:{next_section_mode}".format(
+            origin=self.section.origin.uri,
+            destination=self.section.destination.uri,
+            prev_section_mode=self.prev_section_mode,
+            next_section_mode=self.next_section_mode,
+        )
 
 
 class TransferPool(object):
@@ -85,6 +101,7 @@ class TransferPool(object):
         instance,
         request,
         request_id,
+        pt_planner_name,
     ):
         self._future_manager = future_manager
         self._instance = instance
@@ -93,6 +110,16 @@ class TransferPool(object):
         self._streetnetwork_service = self._instance.get_street_network(FallbackModes.walking.name, request)
         self._transfers_future = dict()
         self._logger = logging.getLogger(__name__)
+        self._pt_planner = self._instance.get_pt_planner(pt_planner_name)
+
+    def __repr__(self):
+        return "{name}:{language}:{publication_date}".format(
+            name=self._instance.name, language=self.language, publication_date=self._instance.publication_date
+        )
+
+    @property
+    def language(self):
+        return self._request.get('language', "en-US")
 
     def _make_sub_request_id(self, origin_uri, destination_uri):
         return "{}_transfer_{}_{}".format(self._request_id, origin_uri, destination_uri)
@@ -167,32 +194,27 @@ class TransferPool(object):
     def _aysnc_no_access_point_transfer(self, section):
         return self._future_manager.create_future(self._do_no_access_point_transfer, section)
 
-    def _get_access_points(self, stop_point_uri, access_point_filter=lambda x: x):
-        sub_request_id = "{}_transfer_start_{}".format(self._request_id, stop_point_uri)
-        stop_points = self._instance.georef.get_stop_points_from_uri(stop_point_uri, sub_request_id, depth=2)
-        if not stop_points:
-            return None
-
-        return [
-            type_pb2.PtObject(name=ap.name, uri=ap.uri, embedded_type=type_pb2.ACCESS_POINT, access_point=ap)
-            for ap in stop_points[0].access_points
-            if access_point_filter(ap)
-        ]
-
     def get_underlying_access_points(self, section, prev_section_mode, next_section_mode):
         """
         find out based on with extremity of the section the access points are calculated and request the georef for
         access_points of the underlying stop_point
         return: access_points
         """
+
         if prev_section_mode in ACCESS_POINTS_PHYSICAL_MODES:
-            return self._get_access_points(
-                section.origin.uri, access_point_filter=lambda access_point: access_point.is_exit
+            sub_request_id = "{}_transfer_start_{}".format(self._request_id, section.origin.uri)
+            return self._pt_planner.get_access_points(
+                section.origin,
+                access_point_filter=lambda access_point: access_point.is_exit,
+                request_id=sub_request_id,
             )
 
         if next_section_mode in ACCESS_POINTS_PHYSICAL_MODES:
-            return self._get_access_points(
-                section.destination.uri, access_point_filter=lambda access_point: access_point.is_entrance
+            sub_request_id = "{}_transfer_start_{}".format(self._request_id, section.destination.uri)
+            return self._pt_planner.get_access_points(
+                section.destination,
+                access_point_filter=lambda access_point: access_point.is_entrance,
+                request_id=sub_request_id,
             )
 
         return None
@@ -241,6 +263,7 @@ class TransferPool(object):
         return best_access_point
 
     def _get_transfer_result(self, section, origin, destination):
+
         sub_request_id = self._make_sub_request_id(origin.uri, destination.uri)
         direct_path_type = StreetNetworkPathType.DIRECT
         extremity = PeriodExtremity(section.end_date_time, False)
@@ -255,28 +278,40 @@ class TransferPool(object):
             sub_request_id,
         )
         if direct_path and direct_path.journeys:
-            return TransferResult(direct_path, origin, destination)
-        return None
+            return (
+                direct_path.SerializeToString(),
+                origin.SerializeToString(),
+                destination.SerializeToString(),
+            )
+        return None, None, None
 
-    def _do_access_point_transfer(self, section, prev_section_mode, next_section_mode):
-        access_points = self.get_underlying_access_points(section, prev_section_mode, next_section_mode)
+    @cache.memoize(app.config[str('CACHE_CONFIGURATION')].get(str('TIMEOUT_TRANSFER_PATH'), 24 * 60 * 60))
+    def get_cached_transfer_path(self, transfer_path_args):
+        access_points = self.get_underlying_access_points(
+            transfer_path_args.section,
+            transfer_path_args.prev_section_mode,
+            transfer_path_args.next_section_mode,
+        )
         # if no access points are found for this stop point, which is supposed to have access points
         # we do nothing about the transfer path
         if not access_points:
-            return None
+            return None, None, None
 
         origins, destinations = self.determinate_matrix_entry(
-            section, access_points, prev_section_mode, next_section_mode
+            transfer_path_args.section,
+            access_points,
+            transfer_path_args.prev_section_mode,
+            transfer_path_args.next_section_mode,
         )
 
         if len(origins) > 1 and len(destinations) > 1:
             self._logger.error(
                 "Error occurred when computing transfer path both origin's and destination's sizes are larger than 1"
             )
-            return None
+            return None, None, None
 
         if len(origins) == 1 and len(destinations) == 1:
-            return self._get_transfer_result(section, origins[0], destinations[0])
+            return self._get_transfer_result(transfer_path_args.section, origins[0], destinations[0])
 
         sub_request_id = "{}_transfer_matrix".format(self._request_id)
         routing_matrix = self._streetnetwork_service.get_street_network_routing_matrix(
@@ -284,7 +319,7 @@ class TransferPool(object):
             origins,
             destinations,
             FallbackModes.walking.name,
-            section.duration * 3,
+            transfer_path_args.section.duration * 3,
             self._request,
             sub_request_id,
         )
@@ -293,16 +328,36 @@ class TransferPool(object):
             matrix.routing_status == response_pb2.unreached for matrix in routing_matrix.rows[0].routing_response
         ):
             logging.getLogger(__name__).warning("no access points is reachable in transfer path computation")
-            return None
+            return None, None, None
 
         # now it's time to find the best combo
         # (stop_point -> access_points or access_points -> stop_point)
         best_access_point = self.determinate_the_best_access_point(routing_matrix, access_points)
 
         origin, destination = self.determinate_direct_path_entry(
-            section, best_access_point, prev_section_mode, next_section_mode
+            transfer_path_args.section,
+            best_access_point,
+            transfer_path_args.prev_section_mode,
+            transfer_path_args.next_section_mode,
         )
-        return self._get_transfer_result(section, origin, destination)
+        return self._get_transfer_result(transfer_path_args.section, origin, destination)
+
+    def _do_access_point_transfer(self, section, prev_section_mode, next_section_mode):
+        path, origin, destination = self.get_cached_transfer_path(
+            TransferPathArgs(section, prev_section_mode, next_section_mode)
+        )
+        if not path:
+            return None
+        pb_path = response_pb2.Response()
+        pb_path.ParseFromString(path)
+
+        pb_origin = type_pb2.PtObject()
+        pb_origin.ParseFromString(origin)
+
+        pb_destination = type_pb2.PtObject()
+        pb_destination.ParseFromString(destination)
+
+        return TransferResult(pb_path, pb_origin, pb_destination)
 
     def _aysnc_access_point_transfer(self, section, prev_section_mode, next_section_mode):
         return self._future_manager.create_future(
@@ -351,14 +406,13 @@ class TransferPool(object):
 
         # we assume here the transfer street network has only one section, which is in walking mode
         transfer_street_network = transfer_direct_path.journeys[0].sections[0].street_network
-        language = self._request.get('language', "en-US")
 
         if self._is_access_point(transfer_result.origin):
             prepend_path_item_with_access_point(
                 transfer_street_network.path_items,
                 section.origin.stop_point,
                 transfer_result.origin.access_point,
-                language,
+                self.language,
             )
 
         if self._is_access_point(transfer_result.destination):
@@ -366,7 +420,7 @@ class TransferPool(object):
                 transfer_street_network.path_items,
                 section.destination.stop_point,
                 transfer_result.destination.access_point,
-                language,
+                self.language,
             )
 
         section.street_network.CopyFrom(transfer_street_network)
