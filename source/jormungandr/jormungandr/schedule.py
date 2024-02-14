@@ -366,7 +366,7 @@ class MixedSchedule(object):
 
         for future in gevent.iwait(futures):
             rt_proxy, schedule, next_rt_passages = future.get()
-            rt_proxy._update_stop_schedule(schedule, next_rt_passages, groub_by_dest)
+            rt_proxy._update_stop_schedule(request, schedule, next_rt_passages, groub_by_dest)
 
     def _manage_occupancies(self, schedules):
         vo_service = self.instance.external_service_provider_manager.get_vehicle_occupancy_service()
