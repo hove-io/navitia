@@ -745,6 +745,8 @@ def filter_olympic_site_by_min_pt_duration(
         return
     if not instance.olympics_forbidden_uris:
         return
+    if not request.get("_keep_olympics_journeys"):
+        return
     if request.get('wheelchair', True):
         return
     origin_olympic_site = is_olympic_site(pt_object_origin, instance)
