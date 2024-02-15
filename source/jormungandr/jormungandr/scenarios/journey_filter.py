@@ -734,7 +734,7 @@ def filter_olympic_site_strict(response_list, request):
                 continue
             if to_be_deleted(j):
                 continue
-            if not is_best_olympics(j):
+            if not any([is_best_olympics(j), is_direct_path_walking(j)]):
                 mark_as_dead(j, request.get('debug'), 'Filtered by strict POI')
 
 
