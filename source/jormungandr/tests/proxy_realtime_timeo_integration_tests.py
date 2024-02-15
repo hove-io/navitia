@@ -1031,7 +1031,6 @@ class TestDepartures(AbstractTestFixture):
 
         assert tmp["display_informations"]["direction"] == "EE"
         assert len(tmp['date_times']) == 2
-        #assert tmp['additional_informations'] == 'no_departure_this_day'
 
     def test_terminus_schedule_groub_by_destination_partial_terminus(self):
         """
