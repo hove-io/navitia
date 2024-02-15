@@ -69,7 +69,10 @@ default_olympic_site_params = {
                     "stop_point:463685": {"attractivity": 1, "virtual_fallback": 10},
                     "stop_point:463686": {"attractivity": 3, "virtual_fallback": 150},
                 },
-                "additional_parameters": {"max_walking_duration_to_pt": 13000},
+                "additional_parameters": {
+                    "max_walking_duration_to_pt": 13000,
+                    "show_natural_opg_journeys": True,
+                },
             },
             "scenario b": {
                 "stop_points": {
@@ -81,6 +84,7 @@ default_olympic_site_params = {
                     "night_bus_filter_max_factor": 2,
                     "night_bus_filter_base_factor": 1800,
                     "forbidden_uris": ["SA:BCY"],
+                    "show_natural_opg_journeys": False,
                 },
             },
         },
@@ -246,6 +250,7 @@ def test_build_with_request_params_and_without_criteria_without_keep_olympics_jo
     assert api_request["_keep_olympics_journeys"]
     assert not api_request.get("max_walking_duration_to_pt")
     olympic_site_params = api_request["olympic_site_params"]
+    assert not olympic_site_params['show_natural_opg_journeys']
     assert "arrival_scenario" in olympic_site_params
     assert "departure_scenario" not in olympic_site_params
     attractivity_virtual_fallback = olympic_site_params["arrival_scenario"]["stop_point:24113"]
@@ -265,6 +270,7 @@ def test_build_with_request_params_and_without_criteria_with_keep_olympics_journ
     api_request["_olympics_sites_attractivities[]"] = [('stop_point:24113', 3), ('stop_point:24131', 30)]
     api_request["_olympics_sites_virtual_fallback[]"] = [('stop_point:24113', 800), ('stop_point:24131', 820)]
     api_request["_keep_olympics_journeys"] = False
+    api_request["_show_natural_opg_journeys"] = True
 
     assert not api_request.get("criteria")
     assert not api_request.get("max_walking_duration_to_pt")
@@ -278,6 +284,7 @@ def test_build_with_request_params_and_without_criteria_with_keep_olympics_journ
     assert not api_request["_keep_olympics_journeys"]
     assert not api_request.get("max_walking_duration_to_pt")
     olympic_site_params = api_request["olympic_site_params"]
+    assert olympic_site_params['show_natural_opg_journeys']
     assert "arrival_scenario" in olympic_site_params
     assert "departure_scenario" not in olympic_site_params
     attractivity_virtual_fallback = olympic_site_params["arrival_scenario"]["stop_point:24113"]
@@ -311,6 +318,7 @@ def test_build_with_request_params_and_departure_criteria():
     assert api_request["criteria"] == "departure_stop_attractivity"
     assert not api_request.get("max_walking_duration_to_pt")
     olympic_site_params = api_request["olympic_site_params"]
+    assert not olympic_site_params['show_natural_opg_journeys']
     assert "arrival_scenario" not in olympic_site_params
     assert "departure_scenario" in olympic_site_params
     attractivity_virtual_fallback = olympic_site_params["departure_scenario"]["stop_point:24113"]
@@ -344,6 +352,7 @@ def test_build_with_request_params_and_arrival_criteria():
     assert api_request["criteria"] == "arrival_stop_attractivity"
     assert not api_request.get("max_walking_duration_to_pt")
     olympic_site_params = api_request["olympic_site_params"]
+    assert not olympic_site_params['show_natural_opg_journeys']
     assert "arrival_scenario" in olympic_site_params
     assert "departure_scenario" not in olympic_site_params
     attractivity_virtual_fallback = olympic_site_params["arrival_scenario"]["stop_point:24113"]
@@ -392,6 +401,7 @@ def test_build_origin_poi_jo():
     assert api_request["criteria"] == "departure_stop_attractivity"
     assert api_request.get("max_walking_duration_to_pt") == 13000
     olympic_site_params = api_request["olympic_site_params"]
+    assert olympic_site_params['show_natural_opg_journeys']
     assert olympic_site_params["strict"]
     assert "arrival_scenario" not in olympic_site_params
     assert "departure_scenario" in olympic_site_params
@@ -424,6 +434,7 @@ def test_build_arrival_poi_jo():
     assert api_request.get("max_walking_duration_to_pt") == 12000
     assert api_request["criteria"] == "arrival_stop_attractivity"
     olympic_site_params = api_request["olympic_site_params"]
+    assert not olympic_site_params['show_natural_opg_journeys']
     assert olympic_site_params["strict"]
     assert "arrival_scenario" in olympic_site_params
     assert "departure_scenario" not in olympic_site_params
@@ -463,6 +474,7 @@ def test_build_departure_and_arrival_poi_jo():
     assert api_request.get('night_bus_filter_base_factor') == 1800
     assert len(api_request.get('forbidden_uris[]')) == 2
     olympic_site_params = api_request["olympic_site_params"]
+    assert not olympic_site_params['show_natural_opg_journeys']
     assert olympic_site_params["strict"]
     assert "arrival_scenario" in olympic_site_params
     assert "departure_scenario" not in olympic_site_params
@@ -582,6 +594,7 @@ def test_build_departure_and_arrival_poi_jo_add_forbidden_uris():
     osp.build(pt_origin_detail, pt_destination_detail, api_request)
     assert api_request["olympic_site_params"]
     assert len(api_request["forbidden_uris[]"]) == 4
+    assert not api_request["olympic_site_params"]['show_natural_opg_journeys']
 
 
 def test_get_dict_scenario_invalid_scanario_name():
@@ -607,6 +620,7 @@ def test_get_dict_scenario_invalid_scanario_name():
     api_request["datetime"] = osp.get_timestamp('20230715T110000')
     osp.build(pt_origin_detail, pt_destination_detail, api_request)
     assert api_request["olympic_site_params"]
+    assert not api_request["olympic_site_params"]['show_natural_opg_journeys']
     assert len(api_request["forbidden_uris[]"]) == 2
     scenario_name = osp.get_valid_scenario_name(
         osp.olympic_site_params["poi:BCD"]["events"], "departure_scenario", osp.get_timestamp('20230720T110000')

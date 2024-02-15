@@ -453,7 +453,7 @@ def filter_olympic_site_origin_olympic_site_to_delete_tag_test():
     destination = make_pt_object(type_pb2.POI, lon=3, lat=4, uri='destination:poi')
 
     journey_filter.filter_olympic_site_by_min_pt_duration(
-        [response], instance, {"wheelchair": False}, origin, destination
+        [response], instance, {"wheelchair": False, "_keep_olympics_journeys": True}, origin, destination
     )
     assert len(response.journeys[0].tags) == 1
     assert response.journeys[0].tags[0] == "to_delete"
@@ -527,7 +527,7 @@ def filter_olympic_site_destination_olympic_site_to_delete_tag_test():
     property.type = "sitejo"
     property.value = "123"
     journey_filter.filter_olympic_site_by_min_pt_duration(
-        [response], instance, {"wheelchair": False}, origin, destination
+        [response], instance, {"wheelchair": False, "_keep_olympics_journeys": True}, origin, destination
     )
     assert len(response.journeys[0].tags) == 1
     assert response.journeys[0].tags[0] == "to_delete"
@@ -686,7 +686,7 @@ def filter_olympic_site_destination_olympic_site_test2_test():
     property.type = "sitejo"
     property.value = "123"
     journey_filter.filter_olympic_site_by_min_pt_duration(
-        [response], instance, {"wheelchair": False}, origin, destination
+        [response], instance, {"wheelchair": False, "_keep_olympics_journeys": True}, origin, destination
     )
     assert len(response.journeys[0].tags) == 1
     assert response.journeys[0].tags[0] == "to_delete"
