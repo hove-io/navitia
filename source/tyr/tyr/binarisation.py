@@ -1255,7 +1255,8 @@ def poi2asgard(self, instance_config, filename, job_id, dataset_uid):
         with collect_metric("poi2Asgard", job, dataset_uid):
             asgard_bucket = current_app.config.get('MINIO_ASGARD_BUCKET_NAME', None)
             if not asgard_bucket:
-                raise Exception("Asgard Bucket is None")
+                dataset.state = "failed"
+                return
 
             bash_command = (
                 "env REQUESTS_CA_BUNDLE=/etc/ssl/certs/ca-certificates.crt "
