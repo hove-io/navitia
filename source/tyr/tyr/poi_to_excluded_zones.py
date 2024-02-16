@@ -57,7 +57,7 @@ def poi_to_excluded_zones(poi_file, output_dir, instance_name):
 
         for i, zone in enumerate(zones):
             output_id = "{}_{}_{}".format(poi_id, i, instance_name)
-            output = {'id': output_id, 'instance': instance_name, 'poi': poi_id}
+            output = {'id': output_id, 'instance': instance_name, 'poi': "poi:{}".format(poi_id)}
             output.update(zone)
             output["shape"] = shape
             with open(output_dir + "/{}.json".format(output_id), "w") as output_file:
