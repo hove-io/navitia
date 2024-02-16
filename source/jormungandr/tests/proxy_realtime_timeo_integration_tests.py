@@ -411,8 +411,8 @@ class TestDepartures(AbstractTestFixture):
 
     def test_stop_schedule_with_rt_empty_list(self):
         """
-        When timeo service responds a empty list, we return the empty rt list
-        But with first_datetime.base_date_time = 0 we return rtlist = None
+        When timeo service responds empty list, we return the empty rt list
+        But with first_datetime absent we return rtlist = None
         and stop_schedule contains only base_schedule
         """
         query = self.query_template_scs.format(
@@ -696,7 +696,7 @@ class TestDepartures(AbstractTestFixture):
         assert len(terminus_schedules) == 2
         ts = terminus_schedules[0]
         assert ts['additional_informations'] == 'no_departure_this_day'
-        assert ts['display_informations']['direction'] == 'TS_D'
+        assert ts['display_informations']['direction'] == 'TS_E'
         assert len(ts['date_times']) == 0
 
         ts = terminus_schedules[1]
@@ -704,7 +704,7 @@ class TestDepartures(AbstractTestFixture):
         assert ts['display_informations']['direction'] == 'TS_A'
         assert len(ts['date_times']) == 0
 
-    def test_terminus_schedule_2(self):
+    def test_terminus_schedule_3(self):
         """
         Terminus_schedule
                         // 1 line, 2 routes and 2 VJs
@@ -1030,7 +1030,9 @@ class TestDepartures(AbstractTestFixture):
         tmp = terminus_schedules[0]
 
         assert tmp["display_informations"]["direction"] == "EE"
-        assert len(tmp['date_times']) == 2
+        assert len(tmp['date_times']) == 0
+        assert tmp['additional_informations'] == 'no_departure_this_day'
+
 
     def test_terminus_schedule_groub_by_destination_partial_terminus(self):
         """

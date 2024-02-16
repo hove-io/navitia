@@ -184,9 +184,9 @@ class RealtimeProxy(six.with_metaclass(ABCMeta, object)):
         if not stop_schedule.HasField('first_datetime'):
             return None
         first_datetime = stop_schedule.first_datetime
-        if not first_datetime.HasField('base_date_time'):
+        if not first_datetime.HasField('date'):
             return None
-        return first_datetime.base_date_time
+        return first_datetime.date
 
     def _update_stop_schedule(self, request, stop_schedule, next_realtime_passages, groub_by_dest=False):
         """
@@ -198,7 +198,7 @@ class RealtimeProxy(six.with_metaclass(ABCMeta, object)):
         If next_realtime_passages is None (and not if it's []) it means that the proxy failed,
         so we use the base schedule
 
-        If next_realtime_passages is empty and (now < first_datetime or first_datetime = None)
+        If next_realtime_passages is empty and (now < first_datetime.date or first_datetime = None)
         we return None to use the base schedule
         """
         if next_realtime_passages is None:
@@ -227,7 +227,7 @@ class RealtimeProxy(six.with_metaclass(ABCMeta, object)):
         if not len(stop_schedule.date_times) and not stop_schedule.HasField('response_status'):
             stop_schedule.response_status = type_pb2.no_departure_this_day
 
-    # By default filter passage if they are on the same route point
+    # By default, filter passage if they are on the same route point
     def _filter_base_passage(self, passage, route_point):
         return RoutePoint(passage.route, passage.stop_point) == route_point
 
