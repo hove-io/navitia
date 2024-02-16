@@ -56,6 +56,10 @@ class ResourceS3Object:
         return "{}-{}-{}".format(self.instance_name, self.s3_object.key, self.s3_object.e_tag)
 
 
+def has_applicable_scenario(api_request):
+    return True if api_request.get("olympic_site_params") else False
+
+
 class OlympicSiteParamsManager:
     def __init__(self, instance, config):
         self.olympic_site_params = dict()
@@ -235,10 +239,9 @@ class OlympicSiteParamsManager:
             api_request["forbidden_uris[]"] = forbidden_uris
 
     def build_api_request(self, api_request):
-        olympic_site_params = api_request.get("olympic_site_params")
-        if not olympic_site_params:
+        if not has_applicable_scenario(api_request):
             return
-
+        olympic_site_params = api_request.get("olympic_site_params")
         # Add keep_olympics_journeys parameter
         if api_request.get("_keep_olympics_journeys") is None and olympic_site_params:
             api_request["_keep_olympics_journeys"] = True

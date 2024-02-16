@@ -45,6 +45,7 @@ from jormungandr.utils import (
 )
 from jormungandr.fallback_modes import FallbackModes
 from jormungandr.scenarios.qualifier import get_ASAP_journey
+from jormungandr.olympic_site_params_manager import has_applicable_scenario
 
 
 def delete_journeys(responses, request):
@@ -700,7 +701,7 @@ def is_direct_path_walking(j):
 
 
 def filter_only_olympic_site(response_list, request):
-    if not request.get('_keep_olympics_journeys'):
+    if not has_applicable_scenario(request):
         return
     olympic_site_params = request.get("olympic_site_params", {})
     strict_param = olympic_site_params.get("strict", False)
@@ -721,7 +722,7 @@ def filter_only_olympic_site(response_list, request):
 
 
 def filter_olympic_site_strict(response_list, request):
-    if not response_list:
+    if not response_list or not has_applicable_scenario(request):
         return
     if request.get('wheelchair', True):
         return
@@ -741,11 +742,9 @@ def filter_olympic_site_strict(response_list, request):
 def filter_olympic_site_by_min_pt_duration(
     response_list, instance, request, pt_object_origin, pt_object_destination
 ):
-    if not response_list:
+    if not response_list or not has_applicable_scenario(request):
         return
     if not instance.olympics_forbidden_uris:
-        return
-    if not request.get("_keep_olympics_journeys"):
         return
     if request.get('wheelchair', True):
         return
