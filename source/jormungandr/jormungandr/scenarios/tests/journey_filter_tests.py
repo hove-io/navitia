@@ -34,6 +34,7 @@ from jormungandr.instance import OlympicsForbiddenUris
 from jormungandr.street_network.tests.streetnetwork_test_utils import make_pt_object
 from jormungandr.olympic_site_params_manager import AttractivityVirtualFallback
 
+DEFAULT_OLYMPIC_SITE_PARAMS = {"toto": "tata"}
 
 def remove_excess_terminus_without_item_test():
     response = response_pb2.Response()
@@ -451,9 +452,9 @@ def filter_olympic_site_origin_olympic_site_to_delete_tag_test():
     property.type = "sitejo"
     property.value = "123"
     destination = make_pt_object(type_pb2.POI, lon=3, lat=4, uri='destination:poi')
-
+    request = {"wheelchair": False, "_keep_olympics_journeys": True, "olympic_site_params": DEFAULT_OLYMPIC_SITE_PARAMS}
     journey_filter.filter_olympic_site_by_min_pt_duration(
-        [response], instance, {"wheelchair": False, "_keep_olympics_journeys": True}, origin, destination
+        [response], instance, request, origin, destination
     )
     assert len(response.journeys[0].tags) == 1
     assert response.journeys[0].tags[0] == "to_delete"
@@ -526,8 +527,9 @@ def filter_olympic_site_destination_olympic_site_to_delete_tag_test():
     property = destination.poi.properties.add()
     property.type = "sitejo"
     property.value = "123"
+    request = {"wheelchair": False, "_keep_olympics_journeys": True, "olympic_site_params": DEFAULT_OLYMPIC_SITE_PARAMS}
     journey_filter.filter_olympic_site_by_min_pt_duration(
-        [response], instance, {"wheelchair": False, "_keep_olympics_journeys": True}, origin, destination
+        [response], instance, request, origin, destination
     )
     assert len(response.journeys[0].tags) == 1
     assert response.journeys[0].tags[0] == "to_delete"
@@ -685,8 +687,9 @@ def filter_olympic_site_destination_olympic_site_test2_test():
     property = destination.poi.properties.add()
     property.type = "sitejo"
     property.value = "123"
+    request = {"wheelchair": False, "_keep_olympics_journeys": True, "olympic_site_params": DEFAULT_OLYMPIC_SITE_PARAMS}
     journey_filter.filter_olympic_site_by_min_pt_duration(
-        [response], instance, {"wheelchair": False, "_keep_olympics_journeys": True}, origin, destination
+        [response], instance, request, origin, destination
     )
     assert len(response.journeys[0].tags) == 1
     assert response.journeys[0].tags[0] == "to_delete"
@@ -806,7 +809,7 @@ def filter_filter_only_olympic_site_best_olympics_test():
     assert len(response.journeys) == 2
     response.journeys[0].tags.append('best_olympics')
     response.journeys[1].tags.append("another_tag")
-    api_request = {"_keep_olympics_journeys": True, "debug": True}
+    api_request = {"_keep_olympics_journeys": True, "debug": True, "olympic_site_params": DEFAULT_OLYMPIC_SITE_PARAMS}
     assert len(response.journeys[0].tags) == 1
     assert len(response.journeys[1].tags) == 1
     journey_filter.filter_only_olympic_site([response], api_request)
