@@ -1033,7 +1033,6 @@ class TestDepartures(AbstractTestFixture):
         assert len(tmp['date_times']) == 0
         assert tmp['additional_informations'] == 'no_departure_this_day'
 
-
     def test_terminus_schedule_groub_by_destination_partial_terminus(self):
         """
         Schema line:
