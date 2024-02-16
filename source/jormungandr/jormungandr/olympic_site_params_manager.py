@@ -108,7 +108,9 @@ class OlympicSiteParamsManager:
         return {}
 
     def get_show_natural_opg_journeys(self, conf_additional_parameters, query_show_natural_opg_journeys):
-        return query_show_natural_opg_journeys or conf_additional_parameters.get("show_natural_opg_journeys", False)
+        return query_show_natural_opg_journeys or conf_additional_parameters.get(
+            "show_natural_opg_journeys", False
+        )
 
     def filter_and_get_additional_parameters(self, conf_additional_parameters):
         return {
