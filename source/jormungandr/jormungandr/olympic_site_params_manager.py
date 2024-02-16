@@ -57,7 +57,7 @@ class ResourceS3Object:
 
 
 def has_applicable_scenario(api_request):
-    return True if api_request.get("olympic_site_params") else False
+    return bool(api_request.get("olympic_site_params"))
 
 
 class OlympicSiteParamsManager:
@@ -108,11 +108,7 @@ class OlympicSiteParamsManager:
         return {}
 
     def get_show_natural_opg_journeys(self, conf_additional_parameters, query_show_natural_opg_journeys):
-        return (
-            query_show_natural_opg_journeys
-            if query_show_natural_opg_journeys is not None
-            else conf_additional_parameters.get("show_natural_opg_journeys", False)
-        )
+        return query_show_natural_opg_journeys or conf_additional_parameters.get("show_natural_opg_journeys", False)
 
     def filter_and_get_additional_parameters(self, conf_additional_parameters):
         return {
