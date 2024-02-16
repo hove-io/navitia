@@ -53,6 +53,7 @@ from jormungandr.interfaces.v1 import (
     obstacles,
     users,
     opg_status,
+    opg_excluded_zones,
 )
 from werkzeug.routing import BaseConverter, FloatConverter, PathConverter
 from jormungandr.modules_loader import AModule
@@ -315,6 +316,15 @@ class V1Routing(AModule):
 
         self.add_resource(
             opg_status.OpgStatus, region + 'opg_status', coord + 'opg_status', endpoint='opg_status'
+        )
+
+        self.add_resource(
+            opg_excluded_zones.OpgExcludedZones,
+            region + 'opg_excluded_zones',
+            region + "coord/" + lon_lat + 'opg_excluded_zones',
+            "/coord/" + lon_lat + 'opg_excluded_zones',
+            '/opg_excluded_zones',
+            endpoint='opg_excluded_zones',
         )
 
         self.add_resource(
