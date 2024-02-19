@@ -31,12 +31,11 @@ from __future__ import absolute_import, print_function, unicode_literals, divisi
 import boto3
 from botocore.client import Config
 import json
-
 import logging
 from jormungandr import app, cache, memory_cache
 from jormungandr.interfaces.v1.StatedResource import StatedResource
 from jormungandr.interfaces.v1.make_links import create_external_link
-import shapely
+from jormungandr import i_manager
 
 
 class OpgExcludedZones(StatedResource):
@@ -46,12 +45,36 @@ class OpgExcludedZones(StatedResource):
         parser_get.add_argument("mode", type=str, default=None, help="A geojson in polyline path as base64")
         parser_get.add_argument("datetime", type=str, default=None, help="Distance range of the query in meters")
 
-    @staticmethod
+    def get_poi_place(self, instance, json_data):
+        place = {"embedded_type": "poi", "poi": json_data, "name": json_data.get("poi")}
+
+        place["poi"]["label"] = json_data.get("poi")
+        place["poi"]["id"] = json_data.get("poi")
+        place["poi"]["poi_type"] = {
+            "id": instance.olympics_forbidden_uris.poi_property_key
+            if instance.olympics_forbidden_uris
+            else "poi_type:site_jo2024",
+            "name": instance.olympics_forbidden_uris.poi_property_value
+            if instance.olympics_forbidden_uris
+            else "Site Olympique JO2024",
+        }
+        return place
+
+    def add_link(self, places):
+        if not places:
+            return places
+        args = {'_type': 'poi', 'id': "{poi.id}", 'region': 'idfm-jo', 'rel': 'pois', 'templated': True}
+        link = create_external_link(url='v1.pois.id', **args)
+        # ugly hack...
+        link["href"] = link["href"].replace("%7B", "{")
+        link["href"] = link["href"].replace("%7D", "}")
+        return {"places": places, "links": [link]}
+
     @memory_cache.memoize(app.config[str('MEMORY_CACHE_CONFIGURATION')].get(str('TIMEOUT_ASGARD_S3'), 120))
     @cache.memoize(app.config[str('CACHE_CONFIGURATION')].get(str('TIMEOUT_ASGARD_S3'), 300))
-    def fetch_and_get_data(bucket_name, folder, instance=None, lon=None, lat=None, mode=None, datetime=None):
+    def fetch_and_get_data(self, instance, bucket_name, folder, mode=None):
         if not bucket_name:
-            return []
+            return {}
         places = []
         logger = logging.getLogger(__name__)
         args = {"connect_timeout": 2, "read_timeout": 2, "retries": {'max_attempts': 0}}
@@ -62,55 +85,35 @@ class OpgExcludedZones(StatedResource):
                 if not obj.key.endswith('.json'):
                     continue
                 try:
-                    place = {"embedded_type": "poi", "poi": {}}
                     file_content = obj.get()['Body'].read().decode('utf-8')
                     json_content = json.loads(file_content)
-
-                    if instance is not None and json_content.get('instance') != instance:
+                    if json_content.get('instance') != instance.name:
                         continue
-
-                    if lon is not None and lat is not None:
-                        p = shapely.geometry.Point(lon, lat)
-                        zone = shapely.wkt.loads(json_content.get("shape", ""))
-                        if not zone.contains(p):
-                            continue
-
                     if mode is not None:
                         if mode not in json_content.get("modes"):
                             continue
-
-                    place["id"] = json_content.get("poi")
-                    place["name"] = json_content.get("poi")
-                    place["poi"].update(json_content)
-                    place["poi"]["label"] = json_content.get("poi")
-                    place["poi"]["id"] = json_content.get("poi")
-                    place["poi"]["poi_type"] = {"id": "poi_type:site_jo2024", "name": "Site Olympique JO2024"}
+                    place = self.get_poi_place(instance, json_content)
                     places.append(place)
-                except Exception as e:
+
+                except Exception:
                     logger.exception("Error on OpgExcludedZones")
                     continue
         except Exception:
             logger.exception("Error on OpgExcludedZones")
             return {}
-        args = {'_type': 'poi', 'id': "{poi.id}", 'region': 'idfm-jo', 'rel': 'pois', 'templated': True}
-        link = create_external_link(url='v1.pois.id', **args)
-        # ugly hack...
-        link["href"] = link["href"].replace("%7B", "{")
-        link["href"] = link["href"].replace("%7D", "}")
-        return {"places": places, "links": [link]}
+        return self.add_link(places)
 
     def get(self, region=None, lon=None, lat=None):
         args = self.parsers["get"].parse_args()
+        region_str = i_manager.get_region(region, lon, lat)
+        instance = i_manager.instances[region_str]
 
         return (
             self.fetch_and_get_data(
-                bucket_name=app.config.get(str("ASGARD_S3_BUCKET"), ""),
+                instance=instance,
+                bucket_name=app.config.get(str("ASGARD_S3_BUCKET")),
                 folder="excluded_zones",
-                instance=region,
-                lon=lon,
-                lat=lat,
                 mode=args['mode'],
-                datetime=args['datetime'],
             ),
             200,
         )
