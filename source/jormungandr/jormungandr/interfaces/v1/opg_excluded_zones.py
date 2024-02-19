@@ -87,10 +87,10 @@ class OpgExcludedZones(StatedResource):
                     place["poi"]["poi_type"] = {"id": "poi_type:site_jo2024", "name": "Site Olympique JO2024"}
                     places.append(place)
                 except Exception as e:
-                    logger.exception("Error on OlympicSiteParamsManager")
+                    logger.exception("Error on OpgExcludedZones")
                     continue
         except Exception:
-            logger.exception("Error on OlympicSiteParamsManager")
+            logger.exception("Error on OpgExcludedZones")
             return {}
         args = {'_type': 'poi', 'id': "{poi.id}", 'region': 'idfm-jo', 'rel': 'pois', 'templated': True}
         link = create_external_link(url='v1.pois.id', **args)
