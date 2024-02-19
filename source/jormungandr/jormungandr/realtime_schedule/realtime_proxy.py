@@ -180,7 +180,15 @@ class RealtimeProxy(six.with_metaclass(ABCMeta, object)):
             note.uri = 'note:{md5}'.format(md5=note_uri)  # the id is a md5 of the direction to factorize them
             new_dt.properties.notes.extend([note])
 
-    def _update_stop_schedule(self, stop_schedule, next_realtime_passages, groub_by_dest=False):
+    def _get_first_datetime(self, stop_schedule):
+        if not stop_schedule.HasField('first_datetime'):
+            return None
+        first_datetime = stop_schedule.first_datetime
+        if not first_datetime.HasField('date'):
+            return None
+        return first_datetime.date
+
+    def _update_stop_schedule(self, request, stop_schedule, next_realtime_passages, groub_by_dest=False):
         """
         Update the stopschedule response with the new realtime passages
 
@@ -189,9 +197,18 @@ class RealtimeProxy(six.with_metaclass(ABCMeta, object)):
 
         If next_realtime_passages is None (and not if it's []) it means that the proxy failed,
         so we use the base schedule
+
+        If next_realtime_passages is empty and (now < first_datetime.date or first_datetime = None)
+        we return None to use the base schedule
         """
         if next_realtime_passages is None:
             return
+
+        if not next_realtime_passages:
+            datetime_now = date_to_timestamp(request['_current_datetime'])
+            first_datetime = self._get_first_datetime(stop_schedule)
+            if first_datetime is None or datetime_now < first_datetime:
+                return
 
         logging.getLogger(__name__).debug(
             'next passages: : {}'.format(["dt: {}".format(d.datetime) for d in next_realtime_passages])
@@ -210,7 +227,7 @@ class RealtimeProxy(six.with_metaclass(ABCMeta, object)):
         if not len(stop_schedule.date_times) and not stop_schedule.HasField('response_status'):
             stop_schedule.response_status = type_pb2.no_departure_this_day
 
-    # By default filter passage if they are on the same route point
+    # By default, filter passage if they are on the same route point
     def _filter_base_passage(self, passage, route_point):
         return RoutePoint(passage.route, passage.stop_point) == route_point
 

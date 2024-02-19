@@ -152,6 +152,10 @@ struct departure_board_fixture {
                 b.vj("Line2").route("Route12").name("BB:VJ2")("AA:sp", "07:55"_t)("BB:sp", "08:55"_t)(
                     "CC:sp", "09:30"_t)("DD:sp", "10:10"_t);
                 b.lines.find("Line2")->second->properties["realtime_system"] = "Hove数字";
+                b.lines.find("Line2")->second->opening_time =
+                    boost::make_optional(boost::posix_time::duration_from_string("02:00"));
+                b.lines.find("Line2")->second->closing_time =
+                    boost::make_optional(boost::posix_time::duration_from_string("14:00"));
 
                 // Terminus_schedule
                 // 1 line, 2 routes and 2 VJs

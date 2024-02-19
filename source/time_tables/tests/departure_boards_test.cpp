@@ -331,6 +331,7 @@ BOOST_AUTO_TEST_CASE(first_last_test1) {
         BOOST_REQUIRE_EQUAL(resp.stop_schedules_size(), 1);
         BOOST_REQUIRE_EQUAL(resp.stop_schedules(0).has_first_datetime(), false);
         BOOST_REQUIRE_EQUAL(resp.stop_schedules(0).has_last_datetime(), false);
+        BOOST_REQUIRE_EQUAL(resp.stop_schedules(0).date_times_size(), 1);
 
         // Case 1 :
         //
@@ -359,6 +360,7 @@ BOOST_AUTO_TEST_CASE(first_last_test1) {
         BOOST_REQUIRE_EQUAL(resp.stop_schedules(0).first_datetime().base_date_time(), "20150615T060000"_pts);
         BOOST_REQUIRE_EQUAL(resp.stop_schedules(0).last_datetime().time(), "10:00"_t);
         BOOST_REQUIRE_EQUAL(resp.stop_schedules(0).last_datetime().base_date_time(), "20150615T100000"_pts);
+        BOOST_REQUIRE_EQUAL(resp.stop_schedules(0).date_times_size(), 1);
 
         // Case 2 :
         //

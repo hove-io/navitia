@@ -129,7 +129,9 @@ class TestDepartures(AbstractTestFixture):
         response = self.query_region(query)
         stop_schedules = response['stop_schedules'][0]['date_times']
         next_passage_dts = [dt["date_time"] for dt in stop_schedules]
-        assert len(next_passage_dts) == 0
+        # Here since realtime_passages is empty and first_datetime absent we return None
+        # so that stop_schedule with one date_times is not updated
+        assert len(next_passage_dts) == 1
 
         for dt in stop_schedules:
             assert dt['data_freshness'] == 'base_schedule'
