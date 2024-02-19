@@ -321,9 +321,7 @@ class V1Routing(AModule):
         self.add_resource(
             opg_excluded_zones.OpgExcludedZones,
             region + 'opg_excluded_zones',
-            region + "coord/" + lon_lat + 'opg_excluded_zones',
-            "/coord/" + lon_lat + 'opg_excluded_zones',
-            '/opg_excluded_zones',
+            coord + 'opg_excluded_zones',
             endpoint='opg_excluded_zones',
         )
 
