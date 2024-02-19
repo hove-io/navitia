@@ -56,6 +56,10 @@ class ResourceS3Object:
         return "{}-{}-{}".format(self.instance_name, self.s3_object.key, self.s3_object.e_tag)
 
 
+def has_applicable_scenario(api_request):
+    return bool(api_request.get("olympic_site_params"))
+
+
 class OlympicSiteParamsManager:
     def __init__(self, instance, config):
         self.olympic_site_params = dict()
@@ -102,6 +106,16 @@ class OlympicSiteParamsManager:
         if scenario_name:
             return self.build_olympic_site_params(scenario_name, data)
         return {}
+
+    def get_show_natural_opg_journeys(self, conf_additional_parameters, query_show_natural_opg_journeys):
+        return query_show_natural_opg_journeys or conf_additional_parameters.get(
+            "show_natural_opg_journeys", False
+        )
+
+    def filter_and_get_additional_parameters(self, conf_additional_parameters):
+        return {
+            key: value for key, value in conf_additional_parameters.items() if key != 'show_natural_opg_journeys'
+        }
 
     def get_dict_additional_parameters(self, poi_uri, key, datetime):
         data = self.olympic_site_params.get(poi_uri)
@@ -223,10 +237,9 @@ class OlympicSiteParamsManager:
             api_request["forbidden_uris[]"] = forbidden_uris
 
     def build_api_request(self, api_request):
-        olympic_site_params = api_request.get("olympic_site_params")
-        if not olympic_site_params:
+        if not has_applicable_scenario(api_request):
             return
-
+        olympic_site_params = api_request.get("olympic_site_params")
         # Add keep_olympics_journeys parameter
         if api_request.get("_keep_olympics_journeys") is None and olympic_site_params:
             api_request["_keep_olympics_journeys"] = True
@@ -289,8 +302,14 @@ class OlympicSiteParamsManager:
                 virtual_fallback = virtual_duration.get(spt_id, 0)
                 result[spt_id] = AttractivityVirtualFallback(attractivity, virtual_fallback)
             if origin_olympic_site:
-                return {"departure_scenario": result}
-            return {"arrival_scenario": result}
+                return {
+                    "departure_scenario": result,
+                    "show_natural_opg_journeys": api_request.get("_show_natural_opg_journeys", False),
+                }
+            return {
+                "arrival_scenario": result,
+                "show_natural_opg_journeys": api_request.get("_show_natural_opg_journeys", False),
+            }
 
         if not self.olympic_site_params:
             return {}
@@ -307,21 +326,29 @@ class OlympicSiteParamsManager:
         )
 
         if departure_olympic_site_params:
+            conf_additional_parameters = self.get_dict_additional_parameters(
+                origin_olympic_site.uri, "departure_scenario", api_request["datetime"]
+            )
             return {
                 "departure_scenario": departure_olympic_site_params,
-                "additional_parameters": self.get_dict_additional_parameters(
-                    origin_olympic_site.uri, "departure_scenario", api_request["datetime"]
-                ),
+                "additional_parameters": self.filter_and_get_additional_parameters(conf_additional_parameters),
                 "strict": self.get_strict_parameter(origin_olympic_site.uri) if origin_olympic_site else False,
+                "show_natural_opg_journeys": self.get_show_natural_opg_journeys(
+                    conf_additional_parameters, api_request.get("_show_natural_opg_journeys")
+                ),
             }
         if arrival_olympic_site_params:
+            conf_additional_parameters = self.get_dict_additional_parameters(
+                destination_olympic_site.uri, "arrival_scenario", api_request["datetime"]
+            )
             return {
                 "arrival_scenario": arrival_olympic_site_params,
-                "additional_parameters": self.get_dict_additional_parameters(
-                    destination_olympic_site.uri, "arrival_scenario", api_request["datetime"]
-                ),
+                "additional_parameters": self.filter_and_get_additional_parameters(conf_additional_parameters),
                 "strict": self.get_strict_parameter(destination_olympic_site.uri)
                 if destination_olympic_site
                 else False,
+                "show_natural_opg_journeys": self.get_show_natural_opg_journeys(
+                    conf_additional_parameters, api_request.get("_show_natural_opg_journeys")
+                ),
             }
         return {}

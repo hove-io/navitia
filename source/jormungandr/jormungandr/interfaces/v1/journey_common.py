@@ -549,7 +549,13 @@ class JourneyCommon(ResourceUri, ResourceUtc):
                 "the value of attractivity must be in the rage of (0, 255)"
             ),
         )
-
+        parser_get.add_argument(
+            "_show_natural_opg_journeys",
+            type=BooleanType(),
+            hidden=True,
+            default=None,
+            help="Show natural opg journeys",
+        )
         # Advanced parameters for valhalla bike
         parser_get.add_argument(
             "bike_use_roads",

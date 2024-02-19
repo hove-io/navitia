@@ -45,6 +45,7 @@ from jormungandr.utils import (
 )
 from jormungandr.fallback_modes import FallbackModes
 from jormungandr.scenarios.qualifier import get_ASAP_journey
+from jormungandr.olympic_site_params_manager import has_applicable_scenario
 
 
 def delete_journeys(responses, request):
@@ -691,28 +692,37 @@ def apply_final_journey_filters(response_list, instance, request):
         filter_non_car_tagged_journey(journeys, request)
 
 
+def is_direct_path_walking(j):
+    if not j:
+        return False
+    if not j.sections:
+        return False
+    return j.sections[0].street_network.mode == response_pb2.Walking if len(j.sections) == 1 else False
+
+
 def filter_only_olympic_site(response_list, request):
-    not_olympic_journeys = list()
-    if not request.get('_keep_olympics_journeys'):
+    if not has_applicable_scenario(request):
         return
-    all_journeys = [j for resp in response_list for j in resp.journeys]
+    olympic_site_params = request.get("olympic_site_params", {})
+    strict_param = olympic_site_params.get("strict", False)
+    if strict_param:
+        return
+    show_natural_opg_journeys = olympic_site_params.get("show_natural_opg_journeys", False)
+    if show_natural_opg_journeys:
+        return
+
+    all_journeys = (j for resp in response_list for j in resp.journeys)
     for j in all_journeys:
         if not j.sections:
             continue
         if to_be_deleted(j):
             continue
-        if not any([is_olympics(j), is_best_olympics(j)]):
-            not_olympic_journeys.append(j)
+        if not any([is_olympics(j), is_best_olympics(j), is_direct_path_walking(j)]):
             mark_as_dead(j, request.get('debug'), 'not_olympic_journey')
-    if not_olympic_journeys:
-        to_delete_count = [j for j in all_journeys if to_be_deleted(j)]
-        if len(to_delete_count) == len(all_journeys):
-            for j in not_olympic_journeys:
-                remove_to_delete_tag(j, request.get('debug'), "not_olympic_journey")
 
 
 def filter_olympic_site_strict(response_list, request):
-    if not response_list:
+    if not response_list or not has_applicable_scenario(request):
         return
     if request.get('wheelchair', True):
         return
@@ -725,14 +735,14 @@ def filter_olympic_site_strict(response_list, request):
                 continue
             if to_be_deleted(j):
                 continue
-            if not is_best_olympics(j):
+            if not any([is_best_olympics(j), is_direct_path_walking(j)]):
                 mark_as_dead(j, request.get('debug'), 'Filtered by strict POI')
 
 
 def filter_olympic_site_by_min_pt_duration(
     response_list, instance, request, pt_object_origin, pt_object_destination
 ):
-    if not response_list:
+    if not response_list or not has_applicable_scenario(request):
         return
     if not instance.olympics_forbidden_uris:
         return

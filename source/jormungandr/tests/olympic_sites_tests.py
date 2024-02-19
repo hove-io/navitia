@@ -125,6 +125,9 @@ DEFAULT_OLYMPIC_SITE_PARAMS = {
         },
     },
 }
+olympic_site_params_show_natural_opg_journeys = deepcopy(DEFAULT_OLYMPIC_SITE_PARAMS)
+scenarios = olympic_site_params_show_natural_opg_journeys[to_poi_uri]["scenarios"]
+scenarios["scenario b"]["additional_parameters"] = {"show_natural_opg_journeys": True}
 
 from_addr_uri = "{};{}".format(s_lon, s_lat)
 to_addr_uri = "{};{}".format(r_lon, r_lat)
@@ -331,8 +334,12 @@ DEFAULT_OLYMPIC_SITE_PARAMS_BUCKET = {"name": "aa", "folder": "olympic_site_para
 
 
 class FakeOlympicSiteParamsManager(OlympicSiteParamsManager):
+    def __init__(self, instance, config, default_olympic_site_paramas=DEFAULT_OLYMPIC_SITE_PARAMS):
+        super(FakeOlympicSiteParamsManager, self).__init__(instance, config)
+        self.test = default_olympic_site_paramas
+
     def fetch_and_get_data(self, instance_name, bucket_name, folder, **kwargs):
-        result = deepcopy(DEFAULT_OLYMPIC_SITE_PARAMS)
+        result = deepcopy(self.test)
         self.str_datetime_time_stamp(result)
         return result
 
@@ -565,7 +572,7 @@ class TestOlympicSites(AbstractTestFixture):
             assert len(first_journey["sections"]) == 1
             assert first_journey["sections"][0]["type"] == "street_network"
 
-    def test_olympic_poi_to_olympic_poi_journeys_invalid_forbidden_uris(self):
+    def test_olympic_poi_to_olympic_poi_journeys_show_natural_opg_journeys_in_query(self):
         # Invalid forbidden_uris :  physical_mode:axb
         from_place = "{}/features/{}?{}".format(BRAGI_URL, from_poi_uri, urlencode(BASIC_PARAMS, doseq=True))
         to_place = "{}/features/{}?{}".format(BRAGI_URL, to_poi_uri, urlencode(BASIC_PARAMS, doseq=True))
@@ -579,9 +586,8 @@ class TestOlympicSites(AbstractTestFixture):
         with requests_mock.Mocker() as m:
             m.get(from_place, json=FROM_ADDRESS)
             m.get(to_place, json=TO_POI)
-            response = self.query_region(
-                template_journey_query.format(place_from=from_poi_uri, place_to=to_poi_uri)
-            )
+            query = template_journey_query.format(place_from=from_poi_uri, place_to=to_poi_uri)
+            response = self.query_region("{}&{}".format(query, "_show_natural_opg_journeys=true"))
             journeys = [journey for journey in response['journeys']]
             assert len(journeys) == 2
             first_journey = response['journeys'][0]
@@ -591,3 +597,55 @@ class TestOlympicSites(AbstractTestFixture):
             last_journey = response['journeys'][1]
             assert len(last_journey["sections"]) == 1
             assert "to_delete" not in first_journey["tags"]
+
+    def test_olympic_poi_to_olympic_poi_journeys_show_natural_opg_journeys_in_config(self):
+        # Invalid forbidden_uris :  physical_mode:axb
+        from_place = "{}/features/{}?{}".format(BRAGI_URL, from_poi_uri, urlencode(BASIC_PARAMS, doseq=True))
+        to_place = "{}/features/{}?{}".format(BRAGI_URL, to_poi_uri, urlencode(BASIC_PARAMS, doseq=True))
+        instance = i_manager.instances["main_routing_test"]
+        forbidden_uris = deepcopy(DEFAULT_FORBIDDEN_URIS)
+        forbidden_uris.update({"pt_object_olympics_forbidden_uris": ["physical_mode:axb"]})
+        instance.olympics_forbidden_uris = parse_and_get_olympics_forbidden_uris(forbidden_uris)
+        instance.olympic_site_params_manager = FakeOlympicSiteParamsManager(
+            instance,
+            DEFAULT_OLYMPIC_SITE_PARAMS_BUCKET,
+            default_olympic_site_paramas=olympic_site_params_show_natural_opg_journeys,
+        )
+
+        with requests_mock.Mocker() as m:
+            m.get(from_place, json=FROM_ADDRESS)
+            m.get(to_place, json=TO_POI)
+            query = template_journey_query.format(place_from=from_poi_uri, place_to=to_poi_uri)
+            response = self.query_region(query)
+            journeys = [journey for journey in response['journeys']]
+            assert len(journeys) == 2
+            first_journey = response['journeys'][0]
+            assert len(first_journey["sections"]) == 3
+            assert "to_delete" not in first_journey["tags"]
+
+            last_journey = response['journeys'][1]
+            assert len(last_journey["sections"]) == 1
+            assert "to_delete" not in first_journey["tags"]
+
+    def test_olympic_poi_to_olympic_poi_journeys_without_show_natural_opg_journeyss(self):
+        # Only direct path, mode=walking
+        from_place = "{}/features/{}?{}".format(BRAGI_URL, from_poi_uri, urlencode(BASIC_PARAMS, doseq=True))
+        to_place = "{}/features/{}?{}".format(BRAGI_URL, to_poi_uri, urlencode(BASIC_PARAMS, doseq=True))
+        instance = i_manager.instances["main_routing_test"]
+        forbidden_uris = deepcopy(DEFAULT_FORBIDDEN_URIS)
+        forbidden_uris.update({"pt_object_olympics_forbidden_uris": ["physical_mode:axb"]})
+        instance.olympics_forbidden_uris = parse_and_get_olympics_forbidden_uris(forbidden_uris)
+        instance.olympic_site_params_manager = FakeOlympicSiteParamsManager(
+            instance, DEFAULT_OLYMPIC_SITE_PARAMS_BUCKET
+        )
+        with requests_mock.Mocker() as m:
+            m.get(from_place, json=FROM_ADDRESS)
+            m.get(to_place, json=TO_POI)
+            query = template_journey_query.format(place_from=from_poi_uri, place_to=to_poi_uri)
+            response = self.query_region(query)
+            journeys = [journey for journey in response['journeys']]
+            assert len(journeys) == 1
+            first_journey = response['journeys'][0]
+            assert len(first_journey["sections"]) == 1
+            assert "to_delete" not in first_journey["tags"]
+            assert first_journey["sections"][0]["mode"] == "walking"
