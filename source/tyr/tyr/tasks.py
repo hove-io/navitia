@@ -210,7 +210,14 @@ def import_data(
                         )
             if dataset.type == "poi":
                 if current_app.config.get('MINIO_ASGARD_BUCKET_NAME'):
-                    actions.append(poi2asgard.si(instance_config, filename, dataset_uid=dataset.uid))
+                    if not utils.files_exists_in_zipfile(filename, {"poi_properties.txt", "geometries.txt"}):
+                        current_app.logger.warning(
+                            "poi_properties.txt or geometries.txt not found for coverage '{}'".format(
+                                instance.name
+                            )
+                        )
+                    else:
+                        actions.append(poi2asgard.si(instance_config, filename, dataset_uid=dataset.uid))
                 else:
                     current_app.logger.warning("unknown asgard bucket for coverage '{}'".format(instance.name))
             actions.append(task[dataset.type].si(instance_config, filename, dataset_uid=dataset.uid))
