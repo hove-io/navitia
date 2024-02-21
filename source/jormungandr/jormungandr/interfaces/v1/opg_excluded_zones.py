@@ -32,10 +32,9 @@ import boto3
 from botocore.client import Config
 import json
 import logging
-from jormungandr import app, cache, memory_cache
 from jormungandr.interfaces.v1.StatedResource import StatedResource
 from jormungandr.interfaces.v1.make_links import create_external_link
-from jormungandr import i_manager
+from jormungandr import i_manager, app
 
 
 class OpgExcludedZones(StatedResource):
@@ -70,8 +69,6 @@ class OpgExcludedZones(StatedResource):
         link["href"] = link["href"].replace("%7D", "}")
         return {"places": places, "links": [link]}
 
-    @memory_cache.memoize(app.config[str('MEMORY_CACHE_CONFIGURATION')].get(str('TIMEOUT_ASGARD_S3'), 120))
-    @cache.memoize(app.config[str('CACHE_CONFIGURATION')].get(str('TIMEOUT_ASGARD_S3'), 300))
     def fetch_and_get_data(self, instance, bucket_name, folder, mode=None):
         if not bucket_name:
             return {}
