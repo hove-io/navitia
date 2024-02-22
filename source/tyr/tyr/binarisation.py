@@ -1269,7 +1269,11 @@ def poi2asgard(self, instance_config, filename, job_id, dataset_uid):
                 if error:
                     raise Exception("Error occurred when putting excluded zones to asgard: {}".format(error))
         else:
-            logger.warning("Impossible to push excluded zones to S3, empty directory")
+            logger.warning(
+                "opg_excluded_zones: Impossible to push excluded zones to S3 for instance {}, empty directory".format(
+                    instance.name
+                )
+            )
     except:
         logger.exception("")
         job.state = "failed"

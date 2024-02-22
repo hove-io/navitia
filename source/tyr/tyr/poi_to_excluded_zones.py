@@ -12,7 +12,9 @@ def parse_file(filename):
             for row in reader:
                 yield row
     except Exception as e:
-        logging.getLogger(__name__).error("Unable to read file {}, error ({})".format(filename, str(e)))
+        logging.getLogger(__name__).error(
+            "opg_excluded_zones: Unable to read file {}, error ({})".format(filename, str(e))
+        )
         raise
 
 
@@ -24,7 +26,9 @@ def get_excluded_zones(path):
         try:
             result[row[0]] = json.loads(row[2])
         except Exception:
-            logging.getLogger(__name__).error("Ignored line, Invalid json ({})".format(row[2]))
+            logging.getLogger(__name__).error(
+                "opg_excluded_zones: Ignored line, Invalid json ({})".format(row[2])
+            )
     return result
 
 
