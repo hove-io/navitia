@@ -201,3 +201,7 @@ def files_exists_in_zipfile(poi_zipfile, set_files):
     z = zipfile.ZipFile(poi_zipfile)
     files_from_zip = {member.filename for member in z.infolist()}
     return not bool(len(set_files.difference(files_from_zip)))
+
+
+def is_empty_directory(directory, ext="json"):
+    return len(glob.glob("{}/*.{}".format(directory, ext))) == 0 if os.path.isdir(directory) else True
