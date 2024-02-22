@@ -1252,6 +1252,12 @@ def poi2asgard(self, instance_config, filename, job_id, dataset_uid):
     try:
         poi_to_excluded_zones(filename, excluded_zone_dir, instance.name)
         if utils.is_empty_directory(excluded_zone_dir):
+            logger.warning(
+                "opg_excluded_zones: Impossible to push excluded zones to S3 for instance {}, empty directory".format(
+                    instance.name
+                )
+            )
+        else:
             with collect_metric("poi2Asgard", job, dataset_uid):
                 asgard_bucket = current_app.config.get('MINIO_ASGARD_BUCKET_NAME', None)
                 if not asgard_bucket:
@@ -1268,12 +1274,6 @@ def poi2asgard(self, instance_config, filename, job_id, dataset_uid):
                 output, error = process.communicate()
                 if error:
                     raise Exception("Error occurred when putting excluded zones to asgard: {}".format(error))
-        else:
-            logger.warning(
-                "opg_excluded_zones: Impossible to push excluded zones to S3 for instance {}, empty directory".format(
-                    instance.name
-                )
-            )
     except:
         logger.exception("")
         job.state = "failed"
