@@ -50,7 +50,7 @@ from navitiacommon.launch_exec import launch_exec
 import navitiacommon.task_pb2
 from tyr import celery, redis
 from tyr.rabbit_mq_handler import RabbitMqHandler
-from navitiacommon import models
+from navitiacommon import models, utils
 from tyr.helper import get_instance_logger, get_named_arg, get_autocomplete_instance_logger, get_task_logger
 from contextlib import contextmanager
 import glob
@@ -1249,25 +1249,31 @@ def poi2asgard(self, instance_config, filename, job_id, dataset_uid):
         shutil.rmtree(excluded_zone_dir)
 
     os.mkdir(excluded_zone_dir)
-    poi_to_excluded_zones(filename, excluded_zone_dir, instance.name)
-
     try:
-        with collect_metric("poi2Asgard", job, dataset_uid):
-            asgard_bucket = current_app.config.get('MINIO_ASGARD_BUCKET_NAME', None)
-            if not asgard_bucket:
-                dataset.state = "failed"
-                return
-
-            bash_command = (
-                "env REQUESTS_CA_BUNDLE=/etc/ssl/certs/ca-certificates.crt "
-                "aws s3 sync ./{excluded_zone_dir} s3://{asgard_bucket}/excluded_zones".format(
-                    excluded_zone_dir=excluded_zone_dir, asgard_bucket=asgard_bucket
+        poi_to_excluded_zones(filename, excluded_zone_dir, instance.name)
+        if utils.is_empty_directory(excluded_zone_dir):
+            logger.warning(
+                "opg_excluded_zones: Impossible to push excluded zones to S3 for instance {}, empty directory".format(
+                    instance.name
                 )
             )
-            process = subprocess.Popen(bash_command.split(), stdout=subprocess.PIPE)
-            output, error = process.communicate()
-            if error:
-                raise Exception("Error occurred when putting excluded zones to asgard: {}".format(error))
+        else:
+            with collect_metric("poi2Asgard", job, dataset_uid):
+                asgard_bucket = current_app.config.get('MINIO_ASGARD_BUCKET_NAME', None)
+                if not asgard_bucket:
+                    dataset.state = "failed"
+                    return
+
+                bash_command = (
+                    "env REQUESTS_CA_BUNDLE=/etc/ssl/certs/ca-certificates.crt "
+                    "aws s3 sync ./{excluded_zone_dir} s3://{asgard_bucket}/excluded_zones".format(
+                        excluded_zone_dir=excluded_zone_dir, asgard_bucket=asgard_bucket
+                    )
+                )
+                process = subprocess.Popen(bash_command.split(), stdout=subprocess.PIPE)
+                output, error = process.communicate()
+                if error:
+                    raise Exception("Error occurred when putting excluded zones to asgard: {}".format(error))
     except:
         logger.exception("")
         job.state = "failed"
