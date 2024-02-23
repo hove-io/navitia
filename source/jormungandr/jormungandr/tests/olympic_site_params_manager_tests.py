@@ -472,7 +472,7 @@ def test_build_departure_and_arrival_poi_jo():
     assert api_request.get("max_walking_duration_to_pt") == 12000
     assert api_request.get('night_bus_filter_max_factor') == 2
     assert api_request.get('night_bus_filter_base_factor') == 1800
-    assert len(api_request.get('forbidden_uris[]')) == 2
+    assert len(api_request.get('forbidden_uris[]')) == 1
     olympic_site_params = api_request["olympic_site_params"]
     assert not olympic_site_params['show_natural_opg_journeys']
     assert olympic_site_params["strict"]
@@ -568,6 +568,7 @@ def test_build_departure_and_arrival_poi_jo_empty_olympic_site_params():
     api_request["datetime"] = osp.get_timestamp('20230715T110000')
     osp.build(pt_origin_detail, pt_destination_detail, api_request)
     assert not api_request["olympic_site_params"]
+    assert "forbidden_uris[]" not in api_request
 
 
 def test_build_departure_and_arrival_poi_jo_add_forbidden_uris():
@@ -593,7 +594,7 @@ def test_build_departure_and_arrival_poi_jo_add_forbidden_uris():
     api_request["datetime"] = osp.get_timestamp('20230715T110000')
     osp.build(pt_origin_detail, pt_destination_detail, api_request)
     assert api_request["olympic_site_params"]
-    assert len(api_request["forbidden_uris[]"]) == 4
+    assert len(api_request["forbidden_uris[]"]) == 3
     assert not api_request["olympic_site_params"]['show_natural_opg_journeys']
 
 
@@ -621,7 +622,7 @@ def test_get_dict_scenario_invalid_scanario_name():
     osp.build(pt_origin_detail, pt_destination_detail, api_request)
     assert api_request["olympic_site_params"]
     assert not api_request["olympic_site_params"]['show_natural_opg_journeys']
-    assert len(api_request["forbidden_uris[]"]) == 2
+    assert len(api_request["forbidden_uris[]"]) == 1
     scenario_name = osp.get_valid_scenario_name(
         osp.olympic_site_params["poi:BCD"]["events"], "departure_scenario", osp.get_timestamp('20230720T110000')
     )

@@ -218,6 +218,13 @@ class OlympicSiteParamsManager:
             instance_name=self.instance.name, bucket_name=self.bucket_name, folder=self.folder, **self.args
         )
 
+    def manage_navette(self, api_request):
+        # Add forbidden_uri
+        if self.instance.olympics_forbidden_uris and self.instance.olympics_forbidden_uris:
+            self.manage_forbidden_uris(
+                api_request, self.instance.olympics_forbidden_uris.pt_object_olympics_forbidden_uris
+            )
+
     def build(self, pt_object_origin, pt_object_destination, api_request):
         # Warning, the order of functions is important
         # Order 1 : get_olympic_site_params
@@ -251,11 +258,6 @@ class OlympicSiteParamsManager:
             else:
                 api_request[key] = value
 
-        # Add forbidden_uri
-        self.manage_forbidden_uris(
-            api_request, self.instance.olympics_forbidden_uris.pt_object_olympics_forbidden_uris
-        )
-
         # Add criteria
         if api_request.get("criteria") in ["departure_stop_attractivity", "arrival_stop_attractivity"]:
             return
@@ -285,6 +287,7 @@ class OlympicSiteParamsManager:
         destination_olympic_site = self.get_olympic_site(pt_destination_detail)
 
         if not origin_olympic_site and not destination_olympic_site:
+            self.manage_navette(api_request)
             return {}
 
         self.fill_olympic_site_params_from_s3()

@@ -409,18 +409,18 @@ class TestOlympicSites(AbstractTestFixture):
                 template_journey_query.format(place_from=from_addr_uri, place_to=to_addr_uri)
             )
             journeys = [journey for journey in response['journeys']]
-            assert len(journeys) == 2
+            assert len(journeys) == 1
             first_journey = response['journeys'][0]
-            assert len(first_journey["sections"]) == 3
+            assert len(first_journey["sections"]) == 1
             physical_mode_id = next(
                 (
                     link["id"]
-                    for link in first_journey["sections"][1]["links"]
+                    for link in first_journey["sections"][0]["links"]
                     if link["type"] == 'physical_mode'
                 ),
                 None,
             )
-            assert physical_mode_id
+            assert not physical_mode_id
 
     def test_address_to_address_journeys(self):
         # forbidden_uris not used :  physical_mode:0x0
@@ -451,18 +451,18 @@ class TestOlympicSites(AbstractTestFixture):
                 template_journey_query.format(place_from=from_addr_uri, place_to=to_addr_uri)
             )
             journeys = [journey for journey in response['journeys']]
-            assert len(journeys) == 2
+            assert len(journeys) == 1
             first_journey = response['journeys'][0]
-            assert len(first_journey["sections"]) == 3
+            assert len(first_journey["sections"]) == 1
             physical_mode_id = next(
                 (
                     link["id"]
-                    for link in first_journey["sections"][1]["links"]
+                    for link in first_journey["sections"][0]["links"]
                     if link["type"] == 'physical_mode'
                 ),
                 None,
             )
-            assert physical_mode_id
+            assert not physical_mode_id
 
     def test_address_to_olympic_poi_journeys(self):
         # forbidden_uris used :  physical_mode:0x0
@@ -512,18 +512,18 @@ class TestOlympicSites(AbstractTestFixture):
                 template_journey_query.format(place_from=from_addr_uri, place_to=to_poi_uri)
             )
             journeys = [journey for journey in response['journeys']]
-            assert len(journeys) == 2
+            assert len(journeys) == 1
             first_journey = response['journeys'][0]
-            assert len(first_journey["sections"]) == 3
+            assert len(first_journey["sections"]) == 1
             physical_mode_id = next(
                 (
                     link["id"]
-                    for link in first_journey["sections"][1]["links"]
+                    for link in first_journey["sections"][0]["links"]
                     if link["type"] == 'physical_mode'
                 ),
                 None,
             )
-            assert physical_mode_id
+            assert not physical_mode_id
 
     def test_olympic_poi_to_address_journeys(self):
         # forbidden_uris used :  physical_mode:0x0
