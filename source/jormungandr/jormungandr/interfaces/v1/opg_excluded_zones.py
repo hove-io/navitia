@@ -35,6 +35,7 @@ import logging
 from jormungandr.interfaces.v1.StatedResource import StatedResource
 from jormungandr.interfaces.v1.make_links import create_external_link
 from jormungandr import i_manager, app
+from jormungandr.excluded_zones_manager import ExcludedZonesManager
 
 
 class OpgExcludedZones(StatedResource):
@@ -74,27 +75,10 @@ class OpgExcludedZones(StatedResource):
             return {}
         places = []
         logger = logging.getLogger(__name__)
-        args = {"connect_timeout": 2, "read_timeout": 2, "retries": {'max_attempts': 0}}
-        s3_resource = boto3.resource('s3', config=Config(**args))
         try:
-            my_bucket = s3_resource.Bucket(bucket_name)
-            for obj in my_bucket.objects.filter(Prefix="{}/".format(folder)):
-                if not obj.key.endswith('.json'):
-                    continue
-                try:
-                    file_content = obj.get()['Body'].read().decode('utf-8')
-                    json_content = json.loads(file_content)
-                    if json_content.get('instance') != instance.name:
-                        continue
-                    if mode is not None:
-                        if mode not in json_content.get("modes"):
-                            continue
-                    place = self.get_poi_place(instance, json_content)
-                    places.append(place)
-
-                except Exception:
-                    logger.exception("Error on OpgExcludedZones")
-                    continue
+            for json_content in ExcludedZonesManager.get_excluded_zones(instance.name, mode):
+                place = self.get_poi_place(instance, json_content)
+                places.append(place)
         except Exception:
             logger.exception("Error on OpgExcludedZones")
             return {}

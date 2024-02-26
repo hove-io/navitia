@@ -30,6 +30,8 @@
 import logging
 import json
 from collections import namedtuple
+
+from jormungandr.resource_s3_object import ResourceS3Object
 from jormungandr.utils import (
     is_olympic_poi,
     local_str_date_to_utc,
@@ -38,22 +40,12 @@ from jormungandr.utils import (
     str_datetime_utc_to_local,
 )
 import boto3
-from jormungandr import app
 from navitiacommon import type_pb2
 from botocore.client import Config
 from jormungandr import app, memory_cache, cache
 
 
 AttractivityVirtualFallback = namedtuple("AttractivityVirtualFallback", "attractivity, virtual_duration")
-
-
-class ResourceS3Object:
-    def __init__(self, s3_object, instance_name):
-        self.s3_object = s3_object
-        self.instance_name = instance_name
-
-    def __repr__(self):
-        return "{}-{}-{}".format(self.instance_name, self.s3_object.key, self.s3_object.e_tag)
 
 
 def has_applicable_scenario(api_request):
