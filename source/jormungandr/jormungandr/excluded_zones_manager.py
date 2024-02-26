@@ -38,7 +38,7 @@ from jormungandr.resource_s3_object import ResourceS3Object
 
 class ExcludedZonesManager:
     @staticmethod
-    @cache.memoize(app.config[str('CACHE_CONFIGURATION')].get(str('ASGARD_S3_DATA_TIMEOUT'), 2 * 60))
+    @cache.memoize(app.config[str('CACHE_CONFIGURATION')].get(str('ASGARD_S3_DATA_TIMEOUT'), 24 * 60))
     def get_object(resource_s3_object):
         logger = logging.getLogger(__name__)
         try:
@@ -50,7 +50,7 @@ class ExcludedZonesManager:
 
     @staticmethod
     @memory_cache.memoize(
-        app.config[str('MEMORY_CACHE_CONFIGURATION')].get(str('ASGARD_S3_DATA_TIMEOUT'), 1 * 60)
+        app.config[str('MEMORY_CACHE_CONFIGURATION')].get(str('ASGARD_S3_DATA_TIMEOUT'), 5 * 60)
     )
     def get_excluded_zones(instance_name=None, mode=None):
         bucket_name = app.config.get(str("ASGARD_S3_BUCKET"))
