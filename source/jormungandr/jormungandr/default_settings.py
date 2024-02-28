@@ -157,6 +157,7 @@ default_cache = {
     'FETCH_S3_DATA_TIMEOUT': 24 * 60,
     # TIMEOUT_TRANSFER_PATH = 24Hours
     "TIMEOUT_TRANSFER_PATH": 24 * 60 * 60,
+    'ASGARD_S3_DATA_TIMEOUT': 2 * 60,
 }
 
 
@@ -168,6 +169,7 @@ default_memory_cache = {
     'TIMEOUT_AUTHENTICATION': 30,
     'TIMEOUT_PARAMS': 30,
     "FETCH_S3_DATA_TIMEOUT": 2 * 60,
+    'ASGARD_S3_DATA_TIMEOUT': 1 * 60,
 }
 
 MEMORY_CACHE_CONFIGURATION = (
