@@ -250,7 +250,7 @@ def test_build_with_request_params_and_without_criteria_without_keep_olympics_jo
     assert api_request["_keep_olympics_journeys"]
     assert not api_request.get("max_walking_duration_to_pt")
     olympic_site_params = api_request["olympic_site_params"]
-    assert not olympic_site_params['show_natural_opg_journeys']
+    assert olympic_site_params['show_natural_opg_journeys']
     assert "arrival_scenario" in olympic_site_params
     assert "departure_scenario" not in olympic_site_params
     attractivity_virtual_fallback = olympic_site_params["arrival_scenario"]["stop_point:24113"]
@@ -318,7 +318,7 @@ def test_build_with_request_params_and_departure_criteria():
     assert api_request["criteria"] == "departure_stop_attractivity"
     assert not api_request.get("max_walking_duration_to_pt")
     olympic_site_params = api_request["olympic_site_params"]
-    assert not olympic_site_params['show_natural_opg_journeys']
+    assert olympic_site_params['show_natural_opg_journeys']
     assert "arrival_scenario" not in olympic_site_params
     assert "departure_scenario" in olympic_site_params
     attractivity_virtual_fallback = olympic_site_params["departure_scenario"]["stop_point:24113"]
@@ -352,7 +352,7 @@ def test_build_with_request_params_and_arrival_criteria():
     assert api_request["criteria"] == "arrival_stop_attractivity"
     assert not api_request.get("max_walking_duration_to_pt")
     olympic_site_params = api_request["olympic_site_params"]
-    assert not olympic_site_params['show_natural_opg_journeys']
+    assert olympic_site_params['show_natural_opg_journeys']
     assert "arrival_scenario" in olympic_site_params
     assert "departure_scenario" not in olympic_site_params
     attractivity_virtual_fallback = olympic_site_params["arrival_scenario"]["stop_point:24113"]
@@ -647,3 +647,46 @@ def test_manage_forbidden_uris():
     api_request = {"forbidden_uris[]": ["uri1", "uri2"]}
     osp.manage_forbidden_uris(api_request, ["ab"])
     assert len(api_request["forbidden_uris[]"]) == 3
+
+
+def test_get_show_natural_opg_journeys():
+    data = {
+        "test1": {"conf_additional_parameters": {}, "query_show_natural_opg_journeys": None, "result": True},
+        "test2": {"conf_additional_parameters": {}, "query_show_natural_opg_journeys": False, "result": False},
+        "test3": {"conf_additional_parameters": {}, "query_show_natural_opg_journeys": True, "result": True},
+        "test4": {
+            "conf_additional_parameters": {"show_natural_opg_journeys": True},
+            "query_show_natural_opg_journeys": None,
+            "result": True,
+        },
+        "test5": {
+            "conf_additional_parameters": {"show_natural_opg_journeys": True},
+            "query_show_natural_opg_journeys": True,
+            "result": True,
+        },
+        "test6": {
+            "conf_additional_parameters": {"show_natural_opg_journeys": True},
+            "query_show_natural_opg_journeys": False,
+            "result": False,
+        },
+        "test7": {
+            "conf_additional_parameters": {"show_natural_opg_journeys": False},
+            "query_show_natural_opg_journeys": None,
+            "result": False,
+        },
+        "test8": {
+            "conf_additional_parameters": {"show_natural_opg_journeys": False},
+            "query_show_natural_opg_journeys": False,
+            "result": False,
+        },
+        "test9": {
+            "conf_additional_parameters": {"show_natural_opg_journeys": False},
+            "query_show_natural_opg_journeys": True,
+            "result": True,
+        },
+    }
+    for test_name, value in data.items():
+        result = OlympicSiteParamsManager.get_show_natural_opg_journeys(
+            value["conf_additional_parameters"], value["query_show_natural_opg_journeys"]
+        )
+        assert result == value["result"], "test {} failed".format(test_name)

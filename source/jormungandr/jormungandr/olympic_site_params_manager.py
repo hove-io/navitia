@@ -99,10 +99,11 @@ class OlympicSiteParamsManager:
             return self.build_olympic_site_params(scenario_name, data)
         return {}
 
-    def get_show_natural_opg_journeys(self, conf_additional_parameters, query_show_natural_opg_journeys):
-        return query_show_natural_opg_journeys or conf_additional_parameters.get(
-            "show_natural_opg_journeys", False
-        )
+    @staticmethod
+    def get_show_natural_opg_journeys(conf_additional_parameters, query_show_natural_opg_journeys):
+        if query_show_natural_opg_journeys is None:
+            return conf_additional_parameters.get("show_natural_opg_journeys", True)
+        return query_show_natural_opg_journeys
 
     def filter_and_get_additional_parameters(self, conf_additional_parameters):
         return {
@@ -299,11 +300,11 @@ class OlympicSiteParamsManager:
             if origin_olympic_site:
                 return {
                     "departure_scenario": result,
-                    "show_natural_opg_journeys": api_request.get("_show_natural_opg_journeys", False),
+                    "show_natural_opg_journeys": api_request.get("_show_natural_opg_journeys", True),
                 }
             return {
                 "arrival_scenario": result,
-                "show_natural_opg_journeys": api_request.get("_show_natural_opg_journeys", False),
+                "show_natural_opg_journeys": api_request.get("_show_natural_opg_journeys", True),
             }
 
         if not self.olympic_site_params:
