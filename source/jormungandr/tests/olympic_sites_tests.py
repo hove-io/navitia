@@ -375,9 +375,9 @@ class TestOlympicSites(AbstractTestFixture):
                 template_journey_query.format(place_from=from_addr_uri, place_to=to_addr_uri)
             )
             journeys = [journey for journey in response['journeys']]
-            assert len(journeys) == 1
+            assert len(journeys) == 2
             first_journey = response['journeys'][0]
-            assert len(first_journey["sections"]) == 1
+            assert len(first_journey["sections"]) == 3
             assert first_journey["sections"][0]["type"] == "street_network"
 
     def test_address_with_invalid_within_to_address_journeys(self):
@@ -485,9 +485,9 @@ class TestOlympicSites(AbstractTestFixture):
             response = self.query_region(
                 template_journey_query.format(place_from=from_addr_uri, place_to=to_poi_uri)
             )
-            assert len(response['journeys']) == 1
+            assert len(response['journeys']) == 2
             first_journey = response['journeys'][0]
-            assert len(first_journey["sections"]) == 1
+            assert len(first_journey["sections"]) == 3
             assert first_journey["sections"][0]["type"] == "street_network"
 
     def test_address_to_not_olympic_poi_journeys(self):
@@ -547,9 +547,9 @@ class TestOlympicSites(AbstractTestFixture):
                 template_journey_query.format(place_from=from_poi_uri, place_to=to_addr_uri)
             )
             journeys = [journey for journey in response['journeys']]
-            assert len(journeys) == 1
+            assert len(journeys) == 2
             first_journey = response['journeys'][0]
-            assert len(first_journey["sections"]) == 1
+            assert len(first_journey["sections"]) == 3
             assert first_journey["sections"][0]["type"] == "street_network"
 
     def test_olympic_poi_to_olympic_poi_journeys(self):
@@ -567,9 +567,9 @@ class TestOlympicSites(AbstractTestFixture):
                 template_journey_query.format(place_from=from_poi_uri, place_to=to_poi_uri)
             )
             journeys = [journey for journey in response['journeys']]
-            assert len(journeys) == 1
+            assert len(journeys) == 2
             first_journey = response['journeys'][0]
-            assert len(first_journey["sections"]) == 1
+            assert len(first_journey["sections"]) == 3
             assert first_journey["sections"][0]["type"] == "street_network"
 
     def test_olympic_poi_to_olympic_poi_journeys_show_natural_opg_journeys_in_query(self):
@@ -644,8 +644,8 @@ class TestOlympicSites(AbstractTestFixture):
             query = template_journey_query.format(place_from=from_poi_uri, place_to=to_poi_uri)
             response = self.query_region(query)
             journeys = [journey for journey in response['journeys']]
-            assert len(journeys) == 1
+            assert len(journeys) == 2
             first_journey = response['journeys'][0]
-            assert len(first_journey["sections"]) == 1
+            assert len(first_journey["sections"]) == 3
             assert "to_delete" not in first_journey["tags"]
             assert first_journey["sections"][0]["mode"] == "walking"
