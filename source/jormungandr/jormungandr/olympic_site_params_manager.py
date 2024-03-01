@@ -100,7 +100,10 @@ class OlympicSiteParamsManager:
         return {}
 
     @staticmethod
-    def get_show_natural_opg_journeys(conf_additional_parameters, query_show_natural_opg_journeys):
+    def get_show_natural_opg_journeys(conf_additional_parameters, api_request):
+        if api_request.get("wheelchair"):
+            return True
+        query_show_natural_opg_journeys = api_request.get("_show_natural_opg_journeys")
         if query_show_natural_opg_journeys is None:
             return conf_additional_parameters.get("show_natural_opg_journeys", True)
         return query_show_natural_opg_journeys
@@ -297,14 +300,15 @@ class OlympicSiteParamsManager:
             for spt_id, attractivity in attractivities.items():
                 virtual_fallback = virtual_duration.get(spt_id, 0)
                 result[spt_id] = AttractivityVirtualFallback(attractivity, virtual_fallback)
+            show_natural_opg_journeys = api_request.get("_show_natural_opg_journeys", True) or api_request.get("wheelchair")
             if origin_olympic_site:
                 return {
                     "departure_scenario": result,
-                    "show_natural_opg_journeys": api_request.get("_show_natural_opg_journeys", True),
+                    "show_natural_opg_journeys": show_natural_opg_journeys,
                 }
             return {
                 "arrival_scenario": result,
-                "show_natural_opg_journeys": api_request.get("_show_natural_opg_journeys", True),
+                "show_natural_opg_journeys": show_natural_opg_journeys,
             }
 
         if not self.olympic_site_params:
@@ -330,7 +334,7 @@ class OlympicSiteParamsManager:
                 "additional_parameters": self.filter_and_get_additional_parameters(conf_additional_parameters),
                 "strict": self.get_strict_parameter(origin_olympic_site.uri) if origin_olympic_site else False,
                 "show_natural_opg_journeys": self.get_show_natural_opg_journeys(
-                    conf_additional_parameters, api_request.get("_show_natural_opg_journeys")
+                    conf_additional_parameters, api_request
                 ),
             }
         if arrival_olympic_site_params:
@@ -344,7 +348,7 @@ class OlympicSiteParamsManager:
                 if destination_olympic_site
                 else False,
                 "show_natural_opg_journeys": self.get_show_natural_opg_journeys(
-                    conf_additional_parameters, api_request.get("_show_natural_opg_journeys")
+                    conf_additional_parameters, api_request
                 ),
             }
         return {}
