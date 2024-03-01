@@ -94,7 +94,6 @@ from jormungandr.autocomplete.geocodejson import GeocodeJson
 from jormungandr import global_autocomplete
 from jormungandr.new_relic import record_custom_parameter
 from jormungandr import fallback_modes
-from jormungandr.excluded_zones_manager import ExcludedZonesManager
 
 from six.moves import filter
 from six.moves import range

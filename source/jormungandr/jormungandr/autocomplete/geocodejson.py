@@ -295,7 +295,6 @@ class GeocodeJson(AbstractAutocomplete):
         if not instances:
             return []
         params = [('pt_dataset[]', i.name) for i in instances]
-        params.extend([('poi_dataset[]', "priv.idfm-jo")])
         params.extend([('poi_dataset[]', i.poi_dataset) for i in instances if i.poi_dataset])
         return params
 

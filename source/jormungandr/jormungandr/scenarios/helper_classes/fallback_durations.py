@@ -149,7 +149,7 @@ class FallbackDurations:
                 raise StreetNetworkException(response_pb2.Error.service_unavailable, e.data["message"])
             except Exception as e:
                 self._logger.exception("Exception':{}".format(str(e)))
-                raise
+                return None
 
     def _retrieve_access_points(self, stop_point, access_points_map, places_isochrone):
         if self._direct_path_type == StreetNetworkPathType.BEGINNING_FALLBACK:

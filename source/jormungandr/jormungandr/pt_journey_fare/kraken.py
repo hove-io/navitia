@@ -48,12 +48,6 @@ class Kraken(AbstractPtJourneyFare):
         request = request_pb2.Request()
         request.requested_api = type_pb2.pt_fares
         pt_fare_request = request.pt_fares
-
-        for j in pt_journeys:
-            for s in j.sections:
-                if s.type == response_pb2.PUBLIC_TRANSPORT:
-                    print(s.uris)
-
         for journey in pt_journeys:
             pt_sections = self._pt_sections(journey)
             if not pt_sections:
@@ -89,7 +83,7 @@ class Kraken(AbstractPtJourneyFare):
             fare_request = self.create_fare_request(pt_journeys)
             return self.instance._send_and_receive(
                 fare_request,
-                timeout=app.config.get(str('PT_FARES_KRAKEN_TIMEOUT'), 1),
+                timeout=app.config.get(str('PT_FARES_KRAKEN_TIMEOUT'), 0.1),
                 request_id="{}_fare".format(request_id),
             )
 
