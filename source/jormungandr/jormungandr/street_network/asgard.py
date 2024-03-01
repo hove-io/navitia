@@ -242,7 +242,20 @@ class Asgard(TransientSocket, Kraken):
             req.sn_routing_matrix.mode = FallbackModes.car.name
 
         res = self._call_asgard(req, request_id)
+
+        # to handle the case where all origins or all destinations happen to be located in excluded zones
+        # Asgard could have returned a matrix filled with Unreached status, which is kind of waste of the bandwidth
+        # So instead, asgard return with and error_id(all_excluded), we fill the matrix with just on element
+        # to make jormun believe that Asgard has actually responded without errors,
+        # so no crow fly is about to be created
+        if res is not None and res.HasField('error') and res.error.id == response_pb2.Error.all_excluded:
+            row = res.sn_routing_matrix.rows.add()
+            r = row.routing_response.add()
+            r.routing_status = response_pb2.unreached
+            r.duration = -1
+
         self._check_for_error_and_raise(res)
+
         return res.sn_routing_matrix
 
     @staticmethod

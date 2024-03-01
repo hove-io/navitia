@@ -179,7 +179,7 @@ class Kraken(object):
                 logging.getLogger(__name__).info(
                     'PtRef, Unable to find stop_point with filter {}'.format(stop_area_uri)
                 )
-            return {sp.uri for sp in result.stop_points}
+            return {(sp.uri, sp.coord.lon, sp.coord.lat) for sp in result.stop_points}
 
         return inner(uri, self.instance.publication_date)
 

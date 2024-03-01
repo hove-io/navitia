@@ -33,6 +33,7 @@ from collections import namedtuple
 import logging
 from .helper_utils import timed_logger
 
+FreeAccessObject = namedtuple('FreeAccessObject', ['uri', 'lon', 'lat'])
 PlaceFreeAccessResult = namedtuple('PlaceFreeAccessResult', ['crowfly', 'odt', 'free_radius'])
 
 
@@ -73,18 +74,25 @@ class PlacesFreeAccess:
         place = self._requested_place_obj
 
         if place.embedded_type == type_pb2.STOP_AREA:
-            crowfly = self._get_stop_points_for_stop_area(self._instance.georef, place.uri)
+            crowfly = {
+                FreeAccessObject(sp[0], sp[1], sp[2])
+                for sp in self._get_stop_points_for_stop_area(self._instance.georef, place.uri)
+            }
         elif place.embedded_type == type_pb2.ADMINISTRATIVE_REGION:
-            crowfly = {sp.uri for sa in place.administrative_region.main_stop_areas for sp in sa.stop_points}
+            crowfly = {
+                FreeAccessObject(sp.uri, sp.coord.lon, sp.coord.lat)
+                for sa in place.administrative_region.main_stop_areas
+                for sp in sa.stop_points
+            }
         elif place.embedded_type == type_pb2.STOP_POINT:
-            crowfly = {place.stop_point.uri}
+            crowfly = {FreeAccessObject(place.stop_point.uri, place.stop_point.lon, place.stop_point.lat)}
 
         coord = utils.get_pt_object_coord(place)
         odt = set()
 
         if coord:
             odt_sps = self._get_odt_stop_points(self._pt_planner, coord)
-            [odt.add(stop_point.uri) for stop_point in odt_sps]
+            [odt.add(FreeAccessObject(stop_point.uri, stop_point.lon, stop_point.lat)) for stop_point in odt_sps]
 
         self._logger.debug("finish places with free access from %s", self._requested_place_obj.uri)
 

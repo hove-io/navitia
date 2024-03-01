@@ -440,6 +440,10 @@ def add_properties(pt_object, dict_pt_object):
         property.value = value
 
 
+def str_to_embedded_type(str_embedded_type):
+    return MAP_STRING_PTOBJECT_TYPE.get(str_embedded_type)
+
+
 def check_dict_object(dict_pt_object):
     if not isinstance(dict_pt_object, dict):
         logging.getLogger(__name__).error('Invalid dict_pt_object')
@@ -490,11 +494,6 @@ def get_pt_object_from_json(dict_pt_object, instance):
     pt_object = type_pb2.PtObject()
     populate_pt_object(pt_object, dict_pt_object)
 
-    within_zones = dict_pt_object.get("within_zones", [])
-    if pt_object.embedded_type == type_pb2.ADDRESS and within_zones:
-        for within_zone in within_zones:
-            pt_object_within_zone = pt_object.address.within_zones.add()
-            populate_pt_object(pt_object_within_zone, within_zone)
     return pt_object
 
 

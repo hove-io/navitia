@@ -82,7 +82,7 @@ def _is_crowfly_needed(uri, fallback_durations, crowfly_sps, fallback_direct_pat
     f = fallback_durations.get(uri, None)
     is_unknown_projection = f.status == response_pb2.unknown if f else False
 
-    is_crowfly_sp = uri in crowfly_sps
+    is_crowfly_sp = uri in [sp.uri for sp in crowfly_sps]
 
     # At this point, theoretically, fallback_dp should be found since the isochrone has already given a
     # valid value BUT, in some cases(due to the bad projection, etc), fallback_dp may not exist even
@@ -538,7 +538,7 @@ def _build_crowfly(pt_journey, entry_point, mode, places_free_access, fallback_d
         # No need for a crowfly if the pt section starts from the requested object
         return None
 
-    if pt_obj.uri in places_free_access.odt:
+    if pt_obj.uri in [o.uri for o in places_free_access.odt]:
         pt_obj.CopyFrom(entry_point)
         # Update first or last coord in the shape
         fallback_logic.update_shape_coord(pt_journey, get_pt_object_coord(pt_obj))
@@ -595,7 +595,7 @@ def _build_fallback(
         _, _, _, _, via_pt_access, via_poi_access = fallback_durations[pt_obj.uri]
 
     if requested_obj.uri != pt_obj.uri:
-        if pt_obj.uri in accessibles_by_crowfly.odt:
+        if pt_obj.uri in [o.uri for o in accessibles_by_crowfly.odt]:
             pt_obj.CopyFrom(requested_obj)
         else:
             # extend the journey with the fallback routing path
