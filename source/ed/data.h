@@ -53,8 +53,6 @@ template <typename T>
 void normalize_uri(std::vector<T*>& vec) {
     std::string prefix = navitia::type::static_data::get()->captionByType(T::type);
     for (auto* element : vec) {
-        // Suppression des espaces de l'URI
-        boost::algorithm::replace_all(element->uri, " ", "");
         element->uri = prefix + ":" + element->uri;
     }
 }
