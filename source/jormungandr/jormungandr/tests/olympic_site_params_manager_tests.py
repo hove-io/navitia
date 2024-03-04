@@ -758,9 +758,21 @@ def test_manage_forbidden_uris():
 
 def test_get_show_natural_opg_journeys():
     data = {
-        "test1": {"conf_additional_parameters": {}, "api_request": {"_show_natural_opg_journeys": None}, "result": True},
-        "test2": {"conf_additional_parameters": {}, "api_request": {"_show_natural_opg_journeys": False}, "result": False},
-        "test3": {"conf_additional_parameters": {}, "api_request": {"_show_natural_opg_journeys": True}, "result": True},
+        "test1": {
+            "conf_additional_parameters": {},
+            "api_request": {"_show_natural_opg_journeys": None},
+            "result": True,
+        },
+        "test2": {
+            "conf_additional_parameters": {},
+            "api_request": {"_show_natural_opg_journeys": False},
+            "result": False,
+        },
+        "test3": {
+            "conf_additional_parameters": {},
+            "api_request": {"_show_natural_opg_journeys": True},
+            "result": True,
+        },
         "test4": {
             "conf_additional_parameters": {"show_natural_opg_journeys": True},
             "api_request": {"_show_natural_opg_journeys": None},

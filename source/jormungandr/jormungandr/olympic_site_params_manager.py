@@ -300,7 +300,9 @@ class OlympicSiteParamsManager:
             for spt_id, attractivity in attractivities.items():
                 virtual_fallback = virtual_duration.get(spt_id, 0)
                 result[spt_id] = AttractivityVirtualFallback(attractivity, virtual_fallback)
-            show_natural_opg_journeys = api_request.get("_show_natural_opg_journeys", True) or api_request.get("wheelchair")
+            show_natural_opg_journeys = api_request.get("_show_natural_opg_journeys", True) or api_request.get(
+                "wheelchair"
+            )
             if origin_olympic_site:
                 return {
                     "departure_scenario": result,
