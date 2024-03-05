@@ -245,7 +245,7 @@ class Asgard(TransientSocket, Kraken):
 
         # to handle the case where all origins or all destinations happen to be located in excluded zones
         # Asgard could have returned a matrix filled with Unreached status, which is kind of waste of the bandwidth
-        # So instead, asgard return with and error_id(all_excluded), we fill the matrix with just on element
+        # So instead, asgard return with an error_id(all_excluded), we fill the matrix with just on element
         # to make jormun believe that Asgard has actually responded without errors,
         # so no crow fly is about to be created
         if res is not None and res.HasField('error') and res.error.id == response_pb2.Error.all_excluded:
