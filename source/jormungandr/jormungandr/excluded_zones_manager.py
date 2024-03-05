@@ -36,12 +36,15 @@ import logging
 import json
 import shapely
 import datetime
+from typing import Dict
 
 from jormungandr import app, memory_cache, cache
 from jormungandr.resource_s3_object import ResourceS3Object
 
 
 class ExcludedZonesManager:
+    excluded_shapes = dict()  # type: Dict[str, shapely.geometry]
+
     @staticmethod
     @cache.memoize(app.config[str('CACHE_CONFIGURATION')].get(str('ASGARD_S3_DATA_TIMEOUT'), 24 * 60))
     def get_object(resource_s3_object):
@@ -62,11 +65,11 @@ class ExcludedZonesManager:
 
         return any((is_between(period, date) for period in activation_period))
 
-    @staticmethod
+    @classmethod
     @memory_cache.memoize(
         app.config[str('MEMORY_CACHE_CONFIGURATION')].get(str('ASGARD_S3_DATA_TIMEOUT'), 5 * 60)
     )
-    def get_all_excluded_zones():
+    def get_all_excluded_zones(cls):
         bucket_name = app.config.get(str("ASGARD_S3_BUCKET"))
         folder = "excluded_zones"
 
@@ -90,6 +93,7 @@ class ExcludedZonesManager:
                 "Error on fetching excluded zones: bucket: {}",
                 bucket_name,
             )
+        cls.excluded_shapes = [shapely.wkt.loads(zone.get('shape', '')) for zone in excluded_zones]
 
         return excluded_zones
 
@@ -112,14 +116,12 @@ class ExcludedZonesManager:
 
         return excluded_zones
 
-    @staticmethod
-    @cache.memoize(app.config[str('CACHE_CONFIGURATION')].get(str('ASGARD_S3_DATA_TIMEOUT'), 5 * 60))
-    def is_excluded(obj, mode, timestamp):
-        print(obj.uri)
+    @classmethod
+    @cache.memoize(app.config[str('CACHE_CONFIGURATION')].get(str('ASGARD_S3_DATA_TIMEOUT'), 1 * 60))
+    def is_excluded(cls, obj, mode, timestamp):
+        print(mode)
         date = datetime.datetime.fromtimestamp(timestamp, tz=pytz.timezone("UTC")).date()
-        excluded_zones = ExcludedZonesManager.get_excluded_zones(instance_name=None, mode=mode, date=date)
-        excluded_shapes = [shapely.wkt.loads(zone.get('shape', '')) for zone in excluded_zones]
-
+        # update excluded zones
+        ExcludedZonesManager.get_excluded_zones(instance_name=None, mode=mode, date=date)
         p = shapely.geometry.Point(obj.lon, obj.lat)
-
-        return any((shape.contains(p) for shape in excluded_shapes))
+        return any((shape.contains(p) for shape in cls.excluded_shapes))

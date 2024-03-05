@@ -201,15 +201,15 @@ class FallbackDurations:
         free_access = self._places_free_access.wait_and_get()
         self._update_free_access_with_free_radius(free_access, proximities_by_crowfly)
         all_free_access = free_access.crowfly | free_access.odt | free_access.free_radius
-
         if self._request['_use_excluded_zones'] and all_free_access:
+            # the mode is hardcoded to walking because we consider that we access to all free_access places
+            # by walking
             is_excluded = functools.partial(
                 excluded_zones_manager.ExcludedZonesManager.is_excluded,
                 mode='walking',
                 timestamp=self._request['datetime'],
             )
             all_free_access = set(itertools.filterfalse(is_excluded, all_free_access))
-
         return all_free_access
 
     def _build_places_isochrone(self, proximities_by_crowfly, all_free_access_uris):
