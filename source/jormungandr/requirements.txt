@@ -1,6 +1,6 @@
 configparser==4.0.2 ; python_version == "2.7"
 setuptools==44.1.0 ; python_version == "2.7"
-Flask==1.1.1
+Flask==2.3.2
 flask_restful==0.3.7
 Flask-SQLAlchemy==2.4
 Flask-Cors==3.0.9
