@@ -58,6 +58,9 @@ class ExcludedZonesManager:
 
     @staticmethod
     def is_activated(activation_period, date):
+        if activation_period is None:
+            return False
+
         def is_between(period, d):
             from_date = parser.parse(period['from']).date()
             to_date = parser.parse(period['to']).date()
@@ -122,7 +125,7 @@ class ExcludedZonesManager:
             if mode is not None and mode not in json_content.get("modes", []):
                 continue
             if date is not None and not ExcludedZonesManager.is_activated(
-                json_content['activation_periods'], date
+                json_content.get('activation_periods'), date
             ):
                 continue
             excluded_zones.append(json_content)
