@@ -67,7 +67,7 @@ class ExcludedZonesManager:
 
     @classmethod
     @memory_cache.memoize(
-        app.config[str('MEMORY_CACHE_CONFIGURATION')].get(str('ASGARD_S3_DATA_TIMEOUT'), 5 * 60)
+        app.config[str('MEMORY_CACHE_CONFIGURATION')].get(str('ASGARD_S3_DATA_TIMEOUT'), 10 * 60)
     )
     def get_all_excluded_zones(cls):
         bucket_name = app.config.get(str("ASGARD_S3_BUCKET"))
@@ -93,13 +93,26 @@ class ExcludedZonesManager:
                 "Error on fetching excluded zones: bucket: {}",
                 bucket_name,
             )
-        cls.excluded_shapes = [shapely.wkt.loads(zone.get('shape', '')) for zone in excluded_zones]
+        excluded_shapes = dict()
+        for zone in excluded_zones:
+            # remove the DAMN MYPY to use walrus operator!!!!!
+            shape_str = zone.get('shape')
+            if shape_str:
+                continue
+            try:
+                shape = shapely.wkt.loads(shape_str)
+            except Exception as e:
+                logger.error("error occurred when load shapes of excluded zones: " + str(e))
+                continue
+            excluded_shapes[zone.get("poi")] = shape
+
+        cls.excluded_shapes = excluded_shapes
 
         return excluded_zones
 
     @staticmethod
     @memory_cache.memoize(
-        app.config[str('MEMORY_CACHE_CONFIGURATION')].get(str('ASGARD_S3_DATA_TIMEOUT'), 5 * 60)
+        app.config[str('MEMORY_CACHE_CONFIGURATION')].get(str('ASGARD_S3_DATA_TIMEOUT'), 10 * 60)
     )
     def get_excluded_zones(instance_name=None, mode=None, date=None):
         excluded_zones = []
@@ -117,11 +130,12 @@ class ExcludedZonesManager:
         return excluded_zones
 
     @classmethod
-    @cache.memoize(app.config[str('CACHE_CONFIGURATION')].get(str('ASGARD_S3_DATA_TIMEOUT'), 1 * 60))
+    @cache.memoize(app.config[str('CACHE_CONFIGURATION')].get(str('ASGARD_S3_DATA_TIMEOUT'), 10 * 60))
     def is_excluded(cls, obj, mode, timestamp):
-        print(mode)
         date = datetime.datetime.fromtimestamp(timestamp, tz=pytz.timezone("UTC")).date()
         # update excluded zones
-        ExcludedZonesManager.get_excluded_zones(instance_name=None, mode=mode, date=date)
+        excluded_zones = ExcludedZonesManager.get_excluded_zones(instance_name=None, mode=mode, date=date)
+        poi_ids = set((zone.get("poi") for zone in excluded_zones))
+        shapes = (cls.excluded_shapes.get(poi_id) for poi_id in poi_ids if cls.excluded_shapes.get(poi_id))
         p = shapely.geometry.Point(obj.lon, obj.lat)
-        return any((shape.contains(p) for shape in cls.excluded_shapes))
+        return any((shape.contains(p) for shape in shapes))
