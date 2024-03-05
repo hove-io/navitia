@@ -27,6 +27,8 @@
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 from __future__ import absolute_import
+
+import collections
 from navitiacommon import type_pb2
 from jormungandr import utils, new_relic
 from collections import namedtuple
@@ -94,7 +96,10 @@ class PlacesFreeAccess:
 
         if coord:
             odt_sps = self._get_odt_stop_points(self._pt_planner, coord)
-            [odt.add(FreeAccessObject(stop_point.uri, stop_point.lon, stop_point.lat)) for stop_point in odt_sps]
+            collections.deque(
+                (odt.add(FreeAccessObject(sp.uri, sp.lon, sp.lat)) for sp in odt_sps),
+                maxlen=1,
+            )
 
         self._logger.debug("finish places with free access from %s", self._requested_place_obj.uri)
 

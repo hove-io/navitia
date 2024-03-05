@@ -82,7 +82,7 @@ def _is_crowfly_needed(uri, fallback_durations, crowfly_sps, fallback_direct_pat
     f = fallback_durations.get(uri, None)
     is_unknown_projection = f.status == response_pb2.unknown if f else False
 
-    is_crowfly_sp = uri in [sp.uri for sp in crowfly_sps]
+    is_crowfly_sp = uri in set((sp.uri for sp in crowfly_sps))
 
     # At this point, theoretically, fallback_dp should be found since the isochrone has already given a
     # valid value BUT, in some cases(due to the bad projection, etc), fallback_dp may not exist even
