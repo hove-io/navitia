@@ -731,7 +731,7 @@ def compute_fallback(
         pt_departure = fallback.get_pt_section_datetime(journey)
         fallback_extremity_dep = PeriodExtremity(pt_departure, False)
         from_sub_request_id = "{}_{}_from".format(request_id, i)
-        if from_obj.uri != pt_orig.uri and pt_orig.uri not in orig_all_free_access:
+        if from_obj.uri != pt_orig.uri and pt_orig.uri not in set((p.uri for p in orig_all_free_access)):
             # here, if the mode is car, we have to find from which car park the stop_point is accessed
             if dep_mode == 'car':
                 orig_obj = orig_fallback_durations_pool.wait_and_get(dep_mode)[pt_orig.uri].car_park
@@ -763,7 +763,7 @@ def compute_fallback(
         pt_arrival = fallback.get_pt_section_datetime(journey)
         fallback_extremity_arr = PeriodExtremity(pt_arrival, True)
         to_sub_request_id = "{}_{}_to".format(request_id, i)
-        if to_obj.uri != pt_dest.uri and pt_dest.uri not in dest_all_free_access:
+        if to_obj.uri != pt_dest.uri and pt_dest.uri not in set((p.uri for p in dest_all_free_access)):
             if arr_mode == 'car':
                 dest_obj = dest_fallback_durations_pool.wait_and_get(arr_mode)[pt_dest.uri].car_park
                 real_mode = dest_fallback_durations_pool.get_real_mode(arr_mode, dest_obj.uri)
