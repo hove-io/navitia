@@ -1,4 +1,4 @@
-Flask==1.1.1
+Flask==2.3.2
 Flask-Migrate==2.5.2
 flask_restful==0.3.7
 Flask-SQLAlchemy==2.4
