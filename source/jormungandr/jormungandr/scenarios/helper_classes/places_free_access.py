@@ -85,7 +85,9 @@ class PlacesFreeAccess:
                 for sp in sa.stop_points
             }
         elif place.embedded_type == type_pb2.STOP_POINT:
-            crowfly = {FreeAccessObject(place.stop_point.uri, place.stop_point.lon, place.stop_point.lat)}
+            crowfly = {
+                FreeAccessObject(place.stop_point.uri, place.stop_point.coord.lon, place.stop_point.coord.lat)
+            }
 
         coord = utils.get_pt_object_coord(place)
         odt = set()
