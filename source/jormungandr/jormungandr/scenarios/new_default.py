@@ -101,7 +101,8 @@ from six.moves import zip
 from functools import cmp_to_key
 
 SECTION_TYPES_TO_RETAIN = {response_pb2.PUBLIC_TRANSPORT, response_pb2.STREET_NETWORK}
-JOURNEY_TYPES_TO_RETAIN = ['best', 'comfort', 'non_pt_walk', 'non_pt_bike', 'non_pt_bss']
+JOURNEY_TAGS_TO_RETAIN = {'best_olympics'}
+JOURNEY_TYPES_TO_RETAIN = {'best_olympics', 'best', 'comfort', 'non_pt_walk', 'non_pt_bike', 'non_pt_bss'}
 STREET_NETWORK_MODE_TO_RETAIN = {response_pb2.Ridesharing, response_pb2.Car, response_pb2.Bike, response_pb2.Bss}
 TEMPLATE_MSG_UNKNOWN_OBJECT = "The entry point: {} is not valid"
 
@@ -515,7 +516,7 @@ def _build_candidate_pool_and_sections_set(journeys):
     idx_of_jrny_must_keep = list()
 
     for (i, jrny) in enumerate(journeys):
-        if jrny.type in JOURNEY_TYPES_TO_RETAIN:
+        if set(jrny.tags) & JOURNEY_TAGS_TO_RETAIN or jrny.type in JOURNEY_TYPES_TO_RETAIN:
             idx_of_jrny_must_keep.append(i)
         sections_set |= set([_get_section_id(s) for s in jrny.sections if s.type in SECTION_TYPES_TO_RETAIN])
         candidates_pool.append(jrny)
