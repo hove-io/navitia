@@ -97,7 +97,7 @@ class PlacesFreeAccess:
         if coord:
             odt_sps = self._get_odt_stop_points(self._pt_planner, coord)
             collections.deque(
-                (odt.add(FreeAccessObject(sp.uri, sp.lon, sp.lat)) for sp in odt_sps),
+                (odt.add(FreeAccessObject(sp.uri, sp.coord.lon, sp.coord.lat)) for sp in odt_sps),
                 maxlen=1,
             )
 
