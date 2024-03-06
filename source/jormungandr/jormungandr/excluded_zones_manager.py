@@ -100,7 +100,7 @@ class ExcludedZonesManager:
         for zone in excluded_zones:
             # remove the DAMN MYPY to use walrus operator!!!!!
             shape_str = zone.get('shape')
-            if shape_str:
+            if not shape_str:
                 continue
             try:
                 shape = shapely.wkt.loads(shape_str)
