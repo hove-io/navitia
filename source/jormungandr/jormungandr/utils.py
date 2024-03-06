@@ -440,6 +440,10 @@ def add_properties(pt_object, dict_pt_object):
         property.value = value
 
 
+def str_to_embedded_type(str_embedded_type):
+    return MAP_STRING_PTOBJECT_TYPE.get(str_embedded_type)
+
+
 def check_dict_object(dict_pt_object):
     if not isinstance(dict_pt_object, dict):
         logging.getLogger(__name__).error('Invalid dict_pt_object')
