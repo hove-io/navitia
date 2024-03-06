@@ -282,6 +282,36 @@ def culling_journeys_4_test():
         assert jrny.type in ('best', 'comfort', 'non_pt_walk')
 
 
+def culling_journeys_5_test():
+    """
+    When max_nb_journeys == 3 and nb_must_have_journeys == 4 and one journey has best_olympics in its tags
+    """
+    mocked_pb_response = build_mocked_response()
+    # tag last journeys with
+    mocked_pb_response.journeys[10].tags.append("best_olympics")
+    mocked_request = {'max_nb_journeys': 6, 'debug': False, 'datetime': 1444903200}
+    new_default.culling_journeys(mocked_pb_response, mocked_request)
+
+    best_olympic = next((j for j in mocked_pb_response.journeys if 'best_olympics' in j.tags))
+    assert best_olympic
+
+
+def culling_journeys_6_test():
+    """
+    When max_nb_journeys == 3 and nb_must_have_journeys == 4 and one journey has best_olympics in its tags
+    """
+    mocked_pb_response = build_mocked_response()
+    # tag last journeys with
+    mocked_pb_response.journeys[5].tags.append("best_olympics")
+
+    mocked_request = {'max_nb_journeys': 3, 'debug': False, 'datetime': 1444903200}
+    new_default.culling_journeys(mocked_pb_response, mocked_request)
+    assert len(mocked_pb_response.journeys) == 3
+
+    best_olympic = next((j for j in mocked_pb_response.journeys if 'best_olympics' in j.tags))
+    assert best_olympic
+
+
 def aggregate_journeys_test():
     mocked_pb_response = build_mocked_response()
     aggregated_journeys, remaining_journeys = new_default.aggregate_journeys(mocked_pb_response.journeys)
