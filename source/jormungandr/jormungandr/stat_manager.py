@@ -50,6 +50,31 @@ import pybreaker
 
 f_datetime = "%Y%m%dT%H%M%S"
 
+MAP_JOURNEY_TAG = {
+    "unknown": stat_pb2.JOURNEY_TAG_UNKNOWN,
+    "olympics": stat_pb2.JOURNEY_TAG_OLYMPICS,
+    "best_olympics": stat_pb2.JOURNEY_TAG_BEST_OLYMPICS,
+    "ecologic": stat_pb2.JOURNEY_TAG_ECOLOGIC,
+    "walking": stat_pb2.JOURNEY_TAG_WALKING,
+    "ridesharing": stat_pb2.JOURNEY_TAG_RIDESHARING,
+    "bss": stat_pb2.JOURNEY_TAG_BSS,
+    "bike": stat_pb2.JOURNEY_TAG_BIKE,
+    "car": stat_pb2.JOURNEY_TAG_CAR,
+    "taxi": stat_pb2.JOURNEY_TAG_TAXI,
+    "car_no_park": stat_pb2.JOURNEY_TAG_CAR_NO_PARK,
+    "balanced": stat_pb2.JOURNEY_TAG_BALANCED,
+    "comfort": stat_pb2.JOURNEY_TAG_COMFORT,
+    "shortest": stat_pb2.JOURNEY_TAG_SHORTEST,
+    "reliable": stat_pb2.JOURNEY_TAG_RELIABLE,
+    "non_pt": stat_pb2.JOURNEY_TAG_NON_PT,
+    "non_pt_walking": stat_pb2.JOURNEY_TAG_NON_PT_WALKING,
+    "non_pt_bike": stat_pb2.JOURNEY_TAG_NON_PT_BIKE,
+    "non_pt_taxi": stat_pb2.JOURNEY_TAG_NON_PT_TAXI,
+    "non_pt_car": stat_pb2.JOURNEY_TAG_NON_PT_CAR,
+    "non_pt_car_no_park": stat_pb2.JOURNEY_TAG_NON_PT_CAR_NO_PARK,
+    "non_pt_ridesharing": stat_pb2.JOURNEY_TAG_NON_PT_RIDESHARING,
+}
+
 
 def init_journey(stat_journey):
     stat_journey.requested_date_time = 0
@@ -372,6 +397,15 @@ class StatManager(object):
             if admin[2]:
                 stat_journey.last_pt_admin_name = admin[2]
 
+    def fill_tags(self, stat_journey, resp_journey):
+        result = set()
+        for tag in resp_journey.get("tags", []):
+            stat_tag = MAP_JOURNEY_TAG.get(tag, stat_pb2.JOURNEY_TAG_UNKNOWN)
+            if stat_tag == stat_pb2.JOURNEY_TAG_UNKNOWN:
+                logging.getLogger(__name__).warning("Stat tag not found for {} navitia tag.".format(tag))
+            result.add(stat_tag)
+        stat_journey.tags.extend(result)
+
     def fill_journeys(self, stat_request, call_result):
         """
         Fill journeys and sections for each journey (datetimes are all UTC)
@@ -404,6 +438,7 @@ class StatManager(object):
                 stat_journey = stat_request.journeys.add()
                 self.fill_journey(stat_journey, resp_journey)
                 self.fill_sections(stat_journey, resp_journey)
+                self.fill_tags(stat_journey, resp_journey)
 
     def get_section_link(self, resp_section, link_type):
         result = ''
