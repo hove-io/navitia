@@ -256,7 +256,7 @@ class Asgard(TransientSocket, Kraken):
 
         self._check_for_error_and_raise(res)
 
-        return res.sn_routing_matrix
+        return res.sn_routing_matrix if res else None
 
     @staticmethod
     def handle_car_no_park_modes(mode):
