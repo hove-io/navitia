@@ -403,6 +403,8 @@ class StatManager(object):
             stat_tag = MAP_JOURNEY_TAG.get(tag, stat_pb2.JOURNEY_TAG_UNKNOWN)
             if stat_tag == stat_pb2.JOURNEY_TAG_UNKNOWN:
                 logging.getLogger(__name__).warning("Stat tag not found for {} navitia tag.".format(tag))
+                if "delete" in tag:
+                    continue
             result.add(stat_tag)
         stat_journey.tags.extend(result)
 

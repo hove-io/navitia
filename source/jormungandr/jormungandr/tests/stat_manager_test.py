@@ -94,3 +94,13 @@ class TestStatManager(unittest.TestCase):
         stat_manager.fill_tags(stat_journey, resp_journey)
         assert len(stat_journey.tags) == 1
         assert stat_journey.tags[0] == stat_pb2.JOURNEY_TAG_UNKNOWN
+
+    def test_fill_tags_many_tags_deleted(self):
+        resp_journey = {"tags": ["olympics", "best_olympics", "to_delete", "deleted_because_abcd"]}
+        stat_manager = StatManager(auto_delete=True)
+        stat_request = stat_pb2.StatRequest()
+        stat_journey = stat_request.journeys.add()
+        stat_manager.fill_tags(stat_journey, resp_journey)
+        assert len(stat_journey.tags) == 2
+        assert stat_journey.tags[0] == stat_pb2.JOURNEY_TAG_OLYMPICS
+        assert stat_journey.tags[1] == stat_pb2.JOURNEY_TAG_BEST_OLYMPICS
