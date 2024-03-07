@@ -42,25 +42,19 @@ class OpgExcludedZones(StatedResource):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         parser_get = self.parsers["get"]
-        parser_get.add_argument("mode", type=str, default=None, help="A geojson in polyline path as base64")
-        parser_get.add_argument("datetime", type=str, default=None, help="Distance range of the query in meters")
+        parser_get.add_argument("mode", type=str, default=None, help="travelling mode")
 
-    def get_poi_place(self, instance, json_data):
+    @staticmethod
+    def get_poi_place(json_data):
         place = {"embedded_type": "poi", "poi": json_data, "name": json_data.get("poi")}
 
         place["poi"]["label"] = json_data.get("poi")
         place["poi"]["id"] = json_data.get("poi")
-        place["poi"]["poi_type"] = {
-            "id": instance.olympics_forbidden_uris.poi_property_key
-            if instance.olympics_forbidden_uris
-            else "poi_type:site_jo2024",
-            "name": instance.olympics_forbidden_uris.poi_property_value
-            if instance.olympics_forbidden_uris
-            else "Site Olympique JO2024",
-        }
+
         return place
 
-    def add_link(self, places):
+    @staticmethod
+    def add_link(places):
         if not places:
             return places
         args = {'_type': 'poi', 'id': "{poi.id}", 'region': 'idfm-jo', 'rel': 'pois', 'templated': True}
@@ -70,30 +64,26 @@ class OpgExcludedZones(StatedResource):
         link["href"] = link["href"].replace("%7D", "}")
         return {"places": places, "links": [link]}
 
-    def fetch_and_get_data(self, instance, bucket_name, folder, mode=None):
+    def fetch_and_get_data(self, bucket_name, mode=None):
         if not bucket_name:
             return {}
         places = []
         logger = logging.getLogger(__name__)
         try:
-            for json_content in ExcludedZonesManager.get_excluded_zones(instance.name, mode):
-                place = self.get_poi_place(instance, json_content)
+            for json_content in ExcludedZonesManager.get_excluded_zones(mode=mode, date=None):
+                place = self.get_poi_place(json_content)
                 places.append(place)
         except Exception:
             logger.exception("Error on OpgExcludedZones")
             return {}
         return self.add_link(places)
 
-    def get(self, region=None, lon=None, lat=None):
+    def get(self, region=None):
         args = self.parsers["get"].parse_args()
-        region_str = i_manager.get_region(region, lon, lat)
-        instance = i_manager.instances[region_str]
 
         return (
             self.fetch_and_get_data(
-                instance=instance,
                 bucket_name=app.config.get(str("ASGARD_S3_BUCKET")),
-                folder="excluded_zones",
                 mode=args['mode'],
             ),
             200,
