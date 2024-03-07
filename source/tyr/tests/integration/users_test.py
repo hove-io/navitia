@@ -37,6 +37,7 @@ from navitiacommon.constants import DEFAULT_SHAPE_SCOPE
 from tyr.rabbit_mq_handler import RabbitMqHandler
 from tyr import app
 from six.moves.urllib.parse import quote
+import ujson
 
 
 @pytest.fixture
@@ -141,8 +142,10 @@ def create_multiple_users(request, geojson_polygon):
         with app.app_context():
             end_point = models.EndPoint.query.get(d['end_point'])
             billing_plan = models.BillingPlan.query.get(d['billing_plan'])
+            # sn_backend_authorization = models.SnBackendAuthorization.query.get(d['sn_backend_authorization'])
             models.db.session.delete(end_point)
             models.db.session.delete(billing_plan)
+            # models.db.session.delete(sn_backend_authorization)
             models.db.session.commit()
 
     request.addfinalizer(teardown)
@@ -908,3 +911,94 @@ def test_filter_users_by_key(create_user, create_multiple_users):
         token = resp_user['keys'][0]['token']
         resp_token = api_get('/v0/users?key={}'.format(token))
         assert resp_token['id'] == user['id']
+
+
+def test_streetnetwork_backend_authorization_for_a_user(create_user, create_multiple_users):
+    resp_users = api_get('/v1/users')
+    assert len(resp_users['users']) == 3
+    user_id = resp_users['users'][0]['id']
+    assert user_id == 47
+
+    # Add three streetnetwork backends for the test
+    new_backend = {'klass': 'valhalla.klass'}
+    resp, status = api_post(
+        'v0/streetnetwork_backends/valhallaDev',
+        data=ujson.dumps(new_backend),
+        content_type='application/json',
+        check=False,
+    )
+    assert status == 201
+    assert resp['streetnetwork_backend']['id'] == "valhallaDev"
+
+    new_backend = {'klass': 'asgard.klass'}
+    resp, status = api_post(
+        'v0/streetnetwork_backends/asgardDev',
+        data=ujson.dumps(new_backend),
+        content_type='application/json',
+        check=False,
+    )
+    assert status == 201
+    assert resp['streetnetwork_backend']['id'] == "asgardDev"
+
+    # Add sn_backend_authorization for the user
+    new_obj = {'sn_backend_id': 'valhallaDev', 'mode': 'walking'}
+    resp, status = api_post(
+        'v1/users/{}/sn_backend_authorizations'.format(user_id),
+        data=ujson.dumps(new_obj),
+        content_type='application/json',
+        check=False,
+    )
+    assert status == 201
+    assert resp['sn_backend_id'] == 'valhallaDev'
+    assert resp['mode'] == 'walking'
+    assert resp['user_id'] == user_id
+
+    # We cannot add another sn_backend for the same user + mode
+    new_obj = {'sn_backend_id': 'asgardDev', 'mode': 'walking'}
+    resp, status = api_post(
+        'v1/users/{}/sn_backend_authorizations'.format(user_id),
+        data=ujson.dumps(new_obj),
+        content_type='application/json',
+        check=False,
+    )
+    assert status == 409
+    assert 'duplicate key value' in resp['error']
+
+    new_obj = {'sn_backend_id': 'asgardDev', 'mode': 'car'}
+    resp, status = api_post(
+        'v1/users/{}/sn_backend_authorizations'.format(user_id),
+        data=ujson.dumps(new_obj),
+        content_type='application/json',
+        check=False,
+    )
+    assert status == 201
+    assert resp['sn_backend_id'] == 'asgardDev'
+    assert resp['mode'] == 'car'
+    assert resp['user_id'] == user_id
+
+    # Testing api get() on sn_backend_authorizations
+    resp, status = api_get('/v1/users/{}/sn_backend_authorizations'.format(user_id), check=False)
+    assert status == 200
+    assert len(resp['sn_backend_authorizations']) == 2
+
+    # Verify that sn_backend_authorizations is present in api /users/user_id
+    resp = api_get('/v1/users/{}'.format(user_id))
+    assert resp['users']['id'] == user_id
+    assert len(resp['users']['sn_backend_authorizations']) == 2
+
+    # Testing api delete()
+    resp, status = api_delete(
+        "/v1/users/{}/sn_backend_authorizations?mode={}".format(user_id, "car"),
+        check=False,
+        no_json=True,
+    )
+    assert status == 204
+    resp, status = api_delete(
+        "/v1/users/{}/sn_backend_authorizations?mode={}".format(user_id, "walking"),
+        check=False,
+        no_json=True,
+    )
+    assert status == 204
+    resp, status = api_get('/v1/users/{}/sn_backend_authorizations'.format(user_id), check=False)
+    assert status == 200
+    assert len(resp['sn_backend_authorizations']) == 0

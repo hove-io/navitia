@@ -123,6 +123,9 @@ class User(db.Model, TimestampMixin):  # type: ignore
     billing_plan = db.relationship('BillingPlan', lazy='joined', cascade='save-update, merge')
 
     keys = db.relationship('Key', backref='user', lazy='dynamic', cascade='save-update, merge, delete')
+    sn_backend_authorizations = db.relationship(
+        'SnBackendAuthorization', backref='user', lazy='dynamic', cascade='save-update, merge, delete'
+    )
 
     authorizations = db.relationship(
         'Authorization', backref='user', lazy='joined', cascade='save-update, merge, delete'
@@ -143,6 +146,10 @@ class User(db.Model, TimestampMixin):  # type: ignore
         nullable=False,
         server_default="{" + ", ".join(DEFAULT_SHAPE_SCOPE) + "}",
     )
+
+    # Add an attributes to inform that this user contains streetnetwork_backend configuration
+    # False  by default and will be updated on each action on the table sn_backend_authorization
+    has_sn_backend = db.Column(db.Boolean, nullable=False, default=False)
 
     def __init__(self, login=None, email=None, block_until=None, keys=None, authorizations=None):
         self.login = login
@@ -996,6 +1003,25 @@ class Authorization(db.Model):  # type: ignore
 
     def __repr__(self):
         return '<Authorization %r-%r-%r>' % (self.user_id, self.instance_id, self.api_id)
+
+
+class SnBackendAuthorization(db.Model, TimestampMixin): # type: ignore
+    # Unicity on user_id and mode: only one sn_backend for a user_id and mode
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), primary_key=True, nullable=False)
+    sn_backend_id = db.Column(db.Text, db.ForeignKey('streetnetwork_backend.id'), nullable=False)
+    mode = db.Column(db.Text, primary_key=True, nullable=False)
+
+    def __init__(self, user_id=None, sn_backend_id=None, mode=None):
+        self.user_id = user_id
+        self.sn_backend_id = sn_backend_id
+        self.mode = mode
+
+    def __repr__(self):
+        return '<SnBackendAuthorization %r-%r-%r>' % (self.user_id, self.sn_backend_id, self.mode)
+
+    @classmethod
+    def get_backend(cls, user_id, mode):
+        return cls.query.filter_by(user_id=user_id, mode=mode).first()
 
 
 class Job(db.Model, TimestampMixin):  # type: ignore

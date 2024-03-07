@@ -395,6 +395,24 @@ class Instance(transient_socket.TransientSocket):
         self.instance_db = instance_db
         return self.instance_db
 
+    @memory_cache.memoize(app.config[str('MEMORY_CACHE_CONFIGURATION')].get(str('TIMEOUT_PARAMS'), 30))
+    @cache.memoize(app.config[str('CACHE_CONFIGURATION')].get(str('TIMEOUT_PARAMS'), 5 * 60))
+    def _get_sn_backend_for_user(self, user_id, mode):
+        if app.config['DISABLE_DATABASE']:
+            return None
+        if not can_connect_to_database():
+            return None
+        try:
+            backend_record = models.SnBackendAuthorization.get_backend(user_id, mode)
+        except Exception as e:
+            logging.getLogger(__name__).exception('No access to table sn_backend_authorization (error: {})'.format(e))
+            return None
+
+        if backend_record:
+            return backend_record.sn_backend_id
+
+        return None
+
     def scenario(self, override_scenario=None):
         """
         once a scenario has been chosen for a request for an instance (coverage), we cannot change it
@@ -1006,14 +1024,27 @@ class Instance(transient_socket.TransientSocket):
         return False
 
     def _get_street_network(self, mode, request):
+        """
+
+        :param mode: fallback mode among ['bike', 'bss', 'car', 'car_no_park', 'ridesharing', 'taxi', 'walking']
+        :param request: This parameter in required only for file configuration.
+        :return: street_network backend connector for the mode
+        """
         if app.config[str('DISABLE_DATABASE')]:
             return self._streetnetwork_backend_manager.get_street_network_legacy(self, mode, request)
         else:
-            # We get the name of the column in the database corresponding to the mode used in the request
-            # And we get the value of this column for this instance
-            column_in_db = "street_network_{}".format(mode)
-            streetnetwork_backend_conf = getattr(self, column_in_db)
-            return self._streetnetwork_backend_manager.get_street_network_db(self, streetnetwork_backend_conf)
+            streetnetwork_backend_id = None
+            if hasattr(g, 'user') and g.user.has_sn_backend:
+                # We can call a function to get streetnetwork_backend_id if present in the table
+                # sn_backend_authorization
+                streetnetwork_backend_id = self._get_sn_backend_for_user(g.user.id, mode)
+
+            if streetnetwork_backend_id is None:
+                # We get the name of the column in the database corresponding to the mode used in the request
+                # And we get the value of this column for this instance
+                column_in_db = "street_network_{}".format(mode)
+                streetnetwork_backend_id = getattr(self, column_in_db)
+            return self._streetnetwork_backend_manager.get_street_network_db(self, streetnetwork_backend_id)
 
     def get_street_network(self, mode, request):
         if mode != fallback_modes.FallbackModes.car.name:
@@ -1026,6 +1057,11 @@ class Instance(transient_socket.TransientSocket):
         )
 
     def get_all_street_networks(self):
+        """
+        Used only to display street_network backends in status.street_networks[]
+        :return: A list of street_network backends configured in the attributes of the form
+        instance.street_network_{<mode>} and present in the table streetnetwork_backend
+        """
         if app.config[str('DISABLE_DATABASE')]:
             return self._streetnetwork_backend_manager.get_all_street_networks_legacy(self)
         else:
