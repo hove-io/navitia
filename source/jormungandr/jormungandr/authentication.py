@@ -269,7 +269,7 @@ def get_user(token, abort_if_no_token=True):
         return g.user
     else:
         if not token:
-            # a token is mandatory for non public jormungandr
+            # a token is mandatory for non-public jormungandr
             if not current_app.config.get('PUBLIC', False):
                 if abort_if_no_token:
                     flask_restful.abort(
