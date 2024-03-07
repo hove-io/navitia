@@ -556,6 +556,13 @@ class JourneyCommon(ResourceUri, ResourceUtc):
             default=None,
             help="Show natural opg journeys",
         )
+        parser_get.add_argument(
+            "_deactivate_opg_scenario",
+            type=BooleanType(),
+            hidden=True,
+            default=False,
+            help="Deactivate opg scenario",
+        )
         # Advanced parameters for valhalla bike
         parser_get.add_argument(
             "bike_use_roads",
