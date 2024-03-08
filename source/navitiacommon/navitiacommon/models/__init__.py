@@ -1005,7 +1005,7 @@ class Authorization(db.Model):  # type: ignore
         return '<Authorization %r-%r-%r>' % (self.user_id, self.instance_id, self.api_id)
 
 
-class SnBackendAuthorization(db.Model, TimestampMixin): # type: ignore
+class SnBackendAuthorization(db.Model, TimestampMixin):  # type: ignore
     # Unicity on user_id and mode: only one sn_backend for a user_id and mode
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), primary_key=True, nullable=False)
     sn_backend_id = db.Column(db.Text, db.ForeignKey('streetnetwork_backend.id'), nullable=False)
