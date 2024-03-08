@@ -426,9 +426,6 @@ struct GtfsParser : public GenericGtfsParser {
     GtfsParser(const std::string& path) : GenericGtfsParser(path) {}
 };
 
-/// Normalise les external code des stop_point et stop_areas
-void normalize_extcodes(Data& data);
-
 /** Convertit une chaine de charactères du type 8:12:31 en secondes depuis minuit
  *
  * Retourne -1 s'il y a eu un problème
