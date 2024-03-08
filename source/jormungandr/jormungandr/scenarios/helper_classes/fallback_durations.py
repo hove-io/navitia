@@ -207,7 +207,9 @@ class FallbackDurations:
                 mode='walking',
                 timestamp=self._request['datetime'],
             )
-            return set(itertools.filterfalse(is_excluded, all_free_access))
+            return set(
+                itertools.filterfalse(excluded_zones_manager.ExcludedZonesManager.is_excluded, all_free_access)
+            )
         return all_free_access
 
     def _get_all_free_access(self, proximities_by_crowfly):
