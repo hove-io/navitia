@@ -207,9 +207,7 @@ class FallbackDurations:
                 mode='walking',
                 timestamp=self._request['datetime'],
             )
-            return set(
-                itertools.filterfalse(excluded_zones_manager.ExcludedZonesManager.is_excluded, all_free_access)
-            )
+            return set(itertools.filterfalse(is_excluded, all_free_access))
         return all_free_access
 
     def _get_all_free_access(self, proximities_by_crowfly):
@@ -217,7 +215,9 @@ class FallbackDurations:
         self._update_free_access_with_free_radius(free_access, proximities_by_crowfly)
         all_free_access = free_access.crowfly | free_access.odt | free_access.free_radius
 
-        return self._filter_free_access_with_excluded_zones(all_free_access)
+        return self._filter_free_access_with_excluded_zones(
+            excluded_zones_manager.ExcludedZonesManager.is_excluded, all_free_access
+        )
 
     def _build_places_isochrone(self, proximities_by_crowfly, all_free_access_uris):
         places_isochrone = []
