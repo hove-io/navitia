@@ -919,6 +919,9 @@ def test_streetnetwork_backend_authorization_for_a_user(create_user, create_mult
     user_id = resp_users['users'][0]['id']
     assert user_id == 47
 
+    # No street network backend is added to the user yet.
+    assert resp_users['users'][0]['has_sn_backend'] is False
+
     # Add three streetnetwork backends for the test
     new_backend = {'klass': 'valhalla.klass'}
     resp, status = api_post(
@@ -976,14 +979,15 @@ def test_streetnetwork_backend_authorization_for_a_user(create_user, create_mult
     assert resp['mode'] == 'car'
     assert resp['user_id'] == user_id
 
-    # Testing api get() on sn_backend_authorizations
+    # # Calling api /users/user_id/sn_backend_authorizations to verify street_network backends
     resp, status = api_get('/v1/users/{}/sn_backend_authorizations'.format(user_id), check=False)
     assert status == 200
     assert len(resp['sn_backend_authorizations']) == 2
 
-    # Verify that sn_backend_authorizations is present in api /users/user_id
+    # Calling /user/user_id to verify that has_sn_backend is True and street_network backends
     resp = api_get('/v1/users/{}'.format(user_id))
     assert resp['users']['id'] == user_id
+    assert resp['users']['has_sn_backend'] is True
     assert len(resp['users']['sn_backend_authorizations']) == 2
 
     # Testing api delete()
@@ -999,6 +1003,14 @@ def test_streetnetwork_backend_authorization_for_a_user(create_user, create_mult
         no_json=True,
     )
     assert status == 204
+
+    # Calling api /users/user_id/sn_backend_authorizations to verify that sn_backend is absent
     resp, status = api_get('/v1/users/{}/sn_backend_authorizations'.format(user_id), check=False)
     assert status == 200
     assert len(resp['sn_backend_authorizations']) == 0
+
+    # Calling /user/user_id to verify that has_sn_backend is False and sn_backend is absent
+    resp = api_get('/v1/users/{}'.format(user_id))
+    assert resp['users']['id'] == user_id
+    assert resp['users']['has_sn_backend'] is False
+    assert len(resp['users']['sn_backend_authorizations']) == 0

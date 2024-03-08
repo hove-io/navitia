@@ -405,7 +405,9 @@ class Instance(transient_socket.TransientSocket):
         try:
             backend_record = models.SnBackendAuthorization.get_backend(user_id, mode)
         except Exception as e:
-            logging.getLogger(__name__).exception('No access to table sn_backend_authorization (error: {})'.format(e))
+            logging.getLogger(__name__).exception(
+                'No access to table sn_backend_authorization (error: {})'.format(e)
+            )
             return None
 
         if backend_record:

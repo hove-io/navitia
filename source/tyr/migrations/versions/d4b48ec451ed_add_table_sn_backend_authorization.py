@@ -24,14 +24,12 @@ def upgrade():
         sa.Column('mode', sa.Text(), nullable=False),
         sa.Column('created_at', sa.DateTime(), nullable=False, server_default=sa.text('CURRENT_TIMESTAMP')),
         sa.Column('updated_at', sa.DateTime(), nullable=True),
-        sa.ForeignKeyConstraint(['sn_backend_id'], ['streetnetwork_backend.id'], ),
-        sa.ForeignKeyConstraint(['user_id'], ['user.id'], ),
+        sa.ForeignKeyConstraint(['sn_backend_id'], ['streetnetwork_backend.id']),
+        sa.ForeignKeyConstraint(['user_id'], ['user.id']),
         sa.PrimaryKeyConstraint('user_id', 'mode')
     )
 
-    op.add_column(
-        'user', sa.Column('has_sn_backend', sa.Boolean(), server_default='False', nullable=False)
-    )
+    op.add_column('user', sa.Column('has_sn_backend', sa.Boolean(), server_default='False', nullable=False))
 
 
 def downgrade():
