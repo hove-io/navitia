@@ -142,10 +142,8 @@ def create_multiple_users(request, geojson_polygon):
         with app.app_context():
             end_point = models.EndPoint.query.get(d['end_point'])
             billing_plan = models.BillingPlan.query.get(d['billing_plan'])
-            # sn_backend_authorization = models.SnBackendAuthorization.query.get(d['sn_backend_authorization'])
             models.db.session.delete(end_point)
             models.db.session.delete(billing_plan)
-            # models.db.session.delete(sn_backend_authorization)
             models.db.session.commit()
 
     request.addfinalizer(teardown)
