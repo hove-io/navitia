@@ -785,7 +785,6 @@ class JourneyCommon(ResourceUri, ResourceUtc):
             "_use_excluded_zones",
             type=BooleanType(),
             hidden=True,
-            default=False,
             help="only available for Asgard so far: take into account excluded zones pre-defined in Asgard, "
             "Warning: this feature may be performance impacting.",
         )
