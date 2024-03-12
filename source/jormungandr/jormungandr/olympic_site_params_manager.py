@@ -225,9 +225,6 @@ class OlympicSiteParamsManager:
         # Warning, the order of functions is important
         # Order 1 : get_olympic_site_params
         # Order 2 : build_api_request
-        if api_request.get("_deactivate_opg_scenario", False):
-            logging.getLogger(__name__).warning("OPG scenario decativated.")
-            return
 
         api_request["olympic_site_params"] = self.get_olympic_site_params(
             pt_object_origin, pt_object_destination, api_request
@@ -290,8 +287,6 @@ class OlympicSiteParamsManager:
             self.manage_navette(api_request)
             return {}
 
-        self.fill_olympic_site_params_from_s3()
-
         if origin_olympic_site and destination_olympic_site:
             origin_olympic_site = None
 
@@ -316,6 +311,12 @@ class OlympicSiteParamsManager:
                 "arrival_scenario": result,
                 "show_natural_opg_journeys": show_natural_opg_journeys,
             }
+
+        if api_request.get("_deactivate_opg_scenario", False):
+            logging.getLogger(__name__).warning("OPG scenario deactivated.")
+            return {}
+
+        self.fill_olympic_site_params_from_s3()
 
         if not self.olympic_site_params:
             return {}

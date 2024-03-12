@@ -728,7 +728,8 @@ def test_build_departure_and_arrival_poi_jo_add_forbidden_uris_deactivate_opg_sc
     api_request["datetime"] = osp.get_timestamp('20230715T110000')
     api_request["_deactivate_opg_scenario"] = True
     osp.build(pt_origin_detail, pt_destination_detail, api_request)
-    assert "olympic_site_params" not in api_request
+    assert "olympic_site_params" in api_request
+    assert not api_request["olympic_site_params"]
     assert len(api_request["forbidden_uris[]"]) == 2
     assert "_keep_olympics_journeys" not in api_request
 
