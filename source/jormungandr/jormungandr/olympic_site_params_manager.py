@@ -225,10 +225,6 @@ class OlympicSiteParamsManager:
         # Warning, the order of functions is important
         # Order 1 : get_olympic_site_params
         # Order 2 : build_api_request
-        if api_request.get("_deactivate_opg_scenario", False):
-            logging.getLogger(__name__).warning("OPG scenario decativated.")
-            return
-
         api_request["olympic_site_params"] = self.get_olympic_site_params(
             pt_object_origin, pt_object_destination, api_request
         )
