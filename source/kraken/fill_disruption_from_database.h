@@ -175,9 +175,10 @@ struct DisruptionDatabaseReader {
             }
         }
 
+        // We should use ptobject_id instead of ptobject_uri to attach children routes if present
         if (impact && !const_it["ls_route_uri"].is_null()) {
             std::tuple<std::string, std::string> line_section_route(
-                const_it["ptobject_uri"].template as<std::string>(),
+                const_it["ptobject_id"].template as<std::string>(),
                 const_it["ls_route_uri"].template as<std::string>());
             if (!line_section_route_set.count(line_section_route)) {
                 fill_associate_route(const_it, pt_object);
@@ -185,9 +186,10 @@ struct DisruptionDatabaseReader {
             }
         }
 
+        // We should use ptobject_id instead of ptobject_uri to attach children routes if present
         if (impact && !const_it["rs_route_uri"].is_null()) {
             std::tuple<std::string, std::string> rail_section_route(
-                const_it["ptobject_uri"].template as<std::string>(),
+                const_it["ptobject_id"].template as<std::string>(),
                 const_it["rs_route_uri"].template as<std::string>());
             if (!rail_section_route_set.count(rail_section_route)) {
                 fill_associate_route(const_it, pt_object);
