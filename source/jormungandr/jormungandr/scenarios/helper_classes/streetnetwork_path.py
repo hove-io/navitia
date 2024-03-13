@@ -91,6 +91,7 @@ class StreetNetworkPath:
         self._futures = []
         self._logger = logging.getLogger(__name__)
         self._request_id = request_id
+        self._best_dp = None
         self._async_request()
 
     @staticmethod
@@ -225,16 +226,22 @@ class StreetNetworkPath:
     def wait_and_get(self):
 
         best_res = min(
-            (future.wait_and_get() for future in self._futures), key=lambda r: r.response.journeys[0].duration
+            (future.wait_and_get() for future in self._futures if future.wait_and_get().response is not None),
+            key=lambda r: r.response.journeys[0].duration,
+            default=None,
         )
-        dp = self.finalize_direct_path(best_res)
+        if best_res is None:
+            return response_pb2.Response()
 
-        origin = self.get_pt_object_origin(dp)
-        destination = self.get_pt_object_destination(dp)
-        prepend_first_coord(dp, origin)
-        append_last_coord(dp, destination)
+        if self._best_dp is None:
+            dp = self.finalize_direct_path(best_res)
+            origin = self.get_pt_object_origin(dp)
+            destination = self.get_pt_object_destination(dp)
+            prepend_first_coord(dp, origin)
+            append_last_coord(dp, destination)
+            self._best_dp = dp
 
-        return dp
+        return self._best_dp
 
 
 class StreetNetworkPathPool:
