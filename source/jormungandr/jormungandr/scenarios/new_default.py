@@ -1121,7 +1121,7 @@ def get_crowfly_air_pollutants(origin, destination):
 
 def aggregate_journeys(journeys):
     """
-    when building candidates_pool, we should take into count the similarity of journeys, which means, we add a journey
+    when building candidates_pool, we should take into account the similarity of journeys, which means, we add a journey
     into the pool only when there are no other "similar" journey already existing in the pool.
 
     the similarity is defined by a tuple of journeys sections.
@@ -1130,13 +1130,19 @@ def aggregate_journeys(journeys):
     aggregated_journeys = list()
     remaining_journeys = list()
 
+    def to_retain(j):
+        return set(j.tags) & set(JOURNEY_TAGS_TO_RETAIN) or j.type in JOURNEY_TYPES_TO_RETAIN
+
+    journeys_to_retain = (j for j in journeys if to_retain(j))
+    journeys_not_to_retain = (j for j in journeys if not to_retain(j))
+
     # we pick out all journeys that must be kept:
-    for j in (j for j in journeys if j.type in JOURNEY_TYPES_TO_RETAIN):
+    for j in journeys_to_retain:
         section_id = tuple(_get_section_id(s) for s in j.sections if s.type in SECTION_TYPES_TO_RETAIN)
         aggregated_journeys.append(j)
         added_sections_ids.add(section_id)
 
-    for j in (j for j in journeys if j.type not in JOURNEY_TYPES_TO_RETAIN):
+    for j in journeys_not_to_retain:
         section_id = tuple(_get_section_id(s) for s in j.sections if s.type in SECTION_TYPES_TO_RETAIN)
 
         if section_id in added_sections_ids:
@@ -1144,6 +1150,7 @@ def aggregate_journeys(journeys):
         else:
             aggregated_journeys.append(j)
             added_sections_ids.add(section_id)
+
     return aggregated_journeys, remaining_journeys
 
 

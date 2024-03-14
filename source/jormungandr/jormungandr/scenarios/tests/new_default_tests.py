@@ -318,6 +318,26 @@ def aggregate_journeys_test():
     assert len(aggregated_journeys) == 17
     assert len(remaining_journeys) == 2
 
+    journeys_uris = {(tuple(s.uris.line for s in j.sections), j.arrival_date_time) for j in aggregated_journeys}
+    # J19 is dominated by J3, because it arrives later than J3
+    # J3 should be found in final result
+    assert ((u'uri_2', u'uri_3', u'uri_4', u'walking'), 1444905600) in journeys_uris
+    # J3 should NOT be found in final result
+    assert ((u'uri_2', u'uri_3', u'uri_4', u'walking'), 1444905720) not in journeys_uris
+
+    mocked_pb_response = build_mocked_response()
+    mocked_pb_response.journeys[18].tags.append("best_olympics")
+
+    aggregated_journeys, remaining_journeys = new_default.aggregate_journeys(mocked_pb_response.journeys)
+    assert len(aggregated_journeys) == 17
+    assert len(remaining_journeys) == 2
+    journeys_uris = {(tuple(s.uris.line for s in j.sections), j.arrival_date_time) for j in aggregated_journeys}
+    # J19 is dominated by J3, BUT it has joker because it has been tagged "best_olympics"
+    # J3 should be NOT found in final result
+    assert ((u'uri_2', u'uri_3', u'uri_4', u'walking'), 1444905600) not in journeys_uris
+    # J3 should be found in final result
+    assert ((u'uri_2', u'uri_3', u'uri_4', u'walking'), 1444905720) in journeys_uris
+
 
 def merge_responses_on_errors_test():
     """
