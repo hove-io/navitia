@@ -1131,7 +1131,7 @@ def aggregate_journeys(journeys):
     remaining_journeys = list()
 
     def to_retain(j):
-        return set(j.tags) & set(JOURNEY_TAGS_TO_RETAIN) or j.type in JOURNEY_TYPES_TO_RETAIN
+        return j.type in JOURNEY_TYPES_TO_RETAIN or set(j.tags) & set(JOURNEY_TAGS_TO_RETAIN)
 
     journeys_to_retain = (j for j in journeys if to_retain(j))
     journeys_not_to_retain = (j for j in journeys if not to_retain(j))
