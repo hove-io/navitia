@@ -1151,6 +1151,8 @@ def aggregate_journeys(journeys):
             aggregated_journeys.append(j)
             added_sections_ids.add(section_id)
 
+    # aggregated_journeys will be passed to culling algorithm,
+    # remaining_journeys are the redundant ones to be removed
     return aggregated_journeys, remaining_journeys
 
 
