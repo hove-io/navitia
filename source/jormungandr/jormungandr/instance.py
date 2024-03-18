@@ -74,6 +74,7 @@ from jormungandr.utils import (
 from jormungandr.olympic_site_params_manager import OlympicSiteParamsManager
 from jormungandr import pt_planners_manager, transient_socket
 from jormungandr.pt_journey_fare import PtJourneyFareBackendManager
+import json
 import os
 
 type_to_pttype = {
@@ -854,8 +855,11 @@ class Instance(transient_socket.TransientSocket):
         """
         encapsulate all call to kraken in a circuit breaker, this way we don't loose time calling dead instance
         """
+        logging.getLogger(__name__).debug("instance.py _send_and_receive args:{}".format(args))
         try:
-            return self.breaker.call(self._send_and_receive, *args, **kwargs)
+            res = self.breaker.call(self._send_and_receive, *args, **kwargs)
+            logging.getLogger(__name__).debug("instance.py _send_and_receive res:{}".format(res))
+            return res
         except pybreaker.CircuitBreakerError as e:
             raise DeadSocketException(self.name, self.socket_path)
 
