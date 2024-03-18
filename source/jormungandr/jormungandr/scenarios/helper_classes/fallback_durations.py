@@ -353,7 +353,32 @@ class FallbackDurations:
             result.append(self._requested_place_obj)
         return result
 
-    def _do_request(self):
+    def _do_request(self, futures, centers_isochrone, stop_points):
+        if len(futures) == 1:
+            return futures[0].wait_and_get()
+        else:
+            fallback_duration = dict()
+            for place_isochrone in stop_points:
+                best_duration = float("inf")
+                best_element = None
+                for index, future in enumerate(futures):
+                    fallback = future.wait_and_get()
+                    element = fallback.get(place_isochrone.uri)
+                    if element and element.duration < best_duration:
+                        best_duration = element.duration
+                        best_element = DurationElement(
+                            element.duration,
+                            element.status,
+                            element.car_park,
+                            element.car_park_crowfly_duration,
+                            element.via_pt_access,
+                            centers_isochrone[index],
+                        )
+                if best_element:
+                    fallback_duration[place_isochrone.uri] = best_element
+            return fallback_duration
+
+    def _async_request(self):
         logger = logging.getLogger(__name__)
         logger.debug("requesting fallback durations from %s by %s", self._requested_place_obj.uri, self._mode)
         # we collect all pt_objects (based on the requested mode, the object may be a car park or a stop point) whose
@@ -381,38 +406,21 @@ class FallbackDurations:
         )
 
         centers_isochrone = self._determine_centers_isochrone()
-        result = []
+        futures = []
         for center_isochrone in centers_isochrone:
-            result.append(
-                self.build_fallback_duration(
-                    center_isochrone, all_free_access_uris, places_isochrone, access_points_map
+            futures.append(
+                self._future_manager.create_future(
+                    self.build_fallback_duration,
+                    center_isochrone,
+                    all_free_access_uris,
+                    places_isochrone,
+                    access_points_map,
                 )
             )
-        if len(result) == 1:
-            return result[0]
-        else:
-            fallback_duration = dict()
-            for place_isochrone in stop_points:
-                best_duration = float("inf")
-                best_element = None
-                for index, fallback in enumerate(result):
-                    element = fallback.get(place_isochrone.uri)
-                    if element and element.duration < best_duration:
-                        best_duration = element.duration
-                        best_element = DurationElement(
-                            element.duration,
-                            element.status,
-                            element.car_park,
-                            element.car_park_crowfly_duration,
-                            element.via_pt_access,
-                            centers_isochrone[index],
-                        )
-                if best_element:
-                    fallback_duration[place_isochrone.uri] = best_element
-            return fallback_duration
 
-    def _async_request(self):
-        self._value = self._future_manager.create_future(self._do_request)
+        self._value = self._future_manager.create_future(
+            self._do_request, futures, centers_isochrone, stop_points
+        )
 
     def wait_and_get(self):
         return self._value.wait_and_get() if self._value else None
