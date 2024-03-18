@@ -66,6 +66,7 @@ class Kraken(object):
         req.car_co2_emission.origin.access_duration = 0
         req.car_co2_emission.destination.place = destination
         req.car_co2_emission.destination.access_duration = 0
+        req.disable_feedpublisher = True
 
         response = self.instance.send_and_receive(req, request_id=request_id)
         if response.error and response.error.id == response_pb2.Error.error_id.Value('no_solution'):
@@ -81,6 +82,7 @@ class Kraken(object):
         req.ptref.start_page = 0
         req.ptref.count = 1
         req.ptref.depth = 1
+        req.disable_feedpublisher = True
         res = self.instance.send_and_receive(req, request_id=request_id)
         if res.physical_modes:
             return res.physical_modes[0]
@@ -165,6 +167,7 @@ class Kraken(object):
         req.ptref.count = 100
         req.ptref.start_page = 0
         req.ptref.depth = 0
+        req.disable_feedpublisher = True
         req.ptref.filter = 'stop_area.uri = {uri}'.format(uri=stop_area_uri)
         return self.instance.send_and_receive(req, request_id=request_id)
 
@@ -190,6 +193,7 @@ class Kraken(object):
         req.ptref.count = 100
         req.ptref.start_page = 0
         req.ptref.depth = depth
+        req.disable_feedpublisher = True
         req.ptref.filter = 'stop_point.uri = {uri}'.format(uri=uri)
         result = self.instance.send_and_receive(req, request_id=request_id)
         return result.stop_points
@@ -199,4 +203,5 @@ class Kraken(object):
         req.requested_api = type_pb2.odt_stop_points
         req.coord.lon = coord.lon
         req.coord.lat = coord.lat
+        req.disable_feedpublisher = True
         return self.instance.send_and_receive(req, request_id=request_id).stop_points
