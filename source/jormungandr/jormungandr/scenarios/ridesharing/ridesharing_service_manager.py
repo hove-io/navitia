@@ -51,7 +51,7 @@ class RidesharingServiceManager(object):
     class InstanceParams(object):
         greenlet_pool_for_ridesharing_services = True
         ridesharing_greenlet_pool_size = 1
-        walking_speed = 1.12
+        walking_speed = 1.11
         timezone = pytz.timezone("UTC")
 
         @classmethod

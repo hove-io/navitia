@@ -29,6 +29,7 @@
 
 from __future__ import absolute_import, print_function, unicode_literals, division
 import calendar
+import json
 from collections import deque, namedtuple, defaultdict
 from datetime import datetime
 from google.protobuf.descriptor import FieldDescriptor
@@ -987,6 +988,9 @@ def create_journeys_request(origins, destinations, datetime, clockwise, journey_
         location.access_duration = access_duration
         _set_arrival_attractivity(stop_point_id, location)
 
+    logger = logging.getLogger(__name__)
+    logger.debug("json.dumps(origins):")
+    logger.debug(json.dumps(origins))
     req.journeys.night_bus_filter_max_factor = journey_parameters.night_bus_filter_max_factor
     req.journeys.night_bus_filter_base_factor = journey_parameters.night_bus_filter_base_factor
 

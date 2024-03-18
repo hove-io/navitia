@@ -44,7 +44,7 @@ import logging
 class TravelerProfile(object):
     def __init__(
         self,
-        walking_speed=1.12,  # type: float
+        walking_speed=1.11,  # type: float
         bike_speed=3.33,  # type: float
         bss_speed=3.33,  # type: float
         car_speed=11.11,  # type: float

@@ -113,3 +113,18 @@ class PlacesFreeAccess:
 
     def wait_and_get(self):
         return self._value.wait_and_get()
+
+    def __str__(self):
+        return (
+            "PlacesFreeAccess: _future_manager:{} _instance:{} _requested_place_obj:{} _value:{} _request_id:{} "
+            "_async_request:{} _logger:{} _pt_planner:{}"
+        ).format(
+            self._future_manager,
+            self._instance,
+            self._requested_place_obj,
+            self._value,
+            self._request_id,
+            self._async_request(),
+            self._logger,
+            self._pt_planner,
+        )

@@ -139,6 +139,7 @@ class Distributed(object):
         requested_direct_path_modes.update(requested_dep_modes_with_pt)
 
         if context.partial_response_is_empty:
+            logger.debug('requesting places: %s ', request)
             logger.debug('requesting places by uri orig: %s dest %s', request['origin'], request['destination'])
 
             context.requested_orig_obj = pt_object_origin_detail
@@ -178,6 +179,7 @@ class Distributed(object):
                     )
                     for mode in requested_direct_path_modes
                 ]
+                logger.debug('no_pt res:{res}')
                 # add SN feed publishers
                 context.streetnetwork_path_pool.add_feed_publishers(request, requested_direct_path_modes, res)
                 return res
@@ -213,6 +215,11 @@ class Distributed(object):
                 request_id="{}_crowfly_dest".format(request_id),
                 o_d_crowfly_distance=crowfly_distance,
             )
+            logger.debug('1 context.orig_proximities_by_crowfly: %s', context.orig_proximities_by_crowfly)
+            logger.debug(
+                '1.1 context.orig_proximities_by_crowfly._value: %s',
+                context.orig_proximities_by_crowfly._value['walking'],
+            )
 
             context.orig_places_free_access = PlacesFreeAccess(
                 future_manager=future_manager,
@@ -228,6 +235,7 @@ class Distributed(object):
                 pt_planner_name=request['_pt_planner'],
                 request_id="{}_places_free_access_dest".format(request_id),
             )
+            logger.debug('2 context.orig_places_free_access: %s', context.orig_places_free_access)
 
             context.orig_fallback_durations_pool = FallbackDurationsPool(
                 future_manager=future_manager,
@@ -241,6 +249,7 @@ class Distributed(object):
                 direct_path_type=StreetNetworkPathType.BEGINNING_FALLBACK,
                 request_id="{}_fallback_orig".format(request_id),
             )
+            logger.debug('3 context.orig_fallback_durations_pool: %s', context.orig_fallback_durations_pool)
 
             context.dest_fallback_durations_pool = FallbackDurationsPool(
                 future_manager=future_manager,
@@ -268,6 +277,7 @@ class Distributed(object):
             request_type=request_type,
             request_id="{}_ptjourney".format(request_id),
         )
+        logger.debug('4 pt_journey_pool: %s', pt_journey_pool)
 
         pt_journey_elements = wait_and_build_crowflies(
             requested_orig_obj=context.requested_orig_obj,
@@ -279,6 +289,7 @@ class Distributed(object):
             orig_fallback_durations_pool=context.orig_fallback_durations_pool,
             dest_fallback_durations_pool=context.dest_fallback_durations_pool,
         )
+        logger.debug('5 pt_journey_elements: %s', pt_journey_elements)
 
         context.journeys_to_modes.update(self._map_journeys_to_modes(pt_journey_elements))
 
@@ -304,6 +315,9 @@ class Distributed(object):
 
         # add SN feed publishers
         context.streetnetwork_path_pool.add_feed_publishers(request, requested_direct_path_modes, res)
+        logger.debug('6 request: %s', request)
+        logger.debug('7 requested_direct_path_modes: %s', requested_direct_path_modes)
+        # logger.debug('8 res: %s', res)
 
         return res
 

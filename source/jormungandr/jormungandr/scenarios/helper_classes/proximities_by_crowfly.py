@@ -60,7 +60,7 @@ class ProximitiesByCrowfly:
         self._requested_place_obj = requested_place_obj
         self._mode = mode
         self._max_duration = max_duration
-        self._max_nb_crowfly = max_nb_crowfly
+        self._max_nb_crowfly = max_nb_crowfly  # 10
         self._object_type = object_type
         self._filter = filter
         self._stop_points_nearby_duration = stop_points_nearby_duration
@@ -94,7 +94,7 @@ class ProximitiesByCrowfly:
                 self._depth,
                 self._forbidden_uris,
                 self._allowed_id,
-                **self._speed_switcher
+                **self._speed_switcher,
             )
 
     def _do_request(self):
@@ -130,6 +130,11 @@ class ProximitiesByCrowfly:
 
     def wait_and_get(self):
         return self._value.wait_and_get()
+
+    def __str__(self):
+        return f"""ProximitiesByCrowfly:
+        _value:{self._value}
+        """
 
 
 class ProximitiesByCrowflyPool:
@@ -224,3 +229,17 @@ class ProximitiesByCrowflyPool:
     def wait_and_get(self, mode):
         c = self._value.get(mode)
         return c.wait_and_get() if c else None
+
+    def __str__(self):
+        return f"""ProximitiesByCrowflyPool:
+        _future_manager:{self._future_manager}
+        _instance:{self._instance}
+        _requested_place_obj:{self._requested_place_obj}
+        _modes:{self._modes}
+        _request:{self._request}
+        _direct_paths_by_mode:{self._direct_paths_by_mode}
+        _max_nb_crowfly_by_mode:{self._max_nb_crowfly_by_mode}
+        _future:{self._future}
+        _value:{self._value}
+        _request_id:{self._request_id}
+        _o_d_crowfly_distance:{self._o_d_crowfly_distance}"""

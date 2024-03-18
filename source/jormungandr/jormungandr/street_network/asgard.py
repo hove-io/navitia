@@ -256,6 +256,9 @@ class Asgard(TransientSocket, Kraken):
 
         self._check_for_error_and_raise(res)
 
+        logger = logging.getLogger(__name__)
+        logger.debug(f"res.sn_routing_matrix.rows:{res.sn_routing_matrix.rows}")
+
         return res.sn_routing_matrix if res else None
 
     @staticmethod

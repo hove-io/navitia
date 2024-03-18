@@ -52,7 +52,7 @@ class PtJourney:
         self,
         future_manager,
         instance,
-        orig_fallback_durtaions_pool,
+        orig_fallback_durations_pool,
         dest_fallback_durations_pool,
         dep_mode,
         arr_mode,
@@ -66,7 +66,7 @@ class PtJourney:
     ):
         self._future_manager = future_manager
         self._instance = instance
-        self._orig_fallback_durtaions_pool = orig_fallback_durtaions_pool
+        self._orig_fallback_durations_pool = orig_fallback_durations_pool
         self._dest_fallback_durations_pool = dest_fallback_durations_pool
         self._dep_mode = dep_mode
         self._arr_mode = arr_mode
@@ -103,7 +103,7 @@ class PtJourney:
             self._arr_mode,
         )
 
-        orig_fallback_durations = self._orig_fallback_durtaions_pool.get_best_fallback_durations(self._dep_mode)
+        orig_fallback_durations = self._orig_fallback_durations_pool.get_best_fallback_durations(self._dep_mode)
         dest_fallback_durations = self._dest_fallback_durations_pool.get_best_fallback_durations(self._arr_mode)
 
         if (
@@ -358,7 +358,7 @@ class PtJourneyPool:
             pt_journey = PtJourney(
                 future_manager=self._future_manager,
                 instance=self._instance,
-                orig_fallback_durtaions_pool=self._orig_fallback_durations_pool,
+                orig_fallback_durations_pool=self._orig_fallback_durations_pool,
                 dest_fallback_durations_pool=self._dest_fallback_durations_pool,
                 dep_mode=dep_mode,
                 arr_mode=arr_mode,

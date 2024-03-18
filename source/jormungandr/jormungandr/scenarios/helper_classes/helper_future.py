@@ -76,6 +76,9 @@ class _GeventFuture(_AbstractFuture):
     def wait_and_get(self):
         return self._future.get()
 
+    def __str__(self):
+        return f"""_future:{self._future}"""
+
 
 class _GeventPoolManager(_AbstractPoolManager):
     def __init__(self, greenlet_pool_size=None):

@@ -55,7 +55,8 @@ class Loki(ZmqSocket, AbstractPtPlanner):
         req = utils.create_journeys_request(
             origins, destinations, datetime, clockwise, journey_parameters, bike_in_pt
         )
-        return self.send_and_receive(req, request_id=request_id)
+        resp = self.send_and_receive(req, request_id=request_id)
+        return resp
 
     def graphical_isochrones(
         self, origins, destinations, datetime, clockwise, graphical_isochrones_parameters, bike_in_pt
