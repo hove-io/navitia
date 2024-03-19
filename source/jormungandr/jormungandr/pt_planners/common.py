@@ -164,6 +164,7 @@ def get_odt_stop_points(pt_planner, coord, request_id):
     req.requested_api = type_pb2.odt_stop_points
     req.coord.lon = coord.lon
     req.coord.lat = coord.lat
+    req.disable_feedpublisher = True
     return pt_planner.send_and_receive(req, request_id=request_id).stop_points
 
 
@@ -174,6 +175,7 @@ def get_stop_points_from_uri(pt_planner, uri, request_id, depth=0):
     req.ptref.count = 100
     req.ptref.start_page = 0
     req.ptref.depth = depth
+    req.disable_feedpublisher = True
     req.ptref.filter = 'stop_point.uri = {uri}'.format(uri=uri)
     result = pt_planner.send_and_receive(req, request_id=request_id)
     return result.stop_points

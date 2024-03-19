@@ -459,6 +459,9 @@ void PbCreator::Filler::add_contributor(const T* nav) {
     if (pb_creator.disable_feedpublisher) {
         return;
     }
+    if (pb_creator.data->pt_data->contributors.size() == pb_creator.contributors.size()) {
+        return;
+    }
     const auto& contributors = ptref_indexes<nt::Contributor>(nav);
     for (const nt::Contributor* c : contributors) {
         if (!c->license.empty()) {
