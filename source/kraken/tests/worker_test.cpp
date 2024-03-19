@@ -191,7 +191,8 @@ BOOST_FIXTURE_TEST_CASE(no_wheelchair_on_vj_tests, fixture) {
     BOOST_CHECK_EQUAL(resp.feed_publishers_size(), 1);
     pbnavitia::FeedPublisher fp = resp.feed_publishers(0);
     BOOST_CHECK_EQUAL(fp.license(), "ODBL");
-    BOOST_CHECK_EQUAL(fp.name(), "builder");
+    BOOST_CHECK_EQUAL(fp.name(), "hove");
+    BOOST_CHECK_EQUAL(fp.url(), "www.hove.com");
 }
 
 BOOST_FIXTURE_TEST_CASE(wheelchair_on_vj_tests, fixture) {
@@ -210,7 +211,8 @@ BOOST_FIXTURE_TEST_CASE(wheelchair_on_vj_tests, fixture) {
     BOOST_CHECK_EQUAL(resp.feed_publishers_size(), 1);
     pbnavitia::FeedPublisher fp = resp.feed_publishers(0);
     BOOST_CHECK_EQUAL(fp.license(), "ODBL");
-    BOOST_CHECK_EQUAL(fp.name(), "builder");
+    BOOST_CHECK_EQUAL(fp.name(), "hove");
+    BOOST_CHECK_EQUAL(fp.url(), "www.hove.com");
 }
 
 BOOST_FIXTURE_TEST_CASE(wheelchair_on_stop_tests, fixture) {
