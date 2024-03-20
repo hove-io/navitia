@@ -214,8 +214,8 @@ jobs:
         run: |
           mimirsbrunn_package="debian-package-master.zip"
           python3 core_team_ci_tools/github_artifacts/github_artifacts.py \
-              -o hove-mimirsbrunn \
-              -io r \
+              -o hove-io \
+              -r mimirsbrunn \
               -t ${{ steps.ci-core-app-token.outputs.token }} \
               -w main7.yml \
               -a debian-package-master.zip \
