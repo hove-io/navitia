@@ -218,7 +218,7 @@ jobs:
           version: 'latest'
           regex: true
           file: 'mimirsbrunn7_${{env.jessie_version}}-*\\.deb'
-          target: 'mimirsbrunn7_${{env.jessie_version}}.deb'
+          target: 'mimirsbrunn7_${{env.jessie_version}}-latest.deb'
           token: ${{ steps.ci-core-app-token.outputs.token }}
 
       - name: Download cosmogony2cities from release
