@@ -209,18 +209,16 @@ jobs:
         run: |
           pip install -r core_team_ci_tools/github_artifacts/requirements.txt --user
 
-      - name: Download mimirsbrunn package
-        run: |
-          mimirsbrunn_package="debian-package-master.zip"
-          python3 core_team_ci_tools/github_artifacts/github_artifacts.py \
-              -o hove-io \
-              -r mimirsbrunn \
-              -t ${{ steps.ci-core-app-token.outputs.token }} \
-              -w main7.yml \
-              -a debian-package-master.zip \
-              --output-dir .
-          unzip -qo $mimirsbrunn_package
-          rm -f $mimirsbrunn_package
+
+      - name: Download mimirsbrunn from release
+        uses: dsaltares/fetch-gh-release-asset@master
+        with:
+          repo: 'hove-io/mimirsbrunn'
+          version: 'latest'
+          regex: true
+          file: 'mimirsbrunn7_${{env.jessie_version}}-*\\.deb'
+          target: 'mimirsbrunn7_${{env.jessie_version}}.deb'
+          token: ${{ steps.ci-core-app-token.outputs.token }}
 
       - name: Download cosmogony2cities from release
         uses: dsaltares/fetch-gh-release-asset@master
