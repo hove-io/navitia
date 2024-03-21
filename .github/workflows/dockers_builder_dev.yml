@@ -216,9 +216,8 @@ jobs:
         with:
           repo: 'hove-io/mimirsbrunn'
           version: 'tags/v3.1.0'
-          regex: true
-          file: 'mimirsbrunn7_${{env.jessie_version}}-*\\.deb'
-          target: 'mimirsbrunn7_${{env.jessie_version}}-v3.1.0.deb'
+          file: 'mimirsbrunn7_${{env.jessie_version}}-3.1.0.deb'
+          target: 'mimirsbrunn7_${{env.jessie_version}}-3.1.0.deb'
           token: ${{ steps.ci-core-app-token.outputs.token }}
 
       # don't forget to update the version of cosmogony2cities if necessary!!
