@@ -30,7 +30,7 @@
 # www.navitia.io
 
 from __future__ import absolute_import, print_function, unicode_literals, division
-from jormungandr import i_manager, fallback_modes, partner_services
+from jormungandr import i_manager, fallback_modes, partner_services, app
 from jormungandr.interfaces.v1.ResourceUri import ResourceUri
 from datetime import datetime
 from jormungandr.resources_utils import ResourceUtc
@@ -56,6 +56,7 @@ from navitiacommon.parser_args_type import (
     SpeedRange,
     FloatRange,
     KeyValueType,
+    PositiveFloat,
 )
 from navitiacommon import type_pb2
 
@@ -788,6 +789,34 @@ class JourneyCommon(ResourceUri, ResourceUtc):
             help="only available for Asgard so far: take into account excluded zones pre-defined in Asgard, "
             "Warning: this feature may be performance impacting.",
         )
+        parser_get.add_argument(
+            "_asgard_max_walking_duration_coeff",
+            type=PositiveFloat(),
+            default=1.12,
+            hidden=True,
+            help="used to adjust the search range in Asgard when computing matrix",
+        )
+        parser_get.add_argument(
+            "_asgard_max_bike_duration_coeff",
+            type=PositiveFloat(),
+            default=2.8,
+            hidden=True,
+            help="used to adjust the search range in Asgard when computing matrix",
+        )
+        parser_get.add_argument(
+            "_asgard_max_bss_duration_coeff",
+            type=PositiveFloat(),
+            default=0.46,
+            hidden=True,
+            help="used to adjust the search range in Asgard when computing matrix",
+        )
+        parser_get.add_argument(
+            "_asgard_max_car_duration_coeff",
+            type=PositiveFloat(),
+            default=1,
+            hidden=True,
+            help="used to adjust the search range in Asgard when computing matrix",
+        )
 
     def parse_args(self, region=None, uri=None):
         args = self.parsers['get'].parse_args()
@@ -817,6 +846,9 @@ class JourneyCommon(ResourceUri, ResourceUtc):
             args['origin_mode'] = args['first_section_mode']
         if 'last_section_mode' in args and args['last_section_mode']:
             args['destination_mode'] = args['last_section_mode']
+
+        if args.get('_use_excluded_zones') is None:
+            args['_use_excluded_zones'] = app.config['USE_EXCLUDED_ZONES']
 
         if region:
             if uri:

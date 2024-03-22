@@ -69,7 +69,6 @@ from navitiacommon.parser_args_type import (
     UnsignedInteger,
     PositiveInteger,
     DepthArgument,
-    PositiveFloat,
 )
 from jormungandr.interfaces.common import add_poi_infos_types, handle_poi_infos
 from jormungandr.fallback_modes import FallbackModes
@@ -673,35 +672,6 @@ class Journeys(JourneyCommon):
         )
 
         parser_get.add_argument(
-            "_asgard_max_walking_duration_coeff",
-            type=PositiveFloat(),
-            default=1.12,
-            hidden=True,
-            help="used to adjust the search range in Asgard when computing matrix",
-        )
-        parser_get.add_argument(
-            "_asgard_max_bike_duration_coeff",
-            type=PositiveFloat(),
-            default=2.8,
-            hidden=True,
-            help="used to adjust the search range in Asgard when computing matrix",
-        )
-        parser_get.add_argument(
-            "_asgard_max_bss_duration_coeff",
-            type=PositiveFloat(),
-            default=0.46,
-            hidden=True,
-            help="used to adjust the search range in Asgard when computing matrix",
-        )
-        parser_get.add_argument(
-            "_asgard_max_car_duration_coeff",
-            type=PositiveFloat(),
-            default=1,
-            hidden=True,
-            help="used to adjust the search range in Asgard when computing matrix",
-        )
-
-        parser_get.add_argument(
             "_loki_pt_journey_fare",
             type=OptionValue(['kraken']),
             default='kraken',
@@ -855,9 +825,6 @@ class Journeys(JourneyCommon):
 
             if args.get('_loki_compute_pt_journey_fare') is None:
                 args['_loki_compute_pt_journey_fare'] = mod.loki_compute_pt_journey_fare
-
-            if args.get('_use_excluded_zones') is None:
-                args['_use_excluded_zones'] = app.config['USE_EXCLUDED_ZONES']
 
         # When computing 'same_journey_schedules'(is_journey_schedules=True), some parameters need to be overridden
         # because they are contradictory to the request
