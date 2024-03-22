@@ -84,6 +84,14 @@ key_fields = {
     'updated_at': FieldDate,
 }
 
+sn_backend_authorization_fields = {
+    'user_id': fields.Raw,
+    'sn_backend_id': fields.Raw,
+    'mode': fields.Raw,
+    'created_at': FieldDate,
+    'updated_at': FieldDate,
+}
+
 generic_field = {
     'id': fields.Raw,
     'klass': fields.Raw,
@@ -283,10 +291,12 @@ user_fields = {
     'shape': Shape,
     'default_coord': fields.Raw,
     'shape_scope': fields.List(fields.String),
+    'has_sn_backend': fields.Boolean,
 }
 
 user_fields_full = deepcopy(user_fields)
 user_fields_full["keys"] = fields.List(fields.Nested(key_fields))
+user_fields_full["sn_backend_authorizations"] = fields.List(fields.Nested(sn_backend_authorization_fields))
 user_fields_full["authorizations"] = fields.List(
     fields.Nested({'instance': fields.Nested(instance_fields), 'api': fields.Nested(api_fields)})
 )

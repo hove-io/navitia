@@ -37,6 +37,7 @@ from navitiacommon.constants import DEFAULT_SHAPE_SCOPE
 from tyr.rabbit_mq_handler import RabbitMqHandler
 from tyr import app
 from six.moves.urllib.parse import quote
+import ujson
 
 
 @pytest.fixture
@@ -908,3 +909,106 @@ def test_filter_users_by_key(create_user, create_multiple_users):
         token = resp_user['keys'][0]['token']
         resp_token = api_get('/v0/users?key={}'.format(token))
         assert resp_token['id'] == user['id']
+
+
+def test_streetnetwork_backend_authorization_for_a_user(create_user, create_multiple_users):
+    resp_users = api_get('/v1/users')
+    assert len(resp_users['users']) == 3
+    user_id = resp_users['users'][0]['id']
+    assert user_id == 47
+
+    # No street network backend is added to the user yet.
+    assert resp_users['users'][0]['has_sn_backend'] is False
+
+    # Add three streetnetwork backends for the test
+    new_backend = {'klass': 'valhalla.klass'}
+    resp, status = api_post(
+        'v0/streetnetwork_backends/valhallaDev',
+        data=ujson.dumps(new_backend),
+        content_type='application/json',
+        check=False,
+    )
+    assert status == 201
+    assert resp['streetnetwork_backend']['id'] == "valhallaDev"
+
+    new_backend = {'klass': 'asgard.klass'}
+    resp, status = api_post(
+        'v0/streetnetwork_backends/asgardDev',
+        data=ujson.dumps(new_backend),
+        content_type='application/json',
+        check=False,
+    )
+    assert status == 201
+    assert resp['streetnetwork_backend']['id'] == "asgardDev"
+
+    # Add sn_backend_authorization for the user
+    new_obj = {'sn_backend_id': 'valhallaDev', 'mode': 'walking'}
+    resp, status = api_post(
+        'v1/users/{}/sn_backend_authorizations'.format(user_id),
+        data=ujson.dumps(new_obj),
+        content_type='application/json',
+        check=False,
+    )
+    assert status == 201
+    assert resp['sn_backend_id'] == 'valhallaDev'
+    assert resp['mode'] == 'walking'
+    assert resp['user_id'] == user_id
+
+    # We cannot add another sn_backend for the same user + mode
+    new_obj = {'sn_backend_id': 'asgardDev', 'mode': 'walking'}
+    resp, status = api_post(
+        'v1/users/{}/sn_backend_authorizations'.format(user_id),
+        data=ujson.dumps(new_obj),
+        content_type='application/json',
+        check=False,
+    )
+    assert status == 409
+    assert 'duplicate key value' in resp['error']
+
+    new_obj = {'sn_backend_id': 'asgardDev', 'mode': 'car'}
+    resp, status = api_post(
+        'v1/users/{}/sn_backend_authorizations'.format(user_id),
+        data=ujson.dumps(new_obj),
+        content_type='application/json',
+        check=False,
+    )
+    assert status == 201
+    assert resp['sn_backend_id'] == 'asgardDev'
+    assert resp['mode'] == 'car'
+    assert resp['user_id'] == user_id
+
+    # # Calling api /users/user_id/sn_backend_authorizations to verify street_network backends
+    resp, status = api_get('/v1/users/{}/sn_backend_authorizations'.format(user_id), check=False)
+    assert status == 200
+    assert len(resp['sn_backend_authorizations']) == 2
+
+    # Calling /user/user_id to verify that has_sn_backend is True and street_network backends
+    resp = api_get('/v1/users/{}'.format(user_id))
+    assert resp['users']['id'] == user_id
+    assert resp['users']['has_sn_backend'] is True
+    assert len(resp['users']['sn_backend_authorizations']) == 2
+
+    # Testing api delete()
+    resp, status = api_delete(
+        "/v1/users/{}/sn_backend_authorizations?mode={}".format(user_id, "car"),
+        check=False,
+        no_json=True,
+    )
+    assert status == 204
+    resp, status = api_delete(
+        "/v1/users/{}/sn_backend_authorizations?mode={}".format(user_id, "walking"),
+        check=False,
+        no_json=True,
+    )
+    assert status == 204
+
+    # Calling api /users/user_id/sn_backend_authorizations to verify that sn_backend is absent
+    resp, status = api_get('/v1/users/{}/sn_backend_authorizations'.format(user_id), check=False)
+    assert status == 200
+    assert len(resp['sn_backend_authorizations']) == 0
+
+    # Calling /user/user_id to verify that has_sn_backend is False and sn_backend is absent
+    resp = api_get('/v1/users/{}'.format(user_id))
+    assert resp['users']['id'] == user_id
+    assert resp['users']['has_sn_backend'] is False
+    assert len(resp['users']['sn_backend_authorizations']) == 0

@@ -45,6 +45,8 @@ class StreetNetworkBackendManager(object):
         self._streetnetwork_backends_by_instance_legacy = defaultdict(
             list
         )  # type: Dict[Instance, List[AbstractStreetNetworkService]]
+        # sn_backends_getter contains all the street_network backends in the table streetnetwork_backend
+        # with discarded = false (models.StreetNetworkBackend.all)
         self._sn_backends_getter = sn_backends_getter
         self._streetnetwork_backends = {}  # type: Dict[str, AbstractStreetNetworkService]
         self._streetnetwork_backends_last_update = {}  # type: Dict[str, datetime]
@@ -52,6 +54,13 @@ class StreetNetworkBackendManager(object):
         self._update_interval = update_interval
 
     def init_streetnetwork_backends_legacy(self, instance, instance_configuration):
+        """
+        Initialize street_network backends from configuration files
+        This function is no more used except for debugging
+        :param instance:
+        :param instance_configuration:
+        :return:
+        """
         instance_configuration = self._append_default_street_network_to_config(instance_configuration)
         self._create_street_network_backends(instance, instance_configuration)
 
@@ -121,6 +130,12 @@ class StreetNetworkBackendManager(object):
 
     def _update_sn_backend(self, sn_backend, instance):
         # type: (StreetNetworkBackend, Instance) -> None
+        """
+        Updates street_network backend 'sn_backend' with last_update value for 'instance'.
+        :param sn_backend:
+        :param instance:
+        :return:
+        """
         self.logger.info('Updating / Adding {} streetnetwork backend'.format(sn_backend.id))
         try:
             self._streetnetwork_backends[sn_backend.id] = self._create_backend_from_db(sn_backend, instance)
@@ -134,7 +149,10 @@ class StreetNetworkBackendManager(object):
     def _update_config(self, instance):
         # type: (Instance) -> None
         """
-        Update list of streetnetwork backends from db
+        Maintains and updates list of street_network backend connectors from the table streetnetwork_backend
+        with discarded=false after update interval or data update for instance.
+        :param instance: instance
+        :return: None
         """
         if (
             self._last_update + datetime.timedelta(seconds=self._update_interval) > datetime.datetime.utcnow()
@@ -152,6 +170,7 @@ class StreetNetworkBackendManager(object):
         self._last_update = datetime.datetime.utcnow()
 
         try:
+            # Getting all the connectors from the table streetnetwork_backend with discarded=false
             sn_backends = self._sn_backends_getter()
         except Exception as e:
             self.logger.exception('No access to table streetnetwork_backend (error: {})'.format(e))
@@ -173,16 +192,23 @@ class StreetNetworkBackendManager(object):
             ):
                 self._update_sn_backend(sn_backend, instance)
 
-    def get_street_network_db(self, instance, streetnetwork_backend_conf):
+    def get_street_network_db(self, instance, streetnetwork_backend_id):
         # type: (Instance, StreetNetworkBackend) -> Optional[AbstractStreetNetworkService]
         # Make sure we update the streetnetwork_backends list from the database before returning them
+        """
+        Gets the concerned street network service from the table streetnetwork_backend
+        with discarded=false and id = streetnetwork_backend_id
+        :param instance:
+        :param streetnetwork_backend_id:
+        :return:
+        """
         self._update_config(instance)
 
-        sn = self._streetnetwork_backends.get(streetnetwork_backend_conf, None)
+        sn = self._streetnetwork_backends.get(streetnetwork_backend_id, None)
         if sn is None:
             raise TechnicalError(
                 'impossible to find a streetnetwork module for instance {} with configuration {}'.format(
-                    instance, streetnetwork_backend_conf
+                    instance, streetnetwork_backend_id
                 )
             )
         return sn
