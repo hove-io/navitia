@@ -798,7 +798,12 @@ pt-date-time (pt stands for "public transport") is a complex date time object to
 |Field|Type|Description|
 |-----|----|-----------|
 |id|String|id of the note|
+|category|Enum|Main category of the note. Can be : "comment" or "terminus"|
+|comment_type|String|Type of the "comment"|
+|type|String|"notes" for the moment, can be enriched|
 |value|String|The content of the note|
+
+On stop_schedules and terminus_schedules services, you will find the main terminus in the `display_information.direction` property. You can find also a `terminus` typed note when a vehicle journey does not stop on this main `display_information.direction` terminus.
 
 ### <a name="stop-date-time"></a>stop_date_time
 
