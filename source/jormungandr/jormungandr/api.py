@@ -33,7 +33,7 @@
 from __future__ import absolute_import, print_function, unicode_literals, division
 import importlib
 from flask_restful.representations import json
-from flask import request, make_response, abort
+from flask import request, jsonify, abort
 from jormungandr import rest_api, app, i_manager
 from jormungandr.index import index
 from jormungandr.modules_loader import ModulesLoader
@@ -59,7 +59,8 @@ def output_jsonp(data, code, headers=None):
 @rest_api.representation("text/json")
 @rest_api.representation("application/json")
 def output_json(data, code, headers=None):
-    resp = make_response(ujson.dumps(data), code)
+    resp = jsonify(data)
+    resp.status_code = code
     resp.headers.extend(headers or {})
     return resp
 
