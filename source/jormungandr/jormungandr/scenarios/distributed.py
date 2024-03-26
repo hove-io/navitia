@@ -190,6 +190,8 @@ class Distributed(object):
             crowfly_distance = crowfly_distance_between(
                 get_pt_object_coord(context.requested_orig_obj), get_pt_object_coord(context.requested_dest_obj)
             )
+
+            direct_path_timeout = app.config.get("DIRECT_PATH_TIMEOUT", 0.05)
             context.orig_proximities_by_crowfly = ProximitiesByCrowflyPool(
                 future_manager=future_manager,
                 instance=instance,
@@ -200,6 +202,7 @@ class Distributed(object):
                 max_nb_crowfly_by_mode=request['max_nb_crowfly_by_mode'],
                 request_id="{}_crowfly_orig".format(request_id),
                 o_d_crowfly_distance=crowfly_distance,
+                direct_path_timeout=direct_path_timeout,
             )
 
             context.dest_proximities_by_crowfly = ProximitiesByCrowflyPool(
@@ -212,6 +215,7 @@ class Distributed(object):
                 max_nb_crowfly_by_mode=request['max_nb_crowfly_by_mode'],
                 request_id="{}_crowfly_dest".format(request_id),
                 o_d_crowfly_distance=crowfly_distance,
+                direct_path_timeout=direct_path_timeout,
             )
 
             context.orig_places_free_access = PlacesFreeAccess(
@@ -240,6 +244,7 @@ class Distributed(object):
                 request=request,
                 direct_path_type=StreetNetworkPathType.BEGINNING_FALLBACK,
                 request_id="{}_fallback_orig".format(request_id),
+                direct_path_timeout=direct_path_timeout,
             )
 
             context.dest_fallback_durations_pool = FallbackDurationsPool(
@@ -253,6 +258,7 @@ class Distributed(object):
                 request=request,
                 direct_path_type=StreetNetworkPathType.ENDING_FALLBACK,
                 request_id="{}_fallback_dest".format(request_id),
+                direct_path_timeout=direct_path_timeout,
             )
 
         pt_journey_pool = PtJourneyPool(
