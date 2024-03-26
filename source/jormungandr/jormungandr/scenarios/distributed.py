@@ -395,6 +395,7 @@ class Distributed(object):
             max_nb_crowfly_by_mode=request.get('max_nb_crowfly_by_mode', {}),
             request_id=request_id,
             o_d_crowfly_distance=None,
+            direct_path_timeout=None,
         )
 
         places_free_access = PlacesFreeAccess(
@@ -422,6 +423,7 @@ class Distributed(object):
             request=request,
             request_id=request_id,
             direct_path_type=direct_path_type,
+            direct_path_timeout=None,
         )
 
         # We don't need requested_orig_obj or requested_dest_obj for isochrone
