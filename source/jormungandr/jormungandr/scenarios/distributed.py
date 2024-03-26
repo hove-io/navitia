@@ -191,7 +191,7 @@ class Distributed(object):
                 get_pt_object_coord(context.requested_orig_obj), get_pt_object_coord(context.requested_dest_obj)
             )
 
-            direct_path_timeout = app.config.get("DIRECT_PATH_TIMEOUT", 0.05)
+            direct_path_timeout = app.config.get("DIRECT_PATH_TIMEOUT", 0.1)
             context.orig_proximities_by_crowfly = ProximitiesByCrowflyPool(
                 future_manager=future_manager,
                 instance=instance,
