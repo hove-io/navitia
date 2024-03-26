@@ -30,6 +30,7 @@ from __future__ import absolute_import
 from jormungandr import utils, new_relic
 from jormungandr.street_network.street_network import StreetNetworkPathType
 import logging
+import gevent
 from .helper_utils import (
     timed_logger,
     prepend_first_coord,
@@ -223,15 +224,27 @@ class StreetNetworkPath:
             for destination in self.get_pt_objects(self._dest_obj):
                 self._futures.append(self._future_manager.create_future(self._do_request, origin, destination))
 
-    def wait_and_get(self):
+    def wait_and_get(self, timeout=None):
 
-        best_res = min(
-            (future.wait_and_get() for future in self._futures if future.wait_and_get().response is not None),
-            key=lambda r: r.response.journeys[0].duration,
-            default=None,
-        )
+        # timeout=None -> wait forever...
+        timer = gevent.timeout.Timeout(timeout, exception=False)
+
+        best_res = None
+        with timer:
+            best_res = min(
+                (
+                    future.wait_and_get()
+                    for future in self._futures
+                    if future.wait_and_get().response is not None
+                ),
+                key=lambda r: r.response.journeys[0].duration,
+                default=None,
+            )
+
+        # if best_res is still None, that means timeout is triggered
         if best_res is None:
-            return response_pb2.Response()
+            self._logger.debug("time out in StreetNetworkPath")
+            return None
 
         if self._best_dp is None:
             dp = self.finalize_direct_path(best_res)
