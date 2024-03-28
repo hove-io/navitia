@@ -79,17 +79,14 @@ jobs:
           submodules: recursive
           token: ${{ steps.ci-core-app-token.outputs.token }}
 
-      - name: Login to Amazon ECR SBX
-        uses: aws-actions/amazon-ecr-login@v1
-        env:
-          AWS_REGION: eu-west-1
-
-      - name: Login to Amazon ECR Shared
+      - name: Login to Amazon ECR
         uses: aws-actions/amazon-ecr-login@v1
         env:
           AWS_REGION: eu-west-1
         with:
-          registries: "162230498103"
+          # 162230498103 : shared
+          # 051314639660 : corefront sbx
+          registries: "162230498103,051314639660"
 
       - name: Create builder docker
         run: |
@@ -183,17 +180,15 @@ jobs:
           target: 'mimirsbrunn-config-.deb'
           token: ${{ steps.ci-core-app-token.outputs.token }}
 
-      - name: Login to Amazon ECR SBX
-        uses: aws-actions/amazon-ecr-login@v1
-        env:
-          AWS_REGION: eu-west-1
-
-      - name: Login to Amazon ECR Shared
+      - name: Login to Amazon ECR
         uses: aws-actions/amazon-ecr-login@v1
         env:
           AWS_REGION: eu-west-1
         with:
-          registries: "162230498103"
+          # 162230498103 : shared
+          # 110444322584 : kraken sbx
+          # 051314639660 : corefront sbx
+          registries: "162230498103,110444322584,051314639660"
 
       - name: Create master docker
         run: |
