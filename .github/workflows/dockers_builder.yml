@@ -53,6 +53,7 @@ jobs:
       - name: failure notification
         if: failure()
         run: |
+          sudo apt update && sudo apt install -y httpie
           echo '{"text":":warning: Github Actions: workflow dockers_builder common_variables failed !"}' | http --json POST ${{secrets.SLACK_NAVITIA_TEAM_URL}}
 
 
@@ -84,6 +85,13 @@ jobs:
         uses: aws-actions/amazon-ecr-login@v1
         env:
           AWS_REGION: eu-west-1
+
+      - name: Login to Amazon ECR Shared
+        uses: aws-actions/amazon-ecr-login@v1
+        env:
+          AWS_REGION: eu-west-1
+        with:
+          registries: "162230498103"
 
       - name: Create builder docker
         run: |
@@ -252,6 +260,7 @@ jobs:
       - name: failure notification
         if: failure()
         run: |
+          sudo apt update && sudo apt install -y httpie
           echo '{"text":":warning: Github Actions: workflow dockers_builder debian8_images failed !"}' | http --json POST ${{secrets.SLACK_NAVITIA_TEAM_URL}}
 
       - name: clean up workspace
@@ -298,6 +307,7 @@ jobs:
       - name: failure notification
         if: failure()
         run: |
+          sudo apt update && sudo apt install -y httpie
           echo '{"text":":warning: Github Actions: dockers_builder the job publish_aws failed !"}' | http --json POST ${{secrets.SLACK_NAVITIA_TEAM_URL}}
 
 
@@ -325,4 +335,5 @@ jobs:
       - name: failure notification
         if: failure()
         run: |
+          sudo apt update && sudo apt install -y httpie
           echo '{"text":":warning: Github Actions: workflow dockers_builder_dev Job run_artemis is failed !"}' | http --json POST ${{secrets.SLACK_NAVITIA_TEAM_URL}}
