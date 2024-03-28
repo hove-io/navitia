@@ -221,7 +221,7 @@ jobs:
           for component in ${{env.front_debian8_components}}; do
               component_tag=${SBX_ECR_REGISTRY_FRONT}/${component}:dev
               docker tag navitia/$component ${component_tag}
-              docker push docker push ${component_tag}
+              docker push ${component_tag}
           done
           for component in ${{env.backend_debian8_components}}; do
             component_tag=${SBX_ECR_REGISTRY_BACKEND}/${component}:dev
