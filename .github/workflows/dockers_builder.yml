@@ -1,6 +1,8 @@
 name: Build Navitia Dockers
 
 on:
+  # to test the workflow without merging in dev
+  pull_request:
   push:
     branches:
       - dev
