@@ -164,7 +164,7 @@ jobs:
           repo: 'hove-io/cosmogony2cities'
           version: 'tags/v0.1.1'
           file: 'cosmogony2cities-debian8.deb'
-          target: 'cosmogony2cities.deb'
+          target: 'cosmogony2cities_.deb'
           token: ${{ steps.ci-core-app-token.outputs.token }}
 
       - name: Download mimirsbrunn package
