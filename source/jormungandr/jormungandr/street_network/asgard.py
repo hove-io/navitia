@@ -65,6 +65,7 @@ class DirectPathProfile(object):
         bike_service_factor=1,
         bike_country_crossing_cost=600,
         bike_country_crossing_penalty=0,
+        bike_destination_only_penalty=120,
         walking_walkway_factor=1,
         walking_sidewalk_factor=1,
         walking_alley_factor=2,
@@ -79,6 +80,7 @@ class DirectPathProfile(object):
         walking_max_hiking_difficulty=1,
         walking_shortest=False,
         walking_ignore_oneways=True,
+        walking_destination_only_penalty=120,
         tag=None,
     ):
         self.bike_use_roads = bike_use_roads
@@ -94,6 +96,7 @@ class DirectPathProfile(object):
         self.bike_service_penalty = bike_service_penalty
         self.bike_country_crossing_cost = bike_country_crossing_cost
         self.bike_country_crossing_penalty = bike_country_crossing_penalty
+        self.bike_destination_only_penalty = bike_destination_only_penalty
 
         self.walking_walkway_factor = walking_walkway_factor
         self.walking_sidewalk_factor = walking_sidewalk_factor
@@ -109,6 +112,7 @@ class DirectPathProfile(object):
         self.walking_max_hiking_difficulty = walking_max_hiking_difficulty
         self.walking_shortest = walking_shortest
         self.walking_ignore_oneways = walking_ignore_oneways
+        self.walking_destination_only_penalty = walking_destination_only_penalty
 
         self.profile_tag = tag
 
@@ -196,6 +200,11 @@ class Asgard(TransientSocket, Kraken):
         req.sn_routing_matrix.datetime = request["datetime"]
         req.sn_routing_matrix.use_excluded_zones = request["_use_excluded_zones"]
 
+        # Asgard/Valhalla walking
+        req.sn_routing_matrix.streetnetwork_params.walking_destination_only_penalty = request[
+            'walking_destination_only_penalty'
+        ]
+
         # Asgard/Valhalla bike
         req.sn_routing_matrix.streetnetwork_params.bike_use_roads = request['bike_use_roads']
         req.sn_routing_matrix.streetnetwork_params.bike_use_hills = request['bike_use_hills']
@@ -215,10 +224,14 @@ class Asgard(TransientSocket, Kraken):
         req.sn_routing_matrix.streetnetwork_params.bike_country_crossing_penalty = request[
             'bike_country_crossing_penalty'
         ]
+        req.sn_routing_matrix.streetnetwork_params.bike_destination_only_penalty = request[
+            'bike_destination_only_penalty'
+        ]
 
         req.sn_routing_matrix.asgard_max_walking_duration_coeff = request.get(
             "_asgard_max_walking_duration_coeff"
         )
+
         req.sn_routing_matrix.asgard_max_bike_duration_coeff = request.get("_asgard_max_bike_duration_coeff")
         req.sn_routing_matrix.asgard_max_bss_duration_coeff = request.get("_asgard_max_bss_duration_coeff")
         req.sn_routing_matrix.asgard_max_car_duration_coeff = request.get("_asgard_max_car_duration_coeff")
@@ -314,8 +327,9 @@ class Asgard(TransientSocket, Kraken):
         profile_param.bike_service_factor = dp_profile.bike_service_factor
         profile_param.bike_country_crossing_cost = dp_profile.bike_country_crossing_cost
         profile_param.bike_country_crossing_penalty = dp_profile.bike_country_crossing_penalty
+        profile_param.bike_destination_only_penalty = dp_profile.bike_destination_only_penalty
 
-        # Asgard/Valhalla bike
+        # Asgard/Valhalla walking
         profile_param.walking_walkway_factor = dp_profile.walking_walkway_factor
         profile_param.walking_sidewalk_factor = dp_profile.walking_sidewalk_factor
         profile_param.walking_alley_factor = dp_profile.walking_alley_factor
@@ -330,6 +344,7 @@ class Asgard(TransientSocket, Kraken):
         profile_param.walking_max_hiking_difficulty = dp_profile.walking_max_hiking_difficulty
         profile_param.walking_shortest = dp_profile.walking_shortest
         profile_param.walking_ignore_oneways = dp_profile.walking_ignore_oneways
+        profile_param.walking_destination_only_penalty = dp_profile.walking_destination_only_penalty
 
         if dp_profile.profile_tag is not None:
             profile_param.profile_tag = dp_profile.profile_tag
