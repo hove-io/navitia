@@ -1289,3 +1289,264 @@ BOOST_FIXTURE_TEST_CASE(traffic_report_on_a_tagged_rail_section, DisruptedNetwor
     std::set<std::string> res = {"disrup_rail_section", "disrup_rail_section_reduced_service"};
     BOOST_CHECK_EQUAL_RANGE(res, uris);
 }
+
+
+struct LineSectionLineReport {
+    ed::builder b;
+    navitia::PbCreator pb_creator;
+    const boost::posix_time::ptime start_date = "20180402T060000"_dt;
+    const boost::posix_time::ptime end_date = "20180428T060000"_dt;
+    const time_period published_period = time_period(start_date, end_date);
+    /*
+     *
+                                                                    published perdiod
+       20180402T060000                                                                                20180428T060000
+               |---------------------------------------------------------------------------------------------|
+               |
+               |
+               |                                            application period
+               |   20180405     20180409      20180412         20180416            20180419      20180423
+impact1        |     |------------|
+impact2        |     |                           |------------------|
+impact3        |     |            |--------------|
+impact4        |     |------------------------------------------------------------------|
+impact5        |     |            |---------------------------------|
+impact6        |     |                                                                               |-------|
+
+
+
+since - until
+
+test0 |---|
+test1     |------|
+test2            |---------|
+test3                     |--|
+test4                        |-----------|
+test5                                    |---|
+test6                                        |-----------|
+test7                                                      |-------|
+test8                                                                      |-------|
+test9                                                                                        |---|
+test10                                                                                         |-------|
+test11                                                                                                             |--|
+
+Results
+test0:
+test1:
+test2: impact1 & impact4
+test3: impact1 & impact4
+test4: impact1 & impact3 & impact4 & impact5
+test5: impact3 & impact4 & impact5
+test6: impact2 & impact3 & impact4 & impact5
+test7: impact2 & impact4 & impact5
+test8: impact4
+test9:
+test10: impact6
+test11:
+    */
+    LineSectionLineReport()
+        : b("20180301", [](ed::builder& b) {
+            b.sa("stop_area:1", 0, 0, false, true)("sp1_1");
+            b.sa("stop_area:2", 0, 0, false, true)("sp1_2");
+            b.sa("stop_area:3", 0, 0, false, true)("sp1_3");
+            b.sa("stop_area:4", 0, 0, false, true)("sp1_4");
+            b.sa("stop_area:5", 0, 0, false, true)("sp1_5");
+            b.sa("stop_area:6", 0, 0, false, true)("sp1_6");
+            b.vj_with_network("network_1", "line_1").route("route_1")
+                    ("sp1_1", "08:10"_t)("sp1_2", "08:20"_t)
+                    ("sp1_3", "08:30"_t)("sp1_4", "08:40"_t)
+                    ("sp1_5", "08:44"_t)("sp1_6", "08:48"_t);
+          }){
+
+        // Impact1
+        navitia::apply_disruption(
+            b.impact(nt::RTLevel::Adapted, "line_section_1")
+                .severity(nt::disruption::Effect::NO_SERVICE)
+                .publish(published_period)
+                .application_periods(time_period("20180405T000000"_dt, "20180409T235900"_dt))
+                .on_line_section("line_1", "stop_area:4", "stop_area:5",
+                                 {"route_1"}, *b.data->pt_data)
+                .get_disruption(),
+            *b.data->pt_data, *b.data->meta);
+
+        // Impact2
+        navitia::apply_disruption(
+            b.impact(nt::RTLevel::Adapted, "line_section_2")
+                .severity(nt::disruption::Effect::NO_SERVICE)
+                .publish(published_period)
+                .application_periods(time_period("20180412T235900"_dt, "20180416T235900"_dt))
+                .on_line_section("line_1", "stop_area:4", "stop_area:5",
+                                 {"route_1"}, *b.data->pt_data)
+                .get_disruption(),
+            *b.data->pt_data, *b.data->meta);
+
+        // Impact3
+        navitia::apply_disruption(
+            b.impact(nt::RTLevel::Adapted, "line_section_3")
+                .severity(nt::disruption::Effect::NO_SERVICE)
+                .publish(published_period)
+                .application_periods(time_period("20180409T235900"_dt, "20180412T235900"_dt))
+                .on_line_section("line_1", "stop_area:4", "stop_area:5",
+                                 {"route_1"}, *b.data->pt_data)
+                .get_disruption(),
+            *b.data->pt_data, *b.data->meta);
+
+        // Impact4
+        navitia::apply_disruption(
+            b.impact(nt::RTLevel::Adapted, "line_section_4")
+                .severity(nt::disruption::Effect::NO_SERVICE)
+                .publish(published_period)
+                .application_periods(time_period("20180405T000000"_dt, "20180419T235900"_dt))
+                .on_line_section("line_1", "stop_area:4", "stop_area:5",
+                                 {"route_1"}, *b.data->pt_data)
+                .get_disruption(),
+            *b.data->pt_data, *b.data->meta);
+
+        // Impact5
+        navitia::apply_disruption(
+            b.impact(nt::RTLevel::Adapted, "line_section_5")
+                .severity(nt::disruption::Effect::NO_SERVICE)
+                .publish(published_period)
+                .application_periods(time_period("20180409T235900"_dt, "20180416T235900"_dt))
+                .on_line_section("line_1", "stop_area:4", "stop_area:5",
+                                 {"route_1"}, *b.data->pt_data)
+                .get_disruption(),
+            *b.data->pt_data, *b.data->meta);
+
+        // Impact6
+        navitia::apply_disruption(
+            b.impact(nt::RTLevel::Adapted, "line_section_6")
+                .severity(nt::disruption::Effect::NO_SERVICE)
+                .publish(published_period)
+                .msg("ms line_section_6", nt::disruption::ChannelType::sms)
+                .application_periods(time_period("20180423T060000"_dt, "20180428T060000"_dt))
+                .on_line_section("line_1", "stop_area:4", "stop_area:5",
+                                 {"route_1"}, *b.data->pt_data)
+                .get_disruption(),
+            *b.data->pt_data, *b.data->meta);
+    }
+};
+
+BOOST_FIXTURE_TEST_CASE(line_report_since_until, LineSectionLineReport) {
+    // Line report without since and until
+
+    pb_creator.init(b.data.get(), start_date, published_period);
+    disruption::line_reports(pb_creator, *b.data, 1, 25, 0, "", {}, {}, boost::none, boost::none);
+
+    BOOST_CHECK_EQUAL(pb_creator.impacts.size(), 6);
+
+    std::set<std::string> uris = navitia::test::get_impacts_uris(pb_creator.impacts);
+    std::set<std::string> res = {"line_section_1", "line_section_2", "line_section_3",
+                                 "line_section_4", "line_section_5", "line_section_6"};
+    BOOST_CHECK_EQUAL_RANGE(res, uris);
+
+    // Line report without since
+    pb_creator.init(b.data.get(), start_date, published_period);
+    disruption::line_reports(pb_creator, *b.data, 1, 25, 0, "", {}, {}, boost::none, "20180429T060000"_dt);
+
+    BOOST_CHECK_EQUAL(pb_creator.impacts.size(), 6);
+
+    uris = navitia::test::get_impacts_uris(pb_creator.impacts);
+    BOOST_CHECK_EQUAL_RANGE(res, uris);
+
+    // Traffic report without until
+    pb_creator.init(b.data.get(), start_date, published_period);
+    disruption::line_reports(pb_creator, *b.data, 1, 25, 0, "", {}, {}, "20180401T060000"_dt, boost::none);
+
+    BOOST_CHECK_EQUAL(pb_creator.impacts.size(), 6);
+
+    uris = navitia::test::get_impacts_uris(pb_creator.impacts);
+    BOOST_CHECK_EQUAL_RANGE(res, uris);
+
+    // Test0
+    pb_creator.init(b.data.get(), start_date, published_period);
+    disruption::line_reports(pb_creator, *b.data, 1, 25, 0, "", {}, {}, "20180329T060000"_dt, "20180401T060000"_dt);
+    BOOST_CHECK_EQUAL(pb_creator.impacts.size(), 0);
+
+    // Test1
+    pb_creator.init(b.data.get(), start_date, published_period);
+    disruption::line_reports(pb_creator, *b.data, 1, 25, 0, "", {}, {}, "20180402T060000"_dt, "20180404T060000"_dt);
+    BOOST_CHECK_EQUAL(pb_creator.impacts.size(), 0);
+
+    // Test2
+    pb_creator.init(b.data.get(), start_date, published_period);
+    disruption::line_reports(pb_creator, *b.data, 1, 25, 0, "", {}, {}, "20180404T060000"_dt, "20180406T060000"_dt);
+    BOOST_CHECK_EQUAL(pb_creator.impacts.size(), 2);
+
+    uris = navitia::test::get_impacts_uris(pb_creator.impacts);
+    res = {"line_section_1", "line_section_4"};
+    BOOST_CHECK_EQUAL_RANGE(res, uris);
+
+    // Test3
+    pb_creator.init(b.data.get(), start_date, published_period);
+    disruption::line_reports(pb_creator, *b.data, 1, 25, 0, "", {}, {}, "20180406T060000"_dt, "20180407T060000"_dt);
+    BOOST_CHECK_EQUAL(pb_creator.impacts.size(), 2);
+
+    uris = navitia::test::get_impacts_uris(pb_creator.impacts);
+    res = {"line_section_1", "line_section_4"};
+    BOOST_CHECK_EQUAL_RANGE(res, uris);
+
+    // Test4
+    pb_creator.init(b.data.get(), start_date, published_period);
+    disruption::line_reports(pb_creator, *b.data, 1, 25, 0, "", {}, {}, "20180407T060000"_dt, "20180410T060000"_dt);
+    BOOST_CHECK_EQUAL(pb_creator.impacts.size(), 4);
+
+    uris = navitia::test::get_impacts_uris(pb_creator.impacts);
+    res = {"line_section_1", "line_section_3", "line_section_4", "line_section_5"};
+    BOOST_CHECK_EQUAL_RANGE(res, uris);
+
+    // Test5
+    pb_creator.init(b.data.get(), start_date, published_period);
+    disruption::line_reports(pb_creator, *b.data, 1, 25, 0, "", {}, {}, "20180410T060000"_dt, "20180411T060000"_dt);
+    BOOST_CHECK_EQUAL(pb_creator.impacts.size(), 3);
+
+    uris = navitia::test::get_impacts_uris(pb_creator.impacts);
+    res = {"line_section_3", "line_section_4", "line_section_5"};
+    BOOST_CHECK_EQUAL_RANGE(res, uris);
+
+    // Test6
+    pb_creator.init(b.data.get(), start_date, published_period);
+    disruption::line_reports(pb_creator, *b.data, 1, 25, 0, "", {}, {}, "20180411T060000"_dt, "20180413T060000"_dt);
+    BOOST_CHECK_EQUAL(pb_creator.impacts.size(), 4);
+
+    uris = navitia::test::get_impacts_uris(pb_creator.impacts);
+    res = {"line_section_2", "line_section_3", "line_section_4", "line_section_5"};
+    BOOST_CHECK_EQUAL_RANGE(res, uris);
+
+    // Test7
+    pb_creator.init(b.data.get(), start_date, published_period);
+    disruption::line_reports(pb_creator, *b.data, 1, 25, 0, "", {}, {}, "20180413T060000"_dt, "20180414T060000"_dt);
+    BOOST_CHECK_EQUAL(pb_creator.impacts.size(), 3);
+
+    uris = navitia::test::get_impacts_uris(pb_creator.impacts);
+    res = {"line_section_2", "line_section_4", "line_section_5"};
+    BOOST_CHECK_EQUAL_RANGE(res, uris);
+
+    // Test8
+    pb_creator.init(b.data.get(), start_date, published_period);
+    disruption::line_reports(pb_creator, *b.data, 1, 25, 0, "", {}, {}, "20180417T060000"_dt, "20180418T060000"_dt);
+    BOOST_CHECK_EQUAL(pb_creator.impacts.size(), 1);
+
+    uris = navitia::test::get_impacts_uris(pb_creator.impacts);
+    res = {"line_section_4"};
+    BOOST_CHECK_EQUAL_RANGE(res, uris);
+
+    // Test9
+    pb_creator.init(b.data.get(), start_date, published_period);
+    disruption::line_reports(pb_creator, *b.data, 1, 25, 0, "", {}, {}, "20180420T060000"_dt, "20180421T060000"_dt);
+    BOOST_CHECK_EQUAL(pb_creator.impacts.size(), 0);
+
+    // Test10
+    pb_creator.init(b.data.get(), start_date, published_period);
+    disruption::line_reports(pb_creator, *b.data, 1, 25, 0, "", {}, {}, "20180421T060000"_dt, "20180424T060000"_dt);
+    BOOST_CHECK_EQUAL(pb_creator.impacts.size(), 1);
+
+    uris = navitia::test::get_impacts_uris(pb_creator.impacts);
+    res = {"line_section_6"};
+    BOOST_CHECK_EQUAL_RANGE(res, uris);
+
+    // Test11
+    pb_creator.init(b.data.get(), start_date, published_period);
+    disruption::line_reports(pb_creator, *b.data, 1, 25, 0, "", {}, {}, "20180429T060000"_dt, "20180430T060000"_dt);
+    BOOST_CHECK_EQUAL(pb_creator.impacts.size(), 0);
+}
