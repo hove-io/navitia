@@ -1290,7 +1290,6 @@ BOOST_FIXTURE_TEST_CASE(traffic_report_on_a_tagged_rail_section, DisruptedNetwor
     BOOST_CHECK_EQUAL_RANGE(res, uris);
 }
 
-
 struct LineSectionLineReport {
     ed::builder b;
     navitia::PbCreator pb_creator;
@@ -1346,26 +1345,23 @@ test11:
     */
     LineSectionLineReport()
         : b("20180301", [](ed::builder& b) {
-            b.sa("stop_area:1", 0, 0, false, true)("sp1_1");
-            b.sa("stop_area:2", 0, 0, false, true)("sp1_2");
-            b.sa("stop_area:3", 0, 0, false, true)("sp1_3");
-            b.sa("stop_area:4", 0, 0, false, true)("sp1_4");
-            b.sa("stop_area:5", 0, 0, false, true)("sp1_5");
-            b.sa("stop_area:6", 0, 0, false, true)("sp1_6");
-            b.vj_with_network("network_1", "line_1").route("route_1")
-                    ("sp1_1", "08:10"_t)("sp1_2", "08:20"_t)
-                    ("sp1_3", "08:30"_t)("sp1_4", "08:40"_t)
-                    ("sp1_5", "08:44"_t)("sp1_6", "08:48"_t);
-          }){
-
+              b.sa("stop_area:1", 0, 0, false, true)("sp1_1");
+              b.sa("stop_area:2", 0, 0, false, true)("sp1_2");
+              b.sa("stop_area:3", 0, 0, false, true)("sp1_3");
+              b.sa("stop_area:4", 0, 0, false, true)("sp1_4");
+              b.sa("stop_area:5", 0, 0, false, true)("sp1_5");
+              b.sa("stop_area:6", 0, 0, false, true)("sp1_6");
+              b.vj_with_network("network_1", "line_1")
+                  .route("route_1")("sp1_1", "08:10"_t)("sp1_2", "08:20"_t)("sp1_3", "08:30"_t)("sp1_4", "08:40"_t)(
+                      "sp1_5", "08:44"_t)("sp1_6", "08:48"_t);
+          }) {
         // Impact1
         navitia::apply_disruption(
             b.impact(nt::RTLevel::Adapted, "line_section_1")
                 .severity(nt::disruption::Effect::NO_SERVICE)
                 .publish(published_period)
                 .application_periods(time_period("20180405T000000"_dt, "20180409T235900"_dt))
-                .on_line_section("line_1", "stop_area:4", "stop_area:5",
-                                 {"route_1"}, *b.data->pt_data)
+                .on_line_section("line_1", "stop_area:4", "stop_area:5", {"route_1"}, *b.data->pt_data)
                 .get_disruption(),
             *b.data->pt_data, *b.data->meta);
 
@@ -1375,8 +1371,7 @@ test11:
                 .severity(nt::disruption::Effect::NO_SERVICE)
                 .publish(published_period)
                 .application_periods(time_period("20180412T235900"_dt, "20180416T235900"_dt))
-                .on_line_section("line_1", "stop_area:4", "stop_area:5",
-                                 {"route_1"}, *b.data->pt_data)
+                .on_line_section("line_1", "stop_area:4", "stop_area:5", {"route_1"}, *b.data->pt_data)
                 .get_disruption(),
             *b.data->pt_data, *b.data->meta);
 
@@ -1386,8 +1381,7 @@ test11:
                 .severity(nt::disruption::Effect::NO_SERVICE)
                 .publish(published_period)
                 .application_periods(time_period("20180409T235900"_dt, "20180412T235900"_dt))
-                .on_line_section("line_1", "stop_area:4", "stop_area:5",
-                                 {"route_1"}, *b.data->pt_data)
+                .on_line_section("line_1", "stop_area:4", "stop_area:5", {"route_1"}, *b.data->pt_data)
                 .get_disruption(),
             *b.data->pt_data, *b.data->meta);
 
@@ -1397,8 +1391,7 @@ test11:
                 .severity(nt::disruption::Effect::NO_SERVICE)
                 .publish(published_period)
                 .application_periods(time_period("20180405T000000"_dt, "20180419T235900"_dt))
-                .on_line_section("line_1", "stop_area:4", "stop_area:5",
-                                 {"route_1"}, *b.data->pt_data)
+                .on_line_section("line_1", "stop_area:4", "stop_area:5", {"route_1"}, *b.data->pt_data)
                 .get_disruption(),
             *b.data->pt_data, *b.data->meta);
 
@@ -1408,8 +1401,7 @@ test11:
                 .severity(nt::disruption::Effect::NO_SERVICE)
                 .publish(published_period)
                 .application_periods(time_period("20180409T235900"_dt, "20180416T235900"_dt))
-                .on_line_section("line_1", "stop_area:4", "stop_area:5",
-                                 {"route_1"}, *b.data->pt_data)
+                .on_line_section("line_1", "stop_area:4", "stop_area:5", {"route_1"}, *b.data->pt_data)
                 .get_disruption(),
             *b.data->pt_data, *b.data->meta);
 
@@ -1420,8 +1412,7 @@ test11:
                 .publish(published_period)
                 .msg("ms line_section_6", nt::disruption::ChannelType::sms)
                 .application_periods(time_period("20180423T060000"_dt, "20180428T060000"_dt))
-                .on_line_section("line_1", "stop_area:4", "stop_area:5",
-                                 {"route_1"}, *b.data->pt_data)
+                .on_line_section("line_1", "stop_area:4", "stop_area:5", {"route_1"}, *b.data->pt_data)
                 .get_disruption(),
             *b.data->pt_data, *b.data->meta);
     }
