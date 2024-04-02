@@ -1410,8 +1410,8 @@ test11:
             b.impact(nt::RTLevel::Adapted, "line_section_6")
                 .severity(nt::disruption::Effect::NO_SERVICE)
                 .publish(published_period)
-                .msg("ms line_section_6", nt::disruption::ChannelType::sms)
                 .application_periods(time_period("20180423T060000"_dt, "20180428T060000"_dt))
+                .msg("ms line_section_6", nt::disruption::ChannelType::sms)
                 .on_line_section("line_1", "stop_area:4", "stop_area:5", {"route_1"}, *b.data->pt_data)
                 .get_disruption(),
             *b.data->pt_data, *b.data->meta);
@@ -1440,7 +1440,7 @@ BOOST_FIXTURE_TEST_CASE(line_report_since_until, LineSectionLineReport) {
     uris = navitia::test::get_impacts_uris(pb_creator.impacts);
     BOOST_CHECK_EQUAL_RANGE(res, uris);
 
-    // Traffic report without until
+    // Line report without until
     pb_creator.init(b.data.get(), start_date, published_period);
     disruption::line_reports(pb_creator, *b.data, 1, 25, 0, "", {}, {}, "20180401T060000"_dt, boost::none);
 
