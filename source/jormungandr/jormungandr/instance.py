@@ -395,6 +395,10 @@ class Instance(transient_socket.TransientSocket):
         self.instance_db = instance_db
         return self.instance_db
 
+    def get_instance_scenario_name_or_default(self, default='distributed'):
+        instance_db = self.get_models()
+        return instance_db.scenario if instance_db else default
+
     def scenario(self, override_scenario=None):
         """
         once a scenario has been chosen for a request for an instance (coverage), we cannot change it
@@ -424,8 +428,7 @@ class Instance(transient_socket.TransientSocket):
             g.scenario[self.name] = scenario
             return scenario
 
-        instance_db = self.get_models()
-        scenario_name = instance_db.scenario if instance_db else 'new_default'
+        scenario_name = self.get_instance_scenario_name_or_default()
         # for the sake of backwards compatibility... some users may still be using experimental...
         scenario_name = replace_experimental_scenario(scenario_name)
         if not self._scenario or scenario_name != self._scenario_name:
