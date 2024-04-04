@@ -183,7 +183,7 @@ Public transport data validator
 ### vptranslator
 Work in progress
 
-Module to transform a ValidityPattern (a year bitset) to a nice string like "valid from the 1st of march to the 31st of may, all working day of the week but the third webdnesday of april"
+Module to transform a ValidityPattern (a year bitset) to a nice string like "valid from the 1st of march to the 31st of may, all working day of the week but the third wednesday of april"
 
 :zap: **cpp module**
 
