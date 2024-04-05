@@ -119,7 +119,15 @@ class Scenario(object):
         req = request_pb2.Request()
         req.requested_api = type_pb2.line_reports
         req.line_reports.depth = request['depth']
-        req.line_reports.filter = request['filter']
+
+        if isinstance(request['filter'], str):
+            req.line_reports.filter = request['filter']
+        else:
+            req.line_reports.object_type = request_pb2.LineReportsRequest.Type.Value(
+                request['filter']['object_type']
+            )
+            req.line_reports.object_id = request['filter']['object_id']
+
         req.line_reports.count = request['count']
         req.line_reports.start_page = request['start_page']
         req._current_datetime = date_to_timestamp(request['_current_datetime'])
@@ -138,7 +146,13 @@ class Scenario(object):
         if request['until']:
             req.line_reports.until_datetime = request['until']
 
-        resp = instance.send_and_receive(req)
+        # We call Loki's line_reports only if _pt_planner=loki
+        if request["_pt_planner"] == "loki":
+            pt_planner = instance.get_pt_planner(request["_pt_planner"])
+            resp = pt_planner.send_and_receive(req)
+        else:
+            resp = instance.send_and_receive(req)
+
         return resp
 
     def equipment_reports(self, request, instance):

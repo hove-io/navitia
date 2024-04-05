@@ -34,6 +34,7 @@ from __future__ import absolute_import, print_function, unicode_literals, divisi
 from navitiacommon.parser_args_type import BooleanType, DateTimeFormat, DepthArgument, OptionValue
 from jormungandr import i_manager, timezone
 from jormungandr.interfaces.parsers import default_count_arg_type
+from jormungandr.interfaces.v1.converters_collection_type import collections_to_resource_type
 from jormungandr.interfaces.v1.decorators import get_obj_serializer
 from jormungandr.interfaces.v1.errors import ManageError
 from jormungandr.interfaces.v1.ResourceUri import ResourceUri
@@ -44,6 +45,7 @@ from jormungandr.utils import date_to_timestamp
 from navitiacommon.type_pb2 import ActiveStatus
 from navitiacommon.constants import ENUM_LANGUAGE
 from flask.globals import g
+from flask_restful import abort
 from datetime import datetime
 import six
 
@@ -104,6 +106,13 @@ class LineReports(ResourceUri, ResourceUtc):
             help="Here, select a specific language for disruption message",
         )
 
+        parser_get.add_argument(
+            "_pt_planner",
+            type=OptionValue(['kraken', 'loki']),
+            hidden=True,
+            help="choose which pt engine to compute the pt journey",
+        )
+
         self.collection = 'line_reports'
         self.get_decorators.insert(0, ManageError())
         self.get_decorators.insert(1, get_obj_serializer(self))
@@ -119,7 +128,13 @@ class LineReports(ResourceUri, ResourceUtc):
         if args['disable_geojson']:
             g.disable_geojson = True
 
-        args["filter"] = self.get_filter(split_uri(uri), args)
+        uri_params = split_uri(uri)
+
+        args["filter"] = (
+            self.get_loki_filter(uri_params)
+            if args["_pt_planner"] == "loki"
+            else self.get_filter(uri_params, args)
+        )
 
         if args['since']:
             args['since'] = date_to_timestamp(self.convert_to_utc(args['since']))
@@ -129,3 +144,27 @@ class LineReports(ResourceUri, ResourceUtc):
         response = i_manager.dispatch(args, "line_reports", instance_name=self.region)
 
         return response
+
+    def get_loki_filter(self, items):
+        """
+        Multi filter on PT objects is not allowed with Loki
+        Eg: /stop_areas/Massy/physical_modes/Bus/line_reports
+        We can only filter on one PT object among lines, stop_areas, commercial_modes, physical_modes
+        Eg:
+        /commercial_modes/Bus/line_reports
+        /lines/61/line_reports
+        /physical_modes/Bus/line_reports
+        /stop_areas/Massy/line_reports
+        """
+        if len(items) == 0:
+            return ""
+
+        if len(items) != 2:
+            abort(400, message="invalid uri")
+
+        pt_object = items[0]
+
+        if pt_object not in ["lines", "stop_areas", "commercial_modes", "physical_modes"]:
+            abort(400, message="filter on {} not allowed".format(pt_object))
+
+        return {"object_type": collections_to_resource_type[pt_object].upper(), "object_id": items[1]}
