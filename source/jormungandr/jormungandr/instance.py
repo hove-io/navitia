@@ -414,6 +414,7 @@ class Instance(transient_socket.TransientSocket):
             return backend_record.sn_backend_id
 
         return None
+
     def get_instance_scenario_name_or_default(self, default='distributed'):
         instance_db = self.get_models()
         return instance_db.scenario if instance_db else default
