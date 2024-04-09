@@ -30,6 +30,7 @@ from __future__ import absolute_import
 from jormungandr import utils, new_relic
 from jormungandr.street_network.street_network import StreetNetworkPathType
 import logging
+import gevent
 from .helper_utils import (
     timed_logger,
     prepend_first_coord,
@@ -88,9 +89,10 @@ class StreetNetworkPath:
         self._fallback_extremity = fallback_extremity
         self._request = request
         self._path_type = streetnetwork_path_type
-        self._value = None
+        self._futures = []
         self._logger = logging.getLogger(__name__)
         self._request_id = request_id
+        self._best_dp = None
         self._async_request()
 
     @staticmethod
@@ -140,35 +142,26 @@ class StreetNetworkPath:
         self.make_poi_access_points(StreetNetworkPathType.ENDING_FALLBACK, resp_direct_path)
         return resp_direct_path.response
 
-    def build_direct_path(self):
-        best_direct_path = None
-        for origin in self.get_pt_objects(self._orig_obj):
-            for destination in self.get_pt_objects(self._dest_obj):
-                response = self._streetnetwork_service.direct_path_with_fp(
-                    self._instance,
-                    self._mode,
-                    origin,
-                    destination,
-                    self._fallback_extremity,
-                    self._request,
-                    self._path_type,
-                    self._request_id,
-                )
-                if not is_valid_direct_path(response):
-                    continue
-                if not best_direct_path:
-                    best_direct_path = Dp_element(origin, destination, response)
-                elif (
-                    response.journeys[0].durations.total < best_direct_path.response.journeys[0].durations.total
-                ):
-                    best_direct_path = Dp_element(origin, destination, response)
-        return self.finalize_direct_path(best_direct_path)
+    def build_direct_path(self, origin, destination):
+        response = self._streetnetwork_service.direct_path_with_fp(
+            self._instance,
+            self._mode,
+            origin,
+            destination,
+            self._fallback_extremity,
+            self._request,
+            self._path_type,
+            self._request_id,
+        )
+        if is_valid_direct_path(response):
+            return response
+        return None
 
     @new_relic.distributedEvent("direct_path", "street_network")
-    def _direct_path_with_fp(self):
+    def _direct_path_with_fp(self, origin, destination):
         with timed_logger(self._logger, 'direct_path_calling_external_service', self._request_id):
             try:
-                return self.build_direct_path()
+                return self.build_direct_path(origin, destination)
             except GeoveloTechnicalError as e:
                 logging.getLogger(__name__).exception('')
                 raise StreetNetworkException(response_pb2.Error.service_unavailable, e.data["message"])
@@ -202,7 +195,7 @@ class StreetNetworkPath:
                 return self.poi_to_pt_object(poi_access_point)
         return None
 
-    def _do_request(self):
+    def _do_request(self, origin, destination):
         self._logger.debug(
             "requesting %s direct path from %s to %s by %s",
             self._path_type,
@@ -211,11 +204,7 @@ class StreetNetworkPath:
             self._mode,
         )
 
-        dp = self._direct_path_with_fp(self._streetnetwork_service)
-        origin = self.get_pt_object_origin(dp)
-        destination = self.get_pt_object_destination(dp)
-        prepend_first_coord(dp, origin)
-        append_last_coord(dp, destination)
+        dp = self._direct_path_with_fp(self._streetnetwork_service, origin, destination)
 
         if getattr(dp, "journeys", None):
             dp.journeys[0].internal_id = str(utils.generate_id())
@@ -227,15 +216,45 @@ class StreetNetworkPath:
             self._dest_obj.uri,
             self._mode,
         )
-        return dp
+        return Dp_element(origin, destination, dp)
 
     def _async_request(self):
-        self._value = self._future_manager.create_future(self._do_request)
+        self._futures = []
+        for origin in self.get_pt_objects(self._orig_obj):
+            for destination in self.get_pt_objects(self._dest_obj):
+                self._futures.append(self._future_manager.create_future(self._do_request, origin, destination))
 
-    def wait_and_get(self):
-        if self._value:
-            return self._value.wait_and_get()
-        return None
+    def wait_and_get(self, timeout=None):
+
+        # timeout=None -> wait forever...
+        timer = gevent.timeout.Timeout(timeout, exception=False)
+
+        best_res = None
+        with timer:
+            best_res = min(
+                (
+                    future.wait_and_get()
+                    for future in self._futures
+                    if future.wait_and_get().response is not None
+                ),
+                key=lambda r: r.response.journeys[0].duration,
+                default=None,
+            )
+
+        # if best_res is still None, that means timeout is triggered
+        if best_res is None:
+            self._logger.debug("time out in StreetNetworkPath")
+            return None
+
+        if self._best_dp is None:
+            dp = self.finalize_direct_path(best_res)
+            origin = self.get_pt_object_origin(dp)
+            destination = self.get_pt_object_destination(dp)
+            prepend_first_coord(dp, origin)
+            append_last_coord(dp, destination)
+            self._best_dp = dp
+
+        return self._best_dp
 
 
 class StreetNetworkPathPool:

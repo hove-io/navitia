@@ -168,8 +168,7 @@ class InstanceManager(object):
             return override_scenario
 
         instance = self.instances[instance_name]
-        instance_db = instance.get_models()
-        scenario_name = instance_db.scenario if instance_db else 'new_default'
+        scenario_name = instance.get_instance_scenario_name_or_default()
         return scenario_name
 
     def dispatch(self, arguments, api, instance_name=None):

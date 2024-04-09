@@ -40,6 +40,7 @@ www.navitia.io
 #include <string>
 #include <memory>
 #include <utility>
+#include <map>
 
 namespace navitia {
 #define FILL_NULLABLE_(var_name, arg_name, col_name, type_name) \
@@ -76,6 +77,8 @@ struct DisruptionDatabaseReader {
     chaos::Pattern* pattern = nullptr;
 
     std::string last_channel_type_id = "";
+
+    std::map<std::string, chaos::PtObject*> map_ptobject;
 
     std::set<std::string> message_ids;
     // message_id + translation_language
@@ -121,6 +124,7 @@ struct DisruptionDatabaseReader {
             pattern = nullptr;
             pattern_ids.clear();
             time_slot_ids.clear();
+            map_ptobject.clear();
         }
 
         if (disruption && !const_it["property_key"].is_null() && !const_it["property_type"].is_null()
@@ -154,26 +158,27 @@ struct DisruptionDatabaseReader {
             time_slot_ids.insert(const_it["time_slot_id"].template as<std::string>());
         }
 
-        // To manage line_section and it's elements as start, end and routes, we should re-use the pt_object
-        // already existing in informed_entities so that any change in sort order after impact
-        // (message, channel, channel_type..) in the query should work.
-        if (impact && !const_it["ptobject_uri"].is_null()) {
-            auto* entities = impact->mutable_informed_entities();
-            auto pt_obj_it =
-                std::find_if(entities->pointer_begin(), entities->pointer_end(), [&](chaos::PtObject* obj) {
-                    return obj->uri() == const_it["ptobject_uri"].template as<std::string>();
-                });
-            if (pt_obj_it == entities->pointer_end()) {
+        // The ptobject is directly associated with impact for all the types except line_section and rail_section
+        // Normally the ptobject is associated only once to the impact, use of ptobject_uri should work
+        // For line_section and rail section there are more pt_object as children associated to the parent pt_object
+        // and should be managed.
+        // Use of ptobject_uri to distinguish parent ptobject doesn't work. ptobject_id should be used instead.
+        // Final solution: use of pt_object_id should work for all types of pt_object
+        if (impact && !const_it["ptobject_id"].is_null()) {
+            auto pt_obj_it = map_ptobject.find(const_it["ptobject_id"].template as<std::string>());
+            if (pt_obj_it != map_ptobject.end()) {
+                pt_object = pt_obj_it->second;
+            } else {
                 pt_object = impact->add_informed_entities();
                 fill_pt_object(const_it, pt_object);
-            } else {
-                pt_object = *pt_obj_it;
+                map_ptobject[const_it["ptobject_id"].template as<std::string>()] = pt_object;
             }
         }
 
+        // We should use ptobject_id instead of ptobject_uri to attach children routes if present
         if (impact && !const_it["ls_route_uri"].is_null()) {
             std::tuple<std::string, std::string> line_section_route(
-                const_it["ptobject_uri"].template as<std::string>(),
+                const_it["ptobject_id"].template as<std::string>(),
                 const_it["ls_route_uri"].template as<std::string>());
             if (!line_section_route_set.count(line_section_route)) {
                 fill_associate_route(const_it, pt_object);
@@ -181,9 +186,10 @@ struct DisruptionDatabaseReader {
             }
         }
 
+        // We should use ptobject_id instead of ptobject_uri to attach children routes if present
         if (impact && !const_it["rs_route_uri"].is_null()) {
             std::tuple<std::string, std::string> rail_section_route(
-                const_it["ptobject_uri"].template as<std::string>(),
+                const_it["ptobject_id"].template as<std::string>(),
                 const_it["rs_route_uri"].template as<std::string>());
             if (!rail_section_route_set.count(rail_section_route)) {
                 fill_associate_route(const_it, pt_object);

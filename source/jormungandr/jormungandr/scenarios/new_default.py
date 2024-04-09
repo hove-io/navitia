@@ -101,7 +101,9 @@ from six.moves import zip
 from functools import cmp_to_key
 
 SECTION_TYPES_TO_RETAIN = {response_pb2.PUBLIC_TRANSPORT, response_pb2.STREET_NETWORK}
+JOURNEY_TAGS_TO_RETAIN = ['best_olympics']
 JOURNEY_TYPES_TO_RETAIN = ['best', 'comfort', 'non_pt_walk', 'non_pt_bike', 'non_pt_bss']
+JOURNEY_TYPES_SCORE = {t: i for i, t in enumerate(JOURNEY_TYPES_TO_RETAIN)}
 STREET_NETWORK_MODE_TO_RETAIN = {response_pb2.Ridesharing, response_pb2.Car, response_pb2.Bike, response_pb2.Bss}
 TEMPLATE_MSG_UNKNOWN_OBJECT = "The entry point: {} is not valid"
 
@@ -515,7 +517,7 @@ def _build_candidate_pool_and_sections_set(journeys):
     idx_of_jrny_must_keep = list()
 
     for (i, jrny) in enumerate(journeys):
-        if jrny.type in JOURNEY_TYPES_TO_RETAIN:
+        if set(jrny.tags) & set(JOURNEY_TAGS_TO_RETAIN) or jrny.type in set(JOURNEY_TYPES_TO_RETAIN):
             idx_of_jrny_must_keep.append(i)
         sections_set |= set([_get_section_id(s) for s in jrny.sections if s.type in SECTION_TYPES_TO_RETAIN])
         candidates_pool.append(jrny)
@@ -750,16 +752,16 @@ def culling_journeys(resp, request):
         )
 
         # At this point, resp.journeys should contain only must-have journeys
-        list_dict = collections.defaultdict(list)
-        for jrny in resp.journeys:
-            if not journey_filter.to_be_deleted(jrny):
-                list_dict[jrny.type].append(jrny)
+        must_have = [j for j in resp.journeys if not journey_filter.to_be_deleted(j)]
 
-        sorted_by_type_journeys = []
-        for t in JOURNEY_TYPES_TO_RETAIN:
-            sorted_by_type_journeys.extend(list_dict.get(t, []))
+        def journey_score(j):
+            if set(j.tags) & set(JOURNEY_TAGS_TO_RETAIN):
+                return -100
+            return JOURNEY_TYPES_SCORE.get(j.type, float('inf'))
 
-        for jrny in sorted_by_type_journeys[max_nb_journeys:]:
+        must_have.sort(key=journey_score)
+
+        for jrny in must_have[max_nb_journeys:]:
             journey_filter.mark_as_dead(jrny, is_debug, 'Filtered by max_nb_journeys')
 
         journey_filter.delete_journeys((resp,), request)
@@ -1040,7 +1042,7 @@ def merge_responses(responses, debug):
 
     if not merged_response.journeys:
         # we aggregate the errors found
-        errors = {r.error.id: r.error for r in responses if r.HasField(str('error'))}
+        errors = {r.error.id: r.error for r in responses if r and r.HasField(str('error'))}
 
         # Only one errors field
         if len(errors) == 1:
@@ -1119,7 +1121,7 @@ def get_crowfly_air_pollutants(origin, destination):
 
 def aggregate_journeys(journeys):
     """
-    when building candidates_pool, we should take into count the similarity of journeys, which means, we add a journey
+    when building candidates_pool, we should take into account the similarity of journeys, which means, we add a journey
     into the pool only when there are no other "similar" journey already existing in the pool.
 
     the similarity is defined by a tuple of journeys sections.
@@ -1128,13 +1130,19 @@ def aggregate_journeys(journeys):
     aggregated_journeys = list()
     remaining_journeys = list()
 
+    def to_retain(j):
+        return j.type in JOURNEY_TYPES_TO_RETAIN or set(j.tags) & set(JOURNEY_TAGS_TO_RETAIN)
+
+    journeys_to_retain = (j for j in journeys if to_retain(j))
+    journeys_not_to_retain = (j for j in journeys if not to_retain(j))
+
     # we pick out all journeys that must be kept:
-    for j in (j for j in journeys if j.type in JOURNEY_TYPES_TO_RETAIN):
+    for j in journeys_to_retain:
         section_id = tuple(_get_section_id(s) for s in j.sections if s.type in SECTION_TYPES_TO_RETAIN)
         aggregated_journeys.append(j)
         added_sections_ids.add(section_id)
 
-    for j in (j for j in journeys if j.type not in JOURNEY_TYPES_TO_RETAIN):
+    for j in journeys_not_to_retain:
         section_id = tuple(_get_section_id(s) for s in j.sections if s.type in SECTION_TYPES_TO_RETAIN)
 
         if section_id in added_sections_ids:
@@ -1142,6 +1150,9 @@ def aggregate_journeys(journeys):
         else:
             aggregated_journeys.append(j)
             added_sections_ids.add(section_id)
+
+    # aggregated_journeys will be passed to culling algorithm,
+    # remaining_journeys are the redundant ones to be removed
     return aggregated_journeys, remaining_journeys
 
 

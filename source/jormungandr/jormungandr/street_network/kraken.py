@@ -248,7 +248,7 @@ class Kraken(AbstractStreetNetworkService):
         )
 
     def _check_for_error_and_raise(self, res):
-        if res is None or res.HasField('error'):
+        if res is None or res.HasField('error') and res.error.id != response_pb2.Error.all_excluded:
             logging.getLogger(__name__).error(
                 'routing matrix query error {}'.format(res.error if res else "Unknown")
             )

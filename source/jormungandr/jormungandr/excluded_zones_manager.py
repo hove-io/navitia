@@ -28,15 +28,24 @@
 # www.navitia.io
 
 import boto3
+import pytz
+import shapely.iterops
+from dateutil import parser
 from botocore.client import Config
 import logging
 import json
+import shapely
+import datetime
+from typing import Dict
 
 from jormungandr import app, memory_cache, cache
 from jormungandr.resource_s3_object import ResourceS3Object
 
 
 class ExcludedZonesManager:
+    excluded_shapes = dict()  # type: Dict[str, shapely.geometry]
+    asgard_s3_bucket_folder = "excluded_zones"
+
     @staticmethod
     @cache.memoize(app.config[str('CACHE_CONFIGURATION')].get(str('ASGARD_S3_DATA_TIMEOUT'), 24 * 60))
     def get_object(resource_s3_object):
@@ -49,12 +58,23 @@ class ExcludedZonesManager:
             return {}
 
     @staticmethod
+    def is_activated(activation_period, date):
+        if activation_period is None:
+            return False
+
+        def is_between(period, d):
+            from_date = parser.parse(period['from']).date()
+            to_date = parser.parse(period['to']).date()
+            return from_date <= d < to_date
+
+        return any((is_between(period, date) for period in activation_period))
+
+    @classmethod
     @memory_cache.memoize(
-        app.config[str('MEMORY_CACHE_CONFIGURATION')].get(str('ASGARD_S3_DATA_TIMEOUT'), 5 * 60)
+        app.config[str('MEMORY_CACHE_CONFIGURATION')].get(str('ASGARD_S3_DATA_TIMEOUT'), 10 * 60)
     )
-    def get_excluded_zones(instance_name=None, mode=None):
+    def get_all_excluded_zones(cls):
         bucket_name = app.config.get(str("ASGARD_S3_BUCKET"))
-        folder = "excluded_zones"
 
         logger = logging.getLogger(__name__)
         args = {"connect_timeout": 2, "read_timeout": 2, "retries": {'max_attempts': 0}}
@@ -62,33 +82,60 @@ class ExcludedZonesManager:
         excluded_zones = []
         try:
             my_bucket = s3_resource.Bucket(bucket_name)
-            for obj in my_bucket.objects.filter(Prefix="{}/".format(folder)):
+            for obj in my_bucket.objects.filter(Prefix="{}/".format(cls.asgard_s3_bucket_folder)):
                 if not obj.key.endswith('.json'):
                     continue
                 try:
                     json_content = ExcludedZonesManager.get_object(ResourceS3Object(obj, None))
-
-                    if instance_name is not None and json_content.get('instance') != instance_name:
-                        continue
-                    if mode is not None and mode not in json_content.get("modes", []):
-                        continue
-
                     excluded_zones.append(json_content)
                 except Exception:
-                    logger.exception(
-                        "Error on fetching excluded zones: bucket: {}, instance: {}, mode ={}",
-                        bucket_name,
-                        instance_name,
-                        mode,
-                    )
+                    logger.exception("Error on fetching excluded zones: bucket: {}", bucket_name)
                     continue
-
         except Exception:
             logger.exception(
-                "Error on fetching excluded zones: bucket: {}, instance: {}, mode ={}",
+                "Error on fetching excluded zones: bucket: {}",
                 bucket_name,
-                instance_name,
-                mode,
             )
+        excluded_shapes = dict()
+        for zone in excluded_zones:
+            # remove the DAMN MYPY to use walrus operator!!!!!
+            shape_str = zone.get('shape')
+            if not shape_str:
+                continue
+            try:
+                shape = shapely.wkt.loads(shape_str)
+            except Exception as e:
+                logger.error("error occurred when load shapes of excluded zones: " + str(e))
+                continue
+            excluded_shapes[zone.get("poi")] = shape
+
+        cls.excluded_shapes = excluded_shapes
 
         return excluded_zones
+
+    @staticmethod
+    @memory_cache.memoize(
+        app.config[str('MEMORY_CACHE_CONFIGURATION')].get(str('ASGARD_S3_DATA_TIMEOUT'), 10 * 60)
+    )
+    def get_excluded_zones(mode=None, date=None):
+        excluded_zones = []
+        for json_content in ExcludedZonesManager.get_all_excluded_zones():
+            if mode is not None and mode not in json_content.get("modes", []):
+                continue
+            if date is not None and not ExcludedZonesManager.is_activated(
+                json_content.get('activation_periods'), date
+            ):
+                continue
+            excluded_zones.append(json_content)
+        return excluded_zones
+
+    @classmethod
+    @memory_cache.memoize(app.config[str('CACHE_CONFIGURATION')].get(str('ASGARD_S3_DATA_TIMEOUT'), 10 * 60))
+    def is_excluded(cls, obj, mode, timestamp):
+        date = datetime.datetime.fromtimestamp(timestamp, tz=pytz.timezone("UTC")).date()
+        # update excluded zones
+        excluded_zones = ExcludedZonesManager.get_excluded_zones(mode=mode, date=date)
+        poi_ids = set((zone.get("poi") for zone in excluded_zones))
+        shapes = (cls.excluded_shapes.get(poi_id) for poi_id in poi_ids if cls.excluded_shapes.get(poi_id))
+        p = shapely.geometry.Point(obj.lon, obj.lat)
+        return any((shape.contains(p) for shape in shapes))

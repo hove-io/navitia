@@ -90,6 +90,14 @@ class TestJourneysDistributedWithMock(JourneyMinBikeMinCar, NewDefaultScenarioAb
         # This will call jormun so we check our counter before
         self.is_valid_journey_response(response, query)
 
+        feed_publishers = get_not_null(response, "feed_publishers")
+        assert len(feed_publishers) == 1
+        feed_publisher = feed_publishers[0]
+        assert feed_publisher["id"] == "builder"
+        assert feed_publisher["name"] == 'routing api data'
+        assert feed_publisher["license"] == "ODBL"
+        assert feed_publisher["url"] == "www.hove.com"
+
     def test_first_and_last_section_multi_modes_no_debug(self):
         """Test to verify optimization of direct path calls"""
         # Initialize counter value in the object MockKraken

@@ -364,6 +364,113 @@ def test_build_with_request_params_and_arrival_criteria():
     assert attractivity_virtual_fallback.virtual_duration == 820
 
 
+def test_build_with_show_natural_opg_journeys_false():
+    instance = FakeInstance(olympics_forbidden_uris=DEFAULT_OLYMPICS_FORBIDDEN_URIS)
+    osp = FakeOlympicSiteParamsManager(instance, DEFAULT_OLYMPIC_SITE_PARAMS_BUCKET)
+    osp.fill_olympic_site_params_from_s3()
+    api_request = dict()
+    api_request["_olympics_sites_attractivities[]"] = [('stop_point:24113', 3), ('stop_point:24131', 30)]
+    api_request["_olympics_sites_virtual_fallback[]"] = [('stop_point:24113', 800), ('stop_point:24131', 820)]
+    api_request["criteria"] = "arrival_stop_attractivity"
+    api_request["_show_natural_opg_journeys"] = False
+
+    assert api_request["criteria"] == "arrival_stop_attractivity"
+    assert not api_request.get("max_walking_duration_to_pt")
+    assert "_keep_olympics_journeys" not in api_request
+    pt_destination_detail = make_pt_object(type_pb2.POI, 2, 3, "poi:BCD")
+    property = pt_destination_detail.poi.properties.add()
+    property.type = DEFAULT_OLYMPICS_FORBIDDEN_URIS["poi_property_key"]
+    property.value = DEFAULT_OLYMPICS_FORBIDDEN_URIS["poi_property_value"]
+    pt_origin_detail = make_pt_object(type_pb2.ADDRESS, 1, 2, "SA:BCD")
+    osp.build(pt_origin_detail, pt_destination_detail, api_request)
+    assert api_request["_keep_olympics_journeys"]
+    assert api_request["criteria"] == "arrival_stop_attractivity"
+    assert not api_request.get("max_walking_duration_to_pt")
+    olympic_site_params = api_request["olympic_site_params"]
+    assert not olympic_site_params['show_natural_opg_journeys']
+    assert "arrival_scenario" in olympic_site_params
+    assert "departure_scenario" not in olympic_site_params
+    attractivity_virtual_fallback = olympic_site_params["arrival_scenario"]["stop_point:24113"]
+    assert attractivity_virtual_fallback.attractivity == 3
+    assert attractivity_virtual_fallback.virtual_duration == 800
+
+    attractivity_virtual_fallback = olympic_site_params["arrival_scenario"]["stop_point:24131"]
+    assert attractivity_virtual_fallback.attractivity == 30
+    assert attractivity_virtual_fallback.virtual_duration == 820
+
+
+def test_build_with_show_natural_opg_journeys_false_wheelchair_false():
+    instance = FakeInstance(olympics_forbidden_uris=DEFAULT_OLYMPICS_FORBIDDEN_URIS)
+    osp = FakeOlympicSiteParamsManager(instance, DEFAULT_OLYMPIC_SITE_PARAMS_BUCKET)
+    osp.fill_olympic_site_params_from_s3()
+    api_request = dict()
+    api_request["_olympics_sites_attractivities[]"] = [('stop_point:24113', 3), ('stop_point:24131', 30)]
+    api_request["_olympics_sites_virtual_fallback[]"] = [('stop_point:24113', 800), ('stop_point:24131', 820)]
+    api_request["criteria"] = "arrival_stop_attractivity"
+    api_request["_show_natural_opg_journeys"] = False
+    api_request["wheelchair"] = False
+
+    assert api_request["criteria"] == "arrival_stop_attractivity"
+    assert not api_request.get("max_walking_duration_to_pt")
+    assert "_keep_olympics_journeys" not in api_request
+    pt_destination_detail = make_pt_object(type_pb2.POI, 2, 3, "poi:BCD")
+    property = pt_destination_detail.poi.properties.add()
+    property.type = DEFAULT_OLYMPICS_FORBIDDEN_URIS["poi_property_key"]
+    property.value = DEFAULT_OLYMPICS_FORBIDDEN_URIS["poi_property_value"]
+    pt_origin_detail = make_pt_object(type_pb2.ADDRESS, 1, 2, "SA:BCD")
+    osp.build(pt_origin_detail, pt_destination_detail, api_request)
+    assert api_request["_keep_olympics_journeys"]
+    assert api_request["criteria"] == "arrival_stop_attractivity"
+    assert not api_request.get("max_walking_duration_to_pt")
+    olympic_site_params = api_request["olympic_site_params"]
+    assert not olympic_site_params['show_natural_opg_journeys']
+    assert "arrival_scenario" in olympic_site_params
+    assert "departure_scenario" not in olympic_site_params
+    attractivity_virtual_fallback = olympic_site_params["arrival_scenario"]["stop_point:24113"]
+    assert attractivity_virtual_fallback.attractivity == 3
+    assert attractivity_virtual_fallback.virtual_duration == 800
+
+    attractivity_virtual_fallback = olympic_site_params["arrival_scenario"]["stop_point:24131"]
+    assert attractivity_virtual_fallback.attractivity == 30
+    assert attractivity_virtual_fallback.virtual_duration == 820
+
+
+def test_build_with_show_natural_opg_journeys_false_wheelchair_True():
+    instance = FakeInstance(olympics_forbidden_uris=DEFAULT_OLYMPICS_FORBIDDEN_URIS)
+    osp = FakeOlympicSiteParamsManager(instance, DEFAULT_OLYMPIC_SITE_PARAMS_BUCKET)
+    osp.fill_olympic_site_params_from_s3()
+    api_request = dict()
+    api_request["_olympics_sites_attractivities[]"] = [('stop_point:24113', 3), ('stop_point:24131', 30)]
+    api_request["_olympics_sites_virtual_fallback[]"] = [('stop_point:24113', 800), ('stop_point:24131', 820)]
+    api_request["criteria"] = "arrival_stop_attractivity"
+    api_request["_show_natural_opg_journeys"] = False
+    api_request["wheelchair"] = True
+
+    assert api_request["criteria"] == "arrival_stop_attractivity"
+    assert not api_request.get("max_walking_duration_to_pt")
+    assert "_keep_olympics_journeys" not in api_request
+    pt_destination_detail = make_pt_object(type_pb2.POI, 2, 3, "poi:BCD")
+    property = pt_destination_detail.poi.properties.add()
+    property.type = DEFAULT_OLYMPICS_FORBIDDEN_URIS["poi_property_key"]
+    property.value = DEFAULT_OLYMPICS_FORBIDDEN_URIS["poi_property_value"]
+    pt_origin_detail = make_pt_object(type_pb2.ADDRESS, 1, 2, "SA:BCD")
+    osp.build(pt_origin_detail, pt_destination_detail, api_request)
+    assert api_request["_keep_olympics_journeys"]
+    assert api_request["criteria"] == "arrival_stop_attractivity"
+    assert not api_request.get("max_walking_duration_to_pt")
+    olympic_site_params = api_request["olympic_site_params"]
+    assert olympic_site_params['show_natural_opg_journeys']
+    assert "arrival_scenario" in olympic_site_params
+    assert "departure_scenario" not in olympic_site_params
+    attractivity_virtual_fallback = olympic_site_params["arrival_scenario"]["stop_point:24113"]
+    assert attractivity_virtual_fallback.attractivity == 3
+    assert attractivity_virtual_fallback.virtual_duration == 800
+
+    attractivity_virtual_fallback = olympic_site_params["arrival_scenario"]["stop_point:24131"]
+    assert attractivity_virtual_fallback.attractivity == 30
+    assert attractivity_virtual_fallback.virtual_duration == 820
+
+
 def test_build_without_request_params():
     instance = FakeInstance(olympics_forbidden_uris=DEFAULT_OLYMPICS_FORBIDDEN_URIS)
     osp = FakeOlympicSiteParamsManager(instance, DEFAULT_OLYMPIC_SITE_PARAMS_BUCKET)
@@ -598,6 +705,35 @@ def test_build_departure_and_arrival_poi_jo_add_forbidden_uris():
     assert not api_request["olympic_site_params"]['show_natural_opg_journeys']
 
 
+def test_build_departure_and_arrival_poi_jo_add_forbidden_uris_deactivate_opg_scenario():
+    instance = FakeInstance(olympics_forbidden_uris=DEFAULT_OLYMPICS_FORBIDDEN_URIS)
+    osp = FakeOlympicSiteParamsManager(instance, DEFAULT_OLYMPIC_SITE_PARAMS_BUCKET)
+    osp.fill_olympic_site_params_from_s3()
+
+    pt_origin_detail = make_pt_object(type_pb2.POI, 1, 2, "poi:EFG")
+    property = pt_origin_detail.poi.properties.add()
+    property.type = DEFAULT_OLYMPICS_FORBIDDEN_URIS["poi_property_key"]
+    property.value = DEFAULT_OLYMPICS_FORBIDDEN_URIS["poi_property_value"]
+
+    pt_destination_detail = make_pt_object(type_pb2.POI, 2, 3, "poi:BCD")
+    property = pt_destination_detail.poi.properties.add()
+    property.type = DEFAULT_OLYMPICS_FORBIDDEN_URIS["poi_property_key"]
+    property.value = DEFAULT_OLYMPICS_FORBIDDEN_URIS["poi_property_value"]
+
+    api_request = {"forbidden_uris[]": ["uri1", "uri2"]}
+
+    assert not api_request.get("criteria")
+    assert not api_request.get("max_walking_duration_to_pt")
+    assert "_keep_olympics_journeys" not in api_request
+    api_request["datetime"] = osp.get_timestamp('20230715T110000')
+    api_request["_deactivate_opg_scenario"] = True
+    osp.build(pt_origin_detail, pt_destination_detail, api_request)
+    assert "olympic_site_params" in api_request
+    assert not api_request["olympic_site_params"]
+    assert len(api_request["forbidden_uris[]"]) == 2
+    assert "_keep_olympics_journeys" not in api_request
+
+
 def test_get_dict_scenario_invalid_scanario_name():
     instance = FakeInstance(olympics_forbidden_uris=DEFAULT_OLYMPICS_FORBIDDEN_URIS)
     osp = FakeOlympicSiteParamsManager(instance, DEFAULT_OLYMPIC_SITE_PARAMS_BUCKET)
@@ -651,42 +787,79 @@ def test_manage_forbidden_uris():
 
 def test_get_show_natural_opg_journeys():
     data = {
-        "test1": {"conf_additional_parameters": {}, "query_show_natural_opg_journeys": None, "result": True},
-        "test2": {"conf_additional_parameters": {}, "query_show_natural_opg_journeys": False, "result": False},
-        "test3": {"conf_additional_parameters": {}, "query_show_natural_opg_journeys": True, "result": True},
+        "test1": {
+            "conf_additional_parameters": {},
+            "api_request": {"_show_natural_opg_journeys": None},
+            "result": True,
+        },
+        "test2": {
+            "conf_additional_parameters": {},
+            "api_request": {"_show_natural_opg_journeys": False},
+            "result": False,
+        },
+        "test3": {
+            "conf_additional_parameters": {},
+            "api_request": {"_show_natural_opg_journeys": True},
+            "result": True,
+        },
         "test4": {
             "conf_additional_parameters": {"show_natural_opg_journeys": True},
-            "query_show_natural_opg_journeys": None,
+            "api_request": {"_show_natural_opg_journeys": None},
             "result": True,
         },
         "test5": {
             "conf_additional_parameters": {"show_natural_opg_journeys": True},
-            "query_show_natural_opg_journeys": True,
+            "api_request": {"_show_natural_opg_journeys": True},
             "result": True,
         },
         "test6": {
             "conf_additional_parameters": {"show_natural_opg_journeys": True},
-            "query_show_natural_opg_journeys": False,
+            "api_request": {"_show_natural_opg_journeys": False},
             "result": False,
         },
         "test7": {
             "conf_additional_parameters": {"show_natural_opg_journeys": False},
-            "query_show_natural_opg_journeys": None,
+            "api_request": {"_show_natural_opg_journeys": None},
             "result": False,
         },
         "test8": {
             "conf_additional_parameters": {"show_natural_opg_journeys": False},
-            "query_show_natural_opg_journeys": False,
+            "api_request": {"_show_natural_opg_journeys": False},
             "result": False,
         },
         "test9": {
             "conf_additional_parameters": {"show_natural_opg_journeys": False},
-            "query_show_natural_opg_journeys": True,
+            "api_request": {"_show_natural_opg_journeys": True},
+            "result": True,
+        },
+        "test10": {
+            "conf_additional_parameters": {"show_natural_opg_journeys": False},
+            "api_request": {"_show_natural_opg_journeys": True, "wheelchair": True},
+            "result": True,
+        },
+        "test11": {
+            "conf_additional_parameters": {"show_natural_opg_journeys": False},
+            "api_request": {"_show_natural_opg_journeys": True, "wheelchair": False},
+            "result": True,
+        },
+        "test12": {
+            "conf_additional_parameters": {"show_natural_opg_journeys": False},
+            "api_request": {"_show_natural_opg_journeys": False, "wheelchair": True},
+            "result": True,
+        },
+        "test13": {
+            "conf_additional_parameters": {"show_natural_opg_journeys": True},
+            "api_request": {"_show_natural_opg_journeys": False, "wheelchair": True},
+            "result": True,
+        },
+        "test14": {
+            "conf_additional_parameters": {"show_natural_opg_journeys": True},
+            "api_request": {"_show_natural_opg_journeys": True, "wheelchair": True},
             "result": True,
         },
     }
     for test_name, value in data.items():
         result = OlympicSiteParamsManager.get_show_natural_opg_journeys(
-            value["conf_additional_parameters"], value["query_show_natural_opg_journeys"]
+            value["conf_additional_parameters"], value["api_request"]
         )
         assert result == value["result"], "test {} failed".format(test_name)

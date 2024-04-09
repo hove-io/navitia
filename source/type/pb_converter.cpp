@@ -459,6 +459,9 @@ void PbCreator::Filler::add_contributor(const T* nav) {
     if (pb_creator.disable_feedpublisher) {
         return;
     }
+    if (pb_creator.data->pt_data->contributors.size() == pb_creator.contributors.size()) {
+        return;
+    }
     const auto& contributors = ptref_indexes<nt::Contributor>(nav);
     for (const nt::Contributor* c : contributors) {
         if (!c->license.empty()) {
@@ -822,7 +825,8 @@ void PbCreator::Filler::fill_pb_object(const nt::Line* l, pbnavitia::Line* line)
          * the behavior too much.
          * */
         auto fill_line_section_message = [&](const nt::VehicleJourney& vj) {
-            for (const auto& impact_ptr : vj.meta_vj->get_publishable_messages(pb_creator.now)) {
+            for (const auto& impact_ptr :
+                 vj.meta_vj->get_applicable_messages(pb_creator.now, pb_creator.action_period)) {
                 if (impact_ptr->is_line_section_of(*vj.route->line)) {
                     fill_message(impact_ptr, line);
                 }
@@ -841,7 +845,8 @@ void PbCreator::Filler::fill_pb_object(const nt::Line* l, pbnavitia::Line* line)
          * the behavior too much.
          * */
         auto fill_rail_section_message = [&](const nt::VehicleJourney& vj) {
-            for (const auto& impact_ptr : vj.meta_vj->get_publishable_messages(pb_creator.now)) {
+            for (const auto& impact_ptr :
+                 vj.meta_vj->get_applicable_messages(pb_creator.now, pb_creator.action_period)) {
                 if (impact_ptr->is_rail_section_of(*vj.route->line)) {
                     fill_message(impact_ptr, line);
                 }

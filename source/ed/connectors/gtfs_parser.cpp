@@ -1255,8 +1255,6 @@ GenericGtfsParser::~GenericGtfsParser() = default;
 
 void GenericGtfsParser::fill(Data& data, const std::string& beginning_date) {
     parse_files(data, beginning_date);
-
-    normalize_extcodes(data);
 }
 
 void GenericGtfsParser::fill_default_modes(Data& data) {
@@ -1348,15 +1346,6 @@ void GenericGtfsParser::fill_default_modes(Data& data) {
     gtfs_data.commercial_mode_map["5"] = commercial_mode;
     // for physical mode, CableCar is Funicular
     gtfs_data.physical_mode_map[commercial_mode->uri] = physical_mode;
-}
-
-void normalize_extcodes(Data& data) {
-    for (nm::StopArea* sa : data.stop_areas) {
-        boost::algorithm::replace_first(sa->uri, "StopArea:", "");
-    }
-    for (nm::StopPoint* sp : data.stop_points) {
-        boost::algorithm::replace_first(sp->uri, "StopPoint:", "");
-    }
 }
 
 boost::gregorian::date_period GenericGtfsParser::basic_production_date(const std::string& beginning_date) {

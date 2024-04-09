@@ -35,7 +35,7 @@ from collections import namedtuple, defaultdict
 from math import sqrt
 from .helper_utils import get_max_fallback_duration
 from jormungandr.street_network.street_network import StreetNetworkPathType
-from jormungandr import new_relic
+from jormungandr import new_relic, excluded_zones_manager
 from jormungandr.fallback_modes import FallbackModes
 import logging
 from .helper_utils import timed_logger
@@ -44,6 +44,9 @@ from navitiacommon import type_pb2
 from jormungandr.exceptions import GeoveloTechnicalError
 from .helper_exceptions import StreetNetworkException
 from jormungandr.scenarios.utils import include_poi_access_points
+from jormungandr.scenarios.helper_classes.places_free_access import FreeAccessObject
+import functools
+import itertools
 
 # The basic element stored in fallback_durations.
 # in DurationElement. can be found:
@@ -189,16 +192,34 @@ class FallbackDurations:
             free_radius_distance = self._request.free_radius_to
         if free_radius_distance is not None:
             free_access.free_radius.update(
-                p.uri for p in proximities_by_crowfly if p.distance < free_radius_distance
+                FreeAccessObject(p.uri, p.stop_point.coord.lon, p.stop_point.coord.lat)
+                for p in proximities_by_crowfly
+                if p.distance < free_radius_distance
             )
+
+    @new_relic.distributedEvent("free_access_with_excluded_zones", "street_network")
+    def _filter_free_access_with_excluded_zones(self, all_free_access):
+        if self._request['_use_excluded_zones'] and all_free_access:
+            # the mode is hardcoded to walking because we consider that we access to all free_access places
+            # by walking
+            is_excluded = functools.partial(
+                excluded_zones_manager.ExcludedZonesManager.is_excluded,
+                mode='walking',
+                timestamp=self._request['datetime'],
+            )
+            return set(itertools.filterfalse(is_excluded, all_free_access))
+        return all_free_access
 
     def _get_all_free_access(self, proximities_by_crowfly):
         free_access = self._places_free_access.wait_and_get()
         self._update_free_access_with_free_radius(free_access, proximities_by_crowfly)
         all_free_access = free_access.crowfly | free_access.odt | free_access.free_radius
-        return all_free_access
 
-    def _build_places_isochrone(self, proximities_by_crowfly, all_free_access):
+        return self._filter_free_access_with_excluded_zones(
+            excluded_zones_manager.ExcludedZonesManager.is_excluded, all_free_access
+        )
+
+    def _build_places_isochrone(self, proximities_by_crowfly, all_free_access_uris):
         places_isochrone = []
         stop_points = []
         # in this map, we store all the information that will be useful where we update the final result
@@ -207,16 +228,17 @@ class FallbackDurations:
         #   - stop_point_uri: to which stop point the access point is attached
         #   - access_point: the actual access_point, of type pt_object
         access_points_map = defaultdict(list)
+
         if self._mode == FallbackModes.car.name or self._request['_access_points'] is False:
             # if a place is freely accessible, there is no need to compute it's access duration in isochrone
-            places_isochrone.extend(p for p in proximities_by_crowfly if p.uri not in all_free_access)
-            stop_points.extend(p for p in proximities_by_crowfly if p.uri not in all_free_access)
+            places_isochrone.extend(p for p in proximities_by_crowfly if p.uri not in all_free_access_uris)
+            stop_points.extend(p for p in proximities_by_crowfly if p.uri not in all_free_access_uris)
             places_isochrone = self._streetnetwork_service.filter_places_isochrone(places_isochrone)
         else:
             proximities_by_crowfly = self._streetnetwork_service.filter_places_isochrone(proximities_by_crowfly)
             for p in proximities_by_crowfly:
                 # if a place is freely accessible, there is no need to compute it's access duration in isochrone
-                if p.uri in all_free_access:
+                if p.uri in all_free_access_uris:
                     continue
                 # what we are looking to compute, is not the stop_point, but the entrance and exit of a stop_point
                 # if any of them are existent
@@ -231,14 +253,14 @@ class FallbackDurations:
 
         return places_isochrone, access_points_map, stop_points
 
-    def _fill_fallback_durations_with_free_access(self, fallback_durations, all_free_access):
+    def _fill_fallback_durations_with_free_access(self, fallback_durations, all_free_access_uris):
         # Since we have already places that have free access, we add them into the result
         from collections import deque
 
         deque(
             (
                 fallback_durations.update({uri: DurationElement(0, response_pb2.reached, None, 0, None, None)})
-                for uri in all_free_access
+                for uri in all_free_access_uris
             ),
             maxlen=1,
         )
@@ -331,47 +353,16 @@ class FallbackDurations:
             result.append(self._requested_place_obj)
         return result
 
-    def _do_request(self):
-        logger = logging.getLogger(__name__)
-        logger.debug("requesting fallback durations from %s by %s", self._requested_place_obj.uri, self._mode)
-        # we collect all pt_objects (based on the requested mode, the object may be a car park or a stop point) whose
-        # beeline to the center_isochrone are smaller than the max duration to pt. aka: max_{mode}_duration_to_pt in
-        # "/journeys" parameters
-        # these pt_objects are potential candidates that will be sent to street network service for computing
-        # the routing matrix
-        proximities_by_crowfly = self._proximities_by_crowfly_pool.wait_and_get(self._mode)
-
-        all_free_access = self._get_all_free_access(proximities_by_crowfly)
-
-        # places_isochrone: a list of pt_objects selected from proximities_by_crowfly that will be sent to street
-        # network service to compute the routing matrix
-        # access_points_map: a map of access_point.uri vs a list of tuple whose elements are stop_point.uri, length and
-        # traversal_time
-        # ex:
-        # access_points_map["access_point:toto"] = [("stop_point:1", 42 , 41), ("stop_point:2", 43 , 44)]
-        # which means, via access point "access_point:toto", on can reach two stop points "stop_point:1" and
-        # "stop_point:2", by walking (42 meters, 41 sec) and (43 meters, 44sec) respectively
-        # it is a temporary storage that will be used later to update fallback_durations
-        places_isochrone, access_points_map, stop_points = self._build_places_isochrone(
-            proximities_by_crowfly, all_free_access
-        )
-
-        centers_isochrone = self._determine_centers_isochrone()
-        result = []
-        for center_isochrone in centers_isochrone:
-            result.append(
-                self.build_fallback_duration(
-                    center_isochrone, all_free_access, places_isochrone, access_points_map
-                )
-            )
-        if len(result) == 1:
-            return result[0]
+    def _do_request(self, futures, centers_isochrone, stop_points):
+        if len(futures) == 1:
+            return futures[0].wait_and_get()
         else:
             fallback_duration = dict()
             for place_isochrone in stop_points:
                 best_duration = float("inf")
                 best_element = None
-                for index, fallback in enumerate(result):
+                for index, future in enumerate(futures):
+                    fallback = future.wait_and_get()
                     element = fallback.get(place_isochrone.uri)
                     if element and element.duration < best_duration:
                         best_duration = element.duration
@@ -388,19 +379,62 @@ class FallbackDurations:
             return fallback_duration
 
     def _async_request(self):
-        self._value = self._future_manager.create_future(self._do_request)
+        logger = logging.getLogger(__name__)
+        logger.debug("requesting fallback durations from %s by %s", self._requested_place_obj.uri, self._mode)
+        # we collect all pt_objects (based on the requested mode, the object may be a car park or a stop point) whose
+        # beeline to the center_isochrone are smaller than the max duration to pt. aka: max_{mode}_duration_to_pt in
+        # "/journeys" parameters
+        # these pt_objects are potential candidates that will be sent to street network service for computing
+        # the routing matrix
+        proximities_by_crowfly = self._proximities_by_crowfly_pool.wait_and_get(self._mode)
+
+        all_free_access = self._get_all_free_access(proximities_by_crowfly)
+
+        all_free_access_uris = set((free_access.uri for free_access in all_free_access))
+
+        # places_isochrone: a list of pt_objects selected from proximities_by_crowfly that will be sent to street
+        # network service to compute the routing matrix
+        # access_points_map: a map of access_point.uri vs a list of tuple whose elements are stop_point.uri, length and
+        # traversal_time
+        # ex:
+        # access_points_map["access_point:toto"] = [("stop_point:1", 42 , 41), ("stop_point:2", 43 , 44)]
+        # which means, via access point "access_point:toto", on can reach two stop points "stop_point:1" and
+        # "stop_point:2", by walking (42 meters, 41 sec) and (43 meters, 44sec) respectively
+        # it is a temporary storage that will be used later to update fallback_durations
+        places_isochrone, access_points_map, stop_points = self._build_places_isochrone(
+            proximities_by_crowfly, all_free_access_uris
+        )
+
+        centers_isochrone = self._determine_centers_isochrone()
+        futures = []
+        for center_isochrone in centers_isochrone:
+            futures.append(
+                self._future_manager.create_future(
+                    self.build_fallback_duration,
+                    center_isochrone,
+                    all_free_access_uris,
+                    places_isochrone,
+                    access_points_map,
+                )
+            )
+
+        self._value = self._future_manager.create_future(
+            self._do_request, futures, centers_isochrone, stop_points
+        )
 
     def wait_and_get(self):
         return self._value.wait_and_get() if self._value else None
 
-    def build_fallback_duration(self, center_isochrone, all_free_access, places_isochrone, access_points_map):
+    def build_fallback_duration(
+        self, center_isochrone, all_free_access_uris, places_isochrone, access_points_map
+    ):
         logger = logging.getLogger(__name__)
 
         # the final result to be returned, which is a map of stop_points.uri vs DurationElement
         fallback_durations = defaultdict(lambda: DurationElement(float('inf'), None, None, 0, None, None))
 
         # Since we have already places that have free access, we add them into the fallback_durations
-        self._fill_fallback_durations_with_free_access(fallback_durations, all_free_access)
+        self._fill_fallback_durations_with_free_access(fallback_durations, all_free_access_uris)
 
         # There are two cases that places_isochrone maybe empty:
         # 1. The duration of direct_path is very small that we cannot find any proximities by crowfly
@@ -465,6 +499,7 @@ class FallbackDurationsPool(dict):
         direct_paths_by_mode,
         request,
         request_id,
+        direct_path_timeout,
         direct_path_type=StreetNetworkPathType.BEGINNING_FALLBACK,
     ):
         super(FallbackDurationsPool, self).__init__()
@@ -483,7 +518,7 @@ class FallbackDurationsPool(dict):
         self._request_id = request_id
 
         self._overrided_uri_map = defaultdict(dict)
-        self._async_request()
+        self._async_request(direct_path_timeout)
 
     @property
     def _overriding_mode_map(self):
@@ -504,10 +539,10 @@ class FallbackDurationsPool(dict):
                 res[mode] = overriding_modes
         return res
 
-    def _async_request(self):
+    def _async_request(self, direct_path_timeout):
         for mode in self._modes:
             max_fallback_duration = get_max_fallback_duration(
-                self._request, mode, self._direct_paths_by_mode.get(mode)
+                self._request, mode, self._direct_paths_by_mode.get(mode), direct_path_timeout
             )
             fallback_durations = FallbackDurations(
                 self._future_manager,

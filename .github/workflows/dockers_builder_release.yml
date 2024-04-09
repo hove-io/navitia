@@ -3,7 +3,7 @@ name: Build Navitia Dockers (Release)
 on:
   push:
     tags:
-      - '*'
+      - 'toto'
 
 env:
   jessie_version: debian8
@@ -234,18 +234,14 @@ jobs:
           unzip -qo $mimirsbrunn_package
           rm -f $mimirsbrunn_package
 
-      - name: Download cosmogony2cities package
-        run: |
-          cosmogony2cities_package="package-${{env.jessie_version}}.zip"
-          python3 core_team_ci_tools/github_artifacts/github_artifacts.py \
-              -o hove-io \
-              -r cosmogony2cities \
-              -t ${{ steps.ci-core-app-token.outputs.token }} \
-              -w build_package.yml \
-              -a $cosmogony2cities_package \
-              --output-dir .
-          unzip -qo $cosmogony2cities_package
-          rm -f $cosmogony2cities_package
+      - name: Download cosmogony2cities from release
+        uses: dsaltares/fetch-gh-release-asset@master
+        with:
+          repo: 'hove-io/cosmogony2cities'
+          version: 'tags/v0.1.1'
+          file: 'cosmogony2cities-${{env.jessie_version}}.deb'
+          target: 'cosmogony2cities_0.1.0-1_amd64.deb'
+          token: ${{ steps.ci-core-app-token.outputs.token }}
 
       - name: Download mimir-config package
         run: |
