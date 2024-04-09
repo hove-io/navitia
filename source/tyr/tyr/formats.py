@@ -94,6 +94,15 @@ streetnetwork_backend_format = {
     'required': ['klass'],
 }
 
+sn_backend_authorization_format = {
+    'type': 'object',
+    'properties': {
+        'sn_backend_id': {'type': 'string'},
+        'mode': {'mode': 'string'},
+    },
+    'required': ['sn_backend_id', 'mode'],
+}
+
 feed_publisher_format = {
     'type': 'object',
     'properties': {

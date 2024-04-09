@@ -66,6 +66,7 @@ from tyr.formats import (
     parse_error,
     equipments_provider_format,
     streetnetwork_backend_format,
+    sn_backend_authorization_format,
 )
 from tyr.helper import (
     get_instance_logger,
@@ -1475,7 +1476,7 @@ class UserV1(User):
 
     def get(self, user_id=None):
         resp = super(UserV1, self).get(user_id)
-        # In case of a response with pagination, the response type is a tuple and it needs to be serialized
+        # In case of a response with pagination, the response type is a tuple, and it needs to be serialized
         if type(resp) == tuple:
             return {'users': resp[0], 'pagination': resp[1]}
         return {'users': resp}
@@ -1648,6 +1649,80 @@ class Authorization(flask_restful.Resource):
         if version == 1:
             return {'user': resp}
         return resp
+
+
+class SnBackendAuthorization(flask_restful.Resource):
+    def __init__(self):
+        pass
+
+    def get(self, user_id):
+        try:
+            objs = models.SnBackendAuthorization.query.filter_by(user_id=user_id).all()
+        except Exception:
+            logging.exception("fail")
+            raise
+        resp = marshal(objs, sn_backend_authorization_fields)
+        return {'sn_backend_authorizations': resp}
+
+    def post(self, user_id):
+        """
+        Add a sn_backend in the db for the user
+        """
+        if not user_id:
+            abort(400, status="error", message='user_id is required')
+
+        try:
+            input_json = request.get_json(force=True, silent=False)
+        except BadRequest:
+            abort(400, status="error", message='Incorrect json provided')
+
+        try:
+            validate(input_json, sn_backend_authorization_format)
+        except ValidationError as e:
+            abort(400, status="invalid data", message='{}'.format(parse_error(e)))
+
+        new_obj = models.SnBackendAuthorization()
+        new_obj.user_id = user_id
+        new_obj.sn_backend_id = input_json['sn_backend_id']
+        new_obj.mode = input_json['mode']
+        user = models.User.query.get_or_404(user_id)
+        try:
+            db.session.add(new_obj)
+            if not user.has_sn_backend:
+                user.has_sn_backend = True
+            db.session.commit()
+        except (sqlalchemy.exc.IntegrityError, sqlalchemy.orm.exc.FlushError) as e:
+            return {'error': str(e)}, 409
+        except Exception as e:
+            abort(400, status="error", message=str(e))
+        return marshal(new_obj, sn_backend_authorization_fields), 201
+
+    def delete(self, user_id):
+        if not user_id:
+            abort(400, status="error", message='user_id is required')
+
+        parser = reqparse.RequestParser()
+        parser.add_argument(
+            'mode',
+            type=str,
+            case_sensitive=True,
+            help='mode is required',
+            choices=['bike', 'bss', 'car', 'car_no_park', 'ridesharing', 'taxi', 'walking'],
+            location=('json', 'values'),
+        )
+        args = parser.parse_args()
+
+        obj = models.SnBackendAuthorization.query.filter_by(user_id=user_id, mode=args['mode']).first_or_404()
+        user = models.User.query.get_or_404(user_id)
+        try:
+            db.session.delete(obj)
+            db.session.flush()
+            user.has_sn_backend = len(models.SnBackendAuthorization.query.filter_by(user_id=user_id).all()) > 0
+            db.session.commit()
+        except Exception:
+            logging.exception("fail")
+            raise
+        return {}, 204
 
 
 class EndPoint(flask_restful.Resource):

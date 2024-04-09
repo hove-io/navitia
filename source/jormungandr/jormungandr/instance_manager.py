@@ -210,18 +210,6 @@ class InstanceManager(object):
         if not self.thread_event.is_set():
             self.thread_event.set()
 
-    def _get_authorized_instances(self, user, api):
-        authorized_instances = [
-            i
-            for name, i in self.instances.items()
-            if authentication.has_access(name, abort=False, user=user, api=api)
-        ]
-
-        if not authorized_instances:
-            context = 'User has no access to any instance'
-            authentication.abort_request(user, context)
-        return authorized_instances
-
     def _find_coverage_by_object_id_in_instances(self, instances, object_id):
         # Request without coverage and coord (from or to)
         # Get list of instances if the coordinate point exist in instance.geom
