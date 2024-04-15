@@ -175,7 +175,6 @@ BOOST_AUTO_TEST_CASE(chaos_fill_disruptions_tests) {
     BOOST_CHECK_EQUAL(ls_1.pt_line_section().line().uri(), "line:tcl:8");
     BOOST_CHECK_EQUAL(ls_1.pt_object_type(), chaos::PtObject_Type_line_section);
 
-
     BOOST_CHECK_EQUAL(ls_1.pt_line_section().start_point().uri(), "stop_area:tcl:SA:5085");
     BOOST_CHECK_EQUAL(ls_1.pt_line_section().end_point().uri(), "stop_area:tcl:SA:5085");
     BOOST_CHECK_EQUAL(ls_1.pt_line_section().routes().size(), 2);
