@@ -74,10 +74,7 @@ def realtime_proxy_verify_default_value_test():
             'id': 'SytralRT',
             'object_id_tag': 'source',
             'class': 'jormungandr.realtime_schedule.sytral.Sytral',
-            'args': {
-                'service_url': 'http://custom_url.com',
-                'timeout': 10
-            },
+            'args': {'service_url': 'http://custom_url.com', 'timeout': 10},
         }
     ]
 
@@ -92,18 +89,14 @@ def realtime_proxy_verify_default_value_test():
 
 def realtime_proxy_verify_added_param_test():
     """
-     SytralRT proxy with param group_by_destination
+    SytralRT proxy with param group_by_destination
     """
     config = [
         {
             'id': 'SytralRT',
             'object_id_tag': 'source',
             'class': 'jormungandr.realtime_schedule.sytral.Sytral',
-            'args': {
-                'service_url': 'http://custom_url.com',
-                'timeout': 10,
-                'group_by_destination': True
-            },
+            'args': {'service_url': 'http://custom_url.com', 'timeout': 10, 'group_by_destination': True},
         }
     ]
 
