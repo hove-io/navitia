@@ -220,6 +220,8 @@ class RealtimeProxy(six.with_metaclass(ABCMeta, object)):
         for passage in next_realtime_passages:
             if not self._is_valid_direction(direction_uri, passage.direction_uri, group_by_dest):
                 continue
+            # If the route direction  doesn't match with departure.direction of forseti then
+            # we should add direction name as note
             add_direction = direction_uri != passage.direction_uri
             self._add_datetime(stop_schedule, passage, add_direction)
 
