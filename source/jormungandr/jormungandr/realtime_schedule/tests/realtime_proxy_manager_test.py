@@ -74,7 +74,7 @@ def realtime_proxy_verify_default_value_test():
             'id': 'SytralRT',
             'object_id_tag': 'source',
             'class': 'jormungandr.realtime_schedule.sytral.Sytral',
-            'args': {'service_url': 'http://custom_url.com', 'timeout': 10},
+            'args': {'service_url': 'https://custom_url.com', 'timeout': 10},
         }
     ]
 
@@ -82,7 +82,7 @@ def realtime_proxy_verify_default_value_test():
     sytral = manager.get('SytralRT')
 
     assert sytral
-    assert sytral.service_url == 'http://custom_url.com'
+    assert sytral.service_url == 'https://custom_url.com'
     assert sytral.timeout == 10
     assert sytral.group_by_destination is False
 
@@ -96,7 +96,7 @@ def realtime_proxy_verify_added_param_test():
             'id': 'SytralRT',
             'object_id_tag': 'source',
             'class': 'jormungandr.realtime_schedule.sytral.Sytral',
-            'args': {'service_url': 'http://custom_url.com', 'timeout': 10, 'group_by_destination': True},
+            'args': {'service_url': 'https://custom_url.com', 'timeout': 10, 'group_by_destination': True},
         }
     ]
 
@@ -104,7 +104,7 @@ def realtime_proxy_verify_added_param_test():
     sytral = manager.get('SytralRT')
 
     assert sytral
-    assert sytral.service_url == 'http://custom_url.com'
+    assert sytral.service_url == 'https://custom_url.com'
     assert sytral.timeout == 10
     assert sytral.group_by_destination is True
 
