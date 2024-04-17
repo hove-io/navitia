@@ -156,7 +156,7 @@ class RealtimeProxy(six.with_metaclass(ABCMeta, object)):
     def _filter_base_stop_schedule(self, date_time):
         return True
 
-    def _is_valid_direction(self, direction_uri, passage_direction_uri):
+    def _is_valid_direction(self, direction_uri, passage_direction_uri, group_by_dest):
         return True
 
     def _add_datetime(self, stop_schedule, passage, add_direction):
@@ -188,7 +188,7 @@ class RealtimeProxy(six.with_metaclass(ABCMeta, object)):
             return None
         return first_datetime.date
 
-    def _update_stop_schedule(self, request, stop_schedule, next_realtime_passages, groub_by_dest=False):
+    def _update_stop_schedule(self, request, stop_schedule, next_realtime_passages, group_by_dest=False):
         """
         Update the stopschedule response with the new realtime passages
 
@@ -218,8 +218,10 @@ class RealtimeProxy(six.with_metaclass(ABCMeta, object)):
         pb_del_if(stop_schedule.date_times, self._filter_base_stop_schedule)
         direction_uri = stop_schedule.pt_display_informations.uris.stop_area
         for passage in next_realtime_passages:
-            if groub_by_dest and not self._is_valid_direction(direction_uri, passage.direction_uri):
+            if not self._is_valid_direction(direction_uri, passage.direction_uri, group_by_dest):
                 continue
+            # If the route direction  doesn't match with departure.direction of forseti then
+            # we should add direction name as note
             add_direction = direction_uri != passage.direction_uri
             self._add_datetime(stop_schedule, passage, add_direction)
 
