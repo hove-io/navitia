@@ -177,7 +177,7 @@ class RoutePoint(object):
             return None
 
     def fetch_direction_uri(self):
-        # type: () -> Text
+        # type: () -> Optional[Text]
         if self.pb_route.HasField("direction"):
             return self.pb_route.direction.uri
         else:
