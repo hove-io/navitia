@@ -176,6 +176,13 @@ class RoutePoint(object):
         else:
             return None
 
+    def fetch_direction_uri(self):
+        # type: () -> Optional[Text]
+        if self.pb_route.HasField("direction"):
+            return self.pb_route.direction.uri
+        else:
+            return None
+
 
 def _get_route_point_from_stop_schedule(stop_schedule):
     rp = RoutePoint(stop_point=stop_schedule.stop_point, route=stop_schedule.route)
