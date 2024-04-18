@@ -240,6 +240,13 @@ class RealtimeProxy(six.with_metaclass(ABCMeta, object)):
 
         # append the realtime passages
         for rt_passage in next_realtime_passages:
+            # As in stop_schedule, we should manage group_by_destination to decide whether we keep
+            # realtime passage comparing passage destination with route_point destination
+            # https://navitia.atlassian.net/browse/NAV-2893
+            direction_uri = route_point.fetch_direction_uri()
+            if direction_uri:
+                if not self._is_valid_direction(direction_uri, rt_passage.direction_uri, group_by_dest=False):
+                    continue
             new_passage = deepcopy(template)
             new_passage.stop_date_time.arrival_date_time = date_to_timestamp(rt_passage.datetime)
             new_passage.stop_date_time.departure_date_time = date_to_timestamp(rt_passage.datetime)
