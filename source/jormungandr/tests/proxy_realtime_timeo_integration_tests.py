@@ -1031,7 +1031,7 @@ class TestDepartures(AbstractTestFixture):
 
         assert tmp["display_informations"]["direction"] == "EE"
         assert len(tmp['date_times']) == 0
-        assert tmp['additional_informations'] == 'no_departure_this_day'
+        assert tmp['additional_informations'] is None
 
     def test_terminus_schedule_groub_by_destination_partial_terminus(self):
         """
@@ -1048,11 +1048,11 @@ class TestDepartures(AbstractTestFixture):
         terminus_schedules = response['terminus_schedules']
         assert len(terminus_schedules) == 2
         tmp = terminus_schedules[0]
-        assert tmp["additional_informations"] == "no_departure_this_day"
+        assert tmp["additional_informations"] is None
         assert tmp["display_informations"]["direction"] == "TS_E"
         assert len(tmp['date_times']) == 0
 
         tmp = terminus_schedules[1]
-        assert tmp["additional_informations"] == "no_departure_this_day"
+        assert tmp["additional_informations"] is None
         assert tmp["display_informations"]["direction"] == "TS_A"
         assert len(tmp['date_times']) == 0
