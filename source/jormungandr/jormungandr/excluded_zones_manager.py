@@ -28,18 +28,26 @@
 # www.navitia.io
 
 import boto3
-import pytz
 import shapely.iterops
 from dateutil import parser
 from botocore.client import Config
 import logging
 import json
 import shapely
-import datetime
 from typing import Dict
+from datetime import timedelta
 
 from jormungandr import app, memory_cache, cache
 from jormungandr.resource_s3_object import ResourceS3Object
+
+# local memory cache
+MEMORY_CACHE_ASGARD_S3_DATA_TIMEOUT = app.config[str('MEMORY_CACHE_CONFIGURATION')].get(
+    str('ASGARD_S3_DATA_TIMEOUT'), timedelta(minutes=30).total_seconds()
+)
+# Redis cache
+CACHE_ASGARD_S3_DATA_TIMEOUT = app.config[str('CACHE_CONFIGURATION')].get(
+    str('ASGARD_S3_DATA_TIMEOUT'), timedelta(hours=2).total_seconds()
+)
 
 
 class ExcludedZonesManager:
@@ -47,8 +55,7 @@ class ExcludedZonesManager:
     asgard_s3_bucket_folder = "excluded_zones"
 
     @staticmethod
-    @cache.memoize(app.config[str('CACHE_CONFIGURATION')].get(str('ASGARD_S3_DATA_TIMEOUT'), 24 * 60))
-    def get_object(resource_s3_object):
+    def _get_object(resource_s3_object):
         logger = logging.getLogger(__name__)
         try:
             file_content = resource_s3_object.s3_object.get()['Body'].read().decode('utf-8')
@@ -58,7 +65,7 @@ class ExcludedZonesManager:
             return {}
 
     @staticmethod
-    def is_activated(activation_period, date):
+    def _is_activated(activation_period, date):
         if activation_period is None:
             return False
 
@@ -70,10 +77,9 @@ class ExcludedZonesManager:
         return any((is_between(period, date) for period in activation_period))
 
     @classmethod
-    @memory_cache.memoize(
-        app.config[str('MEMORY_CACHE_CONFIGURATION')].get(str('ASGARD_S3_DATA_TIMEOUT'), 10 * 60)
-    )
-    def get_all_excluded_zones(cls):
+    @memory_cache.memoize(MEMORY_CACHE_ASGARD_S3_DATA_TIMEOUT)
+    @cache.memoize(CACHE_ASGARD_S3_DATA_TIMEOUT)
+    def _get_all_excluded_zones(cls):
         bucket_name = app.config.get(str("ASGARD_S3_BUCKET"))
 
         logger = logging.getLogger(__name__)
@@ -86,7 +92,7 @@ class ExcludedZonesManager:
                 if not obj.key.endswith('.json'):
                     continue
                 try:
-                    json_content = ExcludedZonesManager.get_object(ResourceS3Object(obj, None))
+                    json_content = ExcludedZonesManager._get_object(ResourceS3Object(obj, None))
                     excluded_zones.append(json_content)
                 except Exception:
                     logger.exception("Error on fetching excluded zones: bucket: {}", bucket_name)
@@ -114,15 +120,14 @@ class ExcludedZonesManager:
         return excluded_zones
 
     @staticmethod
-    @memory_cache.memoize(
-        app.config[str('MEMORY_CACHE_CONFIGURATION')].get(str('ASGARD_S3_DATA_TIMEOUT'), 10 * 60)
-    )
+    @memory_cache.memoize(MEMORY_CACHE_ASGARD_S3_DATA_TIMEOUT)
+    @cache.memoize(CACHE_ASGARD_S3_DATA_TIMEOUT)
     def get_excluded_zones(mode=None, date=None):
         excluded_zones = []
-        for json_content in ExcludedZonesManager.get_all_excluded_zones():
+        for json_content in ExcludedZonesManager._get_all_excluded_zones():
             if mode is not None and mode not in json_content.get("modes", []):
                 continue
-            if date is not None and not ExcludedZonesManager.is_activated(
+            if date is not None and not ExcludedZonesManager._is_activated(
                 json_content.get('activation_periods'), date
             ):
                 continue
@@ -130,9 +135,9 @@ class ExcludedZonesManager:
         return excluded_zones
 
     @classmethod
-    @memory_cache.memoize(app.config[str('CACHE_CONFIGURATION')].get(str('ASGARD_S3_DATA_TIMEOUT'), 10 * 60))
-    def is_excluded(cls, obj, mode, timestamp):
-        date = datetime.datetime.fromtimestamp(timestamp, tz=pytz.timezone("UTC")).date()
+    @memory_cache.memoize(MEMORY_CACHE_ASGARD_S3_DATA_TIMEOUT)
+    @cache.memoize(CACHE_ASGARD_S3_DATA_TIMEOUT)
+    def is_excluded(cls, obj, mode, date):
         # update excluded zones
         excluded_zones = ExcludedZonesManager.get_excluded_zones(mode=mode, date=date)
         poi_ids = set((zone.get("poi") for zone in excluded_zones))
