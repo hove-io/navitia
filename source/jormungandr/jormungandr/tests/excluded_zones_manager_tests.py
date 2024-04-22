@@ -64,7 +64,7 @@ def mock_get_all_excluded_zones():
 @pytest.fixture(scope="function", autouse=True)
 def mock_http_karos(monkeypatch):
     monkeypatch.setattr(
-        'jormungandr.excluded_zones_manager.ExcludedZonesManager.get_all_excluded_zones',
+        'jormungandr.excluded_zones_manager.ExcludedZonesManager._get_all_excluded_zones',
         mock_get_all_excluded_zones,
     )
 
