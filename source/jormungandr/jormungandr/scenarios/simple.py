@@ -122,7 +122,11 @@ class Scenario(object):
 
         if isinstance(request['filter'], str):
             req.line_reports.filter = request['filter']
-        else:
+        elif (
+            isinstance(request['filter'], dict)
+            and 'object_id' in request['filter']
+            and 'object_type' in request['filter']
+        ):
             req.line_reports.object_type = request_pb2.LineReportsRequest.Type.Value(
                 request['filter']['object_type']
             )
