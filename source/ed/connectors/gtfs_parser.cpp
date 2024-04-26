@@ -70,7 +70,7 @@ nt::Type_e get_type_enum(const std::string& str) {
     if ("stop_time" == str) {
         return nt::Type_e::StopTime;
     }
-    LOG4CPLUS_WARN(log4cplus::Logger::getInstance("log"), "unkown navitia type: " << str);
+    LOG4CPLUS_WARN(log4cplus::Logger::getInstance("log"), "unknown navitia type: " << str);
     return nt::Type_e::Unknown;
 }
 
