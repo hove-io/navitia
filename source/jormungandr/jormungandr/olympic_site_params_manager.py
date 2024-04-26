@@ -184,6 +184,9 @@ class OlympicSiteParamsManager:
     )
     def fetch_and_get_data(self, instance_name, bucket_name, folder, **kwargs):
         result = dict()
+
+        return result
+
         logger = logging.getLogger(__name__)
         s3_resource = boto3.resource('s3', config=Config(**kwargs))
         try:

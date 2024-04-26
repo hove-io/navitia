@@ -28,6 +28,8 @@
 # www.navitia.io
 
 from __future__ import absolute_import, print_function, unicode_literals, division
+
+import collections
 import logging
 from jormungandr.exceptions import TechnicalError
 from jormungandr import app
@@ -129,6 +131,18 @@ SHORTEST = DirectPathProfile(bike_shortest=True, tag='shortest')
 
 DIRECT_PATH_ALTERNATIVES_PROFILES = [BALANCED, COMFORT, SHORTEST]
 
+DEFAULT_ASGARD_PROJECTION_RADIUS = app.config['DEFAULT_ASGARD_PROJECTION_RADIUS']
+
+PROJECTION_RADIUS = {
+    type_pb2.POI: {
+        "poi_type:access_point_jo2024": {
+            FallbackModes.walking.name: app.config['ASGARD_PROJECTION_RADIUS_POI_ACCESS_POINT_JO2024'],
+            FallbackModes.bike.name: app.config['ASGARD_PROJECTION_RADIUS_POI_ACCESS_POINT_JO2024'],
+            FallbackModes.bss.name: app.config['ASGARD_PROJECTION_RADIUS_POI_ACCESS_POINT_JO2024'],
+        }
+    }
+}
+
 
 class Asgard(TransientSocket, Kraken):
     def __init__(
@@ -180,10 +194,26 @@ class Asgard(TransientSocket, Kraken):
             'language': self.instance.language,
         }
 
-    def make_location(self, obj):
+    @staticmethod
+    def get_projection_radius(obj, mode):
+        def _poi(o, m):
+            return PROJECTION_RADIUS[type_pb2.POI].get(o.poi.poi_type.uri, {}).get(m)
+
+        def _default(*_, **__):
+            return None
+
+        functor_map = {type_pb2.POI: _poi}
+
+        return functor_map.get(obj.embedded_type, _default)(obj, mode)
+
+    def make_location(self, obj, mode):
         coord = get_pt_object_coord(obj)
         return type_pb2.LocationContext(
-            place="", access_duration=0, lon=round(coord.lon, 5), lat=round(coord.lat, 5)
+            place="",
+            access_duration=0,
+            lon=round(coord.lon, 5),
+            lat=round(coord.lat, 5),
+            projection_radius=self.get_projection_radius(obj, mode),
         )
 
     def get_language_parameter(self, request):
@@ -363,8 +393,10 @@ class Asgard(TransientSocket, Kraken):
     ):
         req = request_pb2.Request()
         req.requested_api = type_pb2.direct_path
-        req.direct_path.origin.CopyFrom(self.make_location(pt_object_origin))
-        req.direct_path.destination.CopyFrom(self.make_location(pt_object_destination))
+
+        req.direct_path.default_projection_radius = DEFAULT_ASGARD_PROJECTION_RADIUS
+        req.direct_path.origin.CopyFrom(self.make_location(pt_object_origin, mode))
+        req.direct_path.destination.CopyFrom(self.make_location(pt_object_destination, mode))
         req.direct_path.datetime = fallback_extremity.datetime
         req.direct_path.clockwise = fallback_extremity.represents_start
         req.direct_path.use_excluded_zones = request["_use_excluded_zones"]

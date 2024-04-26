@@ -33,6 +33,7 @@ from __future__ import absolute_import, print_function, unicode_literals, divisi
 import math
 from navitiacommon import request_pb2, type_pb2, response_pb2
 from jormungandr.fallback_modes import FallbackModes
+from jormungandr import app
 
 N_DEG_TO_RAD = 0.01745329238
 EARTH_RADIUS_IN_METERS = 6372797.560856
@@ -93,8 +94,9 @@ def create_kraken_direct_path_request(
 ):
     req = request_pb2.Request()
     req.requested_api = type_pb2.direct_path
-    req.direct_path.origin.CopyFrom(connector.make_location(pt_object_origin))
-    req.direct_path.destination.CopyFrom(connector.make_location(pt_object_destination))
+
+    req.direct_path.origin.CopyFrom(connector.make_location(pt_object_origin, mode))
+    req.direct_path.destination.CopyFrom(connector.make_location(pt_object_destination, mode))
     req.direct_path.datetime = fallback_extremity.datetime
     req.direct_path.clockwise = fallback_extremity.represents_start
     req.direct_path.streetnetwork_params.origin_mode = connector.handle_car_no_park_modes(mode)
@@ -128,8 +130,12 @@ def create_kraken_matrix_request(
     req = request_pb2.Request()
     req.requested_api = type_pb2.street_network_routing_matrix
 
-    req.sn_routing_matrix.origins.extend((connector.make_location(o) for o in origins))
-    req.sn_routing_matrix.destinations.extend((connector.make_location(d) for d in destinations))
+    req.sn_routing_matrix.default_projection_radius = app.config['DEFAULT_ASGARD_PROJECTION_RADIUS']
+
+    req.sn_routing_matrix.origins.extend((connector.make_location(o, street_network_mode) for o in origins))
+    req.sn_routing_matrix.destinations.extend(
+        (connector.make_location(d, street_network_mode) for d in destinations)
+    )
 
     req.sn_routing_matrix.mode = connector.handle_car_no_park_modes(street_network_mode)
     req.sn_routing_matrix.speed = speed_switcher.get(street_network_mode, kwargs.get("walking"))

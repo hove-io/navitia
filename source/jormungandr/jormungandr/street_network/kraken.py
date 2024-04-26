@@ -236,7 +236,7 @@ class Kraken(AbstractStreetNetworkService):
 
         return res.sn_routing_matrix
 
-    def make_location(self, obj):
+    def make_location(self, obj, _):
         return type_pb2.LocationContext(place=self.get_uri_pt_object(obj), access_duration=0)
 
     def _create_sn_routing_matrix_request(

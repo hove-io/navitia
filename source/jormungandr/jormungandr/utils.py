@@ -431,6 +431,7 @@ def add_children(pt_object, dict_pt_object):
         coord = Coords(ch["coord"]["lat"], ch["coord"]["lon"])
         ch_poi.coord.lon = coord.lon
         ch_poi.coord.lat = coord.lat
+        ch_poi.poi_type.uri = ch.get("poi_type", {}).get("id")
 
 
 def add_properties(pt_object, dict_pt_object):
@@ -571,6 +572,7 @@ def get_pt_object_coord(pt_object):
         type_pb2.POI: "poi",
         type_pb2.ACCESS_POINT: "access_point",
     }
+
     attr = getattr(pt_object, map_coord.get(pt_object.embedded_type, ""), None)
     coord = getattr(attr, "coord", None)
 
