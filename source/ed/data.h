@@ -51,12 +51,11 @@ namespace ed {
 
 template <typename T>
 void normalize_uri(std::vector<T*>& vec) {
-    if vec
-        == "stop_point" {
-            LOG4CPLUS_INFO(log4cplus::Logger::getInstance("log"), "Keeping spaces for stop_point:", vec);
-        }
-    else {
-        std::string prefix = navitia::type::static_data::get()->captionByType(T::type);
+    std::string prefix = navitia::type::static_data::get()->captionByType(T::type);
+
+    if (prefix == "stop_point") {
+        LOG4CPLUS_INFO(log4cplus::Logger::getInstance("log"), "Keeping spaces for stop_point:", vec);
+    } else {
         for (auto* element : vec) {
             // Suppression des espaces de l'URI
             boost::algorithm::replace_all(element->uri, " ", "");
