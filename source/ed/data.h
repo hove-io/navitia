@@ -44,6 +44,7 @@ www.navitia.io
 #include "fare/fare.h"
 #include "type/datetime.h"
 #include "type/address_from_ntfs.h"
+#include "utils/logger.h"
 
 namespace nt = navitia::type;
 /** Ce namespace contient toutes les structures de données \b temporaires, à remplir par le connecteur */
