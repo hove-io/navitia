@@ -51,19 +51,19 @@ namespace nt = navitia::type;
 namespace ed {
 
 template <typename T>
-void normalize_uri(std::vector<T*>& vec) {
+void normalize_uri(std::vector<T*>& vec, bool remove_whitespaces) {
     std::string prefix = navitia::type::static_data::get()->captionByType(T::type);
 
     for (auto* element : vec) {
         if (element->uri.find(' ') != std::string::npos) {
-            if (prefix == "stop_point") {
-                LOG4CPLUS_INFO(log4cplus::Logger::getInstance("log"),
-                               "Keeping spaces for stop_point: " << element->uri);
+            if (!remove_whitespaces) {
+                LOG4CPLUS_WARN(log4cplus::Logger::getInstance("log"),
+                               "Keeping spaces for: " << prefix << ":" << element->uri);
             } else {
                 // Suppression des espaces de l'URI
-                boost::algorithm::replace_all(element->uri, " ", "");
-                LOG4CPLUS_INFO(log4cplus::Logger::getInstance("log"),
+                LOG4CPLUS_WARN(log4cplus::Logger::getInstance("log"),
                                "Removing spaces for: " << prefix << ":" << element->uri);
+                boost::algorithm::replace_all(element->uri, " ", "");
             }
         }
         element->uri = prefix + ":" + element->uri;
