@@ -55,15 +55,18 @@ void normalize_uri(std::vector<T*>& vec) {
     std::string prefix = navitia::type::static_data::get()->captionByType(T::type);
 
     for (auto* element : vec) {
-        if (prefix == "stop_point") {
-            element->uri = prefix + ":" + element->uri;
-            LOG4CPLUS_INFO(log4cplus::Logger::getInstance("log"), "Keeping spaces for stop_point: " << element->uri);
-        } else {
-            // Suppression des espaces de l'URI
-            boost::algorithm::replace_all(element->uri, " ", "");
-            element->uri = prefix + ":" + element->uri;
-            LOG4CPLUS_INFO(log4cplus::Logger::getInstance("log"), "Removing spaces for: " << element->uri);
+        if (element->uri.find(' ') != std::string::npos) {
+            if (prefix == "stop_point") {
+                LOG4CPLUS_INFO(log4cplus::Logger::getInstance("log"),
+                               "Keeping spaces for stop_point: " << element->uri);
+            } else {
+                // Suppression des espaces de l'URI
+                boost::algorithm::replace_all(element->uri, " ", "");
+                LOG4CPLUS_INFO(log4cplus::Logger::getInstance("log"),
+                               "Removing spaces for: " << prefix << ":" << element->uri);
+            }
         }
+        element->uri = prefix + ":" + element->uri;
     }
 }
 
