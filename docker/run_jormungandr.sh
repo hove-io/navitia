@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
 
 file=/usr/src/app/jormungandr.wsgi
-jormungandr_cache2="name=jormungandr,items=2048"
 monitor_cache2="name=monitor,items=100"
 
 
@@ -13,11 +12,13 @@ Usage: ${0##*/} -m monitor-process -r max-requests
 EOF
 }
 
-while getopts "m:r:h" opt; do
+while getopts "m:r:c:h" opt; do
     case $opt in
         m) monitor_processes=$OPTARG
             ;;
         r) app_max_requests=$OPTARG
+            ;;
+        c) jormun_cache_items=$OPTARG
             ;;
         h|\?)
             show_help
@@ -39,6 +40,12 @@ then
   monitor_processes=0
 fi
 
+if [[ -z $jormun_cache_items ]]
+then
+  jormun_cache_items=2048
+fi
+
+jormungandr_cache2="name=jormungandr,items=${jormun_cache_items}"
 
 # run apache2
 service apache2 start
