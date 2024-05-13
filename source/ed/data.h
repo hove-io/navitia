@@ -57,12 +57,12 @@ void normalize_uri(std::vector<T*>& vec, bool remove_whitespaces) {
     for (auto* element : vec) {
         if (element->uri.find(' ') != std::string::npos) {
             if (!remove_whitespaces) {
-                LOG4CPLUS_WARN(log4cplus::Logger::getInstance("log"),
-                               "Keeping spaces for: " << prefix << ":" << element->uri);
+                LOG4CPLUS_ERROR(log4cplus::Logger::getInstance("log"),
+                                "Keeping spaces for: " << prefix << ":" << element->uri);
             } else {
                 // Suppression des espaces de l'URI
-                LOG4CPLUS_WARN(log4cplus::Logger::getInstance("log"),
-                               "Removing spaces for: " << prefix << ":" << element->uri);
+                LOG4CPLUS_ERROR(log4cplus::Logger::getInstance("log"),
+                                "Removing spaces for: " << prefix << ":" << element->uri);
                 boost::algorithm::replace_all(element->uri, " ", "");
             }
         }

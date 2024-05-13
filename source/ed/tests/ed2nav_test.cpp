@@ -87,3 +87,18 @@ BOOST_AUTO_TEST_CASE(throw_on_save) {
     DataThrowOnSave data(0);
     BOOST_CHECK_EQUAL(ed::try_save_file(filename, data), false);
 }
+
+struct toto {
+    std::string uri;
+    const static nt::Type_e type = nt::Type_e::StopArea;
+};
+
+BOOST_AUTO_TEST_CASE(normalize_uri) {
+    std::vector<toto*> stopAreasToNormalize;
+    stopAreasToNormalize.push_back(new toto{"AMI:SP:VENUS 1"});
+
+    ed::normalize_uri(stopAreasToNormalize, true);
+    for (auto* ptr : stopAreasToNormalize) {
+        BOOST_CHECK_EQUAL(ptr->uri, "stop_area:AMI:SP:VENUS1");
+    }
+}
