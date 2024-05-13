@@ -87,3 +87,30 @@ BOOST_AUTO_TEST_CASE(throw_on_save) {
     DataThrowOnSave data(0);
     BOOST_CHECK_EQUAL(ed::try_save_file(filename, data), false);
 }
+
+struct SA {
+    std::string uri;
+    const static nt::Type_e type = nt::Type_e::StopArea;
+};
+struct SP {
+    std::string uri;
+    const static nt::Type_e type = nt::Type_e::StopPoint;
+};
+
+BOOST_AUTO_TEST_CASE(normalize_uri) {
+    std::vector<SA*> stopAreasToNormalize;
+    stopAreasToNormalize.push_back(new SA{"AMI:SP:VENUS 1"});
+
+    ed::normalize_uri(stopAreasToNormalize, true);
+    for (auto* ptr : stopAreasToNormalize) {
+        BOOST_CHECK_EQUAL(ptr->uri, "stop_area:AMI:SP:VENUS1");
+    }
+
+    std::vector<SP*> stopPointsNotToNormalize;
+    stopPointsNotToNormalize.push_back(new SP{"AMI:SP:VENUS 1"});
+
+    ed::normalize_uri(stopPointsNotToNormalize, false);
+    for (auto* ptr : stopPointsNotToNormalize) {
+        BOOST_CHECK_EQUAL(ptr->uri, "stop_point:AMI:SP:VENUS 1");
+    }
+}
