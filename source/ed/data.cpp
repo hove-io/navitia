@@ -66,18 +66,18 @@ void Data::add_feed_info(const std::string& key, const std::string& value) {
 }
 
 void Data::normalize_uri() {
-    ::ed::normalize_uri(networks, true);
-    ::ed::normalize_uri(companies, true);
-    ::ed::normalize_uri(commercial_modes, true);
-    ::ed::normalize_uri(lines, true);
-    ::ed::normalize_uri(line_groups, true);
-    ::ed::normalize_uri(physical_modes, true);
-    ::ed::normalize_uri(stop_areas, true);
-    ::ed::normalize_uri(stop_points, false);
-    ::ed::normalize_uri(vehicle_journeys, true);
-    ::ed::normalize_uri(validity_patterns, true);
-    ::ed::normalize_uri(calendars, true);
-    ::ed::normalize_uri(access_points, true);
+    ::ed::normalize_uri(networks, false);
+    ::ed::normalize_uri(companies, false);
+    ::ed::normalize_uri(commercial_modes, false);
+    ::ed::normalize_uri(lines, false);
+    ::ed::normalize_uri(line_groups, false);
+    ::ed::normalize_uri(physical_modes, false);
+    ::ed::normalize_uri(stop_areas, false);
+    ::ed::normalize_uri(stop_points, true);
+    ::ed::normalize_uri(vehicle_journeys, false);
+    ::ed::normalize_uri(validity_patterns, false);
+    ::ed::normalize_uri(calendars, false);
+    ::ed::normalize_uri(access_points, false);
 }
 
 void Data::build_block_id() {
