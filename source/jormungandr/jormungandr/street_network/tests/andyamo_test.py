@@ -955,12 +955,19 @@ def get_response_andyamo_represents_start_true_test():
     destination = make_pt_object(type_pb2.ADDRESS, lon=-1.6740057, lat=48.097592, uri='AndyamoEnd')
     fallback_extremity = PeriodExtremity(str_to_time_stamp('20220503T060000'), True)
 
-    proto_resp = andyamo._get_response(resp_json, origin, destination, fallback_extremity)
+    proto_resp = andyamo._get_response(
+        json_response=resp_json,
+        pt_object_origin=origin,
+        pt_object_destination=destination,
+        fallback_extremity=fallback_extremity,
+        request={'datetime': str_to_time_stamp('20220503T060000')},
+    )
 
     assert len(proto_resp.journeys) == 1
     assert proto_resp.journeys[0].durations.total == 2245
     assert proto_resp.journeys[0].durations.walking == 2245
     assert proto_resp.journeys[0].distances.walking == 2807
+    assert proto_resp.journeys[0].requested_date_time == str_to_time_stamp('20220503T060000')
 
     assert len(proto_resp.journeys[0].sections) == 1
     assert proto_resp.journeys[0].sections[0].type == response_pb2.STREET_NETWORK
@@ -981,7 +988,13 @@ def get_response_andyamo_represents_start_false_test():
     destination = make_pt_object(type_pb2.ADDRESS, lon=-1.6740057, lat=48.097592, uri='AndyamoEnd')
     fallback_extremity = PeriodExtremity(str_to_time_stamp('20220503T060000'), False)
 
-    proto_resp = andyamo._get_response(resp_json, origin, destination, fallback_extremity)
+    proto_resp = andyamo._get_response(
+        json_response=resp_json,
+        pt_object_origin=origin,
+        pt_object_destination=destination,
+        fallback_extremity=fallback_extremity,
+        request={'datetime': str_to_time_stamp('20220503T055500')},
+    )
 
     assert len(proto_resp.journeys) == 1
     assert proto_resp.journeys[0].durations.total == 2245  # Adjusted to match the response
@@ -990,6 +1003,7 @@ def get_response_andyamo_represents_start_false_test():
     assert (
         abs(proto_resp.journeys[0].distances.walking - 2807.08) < 0.1
     )  # Allow a small difference due to rounding
+    assert proto_resp.journeys[0].requested_date_time == str_to_time_stamp('20220503T055500')
 
 
 def test_get_response_int_cast_success():  # Préparation des données de test
@@ -1008,11 +1022,18 @@ def test_get_response_int_cast_success():  # Préparation des données de test
     andyamo = Andyamo(instance=instance, service_url=fake_service_url, service_backup=service_backup, zone='')
 
     # Appel de la méthode _get_response
-    resp = andyamo._get_response(json_response, pt_object_origin, pt_object_destination, fallback_extremity)
+    resp = andyamo._get_response(
+        json_response=json_response,
+        pt_object_origin=pt_object_origin,
+        pt_object_destination=pt_object_destination,
+        fallback_extremity=fallback_extremity,
+        request={'datetime': str_to_time_stamp('20220503T123000')},
+    )
 
     assert resp.journeys[0].sections[0].street_network.path_items[0].direction == 0
     assert resp.journeys[0].sections[0].street_network.path_items[2].direction == -90
     assert resp.journeys[0].sections[0].street_network.path_items[4].direction == 90
+    assert resp.journeys[0].requested_date_time == str_to_time_stamp('20220503T123000')
 
 
 def create_pt_object(lon, lat, pt_object_type=type_pb2.POI):

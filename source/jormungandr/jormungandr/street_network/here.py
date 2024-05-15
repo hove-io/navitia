@@ -251,7 +251,7 @@ class Here(AbstractStreetNetworkService):
             journey.departure_date_time = datetime - journey.duration
             journey.arrival_date_time = datetime
 
-        journey.requested_date_time = request['datetime']
+        journey.requested_date_time = request.get('datetime', 0)
 
         # distances
         length = here_section.get('summary', {}).get('length', 0)

@@ -284,6 +284,7 @@ def direct_path_geovelo_test():
         assert geovelo_resp.response_type == response_pb2.ITINERARY_FOUND
         assert len(geovelo_resp.journeys) == 1
         assert geovelo_resp.journeys[0].duration == 3155  # 52min35s
+        assert geovelo_resp.journeys[0].requested_date_time == 0  # parameter datetime absent in MOCKED_REQUEST
         assert len(geovelo_resp.journeys[0].sections) == 1
         assert geovelo_resp.journeys[0].arrival_date_time == str_to_time_stamp('20161010T152000')
         assert geovelo_resp.journeys[0].departure_date_time == str_to_time_stamp('20161010T142725')
@@ -323,6 +324,8 @@ def direct_path_geovelo_zero_test():
     origin = make_pt_object(type_pb2.ADDRESS, lon=2, lat=48, uri='refStart1')
     destination = make_pt_object(type_pb2.ADDRESS, lon=2, lat=48, uri='refEnd1')
     fallback_extremity = PeriodExtremity(str_to_time_stamp('20161010T152000'), False)
+    # Add parameter datetime in MOCKED_REQUEST to verify
+    MOCKED_REQUEST['datetime'] = str_to_time_stamp('20161010T150000')
     with requests_mock.Mocker() as req:
         req.post(
             '{}/api/v2/computedroutes?instructions=true&elevations=true&geometry=true'
@@ -336,6 +339,7 @@ def direct_path_geovelo_zero_test():
         assert geovelo_resp.response_type == response_pb2.ITINERARY_FOUND
         assert len(geovelo_resp.journeys) == 1
         assert geovelo_resp.journeys[0].duration == 0
+        assert geovelo_resp.journeys[0].requested_date_time == str_to_time_stamp('20161010T150000')
         assert len(geovelo_resp.journeys[0].sections) == 1
         assert geovelo_resp.journeys[0].arrival_date_time == str_to_time_stamp('20161010T152000')
         assert geovelo_resp.journeys[0].departure_date_time == str_to_time_stamp('20161010T152000')
@@ -388,10 +392,17 @@ def distances_durations_test():
     destination = make_pt_object(type_pb2.ADDRESS, lon=3, lat=48.3, uri='refEnd1')
     fallback_extremity = PeriodExtremity(str_to_time_stamp('20161010T152000'), True)
 
-    proto_resp = geovelo._get_response(resp_json, origin, destination, fallback_extremity)
+    proto_resp = geovelo._get_response(
+        json_response=resp_json,
+        pt_object_origin=origin,
+        pt_object_destination=destination,
+        fallback_extremity=fallback_extremity,
+        request={'datetime': str_to_time_stamp('20161010T151000')},
+    )
     assert proto_resp.journeys[0].durations.total == 3155
     assert proto_resp.journeys[0].durations.bike == 3155
     assert proto_resp.journeys[0].distances.bike == 11393.0
+    assert proto_resp.journeys[0].requested_date_time == str_to_time_stamp('20161010T151000')
 
 
 def make_request_arguments_bike_details_test():
