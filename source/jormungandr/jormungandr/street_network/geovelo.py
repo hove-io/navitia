@@ -425,7 +425,9 @@ class Geovelo(AbstractStreetNetworkService):
             logging.getLogger(__name__).error('Geovelo nb response != nb requested')
             raise UnableToParse('Geovelo nb response != nb requested')
 
-        return self._get_response(resp_json, pt_object_origin, pt_object_destination, fallback_extremity, request)
+        return self._get_response(
+            resp_json, pt_object_origin, pt_object_destination, fallback_extremity, request
+        )
 
     def make_path_key(self, mode, orig_uri, dest_uri, streetnetwork_path_type, period_extremity):
         """
