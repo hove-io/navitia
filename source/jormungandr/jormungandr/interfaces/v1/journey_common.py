@@ -521,6 +521,7 @@ class JourneyCommon(ResourceUri, ResourceUtc):
                     'occupancy',
                     'arrival_stop_attractivity',
                     'departure_stop_attractivity',
+                    'pseudo_duration',
                 ]
             ),
             help="choose the criteria used to compute pt journeys, feature in beta ",

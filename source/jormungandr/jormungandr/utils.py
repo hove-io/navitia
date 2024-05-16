@@ -1053,6 +1053,8 @@ def create_journeys_request(origins, destinations, datetime, clockwise, journey_
         req.journeys.criteria = request_pb2.ArrivalStopAttractivity
     elif journey_parameters.criteria == "departure_stop_attractivity":
         req.journeys.criteria = request_pb2.DepartureStopAttractivity
+    elif journey_parameters.criteria == "pseudo_duration":
+        req.journeys.criteria = request_pb2.PseudoDuration
 
     return req
 
