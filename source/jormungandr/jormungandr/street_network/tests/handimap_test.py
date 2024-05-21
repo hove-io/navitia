@@ -348,12 +348,19 @@ def get_response_handimap_represents_start_true_test():
     destination = make_pt_object(type_pb2.ADDRESS, lon=-1.6740057, lat=48.097592, uri='HandimapEnd')
     fallback_extremity = PeriodExtremity(str_to_time_stamp('20220503T060000'), True)
 
-    proto_resp = handimap._get_response(resp_json, origin, destination, fallback_extremity)
+    proto_resp = handimap._get_response(
+        json_response=resp_json,
+        pt_object_origin=origin,
+        pt_object_destination=destination,
+        fallback_extremity=fallback_extremity,
+        request={'datetime': str_to_time_stamp('20220503T060000')},
+    )
 
     assert len(proto_resp.journeys) == 1
     assert proto_resp.journeys[0].durations.total == 126
     assert proto_resp.journeys[0].durations.walking == 126
     assert proto_resp.journeys[0].distances.walking == 412
+    assert proto_resp.journeys[0].requested_date_time == str_to_time_stamp('20220503T060000')
 
     assert len(proto_resp.journeys[0].sections) == 1
     assert proto_resp.journeys[0].sections[0].type == response_pb2.STREET_NETWORK
@@ -389,12 +396,19 @@ def get_response_handimap_represents_start_false_test():
     destination = make_pt_object(type_pb2.ADDRESS, lon=-1.6740057, lat=48.097592, uri='HandimapEnd')
     fallback_extremity = PeriodExtremity(str_to_time_stamp('20220503T060000'), False)
 
-    proto_resp = handimap._get_response(resp_json, origin, destination, fallback_extremity)
+    proto_resp = handimap._get_response(
+        json_response=resp_json,
+        pt_object_origin=origin,
+        pt_object_destination=destination,
+        fallback_extremity=fallback_extremity,
+        request={'datetime': str_to_time_stamp('20220503T055500')},
+    )
 
     assert len(proto_resp.journeys) == 1
     assert proto_resp.journeys[0].durations.total == 126
     assert proto_resp.journeys[0].durations.walking == 126
     assert proto_resp.journeys[0].distances.walking == 412
+    assert proto_resp.journeys[0].requested_date_time == str_to_time_stamp('20220503T055500')
 
     assert len(proto_resp.journeys[0].sections) == 1
     assert proto_resp.journeys[0].sections[0].type == response_pb2.STREET_NETWORK

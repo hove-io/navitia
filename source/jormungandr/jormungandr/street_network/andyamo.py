@@ -319,10 +319,12 @@ class Andyamo(AbstractStreetNetworkService):
         params = self._make_request_arguments_direct_path(pt_object_origin, pt_object_destination, request)
         response = self._call_andyamo('route', params)
         json_response = self.check_response_and_get_json(response)
-        return self._get_response(json_response, pt_object_origin, pt_object_destination, fallback_extremity)
+        return self._get_response(
+            json_response, pt_object_origin, pt_object_destination, fallback_extremity, request
+        )
 
     @staticmethod
-    def _get_response(json_response, pt_object_origin, pt_object_destination, fallback_extremity):
+    def _get_response(json_response, pt_object_origin, pt_object_destination, fallback_extremity, request):
         '''
         :param fallback_extremity: is a PeriodExtremity (a datetime and it's meaning on the fallback period)
         '''
@@ -341,7 +343,7 @@ class Andyamo(AbstractStreetNetworkService):
             journey.arrival_date_time = datetime
         journey.durations.total = journey.duration
         journey.durations.walking = journey.duration
-
+        journey.requested_date_time = request.get('datetime', 0)
         journey.distances.walking = kilometers_to_meters(andyamo_trip['summary']["length"])
 
         previous_section_endtime = journey.departure_date_time

@@ -292,6 +292,7 @@ def here_basic_routing_test(valid_here_routing_response):
     assert response.response_type == response_pb2.ITINERARY_FOUND
     assert len(response.journeys) == 1
     assert response.journeys[0].duration == 1468
+    assert response.journeys[0].requested_date_time == str_to_time_stamp('20161010T152000')
     assert len(response.journeys[0].sections) == 1
     section = response.journeys[0].sections[0]
     assert section.type == response_pb2.STREET_NETWORK
@@ -322,12 +323,13 @@ def here_basic_routing_test(valid_here_routing_response):
         origin=origin,
         destination=destination,
         fallback_extremity=fallback_extremity,
-        request={'datetime': str_to_time_stamp('20161010T152000')},
+        request={'datetime': str_to_time_stamp('20161010T151000')},
         direct_path_type=StreetNetworkPathType.DIRECT,
     )
     assert response.status_code == 200
     assert response.response_type == response_pb2.ITINERARY_FOUND
     assert len(response.journeys) == 1
+    assert response.journeys[0].requested_date_time == str_to_time_stamp('20161010T151000')
     assert len(response.journeys[0].sections) == 1
     section = response.journeys[0].sections[0]
     assert section.begin_date_time == str_to_time_stamp('20161010T152000')
