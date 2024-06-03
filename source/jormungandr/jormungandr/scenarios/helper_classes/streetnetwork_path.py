@@ -48,6 +48,10 @@ from collections import namedtuple
 
 
 Dp_element = namedtuple("Dp_element", "origin, destination, response")
+from opentelemetry import trace, baggage
+
+
+tracer = trace.get_tracer(__name__)
 
 
 class StreetNetworkPath:
@@ -67,6 +71,7 @@ class StreetNetworkPath:
         request,
         streetnetwork_path_type,
         request_id,
+        ctx=None,
     ):
         """
         :param future_manager: a module that manages the future pool properly
@@ -93,6 +98,7 @@ class StreetNetworkPath:
         self._logger = logging.getLogger(__name__)
         self._request_id = request_id
         self._best_dp = None
+        self._ctx = ctx
         self._async_request()
 
     @staticmethod
@@ -196,27 +202,52 @@ class StreetNetworkPath:
         return None
 
     def _do_request(self, origin, destination):
-        self._logger.debug(
-            "requesting %s direct path from %s to %s by %s",
-            self._path_type,
-            self._orig_obj.uri,
-            self._dest_obj.uri,
-            self._mode,
-        )
+        if self._ctx:
+            self._logger.info("{}", self._ctx)
+            with tracer.start_as_current_span(name="direct_path", context=self._ctx):
+                self._logger.debug(
+                    "requesting %s direct path from %s to %s by %s",
+                    self._path_type,
+                    self._orig_obj.uri,
+                    self._dest_obj.uri,
+                    self._mode,
+                )
 
-        dp = self._direct_path_with_fp(self._streetnetwork_service, origin, destination)
+                dp = self._direct_path_with_fp(self._streetnetwork_service, origin, destination)
 
-        if getattr(dp, "journeys", None):
-            dp.journeys[0].internal_id = str(utils.generate_id())
+                if getattr(dp, "journeys", None):
+                    dp.journeys[0].internal_id = str(utils.generate_id())
 
-        self._logger.debug(
-            "finish %s direct path from %s to %s by %s",
-            self._path_type,
-            self._orig_obj.uri,
-            self._dest_obj.uri,
-            self._mode,
-        )
-        return Dp_element(origin, destination, dp)
+                self._logger.debug(
+                    "finish %s direct path from %s to %s by %s",
+                    self._path_type,
+                    self._orig_obj.uri,
+                    self._dest_obj.uri,
+                    self._mode,
+                )
+                return Dp_element(origin, destination, dp)
+        else:
+            self._logger.debug(
+                "requesting %s direct path from %s to %s by %s",
+                self._path_type,
+                self._orig_obj.uri,
+                self._dest_obj.uri,
+                self._mode,
+            )
+
+            dp = self._direct_path_with_fp(self._streetnetwork_service, origin, destination)
+
+            if getattr(dp, "journeys", None):
+                dp.journeys[0].internal_id = str(utils.generate_id())
+
+            self._logger.debug(
+                "finish %s direct path from %s to %s by %s",
+                self._path_type,
+                self._orig_obj.uri,
+                self._dest_obj.uri,
+                self._mode,
+            )
+            return Dp_element(origin, destination, dp)
 
     def _async_request(self):
         self._futures = []
@@ -263,11 +294,12 @@ class StreetNetworkPathPool:
     According to its usage, a StreetNetworkPath can be direct, beginning_fallback and ending_fallback
     """
 
-    def __init__(self, future_manager, instance):
+    def __init__(self, future_manager, instance, ctx=None):
         self._future_manager = future_manager
         self._instance = instance
         self._value = {}
         self._direct_paths_future_by_mode = {}
+        self.ctx = ctx
 
     def add_async_request(
         self,
@@ -300,6 +332,7 @@ class StreetNetworkPathPool:
                 request,
                 streetnetwork_path_type,
                 request_id,
+                ctx=self.ctx,
             )
         if streetnetwork_path_type is StreetNetworkPathType.DIRECT:
             self._direct_paths_future_by_mode[mode] = path

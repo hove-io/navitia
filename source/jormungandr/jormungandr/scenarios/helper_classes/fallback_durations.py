@@ -66,6 +66,11 @@ DurationElement = namedtuple(
 
 AccessMapElement = namedtuple('AccessMapElement', ['stop_point_uri', 'access_point'])
 
+from opentelemetry import trace, baggage
+
+
+tracer = trace.get_tracer(__name__)
+
 
 class FallbackDurations:
     """
@@ -95,6 +100,7 @@ class FallbackDurations:
         speed_switcher,
         request_id,
         direct_path_type=StreetNetworkPathType.BEGINNING_FALLBACK,
+        ctx=None,
     ):
         """
         :param future_manager: a module that manages the future pool properly
@@ -122,6 +128,7 @@ class FallbackDurations:
         self._streetnetwork_service = instance.get_street_network(mode, request)
         self._logger = logging.getLogger(__name__)
         self._request_id = request_id
+        self._ctx = ctx
         self._async_request()
 
     def _get_duration(self, resp, place):
@@ -358,29 +365,30 @@ class FallbackDurations:
         return result
 
     def _do_request(self, futures, centers_isochrone, stop_points):
-        if len(futures) == 1:
-            return futures[0].wait_and_get()
-        else:
-            fallback_duration = dict()
-            for place_isochrone in stop_points:
-                best_duration = float("inf")
-                best_element = None
-                for index, future in enumerate(futures):
-                    fallback = future.wait_and_get()
-                    element = fallback.get(place_isochrone.uri)
-                    if element and element.duration < best_duration:
-                        best_duration = element.duration
-                        best_element = DurationElement(
-                            element.duration,
-                            element.status,
-                            element.car_park,
-                            element.car_park_crowfly_duration,
-                            element.via_pt_access,
-                            centers_isochrone[index],
-                        )
-                if best_element:
-                    fallback_duration[place_isochrone.uri] = best_element
-            return fallback_duration
+        with tracer.start_as_current_span(name="fallback_durations", context=self._ctx):
+            if len(futures) == 1:
+                return futures[0].wait_and_get()
+            else:
+                fallback_duration = dict()
+                for place_isochrone in stop_points:
+                    best_duration = float("inf")
+                    best_element = None
+                    for index, future in enumerate(futures):
+                        fallback = future.wait_and_get()
+                        element = fallback.get(place_isochrone.uri)
+                        if element and element.duration < best_duration:
+                            best_duration = element.duration
+                            best_element = DurationElement(
+                                element.duration,
+                                element.status,
+                                element.car_park,
+                                element.car_park_crowfly_duration,
+                                element.via_pt_access,
+                                centers_isochrone[index],
+                            )
+                    if best_element:
+                        fallback_duration[place_isochrone.uri] = best_element
+                return fallback_duration
 
     def _async_request(self):
         logger = logging.getLogger(__name__)
@@ -505,6 +513,7 @@ class FallbackDurationsPool(dict):
         request_id,
         direct_path_timeout,
         direct_path_type=StreetNetworkPathType.BEGINNING_FALLBACK,
+        ctx=None,
     ):
         super(FallbackDurationsPool, self).__init__()
         self._future_manager = future_manager
@@ -522,6 +531,7 @@ class FallbackDurationsPool(dict):
         self._request_id = request_id
 
         self._overrided_uri_map = defaultdict(dict)
+        self._ctx = ctx
         self._async_request(direct_path_timeout)
 
     @property
@@ -560,6 +570,7 @@ class FallbackDurationsPool(dict):
                 self._speed_switcher,
                 "{}_{}".format(self._request_id, mode),
                 self._direct_path_type,
+                self._ctx,
             )
             self._value[mode] = fallback_durations
 

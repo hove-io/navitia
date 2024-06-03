@@ -29,7 +29,7 @@
 
 from __future__ import absolute_import
 from jormungandr import utils, new_relic
-from jormungandr.utils import date_to_timestamp
+from jormungandr.utils import date_to_timestamp, get_pt_object_coord
 from jormungandr.street_network.street_network import StreetNetworkPathType
 from navitiacommon import response_pb2, type_pb2
 from collections import namedtuple
@@ -40,6 +40,11 @@ from functools import cmp_to_key
 from .helper_utils import timed_logger
 
 PtPoolElement = namedtuple('PtPoolElement', ['dep_mode', 'arr_mode', 'pt_journey'])
+
+from opentelemetry import trace, baggage
+
+
+tracer = trace.get_tracer(__name__)
 
 
 class PtJourney:
@@ -52,6 +57,8 @@ class PtJourney:
         self,
         future_manager,
         instance,
+        requested_orig_obj,
+        requested_dest_obj,
         orig_fallback_durtaions_pool,
         dest_fallback_durations_pool,
         dep_mode,
@@ -63,9 +70,12 @@ class PtJourney:
         isochrone_center,
         request_type,
         request_id,
+        ctx,
     ):
         self._future_manager = future_manager
         self._instance = instance
+        self._requested_orig_obj = requested_orig_obj
+        self._requested_dest_obj = requested_dest_obj
         self._orig_fallback_durtaions_pool = orig_fallback_durtaions_pool
         self._dest_fallback_durations_pool = dest_fallback_durations_pool
         self._dep_mode = dep_mode
@@ -80,6 +90,7 @@ class PtJourney:
         self._logger = logging.getLogger(__name__)
         self._request_id = request_id
         self._pt_planner = self._instance.get_pt_planner(request['_pt_planner'])
+        self._ctx = ctx
         self._async_request()
 
     @new_relic.distributedEvent("journeys", "journeys")
@@ -106,34 +117,38 @@ class PtJourney:
         orig_fallback_durations = self._orig_fallback_durtaions_pool.get_best_fallback_durations(self._dep_mode)
         dest_fallback_durations = self._dest_fallback_durations_pool.get_best_fallback_durations(self._arr_mode)
 
-        if (
-            not orig_fallback_durations
-            or not dest_fallback_durations
-            or not self._request.get('max_duration', 0)
-        ):
-            return None
+        with tracer.start_as_current_span(name="pt_journey", context=self._ctx):
 
-        resp = self._journeys(self._pt_planner, orig_fallback_durations, dest_fallback_durations)
+            if (
+                not orig_fallback_durations
+                or not dest_fallback_durations
+                or not self._request.get('max_duration', 0)
+            ):
+                return None
 
-        for j in resp.journeys:
-            j.internal_id = str(utils.generate_id())
+            resp = self._journeys(self._pt_planner, orig_fallback_durations, dest_fallback_durations)
 
-        if resp.HasField(str("error")):
+            for j in resp.journeys:
+                j.internal_id = str(utils.generate_id())
+
+            if resp.HasField(str("error")):
+                self._logger.debug(
+                    "pt journey has error dep_mode: %s and arr_mode: %s", self._dep_mode, self._arr_mode
+                )
+                # Here needs to modify error message of no_solution
+                if not orig_fallback_durations:
+                    resp.error.id = response_pb2.Error.no_origin
+                    resp.error.message = "Public transport is not reachable from origin"
+                elif not dest_fallback_durations:
+                    resp.error.id = response_pb2.Error.no_destination
+                    resp.error.message = "Public transport is not reachable from destination"
+
             self._logger.debug(
-                "pt journey has error dep_mode: %s and arr_mode: %s", self._dep_mode, self._arr_mode
+                "finish public transport journey with dep_mode: %s and arr_mode: %s",
+                self._dep_mode,
+                self._arr_mode,
             )
-            # Here needs to modify error message of no_solution
-            if not orig_fallback_durations:
-                resp.error.id = response_pb2.Error.no_origin
-                resp.error.message = "Public transport is not reachable from origin"
-            elif not dest_fallback_durations:
-                resp.error.id = response_pb2.Error.no_destination
-                resp.error.message = "Public transport is not reachable from destination"
-
-        self._logger.debug(
-            "finish public transport journey with dep_mode: %s and arr_mode: %s", self._dep_mode, self._arr_mode
-        )
-        return resp
+            return resp
 
     @new_relic.distributedEvent("graphical_isochrone", "graphical_isochrone")
     def _graphical_isochrone(self, orig_fallback_durations, dest_fallback_durations):
@@ -256,6 +271,7 @@ class PtJourneyPool:
         request_type,
         request_id,
         isochrone_center=None,
+        ctx=None,
     ):
         self._future_manager = future_manager
         self._instance = instance
@@ -273,6 +289,7 @@ class PtJourneyPool:
         self._request = request
         self._value = []
         self._request_id = request_id
+        self._ctx = ctx
         self._async_request()
 
     @staticmethod
@@ -369,6 +386,7 @@ class PtJourneyPool:
                 isochrone_center=self._isochrone_center,
                 request_type=self._request_type,
                 request_id="{}_{}_{}".format(self._request_id, dep_mode, arr_mode),
+                ctx=self._ctx,
             )
 
             self._value.append(PtPoolElement(dep_mode, arr_mode, pt_journey))

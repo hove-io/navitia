@@ -62,6 +62,11 @@ from .helper_classes.helper_exceptions import (
     StreetNetworkException,
 )
 
+from opentelemetry import trace, baggage
+
+
+tracer = trace.get_tracer(__name__)
+
 
 class PartialResponseContext(object):
     requested_orig = None
@@ -138,6 +143,8 @@ class Distributed(object):
         }
         requested_direct_path_modes.update(requested_dep_modes_with_pt)
 
+        parent_ctx = baggage.set_baggage("compute_journeys", "parent")
+
         if context.partial_response_is_empty:
             logger.debug('requesting places by uri orig: %s dest %s', request['origin'], request['destination'])
 
@@ -145,7 +152,7 @@ class Distributed(object):
             context.requested_dest_obj = pt_object_destination_detail
 
             context.streetnetwork_path_pool = StreetNetworkPathPool(
-                future_manager=future_manager, instance=instance
+                future_manager=future_manager, instance=instance, ctx=parent_ctx
             )
 
             period_extremity = PeriodExtremity(request['datetime'], request['clockwise'])
@@ -203,6 +210,7 @@ class Distributed(object):
                 request_id="{}_crowfly_orig".format(request_id),
                 o_d_crowfly_distance=crowfly_distance,
                 direct_path_timeout=direct_path_timeout,
+                ctx=parent_ctx,
             )
 
             context.dest_proximities_by_crowfly = ProximitiesByCrowflyPool(
@@ -216,6 +224,7 @@ class Distributed(object):
                 request_id="{}_crowfly_dest".format(request_id),
                 o_d_crowfly_distance=crowfly_distance,
                 direct_path_timeout=direct_path_timeout,
+                ctx=parent_ctx,
             )
 
             context.orig_places_free_access = PlacesFreeAccess(
@@ -245,6 +254,7 @@ class Distributed(object):
                 direct_path_type=StreetNetworkPathType.BEGINNING_FALLBACK,
                 request_id="{}_fallback_orig".format(request_id),
                 direct_path_timeout=direct_path_timeout,
+                ctx=parent_ctx,
             )
 
             context.dest_fallback_durations_pool = FallbackDurationsPool(
@@ -259,6 +269,7 @@ class Distributed(object):
                 direct_path_type=StreetNetworkPathType.ENDING_FALLBACK,
                 request_id="{}_fallback_dest".format(request_id),
                 direct_path_timeout=direct_path_timeout,
+                ctx=parent_ctx,
             )
 
         pt_journey_pool = PtJourneyPool(
@@ -273,6 +284,7 @@ class Distributed(object):
             request=request,
             request_type=request_type,
             request_id="{}_ptjourney".format(request_id),
+            ctx=parent_ctx,
         )
 
         pt_journey_elements = wait_and_build_crowflies(
@@ -319,7 +331,11 @@ class Distributed(object):
         Fallbacks will only be computed for journeys not tagged as 'to_delete'
         """
 
-        streetnetwork_path_pool = StreetNetworkPathPool(future_manager=future_manager, instance=instance)
+        parent_ctx = baggage.set_baggage("finalise_journeys", "parent")
+
+        streetnetwork_path_pool = StreetNetworkPathPool(
+            future_manager=future_manager, instance=instance, ctx=parent_ctx
+        )
 
         journeys_to_complete = get_journeys_to_complete(responses, context, is_debug)
 
@@ -514,16 +530,17 @@ class Scenario(new_default.Scenario):
                         type_pb2.ISOCHRONE,
                     )
                 elif request_type == type_pb2.PLANNER:
-                    return self._scenario._compute_journeys(
-                        future_manager,
-                        pt_object_origin_detail,
-                        pt_object_destination_detail,
-                        request,
-                        instance,
-                        krakens_call,
-                        context,
-                        type_pb2.PLANNER,
-                    )
+                    with tracer.start_as_current_span(name="distributed_compute_journeys"):
+                        return self._scenario._compute_journeys(
+                            future_manager,
+                            pt_object_origin_detail,
+                            pt_object_destination_detail,
+                            request,
+                            instance,
+                            krakens_call,
+                            context,
+                            type_pb2.PLANNER,
+                        )
                 else:
                     abort(400, message="This type of request is not supported with distributed")
         except PtException as e:
@@ -542,9 +559,10 @@ class Scenario(new_default.Scenario):
             with FutureManager(self.greenlet_pool_size) as future_manager, timed_logger(
                 logger, 'finalise_journeys', "{}_finalise_journeys".format(request_id)
             ):
-                self._scenario.finalise_journeys(
-                    future_manager, request, responses, context, instance, is_debug, request_id
-                )
+                with tracer.start_as_current_span(name="finalise_journeys"):
+                    self._scenario.finalise_journeys(
+                        future_manager, request, responses, context, instance, is_debug, request_id
+                    )
 
                 from jormungandr.scenarios import journey_filter
 

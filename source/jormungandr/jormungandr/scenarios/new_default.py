@@ -111,6 +111,16 @@ TEMPLATE_MSG_UNKNOWN_OBJECT = "The entry point: {} is not valid"
 CO2_ESTIMATION_COEFF = 1.35
 
 
+from opentelemetry import trace, baggage
+from opentelemetry.trace.propagation.tracecontext import TraceContextTextMapPropagator
+from opentelemetry.sdk.trace import TracerProvider
+from opentelemetry.sdk.trace.export import ConsoleSpanExporter, BatchSpanProcessor
+from opentelemetry.baggage.propagation import W3CBaggagePropagator
+
+
+tracer = trace.get_tracer(__name__)
+
+
 def get_kraken_calls(request):
     """
     return a list of tuple (departure fallback mode, arrival fallback mode, direct_path_type)
@@ -1334,16 +1344,17 @@ class Scenario(simple.Scenario):
                 min_nb_journeys_left = min_nb_journeys - nb_qualified_journeys
                 request['min_nb_journeys'] = max(0, min_nb_journeys_left)
 
-            new_resp = self.call_kraken(
-                pt_object_origin,
-                pt_object_destination,
-                request_type,
-                request,
-                instance,
-                krakens_call,
-                "{}_try_{}".format(request_id, nb_try),
-                distributed_context,
-            )
+            with tracer.start_as_current_span("call_kraken"):
+                new_resp = self.call_kraken(
+                    pt_object_origin,
+                    pt_object_destination,
+                    request_type,
+                    request,
+                    instance,
+                    krakens_call,
+                    "{}_try_{}".format(request_id, nb_try),
+                    distributed_context,
+                )
 
             _tag_by_mode(new_resp)
             _tag_direct_path(new_resp)
