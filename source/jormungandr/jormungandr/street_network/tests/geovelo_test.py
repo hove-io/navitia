@@ -815,36 +815,19 @@ def direct_path_invalid_mode_test():
 
 def zone():
     return [
-    [
-      -1.683365,
-      48.116216
-    ],
-    [
-      -1.686063,
-      48.112116
-    ],
-    [
-      -1.679806,
-      48.110085
-    ],
-    [
-      -1.67429761,
-      48.112499
-    ],
-    [
-      -1.675216,
-      48.116483
-    ],
-    [
-      -1.683365,
-      48.116216
-    ]
+    [-1.683365, 48.116216],
+    [-1.686063, 48.112116],
+    [-1.679806, 48.110085],
+    [-1.67429761, 48.112499],
+    [-1.675216, 48.116483],
+    [-1.683365, 48.116216],
   ]
 
 # Points outside zone
 # [[-1.683709, 48.117941],[-1.685259, 48.116715],[-1.670163, 48.111618]]
 # Points inside zone
 # [[-1.682446, 48.112997],[-1.678429, 48.115257],[-1.679347, 48.111848]]
+
 
 def service_without_zone_and_backup_test():
     # If zone is absent then we should use the service without any condition
@@ -859,7 +842,9 @@ def service_without_zone_and_backup_test():
         timeout=56,
         mode_weight={"physical_mode:Train": 3, "physical_mode:RapidTransit": 2, "physical_mode:LocalTrain": 1},
     )
-    result = geovelo.use_direct_path_service_backup(pt_object_origin=point, pt_object_destination=point, represents_start=True)
+    result = geovelo.use_direct_path_service_backup(
+        pt_object_origin=point, pt_object_destination=point, represents_start=True
+    )
     assert result == False
     origins = [point]
     destinations = [
@@ -882,7 +867,11 @@ def service_with_zone_but_without_backup_test():
             zone=zone(),
             service_backup=None,
             timeout=56,
-            mode_weight={"physical_mode:Train": 3, "physical_mode:RapidTransit": 2, "physical_mode:LocalTrain": 1},
+            mode_weight={
+                "physical_mode:Train": 3,
+                "physical_mode:RapidTransit": 2,
+                "physical_mode:LocalTrain": 1,
+            },
         )
     assert str(excinfo.value) == 'service_backup None is not defined hence can not forward to asgard'
 
@@ -907,29 +896,21 @@ def service_with_zone_and_backup_test():
     # When origin of start fallback is outside the zone, we should use service_backup
     # The destination of start fallback is not verified
     result = geovelo.use_direct_path_service_backup(
-        pt_object_origin=outside_origin,
-        pt_object_destination=outside_destination,
-        represents_start=True
+        pt_object_origin=outside_origin, pt_object_destination=outside_destination, represents_start=True
     )
     assert result == True
     result = geovelo.use_direct_path_service_backup(
-        pt_object_origin=outside_origin,
-        pt_object_destination=outside_destination,
-        represents_start=False
+        pt_object_origin=outside_origin, pt_object_destination=outside_destination, represents_start=False
     )
     assert result == True
 
     # We should use this service if origin of start fallback or destination of end fallback is inside the zone
     result = geovelo.use_direct_path_service_backup(
-        pt_object_origin=inside_origin,
-        pt_object_destination=outside_destination,
-        represents_start=True
+        pt_object_origin=inside_origin, pt_object_destination=outside_destination, represents_start=True
     )
     assert result == False
     result = geovelo.use_direct_path_service_backup(
-        pt_object_origin=outside_origin,
-        pt_object_destination=inside_destination,
-        represents_start=False
+        pt_object_origin=outside_origin, pt_object_destination=inside_destination, represents_start=False
     )
     assert result == False
 

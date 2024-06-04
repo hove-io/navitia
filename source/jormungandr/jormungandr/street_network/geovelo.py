@@ -97,7 +97,9 @@ class Geovelo(AbstractStreetNetworkService):
         if zone:
             self.polygon_zone = Polygon(zone)
             if not service_backup:
-                raise ValueError('service_backup {} is not defined hence can not forward to asgard'.format(service_backup))
+                raise ValueError(
+                    'service_backup {} is not defined hence can not forward to asgard'.format(service_backup)
+                )
 
             service_backup["args"]["instance"] = instance
             if 'service_url' not in service_backup['args']:
@@ -465,7 +467,9 @@ class Geovelo(AbstractStreetNetworkService):
         direct_path_type,
         request_id,
     ):
-        if self.use_direct_path_service_backup(pt_object_origin, pt_object_destination, fallback_extremity.represents_start):
+        if self.use_direct_path_service_backup(
+                pt_object_origin, pt_object_destination, fallback_extremity.represents_start
+        ):
             return self.service_backup._direct_path(
                 instance,
                 mode,
