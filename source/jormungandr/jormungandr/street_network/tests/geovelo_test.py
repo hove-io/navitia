@@ -919,7 +919,7 @@ def service_with_zone_and_backup_test():
     )
     assert result == True
 
-    # We should use this service if origin of start fallback or destination of end fallback is inside de zone
+    # We should use this service if origin of start fallback or destination of end fallback is inside the zone
     result = geovelo.use_direct_path_service_backup(
         pt_object_origin=inside_origin,
         pt_object_destination=outside_destination,
@@ -933,23 +933,23 @@ def service_with_zone_and_backup_test():
     )
     assert result == False
 
-    # For stree_network matrix, origins, destinations for start and end fallbacks are recognized by their sized
+    # For stree_network matrix, origins, destinations for start and end fallbacks are recognized by their size
     # if lengh = 1 then it's origins of start fallback or destinations of end fallback (1 to N or N to 1)
-    # Origins of start fallback outside zone hence use service_backup without verifying destinations
+    # Origins of start fallback is outside zone hence use service_backup without verifying destinations
     origins = [outside_origin]
     destinations = [outside_destination, inside_destination]
     result = geovelo.use_sn_matrix_service_backup(origins=origins, destinations=destinations)
     assert result == True
-    # Origins of start fallback inside zone hence use this service
+    # Origins of start fallback is inside the zone hence use this service
     origins = [inside_origin]
     result = geovelo.use_sn_matrix_service_backup(origins=origins, destinations=destinations)
     assert result == False
-    # Destinations of end fallback outside zone hence use service_backup without verifying origins
+    # Destinations of end fallback is outside the zone hence use service_backup without verifying origins
     origins = [outside_origin, inside_origin]
     destinations = [outside_destination]
     result = geovelo.use_sn_matrix_service_backup(origins=origins, destinations=destinations)
     assert result == True
-    # Destinations of end fallback inside zone hence use this service
+    # Destinations of end fallback is inside the zone hence use this service
     destinations = [inside_destination]
     result = geovelo.use_sn_matrix_service_backup(origins=origins, destinations=destinations)
     assert result == False
