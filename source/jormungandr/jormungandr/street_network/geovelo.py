@@ -299,14 +299,7 @@ class Geovelo(AbstractStreetNetworkService):
     ):
         if self.use_sn_matrix_service_backup(origins, destinations):
             return self.service_backup._get_street_network_routing_matrix(
-                instance,
-                asgard['origins'],
-                asgard['destinations'],
-                street_network_mode,
-                max_duration,
-                request,
-                request_id,
-                **kwargs
+                instance, origins, destinations, street_network_mode, max_duration, request, request_id, **kwargs
             )
 
         if street_network_mode != "bike":
@@ -468,7 +461,7 @@ class Geovelo(AbstractStreetNetworkService):
         request_id,
     ):
         if self.use_direct_path_service_backup(
-                pt_object_origin, pt_object_destination, fallback_extremity.represents_start
+            pt_object_origin, pt_object_destination, fallback_extremity.represents_start
         ):
             return self.service_backup._direct_path(
                 instance,
