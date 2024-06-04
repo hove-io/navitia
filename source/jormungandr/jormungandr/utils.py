@@ -1056,6 +1056,22 @@ def create_journeys_request(origins, destinations, datetime, clockwise, journey_
     elif journey_parameters.criteria == "pseudo_duration":
         req.journeys.criteria = request_pb2.PseudoDuration
 
+    req.journeys.departure_coord.CopyFrom(
+        type_pb2.GeographicalCoord(
+            lon=journey_parameters.departure_coord.lon, lat=journey_parameters.departure_coord.lat
+        )
+    )
+    req.journeys.arrival_coord.CopyFrom(
+        type_pb2.GeographicalCoord(
+            lon=journey_parameters.arrival_coord.lon, lat=journey_parameters.arrival_coord.lat
+        )
+    )
+
+    req.journeys.departure_max_radius_to_free_access = int(
+        journey_parameters.departure_max_radius_to_free_access
+    )
+    req.journeys.arrival_max_radius_to_free_access = int(journey_parameters.arrival_max_radius_to_free_access)
+    req.journeys.global_max_speed = journey_parameters.global_max_speed
     return req
 
 

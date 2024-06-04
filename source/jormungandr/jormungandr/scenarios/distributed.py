@@ -273,6 +273,8 @@ class Distributed(object):
             request=request,
             request_type=request_type,
             request_id="{}_ptjourney".format(request_id),
+            departure_max_radius_to_free_access=context.orig_places_free_access.max_radius_to_free_access(),
+            arrival_max_radius_to_free_access=context.dest_places_free_access.max_radius_to_free_access(),
         )
 
         pt_journey_elements = wait_and_build_crowflies(

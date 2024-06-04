@@ -34,6 +34,7 @@ from jormungandr import utils, new_relic
 from collections import namedtuple
 import logging
 from .helper_utils import timed_logger
+from jormungandr.street_network.utils import crowfly_distance_between
 
 FreeAccessObject = namedtuple('FreeAccessObject', ['uri', 'lon', 'lat'])
 PlaceFreeAccessResult = namedtuple('PlaceFreeAccessResult', ['crowfly', 'odt', 'free_radius'])
@@ -113,3 +114,16 @@ class PlacesFreeAccess:
 
     def wait_and_get(self):
         return self._value.wait_and_get()
+
+    def max_radius_to_free_access(self):
+        return max(
+            (
+                crowfly_distance_between(
+                    utils.Coords(lon=p.lon, lat=p.lat), utils.get_pt_object_coord(self._requested_place_obj)
+                )
+                for p in self._value.wait_and_get().crowfly
+                | self._value.wait_and_get().odt
+                | self._value.wait_and_get().free_radius
+            ),
+            default=0,
+        )

@@ -29,7 +29,7 @@
 
 from __future__ import absolute_import
 from jormungandr import utils, new_relic
-from jormungandr.utils import date_to_timestamp
+from jormungandr.utils import date_to_timestamp, get_pt_object_coord
 from jormungandr.street_network.street_network import StreetNetworkPathType
 from navitiacommon import response_pb2, type_pb2
 from collections import namedtuple
@@ -256,6 +256,8 @@ class PtJourneyPool:
         request_type,
         request_id,
         isochrone_center=None,
+        departure_max_radius_to_free_access=None,
+        arrival_max_radius_to_free_access=None,
     ):
         self._future_manager = future_manager
         self._instance = instance
@@ -268,15 +270,25 @@ class PtJourneyPool:
         self._isochrone_center = isochrone_center
         self._request_type = request_type
         self._journey_params = self._create_parameters(
-            instance, request, self._isochrone_center, self._request_type
+            request,
+            self._isochrone_center,
+            self._request_type,
+            departure_max_radius_to_free_access,
+            arrival_max_radius_to_free_access,
         )
         self._request = request
         self._value = []
         self._request_id = request_id
         self._async_request()
 
-    @staticmethod
-    def _create_parameters(instance, request, isochrone_center, request_type):
+    def _create_parameters(
+        self,
+        request,
+        isochrone_center,
+        request_type,
+        departure_max_radius_to_free_access,
+        arrival_max_radius_to_free_access,
+    ):
         from jormungandr.pt_planners.pt_planner import (
             JourneyParameters,
             GraphicalIsochronesParameters,
@@ -330,6 +342,11 @@ class PtJourneyPool:
                 criteria=request.get('criteria', 'robustness'),
                 olympic_site_params=olympic_site_params,
                 language=request['language'],
+                departure_coord=get_pt_object_coord(self._requested_orig_obj),
+                arrival_coord=get_pt_object_coord(self._requested_dest_obj),
+                departure_max_radius_to_free_access=departure_max_radius_to_free_access,
+                arrival_max_radius_to_free_access=arrival_max_radius_to_free_access,
+                global_max_speed=request["_global_max_speed"],
             )
 
     def _async_request(self):
