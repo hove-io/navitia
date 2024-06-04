@@ -76,7 +76,7 @@ class Andyamo(AbstractStreetNetworkService):
             self.polygon_zone = Polygon(zone)
 
         if not service_backup:
-            raise ValueError('service_backup {} is not define cant forward to asgard'.format(service_backup))
+            raise ValueError('service_backup {} is not defined hence can not forward to asgard'.format(service_backup))
 
         service_backup["args"]["instance"] = instance
         if 'service_url' not in service_backup['args']:
