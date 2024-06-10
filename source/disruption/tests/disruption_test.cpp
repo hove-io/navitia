@@ -1543,7 +1543,6 @@ BOOST_FIXTURE_TEST_CASE(line_report_since_until, LineSectionLineReport) {
     BOOST_CHECK_EQUAL(pb_creator.impacts.size(), 0);
 }
 
-
 class SimpleDataset {
 public:
     ed::builder b;
@@ -1563,19 +1562,18 @@ public:
               b.vj_with_network("network_1", "line_1")
                   .route("route_1")("sp1_1", "08:10"_t)("sp1_2", "08:20"_t)("sp1_3", "08:30"_t)("sp1_4", "08:40"_t)(
                       "sp1_5", "08:44"_t)("sp1_6", "08:48"_t);
-    }){}
+          }) {}
     void apply(const nt::disruption::Disruption& dis) {
         return navitia::apply_disruption(dis, *b.data->pt_data, *b.data->meta);
     }
 };
 
 BOOST_FIXTURE_TEST_CASE(line_report_line_section_no_service, SimpleDataset) {
-
     const auto& disrup = b.impact(nt::RTLevel::Adapted, "line_section_1")
                              .severity(nt::disruption::Effect::NO_SERVICE)
-            .publish(published_period)
-            .application_periods(time_period("20180403T000000"_dt, "20180404T235900"_dt))
-            .on_line_section("line_1", "stop_area:4", "stop_area:5", {"route_1"}, *b.data->pt_data)
+                             .publish(published_period)
+                             .application_periods(time_period("20180403T000000"_dt, "20180404T235900"_dt))
+                             .on_line_section("line_1", "stop_area:4", "stop_area:5", {"route_1"}, *b.data->pt_data)
                              .get_disruption();
     const auto& pt_data = b.data->pt_data;
     BOOST_REQUIRE_EQUAL(pt_data->vehicle_journeys.size(), 1);
@@ -1598,12 +1596,11 @@ BOOST_FIXTURE_TEST_CASE(line_report_line_section_no_service, SimpleDataset) {
 }
 
 BOOST_FIXTURE_TEST_CASE(line_report_line_section_detour, SimpleDataset) {
-
     const auto& disrup = b.impact(nt::RTLevel::Adapted, "line_section_1")
                              .severity(nt::disruption::Effect::DETOUR)
-            .publish(published_period)
-            .application_periods(time_period("20180403T000000"_dt, "20180404T235900"_dt))
-            .on_line_section("line_1", "stop_area:4", "stop_area:5", {"route_1"}, *b.data->pt_data)
+                             .publish(published_period)
+                             .application_periods(time_period("20180403T000000"_dt, "20180404T235900"_dt))
+                             .on_line_section("line_1", "stop_area:4", "stop_area:5", {"route_1"}, *b.data->pt_data)
                              .get_disruption();
     const auto& pt_data = b.data->pt_data;
     BOOST_REQUIRE_EQUAL(pt_data->vehicle_journeys.size(), 1);
@@ -1626,12 +1623,11 @@ BOOST_FIXTURE_TEST_CASE(line_report_line_section_detour, SimpleDataset) {
 }
 
 BOOST_FIXTURE_TEST_CASE(line_report_line_section_reduced_service, SimpleDataset) {
-
     const auto& disrup = b.impact(nt::RTLevel::Adapted, "line_section_1")
                              .severity(nt::disruption::Effect::REDUCED_SERVICE)
-            .publish(published_period)
-            .application_periods(time_period("20180403T000000"_dt, "20180404T235900"_dt))
-            .on_line_section("line_1", "stop_area:4", "stop_area:5", {"route_1"}, *b.data->pt_data)
+                             .publish(published_period)
+                             .application_periods(time_period("20180403T000000"_dt, "20180404T235900"_dt))
+                             .on_line_section("line_1", "stop_area:4", "stop_area:5", {"route_1"}, *b.data->pt_data)
                              .get_disruption();
     const auto& pt_data = b.data->pt_data;
     BOOST_REQUIRE_EQUAL(pt_data->vehicle_journeys.size(), 1);
@@ -1654,12 +1650,11 @@ BOOST_FIXTURE_TEST_CASE(line_report_line_section_reduced_service, SimpleDataset)
 }
 
 BOOST_FIXTURE_TEST_CASE(line_report_line_section_modified_service, SimpleDataset) {
-
     const auto& disrup = b.impact(nt::RTLevel::Adapted, "line_section_1")
                              .severity(nt::disruption::Effect::MODIFIED_SERVICE)
-            .publish(published_period)
-            .application_periods(time_period("20180403T000000"_dt, "20180404T235900"_dt))
-            .on_line_section("line_1", "stop_area:4", "stop_area:5", {"route_1"}, *b.data->pt_data)
+                             .publish(published_period)
+                             .application_periods(time_period("20180403T000000"_dt, "20180404T235900"_dt))
+                             .on_line_section("line_1", "stop_area:4", "stop_area:5", {"route_1"}, *b.data->pt_data)
                              .get_disruption();
     const auto& pt_data = b.data->pt_data;
     BOOST_REQUIRE_EQUAL(pt_data->vehicle_journeys.size(), 1);
@@ -1681,15 +1676,13 @@ BOOST_FIXTURE_TEST_CASE(line_report_line_section_modified_service, SimpleDataset
     BOOST_CHECK_EQUAL(pb_creator.impacts.size(), 1);
 }
 
-
 //***********
 BOOST_FIXTURE_TEST_CASE(traffic_report_line_section_no_service, SimpleDataset) {
-
     const auto& disrup = b.impact(nt::RTLevel::Adapted, "line_section_1")
                              .severity(nt::disruption::Effect::NO_SERVICE)
-            .publish(published_period)
-            .application_periods(time_period("20180403T000000"_dt, "20180404T235900"_dt))
-            .on_line_section("line_1", "stop_area:4", "stop_area:5", {"route_1"}, *b.data->pt_data)
+                             .publish(published_period)
+                             .application_periods(time_period("20180403T000000"_dt, "20180404T235900"_dt))
+                             .on_line_section("line_1", "stop_area:4", "stop_area:5", {"route_1"}, *b.data->pt_data)
                              .get_disruption();
     const auto& pt_data = b.data->pt_data;
     BOOST_REQUIRE_EQUAL(pt_data->vehicle_journeys.size(), 1);
@@ -1712,12 +1705,11 @@ BOOST_FIXTURE_TEST_CASE(traffic_report_line_section_no_service, SimpleDataset) {
 }
 
 BOOST_FIXTURE_TEST_CASE(traffic_report_line_section_detour, SimpleDataset) {
-
     const auto& disrup = b.impact(nt::RTLevel::Adapted, "line_section_1")
                              .severity(nt::disruption::Effect::DETOUR)
-            .publish(published_period)
-            .application_periods(time_period("20180403T000000"_dt, "20180404T235900"_dt))
-            .on_line_section("line_1", "stop_area:4", "stop_area:5", {"route_1"}, *b.data->pt_data)
+                             .publish(published_period)
+                             .application_periods(time_period("20180403T000000"_dt, "20180404T235900"_dt))
+                             .on_line_section("line_1", "stop_area:4", "stop_area:5", {"route_1"}, *b.data->pt_data)
                              .get_disruption();
     const auto& pt_data = b.data->pt_data;
     BOOST_REQUIRE_EQUAL(pt_data->vehicle_journeys.size(), 1);
@@ -1740,12 +1732,11 @@ BOOST_FIXTURE_TEST_CASE(traffic_report_line_section_detour, SimpleDataset) {
 }
 
 BOOST_FIXTURE_TEST_CASE(traffic_report_line_section_reduced_service, SimpleDataset) {
-
     const auto& disrup = b.impact(nt::RTLevel::Adapted, "line_section_1")
                              .severity(nt::disruption::Effect::REDUCED_SERVICE)
-            .publish(published_period)
-            .application_periods(time_period("20180403T000000"_dt, "20180404T235900"_dt))
-            .on_line_section("line_1", "stop_area:4", "stop_area:5", {"route_1"}, *b.data->pt_data)
+                             .publish(published_period)
+                             .application_periods(time_period("20180403T000000"_dt, "20180404T235900"_dt))
+                             .on_line_section("line_1", "stop_area:4", "stop_area:5", {"route_1"}, *b.data->pt_data)
                              .get_disruption();
     const auto& pt_data = b.data->pt_data;
     BOOST_REQUIRE_EQUAL(pt_data->vehicle_journeys.size(), 1);
@@ -1768,12 +1759,11 @@ BOOST_FIXTURE_TEST_CASE(traffic_report_line_section_reduced_service, SimpleDatas
 }
 
 BOOST_FIXTURE_TEST_CASE(traffic_report_line_section_modified_service, SimpleDataset) {
-
     const auto& disrup = b.impact(nt::RTLevel::Adapted, "line_section_1")
                              .severity(nt::disruption::Effect::MODIFIED_SERVICE)
-            .publish(published_period)
-            .application_periods(time_period("20180403T000000"_dt, "20180404T235900"_dt))
-            .on_line_section("line_1", "stop_area:4", "stop_area:5", {"route_1"}, *b.data->pt_data)
+                             .publish(published_period)
+                             .application_periods(time_period("20180403T000000"_dt, "20180404T235900"_dt))
+                             .on_line_section("line_1", "stop_area:4", "stop_area:5", {"route_1"}, *b.data->pt_data)
                              .get_disruption();
     const auto& pt_data = b.data->pt_data;
     BOOST_REQUIRE_EQUAL(pt_data->vehicle_journeys.size(), 1);
@@ -1786,9 +1776,6 @@ BOOST_FIXTURE_TEST_CASE(traffic_report_line_section_modified_service, SimpleData
     auto base_vp = vj->base_validity_pattern()->days;
     BOOST_CHECK_MESSAGE(ba::ends_with(base_vp.to_string(), "111111"), base_vp);
     BOOST_CHECK_MESSAGE(ba::ends_with(adapted_vp.to_string(), "111111"), adapted_vp);
-
-
-
 
     apply(disrup);
     BOOST_REQUIRE_EQUAL(b.data->pt_data->vehicle_journeys.size(), 2);
@@ -1812,8 +1799,4 @@ BOOST_FIXTURE_TEST_CASE(traffic_report_line_section_modified_service, SimpleData
     disruption::traffic_reports(pb_creator, *b.data, 1, 25, 0, "", {}, boost::none, boost::none);
 
     BOOST_CHECK_EQUAL(pb_creator.impacts.size(), 1);
-
 }
-
-
-
