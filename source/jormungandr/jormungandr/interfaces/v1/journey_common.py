@@ -650,6 +650,14 @@ class JourneyCommon(ResourceUri, ResourceUtc):
             help="only available for Asgard: A penalty applied for a country crossing. ",
         )
 
+        parser_get.add_argument(
+            "bike_destination_only_penalty",
+            type=PositiveFloat(),
+            hidden=True,
+            default=120,
+            help="only available for Asgard: penalty when the way is private, private_hgv, parking aisle, drive way, drive thru.",
+        )
+
         # Advanced parameters for valhalla walking
         parser_get.add_argument(
             "walking_walkway_factor",
@@ -780,6 +788,14 @@ class JourneyCommon(ResourceUri, ResourceUtc):
             hidden=True,
             default=True,
             help="only available for Asgard: " "Ignore when encountering roads that are oneway.",
+        )
+
+        parser_get.add_argument(
+            "walking_destination_only_penalty",
+            type=PositiveFloat(),
+            hidden=True,
+            default=120,
+            help="only available for Asgard: penalty when the way is private, private_hgv, parking aisle, drive way, drive thru.",
         )
 
         parser_get.add_argument(

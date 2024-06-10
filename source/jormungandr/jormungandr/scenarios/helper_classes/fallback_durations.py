@@ -47,6 +47,8 @@ from jormungandr.scenarios.utils import include_poi_access_points
 from jormungandr.scenarios.helper_classes.places_free_access import FreeAccessObject
 import functools
 import itertools
+import pytz
+import datetime
 
 # The basic element stored in fallback_durations.
 # in DurationElement. can be found:
@@ -202,10 +204,12 @@ class FallbackDurations:
         if self._request['_use_excluded_zones'] and all_free_access:
             # the mode is hardcoded to walking because we consider that we access to all free_access places
             # by walking
+            timestamp = self._request['datetime']
+            date = datetime.datetime.fromtimestamp(timestamp, tz=pytz.timezone("UTC")).date()
             is_excluded = functools.partial(
                 excluded_zones_manager.ExcludedZonesManager.is_excluded,
                 mode='walking',
-                timestamp=self._request['datetime'],
+                date=date,
             )
             return set(itertools.filterfalse(is_excluded, all_free_access))
         return all_free_access
@@ -499,6 +503,7 @@ class FallbackDurationsPool(dict):
         direct_paths_by_mode,
         request,
         request_id,
+        direct_path_timeout,
         direct_path_type=StreetNetworkPathType.BEGINNING_FALLBACK,
     ):
         super(FallbackDurationsPool, self).__init__()
@@ -517,7 +522,7 @@ class FallbackDurationsPool(dict):
         self._request_id = request_id
 
         self._overrided_uri_map = defaultdict(dict)
-        self._async_request()
+        self._async_request(direct_path_timeout)
 
     @property
     def _overriding_mode_map(self):
@@ -538,10 +543,10 @@ class FallbackDurationsPool(dict):
                 res[mode] = overriding_modes
         return res
 
-    def _async_request(self):
+    def _async_request(self, direct_path_timeout):
         for mode in self._modes:
             max_fallback_duration = get_max_fallback_duration(
-                self._request, mode, self._direct_paths_by_mode.get(mode)
+                self._request, mode, self._direct_paths_by_mode.get(mode), direct_path_timeout
             )
             fallback_durations = FallbackDurations(
                 self._future_manager,

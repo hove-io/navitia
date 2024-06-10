@@ -4,6 +4,7 @@ from __future__ import absolute_import
 import os
 import json
 from flask_restful.inputs import boolean
+from datetime import timedelta
 
 # sql queries will return an exception if the query did not succeed before `statement_timeout`
 DEFAULT_SQLALCHEMY_ENGINE_OPTIONS = {
@@ -157,7 +158,7 @@ default_cache = {
     'FETCH_S3_DATA_TIMEOUT': 24 * 60,
     # TIMEOUT_TRANSFER_PATH = 24Hours
     "TIMEOUT_TRANSFER_PATH": 24 * 60 * 60,
-    'ASGARD_S3_DATA_TIMEOUT': 2 * 60,
+    'ASGARD_S3_DATA_TIMEOUT': timedelta(hours=2).total_seconds(),
 }
 
 
@@ -169,7 +170,7 @@ default_memory_cache = {
     'TIMEOUT_AUTHENTICATION': 30,
     'TIMEOUT_PARAMS': 30,
     "FETCH_S3_DATA_TIMEOUT": 2 * 60,
-    'ASGARD_S3_DATA_TIMEOUT': 1 * 60,
+    'ASGARD_S3_DATA_TIMEOUT': timedelta(minutes=30).total_seconds(),
 }
 
 MEMORY_CACHE_CONFIGURATION = (
@@ -354,6 +355,8 @@ PATCH_WITH_GEVENT_SOCKET = bool(os.getenv('JORMUNGANDR_PATCH_WITH_GEVENT_SOCKET'
 PATCH_WITH_GEVENT_SOCKET_LEVEL = os.getenv('JORMUNGANDR_PATCH_WITH_GEVENT_SOCKET_LEVEL', 'socket')
 
 GREENLET_POOL_SIZE = int(os.getenv('JORMUNGANDR_GEVENT_POOL_SIZE', 30))
+
+DIRECT_PATH_TIMEOUT = int(os.getenv('JORMUNGANDR_DIRECT_PATH_TIMEOUT', 0.1))
 
 PARSER_MAX_COUNT = int(os.getenv('JORMUNGANDR_PARSER_MAX_COUNT', 1000))
 

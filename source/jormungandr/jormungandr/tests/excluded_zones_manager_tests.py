@@ -64,7 +64,7 @@ def mock_get_all_excluded_zones():
 @pytest.fixture(scope="function", autouse=True)
 def mock_http_karos(monkeypatch):
     monkeypatch.setattr(
-        'jormungandr.excluded_zones_manager.ExcludedZonesManager.get_all_excluded_zones',
+        'jormungandr.excluded_zones_manager.ExcludedZonesManager._get_all_excluded_zones',
         mock_get_all_excluded_zones,
     )
 
@@ -92,15 +92,25 @@ def get_excluded_zones_test():
 
 
 def excluded_manager_is_excluded_test():
+    import datetime
+    import pytz
+
     Coord = namedtuple('Coord', ['lon', 'lat'])
 
     ExcludedZonesManager.excluded_shapes["poi:gare_de_lyon"] = shapely.wkt.loads(shape_str)
 
-    res = ExcludedZonesManager.is_excluded(Coord(1, 1), mode='walking', timestamp=1723280205)
+    def ts_to_date(timestamp):
+        return datetime.datetime.fromtimestamp(timestamp, tz=pytz.timezone("UTC")).date()
+
+    res = ExcludedZonesManager.is_excluded(Coord(1, 1), mode='walking', date=ts_to_date(1723280205))
     assert not res
 
-    res = ExcludedZonesManager.is_excluded(Coord(2.376365, 48.843402), mode='walking', timestamp=1723280205)
+    res = ExcludedZonesManager.is_excluded(
+        Coord(2.376365, 48.843402), mode='walking', date=ts_to_date(1723280205)
+    )
     assert res
 
-    res = ExcludedZonesManager.is_excluded(Coord(2.376365, 48.843402), mode='walking', timestamp=1722502605)
+    res = ExcludedZonesManager.is_excluded(
+        Coord(2.376365, 48.843402), mode='walking', date=ts_to_date(1722502605)
+    )
     assert not res

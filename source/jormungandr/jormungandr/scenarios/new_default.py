@@ -1042,7 +1042,7 @@ def merge_responses(responses, debug):
 
     if not merged_response.journeys:
         # we aggregate the errors found
-        errors = {r.error.id: r.error for r in responses if r.HasField(str('error'))}
+        errors = {r.error.id: r.error for r in responses if r and r.HasField(str('error'))}
 
         # Only one errors field
         if len(errors) == 1:

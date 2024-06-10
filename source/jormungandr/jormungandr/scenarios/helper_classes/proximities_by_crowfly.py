@@ -144,6 +144,7 @@ class ProximitiesByCrowflyPool:
         max_nb_crowfly_by_mode,
         request_id,
         o_d_crowfly_distance,
+        direct_path_timeout,
     ):
         """
         A ProximitiesByCrowflyPool is a set of ProximitiesByCrowfly grouped by mode
@@ -175,9 +176,9 @@ class ProximitiesByCrowflyPool:
         self._value = {}
         self._request_id = request_id
         self._o_d_crowfly_distance = o_d_crowfly_distance
-        self._async_request()
+        self._async_request(direct_path_timeout)
 
-    def _async_request(self):
+    def _async_request(self, direct_path_timeout):
 
         for mode in self._modes:
             object_type = type_pb2.STOP_POINT
@@ -188,11 +189,15 @@ class ProximitiesByCrowflyPool:
                 filter = "poi_type.uri=\"poi_type:amenity:parking\""
 
             dp_future = self._direct_paths_by_mode.get(mode)
-            max_fallback_duration = get_max_fallback_duration(self._request, mode, dp_future)
+            max_fallback_duration = get_max_fallback_duration(
+                self._request, mode, dp_future, direct_path_timeout
+            )
             speed = jormungandr.street_network.utils.make_speed_switcher(self._request).get(mode)
 
             no_dp = (
-                dp_future is None or dp_future.wait_and_get() is None or not dp_future.wait_and_get().journeys
+                dp_future is None
+                or dp_future.wait_and_get(timeout=direct_path_timeout) is None
+                or not dp_future.wait_and_get(timeout=direct_path_timeout).journeys
             )
 
             if mode == fm.FallbackModes.car.name and no_dp and self._o_d_crowfly_distance is not None:
