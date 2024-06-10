@@ -312,7 +312,7 @@ class OlympicSiteParamsManager:
                 "show_natural_opg_journeys": show_natural_opg_journeys,
             }
 
-        if api_request.get("_deactivate_opg_scenario", False):
+        if any([api_request.get("_deactivate_opg_scenario", False), api_request.get("wheelchair", False)]):
             logging.getLogger(__name__).warning("OPG scenario deactivated.")
             return {}
 
