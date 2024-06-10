@@ -76,6 +76,7 @@ using namespace navitia;
 
 using boost::posix_time::ptime;
 using boost::posix_time::time_period;
+namespace ba = boost::algorithm;
 using navitia::type::disruption::Disruption;
 using navitia::type::disruption::Impact;
 using navitia::type::disruption::PtObj;
@@ -1541,3 +1542,278 @@ BOOST_FIXTURE_TEST_CASE(line_report_since_until, LineSectionLineReport) {
     disruption::line_reports(pb_creator, *b.data, 1, 25, 0, "", {}, {}, "20180429T060000"_dt, "20180430T060000"_dt);
     BOOST_CHECK_EQUAL(pb_creator.impacts.size(), 0);
 }
+
+
+class SimpleDataset {
+public:
+    ed::builder b;
+    navitia::PbCreator pb_creator;
+    const boost::posix_time::ptime start_date = "20180402T060000"_dt;
+    const boost::posix_time::ptime end_date = "20180405T060000"_dt;
+    const time_period published_period = time_period(start_date, end_date);
+
+    SimpleDataset()
+        : b("20180401", [](ed::builder& b) {
+              b.sa("stop_area:1", 0, 0, false, true)("sp1_1");
+              b.sa("stop_area:2", 0, 0, false, true)("sp1_2");
+              b.sa("stop_area:3", 0, 0, false, true)("sp1_3");
+              b.sa("stop_area:4", 0, 0, false, true)("sp1_4");
+              b.sa("stop_area:5", 0, 0, false, true)("sp1_5");
+              b.sa("stop_area:6", 0, 0, false, true)("sp1_6");
+              b.vj_with_network("network_1", "line_1")
+                  .route("route_1")("sp1_1", "08:10"_t)("sp1_2", "08:20"_t)("sp1_3", "08:30"_t)("sp1_4", "08:40"_t)(
+                      "sp1_5", "08:44"_t)("sp1_6", "08:48"_t);
+    }){}
+    void apply(const nt::disruption::Disruption& dis) {
+        return navitia::apply_disruption(dis, *b.data->pt_data, *b.data->meta);
+    }
+};
+
+BOOST_FIXTURE_TEST_CASE(line_report_line_section_no_service, SimpleDataset) {
+
+    const auto& disrup = b.impact(nt::RTLevel::Adapted, "line_section_1")
+                             .severity(nt::disruption::Effect::NO_SERVICE)
+            .publish(published_period)
+            .application_periods(time_period("20180403T000000"_dt, "20180404T235900"_dt))
+            .on_line_section("line_1", "stop_area:4", "stop_area:5", {"route_1"}, *b.data->pt_data)
+                             .get_disruption();
+    const auto& pt_data = b.data->pt_data;
+    BOOST_REQUIRE_EQUAL(pt_data->vehicle_journeys.size(), 1);
+    BOOST_REQUIRE_EQUAL(pt_data->meta_vjs.size(), 1);
+    BOOST_CHECK_EQUAL(pt_data->validity_patterns.size(), 1);
+    auto vj = pt_data->vehicle_journeys_map.at("vehicle_journey:line_1:0");
+    BOOST_CHECK_EQUAL(vj->base_validity_pattern(), vj->adapted_validity_pattern());
+
+    apply(disrup);
+    BOOST_REQUIRE_EQUAL(b.data->pt_data->vehicle_journeys.size(), 2);
+    BOOST_CHECK_EQUAL(pt_data->validity_patterns.size(), 4);
+    BOOST_REQUIRE_EQUAL(pt_data->meta_vjs.size(), 1);
+    vj = pt_data->vehicle_journeys_map.at("vehicle_journey:line_1:0");
+    BOOST_CHECK(vj->base_validity_pattern() != vj->adapted_validity_pattern());
+
+    pb_creator.init(b.data.get(), start_date, published_period);
+    disruption::line_reports(pb_creator, *b.data, 1, 25, 0, "", {}, {}, boost::none, boost::none);
+
+    BOOST_CHECK_EQUAL(pb_creator.impacts.size(), 1);
+}
+
+BOOST_FIXTURE_TEST_CASE(line_report_line_section_detour, SimpleDataset) {
+
+    const auto& disrup = b.impact(nt::RTLevel::Adapted, "line_section_1")
+                             .severity(nt::disruption::Effect::DETOUR)
+            .publish(published_period)
+            .application_periods(time_period("20180403T000000"_dt, "20180404T235900"_dt))
+            .on_line_section("line_1", "stop_area:4", "stop_area:5", {"route_1"}, *b.data->pt_data)
+                             .get_disruption();
+    const auto& pt_data = b.data->pt_data;
+    BOOST_REQUIRE_EQUAL(pt_data->vehicle_journeys.size(), 1);
+    BOOST_REQUIRE_EQUAL(pt_data->meta_vjs.size(), 1);
+    BOOST_CHECK_EQUAL(pt_data->validity_patterns.size(), 1);
+    auto vj = pt_data->vehicle_journeys_map.at("vehicle_journey:line_1:0");
+    BOOST_CHECK_EQUAL(vj->base_validity_pattern(), vj->adapted_validity_pattern());
+
+    apply(disrup);
+    BOOST_REQUIRE_EQUAL(b.data->pt_data->vehicle_journeys.size(), 2);
+    BOOST_CHECK_EQUAL(pt_data->validity_patterns.size(), 4);
+    BOOST_REQUIRE_EQUAL(pt_data->meta_vjs.size(), 1);
+    vj = pt_data->vehicle_journeys_map.at("vehicle_journey:line_1:0");
+    BOOST_CHECK(vj->base_validity_pattern() != vj->adapted_validity_pattern());
+
+    pb_creator.init(b.data.get(), start_date, published_period);
+    disruption::line_reports(pb_creator, *b.data, 1, 25, 0, "", {}, {}, boost::none, boost::none);
+
+    BOOST_CHECK_EQUAL(pb_creator.impacts.size(), 1);
+}
+
+BOOST_FIXTURE_TEST_CASE(line_report_line_section_reduced_service, SimpleDataset) {
+
+    const auto& disrup = b.impact(nt::RTLevel::Adapted, "line_section_1")
+                             .severity(nt::disruption::Effect::REDUCED_SERVICE)
+            .publish(published_period)
+            .application_periods(time_period("20180403T000000"_dt, "20180404T235900"_dt))
+            .on_line_section("line_1", "stop_area:4", "stop_area:5", {"route_1"}, *b.data->pt_data)
+                             .get_disruption();
+    const auto& pt_data = b.data->pt_data;
+    BOOST_REQUIRE_EQUAL(pt_data->vehicle_journeys.size(), 1);
+    BOOST_REQUIRE_EQUAL(pt_data->meta_vjs.size(), 1);
+    BOOST_CHECK_EQUAL(pt_data->validity_patterns.size(), 1);
+    auto vj = pt_data->vehicle_journeys_map.at("vehicle_journey:line_1:0");
+    BOOST_CHECK_EQUAL(vj->base_validity_pattern(), vj->adapted_validity_pattern());
+
+    apply(disrup);
+    BOOST_REQUIRE_EQUAL(b.data->pt_data->vehicle_journeys.size(), 2);
+    BOOST_CHECK_EQUAL(pt_data->validity_patterns.size(), 4);
+    BOOST_REQUIRE_EQUAL(pt_data->meta_vjs.size(), 1);
+    vj = pt_data->vehicle_journeys_map.at("vehicle_journey:line_1:0");
+    BOOST_CHECK(vj->base_validity_pattern() != vj->adapted_validity_pattern());
+
+    pb_creator.init(b.data.get(), start_date, published_period);
+    disruption::line_reports(pb_creator, *b.data, 1, 25, 0, "", {}, {}, boost::none, boost::none);
+
+    BOOST_CHECK_EQUAL(pb_creator.impacts.size(), 1);
+}
+
+BOOST_FIXTURE_TEST_CASE(line_report_line_section_modified_service, SimpleDataset) {
+
+    const auto& disrup = b.impact(nt::RTLevel::Adapted, "line_section_1")
+                             .severity(nt::disruption::Effect::MODIFIED_SERVICE)
+            .publish(published_period)
+            .application_periods(time_period("20180403T000000"_dt, "20180404T235900"_dt))
+            .on_line_section("line_1", "stop_area:4", "stop_area:5", {"route_1"}, *b.data->pt_data)
+                             .get_disruption();
+    const auto& pt_data = b.data->pt_data;
+    BOOST_REQUIRE_EQUAL(pt_data->vehicle_journeys.size(), 1);
+    BOOST_REQUIRE_EQUAL(pt_data->meta_vjs.size(), 1);
+    BOOST_CHECK_EQUAL(pt_data->validity_patterns.size(), 1);
+    auto vj = pt_data->vehicle_journeys_map.at("vehicle_journey:line_1:0");
+    BOOST_CHECK_EQUAL(vj->base_validity_pattern(), vj->adapted_validity_pattern());
+
+    apply(disrup);
+    BOOST_REQUIRE_EQUAL(b.data->pt_data->vehicle_journeys.size(), 2);
+    BOOST_CHECK_EQUAL(pt_data->validity_patterns.size(), 4);
+    BOOST_REQUIRE_EQUAL(pt_data->meta_vjs.size(), 1);
+    vj = pt_data->vehicle_journeys_map.at("vehicle_journey:line_1:0");
+    BOOST_CHECK(vj->base_validity_pattern() != vj->adapted_validity_pattern());
+
+    pb_creator.init(b.data.get(), start_date, published_period);
+    disruption::line_reports(pb_creator, *b.data, 1, 25, 0, "", {}, {}, boost::none, boost::none);
+
+    BOOST_CHECK_EQUAL(pb_creator.impacts.size(), 1);
+}
+
+
+//***********
+BOOST_FIXTURE_TEST_CASE(traffic_report_line_section_no_service, SimpleDataset) {
+
+    const auto& disrup = b.impact(nt::RTLevel::Adapted, "line_section_1")
+                             .severity(nt::disruption::Effect::NO_SERVICE)
+            .publish(published_period)
+            .application_periods(time_period("20180403T000000"_dt, "20180404T235900"_dt))
+            .on_line_section("line_1", "stop_area:4", "stop_area:5", {"route_1"}, *b.data->pt_data)
+                             .get_disruption();
+    const auto& pt_data = b.data->pt_data;
+    BOOST_REQUIRE_EQUAL(pt_data->vehicle_journeys.size(), 1);
+    BOOST_REQUIRE_EQUAL(pt_data->meta_vjs.size(), 1);
+    BOOST_CHECK_EQUAL(pt_data->validity_patterns.size(), 1);
+    auto vj = pt_data->vehicle_journeys_map.at("vehicle_journey:line_1:0");
+    BOOST_CHECK_EQUAL(vj->base_validity_pattern(), vj->adapted_validity_pattern());
+
+    apply(disrup);
+    BOOST_REQUIRE_EQUAL(b.data->pt_data->vehicle_journeys.size(), 2);
+    BOOST_CHECK_EQUAL(pt_data->validity_patterns.size(), 4);
+    BOOST_REQUIRE_EQUAL(pt_data->meta_vjs.size(), 1);
+    vj = pt_data->vehicle_journeys_map.at("vehicle_journey:line_1:0");
+    BOOST_CHECK(vj->base_validity_pattern() != vj->adapted_validity_pattern());
+
+    pb_creator.init(b.data.get(), start_date, published_period);
+    disruption::traffic_reports(pb_creator, *b.data, 1, 25, 0, "", {}, boost::none, boost::none);
+
+    BOOST_CHECK_EQUAL(pb_creator.impacts.size(), 1);
+}
+
+BOOST_FIXTURE_TEST_CASE(traffic_report_line_section_detour, SimpleDataset) {
+
+    const auto& disrup = b.impact(nt::RTLevel::Adapted, "line_section_1")
+                             .severity(nt::disruption::Effect::DETOUR)
+            .publish(published_period)
+            .application_periods(time_period("20180403T000000"_dt, "20180404T235900"_dt))
+            .on_line_section("line_1", "stop_area:4", "stop_area:5", {"route_1"}, *b.data->pt_data)
+                             .get_disruption();
+    const auto& pt_data = b.data->pt_data;
+    BOOST_REQUIRE_EQUAL(pt_data->vehicle_journeys.size(), 1);
+    BOOST_REQUIRE_EQUAL(pt_data->meta_vjs.size(), 1);
+    BOOST_CHECK_EQUAL(pt_data->validity_patterns.size(), 1);
+    auto vj = pt_data->vehicle_journeys_map.at("vehicle_journey:line_1:0");
+    BOOST_CHECK_EQUAL(vj->base_validity_pattern(), vj->adapted_validity_pattern());
+
+    apply(disrup);
+    BOOST_REQUIRE_EQUAL(b.data->pt_data->vehicle_journeys.size(), 2);
+    BOOST_CHECK_EQUAL(pt_data->validity_patterns.size(), 4);
+    BOOST_REQUIRE_EQUAL(pt_data->meta_vjs.size(), 1);
+    vj = pt_data->vehicle_journeys_map.at("vehicle_journey:line_1:0");
+    BOOST_CHECK(vj->base_validity_pattern() != vj->adapted_validity_pattern());
+
+    pb_creator.init(b.data.get(), start_date, published_period);
+    disruption::traffic_reports(pb_creator, *b.data, 1, 25, 0, "", {}, boost::none, boost::none);
+
+    BOOST_CHECK_EQUAL(pb_creator.impacts.size(), 1);
+}
+
+BOOST_FIXTURE_TEST_CASE(traffic_report_line_section_reduced_service, SimpleDataset) {
+
+    const auto& disrup = b.impact(nt::RTLevel::Adapted, "line_section_1")
+                             .severity(nt::disruption::Effect::REDUCED_SERVICE)
+            .publish(published_period)
+            .application_periods(time_period("20180403T000000"_dt, "20180404T235900"_dt))
+            .on_line_section("line_1", "stop_area:4", "stop_area:5", {"route_1"}, *b.data->pt_data)
+                             .get_disruption();
+    const auto& pt_data = b.data->pt_data;
+    BOOST_REQUIRE_EQUAL(pt_data->vehicle_journeys.size(), 1);
+    BOOST_REQUIRE_EQUAL(pt_data->meta_vjs.size(), 1);
+    BOOST_CHECK_EQUAL(pt_data->validity_patterns.size(), 1);
+    auto vj = pt_data->vehicle_journeys_map.at("vehicle_journey:line_1:0");
+    BOOST_CHECK_EQUAL(vj->base_validity_pattern(), vj->adapted_validity_pattern());
+
+    apply(disrup);
+    BOOST_REQUIRE_EQUAL(b.data->pt_data->vehicle_journeys.size(), 2);
+    BOOST_CHECK_EQUAL(pt_data->validity_patterns.size(), 4);
+    BOOST_REQUIRE_EQUAL(pt_data->meta_vjs.size(), 1);
+    vj = pt_data->vehicle_journeys_map.at("vehicle_journey:line_1:0");
+    BOOST_CHECK(vj->base_validity_pattern() != vj->adapted_validity_pattern());
+
+    pb_creator.init(b.data.get(), start_date, published_period);
+    disruption::traffic_reports(pb_creator, *b.data, 1, 25, 0, "", {}, boost::none, boost::none);
+
+    BOOST_CHECK_EQUAL(pb_creator.impacts.size(), 1);
+}
+
+BOOST_FIXTURE_TEST_CASE(traffic_report_line_section_modified_service, SimpleDataset) {
+
+    const auto& disrup = b.impact(nt::RTLevel::Adapted, "line_section_1")
+                             .severity(nt::disruption::Effect::MODIFIED_SERVICE)
+            .publish(published_period)
+            .application_periods(time_period("20180403T000000"_dt, "20180404T235900"_dt))
+            .on_line_section("line_1", "stop_area:4", "stop_area:5", {"route_1"}, *b.data->pt_data)
+                             .get_disruption();
+    const auto& pt_data = b.data->pt_data;
+    BOOST_REQUIRE_EQUAL(pt_data->vehicle_journeys.size(), 1);
+    BOOST_REQUIRE_EQUAL(pt_data->meta_vjs.size(), 1);
+    BOOST_CHECK_EQUAL(pt_data->validity_patterns.size(), 1);
+    // Check the original vj
+    auto vj = pt_data->vehicle_journeys_map.at("vehicle_journey:line_1:0");
+    BOOST_CHECK_EQUAL(vj->base_validity_pattern(), vj->adapted_validity_pattern());
+    auto adapted_vp = vj->adapted_validity_pattern()->days;
+    auto base_vp = vj->base_validity_pattern()->days;
+    BOOST_CHECK_MESSAGE(ba::ends_with(base_vp.to_string(), "111111"), base_vp);
+    BOOST_CHECK_MESSAGE(ba::ends_with(adapted_vp.to_string(), "111111"), adapted_vp);
+
+
+
+
+    apply(disrup);
+    BOOST_REQUIRE_EQUAL(b.data->pt_data->vehicle_journeys.size(), 2);
+    BOOST_CHECK_EQUAL(pt_data->validity_patterns.size(), 4);
+    BOOST_REQUIRE_EQUAL(pt_data->meta_vjs.size(), 1);
+
+    // Check the adapted vj
+    const navitia::type::MetaVehicleJourney* meta_vj = b.get_meta_vj("vj 0");
+    BOOST_REQUIRE_EQUAL(meta_vj->get_adapted_vj().size(), 1);
+    const auto* adapted_vj = meta_vj->get_adapted_vj()[0].get();
+
+    adapted_vp = adapted_vj->adapted_validity_pattern()->days;
+    base_vp = adapted_vj->base_validity_pattern()->days;
+    BOOST_CHECK_MESSAGE(ba::ends_with(adapted_vp.to_string(), "001100"), adapted_vp);
+    BOOST_CHECK_MESSAGE(ba::ends_with(base_vp.to_string(), "000000"), base_vp);
+
+    vj = pt_data->vehicle_journeys_map.at("vehicle_journey:line_1:0");
+    BOOST_CHECK(vj->base_validity_pattern() != vj->adapted_validity_pattern());
+
+    pb_creator.init(b.data.get(), start_date, published_period);
+    disruption::traffic_reports(pb_creator, *b.data, 1, 25, 0, "", {}, boost::none, boost::none);
+
+    BOOST_CHECK_EQUAL(pb_creator.impacts.size(), 1);
+
+}
+
+
+
