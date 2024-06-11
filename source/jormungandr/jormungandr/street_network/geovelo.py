@@ -94,21 +94,18 @@ class Geovelo(AbstractStreetNetworkService):
         self.service_url = service_url
 
         # If shape is absent, it should work as a normal street_network connector as before for retro-compatibility
-        if zone:
-            self.polygon_zone = Polygon(zone)
-            if not service_backup:
-                raise ValueError(
-                    'service_backup {} is not defined hence can not forward to asgard'.format(service_backup)
-                )
+        self.polygon_zone = None
+        self.service_backup = None
+        if zone and service_backup:
+            try:
+                service_backup["args"]["instance"] = instance
+                if 'service_url' not in service_backup['args']:
+                    service_backup['args'].update({'service_url': None})
 
-            service_backup["args"]["instance"] = instance
-            if 'service_url' not in service_backup['args']:
-                service_backup['args'].update({'service_url': None})
-
-            self.service_backup = utils.create_object(service_backup)
-        else:
-            self.polygon_zone = None
-            self.service_backup = None
+                self.polygon_zone = Polygon(zone)
+                self.service_backup = utils.create_object(service_backup)
+            except Exception as e:
+                logging.getLogger(__name__).error('Backup service not active (error: {})'.format(e))
 
         self.api_key = api_key
         self.timeout = timeout
@@ -267,37 +264,28 @@ class Geovelo(AbstractStreetNetworkService):
             )
             raise GeoveloTechnicalError('Geovelo service unavailable, impossible to query')
 
-    @staticmethod
-    def _format_coord(pt_object):
-        coord = get_pt_object_coord(pt_object)
-        return {"lat": coord.lat, "lon": coord.lon}
-
     def inside_zone(self, point):
-        coord = self._format_coord(point)
-        point_coord = (coord["lon"], coord["lat"])
+        coord = get_pt_object_coord(point)
+        point_coord = (coord.lon, coord.lat)
         shapely_point = Point(point_coord)
         return self.polygon_zone.contains(shapely_point)
 
-    def use_sn_matrix_service_backup(self, origins, destinations):
-        # Do not use if service_backup is absent
-        if not self.service_backup:
-            return False
-        # Do not use if shape is absent
+    def use_this_service_for_sn_matrix(self, origins, destinations):
+        # Use if shape is absent
         if not self.polygon_zone:
-            return False
-        # Do not use if the required point is in the shape
+            return True
+        # Use if the required point is in the shape
         # if len(origins) < len(destinations) it's 1 to N hence use first point of origins
         # Exception 1 to 1  use first point of origins(this case is very rare)
         if len(origins) <= len(destinations):
-            result = not self.inside_zone(origins[0])
+            return self.inside_zone(origins[0])
         else:
-            result = not self.inside_zone(destinations[0])
-        return result
+            return self.inside_zone(destinations[0])
 
     def _get_street_network_routing_matrix(
         self, instance, origins, destinations, street_network_mode, max_duration, request, request_id, **kwargs
     ):
-        if self.use_sn_matrix_service_backup(origins, destinations):
+        if not self.use_this_service_for_sn_matrix(origins, destinations):
             return self.service_backup._get_street_network_routing_matrix(
                 instance, origins, destinations, street_network_mode, max_duration, request, request_id, **kwargs
             )
@@ -434,20 +422,20 @@ class Geovelo(AbstractStreetNetworkService):
 
         return resp
 
-    def use_direct_path_service_backup(self, pt_object_origin, pt_object_destination, represents_start=True):
-        # Do not use if service_backup is absent
-        if not self.service_backup:
-            return False
-        # Do not use if shape is absent
+    def use_this_service_for_direct_path(self, pt_object_origin, pt_object_destination, direct_path_type):
+        # Use this service if shape is absent
         if not self.polygon_zone:
-            return False
-        # Do not use if the required point is well in the shape
-        # For represents_start=True use pt_object_origin otherwise use pt_object_destination
-        if represents_start:
-            result = not self.inside_zone(pt_object_origin)
-        else:
-            result = not self.inside_zone(pt_object_destination)
-        return result
+            return True
+        # Use if the required point is well in the shape
+        # For direct_path_type=BEGINNING_FALLBACK use pt_object_origin, for ENDING_FALLBACK use pt_object_destination
+        # For DIRECT use pt_object_destination if pt_object_origin is not in shape
+        if direct_path_type == StreetNetworkPathType.BEGINNING_FALLBACK:
+            return self.inside_zone(pt_object_origin)
+        if direct_path_type == StreetNetworkPathType.ENDING_FALLBACK:
+            return self.inside_zone(pt_object_destination)
+        if direct_path_type == StreetNetworkPathType.DIRECT:
+            return self.inside_zone(pt_object_origin) or self.inside_zone(pt_object_destination)
+        return False
 
     def _direct_path(
         self,
@@ -460,9 +448,7 @@ class Geovelo(AbstractStreetNetworkService):
         direct_path_type,
         request_id,
     ):
-        if self.use_direct_path_service_backup(
-            pt_object_origin, pt_object_destination, fallback_extremity.represents_start
-        ):
+        if not self.use_this_service_for_direct_path(pt_object_origin, pt_object_destination, direct_path_type):
             return self.service_backup._direct_path(
                 instance,
                 mode,
