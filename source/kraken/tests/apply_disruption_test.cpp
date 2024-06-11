@@ -1132,7 +1132,7 @@ BOOST_AUTO_TEST_CASE(stop_point_deletion_test) {
     test_vjs_indexes(b.data->pt_data->vehicle_journeys);
 }
 
-BOOST_AUTO_TEST_CASE(add_simple_impact_on_line_section) {
+BOOST_AUTO_TEST_CASE(impact_on_line_section_multiple_effect) {
     auto blocking_effects = {nt::disruption::Effect::NO_SERVICE, nt::disruption::Effect::DETOUR,
                              nt::disruption::Effect::REDUCED_SERVICE, nt::disruption::Effect::MODIFIED_SERVICE};
     for (auto effect : blocking_effects) {
