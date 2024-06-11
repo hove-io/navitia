@@ -935,6 +935,7 @@ def service_with_valid_zone_and_valid_backup_test():
     assert geovelo.polygon_zone
     assert geovelo.service_backup
 
+
 def service_with_zone_and_backup_test():
     # If zone and service_backup are present we may use service backup depending on conditions as explained below
     instance = MagicMock()
@@ -956,31 +957,41 @@ def service_with_zone_and_backup_test():
     # When origin of beginning fallback is outside the zone, we should use service_backup
     # The destination of ending fallback is not verified
     result = geovelo.use_this_service_for_direct_path(
-        pt_object_origin=outside_origin, pt_object_destination=outside_destination, direct_path_type=direct_path_type
+        pt_object_origin=outside_origin,
+        pt_object_destination=outside_destination,
+        direct_path_type=direct_path_type,
     )
     assert result == False
     direct_path_type = StreetNetworkPathType.ENDING_FALLBACK
     result = geovelo.use_this_service_for_direct_path(
-        pt_object_origin=outside_origin, pt_object_destination=outside_destination, direct_path_type=direct_path_type
+        pt_object_origin=outside_origin,
+        pt_object_destination=outside_destination,
+        direct_path_type=direct_path_type,
     )
     assert result == False
 
     # Use this service if origin of beginning fallback or destination of ending fallback is inside the zone
     direct_path_type = StreetNetworkPathType.BEGINNING_FALLBACK
     result = geovelo.use_this_service_for_direct_path(
-        pt_object_origin=inside_origin, pt_object_destination=outside_destination, direct_path_type=direct_path_type
+        pt_object_origin=inside_origin,
+        pt_object_destination=outside_destination,
+        direct_path_type=direct_path_type,
     )
     assert result == True
     direct_path_type = StreetNetworkPathType.ENDING_FALLBACK
     result = geovelo.use_this_service_for_direct_path(
-        pt_object_origin=outside_origin, pt_object_destination=inside_destination, direct_path_type=direct_path_type
+        pt_object_origin=outside_origin,
+        pt_object_destination=inside_destination,
+        direct_path_type=direct_path_type,
     )
     assert result == True
 
     # Use this service if origin or destination of DIRECT is inside the zone
     direct_path_type = StreetNetworkPathType.DIRECT
     result = geovelo.use_this_service_for_direct_path(
-        pt_object_origin=outside_origin, pt_object_destination=inside_destination, direct_path_type=direct_path_type
+        pt_object_origin=outside_origin,
+        pt_object_destination=inside_destination,
+        direct_path_type=direct_path_type,
     )
     assert result == True
 

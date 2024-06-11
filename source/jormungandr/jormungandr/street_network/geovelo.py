@@ -266,8 +266,7 @@ class Geovelo(AbstractStreetNetworkService):
 
     def inside_zone(self, point):
         coord = get_pt_object_coord(point)
-        point_coord = (coord.lon, coord.lat)
-        shapely_point = Point(point_coord)
+        shapely_point = Point(coord.lon, coord.lat)
         return self.polygon_zone.contains(shapely_point)
 
     def use_this_service_for_sn_matrix(self, origins, destinations):

@@ -134,6 +134,7 @@ def street_network_without_class_test():
     services = _init_and_create_backend_without_default(kraken_conf)
     assert len(services) == 0
 
+
 def valhalla_class_with_class_invalid_test():
     kraken_conf = [
         {
