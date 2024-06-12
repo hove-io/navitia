@@ -105,6 +105,8 @@ class Geovelo(AbstractStreetNetworkService):
                 self.polygon_zone = Polygon(zone)
                 self.service_backup = utils.create_object(service_backup)
             except Exception as e:
+                # For exception on service_backup update polygon_zone with None
+                self.polygon_zone = None
                 logging.getLogger(__name__).error('Backup service not active (error: {})'.format(e))
 
         self.api_key = api_key
