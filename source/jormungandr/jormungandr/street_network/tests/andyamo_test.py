@@ -821,7 +821,7 @@ def test_create_andyamo_without_service_backup():
     instance = MagicMock()
     with pytest.raises(ValueError) as excinfo:
         Andyamo(instance=instance, service_url=fake_service_url, service_backup=None, zone='')
-    assert str(excinfo.value) == 'service_backup None is not define cant forward to asgard'
+    assert str(excinfo.value) == 'service_backup None is not defined hence can not forward to asgard'
 
 
 def test_create_andyamo_without_service_url():

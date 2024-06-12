@@ -29,6 +29,7 @@
 # www.navitia.io
 from __future__ import absolute_import
 from jormungandr.street_network.geovelo import Geovelo
+from jormungandr.street_network.street_network import StreetNetworkPathType
 from navitiacommon import type_pb2, response_pb2
 import pybreaker
 from mock import MagicMock
@@ -42,6 +43,11 @@ import jormungandr.exceptions
 
 MOCKED_REQUEST = {'walking_speed': 1, 'bike_speed': 3.33}
 MOCKED_SERVICE_URL = 'https://bob.com'
+
+service_backup = {
+    "args": {"service_url": MOCKED_SERVICE_URL, "asgard_socket": "tcp://socket.andyamo.com:666"},
+    "class": "jormungandr.street_network.asgard.Asgard",
+}
 
 
 def direct_path_response_valid():
@@ -360,7 +366,7 @@ def direct_path_geovelo_zero_test():
 
 def isochrone_geovelo_test():
     instance = MagicMock()
-    geovelo = Geovelo(instance=instance, service_url=MOCKED_SERVICE_URL)
+    geovelo = Geovelo(instance=instance, service_url=MOCKED_SERVICE_URL, service_backup=None)
     resp_json = isochrone_response_valid()
 
     origins = [make_pt_object(type_pb2.ADDRESS, lon=2, lat=48.2, uri='refStart1')]
@@ -786,13 +792,226 @@ def get_physical_modes_uris_not_stop_point_object_type_test():
 
 def direct_path_invalid_mode_test():
     point = make_pt_object(type_pb2.ADDRESS, lon=1.12, lat=13.15, uri='toto')
+    fallback_extremity = PeriodExtremity(str_to_time_stamp('20161010T152000'), False)
     geovelo = Geovelo(
         instance=None,
         service_url=MOCKED_SERVICE_URL,
         id=u"tata-é$~#@\"*!'`§èû",
         modes=["walking", "bike", "car"],
+        service_backup=None,
         timeout=56,
         mode_weight={"physical_mode:Train": 3, "physical_mode:RapidTransit": 2, "physical_mode:LocalTrain": 1},
     )
     with pytest.raises(jormungandr.exceptions.InvalidArguments):
-        geovelo._direct_path(None, "walking", point, point, None, {}, None, "")
+        geovelo._direct_path(
+            instance=None,
+            mode="walking",
+            pt_object_origin=point,
+            pt_object_destination=point,
+            fallback_extremity=fallback_extremity,
+            request={},
+            direct_path_type=None,
+            request_id="",
+        )
+
+
+def valid_zone():
+    return [
+        [-1.683365, 48.116216],
+        [-1.686063, 48.112116],
+        [-1.679806, 48.110085],
+        [-1.67429761, 48.112499],
+        [-1.675216, 48.116483],
+        [-1.683365, 48.116216],
+    ]
+
+
+def invalid_zone():
+    return [
+        [-1.683365, 48.116216],
+        [-1.686063, 48.112116],
+        [-1.679806, "toto"],
+        [-1.67429761, 48.112499],
+        [-1.675216, 48.116483],
+        [-1.683365, 48.116216],
+    ]
+
+
+# Points outside zone
+# [[-1.683709, 48.117941],[-1.685259, 48.116715],[-1.670163, 48.111618]]
+# Points inside zone
+# [[-1.682446, 48.112997],[-1.678429, 48.115257],[-1.679347, 48.111848]]
+
+
+def service_without_zone_and_backup_test():
+    # If zone is absent then we should use the service without any condition
+    point = make_pt_object(type_pb2.ADDRESS, lon=1.12, lat=13.15, uri='toto')
+    direct_path_type = StreetNetworkPathType.BEGINNING_FALLBACK
+    geovelo = Geovelo(
+        instance=None,
+        service_url=MOCKED_SERVICE_URL,
+        id=u"tata-é$~#@\"*!'`§èû",
+        modes=["walking", "bike", "car"],
+        zone=None,
+        service_backup=None,
+        timeout=56,
+        mode_weight={"physical_mode:Train": 3, "physical_mode:RapidTransit": 2, "physical_mode:LocalTrain": 1},
+    )
+    result = geovelo.use_this_service_for_direct_path(
+        pt_object_origin=point, pt_object_destination=point, direct_path_type=direct_path_type
+    )
+    assert result == True
+    origins = [point]
+    destinations = [
+        make_pt_object(type_pb2.ADDRESS, lon=3, lat=48.3, uri='refEnd1'),
+        make_pt_object(type_pb2.ADDRESS, lon=4, lat=48.4, uri='refEnd2'),
+    ]
+    result = geovelo.use_this_service_for_sn_matrix(origins=origins, destinations=destinations)
+    assert result == True
+
+
+def service_with_valid_zone_but_without_backup_test():
+    # If valid zone is present without service_backup, always use this service
+    instance = MagicMock()
+    geovelo = Geovelo(
+        instance=instance,
+        service_url=MOCKED_SERVICE_URL,
+        id=u"tata-é$~#@\"*!'`§èû",
+        modes=["walking", "bike", "car"],
+        zone=valid_zone(),
+        service_backup=None,
+        timeout=56,
+        mode_weight={
+            "physical_mode:Train": 3,
+            "physical_mode:RapidTransit": 2,
+            "physical_mode:LocalTrain": 1,
+        },
+    )
+    assert geovelo is not None
+    assert geovelo.polygon_zone is None
+    assert geovelo.service_backup is None
+
+
+def service_with_invalid_zone_and_valid_backup_test():
+    # If invalid zone is present with a valid service_backup, always use this service
+    instance = MagicMock()
+    geovelo = Geovelo(
+        instance=instance,
+        service_url=MOCKED_SERVICE_URL,
+        id=u"tata-é$~#@\"*!'`§èû",
+        modes=["walking", "bike", "car"],
+        zone=invalid_zone(),
+        service_backup=service_backup,
+        timeout=56,
+        mode_weight={
+            "physical_mode:Train": 3,
+            "physical_mode:RapidTransit": 2,
+            "physical_mode:LocalTrain": 1,
+        },
+    )
+    assert geovelo is not None
+    assert geovelo.polygon_zone is None
+    assert geovelo.service_backup is None
+
+
+def service_with_valid_zone_and_valid_backup_test():
+    # If valid zone as well as service_backup are present, use this service or backup service with conditions
+    instance = MagicMock()
+    geovelo = Geovelo(
+        instance=instance,
+        service_url=MOCKED_SERVICE_URL,
+        id=u"tata-é$~#@\"*!'`§èû",
+        modes=["walking", "bike", "car"],
+        zone=valid_zone(),
+        service_backup=service_backup,
+        timeout=56,
+        mode_weight={
+            "physical_mode:Train": 3,
+            "physical_mode:RapidTransit": 2,
+            "physical_mode:LocalTrain": 1,
+        },
+    )
+    assert geovelo is not None
+    assert geovelo.polygon_zone
+    assert geovelo.service_backup
+
+
+def service_with_zone_and_backup_test():
+    # If zone and service_backup are present we may use service backup depending on conditions as explained below
+    instance = MagicMock()
+    geovelo = Geovelo(
+        instance=instance,
+        service_url=MOCKED_SERVICE_URL,
+        id=u"tata-é$~#@\"*!'`§èû",
+        modes=["walking", "bike", "car"],
+        zone=valid_zone(),
+        service_backup=service_backup,
+        timeout=56,
+        mode_weight={"physical_mode:Train": 3, "physical_mode:RapidTransit": 2, "physical_mode:LocalTrain": 1},
+    )
+    direct_path_type = StreetNetworkPathType.BEGINNING_FALLBACK
+    outside_origin = make_pt_object(type_pb2.ADDRESS, lon=-1.683709, lat=48.117941, uri='toto')
+    outside_destination = make_pt_object(type_pb2.ADDRESS, lon=-1.685259, lat=48.116715, uri='toto')
+    inside_origin = make_pt_object(type_pb2.ADDRESS, lon=-1.682446, lat=48.112997, uri='toto')
+    inside_destination = make_pt_object(type_pb2.ADDRESS, lon=-1.679347, lat=48.111848, uri='toto')
+    # When origin of beginning fallback is outside the zone, we should use service_backup
+    # The destination of ending fallback is not verified
+    result = geovelo.use_this_service_for_direct_path(
+        pt_object_origin=outside_origin,
+        pt_object_destination=outside_destination,
+        direct_path_type=direct_path_type,
+    )
+    assert result == False
+    direct_path_type = StreetNetworkPathType.ENDING_FALLBACK
+    result = geovelo.use_this_service_for_direct_path(
+        pt_object_origin=outside_origin,
+        pt_object_destination=outside_destination,
+        direct_path_type=direct_path_type,
+    )
+    assert result == False
+
+    # Use this service if origin of beginning fallback or destination of ending fallback is inside the zone
+    direct_path_type = StreetNetworkPathType.BEGINNING_FALLBACK
+    result = geovelo.use_this_service_for_direct_path(
+        pt_object_origin=inside_origin,
+        pt_object_destination=outside_destination,
+        direct_path_type=direct_path_type,
+    )
+    assert result == True
+    direct_path_type = StreetNetworkPathType.ENDING_FALLBACK
+    result = geovelo.use_this_service_for_direct_path(
+        pt_object_origin=outside_origin,
+        pt_object_destination=inside_destination,
+        direct_path_type=direct_path_type,
+    )
+    assert result == True
+
+    # Use this service if origin or destination of DIRECT is inside the zone
+    direct_path_type = StreetNetworkPathType.DIRECT
+    result = geovelo.use_this_service_for_direct_path(
+        pt_object_origin=outside_origin,
+        pt_object_destination=inside_destination,
+        direct_path_type=direct_path_type,
+    )
+    assert result == True
+
+    # For stree_network matrix, origins, destinations for start and end fallbacks are recognized by their size
+    # if length = 1 then it's origins of start fallback or destinations of end fallback (1 to N or N to 1)
+    # Origins of start fallback is outside zone hence use service_backup without verifying destinations
+    origins = [outside_origin]
+    destinations = [outside_destination, inside_destination]
+    result = geovelo.use_this_service_for_sn_matrix(origins=origins, destinations=destinations)
+    assert result == False
+    # Origins of start fallback is inside the zone hence use this service
+    origins = [inside_origin]
+    result = geovelo.use_this_service_for_sn_matrix(origins=origins, destinations=destinations)
+    assert result == True
+    # Destinations of end fallback is outside the zone hence use service_backup without verifying origins
+    origins = [outside_origin, inside_origin]
+    destinations = [outside_destination]
+    result = geovelo.use_this_service_for_sn_matrix(origins=origins, destinations=destinations)
+    assert result == False
+    # Destinations of end fallback is inside the zone hence use this service
+    destinations = [inside_destination]
+    result = geovelo.use_this_service_for_sn_matrix(origins=origins, destinations=destinations)
+    assert result == True
