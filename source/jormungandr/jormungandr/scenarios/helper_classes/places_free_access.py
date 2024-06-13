@@ -114,16 +114,3 @@ class PlacesFreeAccess:
 
     def wait_and_get(self):
         return self._value.wait_and_get()
-
-    def max_radius_to_free_access(self):
-        return max(
-            (
-                crowfly_distance_between(
-                    utils.Coords(lon=p.lon, lat=p.lat), utils.get_pt_object_coord(self._requested_place_obj)
-                )
-                for p in self._value.wait_and_get().crowfly
-                | self._value.wait_and_get().odt
-                | self._value.wait_and_get().free_radius
-            ),
-            default=0,
-        )

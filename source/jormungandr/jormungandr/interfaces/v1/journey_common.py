@@ -841,6 +841,13 @@ class JourneyCommon(ResourceUri, ResourceUtc):
             hidden=True,
             help="the maximum speed among all modes of transport, used in loki to estimate the heuristic ",
         )
+        parser_get.add_argument(
+            "_use_heuristic",
+            type=BooleanType(),
+            default=False,
+            hidden=True,
+            help="whether or not to use heuristic to optimized path searching in loki, used in loki exclusively",
+        )
 
     def parse_args(self, region=None, uri=None):
         args = self.parsers['get'].parse_args()
