@@ -886,4 +886,8 @@ class JourneyCommon(ResourceUri, ResourceUtc):
         else:
             args['original_datetime'] = pytz.UTC.localize(args['_current_datetime'])
 
+        # Use of wheelchair should dominate criteria choice
+        if args.get("wheelchair", False):
+            args['criteria'] = "classic"
+
         return args
