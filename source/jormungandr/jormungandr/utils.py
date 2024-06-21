@@ -1043,12 +1043,12 @@ def create_journeys_request(origins, destinations, datetime, clockwise, journey_
     if journey_parameters.arrival_transfer_penalty:
         req.journeys.arrival_transfer_penalty = journey_parameters.arrival_transfer_penalty
 
-    if journey_parameters.criteria == "robustness":
+    if journey_parameters.wheelchair or journey_parameters.criteria == "classic":
+        req.journeys.criteria = request_pb2.Classic
+    elif journey_parameters.criteria == "robustness":
         req.journeys.criteria = request_pb2.Robustness
     elif journey_parameters.criteria == "occupancy":
         req.journeys.criteria = request_pb2.Occupancy
-    elif journey_parameters.criteria == "classic":
-        req.journeys.criteria = request_pb2.Classic
     elif journey_parameters.criteria == "arrival_stop_attractivity":
         req.journeys.criteria = request_pb2.ArrivalStopAttractivity
     elif journey_parameters.criteria == "departure_stop_attractivity":
