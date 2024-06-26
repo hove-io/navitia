@@ -35,6 +35,7 @@ RUN a2ensite 000-default.conf \
     && a2enmod proxy \
     && a2enmod proxy_balancer \
     && a2enmod proxy_http \
+    && a2enmod headers \
     && a2enconf logformat.conf \
     && a2enmod deflate
 
