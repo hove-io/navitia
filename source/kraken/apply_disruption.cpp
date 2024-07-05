@@ -594,7 +594,7 @@ struct add_impacts_visitor : public apply_impacts_visitor {
         this->log_start_action(uri);
 
         auto blocking_effects = {nt::disruption::Effect::NO_SERVICE, nt::disruption::Effect::DETOUR,
-                                 nt::disruption::Effect::REDUCED_SERVICE};
+                                 nt::disruption::Effect::REDUCED_SERVICE, nt::disruption::Effect::MODIFIED_SERVICE};
         if (!navitia::contains(blocking_effects, impact->severity->effect)) {
             LOG4CPLUS_DEBUG(log, "Unhandled action on " << uri);
             this->log_end_action(uri);
