@@ -429,7 +429,11 @@ class Asgard(TransientSocket, Kraken):
         # bigger than max_{mode}_direct_path_distance don't compute direct_path
         if crowfly_distance > int(request['max_{mode}_direct_path_distance'.format(mode=mode)]):
             return response_pb2.Response()
-        max_duration_param_name = 'max_{mode}_direct_path_duration'.format(mode=mode) if direct_path_type == StreetNetworkPathType.DIRECT else 'max_{mode}_duration_to_pt'.format(mode=mode)
+        max_duration_param_name = (
+            'max_{mode}_direct_path_duration'.format(mode=mode)
+            if direct_path_type == StreetNetworkPathType.DIRECT
+            else 'max_{mode}_duration_to_pt'.format(mode=mode)
+        )
         if (
             crowfly_distance / float(request['{mode}_speed'.format(mode=mode)])
             > request[max_duration_param_name]
