@@ -19,7 +19,7 @@ jobs:
     runs-on: [self-hosted, corefront, sandbox]
     outputs:
       aws_token:    ${{ steps.ecr_token.outputs.token }}
-      github_token: ${{ steps.ci_core_app_token.outputs.token }}
+      github_token: ${{ steps.export_token.outputs.github_token }}
     steps:
       - name: Get ECR Token
         id: ecr_token
@@ -31,7 +31,10 @@ jobs:
         with:
           app_id: ${{ secrets.CI_CORE_APP_ID }}
           private_key: ${{ secrets.CI_CORE_APP_PEM }}
-
+      - name: Get ECR Token
+        id: export_token
+        run: |
+          echo github_token=${{ steps.ci_core_app_token.outputs.token }} >> $GITHUB_OUTPUT
 
   checks:
     runs-on: [self-hosted, corefront, sandbox]
