@@ -18,39 +18,16 @@ jobs:
     name: Init credentials
     runs-on: [self-hosted, corefront, sandbox]
     outputs:
-      aws_token:    ${{ steps.ecr_token.outputs.token }}
-      github_token: ${{ steps.github_token.outputs.token }}
+      aws_token: ${{ steps.ecr_token.outputs.token }}
     steps:
       - name: Get ECR Token
         id: ecr_token
         run: |
           echo token=$(aws ecr get-login-password --region $REGION) >> $GITHUB_OUTPUT
-      - name: Generate github private access token
-        id: ci_core_app_token
-        uses: getsentry/action-github-app-token@v3
-        with:
-          app_id: ${{ secrets.CI_CORE_APP_ID }}
-          private_key: ${{ secrets.CI_CORE_APP_PEM }}
-      - name: Get Github Token
-        id: github_token
-        run: |
-
-          token=${{ steps.ci_core_app_token.outputs.token }}
-
-          if [ -z "${token}" ];
-          then
-            echo "VAR is unset or set to the empty string"
-          else
-            echo "not empty"
-          fi
-
-          echo token=${token} >> $GITHUB_OUTPUT
 
   checks:
     runs-on: [self-hosted, corefront, sandbox]
-    needs: [credentials]
-    outputs:
-      github_private_token: ${{ steps.ci-core-app-token.outputs.token }}
+    needs: credentials
     container:
       image: 162230498103.dkr.ecr.eu-west-1.amazonaws.com/mutable-debian11_dev:latest
       credentials:
@@ -61,17 +38,23 @@ jobs:
       run: chown -R $USER:$USER .
     - name: Git config
       run: git config --global --add safe.directory /__w/navitia/navitia
-    - name: check github token
-      run: echo ${{ needs.credentials.outputs.github_token }}
+    - name: Generate github private access token
+      id: ci-core-app-token
+      uses: getsentry/action-github-app-token@v2.0.0
+      with:
+        app_id: ${{ secrets.CI_CORE_APP_ID }}
+        private_key: ${{ secrets.CI_CORE_APP_PEM }}
 
     - uses: actions/checkout@v3
       with:
         submodules: recursive
-        token: ${{ needs.credentials.outputs.github_token }}
+        token: ${{ steps.ci-core-app-token.outputs.token }}
         # 'check_submodules.sh' below needs entire history
         fetch-depth: 0
+
     - name: check submodules
       run: ./source/scripts/check_submodules.sh
+
     - name: clean up workspace
       if: ${{ always() }}
       run: |
@@ -91,15 +74,21 @@ jobs:
         run: chown -R $USER:$USER .
       - name: Git config
         run: git config --global --add safe.directory /__w/navitia/navitia
+      - name: Generate github private access token
+        id: ci-core-app-token
+        uses: getsentry/action-github-app-token@v2.0.0
+        with:
+          app_id: ${{ secrets.CI_CORE_APP_ID }}
+          private_key: ${{ secrets.CI_CORE_APP_PEM }}
 
       - uses: actions/checkout@v3
         with:
           submodules: recursive
-          token: ${{ needs.checks.outputs.github_private_token }}
+          token: ${{ steps.ci-core-app-token.outputs.token }}
 
       - name: Config Github global url for ssh cases (add access token)
         run: |
-          git config --global url."https://x-access-token:${{ needs.checks.outputs.github_private_token }}@github.com/hove-io/".insteadOf "git@github.com:hove-io/"
+          git config --global url."https://x-access-token:${{ steps.ci-core-app-token.outputs.token }}@github.com/hove-io/".insteadOf "git@github.com:hove-io/"
 
       - name: install dependencies
         run: |
@@ -151,12 +140,17 @@ jobs:
       run: chown -R $USER:$USER .
     - name: Git config
       run: git config --global --add safe.directory /__w/navitia/navitia
+    - name: Generate github private access token
+      id: ci-core-app-token
+      uses: getsentry/action-github-app-token@97c9e23
+      with:
+        app_id: ${{ secrets.CI_CORE_APP_ID }}
+        private_key: ${{ secrets.CI_CORE_APP_PEM }}
 
     - uses: actions/checkout@v3
       with:
         submodules: recursive
-        token:  ${{ needs.checks.outputs.github_private_token  }}
-
+        token:  ${{ steps.ci-core-app-token.outputs.token  }}
     - name: Restore ccache
       uses: hendrikmuhs/ccache-action@v1.2.11
       with:
