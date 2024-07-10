@@ -19,7 +19,7 @@ jobs:
     runs-on: [self-hosted, corefront, sandbox]
     outputs:
       aws_token: ${{ steps.ecr_token.outputs.token }}
-      github_token: ${{ steps.ci-core-app-token.outputs.token }}
+      github_private_token: ${{ steps.ci-core-app-token.outputs.token }}
     steps:
       - name: Get ECR Token
         id: ecr_token
@@ -49,7 +49,7 @@ jobs:
     - uses: actions/checkout@v3
       with:
         submodules: recursive
-        token: ${{ needs.credentials.outputs.github_token }}
+        token: ${{ needs.credentials.outputs.github_private_token }}
         # 'check_submodules.sh' below needs entire history
         fetch-depth: 0
 
@@ -83,7 +83,7 @@ jobs:
 
       - name: Config Github global url for ssh cases (add access token)
         run: |
-          git config --global url."https://x-access-token:${{ needs.credentials.ci-core-app-token.outputs.token }}@github.com/hove-io/".insteadOf "git@github.com:hove-io/"
+          git config --global url."https://x-access-token:${{ needs.credentials.outputs.github_private_token }}@github.com/hove-io/".insteadOf "git@github.com:hove-io/"
 
       - name: install dependencies
         run: |
@@ -139,7 +139,7 @@ jobs:
     - uses: actions/checkout@v3
       with:
         submodules: recursive
-        token:  ${{ needs.credentials.outputs.github_token  }}
+        token:  ${{ needs.credentials.outputs.github_private_token  }}
 
     - name: Restore ccache
       uses: hendrikmuhs/ccache-action@v1.2.11
