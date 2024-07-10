@@ -27,7 +27,7 @@ jobs:
           echo token=$(aws ecr get-login-password --region $REGION) >> $GITHUB_OUTPUT
       - name: Generate github private access token
         id: ci_core_app_token
-        uses: getsentry/action-github-app-token@v3.0.0
+        uses: tibdex/github-app-token@v2
         with:
           app_id: ${{ secrets.CI_CORE_APP_ID }}
           private_key: ${{ secrets.CI_CORE_APP_PEM }}
@@ -49,7 +49,7 @@ jobs:
     - name: Git config
       run: git config --global --add safe.directory /__w/navitia/navitia
     - name: check github token
-      run: echo ${{ needs.credentials.outputs.github_token }}
+      run: echo ${{ needs.credentials.outputs.github_token }} ${{ needs.credentials.outputs.aws_token }}
 
     - uses: actions/checkout@v3
       with:
