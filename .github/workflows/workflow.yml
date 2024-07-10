@@ -19,7 +19,7 @@ jobs:
     runs-on: [self-hosted, corefront, sandbox]
     outputs:
       aws_token:    ${{ steps.ecr_token.outputs.token }}
-      github_token: ${{ steps.ci_core_app_token.outputs.github_token }}
+      github_token: ${{ steps.ci_core_app_token.outputs.token }}
     steps:
       - name: Get ECR Token
         id: ecr_token
