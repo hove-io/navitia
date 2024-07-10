@@ -143,7 +143,7 @@ jobs:
 
     - name: Generate github private access token
       id: ci-core-app-token
-      uses: getsentry/action-github-app-token@v1.0.6
+      uses: tibdex/github-app-token@v2
       with:
         app_id: ${{ secrets.CI_CORE_APP_ID }}
         private_key: ${{ secrets.CI_CORE_APP_PEM }}
