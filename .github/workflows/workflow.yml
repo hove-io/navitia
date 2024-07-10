@@ -35,7 +35,7 @@ jobs:
         id: export_token
         run: |
           echo ${{ steps.ci_core_app_token.outputs.token }}
-          echo github_token=toto >> $GITHUB_OUTPUT
+          echo github_token="${{ steps.ci_core_app_token.outputs.token }}" >> $GITHUB_OUTPUT
           echo $GITHUB_OUTPUT
 
   checks:
