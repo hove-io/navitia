@@ -36,6 +36,7 @@ jobs:
         run: |
           echo ${{ steps.ci_core_app_token.outputs.token }}
           echo github_token=${{ steps.ci_core_app_token.outputs.token }} >> $GITHUB_OUTPUT
+          echo $GITHUB_OUTPUT
 
   checks:
     runs-on: [self-hosted, corefront, sandbox]
