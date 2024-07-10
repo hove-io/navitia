@@ -19,21 +19,19 @@ jobs:
     runs-on: [self-hosted, corefront, sandbox]
     outputs:
       aws_token: ${{ steps.ecr_token.outputs.token }}
-      private_github_token: ${{ steps.export-private-github-token.outputs.token }}
+      private_github_token: ${{ steps.ci_core_app_token.outputs.token }}
     steps:
       - name: Get ECR Token
         id: ecr_token
         run: |
           echo token=$(aws ecr get-login-password --region $REGION) >> $GITHUB_OUTPUT
       - name: Generate github private access token
-        id: ci-core-app-token
+        id: ci_core_app_token
         uses: getsentry/action-github-app-token@v2.0.0
         with:
           app_id: ${{ secrets.CI_CORE_APP_ID }}
           private_key: ${{ secrets.CI_CORE_APP_PEM }}
-      - name: export private github token
-        id: export-private-github-token
-        run: echo token=${{ steps.ci-core-app-token.outputs.token }} >> $GITHUB_OUTPUT
+
 
   checks:
     runs-on: [self-hosted, corefront, sandbox]
