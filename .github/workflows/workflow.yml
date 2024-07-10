@@ -37,7 +37,7 @@ jobs:
           if [ -z "${{ steps.ci_core_app_token.outputs.token }}" ]; then
             echo "VAR is unset or set to the empty string"
           fi
-          echo token=${{ steps.ci_core_app_token.outputs.token }} >> $GITHUB_OUTPUT
+          echo token= >> $GITHUB_OUTPUT
 
   checks:
     runs-on: [self-hosted, corefront, sandbox]
