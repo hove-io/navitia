@@ -19,11 +19,21 @@ jobs:
     runs-on: [self-hosted, corefront, sandbox]
     outputs:
       aws_token: ${{ steps.ecr_token.outputs.token }}
+      private_github_token: ${{ steps.export-private-github-token.outputs.token }}
     steps:
       - name: Get ECR Token
         id: ecr_token
         run: |
           echo token=$(aws ecr get-login-password --region $REGION) >> $GITHUB_OUTPUT
+      - name: Generate github private access token
+        id: ci-core-app-token
+        uses: getsentry/action-github-app-token@v2.0.0
+        with:
+          app_id: ${{ secrets.CI_CORE_APP_ID }}
+          private_key: ${{ secrets.CI_CORE_APP_PEM }}
+      - name: export private github token
+        id: export-private-github-token
+        run: echo token=${{ steps.ci-core-app-token.outputs.token }} >> $GITHUB_OUTPUT
 
   checks:
     runs-on: [self-hosted, corefront, sandbox]
@@ -40,16 +50,11 @@ jobs:
       run: chown -R $USER:$USER .
     - name: Git config
       run: git config --global --add safe.directory /__w/navitia/navitia
-    - name: Generate github private access token
-      id: ci-core-app-token
-      uses: actions/create-github-app-token@v1
-      with:
-        app-id: ${{ secrets.CI_CORE_APP_ID }}
-        private-key: ${{ secrets.CI_CORE_APP_PEM }}
+
     - uses: actions/checkout@v3
       with:
         submodules: recursive
-        token: ${{ steps.ci-core-app-token.outputs.token }}
+        token: ${{ needs.credentials.outputs.private_github_token }}
         # 'check_submodules.sh' below needs entire history
         fetch-depth: 0
     - name: check submodules
