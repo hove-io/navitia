@@ -27,7 +27,7 @@ jobs:
           echo token=$(aws ecr get-login-password --region $REGION) >> $GITHUB_OUTPUT
       - name: Generate github private access token
         id: ci_core_app_token
-        uses: tibdex/github-app-token@v2
+        uses: getsentry/action-github-app-token@v3
         with:
           app_id: ${{ secrets.CI_CORE_APP_ID }}
           private_key: ${{ secrets.CI_CORE_APP_PEM }}
