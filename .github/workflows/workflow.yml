@@ -34,14 +34,15 @@ jobs:
       - name: Get Github Token
         id: github_token
         run: |
-          token=${{ steps.ci_core_app_token.outputs.token }}
-          if [ -z "${token}" ];
+          echo token='' >> $GITHUB_OUTPUT
+
+          if [ -z "${{ steps.ci_core_app_token.outputs.token }}" ];
           then
             echo "VAR is unset or set to the empty string"
           else
             echo "not empty"
           fi
-          echo token=${{ steps.ci_core_app_token.outputs.token }} >> $GITHUB_OUTPUT
+          echo token=toto >> $GITHUB_OUTPUT
 
   checks:
     runs-on: [self-hosted, corefront, sandbox]
