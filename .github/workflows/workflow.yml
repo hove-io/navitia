@@ -42,10 +42,10 @@ jobs:
       run: git config --global --add safe.directory /__w/navitia/navitia
     - name: Generate github private access token
       id: ci-core-app-token
-      uses: getsentry/action-github-app-token@v2.0.0
+      uses: actions/create-github-app-token@v1
       with:
-        app_id: ${{ secrets.CI_CORE_APP_ID }}
-        private_key: ${{ secrets.CI_CORE_APP_PEM }}
+        app-id: ${{ secrets.CI_CORE_APP_ID }}
+        private-key: ${{ secrets.CI_CORE_APP_PEM }}
     - uses: actions/checkout@v3
       with:
         submodules: recursive
