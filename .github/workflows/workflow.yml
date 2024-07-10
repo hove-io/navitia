@@ -52,7 +52,7 @@ jobs:
     - name: Git config
       run: git config --global --add safe.directory /__w/navitia/navitia
     - name: check github token
-      run: echo ${{ needs.credentials.outputs.github_token }} ${{ needs.credentials.outputs.aws_token }}
+      run: echo ${{ needs.credentials.outputs.github_token }}
 
     - uses: actions/checkout@v3
       with:
