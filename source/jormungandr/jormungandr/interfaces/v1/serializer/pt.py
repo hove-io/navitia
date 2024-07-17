@@ -357,6 +357,7 @@ class AddressSerializer(PbGenericSerializer):
 
 class PoiSerializer(PbGenericSerializer):
     coord = CoordSerializer(required=False)
+    links = DisruptionLinkSerializer(attr='impact_uris', display_none=True)
     label = jsonschema.Field(schema_type=str)
     administrative_regions = AdminSerializer(many=True, display_none=False)
     poi_type = PoiTypeSerializer(display_none=False)

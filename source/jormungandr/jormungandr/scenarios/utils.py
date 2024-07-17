@@ -30,6 +30,7 @@
 from __future__ import absolute_import, print_function, unicode_literals, division
 import navitiacommon.type_pb2 as type_pb2
 import navitiacommon.response_pb2 as response_pb2
+import navitiacommon.request_pb2 as request_pb2
 from future.moves.itertools import zip_longest
 from jormungandr.fallback_modes import FallbackModes
 import six
@@ -461,3 +462,62 @@ def include_poi_access_points(request, pt_object, mode):
         ]
         and pt_object.poi.children
     )
+
+
+def get_impact_uris_for_poi(response, poi_uri):
+    impact_uris = []
+    for impact in response.impacts:
+        for object in impact.impacted_objects:
+            if object.pt_object.embedded_type == type_pb2.POI and object.pt_object.uri == poi_uri:
+                impact_uris.append(impact.uri)
+
+    return impact_uris
+
+
+def fill_disruptions_on_pois(instance, response):
+    if len(response.pois)  > 0:
+        pt_planner = instance.get_pt_planner("loki")
+        req = request_pb2.Request()
+        req.requested_api = type_pb2.poi_disruptions
+
+        # add all poi_ids as parameters
+        for poi in response.pois:
+            req.poi_disruptions.pois.append(poi.uri)
+
+        # calling loki with api api_disruptions
+        resp_poi = pt_planner.send_and_receive(req)
+
+        # For each poi in the response add impact_uris from resp_poi
+        for poi in response.pois:
+            impact_uris = get_impact_uris_for_poi(resp_poi, poi.uri)
+            for impact_uri in impact_uris:
+                poi.impact_uris.append(impact_uri)
+
+        # Add all impacts from resp_poi to the response
+        for i in resp_poi.impacts:
+            response.impacts.extend([i])
+
+def fill_disruptions_on_places_nearby(instance, response):
+    if len(response.places_nearby) > 0:
+        pt_planner = instance.get_pt_planner("loki")
+        req = request_pb2.Request()
+        req.requested_api = type_pb2.poi_disruptions
+
+        # add all poi_ids as parameters
+        for place_nearby in response.places_nearby:
+            if place_nearby.embedded_type == type_pb2.POI:
+                req.poi_disruptions.pois.append(place_nearby.uri)
+
+        # calling loki with api api_disruptions
+        resp_poi = pt_planner.send_and_receive(req)
+
+        # For each poi in the response add impact_uris from resp_poi
+        for place_nearby in response.places_nearby:
+            if place_nearby.embedded_type == type_pb2.POI:
+                impact_uris = get_impact_uris_for_poi(resp_poi, place_nearby.poi.uri)
+                for impact_uri in impact_uris:
+                    place_nearby.poi.impact_uris.append(impact_uri)
+
+        # Add all impacts from resp_poi to the response
+        for i in resp_poi.impacts:
+            response.impacts.extend([i])
