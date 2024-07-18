@@ -47,6 +47,9 @@ from jormungandr.scenarios.utils import (
     switch_back_to_ridesharing,
     nCr,
     updated_common_journey_request_with_default,
+    get_disruptions_on_poi,
+    add_disruptions,
+    get_impact_uris_for_poi,
 )
 from navitiacommon import type_pb2, response_pb2, request_pb2
 from jormungandr.scenarios.qualifier import (
@@ -489,6 +492,49 @@ def update_total_co2_emission(pb_resp):
     for j in pb_resp.journeys:
         j.co2_emission.value = sum(s.co2_emission.value for s in j.sections)
         j.co2_emission.unit = 'gEC'
+
+
+def update_disruptions_on_pois(instance, pb_resp):
+    """
+    Maintain a set of uri from all journey.section.origin and journey.section.destination of type Poi,
+    call loki with api api_disruptions&pois[]...
+    For each disruption on poi, add disruption id in the attribute links and add disruptions in the response
+    """
+    if not pb_resp.journeys:
+        return
+    # Add uri of all the pois in a set
+    poi_uris = set()
+    for j in pb_resp.journeys:
+        for s in j.sections:
+            # For origin / destination of type poi call loki to get disruptions
+            if s.origin.embedded_type == type_pb2.POI:
+                poi_uris.add(s.origin.uri)
+
+            if s.destination.embedded_type == type_pb2.POI:
+                poi_uris.add(s.destination.uri)
+
+    # Get disruptions for poi_uris calling loki with api poi_disruptions
+    poi_disruptions = get_disruptions_on_poi(instance, poi_uris)
+    if poi_disruptions is None:
+        return
+
+    # For each poi in the response:
+    # add impact_uris from resp_poi and
+    # copy object poi in impact.impacted_objects
+    for j in pb_resp.journeys:
+        for s in j.sections:
+            if s.origin.embedded_type == type_pb2.POI:
+                impact_uris = get_impact_uris_for_poi(poi_disruptions, s.origin.poi)
+                for impact_uri in impact_uris:
+                    s.origin.poi.impact_uris.append(impact_uri)
+
+            if s.destination.embedded_type == type_pb2.POI:
+                impact_uris = get_impact_uris_for_poi(poi_disruptions, s.destination.poi)
+                for impact_uri in impact_uris:
+                    s.destination.poi.impact_uris.append(impact_uri)
+
+    # Add all impacts from resp_poi to the response
+    add_disruptions(pb_resp, poi_disruptions)
 
 
 def update_total_air_pollutants(pb_resp):
@@ -1433,6 +1479,9 @@ class Scenario(simple.Scenario):
 
         # need to clean extra terminus after culling journeys
         journey_filter.remove_excess_terminus(pb_resp)
+
+        # Update disruptions on pois
+        update_disruptions_on_pois(instance, pb_resp)
 
         self._compute_pagination_links(pb_resp, instance, api_request['clockwise'])
         return pb_resp

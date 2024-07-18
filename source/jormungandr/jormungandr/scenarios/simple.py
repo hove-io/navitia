@@ -38,7 +38,11 @@ import navitiacommon.request_pb2 as request_pb2
 from navitiacommon.type_pb2 import ActiveStatus, Severity
 from jormungandr.interfaces.common import pb_odt_level
 from jormungandr.scenarios.utils import places_type, pt_object_type, add_link
-from jormungandr.scenarios.utils import build_pagination, fill_disruptions_on_pois, fill_disruptions_on_places_nearby
+from jormungandr.scenarios.utils import (
+    build_pagination,
+    fill_disruptions_on_pois,
+    fill_disruptions_on_places_nearby,
+)
 from jormungandr.exceptions import UnknownObject
 
 
@@ -302,7 +306,8 @@ class Scenario(object):
         req.disable_disruption = request["disable_disruption"] if request.get("disable_disruption") else False
         resp = instance.send_and_receive(req)
         # For pois, ws should also call loki to get disruptions on pois
-        fill_disruptions_on_places_nearby(instance, resp)
+        if not req.disable_disruption:
+            fill_disruptions_on_places_nearby(instance, resp)
         build_pagination(request, resp)
         return resp
 
@@ -338,7 +343,7 @@ class Scenario(object):
             resp = instance.send_and_receive(req)
 
             # For api = pois, ws should also call loki to get disruptions on pois
-            if req.ptref.requested_type == type_pb2.POI:
+            if (not req.disable_disruption) and req.ptref.requested_type == type_pb2.POI:
                 fill_disruptions_on_pois(instance, resp)
         build_pagination(request, resp)
         return resp
