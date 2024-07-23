@@ -7,7 +7,7 @@ COPY ./source/jormungandr ./jormungandr
 COPY ./docker/ca-certificates/*.crt /usr/local/share/ca-certificates/
 
 RUN apt-get update --fix-missing \
-    && apt-get install -y curl libpq5 apache2 python3.9-dev python3-pip git libgeos-c1v5 ca-certificates \
+    && apt-get install -y curl libpq5 apache2=2.4.61-1~deb11u1 python3.9-dev python3-pip git libgeos-c1v5 ca-certificates \
     && update-ca-certificates \
     && (cd navitiacommon && python3 setup.py install) \
     && (cd jormungandr && python3 setup.py install && pip3 install --no-cache-dir -U -r requirements.txt)\

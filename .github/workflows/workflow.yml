@@ -141,20 +141,11 @@ jobs:
     - name: Git config
       run: git config --global --add safe.directory /__w/navitia/navitia
 
-    - uses: actions/setup-node@v4
-      with:
-        node-version: 16.15.1
-    - name: Generate github private access token
-      id: ci-core-app-token
-      uses: getsentry/action-github-app-token@v2.0.0
-      with:
-        app_id: ${{ secrets.CI_CORE_APP_ID }}
-        private_key: ${{ secrets.CI_CORE_APP_PEM }}
 
     - uses: actions/checkout@v3
       with:
         submodules: recursive
-        token:  ${{ steps.ci-core-app-token.outputs.token  }}
+
     - name: Restore ccache
       uses: hendrikmuhs/ccache-action@v1.2.11
       with:
