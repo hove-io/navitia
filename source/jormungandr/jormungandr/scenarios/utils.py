@@ -466,83 +466,85 @@ def include_poi_access_points(request, pt_object, mode):
 
 
 def get_impact_uris_for_poi(response, poi):
-    impact_uris = []
+    impact_uris = set()
     if response is None:
         return impact_uris
     for impact in response.impacts:
         for object in impact.impacted_objects:
             if object.pt_object.embedded_type == type_pb2.POI and object.pt_object.uri == poi.uri:
-                impact_uris.append(impact.uri)
+                impact_uris.add(impact.uri)
                 object.pt_object.poi.CopyFrom(poi)
 
     return impact_uris
 
 
 def fill_disruptions_on_pois(instance, response):
-    if len(response.pois) > 0:
-        # add all poi_ids as parameters
-        poi_uris = set()
-        for poi in response.pois:
-            poi_uris.add(poi.uri)
+    if not response.pois:
+        return
 
-        # calling loki with api poi_disruptions
-        resp_poi = get_disruptions_on_poi(instance, poi_uris)
+    # add all poi_ids as parameters
+    poi_uris = set()
+    for poi in response.pois:
+        poi_uris.add(poi.uri)
 
-        # For each poi in the response add impact_uris from resp_poi
-        # and copy object poi in impact.impacted_objects
-        for poi in response.pois:
-            impact_uris = get_impact_uris_for_poi(resp_poi, poi)
-            for impact_uri in impact_uris:
-                poi.impact_uris.append(impact_uri)
+    # calling loki with api poi_disruptions
+    resp_poi = get_disruptions_on_poi(instance, poi_uris)
 
-        # Add all impacts from resp_poi to the response
-        add_disruptions(response, resp_poi)
+    # For each poi in the response add impact_uris from resp_poi
+    # and copy object poi in impact.impacted_objects
+    for poi in response.pois:
+        impact_uris = get_impact_uris_for_poi(resp_poi, poi)
+        for impact_uri in impact_uris:
+            poi.impact_uris.append(impact_uri)
+
+    # Add all impacts from resp_poi to the response
+    add_disruptions(response, resp_poi)
 
 
 def fill_disruptions_on_places_nearby(instance, response):
-    if len(response.places_nearby) > 0:
-        # Add all the poi uris in a list
-        poi_uris = set()
-        for place_nearby in response.places_nearby:
-            if place_nearby.embedded_type == type_pb2.POI:
-                poi_uris.add(place_nearby.uri)
+    if not response.places_nearby:
+        return
 
-        # calling loki with api poi_disruptions
-        resp_poi = get_disruptions_on_poi(instance, poi_uris)
+    # Add all the poi uris in a list
+    poi_uris = set()
+    for place_nearby in response.places_nearby:
+        if place_nearby.embedded_type == type_pb2.POI:
+            poi_uris.add(place_nearby.uri)
 
-        # For each poi in the response add impact_uris from resp_poi
-        # and copy object poi in impact.impacted_objects
-        for place_nearby in response.places_nearby:
-            if place_nearby.embedded_type == type_pb2.POI:
-                impact_uris = get_impact_uris_for_poi(resp_poi, place_nearby.poi)
-                for impact_uri in impact_uris:
-                    place_nearby.poi.impact_uris.append(impact_uri)
+    # calling loki with api poi_disruptions
+    resp_poi = get_disruptions_on_poi(instance, poi_uris)
 
-        # Add all impacts from resp_poi to the response
-        add_disruptions(response, resp_poi)
+    # For each poi in the response add impact_uris from resp_poi
+    # and copy object poi in impact.impacted_objects
+    for place_nearby in response.places_nearby:
+        if place_nearby.embedded_type == type_pb2.POI:
+            impact_uris = get_impact_uris_for_poi(resp_poi, place_nearby.poi)
+            for impact_uri in impact_uris:
+                place_nearby.poi.impact_uris.append(impact_uri)
+
+    # Add all impacts from resp_poi to the response
+    add_disruptions(response, resp_poi)
 
 
 def get_disruptions_on_poi(instance, uris):
-    if len(uris) > 0:
-        try:
-            pt_planner = instance.get_pt_planner("loki")
-            req = request_pb2.Request()
-            req.requested_api = type_pb2.poi_disruptions
+    if not uris:
+        return  None
+    try:
+        pt_planner = instance.get_pt_planner("loki")
+        req = request_pb2.Request()
+        req.requested_api = type_pb2.poi_disruptions
 
-            # add all poi_ids as parameters
-            for uri in uris:
-                req.poi_disruptions.pois.append(uri)
+        # add all poi_ids as parameters
+        req.poi_disruptions.pois.extend(uris)
 
-            # calling loki with api api_disruptions
-            resp_poi = pt_planner.send_and_receive(req)
-        except Exception:
-            return None
-        return resp_poi
-    return None
+        # calling loki with api api_disruptions
+        resp_poi = pt_planner.send_and_receive(req)
+    except Exception:
+        return None
+    return resp_poi
 
 
 def add_disruptions(pb_resp, pb_disruptions):
     if pb_disruptions is None:
         return
-    for i in pb_disruptions.impacts:
-        pb_resp.impacts.extend([i])
+    pb_resp.impacts.extend(pb_disruptions.impacts)

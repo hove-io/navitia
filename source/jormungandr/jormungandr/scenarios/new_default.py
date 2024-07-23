@@ -506,14 +506,13 @@ def update_disruptions_on_pois(instance, pb_resp):
     poi_uris = set()
     for j in pb_resp.journeys:
         for s in j.sections:
-            # For origin / destination of type poi call loki to get disruptions
             if s.origin.embedded_type == type_pb2.POI:
                 poi_uris.add(s.origin.uri)
 
             if s.destination.embedded_type == type_pb2.POI:
                 poi_uris.add(s.destination.uri)
 
-    # Get disruptions for poi_uris calling loki with api poi_disruptions
+    # Get disruptions for poi_uris calling loki with api poi_disruptions and poi_uris in param
     poi_disruptions = get_disruptions_on_poi(instance, poi_uris)
     if poi_disruptions is None:
         return
