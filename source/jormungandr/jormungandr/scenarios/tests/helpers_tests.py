@@ -531,8 +531,8 @@ def get_response_with_a_disruption_on_poi():
 
     # poi = make_pt_object(type_pb2.POI, lon=1, lat=2, uri='poi:test_uri')
     # impacted_object.pt_object.CopyFrom(poi)
-    impacted_object.pt_object.name = "poi"
-    impacted_object.pt_object.uri = "poi:test_uri"
+    impacted_object.pt_object.name = "poi_name_from_loki"
+    impacted_object.pt_object.uri = "poi_uri"
     impacted_object.pt_object.embedded_type = type_pb2.POI
     impact.updated_at = utils.str_to_time_stamp(u'20240712T205200')
     application_period = impact.application_periods.add()
@@ -558,8 +558,8 @@ def get_response_with_a_disruption_on_poi():
 def get_object_pois_in_ptref_response():
     response = response_pb2.Response()
     poi = response.pois.add()
-    poi.uri = "poi:test_uri"
-    poi.name = "test poi"
+    poi.uri = "poi_uri"
+    poi.name = "poi_name_from_kraken"
     poi.coord.lat = 2
     poi.coord.lon = 1
     poi.poi_type.uri = "poi_type:amenity:parking"
@@ -570,13 +570,68 @@ def get_object_pois_in_ptref_response():
 def get_object_pois_in_places_nearby_response():
     response = response_pb2.Response()
     place_nearby = response.places_nearby.add()
-    place_nearby.uri = "poi:test_uri"
-    place_nearby.name = "test poi"
+    place_nearby.uri = "poi_uri"
+    place_nearby.name = "poi_name_from_kraken"
     place_nearby.embedded_type = type_pb2.POI
-    place_nearby.poi.uri = "poi:test_uri"
-    place_nearby.poi.name = "test poi"
+    place_nearby.poi.uri = "poi_uri"
+    place_nearby.poi.name = "poi_name_from_kraken"
     place_nearby.poi.coord.lat = 2
     place_nearby.poi.coord.lon = 1
     place_nearby.poi.poi_type.uri = "poi_type:amenity:parking"
     place_nearby.poi.poi_type.name = "Parking P+R"
     return response
+
+
+def get_journey_with_pois():
+    response = response_pb2.Response()
+    journey = response.journeys.add()
+
+    # Walking section from 'stop_a' to 'poi:test_uri'
+    section = journey.sections.add()
+    section.type = response_pb2.STREET_NETWORK
+    section.street_network.mode = response_pb2.Walking
+    section.origin.uri = 'stop_a'
+    section.origin.embedded_type = type_pb2.STOP_POINT
+    section.destination.uri = 'poi_uri'
+    section.destination.embedded_type = type_pb2.POI
+    section.destination.poi.uri = 'poi_uri'
+    section.destination.poi.name = 'poi_name_from_kraken'
+    section.destination.poi.coord.lon = 1.0
+    section.destination.poi.coord.lat = 2.0
+
+    # Bss section from 'poi:test_uri' to 'poi_b'
+    section = journey.sections.add()
+    section.street_network.mode = response_pb2.Bss
+    section.type = response_pb2.STREET_NETWORK
+    section.origin.uri = 'poi_uri'
+    section.origin.embedded_type = type_pb2.POI
+    section.origin.poi.uri = 'poi_uri'
+    section.origin.poi.name = 'poi_name_from_kraken'
+    section.origin.poi.coord.lon = 1.0
+    section.origin.poi.coord.lat = 2.0
+    section.destination.uri = 'poi_b'
+    section.destination.embedded_type = type_pb2.POI
+
+    # Walking section from 'poi_b' to 'stop_b'
+    section = journey.sections.add()
+    section.type = response_pb2.STREET_NETWORK
+    section.street_network.mode = response_pb2.Walking
+    section.origin.uri = 'poi_b'
+    section.origin.embedded_type = type_pb2.POI
+    section.destination.uri = 'stop_b'
+    section.destination.embedded_type = type_pb2.STOP_POINT
+    return response
+
+
+def verify_poi_in_impacted_objects(object, poi_empty=True):
+    assert object.name == "poi_name_from_loki"
+    assert object.uri == "poi_uri"
+    assert object.embedded_type == type_pb2.POI
+    if poi_empty:
+        assert object.poi.uri == ''
+        assert object.poi.name == ''
+    else:
+        assert object.poi.uri == 'poi_uri'
+        assert object.poi.name == 'poi_name_from_kraken'
+        assert object.poi.coord.lon == 1.0
+        assert object.poi.coord.lat == 2.0
