@@ -554,6 +554,7 @@ def get_response_with_a_disruption_on_poi():
 
     return response
 
+
 def get_object_pois_in_ptref_response():
     response = response_pb2.Response()
     poi = response.pois.add()

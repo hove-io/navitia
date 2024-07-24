@@ -33,6 +33,7 @@ from jormungandr.scenarios.utils import fill_disruptions_on_pois, fill_disruptio
 import pytest
 from pytest_mock import mocker
 
+
 def update_disruptions_on_pois_for_ptref_test(mocker):
     instance = lambda: None
     # As in navitia, object poi in the response of ptref doesn't have any impact
@@ -73,6 +74,7 @@ def update_disruptions_on_pois_for_ptref_test(mocker):
     mock.assert_called_once()
     return
 
+
 def update_disruptions_on_pois_for_places_nearby_test(mocker):
     instance = lambda: None
     # As in navitia, object poi in the response of places_nearby doesn't have any impact
@@ -81,7 +83,6 @@ def update_disruptions_on_pois_for_places_nearby_test(mocker):
     assert len(response_places_nearby.places_nearby) == 1
     assert response_places_nearby.places_nearby[0].uri == "poi:test_uri"
     assert response_places_nearby.places_nearby[0].name == "test poi"
-
 
     # As above Prepare disruptions on poi as response of end point poi_disruptions of loki
     disruptions_with_poi = helpers_tests.get_response_with_a_disruption_on_poi()
