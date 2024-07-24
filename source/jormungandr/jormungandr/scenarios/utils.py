@@ -528,7 +528,7 @@ def fill_disruptions_on_places_nearby(instance, response):
 
 def get_disruptions_on_poi(instance, uris):
     if not uris:
-        return  None
+        return None
     try:
         pt_planner = instance.get_pt_planner("loki")
         req = request_pb2.Request()

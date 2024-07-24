@@ -32,6 +32,8 @@ from jormungandr.scenarios.helpers import (
     is_car_direct_path,
     fill_best_boarding_position,
 )
+from jormungandr.street_network.tests.streetnetwork_test_utils import make_pt_object
+from jormungandr import utils
 
 BEST_BOARDING_POSITIONS = [response_pb2.FRONT, response_pb2.MIDDLE]
 
@@ -516,3 +518,64 @@ def fill_best_boarding_position_test():
     assert response_pb2.BoardingPosition.FRONT in journey.sections[0].best_boarding_positions
     assert response_pb2.BoardingPosition.MIDDLE in journey.sections[0].best_boarding_positions
     assert response_pb2.BoardingPosition.BACK not in journey.sections[0].best_boarding_positions
+
+
+def get_response_with_a_disruption_on_poi():
+    start_period = "20240712T165200"
+    end_period = "20240812T165200"
+    response = response_pb2.Response()
+    impact = response.impacts.add()
+    impact.uri = "test_impact_uri"
+    impact.disruption_uri = "test_disruption_uri"
+    impacted_object = impact.impacted_objects.add()
+
+    # poi = make_pt_object(type_pb2.POI, lon=1, lat=2, uri='poi:test_uri')
+    # impacted_object.pt_object.CopyFrom(poi)
+    impacted_object.pt_object.name = "poi"
+    impacted_object.pt_object.uri = "poi:test_uri"
+    impacted_object.pt_object.embedded_type = type_pb2.POI
+    impact.updated_at = utils.str_to_time_stamp(u'20240712T205200')
+    application_period = impact.application_periods.add()
+    application_period.begin = utils.str_to_time_stamp(start_period)
+    application_period.end = utils.str_to_time_stamp(end_period)
+
+    # Add a message
+    message = impact.messages.add()
+    message.text = "This is the message sms"
+    message.channel.id = "sms"
+    message.channel.name = "sms"
+    message.channel.content_type = "text"
+
+    # Add a severity
+    impact.severity.effect = type_pb2.Severity.UNKNOWN_EFFECT
+    impact.severity.name = ' not blocking'
+    impact.severity.priority = 1
+    impact.contributor = "shortterm.test_poi"
+
+    return response
+
+def get_object_pois_in_ptref_response():
+    response = response_pb2.Response()
+    poi = response.pois.add()
+    poi.uri = "poi:test_uri"
+    poi.name = "test poi"
+    poi.coord.lat = 2
+    poi.coord.lon = 1
+    poi.poi_type.uri = "poi_type:amenity:parking"
+    poi.poi_type.name = "Parking P+R"
+    return response
+
+
+def get_object_pois_in_places_nearby_response():
+    response = response_pb2.Response()
+    place_nearby = response.places_nearby.add()
+    place_nearby.uri = "poi:test_uri"
+    place_nearby.name = "test poi"
+    place_nearby.embedded_type = type_pb2.POI
+    place_nearby.poi.uri = "poi:test_uri"
+    place_nearby.poi.name = "test poi"
+    place_nearby.poi.coord.lat = 2
+    place_nearby.poi.coord.lon = 1
+    place_nearby.poi.poi_type.uri = "poi_type:amenity:parking"
+    place_nearby.poi.poi_type.name = "Parking P+R"
+    return response
