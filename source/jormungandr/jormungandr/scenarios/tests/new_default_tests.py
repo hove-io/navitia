@@ -818,7 +818,9 @@ def journey_with_disruptions_on_poi_test(mocker):
     object = disruptions_with_poi.impacts[0].impacted_objects[0].pt_object
     helpers_tests.verify_poi_in_impacted_objects(object=object, poi_empty=True)
 
-    mock = mocker.patch('jormungandr.scenarios.new_default.get_disruptions_on_poi', return_value=disruptions_with_poi)
+    mock = mocker.patch(
+        'jormungandr.scenarios.new_default.get_disruptions_on_poi', return_value=disruptions_with_poi
+    )
     update_disruptions_on_pois(instance, response_journey_with_pois)
 
     assert len(response_journey_with_pois.impacts) == 1
