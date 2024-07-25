@@ -110,7 +110,10 @@ class JcdecauxProvider(CommonBssProvider):
         ref = poi.get('properties', {}).get('ref')
         service_key = self.WS_URL_TEMPLATE.format(self.contract, self.api_key) + self.network
         data = self._data.get(service_key)
-        if data is None or self._last_update + datetime.timedelta(seconds=self._update_interval) < datetime.datetime.utcnow():
+        if (
+                data is None
+                or self._last_update + datetime.timedelta(seconds=self._update_interval) < datetime.datetime.utcnow()
+        ):
             self._data[service_key] = self._call_webservice()
             self._last_update = datetime.datetime.utcnow()
             data = self._data.get(service_key)
