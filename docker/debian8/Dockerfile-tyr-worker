@@ -6,9 +6,12 @@ ARG GITHUB_TOKEN
 RUN git config --global url."https://x-access-token:${GITHUB_TOKEN}@github.com/hove-io/".insteadOf "ssh://git@github.com/hove-io/"
 RUN git clone -b ${TARTARE_TOOLS_VERSION} --depth 1 https://x-access-token:${GITHUB_TOKEN}@github.com/hove-io/tartare-tools
 
+# rustc 1.80.0 broke the compilation
+RUN rustup install 1.79.0
+
 RUN cd tartare-tools \
-    && cargo build --release -p enrich-ntfs-with-addresses \
-    && cargo build --release -p split-trip-geometries \
+    && cargo +1.79.0 build --release -p enrich-ntfs-with-addresses \
+    && cargo +1.79.0 build --release -p split-trip-geometries \
     && cp target/release/enrich-ntfs-with-addresses /usr/bin/ \
     && cp target/release/split-trip-geometries /usr/bin/ \
     && cd .. \
