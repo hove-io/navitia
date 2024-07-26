@@ -38,7 +38,22 @@ from flask_caching import Cache
 from flask_cors import CORS
 from jormungandr import init
 
+
+####  OpenTelemetry traces configuration  ######################################
+from opentelemetry.sdk.trace import TracerProvider
+from opentelemetry.sdk.trace.export import BatchSpanProcessor, ConsoleSpanExporter
+from opentelemetry.trace import set_tracer_provider
+
+tracer_provider = TracerProvider()
+tracer_provider.add_span_processor(BatchSpanProcessor(ConsoleSpanExporter()))
+set_tracer_provider(tracer_provider)
+
 app = Flask(__name__)  # type: Flask
+
+# Flask auto-instrumentation
+from opentelemetry.instrumentation.flask import FlaskInstrumentor
+
+FlaskInstrumentor().instrument_app(app)
 
 init.load_configuration(app)
 init.logger(app)

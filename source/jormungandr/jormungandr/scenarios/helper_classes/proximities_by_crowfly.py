@@ -34,6 +34,11 @@ from jormungandr import utils, new_relic, fallback_modes as fm
 import logging
 from navitiacommon import type_pb2
 
+from opentelemetry import trace, baggage
+
+
+tracer = trace.get_tracer(__name__)
+
 
 class ProximitiesByCrowfly:
     """
@@ -54,6 +59,7 @@ class ProximitiesByCrowfly:
         request,
         request_id,
         depth,
+        ctx,
     ):
         self._future_manager = future_manager
         self._instance = instance
@@ -72,6 +78,7 @@ class ProximitiesByCrowfly:
         self._forbidden_uris = utils.get_poi_params(request['forbidden_uris[]'])
         self._allowed_id = utils.get_poi_params(request['allowed_id[]'])
         self._pt_planner = self._instance.get_pt_planner(request['_pt_planner'])
+        self._ctx = ctx
         self._async_request()
 
     @new_relic.distributedEvent("get_crowfly", "street_network")
@@ -98,32 +105,35 @@ class ProximitiesByCrowfly:
             )
 
     def _do_request(self):
-        logger = logging.getLogger(__name__)
+        with tracer.start_as_current_span(name="proximities_by_crowfly", context=self._ctx):
+            logger = logging.getLogger(__name__)
 
-        # When max_duration_to_pt is 0, there is no need to compute the fallback to pt, except if place is a stop_point
-        # or a stop_area
-        if self._max_duration == 0:
-            logger.debug("max duration equals to 0, no need to compute proximities by crowfly")
+            # When max_duration_to_pt is 0, there is no need to compute the fallback to pt, except if place is a stop_point
+            # or a stop_area
+            if self._max_duration == 0:
+                logger.debug("max duration equals to 0, no need to compute proximities by crowfly")
 
-            # When max_duration_to_pt is 0, we can get on the public transport ONLY if the place is a stop_point
-            if self._instance.georef.get_stop_points_from_uri(self._requested_place_obj.uri, self._request_id):
-                return [self._requested_place_obj]
+                # When max_duration_to_pt is 0, we can get on the public transport ONLY if the place is a stop_point
+                if self._instance.georef.get_stop_points_from_uri(
+                    self._requested_place_obj.uri, self._request_id
+                ):
+                    return [self._requested_place_obj]
 
-        coord = utils.get_pt_object_coord(self._requested_place_obj)
-        if coord.lat and coord.lon:
-            crow_fly = self._get_crow_fly(self._instance.georef)
+            coord = utils.get_pt_object_coord(self._requested_place_obj)
+            if coord.lat and coord.lon:
+                crow_fly = self._get_crow_fly(self._instance.georef)
 
-            if self._mode == fm.FallbackModes.car.name:
-                # pick up only sytral_parkings with park_ride = yes
-                crow_fly = jormungandr.street_network.utils.pick_up_park_ride_car_park(crow_fly)
+                if self._mode == fm.FallbackModes.car.name:
+                    # pick up only sytral_parkings with park_ride = yes
+                    crow_fly = jormungandr.street_network.utils.pick_up_park_ride_car_park(crow_fly)
 
-            logger.debug(
-                "finish proximities by crowfly from %s in %s", self._requested_place_obj.uri, self._mode
-            )
-            return crow_fly
+                logger.debug(
+                    "finish proximities by crowfly from %s in %s", self._requested_place_obj.uri, self._mode
+                )
+                return crow_fly
 
-        logger.debug("the coord of requested places is not valid: %s", coord)
-        return []
+            logger.debug("the coord of requested places is not valid: %s", coord)
+            return []
 
     def _async_request(self):
         self._value = self._future_manager.create_future(self._do_request)
@@ -145,6 +155,7 @@ class ProximitiesByCrowflyPool:
         request_id,
         o_d_crowfly_distance,
         direct_path_timeout,
+        ctx,
     ):
         """
         A ProximitiesByCrowflyPool is a set of ProximitiesByCrowfly grouped by mode
@@ -176,6 +187,7 @@ class ProximitiesByCrowflyPool:
         self._value = {}
         self._request_id = request_id
         self._o_d_crowfly_distance = o_d_crowfly_distance
+        self._ctx = ctx
         self._async_request(direct_path_timeout)
 
     def _async_request(self, direct_path_timeout):
@@ -222,6 +234,7 @@ class ProximitiesByCrowflyPool:
                 request=self._request,
                 request_id=self._request_id,
                 depth=depth,
+                ctx=self._ctx,
             )
 
             self._value[mode] = p
