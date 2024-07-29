@@ -1059,16 +1059,17 @@ def create_journeys_request(origins, destinations, datetime, clockwise, journey_
     ####################
     # for loki
     req.journeys.use_heuristic = journey_parameters.use_heuristic
-    req.journeys.departure_coord.CopyFrom(
-        type_pb2.GeographicalCoord(
-            lon=journey_parameters.departure_coord.lon, lat=journey_parameters.departure_coord.lat
+    if journey_parameters.departure_coord and journey_parameters.arrival_coord:
+        req.journeys.departure_coord.CopyFrom(
+            type_pb2.GeographicalCoord(
+                lon=journey_parameters.departure_coord.lon, lat=journey_parameters.departure_coord.lat
+            )
         )
-    )
-    req.journeys.arrival_coord.CopyFrom(
-        type_pb2.GeographicalCoord(
-            lon=journey_parameters.arrival_coord.lon, lat=journey_parameters.arrival_coord.lat
+        req.journeys.arrival_coord.CopyFrom(
+            type_pb2.GeographicalCoord(
+                lon=journey_parameters.arrival_coord.lon, lat=journey_parameters.arrival_coord.lat
+            )
         )
-    )
     req.journeys.global_max_speed = journey_parameters.global_max_speed
     ####################
 
