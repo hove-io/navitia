@@ -337,8 +337,8 @@ class PtJourneyPool:
                 olympic_site_params=olympic_site_params,
                 language=request['language'],
                 use_heuristic=request['_use_heuristic'],
-                departure_coord=get_pt_object_coord(self._requested_orig_obj),
-                arrival_coord=get_pt_object_coord(self._requested_dest_obj),
+                departure_coord=get_pt_object_coord(self._requested_orig_obj) if self._requested_orig_obj else None,
+                arrival_coord=get_pt_object_coord(self._requested_dest_obj) if self._requested_dest_obj else None,
                 global_max_speed=request["_global_max_speed"],
             )
 
