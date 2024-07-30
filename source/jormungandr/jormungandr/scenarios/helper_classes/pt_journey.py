@@ -29,7 +29,7 @@
 
 from __future__ import absolute_import
 from jormungandr import utils, new_relic
-from jormungandr.utils import date_to_timestamp
+from jormungandr.utils import date_to_timestamp, get_pt_object_coord
 from jormungandr.street_network.street_network import StreetNetworkPathType
 from navitiacommon import response_pb2, type_pb2
 from collections import namedtuple
@@ -268,15 +268,21 @@ class PtJourneyPool:
         self._isochrone_center = isochrone_center
         self._request_type = request_type
         self._journey_params = self._create_parameters(
-            instance, request, self._isochrone_center, self._request_type
+            request,
+            self._isochrone_center,
+            self._request_type,
         )
         self._request = request
         self._value = []
         self._request_id = request_id
         self._async_request()
 
-    @staticmethod
-    def _create_parameters(instance, request, isochrone_center, request_type):
+    def _create_parameters(
+        self,
+        request,
+        isochrone_center,
+        request_type,
+    ):
         from jormungandr.pt_planners.pt_planner import (
             JourneyParameters,
             GraphicalIsochronesParameters,
@@ -330,6 +336,14 @@ class PtJourneyPool:
                 criteria=request.get('criteria', 'robustness'),
                 olympic_site_params=olympic_site_params,
                 language=request['language'],
+                use_heuristic=request['_use_heuristic'],
+                departure_coord=get_pt_object_coord(self._requested_orig_obj)
+                if self._requested_orig_obj
+                else None,
+                arrival_coord=get_pt_object_coord(self._requested_dest_obj)
+                if self._requested_dest_obj
+                else None,
+                global_max_speed=request["_global_max_speed"],
             )
 
     def _async_request(self):

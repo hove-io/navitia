@@ -75,6 +75,10 @@ class JourneyParameters(object):
         criteria=None,
         olympic_site_params=None,
         language="fr-FR",
+        use_heuristic=False,
+        departure_coord=None,
+        arrival_coord=None,
+        global_max_speed=None,
     ):
 
         self.max_duration = max_duration
@@ -98,6 +102,10 @@ class JourneyParameters(object):
         self.criteria = criteria
         self.olympic_site_params = olympic_site_params or {}
         self.language = language
+        self.use_heuristic = use_heuristic
+        self.departure_coord = departure_coord
+        self.arrival_coord = arrival_coord
+        self.global_max_speed = global_max_speed
 
 
 # Needed for GraphicalIsochrones

@@ -34,6 +34,7 @@ from jormungandr import utils, new_relic
 from collections import namedtuple
 import logging
 from .helper_utils import timed_logger
+from jormungandr.street_network.utils import crowfly_distance_between
 
 FreeAccessObject = namedtuple('FreeAccessObject', ['uri', 'lon', 'lat'])
 PlaceFreeAccessResult = namedtuple('PlaceFreeAccessResult', ['crowfly', 'odt', 'free_radius'])
