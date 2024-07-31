@@ -754,6 +754,8 @@ def filter_olympic_site_by_min_pt_duration(
         origin_olympic_site = False
 
     for resp in response_list:
+        if not resp:
+            continue
         for j in resp.journeys:
             if not j.sections:
                 continue
