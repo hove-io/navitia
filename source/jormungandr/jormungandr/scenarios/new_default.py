@@ -102,6 +102,7 @@ from six.moves import filter
 from six.moves import range
 from six.moves import zip
 from functools import cmp_to_key
+from datetime import datetime
 
 SECTION_TYPES_TO_RETAIN = {response_pb2.PUBLIC_TRANSPORT, response_pb2.STREET_NETWORK}
 JOURNEY_TAGS_TO_RETAIN = ['best_olympics']
@@ -504,16 +505,20 @@ def update_disruptions_on_pois(instance, pb_resp):
         return
     # Add uri of all the pois in a set
     poi_uris = set()
+    since_datetime = date_to_timestamp(datetime.utcnow())
+    until_datetime = date_to_timestamp(datetime.utcnow())
     for j in pb_resp.journeys:
         for s in j.sections:
             if s.origin.embedded_type == type_pb2.POI:
                 poi_uris.add(s.origin.uri)
+                since_datetime = min(since_datetime, s.begin_date_time)
 
             if s.destination.embedded_type == type_pb2.POI:
                 poi_uris.add(s.destination.uri)
+                until_datetime = max(until_datetime, s.end_date_time)
 
     # Get disruptions for poi_uris calling loki with api poi_disruptions and poi_uris in param
-    poi_disruptions = get_disruptions_on_poi(instance, poi_uris)
+    poi_disruptions = get_disruptions_on_poi(instance, poi_uris, since_datetime, until_datetime)
     if poi_disruptions is None:
         return
 

@@ -526,7 +526,7 @@ def fill_disruptions_on_places_nearby(instance, response):
     add_disruptions(response, resp_poi)
 
 
-def get_disruptions_on_poi(instance, uris):
+def get_disruptions_on_poi(instance, uris, since_datetime=None, until_datetime=None):
     if not uris:
         return None
     try:
@@ -534,8 +534,11 @@ def get_disruptions_on_poi(instance, uris):
         req = request_pb2.Request()
         req.requested_api = type_pb2.poi_disruptions
 
-        # add all poi_ids as parameters
         req.poi_disruptions.pois.extend(uris)
+        if since_datetime:
+            req.poi_disruptions.since_datetime = since_datetime
+        if until_datetime:
+            req.poi_disruptions.until_datetime = until_datetime
 
         # calling loki with api api_disruptions
         resp_poi = pt_planner.send_and_receive(req)
