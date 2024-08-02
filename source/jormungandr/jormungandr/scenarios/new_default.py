@@ -505,37 +505,35 @@ def update_disruptions_on_pois(instance, pb_resp):
         return
     # Add uri of all the pois in a set
     poi_uris = set()
+    poi_objets = []
     since_datetime = date_to_timestamp(datetime.utcnow())
     until_datetime = date_to_timestamp(datetime.utcnow())
     for j in pb_resp.journeys:
         for s in j.sections:
             if s.origin.embedded_type == type_pb2.POI:
                 poi_uris.add(s.origin.uri)
+                poi_objets.append(s.origin.poi)
                 since_datetime = min(since_datetime, s.begin_date_time)
 
             if s.destination.embedded_type == type_pb2.POI:
                 poi_uris.add(s.destination.uri)
+                poi_objets.append(s.destination.poi)
                 until_datetime = max(until_datetime, s.end_date_time)
 
+    if since_datetime >= until_datetime:
+        since_datetime = until_datetime - 1
     # Get disruptions for poi_uris calling loki with api poi_disruptions and poi_uris in param
     poi_disruptions = get_disruptions_on_poi(instance, poi_uris, since_datetime, until_datetime)
     if poi_disruptions is None:
         return
 
-    # For each poi in the response:
+    # For each poi in pt_objects:
     # add impact_uris from resp_poi and
     # copy object poi in impact.impacted_objects
-    for j in pb_resp.journeys:
-        for s in j.sections:
-            if s.origin.embedded_type == type_pb2.POI:
-                impact_uris = get_impact_uris_for_poi(poi_disruptions, s.origin.poi)
-                for impact_uri in impact_uris:
-                    s.origin.poi.impact_uris.append(impact_uri)
-
-            if s.destination.embedded_type == type_pb2.POI:
-                impact_uris = get_impact_uris_for_poi(poi_disruptions, s.destination.poi)
-                for impact_uri in impact_uris:
-                    s.destination.poi.impact_uris.append(impact_uri)
+    for pt_object in poi_objets:
+        impact_uris = get_impact_uris_for_poi(poi_disruptions, pt_object)
+        for impact_uri in impact_uris:
+            pt_object.impact_uris.append(impact_uri)
 
     # Add all impacts from resp_poi to the response
     add_disruptions(pb_resp, poi_disruptions)
