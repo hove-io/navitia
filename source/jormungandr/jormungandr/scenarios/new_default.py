@@ -47,6 +47,9 @@ from jormungandr.scenarios.utils import (
     switch_back_to_ridesharing,
     nCr,
     updated_common_journey_request_with_default,
+    get_disruptions_on_poi,
+    add_disruptions,
+    get_impact_uris_for_poi,
 )
 from navitiacommon import type_pb2, response_pb2, request_pb2
 from jormungandr.scenarios.qualifier import (
@@ -99,6 +102,7 @@ from six.moves import filter
 from six.moves import range
 from six.moves import zip
 from functools import cmp_to_key
+from datetime import datetime
 
 SECTION_TYPES_TO_RETAIN = {response_pb2.PUBLIC_TRANSPORT, response_pb2.STREET_NETWORK}
 JOURNEY_TAGS_TO_RETAIN = ['best_olympics']
@@ -489,6 +493,50 @@ def update_total_co2_emission(pb_resp):
     for j in pb_resp.journeys:
         j.co2_emission.value = sum(s.co2_emission.value for s in j.sections)
         j.co2_emission.unit = 'gEC'
+
+
+def update_disruptions_on_pois(instance, pb_resp):
+    """
+    Maintain a set of uri from all journey.section.origin and journey.section.destination of type Poi,
+    call loki with api api_disruptions&pois[]...
+    For each disruption on poi, add disruption id in the attribute links and add disruptions in the response
+    """
+    if not pb_resp.journeys:
+        return
+    # Add uri of all the pois in a set
+    poi_uris = set()
+    poi_objets = []
+    since_datetime = date_to_timestamp(datetime.utcnow())
+    until_datetime = date_to_timestamp(datetime.utcnow())
+    for j in pb_resp.journeys:
+        for s in j.sections:
+            if s.origin.embedded_type == type_pb2.POI:
+                poi_uris.add(s.origin.uri)
+                poi_objets.append(s.origin.poi)
+                since_datetime = min(since_datetime, s.begin_date_time)
+
+            if s.destination.embedded_type == type_pb2.POI:
+                poi_uris.add(s.destination.uri)
+                poi_objets.append(s.destination.poi)
+                until_datetime = max(until_datetime, s.end_date_time)
+
+    if since_datetime >= until_datetime:
+        since_datetime = until_datetime - 1
+    # Get disruptions for poi_uris calling loki with api poi_disruptions and poi_uris in param
+    poi_disruptions = get_disruptions_on_poi(instance, poi_uris, since_datetime, until_datetime)
+    if poi_disruptions is None:
+        return
+
+    # For each poi in pt_objects:
+    # add impact_uris from resp_poi and
+    # copy object poi in impact.impacted_objects
+    for pt_object in poi_objets:
+        impact_uris = get_impact_uris_for_poi(poi_disruptions, pt_object)
+        for impact_uri in impact_uris:
+            pt_object.impact_uris.append(impact_uri)
+
+    # Add all impacts from resp_poi to the response
+    add_disruptions(pb_resp, poi_disruptions)
 
 
 def update_total_air_pollutants(pb_resp):
@@ -1433,6 +1481,9 @@ class Scenario(simple.Scenario):
 
         # need to clean extra terminus after culling journeys
         journey_filter.remove_excess_terminus(pb_resp)
+
+        # Update disruptions on pois
+        update_disruptions_on_pois(instance, pb_resp)
 
         self._compute_pagination_links(pb_resp, instance, api_request['clockwise'])
         return pb_resp

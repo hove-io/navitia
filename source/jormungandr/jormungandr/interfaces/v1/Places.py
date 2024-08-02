@@ -396,7 +396,7 @@ class PlacesNearby(ResourceUri):
             uris = uri.split("/")
             if len(uris) >= 2:
                 args["uri"] = transform_id(uris[-1])
-                # for coherence we check the type of the object
+                # for coherence, we check the type of the object
                 obj_type = uris[-2]
                 if obj_type not in places_types:
                     abort(404, message='places_nearby api not available for {}'.format(obj_type))

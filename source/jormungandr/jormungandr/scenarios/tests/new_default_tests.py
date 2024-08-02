@@ -37,12 +37,14 @@ from jormungandr.scenarios.new_default import (
     _tag_journey_by_mode,
     get_kraken_calls,
     update_best_boarding_positions,
+    update_disruptions_on_pois,
 )
 from jormungandr.instance import Instance
 from jormungandr.scenarios.utils import switch_back_to_ridesharing
 from jormungandr.utils import make_origin_destination_key, str_to_time_stamp
 from werkzeug.exceptions import HTTPException
 import pytest
+from pytest_mock import mocker
 from collections import defaultdict
 
 """
@@ -798,10 +800,34 @@ DEFAULT_OLYMPICS_FORBIDDEN_URIS = {
 }
 
 
-def make_pt_object_poi(property_type="olympic", property_value="1234"):
-    pt_object_poi = type_pb2.PtObject()
-    pt_object_poi.embedded_type = type_pb2.POI
-    property = pt_object_poi.poi.properties.add()
-    property.type = property_type
-    property.value = property_value
-    return pt_object_poi
+def journey_with_disruptions_on_poi_test(mocker):
+    instance = lambda: None
+    # As in navitia, object poi in the response of places_nearby doesn't have any impact
+    response_journey_with_pois = helpers_tests.get_journey_with_pois()
+    assert len(response_journey_with_pois.impacts) == 0
+    assert len(response_journey_with_pois.journeys) == 1
+    journey = response_journey_with_pois.journeys[0]
+    assert len(journey.sections) == 3
+
+    # Prepare disruptions on poi as response of end point poi_disruptions of loki
+    # pt_object poi as impacted object is absent in the response of poi_disruptions
+    disruptions_with_poi = helpers_tests.get_response_with_a_disruption_on_poi()
+    assert len(disruptions_with_poi.impacts) == 1
+    assert disruptions_with_poi.impacts[0].uri == "test_impact_uri"
+    assert len(disruptions_with_poi.impacts[0].impacted_objects) == 1
+    object = disruptions_with_poi.impacts[0].impacted_objects[0].pt_object
+    helpers_tests.verify_poi_in_impacted_objects(object=object, poi_empty=True)
+
+    mock = mocker.patch(
+        'jormungandr.scenarios.new_default.get_disruptions_on_poi', return_value=disruptions_with_poi
+    )
+    update_disruptions_on_pois(instance, response_journey_with_pois)
+
+    assert len(response_journey_with_pois.impacts) == 1
+    impact = response_journey_with_pois.impacts[0]
+    assert len(impact.impacted_objects) == 1
+    object = impact.impacted_objects[0].pt_object
+    helpers_tests.verify_poi_in_impacted_objects(object=object, poi_empty=False)
+
+    mock.assert_called_once()
+    return

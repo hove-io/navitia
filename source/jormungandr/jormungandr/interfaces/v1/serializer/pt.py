@@ -121,6 +121,7 @@ class PtObjectSerializer(PbGenericSerializer):
     quality = jsonschema.Field(schema_type=int, required=False, display_none=True, deprecated=True)
     stop_area = jsonschema.MethodField(schema_type=lambda: StopAreaSerializer())
     stop_point = jsonschema.MethodField(schema_type=lambda: StopPointSerializer())
+    poi = jsonschema.MethodField(schema_type=lambda: PoiSerializer())
     line = jsonschema.MethodField(schema_type=lambda: LineSerializer())
     network = jsonschema.MethodField(schema_type=lambda: NetworkSerializer())
     route = jsonschema.MethodField(schema_type=lambda: RouteSerializer())
@@ -167,6 +168,12 @@ class PtObjectSerializer(PbGenericSerializer):
     def get_stop_point(self, obj):
         if obj.HasField(str('stop_point')):
             return StopPointSerializer(obj.stop_point, display_none=False).data
+        else:
+            return None
+
+    def get_poi(self, obj):
+        if obj.HasField(str('poi')):
+            return PoiSerializer(obj.poi, display_none=False).data
         else:
             return None
 
@@ -357,6 +364,7 @@ class AddressSerializer(PbGenericSerializer):
 
 class PoiSerializer(PbGenericSerializer):
     coord = CoordSerializer(required=False)
+    links = DisruptionLinkSerializer(attr='impact_uris', display_none=False)
     label = jsonschema.Field(schema_type=str)
     administrative_regions = AdminSerializer(many=True, display_none=False)
     poi_type = PoiTypeSerializer(display_none=False)
