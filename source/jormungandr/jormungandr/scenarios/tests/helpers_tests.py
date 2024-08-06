@@ -635,3 +635,42 @@ def verify_poi_in_impacted_objects(object, poi_empty=True):
         assert object.poi.name == 'poi_name_from_kraken'
         assert object.poi.coord.lon == 1.0
         assert object.poi.coord.lat == 2.0
+
+
+def get_odt_journey(deeplink):
+    response = response_pb2.Response()
+    journey = response.journeys.add()
+
+    section = journey.sections.add()
+    section.type = response_pb2.STREET_NETWORK
+    section.street_network.mode = response_pb2.Walking
+    section.duration = 20
+    section = journey.sections.add()
+    section.type = response_pb2.ON_DEMAND_TRANSPORT
+    section.duration = 70
+    section.begin_date_time = utils.str_to_time_stamp("20240806T060500")
+    section.origin.uri = 'stop_a'
+    section.origin.embedded_type = type_pb2.STOP_POINT
+    section.origin.stop_point.uri = 'stop_a'
+    section.origin.stop_point.name = 'stop_a_name'
+    section.origin.stop_point.coord.lon = 1.0
+    section.origin.stop_point.coord.lat = 2.0
+    section.destination.uri = 'stop_b'
+    section.destination.embedded_type = type_pb2.STOP_POINT
+    section.destination.stop_point.uri = 'stop_b'
+    section.destination.stop_point.name = 'stop_b_name'
+    section.destination.stop_point.coord.lon = 3.0
+    section.destination.stop_point.coord.lat = 4.0
+    odt_information = section.odt_information
+    odt_information.name = "odt_name_value"
+    odt_information.deeplink = deeplink
+    odt_information.url = "odt_url_value"
+    odt_information.conditions = "odt_conditions_value"
+    odt_information.phone = "odt_phone_value"
+    odt_information.applies_on.append(response_pb2.OdtInformation.AppliesOn.FROM)
+    section = journey.sections.add()
+    section.type = response_pb2.STREET_NETWORK
+    section.street_network.mode = response_pb2.Walking
+    section.duration = 10
+
+    return response
