@@ -31,6 +31,12 @@
 from __future__ import absolute_import, print_function, unicode_literals, division
 
 from jormungandr.interfaces.v1.serializer.base import SortedGenericSerializer
+from jormungandr.interfaces.v1.decorators import get_serializer
+from jormungandr.interfaces.v1.serializer import api
+from jormungandr import app
+import pytz
+from flask import g
+import jormungandr.scenarios.tests.helpers_tests as helpers_tests
 import serpy
 
 
@@ -47,3 +53,28 @@ def test_sorted_generic_serializer():
     assert data[1]['v'] == 2
     assert data[2]['v'] == 3
     assert data[3]['v'] == 4
+
+
+@get_serializer(serpy=api.JourneysSerializer)
+def abcd():
+    deeplink = "https://toto.com?from=from_value&to=to_value"
+    return helpers_tests.get_odt_journey(deeplink=deeplink)
+
+
+def odt_information_serialization_test():
+    with app.app_context():
+        with app.test_request_context():
+            g.timezone = pytz.utc
+            # get journey response in json
+            resp = abcd()
+            assert len(resp.get("journeys", 0)) == 1
+            journey = resp["journeys"][0]
+            assert len(journey.get("sections", 0)) == 3
+            section = journey["sections"][1]
+            odt_information = section.get("odt_informations", None)
+            assert  odt_information is not None
+            assert odt_information["url"] == "odt_url_value"
+            assert odt_information["name"] == "odt_name_value"
+            assert odt_information["phone"] == "odt_phone_value"
+            assert odt_information["conditions"] == "odt_conditions_value"
+            assert odt_information["deeplink"] == "https://toto.com?from=from_value&to=to_value"
