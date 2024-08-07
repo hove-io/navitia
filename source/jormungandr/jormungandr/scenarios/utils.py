@@ -556,7 +556,7 @@ def add_disruptions(pb_resp, pb_disruptions):
     pb_resp.impacts.extend(pb_disruptions.impacts)
 
 
-def update_deeplink_in_odt_information_in_section(section):
+def update_odt_information_deeplink_in_section(section):
     if section.type != response_pb2.ON_DEMAND_TRANSPORT:
         return
 

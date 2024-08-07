@@ -32,7 +32,7 @@ import jormungandr.scenarios.tests.helpers_tests as helpers_tests
 from jormungandr.scenarios.utils import (
     fill_disruptions_on_pois,
     fill_disruptions_on_places_nearby,
-    update_deeplink_in_odt_information_in_section,
+    update_odt_information_deeplink_in_section,
 )
 
 import pytest
@@ -124,7 +124,7 @@ def journey_with_deeplink_in_odt_information_test():
     assert odt_information.url == "odt_url_value"
     assert odt_information.conditions == "odt_conditions_value"
     assert odt_information.phone == "odt_phone_value"
-    update_deeplink_in_odt_information_in_section(odt_section)
+    update_odt_information_deeplink_in_section(odt_section)
     assert (
         odt_information.deeplink
         == "https://domaine/search?departure-address=stop_a_name&destination-address=stop_b_name&requested-departure-time=1722924300&from_coord_lat=2.0&from_coord_lon=1.0&to_coord_lat=4.0&to_coord_lon=3.0"
@@ -137,7 +137,7 @@ def journey_with_deeplink_in_odt_information_test():
     )
     response_journey_with_odt = helpers_tests.get_odt_journey(deeplink=deeplink)
     odt_section = response_journey_with_odt.journeys[0].sections[1]
-    update_deeplink_in_odt_information_in_section(odt_section)
+    update_odt_information_deeplink_in_section(odt_section)
     assert (
         odt_section.odt_information.deeplink
         == "https://domaine/search?departure-address=stop_a_name&destination-address=stop_b_name&requested-departure-time=1722924300&from_coord_lat=2.0&from_coord_lon=1.0"
@@ -152,7 +152,7 @@ def journey_with_deeplink_in_odt_information_test():
     )
     response_journey_with_odt = helpers_tests.get_odt_journey(deeplink=deeplink)
     odt_section = response_journey_with_odt.journeys[0].sections[1]
-    update_deeplink_in_odt_information_in_section(odt_section)
+    update_odt_information_deeplink_in_section(odt_section)
     assert (
         odt_section.odt_information.deeplink
         == "https://domaine/search?departure-address=stop_a_name&destination-address=stop_b_name&requested-departure-time=1722924300&from_coord_lat=2.0&from_coord_lon=1.0&toto=N/A"

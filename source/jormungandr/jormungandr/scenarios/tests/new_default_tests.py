@@ -38,7 +38,7 @@ from jormungandr.scenarios.new_default import (
     get_kraken_calls,
     update_best_boarding_positions,
     update_disruptions_on_pois,
-    update_deeplink_in_odt_information,
+    update_odt_information_deeplink,
 )
 from jormungandr.instance import Instance
 from jormungandr.scenarios.utils import switch_back_to_ridesharing
@@ -851,7 +851,7 @@ def journey_with_odt_information_test():
         == "https://domaine/search?departure-address={from_name}&destination-address={to_name}&requested-departure-time={departure_datetime}&from_coord_lat={from_coord_lat}&from_coord_lon={from_coord_lon}&not_managed={not_managed}"
     )
 
-    update_deeplink_in_odt_information(response_journey_with_odt)
+    update_odt_information_deeplink(response_journey_with_odt)
     odt_section = response_journey_with_odt.journeys[0].sections[1]
     assert (
         odt_section.odt_information.deeplink
