@@ -836,8 +836,8 @@ def journey_with_disruptions_on_poi_test(mocker):
 
 def journey_with_odt_information_test():
     deeplink = (
-        "https://domaine/search?departure-address={from_name}&destination-address={to_name}" \
-        "&requested-departure-time={datetime}&from_coord_lat={from_coord_lat}" \
+        "https://domaine/search?departure-address={from_name}&destination-address={to_name}"
+        "&requested-departure-time={departure_datetime}&from_coord_lat={from_coord_lat}"
         "&from_coord_lon={from_coord_lon}&not_managed={not_managed}"
     )
     response_journey_with_odt = helpers_tests.get_odt_journey(deeplink=deeplink)
@@ -848,7 +848,7 @@ def journey_with_odt_information_test():
     assert odt_section.type == response_pb2.ON_DEMAND_TRANSPORT
     assert (
         odt_section.odt_information.deeplink
-        == "https://domaine/search?departure-address={from_name}&destination-address={to_name}&requested-departure-time={datetime}&from_coord_lat={from_coord_lat}&from_coord_lon={from_coord_lon}&not_managed={not_managed}"
+        == "https://domaine/search?departure-address={from_name}&destination-address={to_name}&requested-departure-time={departure_datetime}&from_coord_lat={from_coord_lat}&from_coord_lon={from_coord_lon}&not_managed={not_managed}"
     )
 
     update_deeplink_in_odt_information(response_journey_with_odt)

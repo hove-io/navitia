@@ -564,7 +564,7 @@ def update_deeplink_in_odt_information_in_section(section):
     if not deeplink:
         return
 
-    datetime = section.begin_date_time
+    departure_datetime = section.begin_date_time
     from_name = section.origin.stop_point.name
     from_coord_lat = section.origin.stop_point.coord.lat
     from_coord_lon = section.origin.stop_point.coord.lon
@@ -572,15 +572,16 @@ def update_deeplink_in_odt_information_in_section(section):
     to_coord_lat = section.destination.stop_point.coord.lat
     to_coord_lon = section.destination.stop_point.coord.lon
 
-    # get all the placeholder names present in deeplink and match with predefined variables
+    # Get all placeholders present in deeplink and match with predefined placeholder variables. value of those
+    # present in deeplink but absent in predefined placeholder variables will be replaced by N/A
     placeholders = re.findall(r"{(\w+)}", deeplink)
 
     placeholder_dict = defaultdict(lambda: 'N/A')
     fmtr = Formatter()
 
     for p in placeholders:
-        if p == "datetime":
-            placeholder_dict[p] = datetime
+        if p == "departure_datetime":
+            placeholder_dict[p] = departure_datetime
         elif p == "from_name":
             placeholder_dict[p] = from_name
         elif p == "from_coord_lat":

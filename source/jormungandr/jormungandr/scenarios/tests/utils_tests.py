@@ -105,8 +105,8 @@ def journey_with_deeplink_in_odt_information_test():
     instance = lambda: None
     # Get a response with a section of ODT having odt_information.
     deeplink = (
-        "https://domaine/search?departure-address={from_name}&destination-address={to_name}" \
-        "&requested-departure-time={datetime}&from_coord_lat={from_coord_lat}" \
+        "https://domaine/search?departure-address={from_name}&destination-address={to_name}"
+        "&requested-departure-time={departure_datetime}&from_coord_lat={from_coord_lat}"
         "&from_coord_lon={from_coord_lon}&to_coord_lat={to_coord_lat}&to_coord_lon={to_coord_lon}"
     )
     response_journey_with_odt = helpers_tests.get_odt_journey(deeplink=deeplink)
@@ -119,7 +119,7 @@ def journey_with_deeplink_in_odt_information_test():
     assert odt_information.name == "odt_name_value"
     assert (
         odt_information.deeplink
-        == "https://domaine/search?departure-address={from_name}&destination-address={to_name}&requested-departure-time={datetime}&from_coord_lat={from_coord_lat}&from_coord_lon={from_coord_lon}&to_coord_lat={to_coord_lat}&to_coord_lon={to_coord_lon}"
+        == "https://domaine/search?departure-address={from_name}&destination-address={to_name}&requested-departure-time={departure_datetime}&from_coord_lat={from_coord_lat}&from_coord_lon={from_coord_lon}&to_coord_lat={to_coord_lat}&to_coord_lon={to_coord_lon}"
     )
     assert odt_information.url == "odt_url_value"
     assert odt_information.conditions == "odt_conditions_value"
@@ -132,8 +132,8 @@ def journey_with_deeplink_in_odt_information_test():
 
     # Use a deeplink with fewer placeholders
     deeplink = (
-        "https://domaine/search?departure-address={from_name}&destination-address={to_name}" \
-        "&requested-departure-time={datetime}&from_coord_lat={from_coord_lat}&from_coord_lon={from_coord_lon}"
+        "https://domaine/search?departure-address={from_name}&destination-address={to_name}"
+        "&requested-departure-time={departure_datetime}&from_coord_lat={from_coord_lat}&from_coord_lon={from_coord_lon}"
     )
     response_journey_with_odt = helpers_tests.get_odt_journey(deeplink=deeplink)
     odt_section = response_journey_with_odt.journeys[0].sections[1]
@@ -146,8 +146,8 @@ def journey_with_deeplink_in_odt_information_test():
     # Add a placeholder which is not predefined in the function to update deeplink
     # This placeholder will not be replaced(updated)
     deeplink = (
-        "https://domaine/search?departure-address={from_name}&destination-address={to_name}" \
-        "&requested-departure-time={datetime}&from_coord_lat={from_coord_lat}" \
+        "https://domaine/search?departure-address={from_name}&destination-address={to_name}"
+        "&requested-departure-time={departure_datetime}&from_coord_lat={from_coord_lat}"
         "&from_coord_lon={from_coord_lon}&toto={toto}"
     )
     response_journey_with_odt = helpers_tests.get_odt_journey(deeplink=deeplink)
