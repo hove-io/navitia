@@ -560,7 +560,7 @@ def update_odt_information_deeplink_in_section(section):
     if section.type != response_pb2.ON_DEMAND_TRANSPORT:
         return
 
-    deeplink = section.odt_information.deeplink
+    deeplink = section.odt_informations.deeplink
     if not deeplink:
         return
 
@@ -595,4 +595,4 @@ def update_odt_information_deeplink_in_section(section):
         elif p == "to_coord_lon":
             placeholder_dict[p] = to_coord_lon
 
-    section.odt_information.deeplink = fmtr.vformat(deeplink, (), placeholder_dict)
+    section.odt_informations.deeplink = fmtr.vformat(deeplink, (), placeholder_dict)

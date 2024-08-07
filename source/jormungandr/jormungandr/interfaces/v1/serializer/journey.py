@@ -431,7 +431,7 @@ class SectionSerializer(PbNestedSerializer):
     street_informations = StreetInformationSerializer(
         attr="street_network.street_information", many=True, display_none=False
     )
-    odt_information = OdtInformationSerializer(display_none=False)
+    odt_informations = OdtInformationSerializer(display_none=False)
 
 
 class JourneySerializer(PbNestedSerializer):
