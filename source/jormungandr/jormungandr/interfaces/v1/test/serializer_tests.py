@@ -78,3 +78,4 @@ def odt_information_serialization_test():
             assert odt_information["phone"] == "odt_phone_value"
             assert odt_information["conditions"] == "odt_conditions_value"
             assert odt_information["deeplink"] == "https://toto.com?from=from_value&to=to_value"
+            assert odt_information["applies_on"] == ["from"]
