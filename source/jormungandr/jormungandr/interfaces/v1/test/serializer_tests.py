@@ -72,7 +72,7 @@ def odt_information_serialization_test():
             assert len(journey.get("sections", 0)) == 3
             section = journey["sections"][1]
             odt_information = section.get("odt_informations", None)
-            assert  odt_information is not None
+            assert odt_information is not None
             assert odt_information["url"] == "odt_url_value"
             assert odt_information["name"] == "odt_name_value"
             assert odt_information["phone"] == "odt_phone_value"
