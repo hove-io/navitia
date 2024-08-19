@@ -33,6 +33,9 @@ import navitiacommon.response_pb2 as response_pb2
 import navitiacommon.request_pb2 as request_pb2
 from future.moves.itertools import zip_longest
 from jormungandr.fallback_modes import FallbackModes
+import re
+from collections import defaultdict
+from string import Formatter
 from copy import deepcopy
 import six
 
@@ -551,3 +554,45 @@ def add_disruptions(pb_resp, pb_disruptions):
     if pb_disruptions is None:
         return
     pb_resp.impacts.extend(pb_disruptions.impacts)
+
+
+def update_odt_information_deeplink_in_section(section):
+    if section.type != response_pb2.ON_DEMAND_TRANSPORT:
+        return
+
+    deeplink = section.odt_informations.deeplink
+    if not deeplink:
+        return
+
+    departure_datetime = section.begin_date_time
+    from_name = section.origin.stop_point.name
+    from_coord_lat = section.origin.stop_point.coord.lat
+    from_coord_lon = section.origin.stop_point.coord.lon
+    to_name = section.destination.stop_point.name
+    to_coord_lat = section.destination.stop_point.coord.lat
+    to_coord_lon = section.destination.stop_point.coord.lon
+
+    # Get all placeholders present in deeplink and match with predefined placeholder variables. value of those
+    # present in deeplink but absent in predefined placeholder variables will be replaced by N/A
+    placeholders = re.findall(r"{(\w+)}", deeplink)
+
+    placeholder_dict = defaultdict(lambda: 'N/A')
+    fmtr = Formatter()
+
+    for p in placeholders:
+        if p == "departure_datetime":
+            placeholder_dict[p] = departure_datetime
+        elif p == "from_name":
+            placeholder_dict[p] = from_name
+        elif p == "from_coord_lat":
+            placeholder_dict[p] = from_coord_lat
+        elif p == "from_coord_lon":
+            placeholder_dict[p] = from_coord_lon
+        elif p == "to_name":
+            placeholder_dict[p] = to_name
+        elif p == "to_coord_lat":
+            placeholder_dict[p] = to_coord_lat
+        elif p == "to_coord_lon":
+            placeholder_dict[p] = to_coord_lon
+
+    section.odt_informations.deeplink = fmtr.vformat(deeplink, (), placeholder_dict)
