@@ -1,6 +1,6 @@
 FROM 162230498103.dkr.ecr.eu-west-1.amazonaws.com/mutable-debian11_dev:latest
 
-RUN apt-get install -y git
+RUN apt-get update && apt-get install -y git wget
 
 RUN git config --global --add safe.directory /navitia/navitia
 
