@@ -8,7 +8,6 @@ on:
       - '*'
 
 env:
-
   front_debian8_components: 'tyr-web instances-configurator'
   backend_debian8_components: 'kraken tyr-beat tyr-worker mock-kraken eitri'
 
@@ -17,7 +16,6 @@ env:
   PRD_ECR_REGISTRY: "162230498103.dkr.ecr.eu-west-1.amazonaws.com"
 
 jobs:
-
   common_variables:
     name: Common variables
     runs-on: [self-hosted, corefront, sandbox]
@@ -232,9 +230,6 @@ jobs:
           docker tag navitia/tyr-worker ${tyr_worker_tag}
           docker push ${tyr_worker_tag}
 
-
-
-
       - name: failure notification
         if: failure()
         run: |
@@ -272,7 +267,6 @@ jobs:
         with:
           submodules: recursive
           token: ${{ steps.ci-core-app-token.outputs.token }}
-
 
       - name: Login to Amazon ECR
         uses: aws-actions/amazon-ecr-login@v1
@@ -331,13 +325,11 @@ jobs:
           rm -rf ./.??*
 
 
-
   publish_aws:
     runs-on: [self-hosted, corefront, sandbox]
     name: Aws Dispatch (Dev)
     needs: [debian8_front_images, debian8_back_images, debian11_images, common_variables]
     steps:
-
       - name: Generate token for aws images
         id: app-token
         uses: getsentry/action-github-app-token@v2.0.0
@@ -362,7 +354,6 @@ jobs:
           repository: hove-io/corefront-aws-assets
           event-type: build-trigger
           client-payload: '{"branch": "release", "tag": "${{ needs.common_variables.outputs.RELEASE_TAG }}"}'
-
 
       - name: failure notification
         if: failure()
