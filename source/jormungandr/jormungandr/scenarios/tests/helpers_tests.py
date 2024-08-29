@@ -661,11 +661,11 @@ def get_odt_journey(deeplink):
     section.destination.stop_point.name = 'stop_b_name'
     section.destination.stop_point.coord.lon = 3.0
     section.destination.stop_point.coord.lat = 4.0
-    odt_information = section.odt_informations
+    odt_information = section.odt_information
     odt_information.name = "odt_name_value"
     odt_information.deeplink = deeplink
     odt_information.url = "odt_url_value"
-    odt_information.conditions = "odt_conditions_value"
+    odt_information.condition = "odt_conditions_value"
     odt_information.phone = "odt_phone_value"
     odt_information.applies_on.append(response_pb2.OdtInformation.AppliesOn.FROM)
     section = journey.sections.add()

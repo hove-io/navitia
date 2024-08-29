@@ -71,11 +71,11 @@ def odt_information_serialization_test():
             journey = resp["journeys"][0]
             assert len(journey.get("sections", 0)) == 3
             section = journey["sections"][1]
-            odt_information = section.get("odt_informations", None)
+            odt_information = section.get("odt_information", None)
             assert odt_information is not None
             assert odt_information["url"] == "odt_url_value"
             assert odt_information["name"] == "odt_name_value"
             assert odt_information["phone"] == "odt_phone_value"
-            assert odt_information["conditions"] == "odt_conditions_value"
+            assert odt_information["condition"] == "odt_conditions_value"
             assert odt_information["deeplink"] == "https://toto.com?from=from_value&to=to_value"
             assert odt_information["applies_on"] == ["from"]

@@ -847,13 +847,13 @@ def journey_with_odt_information_test():
     odt_section = journey.sections[1]
     assert odt_section.type == response_pb2.ON_DEMAND_TRANSPORT
     assert (
-        odt_section.odt_informations.deeplink
+        odt_section.odt_information.deeplink
         == "https://domaine/search?departure-address={from_name}&destination-address={to_name}&requested-departure-time={departure_datetime}&from_coord_lat={from_coord_lat}&from_coord_lon={from_coord_lon}&not_managed={not_managed}"
     )
 
     update_odt_information_deeplink(response_journey_with_odt)
     odt_section = response_journey_with_odt.journeys[0].sections[1]
     assert (
-        odt_section.odt_informations.deeplink
+        odt_section.odt_information.deeplink
         == "https://domaine/search?departure-address=stop_a_name&destination-address=stop_b_name&requested-departure-time=1722924300&from_coord_lat=2.0&from_coord_lon=1.0&not_managed=N/A"
     )
