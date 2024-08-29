@@ -75,10 +75,9 @@ jobs:
         run: |
           docker build -f docker/debian11/Dockerfile-builder-kraken -t navitia/builder .
 
-      - name: Build packages in master docker
-        #  Will build navitia-*.deb packages in current folder
+      - name: Build Kraken
         run: docker run -v `pwd`:/navitia/navitia/  navitia/builder
 
-      - name: Create navitia images
+      - name: Create Kraken image
         run: |
             docker build -t navitia/kraken -f  docker/debian11/Dockerfile-kraken .
