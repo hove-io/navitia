@@ -127,7 +127,7 @@ def journey_with_deeplink_in_odt_information_test():
     update_odt_information_deeplink_in_section(odt_section)
     assert (
         odt_information.deeplink
-        == "https://domaine/search?departure-address=stop_a_name&destination-address=stop_b_name&requested-departure-time=1722924300&from_coord_lat=2.0&from_coord_lon=1.0&to_coord_lat=4.0&to_coord_lon=3.0"
+        == "https://domaine/search?departure-address=stop%20a%20name&destination-address=stop_b_name&requested-departure-time=1722924300&from_coord_lat=2.0&from_coord_lon=1.0&to_coord_lat=4.0&to_coord_lon=3.0"
     )
 
     # Use a deeplink with fewer placeholders
@@ -140,7 +140,7 @@ def journey_with_deeplink_in_odt_information_test():
     update_odt_information_deeplink_in_section(odt_section)
     assert (
         odt_section.odt_information.deeplink
-        == "https://domaine/search?departure-address=stop_a_name&destination-address=stop_b_name&requested-departure-time=1722924300&from_coord_lat=2.0&from_coord_lon=1.0"
+        == "https://domaine/search?departure-address=stop%20a%20name&destination-address=stop_b_name&requested-departure-time=1722924300&from_coord_lat=2.0&from_coord_lon=1.0"
     )
 
     # Add a placeholder which is not predefined in the function to update deeplink
@@ -155,5 +155,5 @@ def journey_with_deeplink_in_odt_information_test():
     update_odt_information_deeplink_in_section(odt_section)
     assert (
         odt_section.odt_information.deeplink
-        == "https://domaine/search?departure-address=stop_a_name&destination-address=stop_b_name&requested-departure-time=1722924300&from_coord_lat=2.0&from_coord_lon=1.0&toto=N/A"
+        == "https://domaine/search?departure-address=stop%20a%20name&destination-address=stop_b_name&requested-departure-time=1722924300&from_coord_lat=2.0&from_coord_lon=1.0&toto=N/A"
     )

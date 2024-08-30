@@ -33,6 +33,7 @@ import navitiacommon.response_pb2 as response_pb2
 import navitiacommon.request_pb2 as request_pb2
 from future.moves.itertools import zip_longest
 from jormungandr.fallback_modes import FallbackModes
+import requests as requests
 import re
 from collections import defaultdict
 from string import Formatter
@@ -595,4 +596,4 @@ def update_odt_information_deeplink_in_section(section):
         elif p == "to_coord_lon":
             placeholder_dict[p] = to_coord_lon
 
-    section.odt_information.deeplink = fmtr.vformat(deeplink, (), placeholder_dict)
+    section.odt_information.deeplink = requests.utils.requote_uri(fmtr.vformat(deeplink, (), placeholder_dict))

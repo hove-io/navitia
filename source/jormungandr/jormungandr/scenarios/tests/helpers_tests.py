@@ -652,7 +652,7 @@ def get_odt_journey(deeplink):
     section.origin.uri = 'stop_a'
     section.origin.embedded_type = type_pb2.STOP_POINT
     section.origin.stop_point.uri = 'stop_a'
-    section.origin.stop_point.name = 'stop_a_name'
+    section.origin.stop_point.name = 'stop a name'
     section.origin.stop_point.coord.lon = 1.0
     section.origin.stop_point.coord.lat = 2.0
     section.destination.uri = 'stop_b'

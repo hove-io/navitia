@@ -855,5 +855,5 @@ def journey_with_odt_information_test():
     odt_section = response_journey_with_odt.journeys[0].sections[1]
     assert (
         odt_section.odt_information.deeplink
-        == "https://domaine/search?departure-address=stop_a_name&destination-address=stop_b_name&requested-departure-time=1722924300&from_coord_lat=2.0&from_coord_lon=1.0&not_managed=N/A"
+        == "https://domaine/search?departure-address=stop%20a%20name&destination-address=stop_b_name&requested-departure-time=1722924300&from_coord_lat=2.0&from_coord_lon=1.0&not_managed=N/A"
     )
