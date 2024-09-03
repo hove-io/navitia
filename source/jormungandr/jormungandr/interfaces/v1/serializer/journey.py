@@ -68,7 +68,7 @@ from navitiacommon.response_pb2 import (
     SectionType,
     CyclePathType,
     BoardingPosition,
-    OdtInformation,
+    BookingRule,
 )
 import navitiacommon.response_pb2
 from navitiacommon.type_pb2 import RTLevel
@@ -332,13 +332,13 @@ class RidesharingInformationSerializer(PbNestedSerializer):
     seats = SeatsDescriptionSerializer(display_none=False)
 
 
-class OdtInformationSerializer(PbNestedSerializer):
+class   BookingRuleSerializer(PbNestedSerializer):
     name = jsonschema.Field(schema_type=str, display_none=True)
-    url = jsonschema.Field(schema_type=str, display_none=True)
-    condition = jsonschema.Field(schema_type=str, display_none=True)
-    phone = jsonschema.Field(schema_type=str, display_none=True)
-    deeplink = jsonschema.Field(schema_type=str, display_none=True)
-    applies_on = EnumListField(attr='applies_on', pb_type=OdtInformation.AppliesOn)
+    info_url = jsonschema.Field(schema_type=str, display_none=True)
+    message = jsonschema.Field(schema_type=str, display_none=True)
+    phone_number = jsonschema.Field(schema_type=str, display_none=True)
+    booking_url = jsonschema.Field(schema_type=str, display_none=True)
+    applies_on = EnumListField(attr='applies_on', pb_type=BookingRule.AppliesOn)
 
 
 class SectionSerializer(PbNestedSerializer):
@@ -431,7 +431,7 @@ class SectionSerializer(PbNestedSerializer):
     street_informations = StreetInformationSerializer(
         attr="street_network.street_information", many=True, display_none=False
     )
-    odt_information = OdtInformationSerializer(display_none=False)
+    booking_rule = BookingRuleSerializer(display_none=False)
 
 
 class JourneySerializer(PbNestedSerializer):

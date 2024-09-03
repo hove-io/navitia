@@ -38,7 +38,7 @@ from jormungandr.scenarios.new_default import (
     get_kraken_calls,
     update_best_boarding_positions,
     update_disruptions_on_pois,
-    update_odt_information_deeplink,
+    update_booking_rule_url_in_response,
 )
 from jormungandr.instance import Instance
 from jormungandr.scenarios.utils import switch_back_to_ridesharing
@@ -834,26 +834,26 @@ def journey_with_disruptions_on_poi_test(mocker):
     return
 
 
-def journey_with_odt_information_test():
-    deeplink = (
+def journey_with_booking_rule_test():
+    booking_url = (
         "https://domaine/search?departure-address={from_name}&destination-address={to_name}"
         "&requested-departure-time={departure_datetime}&from_coord_lat={from_coord_lat}"
         "&from_coord_lon={from_coord_lon}&not_managed={not_managed}"
     )
-    response_journey_with_odt = helpers_tests.get_odt_journey(deeplink=deeplink)
+    response_journey_with_odt = helpers_tests.get_odt_journey(booking_url=booking_url)
     assert len(response_journey_with_odt.journeys) == 1
     journey = response_journey_with_odt.journeys[0]
     assert len(journey.sections) == 3
     odt_section = journey.sections[1]
     assert odt_section.type == response_pb2.ON_DEMAND_TRANSPORT
     assert (
-        odt_section.odt_information.deeplink
+        odt_section.booking_rule.booking_url
         == "https://domaine/search?departure-address={from_name}&destination-address={to_name}&requested-departure-time={departure_datetime}&from_coord_lat={from_coord_lat}&from_coord_lon={from_coord_lon}&not_managed={not_managed}"
     )
 
-    update_odt_information_deeplink(response_journey_with_odt)
+    update_booking_rule_url_in_response(response_journey_with_odt)
     odt_section = response_journey_with_odt.journeys[0].sections[1]
     assert (
-        odt_section.odt_information.deeplink
+        odt_section.booking_rule.booking_url
         == "https://domaine/search?departure-address=stop%20a%20name&destination-address=stop_b_name&requested-departure-time=1722924300&from_coord_lat=2.0&from_coord_lon=1.0&not_managed=N/A"
     )

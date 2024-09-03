@@ -32,7 +32,7 @@ import jormungandr.scenarios.tests.helpers_tests as helpers_tests
 from jormungandr.scenarios.utils import (
     fill_disruptions_on_pois,
     fill_disruptions_on_places_nearby,
-    update_odt_information_deeplink_in_section,
+    update_booking_rule_url_in_section,
 )
 
 import pytest
@@ -101,59 +101,59 @@ def update_disruptions_on_pois_for_places_nearby_test(mocker):
     return
 
 
-def journey_with_deeplink_in_odt_information_test():
+def journey_with_booking_url_in_booking_rule_test():
     instance = lambda: None
-    # Get a response with a section of ODT having odt_information.
-    deeplink = (
+    # Get a response with a section of ODT having booking_rule.
+    booking_url = (
         "https://domaine/search?departure-address={from_name}&destination-address={to_name}"
         "&requested-departure-time={departure_datetime}&from_coord_lat={from_coord_lat}"
         "&from_coord_lon={from_coord_lon}&to_coord_lat={to_coord_lat}&to_coord_lon={to_coord_lon}"
     )
-    response_journey_with_odt = helpers_tests.get_odt_journey(deeplink=deeplink)
+    response_journey_with_odt = helpers_tests.get_odt_journey(booking_url=booking_url)
     assert len(response_journey_with_odt.journeys) == 1
     journey = response_journey_with_odt.journeys[0]
     assert len(journey.sections) == 3
     odt_section = journey.sections[1]
     assert odt_section.type == response_pb2.ON_DEMAND_TRANSPORT
-    odt_information = odt_section.odt_information
-    assert odt_information.name == "odt_name_value"
+    booking_rule = odt_section.booking_rule
+    assert booking_rule.name == "odt_name_value"
     assert (
-        odt_information.deeplink
+        booking_rule.booking_url
         == "https://domaine/search?departure-address={from_name}&destination-address={to_name}&requested-departure-time={departure_datetime}&from_coord_lat={from_coord_lat}&from_coord_lon={from_coord_lon}&to_coord_lat={to_coord_lat}&to_coord_lon={to_coord_lon}"
     )
-    assert odt_information.url == "odt_url_value"
-    assert odt_information.condition == "odt_conditions_value"
-    assert odt_information.phone == "odt_phone_value"
-    update_odt_information_deeplink_in_section(odt_section)
+    assert booking_rule.info_url == "odt_url_value"
+    assert booking_rule.message == "odt_conditions_value"
+    assert booking_rule.phone_number == "odt_phone_value"
+    update_booking_rule_url_in_section(odt_section)
     assert (
-        odt_information.deeplink
+        booking_rule.booking_url
         == "https://domaine/search?departure-address=stop%20a%20name&destination-address=stop_b_name&requested-departure-time=1722924300&from_coord_lat=2.0&from_coord_lon=1.0&to_coord_lat=4.0&to_coord_lon=3.0"
     )
 
-    # Use a deeplink with fewer placeholders
-    deeplink = (
+    # Use a booking_url with fewer placeholders
+    booking_url = (
         "https://domaine/search?departure-address={from_name}&destination-address={to_name}"
         "&requested-departure-time={departure_datetime}&from_coord_lat={from_coord_lat}&from_coord_lon={from_coord_lon}"
     )
-    response_journey_with_odt = helpers_tests.get_odt_journey(deeplink=deeplink)
+    response_journey_with_odt = helpers_tests.get_odt_journey(booking_url=booking_url)
     odt_section = response_journey_with_odt.journeys[0].sections[1]
-    update_odt_information_deeplink_in_section(odt_section)
+    update_booking_rule_url_in_section(odt_section)
     assert (
-        odt_section.odt_information.deeplink
+        odt_section.booking_rule.booking_url
         == "https://domaine/search?departure-address=stop%20a%20name&destination-address=stop_b_name&requested-departure-time=1722924300&from_coord_lat=2.0&from_coord_lon=1.0"
     )
 
-    # Add a placeholder which is not predefined in the function to update deeplink
+    # Add a placeholder which is not predefined in the function to update url
     # This placeholder will not be replaced(updated)
-    deeplink = (
+    booking_url = (
         "https://domaine/search?departure-address={from_name}&destination-address={to_name}"
         "&requested-departure-time={departure_datetime}&from_coord_lat={from_coord_lat}"
         "&from_coord_lon={from_coord_lon}&toto={toto}"
     )
-    response_journey_with_odt = helpers_tests.get_odt_journey(deeplink=deeplink)
+    response_journey_with_odt = helpers_tests.get_odt_journey(booking_url=booking_url)
     odt_section = response_journey_with_odt.journeys[0].sections[1]
-    update_odt_information_deeplink_in_section(odt_section)
+    update_booking_rule_url_in_section(odt_section)
     assert (
-        odt_section.odt_information.deeplink
+        odt_section.booking_rule.booking_url
         == "https://domaine/search?departure-address=stop%20a%20name&destination-address=stop_b_name&requested-departure-time=1722924300&from_coord_lat=2.0&from_coord_lon=1.0&toto=N/A"
     )

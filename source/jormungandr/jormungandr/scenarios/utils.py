@@ -557,12 +557,12 @@ def add_disruptions(pb_resp, pb_disruptions):
     pb_resp.impacts.extend(pb_disruptions.impacts)
 
 
-def update_odt_information_deeplink_in_section(section):
+def update_booking_rule_url_in_section(section):
     if section.type != response_pb2.ON_DEMAND_TRANSPORT:
         return
 
-    deeplink = section.odt_information.deeplink
-    if not deeplink:
+    booking_url = section.booking_rule.booking_url
+    if not booking_url:
         return
 
     departure_datetime = section.begin_date_time
@@ -573,9 +573,9 @@ def update_odt_information_deeplink_in_section(section):
     to_coord_lat = section.destination.stop_point.coord.lat
     to_coord_lon = section.destination.stop_point.coord.lon
 
-    # Get all placeholders present in deeplink and match with predefined placeholder variables. value of those
-    # present in deeplink but absent in predefined placeholder variables will be replaced by N/A
-    placeholders = re.findall(r"{(\w+)}", deeplink)
+    # Get all placeholders present in booking_url and match with predefined placeholder variables. value of those
+    # present in booking_url but absent in predefined placeholder variables will be replaced by N/A
+    placeholders = re.findall(r"{(\w+)}", booking_url)
 
     placeholder_dict = defaultdict(lambda: 'N/A')
     fmtr = Formatter()
@@ -596,4 +596,4 @@ def update_odt_information_deeplink_in_section(section):
         elif p == "to_coord_lon":
             placeholder_dict[p] = to_coord_lon
 
-    section.odt_information.deeplink = requests.utils.requote_uri(fmtr.vformat(deeplink, (), placeholder_dict))
+    section.booking_rule.booking_url = requests.utils.requote_uri(fmtr.vformat(booking_url, (), placeholder_dict))
