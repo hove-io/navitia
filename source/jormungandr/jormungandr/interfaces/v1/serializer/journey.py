@@ -332,7 +332,7 @@ class RidesharingInformationSerializer(PbNestedSerializer):
     seats = SeatsDescriptionSerializer(display_none=False)
 
 
-class   BookingRuleSerializer(PbNestedSerializer):
+class BookingRuleSerializer(PbNestedSerializer):
     name = jsonschema.Field(schema_type=str, display_none=True)
     info_url = jsonschema.Field(schema_type=str, display_none=True)
     message = jsonschema.Field(schema_type=str, display_none=True)

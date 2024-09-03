@@ -596,4 +596,6 @@ def update_booking_rule_url_in_section(section):
         elif p == "to_coord_lon":
             placeholder_dict[p] = to_coord_lon
 
-    section.booking_rule.booking_url = requests.utils.requote_uri(fmtr.vformat(booking_url, (), placeholder_dict))
+    section.booking_rule.booking_url = requests.utils.requote_uri(
+        fmtr.vformat(booking_url, (), placeholder_dict)
+    )
