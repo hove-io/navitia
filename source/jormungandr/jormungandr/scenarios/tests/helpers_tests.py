@@ -637,7 +637,7 @@ def verify_poi_in_impacted_objects(object, poi_empty=True):
         assert object.poi.coord.lat == 2.0
 
 
-def get_odt_journey(deeplink):
+def get_odt_journey(booking_url):
     response = response_pb2.Response()
     journey = response.journeys.add()
 
@@ -661,13 +661,13 @@ def get_odt_journey(deeplink):
     section.destination.stop_point.name = 'stop_b_name'
     section.destination.stop_point.coord.lon = 3.0
     section.destination.stop_point.coord.lat = 4.0
-    odt_information = section.odt_information
-    odt_information.name = "odt_name_value"
-    odt_information.deeplink = deeplink
-    odt_information.url = "odt_url_value"
-    odt_information.condition = "odt_conditions_value"
-    odt_information.phone = "odt_phone_value"
-    odt_information.applies_on.append(response_pb2.OdtInformation.AppliesOn.FROM)
+    booking_rule = section.booking_rule
+    booking_rule.name = "odt_name_value"
+    booking_rule.booking_url = booking_url
+    booking_rule.info_url = "odt_url_value"
+    booking_rule.message = "odt_conditions_value"
+    booking_rule.phone_number = "odt_phone_value"
+    booking_rule.applies_on.append(response_pb2.BookingRule.AppliesOn.FROM)
     section = journey.sections.add()
     section.type = response_pb2.STREET_NETWORK
     section.street_network.mode = response_pb2.Walking

@@ -1,7 +1,7 @@
 FROM navitia/master
 
 # Install some binaries from tartare-tools
-ENV TARTARE_TOOLS_VERSION="v0.45.0"
+ENV TARTARE_TOOLS_VERSION="v0.46.0"
 ARG GITHUB_TOKEN
 RUN git config --global url."https://x-access-token:${GITHUB_TOKEN}@github.com/hove-io/".insteadOf "ssh://git@github.com/hove-io/"
 RUN git clone -b ${TARTARE_TOOLS_VERSION} --depth 1 https://x-access-token:${GITHUB_TOKEN}@github.com/hove-io/tartare-tools

@@ -50,7 +50,7 @@ from jormungandr.scenarios.utils import (
     get_disruptions_on_poi,
     add_disruptions,
     get_impact_uris_for_poi,
-    update_odt_information_deeplink_in_section,
+    update_booking_rule_url_in_section,
 )
 from navitiacommon import type_pb2, response_pb2, request_pb2
 from jormungandr.scenarios.qualifier import (
@@ -540,9 +540,9 @@ def update_disruptions_on_pois(instance, pb_resp):
     add_disruptions(pb_resp, poi_disruptions)
 
 
-def update_odt_information_deeplink(pb_resp):
+def update_booking_rule_url_in_response(pb_resp):
     """
-    Update placeholders present in sections[i].odt_information.deeplink with their values for each journey
+    Update placeholders present in sections[i].booking_rule.booking_url with their values for each journey
     for each section of type ON_DEMAND_TRANSPORT
     """
     if not pb_resp.journeys:
@@ -551,7 +551,7 @@ def update_odt_information_deeplink(pb_resp):
     for j in pb_resp.journeys:
         for s in j.sections:
             if s.type == response_pb2.ON_DEMAND_TRANSPORT:
-                update_odt_information_deeplink_in_section(s)
+                update_booking_rule_url_in_section(s)
 
 
 def update_total_air_pollutants(pb_resp):
@@ -1500,8 +1500,8 @@ class Scenario(simple.Scenario):
         # Update disruptions on pois
         update_disruptions_on_pois(instance, pb_resp)
 
-        # Update deeplink in odt_information for all sections of type ON_DEMAND_TRANSPORT
-        update_odt_information_deeplink(pb_resp)
+        # Update booking_url in booking_rule for all sections of type ON_DEMAND_TRANSPORT
+        update_booking_rule_url_in_response(pb_resp)
 
         self._compute_pagination_links(pb_resp, instance, api_request['clockwise'])
         return pb_resp

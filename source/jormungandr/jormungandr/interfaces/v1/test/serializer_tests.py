@@ -57,11 +57,11 @@ def test_sorted_generic_serializer():
 
 @get_serializer(serpy=api.JourneysSerializer)
 def abcd():
-    deeplink = "https://toto.com?from=from_value&to=to_value"
-    return helpers_tests.get_odt_journey(deeplink=deeplink)
+    booking_url = "https://toto.com?from=from_value&to=to_value"
+    return helpers_tests.get_odt_journey(booking_url=booking_url)
 
 
-def odt_information_serialization_test():
+def booking_rule_serialization_test():
     with app.app_context():
         with app.test_request_context():
             g.timezone = pytz.utc
@@ -71,11 +71,11 @@ def odt_information_serialization_test():
             journey = resp["journeys"][0]
             assert len(journey.get("sections", 0)) == 3
             section = journey["sections"][1]
-            odt_information = section.get("odt_information", None)
-            assert odt_information is not None
-            assert odt_information["url"] == "odt_url_value"
-            assert odt_information["name"] == "odt_name_value"
-            assert odt_information["phone"] == "odt_phone_value"
-            assert odt_information["condition"] == "odt_conditions_value"
-            assert odt_information["deeplink"] == "https://toto.com?from=from_value&to=to_value"
-            assert odt_information["applies_on"] == ["from"]
+            booking_rule = section.get("booking_rule", None)
+            assert booking_rule is not None
+            assert booking_rule["info_url"] == "odt_url_value"
+            assert booking_rule["name"] == "odt_name_value"
+            assert booking_rule["phone_number"] == "odt_phone_value"
+            assert booking_rule["message"] == "odt_conditions_value"
+            assert booking_rule["booking_url"] == "https://toto.com?from=from_value&to=to_value"
+            assert booking_rule["applies_on"] == ["from"]
