@@ -322,7 +322,7 @@ def fill_uris(resp):
         return
     for journey in resp.journeys:
         for section in journey.sections:
-            if section.type != response_pb2.PUBLIC_TRANSPORT:
+            if section.type not in (response_pb2.PUBLIC_TRANSPORT, response_pb2.ON_DEMAND_TRANSPORT):
                 continue
             if section.HasField(str("pt_display_informations")):
                 uris = section.uris
