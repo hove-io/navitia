@@ -9,7 +9,7 @@ function show_help() {
 Usage: ${0##*/} -m monitor-process -r max-requests
     -m      [0|1] activate monitor-process
     -r      max-requests before reload for jormungandr worker
-    -g      enable gormungandr for route_schedules API
+    -g      Optional: gormungandr url for route_schedules API (Example: http://gormungandr)
 EOF
 }
 
@@ -21,7 +21,7 @@ while getopts "m:r:c:g:h" opt; do
             ;;
         c) jormun_cache_items=$OPTARG
             ;;
-        g) enable_gormungandr_route_schedules=$OPTARG
+        g) gormungandr_url=$OPTARG
             ;;
         h|\?)
             show_help
@@ -50,9 +50,9 @@ fi
 
 jormungandr_cache2="name=jormungandr,items=${jormun_cache_items}"
 
-if [[ $enable_gormungandr_route_schedules -eq 1 ]]
+if [[ -z $gormungandr_url ]]
 then
-  echo "export APACHE_ROUTE_SCHEDULE_TO_GORMUNGANDR=true" >> /etc/apache2/envvars
+  echo "export GORMUNGANDR_URL=$gormungandr_url" >> /etc/apache2/envvars
 fi
 # run apache2
 service apache2 start
