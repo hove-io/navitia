@@ -50,7 +50,7 @@ fi
 
 jormungandr_cache2="name=jormungandr,items=${jormun_cache_items}"
 
-if [[ -z $gormungandr_url ]]
+if [[ ! -z $gormungandr_url ]]
 then
   echo "export GORMUNGANDR_URL=$gormungandr_url" >> /etc/apache2/envvars
 fi
