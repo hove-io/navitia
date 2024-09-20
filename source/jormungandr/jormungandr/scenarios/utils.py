@@ -33,6 +33,7 @@ import navitiacommon.response_pb2 as response_pb2
 import navitiacommon.request_pb2 as request_pb2
 from future.moves.itertools import zip_longest
 from jormungandr.fallback_modes import FallbackModes
+from jormungandr.utils import timestamp_to_datetime
 import requests as requests
 import re
 from collections import defaultdict
@@ -566,10 +567,10 @@ def update_booking_rule_url_in_section(section):
         return
 
     departure_datetime = section.begin_date_time
-    from_name = section.origin.stop_point.name
+    from_name = section.origin.stop_point.label
     from_coord_lat = section.origin.stop_point.coord.lat
     from_coord_lon = section.origin.stop_point.coord.lon
-    to_name = section.destination.stop_point.name
+    to_name = section.destination.stop_point.label
     to_coord_lat = section.destination.stop_point.coord.lat
     to_coord_lon = section.destination.stop_point.coord.lon
 
@@ -582,7 +583,7 @@ def update_booking_rule_url_in_section(section):
 
     for p in placeholders:
         if p == "departure_datetime":
-            placeholder_dict[p] = departure_datetime
+            placeholder_dict[p] = timestamp_to_datetime(departure_datetime)
         elif p == "from_name":
             placeholder_dict[p] = from_name
         elif p == "from_coord_lat":

@@ -653,12 +653,14 @@ def get_odt_journey(booking_url):
     section.origin.embedded_type = type_pb2.STOP_POINT
     section.origin.stop_point.uri = 'stop_a'
     section.origin.stop_point.name = 'stop a name'
+    section.origin.stop_point.label = 'stop a name (city)'
     section.origin.stop_point.coord.lon = 1.0
     section.origin.stop_point.coord.lat = 2.0
     section.destination.uri = 'stop_b'
     section.destination.embedded_type = type_pb2.STOP_POINT
     section.destination.stop_point.uri = 'stop_b'
     section.destination.stop_point.name = 'stop_b_name'
+    section.destination.stop_point.label = 'stop_b_name (city)'
     section.destination.stop_point.coord.lon = 3.0
     section.destination.stop_point.coord.lat = 4.0
     booking_rule = section.booking_rule
