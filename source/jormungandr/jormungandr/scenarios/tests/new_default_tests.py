@@ -839,8 +839,8 @@ def journey_with_disruptions_on_poi_test(mocker):
 
 def journey_with_booking_rule_test():
     with app.app_context():
-        instance = lambda: None
-        g.timezone = pytz.utc
+        # instance = lambda: None
+        g.timezone = pytz.timezone("Europe/Paris")
         booking_url = (
             "https://domaine/search?departure-address={from_name}&destination-address={to_name}"
             "&requested-departure-time={departure_datetime}&from_coord_lat={from_coord_lat}"
@@ -861,5 +861,5 @@ def journey_with_booking_rule_test():
         odt_section = response_journey_with_odt.journeys[0].sections[1]
         assert (
             odt_section.booking_rule.booking_url
-            == "https://domaine/search?departure-address=stop%20a%20name%20(city)&destination-address=stop_b_name%20(city)&requested-departure-time=2024-08-06%2006:05:00+00:00&from_coord_lat=2.0&from_coord_lon=1.0&not_managed=N/A"
+            == "https://domaine/search?departure-address=stop%20a%20name%20(city)&destination-address=stop_b_name%20(city)&requested-departure-time=2024-08-06T08:05:00+0200&from_coord_lat=2.0&from_coord_lon=1.0&not_managed=N/A"
         )

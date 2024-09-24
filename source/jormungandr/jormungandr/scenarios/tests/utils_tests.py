@@ -105,8 +105,8 @@ def update_disruptions_on_pois_for_places_nearby_test(mocker):
 
 def journey_with_booking_url_in_booking_rule_test():
     with app.app_context():
-        instance = lambda: None
-        g.timezone = pytz.utc
+        # instance = lambda: None
+        g.timezone = pytz.timezone("Europe/Paris")
         # Get a response with a section of ODT having booking_rule.
         booking_url = (
             "https://domaine/search?departure-address={from_name}&destination-address={to_name}"
@@ -131,7 +131,7 @@ def journey_with_booking_url_in_booking_rule_test():
         update_booking_rule_url_in_section(odt_section)
         assert (
             booking_rule.booking_url
-            == "https://domaine/search?departure-address=stop%20a%20name%20(city)&destination-address=stop_b_name%20(city)&requested-departure-time=2024-08-06%2006:05:00+00:00&from_coord_lat=2.0&from_coord_lon=1.0&to_coord_lat=4.0&to_coord_lon=3.0"
+            == "https://domaine/search?departure-address=stop%20a%20name%20(city)&destination-address=stop_b_name%20(city)&requested-departure-time=2024-08-06T08:05:00+0200&from_coord_lat=2.0&from_coord_lon=1.0&to_coord_lat=4.0&to_coord_lon=3.0"
         )
 
         # Use a booking_url with fewer placeholders
@@ -144,7 +144,7 @@ def journey_with_booking_url_in_booking_rule_test():
         update_booking_rule_url_in_section(odt_section)
         assert (
             odt_section.booking_rule.booking_url
-            == "https://domaine/search?departure-address=stop%20a%20name%20(city)&destination-address=stop_b_name%20(city)&requested-departure-time=2024-08-06%2006:05:00+00:00&from_coord_lat=2.0&from_coord_lon=1.0"
+            == "https://domaine/search?departure-address=stop%20a%20name%20(city)&destination-address=stop_b_name%20(city)&requested-departure-time=2024-08-06T08:05:00+0200&from_coord_lat=2.0&from_coord_lon=1.0"
         )
 
         # Add a placeholder which is not predefined in the function to update url
@@ -159,5 +159,5 @@ def journey_with_booking_url_in_booking_rule_test():
         update_booking_rule_url_in_section(odt_section)
         assert (
             odt_section.booking_rule.booking_url
-            == "https://domaine/search?departure-address=stop%20a%20name%20(city)&destination-address=stop_b_name%20(city)&requested-departure-time=2024-08-06%2006:05:00+00:00&from_coord_lat=2.0&from_coord_lon=1.0&toto=N/A"
+            == "https://domaine/search?departure-address=stop%20a%20name%20(city)&destination-address=stop_b_name%20(city)&requested-departure-time=2024-08-06T08:05:00+0200&from_coord_lat=2.0&from_coord_lon=1.0&toto=N/A"
         )
