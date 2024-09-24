@@ -839,7 +839,6 @@ def journey_with_disruptions_on_poi_test(mocker):
 
 def journey_with_booking_rule_test():
     with app.app_context():
-        # instance = lambda: None
         g.timezone = pytz.timezone("Europe/Paris")
         booking_url = (
             "https://domaine/search?departure-address={from_name}&destination-address={to_name}"

@@ -105,7 +105,6 @@ def update_disruptions_on_pois_for_places_nearby_test(mocker):
 
 def journey_with_booking_url_in_booking_rule_test():
     with app.app_context():
-        # instance = lambda: None
         g.timezone = pytz.timezone("Europe/Paris")
         # Get a response with a section of ODT having booking_rule.
         booking_url = (
