@@ -13,7 +13,8 @@ RUN apt-get update --fix-missing \
     && update-ca-certificates \
     && (cd navitiacommon && python3 setup.py install) \
     && (cd tyr && python3 setup.py install && pip3 install --no-cache-dir -U -r requirements.txt)\
-    && pip3 install --no-cache-dir uwsgi==2.0.21 \
+    && pip3 install --no-cache-dir uwsgi==2.0.22 \
+    && pip3 install --no-cache-dir -r /usr/share/tyr/requirements.txt \
     && rm -rf navitiacommon tyr \
     && chmod +x /usr/src/app/run.sh \
     && ln -sf /usr/share/tyr/migrations migrations \
@@ -25,8 +26,15 @@ RUN apt-get update --fix-missing \
     && apt-get autoremove -y
 
 
- # Python 'requests' package handle its own CA certificate list
- # Let's force it to use the OS's list
- ENV REQUESTS_CA_BUNDLE /etc/ssl/certs
+# Python 'requests' package handle its own CA certificate list
+# Let's force it to use the OS's list
+ENV REQUESTS_CA_BUNDLE /etc/ssl/certs
+
+RUN cp /usr/bin/manage_tyr.py /usr/src/app/manage_tyr.py
+
+COPY docker/run_tyr_web.sh /usr/src/app/run.sh
+RUN chmod +x /usr/src/app/run.sh
+
+RUN ln -s /usr/share/tyr/migrations migrations
 
 ENTRYPOINT ["bash", "/usr/src/app/run.sh" ]
