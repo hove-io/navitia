@@ -622,6 +622,17 @@ def get_journey_with_pois():
     section.destination.embedded_type = type_pb2.STOP_POINT
     return response
 
+def get_json_entry_point(id="poi_uri", name="poi_name_from_kraken"):
+    entry_point = {}
+    entry_point['id'] = id
+    entry_point['name'] = name
+    entry_point['embedded_type'] = "poi"
+    object = {}
+    object['id'] = id
+    object['name'] = name
+    entry_point['poi'] = object
+    return entry_point
+
 
 def verify_poi_in_impacted_objects(object, poi_empty=True):
     assert object.name == "poi_name_from_loki"

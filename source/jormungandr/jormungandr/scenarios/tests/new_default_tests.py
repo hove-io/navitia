@@ -805,36 +805,41 @@ DEFAULT_OLYMPICS_FORBIDDEN_URIS = {
 
 
 def journey_with_disruptions_on_poi_test(mocker):
-    instance = lambda: None
-    # As in navitia, object poi in the response of places_nearby doesn't have any impact
-    response_journey_with_pois = helpers_tests.get_journey_with_pois()
-    assert len(response_journey_with_pois.impacts) == 0
-    assert len(response_journey_with_pois.journeys) == 1
-    journey = response_journey_with_pois.journeys[0]
-    assert len(journey.sections) == 3
+    with app.app_context():
+        instance = lambda: None
+        g.origin_detail = helpers_tests.get_json_entry_point(id='poi_uri', name='poi_name_from_kraken')
+        g.destination_detail = helpers_tests.get_json_entry_point(id='poi_b', name='poi_n_name')
+        # As in navitia, object poi in the response of places_nearby doesn't have any impact
+        response_journey_with_pois = helpers_tests.get_journey_with_pois()
+        assert len(response_journey_with_pois.impacts) == 0
+        assert len(response_journey_with_pois.journeys) == 1
+        journey = response_journey_with_pois.journeys[0]
+        assert len(journey.sections) == 3
 
-    # Prepare disruptions on poi as response of end point poi_disruptions of loki
-    # pt_object poi as impacted object is absent in the response of poi_disruptions
-    disruptions_with_poi = helpers_tests.get_response_with_a_disruption_on_poi()
-    assert len(disruptions_with_poi.impacts) == 1
-    assert disruptions_with_poi.impacts[0].uri == "test_impact_uri"
-    assert len(disruptions_with_poi.impacts[0].impacted_objects) == 1
-    object = disruptions_with_poi.impacts[0].impacted_objects[0].pt_object
-    helpers_tests.verify_poi_in_impacted_objects(object=object, poi_empty=True)
+        # Prepare disruptions on poi as response of end point poi_disruptions of loki
+        # pt_object poi as impacted object is absent in the response of poi_disruptions
+        disruptions_with_poi = helpers_tests.get_response_with_a_disruption_on_poi()
+        assert len(disruptions_with_poi.impacts) == 1
+        assert disruptions_with_poi.impacts[0].uri == "test_impact_uri"
+        assert len(disruptions_with_poi.impacts[0].impacted_objects) == 1
+        object = disruptions_with_poi.impacts[0].impacted_objects[0].pt_object
+        helpers_tests.verify_poi_in_impacted_objects(object=object, poi_empty=True)
 
-    mock = mocker.patch(
-        'jormungandr.scenarios.new_default.get_disruptions_on_poi', return_value=disruptions_with_poi
-    )
-    update_disruptions_on_pois(instance, response_journey_with_pois)
+        mock = mocker.patch(
+            'jormungandr.scenarios.new_default.get_disruptions_on_poi', return_value=disruptions_with_poi
+        )
+        update_disruptions_on_pois(instance, response_journey_with_pois)
 
-    assert len(response_journey_with_pois.impacts) == 1
-    impact = response_journey_with_pois.impacts[0]
-    assert len(impact.impacted_objects) == 1
-    object = impact.impacted_objects[0].pt_object
-    helpers_tests.verify_poi_in_impacted_objects(object=object, poi_empty=False)
+        assert len(response_journey_with_pois.impacts) == 1
+        impact = response_journey_with_pois.impacts[0]
+        assert len(impact.impacted_objects) == 1
+        object = impact.impacted_objects[0].pt_object
 
-    mock.assert_called_once()
-    return
+        # In this state we haven't yet managed the final response so poi object is empty
+        helpers_tests.verify_poi_in_impacted_objects(object=object, poi_empty=True)
+
+        mock.assert_called_once()
+        return
 
 
 def journey_with_booking_rule_test():
