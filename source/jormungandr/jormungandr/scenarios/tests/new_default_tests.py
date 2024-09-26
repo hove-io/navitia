@@ -44,6 +44,9 @@ from jormungandr.instance import Instance
 from jormungandr.scenarios.utils import switch_back_to_ridesharing
 from jormungandr.utils import make_origin_destination_key, str_to_time_stamp
 from werkzeug.exceptions import HTTPException
+import pytz
+from jormungandr import app
+from flask import g
 import pytest
 from pytest_mock import mocker
 from collections import defaultdict
@@ -835,25 +838,27 @@ def journey_with_disruptions_on_poi_test(mocker):
 
 
 def journey_with_booking_rule_test():
-    booking_url = (
-        "https://domaine/search?departure-address={from_name}&destination-address={to_name}"
-        "&requested-departure-time={departure_datetime}&from_coord_lat={from_coord_lat}"
-        "&from_coord_lon={from_coord_lon}&not_managed={not_managed}"
-    )
-    response_journey_with_odt = helpers_tests.get_odt_journey(booking_url=booking_url)
-    assert len(response_journey_with_odt.journeys) == 1
-    journey = response_journey_with_odt.journeys[0]
-    assert len(journey.sections) == 3
-    odt_section = journey.sections[1]
-    assert odt_section.type == response_pb2.ON_DEMAND_TRANSPORT
-    assert (
-        odt_section.booking_rule.booking_url
-        == "https://domaine/search?departure-address={from_name}&destination-address={to_name}&requested-departure-time={departure_datetime}&from_coord_lat={from_coord_lat}&from_coord_lon={from_coord_lon}&not_managed={not_managed}"
-    )
+    with app.app_context():
+        g.timezone = pytz.timezone("Europe/Paris")
+        booking_url = (
+            "https://domaine/search?departure-address={from_name}&destination-address={to_name}"
+            "&requested-departure-time={departure_datetime}&from_coord_lat={from_coord_lat}"
+            "&from_coord_lon={from_coord_lon}&not_managed={not_managed}"
+        )
+        response_journey_with_odt = helpers_tests.get_odt_journey(booking_url=booking_url)
+        assert len(response_journey_with_odt.journeys) == 1
+        journey = response_journey_with_odt.journeys[0]
+        assert len(journey.sections) == 3
+        odt_section = journey.sections[1]
+        assert odt_section.type == response_pb2.ON_DEMAND_TRANSPORT
+        assert (
+            odt_section.booking_rule.booking_url
+            == "https://domaine/search?departure-address={from_name}&destination-address={to_name}&requested-departure-time={departure_datetime}&from_coord_lat={from_coord_lat}&from_coord_lon={from_coord_lon}&not_managed={not_managed}"
+        )
 
-    update_booking_rule_url_in_response(response_journey_with_odt)
-    odt_section = response_journey_with_odt.journeys[0].sections[1]
-    assert (
-        odt_section.booking_rule.booking_url
-        == "https://domaine/search?departure-address=stop%20a%20name&destination-address=stop_b_name&requested-departure-time=1722924300&from_coord_lat=2.0&from_coord_lon=1.0&not_managed=N/A"
-    )
+        update_booking_rule_url_in_response(response_journey_with_odt)
+        odt_section = response_journey_with_odt.journeys[0].sections[1]
+        assert (
+            odt_section.booking_rule.booking_url
+            == "https://domaine/search?departure-address=stop%20a%20name%20(city)&destination-address=stop_b_name%20(city)&requested-departure-time=2024-08-06T08:05:00+0200&from_coord_lat=2.0&from_coord_lon=1.0&not_managed=N/A"
+        )
