@@ -7,7 +7,6 @@ COPY ./source/tyr ./tyr
 COPY ./docker/ca-certificates/*.crt /usr/local/share/ca-certificates/
 COPY ./docker/run_tyr_web.sh /usr/src/app/run.sh
 
-
 RUN apt-get update --fix-missing \
     && apt-get install -y curl libpq5 python3.9-dev python3-pip git ca-certificates libgeos-c1v5 postgresql-client \
     && update-ca-certificates \

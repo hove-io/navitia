@@ -12,7 +12,7 @@ COPY ./source/cities /usr/share/navitia/cities
 COPY ./docker/templates/* /templates/
 
 RUN apt-get update --fix-missing \
-    && apt-get install -y libpq5 python3.9-dev python3-pip git ca-certificates  postgresql-client gettext-base jq \
+    && apt-get install -y --force-yes libpq5 python3.9-dev python3-pip git ca-certificates postgresql-client gettext-base jq \
     && update-ca-certificates \
     && (cd navitiacommon && python3 setup.py install) \
     && (cd tyr && python3 setup.py install && pip3 install --no-cache-dir -U -r requirements.txt)\
@@ -23,4 +23,4 @@ RUN apt-get update --fix-missing \
         git \
     && apt-get autoremove -y
 
-ENTRYPOINT ["bash", "/usr/share/tyr/run.sh"]
+ENTRYPOINT ["bash", "/run.sh"]
