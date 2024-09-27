@@ -375,7 +375,7 @@ class handle_poi_disruptions(object):
                 uris = set()
                 for d in objects[0]['disruptions']:
                     for io in d['impacted_objects']:
-                        if io['pt_object']['embedded_type'] == "poi" and io['pt_object']['id'] ==  object['id']:
+                        if io['pt_object']['embedded_type'] == "poi" and io['pt_object']['id'] == object['id']:
                             uris.add(d['id'])
                             if 'poi' not in io['pt_object']:
                                 io['pt_object']['poi'] = object

@@ -622,6 +622,7 @@ def get_journey_with_pois():
     section.destination.embedded_type = type_pb2.STOP_POINT
     return response
 
+
 def get_json_entry_point(id="poi_uri", name="poi_name_from_kraken"):
     entry_point = {}
     entry_point['id'] = id
