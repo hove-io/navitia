@@ -355,7 +355,6 @@ class add_tad_links(object):
 
 
 class handle_poi_disruptions(object):
-
     @staticmethod
     def is_absent(links, id):
         for link in links:
