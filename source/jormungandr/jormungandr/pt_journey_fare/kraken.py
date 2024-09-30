@@ -42,7 +42,11 @@ class Kraken(AbstractPtJourneyFare):
 
     @staticmethod
     def _pt_sections(journey):
-        return [s for s in journey.sections if s.type in (response_pb2.PUBLIC_TRANSPORT, response_pb2.ON_DEMAND_TRANSPORT)]
+        return [
+            s
+            for s in journey.sections
+            if s.type in (response_pb2.PUBLIC_TRANSPORT, response_pb2.ON_DEMAND_TRANSPORT)
+        ]
 
     def create_fare_request(self, pt_journeys):
         request = request_pb2.Request()

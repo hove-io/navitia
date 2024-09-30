@@ -612,11 +612,24 @@ def is_olympic_site(entry_point, instance):
 
 
 def get_last_pt_section(journey):
-    return next((s for s in reversed(journey.sections) if s.type in (response_pb2.PUBLIC_TRANSPORT, response_pb2.ON_DEMAND_TRANSPORT)), None)
+    return next(
+        (
+            s
+            for s in reversed(journey.sections)
+            if s.type in (response_pb2.PUBLIC_TRANSPORT, response_pb2.ON_DEMAND_TRANSPORT)
+        ),
+        None,
+    )
 
 
 def get_first_pt_section(journey):
-    return next((s for s in journey.sections if s.type in (response_pb2.PUBLIC_TRANSPORT, response_pb2.ON_DEMAND_TRANSPORT)), None)
+    return next(
+        (
+            s for s in journey.sections
+            if s.type in (response_pb2.PUBLIC_TRANSPORT, response_pb2.ON_DEMAND_TRANSPORT)
+        ),
+        None,
+    )
 
 
 def record_external_failure(message, connector_type, connector_name):

@@ -817,7 +817,10 @@ def get_journey_extremity_pt_section(journey, attractivities_virtual_fallbacks):
         sections = reversed(journey.sections)
     else:
         sections = journey.sections
-    extremity_pt_section = next((s for s in sections if s.type in (response_pb2.PUBLIC_TRANSPORT, response_pb2.ON_DEMAND_TRANSPORT)), None)
+    extremity_pt_section = next(
+        (s for s in sections if s.type in (response_pb2.PUBLIC_TRANSPORT, response_pb2.ON_DEMAND_TRANSPORT)),
+        None,
+    )
 
     return extremity_pt_section
 
@@ -1156,7 +1159,10 @@ def _filter_odt_journeys_counter_clockwise(journeys, debug):
 
 
 def _contains_pt_section(journey):
-    return any(section.type in (response_pb2.PUBLIC_TRANSPORT, response_pb2.ON_DEMAND_TRANSPORT) for section in journey.sections)
+    return any(
+        section.type in (response_pb2.PUBLIC_TRANSPORT, response_pb2.ON_DEMAND_TRANSPORT)
+        for section in journey.sections
+    )
 
 
 def _contains_odt(journey):

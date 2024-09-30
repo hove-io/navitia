@@ -105,7 +105,11 @@ from six.moves import zip
 from functools import cmp_to_key
 from datetime import datetime
 
-SECTION_TYPES_TO_RETAIN = {response_pb2.PUBLIC_TRANSPORT, response_pb2.ON_DEMAND_TRANSPORT, response_pb2.STREET_NETWORK}
+SECTION_TYPES_TO_RETAIN = {
+    response_pb2.PUBLIC_TRANSPORT,
+    response_pb2.ON_DEMAND_TRANSPORT,
+    response_pb2.STREET_NETWORK,
+}
 JOURNEY_TAGS_TO_RETAIN = ['best_olympics']
 JOURNEY_TYPES_TO_RETAIN = ['best', 'comfort', 'non_pt_walk', 'non_pt_bike', 'non_pt_bss']
 JOURNEY_TYPES_SCORE = {t: i for i, t in enumerate(JOURNEY_TYPES_TO_RETAIN)}
@@ -423,7 +427,9 @@ def _tag_direct_path(responses):
     }
 
     for j in itertools.chain.from_iterable(r.journeys for r in responses if r is not None):
-        if all(s.type not in (response_pb2.PUBLIC_TRANSPORT, response_pb2.ON_DEMAND_TRANSPORT) for s in j.sections):
+        if all(
+                s.type not in (response_pb2.PUBLIC_TRANSPORT, response_pb2.ON_DEMAND_TRANSPORT) for s in j.sections
+        ):
             j.tags.extend(['non_pt'])
 
         # TODO: remove that (and street_network_mode_tag_map) when NMP stops using it
