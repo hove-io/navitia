@@ -13,7 +13,6 @@ env:
   REGION: eu-west-1
 
 jobs:
-
   credentials:
     name: Init credentials
     runs-on: [self-hosted, corefront, sandbox]
@@ -118,19 +117,16 @@ jobs:
         fail-fast: false
         matrix:
             os: [{docker_image: mutable-debian8_dev , python_version: python3.6}, {docker_image: mutable-debian11_dev, python_version: python3.9}]
-
     container:
         image: 162230498103.dkr.ecr.eu-west-1.amazonaws.com/${{ matrix.os.docker_image }}:latest
         credentials:
           username: AWS
           password: ${{ needs.credentials.outputs.aws_token }}
-
     services:
       rabbitmq:
         image: rabbitmq:3-alpine
         ports:
           - 5672:5672
-
       redis:
         image: redis:6-alpine
         ports:
@@ -146,7 +142,6 @@ jobs:
       with:
         app_id: ${{ secrets.CI_CORE_APP_ID }}
         private_key: ${{ secrets.CI_CORE_APP_PEM }}
-
     - uses: actions/checkout@v3
       with:
         submodules: recursive
@@ -200,7 +195,6 @@ jobs:
         NAVITIA_DOCKER_NETWORK: ${{ job.container.network }}
         TYR_CELERY_BROKER_URL: 'amqp://guest:guest@rabbitmq:5672//'
         TYR_REDIS_HOST: 'redis'
-
     - name: docker_test python3
       working-directory: ./build
       run: |
@@ -212,12 +206,10 @@ jobs:
         make docker_test
         deactivate
         rm -rf navitia_py3
-
       env:
         NAVITIA_DOCKER_NETWORK: ${{ job.container.network }}
         TYR_CELERY_BROKER_URL: 'amqp://guest:guest@rabbitmq:5672//'
         TYR_REDIS_HOST: 'redis'
-
     - name: clean up workspace
       if: ${{ always() }}
       run: |

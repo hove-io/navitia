@@ -9,7 +9,6 @@ on:
       - '*'
 
 jobs:
-
   common_variables:
     name: Common variables
     runs-on: [self-hosted, kraken, sandbox]
