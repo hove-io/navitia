@@ -428,7 +428,7 @@ def _tag_direct_path(responses):
 
     for j in itertools.chain.from_iterable(r.journeys for r in responses if r is not None):
         if all(
-                s.type not in (response_pb2.PUBLIC_TRANSPORT, response_pb2.ON_DEMAND_TRANSPORT) for s in j.sections
+            s.type not in (response_pb2.PUBLIC_TRANSPORT, response_pb2.ON_DEMAND_TRANSPORT) for s in j.sections
         ):
             j.tags.extend(['non_pt'])
 

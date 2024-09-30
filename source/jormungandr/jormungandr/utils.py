@@ -625,7 +625,8 @@ def get_last_pt_section(journey):
 def get_first_pt_section(journey):
     return next(
         (
-            s for s in journey.sections
+            s
+            for s in journey.sections
             if s.type in (response_pb2.PUBLIC_TRANSPORT, response_pb2.ON_DEMAND_TRANSPORT)
         ),
         None,
