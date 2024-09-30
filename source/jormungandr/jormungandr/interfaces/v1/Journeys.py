@@ -357,11 +357,7 @@ class add_tad_links(object):
 class handle_poi_disruptions(object):
     @staticmethod
     def is_absent(links, id):
-        for link in links:
-            if link['id'] == id:
-                return False
-
-        return True
+        return next((False for link in links if link['id'] == id), True)
 
     def __call__(self, f):
         @wraps(f)
@@ -372,8 +368,8 @@ class handle_poi_disruptions(object):
 
             def get_disruption_uris(object):
                 uris = set()
-                for d in objects[0]['disruptions']:
-                    for io in d['impacted_objects']:
+                for d in objects[0].get('disruptions', []):
+                    for io in d.get('impacted_objects', []):
                         if io['pt_object']['embedded_type'] == "poi" and io['pt_object']['id'] == object['id']:
                             uris.add(d['id'])
                             if 'poi' not in io['pt_object']:
@@ -396,7 +392,7 @@ class handle_poi_disruptions(object):
             # since object poi can only be present in those two cases
             # If object is absent in first_section['from'] as well as last_section['to'] for the first journey
             # then no need to verify for the remaining journeys
-            for j in objects[0]['journeys']:
+            for j in objects[0].get('journeys', []):
                 if "sections" not in j:
                     continue
 
