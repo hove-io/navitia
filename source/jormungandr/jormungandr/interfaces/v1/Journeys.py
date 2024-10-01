@@ -354,6 +354,62 @@ class add_tad_links(object):
         return wrapper
 
 
+class handle_poi_disruptions(object):
+    @staticmethod
+    def is_absent(links, id):
+        return next((False for link in links if link['id'] == id), True)
+
+    def __call__(self, f):
+        @wraps(f)
+        def wrapper(*args, **kwargs):
+            objects = f(*args, **kwargs)
+            if has_invalid_reponse_code(objects) or journeys_absent(objects):
+                return objects
+
+            def get_disruption_uris(object):
+                uris = set()
+                for d in objects[0].get('disruptions', []):
+                    for io in d.get('impacted_objects', []):
+                        if io['pt_object']['embedded_type'] == "poi" and io['pt_object']['id'] == object['id']:
+                            uris.add(d['id'])
+                            if 'poi' not in io['pt_object']:
+                                io['pt_object']['poi'] = object
+
+                return uris
+
+            def update_for_poi(object):
+                # Add links in poi object
+                object_copy = deepcopy(object)
+                object.setdefault('links', [])
+                disruption_uris = get_disruption_uris(object_copy)
+                for disruption_uri in disruption_uris:
+                    if self.is_absent(object['links'], disruption_uri):
+                        object['links'].append(
+                            create_internal_link(_type="disruption", rel="disruptions", id=disruption_uri)
+                        )
+
+            # We should only update 'from' object of the first section as well as 'to' object of the last one
+            # since object poi can only be present in those two cases
+            # If object is absent in first_section['from'] as well as last_section['to'] for the first journey
+            # then no need to verify for the remaining journeys
+            for j in objects[0].get('journeys', []):
+                if "sections" not in j:
+                    continue
+
+                first_sec = j['sections'][0]
+                last_sec = j['sections'][-1]
+                if first_sec['from']['embedded_type'] != "poi" and last_sec['to']['embedded_type'] != "poi":
+                    break
+                if first_sec['from']['embedded_type'] == "poi":
+                    update_for_poi(first_sec['from']['poi'])
+                if last_sec['to']['embedded_type'] == "poi":
+                    update_for_poi(last_sec['to']['poi'])
+
+            return objects
+
+        return wrapper
+
+
 class rig_journey(object):
     """
     decorator to rig journeys in order to put back the requested origin/destination in the journeys
@@ -693,6 +749,7 @@ class Journeys(JourneyCommon):
     @add_debug_info()
     @add_fare_links()
     @add_journey_href()
+    @handle_poi_disruptions()
     @rig_journey()
     @get_serializer(serpy=api.JourneysSerializer)
     @ManageError()

@@ -520,7 +520,7 @@ def fill_best_boarding_position_test():
     assert response_pb2.BoardingPosition.BACK not in journey.sections[0].best_boarding_positions
 
 
-def get_response_with_a_disruption_on_poi():
+def get_response_with_a_disruption_on_poi(uri="poi_uri", name="poi_name_from_loki"):
     start_period = "20240712T165200"
     end_period = "20240812T165200"
     response = response_pb2.Response()
@@ -531,8 +531,8 @@ def get_response_with_a_disruption_on_poi():
 
     # poi = make_pt_object(type_pb2.POI, lon=1, lat=2, uri='poi:test_uri')
     # impacted_object.pt_object.CopyFrom(poi)
-    impacted_object.pt_object.name = "poi_name_from_loki"
-    impacted_object.pt_object.uri = "poi_uri"
+    impacted_object.pt_object.name = name
+    impacted_object.pt_object.uri = uri
     impacted_object.pt_object.embedded_type = type_pb2.POI
     impact.updated_at = utils.str_to_time_stamp(u'20240712T205200')
     application_period = impact.application_periods.add()
@@ -621,6 +621,79 @@ def get_journey_with_pois():
     section.destination.uri = 'stop_b'
     section.destination.embedded_type = type_pb2.STOP_POINT
     return response
+
+
+def get_pb_response_with_journeys_and_disruptions():
+    response = response_pb2.Response()
+
+    # Add a journey : walking address to stop_point + PT stop_point to stop_point + walking toward address
+    journey = response.journeys.add()
+    section = journey.sections.add()
+    section.type = response_pb2.STREET_NETWORK
+    section.street_network.mode = response_pb2.Walking
+    section.origin.uri = 'address_a'
+    section.origin.embedded_type = type_pb2.ADDRESS
+    section.destination.uri = 'stop_point_a'
+    section.destination.embedded_type = type_pb2.STOP_POINT
+    section.destination.stop_point.uri = 'stop_point_a'
+    section.destination.stop_point.name = 'stop_point_name_a'
+    section.destination.stop_point.coord.lon = 1.0
+    section.destination.stop_point.coord.lat = 2.0
+
+    section = journey.sections.add()
+    section.type = response_pb2.PUBLIC_TRANSPORT
+    section.origin.uri = 'stop_point_a'
+    section.origin.embedded_type = type_pb2.STOP_POINT
+    section.origin.stop_point.uri = 'stop_point_a'
+    section.origin.stop_point.name = 'stop_point_name_a'
+    section.origin.stop_point.coord.lon = 1.0
+    section.origin.stop_point.coord.lat = 2.0
+    section.destination.uri = 'stop_point_b'
+    section.destination.embedded_type = type_pb2.STOP_POINT
+    section.destination.stop_point.uri = 'stop_point_b'
+    section.destination.stop_point.name = 'stop_point_name_b'
+    section.destination.stop_point.coord.lon = 3.0
+    section.destination.stop_point.coord.lat = 4.0
+
+    section = journey.sections.add()
+    section.type = response_pb2.STREET_NETWORK
+    section.street_network.mode = response_pb2.Walking
+    section.origin.uri = 'stop_point_b'
+    section.origin.embedded_type = type_pb2.STOP_POINT
+    section.origin.stop_point.uri = 'stop_point_b'
+    section.origin.stop_point.name = 'stop_point_name_b'
+    section.origin.stop_point.coord.lon = 3.0
+    section.origin.stop_point.coord.lat = 4.0
+    section.destination.uri = 'address_b'
+    section.destination.embedded_type = type_pb2.ADDRESS
+
+    # Add a journey : walking address to address
+    journey = response.journeys.add()
+    section = journey.sections.add()
+    section.type = response_pb2.STREET_NETWORK
+    section.street_network.mode = response_pb2.Walking
+    section.origin.uri = 'address_a'
+    section.origin.embedded_type = type_pb2.ADDRESS
+    section.destination.uri = 'address_b'
+    section.destination.embedded_type = type_pb2.ADDRESS
+
+    # Add disruption on poi 'poi_uri_a':
+    pb_disruptions = get_response_with_a_disruption_on_poi(uri="poi_uri_a", name="poi_name_a")
+    response.impacts.extend(pb_disruptions.impacts)
+    response.status_code = 200
+    return response
+
+
+def get_json_entry_point(id="poi_uri", name="poi_name_from_kraken"):
+    entry_point = {}
+    entry_point['id'] = id
+    entry_point['name'] = name
+    entry_point['embedded_type'] = "poi"
+    object = {}
+    object['id'] = id
+    object['name'] = name
+    entry_point['poi'] = object
+    return entry_point
 
 
 def verify_poi_in_impacted_objects(object, poi_empty=True):

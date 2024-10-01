@@ -33,6 +33,14 @@ from jormungandr import i_manager
 from jormungandr.exceptions import RegionNotFound
 from jormungandr.interfaces.v1.journey_common import compute_regions, sort_regions
 from navitiacommon import models
+import pytz
+from flask import g
+import jormungandr.scenarios.tests.helpers_tests as helpers_tests
+from jormungandr.interfaces.v1.serializer import api
+from jormungandr import app
+from jormungandr.interfaces.v1.decorators import get_serializer
+from jormungandr.interfaces.v1.Journeys import handle_poi_disruptions, rig_journey
+from jormungandr.interfaces.v1.errors import ManageError
 
 
 class MockInstance:
@@ -210,3 +218,59 @@ class TestMultiCoverage:
         assert regions[2].name == self.regions['netherlands'].name
         assert regions[3].name == self.regions['france'].name
         assert regions[4].name == self.regions['equador'].name
+
+
+@handle_poi_disruptions()
+@rig_journey()
+@get_serializer(serpy=api.JourneysSerializer)
+@ManageError()
+def get_response_with_poi_and_disruptions():
+    return helpers_tests.get_pb_response_with_journeys_and_disruptions()
+
+
+def handle_poi_disruptions_test():
+    """
+    Both departure and arrival points are POI
+    Only one disruption exist in the response on poi_uri_a
+    journey 1 : walking + PT + walking
+    journey 2 : walking
+    """
+    with app.app_context():
+        with app.test_request_context():
+            g.timezone = pytz.utc
+            g.origin_detail = helpers_tests.get_json_entry_point(id='poi_uri_a', name='poi_name_a')
+            g.destination_detail = helpers_tests.get_json_entry_point(id='poi_uri_b', name='poi_name_b')
+
+            # get response in json with two journeys and one disruption
+            resp = get_response_with_poi_and_disruptions()
+            assert len(resp[0].get("journeys", 0)) == 2
+
+            # Journey 1: a disruption exist for poi_uri_a: the poi in journey should have links and
+            # impacted_object should have object poi
+            origin = resp[0].get("journeys", 0)[0]['sections'][0]['from']['poi']
+            assert origin['id'] == "poi_uri_a"
+            assert len(origin['links']) == 1
+            impacted_object = resp[0]['disruptions'][0]['impacted_objects'][0]['pt_object']['poi']
+            assert impacted_object['id'] == "poi_uri_a"
+            assert "links" not in impacted_object
+
+            # No disruption exist for poi_uri_b: the poi in journey doesn't have links and object poi is absent
+            # in impacted_object
+            destination = resp[0].get("journeys", 0)[0]['sections'][2]['to']['poi']
+            assert destination['id'] == "poi_uri_b"
+            assert len(destination["links"]) == 0
+
+            # Journey 2: a disruption exist for poi_uri_a: the poi in journey should have links and
+            # impacted_object should have object poi
+            origin = resp[0].get("journeys", 0)[1]['sections'][0]['from']['poi']
+            assert origin['id'] == "poi_uri_a"
+            assert len(origin['links']) == 1
+            impacted_object = resp[0]['disruptions'][0]['impacted_objects'][0]['pt_object']['poi']
+            assert impacted_object['id'] == "poi_uri_a"
+            assert "links" not in impacted_object
+
+            # No disruption exist for poi_uri_b: the poi in journey doesn't have links and object poi is absent
+            # in impacted_object
+            destination = resp[0].get("journeys", 0)[1]['sections'][0]['to']['poi']
+            assert destination['id'] == "poi_uri_b"
+            assert len(destination["links"]) == 0
