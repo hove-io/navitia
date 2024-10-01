@@ -315,7 +315,8 @@ class FilterMaxSuccessivePhysicalMode(SingleJourneyFilter):
         """
         bus_count = 0
         for s in journey.sections:
-            if s.type != response_pb2.PUBLIC_TRANSPORT:
+            # if s.type != response_pb2.PUBLIC_TRANSPORT:
+            if s.type not in (response_pb2.PUBLIC_TRANSPORT, response_pb2.ON_DEMAND_TRANSPORT):
                 continue
             if s.pt_display_informations.uris.physical_mode == self.successive_physical_mode_to_limit_id:
                 bus_count += 1
@@ -489,7 +490,7 @@ def similar_journeys_generator(journey, pt_functor, sn_functor=_sn_functor, crow
 
     def _similar_pt():
         for idx, s in enumerate(journey.sections):
-            if s.type == response_pb2.PUBLIC_TRANSPORT:
+            if s.type in (response_pb2.PUBLIC_TRANSPORT, response_pb2.ON_DEMAND_TRANSPORT):
                 yield pt_functor(s)
             elif s.type == response_pb2.STREET_NETWORK and is_walk_after_parking(journey, idx):
                 continue
@@ -552,7 +553,7 @@ def shared_section_generator(journey):
 
     # Compare each section of the journey with the criteria in the function description
     for s in journey.sections:
-        if s.type == response_pb2.PUBLIC_TRANSPORT:
+        if s.type in (response_pb2.PUBLIC_TRANSPORT, response_pb2.ON_DEMAND_TRANSPORT):
             yield "origin:{}/dest:{}".format(s.origin.uri, s.destination.uri)
 
 
@@ -604,7 +605,7 @@ def _debug_journey(journey):
 
     sections = []
     for s in journey.sections:
-        if s.type == response_pb2.PUBLIC_TRANSPORT:
+        if s.type in (response_pb2.PUBLIC_TRANSPORT, response_pb2.ON_DEMAND_TRANSPORT):
             sections.append(
                 u"{line} ({vj})".format(
                     line=s.pt_display_informations.uris.line, vj=s.pt_display_informations.uris.vehicle_journey
@@ -816,7 +817,10 @@ def get_journey_extremity_pt_section(journey, attractivities_virtual_fallbacks):
         sections = reversed(journey.sections)
     else:
         sections = journey.sections
-    extremity_pt_section = next((s for s in sections if s.type == response_pb2.PUBLIC_TRANSPORT), None)
+    extremity_pt_section = next(
+        (s for s in sections if s.type in (response_pb2.PUBLIC_TRANSPORT, response_pb2.ON_DEMAND_TRANSPORT)),
+        None,
+    )
 
     return extremity_pt_section
 
@@ -1155,7 +1159,10 @@ def _filter_odt_journeys_counter_clockwise(journeys, debug):
 
 
 def _contains_pt_section(journey):
-    return any(section.type == response_pb2.PUBLIC_TRANSPORT for section in journey.sections)
+    return any(
+        section.type in (response_pb2.PUBLIC_TRANSPORT, response_pb2.ON_DEMAND_TRANSPORT)
+        for section in journey.sections
+    )
 
 
 def _contains_odt(journey):
