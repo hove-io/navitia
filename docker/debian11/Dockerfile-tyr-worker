@@ -1,11 +1,18 @@
 FROM debian:bullseye-slim
 
+RUN apt-get update \
+    && apt install -y python git libgeos-c1v5 libpq5 curl
+
+RUN curl https://bootstrap.pypa.io/pip/2.7/get-pip.py --output get-pip.py
+RUN python2 get-pip.py
+
 # Install some binaries from tartare-tools
 ENV TARTARE_TOOLS_VERSION="v0.46.0"
 ARG GITHUB_TOKEN
 RUN git config --global url."https://x-access-token:${GITHUB_TOKEN}@github.com/hove-io/".insteadOf "ssh://git@github.com/hove-io/"
 RUN git clone -b ${TARTARE_TOOLS_VERSION} --depth 1 https://x-access-token:${GITHUB_TOKEN}@github.com/hove-io/tartare-tools
 
+RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 # rustc 1.80.0 broke the compilation
 RUN rustup install 1.79.0
 

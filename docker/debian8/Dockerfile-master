@@ -12,7 +12,8 @@ RUN apt-get install -y --force-yes ca-certificates \
         postgresql-client \
         netcat \
         dh-python \
-        curl
+        curl \
+        wget
 
 COPY docker/ca-certificates/*.crt /usr/local/share/ca-certificates/
 RUN update-ca-certificates

@@ -156,6 +156,7 @@ jobs:
       if: ${{ matrix.os.docker_image == 'mutable-debian8_dev'}}
       run: |
         apt remove --yes cmake
+        apt install wget -y
         mkdir local_bin
         cd local_bin
         wget https://cmake.org/files/v3.18/cmake-3.18.6-Linux-x86_64.tar.gz
