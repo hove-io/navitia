@@ -2,13 +2,16 @@ FROM debian:bullseye-slim
 
 WORKDIR /usr/src/app
 
+RUN echo "deb http://archive.debian.org/debian/ bullseye main" > /etc/apt/sources.list.d/archive.list
+
 COPY ./source/navitiacommon ./navitiacommon
 COPY ./source/tyr ./tyr
 COPY ./docker/ca-certificates/*.crt /usr/local/share/ca-certificates/
 COPY ./docker/run_tyr_web.sh /usr/src/app/run.sh
 
-RUN apt-get update --fix-missing \
-    && apt-get install -y curl libpq5 python3.9-dev python3-pip git ca-certificates libgeos-c1v5 postgresql-client \
+RUN apt-get update --force-yes --fix-missing || exit 0
+
+RUN apt-get install -y --force-yes curl libpq5 python3.9-dev python3-pip git ca-certificates libgeos-c1v5 postgresql-client \
     && update-ca-certificates \
     && (cd navitiacommon && python3 setup.py install) \
     && (cd tyr && python3 setup.py install && pip3 install --no-cache-dir -U -r requirements.txt)\
@@ -24,12 +27,8 @@ RUN apt-get update --fix-missing \
         git \
     && apt-get autoremove -y
 
-
-# Python 'requests' package handle its own CA certificate list
-# Let's force it to use the OS's list
-ENV REQUESTS_CA_BUNDLE /etc/ssl/certs
-
-RUN cp /usr/src/app/tyr/manage_tyr.py /usr/src/app/manage_tyr.py
+ENV REQUESTS_CA_BUNDLE=/etc/ssl/certs
+#RUN cp /usr/src/app/tyr/manage_tyr.py /usr/src/app/manage_tyr.py
 
 COPY docker/run_tyr_web.sh /usr/src/app/run.sh
 RUN chmod +x /usr/src/app/run.sh
