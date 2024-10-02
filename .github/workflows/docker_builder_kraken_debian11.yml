@@ -1,22 +1,20 @@
-# name: Build Navitia Dockers
+name: Build Navitia Dockers with Debian 11
 
-# on:
-#   pull_request:
-#   push:
-#     branches:
-#       - dev
-#     tags:
-#       - '*'
-
-# jobs:
-#   common_variables:
-#     name: Common variables
-#     runs-on: [self-hosted, kraken, sandbox]
-#     outputs:
-#       RELEASE_TAG: ${{ steps.choose_navitia_tag.outputs.navitia_tag }}
-#     steps:
-#       - name: force chown to avoid errors
-#         run: sudo chown -R $USER:$USER .
+on:
+  push:
+    branches:
+      - dev
+    tags:
+      - '*'
+jobs:
+  common_variables:
+    name: Common variables
+    runs-on: [self-hosted, kraken, sandbox]
+    outputs:
+      RELEASE_TAG: ${{ steps.choose_navitia_tag.outputs.navitia_tag }}
+    steps:
+      - name: force chown to avoid errors
+        run: sudo chown -R $USER:$USER .
 
 #       - name: Generate github private access token
 #         id: ci-core-app-token

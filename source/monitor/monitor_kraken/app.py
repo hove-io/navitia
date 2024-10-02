@@ -36,10 +36,9 @@ from monitor_kraken import request_pb2
 from monitor_kraken import response_pb2
 from monitor_kraken import type_pb2
 
-# TODO : need to clean that after full migration to python3
 try:
     import ConfigParser
-except:
+except ImportError:
     import configparser as ConfigParser  # type: ignore
 
 app = Flask(__name__)
