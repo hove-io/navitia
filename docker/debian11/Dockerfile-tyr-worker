@@ -1,7 +1,7 @@
 FROM debian:bullseye-slim
 
 RUN apt-get update \
-    && apt install -y python git libgeos-c1v5 libpq5 curl
+    && apt install -y python git libgeos-c1v5 libpq5 curl gcc pkg-config libssl-dev
 
 RUN curl https://bootstrap.pypa.io/pip/2.7/get-pip.py --output get-pip.py
 RUN python2 get-pip.py
@@ -13,6 +13,8 @@ RUN git config --global url."https://x-access-token:${GITHUB_TOKEN}@github.com/h
 RUN git clone -b ${TARTARE_TOOLS_VERSION} --depth 1 https://x-access-token:${GITHUB_TOKEN}@github.com/hove-io/tartare-tools
 
 RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+ENV PATH="/root/.cargo/bin:$PATH"
+
 # rustc 1.80.0 broke the compilation
 RUN rustup install 1.79.0
 
@@ -24,36 +26,36 @@ RUN cd tartare-tools \
     && cd .. \
     && rm -rf tartare-tools
 
-COPY navitia-common_*deb navitia-tyr_*.deb navitia-ed_*.deb  navitia-cities_*.deb  mimirsbrunn7_jessie-*.deb  cosmogony2cities_*.deb  mimirsbrunn-config-*.deb ./
+# COPY navitia-common_*deb navitia-tyr_*.deb navitia-ed_*.deb  navitia-cities_*.deb  mimirsbrunn7_jessie-*.deb  cosmogony2cities_*.deb  mimirsbrunn-config-*.deb ./
 
-# install navitia-common package
-RUN dpkg -i ./navitia-common_*.deb || exit 0
+# # install navitia-common package
+# RUN dpkg -i ./navitia-common_*.deb || exit 0
 
-# install navitia-tyr package
-RUN dpkg -i ./navitia-tyr_*.deb || exit 0
+# # install navitia-tyr package
+# RUN dpkg -i ./navitia-tyr_*.deb || exit 0
 
-# install navitia-ed package
-RUN dpkg -i ./navitia-ed_*.deb || exit 0
+# # install navitia-ed package
+# RUN dpkg -i ./navitia-ed_*.deb || exit 0
 
-# install navitia-cities package
-RUN dpkg -i ./navitia-cities_*.deb || exit 0
+# # install navitia-cities package
+# RUN dpkg -i ./navitia-cities_*.deb || exit 0
 
-# install navitia-mimirsbrunn package
-RUN dpkg -i ./mimirsbrunn7_jessie-*.deb \
-        # install cosmogony2cities package
-        ./cosmogony2cities*.deb \
-        # install conf mimir package
-        ./mimirsbrunn-config-*.deb
+# # install navitia-mimirsbrunn package
+# RUN dpkg -i ./mimirsbrunn7_jessie-*.deb \
+#         # install cosmogony2cities package
+#         ./cosmogony2cities*.deb \
+#         # install conf mimir package
+#         ./mimirsbrunn-config-*.deb
 
-RUN apt-get install -f -y --force-yes
+# RUN apt-get install -f -y --force-yes
 
-RUN rm navitia-common_*deb \
-    navitia-tyr_*.deb \
-    navitia-cities_*.deb \
-    navitia-ed_*.deb \
-    mimirsbrunn-config-*.deb \
-    mimirsbrunn7_jessie-*.deb \
-    cosmogony2cities_*.deb
+# RUN rm navitia-common_*deb \
+#     navitia-tyr_*.deb \
+#     navitia-cities_*.deb \
+#     navitia-ed_*.deb \
+#     mimirsbrunn-config-*.deb \
+#     mimirsbrunn7_jessie-*.deb \
+#     cosmogony2cities_*.deb
 
 # install tyr requirements
 RUN pip install --no-cache-dir -r /usr/share/tyr/requirements.txt
