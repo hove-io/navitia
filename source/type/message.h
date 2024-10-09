@@ -69,7 +69,19 @@ enum class Effect {
 
 enum class ActiveStatus { past = 0, active = 1, future = 2 };
 
-enum class ChannelType { web = 0, sms, email, mobile, notification, twitter, facebook, unknown_type, title, beacon, pids };
+enum class ChannelType {
+    web = 0,
+    sms,
+    email,
+    mobile,
+    notification,
+    twitter,
+    facebook,
+    unknown_type,
+    title,
+    beacon,
+    pids
+};
 
 inline std::string to_string(Effect effect) {
     switch (effect) {
