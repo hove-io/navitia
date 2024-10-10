@@ -682,7 +682,9 @@ class TestDisruptions(AbstractTestFixture):
         channel = get_not_null(message[2], 'channel')
         assert channel['id'] == 'beacon'
         assert channel['name'] == 'beacon channel'
-        assert len(channel['types']) == 3
+        assert len(channel['types']) == 4
+        assert 'web' in channel['types']
+        assert 'pids' in channel['types']
 
     def test_disruption_date_filtering(self):
         """

@@ -69,7 +69,19 @@ enum class Effect {
 
 enum class ActiveStatus { past = 0, active = 1, future = 2 };
 
-enum class ChannelType { web = 0, sms, email, mobile, notification, twitter, facebook, unknown_type, title, beacon };
+enum class ChannelType {
+    web = 0,
+    sms,
+    email,
+    mobile,
+    notification,
+    twitter,
+    facebook,
+    unknown_type,
+    title,
+    beacon,
+    pids
+};
 
 inline std::string to_string(Effect effect) {
     switch (effect) {
@@ -149,6 +161,8 @@ inline std::string to_string(ChannelType ct) {
             return "title";
         case ChannelType::beacon:
             return "beacon";
+        case ChannelType::pids:
+            return "pids";
         default:
             throw navitia::exception("unhandled channeltype case");
     }
