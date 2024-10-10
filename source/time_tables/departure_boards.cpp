@@ -37,6 +37,7 @@ www.navitia.io
 #include "type/pb_converter.h"
 #include "utils/functions.h"
 #include "utils/paginate.h"
+#include "type/vehicle_journey.h"  //required to inline order()
 
 #include <boost/container/flat_set.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
@@ -191,8 +192,16 @@ static void render(PbCreator& pb_creator,
         pbnavitia::Uris* uris = pt_display_information->mutable_uris();
         uris->set_stop_area(sa->uri);
 
+        bool vj_found = false;
+
         // Now we fill the date_times
         for (auto dt_st : id_vec.second) {
+            if (!vj_found && dt_st.second != nullptr) {
+                auto vj = dt_st.second->vehicle_journey;
+                pt_display_information->set_trip_short_name(vj->name);
+                pt_display_information->set_headsign(pb_creator.data->pt_data->headsign_handler.get_headsign(vj));
+                vj_found = true;
+            }
             fill_date_times(pb_creator, schedule, dt_st, calendar_id);
         }
 

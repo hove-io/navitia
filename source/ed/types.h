@@ -536,9 +536,13 @@ struct AdminStopArea {
     std::vector<const StopArea*> stop_area;
 };
 
-#define ASSOCIATE_ED_TYPE(type_name, collection_name)                                                    \
-    inline nt::Type_e get_associated_enum(const ed::types::type_name&) { return nt::Type_e::type_name; } \
-    inline nt::Type_e get_associated_enum(const ed::types::type_name*) { return nt::Type_e::type_name; }
+#define ASSOCIATE_ED_TYPE(type_name, collection_name)                    \
+    inline nt::Type_e get_associated_enum(const ed::types::type_name&) { \
+        return nt::Type_e::type_name;                                    \
+    }                                                                    \
+    inline nt::Type_e get_associated_enum(const ed::types::type_name*) { \
+        return nt::Type_e::type_name;                                    \
+    }
 
 ITERATE_NAVITIA_PT_TYPES(ASSOCIATE_ED_TYPE)
 inline nt::Type_e get_associated_enum(const ed::types::StopTime&) {

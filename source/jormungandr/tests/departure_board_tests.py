@@ -699,6 +699,10 @@ class TestDepartureBoard(AbstractTestFixture):
         assert response["terminus_schedules"][0]["display_informations"]["direction"] == "ODTstop2"
         assert response["terminus_schedules"][0]["display_informations"]["name"] == "B"
         assert response["terminus_schedules"][0]["display_informations"]["commercial_mode"] == "Bus"
+        assert response["terminus_schedules"][0]["display_informations"]["headsign"] == "date_time_estimated"
+        assert (
+            response["terminus_schedules"][0]["display_informations"]["trip_short_name"] == "date_time_estimated"
+        )
 
     # Test on an on_demand_transport with start stop_datetime as on_demand_transport
     def test_journey_with_odt_in_start_stop_date_time(self):

@@ -749,9 +749,11 @@ class RouteDisplayInformationSerializer(PbNestedSerializer):
 
     color = jsonschema.Field(schema_type=str)
     code = jsonschema.Field(schema_type=str)
+    headsign = jsonschema.Field(schema_type=str, display_none=True)
     name = jsonschema.Field(schema_type=str)
     links = jsonschema.MethodField(display_none=True, schema_type=LinkSchema(many=True))
     text_color = jsonschema.Field(schema_type=str)
+    trip_short_name = jsonschema.Field(schema_type=str, display_none=True)
 
     def get_links(self, obj):
         return DisruptionLinkSerializer().to_value(obj.impact_uris)
