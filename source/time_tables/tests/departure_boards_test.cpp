@@ -88,6 +88,8 @@ BOOST_AUTO_TEST_CASE(departureboard_test1) {
         BOOST_REQUIRE_EQUAL(resp.stop_schedules_size(), 2);
         BOOST_REQUIRE_EQUAL(resp.stop_schedules(0).date_times_size(), 1);
         BOOST_REQUIRE_EQUAL(resp.stop_schedules(1).date_times_size(), 1);
+        BOOST_REQUIRE_EQUAL(resp.stop_schedules(0).pt_display_informations().headsign(), "headsign_vj1");
+        BOOST_REQUIRE_EQUAL(resp.stop_schedules(0).pt_display_informations().trip_short_name(), "vj1");
     }
 
     // comparing terminus_schedule with above stop_schedules (function "departure_board")
