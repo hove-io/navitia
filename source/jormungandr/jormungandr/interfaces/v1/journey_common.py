@@ -848,6 +848,12 @@ class JourneyCommon(ResourceUri, ResourceUtc):
             hidden=True,
             help="whether or not to use heuristic to optimized path searching in loki, used in loki exclusively",
         )
+        parser_get.add_argument(
+            "_use_predicted_traffic",
+            type=BooleanType(),
+            hidden=True,
+            help="whether or not to use predicted/historical traffic data for routing, it affects only car/car_no_park mode in Asgard",
+        )
 
     def parse_args(self, region=None, uri=None):
         args = self.parsers['get'].parse_args()
