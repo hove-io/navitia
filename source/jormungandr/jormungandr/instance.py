@@ -859,6 +859,8 @@ class Instance(transient_socket.TransientSocket):
     co2_emission_car_value = _make_property_getter('co2_emission_car_value')
     co2_emission_car_unit = _make_property_getter('co2_emission_car_unit')
 
+    use_predicted_traffic = _make_property_getter('use_predicted_traffic')
+
     def get_pt_planner(self, pt_planner_id=None):
         pt_planner_id = pt_planner_id or self.default_pt_planner
         return self._pt_planner_manager.get_pt_planner(pt_planner_id)
