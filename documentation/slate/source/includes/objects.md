@@ -538,7 +538,7 @@ Severity object can be used to make visual grouping.
 | Field         | Type       | Description
 |---------------|------------|---------------------------------------------
 | id            |string      |Identifier of the address
-| content_type  |string      |Like text/html, you know? Otherwise, take a look at <http://www.w3.org/Protocols/rfc1341/4_Content-Type.html>
+| content_type  |string      |Like text/html, you know? Otherwise, take a look at <https://www.w3.org/Protocols/rfc1341/4_Content-Type.html>
 | name          |string      |name of the Channel
 
 ### Period
@@ -666,7 +666,7 @@ You can find pathways in [journeys](#journeys) service, where there is some "via
 |zip_code|string|Zip code of the admin|
 
 Cities are mainly on the 8 level, dependant on the country
-(<http://wiki.openstreetmap.org/wiki/Tag:boundary%3Dadministrative>)
+(<https://wiki.openstreetmap.org/wiki/Tag:boundary%3Dadministrative>)
 
 
 ### <a name="equipment-reports"></a>Equipment reports
