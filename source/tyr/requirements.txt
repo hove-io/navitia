@@ -11,7 +11,7 @@ Mako==0.9.1
 MarkupSafe==0.23
 SQLAlchemy==1.3.3
 Shapely==1.5.0
-Werkzeug==0.15.5
+Werkzeug==2.2.3
 alembic==1.0.11
 aniso8601==0.82
 argparse==1.2.1
