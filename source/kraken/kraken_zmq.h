@@ -47,22 +47,22 @@ www.navitia.io
 static void respond(zmq::socket_t& socket,
                     const std::vector<std::string>& client_id,
                     const pbnavitia::Response& response) {
-    zmq::message_t reply(response.ByteSize());
+    zmq::message_t reply(response.ByteSizeLong());
     try {
-        response.SerializeToArray(reply.data(), response.ByteSize());
+        response.SerializeToArray(reply.data(), response.ByteSizeLong());
     } catch (const google::protobuf::FatalException& e) {
         auto logger = log4cplus::Logger::getInstance("worker");
         LOG4CPLUS_ERROR(logger, "failure during serialization: " << e.what());
         pbnavitia::Response error_response;
         error_response.mutable_error()->set_id(pbnavitia::Error::internal_error);
         error_response.mutable_error()->set_message(e.what());
-        reply.rebuild(error_response.ByteSize());
-        error_response.SerializeToArray(reply.data(), error_response.ByteSize());
+        reply.rebuild(error_response.ByteSizeLong());
+        error_response.SerializeToArray(reply.data(), error_response.ByteSizeLong());
     }
     for (const auto& idx : client_id) {
-        z_send(socket, idx, ZMQ_SNDMORE);
+        z_send(socket, idx, zmq::send_flags::sndmore);
     }
-    socket.send(reply);
+    socket.send(reply, zmq::send_flags::none);
 }
 
 static pbnavitia::Response create_error_response(std::string error_message, pbnavitia::Error_error_id error_id) {
