@@ -36,7 +36,6 @@ from jormungandr.fallback_modes import FallbackModes
 from jormungandr.utils import timestamp_to_date_str
 from jormungandr.timezone import get_timezone_or_paris
 from six.moves.urllib.parse import quote
-import requests as requests
 import re
 from collections import defaultdict
 from string import Formatter
@@ -592,18 +591,16 @@ def update_booking_rule_url_in_section(section):
         if p == "departure_datetime":
             placeholder_dict[p] = quote(departure_datetime_str)
         elif p == "from_name":
-            placeholder_dict[p] = from_name
+            placeholder_dict[p] = quote(from_name)
         elif p == "from_coord_lat":
             placeholder_dict[p] = from_coord_lat
         elif p == "from_coord_lon":
             placeholder_dict[p] = from_coord_lon
         elif p == "to_name":
-            placeholder_dict[p] = to_name
+            placeholder_dict[p] = quote(to_name)
         elif p == "to_coord_lat":
             placeholder_dict[p] = to_coord_lat
         elif p == "to_coord_lon":
             placeholder_dict[p] = to_coord_lon
 
-    section.booking_rule.booking_url = requests.utils.requote_uri(
-        fmtr.vformat(booking_url, (), placeholder_dict)
-    )
+    section.booking_rule.booking_url = fmtr.vformat(booking_url, (), placeholder_dict)
