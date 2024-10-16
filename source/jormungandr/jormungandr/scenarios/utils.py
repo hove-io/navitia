@@ -35,6 +35,7 @@ from future.moves.itertools import zip_longest
 from jormungandr.fallback_modes import FallbackModes
 from jormungandr.utils import timestamp_to_date_str
 from jormungandr.timezone import get_timezone_or_paris
+from six.moves.urllib.parse import quote
 import requests as requests
 import re
 from collections import defaultdict
@@ -585,10 +586,11 @@ def update_booking_rule_url_in_section(section):
     # Datetime formatting: "%Y-%m-%dT%H:%M:%S%z" ->  2024-09-24T09:25:45+0200
     date_format = "%Y-%m-%dT%H:%M:%S%z"
     timezone = get_timezone_or_paris()
+    departure_datetime_str = timestamp_to_date_str(departure_datetime, timezone, _format=date_format)
 
     for p in placeholders:
         if p == "departure_datetime":
-            placeholder_dict[p] = timestamp_to_date_str(departure_datetime, timezone, _format=date_format)
+            placeholder_dict[p] = quote(departure_datetime_str)
         elif p == "from_name":
             placeholder_dict[p] = from_name
         elif p == "from_coord_lat":
