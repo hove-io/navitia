@@ -10,7 +10,6 @@ env:
   debian_version: debian11
 
 jobs:
-
   build_navitia_arm64:
     runs-on: ubuntu-latest
     steps:

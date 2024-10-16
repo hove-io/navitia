@@ -1,0 +1,51 @@
+FROM debian:bullseye-slim
+
+WORKDIR /srv/kraken
+
+COPY ./docker/ca-certificates/*.crt /usr/local/share/ca-certificates/
+COPY ./source/monitor /srv/monitor_kraken
+
+RUN apt-get update --fix-missing \
+    && apt-get install -y ca-certificates \
+    && update-ca-certificates \
+    && apt-get install -y libgoogle-perftools4 \
+    python3.9 \
+    python3-pip \
+    libboost-all-dev \
+    libprotobuf-dev \
+    liblog4cplus-2.0.5 \
+    libzmq3-dev \
+    libpqxx-dev \
+    netcat \
+    && (cd /srv/monitor_kraken && pip3 install --no-cache-dir -r requirements.txt && python3 setup.py install) \
+    && apt-get purge -y \
+    && apt-get purge -y python3-pip \
+    && apt-get autoremove -y
+
+RUN ln -s /usr/local/lib/python*/dist-packages/monitor_kraken/app.py monitor_kraken
+
+COPY docker/run_kraken_deb11.sh /srv/kraken/run_kraken.sh
+
+RUN chmod +x /srv/kraken/run_kraken.sh
+
+COPY ./docker_build/kraken/kraken /usr/bin/kraken
+RUN chmod +x /usr/bin/kraken
+
+RUN mkdir /libkeepalive
+COPY ./docker_build/build_libkeepalive/libkeepalive.so /libkeepalive/.
+
+# User timeout = 300 + 30 * 6 = 480s
+ENV KEEPIDLE=300
+ENV KEEPCNT=6
+ENV KEEPINTVL=30
+# if you are willing to use settings from os, set KEEPALIVE to off
+# ENV KEEPALIVE=Off
+
+ENV KRAKEN_GENERAL_zmq_socket=tcp://0.0.0.0:30000
+ENV KRAKEN_GENERAL_log_level=INFO
+HEALTHCHECK CMD nc -z localhost 30000 || exit 1
+EXPOSE 30000
+EXPOSE 5000
+
+
+ENTRYPOINT ["bash", "/srv/kraken/run_kraken.sh"]

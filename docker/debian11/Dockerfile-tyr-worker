@@ -1,0 +1,84 @@
+FROM debian:bullseye-slim
+
+# COPY ./source .
+
+RUN apt-get update \
+    && apt install -y python git libgeos-c1v5 libpq5 curl gcc pkg-config libssl-dev
+
+RUN curl https://bootstrap.pypa.io/pip/2.7/get-pip.py --output get-pip.py
+RUN python2 get-pip.py
+
+# Install some binaries from tartare-tools
+ENV TARTARE_TOOLS_VERSION="v0.46.0"
+ARG GITHUB_TOKEN
+RUN git config --global url."https://x-access-token:${GITHUB_TOKEN}@github.com/hove-io/".insteadOf "ssh://git@github.com/hove-io/"
+RUN git clone -b ${TARTARE_TOOLS_VERSION} --depth 1 https://x-access-token:${GITHUB_TOKEN}@github.com/hove-io/tartare-tools
+
+RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+ENV PATH="/root/.cargo/bin:$PATH"
+
+# rustc 1.80.0 broke the compilation
+RUN rustup install 1.79.0
+
+RUN cd tartare-tools \
+    && cargo +1.79.0 build --release -p enrich-ntfs-with-addresses \
+    && cargo +1.79.0 build --release -p split-trip-geometries \
+    && cp target/release/enrich-ntfs-with-addresses /usr/bin/ \
+    && cp target/release/split-trip-geometries /usr/bin/ \
+    && cd .. \
+    && rm -rf tartare-tools \
+    && mkdir /usr/src/app \
+    && mkdir /usr/src/app/tyr \
+    && cp -R source/tyr /usr/src/app/tyr
+
+# COPY navitia-common_*deb navitia-tyr_*.deb navitia-ed_*.deb  navitia-cities_*.deb  mimirsbrunn7_jessie-*.deb  cosmogony2cities_*.deb  mimirsbrunn-config-*.deb ./
+
+# # install navitia-common package
+# RUN dpkg -i ./navitia-common_*.deb || exit 0
+# # install navitia-tyr package
+# RUN dpkg -i ./navitia-tyr_*.deb || exit 0
+# # install navitia-ed package
+# RUN dpkg -i ./navitia-ed_*.deb || exit 0
+# # install navitia-cities package
+# RUN dpkg -i ./navitia-cities_*.deb || exit 0
+# # install navitia-mimirsbrunn package
+# RUN dpkg -i ./mimirsbrunn7_jessie-*.deb \
+#         # install cosmogony2cities package
+#         ./cosmogony2cities*.deb \
+#         # install conf mimir package
+#         ./mimirsbrunn-config-*.deb
+
+# RUN apt-get install -f -y --force-yes
+
+# RUN rm navitia-common_*deb \
+#     navitia-tyr_*.deb \
+#     navitia-cities_*.deb \
+#     navitia-ed_*.deb \
+#     mimirsbrunn-config-*.deb \
+#     mimirsbrunn7_jessie-*.deb \
+#     cosmogony2cities_*.deb
+
+
+WORKDIR /usr/src/app/
+
+# install tyr requirements
+RUN pip install --no-cache-dir -r /usr/src/app/tyr/requirements.txt
+
+RUN apt install -y --force-yes unzip
+RUN curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+RUN unzip awscliv2.zip
+RUN ./aws/install
+
+EXPOSE 5000
+
+# RUN cp /usr/bin/manage_tyr.py /usr/src/app/manage_tyr.py
+
+# TODO change the user to remove this ugly C_FORCE_ROOT
+ENV C_FORCE_ROOT=1
+ENV TYR_WORKER_N_PROC=1
+
+# COPY docker/run_tyr_worker.sh /usr/src/app/
+# RUN chmod +x /usr/src/app/run_tyr_worker.sh
+# ENTRYPOINT ["bash", "/usr/src/app/run_tyr_worker.sh"]
+
+ENTRYPOINT ["celery", "worker", "-A", "tyr.tasks", "-O", "fair"]
