@@ -865,5 +865,5 @@ def journey_with_booking_rule_test():
         odt_section = response_journey_with_odt.journeys[0].sections[1]
         assert (
             odt_section.booking_rule.booking_url
-            == "https://domaine/search?departure-address=stop%20a%20name%20(city)&destination-address=stop_b_name%20(city)&requested-departure-time=2024-08-06T08:05:00+0200&from_coord_lat=2.0&from_coord_lon=1.0&not_managed=N/A"
+            == "https://domaine/search?departure-address=stop%20a%20name%20(city)&destination-address=stop_b_name%20(city)&requested-departure-time=2024-08-06T08%3A05%3A00%2B0200&from_coord_lat=2.0&from_coord_lon=1.0&not_managed=N/A"
         )
