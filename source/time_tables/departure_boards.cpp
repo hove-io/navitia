@@ -66,16 +66,17 @@ static bool is_terminus_for_all_stop_times(const std::vector<routing::datetime_s
     return !stop_times.empty();
 }
 
-void update_display_information(bool& vj_found,
-                                const std::pair<unsigned int, const navitia::type::StopTime*>& dt_st,
+bool update_display_information(const navitia::type::StopTime* st,
                                 pbnavitia::PtDisplayInfo* pt_display_information,
                                 PbCreator& pb_creator) {
-    if (!vj_found && dt_st.second != nullptr) {
-        auto vj = dt_st.second->vehicle_journey;
+    if (st != nullptr) {
+        const auto* vj = st->vehicle_journey;
         pt_display_information->set_trip_short_name(vj->name);
         pt_display_information->set_headsign(pb_creator.data->pt_data->headsign_handler.get_headsign(vj));
-        vj_found = true;
+        return true;
     }
+
+    return false;
 }
 
 static void fill_date_times(PbCreator& pb_creator,
@@ -148,7 +149,9 @@ static void render(PbCreator& pb_creator,
 
         // Now we fill the date_times
         for (auto dt_st : id_vec.second) {
-            update_display_information(vj_found, dt_st, pt_display_information, pb_creator);
+            if (!vj_found) {
+                vj_found = update_display_information(dt_st.second, pt_display_information, pb_creator);
+            }
             fill_date_times(pb_creator, schedule, dt_st, calendar_id);
         }
 
@@ -211,7 +214,9 @@ static void render(PbCreator& pb_creator,
 
         // Now we fill the date_times
         for (auto dt_st : id_vec.second) {
-            update_display_information(vj_found, dt_st, pt_display_information, pb_creator);
+            if (!vj_found) {
+                vj_found = update_display_information(dt_st.second, pt_display_information, pb_creator);
+            }
             fill_date_times(pb_creator, schedule, dt_st, calendar_id);
         }
 
