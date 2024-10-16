@@ -63,4 +63,4 @@ while read var ; do
 done < <(env)
 
 
-exec celery beat -A tyr.tasks
+exec celery -A tyr.tasks beat

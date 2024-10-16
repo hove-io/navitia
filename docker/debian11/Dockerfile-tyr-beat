@@ -5,22 +5,21 @@ WORKDIR /usr/share/tyr/
 COPY ./source/navitiacommon ./navitiacommon
 COPY ./source/tyr ./tyr
 COPY ./docker/ca-certificates/*.crt /usr/local/share/ca-certificates/
-COPY ./docker/run_tyr_beat.sh ./run.sh
+COPY ./docker/run_tyr_beat.sh /run.sh
 COPY ./source/sql/alembic /usr/share/navitia/ed/alembic
 COPY ./source/sql/requirements.txt /tmp/requirements.txt
 COPY ./source/cities /usr/share/navitia/cities
 COPY ./docker/templates/* /templates/
 
+RUN chmod +x /run.sh
+
 RUN apt-get update --fix-missing \
-    && apt-get install -y --force-yes libpq5 python3.9-dev python3-pip git ca-certificates postgresql-client gettext-base jq \
+    && apt-get install -y --force-yes libgeos-dev libpq5 python3.9-dev python3-pip git ca-certificates postgresql-client gettext-base jq \
     && update-ca-certificates \
     && (cd navitiacommon && python3 setup.py install) \
     && (cd tyr && python3 setup.py install && pip3 install --no-cache-dir -U -r requirements.txt)\
     && pip3 install --no-cache-dir -U -r /tmp/requirements.txt \
-    && rm -rf navitiacommon tyr \
-    && apt-get purge -y \
-        python3-pip \
-        git \
+    && apt-get purge -y git \
     && apt-get autoremove -y
 
 ENTRYPOINT ["bash", "/run.sh"]
