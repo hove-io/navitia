@@ -57,7 +57,7 @@ class AbstractParkingPlacesProvider(six.with_metaclass(ABCMeta, object)):
                     raise Exception("Geometry shape is invalid")
                 self.boundary_shape = boundary_shape
             except Exception as e:
-                self.log.error('Error while loading boundary shape :', str(e))
+                self.log.error('Error while loading boundary shape : {}'.format(e))
                 self.log.error("Unable to parse geometry object : ", boundary_geometry)
 
     def has_boundary_shape(self):  # type () : bool
@@ -78,12 +78,12 @@ class AbstractParkingPlacesProvider(six.with_metaclass(ABCMeta, object)):
             return self.boundary_shape.contains(shapely.geometry.Point([lon, lat]))
         except KeyError as e:
             self.log.error(
-                "Coords illformed, 'poi' needs a coord dict with 'lon' and 'lat' attributes': ", str(e)
+                "Coords illformed, 'poi' needs a coord dict with 'lon' and 'lat' attributes': {}".format(e)
             )
         except ValueError as e:
-            self.log.error("Cannot convert POI's coord to float : ", str(e))
+            self.log.error("Cannot convert POI's coord to float : {}".format(e))
         except Exception as e:
-            self.log.error("Cannot find if coordinate is within shape: ", str(e))
+            self.log.error("Cannot find if coordinate is within shape: {}".format(e))
 
         return False
 

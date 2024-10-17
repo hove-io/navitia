@@ -61,7 +61,8 @@ static pt::ptime d(std::string str) {
 
 BOOST_AUTO_TEST_CASE(departureboard_test1) {
     ed::builder b("20150615", [](ed::builder& b) {
-        b.vj("A", "110011000001", "", true, "vj1", "")("stop1", "10:00"_t, "10:00"_t)("stop2", "10:30"_t, "10:30"_t);
+        b.vj("A", "110011000001", "", true, "vj1", "headsign_vj1")("stop1", "10:00"_t, "10:00"_t)("stop2", "10:30"_t,
+                                                                                                  "10:30"_t);
         b.vj("B", "110000001111", "", true, "vj2", "")("stop1", "10:10"_t, "10:10"_t)("stop2", "10:40"_t, "10:40"_t)(
             "stop3", "10:50"_t, "10:50"_t);
 
@@ -87,6 +88,8 @@ BOOST_AUTO_TEST_CASE(departureboard_test1) {
         BOOST_REQUIRE_EQUAL(resp.stop_schedules_size(), 2);
         BOOST_REQUIRE_EQUAL(resp.stop_schedules(0).date_times_size(), 1);
         BOOST_REQUIRE_EQUAL(resp.stop_schedules(1).date_times_size(), 1);
+        BOOST_REQUIRE_EQUAL(resp.stop_schedules(0).pt_display_informations().headsign(), "headsign_vj1");
+        BOOST_REQUIRE_EQUAL(resp.stop_schedules(0).pt_display_informations().trip_short_name(), "vj1");
     }
 
     // comparing terminus_schedule with above stop_schedules (function "departure_board")
@@ -103,8 +106,12 @@ BOOST_AUTO_TEST_CASE(departureboard_test1) {
         BOOST_REQUIRE_EQUAL(resp.terminus_schedules(1).date_times_size(), 1);
         BOOST_REQUIRE_EQUAL(resp.terminus_schedules(0).stop_point().uri(), "stop1");
         BOOST_REQUIRE_EQUAL(resp.terminus_schedules(0).pt_display_informations().direction(), "stop2");
+        BOOST_REQUIRE_EQUAL(resp.terminus_schedules(0).pt_display_informations().headsign(), "headsign_vj1");
+        BOOST_REQUIRE_EQUAL(resp.terminus_schedules(0).pt_display_informations().trip_short_name(), "vj1");
         BOOST_REQUIRE_EQUAL(resp.terminus_schedules(1).stop_point().uri(), "stop1");
         BOOST_REQUIRE_EQUAL(resp.terminus_schedules(1).pt_display_informations().direction(), "stop3");
+        BOOST_REQUIRE_EQUAL(resp.terminus_schedules(1).pt_display_informations().headsign(), "vj2");
+        BOOST_REQUIRE_EQUAL(resp.terminus_schedules(1).pt_display_informations().trip_short_name(), "vj2");
     }
 
     // no departure for route "A"

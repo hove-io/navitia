@@ -683,6 +683,28 @@ class TestDepartureBoard(AbstractTestFixture):
         assert display_information_route['name'] == 'line:A'
         assert display_information_route['code'] == 'A'
 
+    def test_display_informations_in_stop_schedule(self):
+        """
+        verify some attributs in display_informations of a stop_schedule
+        """
+        response = self.query_region(
+            "stop_areas/stop1/stop_schedules?from_datetime=20120615T080000&disable_geojson=true"
+        )
+        schedules = get_not_null(response, 'stop_schedules')
+        assert len(schedules) == 1, "there should be only one elt"
+        schedule = schedules[0]
+        is_valid_stop_schedule(response["stop_schedules"], self.tester, only_time=False)
+
+        display_information_route = get_not_null(schedule, 'display_informations')
+        assert display_information_route['direction'] == 'stop2'
+        assert display_information_route['label'] == 'A'
+        assert display_information_route['color'] == '289728'
+        assert display_information_route['text_color'] == 'FFD700'
+        assert display_information_route['name'] == 'line:A'
+        assert display_information_route['code'] == 'A'
+        assert display_information_route['headsign'] == 'week'
+        assert display_information_route['trip_short_name'] == 'week'
+
     def test_terminus_schedules(self):
         """
         terminus_schedules for a given date
@@ -699,6 +721,10 @@ class TestDepartureBoard(AbstractTestFixture):
         assert response["terminus_schedules"][0]["display_informations"]["direction"] == "ODTstop2"
         assert response["terminus_schedules"][0]["display_informations"]["name"] == "B"
         assert response["terminus_schedules"][0]["display_informations"]["commercial_mode"] == "Bus"
+        assert response["terminus_schedules"][0]["display_informations"]["headsign"] == "date_time_estimated"
+        assert (
+            response["terminus_schedules"][0]["display_informations"]["trip_short_name"] == "date_time_estimated"
+        )
 
     # Test on an on_demand_transport with start stop_datetime as on_demand_transport
     def test_journey_with_odt_in_start_stop_date_time(self):
