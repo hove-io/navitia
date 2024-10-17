@@ -4,7 +4,7 @@
 swagger-spec-validator==2.1.0
 mock==1.0.1
 validators==0.10
-pytest==5.4.2
+pytest==6.2.5
 pytest-mock==1.10.0
 pytest-cov==2.5.1
 requests-mock==1.0.0
