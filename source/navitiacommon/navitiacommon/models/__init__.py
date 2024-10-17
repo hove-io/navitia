@@ -774,8 +774,8 @@ class Instance(db.Model):  # type: ignore
     use_predicted_traffic = db.Column(
         db.Boolean,
         default=default_values.use_predicted_traffic,
-        nullable=False,
-        server_default=str(default_values.use_predicted_traffic),
+        nullable=True,
+        server_default=false(),
     )
 
     def __init__(self, name=None, is_free=False, authorizations=None, jobs=None):
