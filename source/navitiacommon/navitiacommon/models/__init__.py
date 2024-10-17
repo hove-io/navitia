@@ -771,6 +771,13 @@ class Instance(db.Model):  # type: ignore
         server_default=str(default_values.co2_emission_car_unit),
     )
 
+    use_predicted_traffic = db.Column(
+        db.Boolean,
+        default=default_values.use_predicted_traffic,
+        nullable=True,
+        server_default=false(),
+    )
+
     def __init__(self, name=None, is_free=False, authorizations=None, jobs=None):
         self.name = name
         self.is_free = is_free
