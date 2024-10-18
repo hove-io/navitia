@@ -1,0 +1,42 @@
+FROM 162230498103.dkr.ecr.eu-west-1.amazonaws.com/mutable-debian11_dev:latest
+
+RUN echo "deb http://archive.debian.org/debian/ bullseye main" > /etc/apt/sources.list.d/archive.list
+
+# update package list from providers
+RUN apt-get update --force-yes --fix-missing || exit 0
+
+# install postgresql-client for tyr-beat
+#         netcat for kraken
+#         curl for jormun
+RUN apt-get install -y --force-yes ca-certificates \
+        postgresql-client \
+        netcat \
+        dh-python \
+        curl \
+        wget
+
+COPY docker/ca-certificates/*.crt /usr/local/share/ca-certificates/
+RUN update-ca-certificates
+
+# install a more recent version of CMake
+RUN apt-get remove --yes cmake \
+    && cd /tmp \
+    && wget https://cmake.org/files/v3.18/cmake-3.18.6-Linux-x86_64.tar.gz \
+    && tar xf cmake-3.18.6-Linux-x86_64.tar.gz --strip-components=1 --directory=/usr/local \
+    && rm -f cmake-3.18.6-Linux-x86_64.tar.gz \
+    && cd -
+
+# Python 'requests' package handle its own CA certificate list
+# Let's force it to use the OS's list
+ENV REQUESTS_CA_BUNDLE /etc/ssl/certs/ca-certificates.crt
+
+# install rustup
+ENV RUSTUP_HOME=/usr/local/rustup \
+    CARGO_HOME=/usr/local/cargo
+
+ENV PATH=/usr/local/cargo/bin:${PATH}
+RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --no-modify-path --profile minimal \
+    && chmod -R a+wrX ${RUSTUP_HOME} ${CARGO_HOME} \
+    && rustup --version \
+    && cargo --version \
+    && rustc --version
