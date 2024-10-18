@@ -1,6 +1,7 @@
 name: Build Navitia Dockers
 
 on:
+  pull_request:
   push:
     branches:
       - dev
@@ -8,16 +9,15 @@ on:
       - '*'
 
 env:
+  front_components: 'tyr-web instances-configurator'
+  backend_components: 'kraken tyr-beat tyr-worker mock-kraken eitri'
+  backend_core_components: 'jormungandr kraken tyr-beat tyr-worker'
 
-  front_debian8_components: 'tyr-web instances-configurator'
-  backend_debian8_components: 'kraken tyr-beat tyr-worker mock-kraken eitri'
-
-  SBX_ECR_REGISTRY_BACKEND: "110444322584.dkr.ecr.eu-west-1.amazonaws.com"
-  SBX_ECR_REGISTRY_FRONT: "051314639660.dkr.ecr.eu-west-1.amazonaws.com"
+  SBX_ECR_REGISTRY_BACKEND: "110444322584.dkr.ecr.eu-west-1.amazonaws.com" # navitia-kraken-sandbox
+  SBX_ECR_REGISTRY_FRONT: "051314639660.dkr.ecr.eu-west-1.amazonaws.com" # navitia-corefront-sandbox
   PRD_ECR_REGISTRY: "162230498103.dkr.ecr.eu-west-1.amazonaws.com"
 
 jobs:
-
   common_variables:
     name: Common variables
     runs-on: [self-hosted, corefront, sandbox]
@@ -26,14 +26,12 @@ jobs:
     steps:
       - name: force chown to avoid errors
         run: sudo chown -R $USER:$USER .
-
       - name: Generate github private access token
         id: ci-core-app-token
         uses: getsentry/action-github-app-token@v2.0.0
         with:
           app_id: ${{ secrets.CI_CORE_APP_ID }}
           private_key: ${{ secrets.CI_CORE_APP_PEM }}
-
       - name: Checkout navitia
         id: checkout_navitia
         uses: actions/checkout@v3
@@ -41,13 +39,11 @@ jobs:
           token: ${{ steps.ci-core-app-token.outputs.token }}
           # we need entire history for tags
           fetch-depth: 0
-
       - name: Choose navitia tag
         id: choose_navitia_tag
         run: |
           version=$(git describe --tags)
           echo "navitia_tag=$version" >> $GITHUB_OUTPUT
-
       - name: failure notification
         if: failure()
         run: |
@@ -55,9 +51,9 @@ jobs:
           echo '{"text":":warning: Github Actions: workflow dockers_builder common_variables failed !"}' | http --json POST ${{secrets.SLACK_NAVITIA_TEAM_URL}}
 
 
-  debian11_images:
+  debian11_back_images:
     runs-on: [self-hosted, corefront, sandbox]
-    name: Build debian11 images
+    name: Build debian11 backend images
     needs: common_variables
     steps:
       - name: force chown to avoid errors
@@ -86,35 +82,49 @@ jobs:
         with:
           # 162230498103 : shared
           # 051314639660 : corefront sbx
-          registries: "162230498103,051314639660"
+          # 110444322584 : kraken sbx
+          registries: "162230498103,110444322584,051314639660"
 
-      - name: Create builder docker
+      - name: Create master&builder docker
         run: |
-          docker build -f docker/debian11/Dockerfile-builder -t navitia/builder_debian11 .
+          docker build -f docker/debian11/Dockerfile-master -t navitia/master_debian11 .
+          docker build -f docker/debian11/Dockerfile-builder-kraken -t navitia/builder_debian11 .
 
-      - name: Build navitia
+      - name: Build packages in master docker
         run: |
           docker run -v `pwd`:/navitia/navitia/  navitia/builder_debian11
 
       - name: Create navitia images
-        run: |
-          echo "*********  Building Jormungandr ***************"
-          docker build -t navitia/jormungandr_debian11 -f  docker/debian11/Dockerfile-jormungandr .
+        run:  |
+          for component in ${{env.backend_core_components}}; do
+              echo "*********  Building $component ***************"
+              docker build -t navitia/$component --build-arg GITHUB_TOKEN=${{ steps.ci-core-app-token.outputs.token }} -f  docker/debian11/Dockerfile-${component} .
+          done
 
-      - name: Push jormun dev image on SBX ECR
+      - name: Push dev images on SBX ECR
         if: github.ref == 'refs/heads/dev'
         run: |
           jormun_tag=${SBX_ECR_REGISTRY_FRONT}/jormungandr:no_config_dev
           docker tag navitia/jormungandr_debian11 ${jormun_tag}
           docker push ${jormun_tag}
 
-      - name: Push jormun release image on SBX ECR
+      - name: Push release images on PRD ECR
         if: startsWith(github.ref, 'refs/tags/')
         run: |
-          jormun_tag=${SBX_ECR_REGISTRY_FRONT}/jormungandr:no_config_${{ needs.common_variables.outputs.RELEASE_TAG }}
-          docker tag navitia/jormungandr_debian11 ${jormun_tag}
-          docker push ${jormun_tag}
+          # Kraken
+          kraken_tag=${PRD_ECR_REGISTRY}/navitia-debian11-kraken-kraken:${{ needs.common_variables.outputs.RELEASE_TAG }}
+          docker tag navitia/kraken ${kraken_tag}
+          docker push ${kraken_tag}
 
+          # Tyr-beat
+          tyr_beat_tag=${PRD_ECR_REGISTRY}/navitia-debian11-tyr-tyrbeat:${{ needs.common_variables.outputs.RELEASE_TAG }}
+          docker tag navitia/tyr-beat ${tyr_beat_tag}
+          docker push ${tyr_beat_tag}
+
+          # Tyr-worker
+          tyr_worker_tag=${PRD_ECR_REGISTRY}/navitia-debian11-tyr-tyrworker:${{ needs.common_variables.outputs.RELEASE_TAG }}
+          docker tag navitia/tyr-worker ${tyr_worker_tag}
+          docker push ${tyr_worker_tag}
 
       - name: failure notification
         if: failure()
@@ -128,6 +138,84 @@ jobs:
           sudo chown -R $USER:$USER .
           rm -rf ./*
           rm -rf ./.??*
+
+
+  debian11_front_images:
+    runs-on: [self-hosted, corefront, sandbox]
+    name: Build debian11 front images
+    needs: common_variables
+    steps:
+      - name: force chown to avoid errors
+        run: sudo chown -R $USER:$USER .
+
+      - name: Git config
+        run: git config --global --add safe.directory /__w/navitia/navitia
+
+      - name: Generate github private access token
+        id: ci-core-app-token
+        uses: getsentry/action-github-app-token@v2.0.0
+        with:
+          app_id: ${{ secrets.CI_CORE_APP_ID }}
+          private_key: ${{ secrets.CI_CORE_APP_PEM }}
+
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          submodules: recursive
+          token: ${{ steps.ci-core-app-token.outputs.token }}
+
+      - name: Login to Amazon ECR
+        uses: aws-actions/amazon-ecr-login@v1
+        env:
+          AWS_REGION: eu-west-1
+        with:
+          # 162230498103 : shared
+          # 051314639660 : corefront sbx
+          # 110444322584 : kraken sbx
+          registries: "162230498103,110444322584,051314639660"
+
+      - name: Create master&builder docker
+        run: |
+          docker build -f docker/debian11/Dockerfile-master -t navitia/master_debian11 .
+          docker build -f docker/debian11/Dockerfile-builder -t navitia/builder_debian11 .
+
+      - name: Build packages in master docker
+        run: |
+          docker run -v `pwd`:/navitia/navitia/  navitia/builder_debian11
+
+      - name: Create navitia images
+        run:  |
+          echo "*********  Building Tyr Web ***************"
+          docker build -t navitia/tyr-web --build-arg GITHUB_TOKEN=${{ steps.ci-core-app-token.outputs.token }} -f  docker/debian11/Dockerfile-tyr-web .
+
+      - name: Push dev images on SBX ECR
+        if: github.ref == 'refs/heads/dev'
+        run: |
+          component_tag=${SBX_ECR_REGISTRY_FRONT}/tyr-web:dev
+          docker tag navitia/tyr-web${component_tag}
+          docker push ${component_tag}
+
+      - name: Push release images on PRD ECR
+        if: startsWith(github.ref, 'refs/tags/')
+        run: |
+          # Tyr-web
+          tyr_web_tag=${PRD_ECR_REGISTRY}/navitia-tyr-web-tyr-web:${{ needs.common_variables.outputs.RELEASE_TAG }}
+          docker tag navitia/tyr-web ${tyr_web_tag}
+          docker push ${tyr_web_tag}
+
+      - name: failure notification
+        if: failure()
+        run: |
+          echo '{"text":":warning: Github Actions: workflow dockers_builder debian11_images failed !"}' | http --json POST ${{secrets.SLACK_NAVITIA_TEAM_URL}}
+
+      - name: clean up workspace
+        if: ${{ always() }}
+        run: |
+          # some files are created by a docker container
+          sudo chown -R $USER:$USER .
+          rm -rf ./*
+          rm -rf ./.??*
+
 
   debian8_back_images:
     runs-on: [self-hosted, kraken, sandbox]
@@ -200,7 +288,7 @@ jobs:
 
       - name: Create navitia images
         run: |
-          for component in ${{env.backend_debian8_components}}; do
+          for component in ${{env.backend_components}}; do
               echo "*********  Building $component ***************"
               docker build -t navitia/$component --build-arg GITHUB_TOKEN=${{ steps.ci-core-app-token.outputs.token }} -f  docker/debian8/Dockerfile-${component} .
           done
@@ -208,7 +296,7 @@ jobs:
       - name: Push dev images on SBX ECR
         if: github.ref == 'refs/heads/dev'
         run: |
-          for component in ${{env.backend_debian8_components}}; do
+          for component in ${{env.backend_components}}; do
             component_tag=${SBX_ECR_REGISTRY_BACKEND}/${component}:dev
             docker tag navitia/$component ${component_tag}
             docker push ${component_tag}
@@ -231,9 +319,6 @@ jobs:
           tyr_worker_tag=${PRD_ECR_REGISTRY}/navitia-tyr-tyrworker:${{ needs.common_variables.outputs.RELEASE_TAG }}
           docker tag navitia/tyr-worker ${tyr_worker_tag}
           docker push ${tyr_worker_tag}
-
-
-
 
       - name: failure notification
         if: failure()
@@ -273,7 +358,6 @@ jobs:
           submodules: recursive
           token: ${{ steps.ci-core-app-token.outputs.token }}
 
-
       - name: Login to Amazon ECR
         uses: aws-actions/amazon-ecr-login@v1
         env:
@@ -294,7 +378,7 @@ jobs:
 
       - name: Create navitia images
         run: |
-          for component in ${{env.front_debian8_components}}; do
+          for component in ${{env.front_components}}; do
               echo "*********  Building $component ***************"
               docker build -t navitia/$component -f  docker/debian8/Dockerfile-${component} .
           done
@@ -302,7 +386,7 @@ jobs:
       - name: Push dev images on SBX ECR
         if: github.ref == 'refs/heads/dev'
         run: |
-          for component in ${{env.front_debian8_components}}; do
+          for component in ${{env.front_components}}; do
               component_tag=${SBX_ECR_REGISTRY_FRONT}/${component}:dev
               docker tag navitia/$component ${component_tag}
               docker push ${component_tag}
@@ -331,53 +415,49 @@ jobs:
           rm -rf ./.??*
 
 
+  # publish_aws:
+  #   runs-on: [self-hosted, corefront, sandbox]
+  #   name: Aws Dispatch (Dev)
+  #   needs: [debian8_front_images, debian8_back_images, debian11_images, common_variables]
+  #   steps:
+  #     - name: Generate token for aws images
+  #       id: app-token
+  #       uses: getsentry/action-github-app-token@v2.0.0
+  #       with:
+  #         app_id: ${{ secrets.GA_OS_WORKFLOW_TRIGGER_APP_ID }}
+  #         private_key: ${{ secrets.GA_OS_WORKFLOW_TRIGGER_APP_PEM }}
 
-  publish_aws:
-    runs-on: [self-hosted, corefront, sandbox]
-    name: Aws Dispatch (Dev)
-    needs: [debian8_front_images, debian8_back_images, debian11_images, common_variables]
-    steps:
+  #     - name: Aws Dispatch Frontend for dev
+  #       if: github.ref == 'refs/heads/dev'
+  #       uses: peter-evans/repository-dispatch@v2
+  #       with:
+  #         token: ${{ steps.app-token.outputs.token }}
+  #         repository: hove-io/corefront-aws-assets
+  #         event-type: build-trigger
+  #         client-payload: '{"branch": "dev", "tag": "dev"}'
 
-      - name: Generate token for aws images
-        id: app-token
-        uses: getsentry/action-github-app-token@v2.0.0
-        with:
-          app_id: ${{ secrets.GA_OS_WORKFLOW_TRIGGER_APP_ID }}
-          private_key: ${{ secrets.GA_OS_WORKFLOW_TRIGGER_APP_PEM }}
+  #     - name: Aws Dispatch Frontend for release
+  #       if: startsWith(github.ref, 'refs/tags/')
+  #       uses: peter-evans/repository-dispatch@v2
+  #       with:
+  #         token: ${{ steps.app-token.outputs.token }}
+  #         repository: hove-io/corefront-aws-assets
+  #         event-type: build-trigger
+  #         client-payload: '{"branch": "release", "tag": "${{ needs.common_variables.outputs.RELEASE_TAG }}"}'
 
-      - name: Aws Dispatch Frontend for dev
-        if: github.ref == 'refs/heads/dev'
-        uses: peter-evans/repository-dispatch@v2
-        with:
-          token: ${{ steps.app-token.outputs.token }}
-          repository: hove-io/corefront-aws-assets
-          event-type: build-trigger
-          client-payload: '{"branch": "dev", "tag": "dev"}'
-
-      - name: Aws Dispatch Frontend for release
-        if: startsWith(github.ref, 'refs/tags/')
-        uses: peter-evans/repository-dispatch@v2
-        with:
-          token: ${{ steps.app-token.outputs.token }}
-          repository: hove-io/corefront-aws-assets
-          event-type: build-trigger
-          client-payload: '{"branch": "release", "tag": "${{ needs.common_variables.outputs.RELEASE_TAG }}"}'
-
-
-      - name: failure notification
-        if: failure()
-        run: |
-          sudo apt update && sudo apt install -y httpie
-          echo '{"text":":warning: Github Actions: dockers_builder the job publish_aws failed !"}' | http --json POST ${{secrets.SLACK_NAVITIA_TEAM_URL}}
+  #     - name: failure notification
+  #       if: failure()
+  #       run: |
+  #         sudo apt update && sudo apt install -y httpie
+  #         echo '{"text":":warning: Github Actions: dockers_builder the job publish_aws failed !"}' | http --json POST ${{secrets.SLACK_NAVITIA_TEAM_URL}}
 
 
   run_artemis:
     runs-on: [self-hosted, corefront, sandbox]
-    needs: [publish_aws]
+    needs: [debian11_back_images, debian11_front_images]
     name: Run artemis Dispatch (Dev)
     if: github.ref == 'refs/heads/dev'
     steps:
-
       - name: Generate github private access token
         id: ci-core-app-token
         uses: getsentry/action-github-app-token@v2.0.0
