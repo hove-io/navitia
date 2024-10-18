@@ -58,7 +58,7 @@ class AbstractParkingPlacesProvider(six.with_metaclass(ABCMeta, object)):
                 self.boundary_shape = boundary_shape
             except Exception as e:
                 self.log.error('Error while loading boundary shape : {}'.format(e))
-                self.log.error("Unable to parse geometry object : ", boundary_geometry)
+                self.log.error("Unable to parse geometry object : {}".format(boundary_geometry))
 
     def has_boundary_shape(self):  # type () : bool
         return hasattr(self, 'boundary_shape') and self.boundary_shape != None

@@ -254,6 +254,8 @@ loki_pt_journey_fare_configurations = dict()  # type: dict
 co2_emission_car_value = 184.0  # gEC by Km
 co2_emission_car_unit = 'gEC'
 
+use_predicted_traffic = False
+
 
 def get_value_or_default(attr, instance, instance_name):
     if not instance or getattr(instance, attr, None) == None:
