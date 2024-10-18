@@ -5,6 +5,14 @@ mkdir -p docker_build && cd docker_build
 cmake -DCMAKE_BUILD_TYPE=Release ../source
 make -j$(($(grep -c '^processor' /proc/cpuinfo)+1)) protobuf_files
 make -j$(($(grep -c '^processor' /proc/cpuinfo)+1)) kraken
+make -j$(($(grep -c '^processor' /proc/cpuinfo)+1)) cities
+make -j$(($(grep -c '^processor' /proc/cpuinfo)+1)) ed2nav
+make -j$(($(grep -c '^processor' /proc/cpuinfo)+1)) fare2ed
+make -j$(($(grep -c '^processor' /proc/cpuinfo)+1)) fusio2ed
+make -j$(($(grep -c '^processor' /proc/cpuinfo)+1)) geopal2ed
+make -j$(($(grep -c '^processor' /proc/cpuinfo)+1)) gtfs2ed
+make -j$(($(grep -c '^processor' /proc/cpuinfo)+1)) osm2ed
+make -j$(($(grep -c '^processor' /proc/cpuinfo)+1)) poi2ed
 
 # Build libkeepalive https://libkeepalive.sourceforge.net/
 # libkeepalive is a library to keep tcp connection alive. The reason of doing so is that aws LoadBalancer, to which
