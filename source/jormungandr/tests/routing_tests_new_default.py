@@ -248,7 +248,7 @@ class TestJourneysNewDefault(
         assert 'car_direct_path' in response['context']
         assert 'co2_emission' in response['context']['car_direct_path']
 
-        assert pytest.approx(52.591, response['context']['car_direct_path']['co2_emission']['value'], 0.001)
+        assert 52.591 == pytest.approx(response['context']['car_direct_path']['co2_emission']['value'], 0.001)
         assert response['context']['car_direct_path']['co2_emission']['unit'] == 'gEC'
         assert response['context']['car_direct_path']['air_pollutants']['values']['nox'] == 0.0932
         assert response['context']['car_direct_path']['air_pollutants']['values']['pm'] == 0.0119
