@@ -1,0 +1,80 @@
+name: Build Navitia Dockers with Debian 11
+
+on:
+  push:
+    branches:
+      - dev
+    tags:
+      - '*'
+jobs:
+  common_variables:
+    name: Common variables
+    runs-on: [self-hosted, kraken, sandbox]
+    outputs:
+      RELEASE_TAG: ${{ steps.choose_navitia_tag.outputs.navitia_tag }}
+    steps:
+      - name: force chown to avoid errors
+        run: sudo chown -R $USER:$USER .
+
+#       - name: Generate github private access token
+#         id: ci-core-app-token
+#         uses: getsentry/action-github-app-token@v2.0.0
+#         with:
+#           app_id: ${{ secrets.CI_CORE_APP_ID }}
+#           private_key: ${{ secrets.CI_CORE_APP_PEM }}
+
+#       - name: Checkout navitia
+#         id: checkout_navitia
+#         uses: actions/checkout@v3
+#         with:
+#           token: ${{ steps.ci-core-app-token.outputs.token }}
+#           # we need entire history for tags
+#           fetch-depth: 0
+
+#       - name: Choose navitia tag
+#         id: choose_navitia_tag
+#         run: |
+#           version=$(git describe --tags)
+#           echo "navitia_tag=$version" >> $GITHUB_OUTPUT
+
+#   debian11_kraken_image:
+#     runs-on: [self-hosted, kraken, sandbox]
+#     name: Build debian11 kraken image
+#     needs: common_variables
+#     steps:
+#       - name: force chown to avoid errors
+#         run: sudo chown -R $USER:$USER .
+
+#       - name: Git config
+#         run: git config --global --add safe.directory /__w/navitia/navitia
+
+#       - name: Generate github private access token
+#         id: ci-core-app-token
+#         uses: getsentry/action-github-app-token@v2.0.0
+#         with:
+#           app_id: ${{ secrets.CI_CORE_APP_ID }}
+#           private_key: ${{ secrets.CI_CORE_APP_PEM }}
+
+#       - name: Checkout
+#         uses: actions/checkout@v3
+#         with:
+#           submodules: recursive
+#           token: ${{ steps.ci-core-app-token.outputs.token }}
+
+#       - name: Login to Amazon ECR
+#         uses: aws-actions/amazon-ecr-login@v1
+#         env:
+#           AWS_REGION: eu-west-1
+#         with:
+#           registries: "162230498103"
+
+#       - name: Create builder docker
+#         run: |
+#           docker build -f docker/debian11/Dockerfile-builder-kraken -t navitia/builder .
+
+#       - name: Build Kraken
+#         run: docker run -v `pwd`:/navitia/navitia/  navitia/builder
+
+#       - name: Create Kraken image
+#         run: |
+#             docker build -t navitia/kraken -f  docker/debian11/Dockerfile-kraken .
