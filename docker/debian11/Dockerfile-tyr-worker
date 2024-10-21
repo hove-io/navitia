@@ -1,0 +1,66 @@
+# Compilation of rust binaries from tartare-tools
+FROM rust:1.82-bullseye AS tartare-tools
+
+ARG TARTARE_TOOLS_VERSION="v0.46.0"
+ARG GITHUB_TOKEN
+RUN git config --global url."https://x-access-token:${GITHUB_TOKEN}@github.com/hove-io/".insteadOf "ssh://git@github.com/hove-io/"
+RUN git clone -b ${TARTARE_TOOLS_VERSION} --depth 1 https://x-access-token:${GITHUB_TOKEN}@github.com/hove-io/tartare-tools
+
+RUN cd tartare-tools \
+    && cargo  build --release -p enrich-ntfs-with-addresses \
+    && cargo  build --release -p split-trip-geometries \
+    && cp target/release/enrich-ntfs-with-addresses /usr/bin/ \
+    && cp target/release/split-trip-geometries /usr/bin/ \
+    && cd .. \
+    && rm -rf tartare-tools
+
+FROM debian:bullseye-slim
+
+WORKDIR /usr/src/app/
+
+COPY ./source/navitiacommon ./navitiacommon
+COPY ./source/tyr ./tyr
+COPY ./docker/run_tyr_worker.sh /usr/src/app/run.sh
+RUN chmod +x /usr/src/app/run.sh
+
+COPY mimirsbrunn7_bullseye-*.deb  cosmogony2cities_*.deb  mimirsbrunn-config-*.deb ./
+
+RUN apt-get update --fix-missing \
+    && apt-get install -y --force-yes unzip curl libgeos-dev libpq5 python3.9 python3-pip git ca-certificates postgresql-client gettext-base jq \
+    libboost-all-dev \
+    libprotobuf-dev \
+    liblog4cplus-2.0.5 \
+    libzmq3-dev \
+    libpqxx-dev \
+    libgoogle-perftools4 \
+    libosmpbf-dev \
+    libproj-dev \
+    ./mimirsbrunn7_bullseye-*.deb ./cosmogony2cities_*.deb ./mimirsbrunn-config-*.deb \
+    && update-ca-certificates \
+    && curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip" \
+    && unzip awscliv2.zip && ./aws/install \
+    && (cd navitiacommon && python3 setup.py install) \
+    && (cd tyr && python3 setup.py install && pip3 install --no-cache-dir -U -r requirements.txt)\
+    && rm -rf ./mimirsbrunn7_bullseye-*.deb ./cosmogony2cities*.deb ./mimirsbrunn-config-*.deb \
+    && apt-get purge -y git python3-pip \
+    && apt-get autoremove -y
+
+# binaries from tartare-tools
+COPY --from=tartare-tools /usr/bin/enrich-ntfs-with-addresses /usr/bin/
+COPY --from=tartare-tools /usr/bin/split-trip-geometries /usr/bin/
+
+# binaries from navitia
+COPY ./docker_build/cities/cities /usr/bin/cities
+COPY ./docker_build/ed/ed2nav /usr/bin/ed2nav
+COPY ./docker_build/ed/fare2ed /usr/bin/fare2ed
+COPY ./docker_build/ed/fusio2ed /usr/bin/fusio2ed
+COPY ./docker_build/ed/geopal2ed /usr/bin/geopal2ed
+COPY ./docker_build/ed/gtfs2ed /usr/bin/gtfs2ed
+COPY ./docker_build/ed/osm2ed osm2ed
+COPY ./docker_build/ed/poi2ed poi2ed
+
+# TODO change the user to remove this ugly C_FORCE_ROOT
+ENV C_FORCE_ROOT=1
+ENV TYR_WORKER_N_PROC=1
+
+ENTRYPOINT ["bash", "/usr/src/app/run.sh"]

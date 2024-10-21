@@ -29,13 +29,17 @@
 
 from flask import Flask, request
 import json
-from ConfigParser import ConfigParser
 import zmq
 import os
 
 from monitor_kraken import request_pb2
 from monitor_kraken import response_pb2
 from monitor_kraken import type_pb2
+
+try:
+    import ConfigParser
+except ImportError:
+    import configparser as ConfigParser  # type: ignore
 
 app = Flask(__name__)
 # config used in monitor() for several kraken
@@ -217,4 +221,4 @@ def request_kraken_zmq_status(zmq_socket, zmq_timeout_in_ms):
 
 
 if __name__ == '__main__':
-    app.run(host=os.environ.get("MONITOR_HOST", "127.0.0.1"))
+    app.run(host=os.environ.get("MONITOR_HOST", "0.0.0.0"))
