@@ -39,7 +39,7 @@ A disruption is present in the response of the endpoints described if the reques
 
 Several public transport objects have separate collections for `base_schedule` and `realtime`.<br>So the data_freshness parameter may affect the number of objects returned depending on the request.
 
-For example when looking for a specific circulation with the collection vehicle_journey using the request:<br>`http://api.navitia.io/v1/coverage/<toto>/vehicle_journeys?since=20191008T100000&until=20191008T200000&data_freshness=base_schedule`.
+For example when looking for a specific circulation with the collection vehicle_journey using the request:<br>`https://api.navitia.io/v1/coverage/<toto>/vehicle_journeys?since=20191008T100000&until=20191008T200000&data_freshness=base_schedule`.
 
 A vehicle_journey circulating between since and until that is **fully deleted** (NO_SERVICE) by a disruption will
 of course be **visible** if `data_freshness=base_schedule`.<br>But it **will not appear** with the parameter `data_freshness=realtime` as it does not exist in that collection.
@@ -85,7 +85,7 @@ See the [disruption](#disruption) objects section for its full content and descr
 
 ``` shell
 # Request example for /journeys
-http://api.navitia.io/v1/coverage/<coverage>/journeys?from=<origin>&to=<destination>&data_freshness=realtime
+https://api.navitia.io/v1/coverage/<coverage>/journeys?from=<origin>&to=<destination>&data_freshness=realtime
 ```
 
 ``` shell
@@ -165,7 +165,7 @@ A list of the disruptions impacting the journey is also present at the root leve
 
 ``` shell
 # Request example for /departures (data_freshness=realtime by default)
-http://api.navitia.io/v1/coverage/<coverage>/physical_modes/<physical_mode>/stop_areas/<stop_area>/departures?from_datetime=<from_date>&data_freshness=realtime
+https://api.navitia.io/v1/coverage/<coverage>/physical_modes/<physical_mode>/stop_areas/<stop_area>/departures?from_datetime=<from_date>&data_freshness=realtime
 ```
 
 ``` shell
@@ -220,7 +220,7 @@ A list of the disruptions impacting the departures is also present at the root l
 
 ``` shell
 # Request example for /stop_schedules (data_freshness=realtime by default)
-http://api.navitia.io/v1/coverage/<coverage>/physical_modes/<physical_mode>/lines/<line>/stop_areas/<stop_area>/stop_schedules?from_datetime=<from_date>&data_freshness=realtime
+https://api.navitia.io/v1/coverage/<coverage>/physical_modes/<physical_mode>/lines/<line>/stop_areas/<stop_area>/stop_schedules?from_datetime=<from_date>&data_freshness=realtime
 ```
 
 ``` shell
@@ -365,7 +365,7 @@ In the disruption, new stop points can be found in the list of "impacted_stops" 
 
 ``` shell
 # Request example for /journeys
-http://api.navitia.io/v1/coverage/<coverage>/journeys?from=<origin>&to=<destination>&data_freshness=realtime
+https://api.navitia.io/v1/coverage/<coverage>/journeys?from=<origin>&to=<destination>&data_freshness=realtime
 ```
 
 ``` shell
@@ -464,7 +464,7 @@ In the disruption, every stops served by the new train can be found in the list 
 
 ``` shell
 # Request example for /journeys
-http://api.navitia.io/v1/coverage/<coverage>/journeys?from=<origin>&to=<destination>&data_freshness=realtime
+https://api.navitia.io/v1/coverage/<coverage>/journeys?from=<origin>&to=<destination>&data_freshness=realtime
 ```
 
 ``` shell
@@ -567,7 +567,7 @@ When requesting a journey that was previously disrupted and is now back to norma
 
 ``` shell
 # Request example for /departures (data_freshness=realtime by default)
-http://api.navitia.io/v1/coverage/<coverage>/physical_modes/<physical_mode>/stop_areas/<stop_area>/departures?from_datetime=<from_date>&data_freshness=realtime
+https://api.navitia.io/v1/coverage/<coverage>/physical_modes/<physical_mode>/stop_areas/<stop_area>/departures?from_datetime=<from_date>&data_freshness=realtime
 ```
 
 ``` shell
@@ -613,7 +613,7 @@ No disruption is present at the root level of the response and so, in the sectio
 
 ``` shell
 # Request example for /stop_schedules (data_freshness=realtime by default)
-http://api.navitia.io/v1/coverage/<coverage>/physical_modes/<physical_mode>/lines/<line>/stop_areas/<stop_area>/stop_schedules?from_datetime=<from_date>&data_freshness=realtime
+https://api.navitia.io/v1/coverage/<coverage>/physical_modes/<physical_mode>/lines/<line>/stop_areas/<stop_area>/stop_schedules?from_datetime=<from_date>&data_freshness=realtime
 ```
 
 ``` shell
@@ -651,7 +651,7 @@ No disruption is present at the root level of the response and so, in the sectio
 
 ``` shell
 # Request example for /terminus_schedules (data_freshness=base_schedule by default)
-http://api.navitia.io/v1/coverage/<coverage>/physical_modes/<physical_mode>/lines/<line>/stop_areas/<stop_area>/terminus_schedules?from_datetime=<from_date>&data_freshness=realtime
+https://api.navitia.io/v1/coverage/<coverage>/physical_modes/<physical_mode>/lines/<line>/stop_areas/<stop_area>/terminus_schedules?from_datetime=<from_date>&data_freshness=realtime
 ```
 
 ``` shell
