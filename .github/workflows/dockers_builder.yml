@@ -118,7 +118,6 @@ jobs:
 
       - name: Create builder docker image
         run: |
-          docker build -f docker/debian11/Dockerfile-master -t navitia/master_debian11 .
           docker build -f docker/debian11/Dockerfile-builder-kraken -t navitia/builder_debian11 .
 
       - name: Build packages in master docker
