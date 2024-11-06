@@ -1000,7 +1000,7 @@ class Instance(flask_restful.Resource):
         parser.add_argument(
             'use_predicted_traffic',
             type=inputs.boolean,
-            help='whether or not use predicted traffic',
+            help='whether or not use predicted traffic for asgard',
             location=('json', 'values'),
             default=instance.use_predicted_traffic,
         )
