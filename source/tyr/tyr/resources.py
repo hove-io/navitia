@@ -997,6 +997,14 @@ class Instance(flask_restful.Resource):
             default=instance.co2_emission_car_unit,
         )
 
+        parser.add_argument(
+            'use_predicted_traffic',
+            type=inputs.boolean,
+            help='whether or not use predicted traffic',
+            location=('json', 'values'),
+            default=instance.use_predicted_traffic,
+        )
+
         args = parser.parse_args()
 
         try:
@@ -1098,6 +1106,7 @@ class Instance(flask_restful.Resource):
                         'additional_parameters',
                         'co2_emission_car_value',
                         'co2_emission_car_unit',
+                        'use_predicted_traffic',
                     ],
                 ),
                 maxlen=0,
