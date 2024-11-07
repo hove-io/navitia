@@ -854,6 +854,13 @@ class JourneyCommon(ResourceUri, ResourceUtc):
             hidden=True,
             help="whether or not to use predicted/historical traffic data for routing, it affects only car/car_no_park mode in Asgard",
         )
+        parser_get.add_argument(
+            "_use_zonal_odt",
+            type=BooleanType(),
+            default=True,
+            hidden=True,
+            help="only available for Loki: " "Use zonal ODT in fallback.",
+        )
 
     def parse_args(self, region=None, uri=None):
         args = self.parsers['get'].parse_args()

@@ -1072,6 +1072,7 @@ def create_journeys_request(origins, destinations, datetime, clockwise, journey_
 
     ####################
     # for loki
+    req.journeys._use_zonal_odt = journey_parameters.use_zonal_odt
     req.journeys.use_heuristic = journey_parameters.use_heuristic
     if (
         journey_parameters.departure_coord

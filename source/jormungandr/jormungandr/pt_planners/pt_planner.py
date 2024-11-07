@@ -76,6 +76,7 @@ class JourneyParameters(object):
         olympic_site_params=None,
         language="fr-FR",
         use_heuristic=False,
+        use_zonal_odt=True,
         departure_coord=None,
         arrival_coord=None,
         global_max_speed=None,
@@ -103,6 +104,7 @@ class JourneyParameters(object):
         self.olympic_site_params = olympic_site_params or {}
         self.language = language
         self.use_heuristic = use_heuristic
+        self.use_zonal_odt = use_zonal_odt
         self.departure_coord = departure_coord
         self.arrival_coord = arrival_coord
         self.global_max_speed = global_max_speed
