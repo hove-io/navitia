@@ -589,6 +589,16 @@ class Scenario(new_default.Scenario):
                 'additional_time_before_last_section_taxi'
             ] = instance.additional_time_after_first_section_taxi
 
+        if request.get('additional_time_after_first_section_bike') is None:
+            request[
+                'additional_time_after_first_section_bike'
+            ] = instance.additional_time_after_first_section_bike
+
+        if request.get('additional_time_before_last_section_bike') is None:
+            request[
+                'additional_time_before_last_section_bike'
+            ] = instance.additional_time_before_last_section_bike
+
         krakens_call = set({(request["origin_mode"][0], request["destination_mode"][0], "indifferent")})
         pt_object_origin = None
         pt_object_destination = None

@@ -1,6 +1,4 @@
-# encoding: utf-8
-
-#  Copyright (c) 2001-2022, Hove and/or its affiliates. All rights reserved.
+# Copyright (c) 2001-2024, Hove and/or its affiliates. All rights reserved.
 #
 # This file is part of Navitia,
 #     the software to build cool stuff with public transport.
@@ -28,17 +26,50 @@
 # channel `#navitia` on riot https://riot.im/app/#/room/#navitia:matrix.org
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
+#
+#
 
-from __future__ import absolute_import, print_function, unicode_literals, division
 
-from jormungandr.street_network.asgard import Asgard
-from jormungandr.street_network.geovelo import Geovelo
-from jormungandr.street_network.here import Here
-from jormungandr.street_network.kraken import Kraken
-from jormungandr.street_network.ridesharing import Ridesharing
-from jormungandr.street_network.taxi import Taxi
-from jormungandr.street_network.with_parking import WithParking
-from jormungandr.street_network.car_with_park import CarWithPark
-from jormungandr.street_network.handimap import Handimap
-from jormungandr.street_network.andyamo import Andyamo
-from jormungandr.street_network.bike import Bike
+from enum import Enum
+from navitiacommon import response_pb2
+
+
+
+class ParkModes(Enum):
+    none = response_pb2.None
+    without_park = response_pb2.WithoutPark
+    with_park = response_pb2.WithPark
+
+
+    @classmethod
+    def modes_str(cls):
+
+        return {e.name for e in cls}
+
+
+    @classmethod
+    def modes_enum(cls):
+        return set(cls)
+
+
+    @classmethod
+    def get_allowed_combinations_enums(cls):
+        def _combi(first_sections_modes, last_section_modes):
+            from itertools import product
+
+            # cartesian product between two iterables
+            return set(product(first_sections_modes, last_section_modes))
+
+        return _combi(cls.modes_enum(), cls.modes_enum())
+
+
+    @classmethod
+    def get_allowed_combinations_str(cls):
+        # python 2/3 portability
+        import six
+        allowed_combinations_enum = cls.get_allowed_combinations_enums()
+        # transform all enum to str
+        return set(six.moves.map(lambda modes: (modes[0].name, modes[1].name), allowed_combinations_enum))
+
+
+all_park_modes = ParkModes.modes_str()
