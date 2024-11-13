@@ -712,6 +712,22 @@ class Instance(flask_restful.Resource):
         )
 
         parser.add_argument(
+            'additional_time_before_first_section_bike',
+            type=int,
+            help='additional time after the bike section when used as first section mode',
+            location=('json', 'values'),
+            default=instance.additional_time_before_first_section_bike
+        )
+
+        parser.add_argument(
+            'additional_time_before_last_section_bike',
+            type=int,
+            help='additional time before the bike section when used as first section mode',
+            location=('json', 'values'),
+            default=instance.additional_time_before_first_section_bike
+        )
+
+        parser.add_argument(
             'max_additional_connections',
             type=int,
             help='maximum number of connections allowed in journeys',
@@ -1058,6 +1074,8 @@ class Instance(flask_restful.Resource):
                         'autocomplete_backend',
                         'additional_time_after_first_section_taxi',
                         'additional_time_before_last_section_taxi',
+                        'additional_time_after_first_section_bike',
+                        'additional_time_after_last_section_bike',
                         'max_additional_connections',
                         'car_park_provider',
                         'street_network_car',

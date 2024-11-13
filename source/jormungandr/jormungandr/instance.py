@@ -820,6 +820,10 @@ class Instance(transient_socket.TransientSocket):
     additional_time_after_first_section_taxi = _make_property_getter('additional_time_after_first_section_taxi')
     additional_time_before_last_section_taxi = _make_property_getter('additional_time_before_last_section_taxi')
 
+    additional_time_after_first_section_bike = _make_property_getter('additional_time_after_first_section_bike')
+    additional_time_before_last_section_bike = _make_property_getter('additional_time_before_last_section_bike')
+
+
     max_walking_direct_path_duration = _make_property_getter('max_walking_direct_path_duration')
     max_bike_direct_path_duration = _make_property_getter('max_bike_direct_path_duration')
     max_bss_direct_path_duration = _make_property_getter('max_bss_direct_path_duration')

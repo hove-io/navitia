@@ -30,7 +30,7 @@
 # www.navitia.io
 
 from __future__ import absolute_import, print_function, unicode_literals, division
-from jormungandr import i_manager, fallback_modes, partner_services, app
+from jormungandr import i_manager, fallback_modes, partner_services, app, park_modes
 from jormungandr.interfaces.v1.ResourceUri import ResourceUri
 from datetime import datetime
 from jormungandr.resources_utils import ResourceUtc
@@ -238,6 +238,14 @@ class JourneyCommon(ResourceUri, ResourceUtc):
             dest="destination_mode",
             action="append",
             help='Same as first_section_mode but for the last section.',
+        )
+
+        parser_get.add_argument(
+            "park_mode[]",
+            type=OptionValue(park_modes.all_park_modes),
+            dest="origin_mode",
+            action="append",
+            help='Force the park mode if the first section is by bike\n'
         )
         # for retrocompatibility purpose, we duplicate (without []):
         parser_get.add_argument(
@@ -506,6 +514,20 @@ class JourneyCommon(ResourceUri, ResourceUtc):
             type=int,
             help="the additional time added to the taxi section, right before riding the taxi but after hopping off the public transit",
         )
+
+
+        parser_get.add_argument(
+            "additional_time_after_first_section_bike",
+            type=int,
+            help="the additional time added to the bike section, right after riding the bike but before hopping on the public transit",
+        )
+
+        parser_get.add_argument(
+            "additional_time_before_last_section_bike",
+            type=int,
+            help="the additional time added to the bike section, right before riding the bike but after hopping off the public transit",
+        )
+
         parser_get.add_argument(
             "_pt_planner",
             type=OptionValue(['kraken', 'loki']),
