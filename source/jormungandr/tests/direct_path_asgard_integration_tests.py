@@ -440,8 +440,7 @@ class TestAsgardDirectPath(AbstractTestFixture):
 
         assert len(response['journeys']) == len(DIRECT_PATH_ALTERNATIVES_PROFILES)
 
-    def \
-            test_journey_bss_with_direct_path(self):
+    def test_journey_bss_with_direct_path(self):
         """
         we only want direct path
         """

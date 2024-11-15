@@ -197,7 +197,7 @@ def ouestgo_basic_test():
         request_dates = utils.RequestDates(
             departure_datetime=utils.make_timestamp_from_str("20221121T084122"),
             arrival_datetime=utils.make_timestamp_from_str("20221121T084122"),
-            represents_start=True
+            represents_start=True,
         )
         ridesharing_journeys, feed_publisher = ouestgo.request_journeys_with_feed_publisher(
             from_coord=from_coord,
@@ -251,7 +251,7 @@ def test_request_journeys_should_raise_on_non_200():
                 utils.RequestDates(
                     departure_datetime=utils.make_timestamp_from_str("20221121T084122"),
                     arrival_datetime=utils.make_timestamp_from_str("20221121T084122"),
-                    represents_start=True
+                    represents_start=True,
                 ),
                 DummyInstance(),
             )
