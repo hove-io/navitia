@@ -230,7 +230,9 @@ class Ouestgo(AbstractRidesharingService):
             # EVEN THOUGH the timezone is previously set in g.
             # We'd better retrieve the timezone from instance_params than relying on the g
             timezone = get_timezone_or_paris() if instance_params is None else instance_params.timezone
-            r = self._make_response(resp.json(), request_dates.departure_datetime, from_coord, to_coord, timezone)
+            r = self._make_response(
+                resp.json(), request_dates.departure_datetime, from_coord, to_coord, timezone
+            )
             self.record_additional_info('Received ridesharing offers', nb_ridesharing_offers=len(r))
             logging.getLogger('stat.ridesharing.ouestgo').info(
                 'Received ridesharing offers : %s',

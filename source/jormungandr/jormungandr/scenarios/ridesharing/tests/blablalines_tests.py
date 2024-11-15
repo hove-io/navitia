@@ -149,7 +149,7 @@ def blablalines_test():
         request_dates = utils.RequestDates(
             departure_datetime=utils.str_to_time_stamp("20171225T060000"),
             arrival_datetime=utils.str_to_time_stamp("20171225T060000"),
-            represents_start=True
+            represents_start=True,
         )
         ridesharing_journeys, feed_publisher = blablalines.request_journeys_with_feed_publisher(
             from_coord=from_coord,
@@ -220,7 +220,7 @@ def test_request_journeys_should_raise_on_non_200():
                 utils.RequestDates(
                     departure_datetime=utils.str_to_time_stamp("20171225T060000"),
                     arrival_datetime=utils.str_to_time_stamp("20171225T060000"),
-                    represents_start=True
+                    represents_start=True,
                 ),
                 DummyInstance(),
             )

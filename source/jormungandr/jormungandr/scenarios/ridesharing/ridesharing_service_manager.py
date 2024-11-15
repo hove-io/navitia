@@ -200,7 +200,9 @@ class RidesharingServiceManager(object):
                         section.additional_informations.append(response_pb2.HAS_DATETIME_ESTIMATED)
                         request_dates = None
                         if len(journey.sections) == 1:  # direct path, we use the user input
-                            request_dates = RequestDates(request['datetime'], request['datetime'], request['clockwise'])
+                            request_dates = RequestDates(
+                                request['datetime'], request['datetime'], request['clockwise']
+                            )
                         elif (
                             section_idx == 0
                         ):  # ridesharing on first section we want to arrive before the start of the pt

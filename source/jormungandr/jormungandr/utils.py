@@ -715,7 +715,6 @@ PeriodExtremity = namedtuple('PeriodExtremity', ['datetime', 'represents_start']
 RequestDates = namedtuple('RequestDates', ['departure_datetime', 'arrival_datetime', 'represents_start'])
 
 
-
 class SectionSorter(object):
     def __call__(self, a, b):
         if a.begin_date_time != b.begin_date_time:

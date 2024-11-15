@@ -173,7 +173,7 @@ def klaxit_service_test():
         request_dates = utils.RequestDates(
             departure_datetime=utils.str_to_time_stamp("20171225T060000"),
             arrival_datetime=utils.str_to_time_stamp("20171225T060000"),
-            represents_start=True
+            represents_start=True,
         )
         params = RidesharingServiceManager.InstanceParams.make_params(DummyInstance())
         ridesharing_journeys, feed_publisher = klaxit.request_journeys_with_feed_publisher(
@@ -248,7 +248,7 @@ def test_request_journeys_should_raise_on_non_200():
                 utils.RequestDates(
                     departure_datetime=utils.str_to_time_stamp("20171225T060000"),
                     arrival_datetime=utils.str_to_time_stamp("20171225T060000"),
-                    represents_start=True
+                    represents_start=True,
                 ),
                 DummyInstance(),
             )
