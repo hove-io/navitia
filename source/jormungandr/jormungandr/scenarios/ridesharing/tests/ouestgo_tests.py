@@ -194,13 +194,15 @@ def ouestgo_basic_test():
         from_coord = '48.68793,6.171514'
         to_coord = '49.108385,6.194897'
 
-        period_extremity = utils.PeriodExtremity(
-            datetime=utils.make_timestamp_from_str("20221121T084122"), represents_start=True
+        request_dates = utils.RequestDates(
+            departure_datetime=utils.make_timestamp_from_str("20221121T084122"),
+            arrival_datetime=utils.make_timestamp_from_str("20221121T084122"),
+            represents_start=True
         )
         ridesharing_journeys, feed_publisher = ouestgo.request_journeys_with_feed_publisher(
             from_coord=from_coord,
             to_coord=to_coord,
-            period_extremity=period_extremity,
+            request_dates=request_dates,
             instance_params=DummyInstance(),
         )
 
@@ -246,8 +248,10 @@ def test_request_journeys_should_raise_on_non_200():
             ouestgo._request_journeys(
                 '1.2,3.4',
                 '5.6,7.8',
-                utils.PeriodExtremity(
-                    datetime=utils.make_timestamp_from_str("20221121T084122"), represents_start=True
+                utils.RequestDates(
+                    departure_datetime=utils.make_timestamp_from_str("20221121T084122"),
+                    arrival_datetime=utils.make_timestamp_from_str("20221121T084122"),
+                    represents_start=True
                 ),
                 DummyInstance(),
             )

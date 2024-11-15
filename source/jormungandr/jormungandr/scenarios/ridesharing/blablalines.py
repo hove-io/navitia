@@ -174,12 +174,12 @@ class Blablalines(AbstractRidesharingService):
 
         return ridesharing_journeys
 
-    def _request_journeys(self, from_coord, to_coord, period_extremity, instance, limit=None):
+    def _request_journeys(self, from_coord, to_coord, request_dates, instance, limit=None):
         """
 
         :param from_coord: lat,lon ex: '48.109377,-1.682103'
         :param to_coord: lat,lon ex: '48.020335,-1.743929'
-        :param period_extremity: a tuple of [timestamp(utc), clockwise]
+        :param request_dates: a tuple of [timestamp(utc), timestamp(utc), clockwise]
         :param limit: optional
         :return:
         """
@@ -190,18 +190,18 @@ class Blablalines(AbstractRidesharingService):
         dt = datetime.datetime.now()
         now = calendar.timegm(dt.utctimetuple())
 
-        if period_extremity.datetime < now + MIN_BLABLALINES_MARGIN_DEPARTURE_TIME:
+        if request_dates.departure_datetime < now + MIN_BLABLALINES_MARGIN_DEPARTURE_TIME:
             logging.getLogger(__name__).info(
                 'blablalines ridesharing request departure time < now + 15 min. Force to now + 15 min'
             )
             departure_epoch = now + MIN_BLABLALINES_MARGIN_DEPARTURE_TIME
-        elif period_extremity.datetime > now + MAX_BLABLALINES_MARGIN_DEPARTURE_TIME:
+        elif request_dates.departure_datetime > now + MAX_BLABLALINES_MARGIN_DEPARTURE_TIME:
             logging.getLogger(__name__).error(
                 'Blablalines error, request departure time should be between now to 1 week from now. departure is greater than now + 1 week'
             )
             return []
         else:
-            departure_epoch = period_extremity.datetime
+            departure_epoch = request_dates.departure_datetime
 
         # Paramaeters documenation : https://www.blablalines.com/public-api-v2
         params = {
@@ -225,7 +225,7 @@ class Blablalines(AbstractRidesharingService):
             raise RidesharingServiceError('non 200 response', resp.status_code, resp.reason, resp.text)
 
         if resp:
-            r = self._make_response(resp.json(), period_extremity.datetime, from_coord, to_coord)
+            r = self._make_response(resp.json(), request_dates.departure_datetime, from_coord, to_coord)
             self.record_additional_info('Received ridesharing offers', nb_ridesharing_offers=len(r))
             logging.getLogger('stat.ridesharing.blablalines').info(
                 'Received ridesharing offers : %s',

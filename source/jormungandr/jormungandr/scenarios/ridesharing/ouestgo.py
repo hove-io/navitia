@@ -183,12 +183,12 @@ class Ouestgo(AbstractRidesharingService):
 
         return ridesharing_journeys
 
-    def _request_journeys(self, from_coord, to_coord, period_extremity, instance_params=None, limit=None):
+    def _request_journeys(self, from_coord, to_coord, request_dates, instance_params=None, limit=None):
         """
 
         :param from_coord: lat,lon ex: '48.109377,-1.682103'
         :param to_coord: lat,lon ex: '48.020335,-1.743929'
-        :param period_extremity: a tuple of [timestamp(utc), clockwise]
+        :param request_dates: a tuple of [timestamp(utc), timestamp(utc), clockwise]
         :param limit: optional
         :return:
         """
@@ -204,12 +204,12 @@ class Ouestgo(AbstractRidesharingService):
             'p[to][latitude]': arr_lat,
             'p[to][longitude]': arr_lon,
             'signature': 'toto',
-            'timestamp': period_extremity.datetime,
+            'timestamp': request_dates.departure_datetime,
             'p[outward][mindate]': timestamp_to_date_str(
-                period_extremity.datetime, timezone, _format=DATE_FORMAT
+                request_dates.departure_datetime, timezone, _format=DATE_FORMAT
             ),
             'p[outward][maxdate]': timestamp_to_date_str(
-                period_extremity.datetime, timezone, _format=DATE_FORMAT
+                request_dates.departure_datetime, timezone, _format=DATE_FORMAT
             ),
         }
 
@@ -230,7 +230,7 @@ class Ouestgo(AbstractRidesharingService):
             # EVEN THOUGH the timezone is previously set in g.
             # We'd better retrieve the timezone from instance_params than relying on the g
             timezone = get_timezone_or_paris() if instance_params is None else instance_params.timezone
-            r = self._make_response(resp.json(), period_extremity.datetime, from_coord, to_coord, timezone)
+            r = self._make_response(resp.json(), request_dates.departure_datetime, from_coord, to_coord, timezone)
             self.record_additional_info('Received ridesharing offers', nb_ridesharing_offers=len(r))
             logging.getLogger('stat.ridesharing.ouestgo').info(
                 'Received ridesharing offers : %s',
