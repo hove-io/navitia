@@ -39,7 +39,7 @@ from jormungandr.scenarios.ridesharing.ridesharing_journey import Gender
 from jormungandr.utils import get_pt_object_coord, generate_id
 from jormungandr.street_network.utils import crowfly_distance_between
 from navitiacommon import response_pb2
-from jormungandr.utils import PeriodExtremity
+from jormungandr.utils import RequestDates
 from jormungandr.scenarios.journey_filter import to_be_deleted
 from jormungandr.scenarios.helper_classes.helper_future import FutureManager
 from importlib import import_module
@@ -198,27 +198,27 @@ class RidesharingServiceManager(object):
                 for section_idx, section in enumerate(journey.sections):
                     if section.street_network.mode == response_pb2.Ridesharing:
                         section.additional_informations.append(response_pb2.HAS_DATETIME_ESTIMATED)
-                        period_extremity = None
+                        request_dates = None
                         if len(journey.sections) == 1:  # direct path, we use the user input
-                            period_extremity = PeriodExtremity(request['datetime'], request['clockwise'])
+                            request_dates = RequestDates(request['datetime'], request['datetime'], request['clockwise'])
                         elif (
                             section_idx == 0
                         ):  # ridesharing on first section we want to arrive before the start of the pt
-                            period_extremity = PeriodExtremity(section.end_date_time, False)
+                            request_dates = RequestDates(section.begin_date_time, section.end_date_time, False)
                         else:  # ridesharing at the end, we search for solution starting after the end of the pt sections
-                            period_extremity = PeriodExtremity(section.begin_date_time, True)
+                            request_dates = RequestDates(section.begin_date_time, section.end_date_time, True)
                         instance_params = self.InstanceParams.make_params(instance)
                         if greenlet_pool_actived:
                             futures[journey_idx][section_idx] = future_manager.create_future(
                                 self.build_ridesharing_journeys,
                                 section.origin,
                                 section.destination,
-                                period_extremity,
+                                request_dates,
                                 instance_params,
                             )
                         else:
                             pb_rsjs, pb_tickets, pb_fps = self.build_ridesharing_journeys(
-                                section.origin, section.destination, period_extremity, instance_params
+                                section.origin, section.destination, request_dates, instance_params
                             )
                             self.add_new_ridesharing_results(
                                 pb_rsjs, pb_tickets, pb_fps, response, journey_idx, section_idx
@@ -242,7 +242,7 @@ class RidesharingServiceManager(object):
         response.feed_publishers.extend((fp for fp in pb_fps if fp not in response.feed_publishers))
 
     def get_ridesharing_journeys_with_feed_publishers(
-        self, from_coord, to_coord, period_extremity, instance_params, limit=None
+        self, from_coord, to_coord, request_dates, instance_params, limit=None
     ):
         calls = []
         res = []
@@ -252,7 +252,7 @@ class RidesharingServiceManager(object):
 
             def _call(s=service):
                 return s.request_journeys_with_feed_publisher(
-                    from_coord, to_coord, period_extremity, instance_params, limit
+                    from_coord, to_coord, request_dates, instance_params, limit
                 )
 
             calls.append(_call)
@@ -271,14 +271,14 @@ class RidesharingServiceManager(object):
 
         return res, fps
 
-    def build_ridesharing_journeys(self, from_pt_obj, to_pt_obj, period_extremity, instance_params):
+    def build_ridesharing_journeys(self, from_pt_obj, to_pt_obj, request_dates, instance_params):
         from_coord = get_pt_object_coord(from_pt_obj)
         to_coord = get_pt_object_coord(to_pt_obj)
         from_str = "{},{}".format(from_coord.lat, from_coord.lon)
         to_str = "{},{}".format(to_coord.lat, to_coord.lon)
         try:
             rsjs, fps = self.get_ridesharing_journeys_with_feed_publishers(
-                from_str, to_str, period_extremity, instance_params
+                from_str, to_str, request_dates, instance_params
             )
         except Exception as e:
             self.logger.exception(
@@ -304,7 +304,7 @@ class RidesharingServiceManager(object):
             pickup_coord = get_pt_object_coord(pb_rsj_pickup)
             dropoff_coord = get_pt_object_coord(pb_rsj_dropoff)
 
-            pb_rsj.requested_date_time = period_extremity.datetime
+            pb_rsj.requested_date_time = request_dates.departure_datetime
             if rsj.departure_date_time:
                 pb_rsj.departure_date_time = rsj.departure_date_time
             if rsj.arrival_date_time:

@@ -162,12 +162,12 @@ class Klaxit(AbstractRidesharingService):
 
         return ridesharing_journeys
 
-    def _request_journeys(self, from_coord, to_coord, period_extremity, instance, limit=None):
+    def _request_journeys(self, from_coord, to_coord, request_dates, instance, limit=None):
         """
 
         :param from_coord: lat,lon ex: '48.109377,-1.682103'
         :param to_coord: lat,lon ex: '48.020335,-1.743929'
-        :param period_extremity: a tuple of [timestamp(utc), clockwise]
+        :param request_dates: a tuple of [timestamp(utc), timestamp(utc), clockwise]
         :param limit: optional
         :return:
         """
@@ -182,7 +182,7 @@ class Klaxit(AbstractRidesharingService):
             'departureLng': dep_lon,
             'arrivalLat': arr_lat,
             'arrivalLng': arr_lon,
-            'date': period_extremity.datetime,
+            'date': request_dates.departure_datetime,
             'timeDelta': self.timedelta,
             'departureRadius': 2,
             'arrivalRadius': 2,
