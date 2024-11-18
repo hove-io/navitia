@@ -180,6 +180,7 @@ def test_update_instances(create_instance):
         "language": "es-ES",
         "co2_emission_car_value": 4242.0,
         "co2_emission_car_unit": "UNITY",
+        "use_predicted_traffic": True,
     }
     resp = api_get('/v0/instances/{}'.format(create_instance))
     assert resp[0]['access_points'] is False
@@ -233,6 +234,7 @@ def test_update_instances(create_instance):
     assert resp['language'] == 'es-ES'
     assert resp['co2_emission_car_value'] == 4242.0
     assert resp['co2_emission_car_unit'] == 'UNITY'
+    assert resp['use_predicted_traffic'] is True
 
 
 def test_update_instances_is_free(create_instance):

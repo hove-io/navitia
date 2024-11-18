@@ -247,6 +247,7 @@ instance_fields = {
     'additional_parameters': fields.Raw,
     'co2_emission_car_value': fields.Raw,
     'co2_emission_car_unit': fields.Raw,
+    'use_predicted_traffic': fields.Boolean,
 }
 
 api_fields = {'id': fields.Raw, 'name': fields.Raw}
