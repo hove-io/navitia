@@ -711,7 +711,6 @@ class Instance(flask_restful.Resource):
             default=instance.additional_time_before_last_section_taxi,
         )
 
-
         parser.add_argument(
             "on_street_bike_parking_duration",
             type=int,
@@ -720,13 +719,12 @@ class Instance(flask_restful.Resource):
             default=instance.on_street_bike_parking_duration,
         )
 
-
         parser.add_argument(
             'additional_time_before_first_section_bike',
             type=int,
             help='additional time after the bike section when used as first section mode',
             location=('json', 'values'),
-            default=instance.additional_time_before_first_section_bike
+            default=instance.additional_time_before_first_section_bike,
         )
 
         parser.add_argument(
@@ -734,7 +732,7 @@ class Instance(flask_restful.Resource):
             type=int,
             help='additional time before the bike section when used as first section mode',
             location=('json', 'values'),
-            default=instance.additional_time_before_first_section_bike
+            default=instance.additional_time_before_first_section_bike,
         )
 
         parser.add_argument(

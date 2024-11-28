@@ -88,5 +88,4 @@ class FallbackModes(Enum):
 
 
 all_fallback_modes = FallbackModes.modes_str()
-
 allowed_combinations = FallbackModes.get_allowed_combinations_str()

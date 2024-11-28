@@ -39,17 +39,14 @@ class ParkMode(Enum):
     on_street = response_pb2.OnStreet
     park_and_ride = response_pb2.ParkAndRide
 
-
     @classmethod
     def modes_str(cls):
 
         return {e.name for e in cls}
 
-
     @classmethod
     def modes_enum(cls):
         return set(cls)
-
 
     @classmethod
     def get_allowed_combinations_enums(cls):
@@ -61,11 +58,11 @@ class ParkMode(Enum):
 
         return _combi(cls.modes_enum(), cls.modes_enum())
 
-
     @classmethod
     def get_allowed_combinations_str(cls):
         # python 2/3 portability
         import six
+
         allowed_combinations_enum = cls.get_allowed_combinations_enums()
         # transform all enum to str
         return set(six.moves.map(lambda modes: (modes[0].name, modes[1].name), allowed_combinations_enum))
