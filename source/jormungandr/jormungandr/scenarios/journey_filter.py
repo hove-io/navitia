@@ -36,8 +36,6 @@ import six
 from jormungandr.scenarios.utils import compare, get_or_default
 from navitiacommon import response_pb2
 from jormungandr.utils import (
-    get_pt_object_from_json,
-    json_address_from_uri,
     pb_del_if,
     ComposedFilter,
     portable_min,
@@ -693,10 +691,6 @@ def apply_final_journey_filters(response_list, instance, request):
     if origin_mode == ['car']:
         journeys = journey_generator(response_list)
         filter_non_car_tagged_journey(journeys, request)
-
-
-
-
 
 
 def is_direct_path_walking(j):
