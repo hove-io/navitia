@@ -711,6 +711,16 @@ class Instance(flask_restful.Resource):
             default=instance.additional_time_before_last_section_taxi,
         )
 
+
+        parser.add_argument(
+            "on_street_bike_parking_duration",
+            type=int,
+            help="additionnal time after the bike section when used as first section mode",
+            location=("json", "values"),
+            default=instance.on_street_bike_parking_duration,
+        )
+
+
         parser.add_argument(
             'additional_time_before_first_section_bike',
             type=int,
@@ -1066,8 +1076,7 @@ class Instance(flask_restful.Resource):
                         'autocomplete_backend',
                         'additional_time_after_first_section_taxi',
                         'additional_time_before_last_section_taxi',
-                        'additional_time_after_first_section_bike',
-                        'additional_time_after_last_section_bike',
+                        'on_street_bike_parking_duration',
                         'max_additional_connections',
                         'car_park_provider',
                         'street_network_car',

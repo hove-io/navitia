@@ -83,6 +83,7 @@ class StreetNetworkBackendManager(object):
             'modes': ['ridesharing'],
         }
 
+
         modes_in_configs = set(
             list(itertools.chain.from_iterable(config.get('modes', []) for config in instance_configuration))
         )
@@ -94,12 +95,15 @@ class StreetNetworkBackendManager(object):
         if 'ridesharing' in modes_not_set:
             instance_configuration.append(ridesharing)
 
+
         kraken['modes'] = [m for m in modes_not_set - {'taxi', 'ridesharing'}]
+
         instance_configuration.append(copy.deepcopy(kraken))
 
         return instance_configuration
 
     def _create_street_network_backends(self, instance, instance_configuration):
+
         # type: (Instance, List[Dict[str, Any]]) -> None
         for config in instance_configuration:
             # Set default arguments
@@ -240,7 +244,6 @@ class StreetNetworkBackendManager(object):
         # type: (Instance, str, Dict[str, Any]) -> AbstractStreetNetworkService
         overriden_sn_id = (request or {}).get('_street_network')
         if overriden_sn_id:
-
             def predicate(s):
                 return s.sn_system_id == overriden_sn_id
 
@@ -249,6 +252,7 @@ class StreetNetworkBackendManager(object):
             def predicate(s):
                 return mode in s.modes
 
+        print("instance_bn", self._streetnetwork_backends_by_instance_legacy[instance])
         sn = next((s for s in self._streetnetwork_backends_by_instance_legacy[instance] if predicate(s)), None)
         if sn is None:
             raise TechnicalError(
