@@ -234,16 +234,6 @@ class JourneyCommon(ResourceUri, ResourceUtc):
         )
 
         parser_get.add_argument(
-            "park_mode[]",
-            type=OptionValue(park_modes.all_park_modes),
-            dest="park_mode",
-            action="append",
-            help='If you want to use park modes in your journey. '
-            'Note: the park_modes[] concern only the bike objects. '
-        )
-
-
-        parser_get.add_argument(
             "last_section_mode[]",
             type=OptionValue(fallback_modes.all_fallback_modes),
             dest="destination_mode",
@@ -254,7 +244,7 @@ class JourneyCommon(ResourceUri, ResourceUtc):
         parser_get.add_argument(
             "park_mode[]",
             type=OptionValue(park_modes.all_park_modes),
-            dest="origin_mode",
+            dest="park_mode",
             action="append",
             help='Force the park mode if the first section is by bike\n'
         )
