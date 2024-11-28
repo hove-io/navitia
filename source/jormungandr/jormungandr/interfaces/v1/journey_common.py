@@ -232,7 +232,6 @@ class JourneyCommon(ResourceUri, ResourceUtc):
             'first_section_mode[]=bike&last_section_mode[]=walking&'
             'last_section_mode[]=bss&last_section_mode[]=bike`',
         )
-
         parser_get.add_argument(
             "last_section_mode[]",
             type=OptionValue(fallback_modes.all_fallback_modes),
@@ -246,7 +245,7 @@ class JourneyCommon(ResourceUri, ResourceUtc):
             type=OptionValue(park_modes.all_park_modes),
             dest="park_mode",
             action="append",
-            help='Force the park mode if the first section is by bike\n'
+            help='Force the park mode if the first section is by bike\n',
         )
         # for retrocompatibility purpose, we duplicate (without []):
         parser_get.add_argument(

@@ -343,7 +343,6 @@ class Distributed(object):
             for response in responses:
                 pt_journey_fare_pool.async_compute_fare(response, request_id)
 
-
         wait_and_complete_pt_journey(
             requested_orig_obj=context.requested_orig_obj,
             requested_dest_obj=context.requested_dest_obj,
@@ -357,8 +356,6 @@ class Distributed(object):
             journeys=journeys_to_complete,
             request_id="{}_complete_pt_journey".format(request_id),
         )
-
-
         if request['_loki_compute_pt_journey_fare'] is True and request['_pt_planner'] == "loki":
             wait_and_complete_pt_journey_fare(
                 pt_elements=journeys_to_complete, pt_journey_fare_pool=pt_journey_fare_pool
@@ -593,10 +590,7 @@ class Scenario(new_default.Scenario):
             ] = instance.additional_time_after_first_section_taxi
 
         if request.get('on_street_bike_parking_duration') is None:
-            request[
-                'on_street_bike_parking_duration'
-            ] = instance.on_street_bike_parking_duration
-            
+            request['on_street_bike_parking_duration'] = instance.on_street_bike_parking_duration
 
         krakens_call = set({(request["origin_mode"][0], request["destination_mode"][0], "indifferent")})
         pt_object_origin = None
