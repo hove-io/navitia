@@ -30,7 +30,7 @@
 # www.navitia.io
 
 from __future__ import absolute_import, print_function, unicode_literals, division
-from jormungandr import i_manager, fallback_modes, partner_services, app, park_modes
+from jormungandr import i_manager, fallback_modes, park_modes, partner_services, app
 from jormungandr.interfaces.v1.ResourceUri import ResourceUri
 from datetime import datetime
 from jormungandr.resources_utils import ResourceUtc
@@ -232,6 +232,17 @@ class JourneyCommon(ResourceUri, ResourceUtc):
             'first_section_mode[]=bike&last_section_mode[]=walking&'
             'last_section_mode[]=bss&last_section_mode[]=bike`',
         )
+
+        parser_get.add_argument(
+            "park_mode[]",
+            type=OptionValue(park_modes.all_park_modes),
+            dest="park_mode",
+            action="append",
+            help='If you want to use park modes in your journey. '
+            'Note: the park_modes[] concern only the bike objects. '
+        )
+
+
         parser_get.add_argument(
             "last_section_mode[]",
             type=OptionValue(fallback_modes.all_fallback_modes),
@@ -515,17 +526,10 @@ class JourneyCommon(ResourceUri, ResourceUtc):
             help="the additional time added to the taxi section, right before riding the taxi but after hopping off the public transit",
         )
 
-
         parser_get.add_argument(
-            "additional_time_after_first_section_bike",
+            "on_street_bike_parking_duration",
             type=int,
-            help="the additional time added to the bike section, right after riding the bike but before hopping on the public transit",
-        )
-
-        parser_get.add_argument(
-            "additional_time_before_last_section_bike",
-            type=int,
-            help="the additional time added to the bike section, right before riding the bike but after hopping off the public transit",
+            help="the additional time added to the bike section before and after parking the bike",
         )
 
         parser_get.add_argument(

@@ -75,7 +75,6 @@ from jormungandr.fallback_modes import FallbackModes
 from copy import deepcopy
 from jormungandr.travelers_profile import TravelerProfile
 from navitiacommon.constants import ENUM_LANGUAGE
-import urllib.parse
 import base64
 
 
@@ -143,6 +142,9 @@ class add_journey_href(object):
                         args['from'] = journey['from']['id']
                     args['rel'] = 'journeys'
                     journey['links'] = [create_external_link('v1.journeys', **args)]
+
+                
+                
                 elif allowed_ids and 'public_transport' in (s['type'] for s in journey['sections']):
                     # exactly one first_section_mode
                     if any(s['type'].startswith('bss') for s in journey['sections'][:2]):
@@ -436,15 +438,15 @@ class rig_journey(object):
             for j in response.get('journeys', []):
                 if 'sections' not in j:
                     continue
-                logging.debug(
-                    'for journey changing origin: {old_o} to {new_o}'
-                    ', destination to {old_d} to {new_d}'.format(
-                        old_o=j.get('sections', [{}])[0].get('from').get('id'),
-                        new_o=(g.origin_detail or {}).get('id'),
-                        old_d=j.get('sections', [{}])[-1].get('to').get('id'),
-                        new_d=(g.destination_detail or {}).get('id'),
-                    )
-                )
+                # logging.debug(
+                #     'for journey changing origin: {old_o} to {new_o}'
+                #     ', destination to {old_d} to {new_d}'.format(
+                #         old_o=j.get('sections', [{}])[0].get('from').get('id'),
+                #         new_o=(g.origin_detail or {}).get('id'),
+                #         old_d=j.get('sections', [{}])[-1].get('to').get('id'),
+                #         new_d=(g.destination_detail or {}).get('id'),
+                #     )
+                # )
                 if g.origin_detail:
                     self.clean_global_origin_destination_detail(g.origin_detail)
                     j['sections'][0]['from'] = g.origin_detail
@@ -826,10 +828,8 @@ class Journeys(JourneyCommon):
             if args.get('additional_time_before_last_section_taxi') is None:
                 args['additional_time_before_last_section_taxi'] = mod.additional_time_before_last_section_taxi
 
-            if args.get('additional_time_after_first_section_bike') is None:
-                args['additional_time_after_first_section_bike'] = mod.additional_time_after_first_section_bike
-            if args.get('additional_time_before_last_section_bike') is None:
-                args['additional_time_before_last_section_bike'] = mod.additional_time_before_last_section_bike
+            if args.get("on_street_bike_parking_duration") is None:
+                args["on_street_bike_parking_duration"] = mod.on_street_bike_parking_duration
 
             if args.get('_stop_points_nearby_duration') is None:
                 args['_stop_points_nearby_duration'] = mod.stop_points_nearby_duration

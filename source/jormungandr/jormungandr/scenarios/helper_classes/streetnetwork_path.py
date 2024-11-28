@@ -225,7 +225,6 @@ class StreetNetworkPath:
                 self._futures.append(self._future_manager.create_future(self._do_request, origin, destination))
 
     def wait_and_get(self, timeout=None):
-
         # timeout=None -> wait forever...
         timer = gevent.timeout.Timeout(timeout, exception=False)
 

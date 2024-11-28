@@ -12,7 +12,7 @@ DEFAULT_SQLALCHEMY_ENGINE_OPTIONS = {
 }  # 1000ms
 
 # path of the configuration file for each instances
-INSTANCES_DIR = os.getenv('JORMUNGANDR_INSTANCES_DIR', '/etc/jormungandr.d')
+INSTANCES_DIR = os.getenv('JORMUNGANDR_INSTANCES_DIR', './jormung_conf')
 
 
 INSTANCES_TIMEOUT = float(os.getenv('JORMUNGANDR_INSTANCES_TIMEOUT_S', 10))
@@ -32,7 +32,7 @@ SQLALCHEMY_DATABASE_URI = os.getenv(
     'JORMUNGANDR_SQLALCHEMY_DATABASE_URI', 'postgresql://navitia:navitia@localhost/jormungandr'
 )
 
-DISABLE_DATABASE = boolean(os.getenv('JORMUNGANDR_DISABLE_DATABASE', False))
+DISABLE_DATABASE = boolean(os.getenv('JORMUNGANDR_DISABLE_DATABASE', True))
 
 # Active the asynchronous ridesharing mode
 ASYNCHRONOUS_RIDESHARING = boolean(os.getenv('JORMUNGANDR_ASYNCHRONOUS_RIDESHARING', False))

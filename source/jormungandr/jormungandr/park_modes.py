@@ -34,11 +34,10 @@ from enum import Enum
 from navitiacommon import response_pb2
 
 
-
-class ParkModes(Enum):
-    none = response_pb2.None
-    without_park = response_pb2.WithoutPark
-    with_park = response_pb2.WithPark
+class ParkMode(Enum):
+    none = response_pb2.NONE
+    on_street = response_pb2.OnStreet
+    park_and_ride = response_pb2.ParkAndRide
 
 
     @classmethod
@@ -72,4 +71,4 @@ class ParkModes(Enum):
         return set(six.moves.map(lambda modes: (modes[0].name, modes[1].name), allowed_combinations_enum))
 
 
-all_park_modes = ParkModes.modes_str()
+all_park_modes = ParkMode.modes_str()

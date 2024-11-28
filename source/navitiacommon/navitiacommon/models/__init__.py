@@ -516,12 +516,8 @@ class Instance(db.Model):  # type: ignore
         db.Integer, default=default_values.additional_time_before_last_section_taxi, nullable=False
     )
 
-    additional_time_after_first_section_bike = db.Column(
-        db.Integer, default=default_values.additional_time_after_first_section_bike, nullable=False
-    )
-
-    additional_time_before_last_section_bike = db.Column(
-        db.Integer, default=default_values.additional_time_before_last_section_bike, nullable=False
+    on_street_bike_parking_duration = db.Column(
+        db.Integer, default=default_values.on_street_bike_parking_duration, nullable=False
     )
 
     max_walking_direct_path_duration = db.Column(
