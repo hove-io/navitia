@@ -676,6 +676,38 @@ class TestDistributedMaxDistanceForDirectPathUpperLimit(NewDefaultScenarioAbstra
     test_max_taxi_direct_path_distance = _make_function_distance_over_upper_limit(a, b, 'taxi', operator.truth)
 
 
+@dataset({"main_routing_test": {"scenario": "distributed"}})
+class TestDistributedWithDestinationPositionNotMatchingAutocomplete(NewDefaultScenarioAbstractTestFixture):
+    """
+
+    """
+    def test_destination_address_id_and_coord(self):
+        from_coord = '8.98311981954709e-05;8.98311981954709e-05'
+        to_coord = '0.0018864551621048887;0.0007186495855637672'
+
+        query = (
+            'journeys?'
+            'from={from_coord}'
+            '&to={to_coord}'
+            '&datetime={datetime}'
+            '&first_section_mode[]=walking'
+            '&last_section_mode[]=walking'
+            '&max_duration=0'
+            '&_min_bike=0'
+            '&_min_car=0'
+            '&_min_taxi=0'
+        ).format(from_coord=from_coord, to_coord=to_coord, datetime="20120614T080000")
+
+        response = self.query_region(query)
+
+        assert len(response['journeys']) == 1
+        journey = response['journeys'][0]
+        to_address = journey['sections'][-1]['to']['address']
+        assert to_address['id'] == '0.001886455162104889;0.0007186495855637672'
+        assert to_address['coord']['lon'] == '0.0018864551621048887'
+        assert to_address['coord']['lat'] == '0.0007186495855637672'
+
+
 def _make_function_distance_under_lower_limit(from_coord, to_coord, mode):
     def test_ko_crow_fly_smaller_than_max_mode_direct_path_distance(self):
         query = (
