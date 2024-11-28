@@ -53,7 +53,7 @@ from jormungandr.scenarios.utils import (
 from jormungandr.new_relic import record_custom_parameter
 from navitiacommon import response_pb2, type_pb2
 from flask_restful import abort
-from .helper_classes.helper_utils import timed_logger
+from .helper_classes.timer_logger_helper import timed_logger
 from .helper_classes.helper_exceptions import (
     NoGraphicalIsochroneFoundException,
     PtException,
@@ -355,6 +355,9 @@ class Distributed(object):
             request=request,
             journeys=journeys_to_complete,
             request_id="{}_complete_pt_journey".format(request_id),
+            instance=instance,
+            future_manager=future_manager,
+            _request_id=request_id,
         )
         if request['_loki_compute_pt_journey_fare'] is True and request['_pt_planner'] == "loki":
             wait_and_complete_pt_journey_fare(

@@ -32,9 +32,9 @@ from .helper_utils import (
     complete_pt_journey,
     compute_fallback,
     _build_crowflies,
-    timed_logger,
     complete_transfer,
 )
+from .timer_logger_helper import timed_logger
 from .helper_exceptions import InvalidDateBoundException
 from jormungandr.street_network.street_network import StreetNetworkPathType
 from collections import namedtuple
@@ -166,6 +166,7 @@ def wait_and_complete_pt_journey(
     request,
     journeys,
     request_id,
+    **kwargs
 ):
     """
     In this function, we compute all fallback path once the pt journey is finished, then we build the
@@ -206,6 +207,7 @@ def wait_and_complete_pt_journey(
                 orig_fallback_durations_pool=orig_fallback_durations_pool,
                 dest_fallback_durations_pool=dest_fallback_durations_pool,
                 request=request,
+                **kwargs
             )
             if {pt_element.dep_mode, pt_element.arr_mode} & {'car', 'car_no_park'}:
                 tag_LEZ(pt_element.pt_journeys)
