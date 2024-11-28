@@ -1039,7 +1039,6 @@ class Instance(transient_socket.TransientSocket):
         :param request: This parameter in required only for file configuration.
         :return: street_network backend connector for the mode
         """
-        
         if app.config[str('DISABLE_DATABASE')]:
             return self._streetnetwork_backend_manager.get_street_network_legacy(self, mode, request)
         else:
@@ -1059,7 +1058,6 @@ class Instance(transient_socket.TransientSocket):
     def get_street_network(self, mode, request):
         if mode != fallback_modes.FallbackModes.car.name:
             return self._get_street_network(mode, request)
-
 
         walking_service = self._get_street_network(fallback_modes.FallbackModes.walking.name, request)
         car_service = self._get_street_network(fallback_modes.FallbackModes.car.name, request)
