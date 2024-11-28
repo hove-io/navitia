@@ -37,7 +37,7 @@ import six
 import copy
 import logging
 from functools import cmp_to_key
-from .helper_utils import timed_logger
+from .timer_logger_helper import timed_logger
 
 PtPoolElement = namedtuple('PtPoolElement', ['dep_mode', 'arr_mode', 'pt_journey'])
 

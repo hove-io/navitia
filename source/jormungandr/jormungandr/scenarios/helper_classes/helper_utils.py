@@ -40,14 +40,13 @@ from jormungandr.utils import (
 )
 from jormungandr.street_network.utils import crowfly_distance_between
 from jormungandr.fallback_modes import FallbackModes, all_fallback_modes
+from jormungandr.scenarios.helper_classes.place_by_uri import PlaceByUri
 from .helper_exceptions import *
 from navitiacommon import response_pb2, type_pb2
 import copy
 import logging
 import six
 from functools import cmp_to_key
-from contextlib import contextmanager
-import time
 
 CAR_PARK_DURATION = 300  # secs
 
@@ -426,6 +425,7 @@ def _update_journey(journey, park_section, street_mode_section, to_replace, new_
 def _update_fallback_with_bike_mode(
     journey, fallback_dp, fallback_period_extremity, fallback_type, via_pt_access, via_poi_access, **kwargs
 ):
+
     """
     Replace journey's fallback sections with the given fallback_dp.
 
@@ -439,6 +439,14 @@ def _update_fallback_with_bike_mode(
 
     # We have to create the link between the fallback and the pt part manually here
     if fallback_type == StreetNetworkPathType.BEGINNING_FALLBACK and kwargs["origin_mode"] == ["bike"]:
+        place_by_uri_instance = PlaceByUri(
+            kwargs["future_manager"],
+            kwargs["instance"],
+            fallback_sections[-1].destination.uri,
+            kwargs["request_id"],
+        )
+        address = place_by_uri_instance.wait_and_get()
+        fallback_sections[-1].destination.CopyFrom(address)
         for s in journey.sections:
             s.begin_date_time += kwargs["additional_time"]
             s.end_date_time += kwargs["additional_time"]
@@ -449,6 +457,14 @@ def _update_fallback_with_bike_mode(
         _update_journey(journey, park_section, street_mode_section, journey.sections[0], fallback_sections)
 
     elif fallback_type == StreetNetworkPathType.ENDING_FALLBACK and kwargs["destination_mode"] == ["bike"]:
+        place_by_uri_instance = PlaceByUri(
+            kwargs["future_manager"],
+            kwargs["instance"],
+            fallback_sections[0].destination.uri,
+            kwargs["request_id"],
+        )
+        address = place_by_uri_instance.wait_and_get()
+        fallback_sections[0].destination.CopyFrom(address)
         street_mode_section = _extend_with_bike_park_street_network(
             fallback_sections[0].destination,
             fallback_sections[0].begin_date_time,
@@ -652,6 +668,7 @@ def _build_fallback(
     fallback_durations_pool,
     request,
     fallback_type,
+    **kwargs
 ):
     accessibles_by_crowfly = obj_accessible_by_crowfly.wait_and_get()
     fallback_durations = fallback_durations_pool.wait_and_get(mode)
@@ -729,6 +746,10 @@ def _build_fallback(
                         origin_mode=request["origin_mode"],
                         destination_mode=request["destination_mode"],
                         additional_time=request["on_street_bike_parking_duration"],
+                        instance=kwargs["instance"],
+                        future_manager=kwargs["future_manager"],
+                        request_id=kwargs["_request_id"],
+                        request=request,
                     )
                 else:
                     _update_fallback_sections(
@@ -887,6 +908,7 @@ def complete_pt_journey(
     orig_fallback_durations_pool,
     dest_fallback_durations_pool,
     request,
+    **kwargs
 ):
     """
     We complete the pt_journey by adding the beginning fallback and the ending fallback
@@ -905,6 +927,7 @@ def complete_pt_journey(
         orig_fallback_durations_pool,
         request=request,
         fallback_type=StreetNetworkPathType.BEGINNING_FALLBACK,
+        **kwargs
     )
 
     pt_journey = _build_fallback(
@@ -916,6 +939,7 @@ def complete_pt_journey(
         dest_fallback_durations_pool,
         request=request,
         fallback_type=StreetNetworkPathType.ENDING_FALLBACK,
+        **kwargs
     )
 
     logger.debug("finish building pt journey starts with %s and ends with %s", dep_mode, arr_mode)
@@ -951,24 +975,6 @@ def check_final_results_or_raise(final_results, orig_fallback_durations_pool, de
         raise EntryPointException(
             error_message="Public transport is not reachable from destination",
             error_id=response_pb2.Error.no_destination,
-        )
-
-
-@contextmanager
-def timed_logger(logger, task_name, request_id):
-    start = time.time()
-    try:
-        yield logger
-    finally:
-        end = time.time()
-        elapsed_time = (end - start) * 1000
-        start_in_ms = int(start * 1000)
-        end_in_ms = int(end * 1000)
-
-        logger.info(
-            "Task : {}, request : {},  start : {}, end : {}, elapsed time: {} ms".format(
-                task_name, request_id, start_in_ms, end_in_ms, '%.2e' % elapsed_time
-            )
         )
 
 
