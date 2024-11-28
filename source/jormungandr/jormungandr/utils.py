@@ -1213,3 +1213,17 @@ def content_is_too_large(instance, endpoint, response):
         return False
 
     return True
+
+
+def is_different_geographic_position(addr1, addr2):
+    """
+    Returns True if both params are address with different id (also means different coordinate) else False
+    :return: boolean
+    """
+    if not (addr1 and addr2):
+        return False
+    if  addr1.get('embedded_type') != "address":
+        return False
+    if addr1.get('id') != addr2.get('id'):
+        return True
+    return False
