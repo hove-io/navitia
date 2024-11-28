@@ -28,9 +28,9 @@
 # www.navitia.io
 
 
-
 from __future__ import absolute_import, print_function, unicode_literals, division
 from .tests_mechanism import AbstractTestFixture, dataset
+
 
 @dataset({"park_modes_test": {}})
 class TestParkMode(AbstractTestFixture):
@@ -39,7 +39,7 @@ class TestParkMode(AbstractTestFixture):
     """
 
     def test_first_section_park_mode_none_with_access_point(self):
-        """"
+        """ "
         Test park mode none with _access point
         """
         query = "v1/coverage/main_routing_test/journeys?from=2.36893%3B48.88413&to=2.28928%3B48.84710&first_section_mode%5B%5D=bike&park_mode%5B%5D=none&_access_points=true"
@@ -51,9 +51,8 @@ class TestParkMode(AbstractTestFixture):
                 assert journey['sections'][0]['mode'] == 'bike'
                 assert journey['sections'][1]['type'] != 'park'
 
-
     def test_first_section_park_mode_none_without_access_point(self):
-        """"
+        """ "
         Test park mode none without access point
         """
         query = "v1/coverage/main_routing_test/journeys?from=2.36893%3B48.88413&to=2.28928%3B48.84710&first_section_mode%5B%5D=bike&park_mode%5B%5D=none"
@@ -65,9 +64,8 @@ class TestParkMode(AbstractTestFixture):
                 assert journey['sections'][0]['mode'] == 'bike'
                 assert journey['sections'][1]['type'] != 'park'
 
-
     def test_first_section_park_mode_on_street_with_access_point(self):
-        """"
+        """ "
         Test park mode on street with access point
         """
         query = "v1/coverage/main_routing_test/journeys?from=2.36893%3B48.88413&to=2.28928%3B48.84710&first_section_mode%5B%5D=bike&park_mode%5B%5D=on_street&_access_points=true"
@@ -76,7 +74,7 @@ class TestParkMode(AbstractTestFixture):
 
         for journey in response['journeys']:
             if len(journey['sections']) > 0:
-                assert len( journey['sections'][0]['vias']) > 0
+                assert len(journey['sections'][0]['vias']) > 0
                 assert journey['sections'][0]['mode'] == 'bike'
                 assert journey['sections'][1]['type'] == 'park'
                 assert journey['sections'][1]['type'] == 'street_network'
@@ -85,9 +83,8 @@ class TestParkMode(AbstractTestFixture):
                 assert journey['sections'][1]['from']["embedded_type"] is None
                 assert journey['sections'][1]['to']["embedded_type"] is None
 
-
     def test_first_section_park_mode_on_street_without_access_point(self):
-        """"
+        """ "
         Test park mode on street without access point
         """
         query = "v1/coverage/main_routing_test/journeys?from=2.36893%3B48.88413&to=2.28928%3B48.84710&first_section_mode%5B%5D=bike&park_mode%5B%5D=on_street"
@@ -96,7 +93,7 @@ class TestParkMode(AbstractTestFixture):
 
         for journey in response['journeys']:
             if len(journey['sections']) > 0:
-                assert len( journey['sections'][0]['vias']) > 0
+                assert len(journey['sections'][0]['vias']) > 0
                 assert journey['sections'][0]['mode'] == 'bike'
                 assert journey['sections'][1]['type'] == 'park'
                 assert journey['sections'][1]['type'] == 'street_network'
@@ -105,9 +102,8 @@ class TestParkMode(AbstractTestFixture):
                 assert journey['sections'][1]['from']["embedded_type"] is None
                 assert journey['sections'][1]['to']["embedded_type"] is None
 
-
     def test_first_section_park_mode_park_and_ride_with_access_point(self):
-        """"
+        """ "
         Test park mode park and ride with access point
         """
         query = "v1/coverage/main_routing_test/journeys?from=2.36893%3B48.88413&to=2.28928%3B48.84710&first_section_mode%5B%5D=bike&park_mode%5B%5D=park_and_ride&_access_points=true"
@@ -120,7 +116,7 @@ class TestParkMode(AbstractTestFixture):
                 assert journey['sections'][1]['type'] != 'park'
 
     def test_first_section_park_mode_park_and_ride_without_access_point(self):
-        """"
+        """ "
         Test park mode park and ride without access point
         """
         query = "v1/coverage/main_routing_test/journeys?from=2.36893%3B48.88413&to=2.28928%3B48.84710&first_section_mode%5B%5D=bike&park_mode%5B%5D=park_and_ride"
@@ -132,9 +128,8 @@ class TestParkMode(AbstractTestFixture):
                 assert journey['sections'][0]['mode'] == 'bike'
                 assert journey['sections'][1]['type'] != 'park'
 
-
     def test_last_section_mode_park_mode_none_with_access_point(self):
-        """"
+        """ "
         Test park mode none with _access point
         """
         query = "v1/coverage/main_routing_test/journeys?from=2.36893%3B48.88413&to=2.28928%3B48.84710&last_section_mode%5B%5D=bike&park_mode%5B%5D=none&_access_points=true"
@@ -146,9 +141,8 @@ class TestParkMode(AbstractTestFixture):
                 assert journey['sections'][0]['mode'] == 'bike'
                 assert journey['sections'][1]['type'] != 'park'
 
-
     def test_last_section_mode_park_mode_none_without_access_point(self):
-        """"
+        """ "
         Test park mode none without access point
         """
         query = "v1/coverage/main_routing_test/journeys?from=2.36893%3B48.88413&to=2.28928%3B48.84710&last_section_mode%5B%5D=bike&park_mode%5B%5D=none"
@@ -160,9 +154,8 @@ class TestParkMode(AbstractTestFixture):
                 assert journey['sections'][0]['mode'] == 'bike'
                 assert journey['sections'][1]['type'] != 'park'
 
-
     def test_last_section_mode_park_mode_on_street_with_access_point(self):
-        """"
+        """ "
         Test park mode on street with access point
         """
         query = "v1/coverage/main_routing_test/journeys?from=2.36893%3B48.88413&to=2.28928%3B48.84710&last_section_mode%5B%5D=bike&park_mode%5B%5D=on_street&_access_points=true"
@@ -171,7 +164,7 @@ class TestParkMode(AbstractTestFixture):
 
         for journey in response['journeys']:
             if len(journey['sections']) > 0:
-                assert len( journey['sections'][0]['vias']) > 0
+                assert len(journey['sections'][0]['vias']) > 0
                 assert journey['sections'][0]['mode'] == 'bike'
                 assert journey['sections'][1]['type'] == 'park'
                 assert journey['sections'][1]['type'] == 'street_network'
@@ -180,9 +173,8 @@ class TestParkMode(AbstractTestFixture):
                 assert journey['sections'][1]['from']["embedded_type"] is None
                 assert journey['sections'][1]['to']["embedded_type"] is None
 
-
     def test_last_section_mode_park_mode_on_street_without_access_point(self):
-        """"
+        """ "
         Test park mode on street without access point
         """
         query = "v1/coverage/main_routing_test/journeys?from=2.36893%3B48.88413&to=2.28928%3B48.84710&last_section_mode%5B%5D=bike&park_mode%5B%5D=on_street"
@@ -191,7 +183,7 @@ class TestParkMode(AbstractTestFixture):
 
         for journey in response['journeys']:
             if len(journey['sections']) > 0:
-                assert len( journey['sections'][0]['vias']) > 0
+                assert len(journey['sections'][0]['vias']) > 0
                 assert journey['sections'][0]['mode'] == 'bike'
                 assert journey['sections'][1]['type'] == 'park'
                 assert journey['sections'][1]['type'] == 'street_network'
@@ -200,9 +192,8 @@ class TestParkMode(AbstractTestFixture):
                 assert journey['sections'][1]['from']["embedded_type"] is None
                 assert journey['sections'][1]['to']["embedded_type"] is None
 
-
     def test_last_section_mode_park_mode_park_and_ride_with_access_point(self):
-        """"
+        """ "
         Test park mode park and ride with access point
         """
         query = "v1/coverage/main_routing_test/journeys?from=2.36893%3B48.88413&to=2.28928%3B48.84710&last_section_mode%5B%5D=bike&park_mode%5B%5D=park_and_ride&_access_points=true"
@@ -215,7 +206,7 @@ class TestParkMode(AbstractTestFixture):
                 assert journey['sections'][1]['type'] != 'park'
 
     def test_last_section_mode_park_mode_park_and_ride_without_access_point(self):
-        """"
+        """ "
         Test park mode park and ride without access point
         """
         query = "v1/coverage/main_routing_test/journeys?from=2.36893%3B48.88413&to=2.28928%3B48.84710&last_section_mode%5B%5D=bike&park_mode%5B%5D=park_and_ride"

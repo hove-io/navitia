@@ -35,6 +35,8 @@ from jormungandr.street_network.street_network import AbstractStreetNetworkServi
 from jormungandr import utils, fallback_modes as fm
 from jormungandr.utils import SectionSorter
 from functools import cmp_to_key
+
+
 from navitiacommon import response_pb2
 
 
