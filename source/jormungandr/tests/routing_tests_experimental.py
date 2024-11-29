@@ -679,7 +679,7 @@ class TestDistributedMaxDistanceForDirectPathUpperLimit(NewDefaultScenarioAbstra
 @dataset({"main_routing_test": {"scenario": "distributed"}})
 class TestDistributedWithDestinationPositionNotMatchingAutocomplete(NewDefaultScenarioAbstractTestFixture):
     """
-
+    Test on geographical position as destination which doesn't match with address found by autocomplete
     """
     def test_destination_address_id_and_coord(self):
         from_coord = '8.98311981954709e-05;8.98311981954709e-05'

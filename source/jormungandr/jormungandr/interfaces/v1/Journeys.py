@@ -454,7 +454,9 @@ class rig_journey(object):
                     if hasattr(g, 'request_origin') and g.request_origin:
                         coord = j['sections'][0]['from'].get('address', {}).get('coord')
                         if coord:
-                            j['sections'][0]['from']['address']['coord'] = g.request_origin.get('address').get('coord')
+                            j['sections'][0]['from']['address']['coord'] = g.request_origin.get('address').get(
+                                'coord'
+                            )
 
                 if g.destination_detail:
                     self.clean_global_origin_destination_detail(g.destination_detail)
@@ -464,7 +466,9 @@ class rig_journey(object):
                     if hasattr(g, 'request_destination') and g.request_destination:
                         coord = j['sections'][-1]['to'].get('address', {}).get('coord')
                         if coord:
-                            j['sections'][-1]['to']['address']['coord'] = g.request_destination.get('address').get('coord')
+                            j['sections'][-1]['to']['address']['coord'] = g.request_destination.get('address').get(
+                                'coord'
+                            )
 
             return objects
 
