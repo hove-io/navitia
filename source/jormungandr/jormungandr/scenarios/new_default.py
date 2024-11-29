@@ -1317,11 +1317,10 @@ class Scenario(simple.Scenario):
         )
 
         # we store the origin/destination detail in g to be able to use them after the marshall
-        # If origin/destination is address and id doesn't match with calculated id then
+        # If origin/destination is address and id doesn't match with calculated id (by autocomplete) then
         # we should use the original request address id and update later
         g.origin_detail = origin_detail
         request_origin = json_address_from_uri(api_request.get('origin'))
-        # if request_origin and origin_detail and request_origin.get('id') != origin_detail.get('id'):
         if is_different_geographic_position(origin_detail, request_origin):
             origin_detail = request_origin
             g.request_origin = request_origin
