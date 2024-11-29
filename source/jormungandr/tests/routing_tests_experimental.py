@@ -681,6 +681,7 @@ class TestDistributedWithDestinationPositionNotMatchingAutocomplete(NewDefaultSc
     """
     Test on geographical position as destination which doesn't match with address found by autocomplete
     """
+
     def test_destination_address_id_and_coord(self):
         from_coord = '8.98311981954709e-05;8.98311981954709e-05'
         to_coord = '0.0018864551621048887;0.0007186495855637672'
