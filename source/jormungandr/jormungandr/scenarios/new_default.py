@@ -1337,7 +1337,6 @@ class Scenario(simple.Scenario):
 
         g.destination_detail = destination_detail
         request_destination = json_address_from_uri(api_request.get('destination'))
-        # if request_destination and destination_detail and request_destination.get('id') != destination_detail.get('id'):
         if is_different_geographic_position(destination_detail, request_destination):
             destination_detail = request_destination
             g.request_destination = request_destination

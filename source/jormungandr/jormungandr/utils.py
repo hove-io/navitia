@@ -1222,7 +1222,7 @@ def is_different_geographic_position(addr1, addr2):
     """
     if not (addr1 and addr2):
         return False
-    if  addr1.get('embedded_type') != "address":
+    if addr1.get('embedded_type') != "address":
         return False
     if addr1.get('id') != addr2.get('id'):
         return True
