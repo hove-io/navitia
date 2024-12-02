@@ -39,7 +39,7 @@ from jormungandr.utils import (
     get_pt_object_coord,
     generate_id,
 )
-from jormungandr.street_network.utils import crowfly_distance_between
+from jormungandr.street_network.utils import crowfly_distance_between, get_manhattan_duration
 from jormungandr.fallback_modes import FallbackModes, all_fallback_modes
 from jormungandr.scenarios.helper_classes.place_by_uri import PlaceByUri
 import math
@@ -49,6 +49,8 @@ import copy
 import logging
 import six
 from functools import cmp_to_key
+from contextlib import contextmanager
+import time
 
 CAR_PARK_DURATION = 300  # secs
 
@@ -193,9 +195,9 @@ def _make_ending_car_park_sections(
     car_park_to_sp_section.duration = car_park_crowfly_duration
 
 
-def _extend_with_bike_park(begin_date_time, duration):
+def _make_bike_park(begin_date_time, duration):
     bike_park_section = response_pb2.Section()
-    bike_park_section.id = "Section_1"
+    bike_park_section.id = "section_bike_park"
     bike_park_section.duration = duration
     bike_park_section.type = response_pb2.PARK
     bike_park_section.begin_date_time = begin_date_time
@@ -203,7 +205,7 @@ def _extend_with_bike_park(begin_date_time, duration):
     return bike_park_section
 
 
-def _extend_with_bike_park_street_network(origin, begin_date_time, destination, end_date_time, duration):
+def _make_bike_park_street_network(origin, begin_date_time, destination, end_date_time, duration):
     bike_park_to_sp_section = response_pb2.Section()
     bike_park_to_sp_section.id = "Street_network_section_2"
     bike_park_to_sp_section.origin.CopyFrom(origin)
@@ -425,57 +427,20 @@ def _update_journey(journey, park_section, street_mode_section, to_replace, new_
     journey.nb_sections += 2
 
 
-def haversine(cord1, cord2):
-    """
-    Calculate the great-circle distance between two points on the Earth's surface using the Haversine formula.
-
-    Parameters:
-    cord1 (object): An object with 'lat' and 'lon' attributes representing the latitude and longitude of the first point in degrees.
-    cord2 (object): An object with 'lat' and 'lon' attributes representing the latitude and longitude of the second point in degrees.
-
-    Returns:
-    float: The distance between the two points in kilometers.
-    """
-    lat1, lon1 = cord1.lat, cord1.lon
-    lat2, lon2 = cord2.lat, cord2.lon
-    # Radius of the Earth in kilometers
-    r = 6371.0
-
-    # Convert latitude and longitude from degrees to radians
-    lat1_rad, lon1_rad = math.radians(lat1), math.radians(lon1)
-    lat2_rad, lon2_rad = math.radians(lat2), math.radians(lon2)
-
-    # Differences in coordinates
-    delta_lat = lat2_rad - lat1_rad
-    delta_lon = lon2_rad - lon1_rad
-
-    # Haversine formula
-    a = math.sin(delta_lat / 2) ** 2 + math.cos(lat1_rad) * math.cos(lat2_rad) * math.sin(delta_lon / 2) ** 2
-    c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
-
-    # Distance in kilometers
-    distance = r * c
-    return distance
-
-
-def walking_time(cord1, cord2, speed_kmh=3):
+def walking_time(cord1, cord2, walking_speed):
     """
     Calculate the walking time between two coordinates.
 
     Args:
         cord1 (tuple): The (latitude, longitude) of the starting point.
         cord2 (tuple): The (latitude, longitude) of the destination point.
-        speed_kmh (float, optional): Walking speed in kilometers per hour. Defaults to 5 km/h.
+        walking_speed (float, optional): Walking speed in meter per seconds.
 
     Returns:
         float: The walking time in secondes.
     """
-    distance = haversine(cord1, cord2)
-    # Time in hours
-    time_hours = distance / speed_kmh
-    # Convert to secondes
-    seconds = time_hours * 60 * 60
-    return round(seconds)
+    distance = crowfly_distance_between(cord1, cord2)
+    return get_manhattan_duration(distance, walking_speed)
 
 
 def _get_place(kwargs, uri):
@@ -536,15 +501,19 @@ def _update_fallback_with_bike_mode(
     _rename_fallback_sections_ids(fallback_sections)
 
     # We have to create the link between the fallback and the pt part manually here
-    if fallback_type == StreetNetworkPathType.BEGINNING_FALLBACK and kwargs["origin_mode"] == ["bike"]:
+    if fallback_type == StreetNetworkPathType.BEGINNING_FALLBACK and "bike" in kwargs["origin_mode"]:
         address = _get_place(kwargs, fallback_sections[-1].destination.uri)
-        walktime = walking_time(address.address.coord, journey.sections[0].destination.stop_point.coord)
+        walktime = walking_time(
+            address.address.coord,
+            journey.sections[0].destination.stop_point.coord,
+            kwargs["instance"].walking_speed,
+        )
         fallback_sections[-1].destination.CopyFrom(address)
         for s in journey.sections:
             s.begin_date_time += kwargs["additional_time"] + walktime
             s.end_date_time += kwargs["additional_time"] + walktime
-        park_section = _extend_with_bike_park(fallback_sections[-1].end_date_time, kwargs["additional_time"])
-        street_mode_section = _extend_with_bike_park_street_network(
+        park_section = _make_bike_park(fallback_sections[-1].end_date_time, kwargs["additional_time"])
+        street_mode_section = _make_bike_park_street_network(
             fallback_sections[-1].destination,
             park_section.end_date_time,
             journey.sections[0].destination,
@@ -555,18 +524,20 @@ def _update_fallback_with_bike_mode(
             [journey.sections[0].destination.stop_point.coord, fallback_sections[-1].destination.address.coord]
         )
         _update_journey(journey, park_section, street_mode_section, journey.sections[0], fallback_sections)
-    if fallback_type == StreetNetworkPathType.BEGINNING_FALLBACK and kwargs["origin_mode"] != ["bike"]:
+    if fallback_type == StreetNetworkPathType.BEGINNING_FALLBACK and "bike" not in kwargs["origin_mode"]:
         section_to_replace = journey.sections[0]
         journey.sections.remove(section_to_replace)
         fallback_sections[-1].destination.CopyFrom(journey.sections[0].origin)
         journey.sections.extend(fallback_sections)
-    elif fallback_type == StreetNetworkPathType.ENDING_FALLBACK and kwargs["destination_mode"] == ["bike"]:
+    elif fallback_type == StreetNetworkPathType.ENDING_FALLBACK and "bike" in kwargs["destination_mode"]:
         walktime = walking_time(
-            journey.sections[-1].origin.stop_point.coord, fallback_sections[0].origin.address.coord
+            journey.sections[-1].origin.stop_point.coord,
+            fallback_sections[0].origin.address.coord,
+            kwargs["instance"].walking_speed,
         )
         address = _get_place(kwargs, fallback_sections[0].origin.uri)
         fallback_sections[0].origin.CopyFrom(address)
-        street_mode_section = _extend_with_bike_park_street_network(
+        street_mode_section = _make_bike_park_street_network(
             journey.sections[-1].origin,
             fallback_sections[0].begin_date_time,
             fallback_sections[0].origin,
@@ -574,13 +545,13 @@ def _update_fallback_with_bike_mode(
             - journey.sections[-1].begin_date_time,
             walktime,
         )
-        park_section = _extend_with_bike_park(street_mode_section.begin_date_time, kwargs["additional_time"])
+        park_section = _make_bike_park(street_mode_section.begin_date_time, kwargs["additional_time"])
         fallback_sections[0].begin_date_time += kwargs["additional_time"]
         street_mode_section.street_network.coordinates.extend(
             [journey.sections[-1].origin.stop_point.coord, fallback_sections[0].origin.address.coord]
         )
         _update_journey(journey, park_section, street_mode_section, journey.sections[-1], fallback_sections)
-    elif fallback_type == StreetNetworkPathType.ENDING_FALLBACK and kwargs["destination_mode"] != ["bike"]:
+    elif fallback_type == StreetNetworkPathType.ENDING_FALLBACK and "bike" not in kwargs["destination_mode"]:
         section_to_replace = journey.sections[-1]
         journey.sections.remove(section_to_replace)
         fallback_sections[0].origin.CopyFrom(journey.sections[-1].destination)
@@ -850,8 +821,8 @@ def _build_fallback(
                         fallback_dp_copy, fallback_type, requested_obj, via_poi_access, language
                     )
 
-                if request["park_mode"] == [ParkMode.on_street.name] and (
-                    request["origin_mode"] == ["bike"] or request["destination_mode"] == ["bike"]
+                if ParkMode.on_street.name in request["park_mode"] and (
+                    "bike" in request["origin_mode"] or "bike" in request["destination_mode"]
                 ):
                     _update_fallback_with_bike_mode(
                         pt_journey,
