@@ -87,6 +87,7 @@ from jormungandr.utils import (
     json_address_from_uri,
     entrypoint_uri_refocus,
     get_pt_object_coord,
+    is_different_geographic_position,
 )
 from jormungandr.error import generate_error
 from jormungandr.utils import Coords
@@ -1316,17 +1317,31 @@ class Scenario(simple.Scenario):
         )
 
         # we store the origin/destination detail in g to be able to use them after the marshall
+        # If origin/destination is address and id doesn't match with calculated id (by autocomplete) then
+        # we should use the original request address id and update later
         g.origin_detail = origin_detail
-        g.destination_detail = destination_detail
+        request_origin = json_address_from_uri(api_request.get('origin'))
+        if is_different_geographic_position(origin_detail, request_origin):
+            origin_detail = request_origin
+            g.request_origin = request_origin
+        else:
+            origin_detail = origin_detail or request_origin
 
-        origin_detail = origin_detail or json_address_from_uri(api_request.get('origin'))
         if not origin_detail:
             return generate_error(
                 TEMPLATE_MSG_UNKNOWN_OBJECT.format(api_request.get('origin')),
                 response_pb2.Error.unknown_object,
                 404,
             )
-        destination_detail = destination_detail or json_address_from_uri(api_request.get('destination'))
+
+        g.destination_detail = destination_detail
+        request_destination = json_address_from_uri(api_request.get('destination'))
+        if is_different_geographic_position(destination_detail, request_destination):
+            destination_detail = request_destination
+            g.request_destination = request_destination
+        else:
+            destination_detail = destination_detail or request_destination
+
         if not destination_detail:
             return generate_error(
                 TEMPLATE_MSG_UNKNOWN_OBJECT.format(api_request.get('destination')),
