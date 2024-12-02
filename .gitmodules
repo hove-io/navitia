@@ -15,7 +15,7 @@
 	url = git@github.com:hove-io/chaos-proto.git
 [submodule "source/navitia-proto"]
 	path = source/navitia-proto
-	url = https://github.com/hove-io/navitia-proto.git
+	url = git@github.com:hove-io/navitia-proto.git
 [submodule "source/third_party/prometheus-cpp"]
 	path = source/third_party/prometheus-cpp
 	url = https://github.com/jupp0r/prometheus-cpp
