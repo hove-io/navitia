@@ -31,13 +31,13 @@
 
 
 from enum import Enum
-from navitiacommon import response_pb2
+from navitiacommon import request_pb2
 
 
 class ParkMode(Enum):
-    none = response_pb2.NONE
-    on_street = response_pb2.OnStreet
-    park_and_ride = response_pb2.ParkAndRide
+    none = request_pb2.NONE
+    on_street = request_pb2.OnStreet
+    park_and_ride = request_pb2.ParkAndRide
 
     @classmethod
     def modes_str(cls):

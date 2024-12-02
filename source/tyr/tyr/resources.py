@@ -720,22 +720,6 @@ class Instance(flask_restful.Resource):
         )
 
         parser.add_argument(
-            'additional_time_before_first_section_bike',
-            type=int,
-            help='additional time after the bike section when used as first section mode',
-            location=('json', 'values'),
-            default=instance.additional_time_before_first_section_bike,
-        )
-
-        parser.add_argument(
-            'additional_time_before_last_section_bike',
-            type=int,
-            help='additional time before the bike section when used as first section mode',
-            location=('json', 'values'),
-            default=instance.additional_time_before_first_section_bike,
-        )
-
-        parser.add_argument(
             'max_additional_connections',
             type=int,
             help='maximum number of connections allowed in journeys',

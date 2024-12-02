@@ -75,6 +75,7 @@ from jormungandr.fallback_modes import FallbackModes
 from copy import deepcopy
 from jormungandr.travelers_profile import TravelerProfile
 from navitiacommon.constants import ENUM_LANGUAGE
+import urllib.parse
 import base64
 
 
