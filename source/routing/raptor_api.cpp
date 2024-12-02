@@ -397,8 +397,6 @@ static void compute_metadata(pbnavitia::Journey* pb_journey) {
                     total_car_distance += section.length();
                     break;
                 case pbnavitia::StreetNetworkMode::Bike:
-                    total_bike_duration += section.duration();
-                    total_bike_distance += section.length();
                 case pbnavitia::StreetNetworkMode::Bss:
                     total_bike_duration += section.duration();
                     total_bike_distance += section.length();
