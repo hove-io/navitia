@@ -44,28 +44,5 @@ class ParkMode(Enum):
 
         return {e.name for e in cls}
 
-    @classmethod
-    def modes_enum(cls):
-        return set(cls)
-
-    @classmethod
-    def get_allowed_combinations_enums(cls):
-        def _combi(first_sections_modes, last_section_modes):
-            from itertools import product
-
-            # cartesian product between two iterables
-            return set(product(first_sections_modes, last_section_modes))
-
-        return _combi(cls.modes_enum(), cls.modes_enum())
-
-    @classmethod
-    def get_allowed_combinations_str(cls):
-        # python 2/3 portability
-        import six
-
-        allowed_combinations_enum = cls.get_allowed_combinations_enums()
-        # transform all enum to str
-        return set(six.moves.map(lambda modes: (modes[0].name, modes[1].name), allowed_combinations_enum))
-
 
 all_park_modes = ParkMode.modes_str()
