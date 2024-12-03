@@ -245,7 +245,13 @@ class JourneyCommon(ResourceUri, ResourceUtc):
             type=OptionValue(park_modes.all_park_modes),
             dest="park_mode",
             action="append",
-            help='Force the park mode if the first section is by bike\n',
+            help='Force the park mode for the first or last section of a journey\n'
+            'Need to be set with one of the first_section_mode[] or last_section_mode[] corresponding to vehicles that could be parked\n'
+            'Note: Only work with the first or last section mode  being a bike for the moment\n'
+            'Eg: If you want to park a bike at the departure, you need:\n'
+            '`first_section_mode[]=bike&park_mode[]=on_street`'
+            'Eg: If you want to park a bike at the arrival, you need:\n'
+            '`last_section_mode[]=bike&park_mode[]=on_street`',
         )
         # for retrocompatibility purpose, we duplicate (without []):
         parser_get.add_argument(
