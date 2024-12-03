@@ -17,7 +17,7 @@ import sqlalchemy as sa
 def upgrade():
     op.add_column(
         'instance',
-        sa.Column('on_street_bike_parking_duration', sa.Integer(), nullable=False, server_default='500'),
+        sa.Column('on_street_bike_parking_duration', sa.Integer(), nullable=False, server_default='300'),
     )
 
 
