@@ -843,6 +843,9 @@ class Journeys(JourneyCommon):
             if args.get('additional_time_before_last_section_taxi') is None:
                 args['additional_time_before_last_section_taxi'] = mod.additional_time_before_last_section_taxi
 
+            if args.get("on_street_bike_parking_duration") is None:
+                args["on_street_bike_parking_duration"] = mod.on_street_bike_parking_duration
+
             if args.get('_stop_points_nearby_duration') is None:
                 args['_stop_points_nearby_duration'] = mod.stop_points_nearby_duration
 

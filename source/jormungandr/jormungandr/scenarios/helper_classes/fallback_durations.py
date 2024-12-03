@@ -38,7 +38,7 @@ from jormungandr.street_network.street_network import StreetNetworkPathType
 from jormungandr import new_relic, excluded_zones_manager
 from jormungandr.fallback_modes import FallbackModes
 import logging
-from .helper_utils import timed_logger
+from .timer_logger_helper import timed_logger
 import six
 from navitiacommon import type_pb2
 from jormungandr.exceptions import GeoveloTechnicalError

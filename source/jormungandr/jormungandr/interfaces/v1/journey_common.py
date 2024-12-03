@@ -30,7 +30,7 @@
 # www.navitia.io
 
 from __future__ import absolute_import, print_function, unicode_literals, division
-from jormungandr import i_manager, fallback_modes, partner_services, app
+from jormungandr import i_manager, fallback_modes, park_modes, partner_services, app
 from jormungandr.interfaces.v1.ResourceUri import ResourceUri
 from datetime import datetime
 from jormungandr.resources_utils import ResourceUtc
@@ -238,6 +238,20 @@ class JourneyCommon(ResourceUri, ResourceUtc):
             dest="destination_mode",
             action="append",
             help='Same as first_section_mode but for the last section.',
+        )
+
+        parser_get.add_argument(
+            "park_mode[]",
+            type=OptionValue(park_modes.all_park_modes),
+            dest="park_mode",
+            action="append",
+            help='Force the park mode for the first or last section of a journey\n'
+            'Need to be set with one of the first_section_mode[] or last_section_mode[] corresponding to vehicles that could be parked\n'
+            'Note: Only work with the first or last section mode  being a bike for the moment\n'
+            'Eg: If you want to park a bike at the departure, you need:\n'
+            '`first_section_mode[]=bike&park_mode[]=on_street`'
+            'Eg: If you want to park a bike at the arrival, you need:\n'
+            '`last_section_mode[]=bike&park_mode[]=on_street`',
         )
         # for retrocompatibility purpose, we duplicate (without []):
         parser_get.add_argument(
@@ -506,6 +520,13 @@ class JourneyCommon(ResourceUri, ResourceUtc):
             type=int,
             help="the additional time added to the taxi section, right before riding the taxi but after hopping off the public transit",
         )
+
+        parser_get.add_argument(
+            "on_street_bike_parking_duration",
+            type=int,
+            help="the additional time added to the bike section before and after parking the bike",
+        )
+
         parser_get.add_argument(
             "_pt_planner",
             type=OptionValue(['kraken', 'loki']),

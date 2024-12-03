@@ -29,7 +29,8 @@
 from __future__ import absolute_import
 
 import jormungandr.street_network.utils
-from .helper_utils import get_max_fallback_duration, timed_logger
+from .helper_utils import get_max_fallback_duration
+from .timer_logger_helper import timed_logger
 from jormungandr import utils, new_relic, fallback_modes as fm
 import logging
 from navitiacommon import type_pb2

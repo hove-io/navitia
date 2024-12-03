@@ -32,7 +32,6 @@ from jormungandr.street_network.street_network import StreetNetworkPathType
 import logging
 import gevent
 from .helper_utils import (
-    timed_logger,
     prepend_first_coord,
     append_last_coord,
     extend_path_with_via_poi_access,
@@ -40,6 +39,7 @@ from .helper_utils import (
     is_valid_direct_path_streetwork,
     is_valid_direct_path,
 )
+from .timer_logger_helper import timed_logger
 from navitiacommon import type_pb2, response_pb2
 from jormungandr.exceptions import GeoveloTechnicalError
 from .helper_exceptions import StreetNetworkException

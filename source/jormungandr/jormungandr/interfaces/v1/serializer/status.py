@@ -74,6 +74,7 @@ class ParametersSerializer(serpy.Serializer):
     max_extra_second_pass = Field(schema_type=int)
     additional_time_after_first_section_taxi = Field(schema_type=int)
     additional_time_before_last_section_taxi = Field(schema_type=int)
+    on_street_bike_parking_duration = Field(schema_type=int)
     max_walking_direct_path_duration = Field(schema_type=int)
     max_bike_direct_path_duration = Field(schema_type=int)
     max_bss_direct_path_duration = Field(schema_type=int)

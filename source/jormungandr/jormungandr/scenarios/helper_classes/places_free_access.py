@@ -33,7 +33,7 @@ from navitiacommon import type_pb2
 from jormungandr import utils, new_relic
 from collections import namedtuple
 import logging
-from .helper_utils import timed_logger
+from .timer_logger_helper import timed_logger
 from jormungandr.street_network.utils import crowfly_distance_between
 
 FreeAccessObject = namedtuple('FreeAccessObject', ['uri', 'lon', 'lat'])

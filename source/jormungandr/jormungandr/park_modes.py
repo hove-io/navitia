@@ -1,4 +1,4 @@
-# Copyright (c) 2001-2022, Hove and/or its affiliates. All rights reserved.
+# Copyright (c) 2001-2024, Hove and/or its affiliates. All rights reserved.
 #
 # This file is part of Navitia,
 #     the software to build cool stuff with public transport.
@@ -26,32 +26,23 @@
 # channel `#navitia` on riot https://riot.im/app/#/room/#navitia:matrix.org
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
-from __future__ import absolute_import
-from jormungandr import new_relic
-import logging
-from .timer_logger_helper import timed_logger
+#
+#
 
 
-class PlaceByUri:
-    def __init__(self, future_manager, instance, uri, request_id):
-        self._future_manager = future_manager
-        self._instance = instance
-        self._uri = uri
-        self._value = None
-        self._logger = logging.getLogger(__name__)
-        self._request_id = request_id
-        self._async_request()
+from enum import Enum
+from navitiacommon import request_pb2
 
-    @new_relic.distributedEvent("place_by_uri", "places")
-    def _place(self):
-        with timed_logger(self._logger, 'place_by_uri_calling_external_service', self._request_id):
-            return self._instance.georef.place(self._uri, request_id=self._request_id)
 
-    def _do_request(self):
-        return self._place(self._instance.georef)
+class ParkMode(Enum):
+    none = request_pb2.NONE
+    on_street = request_pb2.OnStreet
+    park_and_ride = request_pb2.ParkAndRide
 
-    def _async_request(self):
-        self._value = self._future_manager.create_future(self._do_request)
+    @classmethod
+    def modes_str(cls):
 
-    def wait_and_get(self):
-        return self._value.wait_and_get()
+        return {e.name for e in cls}
+
+
+all_park_modes = ParkMode.modes_str()

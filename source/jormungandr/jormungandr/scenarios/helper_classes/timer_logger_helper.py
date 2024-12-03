@@ -1,4 +1,5 @@
-# Copyright (c) 2001-2022, Hove and/or its affiliates. All rights reserved.
+# encoding: utf-8
+# Copyright (c) 2001-2024, Hove and/or its affiliates. All rights reserved.
 #
 # This file is part of Navitia,
 #     the software to build cool stuff with public transport.
@@ -26,32 +27,24 @@
 # channel `#navitia` on riot https://riot.im/app/#/room/#navitia:matrix.org
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
-from __future__ import absolute_import
-from jormungandr import new_relic
-import logging
-from .timer_logger_helper import timed_logger
+
+from contextlib import contextmanager
+import time
 
 
-class PlaceByUri:
-    def __init__(self, future_manager, instance, uri, request_id):
-        self._future_manager = future_manager
-        self._instance = instance
-        self._uri = uri
-        self._value = None
-        self._logger = logging.getLogger(__name__)
-        self._request_id = request_id
-        self._async_request()
+@contextmanager
+def timed_logger(logger, task_name, request_id):
+    start = time.time()
+    try:
+        yield logger
+    finally:
+        end = time.time()
+        elapsed_time = (end - start) * 1000
+        start_in_ms = int(start * 1000)
+        end_in_ms = int(end * 1000)
 
-    @new_relic.distributedEvent("place_by_uri", "places")
-    def _place(self):
-        with timed_logger(self._logger, 'place_by_uri_calling_external_service', self._request_id):
-            return self._instance.georef.place(self._uri, request_id=self._request_id)
-
-    def _do_request(self):
-        return self._place(self._instance.georef)
-
-    def _async_request(self):
-        self._value = self._future_manager.create_future(self._do_request)
-
-    def wait_and_get(self):
-        return self._value.wait_and_get()
+        logger.info(
+            "Task : {}, request : {},  start : {}, end : {}, elapsed time: {} ms".format(
+                task_name, request_id, start_in_ms, end_in_ms, '%.2e' % elapsed_time
+            )
+        )
