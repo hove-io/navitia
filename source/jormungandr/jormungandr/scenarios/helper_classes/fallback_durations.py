@@ -29,6 +29,7 @@
 
 from __future__ import absolute_import
 
+from jormungandr.park_modes import ParkMode
 import jormungandr.street_network.utils
 from navitiacommon import response_pb2
 from collections import namedtuple, defaultdict
@@ -337,6 +338,13 @@ class FallbackDurations:
         for idx, r in routing_response:
             pt_object = places_isochrone[idx]
             duration = self._get_duration(r, pt_object)
+
+            extra_duration = 0
+            if FallbackModes.bike.name == self._mode and ParkMode.on_street.name == (
+                self._request.get("park_mode") or ""
+            ):
+                extra_duration = self._request["on_street_bike_parking_duration"]
+            duration += extra_duration
             # in this case, the pt_object can be either a stop point or an access point
             if is_stop_point(pt_object):
                 self._update_fb_durations(fallback_durations, pt_object, duration, r)
