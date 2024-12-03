@@ -821,9 +821,7 @@ def _build_fallback(
                         fallback_dp_copy, fallback_type, requested_obj, via_poi_access, language
                     )
 
-                if request["park_mode"] == [ParkMode.on_street.name] and (
-                    request["origin_mode"] == ["bike"] or request["destination_mode"] == ["bike"]
-                ):
+                if request["park_mode"] == [ParkMode.on_street.name]:
                     _update_fallback_with_bike_mode(
                         pt_journey,
                         fallback_dp_copy,
