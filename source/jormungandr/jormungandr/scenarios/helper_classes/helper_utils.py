@@ -433,7 +433,7 @@ def _update_journey(journey, park_section, street_mode_section, to_replace, new_
 
 def _get_walking_information(cord1, cord2, walking_speed):
     """
-    Calculate the walking time between two coordinates.
+    Calculate the walking time and the distance between two coordinates.
 
     Args:
         cord1 (tuple): The (latitude, longitude) of the starting point.
@@ -442,6 +442,7 @@ def _get_walking_information(cord1, cord2, walking_speed):
 
     Returns:
         float: The walking time in secondes.
+        float: The distance in meters.
     """
     distance = crowfly_distance_between(cord1, cord2)
     return get_manhattan_duration(distance, walking_speed), round(distance)
