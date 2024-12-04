@@ -1563,3 +1563,55 @@ class TestBikeWithParkingPenalty(NewDefaultScenarioAbstractTestFixture):
                 assert journey['sections'][2]['type'] == 'street_network'
                 assert journey['sections'][2]['mode'] == 'walking'
                 assert len(journey['sections'][2]['vias']) >= 1
+
+    def test_bike_with_parking_penalty_multiple_first_section_mode(self):
+        query = (
+            sub_query
+            + "&datetime=20120614T075000"
+            + "&from=2.36893;48.88413"
+            + "&to=2.28928;48.84710"
+            + "&first_section_mode[]=bike"
+            + "&bike_speed=0.1"
+            + "&park_mode[]=on_street"
+            + "&_access_points=true"
+            + "&first_section_mode[]=walking"
+        )
+
+        response = self.query_region(query)
+        check_best(response)
+
+        journeys = get_not_null(response, 'journeys')
+        assert len(journeys) > 0
+        for journey in journeys:
+            if len(journey['sections']) > 1:
+                assert journey['sections'][0]['mode'] in ['bike', 'walking']
+                assert journey['sections'][1]['type'] == 'park'
+                assert journey['sections'][2]['type'] == 'street_network'
+                assert journey['sections'][2]['mode'] == 'walking'
+                assert len(journey['sections'][2]['vias']) >= 1
+
+    def test_bike_with_parking_penalty_multiple_first_section_mode_and_access_points(self):
+        query = (
+            sub_query
+            + "&datetime=20120614T075000"
+            + "&from=2.36893;48.88413"
+            + "&to=2.28928;48.84710"
+            + "&first_section_mode[]=bike"
+            + "&bike_speed=0.1"
+            + "&park_mode[]=on_street"
+            + "&_access_points=true"
+            + "&first_section_mode[]=walking"
+        )
+
+        response = self.query_region(query)
+        check_best(response)
+
+        journeys = get_not_null(response, 'journeys')
+        assert len(journeys) > 0
+        for journey in journeys:
+            if len(journey['sections']) > 1:
+                assert journey['sections'][0]['mode'] in ['bike', 'walking']
+                assert journey['sections'][1]['type'] == 'park'
+                assert journey['sections'][2]['type'] == 'street_network'
+                assert journey['sections'][2]['mode'] == 'walking'
+                assert len(journey['sections'][2]['vias']) >= 1
