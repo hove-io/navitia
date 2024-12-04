@@ -518,7 +518,6 @@ def _update_fallback_with_bike_mode(
             s.end_date_time += kwargs["additional_time"] + walktime
         park_section = _make_bike_park(fallback_sections[-1].end_date_time, kwargs["additional_time"])
         journey.durations.walking += walktime
-        # journey.distances.walking += walking_distance
         street_mode_section = _make_bike_park_street_network(
             fallback_sections[-1].destination,
             park_section.end_date_time,
@@ -542,7 +541,6 @@ def _update_fallback_with_bike_mode(
             kwargs["instance"].walking_speed,
         )
         journey.durations.walking += walktime
-        # journey.distances.walking += walking_distance
         address = _get_place(kwargs, fallback_sections[0].origin.uri)
         fallback_sections[0].origin.CopyFrom(address)
         street_mode_section = _make_bike_park_street_network(
