@@ -1530,8 +1530,6 @@ class TestBikeWithParkingPenalty(NewDefaultScenarioAbstractTestFixture):
         query = (
             sub_query
             + "&datetime=20120614T075000"
-            + "&from=2.36893;48.88413"
-            + "&to=2.28928;48.84710"
             + "&first_section_mode[]=bike"
             + "&bike_speed=0.1"
             + "&park_mode[]=on_street"
@@ -1550,23 +1548,23 @@ class TestBikeWithParkingPenalty(NewDefaultScenarioAbstractTestFixture):
             assert journey['sections'][2]['mode'] == 'walking'
             assert len(journey['sections'][2]['geojson']['coordinates']) == 2
 
+    # 'from=0.0000898312;0.0000898312&to=0.00188646;0.00071865&'
     def test_bike_with_parking_penalty_last_section(self):
         query = (
             sub_query
-            + "&datetime=20120614T095000"
-            + "&from=2.36893;48.88413"
-            + "&to=2.28928;48.84710"
+            + "&datetime=20120614T075000"
             + "&last_section_mode[]=bike"
+            + "&bike_speed=0.1"
             + "&park_mode[]=on_street"
         )
 
         response = self.query_region(query)
         check_best(response)
-
         journeys = get_not_null(response, 'journeys')
-        pt_journeys = [j for j in journeys if 'bike' in j['tags']]
+        pt_journeys = [j for j in journeys if 'bike' in j['tags'] and 'non_pt_bike' not in j['tags']]
+        assert len(pt_journeys) > 0
         for journey in pt_journeys:
-            assert journey['sections'][-1]['mode'] == 'bike'
+            assert len(journey['sections']) >= 15
             assert journey['sections'][-2]['type'] == 'park'
             assert journey['sections'][-3]['type'] == 'street_network'
 
@@ -1574,8 +1572,6 @@ class TestBikeWithParkingPenalty(NewDefaultScenarioAbstractTestFixture):
         query = (
             sub_query
             + "&datetime=20120614T075000"
-            + "&from=2.36893;48.88413"
-            + "&to=2.28928;48.84710"
             + "&first_section_mode[]=bike"
             + "&bike_speed=0.1"
             + "&park_mode[]=on_street"
@@ -1599,8 +1595,6 @@ class TestBikeWithParkingPenalty(NewDefaultScenarioAbstractTestFixture):
         query = (
             sub_query
             + "&datetime=20120614T075000"
-            + "&from=2.36893;48.88413"
-            + "&to=2.28928;48.84710"
             + "&first_section_mode[]=bike"
             + "&bike_speed=0.1"
             + "&park_mode[]=on_street"
@@ -1625,8 +1619,6 @@ class TestBikeWithParkingPenalty(NewDefaultScenarioAbstractTestFixture):
         query = (
             sub_query
             + "&datetime=20120614T075000"
-            + "&from=2.36893;48.88413"
-            + "&to=2.28928;48.84710"
             + "&first_section_mode[]=bike"
             + "&bike_speed=0.1"
             + "&park_mode[]=on_street"
@@ -1651,8 +1643,6 @@ class TestBikeWithParkingPenalty(NewDefaultScenarioAbstractTestFixture):
         query = (
             sub_query
             + "&datetime=20120614T075000"
-            + "&from=2.36893;48.88413"
-            + "&to=2.28928;48.84710"
             + "&first_section_mode[]=bike"
             + "&bike_speed=0.1"
             + "&park_mode[]=none"
@@ -1674,8 +1664,6 @@ class TestBikeWithParkingPenalty(NewDefaultScenarioAbstractTestFixture):
         query = (
             sub_query
             + "&datetime=20120614T075000"
-            + "&from=2.36893;48.88413"
-            + "&to=2.28928;48.84710"
             + "&first_section_mode[]=bike"
             + "&bike_speed=0.1"
             + "&park_mode[]=park_and_ride"

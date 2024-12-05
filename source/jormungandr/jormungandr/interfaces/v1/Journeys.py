@@ -37,6 +37,7 @@ from jormungandr import i_manager, app, fallback_modes
 from jormungandr.interfaces.parsers import default_count_arg_type
 from jormungandr.interfaces.v1.ResourceUri import complete_links
 from functools import wraps
+from jormungandr.park_modes import all_park_modes
 from jormungandr.timezone import set_request_timezone
 from jormungandr.interfaces.v1.make_links import (
     create_external_link,
@@ -567,6 +568,16 @@ class Journeys(JourneyCommon):
             help="Show more information about the poi if it's available, for instance, show "
             "BSS/car park availability in the pois(BSS/car park) of response",
         )
+
+        parser_get.add_argument(
+            "park_mode[]",
+            type=OptionValue(all_park_modes),
+            default=[],
+            action="append",
+            dest="park_mode",
+            help="Specify the mode of transport to park",
+        )
+
         parser_get.add_argument(
             "_no_shared_section",
             type=BooleanType(),
