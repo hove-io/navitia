@@ -1541,23 +1541,22 @@ class TestBikeWithParkingPenalty(NewDefaultScenarioAbstractTestFixture):
         check_best(response)
 
         journeys = get_not_null(response, 'journeys')
-        assert len(journeys) > 0
-        for journey in journeys:
-            if len(journey['sections']) > 1:
-                assert journey['sections'][0]['mode'] == 'bike'
-                assert journey['sections'][1]['type'] == 'park'
-                assert journey['sections'][2]['type'] == 'street_network'
-                assert journey['sections'][2]['mode'] == 'walking'
-                assert len(journey['sections'][2]['geojson']['coordinates']) == 2
+        pt_journeys = [j for j in journeys if 'bike' in j['tags'] and 'non_pt_bike' not in j['tags']]
+        assert len(pt_journeys) > 0
+        for journey in pt_journeys:
+            assert journey['sections'][0]['mode'] == 'bike'
+            assert journey['sections'][1]['type'] == 'park'
+            assert journey['sections'][2]['type'] == 'street_network'
+            assert journey['sections'][2]['mode'] == 'walking'
+            assert len(journey['sections'][2]['geojson']['coordinates']) == 2
 
     def test_bike_with_parking_penalty_last_section(self):
         query = (
             sub_query
-            + "&datetime=20120614T075000"
+            + "&datetime=20120614T095000"
             + "&from=2.36893;48.88413"
             + "&to=2.28928;48.84710"
             + "&last_section_mode[]=bike"
-            + "&bike_speed=0.1"
             + "&park_mode[]=on_street"
         )
 
@@ -1565,12 +1564,11 @@ class TestBikeWithParkingPenalty(NewDefaultScenarioAbstractTestFixture):
         check_best(response)
 
         journeys = get_not_null(response, 'journeys')
-        assert len(journeys) > 0
-        for journey in journeys:
-            if len(journey['sections']) > 1:
-                assert journey['sections'][-1]['mode'] == 'bike'
-                assert journey['sections'][-2]['type'] == 'park'
-                assert journey['sections'][-3]['type'] == 'street_network'
+        pt_journeys = [j for j in journeys if 'bike' in j['tags']]
+        for journey in pt_journeys:
+            assert journey['sections'][-1]['mode'] == 'bike'
+            assert journey['sections'][-2]['type'] == 'park'
+            assert journey['sections'][-3]['type'] == 'street_network'
 
     def test_bike_with_parking_penalty_first_section_and_access_points(self):
         query = (
@@ -1588,14 +1586,14 @@ class TestBikeWithParkingPenalty(NewDefaultScenarioAbstractTestFixture):
         check_best(response)
 
         journeys = get_not_null(response, 'journeys')
-        assert len(journeys) > 0
-        for journey in journeys:
-            if len(journey['sections']) > 1:
-                assert journey['sections'][0]['mode'] == 'bike'
-                assert journey['sections'][1]['type'] == 'park'
-                assert journey['sections'][2]['type'] == 'street_network'
-                assert journey['sections'][2]['mode'] == 'walking'
-                assert len(journey['sections'][2]['vias']) >= 1
+        pt_journeys = [j for j in journeys if 'bike' in j['tags'] and 'non_pt_bike' not in j['tags']]
+        assert len(pt_journeys) > 0
+        for journey in pt_journeys:
+            assert journey['sections'][0]['mode'] == 'bike'
+            assert journey['sections'][1]['type'] == 'park'
+            assert journey['sections'][2]['type'] == 'street_network'
+            assert journey['sections'][2]['mode'] == 'walking'
+            assert len(journey['sections'][2]['vias']) >= 1
 
     def test_bike_with_parking_penalty_multiple_first_section_mode(self):
         query = (
@@ -1614,14 +1612,14 @@ class TestBikeWithParkingPenalty(NewDefaultScenarioAbstractTestFixture):
         check_best(response)
 
         journeys = get_not_null(response, 'journeys')
-        assert len(journeys) > 0
-        for journey in journeys:
-            if len(journey['sections']) > 1:
-                assert journey['sections'][0]['mode'] in ['bike', 'walking']
-                assert journey['sections'][1]['type'] == 'park'
-                assert journey['sections'][2]['type'] == 'street_network'
-                assert journey['sections'][2]['mode'] == 'walking'
-                assert len(journey['sections'][2]['vias']) >= 1
+        pt_journeys = [j for j in journeys if 'bike' in j['tags'] and 'non_pt_bike' not in j['tags']]
+        assert len(pt_journeys) > 0
+        for journey in pt_journeys:
+            assert journey['sections'][0]['mode'] in ['bike', 'walking']
+            assert journey['sections'][1]['type'] == 'park'
+            assert journey['sections'][2]['type'] == 'street_network'
+            assert journey['sections'][2]['mode'] == 'walking'
+            assert len(journey['sections'][2]['vias']) >= 1
 
     def test_bike_with_parking_penalty_multiple_first_section_mode_and_access_points(self):
         query = (
@@ -1640,14 +1638,14 @@ class TestBikeWithParkingPenalty(NewDefaultScenarioAbstractTestFixture):
         check_best(response)
 
         journeys = get_not_null(response, 'journeys')
-        assert len(journeys) > 0
-        for journey in journeys:
-            if len(journey['sections']) > 1:
-                assert journey['sections'][0]['mode'] in ['bike', 'walking']
-                assert journey['sections'][1]['type'] == 'park'
-                assert journey['sections'][2]['type'] == 'street_network'
-                assert journey['sections'][2]['mode'] == 'walking'
-                assert len(journey['sections'][2]['vias']) >= 1
+        pt_journeys = [j for j in journeys if 'bike' in j['tags'] and 'non_pt_bike' not in j['tags']]
+        assert len(pt_journeys) > 0
+        for journey in pt_journeys:
+            assert journey['sections'][0]['mode'] in ['bike', 'walking']
+            assert journey['sections'][1]['type'] == 'park'
+            assert journey['sections'][2]['type'] == 'street_network'
+            assert journey['sections'][2]['mode'] == 'walking'
+            assert len(journey['sections'][2]['vias']) >= 1
 
     def test_bike_with_parking_penalty_multiple_first_section_mode_park_mode_none(self):
         query = (
@@ -1666,11 +1664,11 @@ class TestBikeWithParkingPenalty(NewDefaultScenarioAbstractTestFixture):
         check_best(response)
 
         journeys = get_not_null(response, 'journeys')
-        assert len(journeys) > 0
-        for journey in journeys:
-            if len(journey['sections']) > 1:
-                assert journey['sections'][0]['mode'] in ['bike', 'walking']
-                assert journey['sections'][1]['type'] != 'park'
+        pt_journeys = [j for j in journeys if 'bike' in j['tags'] and 'non_pt_bike' not in j['tags']]
+        assert len(pt_journeys) > 0
+        for journey in pt_journeys:
+            assert journey['sections'][0]['mode'] in ['bike', 'walking']
+            assert journey['sections'][1]['type'] != 'park'
 
     def test_bike_with_parking_penalty_multiple_first_section_mode_park_mode_park_and_ride(self):
         query = (
@@ -1689,8 +1687,8 @@ class TestBikeWithParkingPenalty(NewDefaultScenarioAbstractTestFixture):
         check_best(response)
 
         journeys = get_not_null(response, 'journeys')
-        assert len(journeys) > 0
-        for journey in journeys:
-            if len(journey['sections']) > 1:
-                assert journey['sections'][0]['mode'] in ['bike', 'walking']
-                assert journey['sections'][1]['type'] != 'park'
+        pt_journeys = [j for j in journeys if 'bike' in j['tags'] and 'non_pt_bike' not in j['tags']]
+        assert len(pt_journeys) > 0
+        for journey in pt_journeys:
+            assert journey['sections'][0]['mode'] in ['bike', 'walking']
+            assert journey['sections'][1]['type'] != 'park'
