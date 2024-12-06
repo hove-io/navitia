@@ -245,7 +245,7 @@ def handle_poi_disruptions_test():
             resp = get_response_with_poi_and_disruptions()
             assert len(resp[0].get("journeys", 0)) == 2
 
-            # Journey 1: a disruption exist for poi_uri_a: the poi in journey should have links and
+            # Journey 1: a disruption exist for poi_uri_a (origin): the poi in journey should have links and
             # impacted_object should have object poi
             origin = resp[0].get("journeys", 0)[0]['sections'][0]['from']['poi']
             assert origin['id'] == "poi_uri_a"
@@ -254,14 +254,14 @@ def handle_poi_disruptions_test():
             assert impacted_object['id'] == "poi_uri_a"
             assert "links" not in impacted_object
 
-            # No disruption exist for poi_uri_b: the poi in journey doesn't have links and object poi is absent
+            # No disruption exist for poi_uri_b (destination): the poi in journey doesn't have links and object poi is absent
             # in impacted_object
             destination = resp[0].get("journeys", 0)[0]['sections'][2]['to']['poi']
             assert destination['id'] == "poi_uri_b"
             assert len(destination["links"]) == 0
 
-            # Journey 2: a disruption exist for poi_uri_a: the poi in journey should have links and
-            # impacted_object should have object poi
+            # Journey 2: a disruption exist for poi_uri_a (origin) and another exist for poi_uri_from:
+            # both pois in journey should have links and  impacted_object should have object poi
             origin = resp[0].get("journeys", 0)[1]['sections'][0]['from']['poi']
             assert origin['id'] == "poi_uri_a"
             assert len(origin['links']) == 1
@@ -269,8 +269,21 @@ def handle_poi_disruptions_test():
             assert impacted_object['id'] == "poi_uri_a"
             assert "links" not in impacted_object
 
+            sections = resp[0].get("journeys", 0)[1]['sections']
+            assert len(sections) == 3
+            poi = sections[0]['to']['poi']
+            assert  poi['id'] == "poi_uri_from"
+            assert len(poi['links']) == 1
+            impacted_object = resp[0]['disruptions'][1]['impacted_objects'][0]['pt_object']['poi']
+            assert impacted_object['id'] == "poi_uri_from"
+            assert "links" not in impacted_object
+
+            poi = sections[1]['to']['poi']
+            assert poi['id'] == "poi_uri_to"
+            assert len(poi['links']) == 0
+
             # No disruption exist for poi_uri_b: the poi in journey doesn't have links and object poi is absent
             # in impacted_object
-            destination = resp[0].get("journeys", 0)[1]['sections'][0]['to']['poi']
+            destination = sections[2]['to']['poi']
             assert destination['id'] == "poi_uri_b"
             assert len(destination["links"]) == 0

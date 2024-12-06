@@ -202,6 +202,7 @@ instance_fields = {
     'max_additional_connections': fields.Raw,
     'successive_physical_mode_to_limit_id': fields.Raw,
     'car_park_provider': fields.Raw,
+    'disruptions_on_poi': fields.Raw,
     'equipment_details_providers': fields.Nested(equipment_provider_fields),
     'street_network_car': FieldUrlStreetNetworkBackend(),
     'street_network_car_no_park': FieldUrlStreetNetworkBackend(),

@@ -395,6 +395,12 @@ class JourneyCommon(ResourceUri, ResourceUtc):
             'and thus avoid disrupted public transport.\n'
             'Nota: `disruption_active=true` <=> `data_freshness=realtime`',
         )
+        parser_get.add_argument(
+            "_disruptions_on_poi",
+            type=BooleanType(),
+            hidden=True,
+            help="Fetch and display disruptions on poi in the journey response",
+        )
         # no default value for data_freshness because we need to maintain retrocomp with disruption_active
         parser_get.add_argument(
             "data_freshness",
