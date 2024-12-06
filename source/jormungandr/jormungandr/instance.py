@@ -615,6 +615,11 @@ class Instance(transient_socket.TransientSocket):
         return get_value_or_default('car_park_provider', instance_db, self.name)
 
     @property
+    def disruptions_on_poi(self):
+        # type: () -> bool
+        instance_db = self.get_models()
+        return get_value_or_default('disruptions_on_poi', instance_db, self.name)
+    @property
     def max_additional_connections(self):
         # type: () -> int
         instance_db = self.get_models()

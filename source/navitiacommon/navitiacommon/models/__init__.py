@@ -464,6 +464,10 @@ class Instance(db.Model):  # type: ignore
         db.Boolean, default=default_values.car_park_provider, nullable=False, server_default=true()
     )
 
+    disruptions_on_poi = db.Column(
+        db.Boolean, default=default_values.disruptions_on_poi, nullable=False, server_default=false()
+    )
+
     max_additional_connections = db.Column(
         db.Integer, default=default_values.max_additional_connections, nullable=False, server_default='2'
     )

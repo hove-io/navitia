@@ -100,11 +100,14 @@ night_bus_filter_base_factor = 15 * 60  # seconds
 # will be chosen.
 priority = 0
 
-# activate / desactivate call to bss provider
+# activate / deactivate call to bss provider
 bss_provider = True
 
-# activate / desactivate call to car parking provider
+# activate / deactivate call to car parking provider
 car_park_provider = True
+
+# activate / deactivate adding disruptions on poi in journeys
+disruptions_on_poi = False
 
 # Maximum number of connections allowed in journeys is calculated as
 # max_additional_connections + minimum connections among the journeys

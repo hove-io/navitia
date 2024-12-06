@@ -736,6 +736,14 @@ class Instance(flask_restful.Resource):
         )
 
         parser.add_argument(
+            'disruptions_on_poi',
+            type=inputs.boolean,
+            help='boolean to activate / deactivate adding disruptions on poi in journeys',
+            location=('json', 'values'),
+            default=instance.disruptions_on_poi,
+        )
+
+        parser.add_argument(
             'equipment_details_providers',
             type=str,
             action="append",
@@ -1069,6 +1077,7 @@ class Instance(flask_restful.Resource):
                         'on_street_bike_parking_duration',
                         'max_additional_connections',
                         'car_park_provider',
+                        'disruptions_on_poi',
                         'street_network_car',
                         'street_network_car_no_park',
                         'street_network_walking',

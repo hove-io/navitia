@@ -50,6 +50,7 @@ from flask import g
 import pytest
 from pytest_mock import mocker
 from collections import defaultdict
+import copy
 
 """
  sections       0   1   2   3   4   5   6   7   8   9   10
@@ -816,6 +817,8 @@ def journey_with_disruptions_on_poi_test(mocker):
         journey = response_journey_with_pois.journeys[0]
         assert len(journey.sections) == 3
 
+        original_response = copy.deepcopy(response_journey_with_pois)
+
         # Prepare disruptions on poi as response of end point poi_disruptions of loki
         # pt_object poi as impacted object is absent in the response of poi_disruptions
         disruptions_with_poi = helpers_tests.get_response_with_a_disruption_on_poi()
@@ -828,7 +831,8 @@ def journey_with_disruptions_on_poi_test(mocker):
         mock = mocker.patch(
             'jormungandr.scenarios.new_default.get_disruptions_on_poi', return_value=disruptions_with_poi
         )
-        update_disruptions_on_pois(instance, response_journey_with_pois)
+        mocked_request = {'origin_mode': [], 'destination_mode': [], '_disruptions_on_poi': True}
+        update_disruptions_on_pois(instance, mocked_request, response_journey_with_pois)
 
         assert len(response_journey_with_pois.impacts) == 1
         impact = response_journey_with_pois.impacts[0]
@@ -837,8 +841,11 @@ def journey_with_disruptions_on_poi_test(mocker):
 
         # In this state we haven't yet managed the final response so poi object is empty
         helpers_tests.verify_poi_in_impacted_objects(object=object, poi_empty=True)
+        mocked_request = {'origin_mode': [], 'destination_mode': [], '_disruptions_on_poi': True}
+        update_disruptions_on_pois(instance, mocked_request, original_response)
+        assert len(original_response.impacts) == 1
 
-        mock.assert_called_once()
+        mock.assert_called()
         return
 
 

@@ -378,6 +378,14 @@ class handle_poi_disruptions(object):
 
                 return uris
 
+            def impact_on_poi():
+                for d in objects[0].get('disruptions', []):
+                    for io in d.get('impacted_objects', []):
+                        if io.get('pt_object', {}).get('embedded_type') == "poi":
+                            return True
+
+                return False
+
             def update_for_poi(object):
                 # Add links in poi object
                 object_copy = deepcopy(object)
@@ -389,22 +397,20 @@ class handle_poi_disruptions(object):
                             create_internal_link(_type="disruption", rel="disruptions", id=disruption_uri)
                         )
 
-            # We should only update 'from' object of the first section as well as 'to' object of the last one
-            # since object poi can only be present in those two cases
-            # If object is absent in first_section['from'] as well as last_section['to'] for the first journey
-            # then no need to verify for the remaining journeys
+            # If no disruption on poi exist, no action to do
+            if not impact_on_poi():
+                return objects
+
+            # We should update 'from' and 'to' object of all the sections if object is POI
             for j in objects[0].get('journeys', []):
                 if "sections" not in j:
                     continue
 
-                first_sec = j['sections'][0]
-                last_sec = j['sections'][-1]
-                if first_sec['from']['embedded_type'] != "poi" and last_sec['to']['embedded_type'] != "poi":
-                    break
-                if first_sec['from']['embedded_type'] == "poi":
-                    update_for_poi(first_sec['from']['poi'])
-                if last_sec['to']['embedded_type'] == "poi":
-                    update_for_poi(last_sec['to']['poi'])
+                for s in j.get('sections', []):
+                    if s.get('from', {}).get('embedded_type') == "poi":
+                        update_for_poi(s['from']['poi'])
+                    if s.get('to', {}).get('embedded_type') == "poi":
+                        update_for_poi(s['to']['poi'])
 
             return objects
 
@@ -907,6 +913,9 @@ class Journeys(JourneyCommon):
 
             if args.get('_use_predicted_traffic') is None:
                 args['_use_predicted_traffic'] = mod.use_predicted_traffic
+
+            if args.get('_disruptions_on_poi') is None:
+                args['_disruptions_on_poi'] = mod.disruptions_on_poi
 
         # When computing 'same_journey_schedules'(is_journey_schedules=True), some parameters need to be overridden
         # because they are contradictory to the request

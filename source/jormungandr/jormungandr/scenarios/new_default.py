@@ -503,16 +503,21 @@ def update_total_co2_emission(pb_resp):
         j.co2_emission.unit = 'gEC'
 
 
-def update_disruptions_on_pois(instance, pb_resp):
+def update_disruptions_on_pois(instance, api_request, pb_resp):
     """
-    Maintain a set of uri from g.origin_detail and g.destination_detail of type Poi,
-    call loki with api api_disruptions&pois[]...
+    Maintain a set of uri from g.origin_detail and g.destination_detail of type Poi
+    Add uri from all journey.section.origin and journey.section.destination of type Poi
+    Call loki with api api_disruptions&pois[]...
     For each disruption on poi, add disruption id in the attribute links and add disruptions in the response
     """
+    required_mode_list = {'bss', 'car'}
+    if not api_request.get('_disruptions_on_poi'):
+        return
     if not pb_resp.journeys:
         return
     # Add uri of all the pois in a set
     poi_uris = set()
+    poi_objets = []
     since_datetime = date_to_timestamp(datetime.utcnow())
     until_datetime = date_to_timestamp(datetime.utcnow())
 
@@ -523,6 +528,23 @@ def update_disruptions_on_pois(instance, pb_resp):
     if g.destination_detail and g.destination_detail.get('embedded_type') == "poi":
         poi_uris.add(g.destination_detail.get('id'))
 
+    # Add pois present in all journeys if any of modes={'bss', 'car'} is present in
+    # origin_mode or destination_mode or direct_path_mode
+    mode_list = api_request.get('origin_mode', [])
+    mode_list.extend(api_request.get('destination_mode', []))
+    if set(mode_list).intersection(required_mode_list):
+        for j in pb_resp.journeys:
+            for s in j.sections:
+                if s.origin.embedded_type == type_pb2.POI:
+                    poi_uris.add(s.origin.uri)
+                    poi_objets.append(s.origin.poi)
+                    since_datetime = min(since_datetime, s.begin_date_time)
+
+                if s.destination.embedded_type == type_pb2.POI:
+                    poi_uris.add(s.destination.uri)
+                    poi_objets.append(s.destination.poi)
+                    until_datetime = max(until_datetime, s.end_date_time)
+
     if since_datetime >= until_datetime:
         since_datetime = until_datetime - 1
 
@@ -530,6 +552,14 @@ def update_disruptions_on_pois(instance, pb_resp):
     poi_disruptions = get_disruptions_on_poi(instance, poi_uris, since_datetime, until_datetime)
     if poi_disruptions is None:
         return
+
+    # For each poi in pt_objects:
+    # add impact_uris from resp_poi and
+    # copy object poi in impact.impacted_objects
+    for pt_object in poi_objets:
+        impact_uris = get_impact_uris_for_poi(poi_disruptions, pt_object)
+        for impact_uri in impact_uris:
+            pt_object.impact_uris.append(impact_uri)
 
     # Add all impacts from resp_poi to the response
     add_disruptions(pb_resp, poi_disruptions)
@@ -1507,7 +1537,7 @@ class Scenario(simple.Scenario):
         journey_filter.remove_excess_terminus(pb_resp)
 
         # Update disruptions on pois
-        update_disruptions_on_pois(instance, pb_resp)
+        update_disruptions_on_pois(instance, api_request, pb_resp)
 
         # Update booking_url in booking_rule for all sections of type ON_DEMAND_TRANSPORT
         update_booking_rule_url_in_response(pb_resp)
