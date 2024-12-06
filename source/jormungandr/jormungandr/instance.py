@@ -619,6 +619,7 @@ class Instance(transient_socket.TransientSocket):
         # type: () -> bool
         instance_db = self.get_models()
         return get_value_or_default('disruptions_on_poi', instance_db, self.name)
+
     @property
     def max_additional_connections(self):
         # type: () -> int
