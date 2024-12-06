@@ -98,6 +98,7 @@ from jormungandr import app
 from jormungandr.autocomplete.geocodejson import GeocodeJson
 from jormungandr import global_autocomplete
 from jormungandr.new_relic import record_custom_parameter
+from jormungandr.otlp import otlp_instance
 from jormungandr import fallback_modes
 
 from six.moves import filter
@@ -604,7 +605,7 @@ def _build_candidate_pool_and_sections_set(journeys):
     candidates_pool = list()
     idx_of_jrny_must_keep = list()
 
-    for (i, jrny) in enumerate(journeys):
+    for i, jrny in enumerate(journeys):
         if set(jrny.tags) & set(JOURNEY_TAGS_TO_RETAIN) or jrny.type in set(JOURNEY_TYPES_TO_RETAIN):
             idx_of_jrny_must_keep.append(i)
         sections_set |= set([_get_section_id(s) for s in jrny.sections if s.type in SECTION_TYPES_TO_RETAIN])
@@ -972,6 +973,8 @@ reliable_physical_modes = [
     "physical_mode:LongDistanceTrain",
 ]
 reliable_fallback_modes = [response_pb2.Bike, response_pb2.Walking]
+
+
 # returns true if :
 #  - a journey has at least one public transport section
 #  - all public transport sections use reliable physical modes
@@ -1564,6 +1567,7 @@ class Scenario(simple.Scenario):
         # TODO: handle min_alternative_journeys
         # TODO: call first bss|bss and do not call walking|walking if no bss in first results
         record_custom_parameter('scenario', 'new_default')
+        otlp_instance.record_request_call_label('scenario', 'new_default')
         resp = []
         logger = logging.getLogger(__name__)
         futures = []

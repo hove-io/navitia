@@ -32,6 +32,7 @@ from flask import request
 from werkzeug.exceptions import HTTPException
 import logging
 from jormungandr.new_relic import record_exception
+from jormungandr.otlp import otlp_instance
 
 __all__ = [
     "RegionNotFound",
@@ -166,9 +167,11 @@ def log_exception(sender, exception, **extra):
         logger.debug(error)
         if exception.code >= 500:
             record_exception()
+            otlp_instance.record_exception(exception)
     else:
         logger.exception(error)
         record_exception()
+        otlp_instance.record_exception(exception)
 
 
 class StatManagerError(RuntimeError):

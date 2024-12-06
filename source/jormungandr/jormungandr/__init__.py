@@ -47,6 +47,8 @@ init.logger(app)
 if app.config.get(str('PATCH_WITH_GEVENT_SOCKET'), False):
     init.patch_http(patch_level=app.config.get(str('PATCH_WITH_GEVENT_SOCKET_LEVEL'), "socket"))
 
+from jormungandr import otlp
+
 from jormungandr import new_relic
 
 new_relic.init(app.config.get(str('NEWRELIC_CONFIG_PATH'), None))
