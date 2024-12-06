@@ -112,46 +112,54 @@ class Otlp(metaclass=OtlpMeta):
         )
 
     def __declare_histograms(self) -> None:
-        pass
+        self.__jormungandr_distributed_duration = self._meter.create_histogram(
+            name="jormungandr_distributed_duration", description="Distributed scenario duration"
+        )
 
     def get_tracer(self) -> trace.Tracer:
         return self._tracer
 
-    def record_exception(self, exception: BaseException, attributes: Dict = {}) -> None:
-        """
-        record the exception currently handled to otlp
-        """
-        if self._tracer:
-            # TODO: Can remove this and use directly request.id below ?
-            try:
-                navitia_request_id = request.id
-            except RuntimeError:
-                self.__log.exception("failure while getting request id. We are outside of a flask context :(")
-                navitia_request_id = 42
+    def __record_exception_trace(self, exception: BaseException, attributes: Dict = {}) -> None:
+        # TODO: Can remove this and use directly request.id below ? Check if it works on SBX (remove this before merge !)
+        try:
+            navitia_request_id = request.id
+        except RuntimeError:
+            self.__log.exception("failure while getting request id. We are outside of a flask context :(")
+            navitia_request_id = 42
 
-            try:
-                span = trace.get_current_span()
-                span.set_attribute("navitia_request_id", str(navitia_request_id))
-                for key, value in attributes.items():
-                    span.set_attribute(key, value)
-                span.set_status(Status(StatusCode.ERROR, "Exception"))
-                span.record_exception(exception)
-            except Exception:
-                self.__log.exception("failure while reporting to otlp (with trace)")
+        try:
+            span = trace.get_current_span()
+            span.set_attribute("navitia_request_id", str(navitia_request_id))
+            for key, value in attributes.items():
+                span.set_attribute(key, value)
+            span.set_status(Status(StatusCode.ERROR, "Exception"))
+            span.record_exception(exception)
+        except Exception:
+            self.__log.exception("failure while reporting to otlp (with trace)")
+
+    def __record_exception_meter(self, exception: BaseException) -> None:
+        try:
+            self.__jormungandr_exception.add(
+                1,
+                {
+                    "exception_type": type(exception).__name__,
+                    "status": Status(StatusCode.ERROR, "Exception"),
+                },
+            )
+        except Exception:
+            self.__log.exception("failure while reporting to otlp (with meter)")
+
+    def record_exception(self, exception: BaseException, attributes: Dict = {}) -> None:
+        if self._tracer:
+            self.__record_exception_trace(exception, attributes)
 
         if self._meter:
-            try:
-                self.__jormungandr_exception.add(
-                    1,
-                    {
-                        "exception_type": type(exception).__name__,
-                        "status": Status(StatusCode.ERROR, "Exception"),
-                    },
-                )
-            except Exception:
-                self.__log.exception("failure while reporting to otlp (with meter)")
+            self.__record_exception_meter(exception)
 
     def send_request_call_metrics(self, labels=None) -> None:
+        if not self._meter:
+            return
+
         if labels:
             self.record_request_call_labels(labels)
 
@@ -167,95 +175,19 @@ class Otlp(metaclass=OtlpMeta):
         self.__request_call_labels[label_name] = label_value
 
     def send_event_metric(self, event_type: str, labels: Dict = {}) -> None:
+        if not self._meter:
+            return
+
         labels["environment"] = self.__environment
         labels["event_type"] = event_type
         self.__jormungandr_event.add(1, labels)
 
-    # def send_distributed_event(self, call_name: str, group_name: str, status) -> None:
-    #     labels = {
-    #         "service": service_name,
-    #         "call": call_name,
-    #         "group": group_name,
-    #         "status": status,
-    #         "az": os.getenv('JORMUNGANDR_DEPLOYMENT_AZ', "unknown"),
-    #     }
+    def send_distributed_duration_metric(self, labels, duration) -> None:
+        if self._meter:
+            return
+
+        labels["environment"] = self.__environment
+        self.__jormungandr_distributed_duration.record(duration, labels)
 
 
 otlp_instance = Otlp()
-
-
-def __get_common_event_params(service_name, call_name, status="ok"):
-    return {
-        "service": service_name,
-        "call": call_name,
-        "status": status,
-        "az": os.getenv('JORMUNGANDR_DEPLOYMENT_AZ', "unknown"),
-    }
-
-
-# # Using existing library of opentelemetry without instrumenting
-# from opentelemetry.sdk.resources import SERVICE_NAME, Resource
-
-# # Metrics part
-# from opentelemetry import metrics
-# from opentelemetry.sdk.metrics import MeterProvider
-# from opentelemetry.exporter.otlp.proto.http.metric_exporter import OTLPMetricExporter
-# from opentelemetry.sdk.metrics.export import PeriodicExportingMetricReader
-
-# # Traces Part
-# from opentelemetry import trace
-# from opentelemetry.sdk.trace import TracerProvider
-# from opentelemetry.sdk.trace.export import BatchSpanProcessor
-# from opentelemetry.exporter.otlp.proto.http.trace_exporter import OTLPSpanExporter
-
-# # OpenTelemetry configuration
-
-# resource = Resource(
-#     attributes={
-#         SERVICE_NAME: "my_jormungandr_service",
-#     }
-# )
-
-# # Metrics configuration
-# exporter = OTLPMetricExporter()
-# reader = PeriodicExportingMetricReader(exporter)
-
-# provider = MeterProvider(resource=resource, metric_readers=[reader])
-# metrics.set_meter_provider(provider)
-
-# meter = metrics.get_meter("my_jormungandr_meter")
-# my_metric_counter = meter.create_counter(name="my_jormungandr_from_otlp_lib", description="An example counter")
-# my_metric_histogram = meter.create_histogram(
-#     name="my_jormungandr_histogram_from_otlp_lib", description="An example histogram"
-# )
-
-# my_metric_counter.add(1, {"environment": "local"})
-
-
-# # Trace configuration
-# trace_exporter = OTLPSpanExporter()
-
-# span_processor = BatchSpanProcessor(trace_exporter)
-
-# trace_provider = TracerProvider(resource=resource)
-# trace_provider.add_span_processor(span_processor)
-# trace.set_tracer_provider(trace_provider)
-
-# tracer = trace.get_tracer(__name__)
-
-
-# my_trace = trace.get_tracer("my_jormungandr_tracer")
-
-
-# @app.route("/my_trace")
-# def call_http():
-#     logging.info("-----------------------------------------------------")
-#     my_metric_counter.add(1, {"environment": "local"})
-#     my_metric_histogram.record(0.42, {"environment": "local"})
-
-#     with tracer.start_as_current_span("example-span") as span:
-#         span.set_attribute("example-attribute", "example-value")
-#         print("Doing some work...")
-#     logging.info("-----------------------------------------------------")
-
-#     return 'good ?'
