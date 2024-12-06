@@ -44,6 +44,7 @@ from jormungandr.utils import content_is_too_large
 from jormungandr.authentication import get_user, get_token, get_app_name, get_used_coverages
 from jormungandr._version import __version__
 import six
+from jormungandr.otlp import otlp_instance
 
 
 @rest_api.representation("text/jsonp")
@@ -123,6 +124,32 @@ def add_info_newrelic(response, *args, **kwargs):
     except:
         logger = logging.getLogger(__name__)
         logger.exception('error while reporting to newrelic:')
+    return response
+
+
+@app.after_request
+def record_request_call_to_otlp(response, *args, **kwargs):
+    try:
+        token = get_token()
+        user = get_user(token=token, abort_if_no_token=False) if token else None
+        user_id = str(user.id) if user else "unknown"
+        token_name = get_app_name(token) if user else "unknown"
+        version = __version__
+        coverages = get_used_coverages()
+        coverage = coverages[0] if coverages else "unknown"
+        labels = {
+            "token": token,
+            "user_id": user_id,
+            "token_name": token_name,
+            "version": version,
+            "coverage": coverage,
+            "status": response.status_code,
+        }
+        otlp_instance.send_request_call_metrics(labels)
+    except:
+        logger = logging.getLogger(__name__)
+        logger.exception('error while reporting to otlp:')
+
     return response
 
 

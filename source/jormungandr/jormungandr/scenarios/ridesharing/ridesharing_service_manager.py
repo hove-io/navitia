@@ -33,6 +33,7 @@ from typing import Dict
 from jormungandr import utils
 import six
 from jormungandr import new_relic
+from jormungandr.otlp import otlp_instance
 from jormungandr import app
 from jormungandr.scenarios import journey_filter
 from jormungandr.scenarios.ridesharing.ridesharing_journey import Gender
@@ -286,7 +287,10 @@ class RidesharingServiceManager(object):
             self.logger.exception(
                 'Error while retrieving ridesharing ads and feed_publishers from %s to %s: {}', from_str, to_str
             )
-            new_relic.record_custom_event('ridesharing_internal_failure', {'message': str(e)})
+            params = {'message': str(e)}
+            new_relic.record_custom_event('ridesharing_internal_failure', params)
+            otlp_instance.send_event_metric('ridesharing_internal_failure')
+            otlp_instance.record_exception(e, params)
             rsjs = []
             fps = []
 

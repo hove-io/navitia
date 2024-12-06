@@ -31,6 +31,7 @@
 from __future__ import absolute_import, print_function, unicode_literals, division
 
 from jormungandr import utils, new_relic
+from jormungandr.otlp import otlp_instance
 
 import abc
 from enum import Enum
@@ -155,6 +156,7 @@ class AbstractStreetNetworkService(ABC):  # type: ignore
         params = {'streetnetwork_id': six.text_type(self.sn_system_id), 'status': status}
         params.update(kwargs)
         new_relic.record_custom_event('streetnetwork', params)
+        otlp_instance.send_event_metric('streetnetwork', params)
 
     def _add_feed_publisher(self, resp):
         sn_feed = self.feed_publisher()
