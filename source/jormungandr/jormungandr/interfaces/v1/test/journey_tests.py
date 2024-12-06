@@ -272,7 +272,7 @@ def handle_poi_disruptions_test():
             sections = resp[0].get("journeys", 0)[1]['sections']
             assert len(sections) == 3
             poi = sections[0]['to']['poi']
-            assert  poi['id'] == "poi_uri_from"
+            assert poi['id'] == "poi_uri_from"
             assert len(poi['links']) == 1
             impacted_object = resp[0]['disruptions'][1]['impacted_objects'][0]['pt_object']['poi']
             assert impacted_object['id'] == "poi_uri_from"
