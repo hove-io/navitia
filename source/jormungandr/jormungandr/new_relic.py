@@ -131,7 +131,7 @@ def get_common_event_params(service_name, call_name, status="ok"):
     }
 
 
-# TODO: Move this function into otlp.py when we will remove newrelic
+# TODO: Update and move this function into otlp.py when we will remove newrelic
 def distributedEvent(call_name, group_name):
     """
     Custom event that we publish to New Relic and Grafana for distributed scenario
@@ -186,6 +186,7 @@ def record_streetnetwork_call(call_name, connector_name, mode, coverage_name):
     except Exception as e:
         event_params["status"] = "failed"
         event_params.update({"exception": e})
+        otlp_instance.record_exception(e, event_params)
         raise
 
     duration = timeit.default_timer() - start_time
@@ -193,6 +194,9 @@ def record_streetnetwork_call(call_name, connector_name, mode, coverage_name):
 
     # Send the custom event to newrelic !
     record_custom_event(newrelic_service_name, event_params)
+    # Send metrics to otlp
+    otlp_instance.send_event_metric(newrelic_service_name, event_params)
+    otlp_instance.send_streetnetwork_call_duration_metric(event_params, duration)
 
 
 def statManagerEvent(call_name, group_name):
@@ -212,6 +216,7 @@ def statManagerEvent(call_name, group_name):
             except Exception as e:
                 event_params["status"] = "failed"
                 event_params.update({"reason": str(e)})
+                otlp_instance.record_exception(e, event_params)
                 raise
             finally:
                 duration = timeit.default_timer() - start_time
@@ -219,6 +224,8 @@ def statManagerEvent(call_name, group_name):
 
                 # Send the custom event to newrelic !
                 record_custom_event("stat_manager", event_params)
+                # Send metrics to otlp
+                otlp_instance.send_event_metric("stat_manager", event_params)
 
         return wrapper
 

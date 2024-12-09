@@ -115,6 +115,9 @@ class Otlp(metaclass=OtlpMeta):
         self.__jormungandr_distributed_duration = self._meter.create_histogram(
             name="jormungandr_distributed_duration", description="Distributed scenario duration"
         )
+        self.__jormungandr_streetnetwork_call_duration = self._meter.create_histogram(
+            name="jormungandr_streetnetwork_call_duration", description="Streetnetwork call duration"
+        )
 
     def get_tracer(self) -> trace.Tracer:
         return self._tracer
@@ -188,6 +191,13 @@ class Otlp(metaclass=OtlpMeta):
 
         labels["environment"] = self.__environment
         self.__jormungandr_distributed_duration.record(duration, labels)
+
+    def send_streetnetwork_call_duration_metric(self, labels, duration) -> None:
+        if self._meter:
+            return
+
+        labels["environment"] = self.__environment
+        self.__jormungandr_streetnetwork_call_duration.record(duration, labels)
 
 
 otlp_instance = Otlp()
