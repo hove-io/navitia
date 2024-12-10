@@ -529,8 +529,6 @@ def get_response_with_a_disruption_on_poi(uri="poi_uri", name="poi_name_from_lok
     impact.disruption_uri = "test_disruption_uri"
     impacted_object = impact.impacted_objects.add()
 
-    # poi = make_pt_object(type_pb2.POI, lon=1, lat=2, uri='poi:test_uri')
-    # impacted_object.pt_object.CopyFrom(poi)
     impacted_object.pt_object.name = name
     impacted_object.pt_object.uri = uri
     impacted_object.pt_object.embedded_type = type_pb2.POI
@@ -667,18 +665,45 @@ def get_pb_response_with_journeys_and_disruptions():
     section.destination.uri = 'address_b'
     section.destination.embedded_type = type_pb2.ADDRESS
 
-    # Add a journey : walking address to address
+    # Add a journey : walking address to poi + poi to poi + poi to address
     journey = response.journeys.add()
     section = journey.sections.add()
     section.type = response_pb2.STREET_NETWORK
     section.street_network.mode = response_pb2.Walking
     section.origin.uri = 'address_a'
     section.origin.embedded_type = type_pb2.ADDRESS
+    section.destination.uri = 'poi_uri_from'
+    section.destination.embedded_type = type_pb2.POI
+    section.destination.poi.uri = 'poi_uri_from'
+    section.destination.poi.name = 'poi_name_from'
+
+    section = journey.sections.add()
+    section.type = response_pb2.STREET_NETWORK
+    section.origin.uri = 'poi_uri_from'
+    section.origin.embedded_type = type_pb2.POI
+    section.origin.poi.uri = 'poi_uri_from'
+    section.origin.poi.name = 'poi_name_from'
+    section.street_network.mode = response_pb2.Bss
+    section.destination.uri = 'poi_uri_to'
+    section.destination.embedded_type = type_pb2.POI
+    section.destination.poi.uri = 'poi_uri_to'
+    section.destination.poi.name = 'poi_name_to'
+
+    section = journey.sections.add()
+    section.type = response_pb2.STREET_NETWORK
+    section.origin.uri = 'poi_uri_to'
+    section.origin.embedded_type = type_pb2.POI
+    section.origin.poi.uri = 'poi_uri_to'
+    section.origin.poi.name = 'poi_name_to'
+    section.street_network.mode = response_pb2.Walking
     section.destination.uri = 'address_b'
     section.destination.embedded_type = type_pb2.ADDRESS
 
-    # Add disruption on poi 'poi_uri_a':
+    # Add disruption on poi 'poi_uri_a' (poi of origin):
     pb_disruptions = get_response_with_a_disruption_on_poi(uri="poi_uri_a", name="poi_name_a")
+    response.impacts.extend(pb_disruptions.impacts)
+    # Add disruption on poi 'poi_uri_from':
+    pb_disruptions = get_response_with_a_disruption_on_poi(uri="poi_uri_from", name="poi_name_from")
     response.impacts.extend(pb_disruptions.impacts)
     response.status_code = 200
     return response
