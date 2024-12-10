@@ -709,6 +709,11 @@ def encode_polyline(coords, precision=6):
 # (mostly used for fallback management in experimental scenario)
 PeriodExtremity = namedtuple('PeriodExtremity', ['datetime', 'represents_start'])
 
+# RequestDates is used by ridesharing services
+# instant_system needs both departure_datetime and arrival_datetime
+# other services use only departure_datetime without any condition
+RequestDates = namedtuple('RequestDates', ['departure_datetime', 'arrival_datetime', 'represents_start'])
+
 
 class SectionSorter(object):
     def __call__(self, a, b):
