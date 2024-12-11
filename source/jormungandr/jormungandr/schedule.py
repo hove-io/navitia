@@ -217,7 +217,7 @@ class MixedSchedule(object):
             log.info('impossible to find {}, no realtime added'.format(rt_system_code))
             params = {'rt_system_id': rt_system_code, 'message': 'no handler found'}
             new_relic.record_custom_event('realtime_internal_failure', params)
-            otlp_instance.send_event_metric('realtime_internal_failure', params)
+            otlp_instance.send_event_metrics('realtime_internal_failure', params)
             return None
         return rt_system
 
@@ -241,7 +241,7 @@ class MixedSchedule(object):
             )
             params = {'rt_system_id': six.text_type(rt_system.rt_system_id), 'message': str(e)}
             new_relic.record_custom_event('realtime_internal_failure', params)
-            otlp_instance.send_event_metric('realtime_internal_failure', params)
+            otlp_instance.send_event_metrics('realtime_internal_failure', params)
 
         if next_rt_passages is None:
             log.debug('no next passages, using base schedule')

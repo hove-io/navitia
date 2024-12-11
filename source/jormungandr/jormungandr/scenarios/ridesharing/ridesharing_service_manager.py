@@ -289,7 +289,7 @@ class RidesharingServiceManager(object):
             )
             params = {'message': str(e)}
             new_relic.record_custom_event('ridesharing_internal_failure', params)
-            otlp_instance.send_event_metric('ridesharing_internal_failure')
+            otlp_instance.send_event_metrics('ridesharing_internal_failure')
             otlp_instance.record_exception(e, params)
             rsjs = []
             fps = []

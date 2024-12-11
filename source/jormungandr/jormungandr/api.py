@@ -33,7 +33,7 @@
 from __future__ import absolute_import, print_function, unicode_literals, division
 import importlib
 from flask_restful.representations import json
-from flask import request, make_response, abort
+from flask import request, make_response, abort, g
 from jormungandr import rest_api, app, i_manager
 from jormungandr.index import index
 from jormungandr.modules_loader import ModulesLoader
@@ -45,6 +45,7 @@ from jormungandr.authentication import get_user, get_token, get_app_name, get_us
 from jormungandr._version import __version__
 import six
 from jormungandr.otlp import otlp_instance
+import time
 
 
 @rest_api.representation("text/jsonp")
@@ -127,13 +128,21 @@ def add_info_newrelic(response, *args, **kwargs):
     return response
 
 
+@app.before_request
+def set_request_id():
+    otlp_instance.record_request_call_label("api", request.endpoint)
+    g.start = time.time()
+
+
 @app.after_request
 def record_request_call_to_otlp(response, *args, **kwargs):
     try:
-        token = get_token()
+        duration = time.time() - g.start
+        token = get_token() if get_token() else "unknown"
         user = get_user(token=token, abort_if_no_token=False) if token else None
         user_id = str(user.id) if user else "unknown"
-        token_name = get_app_name(token) if user else "unknown"
+        token_name = get_app_name(token)
+        token_name = token_name if token_name else "unknown"
         version = __version__
         coverages = get_used_coverages()
         coverage = coverages[0] if coverages else "unknown"
@@ -145,7 +154,7 @@ def record_request_call_to_otlp(response, *args, **kwargs):
             "coverage": coverage,
             "status": response.status_code,
         }
-        otlp_instance.send_request_call_metrics(labels)
+        otlp_instance.send_request_call_metrics(duration, labels)
     except:
         logger = logging.getLogger(__name__)
         logger.exception('error while reporting to otlp:')

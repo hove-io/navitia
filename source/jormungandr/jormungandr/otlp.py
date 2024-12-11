@@ -29,6 +29,7 @@
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 
+import os
 import logging
 from typing import Dict
 
@@ -44,7 +45,6 @@ from opentelemetry.exporter.otlp.proto.http.trace_exporter import OTLPSpanExport
 from opentelemetry.trace.status import Status, StatusCode
 
 from opentelemetry import trace, metrics
-import os
 
 
 class OtlpMeta(type):
@@ -59,13 +59,14 @@ class OtlpMeta(type):
 
 class Otlp(metaclass=OtlpMeta):
     __service_name = "jormungandr"
+    __platform = "unknown"
     __request_call_labels = {}
 
-    def __init__(self) -> None:
+    def __init__(self, platform: str) -> None:
         self.__log = logging.getLogger(__name__)
 
         try:
-            self.__environment = os.getenv("ENVIRONMENT", "local")
+            self.__platform = platform + " (Python)"
             self.__resource = Resource(
                 attributes={
                     SERVICE_NAME: self.__service_name,
@@ -112,11 +113,11 @@ class Otlp(metaclass=OtlpMeta):
         )
 
     def __declare_histograms(self) -> None:
-        self.__jormungandr_distributed_duration = self._meter.create_histogram(
-            name="jormungandr_distributed_duration", description="Distributed scenario duration"
+        self.__jormungandr_event_duration = self._meter.create_histogram(
+            name="jormungandr_event_duration", description="Event duration"
         )
-        self.__jormungandr_streetnetwork_call_duration = self._meter.create_histogram(
-            name="jormungandr_streetnetwork_call_duration", description="Streetnetwork call duration"
+        self.__jormungandr_request_call_duration = self._meter.create_histogram(
+            name="jormungandr_request_call_duration", description="Request call duration", unit="s"
         )
 
     def get_tracer(self) -> trace.Tracer:
@@ -131,12 +132,15 @@ class Otlp(metaclass=OtlpMeta):
             navitia_request_id = 42
 
         try:
-            span = trace.get_current_span()
-            span.set_attribute("navitia_request_id", str(navitia_request_id))
-            for key, value in attributes.items():
-                span.set_attribute(key, value)
-            span.set_status(Status(StatusCode.ERROR, "Exception"))
-            span.record_exception(exception)
+            with self._tracer.start_as_current_span("exception") as span:
+                span.set_attribute("navitia_request_id", str(navitia_request_id))
+                for key, value in attributes.items():
+                    span.set_attribute(key, value)
+                for key, value in self.__request_call_labels.items():
+                    span.set_attribute(key, value)
+                span.set_status(Status(StatusCode.ERROR, "Exception"))
+                span.record_exception(exception)
+
         except Exception:
             self.__log.exception("failure while reporting to otlp (with trace)")
 
@@ -144,10 +148,7 @@ class Otlp(metaclass=OtlpMeta):
         try:
             self.__jormungandr_exception.add(
                 1,
-                {
-                    "exception_type": type(exception).__name__,
-                    "status": Status(StatusCode.ERROR, "Exception"),
-                },
+                {"exception_type": type(exception).__name__},
             )
         except Exception:
             self.__log.exception("failure while reporting to otlp (with meter)")
@@ -159,16 +160,17 @@ class Otlp(metaclass=OtlpMeta):
         if self._meter:
             self.__record_exception_meter(exception)
 
-    def send_request_call_metrics(self, labels=None) -> None:
+    def send_request_call_metrics(self, duration, labels=None) -> None:
         if not self._meter:
             return
 
         if labels:
             self.record_request_call_labels(labels)
 
-        self.__request_call_labels["environment"] = self.__environment
-
-        self.__jormungandr_request_call.add(1, self.__request_call_labels)
+        self.record_request_call_label("platform", self.__platform)
+        labels = self.__request_call_labels.copy()
+        self.__jormungandr_request_call.add(1, labels)
+        self.__jormungandr_request_call_duration.record(duration, labels)
         self.__request_call_labels.clear()
 
     def record_request_call_labels(self, labels: Dict) -> None:
@@ -177,27 +179,18 @@ class Otlp(metaclass=OtlpMeta):
     def record_request_call_label(self, label_name: str, label_value: str) -> None:
         self.__request_call_labels[label_name] = label_value
 
-    def send_event_metric(self, event_type: str, labels: Dict = {}) -> None:
+    def send_event_metrics(self, event_type: str, labels: Dict = {}) -> None:
         if not self._meter:
             return
 
-        labels["environment"] = self.__environment
+        labels["platform"] = self.__platform
         labels["event_type"] = event_type
+        if "navitia_request_id" in labels:
+            labels.pop("navitia_request_id")
+        if "duration" in labels:
+            duration = labels.pop("duration", None)
+            self.__jormungandr_event_duration.record(duration, labels)
         self.__jormungandr_event.add(1, labels)
 
-    def send_distributed_duration_metric(self, labels, duration) -> None:
-        if self._meter:
-            return
 
-        labels["environment"] = self.__environment
-        self.__jormungandr_distributed_duration.record(duration, labels)
-
-    def send_streetnetwork_call_duration_metric(self, labels, duration) -> None:
-        if self._meter:
-            return
-
-        labels["environment"] = self.__environment
-        self.__jormungandr_streetnetwork_call_duration.record(duration, labels)
-
-
-otlp_instance = Otlp()
+otlp_instance = Otlp(os.getenv("OTEL_PLATFORM"))
