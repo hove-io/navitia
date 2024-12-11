@@ -1567,7 +1567,7 @@ class Scenario(simple.Scenario):
         # TODO: handle min_alternative_journeys
         # TODO: call first bss|bss and do not call walking|walking if no bss in first results
         record_custom_parameter('scenario', 'new_default')
-        otlp_instance.record_request_call_label('scenario', 'new_default')
+        otlp_instance.record_label('scenario', 'new_default')
         resp = []
         logger = logging.getLogger(__name__)
         futures = []

@@ -130,7 +130,12 @@ def add_info_newrelic(response, *args, **kwargs):
 
 @app.before_request
 def set_request_id():
-    otlp_instance.record_request_call_label("api", request.endpoint)
+    otlp_instance.record_label("api", request.endpoint)
+    otlp_instance.record_label("version", __version__)
+    coverages = get_used_coverages()
+    coverage = coverages[0] if coverages else "unknown"
+    otlp_instance.record_label("coverage", coverage)
+
     g.start = time.time()
 
 
@@ -143,15 +148,10 @@ def record_request_call_to_otlp(response, *args, **kwargs):
         user_id = str(user.id) if user else "unknown"
         token_name = get_app_name(token)
         token_name = token_name if token_name else "unknown"
-        version = __version__
-        coverages = get_used_coverages()
-        coverage = coverages[0] if coverages else "unknown"
         labels = {
             "token": token,
             "user_id": user_id,
             "token_name": token_name,
-            "version": version,
-            "coverage": coverage,
             "status": response.status_code,
         }
         otlp_instance.send_request_call_metrics(duration, labels)
