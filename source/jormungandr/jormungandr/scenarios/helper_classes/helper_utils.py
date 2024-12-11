@@ -431,7 +431,7 @@ def _update_journey(journey, park_section, street_mode_section, to_replace):
     journey.nb_sections += 2
 
 
-def _get_walking_information(cord1, cord2, walking_speed):
+def _get_walking_information(uri1, uri2, walking_speed):
     """
     Calculate the walking time and the distance between two coordinates.
 
@@ -444,6 +444,35 @@ def _get_walking_information(cord1, cord2, walking_speed):
         float: The walking time in secondes.
         float: The distance in meters.
     """
+    cord1 = tuple()
+    cord2 = tuple()
+
+    if uri1.embedded_type == type_pb2.STOP_POINT:
+        cord1 = uri1.stop_point.coord
+    elif uri1.embedded_type == type_pb2.ACCESS_POINT:
+        cord1 = uri1.access_point.coord
+    elif uri1.embedded_type == type_pb2.POI:
+        cord1 = uri1.poi.coord
+    elif uri1.embedded_type == type_pb2.ADDRESS:
+        cord1 = uri1.address.coord
+    elif uri1.embedded_type == type_pb2.STOP_AREA:
+        cord1 = uri1.stop_area.coord
+    elif uri1.embedded_type == type_pb2.ADMINISTRATIVE_REGION:
+        cord1 = uri1.administrative_region.coord
+
+    if uri2.embedded_type == type_pb2.STOP_POINT:
+        cord2 = uri2.stop_point.coord
+    elif uri2.embedded_type == type_pb2.ACCESS_POINT:
+        cord2 = uri2.access_point.coord
+    elif uri2.embedded_type == type_pb2.POI:
+        cord2 = uri2.poi.coord
+    elif uri2.embedded_type == type_pb2.ADDRESS:
+        cord2 = uri2.address.coord
+    elif uri2.embedded_type == type_pb2.STOP_AREA:
+        cord2 = uri2.stop_area.coord
+    elif uri2.embedded_type == type_pb2.ADMINISTRATIVE_REGION:
+        cord2 = uri2.administrative_region.coord
+
     distance = crowfly_distance_between(cord1, cord2)
     return get_manhattan_duration(distance, walking_speed), round(distance)
 
@@ -509,13 +538,15 @@ def _update_fallback_with_bike_mode(
         fallback_type == StreetNetworkPathType.BEGINNING_FALLBACK
         and fallback_sections[-1].street_network.mode is response_pb2.Bike
     ):
-        address = _get_place(kwargs, fallback_sections[-1].destination.uri)
+
+        place = _get_place(kwargs, fallback_sections[-1].destination.uri)
         walktime, walking_distance = _get_walking_information(
-            address.address.coord,
-            journey.sections[0].destination.stop_point.coord,
+            place,
+            journey.sections[0].destination,
             kwargs["instance"].walking_speed,
         )
-        fallback_sections[-1].destination.CopyFrom(address)
+
+        fallback_sections[-1].destination.CopyFrom(place)
         for s in journey.sections:
             s.begin_date_time += kwargs["additional_time"] + walktime
             s.end_date_time += kwargs["additional_time"] + walktime
@@ -545,13 +576,13 @@ def _update_fallback_with_bike_mode(
         and fallback_sections[0].street_network.mode is response_pb2.Bike
     ):
         walktime, walking_distance = _get_walking_information(
-            journey.sections[-1].origin.stop_point.coord,
-            fallback_sections[0].origin.address.coord,
+            journey.sections[-1].origin,
+            fallback_sections[0].origin,
             kwargs["instance"].walking_speed,
         )
         journey.durations.walking += walktime
-        address = _get_place(kwargs, fallback_sections[0].origin.uri)
-        fallback_sections[0].origin.CopyFrom(address)
+        place = _get_place(kwargs, fallback_sections[0].origin.uri)
+        fallback_sections[0].origin.CopyFrom(place)
         street_mode_section = _make_bike_park_street_network(
             journey.sections[-1].origin,
             fallback_sections[0].begin_date_time,
