@@ -119,7 +119,7 @@ class SytralProvider(object):
         params = {'parking_system_id': "SytralRT", 'dataset': "sytral", 'status': status}
         params.update(kwargs)
         new_relic.record_custom_event('parking_status', params)
-        otlp_instance.send_event_metric('parking_status', params)
+        otlp_instance.send_event_metrics('parking_status', params)
 
     def _fill_equipment_details(self, equipment_form_web_service, equipment_details):
         equipment_details.id = equipment_form_web_service['id']

@@ -158,10 +158,8 @@ def distributedEvent(call_name, group_name):
 
             # Send the custom event to newrelic !
             record_custom_event("distributed", event_params)
-
-            event_params.pop("duration")
-            otlp_instance.send_event_metric("distributed", event_params)
-            otlp_instance.send_distributed_duration_metric(event_params, duration)
+            # Send metrics to otlp
+            otlp_instance.send_event_metrics("distributed", event_params)
 
             return result
 
@@ -170,6 +168,7 @@ def distributedEvent(call_name, group_name):
     return wrap
 
 
+# TODO: Update and move this function into otlp.py when we will remove newrelic
 @contextmanager
 def record_streetnetwork_call(call_name, connector_name, mode, coverage_name):
     """
@@ -195,10 +194,10 @@ def record_streetnetwork_call(call_name, connector_name, mode, coverage_name):
     # Send the custom event to newrelic !
     record_custom_event(newrelic_service_name, event_params)
     # Send metrics to otlp
-    otlp_instance.send_event_metric(newrelic_service_name, event_params)
-    otlp_instance.send_streetnetwork_call_duration_metric(event_params, duration)
+    otlp_instance.send_event_metrics(newrelic_service_name, event_params)
 
 
+# TODO: Update and move this function into otlp.py when we will remove newrelic
 def statManagerEvent(call_name, group_name):
     """
     Custom event that we publish to New Relic for stat_manager
@@ -225,7 +224,7 @@ def statManagerEvent(call_name, group_name):
                 # Send the custom event to newrelic !
                 record_custom_event("stat_manager", event_params)
                 # Send metrics to otlp
-                otlp_instance.send_event_metric("stat_manager", event_params)
+                otlp_instance.send_event_metrics("stat_manager", event_params)
 
         return wrapper
 

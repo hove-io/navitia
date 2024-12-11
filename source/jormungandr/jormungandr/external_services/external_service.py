@@ -80,7 +80,7 @@ class AbstractExternalService(object):
         params = {'external_service_id': "Forseti", 'status': status, 'external_service_url': url}
         params.update(kwargs)
         new_relic.record_custom_event('external_service_status', params)
-        otlp_instance.send_event_metric('external_service_status', params)
+        otlp_instance.send_event_metrics('external_service_status', params)
 
     @abc.abstractmethod
     def get_response(self, arguments):

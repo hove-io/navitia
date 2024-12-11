@@ -282,7 +282,7 @@ class RealtimeProxy(six.with_metaclass(ABCMeta, object)):
         if comment is not None:
             params['comment'] = comment
         new_relic.record_custom_event('realtime_internal_failure', params)
-        otlp_instance.send_event_metric('realtime_internal_failure', params)
+        otlp_instance.send_event_metrics('realtime_internal_failure', params)
 
     def record_call(self, status, **kwargs):
         """
@@ -291,7 +291,7 @@ class RealtimeProxy(six.with_metaclass(ABCMeta, object)):
         params = {'realtime_system_id': six.text_type(self.rt_system_id), 'status': status}
         params.update(kwargs)
         new_relic.record_custom_event('realtime_status', params)
-        otlp_instance.send_event_metric('realtime_status', params)
+        otlp_instance.send_event_metrics('realtime_status', params)
 
     def record_additional_info(self, status, **kwargs):
         """
@@ -300,7 +300,7 @@ class RealtimeProxy(six.with_metaclass(ABCMeta, object)):
         params = {'realtime_system_id': six.text_type(self.rt_system_id), 'status': status}
         params.update(kwargs)
         new_relic.record_custom_event('realtime_proxy_additional_info', params)
-        otlp_instance.send_event_metric('realtime_proxy_additional_info', params)
+        otlp_instance.send_event_metrics('realtime_proxy_additional_info', params)
 
     @cache.memoize(app.config.get(str('CACHE_CONFIGURATION'), {}).get(str('TIMEOUT_PTOBJECTS'), 600))
     def _get_direction(self, line_uri, object_code, default_value):
