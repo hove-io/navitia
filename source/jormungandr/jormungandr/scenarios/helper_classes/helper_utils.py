@@ -613,7 +613,10 @@ def _update_fallback_with_bike_mode(
             target_section = next((s for s in journey.sections if s.id == "Street_network_section_2"), None)
             if target_section:
                 target_section.vias.add().CopyFrom(via_pt_access.access_point)
-                target_section.street_network.path_items.extend(fallback_sections[-1].street_network.path_items)
+                target_section.street_network.path_items.extend(
+                    [fallback_sections[-1].street_network.path_items[-1]]
+                )
+                fallback_sections[-1].street_network.path_items.pop()
                 target_section.duration += via_pt_access.access_point.traversal_time
                 target_section.length += via_pt_access.access_point.length
                 fallback_sections[-1].duration -= via_pt_access.access_point.traversal_time
