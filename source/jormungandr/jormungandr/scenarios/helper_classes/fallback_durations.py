@@ -340,11 +340,11 @@ class FallbackDurations:
             duration = self._get_duration(r, pt_object)
 
             extra_duration = 0
-            if FallbackModes.bike.name == self._mode and ParkMode.on_street.name in (
+            if FallbackModes.bike.name == self._mode and ParkMode.on_street.name == (
                 self._request.get("park_mode") or ""
             ):
                 extra_duration = self._request["on_street_bike_parking_duration"]
-            duration += extra_duration
+            duration -= extra_duration
             # in this case, the pt_object can be either a stop point or an access point
             if is_stop_point(pt_object):
                 self._update_fb_durations(fallback_durations, pt_object, duration, r)
