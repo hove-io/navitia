@@ -341,7 +341,7 @@ class FallbackDurations:
 
             extra_duration = 0
             if FallbackModes.bike.name == self._mode and ParkMode.on_street.name in (
-                self._request.get("park_mode") or []
+                self._request.get("park_mode") or ""
             ):
                 extra_duration = self._request["on_street_bike_parking_duration"]
             duration += extra_duration

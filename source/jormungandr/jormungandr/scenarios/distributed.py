@@ -185,7 +185,7 @@ class Distributed(object):
                 return res
 
             # if the parkmode is set to "on street" we need to add additional time to the max_bike_duration_to_pt
-            if ParkMode.on_street.name in request.get("park_mode", []):
+            if ParkMode.on_street.name in request.get("park_mode", ""):
                 request["max_bike_duration_to_pt"] += request.get("on_street_bike_parking_duration", 0)
 
             # We'd like to get the duration of a direct path to do some optimizations in ProximitiesByCrowflyPool and
