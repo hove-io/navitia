@@ -60,7 +60,7 @@ class OtlpMeta(type):
 class Otlp(metaclass=OtlpMeta):
     __service_name = "jormungandr"
     __platform = "unknown"
-    __request_call_labels = {}
+    __labels = {}
 
     def __init__(self, platform: str) -> None:
         self.__log = logging.getLogger(__name__)
@@ -136,7 +136,7 @@ class Otlp(metaclass=OtlpMeta):
                 span.set_attribute("navitia_request_id", str(navitia_request_id))
                 for key, value in attributes.items():
                     span.set_attribute(key, value)
-                for key, value in self.__request_call_labels.items():
+                for key, value in self.__labels.items():
                     span.set_attribute(key, value)
                 span.set_status(Status(StatusCode.ERROR, "Exception"))
                 span.record_exception(exception)
@@ -165,26 +165,26 @@ class Otlp(metaclass=OtlpMeta):
             return
 
         if labels:
-            self.record_request_call_labels(labels)
+            self.record_labels(labels)
 
-        self.record_request_call_label("platform", self.__platform)
-        labels = self.__request_call_labels.copy()
+        self.record_label("platform", self.__platform)
+        labels = self.__labels.copy()
         self.__jormungandr_request_call.add(1, labels)
         self.__jormungandr_request_call_duration.record(duration, labels)
-        self.__request_call_labels.clear()
+        self.__labels.clear()
 
-    def record_request_call_labels(self, labels: Dict) -> None:
-        self.__request_call_labels.update(labels)
+    def record_labels(self, labels: Dict) -> None:
+        self.__labels.update(labels)
 
-    def record_request_call_label(self, label_name: str, label_value: str) -> None:
-        self.__request_call_labels[label_name] = label_value
+    def record_label(self, label_name: str, label_value: str) -> None:
+        self.__labels[label_name] = label_value
 
     def send_event_metrics(self, event_type: str, labels: Dict = {}) -> None:
         if not self._meter:
             return
-
         labels["platform"] = self.__platform
         labels["event_type"] = event_type
+        labels.update(self.__labels)
         if "navitia_request_id" in labels:
             labels.pop("navitia_request_id")
         if "duration" in labels:

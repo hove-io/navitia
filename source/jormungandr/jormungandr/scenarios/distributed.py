@@ -500,7 +500,7 @@ class Scenario(new_default.Scenario):
         context=None,
     ):
         record_custom_parameter('scenario', 'distributed')
-        otlp_instance.record_request_call_label('scenario', 'distributed')
+        otlp_instance.record_label('scenario', 'distributed')
         logger = logging.getLogger(__name__)
         """
         All spawned futures must be started(if they're not yet started) when leaving the scope.
