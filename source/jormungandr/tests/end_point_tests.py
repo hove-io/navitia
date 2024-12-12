@@ -258,3 +258,25 @@ class TestEndPoint(AbstractTestFixture):
         r1 = self.tester.get('v1/coverage/main_routing_test/coord/0.001077974378345651;0.0005839027882705609')
         r2 = self.tester.get('v1/coord/0.001077974378345651;0.0005839027882705609')
         assert r1.get_json()['address'] == r2.get_json()['address']
+
+    def test_backends_status(self):
+        json_response = self.query("/v1/backends_status")
+
+        assert len(json_response['lokis']) == 2
+        assert len(json_response['krakens']) == 2
+
+        for attribute in [
+            'status',
+            'backend_version',
+            'start_date',
+            'end_date',
+            'loaded',
+            'last_load_at',
+            'last_load_status',
+            'is_realtime_loaded',
+            'last_rt_data_loaded',
+        ]:
+            assert attribute in json_response['lokis']['main_ptref_test']
+            assert attribute in json_response['krakens']['main_ptref_test']
+            assert attribute in json_response['lokis']['main_routing_test']
+            assert attribute in json_response['krakens']['main_routing_test']
