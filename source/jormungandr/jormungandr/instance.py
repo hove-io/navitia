@@ -865,6 +865,9 @@ class Instance(transient_socket.TransientSocket):
         pt_planner_id = pt_planner_id or self.default_pt_planner
         return self._pt_planner_manager.get_pt_planner(pt_planner_id)
 
+    def get_all_pt_planners(self):
+        return self._pt_planner_manager.get_all_pt_planners()
+
     def get_pt_journey_fare(self, loki_pt_journey_fare_id=None):
         pt_journey_fare_id = loki_pt_journey_fare_id or self.loki_pt_journey_fare
         return self._pt_journey_fare_backend_manager.get_pt_journey_fare(pt_journey_fare_id)
