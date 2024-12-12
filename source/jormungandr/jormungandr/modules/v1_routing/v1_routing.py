@@ -54,6 +54,7 @@ from jormungandr.interfaces.v1 import (
     users,
     opg_status,
     opg_excluded_zones,
+    backends_status,
 )
 from werkzeug.routing import BaseConverter, FloatConverter, PathConverter
 from jormungandr.modules_loader import AModule
@@ -131,6 +132,8 @@ class V1Routing(AModule):
         self.add_resource(Readyness.Readyness, '/readyness', endpoint='readyness')
         self.module_resources_manager.register_resource(Index.TechnicalStatus())
         self.add_resource(Index.TechnicalStatus, '/status', endpoint='technical_status')
+        self.add_resource(backends_status.BackendsStatus, '/backends_status', endpoint='backends_status')
+
         lon_lat = '<lon:lon>;<lat:lat>/'
         coverage = '/coverage/'
         region = coverage + '<region:region>/'
