@@ -44,7 +44,8 @@ def upgrade():
         'instance', sa.Column('walking_alley_factor', sa.Float(), server_default='2.0', nullable=False)
     )
     op.add_column(
-        'instance', sa.Column('walking_destination_only_penalty', sa.Float(), server_default='120', nullable=False)
+        'instance',
+        sa.Column('walking_destination_only_penalty', sa.Float(), server_default='120', nullable=False),
     )
     op.add_column(
         'instance', sa.Column('walking_driveway_factor', sa.Float(), server_default='5.0', nullable=False)
