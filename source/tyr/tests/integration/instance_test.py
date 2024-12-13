@@ -773,7 +773,7 @@ def test_on_attributs_starting_with_walking(create_instance):
     assert resp[0]['walking_ignore_oneways'] is False
     assert resp[0]['walking_destination_only_penalty'] == 122
 
-    params = { 'walking_max_hiking_difficulty': 7 }
+    params = { 'walking_max_hiking_difficulty': 7}
     resp = api_put('/v0/instances/fr', data=json.dumps(params), content_type='application/json')
     assert resp['walking_max_hiking_difficulty'] == 6
 

@@ -15,36 +15,71 @@ from alembic import op
 import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
 
+
 def upgrade():
     op.add_column('instance', sa.Column('bicycle_type', sa.Text(), server_default='hybrid', nullable=False))
-    op.add_column('instance', sa.Column('bike_avoid_bad_surfaces', sa.Float(), server_default='0.25', nullable=False))
-    op.add_column('instance', sa.Column('bike_country_crossing_cost', sa.Float(), server_default='600', nullable=False))
-    op.add_column('instance', sa.Column('bike_country_crossing_penalty', sa.Float(), server_default='0', nullable=False))
-    op.add_column('instance', sa.Column('bike_destination_only_penalty', sa.Float(), server_default='120', nullable=False))
+    op.add_column(
+        'instance', sa.Column('bike_avoid_bad_surfaces', sa.Float(), server_default='0.25', nullable=False)
+    )
+    op.add_column(
+        'instance', sa.Column('bike_country_crossing_cost', sa.Float(), server_default='600', nullable=False)
+    )
+    op.add_column(
+        'instance', sa.Column('bike_country_crossing_penalty', sa.Float(), server_default='0', nullable=False)
+    )
+    op.add_column(
+        'instance', sa.Column('bike_destination_only_penalty', sa.Float(), server_default='120', nullable=False)
+    )
     op.add_column('instance', sa.Column('bike_maneuver_penalty', sa.Float(), server_default='5', nullable=False))
     op.add_column('instance', sa.Column('bike_service_factor', sa.Float(), server_default='1', nullable=False))
     op.add_column('instance', sa.Column('bike_service_penalty', sa.Float(), server_default='0', nullable=False))
     op.add_column('instance', sa.Column('bike_shortest', sa.Boolean(), server_default='False', nullable=False))
     op.add_column('instance', sa.Column('bike_use_ferry', sa.Float(), server_default='0.5', nullable=False))
     op.add_column('instance', sa.Column('bike_use_hills', sa.Float(), server_default='0.5', nullable=False))
-    op.add_column('instance', sa.Column('bike_use_living_streets', sa.Float(), server_default='0.5', nullable=False))
+    op.add_column(
+        'instance', sa.Column('bike_use_living_streets', sa.Float(), server_default='0.5', nullable=False)
+    )
     op.add_column('instance', sa.Column('bike_use_roads', sa.Float(), server_default='0.5', nullable=False))
-    op.add_column('instance', sa.Column('walking_alley_factor', sa.Float(), server_default='2.0', nullable=False))
-    op.add_column('instance', sa.Column('walking_destination_only_penalty', sa.Float(), server_default='120', nullable=False))
-    op.add_column('instance', sa.Column('walking_driveway_factor', sa.Float(), server_default='5.0', nullable=False))
-    op.add_column('instance', sa.Column('walking_ignore_oneways', sa.Boolean(), server_default='True', nullable=False))
-    op.add_column('instance', sa.Column('walking_max_hiking_difficulty', sa.Integer(), server_default='1', nullable=False))
-    op.add_column('instance', sa.Column('walking_service_factor', sa.Float(), server_default='1', nullable=False))
-    op.add_column('instance', sa.Column('walking_shortest', sa.Boolean(), server_default='False', nullable=False))
-    op.add_column('instance', sa.Column('walking_sidewalk_factor', sa.Float(), server_default='1.0', nullable=False))
+    op.add_column(
+        'instance', sa.Column('walking_alley_factor', sa.Float(), server_default='2.0', nullable=False)
+    )
+    op.add_column(
+        'instance', sa.Column('walking_destination_only_penalty', sa.Float(), server_default='120', nullable=False)
+    )
+    op.add_column(
+        'instance', sa.Column('walking_driveway_factor', sa.Float(), server_default='5.0', nullable=False)
+    )
+    op.add_column(
+        'instance', sa.Column('walking_ignore_oneways', sa.Boolean(), server_default='True', nullable=False)
+    )
+    op.add_column(
+        'instance', sa.Column('walking_max_hiking_difficulty', sa.Integer(), server_default='1', nullable=False)
+    )
+    op.add_column(
+        'instance', sa.Column('walking_service_factor', sa.Float(), server_default='1', nullable=False)
+    )
+    op.add_column(
+        'instance', sa.Column('walking_shortest', sa.Boolean(), server_default='False', nullable=False)
+    )
+    op.add_column(
+        'instance', sa.Column('walking_sidewalk_factor', sa.Float(), server_default='1.0', nullable=False)
+    )
     op.add_column('instance', sa.Column('walking_step_penalty', sa.Float(), server_default='30', nullable=False))
     op.add_column('instance', sa.Column('walking_use_ferry', sa.Float(), server_default='0.5', nullable=False))
     op.add_column('instance', sa.Column('walking_use_hills', sa.Float(), server_default='0.5', nullable=False))
-    op.add_column('instance', sa.Column('walking_use_living_streets', sa.Float(), server_default='0.6', nullable=False))
+    op.add_column(
+        'instance', sa.Column('walking_use_living_streets', sa.Float(), server_default='0.6', nullable=False)
+    )
     op.add_column('instance', sa.Column('walking_use_tracks', sa.Float(), server_default='0.5', nullable=False))
-    op.add_column('instance', sa.Column('walking_walkway_factor', sa.Float(), server_default='1.0', nullable=False))
-    op.add_column('traveler_profile', sa.Column('walking_step_penalty', sa.Float(), server_default='30', nullable=False))
-    op.add_column('traveler_profile', sa.Column('walking_use_hills', sa.Float(), server_default='0.5', nullable=False))
+    op.add_column(
+        'instance', sa.Column('walking_walkway_factor', sa.Float(), server_default='1.0', nullable=False)
+    )
+    op.add_column(
+        'traveler_profile', sa.Column('walking_step_penalty', sa.Float(), server_default='30', nullable=False)
+    )
+    op.add_column(
+        'traveler_profile', sa.Column('walking_use_hills', sa.Float(), server_default='0.5', nullable=False)
+    )
     op.add_column(
         'traveler_profile',
         sa.Column('max_walking_direct_path_duration', sa.Integer(), server_default='86400', nullable=False),

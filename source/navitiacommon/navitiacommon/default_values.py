@@ -280,17 +280,17 @@ walking_ignore_oneways = True
 walking_destination_only_penalty = 120
 
 # Parameters on bike
-bike_use_roads = 0.5  #(0 - 1.0)
-bike_use_hills = 0.5  #(0 - 1.0)
-bike_use_ferry = 0.5  #(0 - 1.0)
-bike_avoid_bad_surfaces = 0.25  #(0 - 1.0)
+bike_use_roads = 0.5  # (0 - 1.0)
+bike_use_hills = 0.5  # (0 - 1.0)
+bike_use_ferry = 0.5  # (0 - 1.0)
+bike_avoid_bad_surfaces = 0.25  # (0 - 1.0)
 bike_shortest = False
-bicycle_type = 'Hybrid'  #The type of bicycle [Road, Hybrid, City, Cross, Mountain]
-bike_use_living_streets = 0.5  #(0 - 1.0)
-bike_maneuver_penalty = 5  #(seconds)
+bicycle_type = 'Hybrid'  # The type of bicycle [Road, Hybrid, City, Cross, Mountain]
+bike_use_living_streets = 0.5  # (0 - 1.0)
+bike_maneuver_penalty = 5  # (seconds)
 bike_service_penalty = 0
 bike_service_factor = 1
-bike_country_crossing_cost = 600  #(seconds)
+bike_country_crossing_cost = 600  # (seconds)
 bike_country_crossing_penalty = 0
 bike_destination_only_penalty = 120
 
