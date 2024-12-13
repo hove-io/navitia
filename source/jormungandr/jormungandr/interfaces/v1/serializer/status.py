@@ -128,7 +128,6 @@ class ParametersSerializer(serpy.Serializer):
     bike_destination_only_penalty = Field(schema_type=float)
 
 
-
 class TravelerProfilesSerializer(serpy.Serializer):
     bike_speed = Field(schema_type=float)
     bss_speed = Field(schema_type=float)
