@@ -547,15 +547,6 @@ class Journeys(JourneyCommon):
         )
 
         parser_get.add_argument(
-            "park_mode[]",
-            type=OptionValue(all_park_modes),
-            default=[],
-            action="append",
-            dest="park_mode",
-            help="Specify the mode of transport to park",
-        )
-
-        parser_get.add_argument(
             "_no_shared_section",
             type=BooleanType(),
             default=False,

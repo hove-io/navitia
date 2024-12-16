@@ -217,7 +217,7 @@ def _make_bike_park_street_network(origin, begin_date_time, destination, end_dat
     )
     bike_park_to_sp_section.street_network.duration = duration
     bike_park_to_sp_section.begin_date_time = begin_date_time
-    bike_park_to_sp_section.end_date_time = end_date_time + duration
+    bike_park_to_sp_section.end_date_time = bike_park_to_sp_section.begin_date_time + duration
     bike_park_to_sp_section.duration = duration
     bike_park_to_sp_section.street_network.length = length
     return bike_park_to_sp_section
@@ -431,7 +431,23 @@ def _update_journey(journey, park_section, street_mode_section, to_replace):
     journey.nb_sections += 2
 
 
-def _get_walking_information(uri1, uri2, walking_speed):
+def _get_coords_from_pt_object(pt_object):
+    coord = None
+    if pt_object.embedded_type == type_pb2.STOP_POINT:
+        coord = pt_object.stop_point.coord
+    elif pt_object.embedded_type == type_pb2.ACCESS_POINT:
+        coord = pt_object.access_point.coord
+    elif pt_object.embedded_type == type_pb2.POI:
+        coord = pt_object.poi.coord
+    elif pt_object.embedded_type == type_pb2.ADDRESS:
+        coord = pt_object.address.coord
+    elif pt_object.embedded_type == type_pb2.STOP_AREA:
+        coord = pt_object.stop_area.coord
+    elif pt_object.embedded_type == type_pb2.ADMINISTRATIVE_REGION:
+        coord = pt_object.administrative_region.coord
+    return coord
+
+def _get_walking_information(object_1, object_2, walking_speed):
     """
     Calculate the walking time and the distance between two coordinates.
 
@@ -442,42 +458,42 @@ def _get_walking_information(uri1, uri2, walking_speed):
 
     Returns:
         float: The walking time in secondes.
-        float: The distance in meters.
+        float: The distance in meters
     """
     cord1 = tuple()
     cord2 = tuple()
 
-    if uri1.embedded_type == type_pb2.STOP_POINT:
-        cord1 = uri1.stop_point.coord
-    elif uri1.embedded_type == type_pb2.ACCESS_POINT:
-        cord1 = uri1.access_point.coord
-    elif uri1.embedded_type == type_pb2.POI:
-        cord1 = uri1.poi.coord
-    elif uri1.embedded_type == type_pb2.ADDRESS:
-        cord1 = uri1.address.coord
-    elif uri1.embedded_type == type_pb2.STOP_AREA:
-        cord1 = uri1.stop_area.coord
-    elif uri1.embedded_type == type_pb2.ADMINISTRATIVE_REGION:
-        cord1 = uri1.administrative_region.coord
+    if object_1.embedded_type == type_pb2.STOP_POINT:
+        cord1 = object_1.stop_point.coord
+    elif object_1.embedded_type == type_pb2.ACCESS_POINT:
+        cord1 = object_1.access_point.coord
+    elif object_1.embedded_type == type_pb2.POI:
+        cord1 = object_1.poi.coord
+    elif object_1.embedded_type == type_pb2.ADDRESS:
+        cord1 = object_1.address.coord
+    elif object_1.embedded_type == type_pb2.STOP_AREA:
+        cord1 = object_1.stop_area.coord
+    elif object_1.embedded_type == type_pb2.ADMINISTRATIVE_REGION:
+        cord1 = object_1.administrative_region.coord
 
-    if uri2.embedded_type == type_pb2.STOP_POINT:
-        cord2 = uri2.stop_point.coord
-    elif uri2.embedded_type == type_pb2.ACCESS_POINT:
-        cord2 = uri2.access_point.coord
-    elif uri2.embedded_type == type_pb2.POI:
-        cord2 = uri2.poi.coord
-    elif uri2.embedded_type == type_pb2.ADDRESS:
-        cord2 = uri2.address.coord
-    elif uri2.embedded_type == type_pb2.STOP_AREA:
-        cord2 = uri2.stop_area.coord
-    elif uri2.embedded_type == type_pb2.ADMINISTRATIVE_REGION:
-        cord2 = uri2.administrative_region.coord
+    if object_2.embedded_type == type_pb2.STOP_POINT:
+        cord2 = object_2.stop_point.coord
+    elif object_2.embedded_type == type_pb2.ACCESS_POINT:
+        cord2 = object_2.access_point.coord
+    elif object_2.embedded_type == type_pb2.POI:
+        cord2 = object_2.poi.coord
+    elif object_2.embedded_type == type_pb2.ADDRESS:
+        cord2 = object_2.address.coord
+    elif object_2.embedded_type == type_pb2.STOP_AREA:
+        cord2 = object_2.stop_area.coord
+    elif object_2.embedded_type == type_pb2.ADMINISTRATIVE_REGION:
+        cord2 = object_2.administrative_region.coord
 
     distance = crowfly_distance_between(cord1, cord2)
     return get_manhattan_duration(distance, walking_speed), round(distance)
 
 
-def _get_place(kwargs, uri):
+def _get_place(kwargs, pt_object):
     """
     Retrieve a place instance based on the provided URI.
 
@@ -488,11 +504,29 @@ def _get_place(kwargs, uri):
             - request_id: The ID of the request.
         uri (str): The URI of the place to retrieve.
 
-    Returns:
+    Returns: 
         PlaceByUri: An instance of PlaceByUri after waiting for the result.
     """
+    coord = _get_coords_from_pt_object(pt_object)
+    uri = "{};{}".format(coord.lon, coord.lat)
     place_by_uri_instance = PlaceByUri(kwargs["future_manager"], kwargs["instance"], uri, kwargs["request_id"])
     return place_by_uri_instance.wait_and_get()
+
+def get_uri_from_object(object):
+    if object.embedded_type == type_pb2.STOP_POINT:
+        return object.stop_point.uri
+    elif object.embedded_type == type_pb2.ACCESS_POINT:
+        return object.access_point.uri
+    elif object.embedded_type == type_pb2.POI:
+        return object.poi.uri
+    elif object.embedded_type == type_pb2.ADDRESS:
+        return object.address.uri
+    elif object.embedded_type == type_pb2.STOP_AREA:
+        return object.stop_area.uri
+    elif object.embedded_type == type_pb2.ADMINISTRATIVE_REGION:
+        return object.administrative_region.uri
+    else:
+        return None
 
 
 def _update_fallback_with_bike_mode(
@@ -500,7 +534,7 @@ def _update_fallback_with_bike_mode(
 ):
     """
     Updates the journey with bike mode fallback sections.
-
+access_point
     This function updates the journey sections with bike mode fallback sections based on the fallback type
     (BEGINNING_FALLBACK or ENDING_FALLBACK). It aligns the fallback direct path datetime, updates the section IDs,
     and creates the necessary links between the fallback and public transport parts. It also handles the addition
@@ -539,7 +573,7 @@ def _update_fallback_with_bike_mode(
         and fallback_sections[-1].street_network.mode is response_pb2.Bike
     ):
 
-        place = _get_place(kwargs, fallback_sections[-1].destination.uri)
+        place = _get_place(kwargs, fallback_sections[-1].destination)
         walktime, walking_distance = _get_walking_information(
             place,
             journey.sections[0].destination,
@@ -581,7 +615,7 @@ def _update_fallback_with_bike_mode(
             kwargs["instance"].walking_speed,
         )
         journey.durations.walking += walktime
-        place = _get_place(kwargs, fallback_sections[0].origin.uri)
+        place = _get_place(kwargs, fallback_sections[0].origin)
         fallback_sections[0].origin.CopyFrom(place)
         street_mode_section = _make_bike_park_street_network(
             journey.sections[-1].origin,
