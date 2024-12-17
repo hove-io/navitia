@@ -235,7 +235,7 @@ filter_odt_journeys = False
 
 additional_parameters = False
 
-default_max_waiting_duration_odt = 30*60 # 30 minutes
+max_waiting_duration_odt = 30 * 60  # 30 minutes
 
 ghost_words = []  # type: List[str]
 

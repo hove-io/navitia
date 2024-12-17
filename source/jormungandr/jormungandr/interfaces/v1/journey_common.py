@@ -41,7 +41,6 @@ from jormungandr.exceptions import RegionNotFound
 from functools import cmp_to_key
 from jormungandr.instance_manager import instances_comparator
 from navitiacommon.default_traveler_profile_params import acceptable_traveler_types
-from navitiacommon.default_values import default_max_waiting_duration_odt
 import pytz
 import six
 from jormungandr.fallback_modes import FallbackModes
@@ -60,7 +59,7 @@ from navitiacommon.parser_args_type import (
     PositiveFloat,
     PositiveInteger,
 )
-from navitiacommon import type_pb2
+from navitiacommon import type_pb2, default_values
 
 BICYCLE_TYPES = [t for t, _ in type_pb2.BicycleType.items()]
 
@@ -893,11 +892,12 @@ class JourneyCommon(ResourceUri, ResourceUtc):
         parser_get.add_argument(
             "_max_waiting_duration_odt",
             type=PositiveInteger(),
-            default= default_max_waiting_duration_odt,
+            default=default_values.max_waiting_duration_odt,
             hidden=True,
             help='A journey containing a waiting section between TC and Zonal ODT with a duration greater to  max_waiting_duration_odt '
             'will be discarded. Units : seconds. Must be > 0. Default value : 30 minutes',
         )
+
     def parse_args(self, region=None, uri=None):
         args = self.parsers['get'].parse_args()
 

@@ -80,7 +80,7 @@ class JourneyParameters(object):
         arrival_coord=None,
         global_max_speed=None,
         use_zonal_odt=False,
-        max_waiting_duration_odt = 30*60 # 30 minutes
+        max_waiting_duration_odt=default_values.max_waiting_duration_odt,
     ):
 
         self.max_duration = max_duration
