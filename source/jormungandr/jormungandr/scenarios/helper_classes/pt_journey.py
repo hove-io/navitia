@@ -344,6 +344,8 @@ class PtJourneyPool:
                 if self._requested_dest_obj
                 else None,
                 global_max_speed=request["_global_max_speed"],
+                use_zonal_odt=request["_use_zonal_odt"],
+                max_waiting_duration_odt=request["_max_waiting_duration_odt"],
             )
 
     def _async_request(self):
