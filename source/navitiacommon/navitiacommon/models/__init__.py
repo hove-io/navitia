@@ -1209,6 +1209,20 @@ class TravelerProfile(db.Model):  # type: ignore
         server_default=str(default_values.max_ridesharing_direct_path_duration),
     )
 
+    max_taxi_direct_path_duration = db.Column(
+        db.Integer,
+        default=default_values.max_taxi_direct_path_duration,
+        nullable=False,
+        server_default=str(default_values.max_taxi_direct_path_duration),
+    )
+
+    max_car_no_park_direct_path_duration = db.Column(
+        db.Integer,
+        default=default_values.max_car_no_park_direct_path_duration,
+        nullable=False,
+        server_default=str(default_values.max_car_no_park_direct_path_duration),
+    )
+
     @classmethod
     def get_by_coverage_and_type(cls, coverage, traveler_type):
         model = (

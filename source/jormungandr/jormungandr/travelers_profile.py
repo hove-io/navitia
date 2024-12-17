@@ -59,11 +59,13 @@ class TravelerProfile(object):
         max_car_duration_to_pt=15 * 60,  # type: int
         walking_step_penalty=30.0,  # type: float
         walking_use_hills=0.5,  # type: float
-        max_walking_direct_path_duration=24 * 60 * 60,  # type: int
-        max_bike_direct_path_duration=24 * 60 * 60,  # type: int
-        max_bss_direct_path_duration=24 * 60 * 60,  # type: int
-        max_car_direct_path_duration=24 * 60 * 60,  # type: int
-        max_ridesharing_direct_path_duration=24 * 60 * 60,  # type: int
+        max_walking_direct_path_duration=60 * 60,  # type: int
+        max_bike_direct_path_duration=60 * 60,  # type: int
+        max_bss_direct_path_duration=60 * 60,  # type: int
+        max_car_direct_path_duration=40 * 60,  # type: int
+        max_ridesharing_direct_path_duration=60 * 60,  # type: int
+        max_taxi_direct_path_duration=60 * 60,  # type: int
+        max_car_no_park_direct_path_duration=30 * 60,  # type: int
         traveler_type='',  # type: Text
         is_from_db=False,  # type: bool
     ):
@@ -101,6 +103,8 @@ class TravelerProfile(object):
         self.max_bss_direct_path_duration = max_bss_direct_path_duration
         self.max_car_direct_path_duration = max_car_direct_path_duration
         self.max_ridesharing_direct_path_duration = max_ridesharing_direct_path_duration
+        self.max_taxi_direct_path_duration = max_taxi_direct_path_duration
+        self.max_car_no_park_direct_path_duration = max_car_no_park_direct_path_duration
 
         self.wheelchair = wheelchair
 
@@ -127,6 +131,8 @@ class TravelerProfile(object):
             ('max_bss_direct_path_duration', self.max_bss_direct_path_duration),
             ('max_car_direct_path_duration', self.max_car_direct_path_duration),
             ('max_ridesharing_direct_path_duration', self.max_ridesharing_direct_path_duration),
+            ('max_taxi_direct_path_duration', self.max_taxi_direct_path_duration),
+            ('max_car_no_park_direct_path_duration', self.max_car_no_park_direct_path_duration),
         )
 
         def override(pair):
@@ -181,6 +187,8 @@ class TravelerProfile(object):
             max_bss_direct_path_duration=model.max_bss_direct_path_duration,
             max_car_direct_path_duration=model.max_car_direct_path_duration,
             max_ridesharing_direct_path_duration=model.max_ridesharing_direct_path_duration,
+            max_taxi_direct_path_duration=model.max_taxi_direct_path_duration,
+            max_car_no_park_direct_path_duration=model.max_car_no_park_direct_path_duration,
             is_from_db=True,
         )
 

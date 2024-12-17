@@ -149,6 +149,8 @@ class TravelerProfilesSerializer(serpy.Serializer):
     max_bss_direct_path_duration = Field(schema_type=int)
     max_car_direct_path_duration = Field(schema_type=int)
     max_ridesharing_direct_path_duration = Field(schema_type=int)
+    max_taxi_direct_path_duration = Field(schema_type=int)
+    max_car_no_park_direct_path_duration = Field(schema_type=int)
 
 
 class AutocompleteSerializer(serpy.DictSerializer):

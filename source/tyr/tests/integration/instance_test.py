@@ -393,9 +393,11 @@ def test_create_traveler_profile(create_instance, traveler_profile_params):
     check_traveler_profile(resp[0], traveler_profile_params)
 
     # Let's check some attributes absent in traveler_profile_params
-    # They should have default value of database
-    assert resp[0]['max_car_direct_path_duration'] == 24 * 60 * 60
-    assert resp[0]['max_ridesharing_direct_path_duration'] == 24 * 60 * 60
+    # They should have default value of default_traveler_profile_params
+    assert resp[0]['max_car_direct_path_duration'] == 40 * 60
+    assert resp[0]['max_ridesharing_direct_path_duration'] == 60 * 60
+    assert resp[0]['max_taxi_direct_path_duration'] == 60 * 60
+    assert resp[0]['max_car_no_park_direct_path_duration'] == 30 * 60
 
     # Those present in traveler_profile_params should have values as declared
     assert resp[0]['walking_use_hills'] == 0.5
@@ -422,8 +424,8 @@ def test_update_traveler_profile(create_instance, traveler_profile_params):
 
     # Let's check some attributes absent in traveler_profile_params
     # They should have default value of database
-    assert resp[0]['max_car_direct_path_duration'] == 24 * 60 * 60
-    assert resp[0]['max_ridesharing_direct_path_duration'] == 24 * 60 * 60
+    assert resp[0]['max_car_direct_path_duration'] == 40 * 60
+    assert resp[0]['max_ridesharing_direct_path_duration'] == 60 * 60
 
     # Those present in traveler_profile_params should have values as declared
     assert resp[0]['walking_use_hills'] == 0.5

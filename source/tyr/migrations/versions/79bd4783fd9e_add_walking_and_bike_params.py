@@ -101,6 +101,14 @@ def upgrade():
         'traveler_profile',
         sa.Column('max_ridesharing_direct_path_duration', sa.Integer(), server_default='86400', nullable=False),
     )
+    op.add_column(
+        'traveler_profile',
+        sa.Column('max_taxi_direct_path_duration', sa.Integer(), server_default='86400', nullable=False),
+    )
+    op.add_column(
+        'traveler_profile',
+        sa.Column('max_car_no_park_direct_path_duration', sa.Integer(), server_default='86400', nullable=False),
+    )
 
 
 def downgrade():
@@ -138,3 +146,5 @@ def downgrade():
     op.drop_column('traveler_profile', 'max_bss_direct_path_duration')
     op.drop_column('traveler_profile', 'max_car_direct_path_duration')
     op.drop_column('traveler_profile', 'max_ridesharing_direct_path_duration')
+    op.drop_column('traveler_profile', 'max_taxi_direct_path_duration')
+    op.drop_column('traveler_profile', 'max_car_no_park_direct_path_duration')

@@ -145,6 +145,8 @@ traveler_profile = {
     'max_bss_direct_path_duration': fields.Raw,
     'max_car_direct_path_duration': fields.Raw,
     'max_ridesharing_direct_path_duration': fields.Raw,
+    'max_taxi_direct_path_duration': fields.Raw,
+    'max_car_no_park_direct_path_duration': fields.Raw,
     'error': fields.String,
 }
 
