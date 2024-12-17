@@ -144,7 +144,7 @@ def record_request_call_to_otlp(response, *args, **kwargs):
     try:
         duration = time.time() - g.start
         token = get_token() if get_token() else "unknown"
-        user = get_user(token=token, abort_if_no_token=False) if token else None
+        user = get_user(token=token, abort_if_no_token=False) if token != "unknown" else None
         user_id = str(user.id) if user else "unknown"
         token_name = get_app_name(token)
         token_name = token_name if token_name else "unknown"
