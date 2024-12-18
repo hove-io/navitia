@@ -432,20 +432,9 @@ def _update_journey(journey, park_section, street_mode_section, to_replace):
 
 
 def _get_coords_from_pt_object(pt_object):
-    coord = None
-    if pt_object.embedded_type == type_pb2.STOP_POINT:
-        coord = pt_object.stop_point.coord
-    elif pt_object.embedded_type == type_pb2.ACCESS_POINT:
-        coord = pt_object.access_point.coord
-    elif pt_object.embedded_type == type_pb2.POI:
-        coord = pt_object.poi.coord
-    elif pt_object.embedded_type == type_pb2.ADDRESS:
-        coord = pt_object.address.coord
-    elif pt_object.embedded_type == type_pb2.STOP_AREA:
-        coord = pt_object.stop_area.coord
-    elif pt_object.embedded_type == type_pb2.ADMINISTRATIVE_REGION:
-        coord = pt_object.administrative_region.coord
+    coord = get_pt_object_coord(pt_object)
     return coord
+
 
 def _get_walking_information(object_1, object_2, walking_speed):
     """
@@ -460,34 +449,8 @@ def _get_walking_information(object_1, object_2, walking_speed):
         float: The walking time in secondes.
         float: The distance in meters
     """
-    cord1 = tuple()
-    cord2 = tuple()
-
-    if object_1.embedded_type == type_pb2.STOP_POINT:
-        cord1 = object_1.stop_point.coord
-    elif object_1.embedded_type == type_pb2.ACCESS_POINT:
-        cord1 = object_1.access_point.coord
-    elif object_1.embedded_type == type_pb2.POI:
-        cord1 = object_1.poi.coord
-    elif object_1.embedded_type == type_pb2.ADDRESS:
-        cord1 = object_1.address.coord
-    elif object_1.embedded_type == type_pb2.STOP_AREA:
-        cord1 = object_1.stop_area.coord
-    elif object_1.embedded_type == type_pb2.ADMINISTRATIVE_REGION:
-        cord1 = object_1.administrative_region.coord
-
-    if object_2.embedded_type == type_pb2.STOP_POINT:
-        cord2 = object_2.stop_point.coord
-    elif object_2.embedded_type == type_pb2.ACCESS_POINT:
-        cord2 = object_2.access_point.coord
-    elif object_2.embedded_type == type_pb2.POI:
-        cord2 = object_2.poi.coord
-    elif object_2.embedded_type == type_pb2.ADDRESS:
-        cord2 = object_2.address.coord
-    elif object_2.embedded_type == type_pb2.STOP_AREA:
-        cord2 = object_2.stop_area.coord
-    elif object_2.embedded_type == type_pb2.ADMINISTRATIVE_REGION:
-        cord2 = object_2.administrative_region.coord
+    cord1 = get_pt_object_coord(object_1)
+    cord2 = get_pt_object_coord(object_2)
 
     distance = crowfly_distance_between(cord1, cord2)
     return get_manhattan_duration(distance, walking_speed), round(distance)
@@ -504,7 +467,7 @@ def _get_place(kwargs, pt_object):
             - request_id: The ID of the request.
         uri (str): The URI of the place to retrieve.
 
-    Returns: 
+    Returns:
         PlaceByUri: An instance of PlaceByUri after waiting for the result.
     """
     coord = _get_coords_from_pt_object(pt_object)
@@ -512,51 +475,35 @@ def _get_place(kwargs, pt_object):
     place_by_uri_instance = PlaceByUri(kwargs["future_manager"], kwargs["instance"], uri, kwargs["request_id"])
     return place_by_uri_instance.wait_and_get()
 
-def get_uri_from_object(object):
-    if object.embedded_type == type_pb2.STOP_POINT:
-        return object.stop_point.uri
-    elif object.embedded_type == type_pb2.ACCESS_POINT:
-        return object.access_point.uri
-    elif object.embedded_type == type_pb2.POI:
-        return object.poi.uri
-    elif object.embedded_type == type_pb2.ADDRESS:
-        return object.address.uri
-    elif object.embedded_type == type_pb2.STOP_AREA:
-        return object.stop_area.uri
-    elif object.embedded_type == type_pb2.ADMINISTRATIVE_REGION:
-        return object.administrative_region.uri
-    else:
-        return None
-
 
 def _update_fallback_with_bike_mode(
     journey, fallback_dp, fallback_period_extremity, fallback_type, via_pt_access, via_poi_access, **kwargs
 ):
     """
-    Updates the journey with bike mode fallback sections.
-access_point
-    This function updates the journey sections with bike mode fallback sections based on the fallback type
-    (BEGINNING_FALLBACK or ENDING_FALLBACK). It aligns the fallback direct path datetime, updates the section IDs,
-    and creates the necessary links between the fallback and public transport parts. It also handles the addition
-    of POI access points in the sections.
+        Updates the journey with bike mode fallback sections.
+    access_point
+        This function updates the journey sections with bike mode fallback sections based on the fallback type
+        (BEGINNING_FALLBACK or ENDING_FALLBACK). It aligns the fallback direct path datetime, updates the section IDs,
+        and creates the necessary links between the fallback and public transport parts. It also handles the addition
+        of POI access points in the sections.
 
-    Args:
-        journey (Journey): The journey object to be updated.
-        fallback_dp (DirectPath): The direct path object for the fallback.
-        fallback_period_extremity (datetime): The extremity datetime for the fallback period.
-        fallback_type (StreetNetworkPathType): The type of fallback (BEGINNING_FALLBACK or ENDING_FALLBACK).
-        via_pt_access (PtObject): The public transport access point object.
-        via_poi_access (POIObject): The point of interest access point object.
-        **kwargs: Additional keyword arguments, including:
-            - origin_mode (list): The mode of origin (e.g., ["bike"]).
-            - destination_mode (list): The mode of destination (e.g., ["bike"]).
-            - future_manager (FutureManager): The future manager instance.
-            - instance (Instance): The instance object.
-            - request_id (str): The request ID.
-            - additional_time (timedelta): The additional time to be added to the sections.
+        Args:
+            journey (Journey): The journey object to be updated.
+            fallback_dp (DirectPath): The direct path object for the fallback.
+            fallback_period_extremity (datetime): The extremity datetime for the fallback period.
+            fallback_type (StreetNetworkPathType): The type of fallback (BEGINNING_FALLBACK or ENDING_FALLBACK).
+            via_pt_access (PtObject): The public transport access point object.
+            via_poi_access (POIObject): The point of interest access point object.
+            **kwargs: Additional keyword arguments, including:
+                - origin_mode (list): The mode of origin (e.g., ["bike"]).
+                - destination_mode (list): The mode of destination (e.g., ["bike"]).
+                - future_manager (FutureManager): The future manager instance.
+                - instance (Instance): The instance object.
+                - request_id (str): The request ID.
+                - additional_time (timedelta): The additional time to be added to the sections.
 
-    Returns:
-        None
+        Returns:
+            None
     """
     # Validate required arguments
     if not all(kwargs.get(key) for key in ("future_manager", "instance", "request_id")):
@@ -582,7 +529,7 @@ access_point
 
         fallback_sections[-1].destination.CopyFrom(place)
         fallback_sections[-1].end_date_time -= kwargs["additional_time"] + walktime
-        fallback_sections[-1].begin_date_time-= kwargs["additional_time"] + walktime
+        fallback_sections[-1].begin_date_time -= kwargs["additional_time"] + walktime
         park_section = _make_bike_park(fallback_sections[-1].end_date_time, kwargs["additional_time"])
         journey.durations.walking += walktime
         street_mode_section = _make_bike_park_street_network(
