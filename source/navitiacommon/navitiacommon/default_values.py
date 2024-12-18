@@ -263,6 +263,37 @@ co2_emission_car_unit = 'gEC'
 
 use_predicted_traffic = False
 
+# Parameters on walk
+walking_walkway_factor = 1.0
+walking_sidewalk_factor = 1.0
+walking_alley_factor = 2.0
+walking_driveway_factor = 5.0
+walking_step_penalty = 30.0
+walking_use_ferry = 0.5
+walking_use_living_streets = 0.6
+walking_use_tracks = 0.5
+walking_use_hills = 0.5
+walking_service_factor = 1.0
+walking_max_hiking_difficulty = 1
+walking_shortest = False
+walking_ignore_oneways = True
+walking_destination_only_penalty = 120
+
+# Parameters on bike
+bike_use_roads = 0.5  # (0 - 1.0)
+bike_use_hills = 0.5  # (0 - 1.0)
+bike_use_ferry = 0.5  # (0 - 1.0)
+bike_avoid_bad_surfaces = 0.25  # (0 - 1.0)
+bike_shortest = False
+bicycle_type = 'Hybrid'  # The type of bicycle [Road, Hybrid, City, Cross, Mountain]
+bike_use_living_streets = 0.5  # (0 - 1.0)
+bike_maneuver_penalty = 5  # (seconds)
+bike_service_penalty = 0
+bike_service_factor = 1
+bike_country_crossing_cost = 600  # (seconds)
+bike_country_crossing_penalty = 0
+bike_destination_only_penalty = 120
+
 
 def get_value_or_default(attr, instance, instance_name):
     if not instance or getattr(instance, attr, None) == None:

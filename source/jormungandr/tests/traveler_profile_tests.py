@@ -45,12 +45,20 @@ def test_get_traveler_profile_and_override():
     traveler_type = 'standard'
     traveler_profile = TravelerProfile.make_traveler_profile(region, traveler_type)
 
-    args = {'walking_speed': 42424242, 'bike_speed': 42424242}
+    assert traveler_profile.walking_speed == 1.11
+    assert traveler_profile.bike_speed == 3.33
+    assert traveler_profile.walking_use_hills == 0.5
+    assert traveler_profile.walking_step_penalty == 30.0
+
+    args = {'walking_speed': 42424242, 'bike_speed': 42424242, 'walking_step_penalty': 33.0}
     traveler_profile.override_params(args)
 
     assert args['walking_speed'] == 42424242
     assert args['bike_speed'] == 42424242
+    assert args['walking_use_hills'] == 0.5
+    assert args['walking_step_penalty'] == 33.0
 
+    # Attributes modified in args above are absent in arg_vs_profile_attr
     arg_vs_profile_attr = (
         ('bss_speed', 'bss_speed'),
         ('car_speed', 'car_speed'),
@@ -61,6 +69,12 @@ def test_get_traveler_profile_and_override():
         ('origin_mode', 'first_section_mode'),
         ('destination_mode', 'last_section_mode'),
         ('wheelchair', 'wheelchair'),
+        ('walking_use_hills', 'walking_use_hills'),
+        ('max_walking_direct_path_duration', 'max_walking_direct_path_duration'),
+        ('max_bike_direct_path_duration', 'max_bike_direct_path_duration'),
+        ('max_bss_direct_path_duration', 'max_bss_direct_path_duration'),
+        ('max_car_direct_path_duration', 'max_car_direct_path_duration'),
+        ('max_ridesharing_direct_path_duration', 'max_ridesharing_direct_path_duration'),
     )
 
     standard_profile = default_traveler_profiles['standard']

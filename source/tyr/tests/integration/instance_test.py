@@ -66,6 +66,11 @@ def traveler_profile_params():
         "bike_speed": 8.8,
         "car_speed": 23.11,
         "max_bike_duration_to_pt": 500,
+        "walking_use_hills": 0.5,
+        "walking_step_penalty": 40.0,
+        "max_walking_direct_path_duration": 4 * 60 * 60,
+        "max_bike_direct_path_duration": 4 * 60 * 60,
+        "max_bss_direct_path_duration": 4 * 60 * 60,
     }
 
 
@@ -387,6 +392,19 @@ def test_create_traveler_profile(create_instance, traveler_profile_params):
     resp = api_get('/v0/instances/fr/traveler_profiles/standard')
     check_traveler_profile(resp[0], traveler_profile_params)
 
+    # Let's check some attributes absent in traveler_profile_params
+    # They should have default value of default_traveler_profile_params
+    assert resp[0]['max_car_direct_path_duration'] == 40 * 60
+    assert resp[0]['max_ridesharing_direct_path_duration'] == 60 * 60
+    assert resp[0]['max_taxi_direct_path_duration'] == 60 * 60
+    assert resp[0]['max_car_no_park_direct_path_duration'] == 30 * 60
+
+    # Those present in traveler_profile_params should have values as declared
+    assert resp[0]['walking_use_hills'] == 0.5
+    assert resp[0]['walking_step_penalty'] == 40.0
+    assert resp[0]['max_walking_direct_path_duration'] == 4 * 60 * 60
+    assert resp[0]['max_bike_direct_path_duration'] == 4 * 60 * 60
+
 
 def test_update_traveler_profile(create_instance, traveler_profile_params):
 
@@ -403,6 +421,17 @@ def test_update_traveler_profile(create_instance, traveler_profile_params):
 
     resp = api_get('/v0/instances/fr/traveler_profiles/standard')
     check_traveler_profile(resp[0], traveler_profile_params)
+
+    # Let's check some attributes absent in traveler_profile_params
+    # They should have default value of database
+    assert resp[0]['max_car_direct_path_duration'] == 40 * 60
+    assert resp[0]['max_ridesharing_direct_path_duration'] == 60 * 60
+
+    # Those present in traveler_profile_params should have values as declared
+    assert resp[0]['walking_use_hills'] == 0.5
+    assert resp[0]['walking_step_penalty'] == 40.0
+    assert resp[0]['max_walking_direct_path_duration'] == 4 * 60 * 60
+    assert resp[0]['max_bike_direct_path_duration'] == 4 * 60 * 60
 
 
 def test_delete_traveler_profile(create_instance):
@@ -692,3 +721,122 @@ def test_update_invalide_language(create_instance):
 
     resp = api_get('/v0/instances/fr')
     assert resp[0]['language'] == "fr-FR"
+
+
+def test_on_attributs_starting_with_walking(create_instance):
+    resp = api_get('/v0/instances/fr')
+    assert resp[0]['walking_walkway_factor'] == 1.0
+    assert resp[0]['walking_sidewalk_factor'] == 1.0
+    assert resp[0]['walking_alley_factor'] == 2.0
+    assert resp[0]['walking_driveway_factor'] == 5.0
+    assert resp[0]['walking_step_penalty'] == 30
+    assert resp[0]['walking_use_ferry'] == 0.5
+    assert resp[0]['walking_use_living_streets'] == 0.6
+    assert resp[0]['walking_use_tracks'] == 0.5
+    assert resp[0]['walking_use_hills'] == 0.5
+    assert resp[0]['walking_service_factor'] == 1
+    assert resp[0]['walking_max_hiking_difficulty'] == 1
+    assert resp[0]['walking_shortest'] is False
+    assert resp[0]['walking_ignore_oneways'] is True
+    assert resp[0]['walking_destination_only_penalty'] == 120
+
+    params = {
+        'walking_walkway_factor': 0.8,
+        'walking_sidewalk_factor': 0.9,
+        'walking_alley_factor': 2.1,
+        'walking_driveway_factor': 6.0,
+        'walking_step_penalty': 33,
+        'walking_use_ferry': 0.6,
+        'walking_use_living_streets': 0.7,
+        'walking_use_tracks': 0.4,
+        'walking_use_hills': 0.6,
+        'walking_service_factor': 2,
+        'walking_max_hiking_difficulty': 3,
+        'walking_shortest': True,
+        'walking_ignore_oneways': False,
+        'walking_destination_only_penalty': 122,
+    }
+    resp = api_put('/v0/instances/fr', data=json.dumps(params), content_type='application/json')
+    assert resp['walking_walkway_factor'] == 0.8
+
+    resp = api_get('/v0/instances/fr')
+    assert resp[0]['walking_walkway_factor'] == 0.8
+    assert resp[0]['walking_sidewalk_factor'] == 0.9
+    assert resp[0]['walking_alley_factor'] == 2.1
+    assert resp[0]['walking_driveway_factor'] == 6.0
+    assert resp[0]['walking_step_penalty'] == 33
+    assert resp[0]['walking_use_ferry'] == 0.6
+    assert resp[0]['walking_use_living_streets'] == 0.7
+    assert resp[0]['walking_use_tracks'] == 0.4
+    assert resp[0]['walking_use_hills'] == 0.6
+    assert resp[0]['walking_service_factor'] == 2
+    assert resp[0]['walking_max_hiking_difficulty'] == 3
+    assert resp[0]['walking_shortest'] is True
+    assert resp[0]['walking_ignore_oneways'] is False
+    assert resp[0]['walking_destination_only_penalty'] == 122
+
+    params = {'walking_max_hiking_difficulty': 7}
+    resp = api_put('/v0/instances/fr', data=json.dumps(params), content_type='application/json')
+    assert resp['walking_max_hiking_difficulty'] == 6
+
+
+def test_on_attributs_starting_with_bike(create_instance):
+    resp = api_get('/v0/instances/fr')
+    assert resp[0]['bike_use_roads'] == 0.5
+    assert resp[0]['bike_use_hills'] == 0.5
+    assert resp[0]['bike_use_ferry'] == 0.5
+    assert resp[0]['bike_avoid_bad_surfaces'] == 0.25
+    assert resp[0]['bike_shortest'] is False
+    assert resp[0]['bicycle_type'] == "Hybrid"
+    assert resp[0]['bike_use_living_streets'] == 0.5
+    assert resp[0]['bike_maneuver_penalty'] == 5
+    assert resp[0]['bike_service_penalty'] == 0
+    assert resp[0]['bike_service_factor'] == 1
+    assert resp[0]['bike_country_crossing_cost'] == 600
+    assert resp[0]['bike_country_crossing_penalty'] == 0
+    assert resp[0]['bike_destination_only_penalty'] == 120
+
+    params = {
+        'bike_use_roads': 0.3,
+        'bike_use_hills': 0.4,
+        'bike_use_ferry': 0.6,
+        'bike_avoid_bad_surfaces': 0.75,
+        'bike_shortest': True,
+        'bicycle_type': "Road",
+        'bike_use_living_streets': 0.7,
+        'bike_maneuver_penalty': 6,
+        'bike_service_penalty': 1,
+        'bike_service_factor': 0,
+        'bike_country_crossing_cost': 500,
+        'bike_country_crossing_penalty': 1,
+        'bike_destination_only_penalty': 112,
+    }
+    resp = api_put('/v0/instances/fr', data=json.dumps(params), content_type='application/json')
+    assert resp['bike_use_roads'] == 0.3
+
+    resp = api_get('/v0/instances/fr')
+    assert resp[0]['bike_use_roads'] == 0.3
+    assert resp[0]['bike_use_hills'] == 0.4
+    assert resp[0]['bike_use_ferry'] == 0.6
+    assert resp[0]['bike_avoid_bad_surfaces'] == 0.75
+    assert resp[0]['bike_shortest'] is True
+    assert resp[0]['bicycle_type'] == "Road"
+    assert resp[0]['bike_use_living_streets'] == 0.7
+    assert resp[0]['bike_maneuver_penalty'] == 6
+    assert resp[0]['bike_service_penalty'] == 1
+    assert resp[0]['bike_service_factor'] == 0
+    assert resp[0]['bike_country_crossing_cost'] == 500
+    assert resp[0]['bike_country_crossing_penalty'] == 1
+    assert resp[0]['bike_destination_only_penalty'] == 112
+
+    params = {
+        'bicycle_type': "toto",
+        'bike_use_living_streets': 0.9,
+        'bike_destination_only_penalty': 112,
+    }
+    resp, status = api_put(
+        '/v0/instances/fr', data=json.dumps(params), content_type='application/json', check=False
+    )
+    assert status == 400
+    assert "message" in resp
+    assert "The type of bicycle" in resp['message']['bicycle_type']

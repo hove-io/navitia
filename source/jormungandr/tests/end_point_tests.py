@@ -280,3 +280,46 @@ class TestEndPoint(AbstractTestFixture):
             assert attribute in json_response['krakens']['main_ptref_test']
             assert attribute in json_response['lokis']['main_routing_test']
             assert attribute in json_response['krakens']['main_routing_test']
+
+    def test_parameters_in_one_status(self):
+        json_response = self.query("/v1/coverage/main_routing_test/status")
+        is_valid_region_status(get_not_null(json_response, "status"))
+        self.check_context(json_response)
+
+        # Verify that parameters exist in parameters for walking as wall as bike and some others
+        parameters = json_response['status']['parameters']
+        assert len(parameters) == 90
+        assert parameters['walking_walkway_factor'] == 1.0
+        assert parameters['walking_sidewalk_factor'] == 1.0
+        assert parameters['walking_alley_factor'] == 2.0
+        assert parameters['walking_driveway_factor'] == 5.0
+        assert parameters['walking_step_penalty'] == 30.0
+        assert parameters['walking_use_ferry'] == 0.5
+        assert parameters['walking_use_living_streets'] == 0.6
+        assert parameters['walking_use_tracks'] == 0.5
+        assert parameters['walking_use_hills'] == 0.5
+        assert parameters['walking_service_factor'] == 1
+        assert parameters['walking_max_hiking_difficulty'] == 1
+        assert parameters['walking_shortest'] is False
+        assert parameters['walking_ignore_oneways'] is True
+        assert parameters['walking_destination_only_penalty'] == 120
+
+        assert parameters['bike_use_roads'] == 0.5
+        assert parameters['bike_use_hills'] == 0.5
+        assert parameters['bike_use_ferry'] == 0.5
+        assert parameters['bike_avoid_bad_surfaces'] == 0.25
+        assert parameters['bike_shortest'] is False
+        assert parameters['bicycle_type'] == 'Hybrid'
+        assert parameters['bike_use_living_streets'] == 0.5
+        assert parameters['bike_maneuver_penalty'] == 5
+        assert parameters['bike_service_penalty'] == 0
+        assert parameters['bike_service_factor'] == 1
+        assert parameters['bike_country_crossing_cost'] == 600
+        assert parameters['bike_country_crossing_penalty'] == 0
+        assert parameters['bike_destination_only_penalty'] == 120
+
+        assert parameters['max_walking_direct_path_duration'] == 86400  # 24 * 60 * 60
+        assert parameters['max_bike_direct_path_duration'] == 86400
+        assert parameters['max_bss_direct_path_duration'] == 86400
+        assert parameters['max_car_direct_path_duration'] == 86400
+        assert parameters['max_ridesharing_direct_path_duration'] == 86400
