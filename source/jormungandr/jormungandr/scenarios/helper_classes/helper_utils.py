@@ -581,9 +581,8 @@ access_point
         )
 
         fallback_sections[-1].destination.CopyFrom(place)
-        for s in journey.sections:
-            s.begin_date_time += kwargs["additional_time"] + walktime
-            s.end_date_time += kwargs["additional_time"] + walktime
+        fallback_sections[-1].end_date_time -= kwargs["additional_time"] + walktime
+        fallback_sections[-1].begin_date_time-= kwargs["additional_time"] + walktime
         park_section = _make_bike_park(fallback_sections[-1].end_date_time, kwargs["additional_time"])
         journey.durations.walking += walktime
         street_mode_section = _make_bike_park_street_network(
