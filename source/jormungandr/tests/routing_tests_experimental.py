@@ -1542,6 +1542,10 @@ class TestBikeWithParkingPenalty(NewDefaultScenarioAbstractTestFixture):
         pt_journeys = [j for j in journeys if 'bike' in j['tags'] and 'non_pt_bike' not in j['tags']]
         assert len(pt_journeys) > 0
         for journey in pt_journeys:
+            departure_datetime = datetime.datetime.strptime(journey['departure_date_time'], '%Y%m%dT%H%M%S')
+            reqeust_datetime = datetime.datetime.strptime("20120614T075000", '%Y%m%dT%H%M%S')
+            assert reqeust_datetime < departure_datetime
+
             assert journey['sections'][0]['mode'] == 'bike'
             assert journey['sections'][1]['type'] == 'park'
             assert journey['sections'][2]['type'] == 'street_network'
@@ -1587,6 +1591,10 @@ class TestBikeWithParkingPenalty(NewDefaultScenarioAbstractTestFixture):
         pt_journeys = [j for j in journeys if 'bike' in j['tags'] and 'non_pt_bike' not in j['tags']]
         assert len(pt_journeys) > 0
         for journey in pt_journeys:
+            departure_datetime = datetime.datetime.strptime(journey['departure_date_time'], '%Y%m%dT%H%M%S')
+            reqeust_datetime = datetime.datetime.strptime("20120614T075000", '%Y%m%dT%H%M%S')
+            assert reqeust_datetime < departure_datetime
+
             assert journey['sections'][0]['mode'] == 'bike'
             assert journey['sections'][1]['type'] == 'park'
             assert journey['sections'][2]['type'] == 'street_network'
@@ -1611,6 +1619,10 @@ class TestBikeWithParkingPenalty(NewDefaultScenarioAbstractTestFixture):
         pt_journeys = [j for j in journeys if 'bike' in j['tags'] and 'non_pt_bike' not in j['tags']]
         assert len(pt_journeys) > 0
         for journey in pt_journeys:
+            departure_datetime = datetime.datetime.strptime(journey['departure_date_time'], '%Y%m%dT%H%M%S')
+            reqeust_datetime = datetime.datetime.strptime("20120614T075000", '%Y%m%dT%H%M%S')
+            assert reqeust_datetime < departure_datetime
+
             assert journey['sections'][0]['mode'] in ['bike', 'walking']
             assert journey['sections'][1]['type'] == 'park'
             assert journey['sections'][2]['type'] == 'street_network'
@@ -1635,6 +1647,10 @@ class TestBikeWithParkingPenalty(NewDefaultScenarioAbstractTestFixture):
         pt_journeys = [j for j in journeys if 'bike' in j['tags'] and 'non_pt_bike' not in j['tags']]
         assert len(pt_journeys) > 0
         for journey in pt_journeys:
+            departure_datetime = datetime.datetime.strptime(journey['departure_date_time'], '%Y%m%dT%H%M%S')
+            reqeust_datetime = datetime.datetime.strptime("20120614T075000", '%Y%m%dT%H%M%S')
+            assert reqeust_datetime < departure_datetime
+
             assert journey['sections'][0]['mode'] in ['bike', 'walking']
             assert journey['sections'][1]['type'] == 'park'
             assert journey['sections'][2]['type'] == 'street_network'
@@ -1659,6 +1675,10 @@ class TestBikeWithParkingPenalty(NewDefaultScenarioAbstractTestFixture):
         pt_journeys = [j for j in journeys if 'bike' in j['tags'] and 'non_pt_bike' not in j['tags']]
         assert len(pt_journeys) > 0
         for journey in pt_journeys:
+            departure_datetime = datetime.datetime.strptime(journey['departure_date_time'], '%Y%m%dT%H%M%S')
+            reqeust_datetime = datetime.datetime.strptime("20120614T075000", '%Y%m%dT%H%M%S')
+            assert reqeust_datetime < departure_datetime
+
             assert journey['sections'][0]['mode'] in ['bike', 'walking']
             assert journey['sections'][1]['type'] != 'park'
 
@@ -1680,5 +1700,9 @@ class TestBikeWithParkingPenalty(NewDefaultScenarioAbstractTestFixture):
         pt_journeys = [j for j in journeys if 'bike' in j['tags'] and 'non_pt_bike' not in j['tags']]
         assert len(pt_journeys) > 0
         for journey in pt_journeys:
+            departure_datetime = datetime.datetime.strptime(journey['departure_date_time'], '%Y%m%dT%H%M%S')
+            reqeust_datetime = datetime.datetime.strptime("20120614T075000", '%Y%m%dT%H%M%S')
+            assert reqeust_datetime < departure_datetime
+
             assert journey['sections'][0]['mode'] in ['bike', 'walking']
             assert journey['sections'][1]['type'] != 'park'
