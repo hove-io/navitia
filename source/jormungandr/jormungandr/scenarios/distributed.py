@@ -29,6 +29,8 @@
 
 from __future__ import absolute_import, print_function, unicode_literals, division
 
+from jormungandr.park_modes import ParkMode
+
 try:
     from typing import Dict, Text, Any, Tuple
 except ImportError:
@@ -181,6 +183,10 @@ class Distributed(object):
                 # add SN feed publishers
                 context.streetnetwork_path_pool.add_feed_publishers(request, requested_direct_path_modes, res)
                 return res
+
+            # if the parkmode is set to "on street" we need to subtract additional time to the max_bike_duration_to_pt
+            if ParkMode.on_street.name == request.get("park_mode", ""):
+                request["max_bike_duration_to_pt"] += request.get("on_street_bike_parking_duration", 0)
 
             # We'd like to get the duration of a direct path to do some optimizations in ProximitiesByCrowflyPool and
             # FallbackDurationsPool.
