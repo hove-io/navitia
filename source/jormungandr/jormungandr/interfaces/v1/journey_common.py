@@ -57,8 +57,9 @@ from navitiacommon.parser_args_type import (
     FloatRange,
     KeyValueType,
     PositiveFloat,
+    PositiveInteger,
 )
-from navitiacommon import type_pb2
+from navitiacommon import type_pb2, default_values
 
 BICYCLE_TYPES = [t for t, _ in type_pb2.BicycleType.items()]
 
@@ -879,6 +880,21 @@ class JourneyCommon(ResourceUri, ResourceUtc):
             type=BooleanType(),
             hidden=True,
             help="whether or not to use predicted/historical traffic data for routing, it affects only car/car_no_park mode in Asgard",
+        )
+        parser_get.add_argument(
+            "_use_zonal_odt",
+            type=BooleanType(),
+            default=False,
+            hidden=True,
+            help="only available for Loki: " "Use zonal ODT in fallback.",
+        )
+        parser_get.add_argument(
+            "_max_waiting_duration_odt",
+            type=PositiveInteger(),
+            default=default_values.max_waiting_duration_odt,
+            hidden=True,
+            help='A journey containing a waiting section between TC and Zonal ODT with a duration greater to  max_waiting_duration_odt '
+            'will be discarded. Units : seconds. Must be > 0. Default value : 30 minutes',
         )
 
     def parse_args(self, region=None, uri=None):

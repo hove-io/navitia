@@ -1094,6 +1094,8 @@ def create_journeys_request(origins, destinations, datetime, clockwise, journey_
             )
         )
         req.journeys.global_max_speed = journey_parameters.global_max_speed
+        req.journeys.use_zonal_odt = journey_parameters.use_zonal_odt
+        req.journeys.max_waiting_duration_odt = journey_parameters.max_waiting_duration_odt
     ####################
 
     return req
