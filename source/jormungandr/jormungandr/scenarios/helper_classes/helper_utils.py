@@ -602,6 +602,7 @@ def _update_fallback_with_bike_mode(
                 target_section.duration = via_pt_access.access_point.traversal_time
                 target_section.length = via_pt_access.access_point.length
                 fallback_sections[-1].duration -= via_pt_access.access_point.traversal_time
+                fallback_sections[-1].length -= via_pt_access.access_point.length
             else:
                 fallback_sections[-1].vias.add().CopyFrom(via_pt_access.access_point)
 
