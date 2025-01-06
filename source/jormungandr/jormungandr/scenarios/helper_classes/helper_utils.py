@@ -198,8 +198,6 @@ def _make_ending_car_park_sections(
 def _make_bike_park(begin_date_time, duration):
     bike_park_section = response_pb2.Section()
     bike_park_section.id = "section_bike_park"
-    bike_park_section.origin = None
-    bike_park_section.destination = None
     bike_park_section.duration = duration
     bike_park_section.type = response_pb2.PARK
     bike_park_section.begin_date_time = begin_date_time
