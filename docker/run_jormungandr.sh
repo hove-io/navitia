@@ -10,6 +10,7 @@ Usage: ${0##*/} -m monitor-process -r max-requests
     -m      [0|1] activate monitor-process
     -r      max-requests before reload for jormungandr worker
     -g      Optional: gormungandr url for route_schedules API (Example: http://gormungandr)
+    -v      Optional: gormungandr version API : route_schedules(1), route_schedules and journeys(2)
 EOF
 }
 
@@ -22,6 +23,8 @@ while getopts "m:r:c:g:h" opt; do
         c) jormun_cache_items=$OPTARG
             ;;
         g) gormungandr_url=$OPTARG
+            ;;
+        v) gormungandr_version=$OPTARG
             ;;
         h|\?)
             show_help
@@ -50,9 +53,10 @@ fi
 
 jormungandr_cache2="name=jormungandr,items=${jormun_cache_items}"
 
-if [[ ! -z $gormungandr_url ]]
+if [[ ! -z $gormungandr_url ]] && [[ ! -z $gormungandr_version ]];
 then
   echo "export GORMUNGANDR_URL=$gormungandr_url" >> /etc/apache2/envvars
+  echo "export GORMUNGANDR_VERSION=$gormungandr_version" >> /etc/apache2/envvars
 fi
 # run apache2
 service apache2 start
