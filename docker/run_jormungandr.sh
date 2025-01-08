@@ -14,7 +14,7 @@ Usage: ${0##*/} -m monitor-process -r max-requests
 EOF
 }
 
-while getopts "m:r:c:g:h" opt; do
+while getopts "m:r:c:g:v:h" opt; do
     case $opt in
         m) monitor_processes=$OPTARG
             ;;
