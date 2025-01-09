@@ -597,6 +597,9 @@ def _update_fallback_with_bike_mode(
                     [fallback_sections[-1].street_network.path_items[-1]]
                 )
                 fallback_sections[-1].street_network.path_items.pop()
+                # update the duration and length of the sections
+                # the duration and length of the target section is the duration and length of the access point
+                # the duration and length of the fallback section is the duration and length of the street network minus the duration and length of the access point
                 target_section.duration = via_pt_access.access_point.traversal_time
                 target_section.length = via_pt_access.access_point.length
                 fallback_sections[-1].duration -= via_pt_access.access_point.traversal_time

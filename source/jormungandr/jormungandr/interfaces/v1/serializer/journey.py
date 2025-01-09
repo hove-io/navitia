@@ -367,7 +367,7 @@ class SectionSerializer(PbNestedSerializer):
         if obj.HasField(str('type')):
             enum = obj.DESCRIPTOR.fields_by_name['type'].enum_type.values_by_number
             ret_value = enum[getattr(obj, 'type')].name
-            if ret_value == 'WAITING' or (ret_value == 'PARK' and obj.id == 'section_bike_park_1'):
+            if ret_value == 'WAITING' or (ret_value == 'PARK' and 'section_bike_park' in obj.id):
                 return None
         return PlaceSerializer(obj.destination).data
 
@@ -377,7 +377,7 @@ class SectionSerializer(PbNestedSerializer):
         if obj.HasField(str('type')):
             enum = obj.DESCRIPTOR.fields_by_name['type'].enum_type.values_by_number
             ret_value = enum[getattr(obj, 'type')].name
-            if ret_value == 'WAITING' or (ret_value == 'PARK' and obj.id == 'section_bike_park_1'):
+            if ret_value == 'WAITING' or (ret_value == 'PARK' and 'section_bike_park' in obj.id):
                 return None
         return PlaceSerializer(obj.origin).data
 
