@@ -1723,7 +1723,6 @@ class TestBikeWithParkingPenalty(NewDefaultScenarioAbstractTestFixture):
         journeys = get_not_null(response, 'journeys')
         pt_journeys = [j for j in journeys if 'bike' in j['tags'] and 'non_pt_bike' not in j['tags']]
         assert len(pt_journeys) > 0
-        print("Blablab", pt_journeys[0]["sections"][1])
         for journey in pt_journeys:
             assert journey['sections'][1]['type'] == 'park'
             assert 'from' not in journey['sections'][1]
