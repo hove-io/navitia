@@ -1726,7 +1726,7 @@ class TestBikeWithParkingPenalty(NewDefaultScenarioAbstractTestFixture):
         print("Blablab", len(pt_journeys[0]["sections"]))
         for journey in pt_journeys:
             assert journey['sections'][1]['type'] == 'park'
-            assert 'from' in journey['sections'][1]
+            assert 'from' not in journey['sections'][1]
             assert 'to' not in journey['sections'][1]
 
     def test_bike_traversal_time(self):
