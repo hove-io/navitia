@@ -51,11 +51,14 @@ class BackendsStatus(StatedResource):
             for pt_planner_type, pt_planner in instance.get_all_pt_planners():
                 futures.append(pool.spawn(do, instance.name, pt_planner_type, pt_planner, req))
 
+            futures.append(pool.spawn(do, instance.name, None, instance, req))
         found_err = False
         status_code = 200
 
         for future in gevent.iwait(futures):
             instance_name, pt_planner_type, status, err = future.get()
+            if pt_planner_type is None:
+                continue
             found_err |= err is not None
             if err:
                 response['errors'].append(
