@@ -1706,3 +1706,25 @@ class TestBikeWithParkingPenalty(NewDefaultScenarioAbstractTestFixture):
 
             assert journey['sections'][0]['mode'] in ['bike', 'walking']
             assert journey['sections'][1]['type'] != 'park'
+
+    def test_bike_park_section_from_to_none(self):
+        query = (
+            sub_query
+            + "&datetime=20120614T075000"
+            + "&first_section_mode[]=bike"
+            + "&bike_speed=0.05"
+            + "&park_mode=on_street"
+            + "&_access_points=true"
+        )
+
+        response = self.query_region(query)
+        check_best(response)
+
+        journeys = get_not_null(response, 'journeys')
+        pt_journeys = [j for j in journeys if 'bike' in j['tags'] and 'non_pt_bike' not in j['tags']]
+        assert len(pt_journeys) > 0
+        print("Blablab", pt_journeys[0]["sections"][1])
+        for journey in pt_journeys:
+            assert journey['sections'][1]['type'] == 'park'
+            assert 'from' not in journey['sections'][1]
+            assert 'to' not in journey['sections'][1]
