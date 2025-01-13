@@ -1723,7 +1723,45 @@ class TestBikeWithParkingPenalty(NewDefaultScenarioAbstractTestFixture):
         journeys = get_not_null(response, 'journeys')
         pt_journeys = [j for j in journeys if 'bike' in j['tags'] and 'non_pt_bike' not in j['tags']]
         assert len(pt_journeys) > 0
+        print("Blablab", len(pt_journeys[0]["sections"]))
         for journey in pt_journeys:
             assert journey['sections'][1]['type'] == 'park'
-            assert 'from' not in journey['sections'][1]
+            assert 'from' in journey['sections'][1]
             assert 'to' not in journey['sections'][1]
+
+    def test_bike_traversal_time(self):
+        query = (
+            sub_query
+            + "&datetime=20120614T075000"
+            + "&first_section_mode[]=bike"
+            + "&bike_speed=0.05"
+            + "&debug=true"
+            + "&_access_points=true"
+        )
+
+        # We begin with a normal request to get the fallback duration without the park_mode
+        response = self.query_region(query)
+        check_best(response)
+        journeys = get_not_null(response, 'journeys')
+        pt_journeys = [j for j in journeys if 'bike' in j['tags'] and 'non_pt_bike' not in j['tags']]
+        assert len(pt_journeys) == 1
+
+        query = (
+            sub_query
+            + "&datetime=20120614T075000"
+            + "&first_section_mode[]=bike"
+            + "&bike_speed=0.05"
+            + "&park_mode=on_street"
+            + "&_access_points=true"
+        )
+
+        # With a request with the park_mode, we expect the same duration as the previous request if we add the first and the street network section following the park section
+        response_2 = self.query_region(query)
+        check_best(response_2)
+        journeys_2 = get_not_null(response_2, 'journeys')
+        pt_journeys_2 = [j for j in journeys_2 if 'bike' in j['tags'] and 'non_pt_bike' not in j['tags']]
+        assert len(pt_journeys_2) == 1
+        assert (
+            pt_journeys[0]["sections"][0]["duration"]
+            == pt_journeys_2[0]["sections"][0]["duration"] + pt_journeys_2[0]["sections"][2]["duration"]
+        )
