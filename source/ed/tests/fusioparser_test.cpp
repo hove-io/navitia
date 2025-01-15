@@ -811,7 +811,6 @@ BOOST_AUTO_TEST_CASE(ntfs_with_zonal_odt) {
     BOOST_CHECK_EQUAL(data.lines[5]->uri, "Juvisy:RisOrangis");
     BOOST_CHECK_EQUAL(data.lines[5]->name, "Juvisy Ris Orangis");
 
-
     BOOST_CHECK_EQUAL(data.vehicle_journeys[0]->uri, "SP:JeanJaures_SP:ODT:GareMennecy");
     BOOST_CHECK_EQUAL(data.vehicle_journeys[0]->name, "Gare de mennecy");
     BOOST_REQUIRE_EQUAL(data.vehicle_journeys[0]->stop_time_list.size(), 3);
