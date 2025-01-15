@@ -1,0 +1,28 @@
+stop_id,stop_name,stop_code,visible,fare_zone_id,stop_lon,stop_lat,location_type,parent_station,stop_timezone,geometry_id,equipment_id,level_id,platform_code,address_id
+
+SP:GareMennecy,Gare Mennecy,,1,1,2.431935,48.570549,0,,Europe/Paris,,,,,
+SP:MoulinGalant,Moulin Galant,,1,1,2.473445,48.586882,0,,Europe/Paris,,,,,
+SP:CorbeilEssonnes,Corbeil Essonnes,,1,1,2.472468,48.613239,0,,Europe/Paris,,,,,
+
+SP:GareCorbeilEssonnes,Corbeil Essonnes,,1,1,2.472468,48.613239,0,,Europe/Paris,,,,,
+SP:EvryCourcouronnes,Évry - Courcouronnes,,1,1,2.427791286932239,48.6254053635867,0,,Europe/Paris,,,,,
+SP:BrasdeFer,le Bras de Fer,,1,1,2.45032673555364,48.623073784822864,0,,Europe/Paris,,,,,
+
+SP:JeanJaures,Jean Jaures,,1,1,2.441234,48.572085,0,,Europe/Paris,,,,,
+SP:BelAir,BelAir,,1,1,2.438088,48.569524,0,,Europe/Paris,,,,,
+SP:ODT:GareMennecy,Gare Mennecy,,1,1,2.433517,48.570641,0,,Europe/Paris,,,,,
+
+SP:MoulinFoulon,Moulin Foulon,,1,1,2.469558,48.592665,0,,Europe/Paris,,,,,
+SP:Papeterie,Papeterie,,1,1,2.472873,48.588318,0,,Europe/Paris,,,,,
+SP:ODT:MoulinGalant,MoulinGalant,,1,1,2.472855,48.586157,0,,Europe/Paris,,,,,
+
+
+SP:Gendarmerie,Gendarmerie,,1,1,2.432828,48.563623,0,,Europe/Paris,,,,,
+SP:Darblay,Darblay,,1,1,2.429934,48.567961,0,,Europe/Paris,,,,,
+SP:GMennecy,Gare de mennecy,,1,1,2.432989,48.570639,0,,Europe/Paris,,,,,
+
+
+
+SP:Juvisy,Juvisy,,1,1,2.383335,48.689709,0,,Europe/Paris,,,,,
+SP:ViryChatillon,Viry Chatillon,,1,1,2.387022,48.675908,0,,Europe/Paris,,,,,
+SP:RisOrangis,Ris Orangis,,1,1,2.414997,48.659057,0,,Europe/Paris,,,,,

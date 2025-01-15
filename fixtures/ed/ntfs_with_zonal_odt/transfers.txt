@@ -1,0 +1,7 @@
+from_stop_id,to_stop_id,min_transfer_time,real_min_transfer_time,equipment_id
+SP:MoulinGalant,SP:ODT:MoulinGalant,120,120
+SP:ODT:GareMennecy,SP:GareMennecy,120,120
+SP:MoulinGalant,SP:MoulinGalant,0,120
+SP:ODT:GareMennecy,SP:ODT:GareMennecy,0,120
+SP:GMennecy,SP:GareMennecy,60,120
+SP:CorbeilEssonnes,SP:GareCorbeilEssonnes,120,120

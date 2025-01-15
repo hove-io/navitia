@@ -1,0 +1,2 @@
+object_id,object_type,booking_rule_id
+

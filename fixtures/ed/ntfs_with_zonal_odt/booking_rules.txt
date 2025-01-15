@@ -1,0 +1,2 @@
+booking_rule_id,name,info_url,phone_number,message,booking_url
+
