@@ -601,6 +601,9 @@ class Scenario(new_default.Scenario):
         if request.get('on_street_bike_parking_duration') is None:
             request['on_street_bike_parking_duration'] = instance.on_street_bike_parking_duration
 
+        if request.get('_access_points') is None:
+            request['_access_points'] = False
+
         krakens_call = set({(request["origin_mode"][0], request["destination_mode"][0], "indifferent")})
         pt_object_origin = None
         pt_object_destination = None
