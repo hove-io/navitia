@@ -1197,7 +1197,10 @@ std::vector<nm::StopTime*> StopTimeGtfsHandler::handle_line(Data& data, const cs
             stop_time->drop_off_allowed = (row[drop_off_c] != "1" && row[drop_off_c] != "3");
         else
             stop_time->drop_off_allowed = true;
-
+        if (row[arrival_c].empty() && row[departure_c].empty()) {
+            stop_time->pick_up_allowed = false;
+            stop_time->drop_off_allowed = false;
+        }
         stop_time->vehicle_journey->stop_time_list.push_back(stop_time);
         stop_time->wheelchair_boarding = stop_time->vehicle_journey->wheelchair_boarding;
         stop_time->idx = data.stops.size();

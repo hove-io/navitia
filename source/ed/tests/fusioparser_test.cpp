@@ -785,3 +785,38 @@ BOOST_AUTO_TEST_CASE(pathway_tests) {
 
     test(*data.pathways[2], "SP:B:IO:1", "SP:B:IO:1", "SP:B", "IO:1", 3, true, 42, 60, 40, 30, 2, "", "");
 }
+
+BOOST_AUTO_TEST_CASE(ntfs_with_zonal_odt) {
+    ed::Data data;
+
+    ed::connectors::FusioParser parser(ntfs_path + "_with_zonal_odt");
+    parser.fill(data, "20240916");
+
+    BOOST_REQUIRE_EQUAL(data.lines.size(), 6);
+    BOOST_REQUIRE_EQUAL(data.vehicle_journeys.size(), 6);
+    BOOST_REQUIRE_EQUAL(data.routes.size(), 6);
+    BOOST_REQUIRE_EQUAL(data.stop_points.size(), 18);
+    BOOST_REQUIRE_EQUAL(data.stop_areas.size(), 18);
+
+    BOOST_CHECK_EQUAL(data.lines[0]->uri, "JeanJaures_GareMennecy");
+    BOOST_CHECK_EQUAL(data.lines[0]->name, "TAD");
+    BOOST_CHECK_EQUAL(data.lines[1]->uri, "GareMennecy_CorbeilEssonnes");
+    BOOST_CHECK_EQUAL(data.lines[1]->name, "D");
+    BOOST_CHECK_EQUAL(data.lines[2]->uri, "MoulinGalant_MoulinFoulon");
+    BOOST_CHECK_EQUAL(data.lines[2]->name, "TAD");
+    BOOST_CHECK_EQUAL(data.lines[3]->uri, "bus_aa");
+    BOOST_CHECK_EQUAL(data.lines[3]->name, "AA");
+    BOOST_CHECK_EQUAL(data.lines[4]->uri, "bus_bb");
+    BOOST_CHECK_EQUAL(data.lines[4]->name, "BB");
+    BOOST_CHECK_EQUAL(data.lines[5]->uri, "Juvisy:RisOrangis");
+    BOOST_CHECK_EQUAL(data.lines[5]->name, "Juvisy Ris Orangis");
+
+
+    BOOST_CHECK_EQUAL(data.vehicle_journeys[0]->uri, "SP:JeanJaures_SP:ODT:GareMennecy");
+    BOOST_CHECK_EQUAL(data.vehicle_journeys[0]->name, "Gare de mennecy");
+    BOOST_REQUIRE_EQUAL(data.vehicle_journeys[0]->stop_time_list.size(), 3);
+    for (auto st : data.vehicle_journeys[0]->stop_time_list) {
+        BOOST_CHECK_EQUAL(st->drop_off_allowed, false);
+        BOOST_CHECK_EQUAL(st->pick_up_allowed, false);
+    }
+}
