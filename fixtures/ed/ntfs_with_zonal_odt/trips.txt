@@ -2,8 +2,6 @@ trip_id,route_id,physical_mode_id,dataset_id,service_id,trip_headsign,trip_short
 SP:JeanJaures_SP:ODT:GareMennecy,JeanJaures_GareMennecy,Bus,dataset,S1,Gare de mennecy,,,C1,,,
 SP:GareMennecy_SP:CorbeilEssonnes,GareMennecy_CorbeilEssonnes,Bus,dataset,S1,Mennecy Corbeil,,,C1,,,
 SP:ODT:MoulinGalant_SP:MoulinFoulon,MoulinGalant_MoulinFoulon,Bus,dataset,S1,Moulin Galant Moulin Foulon,,,C1,,,
-
 bus_aa,bus_aa,Bus,dataset,S1,Vers gare de mennecy,,,C1,,,
 bus_bb,bus_bb,Bus,dataset,S1,Vers le Bras de Fer,,,C1,,,
-
 Juvisy:RisOrangis,Juvisy:RisOrangis,Bus,dataset,S1,Vers Ris Orangis,,,C1,,,

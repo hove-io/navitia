@@ -2,8 +2,6 @@ line_id,line_code,line_name,forward_line_name,backward_line_name,line_color,line
 JeanJaures_GareMennecy,TAD,TAD,,,6ECA97,000000,,IDFM:1076,Bus,,,
 GareMennecy_CorbeilEssonnes,D,D,,,4890CD,FFFFFF,,IDFM:1076,Bus,,,
 MoulinGalant_MoulinFoulon,TAD,TAD,,,652C8F,FFFFFF,,IDFM:1076,Bus,,,
-
 bus_aa,AA,AA,,,652C8F,FFFFFF,,IDFM:1076,Bus,,,
 bus_bb,BB,BB,,,652C8F,FFFFFF,,IDFM:1076,Bus,,,
-
 Juvisy:RisOrangis,CC,Juvisy Ris Orangis,,,652C8F,FFFFFF,,IDFM:1076,Bus,,,
