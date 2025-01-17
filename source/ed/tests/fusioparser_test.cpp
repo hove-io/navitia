@@ -817,5 +817,6 @@ BOOST_AUTO_TEST_CASE(ntfs_with_zonal_odt) {
     for (auto st : data.vehicle_journeys[0]->stop_time_list) {
         BOOST_CHECK_EQUAL(st->drop_off_allowed, false);
         BOOST_CHECK_EQUAL(st->pick_up_allowed, false);
+        BOOST_CHECK_EQUAL(st->departure_time, "10:00:00"_t); // local time : 12:00:00
     }
 }

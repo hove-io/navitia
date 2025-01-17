@@ -487,11 +487,6 @@ void StopTimeFusioHandler::handle_line(Data& data, const csv_row& row, bool is_f
         else
             stop_time->date_time_estimated = false;
 
-        if (row[arrival_c].empty() && row[departure_c].empty()) {
-            stop_time->pick_up_allowed = false;
-            stop_time->drop_off_allowed = false;
-        }
-
         if (is_valid(id_c, row)) {
             // if we have an id, we store the stoptime for futur use
             gtfs_data.stop_time_map[row[id_c]].push_back(stop_time);
