@@ -1154,10 +1154,8 @@ static int to_utc(const std::string& local_time, int utc_offset) {
 
 bool StopTimeGtfsHandler::is_zonal_odt(const csv_row& row) {
     if (row[arrival_c].empty() && row[departure_c].empty()) {
-        return has_col(start_pickup_drop_off_window_c, row)
-                && has_col(end_pickup_drop_off_window_c, row)
-                && (!row[start_pickup_drop_off_window_c].empty())
-                && (!row[end_pickup_drop_off_window_c].empty());
+        return has_col(start_pickup_drop_off_window_c, row) && has_col(end_pickup_drop_off_window_c, row)
+               && (!row[start_pickup_drop_off_window_c].empty()) && (!row[end_pickup_drop_off_window_c].empty());
     }
     return false;
 }
