@@ -1181,7 +1181,6 @@ std::vector<nm::StopTime*> StopTimeGtfsHandler::handle_line(Data& data, const cs
         // we need to convert the stop times in UTC
         int utc_offset = data.tz_wrapper.tz_handler.get_utc_offset(*vj_it->second->validity_pattern);
 
-
         stop_time->stop_point = stop_it->second;
         stop_time->order = boost::lexical_cast<unsigned int>(row[stop_seq_c]);
         stop_time->vehicle_journey = vj_it->second;
