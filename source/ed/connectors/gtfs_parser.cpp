@@ -1087,6 +1087,8 @@ void StopTimeGtfsHandler::init(Data&) {
     stop_seq_c = csv.get_pos_col("stop_sequence");
     pickup_c = csv.get_pos_col("pickup_type");
     drop_off_c = csv.get_pos_col("drop_off_type");
+    start_pickup_drop_off_window_c = csv.get_pos_col("start_pickup_drop_off_window");
+    end_pickup_drop_off_window_c = csv.get_pos_col("end_pickup_drop_off_window");
 }
 
 void StopTimeGtfsHandler::finish(Data& data) {
@@ -1150,6 +1152,14 @@ static int to_utc(const std::string& local_time, int utc_offset) {
     return local;
 }
 
+bool StopTimeGtfsHandler::is_zonal_odt(const csv_row& row) {
+    if (row[arrival_c].empty() && row[departure_c].empty()) {
+        return has_col(start_pickup_drop_off_window_c, row) && has_col(end_pickup_drop_off_window_c, row)
+               && (!row[start_pickup_drop_off_window_c].empty()) && (!row[end_pickup_drop_off_window_c].empty());
+    }
+    return false;
+}
+
 std::vector<nm::StopTime*> StopTimeGtfsHandler::handle_line(Data& data, const csv_row& row, bool) {
     auto stop_it = gtfs_data.stop_point_map.find(row[stop_c]);
     if (stop_it == gtfs_data.stop_point_map.end()) {
@@ -1171,13 +1181,6 @@ std::vector<nm::StopTime*> StopTimeGtfsHandler::handle_line(Data& data, const cs
         // we need to convert the stop times in UTC
         int utc_offset = data.tz_wrapper.tz_handler.get_utc_offset(*vj_it->second->validity_pattern);
 
-        stop_time->arrival_time = to_utc(row[arrival_c], utc_offset);
-        stop_time->departure_time = to_utc(row[departure_c], utc_offset);
-
-        // GTFS don't handle boarding / alighting duration, assuming 0
-        stop_time->alighting_time = stop_time->arrival_time;
-        stop_time->boarding_time = stop_time->departure_time;
-
         stop_time->stop_point = stop_it->second;
         stop_time->order = boost::lexical_cast<unsigned int>(row[stop_seq_c]);
         stop_time->vehicle_journey = vj_it->second;
@@ -1197,6 +1200,20 @@ std::vector<nm::StopTime*> StopTimeGtfsHandler::handle_line(Data& data, const cs
             stop_time->drop_off_allowed = (row[drop_off_c] != "1" && row[drop_off_c] != "3");
         else
             stop_time->drop_off_allowed = true;
+
+        if (is_zonal_odt(row)) {
+            stop_time->arrival_time = to_utc("12:00:00", utc_offset);
+            stop_time->departure_time = to_utc("12:00:00", utc_offset);
+            stop_time->pick_up_allowed = false;
+            stop_time->drop_off_allowed = false;
+        } else {
+            stop_time->arrival_time = to_utc(row[arrival_c], utc_offset);
+            stop_time->departure_time = to_utc(row[departure_c], utc_offset);
+        }
+
+        // GTFS don't handle boarding / alighting duration, assuming 0
+        stop_time->alighting_time = stop_time->arrival_time;
+        stop_time->boarding_time = stop_time->departure_time;
 
         stop_time->vehicle_journey->stop_time_list.push_back(stop_time);
         stop_time->wheelchair_boarding = stop_time->vehicle_journey->wheelchair_boarding;

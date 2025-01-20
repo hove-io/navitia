@@ -1,0 +1,2 @@
+network_id,network_name,network_url,network_timezone,network_lang,network_phone,network_address,network_fare_url,network_sort_order
+IDFM:1076,Cœur d’Essonne 1,,Europe/Paris,,,,,

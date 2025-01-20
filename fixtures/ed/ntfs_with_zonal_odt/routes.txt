@@ -1,0 +1,7 @@
+route_id,route_name,direction_type,line_id,geometry_id,destination_id
+JeanJaures_GareMennecy,JeanJaures GareMennecy,outbound,JeanJaures_GareMennecy,,
+GareMennecy_CorbeilEssonnes,Gare Mennecy Corbeil Essonnes,outbound,GareMennecy_CorbeilEssonnes,,
+MoulinGalant_MoulinFoulon,Moulin Galant Moulin Foulon,inbound,MoulinGalant_MoulinFoulon,,
+bus_aa,Vers gare mennecy,inbound,bus_aa,,
+bus_bb,Vers le Bras de Fer,inbound,bus_bb,,
+Juvisy:RisOrangis,Vers Ris Orangis,inbound,Juvisy:RisOrangis,,
