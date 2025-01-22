@@ -32,7 +32,6 @@
 import os
 import logging
 from typing import Dict
-
 from flask import request
 
 from opentelemetry.sdk.resources import SERVICE_NAME, Resource
@@ -43,7 +42,6 @@ from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import BatchSpanProcessor
 from opentelemetry.exporter.otlp.proto.http.trace_exporter import OTLPSpanExporter
 from opentelemetry.trace.status import Status, StatusCode
-
 from opentelemetry import trace, metrics
 
 
@@ -60,13 +58,21 @@ class OtlpMeta(type):
 class Otlp(metaclass=OtlpMeta):
     __service_name = "jormungandr"
     __platform = "unknown"
+    __account = "unknown"
     __labels = {}
 
-    def __init__(self, platform: str) -> None:
+    def __init__(self, platform: str, account: str) -> None:
         self.__log = logging.getLogger(__name__)
+        self._tracer = None
+        self._meter = None
+
+        if not os.getenv("OTEL_EXPORTER_OTLP_ENDPOINT"):
+            self.__log.info("OTLP not configured. Disabling otlp.")
+            return
 
         try:
             self.__platform = platform + " (Python)"
+            self.__account = account
             self.__resource = Resource(
                 attributes={
                     SERVICE_NAME: self.__service_name,
@@ -78,7 +84,7 @@ class Otlp(metaclass=OtlpMeta):
             self.__declare_counters()
             self.__declare_histograms()
         except Exception:
-            self.__log.exception("failure while initializing otlp")
+            self.__log.exception("Failure while initializing otlp. Disabling otlp.")
             self._tracer = None
             self._meter = None
 
@@ -123,20 +129,53 @@ class Otlp(metaclass=OtlpMeta):
     def get_tracer(self) -> trace.Tracer:
         return self._tracer
 
-    def __record_exception_trace(self, exception: BaseException, attributes: Dict = {}) -> None:
-        # TODO: Can remove this and use directly request.id below ? Check if it works on SBX (remove this before merge !)
-        try:
-            navitia_request_id = request.id
-        except RuntimeError:
-            self.__log.exception("failure while getting request id. We are outside of a flask context :(")
-            navitia_request_id = 42
+    def __get_request_id(self) -> str:
+        if not request:
+            return "unknown"
 
+        return str(request.id)
+
+    def __should_ignore(self) -> bool:
+        ignore_paths = ["/status", "/"]
+
+        return request.path in ignore_paths
+
+    def __get_labels(self) -> Dict:
+        if self.__get_request_id() not in self.__labels:
+            self.__labels[self.__get_request_id()] = self.__generate_default_labels()
+
+        return self.__labels[self.__get_request_id()]
+
+    def record_labels(self, labels: Dict) -> None:
+        if self.__should_ignore():
+            return
+
+        self.__get_labels().update(labels)
+
+    def record_label(self, label_name: str, label_value: str) -> None:
+        if self.__should_ignore():
+            return
+
+        self.__get_labels()[label_name] = label_value
+
+    def __clear_labels(self) -> None:
+        self.__get_labels().clear()
+        self.__labels.pop(self.__get_request_id(), None)
+
+    def __generate_default_labels(self) -> Dict:
+        return {
+            "event_type": "unknown",
+            "platform": self.__platform,
+            "account": self.__account,
+        }
+
+    def __record_exception_trace(self, exception: BaseException, attributes: Dict = {}) -> None:
         try:
             with self._tracer.start_as_current_span("exception") as span:
-                span.set_attribute("navitia_request_id", str(navitia_request_id))
+                span.set_attribute("navitia_request_id", self.__get_request_id())
                 for key, value in attributes.items():
                     span.set_attribute(key, value)
-                for key, value in self.__labels.items():
+                for key, value in self.__get_labels().items():
                     span.set_attribute(key, value)
                 span.set_status(Status(StatusCode.ERROR, "Exception"))
                 span.record_exception(exception)
@@ -146,10 +185,11 @@ class Otlp(metaclass=OtlpMeta):
 
     def __record_exception_meter(self, exception: BaseException) -> None:
         try:
-            self.__jormungandr_exception.add(
-                1,
-                {"exception_type": type(exception).__name__},
-            )
+            labels = {"exception_type": type(exception).__name__}
+            for key, value in self.__get_labels().items():
+                labels[key] = value
+
+            self.__jormungandr_exception.add(1, labels)
         except Exception:
             self.__log.exception("failure while reporting to otlp (with meter)")
 
@@ -168,29 +208,24 @@ class Otlp(metaclass=OtlpMeta):
             self.record_labels(labels)
 
         self.record_label("platform", self.__platform)
-        labels = self.__labels.copy()
+        labels = self.__get_labels().copy()
         self.__jormungandr_request_call.add(1, labels)
         self.__jormungandr_request_call_duration.record(duration, labels)
-        self.__labels.clear()
-
-    def record_labels(self, labels: Dict) -> None:
-        self.__labels.update(labels)
-
-    def record_label(self, label_name: str, label_value: str) -> None:
-        self.__labels[label_name] = label_value
+        self.__clear_labels()
 
     def send_event_metrics(self, event_type: str, labels: Dict = {}) -> None:
         if not self._meter:
             return
-        labels["platform"] = self.__platform
-        labels["event_type"] = event_type
-        labels.update(self.__labels)
+
+        labels = self.__get_labels().copy()
+        labels.update("event_type", event_type)
         if "navitia_request_id" in labels:
             labels.pop("navitia_request_id")
         if "duration" in labels:
             duration = labels.pop("duration", None)
             self.__jormungandr_event_duration.record(duration, labels)
         self.__jormungandr_event.add(1, labels)
+        self.__clear_labels()
 
 
-otlp_instance = Otlp(os.getenv("OTEL_PLATFORM"))
+otlp_instance = Otlp(os.getenv("OTEL_PLATFORM"), os.getenv("OTEL_ACCOUNT"))
