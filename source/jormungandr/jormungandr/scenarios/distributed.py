@@ -592,13 +592,13 @@ class Scenario(new_default.Scenario):
         if request.get("max_duration") is None:
             request["max_duration"] = max(request["boundary_duration[]"], key=int)
         if request.get('additional_time_after_first_section_taxi') is None:
-            request['additional_time_after_first_section_taxi'] = (
-                instance.additional_time_after_first_section_taxi
-            )
+            request[
+                'additional_time_after_first_section_taxi'
+            ] = instance.additional_time_after_first_section_taxi
         if request.get('additional_time_before_last_section_taxi') is None:
-            request['additional_time_before_last_section_taxi'] = (
-                instance.additional_time_after_first_section_taxi
-            )
+            request[
+                'additional_time_before_last_section_taxi'
+            ] = instance.additional_time_after_first_section_taxi
 
         if request.get('on_street_bike_parking_duration') is None:
             request['on_street_bike_parking_duration'] = instance.on_street_bike_parking_duration
