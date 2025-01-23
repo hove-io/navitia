@@ -1,3 +1,5 @@
+FROM mimirsbrunn:local AS mimir_bins
+
 FROM navitia/master
 
 # Install some binaries from tartare-tools
@@ -17,7 +19,7 @@ RUN cd tartare-tools \
     && cd .. \
     && rm -rf tartare-tools
 
-COPY navitia-common_*deb navitia-tyr_*.deb navitia-ed_*.deb  navitia-cities_*.deb  mimirsbrunn7_jessie-*.deb  cosmogony2cities_*.deb  mimirsbrunn-config-*.deb ./
+COPY navitia-common_*deb navitia-tyr_*.deb navitia-ed_*.deb  navitia-cities_*.deb cosmogony2cities_*.deb  mimirsbrunn-config-*.deb ./
 
 # install navitia-common package
 RUN dpkg -i ./navitia-common_*.deb || exit 0
@@ -31,10 +33,8 @@ RUN dpkg -i ./navitia-ed_*.deb || exit 0
 # install navitia-cities package
 RUN dpkg -i ./navitia-cities_*.deb || exit 0
 
-# install navitia-mimirsbrunn package
-RUN dpkg -i ./mimirsbrunn7_jessie-*.deb \
-        # install cosmogony2cities package
-        ./cosmogony2cities*.deb \
+# install cosmogony2cities package
+RUN dpkg -i ./cosmogony2cities*.deb \
         # install conf mimir package
         ./mimirsbrunn-config-*.deb
 
@@ -45,8 +45,11 @@ RUN rm navitia-common_*deb \
     navitia-cities_*.deb \
     navitia-ed_*.deb \
     mimirsbrunn-config-*.deb \
-    mimirsbrunn7_jessie-*.deb \
     cosmogony2cities_*.deb
+
+# Copy: osm2mimir && cosmogony2mimir && bano2mimir && openaddresses2mimir && ntfs2mimir && poi2mimir && ctlmimir
+COPY --from=mimir_bins /usr/bin/*2mimir /usr/bin/.
+COPY --from=mimir_bins /usr/bin/*ctlmimir /usr/bin/ctlmimir
 
 # install tyr requirements
 RUN pip install --no-cache-dir -r /usr/share/tyr/requirements.txt

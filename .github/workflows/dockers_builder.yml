@@ -15,6 +15,8 @@ env:
   SBX_ECR_REGISTRY_BACKEND: "110444322584.dkr.ecr.eu-west-1.amazonaws.com"
   SBX_ECR_REGISTRY_FRONT: "051314639660.dkr.ecr.eu-west-1.amazonaws.com"
   PRD_ECR_REGISTRY: "162230498103.dkr.ecr.eu-west-1.amazonaws.com"
+  SBX_ECR_MIMIR_REGISTRY: "026897623940.dkr.ecr.eu-west-1.amazonaws.com"
+
 
 jobs:
 
@@ -162,14 +164,14 @@ jobs:
           target: 'cosmogony2cities_.deb'
           token: ${{ steps.ci-core-app-token.outputs.token }}
 
-      - name: Download mimirsbrunn package
-        uses: dsaltares/fetch-gh-release-asset@master
-        with:
-          repo: 'hove-io/mimirsbrunn'
-          version: 'tags/v3.1.0'
-          file: 'mimirsbrunn7_jessie-3.1.0.deb'
-          target: 'mimirsbrunn7_jessie-.deb'
-          token: ${{ steps.ci-core-app-token.outputs.token }}
+      # - name: Download mimirsbrunn package
+      #   uses: dsaltares/fetch-gh-release-asset@master
+      #   with:
+      #     repo: 'hove-io/mimirsbrunn'
+      #     version: 'tags/v3.1.0'
+      #     file: 'mimirsbrunn7_jessie-3.1.0.deb'
+      #     target: 'mimirsbrunn7_jessie-.deb'
+      #     token: ${{ steps.ci-core-app-token.outputs.token }}
 
       - name: Download mimir-config package
         uses: dsaltares/fetch-gh-release-asset@master
@@ -187,7 +189,22 @@ jobs:
         with:
           # 162230498103 : shared
           # 110444322584 : kraken sbx
-          registries: "162230498103,110444322584,051314639660"
+          registries: "162230498103,110444322584,051314639660,026897623940"
+
+      - name: Get and tag mimir dev image
+        if: github.ref == 'refs/heads/dev'
+        run: |
+          image=${SBX_ECR_MIMIR_REGISTRY}/mimirsbrunn:latest
+          docker pull ${image}
+          docker tag ${image} mimirsbrunn:local
+
+      - name: Get and tag mimir release image
+        if: startsWith(github.ref, 'refs/tags/')
+        run: |
+            MIMIR_TAG="v3.1.0"
+            image=${PRD_ECR_REGISTRY}/navitia-bragi-mimirsbrunn:${MIMIR_TAG}
+            docker pull ${image}
+            docker tag ${image} mimirsbrunn:local
 
       - name: Create master docker
         run: |
@@ -231,9 +248,6 @@ jobs:
           tyr_worker_tag=${PRD_ECR_REGISTRY}/navitia-tyr-tyrworker:${{ needs.common_variables.outputs.RELEASE_TAG }}
           docker tag navitia/tyr-worker ${tyr_worker_tag}
           docker push ${tyr_worker_tag}
-
-
-
 
       - name: failure notification
         if: failure()
@@ -330,8 +344,6 @@ jobs:
           rm -rf ./*
           rm -rf ./.??*
 
-
-
   publish_aws:
     runs-on: [self-hosted, corefront, sandbox]
     name: Aws Dispatch (Dev)
@@ -369,7 +381,6 @@ jobs:
         run: |
           sudo apt update && sudo apt install -y httpie
           echo '{"text":":warning: Github Actions: dockers_builder the job publish_aws failed !"}' | http --json POST ${{secrets.SLACK_NAVITIA_TEAM_URL}}
-
 
   run_artemis:
     runs-on: [self-hosted, corefront, sandbox]
