@@ -56,10 +56,10 @@ class OtlpMeta(type):
 
 
 class Otlp(metaclass=OtlpMeta):
-    __service_name = "jormungandr"
-    __platform = "unknown"
-    __account = "unknown"
-    __labels = {}
+    __service_name: str = "jormungandr"
+    __platform: str = "unknown"
+    __account: str = "unknown"
+    __labels: Dict = {}
 
     def __init__(self, platform: str, account: str) -> None:
         self.__log = logging.getLogger(__name__)
@@ -218,7 +218,7 @@ class Otlp(metaclass=OtlpMeta):
             return
 
         labels = self.__get_labels().copy()
-        labels.update("event_type", event_type)
+        labels["event_type"] = event_type
         if "navitia_request_id" in labels:
             labels.pop("navitia_request_id")
         if "duration" in labels:

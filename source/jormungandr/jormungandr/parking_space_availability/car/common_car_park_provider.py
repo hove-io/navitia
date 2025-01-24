@@ -121,4 +121,4 @@ class CommonCarParkProvider(AbstractParkingPlacesProvider):
         params = {'parking_system_id': self.provider_name, 'dataset': self.dataset, 'status': status}
         params.update(kwargs)
         new_relic.record_custom_event('parking_status', params)
-        otlp_instance.record_custom_event('parking_status', params)
+        otlp_instance.send_event_metrics('parking_status', params)

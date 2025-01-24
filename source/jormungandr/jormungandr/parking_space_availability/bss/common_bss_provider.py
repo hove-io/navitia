@@ -60,4 +60,4 @@ class CommonBssProvider(AbstractParkingPlacesProvider):
         params = {'bss_system_id': six.text_type(self.network), 'status': status}
         params.update(kwargs)
         new_relic.record_custom_event('bss_status', params)
-        otlp_instance.record_custom_event('bss_status', params)
+        otlp_instance.send_event_metrics('bss_status', params)
