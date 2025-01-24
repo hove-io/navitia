@@ -46,7 +46,7 @@ __all__ = [
 ]
 
 
-def format_error(code, message):
+def format_error(code: str, message: str) -> Dict:
     error = {"error": {"id": code, "message": message}, "message": message}
     return error
 
