@@ -67,7 +67,7 @@ if [ $monitor_processes -eq 1 ]
 then
   echo "!!!!!!!!!!!!!!!!!!!!! Start Jormungandr with monitoring service !!!!!!!!!!!!!!!!!!!!!"
   # JORMUNGANDR_IS_PUBLIC is set to True only for the use of /v1/backends_status
-  uwsgi --cache2 $jormungandr_cache2 $max_requests --http :9090 --stats :5050 --lazy-apps --file $file & JORMUNGANDR_IS_PUBLIC=True uwsgi --cache2 $monitor_cache2 --http :9091 --lazy-apps --file $file --processes 1 --listen 5
+  uwsgi --cache2 $jormungandr_cache2 $max_requests --http :9090 --stats :5050 --lazy-apps --file $file & UWSGI_PROCESSES=1 JORMUNGANDR_IS_PUBLIC=True uwsgi --cache2 $monitor_cache2 --http :9091 --lazy-apps --file $file --processes 1 --listen 5
 else
   echo "!!!!!!!!!!!!!!!!!!!!! Start Jormungandr without monitoring service !!!!!!!!!!!!!!!!!!!!!"
   uwsgi  --cache2 $jormungandr_cache2 $max_requests --http :9090 --stats :5050 --lazy-apps --file $file
