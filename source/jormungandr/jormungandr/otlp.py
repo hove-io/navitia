@@ -65,8 +65,9 @@ class Otlp(metaclass=OtlpMeta):
         self.__log = logging.getLogger(__name__)
         self._tracer = None
         self._meter = None
+        otel_exporter_otlp_endpoint = os.getenv("OTEL_EXPORTER_OTLP_ENDPOINT", "")
 
-        if not os.getenv("OTEL_EXPORTER_OTLP_ENDPOINT"):
+        if otel_exporter_otlp_endpoint == "":
             self.__log.info("OTLP not configured. Disabling otlp.")
             return
 
@@ -217,11 +218,7 @@ class Otlp(metaclass=OtlpMeta):
         if not self._meter:
             return
 
-        labels = {
-            "platform": self.__platform,
-            "account": self.__account,
-            "event_type": event_type
-        }
+        labels = {"platform": self.__platform, "account": self.__account, "event_type": event_type}
         labels.update(params)
 
         if "navitia_request_id" in labels:
