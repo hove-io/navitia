@@ -141,10 +141,12 @@ class Otlp(metaclass=OtlpMeta):
         return request.path in ignore_paths
 
     def __get_labels(self) -> Dict:
-        if self.__get_request_id() not in self.__labels:
-            self.__labels[self.__get_request_id()] = self.__generate_default_labels()
+        request_id = self.__get_request_id()
 
-        return self.__labels[self.__get_request_id()]
+        if request_id not in self.__labels:
+            self.__labels[request_id] = self.__generate_default_labels()
+
+        return self.__labels[request_id]
 
     def record_labels(self, labels: Dict) -> None:
         if self.__should_ignore():
@@ -164,7 +166,8 @@ class Otlp(metaclass=OtlpMeta):
 
     def __generate_default_labels(self) -> Dict:
         return {
-            "event_type": "unknown",
+            "coverage": "unknown",
+            "api": "unknown",
             "platform": self.__platform,
             "account": self.__account,
         }
@@ -179,7 +182,6 @@ class Otlp(metaclass=OtlpMeta):
                     span.set_attribute(key, value)
                 span.set_status(Status(StatusCode.ERROR, "Exception"))
                 span.record_exception(exception)
-
         except Exception:
             self.__log.exception("failure while reporting to otlp (with trace)")
 
@@ -206,26 +208,28 @@ class Otlp(metaclass=OtlpMeta):
 
         if labels:
             self.record_labels(labels)
-
-        self.record_label("platform", self.__platform)
         labels = self.__get_labels().copy()
         self.__jormungandr_request_call.add(1, labels)
         self.__jormungandr_request_call_duration.record(duration, labels)
         self.__clear_labels()
 
-    def send_event_metrics(self, event_type: str, labels: Dict = {}) -> None:
+    def send_event_metrics(self, event_type: str, params: Dict = {}) -> None:
         if not self._meter:
             return
 
-        labels = self.__get_labels().copy()
-        labels["event_type"] = event_type
+        labels = {
+            "platform": self.__platform,
+            "account": self.__account,
+            "event_type": event_type
+        }
+        labels.update(params)
+
         if "navitia_request_id" in labels:
             labels.pop("navitia_request_id")
         if "duration" in labels:
             duration = labels.pop("duration", None)
             self.__jormungandr_event_duration.record(duration, labels)
         self.__jormungandr_event.add(1, labels)
-        self.__clear_labels()
 
 
 otlp_instance = Otlp(os.getenv("OTEL_PLATFORM"), os.getenv("OTEL_ACCOUNT"))
