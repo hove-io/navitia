@@ -46,12 +46,12 @@ __all__ = [
 ]
 
 
-def format_error(code: str, message: str) -> Dict:
+def format_error(code, message):
     error = {"error": {"id": code, "message": message}, "message": message}
     return error
 
 
-def format_otlp_error(data: Dict) -> Dict:
+def format_otlp_error(data):
     return {"error_id": data["error"]["id"], "error_message": data["error"]["message"]}
 
 

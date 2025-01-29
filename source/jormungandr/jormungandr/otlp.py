@@ -120,6 +120,8 @@ class Otlp(metaclass=OtlpMeta):
         )
 
     def __declare_histograms(self) -> None:
+        self._meter = metrics.get_meter(__name__)
+
         self.__jormungandr_event_duration = self._meter.create_histogram(
             name="jormungandr_event_duration", description="Event duration"
         )
