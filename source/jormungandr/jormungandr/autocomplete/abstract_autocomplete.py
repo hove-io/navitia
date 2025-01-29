@@ -36,6 +36,7 @@ import six
 from jormungandr.new_relic import record_custom_event
 from jormungandr.otlp import otlp_instance
 
+
 class AutocompleteError(RuntimeError):
     pass
 

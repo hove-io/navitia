@@ -150,6 +150,7 @@ def record_request_call_to_otlp(response, *args, **kwargs):
 
     return response
 
+
 @app.before_request
 def set_request_id():
     try:
@@ -157,7 +158,7 @@ def set_request_id():
 
         otlp_instance.record_label("api", request.endpoint)
         otlp_instance.record_label("version", __version__)
-        coverages = ", ".join(sorted(get_used_coverages())) if get_used_coverages()  else "unknown"
+        coverages = ", ".join(sorted(get_used_coverages())) if get_used_coverages() else "unknown"
         otlp_instance.record_label("coverage", coverages)
     except:
         logger = logging.getLogger(__name__)
