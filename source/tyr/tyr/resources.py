@@ -1175,7 +1175,7 @@ class Instance(flask_restful.Resource):
 
         parser.add_argument(
             'bicycle_type',
-            type=OptionValue(['Road', 'Hybrid', 'City', 'Cross', 'Mountain']),
+            type=OptionValue(['road', 'hybrid', 'cross', 'mountain']),
             help='The type of bicycle',
             location=('json', 'values'),
             default=instance.bicycle_type,

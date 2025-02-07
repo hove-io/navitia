@@ -787,7 +787,7 @@ def test_on_attributs_starting_with_bike(create_instance):
     assert resp[0]['bike_use_ferry'] == 0.5
     assert resp[0]['bike_avoid_bad_surfaces'] == 0.25
     assert resp[0]['bike_shortest'] is False
-    assert resp[0]['bicycle_type'] == "Hybrid"
+    assert resp[0]['bicycle_type'] == "hybrid"
     assert resp[0]['bike_use_living_streets'] == 0.5
     assert resp[0]['bike_maneuver_penalty'] == 5
     assert resp[0]['bike_service_penalty'] == 0
@@ -802,7 +802,7 @@ def test_on_attributs_starting_with_bike(create_instance):
         'bike_use_ferry': 0.6,
         'bike_avoid_bad_surfaces': 0.75,
         'bike_shortest': True,
-        'bicycle_type': "Road",
+        'bicycle_type': "road",
         'bike_use_living_streets': 0.7,
         'bike_maneuver_penalty': 6,
         'bike_service_penalty': 1,
@@ -820,7 +820,7 @@ def test_on_attributs_starting_with_bike(create_instance):
     assert resp[0]['bike_use_ferry'] == 0.6
     assert resp[0]['bike_avoid_bad_surfaces'] == 0.75
     assert resp[0]['bike_shortest'] is True
-    assert resp[0]['bicycle_type'] == "Road"
+    assert resp[0]['bicycle_type'] == "road"
     assert resp[0]['bike_use_living_streets'] == 0.7
     assert resp[0]['bike_maneuver_penalty'] == 6
     assert resp[0]['bike_service_penalty'] == 1
