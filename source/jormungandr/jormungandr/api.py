@@ -128,6 +128,12 @@ def add_info_newrelic(response, *args, **kwargs):
     return response
 
 
+def __get_otlp_coverages_label():
+    used_coverages = get_used_coverages()
+
+    return ", ".join(sorted(used_coverages)) if used_coverages else "unknown"
+
+
 @app.after_request
 def record_request_call_to_otlp(response, *args, **kwargs):
     try:
@@ -142,6 +148,7 @@ def record_request_call_to_otlp(response, *args, **kwargs):
             "user_id": user_id,
             "token_name": token_name,
             "status": response.status_code,
+            "coverages": __get_otlp_coverages_label(),
         }
         otlp_instance.send_request_call_metrics(duration, labels)
     except:
@@ -158,8 +165,7 @@ def set_request_id():
 
         otlp_instance.record_label("api", request.endpoint)
         otlp_instance.record_label("version", __version__)
-        coverages = ", ".join(sorted(get_used_coverages())) if get_used_coverages() else "unknown"
-        otlp_instance.record_label("coverage", coverages)
+        otlp_instance.record_label("coverage", __get_otlp_coverages_label())
     except:
         logger = logging.getLogger(__name__)
         logger.exception('error while reporting to otlp from app.before_request')
