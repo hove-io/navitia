@@ -917,6 +917,65 @@ class Journeys(JourneyCommon):
             if args.get('_disruptions_on_poi') is None:
                 args['_disruptions_on_poi'] = mod.disruptions_on_poi
 
+            # Set params for advanced parameters for valhalla walking
+            if args.get('walking_walkway_factor') is None:
+                args['walking_walkway_factor'] = mod.walking_walkway_factor
+            if args.get('walking_sidewalk_factor') is None:
+                args['walking_sidewalk_factor'] = mod.walking_sidewalk_factor
+            if args.get('walking_alley_factor') is None:
+                args['walking_alley_factor'] = mod.walking_alley_factor
+            if args.get('walking_driveway_factor') is None:
+                args['walking_driveway_factor'] = mod.walking_driveway_factor
+            if args.get('walking_step_penalty') is None:
+                args['walking_step_penalty'] = mod.walking_step_penalty
+            if args.get('walking_use_ferry') is None:
+                args['walking_use_ferry'] = mod.walking_use_ferry
+            if args.get('walking_use_living_streets') is None:
+                args['walking_use_living_streets'] = mod.walking_use_living_streets
+            if args.get('walking_use_tracks') is None:
+                args['walking_use_tracks'] = mod.walking_use_tracks
+            if args.get('walking_use_hills') is None:
+                args['walking_use_hills'] = mod.walking_use_hills
+            if args.get('walking_service_factor') is None:
+                args['walking_service_factor'] = mod.walking_service_factor
+            if args.get('walking_max_hiking_difficulty') is None:
+                args['walking_max_hiking_difficulty'] = mod.walking_max_hiking_difficulty
+            if args.get('walking_shortest') is None:
+                args['walking_shortest'] = mod.walking_shortest
+            if args.get('walking_ignore_oneways') is None:
+                args['walking_ignore_oneways'] = mod.walking_ignore_oneways
+            if args.get('walking_destination_only_penalty') is None:
+                args['walking_destination_only_penalty'] = mod.walking_destination_only_penalty
+
+            # Set params for advanced parameters for valhalla bike
+            if args.get('bike_use_roads') is None:
+                args['bike_use_roads'] = mod.bike_use_roads
+            if args.get('bike_use_hills') is None:
+                args['bike_use_hills'] = mod.bike_use_hills
+            if args.get('bike_use_ferry') is None:
+                args['bike_use_ferry'] = mod.bike_use_ferry
+            if args.get('bike_avoid_bad_surfaces') is None:
+                args['bike_avoid_bad_surfaces'] = mod.bike_avoid_bad_surfaces
+            if args.get('bike_shortest') is None:
+                args['bike_shortest'] = mod.bike_shortest
+            if args.get('bicycle_type') is None:
+                args['bicycle_type'] = mod.bicycle_type
+            if args.get('bike_use_living_streets') is None:
+                args['bike_use_living_streets'] = mod.bike_use_living_streets
+            if args.get('bike_maneuver_penalty') is None:
+                args['bike_maneuver_penalty'] = mod.bike_maneuver_penalty
+            if args.get('bike_service_penalty') is None:
+                args['bike_service_penalty'] = mod.bike_service_penalty
+            if args.get('bike_service_factor') is None:
+                args['bike_service_factor'] = mod.bike_service_factor
+            if args.get('bike_country_crossing_cost') is None:
+                args['bike_country_crossing_cost'] = mod.bike_country_crossing_cost
+            if args.get('bike_country_crossing_penalty') is None:
+                args['bike_country_crossing_penalty'] = mod.bike_country_crossing_penalty
+            if args.get('bike_destination_only_penalty') is None:
+                args['bike_destination_only_penalty'] = mod.bike_destination_only_penalty
+
+
         # When computing 'same_journey_schedules'(is_journey_schedules=True), some parameters need to be overridden
         # because they are contradictory to the request
         if args.get("is_journey_schedules"):
