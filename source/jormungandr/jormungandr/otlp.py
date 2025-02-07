@@ -45,17 +45,7 @@ from opentelemetry.trace.status import Status, StatusCode
 from opentelemetry import trace, metrics
 
 
-class OtlpMeta(type):
-    _instance: Dict = {}
-
-    def __call__(cls, *args, **kwds):
-        if cls not in cls._instance:
-            cls._instance[cls] = super().__call__(*args, **kwds)
-
-        return cls._instance[cls]
-
-
-class Otlp(metaclass=OtlpMeta):
+class Otlp:
     __service_name: str = "jormungandr"
     __platform: str = "unknown"
     __account: str = "unknown"
