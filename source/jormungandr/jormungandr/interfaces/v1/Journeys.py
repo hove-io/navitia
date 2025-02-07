@@ -975,7 +975,6 @@ class Journeys(JourneyCommon):
             if args.get('bike_destination_only_penalty') is None:
                 args['bike_destination_only_penalty'] = mod.bike_destination_only_penalty
 
-
         # When computing 'same_journey_schedules'(is_journey_schedules=True), some parameters need to be overridden
         # because they are contradictory to the request
         if args.get("is_journey_schedules"):
