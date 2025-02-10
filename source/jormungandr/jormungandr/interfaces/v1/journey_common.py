@@ -597,84 +597,72 @@ class JourneyCommon(ResourceUri, ResourceUtc):
             "bike_use_roads",
             type=FloatRange(0, 1),
             hidden=True,
-            default=0.5,
             help="only available for Asgard: A cyclist's propensity to use roads alongside other vehicles.",
         )
         parser_get.add_argument(
             "bike_use_hills",
             type=FloatRange(0, 1),
             hidden=True,
-            default=0.5,
             help="only available for Asgard: A cyclist's desire to tackle hills in their routes.",
         )
         parser_get.add_argument(
             "bike_use_ferry",
             type=FloatRange(0, 1),
             hidden=True,
-            default=0.5,
             help="only available for Asgard: This value indicates the willingness to take ferries.",
         )
         parser_get.add_argument(
             "bike_avoid_bad_surfaces",
             type=FloatRange(0, 1),
             hidden=True,
-            default=0.25,
             help="only available for Asgard: This value is meant to represent how much a cyclist wants to avoid roads with poor surfaces relative to the bicycle type being used.",
         )
         parser_get.add_argument(
             "bike_shortest",
             type=BooleanType(),
             hidden=True,
-            default=False,
             help="only available for Asgard: Changes the metric to quasi-shortest, i.e. purely distance-based costing.",
         )
         parser_get.add_argument(
             "bicycle_type",
             type=OptionValue(BICYCLE_TYPES),
             hidden=True,
-            default='hybrid',
-            help="only available for Asgard: The type of bicycle.",
+            help="only available for Asgard: The type of bicycle. Allowed values (road, hybrid, cross, moutain)",
         )
         parser_get.add_argument(
             "bike_use_living_streets",
             type=FloatRange(0, 1),
             hidden=True,
-            default=0.5,
             help="only available for Asgard: This value indicates the willingness to take living streets.",
         )
         parser_get.add_argument(
             "bike_maneuver_penalty",
             type=float,
             hidden=True,
-            default=5,
             help="only available for Asgard: A penalty applied when transitioning between roads that do not have consistent naming–in other words, no road names in common. This penalty can be used to create simpler routes that tend to have fewer maneuvers or narrative guidance instructions.",
         )
         parser_get.add_argument(
             "bike_service_penalty",
             type=float,
             hidden=True,
-            default=0,
             help="only available for Asgard: A penalty applied for transition to generic service road. ",
         )
         parser_get.add_argument(
             "bike_service_factor",
             type=float,
             hidden=True,
-            default=1,
             help="only available for Asgard: A factor that modifies (multiplies) the cost when generic service roads are encountered. ",
         )
         parser_get.add_argument(
             "bike_country_crossing_cost",
             type=float,
             hidden=True,
-            default=600,
             help="only available for Asgard: A cost applied when encountering an international border. This cost is added to the estimated and elapsed times. ",
         )
         parser_get.add_argument(
             "bike_country_crossing_penalty",
             type=float,
             hidden=True,
-            default=0,
             help="only available for Asgard: A penalty applied for a country crossing. ",
         )
 
@@ -682,7 +670,6 @@ class JourneyCommon(ResourceUri, ResourceUtc):
             "bike_destination_only_penalty",
             type=PositiveFloat(),
             hidden=True,
-            default=120,
             help="only available for Asgard: penalty when the way is private, private_hgv, parking aisle, drive way, drive thru.",
         )
 
@@ -691,7 +678,6 @@ class JourneyCommon(ResourceUri, ResourceUtc):
             "walking_walkway_factor",
             type=float,
             hidden=True,
-            default=1.0,
             help="only available for Asgard: "
             "A factor that modifies (multiplies) the cost when encountering roads classified as footway.",
         )
@@ -700,7 +686,6 @@ class JourneyCommon(ResourceUri, ResourceUtc):
             "walking_sidewalk_factor",
             type=float,
             hidden=True,
-            default=1.0,
             help="only available for Asgard: "
             "A factor that modifies (multiplies) the cost when encountering roads with dedicated sidewalks.",
         )
@@ -709,7 +694,6 @@ class JourneyCommon(ResourceUri, ResourceUtc):
             "walking_alley_factor",
             type=float,
             hidden=True,
-            default=2.0,
             help="only available for Asgard: "
             "A factor that modifies (multiplies) the cost when alleys are encountered.",
         )
@@ -718,7 +702,6 @@ class JourneyCommon(ResourceUri, ResourceUtc):
             "walking_driveway_factor",
             type=float,
             hidden=True,
-            default=5.0,
             help="only available for Asgard: "
             "A factor that modifies (multiplies) the cost when encountering a driveway, "
             "which is often a private, service road.",
@@ -728,7 +711,6 @@ class JourneyCommon(ResourceUri, ResourceUtc):
             "walking_step_penalty",
             type=float,
             hidden=True,
-            default=30.0,
             help="only available for Asgard: "
             "A penalty in seconds added to each transition onto a path with steps or stairs.",
         )
@@ -737,7 +719,6 @@ class JourneyCommon(ResourceUri, ResourceUtc):
             "walking_use_ferry",
             type=IntervalValue(type=float, min_value=0, max_value=1),
             hidden=True,
-            default=0.5,
             help="only available for Asgard: "
             "This value indicates the willingness to take ferries. This is range of values between 0 and 1. "
             "Values near 0 attempt to avoid ferries and values near 1 will favor ferries.",
@@ -747,7 +728,6 @@ class JourneyCommon(ResourceUri, ResourceUtc):
             "walking_use_living_streets",
             type=IntervalValue(type=float, min_value=0, max_value=1),
             hidden=True,
-            default=0.6,
             help="only available for Asgard: "
             "This value indicates the willingness to take living streets.It is a range of values between 0 and 1. "
             "Values near 0 attempt to avoid living streets and values near 1 will favor living streets. ",
@@ -757,7 +737,6 @@ class JourneyCommon(ResourceUri, ResourceUtc):
             "walking_use_tracks",
             type=IntervalValue(type=float, min_value=0, max_value=1),
             hidden=True,
-            default=0.5,
             help="only available for Asgard: "
             "This value indicates the willingness to take track roads. This is a range of values between 0 and 1. "
             "Values near 0 attempt to avoid tracks and values near 1 will favor tracks a little bit.",
@@ -767,7 +746,6 @@ class JourneyCommon(ResourceUri, ResourceUtc):
             "walking_use_hills",
             type=IntervalValue(type=float, min_value=0, max_value=1),
             hidden=True,
-            default=0.5,
             help="only available for Asgard: "
             "This is a range of values from 0 to 1, where 0 attempts to avoid hills and steep grades even if it "
             "means a longer (time and distance) path, while 1 indicates the pedestrian does not fear hills and "
@@ -786,7 +764,6 @@ class JourneyCommon(ResourceUri, ResourceUtc):
             "walking_service_factor",
             type=float,
             hidden=True,
-            default=1,
             help="only available for Asgard: "
             "A factor that modifies (multiplies) the cost when generic service roads are encountered.",
         )
@@ -795,7 +772,6 @@ class JourneyCommon(ResourceUri, ResourceUtc):
             "walking_max_hiking_difficulty",
             type=IntervalValue(type=int, min_value=0, max_value=6),
             hidden=True,
-            default=1,
             help="only available for Asgard: "
             "This value indicates the maximum difficulty of hiking trails that is allowed. "
             "Values between 0 and 6 are allowed.",
@@ -805,7 +781,6 @@ class JourneyCommon(ResourceUri, ResourceUtc):
             "walking_shortest",
             type=BooleanType(),
             hidden=True,
-            default=False,
             help="only available for Asgard: "
             "Changes the metric to quasi-shortest, i.e. purely distance-based costing.",
         )
@@ -814,7 +789,6 @@ class JourneyCommon(ResourceUri, ResourceUtc):
             "walking_ignore_oneways",
             type=BooleanType(),
             hidden=True,
-            default=True,
             help="only available for Asgard: " "Ignore when encountering roads that are oneway.",
         )
 
@@ -822,7 +796,6 @@ class JourneyCommon(ResourceUri, ResourceUtc):
             "walking_destination_only_penalty",
             type=PositiveFloat(),
             hidden=True,
-            default=120,
             help="only available for Asgard: penalty when the way is private, private_hgv, parking aisle, drive way, drive thru.",
         )
 

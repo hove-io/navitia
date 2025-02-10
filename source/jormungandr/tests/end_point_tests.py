@@ -309,7 +309,7 @@ class TestEndPoint(AbstractTestFixture):
         assert parameters['bike_use_ferry'] == 0.5
         assert parameters['bike_avoid_bad_surfaces'] == 0.25
         assert parameters['bike_shortest'] is False
-        assert parameters['bicycle_type'] == 'Hybrid'
+        assert parameters['bicycle_type'] == 'hybrid'
         assert parameters['bike_use_living_streets'] == 0.5
         assert parameters['bike_maneuver_penalty'] == 5
         assert parameters['bike_service_penalty'] == 0
