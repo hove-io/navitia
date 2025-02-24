@@ -35,6 +35,7 @@ import pybreaker
 import requests as requests
 
 from jormungandr import cache, app, new_relic
+from jormungandr.otlp import otlp_instance
 from jormungandr.parking_space_availability import AbstractParkingPlacesProvider
 from jormungandr.ptref import FeedPublisher
 
@@ -120,3 +121,4 @@ class CommonCarParkProvider(AbstractParkingPlacesProvider):
         params = {'parking_system_id': self.provider_name, 'dataset': self.dataset, 'status': status}
         params.update(kwargs)
         new_relic.record_custom_event('parking_status', params)
+        otlp_instance.send_event_metrics('parking_status', params)

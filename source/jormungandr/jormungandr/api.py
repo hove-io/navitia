@@ -33,7 +33,7 @@
 from __future__ import absolute_import, print_function, unicode_literals, division
 import importlib
 from flask_restful.representations import json
-from flask import request, make_response, abort
+from flask import request, make_response, abort, g
 from jormungandr import rest_api, app, i_manager
 from jormungandr.index import index
 from jormungandr.modules_loader import ModulesLoader
@@ -44,6 +44,8 @@ from jormungandr.utils import content_is_too_large
 from jormungandr.authentication import get_user, get_token, get_app_name, get_used_coverages
 from jormungandr._version import __version__
 import six
+from jormungandr.otlp import otlp_instance
+import time
 
 
 @rest_api.representation("text/jsonp")
@@ -124,6 +126,49 @@ def add_info_newrelic(response, *args, **kwargs):
         logger = logging.getLogger(__name__)
         logger.exception('error while reporting to newrelic:')
     return response
+
+
+def __get_otlp_coverages_label():
+    used_coverages = get_used_coverages()
+
+    return ", ".join(sorted(used_coverages)) if used_coverages else "unknown"
+
+
+@app.after_request
+def record_request_call_to_otlp(response, *args, **kwargs):
+    try:
+        duration = time.time() - g.start
+        token = get_token() if get_token() else "unknown"
+        user = get_user(token=token, abort_if_no_token=False) if token != "unknown" else None
+        user_id = str(user.id) if user else "unknown"
+        token_name = get_app_name(token)
+        token_name = token_name if token_name else "unknown"
+        labels = {
+            "token": token,
+            "user_id": user_id,
+            "token_name": token_name,
+            "status": response.status_code,
+            "coverages": __get_otlp_coverages_label(),
+        }
+        otlp_instance.send_request_call_metrics(duration, labels)
+    except:
+        logger = logging.getLogger(__name__)
+        logger.exception('error while reporting to otlp from app.after_request')
+
+    return response
+
+
+@app.before_request
+def set_request_id():
+    try:
+        g.start = time.time()
+
+        otlp_instance.record_label("api", request.endpoint)
+        otlp_instance.record_label("version", __version__)
+        otlp_instance.record_label("coverage", __get_otlp_coverages_label())
+    except:
+        logger = logging.getLogger(__name__)
+        logger.exception('error while reporting to otlp from app.before_request')
 
 
 # If modules are configured, then load and run them

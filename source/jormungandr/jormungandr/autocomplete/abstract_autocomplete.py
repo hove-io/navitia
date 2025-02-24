@@ -34,6 +34,7 @@ from abc import abstractmethod, ABCMeta
 from jormungandr.exceptions import UnknownObject, TechnicalError, log_exception
 import six
 from jormungandr.new_relic import record_custom_event
+from jormungandr.otlp import otlp_instance
 
 
 class AutocompleteError(RuntimeError):
@@ -79,6 +80,7 @@ class AbstractAutocomplete(six.with_metaclass(ABCMeta, object)):
         if exc is not None:
             data["cause"] = str(exc)
         record_custom_event('autocomplete_status', data)
+        otlp_instance.send_event_metrics('autocomplete_status', data)
 
     def get_object_by_uri(self, uri, request_id=None, instances=None, current_datetime=None):
         """

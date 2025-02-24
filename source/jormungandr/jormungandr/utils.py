@@ -41,6 +41,7 @@ import logging
 from jormungandr.exceptions import ConfigException, UnableToParse, InvalidArguments
 from six.moves.urllib.parse import urlparse
 from jormungandr import new_relic, app
+from jormungandr.otlp import otlp_instance
 from six.moves import zip, range
 from jormungandr.exceptions import TechnicalError
 from flask import request, g
@@ -636,6 +637,7 @@ def get_first_pt_section(journey):
 def record_external_failure(message, connector_type, connector_name):
     params = {'{}_system_id'.format(connector_type): six.text_type(connector_name), 'message': message}
     new_relic.record_custom_event('{}_external_failure'.format(connector_type), params)
+    otlp_instance.send_event_metrics('{}_external_failure'.format(connector_type), params)
 
 
 def decode_polyline(encoded, precision=6):

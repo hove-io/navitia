@@ -53,6 +53,7 @@ from jormungandr.scenarios.utils import (
     updated_common_journey_request_with_default,
 )
 from jormungandr.new_relic import record_custom_parameter
+from jormungandr.otlp import otlp_instance
 from navitiacommon import response_pb2, type_pb2
 from flask_restful import abort
 from .helper_classes.timer_logger_helper import timed_logger
@@ -460,7 +461,7 @@ class Distributed(object):
         pt_journey_pool = PtJourneyPool(**pt_journey_args)
 
         res = []
-        for (dep_mode, arr_mode, future_pt_journey) in pt_journey_pool:
+        for dep_mode, arr_mode, future_pt_journey in pt_journey_pool:
             logger.debug("waiting for pt journey starts with %s and ends with %s", dep_mode, arr_mode)
             pt_journeys = wait_and_get_pt_journeys(future_pt_journey, False)
             if pt_journeys:
@@ -499,6 +500,7 @@ class Scenario(new_default.Scenario):
         context=None,
     ):
         record_custom_parameter('scenario', 'distributed')
+        otlp_instance.record_label('scenario', 'distributed')
         logger = logging.getLogger(__name__)
         """
         All spawned futures must be started(if they're not yet started) when leaving the scope.

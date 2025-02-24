@@ -32,6 +32,7 @@ from __future__ import absolute_import, print_function, unicode_literals, divisi
 import abc
 import six
 from jormungandr import new_relic
+from jormungandr.otlp import otlp_instance
 from jormungandr.utils import decode_polyline
 from navitiacommon import type_pb2
 from collections import namedtuple
@@ -170,6 +171,7 @@ class AbstractRidesharingService(object):
             'ridesharing_service_url': self.service_url,
         }
         new_relic.record_custom_event('ridesharing_internal_failure', params)
+        otlp_instance.send_event_metrics('ridesharing_internal_failure', params)
 
     def record_call(self, status, **kwargs):
         """
@@ -182,6 +184,7 @@ class AbstractRidesharingService(object):
         }
         params.update(kwargs)
         new_relic.record_custom_event('ridesharing_status', params)
+        otlp_instance.send_event_metrics('ridesharing_status', params)
 
     def record_additional_info(self, status, **kwargs):
         """
@@ -194,6 +197,7 @@ class AbstractRidesharingService(object):
         }
         params.update(kwargs)
         new_relic.record_custom_event('ridesharing_proxy_additional_info', params)
+        otlp_instance.send_event_metrics('ridesharing_proxy_additional_info', params)
 
     def __eq__(self, other):
         return all(

@@ -484,7 +484,6 @@ class rig_journey(object):
 class Journeys(JourneyCommon):
     def __init__(self):
         # journeys must have a custom authentication process
-
         super(Journeys, self).__init__(output_type_serializer=api.JourneysSerializer)
 
         parser_get = self.parsers["get"]
