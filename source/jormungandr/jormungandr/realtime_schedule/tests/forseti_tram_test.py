@@ -110,9 +110,7 @@ def make_url_params_test():
     params = forseti._make_params(MockRoutePoint(line_code='line_1', stop_id=['stop_1', 'stop_2']))
     assert params == [('stop_id', 'stop_1'), ('stop_id', 'stop_2')]
 
-    params = forseti._make_params(
-        MockRoutePoint(line_code='line_1', stop_id='stop_1', direction_type='forward')
-    )
+    params = forseti._make_params(MockRoutePoint(line_code='line_1', stop_id='stop_1', direction_type='forward'))
     assert params == [('stop_id', 'stop_1'), ('direction_type', 'forward')]
 
 
@@ -169,7 +167,7 @@ def mock_multiline_response():
                 "direction": "MOBIITI:StopPlace:18638",
                 "direction_name": "François Mitterrand",
                 "datetime": "2025-02-26T15:50:48+01:00",
-                "direction_type": "forward"
+                "direction_type": "forward",
             },
             {
                 "line": "NM:Line:1:LOC",
@@ -178,7 +176,7 @@ def mock_multiline_response():
                 "direction": "MOBIITI:StopPlace:19578",
                 "direction_name": "Jamet",
                 "datetime": "2025-02-26T15:54:00+01:00",
-                "direction_type": "forward"
+                "direction_type": "forward",
             },
             {
                 "line": "NM:Line:2:LOC",
@@ -187,7 +185,7 @@ def mock_multiline_response():
                 "direction": "MOBIITI:StopPlace:18590",
                 "direction_name": "Grand Val",
                 "datetime": "2025-02-26T15:54:12+01:00",
-                "direction_type": "backward"
+                "direction_type": "backward",
             },
             {
                 "line": "NM:Line:1:LOC",
@@ -196,7 +194,7 @@ def mock_multiline_response():
                 "direction": "MOBIITI:StopPlace:18920",
                 "direction_name": "Ranzay",
                 "datetime": "2025-02-26T16:02:06+01:00",
-                "direction_type": "backward"
+                "direction_type": "backward",
             },
             {
                 "line": "NM:Line:2:LOC",
@@ -205,7 +203,7 @@ def mock_multiline_response():
                 "direction": "MOBIITI:StopPlace:18590",
                 "direction_name": "Grand Val",
                 "datetime": "2025-02-26T16:05:00+01:00",
-                "direction_type": "forward"
+                "direction_type": "forward",
             },
             {
                 "line": "NM:Line:1:LOC",
@@ -214,8 +212,8 @@ def mock_multiline_response():
                 "direction": "MOBIITI:StopPlace:18638",
                 "direction_name": "François Mitterrand",
                 "datetime": "2025-02-26T16:15:06+01:00",
-                "direction_type": "forward"
-            }
+                "direction_type": "forward",
+            },
         ]
     }
 
@@ -229,14 +227,25 @@ def next_passage_for_route_point_test(mock_multiline_response):
     """
     forseti = ForsetiMultiStop(id='my_tram_rt', service_url='http://bob.com/', instance=MockInstance())
 
-    mock_requests = MockRequests({'http://bob.com/?direction_type=forward&stop_id=MOBIITI%3AStopPlace%3A18977': (mock_multiline_response, 200)})
+    mock_requests = MockRequests(
+        {
+            'http://bob.com/?direction_type=forward&stop_id=MOBIITI%3AStopPlace%3A18977': (
+                mock_multiline_response,
+                200,
+            )
+        }
+    )
 
-    route_point = MockRoutePoint(line_code='NM:Line:1:LOC', stop_id='MOBIITI:StopPlace:18977', direction_type='forward')
+    route_point = MockRoutePoint(
+        line_code='NM:Line:1:LOC', stop_id='MOBIITI:StopPlace:18977', direction_type='forward'
+    )
 
     with mock.patch('requests.get', mock_requests.get):
         with mock.patch(
             'jormungandr.realtime_schedule.forseti_multi_stop.ForsetiMultiStop._get_direction',
-            lambda ForsetiMultiStop, **kwargs: Direction("stop_area:PDL:MOBIITI:StopPlace:8730", "François Mitterrand (Saint-Herblain)"),
+            lambda ForsetiMultiStop, **kwargs: Direction(
+                "stop_area:PDL:MOBIITI:StopPlace:8730", "François Mitterrand (Saint-Herblain)"
+            ),
         ):
             passages = forseti.next_passage_for_route_point(route_point)
 
