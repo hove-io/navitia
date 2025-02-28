@@ -276,3 +276,61 @@ def status_test():
     )
     status = forseti.status()
     assert status['id'] == "my_tram_rt"
+
+
+@pytest.fixture(scope="module")
+def mock_no_departure_response():
+    return {"departures": []}
+
+
+@pytest.fixture(scope="module")
+def mock_empty_response():
+    return {}
+
+
+def next_passage_with_empty_departures_response_test(mock_no_departure_response):
+    """
+    Test the whole next_passage_for_route_point
+    Mock the http call to return a response with departures = [] , we should get no departure
+    No switch to base_schedule as empty departure could be due to date_times cancellation
+    """
+    forseti = ForsetiMultiStop(id='my_tram_rt', service_url='http://bob.com/', instance=MockInstance())
+
+    mock_requests = MockRequests(
+        {
+            'http://bob.com/?direction_type=forward&stop_id=MOBIITI%3AStopPlace%3A18000': (
+                mock_no_departure_response,
+                200,
+            )
+        }
+    )
+    route_point = MockRoutePoint(
+        line_code='NM:Line:1:LOC', stop_id='MOBIITI:StopPlace:18000', direction_type='forward'
+    )
+    with mock.patch('requests.get', mock_requests.get):
+        passages = forseti.next_passage_for_route_point(route_point)
+        assert passages == []
+
+
+def next_passage_for_empty_response_test(mock_empty_response):
+    """
+    Test the whole next_passage_for_route_point
+    Mock the http call to return a response without "departures" , we should get None
+    We should switch to base_schedule
+    """
+    forseti = ForsetiMultiStop(id='my_tram_rt', service_url='http://bob.com/', instance=MockInstance())
+
+    mock_requests = MockRequests(
+        {
+            'http://bob.com/?direction_type=forward&stop_id=MOBIITI%3AStopPlace%3A18000': (
+                mock_no_departure_response,
+                500,
+            )
+        }
+    )
+    route_point = MockRoutePoint(
+        line_code='NM:Line:1:LOC', stop_id='MOBIITI:StopPlace:18000', direction_type='forward'
+    )
+    with mock.patch('requests.get', mock_requests.get):
+        passages = forseti.next_passage_for_route_point(route_point)
+        assert passages is None

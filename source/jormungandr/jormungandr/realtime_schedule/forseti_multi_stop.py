@@ -123,8 +123,10 @@ class ForsetiMultiStop(RealtimeProxy):
         return params
 
     def _is_valid_direction(self, direction_uri, passage_direction_uri, group_by_dest):
-        # If group_by_dest is False then return True
-        # otherwise return the comparison result
+        """
+        If group_by_dest is False then return True otherwise return the comparison result
+        group_by_dest = True for /terminus_schedules and False for all the others
+        """
         if not group_by_dest:
             return True
         return direction_uri == passage_direction_uri
@@ -139,7 +141,7 @@ class ForsetiMultiStop(RealtimeProxy):
             extra={'rt_system_id': six.text_type(self.rt_system_id)},
         )
         try:
-            return self.breaker.call(requests.get, url=self.service_url, params=params, timeout=self.timeout)
+            return self.breaker.call(requests.get, url=self.service_url, params=params, timeout=self.timeout, verify=False)
         except pybreaker.CircuitBreakerError as e:
             logging.getLogger(__name__).error(
                 'Forseti service dead, using base schedule (error: {}'.format(e),
@@ -190,10 +192,6 @@ class ForsetiMultiStop(RealtimeProxy):
             )
             next_passage = RealTimePassage(dt, direction.label, is_real_time, direction.uri)
             next_passages.append(next_passage)
-
-        # If next_passages is empty return 0 to display base_schedule
-        if len(next_passages) == 0:
-            return None
 
         return next_passages
 
