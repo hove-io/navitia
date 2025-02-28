@@ -141,7 +141,7 @@ class ForsetiMultiStop(RealtimeProxy):
             extra={'rt_system_id': six.text_type(self.rt_system_id)},
         )
         try:
-            return self.breaker.call(requests.get, url=self.service_url, params=params, timeout=self.timeout, verify=False)
+            return self.breaker.call(requests.get, url=self.service_url, params=params, timeout=self.timeout)
         except pybreaker.CircuitBreakerError as e:
             logging.getLogger(__name__).error(
                 'Forseti service dead, using base schedule (error: {}'.format(e),
