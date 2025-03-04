@@ -2221,6 +2221,22 @@ class TravelerProfile(flask_restful.Resource):
             location=('json', 'values'),
         )
 
+        parser.add_argument(
+            'max_car_no_park_direct_path_duration',
+            type=PositiveFloat(),
+            required=False,
+            help='in second',
+            location=('json', 'values'),
+        )
+
+        parser.add_argument(
+            'max_taxi_direct_path_duration',
+            type=PositiveFloat(),
+            required=False,
+            help='in second',
+            location=('json', 'values'),
+        )
+
         self.args = parser.parse_args()
 
     def check_resources(f):
