@@ -141,13 +141,14 @@ class Geovelo(AbstractStreetNetworkService):
         return [coord.lat, coord.lon, None]
 
     @classmethod
-    def _make_request_arguments_bike_details(cls, bike_speed_mps):
+    def _make_request_arguments_bike_details(cls, bike_speed_mps, use_ebike):
         bike_speed = mps_to_kmph(bike_speed_mps)
 
         return {
             'profile': 'MEDIAN',  # can be BEGINNER, EXPERT
             'bikeType': 'TRADITIONAL',  # can be 'BSS'
             'averageSpeed': bike_speed,  # in km/h, BEGINNER sets it to 13
+            'eBike': use_ebike,  # whether to use an electric bike or not
         }
 
     def sort_places_by_physical_mode_and_distance(self, points):
@@ -161,18 +162,18 @@ class Geovelo(AbstractStreetNetworkService):
         return sorted(points, key=lambda point: (priority_by_mode(point), point.distance))
 
     @classmethod
-    def _make_request_arguments_isochrone(cls, origins, destinations, bike_speed_mps=3.33):
+    def _make_request_arguments_isochrone(cls, origins, destinations, bike_speed_mps=3.33, use_ebike=False):
         origins_coord = [cls._pt_object_summary_isochrone(o) for o in origins]
         destinations_coord = [cls._pt_object_summary_isochrone(o) for o in destinations]
         return {
             'starts': [o for o in origins_coord],
             'ends': [o for o in destinations_coord],
-            'bikeDetails': cls._make_request_arguments_bike_details(bike_speed_mps),
+            'bikeDetails': cls._make_request_arguments_bike_details(bike_speed_mps, use_ebike),
             'transportMode': 'BIKE',
         }
 
     @classmethod
-    def _make_request_arguments_direct_path(cls, origin, destination, bike_speed_mps=3.33):
+    def _make_request_arguments_direct_path(cls, origin, destination, bike_speed_mps=3.33, use_ebike=False):
         coord_orig = get_pt_object_coord(origin)
         coord_dest = get_pt_object_coord(destination)
         return {
@@ -181,7 +182,7 @@ class Geovelo(AbstractStreetNetworkService):
                 {'latitude': coord_dest.lat, 'longitude': coord_dest.lon},
             ],
             'transportModes': ['BIKE'],
-            'bikeDetails': cls._make_request_arguments_bike_details(bike_speed_mps),
+            'bikeDetails': cls._make_request_arguments_bike_details(bike_speed_mps, use_ebike),
         }
 
     def _call_geovelo(self, url, method=requests.post, data=None):
@@ -271,6 +272,10 @@ class Geovelo(AbstractStreetNetworkService):
         shapely_point = Point(coord.lon, coord.lat)
         return self.polygon_zone.contains(shapely_point)
 
+    @staticmethod
+    def use_ebike(request):
+        return request.get('bike_type') == 'ebike'
+
     def use_this_service_for_sn_matrix(self, origins, destinations):
         # Use if shape is absent
         if not self.polygon_zone:
@@ -306,7 +311,9 @@ class Geovelo(AbstractStreetNetworkService):
                 )
             )
 
-        data = self._make_request_arguments_isochrone(origins, destinations, request['bike_speed'])
+        data = self._make_request_arguments_isochrone(
+            origins, destinations, request['bike_speed'], self.use_ebike(request)
+        )
         r = self._call_geovelo(
             '{}/{}'.format(self.service_url, 'api/v2/routes_m2m'), requests.post, ujson.dumps(data)
         )
@@ -466,7 +473,7 @@ class Geovelo(AbstractStreetNetworkService):
             raise InvalidArguments('Geovelo, mode {} not implemented'.format(mode))
 
         data = self._make_request_arguments_direct_path(
-            pt_object_origin, pt_object_destination, request['bike_speed']
+            pt_object_origin, pt_object_destination, request['bike_speed'], self.use_ebike(request)
         )
         single_result = True
         if (

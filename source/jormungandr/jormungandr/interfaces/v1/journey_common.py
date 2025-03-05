@@ -869,6 +869,18 @@ class JourneyCommon(ResourceUri, ResourceUtc):
             help='A journey containing a waiting section between TC and Zonal ODT with a duration greater to  max_waiting_duration_odt '
             'will be discarded. Units : seconds. Must be > 0. Default value : 30 minutes',
         )
+        parser_get.add_argument(
+            "bike_type",
+            # wordings are from https://wiki.openstreetmap.org/wiki/Tag:amenity%3Dbicycle_rental#Types_of_bicycles_and_accessories
+            type=OptionValue(
+                [
+                    'city_bike',
+                    'ebike',
+                ]
+            ),
+            default='city_bike',
+            help="only available for Geovelo so far: whether to use electric bike.",
+        )
 
     def parse_args(self, region=None, uri=None):
         args = self.parsers['get'].parse_args()
