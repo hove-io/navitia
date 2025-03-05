@@ -410,6 +410,10 @@ def test_update_traveler_profile(create_instance, traveler_profile_params):
 
     api_post('/v0/instances/fr/traveler_profiles/standard')
 
+    # Modify certain attributes absent in traveler_profile_params
+    traveler_profile_params["max_car_no_park_direct_path_duration"] = 3 * 60 * 60
+    traveler_profile_params["max_taxi_direct_path_duration"] = 2 * 60 * 60
+
     resp = api_put(
         '/v0/instances/fr/traveler_profiles/standard',
         data=json.dumps(traveler_profile_params),
@@ -432,6 +436,8 @@ def test_update_traveler_profile(create_instance, traveler_profile_params):
     assert resp[0]['walking_step_penalty'] == 40.0
     assert resp[0]['max_walking_direct_path_duration'] == 4 * 60 * 60
     assert resp[0]['max_bike_direct_path_duration'] == 4 * 60 * 60
+    assert resp[0]['max_car_no_park_direct_path_duration'] == 3 * 60 * 60
+    assert resp[0]['max_taxi_direct_path_duration'] == 2 * 60 * 60
 
 
 def test_delete_traveler_profile(create_instance):
