@@ -96,12 +96,7 @@ class ForsetiMultiStop(RealtimeProxy):
         """
         used as the cache key. We use the rt_system_id to share the cache between servers in production
         """
-        if PY3:
-            return self.rt_system_id
-        try:
-            return self.rt_system_id.encode('utf-8', 'backslashreplace')
-        except:
-            return self.rt_system_id
+        return self.rt_system_id
 
     def _make_params(self, route_point):
         """
@@ -141,7 +136,7 @@ class ForsetiMultiStop(RealtimeProxy):
             extra={'rt_system_id': six.text_type(self.rt_system_id)},
         )
         try:
-            return self.breaker.call(requests.get, url=self.service_url, params=params, timeout=self.timeout)
+            return self.breaker.call(requests.get, url=self.service_url, params=params, timeout=self.timeout, verify=False)
         except pybreaker.CircuitBreakerError as e:
             logging.getLogger(__name__).error(
                 'Forseti service dead, using base schedule (error: {}'.format(e),
