@@ -50,13 +50,14 @@ service_backup = {
 }
 
 
-def direct_path_response_valid():
+def direct_path_response_valid(ebike):
     """
     A mock of a valid response from geovelo.
     Reply to POST of {"starts":[[48.803064,2.443385, "refStart1"]],
                       "ends":[[48.802049,2.426482, "refEnd1"]]}
     Modify with caution as it will affect every tests using these start and end uris.
     """
+    duration = 2822 if ebike else 3155
     return [
         {
             "distances": {
@@ -65,7 +66,7 @@ def direct_path_response_valid():
                 "recommendedRoads": 7759.0,
                 "total": 11393.0,
             },
-            "duration": 3155,
+            "duration": duration,
             "estimatedDatetimeOfArrival": "2017-02-24T16:52:08.711",
             "estimatedDatetimeOfDeparture": "2017-02-24T15:59:33.711",
             "id": "bG9jPTQ4Ljg4Nzk0LDIuMzE0MzM4JmxvYz00OC44Mjk5MjcsMi4zNzY3NDcjQkVHSU5ORVIjRmFsc2UjQkVHSU5ORVIjMTMjRmFsc2UjRmFsc2UjMjAxNy0wMi0yNCAxNTo1OTozMy43MTEwNjgjVFJBRElUSU9OQUwjMCMwI1JFQ09NTUVOREVEI0ZhbHNl",
@@ -116,7 +117,7 @@ def direct_path_response_valid():
                         "profile": "BEGINNER",
                         "verticalGain": 51,
                     },
-                    "duration": 3155,
+                    "duration": duration,
                     "estimatedDatetimeOfArrival": "2017-02-24T16:52:08.711",
                     "estimatedDatetimeOfDeparture": "2017-02-24T15:59:33.711",
                     "geometry": "_yzf|AszglClL`ShClEzCrHj@nNnBfD~AoHfDeD`nBmeC|AqBvAuAhWyWjVqUbJsJdd@uf@uPwh@sBgG{JoYmEkMeEwLxv@iu@}Hwj@k@}DcCqQ{Ims@m@yEbBcDbCyEhEiIhSm`@rPy\\bI}OfBwD|H}CaNehA}MwiAzA_LiBsPa@sDoBaSeAoKiCcHqBQmG{Rqk@meAa@oHRwSDuDv^yfChAmAnAkHrFqZnA{Gb@wDxc@m{Btd@a|Bz@cErHum@xLobBfBqMd@aHAkGmA{LaAkCaUwoBo@sFiR{aB_@wJuFoe@u@sDm@_CyTonB`@yDy@gIdA{EyBsTNoG_OqzBe@uDuAaLjD~DzAmAzNoLxCcBtDqEj_A}y@`_@i\\vFcF~c@w^~GuFbJgJ`JaHnCmDri@kd@nQcOxCiC~\\wYfCuBlC_CpB_BtCeCxDoEdx@}q@pG_Fpi@yd@lDuBhO_NjD}CxKyJ~IcIlIsHp^{\\dRwN~DuDjBqBxEkEzh@md@xHwG~AqAhGgFzMeLrM_Lp{@_t@lEeDfKsJvQ_PxDuCnCoCzO_NlIcHhSyQzFcF~CoCdsA{hAfDoCtSqStDyCjAmEn@uJ`Ywk@xEeJxHePwWabAaB{GkKqc@wL}n@sAuG`@qFxB}A~vBc|AfUkPjE}C|b@uZ`w@oj@~j@ca@tl@mb@zMgIzIoEvNiIlHaJjIcFfNwFhH_ChMuBpMoAlK_@rLH~Lp@|OjCfFjAtD|FfCz@lBp@nHe@xkCl~@vaAf]b{@pZzMhFnCb@nFpBtGkWlBuBbBcC|NgTzWu_@fB_CtCcC|@_Cvb@qgAtw@usBdRnMtJnGb\\vTy@hEvCtAfFdC`Bv@nEtBtExBhW`Q|HtE|ChBrAjAdL_Nb^qc@zUkYxCqDlCmDxRkTrAwAlEyDdH{GhZmm@lCgFfDkIvA|@lv@xe@pCfBpDlBpC_I|DuKr[gy@xAwDhKgX`FyMzBkFdCsG|JoWdk@c{AdLsZzEcObFgMbMa\\fR}f@nBzF`c@d`BjAdF`Mra@hGfSzw@f}BxF~LfCzDzA@lCzPnZdu@p^x{@rFzNzCfIpLl[fAvCvxA}`BPaDhFkGnHkJvF_IrKoIfCiDrz@nkBvKzFdEoDfGkEbO{MbFsErDzAz^_\\t_@e]lE_Gpc@ql@r_@wg@fk@gv@fa@{h@rNcRvLvWrWrk@fB`ElD~H`Pv]pEdKhAbCbN|[fBnElBtE~AlF`Mlu@rZoXjE{Dt^e\\|AnDzAhDzJwK]eAg@CTpBrGeBzBkBk@eBHa@J_AeAY}@}ClCiCw@wJ[cAeB?gScp@YtCxBjH~DvM",
@@ -238,7 +239,15 @@ def make_data_test():
         '''{
             "starts": [[48.2, 2.0, null]], "ends": [[48.3, 3.0, null], [48.4, 4.0, null]],
             "transportMode": "BIKE",
-            "bikeDetails": {"profile": "MEDIAN", "averageSpeed": 12, "bikeType": "TRADITIONAL"}}'''
+            "bikeDetails": {"profile": "MEDIAN", "averageSpeed": 12, "bikeType": "TRADITIONAL", "eBike": false}}'''
+    )
+
+    data = Geovelo._make_request_arguments_isochrone(origins, destinations, use_ebike=True)
+    assert ujson.loads(ujson.dumps(data)) == ujson.loads(
+        '''{
+            "starts": [[48.2, 2.0, null]], "ends": [[48.3, 3.0, null], [48.4, 4.0, null]],
+            "transportMode": "BIKE",
+            "bikeDetails": {"profile": "MEDIAN", "averageSpeed": 12, "bikeType": "TRADITIONAL", "eBike": true}}'''
     )
 
 
@@ -272,54 +281,76 @@ def get_matrix_test():
 def direct_path_geovelo_test():
     instance = MagicMock()
     geovelo = Geovelo(instance=instance, service_url=MOCKED_SERVICE_URL)
-    resp_json = direct_path_response_valid()
 
     origin = make_pt_object(type_pb2.ADDRESS, lon=2, lat=48.2, uri='refStart1')
     destination = make_pt_object(type_pb2.ADDRESS, lon=3, lat=48.3, uri='refEnd1')
     fallback_extremity = PeriodExtremity(str_to_time_stamp('20161010T152000'), False)
     with requests_mock.Mocker() as req:
+
+        def json_matcher(request, _):
+            req_data = request.json()
+            return direct_path_response_valid(req_data.get("bikeDetails", {}).get("eBike"))
+
         req.post(
             '{}/api/v2/computedroutes?instructions=true&elevations=true&geometry=true'
             '&single_result=true&bike_stations=false&objects_as_ids=true&'.format(MOCKED_SERVICE_URL),
-            json=resp_json,
+            json=json_matcher,
         )
-        geovelo_resp = geovelo.direct_path_with_fp(
-            instance, 'bike', origin, destination, fallback_extremity, MOCKED_REQUEST, None, None
-        )
-        assert geovelo_resp.status_code == 200
-        assert geovelo_resp.response_type == response_pb2.ITINERARY_FOUND
-        assert len(geovelo_resp.journeys) == 1
-        assert geovelo_resp.journeys[0].duration == 3155  # 52min35s
-        assert geovelo_resp.journeys[0].requested_date_time == 0  # parameter datetime absent in MOCKED_REQUEST
-        assert len(geovelo_resp.journeys[0].sections) == 1
-        assert geovelo_resp.journeys[0].arrival_date_time == str_to_time_stamp('20161010T152000')
-        assert geovelo_resp.journeys[0].departure_date_time == str_to_time_stamp('20161010T142725')
-        assert geovelo_resp.journeys[0].sections[0].type == response_pb2.STREET_NETWORK
-        assert geovelo_resp.journeys[0].sections[0].type == response_pb2.STREET_NETWORK
-        assert geovelo_resp.journeys[0].sections[0].duration == 3155
-        assert geovelo_resp.journeys[0].sections[0].length == 11393
-        assert geovelo_resp.journeys[0].sections[0].street_network.coordinates[2].lon == 2.314258
-        assert geovelo_resp.journeys[0].sections[0].street_network.coordinates[2].lat == 48.887428
-        assert geovelo_resp.journeys[0].sections[0].origin == origin
-        assert geovelo_resp.journeys[0].sections[0].destination == destination
-        assert geovelo_resp.journeys[0].sections[0].street_network.path_items[1].name == "Rue Jouffroy d'Abbans"
-        assert geovelo_resp.journeys[0].sections[0].street_network.path_items[1].direction == 0
-        assert geovelo_resp.journeys[0].sections[0].street_network.path_items[1].length == 40
-        assert geovelo_resp.journeys[0].sections[0].street_network.path_items[1].duration == 11
-        assert geovelo_resp.journeys[0].sections[0].street_network.elevations[0].distance_from_start == 0
-        assert geovelo_resp.journeys[0].sections[0].street_network.elevations[0].elevation == 45.5
-        assert geovelo_resp.journeys[0].sections[0].street_network.elevations[1].distance_from_start == 128
-        assert geovelo_resp.journeys[0].sections[0].street_network.elevations[1].elevation == 44
-        assert geovelo_resp.journeys[0].sections[0].street_network.elevations[2].distance_from_start == 274
-        assert geovelo_resp.journeys[0].sections[0].street_network.elevations[2].elevation == 50
-        assert geovelo_resp.journeys[0].sections[0].cycle_lane_length == 98
-        assert len(geovelo_resp.journeys[0].sections[0].street_network.street_information) == 3
-        assert geovelo_resp.journeys[0].sections[0].street_network.street_information[0].cycle_path_type == 2
-        assert geovelo_resp.journeys[0].sections[0].street_network.street_information[0].length == 58.0
-        assert geovelo_resp.journeys[0].sections[0].street_network.street_information[1].cycle_path_type == 2
-        assert geovelo_resp.journeys[0].sections[0].street_network.street_information[1].length == 40.0
-        assert geovelo_resp.journeys[0].sections[0].street_network.street_information[2].cycle_path_type == 2
-        assert geovelo_resp.journeys[0].sections[0].street_network.street_information[2].length == 0.0
+
+        def _test(request):
+
+            use_ebike = Geovelo.use_ebike(request)
+
+            geovelo_resp = geovelo.direct_path_with_fp(
+                instance, 'bike', origin, destination, fallback_extremity, request, None, None
+            )
+            assert geovelo_resp.status_code == 200
+            assert geovelo_resp.response_type == response_pb2.ITINERARY_FOUND
+            assert len(geovelo_resp.journeys) == 1
+            assert geovelo_resp.journeys[0].duration == 2822 if use_ebike else 3155
+            assert geovelo_resp.journeys[0].arrival_date_time == str_to_time_stamp('20161010T152000')
+            assert geovelo_resp.journeys[0].departure_date_time == str_to_time_stamp(
+                '20161010T143258' if use_ebike else '20161010T142725'
+            )
+            assert (
+                geovelo_resp.journeys[0].requested_date_time == 0
+            )  # parameter datetime absent in MOCKED_REQUEST
+            assert len(geovelo_resp.journeys[0].sections) == 1
+            assert geovelo_resp.journeys[0].sections[0].type == response_pb2.STREET_NETWORK
+            assert geovelo_resp.journeys[0].sections[0].type == response_pb2.STREET_NETWORK
+            assert geovelo_resp.journeys[0].sections[0].duration == 2822 if use_ebike else 3155
+            assert geovelo_resp.journeys[0].sections[0].length == 11393
+            assert geovelo_resp.journeys[0].sections[0].street_network.coordinates[2].lon == 2.314258
+            assert geovelo_resp.journeys[0].sections[0].street_network.coordinates[2].lat == 48.887428
+            assert geovelo_resp.journeys[0].sections[0].origin == origin
+            assert geovelo_resp.journeys[0].sections[0].destination == destination
+            assert (
+                geovelo_resp.journeys[0].sections[0].street_network.path_items[1].name == "Rue Jouffroy d'Abbans"
+            )
+            assert geovelo_resp.journeys[0].sections[0].street_network.path_items[1].direction == 0
+            assert geovelo_resp.journeys[0].sections[0].street_network.path_items[1].length == 40
+            assert (
+                geovelo_resp.journeys[0].sections[0].street_network.path_items[1].duration == 10
+                if use_ebike
+                else 11
+            )
+            assert geovelo_resp.journeys[0].sections[0].street_network.elevations[0].distance_from_start == 0
+            assert geovelo_resp.journeys[0].sections[0].street_network.elevations[0].elevation == 45.5
+            assert geovelo_resp.journeys[0].sections[0].street_network.elevations[1].distance_from_start == 128
+            assert geovelo_resp.journeys[0].sections[0].street_network.elevations[1].elevation == 44
+            assert geovelo_resp.journeys[0].sections[0].street_network.elevations[2].distance_from_start == 274
+            assert geovelo_resp.journeys[0].sections[0].street_network.elevations[2].elevation == 50
+            assert geovelo_resp.journeys[0].sections[0].cycle_lane_length == 98
+            assert len(geovelo_resp.journeys[0].sections[0].street_network.street_information) == 3
+            assert geovelo_resp.journeys[0].sections[0].street_network.street_information[0].cycle_path_type == 2
+            assert geovelo_resp.journeys[0].sections[0].street_network.street_information[0].length == 58.0
+            assert geovelo_resp.journeys[0].sections[0].street_network.street_information[1].cycle_path_type == 2
+            assert geovelo_resp.journeys[0].sections[0].street_network.street_information[1].length == 40.0
+            assert geovelo_resp.journeys[0].sections[0].street_network.street_information[2].cycle_path_type == 2
+            assert geovelo_resp.journeys[0].sections[0].street_network.street_information[2].length == 0.0
+
+        _test(MOCKED_REQUEST)
+        _test(dict({"bike_type": "ebike"}, **MOCKED_REQUEST))
 
 
 def direct_path_geovelo_zero_test():
@@ -392,7 +423,7 @@ def distances_durations_test():
     """
     instance = MagicMock()
     geovelo = Geovelo(instance=instance, service_url=MOCKED_SERVICE_URL)
-    resp_json = direct_path_response_valid()
+    resp_json = direct_path_response_valid(False)
 
     origin = make_pt_object(type_pb2.ADDRESS, lon=2, lat=48.2, uri='refStart1')
     destination = make_pt_object(type_pb2.ADDRESS, lon=3, lat=48.3, uri='refEnd1')
@@ -417,16 +448,22 @@ def make_request_arguments_bike_details_test():
     """
     instance = MagicMock()
     geovelo = Geovelo(instance=instance, service_url=MOCKED_SERVICE_URL)
-    data = geovelo._make_request_arguments_bike_details(bike_speed_mps=3.33)
+    data = geovelo._make_request_arguments_bike_details(bike_speed_mps=3.33, use_ebike=False)
     assert ujson.loads(ujson.dumps(data)) == ujson.loads(
         '''{"profile": "MEDIAN", "averageSpeed": 12,
-    "bikeType": "TRADITIONAL"}'''
+    "bikeType": "TRADITIONAL","eBike": false}'''
     )
 
-    data = geovelo._make_request_arguments_bike_details(bike_speed_mps=4.1)
+    data = geovelo._make_request_arguments_bike_details(bike_speed_mps=4.1, use_ebike=False)
     assert ujson.loads(ujson.dumps(data)) == ujson.loads(
         '''{"profile": "MEDIAN", "averageSpeed": 15,
-    "bikeType": "TRADITIONAL"}'''
+    "bikeType": "TRADITIONAL","eBike": false}'''
+    )
+
+    data = geovelo._make_request_arguments_bike_details(bike_speed_mps=4.1, use_ebike=True)
+    assert ujson.loads(ujson.dumps(data)) == ujson.loads(
+        '''{"profile": "MEDIAN", "averageSpeed": 15,
+    "bikeType": "TRADITIONAL","eBike": true}'''
     )
 
 
