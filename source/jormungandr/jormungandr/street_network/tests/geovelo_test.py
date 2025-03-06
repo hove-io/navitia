@@ -239,7 +239,15 @@ def make_data_test():
         '''{
             "starts": [[48.2, 2.0, null]], "ends": [[48.3, 3.0, null], [48.4, 4.0, null]],
             "transportMode": "BIKE",
-            "bikeDetails": {"profile": "MEDIAN", "averageSpeed": 12, "bikeType": "TRADITIONAL"}}'''
+            "bikeDetails": {"profile": "MEDIAN", "averageSpeed": 12, "bikeType": "TRADITIONAL", "eBike": false}}'''
+    )
+
+    data = Geovelo._make_request_arguments_isochrone(origins, destinations, use_ebike=True)
+    assert ujson.loads(ujson.dumps(data)) == ujson.loads(
+        '''{
+            "starts": [[48.2, 2.0, null]], "ends": [[48.3, 3.0, null], [48.4, 4.0, null]],
+            "transportMode": "BIKE",
+            "bikeDetails": {"profile": "MEDIAN", "averageSpeed": 12, "bikeType": "TRADITIONAL", "eBike": true}}'''
     )
 
 
