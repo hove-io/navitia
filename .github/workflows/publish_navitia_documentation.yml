@@ -15,6 +15,14 @@ jobs:
     steps:
     - name: force chown to avoid errors
       run: chown -R $USER:$USER .
+
+    - name: Generate github private access token
+      id: ci-core-app-token
+      uses: getsentry/action-github-app-token@v2.0.0
+      with:
+        app_id: ${{ secrets.CI_CORE_APP_ID }}
+        private_key: ${{ secrets.CI_CORE_APP_PEM }}
+
     - name: Git config
       run: git config --global --add safe.directory /__w/navitia/navitia
     - name: Checkout
@@ -30,14 +38,15 @@ jobs:
           # copy website to workspace
           rm -rf /work/documentation/slate/build
           cp -r /srv/slate/build /work/documentation/slate
-    # - name: Deploy to GitHub Pages
-    #   if: success()
-    #   uses: crazy-max/ghaction-github-pages@v2
-    #   with:
-    #     target_branch: gh-pages
-    #     build_dir: documentation/slate/build
-    #   env:
-    #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    - name: Deploy to GitHub Pages
+      if: success()
+      uses: crazy-max/ghaction-github-pages@v2
+      with:
+        target_branch: gh-pages
+        build_dir: documentation/slate/build
+      env:
+        GITHUB_TOKEN: ${{ steps.ci-core-app-token.outputs.token }}
+
     - name: slack notification (the job has failed)
       if: failure()
       run: |
