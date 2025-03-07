@@ -22,6 +22,7 @@ jobs:
     - name: Build website in Slate format
       uses: addnab/docker-run-action@v3
       with:
+        username: $USER
         image: slatedocs/slate:latest
         options: -v ${{ github.workspace }}:/work
         run: |
