@@ -464,6 +464,10 @@ class Instance(db.Model):  # type: ignore
         db.Boolean, default=default_values.car_park_provider, nullable=False, server_default=true()
     )
 
+    disruptions_on_poi = db.Column(
+        db.Boolean, default=default_values.disruptions_on_poi, nullable=False, server_default=false()
+    )
+
     max_additional_connections = db.Column(
         db.Integer, default=default_values.max_additional_connections, nullable=False, server_default='2'
     )
@@ -514,6 +518,10 @@ class Instance(db.Model):  # type: ignore
 
     additional_time_before_last_section_taxi = db.Column(
         db.Integer, default=default_values.additional_time_before_last_section_taxi, nullable=False
+    )
+
+    on_street_bike_parking_duration = db.Column(
+        db.Integer, default=default_values.on_street_bike_parking_duration, nullable=False
     )
 
     max_walking_direct_path_duration = db.Column(
@@ -771,6 +779,202 @@ class Instance(db.Model):  # type: ignore
         server_default=str(default_values.co2_emission_car_unit),
     )
 
+    use_predicted_traffic = db.Column(
+        db.Boolean,
+        default=default_values.use_predicted_traffic,
+        nullable=True,
+        server_default=false(),
+    )
+
+    walking_walkway_factor = db.Column(
+        db.Float,
+        default=default_values.walking_walkway_factor,
+        nullable=False,
+        server_default=str(default_values.walking_walkway_factor),
+    )
+
+    walking_sidewalk_factor = db.Column(
+        db.Float,
+        default=default_values.walking_sidewalk_factor,
+        nullable=False,
+        server_default=str(default_values.walking_sidewalk_factor),
+    )
+
+    walking_alley_factor = db.Column(
+        db.Float,
+        default=default_values.walking_alley_factor,
+        nullable=False,
+        server_default=str(default_values.walking_alley_factor),
+    )
+
+    walking_driveway_factor = db.Column(
+        db.Float,
+        default=default_values.walking_driveway_factor,
+        nullable=False,
+        server_default=str(default_values.walking_driveway_factor),
+    )
+
+    walking_step_penalty = db.Column(
+        db.Float,
+        default=default_values.walking_step_penalty,
+        nullable=False,
+        server_default=str(default_values.walking_step_penalty),
+    )
+
+    walking_use_ferry = db.Column(
+        db.Float,
+        default=default_values.walking_use_ferry,
+        nullable=False,
+        server_default=str(default_values.walking_use_ferry),
+    )
+
+    walking_use_living_streets = db.Column(
+        db.Float,
+        default=default_values.walking_use_living_streets,
+        nullable=False,
+        server_default=str(default_values.walking_use_living_streets),
+    )
+
+    walking_use_tracks = db.Column(
+        db.Float,
+        default=default_values.walking_use_tracks,
+        nullable=False,
+        server_default=str(default_values.walking_use_tracks),
+    )
+
+    walking_use_hills = db.Column(
+        db.Float,
+        default=default_values.walking_use_hills,
+        nullable=False,
+        server_default=str(default_values.walking_use_hills),
+    )
+
+    walking_service_factor = db.Column(
+        db.Float,
+        default=default_values.walking_service_factor,
+        nullable=False,
+        server_default=str(default_values.walking_service_factor),
+    )
+
+    walking_max_hiking_difficulty = db.Column(
+        db.Integer,
+        default=default_values.walking_max_hiking_difficulty,
+        nullable=False,
+        server_default=str(default_values.walking_max_hiking_difficulty),
+    )
+
+    walking_shortest = db.Column(
+        db.Boolean,
+        default=default_values.walking_shortest,
+        nullable=False,
+        server_default=str(default_values.walking_shortest),
+    )
+
+    walking_ignore_oneways = db.Column(
+        db.Boolean,
+        default=default_values.walking_ignore_oneways,
+        nullable=False,
+        server_default=str(default_values.walking_ignore_oneways),
+    )
+
+    walking_destination_only_penalty = db.Column(
+        db.Float,
+        default=default_values.walking_destination_only_penalty,
+        nullable=False,
+        server_default=str(default_values.walking_destination_only_penalty),
+    )
+
+    bike_use_roads = db.Column(
+        db.Float,
+        default=default_values.bike_use_roads,
+        nullable=False,
+        server_default=str(default_values.bike_use_roads),
+    )
+
+    bike_use_hills = db.Column(
+        db.Float,
+        default=default_values.bike_use_hills,
+        nullable=False,
+        server_default=str(default_values.bike_use_hills),
+    )
+
+    bike_use_ferry = db.Column(
+        db.Float,
+        default=default_values.bike_use_ferry,
+        nullable=False,
+        server_default=str(default_values.bike_use_ferry),
+    )
+
+    bike_avoid_bad_surfaces = db.Column(
+        db.Float,
+        default=default_values.bike_avoid_bad_surfaces,
+        nullable=False,
+        server_default=str(default_values.bike_avoid_bad_surfaces),
+    )
+
+    bike_shortest = db.Column(
+        db.Boolean,
+        default=default_values.bike_shortest,
+        nullable=False,
+        server_default=str(default_values.bike_shortest),
+    )
+
+    bicycle_type = db.Column(
+        db.Text,
+        default=default_values.bicycle_type,
+        nullable=False,
+        server_default=str(default_values.bicycle_type),
+    )
+
+    bike_use_living_streets = db.Column(
+        db.Float,
+        default=default_values.bike_use_living_streets,
+        nullable=False,
+        server_default=str(default_values.bike_use_living_streets),
+    )
+
+    bike_maneuver_penalty = db.Column(
+        db.Float,
+        default=default_values.bike_maneuver_penalty,
+        nullable=False,
+        server_default=str(default_values.bike_maneuver_penalty),
+    )
+
+    bike_service_penalty = db.Column(
+        db.Float,
+        default=default_values.bike_service_penalty,
+        nullable=False,
+        server_default=str(default_values.bike_service_penalty),
+    )
+
+    bike_service_factor = db.Column(
+        db.Float,
+        default=default_values.bike_service_factor,
+        nullable=False,
+        server_default=str(default_values.bike_service_factor),
+    )
+
+    bike_country_crossing_cost = db.Column(
+        db.Float,
+        default=default_values.bike_country_crossing_cost,
+        nullable=False,
+        server_default=str(default_values.bike_country_crossing_cost),
+    )
+
+    bike_country_crossing_penalty = db.Column(
+        db.Float,
+        default=default_values.bike_country_crossing_penalty,
+        nullable=False,
+        server_default=str(default_values.bike_country_crossing_penalty),
+    )
+
+    bike_destination_only_penalty = db.Column(
+        db.Float,
+        default=default_values.bike_destination_only_penalty,
+        nullable=False,
+        server_default=str(default_values.bike_destination_only_penalty),
+    )
+
     def __init__(self, name=None, is_free=False, authorizations=None, jobs=None):
         self.name = name
         self.is_free = is_free
@@ -955,6 +1159,69 @@ class TravelerProfile(db.Model):  # type: ignore
     first_section_mode = db.Column(ArrayOfEnum(fallback_mode), nullable=False)
 
     last_section_mode = db.Column(ArrayOfEnum(fallback_mode), nullable=False)
+
+    walking_step_penalty = db.Column(
+        db.Float,
+        default=default_values.walking_step_penalty,
+        nullable=False,
+        server_default=str(default_values.walking_step_penalty),
+    )
+
+    walking_use_hills = db.Column(
+        db.Float,
+        default=default_values.walking_use_hills,
+        nullable=False,
+        server_default=str(default_values.walking_use_hills),
+    )
+
+    max_walking_direct_path_duration = db.Column(
+        db.Integer,
+        default=default_values.max_walking_direct_path_duration,
+        nullable=False,
+        server_default=str(default_values.max_walking_direct_path_duration),
+    )
+
+    max_bike_direct_path_duration = db.Column(
+        db.Integer,
+        default=default_values.max_bike_direct_path_duration,
+        nullable=False,
+        server_default=str(default_values.max_bike_direct_path_duration),
+    )
+
+    max_bss_direct_path_duration = db.Column(
+        db.Integer,
+        default=default_values.max_bss_direct_path_duration,
+        nullable=False,
+        server_default=str(default_values.max_bss_direct_path_duration),
+    )
+
+    max_car_direct_path_duration = db.Column(
+        db.Integer,
+        default=default_values.max_car_direct_path_duration,
+        nullable=False,
+        server_default=str(default_values.max_car_direct_path_duration),
+    )
+
+    max_ridesharing_direct_path_duration = db.Column(
+        db.Integer,
+        default=default_values.max_ridesharing_direct_path_duration,
+        nullable=False,
+        server_default=str(default_values.max_ridesharing_direct_path_duration),
+    )
+
+    max_taxi_direct_path_duration = db.Column(
+        db.Integer,
+        default=default_values.max_taxi_direct_path_duration,
+        nullable=False,
+        server_default=str(default_values.max_taxi_direct_path_duration),
+    )
+
+    max_car_no_park_direct_path_duration = db.Column(
+        db.Integer,
+        default=default_values.max_car_no_park_direct_path_duration,
+        nullable=False,
+        server_default=str(default_values.max_car_no_park_direct_path_duration),
+    )
 
     @classmethod
     def get_by_coverage_and_type(cls, coverage, traveler_type):

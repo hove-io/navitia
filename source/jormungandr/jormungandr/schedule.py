@@ -39,6 +39,8 @@ from jormungandr import utils
 from navitiacommon import type_pb2, request_pb2, response_pb2
 from copy import deepcopy
 from jormungandr import new_relic
+from jormungandr.otlp import otlp_instance
+from jormungandr.otlp import otlp_instance
 
 import gevent
 import gevent.pool
@@ -213,9 +215,9 @@ class MixedSchedule(object):
         rt_system = self.instance.realtime_proxy_manager.get(rt_system_code)
         if not rt_system:
             log.info('impossible to find {}, no realtime added'.format(rt_system_code))
-            new_relic.record_custom_event(
-                'realtime_internal_failure', {'rt_system_id': rt_system_code, 'message': 'no handler found'}
-            )
+            params = {'rt_system_id': rt_system_code, 'message': 'no handler found'}
+            new_relic.record_custom_event('realtime_internal_failure', params)
+            otlp_instance.send_event_metrics('realtime_internal_failure', params)
             return None
         return rt_system
 
@@ -237,10 +239,9 @@ class MixedSchedule(object):
             log.exception(
                 'failure while requesting next passages to external RT system {}'.format(rt_system.rt_system_id)
             )
-            new_relic.record_custom_event(
-                'realtime_internal_failure',
-                {'rt_system_id': six.text_type(rt_system.rt_system_id), 'message': str(e)},
-            )
+            params = {'rt_system_id': six.text_type(rt_system.rt_system_id), 'message': str(e)}
+            new_relic.record_custom_event('realtime_internal_failure', params)
+            otlp_instance.send_event_metrics('realtime_internal_failure', params)
 
         if next_rt_passages is None:
             log.debug('no next passages, using base schedule')

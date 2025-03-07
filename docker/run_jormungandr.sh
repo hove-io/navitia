@@ -9,16 +9,22 @@ function show_help() {
 Usage: ${0##*/} -m monitor-process -r max-requests
     -m      [0|1] activate monitor-process
     -r      max-requests before reload for jormungandr worker
+    -g      Optional: gormungandr url for route_schedules API (Example: http://gormungandr)
+    -v      Optional: gormungandr version API : route_schedules(1), route_schedules and journeys(2)
 EOF
 }
 
-while getopts "m:r:c:h" opt; do
+while getopts "m:r:c:g:v:h" opt; do
     case $opt in
         m) monitor_processes=$OPTARG
             ;;
         r) app_max_requests=$OPTARG
             ;;
         c) jormun_cache_items=$OPTARG
+            ;;
+        g) gormungandr_url=$OPTARG
+            ;;
+        v) gormungandr_version=$OPTARG
             ;;
         h|\?)
             show_help
@@ -47,6 +53,11 @@ fi
 
 jormungandr_cache2="name=jormungandr,items=${jormun_cache_items}"
 
+if [[ ! -z $gormungandr_url ]] && [[ ! -z $gormungandr_version ]];
+then
+  echo "export GORMUNGANDR_URL=$gormungandr_url" >> /etc/apache2/envvars
+  echo "export GORMUNGANDR_VERSION=$gormungandr_version" >> /etc/apache2/envvars
+fi
 # run apache2
 service apache2 start
 if [ $? == 1 ]
@@ -59,7 +70,8 @@ fi
 if [ $monitor_processes -eq 1 ]
 then
   echo "!!!!!!!!!!!!!!!!!!!!! Start Jormungandr with monitoring service !!!!!!!!!!!!!!!!!!!!!"
-  uwsgi --cache2 $jormungandr_cache2 $max_requests --http :9090 --stats :5050 --lazy-apps --file $file & uwsgi --cache2 $monitor_cache2 --http :9091 --lazy-apps --file $file --processes 1 --listen 5
+  # JORMUNGANDR_IS_PUBLIC is set to True only for the use of /v1/backends_status
+  uwsgi --cache2 $jormungandr_cache2 $max_requests --http :9090 --stats :5050 --lazy-apps --file $file & JORMUNGANDR_IS_PUBLIC=True uwsgi --cache2 $monitor_cache2 --http :9091 --lazy-apps --file $file --processes 1 --listen 5
 else
   echo "!!!!!!!!!!!!!!!!!!!!! Start Jormungandr without monitoring service !!!!!!!!!!!!!!!!!!!!!"
   uwsgi  --cache2 $jormungandr_cache2 $max_requests --http :9090 --stats :5050 --lazy-apps --file $file

@@ -822,7 +822,7 @@ struct routing_api_data {
                   "content type",
                   default_date,
                   default_date,
-                  {ChannelType::web, ChannelType::title, ChannelType::beacon},
+                  {ChannelType::web, ChannelType::title, ChannelType::beacon, ChannelType::pids},
                   {}});
 
         disruption_maker.impact()

@@ -33,6 +33,7 @@ import requests as requests
 import pybreaker
 import ujson
 import six
+from shapely.geometry import Point, Polygon
 
 import itertools
 import sys
@@ -45,6 +46,7 @@ from jormungandr.street_network.street_network import (
     StreetNetworkPathType,
 )
 from jormungandr.utils import get_pt_object_coord, is_url, decode_polyline, mps_to_kmph
+from jormungandr import utils
 from jormungandr.street_network.utils import add_cycle_lane_length
 from jormungandr.ptref import FeedPublisher
 
@@ -75,7 +77,9 @@ class Geovelo(AbstractStreetNetworkService):
         self,
         instance,
         service_url,
+        service_backup=None,
         modes=[],
+        zone=None,
         id='geovelo',
         timeout=10,
         api_key=None,
@@ -88,6 +92,23 @@ class Geovelo(AbstractStreetNetworkService):
         if not is_url(service_url):
             raise ValueError('service_url {} is not a valid url'.format(service_url))
         self.service_url = service_url
+
+        # If shape is absent, it should work as a normal street_network connector as before for retro-compatibility
+        self.polygon_zone = None
+        self.service_backup = None
+        if zone and service_backup:
+            try:
+                service_backup["args"]["instance"] = instance
+                if 'service_url' not in service_backup['args']:
+                    service_backup['args'].update({'service_url': None})
+
+                self.polygon_zone = Polygon(zone)
+                self.service_backup = utils.create_object(service_backup)
+            except Exception as e:
+                # For exception on service_backup update polygon_zone with None
+                self.polygon_zone = None
+                logging.getLogger(__name__).error('Backup service not active (error: {})'.format(e))
+
         self.api_key = api_key
         self.timeout = timeout
         self.modes = modes
@@ -120,13 +141,14 @@ class Geovelo(AbstractStreetNetworkService):
         return [coord.lat, coord.lon, None]
 
     @classmethod
-    def _make_request_arguments_bike_details(cls, bike_speed_mps):
+    def _make_request_arguments_bike_details(cls, bike_speed_mps, use_ebike):
         bike_speed = mps_to_kmph(bike_speed_mps)
 
         return {
             'profile': 'MEDIAN',  # can be BEGINNER, EXPERT
             'bikeType': 'TRADITIONAL',  # can be 'BSS'
             'averageSpeed': bike_speed,  # in km/h, BEGINNER sets it to 13
+            'eBike': use_ebike,  # whether to use an electric bike or not
         }
 
     def sort_places_by_physical_mode_and_distance(self, points):
@@ -140,18 +162,18 @@ class Geovelo(AbstractStreetNetworkService):
         return sorted(points, key=lambda point: (priority_by_mode(point), point.distance))
 
     @classmethod
-    def _make_request_arguments_isochrone(cls, origins, destinations, bike_speed_mps=3.33):
+    def _make_request_arguments_isochrone(cls, origins, destinations, bike_speed_mps=3.33, use_ebike=False):
         origins_coord = [cls._pt_object_summary_isochrone(o) for o in origins]
         destinations_coord = [cls._pt_object_summary_isochrone(o) for o in destinations]
         return {
             'starts': [o for o in origins_coord],
             'ends': [o for o in destinations_coord],
-            'bikeDetails': cls._make_request_arguments_bike_details(bike_speed_mps),
+            'bikeDetails': cls._make_request_arguments_bike_details(bike_speed_mps, use_ebike),
             'transportMode': 'BIKE',
         }
 
     @classmethod
-    def _make_request_arguments_direct_path(cls, origin, destination, bike_speed_mps=3.33):
+    def _make_request_arguments_direct_path(cls, origin, destination, bike_speed_mps=3.33, use_ebike=False):
         coord_orig = get_pt_object_coord(origin)
         coord_dest = get_pt_object_coord(destination)
         return {
@@ -160,7 +182,7 @@ class Geovelo(AbstractStreetNetworkService):
                 {'latitude': coord_dest.lat, 'longitude': coord_dest.lon},
             ],
             'transportModes': ['BIKE'],
-            'bikeDetails': cls._make_request_arguments_bike_details(bike_speed_mps),
+            'bikeDetails': cls._make_request_arguments_bike_details(bike_speed_mps, use_ebike),
         }
 
     def _call_geovelo(self, url, method=requests.post, data=None):
@@ -245,9 +267,35 @@ class Geovelo(AbstractStreetNetworkService):
             )
             raise GeoveloTechnicalError('Geovelo service unavailable, impossible to query')
 
+    def inside_zone(self, point):
+        coord = get_pt_object_coord(point)
+        shapely_point = Point(coord.lon, coord.lat)
+        return self.polygon_zone.contains(shapely_point)
+
+    @staticmethod
+    def use_ebike(request):
+        return request.get('bike_type') == 'ebike'
+
+    def use_this_service_for_sn_matrix(self, origins, destinations):
+        # Use if shape is absent
+        if not self.polygon_zone:
+            return True
+        # Use if the required point is in the shape
+        # if len(origins) < len(destinations) it's 1 to N hence use first point of origins
+        # Exception 1 to 1  use first point of origins(this case is very rare)
+        if len(origins) <= len(destinations):
+            return self.inside_zone(origins[0])
+        else:
+            return self.inside_zone(destinations[0])
+
     def _get_street_network_routing_matrix(
         self, instance, origins, destinations, street_network_mode, max_duration, request, request_id, **kwargs
     ):
+        if not self.use_this_service_for_sn_matrix(origins, destinations):
+            return self.service_backup._get_street_network_routing_matrix(
+                instance, origins, destinations, street_network_mode, max_duration, request, request_id, **kwargs
+            )
+
         if street_network_mode != "bike":
             logging.getLogger(__name__).error('Geovelo, mode {} not implemented'.format(street_network_mode))
             raise InvalidArguments('Geovelo, mode {} not implemented'.format(street_network_mode))
@@ -263,7 +311,9 @@ class Geovelo(AbstractStreetNetworkService):
                 )
             )
 
-        data = self._make_request_arguments_isochrone(origins, destinations, request['bike_speed'])
+        data = self._make_request_arguments_isochrone(
+            origins, destinations, request['bike_speed'], self.use_ebike(request)
+        )
         r = self._call_geovelo(
             '{}/{}'.format(self.service_url, 'api/v2/routes_m2m'), requests.post, ujson.dumps(data)
         )
@@ -380,6 +430,21 @@ class Geovelo(AbstractStreetNetworkService):
 
         return resp
 
+    def use_this_service_for_direct_path(self, pt_object_origin, pt_object_destination, direct_path_type):
+        # Use this service if shape is absent
+        if not self.polygon_zone:
+            return True
+        # Use if the required point is well in the shape
+        # For direct_path_type=BEGINNING_FALLBACK use pt_object_origin, for ENDING_FALLBACK use pt_object_destination
+        # For DIRECT use pt_object_destination if pt_object_origin is not in shape
+        if direct_path_type == StreetNetworkPathType.BEGINNING_FALLBACK:
+            return self.inside_zone(pt_object_origin)
+        if direct_path_type == StreetNetworkPathType.ENDING_FALLBACK:
+            return self.inside_zone(pt_object_destination)
+        if direct_path_type == StreetNetworkPathType.DIRECT:
+            return self.inside_zone(pt_object_origin) or self.inside_zone(pt_object_destination)
+        return False
+
     def _direct_path(
         self,
         instance,
@@ -391,12 +456,24 @@ class Geovelo(AbstractStreetNetworkService):
         direct_path_type,
         request_id,
     ):
+        if not self.use_this_service_for_direct_path(pt_object_origin, pt_object_destination, direct_path_type):
+            return self.service_backup._direct_path(
+                instance,
+                mode,
+                pt_object_origin,
+                pt_object_destination,
+                fallback_extremity,
+                request,
+                direct_path_type,
+                request_id,
+            )
+
         if mode != "bike":
             logging.getLogger(__name__).error('Geovelo, mode {} not implemented'.format(mode))
             raise InvalidArguments('Geovelo, mode {} not implemented'.format(mode))
 
         data = self._make_request_arguments_direct_path(
-            pt_object_origin, pt_object_destination, request['bike_speed']
+            pt_object_origin, pt_object_destination, request['bike_speed'], self.use_ebike(request)
         )
         single_result = True
         if (

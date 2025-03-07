@@ -347,12 +347,14 @@ struct TripsGtfsHandler : public GenericHandler {
 };
 struct StopTimeGtfsHandler : public GenericHandler {
     StopTimeGtfsHandler(GtfsData& gdata, CsvReader& reader) : GenericHandler(gdata, reader) {}
-    int trip_c, arrival_c, departure_c, stop_c, stop_seq_c, pickup_c, drop_off_c;
+    int trip_c, arrival_c, departure_c, stop_c, stop_seq_c, pickup_c, drop_off_c, start_pickup_drop_off_window_c,
+        end_pickup_drop_off_window_c;
 
     size_t count = 0;
     void init(Data& data);
     void finish(Data& data);
     std::vector<ed::types::StopTime*> handle_line(Data& data, const csv_row& line, bool is_first_line);
+    bool is_zonal_odt(const csv_row& row);
     const std::vector<std::string> required_headers() const {
         return {"trip_id", "arrival_time", "departure_time", "stop_id", "stop_sequence"};
     }

@@ -33,7 +33,8 @@ from navitiacommon import type_pb2
 from jormungandr import utils, new_relic
 from collections import namedtuple
 import logging
-from .helper_utils import timed_logger
+from .timer_logger_helper import timed_logger
+from jormungandr.street_network.utils import crowfly_distance_between
 
 FreeAccessObject = namedtuple('FreeAccessObject', ['uri', 'lon', 'lat'])
 PlaceFreeAccessResult = namedtuple('PlaceFreeAccessResult', ['crowfly', 'odt', 'free_radius'])
@@ -63,7 +64,8 @@ class PlacesFreeAccess:
     @new_relic.distributedEvent("get_stop_points_for_stop_area", "places")
     def _get_stop_points_for_stop_area(self, uri):
         with timed_logger(self._logger, 'stop_points_for_stop_area_calling_external_service', self._request_id):
-            return self._instance.georef.get_stop_points_for_stop_area(uri, self._request_id)
+            stop_points = self._instance.georef.get_stop_points_for_stop_area(uri, self._request_id)
+            return sorted(stop_points, key=lambda p: p[0])
 
     @new_relic.distributedEvent("get_odt_stop_points", "places")
     def _get_odt_stop_points(self, coord):

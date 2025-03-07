@@ -37,6 +37,7 @@ from jormungandr import i_manager, app, fallback_modes
 from jormungandr.interfaces.parsers import default_count_arg_type
 from jormungandr.interfaces.v1.ResourceUri import complete_links
 from functools import wraps
+from jormungandr.park_modes import all_park_modes
 from jormungandr.timezone import set_request_timezone
 from jormungandr.interfaces.v1.make_links import (
     create_external_link,
@@ -354,6 +355,68 @@ class add_tad_links(object):
         return wrapper
 
 
+class handle_poi_disruptions(object):
+    @staticmethod
+    def is_absent(links, id):
+        return next((False for link in links if link['id'] == id), True)
+
+    def __call__(self, f):
+        @wraps(f)
+        def wrapper(*args, **kwargs):
+            objects = f(*args, **kwargs)
+            if has_invalid_reponse_code(objects) or journeys_absent(objects):
+                return objects
+
+            def get_disruption_uris(object):
+                uris = set()
+                for d in objects[0].get('disruptions', []):
+                    for io in d.get('impacted_objects', []):
+                        if io['pt_object']['embedded_type'] == "poi" and io['pt_object']['id'] == object['id']:
+                            uris.add(d['id'])
+                            if 'poi' not in io['pt_object']:
+                                io['pt_object']['poi'] = object
+
+                return uris
+
+            def impact_on_poi():
+                for d in objects[0].get('disruptions', []):
+                    for io in d.get('impacted_objects', []):
+                        if io.get('pt_object', {}).get('embedded_type') == "poi":
+                            return True
+
+                return False
+
+            def update_for_poi(object):
+                # Add links in poi object
+                object_copy = deepcopy(object)
+                object.setdefault('links', [])
+                disruption_uris = get_disruption_uris(object_copy)
+                for disruption_uri in disruption_uris:
+                    if self.is_absent(object['links'], disruption_uri):
+                        object['links'].append(
+                            create_internal_link(_type="disruption", rel="disruptions", id=disruption_uri)
+                        )
+
+            # If no disruption on poi exist, no action to do
+            if not impact_on_poi():
+                return objects
+
+            # We should update 'from' and 'to' object of all the sections if object is POI
+            for j in objects[0].get('journeys', []):
+                if "sections" not in j:
+                    continue
+
+                for s in j.get('sections', []):
+                    if s.get('from', {}).get('embedded_type') == "poi":
+                        update_for_poi(s['from']['poi'])
+                    if s.get('to', {}).get('embedded_type') == "poi":
+                        update_for_poi(s['to']['poi'])
+
+            return objects
+
+        return wrapper
+
+
 class rig_journey(object):
     """
     decorator to rig journeys in order to put back the requested origin/destination in the journeys
@@ -392,9 +455,26 @@ class rig_journey(object):
                 if g.origin_detail:
                     self.clean_global_origin_destination_detail(g.origin_detail)
                     j['sections'][0]['from'] = g.origin_detail
+
+                    # Replace coord by origin position if present in g.request_origin
+                    if hasattr(g, 'request_origin') and g.request_origin:
+                        coord = j['sections'][0]['from'].get('address', {}).get('coord')
+                        if coord:
+                            j['sections'][0]['from']['address']['coord'] = g.request_origin.get('address').get(
+                                'coord'
+                            )
+
                 if g.destination_detail:
                     self.clean_global_origin_destination_detail(g.destination_detail)
                     j['sections'][-1]['to'] = g.destination_detail
+
+                    # Replace coord by destination position if present in g.request_destination
+                    if hasattr(g, 'request_destination') and g.request_destination:
+                        coord = j['sections'][-1]['to'].get('address', {}).get('coord')
+                        if coord:
+                            j['sections'][-1]['to']['address']['coord'] = g.request_destination.get(
+                                'address'
+                            ).get('coord')
 
             return objects
 
@@ -404,7 +484,6 @@ class rig_journey(object):
 class Journeys(JourneyCommon):
     def __init__(self):
         # journeys must have a custom authentication process
-
         super(Journeys, self).__init__(output_type_serializer=api.JourneysSerializer)
 
         parser_get = self.parsers["get"]
@@ -488,6 +567,7 @@ class Journeys(JourneyCommon):
             help="Show more information about the poi if it's available, for instance, show "
             "BSS/car park availability in the pois(BSS/car park) of response",
         )
+
         parser_get.add_argument(
             "_no_shared_section",
             type=BooleanType(),
@@ -693,6 +773,7 @@ class Journeys(JourneyCommon):
     @add_debug_info()
     @add_fare_links()
     @add_journey_href()
+    @handle_poi_disruptions()
     @rig_journey()
     @get_serializer(serpy=api.JourneysSerializer)
     @ManageError()
@@ -769,6 +850,9 @@ class Journeys(JourneyCommon):
             if args.get('additional_time_before_last_section_taxi') is None:
                 args['additional_time_before_last_section_taxi'] = mod.additional_time_before_last_section_taxi
 
+            if args.get("on_street_bike_parking_duration") is None:
+                args["on_street_bike_parking_duration"] = mod.on_street_bike_parking_duration
+
             if args.get('_stop_points_nearby_duration') is None:
                 args['_stop_points_nearby_duration'] = mod.stop_points_nearby_duration
 
@@ -825,6 +909,70 @@ class Journeys(JourneyCommon):
 
             if args.get('_loki_compute_pt_journey_fare') is None:
                 args['_loki_compute_pt_journey_fare'] = mod.loki_compute_pt_journey_fare
+
+            if args.get('_use_predicted_traffic') is None:
+                args['_use_predicted_traffic'] = mod.use_predicted_traffic
+
+            if args.get('_disruptions_on_poi') is None:
+                args['_disruptions_on_poi'] = mod.disruptions_on_poi
+
+            # Set params for advanced parameters for valhalla walking
+            if args.get('walking_walkway_factor') is None:
+                args['walking_walkway_factor'] = mod.walking_walkway_factor
+            if args.get('walking_sidewalk_factor') is None:
+                args['walking_sidewalk_factor'] = mod.walking_sidewalk_factor
+            if args.get('walking_alley_factor') is None:
+                args['walking_alley_factor'] = mod.walking_alley_factor
+            if args.get('walking_driveway_factor') is None:
+                args['walking_driveway_factor'] = mod.walking_driveway_factor
+            if args.get('walking_step_penalty') is None:
+                args['walking_step_penalty'] = mod.walking_step_penalty
+            if args.get('walking_use_ferry') is None:
+                args['walking_use_ferry'] = mod.walking_use_ferry
+            if args.get('walking_use_living_streets') is None:
+                args['walking_use_living_streets'] = mod.walking_use_living_streets
+            if args.get('walking_use_tracks') is None:
+                args['walking_use_tracks'] = mod.walking_use_tracks
+            if args.get('walking_use_hills') is None:
+                args['walking_use_hills'] = mod.walking_use_hills
+            if args.get('walking_service_factor') is None:
+                args['walking_service_factor'] = mod.walking_service_factor
+            if args.get('walking_max_hiking_difficulty') is None:
+                args['walking_max_hiking_difficulty'] = mod.walking_max_hiking_difficulty
+            if args.get('walking_shortest') is None:
+                args['walking_shortest'] = mod.walking_shortest
+            if args.get('walking_ignore_oneways') is None:
+                args['walking_ignore_oneways'] = mod.walking_ignore_oneways
+            if args.get('walking_destination_only_penalty') is None:
+                args['walking_destination_only_penalty'] = mod.walking_destination_only_penalty
+
+            # Set params for advanced parameters for valhalla bike
+            if args.get('bike_use_roads') is None:
+                args['bike_use_roads'] = mod.bike_use_roads
+            if args.get('bike_use_hills') is None:
+                args['bike_use_hills'] = mod.bike_use_hills
+            if args.get('bike_use_ferry') is None:
+                args['bike_use_ferry'] = mod.bike_use_ferry
+            if args.get('bike_avoid_bad_surfaces') is None:
+                args['bike_avoid_bad_surfaces'] = mod.bike_avoid_bad_surfaces
+            if args.get('bike_shortest') is None:
+                args['bike_shortest'] = mod.bike_shortest
+            if args.get('bicycle_type') is None:
+                args['bicycle_type'] = mod.bicycle_type
+            if args.get('bike_use_living_streets') is None:
+                args['bike_use_living_streets'] = mod.bike_use_living_streets
+            if args.get('bike_maneuver_penalty') is None:
+                args['bike_maneuver_penalty'] = mod.bike_maneuver_penalty
+            if args.get('bike_service_penalty') is None:
+                args['bike_service_penalty'] = mod.bike_service_penalty
+            if args.get('bike_service_factor') is None:
+                args['bike_service_factor'] = mod.bike_service_factor
+            if args.get('bike_country_crossing_cost') is None:
+                args['bike_country_crossing_cost'] = mod.bike_country_crossing_cost
+            if args.get('bike_country_crossing_penalty') is None:
+                args['bike_country_crossing_penalty'] = mod.bike_country_crossing_penalty
+            if args.get('bike_destination_only_penalty') is None:
+                args['bike_destination_only_penalty'] = mod.bike_destination_only_penalty
 
         # When computing 'same_journey_schedules'(is_journey_schedules=True), some parameters need to be overridden
         # because they are contradictory to the request

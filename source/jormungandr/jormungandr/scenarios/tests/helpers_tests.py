@@ -32,6 +32,8 @@ from jormungandr.scenarios.helpers import (
     is_car_direct_path,
     fill_best_boarding_position,
 )
+from jormungandr.street_network.tests.streetnetwork_test_utils import make_pt_object
+from jormungandr import utils
 
 BEST_BOARDING_POSITIONS = [response_pb2.FRONT, response_pb2.MIDDLE]
 
@@ -516,3 +518,259 @@ def fill_best_boarding_position_test():
     assert response_pb2.BoardingPosition.FRONT in journey.sections[0].best_boarding_positions
     assert response_pb2.BoardingPosition.MIDDLE in journey.sections[0].best_boarding_positions
     assert response_pb2.BoardingPosition.BACK not in journey.sections[0].best_boarding_positions
+
+
+def get_response_with_a_disruption_on_poi(uri="poi_uri", name="poi_name_from_loki"):
+    start_period = "20240712T165200"
+    end_period = "20240812T165200"
+    response = response_pb2.Response()
+    impact = response.impacts.add()
+    impact.uri = "test_impact_uri"
+    impact.disruption_uri = "test_disruption_uri"
+    impacted_object = impact.impacted_objects.add()
+
+    impacted_object.pt_object.name = name
+    impacted_object.pt_object.uri = uri
+    impacted_object.pt_object.embedded_type = type_pb2.POI
+    impact.updated_at = utils.str_to_time_stamp(u'20240712T205200')
+    application_period = impact.application_periods.add()
+    application_period.begin = utils.str_to_time_stamp(start_period)
+    application_period.end = utils.str_to_time_stamp(end_period)
+
+    # Add a message
+    message = impact.messages.add()
+    message.text = "This is the message sms"
+    message.channel.id = "sms"
+    message.channel.name = "sms"
+    message.channel.content_type = "text"
+
+    # Add a severity
+    impact.severity.effect = type_pb2.Severity.UNKNOWN_EFFECT
+    impact.severity.name = ' not blocking'
+    impact.severity.priority = 1
+    impact.contributor = "shortterm.test_poi"
+
+    return response
+
+
+def get_object_pois_in_ptref_response():
+    response = response_pb2.Response()
+    poi = response.pois.add()
+    poi.uri = "poi_uri"
+    poi.name = "poi_name_from_kraken"
+    poi.coord.lat = 2
+    poi.coord.lon = 1
+    poi.poi_type.uri = "poi_type:amenity:parking"
+    poi.poi_type.name = "Parking P+R"
+    return response
+
+
+def get_object_pois_in_places_nearby_response():
+    response = response_pb2.Response()
+    place_nearby = response.places_nearby.add()
+    place_nearby.uri = "poi_uri"
+    place_nearby.name = "poi_name_from_kraken"
+    place_nearby.embedded_type = type_pb2.POI
+    place_nearby.poi.uri = "poi_uri"
+    place_nearby.poi.name = "poi_name_from_kraken"
+    place_nearby.poi.coord.lat = 2
+    place_nearby.poi.coord.lon = 1
+    place_nearby.poi.poi_type.uri = "poi_type:amenity:parking"
+    place_nearby.poi.poi_type.name = "Parking P+R"
+    return response
+
+
+def get_journey_with_pois():
+    response = response_pb2.Response()
+    journey = response.journeys.add()
+
+    # Walking section from 'stop_a' to 'poi:test_uri'
+    section = journey.sections.add()
+    section.type = response_pb2.STREET_NETWORK
+    section.street_network.mode = response_pb2.Walking
+    section.origin.uri = 'stop_a'
+    section.origin.embedded_type = type_pb2.STOP_POINT
+    section.destination.uri = 'poi_uri'
+    section.destination.embedded_type = type_pb2.POI
+    section.destination.poi.uri = 'poi_uri'
+    section.destination.poi.name = 'poi_name_from_kraken'
+    section.destination.poi.coord.lon = 1.0
+    section.destination.poi.coord.lat = 2.0
+
+    # Bss section from 'poi:test_uri' to 'poi_b'
+    section = journey.sections.add()
+    section.street_network.mode = response_pb2.Bss
+    section.type = response_pb2.STREET_NETWORK
+    section.origin.uri = 'poi_uri'
+    section.origin.embedded_type = type_pb2.POI
+    section.origin.poi.uri = 'poi_uri'
+    section.origin.poi.name = 'poi_name_from_kraken'
+    section.origin.poi.coord.lon = 1.0
+    section.origin.poi.coord.lat = 2.0
+    section.destination.uri = 'poi_b'
+    section.destination.embedded_type = type_pb2.POI
+
+    # Walking section from 'poi_b' to 'stop_b'
+    section = journey.sections.add()
+    section.type = response_pb2.STREET_NETWORK
+    section.street_network.mode = response_pb2.Walking
+    section.origin.uri = 'poi_b'
+    section.origin.embedded_type = type_pb2.POI
+    section.destination.uri = 'stop_b'
+    section.destination.embedded_type = type_pb2.STOP_POINT
+    return response
+
+
+def get_pb_response_with_journeys_and_disruptions():
+    response = response_pb2.Response()
+
+    # Add a journey : walking address to stop_point + PT stop_point to stop_point + walking toward address
+    journey = response.journeys.add()
+    section = journey.sections.add()
+    section.type = response_pb2.STREET_NETWORK
+    section.street_network.mode = response_pb2.Walking
+    section.origin.uri = 'address_a'
+    section.origin.embedded_type = type_pb2.ADDRESS
+    section.destination.uri = 'stop_point_a'
+    section.destination.embedded_type = type_pb2.STOP_POINT
+    section.destination.stop_point.uri = 'stop_point_a'
+    section.destination.stop_point.name = 'stop_point_name_a'
+    section.destination.stop_point.coord.lon = 1.0
+    section.destination.stop_point.coord.lat = 2.0
+
+    section = journey.sections.add()
+    section.type = response_pb2.PUBLIC_TRANSPORT
+    section.origin.uri = 'stop_point_a'
+    section.origin.embedded_type = type_pb2.STOP_POINT
+    section.origin.stop_point.uri = 'stop_point_a'
+    section.origin.stop_point.name = 'stop_point_name_a'
+    section.origin.stop_point.coord.lon = 1.0
+    section.origin.stop_point.coord.lat = 2.0
+    section.destination.uri = 'stop_point_b'
+    section.destination.embedded_type = type_pb2.STOP_POINT
+    section.destination.stop_point.uri = 'stop_point_b'
+    section.destination.stop_point.name = 'stop_point_name_b'
+    section.destination.stop_point.coord.lon = 3.0
+    section.destination.stop_point.coord.lat = 4.0
+
+    section = journey.sections.add()
+    section.type = response_pb2.STREET_NETWORK
+    section.street_network.mode = response_pb2.Walking
+    section.origin.uri = 'stop_point_b'
+    section.origin.embedded_type = type_pb2.STOP_POINT
+    section.origin.stop_point.uri = 'stop_point_b'
+    section.origin.stop_point.name = 'stop_point_name_b'
+    section.origin.stop_point.coord.lon = 3.0
+    section.origin.stop_point.coord.lat = 4.0
+    section.destination.uri = 'address_b'
+    section.destination.embedded_type = type_pb2.ADDRESS
+
+    # Add a journey : walking address to poi + poi to poi + poi to address
+    journey = response.journeys.add()
+    section = journey.sections.add()
+    section.type = response_pb2.STREET_NETWORK
+    section.street_network.mode = response_pb2.Walking
+    section.origin.uri = 'address_a'
+    section.origin.embedded_type = type_pb2.ADDRESS
+    section.destination.uri = 'poi_uri_from'
+    section.destination.embedded_type = type_pb2.POI
+    section.destination.poi.uri = 'poi_uri_from'
+    section.destination.poi.name = 'poi_name_from'
+
+    section = journey.sections.add()
+    section.type = response_pb2.STREET_NETWORK
+    section.origin.uri = 'poi_uri_from'
+    section.origin.embedded_type = type_pb2.POI
+    section.origin.poi.uri = 'poi_uri_from'
+    section.origin.poi.name = 'poi_name_from'
+    section.street_network.mode = response_pb2.Bss
+    section.destination.uri = 'poi_uri_to'
+    section.destination.embedded_type = type_pb2.POI
+    section.destination.poi.uri = 'poi_uri_to'
+    section.destination.poi.name = 'poi_name_to'
+
+    section = journey.sections.add()
+    section.type = response_pb2.STREET_NETWORK
+    section.origin.uri = 'poi_uri_to'
+    section.origin.embedded_type = type_pb2.POI
+    section.origin.poi.uri = 'poi_uri_to'
+    section.origin.poi.name = 'poi_name_to'
+    section.street_network.mode = response_pb2.Walking
+    section.destination.uri = 'address_b'
+    section.destination.embedded_type = type_pb2.ADDRESS
+
+    # Add disruption on poi 'poi_uri_a' (poi of origin):
+    pb_disruptions = get_response_with_a_disruption_on_poi(uri="poi_uri_a", name="poi_name_a")
+    response.impacts.extend(pb_disruptions.impacts)
+    # Add disruption on poi 'poi_uri_from':
+    pb_disruptions = get_response_with_a_disruption_on_poi(uri="poi_uri_from", name="poi_name_from")
+    response.impacts.extend(pb_disruptions.impacts)
+    response.status_code = 200
+    return response
+
+
+def get_json_entry_point(id="poi_uri", name="poi_name_from_kraken"):
+    entry_point = {}
+    entry_point['id'] = id
+    entry_point['name'] = name
+    entry_point['embedded_type'] = "poi"
+    object = {}
+    object['id'] = id
+    object['name'] = name
+    entry_point['poi'] = object
+    return entry_point
+
+
+def verify_poi_in_impacted_objects(object, poi_empty=True):
+    assert object.name == "poi_name_from_loki"
+    assert object.uri == "poi_uri"
+    assert object.embedded_type == type_pb2.POI
+    if poi_empty:
+        assert object.poi.uri == ''
+        assert object.poi.name == ''
+    else:
+        assert object.poi.uri == 'poi_uri'
+        assert object.poi.name == 'poi_name_from_kraken'
+        assert object.poi.coord.lon == 1.0
+        assert object.poi.coord.lat == 2.0
+
+
+def get_odt_journey(booking_url):
+    response = response_pb2.Response()
+    journey = response.journeys.add()
+
+    section = journey.sections.add()
+    section.type = response_pb2.STREET_NETWORK
+    section.street_network.mode = response_pb2.Walking
+    section.duration = 20
+    section = journey.sections.add()
+    section.type = response_pb2.ON_DEMAND_TRANSPORT
+    section.duration = 70
+    section.begin_date_time = utils.str_to_time_stamp("20240806T060500")
+    section.origin.uri = 'stop_a'
+    section.origin.embedded_type = type_pb2.STOP_POINT
+    section.origin.stop_point.uri = 'stop_a'
+    section.origin.stop_point.name = 'stop a name'
+    section.origin.stop_point.label = "P+R d'Avon (city)"
+    section.origin.stop_point.coord.lon = 1.0
+    section.origin.stop_point.coord.lat = 2.0
+    section.destination.uri = 'stop_b'
+    section.destination.embedded_type = type_pb2.STOP_POINT
+    section.destination.stop_point.uri = 'stop_b'
+    section.destination.stop_point.name = 'stop_b_name'
+    section.destination.stop_point.label = "gare de l'est (city)"
+    section.destination.stop_point.coord.lon = 3.0
+    section.destination.stop_point.coord.lat = 4.0
+    booking_rule = section.booking_rule
+    booking_rule.name = "odt_name_value"
+    booking_rule.booking_url = booking_url
+    booking_rule.info_url = "odt_url_value"
+    booking_rule.message = "odt_conditions_value"
+    booking_rule.phone_number = "odt_phone_value"
+    booking_rule.applies_on.append(response_pb2.BookingRule.AppliesOn.FROM)
+    section = journey.sections.add()
+    section.type = response_pb2.STREET_NETWORK
+    section.street_network.mode = response_pb2.Walking
+    section.duration = 10
+
+    return response

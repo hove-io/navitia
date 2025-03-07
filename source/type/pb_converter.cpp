@@ -1389,6 +1389,9 @@ void PbCreator::Filler::fill_pb_object(const nd::Impact* impact, pbnavitia::Impa
                 case nd::ChannelType::beacon:
                     pb_channel->add_channel_types(pbnavitia::Channel::beacon);
                     break;
+                case nd::ChannelType::pids:
+                    pb_channel->add_channel_types(pbnavitia::Channel::pids);
+                    break;
             }
         }
     }

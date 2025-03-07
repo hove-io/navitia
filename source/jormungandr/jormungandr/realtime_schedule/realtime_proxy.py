@@ -35,6 +35,7 @@ from jormungandr.schedule import RoutePoint
 from jormungandr.utils import timestamp_to_datetime, record_external_failure
 from jormungandr.utils import date_to_timestamp, pb_del_if
 from jormungandr import new_relic
+from jormungandr.otlp import otlp_instance
 from navitiacommon import type_pb2
 import datetime
 import hashlib
@@ -190,7 +191,9 @@ class RealtimeProxy(six.with_metaclass(ABCMeta, object)):
 
     def _update_stop_schedule(self, request, stop_schedule, next_realtime_passages, group_by_dest=False):
         """
-        Update the stopschedule response with the new realtime passages
+        Update the response for /stop_schedules, /terminus_schedules with the new realtime passages
+        group_by_dest = False for /stop_schedules
+        group_by_dest = True for /terminus_schedules
 
         By default, all base schedule data is removed and replaced with realtime data.
         Each proxy can define its own way to merge passages.
@@ -232,6 +235,9 @@ class RealtimeProxy(six.with_metaclass(ABCMeta, object)):
         return RoutePoint(passage.route, passage.stop_point) == route_point
 
     def _update_passages(self, passages, route_point, template, next_realtime_passages):
+        """
+        Update the /departures response with the new realtime passages
+        """
         if next_realtime_passages is None:
             return
 
@@ -281,6 +287,7 @@ class RealtimeProxy(six.with_metaclass(ABCMeta, object)):
         if comment is not None:
             params['comment'] = comment
         new_relic.record_custom_event('realtime_internal_failure', params)
+        otlp_instance.send_event_metrics('realtime_internal_failure', params)
 
     def record_call(self, status, **kwargs):
         """
@@ -289,6 +296,7 @@ class RealtimeProxy(six.with_metaclass(ABCMeta, object)):
         params = {'realtime_system_id': six.text_type(self.rt_system_id), 'status': status}
         params.update(kwargs)
         new_relic.record_custom_event('realtime_status', params)
+        otlp_instance.send_event_metrics('realtime_status', params)
 
     def record_additional_info(self, status, **kwargs):
         """
@@ -297,6 +305,7 @@ class RealtimeProxy(six.with_metaclass(ABCMeta, object)):
         params = {'realtime_system_id': six.text_type(self.rt_system_id), 'status': status}
         params.update(kwargs)
         new_relic.record_custom_event('realtime_proxy_additional_info', params)
+        otlp_instance.send_event_metrics('realtime_proxy_additional_info', params)
 
     @cache.memoize(app.config.get(str('CACHE_CONFIGURATION'), {}).get(str('TIMEOUT_PTOBJECTS'), 600))
     def _get_direction(self, line_uri, object_code, default_value):

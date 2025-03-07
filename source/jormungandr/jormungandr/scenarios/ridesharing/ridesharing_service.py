@@ -32,6 +32,7 @@ from __future__ import absolute_import, print_function, unicode_literals, divisi
 import abc
 import six
 from jormungandr import new_relic
+from jormungandr.otlp import otlp_instance
 from jormungandr.utils import decode_polyline
 from navitiacommon import type_pb2
 from collections import namedtuple
@@ -112,7 +113,7 @@ class AbstractRidesharingService(object):
             raise RidesharingServiceError(str(e))
 
     def request_journeys_with_feed_publisher(
-        self, from_coord, to_coord, period_extremity, instance_params, limit=None
+        self, from_coord, to_coord, request_dates, instance_params, limit=None
     ):
         """
         This function shouldn't be overwritten!
@@ -120,7 +121,7 @@ class AbstractRidesharingService(object):
         :return: a list(mandatory) contains solutions and a feed_publisher
         """
         try:
-            journeys = self._request_journeys(from_coord, to_coord, period_extremity, instance_params, limit)
+            journeys = self._request_journeys(from_coord, to_coord, request_dates, instance_params, limit)
             feed_publisher = self._get_feed_publisher()
 
             self.record_call('ok')
@@ -132,7 +133,7 @@ class AbstractRidesharingService(object):
             return [], None
 
     @abc.abstractmethod
-    def _request_journeys(self, from_coord, to_coord, period_extremity, instance_params, limit=None):
+    def _request_journeys(self, from_coord, to_coord, request_dates, instance_params, limit=None):
         """
         :return: a list(mandatory) contains solutions
         """
@@ -170,6 +171,7 @@ class AbstractRidesharingService(object):
             'ridesharing_service_url': self.service_url,
         }
         new_relic.record_custom_event('ridesharing_internal_failure', params)
+        otlp_instance.send_event_metrics('ridesharing_internal_failure', params)
 
     def record_call(self, status, **kwargs):
         """
@@ -182,6 +184,7 @@ class AbstractRidesharingService(object):
         }
         params.update(kwargs)
         new_relic.record_custom_event('ridesharing_status', params)
+        otlp_instance.send_event_metrics('ridesharing_status', params)
 
     def record_additional_info(self, status, **kwargs):
         """
@@ -194,6 +197,7 @@ class AbstractRidesharingService(object):
         }
         params.update(kwargs)
         new_relic.record_custom_event('ridesharing_proxy_additional_info', params)
+        otlp_instance.send_event_metrics('ridesharing_proxy_additional_info', params)
 
     def __eq__(self, other):
         return all(

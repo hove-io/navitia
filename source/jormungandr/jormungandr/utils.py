@@ -41,6 +41,7 @@ import logging
 from jormungandr.exceptions import ConfigException, UnableToParse, InvalidArguments
 from six.moves.urllib.parse import urlparse
 from jormungandr import new_relic, app
+from jormungandr.otlp import otlp_instance
 from six.moves import zip, range
 from jormungandr.exceptions import TechnicalError
 from flask import request, g
@@ -612,16 +613,31 @@ def is_olympic_site(entry_point, instance):
 
 
 def get_last_pt_section(journey):
-    return next((s for s in reversed(journey.sections) if s.type == response_pb2.PUBLIC_TRANSPORT), None)
+    return next(
+        (
+            s
+            for s in reversed(journey.sections)
+            if s.type in (response_pb2.PUBLIC_TRANSPORT, response_pb2.ON_DEMAND_TRANSPORT)
+        ),
+        None,
+    )
 
 
 def get_first_pt_section(journey):
-    return next((s for s in journey.sections if s.type == response_pb2.PUBLIC_TRANSPORT), None)
+    return next(
+        (
+            s
+            for s in journey.sections
+            if s.type in (response_pb2.PUBLIC_TRANSPORT, response_pb2.ON_DEMAND_TRANSPORT)
+        ),
+        None,
+    )
 
 
 def record_external_failure(message, connector_type, connector_name):
     params = {'{}_system_id'.format(connector_type): six.text_type(connector_name), 'message': message}
     new_relic.record_custom_event('{}_external_failure'.format(connector_type), params)
+    otlp_instance.send_event_metrics('{}_external_failure'.format(connector_type), params)
 
 
 def decode_polyline(encoded, precision=6):
@@ -694,6 +710,11 @@ def encode_polyline(coords, precision=6):
 #     represents_start: is True if it's start of period, False if it's the end of period
 # (mostly used for fallback management in experimental scenario)
 PeriodExtremity = namedtuple('PeriodExtremity', ['datetime', 'represents_start'])
+
+# RequestDates is used by ridesharing services
+# instant_system needs both departure_datetime and arrival_datetime
+# other services use only departure_datetime without any condition
+RequestDates = namedtuple('RequestDates', ['departure_datetime', 'arrival_datetime', 'represents_start'])
 
 
 class SectionSorter(object):
@@ -1043,16 +1064,41 @@ def create_journeys_request(origins, destinations, datetime, clockwise, journey_
     if journey_parameters.arrival_transfer_penalty:
         req.journeys.arrival_transfer_penalty = journey_parameters.arrival_transfer_penalty
 
-    if journey_parameters.criteria == "robustness":
+    if journey_parameters.wheelchair or journey_parameters.criteria == "classic":
+        req.journeys.criteria = request_pb2.Classic
+    elif journey_parameters.criteria == "robustness":
         req.journeys.criteria = request_pb2.Robustness
     elif journey_parameters.criteria == "occupancy":
         req.journeys.criteria = request_pb2.Occupancy
-    elif journey_parameters.criteria == "classic":
-        req.journeys.criteria = request_pb2.Classic
     elif journey_parameters.criteria == "arrival_stop_attractivity":
         req.journeys.criteria = request_pb2.ArrivalStopAttractivity
     elif journey_parameters.criteria == "departure_stop_attractivity":
         req.journeys.criteria = request_pb2.DepartureStopAttractivity
+    elif journey_parameters.criteria == "pseudo_duration":
+        req.journeys.criteria = request_pb2.PseudoDuration
+
+    ####################
+    # for loki
+    req.journeys.use_heuristic = journey_parameters.use_heuristic
+    if (
+        journey_parameters.departure_coord
+        and journey_parameters.arrival_coord
+        and journey_parameters.global_max_speed
+    ):
+        req.journeys.departure_coord.CopyFrom(
+            type_pb2.GeographicalCoord(
+                lon=journey_parameters.departure_coord.lon, lat=journey_parameters.departure_coord.lat
+            )
+        )
+        req.journeys.arrival_coord.CopyFrom(
+            type_pb2.GeographicalCoord(
+                lon=journey_parameters.arrival_coord.lon, lat=journey_parameters.arrival_coord.lat
+            )
+        )
+        req.journeys.global_max_speed = journey_parameters.global_max_speed
+        req.journeys.use_zonal_odt = journey_parameters.use_zonal_odt
+        req.journeys.max_waiting_duration_odt = journey_parameters.max_waiting_duration_odt
+    ####################
 
     return req
 
@@ -1176,3 +1222,17 @@ def content_is_too_large(instance, endpoint, response):
         return False
 
     return True
+
+
+def is_different_geographic_position(addr1, addr2):
+    """
+    Returns True if both params are address with different id (also means different coordinate) else False
+    :return: boolean
+    """
+    if not (addr1 and addr2):
+        return False
+    if addr1.get('embedded_type') != "address":
+        return False
+    if addr1.get('id') != addr2.get('id'):
+        return True
+    return False

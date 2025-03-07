@@ -29,7 +29,7 @@
 from __future__ import absolute_import
 from jormungandr import new_relic
 import logging
-from .helper_utils import timed_logger
+from .timer_logger_helper import timed_logger
 
 
 class PlaceByUri:

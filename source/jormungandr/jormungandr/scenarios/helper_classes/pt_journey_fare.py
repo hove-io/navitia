@@ -50,7 +50,9 @@ class PtJourneyFarePool(object):
         self._futures.append(self._future_manager.create_future(self._do, response, request_id).get_future())
 
     def _do(self, response, request_id):
-        return response, self._backend.get_pt_journeys_fares(response.journeys, request_id)
+        if response and response.journeys:
+            return response, self._backend.get_pt_journeys_fares(response.journeys, request_id)
+        return response, None
 
     def wait_and_generate(self):
         with gevent.iwait(self._futures) as futures:

@@ -30,8 +30,16 @@
 from __future__ import absolute_import, print_function, unicode_literals, division
 import navitiacommon.type_pb2 as type_pb2
 import navitiacommon.response_pb2 as response_pb2
+import navitiacommon.request_pb2 as request_pb2
 from future.moves.itertools import zip_longest
 from jormungandr.fallback_modes import FallbackModes
+from jormungandr.utils import timestamp_to_date_str
+from jormungandr.timezone import get_timezone_or_paris
+from six.moves.urllib.parse import quote
+import re
+from collections import defaultdict
+from string import Formatter
+from copy import deepcopy
 import six
 
 places_type = {
@@ -110,7 +118,7 @@ class JourneySorter(object):
         for journey in [j1, j2]:
             non_pt_duration = 0
             for section in journey.sections:
-                if section.type != response_pb2.PUBLIC_TRANSPORT:
+                if section.type not in (response_pb2.PUBLIC_TRANSPORT, response_pb2.ON_DEMAND_TRANSPORT):
                     non_pt_duration += section.duration
             if non_pt_duration_j1 is None:
                 non_pt_duration_j1 = non_pt_duration
@@ -316,7 +324,7 @@ def fill_uris(resp):
         return
     for journey in resp.journeys:
         for section in journey.sections:
-            if section.type != response_pb2.PUBLIC_TRANSPORT:
+            if section.type not in (response_pb2.PUBLIC_TRANSPORT, response_pb2.ON_DEMAND_TRANSPORT):
                 continue
             if section.HasField(str("pt_display_informations")):
                 uris = section.uris
@@ -461,3 +469,138 @@ def include_poi_access_points(request, pt_object, mode):
         ]
         and pt_object.poi.children
     )
+
+
+def get_impact_uris_for_poi(response, poi):
+    impact_uris = set()
+    if response is None:
+        return impact_uris
+    for impact in response.impacts:
+        for object in impact.impacted_objects:
+            if object.pt_object.embedded_type == type_pb2.POI and object.pt_object.uri == poi.uri:
+                impact_uris.add(impact.uri)
+                object.pt_object.poi.CopyFrom(poi)
+
+    return impact_uris
+
+
+def fill_disruptions_on_pois(instance, response):
+    if not response.pois:
+        return
+
+    # add all poi_ids as parameters
+    poi_uris = set()
+    for poi in response.pois:
+        poi_uris.add(poi.uri)
+
+    # calling loki with api poi_disruptions
+    resp_poi = get_disruptions_on_poi(instance, poi_uris)
+
+    # For each poi in the response add impact_uris from resp_poi
+    # and copy object poi in impact.impacted_objects
+    for poi in response.pois:
+        impact_uris = get_impact_uris_for_poi(resp_poi, poi)
+        for impact_uri in impact_uris:
+            poi.impact_uris.append(impact_uri)
+
+    # Add all impacts from resp_poi to the response
+    add_disruptions(response, resp_poi)
+
+
+def fill_disruptions_on_places_nearby(instance, response):
+    if not response.places_nearby:
+        return
+
+    # Add all the poi uris in a list
+    poi_uris = set()
+    for place_nearby in response.places_nearby:
+        if place_nearby.embedded_type == type_pb2.POI:
+            poi_uris.add(place_nearby.uri)
+
+    # calling loki with api poi_disruptions
+    resp_poi = get_disruptions_on_poi(instance, poi_uris)
+
+    # For each poi in the response add impact_uris from resp_poi
+    # and copy object poi in impact.impacted_objects
+    for place_nearby in response.places_nearby:
+        if place_nearby.embedded_type == type_pb2.POI:
+            impact_uris = get_impact_uris_for_poi(resp_poi, place_nearby.poi)
+            for impact_uri in impact_uris:
+                place_nearby.poi.impact_uris.append(impact_uri)
+
+    # Add all impacts from resp_poi to the response
+    add_disruptions(response, resp_poi)
+
+
+def get_disruptions_on_poi(instance, uris, since_datetime=None, until_datetime=None):
+    if not uris:
+        return None
+    try:
+        pt_planner = instance.get_pt_planner("loki")
+        req = request_pb2.Request()
+        req.requested_api = type_pb2.poi_disruptions
+
+        req.poi_disruptions.pois.extend(uris)
+        if since_datetime:
+            req.poi_disruptions.since_datetime = since_datetime
+        if until_datetime:
+            req.poi_disruptions.until_datetime = until_datetime
+
+        # calling loki with api api_disruptions
+        resp_poi = pt_planner.send_and_receive(req)
+    except Exception:
+        return None
+    return resp_poi
+
+
+def add_disruptions(pb_resp, pb_disruptions):
+    if pb_disruptions is None:
+        return
+    pb_resp.impacts.extend(pb_disruptions.impacts)
+
+
+def update_booking_rule_url_in_section(section):
+    if section.type != response_pb2.ON_DEMAND_TRANSPORT:
+        return
+
+    booking_url = section.booking_rule.booking_url
+    if not booking_url:
+        return
+
+    departure_datetime = section.begin_date_time
+    from_name = section.origin.stop_point.label
+    from_coord_lat = section.origin.stop_point.coord.lat
+    from_coord_lon = section.origin.stop_point.coord.lon
+    to_name = section.destination.stop_point.label
+    to_coord_lat = section.destination.stop_point.coord.lat
+    to_coord_lon = section.destination.stop_point.coord.lon
+
+    # Get all placeholders present in booking_url and match with predefined placeholder variables. value of those
+    # present in booking_url but absent in predefined placeholder variables will be replaced by N/A
+    placeholders = re.findall(r"{(\w+)}", booking_url)
+
+    placeholder_dict = defaultdict(lambda: 'N/A')
+    fmtr = Formatter()
+
+    # Datetime formatting: "%Y-%m-%dT%H:%M:%S%z" ->  2024-09-24T09:25:45+0200
+    date_format = "%Y-%m-%dT%H:%M:%S%z"
+    timezone = get_timezone_or_paris()
+    departure_datetime_str = timestamp_to_date_str(departure_datetime, timezone, _format=date_format)
+
+    for p in placeholders:
+        if p == "departure_datetime":
+            placeholder_dict[p] = quote(departure_datetime_str)
+        elif p == "from_name":
+            placeholder_dict[p] = quote(from_name)
+        elif p == "from_coord_lat":
+            placeholder_dict[p] = from_coord_lat
+        elif p == "from_coord_lon":
+            placeholder_dict[p] = from_coord_lon
+        elif p == "to_name":
+            placeholder_dict[p] = quote(to_name)
+        elif p == "to_coord_lat":
+            placeholder_dict[p] = to_coord_lat
+        elif p == "to_coord_lon":
+            placeholder_dict[p] = to_coord_lon
+
+    section.booking_rule.booking_url = fmtr.vformat(booking_url, (), placeholder_dict)

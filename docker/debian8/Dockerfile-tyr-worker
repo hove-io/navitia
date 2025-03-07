@@ -1,20 +1,25 @@
+FROM mimirsbrunn:local AS mimir_bins
+
 FROM navitia/master
 
 # Install some binaries from tartare-tools
-ENV TARTARE_TOOLS_VERSION="v0.42.0"
+ENV TARTARE_TOOLS_VERSION="v0.47.1"
 ARG GITHUB_TOKEN
 RUN git config --global url."https://x-access-token:${GITHUB_TOKEN}@github.com/hove-io/".insteadOf "ssh://git@github.com/hove-io/"
 RUN git clone -b ${TARTARE_TOOLS_VERSION} --depth 1 https://x-access-token:${GITHUB_TOKEN}@github.com/hove-io/tartare-tools
 
+# rustc 1.80.0 broke the compilation
+RUN rustup install 1.79.0
+
 RUN cd tartare-tools \
-    && cargo build --release -p enrich-ntfs-with-addresses \
-    && cargo build --release -p split-trip-geometries \
+    && cargo +1.79.0 build --release -p enrich-ntfs-with-addresses \
+    && cargo +1.79.0 build --release -p split-trip-geometries \
     && cp target/release/enrich-ntfs-with-addresses /usr/bin/ \
     && cp target/release/split-trip-geometries /usr/bin/ \
     && cd .. \
     && rm -rf tartare-tools
 
-COPY navitia-common_*deb navitia-tyr_*.deb navitia-ed_*.deb  navitia-cities_*.deb  mimirsbrunn7_jessie-*.deb  cosmogony2cities_*.deb  mimirsbrunn-config-*.deb ./
+COPY navitia-common_*deb navitia-tyr_*.deb navitia-ed_*.deb  navitia-cities_*.deb cosmogony2cities_*.deb  mimirsbrunn-config-*.deb ./
 
 # install navitia-common package
 RUN dpkg -i ./navitia-common_*.deb || exit 0
@@ -28,10 +33,8 @@ RUN dpkg -i ./navitia-ed_*.deb || exit 0
 # install navitia-cities package
 RUN dpkg -i ./navitia-cities_*.deb || exit 0
 
-# install navitia-mimirsbrunn package
-RUN dpkg -i ./mimirsbrunn7_jessie-*.deb \
-        # install cosmogony2cities package
-        ./cosmogony2cities*.deb \
+# install cosmogony2cities package
+RUN dpkg -i ./cosmogony2cities*.deb \
         # install conf mimir package
         ./mimirsbrunn-config-*.deb
 
@@ -42,8 +45,10 @@ RUN rm navitia-common_*deb \
     navitia-cities_*.deb \
     navitia-ed_*.deb \
     mimirsbrunn-config-*.deb \
-    mimirsbrunn7_jessie-*.deb \
     cosmogony2cities_*.deb
+
+# Copy: osm2mimir7 && cosmogony2mimir7 && bano2mimir7 && openaddresses2mimir7 && ntfs2mimir7 && poi2mimir7 && ctlmimir7
+COPY --from=mimir_bins /usr/bin/*mimir7 /usr/bin/
 
 # install tyr requirements
 RUN pip install --no-cache-dir -r /usr/share/tyr/requirements.txt

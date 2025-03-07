@@ -111,14 +111,16 @@ class StreetNetworkBackendManager(object):
             # for retrocompatibility, since 'modes' was originaly outside 'args'
             config['args'].setdefault('modes', config.get('modes', []))
 
-            backend = utils.create_object(config)
-
-            self._streetnetwork_backends_by_instance_legacy[instance].append(backend)
-            self.logger.info(
-                '** StreetNetwork {} used for direct_path with mode: {} **'.format(
-                    type(backend).__name__, backend.modes
+            try:
+                backend = utils.create_object(config)
+                self._streetnetwork_backends_by_instance_legacy[instance].append(backend)
+                self.logger.info(
+                    '** StreetNetwork {} used for direct_path with mode: {} **'.format(
+                        type(backend).__name__, backend.modes
+                    )
                 )
-            )
+            except Exception as e:
+                logging.getLogger(__name__).error('Routing service not active (error: {})'.format(e))
 
     def _create_backend_from_db(self, sn_backend, instance):
         # type: (StreetNetworkBackend, Instance) -> AbstractStreetNetworkService

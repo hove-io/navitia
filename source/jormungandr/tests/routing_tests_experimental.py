@@ -676,6 +676,39 @@ class TestDistributedMaxDistanceForDirectPathUpperLimit(NewDefaultScenarioAbstra
     test_max_taxi_direct_path_distance = _make_function_distance_over_upper_limit(a, b, 'taxi', operator.truth)
 
 
+@dataset({"main_routing_test": {"scenario": "distributed"}})
+class TestDistributedWithDestinationPositionNotMatchingAutocomplete(NewDefaultScenarioAbstractTestFixture):
+    """
+    Test on geographical position as destination which doesn't match with address found by autocomplete
+    """
+
+    def test_destination_address_id_and_coord(self):
+        from_coord = '8.98311981954709e-05;8.98311981954709e-05'
+        to_coord = '0.0018864551621048887;0.0007186495855637672'
+
+        query = (
+            'journeys?'
+            'from={from_coord}'
+            '&to={to_coord}'
+            '&datetime={datetime}'
+            '&first_section_mode[]=walking'
+            '&last_section_mode[]=walking'
+            '&max_duration=0'
+            '&_min_bike=0'
+            '&_min_car=0'
+            '&_min_taxi=0'
+        ).format(from_coord=from_coord, to_coord=to_coord, datetime="20120614T080000")
+
+        response = self.query_region(query)
+
+        assert len(response['journeys']) == 1
+        journey = response['journeys'][0]
+        to_address = journey['sections'][-1]['to']['address']
+        assert to_address['id'] == '0.001886455162104889;0.0007186495855637672'
+        assert to_address['coord']['lon'] == '0.0018864551621048887'
+        assert to_address['coord']['lat'] == '0.0007186495855637672'
+
+
 def _make_function_distance_under_lower_limit(from_coord, to_coord, mode):
     def test_ko_crow_fly_smaller_than_max_mode_direct_path_distance(self):
         query = (
@@ -1489,3 +1522,246 @@ class TestLinksDistributed(NewDefaultScenarioAbstractTestFixture):
         assert href_value is not None
         # Before correction: assert href_value.count('allowed_id') == 11
         assert href_value.count('allowed_id') == 2
+
+
+@dataset({"main_routing_test": {"scenario": "distributed"}})
+class TestBikeWithParkingPenalty(NewDefaultScenarioAbstractTestFixture):
+    def test_bike_with_parking_penalty_first_section(self):
+        query = (
+            sub_query
+            + "&datetime=20120614T075000"
+            + "&first_section_mode[]=bike"
+            + "&bike_speed=0.05"
+            + "&park_mode=on_street"
+        )
+
+        response = self.query_region(query)
+        check_best(response)
+
+        journeys = get_not_null(response, 'journeys')
+        pt_journeys = [j for j in journeys if 'bike' in j['tags'] and 'non_pt_bike' not in j['tags']]
+        assert len(pt_journeys) > 0
+        for journey in pt_journeys:
+            departure_datetime = datetime.datetime.strptime(journey['departure_date_time'], '%Y%m%dT%H%M%S')
+            reqeust_datetime = datetime.datetime.strptime("20120614T075000", '%Y%m%dT%H%M%S')
+            assert reqeust_datetime < departure_datetime
+
+            assert journey['sections'][0]['mode'] == 'bike'
+            assert journey['sections'][1]['type'] == 'park'
+            assert journey['sections'][2]['type'] == 'street_network'
+            assert journey['sections'][2]['mode'] == 'walking'
+            assert len(journey['sections'][2]['geojson']['coordinates']) == 2
+
+    # 'from=0.0000898312;0.0000898312&to=0.00188646;0.00071865&'
+    def test_bike_with_parking_penalty_last_section(self):
+        query = (
+            sub_query
+            + "&datetime=20120614T075000"
+            + "&last_section_mode[]=bike"
+            + "&bike_speed=10"
+            + "&park_mode=on_street"
+            + "&on_street_bike_parking_duration=5"
+            + "&debug=true"
+        )
+
+        response = self.query_region(query)
+        check_best(response)
+        journeys = get_not_null(response, 'journeys')
+        pt_journeys = [j for j in journeys if 'bike' in j['tags'] and 'non_pt_bike' not in j['tags']]
+        assert len(pt_journeys) > 0
+        for journey in pt_journeys:
+            assert journey['sections'][-2]['type'] == 'park'
+            assert journey['sections'][-2]['duration'] == 5
+            assert journey['sections'][-3]['type'] == 'street_network'
+
+    def test_bike_with_parking_penalty_first_section_and_access_points(self):
+        query = (
+            sub_query
+            + "&datetime=20120614T075000"
+            + "&first_section_mode[]=bike"
+            + "&bike_speed=0.05"
+            + "&park_mode=on_street"
+            + "&_access_points=true"
+        )
+
+        response = self.query_region(query)
+        check_best(response)
+
+        journeys = get_not_null(response, 'journeys')
+        pt_journeys = [j for j in journeys if 'bike' in j['tags'] and 'non_pt_bike' not in j['tags']]
+        assert len(pt_journeys) > 0
+        for journey in pt_journeys:
+            departure_datetime = datetime.datetime.strptime(journey['departure_date_time'], '%Y%m%dT%H%M%S')
+            reqeust_datetime = datetime.datetime.strptime("20120614T075000", '%Y%m%dT%H%M%S')
+            assert reqeust_datetime < departure_datetime
+
+            assert journey['sections'][0]['mode'] == 'bike'
+            assert journey['sections'][1]['type'] == 'park'
+            assert journey['sections'][2]['type'] == 'street_network'
+            assert journey['sections'][2]['mode'] == 'walking'
+            assert len(journey['sections'][2]['vias']) >= 1
+
+    def test_bike_with_parking_penalty_multiple_first_section_mode(self):
+        query = (
+            sub_query
+            + "&datetime=20120614T075000"
+            + "&first_section_mode[]=bike"
+            + "&bike_speed=0.05"
+            + "&park_mode=on_street"
+            + "&_access_points=true"
+            + "&first_section_mode[]=walking"
+        )
+
+        response = self.query_region(query)
+        check_best(response)
+
+        journeys = get_not_null(response, 'journeys')
+        pt_journeys = [j for j in journeys if 'bike' in j['tags'] and 'non_pt_bike' not in j['tags']]
+        assert len(pt_journeys) > 0
+        for journey in pt_journeys:
+            departure_datetime = datetime.datetime.strptime(journey['departure_date_time'], '%Y%m%dT%H%M%S')
+            reqeust_datetime = datetime.datetime.strptime("20120614T075000", '%Y%m%dT%H%M%S')
+            assert reqeust_datetime < departure_datetime
+
+            assert journey['sections'][0]['mode'] in ['bike', 'walking']
+            assert journey['sections'][1]['type'] == 'park'
+            assert journey['sections'][2]['type'] == 'street_network'
+            assert journey['sections'][2]['mode'] == 'walking'
+            assert len(journey['sections'][2]['vias']) >= 1
+
+    def test_bike_with_parking_penalty_multiple_first_section_mode_and_access_points(self):
+        query = (
+            sub_query
+            + "&datetime=20120614T075000"
+            + "&first_section_mode[]=bike"
+            + "&bike_speed=0.05"
+            + "&park_mode=on_street"
+            + "&_access_points=true"
+            + "&first_section_mode[]=walking"
+        )
+
+        response = self.query_region(query)
+        check_best(response)
+
+        journeys = get_not_null(response, 'journeys')
+        pt_journeys = [j for j in journeys if 'bike' in j['tags'] and 'non_pt_bike' not in j['tags']]
+        assert len(pt_journeys) > 0
+        for journey in pt_journeys:
+            departure_datetime = datetime.datetime.strptime(journey['departure_date_time'], '%Y%m%dT%H%M%S')
+            reqeust_datetime = datetime.datetime.strptime("20120614T075000", '%Y%m%dT%H%M%S')
+            assert reqeust_datetime < departure_datetime
+
+            assert journey['sections'][0]['mode'] in ['bike', 'walking']
+            assert journey['sections'][1]['type'] == 'park'
+            assert journey['sections'][2]['type'] == 'street_network'
+            assert journey['sections'][2]['mode'] == 'walking'
+            assert len(journey['sections'][2]['vias']) >= 1
+
+    def test_bike_with_parking_penalty_multiple_first_section_mode_park_mode_none(self):
+        query = (
+            sub_query
+            + "&datetime=20120614T075000"
+            + "&first_section_mode[]=bike"
+            + "&bike_speed=0.05"
+            + "&park_mode=none"
+            + "&_access_points=true"
+            + "&first_section_mode[]=walking"
+        )
+
+        response = self.query_region(query)
+        check_best(response)
+
+        journeys = get_not_null(response, 'journeys')
+        pt_journeys = [j for j in journeys if 'bike' in j['tags'] and 'non_pt_bike' not in j['tags']]
+        assert len(pt_journeys) > 0
+        for journey in pt_journeys:
+            departure_datetime = datetime.datetime.strptime(journey['departure_date_time'], '%Y%m%dT%H%M%S')
+            reqeust_datetime = datetime.datetime.strptime("20120614T075000", '%Y%m%dT%H%M%S')
+            assert reqeust_datetime < departure_datetime
+
+            assert journey['sections'][0]['mode'] in ['bike', 'walking']
+            assert journey['sections'][1]['type'] != 'park'
+
+    def test_bike_with_parking_penalty_multiple_first_section_mode_park_mode_park_and_ride(self):
+        query = (
+            sub_query
+            + "&datetime=20120614T075000"
+            + "&first_section_mode[]=bike"
+            + "&bike_speed=0.05"
+            + "&park_mode=park_and_ride"
+            + "&_access_points=true"
+            + "&first_section_mode[]=walking"
+        )
+
+        response = self.query_region(query)
+        check_best(response)
+
+        journeys = get_not_null(response, 'journeys')
+        pt_journeys = [j for j in journeys if 'bike' in j['tags'] and 'non_pt_bike' not in j['tags']]
+        assert len(pt_journeys) > 0
+        for journey in pt_journeys:
+            departure_datetime = datetime.datetime.strptime(journey['departure_date_time'], '%Y%m%dT%H%M%S')
+            reqeust_datetime = datetime.datetime.strptime("20120614T075000", '%Y%m%dT%H%M%S')
+            assert reqeust_datetime < departure_datetime
+
+            assert journey['sections'][0]['mode'] in ['bike', 'walking']
+            assert journey['sections'][1]['type'] != 'park'
+
+    def test_bike_park_section_from_to_none(self):
+        query = (
+            sub_query
+            + "&datetime=20120614T075000"
+            + "&first_section_mode[]=bike"
+            + "&bike_speed=0.05"
+            + "&park_mode=on_street"
+            + "&_access_points=true"
+        )
+
+        response = self.query_region(query)
+        check_best(response)
+
+        journeys = get_not_null(response, 'journeys')
+        pt_journeys = [j for j in journeys if 'bike' in j['tags'] and 'non_pt_bike' not in j['tags']]
+        assert len(pt_journeys) > 0
+        print("Blablab", len(pt_journeys[0]["sections"]))
+        for journey in pt_journeys:
+            assert journey['sections'][1]['type'] == 'park'
+            assert 'from' not in journey['sections'][1]
+            assert 'to' not in journey['sections'][1]
+
+    def test_bike_traversal_time(self):
+        query = (
+            sub_query
+            + "&datetime=20120614T075000"
+            + "&first_section_mode[]=bike"
+            + "&bike_speed=0.05"
+            + "&debug=true"
+            + "&_access_points=true"
+        )
+
+        # We begin with a normal request to get the fallback duration without the park_mode
+        response = self.query_region(query)
+        check_best(response)
+        journeys = get_not_null(response, 'journeys')
+        pt_journeys = [j for j in journeys if 'bike' in j['tags'] and 'non_pt_bike' not in j['tags']]
+        assert len(pt_journeys) == 1
+
+        query = (
+            sub_query
+            + "&datetime=20120614T075000"
+            + "&first_section_mode[]=bike"
+            + "&bike_speed=0.05"
+            + "&park_mode=on_street"
+            + "&_access_points=true"
+        )
+
+        # With a request with the park_mode, we expect the same duration as the previous request if we add the first and the street network section following the park section
+        response_2 = self.query_region(query)
+        check_best(response_2)
+        journeys_2 = get_not_null(response_2, 'journeys')
+        pt_journeys_2 = [j for j in journeys_2 if 'bike' in j['tags'] and 'non_pt_bike' not in j['tags']]
+        assert len(pt_journeys_2) == 1
+        assert (
+            pt_journeys[0]["sections"][0]["duration"]
+            == pt_journeys_2[0]["sections"][0]["duration"] + pt_journeys_2[0]["sections"][2]["duration"]
+        )

@@ -40,7 +40,7 @@ MOCKED_ASGARD_CONF = [
         "modes": ['walking', 'car', 'bss', 'bike', 'car_no_park'],
         "class": "tests.direct_path_asgard_integration_tests.MockAsgard",
         "args": {
-            "costing_options": {"bicycle": {"bicycle_type": "Hybrid"}},
+            "costing_options": {"bicycle": {"bicycle_type": "hybrid"}},
             "api_key": "",
             "asgard_socket": "bob_socket",
             "service_url": "http://bob.com",
@@ -53,7 +53,7 @@ MOCKED_ASGARD_CONF_WITH_BAD_RESPONSE = [
         "modes": ['walking', 'car', 'bss', 'bike'],
         "class": "tests.direct_path_asgard_integration_tests.MockAsgardWithBadResponse",
         "args": {
-            "costing_options": {"bicycle": {"bicycle_type": "Hybrid"}},
+            "costing_options": {"bicycle": {"bicycle_type": "hybrid"}},
             "api_key": "",
             "asgard_socket": "bob_socket",
             "service_url": "http://bob.com",

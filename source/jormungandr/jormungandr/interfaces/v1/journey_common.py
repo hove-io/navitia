@@ -30,7 +30,7 @@
 # www.navitia.io
 
 from __future__ import absolute_import, print_function, unicode_literals, division
-from jormungandr import i_manager, fallback_modes, partner_services, app
+from jormungandr import i_manager, fallback_modes, park_modes, partner_services, app
 from jormungandr.interfaces.v1.ResourceUri import ResourceUri
 from datetime import datetime
 from jormungandr.resources_utils import ResourceUtc
@@ -57,8 +57,9 @@ from navitiacommon.parser_args_type import (
     FloatRange,
     KeyValueType,
     PositiveFloat,
+    PositiveInteger,
 )
-from navitiacommon import type_pb2
+from navitiacommon import type_pb2, default_values
 
 BICYCLE_TYPES = [t for t, _ in type_pb2.BicycleType.items()]
 
@@ -239,6 +240,19 @@ class JourneyCommon(ResourceUri, ResourceUtc):
             action="append",
             help='Same as first_section_mode but for the last section.',
         )
+
+        parser_get.add_argument(
+            "park_mode",
+            type=OptionValue(park_modes.all_park_modes),
+            dest="park_mode",
+            help='Force the park mode for the first or last section of a journey\n'
+            'Need to be set with one of the first_section_mode[] or last_section_mode[] corresponding to vehicles that could be parked\n'
+            'Note: Only work with the first or last section mode  being a bike for the moment\n'
+            'Eg: If you want to park a bike at the departure, you need:\n'
+            '`first_section_mode[]=bike&park_mode=on_street`'
+            'Eg: If you want to park a bike at the arrival, you need:\n'
+            '`last_section_mode[]=bike&park_mode=on_street`',
+        )
         # for retrocompatibility purpose, we duplicate (without []):
         parser_get.add_argument(
             "first_section_mode",
@@ -381,6 +395,12 @@ class JourneyCommon(ResourceUri, ResourceUtc):
             'and thus avoid disrupted public transport.\n'
             'Nota: `disruption_active=true` <=> `data_freshness=realtime`',
         )
+        parser_get.add_argument(
+            "_disruptions_on_poi",
+            type=BooleanType(),
+            hidden=True,
+            help="Fetch and display disruptions on poi in the journey response",
+        )
         # no default value for data_freshness because we need to maintain retrocomp with disruption_active
         parser_get.add_argument(
             "data_freshness",
@@ -506,6 +526,13 @@ class JourneyCommon(ResourceUri, ResourceUtc):
             type=int,
             help="the additional time added to the taxi section, right before riding the taxi but after hopping off the public transit",
         )
+
+        parser_get.add_argument(
+            "on_street_bike_parking_duration",
+            type=int,
+            help="the additional time added to the bike section before and after parking the bike",
+        )
+
         parser_get.add_argument(
             "_pt_planner",
             type=OptionValue(['kraken', 'loki']),
@@ -521,6 +548,7 @@ class JourneyCommon(ResourceUri, ResourceUtc):
                     'occupancy',
                     'arrival_stop_attractivity',
                     'departure_stop_attractivity',
+                    'pseudo_duration',
                 ]
             ),
             help="choose the criteria used to compute pt journeys, feature in beta ",
@@ -569,84 +597,72 @@ class JourneyCommon(ResourceUri, ResourceUtc):
             "bike_use_roads",
             type=FloatRange(0, 1),
             hidden=True,
-            default=0.5,
             help="only available for Asgard: A cyclist's propensity to use roads alongside other vehicles.",
         )
         parser_get.add_argument(
             "bike_use_hills",
             type=FloatRange(0, 1),
             hidden=True,
-            default=0.5,
             help="only available for Asgard: A cyclist's desire to tackle hills in their routes.",
         )
         parser_get.add_argument(
             "bike_use_ferry",
             type=FloatRange(0, 1),
             hidden=True,
-            default=0.5,
             help="only available for Asgard: This value indicates the willingness to take ferries.",
         )
         parser_get.add_argument(
             "bike_avoid_bad_surfaces",
             type=FloatRange(0, 1),
             hidden=True,
-            default=0.25,
             help="only available for Asgard: This value is meant to represent how much a cyclist wants to avoid roads with poor surfaces relative to the bicycle type being used.",
         )
         parser_get.add_argument(
             "bike_shortest",
             type=BooleanType(),
             hidden=True,
-            default=False,
             help="only available for Asgard: Changes the metric to quasi-shortest, i.e. purely distance-based costing.",
         )
         parser_get.add_argument(
             "bicycle_type",
             type=OptionValue(BICYCLE_TYPES),
             hidden=True,
-            default='hybrid',
-            help="only available for Asgard: The type of bicycle.",
+            help="only available for Asgard: The type of bicycle. Allowed values (road, hybrid, cross, moutain)",
         )
         parser_get.add_argument(
             "bike_use_living_streets",
             type=FloatRange(0, 1),
             hidden=True,
-            default=0.5,
             help="only available for Asgard: This value indicates the willingness to take living streets.",
         )
         parser_get.add_argument(
             "bike_maneuver_penalty",
             type=float,
             hidden=True,
-            default=5,
             help="only available for Asgard: A penalty applied when transitioning between roads that do not have consistent naming–in other words, no road names in common. This penalty can be used to create simpler routes that tend to have fewer maneuvers or narrative guidance instructions.",
         )
         parser_get.add_argument(
             "bike_service_penalty",
             type=float,
             hidden=True,
-            default=0,
             help="only available for Asgard: A penalty applied for transition to generic service road. ",
         )
         parser_get.add_argument(
             "bike_service_factor",
             type=float,
             hidden=True,
-            default=1,
             help="only available for Asgard: A factor that modifies (multiplies) the cost when generic service roads are encountered. ",
         )
         parser_get.add_argument(
             "bike_country_crossing_cost",
             type=float,
             hidden=True,
-            default=600,
             help="only available for Asgard: A cost applied when encountering an international border. This cost is added to the estimated and elapsed times. ",
         )
         parser_get.add_argument(
             "bike_country_crossing_penalty",
             type=float,
             hidden=True,
-            default=0,
             help="only available for Asgard: A penalty applied for a country crossing. ",
         )
 
@@ -654,7 +670,6 @@ class JourneyCommon(ResourceUri, ResourceUtc):
             "bike_destination_only_penalty",
             type=PositiveFloat(),
             hidden=True,
-            default=120,
             help="only available for Asgard: penalty when the way is private, private_hgv, parking aisle, drive way, drive thru.",
         )
 
@@ -663,7 +678,6 @@ class JourneyCommon(ResourceUri, ResourceUtc):
             "walking_walkway_factor",
             type=float,
             hidden=True,
-            default=1.0,
             help="only available for Asgard: "
             "A factor that modifies (multiplies) the cost when encountering roads classified as footway.",
         )
@@ -672,7 +686,6 @@ class JourneyCommon(ResourceUri, ResourceUtc):
             "walking_sidewalk_factor",
             type=float,
             hidden=True,
-            default=1.0,
             help="only available for Asgard: "
             "A factor that modifies (multiplies) the cost when encountering roads with dedicated sidewalks.",
         )
@@ -681,7 +694,6 @@ class JourneyCommon(ResourceUri, ResourceUtc):
             "walking_alley_factor",
             type=float,
             hidden=True,
-            default=2.0,
             help="only available for Asgard: "
             "A factor that modifies (multiplies) the cost when alleys are encountered.",
         )
@@ -690,7 +702,6 @@ class JourneyCommon(ResourceUri, ResourceUtc):
             "walking_driveway_factor",
             type=float,
             hidden=True,
-            default=5.0,
             help="only available for Asgard: "
             "A factor that modifies (multiplies) the cost when encountering a driveway, "
             "which is often a private, service road.",
@@ -700,7 +711,6 @@ class JourneyCommon(ResourceUri, ResourceUtc):
             "walking_step_penalty",
             type=float,
             hidden=True,
-            default=30.0,
             help="only available for Asgard: "
             "A penalty in seconds added to each transition onto a path with steps or stairs.",
         )
@@ -709,7 +719,6 @@ class JourneyCommon(ResourceUri, ResourceUtc):
             "walking_use_ferry",
             type=IntervalValue(type=float, min_value=0, max_value=1),
             hidden=True,
-            default=0.5,
             help="only available for Asgard: "
             "This value indicates the willingness to take ferries. This is range of values between 0 and 1. "
             "Values near 0 attempt to avoid ferries and values near 1 will favor ferries.",
@@ -719,7 +728,6 @@ class JourneyCommon(ResourceUri, ResourceUtc):
             "walking_use_living_streets",
             type=IntervalValue(type=float, min_value=0, max_value=1),
             hidden=True,
-            default=0.6,
             help="only available for Asgard: "
             "This value indicates the willingness to take living streets.It is a range of values between 0 and 1. "
             "Values near 0 attempt to avoid living streets and values near 1 will favor living streets. ",
@@ -729,7 +737,6 @@ class JourneyCommon(ResourceUri, ResourceUtc):
             "walking_use_tracks",
             type=IntervalValue(type=float, min_value=0, max_value=1),
             hidden=True,
-            default=0.5,
             help="only available for Asgard: "
             "This value indicates the willingness to take track roads. This is a range of values between 0 and 1. "
             "Values near 0 attempt to avoid tracks and values near 1 will favor tracks a little bit.",
@@ -739,7 +746,6 @@ class JourneyCommon(ResourceUri, ResourceUtc):
             "walking_use_hills",
             type=IntervalValue(type=float, min_value=0, max_value=1),
             hidden=True,
-            default=0.5,
             help="only available for Asgard: "
             "This is a range of values from 0 to 1, where 0 attempts to avoid hills and steep grades even if it "
             "means a longer (time and distance) path, while 1 indicates the pedestrian does not fear hills and "
@@ -758,7 +764,6 @@ class JourneyCommon(ResourceUri, ResourceUtc):
             "walking_service_factor",
             type=float,
             hidden=True,
-            default=1,
             help="only available for Asgard: "
             "A factor that modifies (multiplies) the cost when generic service roads are encountered.",
         )
@@ -767,7 +772,6 @@ class JourneyCommon(ResourceUri, ResourceUtc):
             "walking_max_hiking_difficulty",
             type=IntervalValue(type=int, min_value=0, max_value=6),
             hidden=True,
-            default=1,
             help="only available for Asgard: "
             "This value indicates the maximum difficulty of hiking trails that is allowed. "
             "Values between 0 and 6 are allowed.",
@@ -777,7 +781,6 @@ class JourneyCommon(ResourceUri, ResourceUtc):
             "walking_shortest",
             type=BooleanType(),
             hidden=True,
-            default=False,
             help="only available for Asgard: "
             "Changes the metric to quasi-shortest, i.e. purely distance-based costing.",
         )
@@ -786,7 +789,6 @@ class JourneyCommon(ResourceUri, ResourceUtc):
             "walking_ignore_oneways",
             type=BooleanType(),
             hidden=True,
-            default=True,
             help="only available for Asgard: " "Ignore when encountering roads that are oneway.",
         )
 
@@ -794,7 +796,6 @@ class JourneyCommon(ResourceUri, ResourceUtc):
             "walking_destination_only_penalty",
             type=PositiveFloat(),
             hidden=True,
-            default=120,
             help="only available for Asgard: penalty when the way is private, private_hgv, parking aisle, drive way, drive thru.",
         )
 
@@ -832,6 +833,53 @@ class JourneyCommon(ResourceUri, ResourceUtc):
             default=1,
             hidden=True,
             help="used to adjust the search range in Asgard when computing matrix",
+        )
+        parser_get.add_argument(
+            "_global_max_speed",
+            type=PositiveFloat(),
+            default=18.0,
+            hidden=True,
+            help="the maximum speed among all modes of transport, used in loki to estimate the heuristic ",
+        )
+        parser_get.add_argument(
+            "_use_heuristic",
+            type=BooleanType(),
+            default=False,
+            hidden=True,
+            help="whether or not to use heuristic to optimized path searching in loki, used in loki exclusively",
+        )
+        parser_get.add_argument(
+            "_use_predicted_traffic",
+            type=BooleanType(),
+            hidden=True,
+            help="whether or not to use predicted/historical traffic data for routing, it affects only car/car_no_park mode in Asgard",
+        )
+        parser_get.add_argument(
+            "_use_zonal_odt",
+            type=BooleanType(),
+            default=False,
+            hidden=True,
+            help="only available for Loki: " "Use zonal ODT in fallback.",
+        )
+        parser_get.add_argument(
+            "_max_waiting_duration_odt",
+            type=PositiveInteger(),
+            default=default_values.max_waiting_duration_odt,
+            hidden=True,
+            help='A journey containing a waiting section between TC and Zonal ODT with a duration greater to  max_waiting_duration_odt '
+            'will be discarded. Units : seconds. Must be > 0. Default value : 30 minutes',
+        )
+        parser_get.add_argument(
+            "bike_type",
+            # wordings are from https://wiki.openstreetmap.org/wiki/Tag:amenity%3Dbicycle_rental#Types_of_bicycles_and_accessories
+            type=OptionValue(
+                [
+                    'city_bike',
+                    'ebike',
+                ]
+            ),
+            default='city_bike',
+            help="only available for Geovelo so far: whether to use electric bike.",
         )
 
     def parse_args(self, region=None, uri=None):
@@ -884,5 +932,9 @@ class JourneyCommon(ResourceUri, ResourceUtc):
             args['original_datetime'] = args['datetime']
         else:
             args['original_datetime'] = pytz.UTC.localize(args['_current_datetime'])
+
+        # Use of wheelchair should dominate criteria choice
+        if args.get("wheelchair", False):
+            args['criteria'] = "classic"
 
         return args

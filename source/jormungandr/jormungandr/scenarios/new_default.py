@@ -47,6 +47,10 @@ from jormungandr.scenarios.utils import (
     switch_back_to_ridesharing,
     nCr,
     updated_common_journey_request_with_default,
+    get_disruptions_on_poi,
+    add_disruptions,
+    get_impact_uris_for_poi,
+    update_booking_rule_url_in_section,
 )
 from navitiacommon import type_pb2, response_pb2, request_pb2
 from jormungandr.scenarios.qualifier import (
@@ -83,6 +87,7 @@ from jormungandr.utils import (
     json_address_from_uri,
     entrypoint_uri_refocus,
     get_pt_object_coord,
+    is_different_geographic_position,
 )
 from jormungandr.error import generate_error
 from jormungandr.utils import Coords
@@ -93,14 +98,20 @@ from jormungandr import app
 from jormungandr.autocomplete.geocodejson import GeocodeJson
 from jormungandr import global_autocomplete
 from jormungandr.new_relic import record_custom_parameter
+from jormungandr.otlp import otlp_instance
 from jormungandr import fallback_modes
 
 from six.moves import filter
 from six.moves import range
 from six.moves import zip
 from functools import cmp_to_key
+from datetime import datetime
 
-SECTION_TYPES_TO_RETAIN = {response_pb2.PUBLIC_TRANSPORT, response_pb2.STREET_NETWORK}
+SECTION_TYPES_TO_RETAIN = {
+    response_pb2.PUBLIC_TRANSPORT,
+    response_pb2.ON_DEMAND_TRANSPORT,
+    response_pb2.STREET_NETWORK,
+}
 JOURNEY_TAGS_TO_RETAIN = ['best_olympics']
 JOURNEY_TYPES_TO_RETAIN = ['best', 'comfort', 'non_pt_walk', 'non_pt_bike', 'non_pt_bss']
 JOURNEY_TYPES_SCORE = {t: i for i, t in enumerate(JOURNEY_TYPES_TO_RETAIN)}
@@ -268,7 +279,7 @@ def create_pb_request(requested_type, request, dep_mode, arr_mode, direct_path_t
 
 
 def _has_pt(j):
-    return any(s.type == response_pb2.PUBLIC_TRANSPORT for s in j.sections)
+    return any(s.type in (response_pb2.PUBLIC_TRANSPORT, response_pb2.ON_DEMAND_TRANSPORT) for s in j.sections)
 
 
 def sort_journeys(resp, journey_order, clockwise):
@@ -357,7 +368,7 @@ def update_best_boarding_positions(pb_resp, instance):
         prev_iter = iter(j.sections)
         current_iter = itertools.islice(j.sections, 1, None)
         for prev, curr in zip(prev_iter, current_iter):
-            if prev.type != response_pb2.PUBLIC_TRANSPORT:
+            if prev.type not in (response_pb2.PUBLIC_TRANSPORT, response_pb2.ON_DEMAND_TRANSPORT):
                 continue
             boarding_positions = get_best_boarding_positions(curr, instance)
             helpers.fill_best_boarding_position(prev, boarding_positions)
@@ -418,7 +429,9 @@ def _tag_direct_path(responses):
     }
 
     for j in itertools.chain.from_iterable(r.journeys for r in responses if r is not None):
-        if all(s.type != response_pb2.PUBLIC_TRANSPORT for s in j.sections):
+        if all(
+            s.type not in (response_pb2.PUBLIC_TRANSPORT, response_pb2.ON_DEMAND_TRANSPORT) for s in j.sections
+        ):
             j.tags.extend(['non_pt'])
 
         # TODO: remove that (and street_network_mode_tag_map) when NMP stops using it
@@ -439,7 +452,7 @@ def _is_bike_section(s):
 def _is_pt_bike_accepted_section(s):
     bike_ok = type_pb2.hasEquipments.has_bike_accepted
     return (
-        s.type == response_pb2.PUBLIC_TRANSPORT
+        s.type in (response_pb2.PUBLIC_TRANSPORT, response_pb2.ON_DEMAND_TRANSPORT)
         and bike_ok in s.pt_display_informations.has_equipments.has_equipments
         and bike_ok in s.origin.stop_point.has_equipments.has_equipments
         and bike_ok in s.destination.stop_point.has_equipments.has_equipments
@@ -491,6 +504,82 @@ def update_total_co2_emission(pb_resp):
         j.co2_emission.unit = 'gEC'
 
 
+def update_disruptions_on_pois(instance, api_request, pb_resp):
+    """
+    Maintain a set of uri from g.origin_detail and g.destination_detail of type Poi
+    Add uri from all journey.section.origin and journey.section.destination of type Poi
+    Call loki with api api_disruptions&pois[]...
+    For each disruption on poi, add disruption id in the attribute links and add disruptions in the response
+    """
+    required_mode_list = {'bss', 'car'}
+    if not api_request.get('_disruptions_on_poi'):
+        return
+    if not pb_resp.journeys:
+        return
+    # Add uri of all the pois in a set
+    poi_uris = set()
+    poi_objets = []
+    since_datetime = date_to_timestamp(datetime.utcnow())
+    until_datetime = date_to_timestamp(datetime.utcnow())
+
+    # Here we manage origin and destination of type POI
+    if g.origin_detail and g.origin_detail.get('embedded_type') == "poi":
+        poi_uris.add(g.origin_detail.get('id'))
+
+    if g.destination_detail and g.destination_detail.get('embedded_type') == "poi":
+        poi_uris.add(g.destination_detail.get('id'))
+
+    # Add pois present in all journeys if any of modes={'bss', 'car'} is present in
+    # origin_mode or destination_mode or direct_path_mode
+    mode_list = api_request.get('origin_mode', [])
+    mode_list.extend(api_request.get('destination_mode', []))
+    if set(mode_list).intersection(required_mode_list):
+        for j in pb_resp.journeys:
+            for s in j.sections:
+                if s.origin.embedded_type == type_pb2.POI:
+                    poi_uris.add(s.origin.uri)
+                    poi_objets.append(s.origin.poi)
+                    since_datetime = min(since_datetime, s.begin_date_time)
+
+                if s.destination.embedded_type == type_pb2.POI:
+                    poi_uris.add(s.destination.uri)
+                    poi_objets.append(s.destination.poi)
+                    until_datetime = max(until_datetime, s.end_date_time)
+
+    if since_datetime >= until_datetime:
+        since_datetime = until_datetime - 1
+
+    # Get disruptions for poi_uris calling loki with api poi_disruptions and poi_uris in param
+    poi_disruptions = get_disruptions_on_poi(instance, poi_uris, since_datetime, until_datetime)
+    if poi_disruptions is None:
+        return
+
+    # For each poi in pt_objects:
+    # add impact_uris from resp_poi and
+    # copy object poi in impact.impacted_objects
+    for pt_object in poi_objets:
+        impact_uris = get_impact_uris_for_poi(poi_disruptions, pt_object)
+        for impact_uri in impact_uris:
+            pt_object.impact_uris.append(impact_uri)
+
+    # Add all impacts from resp_poi to the response
+    add_disruptions(pb_resp, poi_disruptions)
+
+
+def update_booking_rule_url_in_response(pb_resp):
+    """
+    Update placeholders present in sections[i].booking_rule.booking_url with their values for each journey
+    for each section of type ON_DEMAND_TRANSPORT
+    """
+    if not pb_resp.journeys:
+        return
+
+    for j in pb_resp.journeys:
+        for s in j.sections:
+            if s.type == response_pb2.ON_DEMAND_TRANSPORT:
+                update_booking_rule_url_in_section(s)
+
+
 def update_total_air_pollutants(pb_resp):
     """
     update journey.air_pollutants
@@ -516,7 +605,7 @@ def _build_candidate_pool_and_sections_set(journeys):
     candidates_pool = list()
     idx_of_jrny_must_keep = list()
 
-    for (i, jrny) in enumerate(journeys):
+    for i, jrny in enumerate(journeys):
         if set(jrny.tags) & set(JOURNEY_TAGS_TO_RETAIN) or jrny.type in set(JOURNEY_TYPES_TO_RETAIN):
             idx_of_jrny_must_keep.append(i)
         sections_set |= set([_get_section_id(s) for s in jrny.sections if s.type in SECTION_TYPES_TO_RETAIN])
@@ -884,6 +973,8 @@ reliable_physical_modes = [
     "physical_mode:LongDistanceTrain",
 ]
 reliable_fallback_modes = [response_pb2.Bike, response_pb2.Walking]
+
+
 # returns true if :
 #  - a journey has at least one public transport section
 #  - all public transport sections use reliable physical modes
@@ -909,7 +1000,7 @@ def is_reliable_journey(journey):
                 if mode not in reliable_fallback_modes:
                     return False
 
-        if section.type != response_pb2.PUBLIC_TRANSPORT:
+        if section.type not in (response_pb2.PUBLIC_TRANSPORT, response_pb2.ON_DEMAND_TRANSPORT):
             continue
         if not section.HasField("uris"):
             continue
@@ -1259,17 +1350,31 @@ class Scenario(simple.Scenario):
         )
 
         # we store the origin/destination detail in g to be able to use them after the marshall
+        # If origin/destination is address and id doesn't match with calculated id (by autocomplete) then
+        # we should use the original request address id and update later
         g.origin_detail = origin_detail
-        g.destination_detail = destination_detail
+        request_origin = json_address_from_uri(api_request.get('origin'))
+        if is_different_geographic_position(origin_detail, request_origin):
+            origin_detail = request_origin
+            g.request_origin = request_origin
+        else:
+            origin_detail = origin_detail or request_origin
 
-        origin_detail = origin_detail or json_address_from_uri(api_request.get('origin'))
         if not origin_detail:
             return generate_error(
                 TEMPLATE_MSG_UNKNOWN_OBJECT.format(api_request.get('origin')),
                 response_pb2.Error.unknown_object,
                 404,
             )
-        destination_detail = destination_detail or json_address_from_uri(api_request.get('destination'))
+
+        g.destination_detail = destination_detail
+        request_destination = json_address_from_uri(api_request.get('destination'))
+        if is_different_geographic_position(destination_detail, request_destination):
+            destination_detail = request_destination
+            g.request_destination = request_destination
+        else:
+            destination_detail = destination_detail or request_destination
+
         if not destination_detail:
             return generate_error(
                 TEMPLATE_MSG_UNKNOWN_OBJECT.format(api_request.get('destination')),
@@ -1434,6 +1539,12 @@ class Scenario(simple.Scenario):
         # need to clean extra terminus after culling journeys
         journey_filter.remove_excess_terminus(pb_resp)
 
+        # Update disruptions on pois
+        update_disruptions_on_pois(instance, api_request, pb_resp)
+
+        # Update booking_url in booking_rule for all sections of type ON_DEMAND_TRANSPORT
+        update_booking_rule_url_in_response(pb_resp)
+
         self._compute_pagination_links(pb_resp, instance, api_request['clockwise'])
         return pb_resp
 
@@ -1456,6 +1567,7 @@ class Scenario(simple.Scenario):
         # TODO: handle min_alternative_journeys
         # TODO: call first bss|bss and do not call walking|walking if no bss in first results
         record_custom_parameter('scenario', 'new_default')
+        otlp_instance.record_label('scenario', 'new_default')
         resp = []
         logger = logging.getLogger(__name__)
         futures = []

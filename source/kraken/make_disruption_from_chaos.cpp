@@ -323,6 +323,9 @@ static std::set<nt::disruption::ChannelType> create_channel_types(const chaos::C
             case chaos::Channel_Type_beacon:
                 res.insert(nt::disruption::ChannelType::beacon);
                 break;
+            case chaos::Channel_Type_pids:
+                res.insert(nt::disruption::ChannelType::pids);
+                break;
             default:
                 res.insert(nt::disruption::ChannelType::unknown_type);
                 LOG4CPLUS_WARN(log4cplus::Logger::getInstance("log"),

@@ -615,6 +615,12 @@ class Instance(transient_socket.TransientSocket):
         return get_value_or_default('car_park_provider', instance_db, self.name)
 
     @property
+    def disruptions_on_poi(self):
+        # type: () -> bool
+        instance_db = self.get_models()
+        return get_value_or_default('disruptions_on_poi', instance_db, self.name)
+
+    @property
     def max_additional_connections(self):
         # type: () -> int
         instance_db = self.get_models()
@@ -820,6 +826,8 @@ class Instance(transient_socket.TransientSocket):
     additional_time_after_first_section_taxi = _make_property_getter('additional_time_after_first_section_taxi')
     additional_time_before_last_section_taxi = _make_property_getter('additional_time_before_last_section_taxi')
 
+    on_street_bike_parking_duration = _make_property_getter('on_street_bike_parking_duration')
+
     max_walking_direct_path_duration = _make_property_getter('max_walking_direct_path_duration')
     max_bike_direct_path_duration = _make_property_getter('max_bike_direct_path_duration')
     max_bss_direct_path_duration = _make_property_getter('max_bss_direct_path_duration')
@@ -859,9 +867,45 @@ class Instance(transient_socket.TransientSocket):
     co2_emission_car_value = _make_property_getter('co2_emission_car_value')
     co2_emission_car_unit = _make_property_getter('co2_emission_car_unit')
 
+    use_predicted_traffic = _make_property_getter('use_predicted_traffic')
+
+    # Add some attributes on walking
+    walking_walkway_factor = _make_property_getter('walking_walkway_factor')
+    walking_sidewalk_factor = _make_property_getter('walking_sidewalk_factor')
+    walking_alley_factor = _make_property_getter('walking_alley_factor')
+    walking_driveway_factor = _make_property_getter('walking_driveway_factor')
+    walking_step_penalty = _make_property_getter('walking_step_penalty')
+    walking_use_ferry = _make_property_getter('walking_use_ferry')
+    walking_use_living_streets = _make_property_getter('walking_use_living_streets')
+    walking_use_tracks = _make_property_getter('walking_use_tracks')
+    walking_use_hills = _make_property_getter('walking_use_hills')
+    walking_service_factor = _make_property_getter('walking_service_factor')
+    walking_max_hiking_difficulty = _make_property_getter('walking_max_hiking_difficulty')
+    walking_shortest = _make_property_getter('walking_shortest')
+    walking_ignore_oneways = _make_property_getter('walking_ignore_oneways')
+    walking_destination_only_penalty = _make_property_getter('walking_destination_only_penalty')
+
+    # Add some attributes on bike
+    bike_use_roads = _make_property_getter('bike_use_roads')
+    bike_use_hills = _make_property_getter('bike_use_hills')
+    bike_use_ferry = _make_property_getter('bike_use_ferry')
+    bike_avoid_bad_surfaces = _make_property_getter('bike_avoid_bad_surfaces')
+    bike_shortest = _make_property_getter('bike_shortest')
+    bicycle_type = _make_property_getter('bicycle_type')
+    bike_use_living_streets = _make_property_getter('bike_use_living_streets')
+    bike_maneuver_penalty = _make_property_getter('bike_maneuver_penalty')
+    bike_service_penalty = _make_property_getter('bike_service_penalty')
+    bike_service_factor = _make_property_getter('bike_service_factor')
+    bike_country_crossing_cost = _make_property_getter('bike_country_crossing_cost')
+    bike_country_crossing_penalty = _make_property_getter('bike_country_crossing_penalty')
+    bike_destination_only_penalty = _make_property_getter('bike_destination_only_penalty')
+
     def get_pt_planner(self, pt_planner_id=None):
         pt_planner_id = pt_planner_id or self.default_pt_planner
         return self._pt_planner_manager.get_pt_planner(pt_planner_id)
+
+    def get_all_pt_planners(self):
+        return self._pt_planner_manager.get_all_pt_planners()
 
     def get_pt_journey_fare(self, loki_pt_journey_fare_id=None):
         pt_journey_fare_id = loki_pt_journey_fare_id or self.loki_pt_journey_fare

@@ -121,6 +121,7 @@ class PtObjectSerializer(PbGenericSerializer):
     quality = jsonschema.Field(schema_type=int, required=False, display_none=True, deprecated=True)
     stop_area = jsonschema.MethodField(schema_type=lambda: StopAreaSerializer())
     stop_point = jsonschema.MethodField(schema_type=lambda: StopPointSerializer())
+    poi = jsonschema.MethodField(schema_type=lambda: PoiSerializer())
     line = jsonschema.MethodField(schema_type=lambda: LineSerializer())
     network = jsonschema.MethodField(schema_type=lambda: NetworkSerializer())
     route = jsonschema.MethodField(schema_type=lambda: RouteSerializer())
@@ -167,6 +168,12 @@ class PtObjectSerializer(PbGenericSerializer):
     def get_stop_point(self, obj):
         if obj.HasField(str('stop_point')):
             return StopPointSerializer(obj.stop_point, display_none=False).data
+        else:
+            return None
+
+    def get_poi(self, obj):
+        if obj.HasField(str('poi')):
+            return PoiSerializer(obj.poi, display_none=False).data
         else:
             return None
 
@@ -357,6 +364,7 @@ class AddressSerializer(PbGenericSerializer):
 
 class PoiSerializer(PbGenericSerializer):
     coord = CoordSerializer(required=False)
+    links = DisruptionLinkSerializer(attr='impact_uris', display_none=False)
     label = jsonschema.Field(schema_type=str)
     administrative_regions = AdminSerializer(many=True, display_none=False)
     poi_type = PoiTypeSerializer(display_none=False)
@@ -741,9 +749,11 @@ class RouteDisplayInformationSerializer(PbNestedSerializer):
 
     color = jsonschema.Field(schema_type=str)
     code = jsonschema.Field(schema_type=str)
+    headsign = jsonschema.Field(schema_type=str, display_none=True)
     name = jsonschema.Field(schema_type=str)
     links = jsonschema.MethodField(display_none=True, schema_type=LinkSchema(many=True))
     text_color = jsonschema.Field(schema_type=str)
+    trip_short_name = jsonschema.Field(schema_type=str, display_none=True)
 
     def get_links(self, obj):
         return DisruptionLinkSerializer().to_value(obj.impact_uris)

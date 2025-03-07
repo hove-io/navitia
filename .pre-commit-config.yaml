@@ -33,4 +33,4 @@ repos:
         args: [--ignore-missing-imports, --py2, --follow-imports, skip]
         files: source
         language_version: python3.9
-        exclude: /monitor/|/third_party/|/tests/|/sql/|env\.py$|setup\.py$
+        exclude: /monitor/|/third_party/|/tests/|/sql/|env\.py$|setup\.py|otlp\.py$

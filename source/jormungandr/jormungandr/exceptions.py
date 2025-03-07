@@ -32,6 +32,8 @@ from flask import request
 from werkzeug.exceptions import HTTPException
 import logging
 from jormungandr.new_relic import record_exception
+from jormungandr.otlp import otlp_instance
+from typing import Dict
 
 __all__ = [
     "RegionNotFound",
@@ -47,6 +49,10 @@ __all__ = [
 def format_error(code, message):
     error = {"error": {"id": code, "message": message}, "message": message}
     return error
+
+
+def format_otlp_error(data):
+    return {"error_id": data["error"]["id"], "error_message": data["error"]["message"]}
 
 
 class RegionNotFound(HTTPException):
@@ -76,6 +82,7 @@ class RegionNotFound(HTTPException):
             self.data = format_error("unknown_object", "Invalid id : {id}".format(id=object_id))
         else:
             self.data = format_error("unknown_object", "Unable to parse region")
+        otlp_instance.record_exception(self, format_otlp_error(self.data))
 
     def __str__(self):
         return repr(self.data['message'])
@@ -87,6 +94,7 @@ class DeadSocketException(HTTPException):
         error = 'The region {} is dead'.format(region)
         self.data = format_error("dead_socket", error)
         self.code = 503
+        otlp_instance.record_exception(self, format_otlp_error(self.data))
 
 
 class ApiNotFound(HTTPException):
@@ -95,6 +103,7 @@ class ApiNotFound(HTTPException):
         error = 'The api {} doesn\'t exist'.format(api)
         self.data = format_error("unknown_object", error)
         self.code = 404
+        otlp_instance.record_exception(self, format_otlp_error(self.data))
 
 
 class UnknownObject(HTTPException):
@@ -103,6 +112,7 @@ class UnknownObject(HTTPException):
         error = 'The object {} doesn\'t exist'.format(msg)
         self.data = format_error("unknown_object", error)
         self.code = 404
+        otlp_instance.record_exception(self, format_otlp_error(self.data))
 
 
 class InvalidArguments(HTTPException):
@@ -110,6 +120,7 @@ class InvalidArguments(HTTPException):
         super(InvalidArguments, self).__init__()
         self.data = format_error("unknown_object", "Invalid arguments " + arg)
         self.code = 400
+        otlp_instance.record_exception(self, format_otlp_error(self.data))
 
 
 class UnableToParse(HTTPException):
@@ -117,6 +128,7 @@ class UnableToParse(HTTPException):
         super(UnableToParse, self).__init__()
         self.data = format_error("unable_to_parse", msg)
         self.code = 400
+        otlp_instance.record_exception(self, format_otlp_error(self.data))
 
 
 class TechnicalError(HTTPException):
@@ -124,6 +136,7 @@ class TechnicalError(HTTPException):
         super(TechnicalError, self).__init__()
         self.data = format_error("technical_error", msg)
         self.code = 500
+        otlp_instance.record_exception(self, format_otlp_error(self.data))
 
 
 # Only used by geovelo streetnetwork
@@ -132,6 +145,7 @@ class GeoveloTechnicalError(HTTPException):
         super(GeoveloTechnicalError, self).__init__()
         self.data = format_error("technical_error", msg)
         self.code = 500
+        otlp_instance.record_exception(self, format_otlp_error(self.data))
 
 
 class HandimapTechnicalError(HTTPException):
@@ -139,6 +153,7 @@ class HandimapTechnicalError(HTTPException):
         super(HandimapTechnicalError, self).__init__()
         self.data = format_error("technical_error", msg)
         self.code = 500
+        otlp_instance.record_exception(self, format_otlp_error(self.data))
 
 
 class AndyamoTechnicalError(HTTPException):
@@ -146,6 +161,7 @@ class AndyamoTechnicalError(HTTPException):
         super(AndyamoTechnicalError, self).__init__()
         self.data = format_error("technical_error", msg)
         self.code = 500
+        otlp_instance.record_exception(self, format_otlp_error(self.data))
 
 
 class ConfigException(Exception):
@@ -153,6 +169,7 @@ class ConfigException(Exception):
         super(ConfigException, self).__init__(arg)
         self.data = format_error("config_exception", "Invalid config " + arg)
         self.code = 400
+        otlp_instance.record_exception(self, format_otlp_error(self.data))
 
 
 def log_exception(sender, exception, **extra):
@@ -166,9 +183,11 @@ def log_exception(sender, exception, **extra):
         logger.debug(error)
         if exception.code >= 500:
             record_exception()
+            otlp_instance.record_exception(exception)
     else:
         logger.exception(error)
         record_exception()
+        otlp_instance.record_exception(exception)
 
 
 class StatManagerError(RuntimeError):

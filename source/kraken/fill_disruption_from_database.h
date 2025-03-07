@@ -471,6 +471,8 @@ struct DisruptionDatabaseReader {
             channel->add_types(chaos::Channel_Type_title);
         } else if (type_ == "beacon") {
             channel->add_types(chaos::Channel_Type_beacon);
+        } else if (type_ == "pids") {
+            channel->add_types(chaos::Channel_Type_pids);
         } else {
             channel->add_types(chaos::Channel_Type_unkown_type);
         }

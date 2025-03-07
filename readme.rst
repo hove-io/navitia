@@ -131,7 +131,7 @@ Who's who
 More information
 ----------------
 
-* main web site https://www.navitia.io
+* main web site https://www.hove.com
 * playground https://playground.navitia.io
 * integration documentation https://doc.navitia.io
 * technical documentation https://github.com/hove-io/navitia/tree/dev/documentation/rfc
@@ -180,13 +180,3 @@ Navitia is made of 3 main modules:
 .. image:: documentation/diagrams/Navitia_simple_architecture.png
 
 More information here: https://github.com/hove-io/navitia/wiki/Architecture
-
-Alternatives?
-=============
-Navitia is written in C++ / python, here are some alternatives:
-
-* | `OpenTripPlanner <https://github.com/opentripplanner/OpenTripPlanner/>`_ : written in java.
-  | More information here https://github.com/hove-io/navitia/wiki/OpenTripPlanner-and-Navitia-comparison.
-* `rrrr <https://github.com/bliksemlabs/rrrr>`_ : the lightest one, written in python/c
-* `Motis <https://github.com/motis-project/motis>`_ : Multi objective algorithm similar to Navitia in its approach
-* `Mumoro <https://github.com/Tristramg/mumoro>`_ : an R&D MUltiModal MUltiObjective ROuting algorithm

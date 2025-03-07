@@ -37,13 +37,20 @@ from jormungandr.scenarios.new_default import (
     _tag_journey_by_mode,
     get_kraken_calls,
     update_best_boarding_positions,
+    update_disruptions_on_pois,
+    update_booking_rule_url_in_response,
 )
 from jormungandr.instance import Instance
 from jormungandr.scenarios.utils import switch_back_to_ridesharing
 from jormungandr.utils import make_origin_destination_key, str_to_time_stamp
 from werkzeug.exceptions import HTTPException
+import pytz
+from jormungandr import app
+from flask import g
 import pytest
+from pytest_mock import mocker
 from collections import defaultdict
+import copy
 
 """
  sections       0   1   2   3   4   5   6   7   8   9   10
@@ -798,10 +805,72 @@ DEFAULT_OLYMPICS_FORBIDDEN_URIS = {
 }
 
 
-def make_pt_object_poi(property_type="olympic", property_value="1234"):
-    pt_object_poi = type_pb2.PtObject()
-    pt_object_poi.embedded_type = type_pb2.POI
-    property = pt_object_poi.poi.properties.add()
-    property.type = property_type
-    property.value = property_value
-    return pt_object_poi
+def journey_with_disruptions_on_poi_test(mocker):
+    with app.app_context():
+        instance = lambda: None
+        g.origin_detail = helpers_tests.get_json_entry_point(id='poi_uri', name='poi_name_from_kraken')
+        g.destination_detail = helpers_tests.get_json_entry_point(id='poi_b', name='poi_n_name')
+        # As in navitia, object poi in the response of places_nearby doesn't have any impact
+        response_journey_with_pois = helpers_tests.get_journey_with_pois()
+        assert len(response_journey_with_pois.impacts) == 0
+        assert len(response_journey_with_pois.journeys) == 1
+        journey = response_journey_with_pois.journeys[0]
+        assert len(journey.sections) == 3
+
+        original_response = copy.deepcopy(response_journey_with_pois)
+
+        # Prepare disruptions on poi as response of end point poi_disruptions of loki
+        # pt_object poi as impacted object is absent in the response of poi_disruptions
+        disruptions_with_poi = helpers_tests.get_response_with_a_disruption_on_poi()
+        assert len(disruptions_with_poi.impacts) == 1
+        assert disruptions_with_poi.impacts[0].uri == "test_impact_uri"
+        assert len(disruptions_with_poi.impacts[0].impacted_objects) == 1
+        object = disruptions_with_poi.impacts[0].impacted_objects[0].pt_object
+        helpers_tests.verify_poi_in_impacted_objects(object=object, poi_empty=True)
+
+        mock = mocker.patch(
+            'jormungandr.scenarios.new_default.get_disruptions_on_poi', return_value=disruptions_with_poi
+        )
+        mocked_request = {'origin_mode': [], 'destination_mode': [], '_disruptions_on_poi': True}
+        update_disruptions_on_pois(instance, mocked_request, response_journey_with_pois)
+
+        assert len(response_journey_with_pois.impacts) == 1
+        impact = response_journey_with_pois.impacts[0]
+        assert len(impact.impacted_objects) == 1
+        object = impact.impacted_objects[0].pt_object
+
+        # In this state we haven't yet managed the final response so poi object is empty
+        helpers_tests.verify_poi_in_impacted_objects(object=object, poi_empty=True)
+        mocked_request = {'origin_mode': [], 'destination_mode': [], '_disruptions_on_poi': True}
+        update_disruptions_on_pois(instance, mocked_request, original_response)
+        assert len(original_response.impacts) == 1
+
+        mock.assert_called()
+        return
+
+
+def journey_with_booking_rule_test():
+    with app.app_context():
+        g.timezone = pytz.timezone("Europe/Paris")
+        booking_url = (
+            "https://domaine/search?departure-address={from_name}&destination-address={to_name}"
+            "&requested-departure-time={departure_datetime}&from_coord_lat={from_coord_lat}"
+            "&from_coord_lon={from_coord_lon}&not_managed={not_managed}"
+        )
+        response_journey_with_odt = helpers_tests.get_odt_journey(booking_url=booking_url)
+        assert len(response_journey_with_odt.journeys) == 1
+        journey = response_journey_with_odt.journeys[0]
+        assert len(journey.sections) == 3
+        odt_section = journey.sections[1]
+        assert odt_section.type == response_pb2.ON_DEMAND_TRANSPORT
+        assert (
+            odt_section.booking_rule.booking_url
+            == "https://domaine/search?departure-address={from_name}&destination-address={to_name}&requested-departure-time={departure_datetime}&from_coord_lat={from_coord_lat}&from_coord_lon={from_coord_lon}&not_managed={not_managed}"
+        )
+
+        update_booking_rule_url_in_response(response_journey_with_odt)
+        odt_section = response_journey_with_odt.journeys[0].sections[1]
+        assert (
+            odt_section.booking_rule.booking_url
+            == "https://domaine/search?departure-address=P%2BR%20d%27Avon%20%28city%29&destination-address=gare%20de%20l%27est%20%28city%29&requested-departure-time=2024-08-06T08%3A05%3A00%2B0200&from_coord_lat=2.0&from_coord_lon=1.0&not_managed=N/A"
+        )

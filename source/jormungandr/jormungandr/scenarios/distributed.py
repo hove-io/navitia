@@ -29,6 +29,8 @@
 
 from __future__ import absolute_import, print_function, unicode_literals, division
 
+from jormungandr.park_modes import ParkMode
+
 try:
     from typing import Dict, Text, Any, Tuple
 except ImportError:
@@ -51,9 +53,10 @@ from jormungandr.scenarios.utils import (
     updated_common_journey_request_with_default,
 )
 from jormungandr.new_relic import record_custom_parameter
+from jormungandr.otlp import otlp_instance
 from navitiacommon import response_pb2, type_pb2
 from flask_restful import abort
-from .helper_classes.helper_utils import timed_logger
+from .helper_classes.timer_logger_helper import timed_logger
 from .helper_classes.helper_exceptions import (
     NoGraphicalIsochroneFoundException,
     PtException,
@@ -181,6 +184,10 @@ class Distributed(object):
                 # add SN feed publishers
                 context.streetnetwork_path_pool.add_feed_publishers(request, requested_direct_path_modes, res)
                 return res
+
+            # if the parkmode is set to "on street" we need to subtract additional time to the max_bike_duration_to_pt
+            if ParkMode.on_street.name == request.get("park_mode", ""):
+                request["max_bike_duration_to_pt"] += request.get("on_street_bike_parking_duration", 0)
 
             # We'd like to get the duration of a direct path to do some optimizations in ProximitiesByCrowflyPool and
             # FallbackDurationsPool.
@@ -355,6 +362,9 @@ class Distributed(object):
             request=request,
             journeys=journeys_to_complete,
             request_id="{}_complete_pt_journey".format(request_id),
+            instance=instance,
+            future_manager=future_manager,
+            _request_id=request_id,
         )
         if request['_loki_compute_pt_journey_fare'] is True and request['_pt_planner'] == "loki":
             wait_and_complete_pt_journey_fare(
@@ -451,7 +461,7 @@ class Distributed(object):
         pt_journey_pool = PtJourneyPool(**pt_journey_args)
 
         res = []
-        for (dep_mode, arr_mode, future_pt_journey) in pt_journey_pool:
+        for dep_mode, arr_mode, future_pt_journey in pt_journey_pool:
             logger.debug("waiting for pt journey starts with %s and ends with %s", dep_mode, arr_mode)
             pt_journeys = wait_and_get_pt_journeys(future_pt_journey, False)
             if pt_journeys:
@@ -490,6 +500,7 @@ class Scenario(new_default.Scenario):
         context=None,
     ):
         record_custom_parameter('scenario', 'distributed')
+        otlp_instance.record_label('scenario', 'distributed')
         logger = logging.getLogger(__name__)
         """
         All spawned futures must be started(if they're not yet started) when leaving the scope.
@@ -588,6 +599,12 @@ class Scenario(new_default.Scenario):
             request[
                 'additional_time_before_last_section_taxi'
             ] = instance.additional_time_after_first_section_taxi
+
+        if request.get('on_street_bike_parking_duration') is None:
+            request['on_street_bike_parking_duration'] = instance.on_street_bike_parking_duration
+
+        if request.get('_access_points') is None:
+            request['_access_points'] = False
 
         krakens_call = set({(request["origin_mode"][0], request["destination_mode"][0], "indifferent")})
         pt_object_origin = None

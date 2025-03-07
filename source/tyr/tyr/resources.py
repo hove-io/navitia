@@ -54,7 +54,15 @@ from navitiacommon.default_traveler_profile_params import (
     acceptable_traveler_types,
 )
 from navitiacommon.models import db
-from navitiacommon.parser_args_type import CoordFormat, PositiveFloat, BooleanType, OptionValue, geojson_argument
+from navitiacommon.parser_args_type import (
+    CoordFormat,
+    PositiveFloat,
+    BooleanType,
+    OptionValue,
+    geojson_argument,
+    IntervalValue,
+    PositiveFloat,
+)
 from validate_email import validate_email
 from werkzeug.exceptions import BadRequest
 
@@ -712,6 +720,14 @@ class Instance(flask_restful.Resource):
         )
 
         parser.add_argument(
+            "on_street_bike_parking_duration",
+            type=int,
+            help="additionnal time after the bike section when used as first section mode",
+            location=("json", "values"),
+            default=instance.on_street_bike_parking_duration,
+        )
+
+        parser.add_argument(
             'max_additional_connections',
             type=int,
             help='maximum number of connections allowed in journeys',
@@ -725,6 +741,14 @@ class Instance(flask_restful.Resource):
             help='boolean to activate / deactivate call to car parking provider',
             location=('json', 'values'),
             default=instance.car_park_provider,
+        )
+
+        parser.add_argument(
+            'disruptions_on_poi',
+            type=inputs.boolean,
+            help='boolean to activate / deactivate adding disruptions on poi in journeys',
+            location=('json', 'values'),
+            default=instance.disruptions_on_poi,
         )
 
         parser.add_argument(
@@ -997,6 +1021,230 @@ class Instance(flask_restful.Resource):
             default=instance.co2_emission_car_unit,
         )
 
+        parser.add_argument(
+            'walking_walkway_factor',
+            type=float,
+            help='A factor that modifies the cost when encountering roads classified as footway',
+            location=('json', 'values'),
+            default=instance.walking_walkway_factor,
+        )
+
+        parser.add_argument(
+            'walking_sidewalk_factor',
+            type=float,
+            help='A factor that modifies the cost when encountering roads with dedicated sidewalks',
+            location=('json', 'values'),
+            default=instance.walking_sidewalk_factor,
+        )
+
+        parser.add_argument(
+            'walking_alley_factor',
+            type=float,
+            help='A factor that modifies (multiplies) the cost when alleys are encountered',
+            location=('json', 'values'),
+            default=instance.walking_alley_factor,
+        )
+
+        parser.add_argument(
+            'walking_driveway_factor',
+            type=float,
+            help='A factor that modifies (multiplies) the cost when encountering a driveway, which is often a private, service road',
+            location=('json', 'values'),
+            default=instance.walking_driveway_factor,
+        )
+
+        parser.add_argument(
+            'walking_step_penalty',
+            type=int,
+            help='A penalty in seconds added to each transition onto a path with steps or stairs',
+            location=('json', 'values'),
+            default=instance.walking_step_penalty,
+        )
+
+        parser.add_argument(
+            'walking_use_ferry',
+            type=float,
+            help='This value indicates the willingness to take ferries with values between 0 and 1',
+            location=('json', 'values'),
+            default=instance.walking_use_ferry,
+        )
+
+        parser.add_argument(
+            'walking_use_living_streets',
+            type=float,
+            help='This value indicates the willingness to take living streets with values between 0 and 1',
+            location=('json', 'values'),
+            default=instance.walking_use_living_streets,
+        )
+
+        parser.add_argument(
+            'walking_use_tracks',
+            type=float,
+            help='This value indicates the willingness to take track roads with values between 0 and 1',
+            location=('json', 'values'),
+            default=instance.walking_use_tracks,
+        )
+
+        parser.add_argument(
+            'walking_use_hills',
+            type=float,
+            help='This value avoid hilly roads in favor of flatter roads or less steep grades where available with values between 0 and 1',
+            location=('json', 'values'),
+            default=instance.walking_use_hills,
+        )
+
+        parser.add_argument(
+            'walking_service_factor',
+            type=float,
+            help='A factor that modifies (multiplies) the cost when generic service roads are encountered',
+            location=('json', 'values'),
+            default=instance.walking_service_factor,
+        )
+
+        parser.add_argument(
+            'walking_max_hiking_difficulty',
+            type=IntervalValue(type=int, min_value=0, max_value=6),
+            help='This value indicates the maximum difficulty of hiking trails that is allowed with values between 0 and 6',
+            location=('json', 'values'),
+            default=instance.walking_max_hiking_difficulty,
+        )
+
+        parser.add_argument(
+            'walking_ignore_oneways',
+            type=inputs.boolean,
+            help='Changes the metric to quasi-shortest, i.e. purely distance-based costing',
+            location=('json', 'values'),
+            default=instance.walking_ignore_oneways,
+        )
+
+        parser.add_argument(
+            'walking_shortest',
+            type=inputs.boolean,
+            help='Allow taking the road in the opposite direction even though the road is tagged oneway',
+            location=('json', 'values'),
+            default=instance.walking_shortest,
+        )
+
+        parser.add_argument(
+            'walking_destination_only_penalty',
+            type=PositiveFloat(),
+            help='Penalty when the way is private, private_hgv, parking aisle, drive way, drive thru',
+            location=('json', 'values'),
+            default=instance.walking_destination_only_penalty,
+        )
+
+        parser.add_argument(
+            'bike_use_roads',
+            type=float,
+            help='The motivation to share the road with other vehicles with values between 0 and 1.0',
+            location=('json', 'values'),
+            default=instance.bike_use_roads,
+        )
+
+        parser.add_argument(
+            'bike_use_hills',
+            type=float,
+            help='This value indicates the choice of using up hill with values between 0 and 1',
+            location=('json', 'values'),
+            default=instance.bike_use_hills,
+        )
+
+        parser.add_argument(
+            'bike_use_ferry',
+            type=float,
+            help='This value indicates the willingness to take ferries with values between 0 and 1',
+            location=('json', 'values'),
+            default=instance.bike_use_ferry,
+        )
+
+        parser.add_argument(
+            'bike_avoid_bad_surfaces',
+            type=float,
+            help='Avoid irregular road surfaces with values between 0 and 1',
+            location=('json', 'values'),
+            default=instance.bike_avoid_bad_surfaces,
+        )
+
+        parser.add_argument(
+            'bike_shortest',
+            type=inputs.boolean,
+            help='Changes the metric to quasi-shortest, i.e. purely distance-based costing',
+            location=('json', 'values'),
+            default=instance.bike_shortest,
+        )
+
+        parser.add_argument(
+            'bicycle_type',
+            type=OptionValue(['road', 'hybrid', 'cross', 'mountain']),
+            help='The type of bicycle',
+            location=('json', 'values'),
+            default=instance.bicycle_type,
+        )
+
+        parser.add_argument(
+            'bike_use_living_streets',
+            type=float,
+            help='This value indicates the willingness to take living streets with values between 0 and 1',
+            location=('json', 'values'),
+            default=instance.bike_use_living_streets,
+        )
+
+        parser.add_argument(
+            'bike_maneuver_penalty',
+            type=float,
+            help='A penalty applied when transitioning between roads that do not have consistent naming',
+            location=('json', 'values'),
+            default=instance.bike_maneuver_penalty,
+        )
+
+        parser.add_argument(
+            'bike_service_penalty',
+            type=float,
+            help='A penalty applied for transition to generic service road',
+            location=('json', 'values'),
+            default=instance.bike_service_penalty,
+        )
+
+        parser.add_argument(
+            'bike_service_factor',
+            type=float,
+            help='A factor that modifies (multiplies) the cost when generic service roads are encountered',
+            location=('json', 'values'),
+            default=instance.bike_service_factor,
+        )
+
+        parser.add_argument(
+            'bike_country_crossing_cost',
+            type=float,
+            help='A cost applied when encountering an international border. This cost is added to the estimated and elapsed times',
+            location=('json', 'values'),
+            default=instance.bike_country_crossing_cost,
+        )
+
+        parser.add_argument(
+            'bike_country_crossing_penalty',
+            type=float,
+            help='A penalty applied for a country crossing. This penalty can be used to create paths that avoid spanning country boundaries.',
+            location=('json', 'values'),
+            default=instance.bike_country_crossing_penalty,
+        )
+
+        parser.add_argument(
+            'bike_destination_only_penalty',
+            type=PositiveFloat(),
+            help='Penalty when the way is private, private_hgv, parking aisle, drive way, drive thru.',
+            location=('json', 'values'),
+            default=instance.bike_destination_only_penalty,
+        )
+
+        parser.add_argument(
+            'use_predicted_traffic',
+            type=inputs.boolean,
+            help='whether or not use predicted traffic for asgard',
+            location=('json', 'values'),
+            default=instance.use_predicted_traffic,
+        )
+
         args = parser.parse_args()
 
         try:
@@ -1050,8 +1298,10 @@ class Instance(flask_restful.Resource):
                         'autocomplete_backend',
                         'additional_time_after_first_section_taxi',
                         'additional_time_before_last_section_taxi',
+                        'on_street_bike_parking_duration',
                         'max_additional_connections',
                         'car_park_provider',
+                        'disruptions_on_poi',
                         'street_network_car',
                         'street_network_car_no_park',
                         'street_network_walking',
@@ -1098,6 +1348,34 @@ class Instance(flask_restful.Resource):
                         'additional_parameters',
                         'co2_emission_car_value',
                         'co2_emission_car_unit',
+                        'walking_walkway_factor',
+                        'walking_sidewalk_factor',
+                        'walking_alley_factor',
+                        'walking_driveway_factor',
+                        'walking_step_penalty',
+                        'walking_use_ferry',
+                        'walking_use_living_streets',
+                        'walking_use_tracks',
+                        'walking_use_hills',
+                        'walking_service_factor',
+                        'walking_max_hiking_difficulty',
+                        'walking_shortest',
+                        'walking_ignore_oneways',
+                        'walking_destination_only_penalty',
+                        'bike_use_roads',
+                        'bike_use_hills',
+                        'bike_use_ferry',
+                        'bike_avoid_bad_surfaces',
+                        'bike_shortest',
+                        'bicycle_type',
+                        'bike_use_living_streets',
+                        'bike_maneuver_penalty',
+                        'bike_service_penalty',
+                        'bike_service_factor',
+                        'bike_country_crossing_cost',
+                        'bike_country_crossing_penalty',
+                        'bike_destination_only_penalty',
+                        'use_predicted_traffic',
                     ],
                 ),
                 maxlen=0,
@@ -1885,6 +2163,78 @@ class TravelerProfile(flask_restful.Resource):
         )
         parser.add_argument(
             'last_section_mode', type=OptionValue(fb_modes), action='append', required=False, location='json'
+        ),
+
+        parser.add_argument(
+            'walking_step_penalty',
+            type=PositiveFloat(),
+            required=False,
+            help='A penalty in seconds added to each transition onto a path with steps or stairs',
+            location=('json', 'values'),
+        )
+
+        parser.add_argument(
+            'walking_use_hills',
+            type=PositiveFloat(),
+            required=False,
+            help='This value avoid hilly roads in favor of flatter roads or less steep grades where available with values between 0 and 1',
+            location=('json', 'values'),
+        )
+
+        parser.add_argument(
+            'max_walking_direct_path_duration',
+            type=PositiveFloat(),
+            required=False,
+            help='in second',
+            location=('json', 'values'),
+        )
+
+        parser.add_argument(
+            'max_bike_direct_path_duration',
+            type=PositiveFloat(),
+            required=False,
+            help='in second',
+            location=('json', 'values'),
+        )
+
+        parser.add_argument(
+            'max_bss_direct_path_duration',
+            type=PositiveFloat(),
+            required=False,
+            help='in second',
+            location=('json', 'values'),
+        )
+
+        parser.add_argument(
+            'max_car_direct_path_duration',
+            type=PositiveFloat(),
+            required=False,
+            help='in second',
+            location=('json', 'values'),
+        )
+
+        parser.add_argument(
+            'max_ridesharing_direct_path_duration',
+            type=PositiveFloat(),
+            required=False,
+            help='in second',
+            location=('json', 'values'),
+        )
+
+        parser.add_argument(
+            'max_car_no_park_direct_path_duration',
+            type=PositiveFloat(),
+            required=False,
+            help='in second',
+            location=('json', 'values'),
+        )
+
+        parser.add_argument(
+            'max_taxi_direct_path_duration',
+            type=PositiveFloat(),
+            required=False,
+            help='in second',
+            location=('json', 'values'),
         )
 
         self.args = parser.parse_args()
