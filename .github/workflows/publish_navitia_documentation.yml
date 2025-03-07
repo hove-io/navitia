@@ -26,6 +26,7 @@ jobs:
         image: slatedocs/slate:latest
         options: -v ${{ github.workspace }}:/work
         run: |
+          chown -R $USER:$USER /work
           cp -r /work/documentation/slate/source /srv/slate
           ./slate.sh build
           # copy website to workspace
