@@ -45,7 +45,7 @@ jobs:
         target_branch: gh-pages
         build_dir: documentation/slate/build
       env:
-        GITHUB_TOKEN: ${{ steps.ci-core-app-token.outputs.token }}
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
     - name: slack notification (the job has failed)
       if: failure()
