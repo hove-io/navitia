@@ -4,7 +4,7 @@ Interface
 The base URL for **navitia.io** is:
 <https://api.navitia.io/v1/>
 
-We aim to implement [HATEOAS](http://en.wikipedia.org/wiki/HATEOAS)
+We aim to implement [HATEOAS](https://en.wikipedia.org/wiki/HATEOAS)
 concept with Navitia.
 
 Every resource returns a response containing a links object, a paging
