@@ -2,9 +2,9 @@ name: Publish Navitia Documentation
 
 on:
   push:
-    branches:
-      - release
-  workflow_dispatch:
+    tags:
+      - '*'
+  pull_request:
 
 env:
   REGION: eu-west-1
@@ -30,14 +30,14 @@ jobs:
           # copy website to workspace
           rm -rf /work/documentation/slate/build
           cp -r /srv/slate/build /work/documentation/slate
-    - name: Deploy to GitHub Pages
-      if: success()
-      uses: crazy-max/ghaction-github-pages@v2
-      with:
-        target_branch: gh-pages
-        build_dir: documentation/slate/build
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    # - name: Deploy to GitHub Pages
+    #   if: success()
+    #   uses: crazy-max/ghaction-github-pages@v2
+    #   with:
+    #     target_branch: gh-pages
+    #     build_dir: documentation/slate/build
+    #   env:
+    #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     - name: slack notification (the job has failed)
       if: failure()
       run: |
