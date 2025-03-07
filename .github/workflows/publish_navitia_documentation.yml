@@ -22,11 +22,9 @@ jobs:
     - name: Build website in Slate format
       uses: addnab/docker-run-action@v3
       with:
-        username: $USER
         image: slatedocs/slate:latest
-        options: -v ${{ github.workspace }}:/work
+        options: -v ${{ github.workspace }}:/work --user $(id -u):$(id -g)
         run: |
-          chown -R $USER:$USER /work
           cp -r /work/documentation/slate/source /srv/slate
           ./slate.sh build
           # copy website to workspace
