@@ -191,7 +191,9 @@ class RealtimeProxy(six.with_metaclass(ABCMeta, object)):
 
     def _update_stop_schedule(self, request, stop_schedule, next_realtime_passages, group_by_dest=False):
         """
-        Update the stopschedule response with the new realtime passages
+        Update the response for /stop_schedules, /terminus_schedules with the new realtime passages
+        group_by_dest = False for /stop_schedules
+        group_by_dest = True for /terminus_schedules
 
         By default, all base schedule data is removed and replaced with realtime data.
         Each proxy can define its own way to merge passages.
@@ -233,6 +235,9 @@ class RealtimeProxy(six.with_metaclass(ABCMeta, object)):
         return RoutePoint(passage.route, passage.stop_point) == route_point
 
     def _update_passages(self, passages, route_point, template, next_realtime_passages):
+        """
+        Update the /departures response with the new realtime passages
+        """
         if next_realtime_passages is None:
             return
 
