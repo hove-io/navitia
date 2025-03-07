@@ -55,6 +55,8 @@ When the token is not allowed to request the coverage.
 | no_destination              | Couldn't find a destination                                                 | /journeys                 |
 | no_origin_nor_destination   | Couldn't find neither origin nor destination                                | /journeys                 |
 | unknown_object              | Couldn't find one of the request parameters. It can be the region, the API or a PT object | All services              |
+| no_solution                 | From data, there is no solution available given the request                | /journeys                  |
+
 
 ### 413: request too large
 
@@ -75,16 +77,6 @@ Tips to work around this error:
 * rerun your request after an exponential backoff
 * give up your request
 * contact us for a [quotation](https://navitia.io/demande-de-devis/)
-
-## Code 200
-
-Even if everything is correct (input parameters, internal processing)
-Navitia can end up finding that the correct answer is empty.
-
-| Error id                    | Description                                                                |
-|-----------------------------|----------------------------------------------------------------------------|
-| no_solution                 | From data, there is no solution available given the request                |
-
 
 ## Code 50x
 
