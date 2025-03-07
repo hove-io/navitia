@@ -23,7 +23,7 @@ jobs:
       uses: addnab/docker-run-action@v3
       with:
         image: slatedocs/slate:latest
-        options: -v ${{ github.workspace }}:/work --user $(id -u):$(id -g)
+        options: -v ${{ github.workspace }}:/work
         run: |
           cp -r /work/documentation/slate/source /srv/slate
           ./slate.sh build
@@ -43,8 +43,8 @@ jobs:
       run: |
           echo '{"text":":warning: Navitia Github Actions: publish_navitia_documentation failed ! (https://github.com/hove-io/navitia/actions?query=workflow%3A%22Publish+Navitia+Documentation%22)"}' | http --json POST ${{secrets.SLACK_NAVITIA_TEAM_URL}}
 
-    - name: clean up workspace
-      if: ${{ always() }}
-      run: |
-        rm -rf ./*
-        rm -rf ./.??*
+    # - name: clean up workspace
+    #   if: ${{ always() }}
+    #   run: |
+    #     rm -rf ./*
+    #     rm -rf ./.??*
