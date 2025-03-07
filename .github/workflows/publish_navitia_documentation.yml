@@ -2,9 +2,8 @@ name: Publish Navitia Documentation
 
 on:
   push:
-    branches:
-      - release
-  workflow_dispatch:
+    tags:
+      - '*'
 
 env:
   REGION: eu-west-1
@@ -15,6 +14,7 @@ jobs:
     steps:
     - name: force chown to avoid errors
       run: chown -R $USER:$USER .
+
     - name: Git config
       run: git config --global --add safe.directory /__w/navitia/navitia
     - name: Checkout
@@ -38,13 +38,8 @@ jobs:
         build_dir: documentation/slate/build
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
     - name: slack notification (the job has failed)
       if: failure()
       run: |
           echo '{"text":":warning: Navitia Github Actions: publish_navitia_documentation failed ! (https://github.com/hove-io/navitia/actions?query=workflow%3A%22Publish+Navitia+Documentation%22)"}' | http --json POST ${{secrets.SLACK_NAVITIA_TEAM_URL}}
-
-    - name: clean up workspace
-      if: ${{ always() }}
-      run: |
-        rm -rf ./*
-        rm -rf ./.??*
