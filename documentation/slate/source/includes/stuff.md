@@ -13,7 +13,7 @@ return multiple journeys if it cannot know that one is better than the
 other. For example it cannot decide that a one hour journey with no
 connection is better than a 45 minutes journey with one connection
 (it is called the [pareto front](http://en.wikipedia.org/wiki/Pareto_efficiency)).
-Navitia uses multiple objectives : arrival datetime, the number of transfers, 
+Navitia uses multiple objectives : arrival datetime, the number of transfers,
 the duration of "walking" (transfers and fallback), reliability of lines, crowd, etc.
 
 If the user asks for more journeys than the number of journeys given by
