@@ -1013,6 +1013,27 @@ See how disruptions affect a journey in the [real time](#realtime) section.
 | nop     | free_radius_to	     | int     | Radius length (in meters) around the coordinates of arrival in which the stop points are considered free to go (crowfly=0)  | 0           |
 | nop     | timeframe_duration	     | int     | Minimum timeframe to search journeys (in seconds, maximum allowed value = 86400). For example 'timeframe_duration=3600' will search for all interesting journeys departing within the next hour.  | 0           |
 
+### Additional Parameters for Biking and Walking
+
+Navitia’s routing engine for biking, walking, and driving is powered by [Valhalla](https://valhalla.github.io/valhalla/). This robust and flexible software enables advanced and efficient route calculations. Valhalla is deeply integrated into Navitia, enabling high-performance intermodal routing calculations.
+
+As a result, Navitia supports all available costing parameters provided by Valhalla. These parameters are detailed in the [Valhalla API reference](https://valhalla.github.io/valhalla/api/turn-by-turn/api-reference), and you can experiment with them using the [Valhalla demo tool](https://valhalla.openstreetmap.de/directions?profile=pedestrian\&wps=2.335753440856934,48.871990875012344).
+
+To customize routing behavior, you can use these parameters in Navitia by adding the appropriate prefix (`walking_` or `bike_`). For example, setting `walking_walkway_factor=3` increases the preference for pedestrian paths, while `bike_use_hills=0` avoids hilly terrain when cycling. Below are two examples:
+
+| Mode    | Valhalla Parameter | Description                                                                                                                                                                                  | Navitia Parameter        | Example API Request                                                                                                                                                               |
+| ------- | ------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Walking | `walkway_factor`   | Adjusts the cost of roads classified as `footway`, such as designated footpaths or sidewalks along residential streets. Pedestrian routes generally favor these paths. Default value: `1.0`. | `walking_walkway_factor` | [Example](https://api.navitia.io/v1/coverage/fr-idf/journeys?from=2.37715%3B48.846781\&to=2.396956%3B48.845602\&walking_walkway_factor=3&)                                        |
+| Biking  | `use_hills`        | Defines a cyclist’s willingness to tackle hills. Ranges from `0` (avoids hills, even if the route is longer) to `1` (willing to take on hills and steep grades). Default value: `0.5`.       | `bike_use_hills`         | [Example](https://api.navitia.io/v1/coverage/fr-idf/journeys?from=2.37715%3B48.846781\&to=2.396956%3B48.845602\&bike_use_hills=0\&direct_path=only\&direct_path_mode%5B%5D=bike&) |
+
+These parameters empower users to tailor their pedestrian and cycling routes in Navitia, optimizing travel times, avoiding undesirable terrain, and enhancing overall navigation efficiency to better suit their individual needs. Here are some of our favorite parameters:
+
+- **`bike_avoid_bad_surfaces`**: Helps cyclists avoid rough or unpaved surfaces, improving ride comfort.
+- **`bike_maneuver_penalty`**: Adjusts the cost of making turns, influencing route selection to favor smoother navigation.
+- **`bike_use_living_streets`**: Controls the preference for cycling on residential and low-traffic streets.
+- **`walking_step_penalty`**: Modifies the cost of taking stairs, allowing for more accessible pedestrian routes.
+- **`walking_use_hills`**: Determines a pedestrian’s willingness to walk on hilly terrain, adjusting routes accordingly.
+
 ### Precisions on `forbidden_uris[]` and `allowed_id[]`
 
 These parameters are filtering the vehicle journeys and the stop points used to compute the journeys.
