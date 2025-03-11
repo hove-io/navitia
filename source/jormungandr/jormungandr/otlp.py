@@ -31,7 +31,7 @@
 
 import os
 import logging
-from typing import Dict
+from typing import Dict, Optional
 from flask import request
 
 from opentelemetry.sdk.resources import SERVICE_NAME, Resource
@@ -52,7 +52,7 @@ class Otlp:
     __instance_id: str = "unknown"
     __labels: Dict = {}
 
-    def __init__(self, platform: str, account: str, instance_id: str) -> None:
+    def __init__(self, platform: str, account: str, instance_id: Optional[str]) -> None:
         self.__log = logging.getLogger(__name__)
         self._tracer = None
         self._meter = None
@@ -65,7 +65,7 @@ class Otlp:
         try:
             self.__platform = platform + " (Python)"
             self.__account = account
-            self.__instance_id = self.__get_task_id(instance_id) if "/" in instance_id else instance_id
+            self.__instance_id = self.__get_task_id() if instance_id is None else instance_id
             self.__resource = Resource(
                 attributes={
                     SERVICE_NAME: self.__service_name,
@@ -81,7 +81,9 @@ class Otlp:
             self._tracer = None
             self._meter = None
 
-    def __get_task_id(self, ecs_container_metadata_uri_v4: str) -> str:
+    def __get_task_id(self) -> str:
+        ecs_container_metadata_uri_v4 = os.getenv("ECS_CONTAINER_METADATA_URI_V4", "unknown")
+
         return ecs_container_metadata_uri_v4.split("/")[-1].split("-")[0]
 
     def __init_tracer(self):
