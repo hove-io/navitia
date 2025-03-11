@@ -65,7 +65,7 @@ class Otlp:
         try:
             self.__platform = platform + " (Python)"
             self.__account = account
-            self.__instance_id = instance_id
+            self.__instance_id = self.__get_task_id(instance_id) if "/" in instance_id else instance_id
             self.__resource = Resource(
                 attributes={
                     SERVICE_NAME: self.__service_name,
@@ -80,6 +80,9 @@ class Otlp:
             self.__log.exception("Failure while initializing otlp. Disabling otlp.")
             self._tracer = None
             self._meter = None
+
+    def __get_task_id(self, ecs_container_metadata_uri_v4: str) -> str:
+        return ecs_container_metadata_uri_v4.split("/")[-1].split("-")[0]
 
     def __init_tracer(self):
         trace_exporter = OTLPSpanExporter()
