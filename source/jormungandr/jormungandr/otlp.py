@@ -31,7 +31,7 @@
 
 import os
 import logging
-from typing import Dict
+from typing import Dict, Optional
 from flask import request
 
 from opentelemetry.sdk.resources import SERVICE_NAME, Resource
@@ -49,9 +49,10 @@ class Otlp:
     __service_name: str = "jormungandr"
     __platform: str = "unknown"
     __account: str = "unknown"
+    __instance_id: str = "unknown"
     __labels: Dict = {}
 
-    def __init__(self, platform: str, account: str) -> None:
+    def __init__(self, platform: str, account: str, instance_id: Optional[str]) -> None:
         self.__log = logging.getLogger(__name__)
         self._tracer = None
         self._meter = None
@@ -64,6 +65,7 @@ class Otlp:
         try:
             self.__platform = platform + " (Python)"
             self.__account = account
+            self.__instance_id = self.__get_task_id() if instance_id is None else instance_id
             self.__resource = Resource(
                 attributes={
                     SERVICE_NAME: self.__service_name,
@@ -78,6 +80,11 @@ class Otlp:
             self.__log.exception("Failure while initializing otlp. Disabling otlp.")
             self._tracer = None
             self._meter = None
+
+    def __get_task_id(self) -> str:
+        ecs_container_metadata_uri_v4 = os.getenv("ECS_CONTAINER_METADATA_URI_V4", "unknown")
+
+        return ecs_container_metadata_uri_v4.split("/")[-1].split("-")[0]
 
     def __init_tracer(self):
         trace_exporter = OTLPSpanExporter()
@@ -161,6 +168,7 @@ class Otlp:
         return {
             "coverage": "unknown",
             "api": "unknown",
+            "instance_id": self.__instance_id,
             "platform": self.__platform,
             "account": self.__account,
         }
@@ -221,4 +229,4 @@ class Otlp:
         self.__jormungandr_event.add(1, labels)
 
 
-otlp_instance = Otlp(os.getenv("OTEL_PLATFORM"), os.getenv("OTEL_ACCOUNT"))
+otlp_instance = Otlp(os.getenv("OTEL_PLATFORM"), os.getenv("OTEL_ACCOUNT"), os.getenv("OTEL_INSTANCE_ID"))
