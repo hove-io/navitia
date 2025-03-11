@@ -49,9 +49,10 @@ class Otlp:
     __service_name: str = "jormungandr"
     __platform: str = "unknown"
     __account: str = "unknown"
+    __instance_id: str = "unknown"
     __labels: Dict = {}
 
-    def __init__(self, platform: str, account: str) -> None:
+    def __init__(self, platform: str, account: str, instance_id: str) -> None:
         self.__log = logging.getLogger(__name__)
         self._tracer = None
         self._meter = None
@@ -64,6 +65,7 @@ class Otlp:
         try:
             self.__platform = platform + " (Python)"
             self.__account = account
+            self.__instance_id = instance_id
             self.__resource = Resource(
                 attributes={
                     SERVICE_NAME: self.__service_name,
@@ -161,6 +163,7 @@ class Otlp:
         return {
             "coverage": "unknown",
             "api": "unknown",
+            "instance_id": self.__instance_id,
             "platform": self.__platform,
             "account": self.__account,
         }
@@ -221,4 +224,4 @@ class Otlp:
         self.__jormungandr_event.add(1, labels)
 
 
-otlp_instance = Otlp(os.getenv("OTEL_PLATFORM"), os.getenv("OTEL_ACCOUNT"))
+otlp_instance = Otlp(os.getenv("OTEL_PLATFORM"), os.getenv("OTEL_ACCOUNT"), os.getenv("OTEL_INSTANCE_ID"))
