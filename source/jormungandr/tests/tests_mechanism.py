@@ -75,6 +75,7 @@ class FakeModel(object):
         scenario='new_default',
         equipment_details_providers=[],
         poi_dataset=None,
+        same_journey_schedules_configuration=None,
     ):
         self.priority = priority
         self.is_free = is_free
@@ -83,6 +84,7 @@ class FakeModel(object):
         self.equipment_details_providers = equipment_details_providers
         self.poi_dataset = poi_dataset
         self.max_nb_journeys = max_nb_journeys
+        self.same_journey_schedules_configuration = same_journey_schedules_configuration
 
 
 class AbstractTestFixture(unittest.TestCase):

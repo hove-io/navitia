@@ -174,6 +174,7 @@ class Instance(transient_socket.TransientSocket):
         individual_bss_provider=[],
         individual_car_parking_provider=[],
         timezone=None,
+        same_journey_schedules_configuration=None,
     ):
         super(Instance, self).__init__(
             name=name,
@@ -303,6 +304,11 @@ class Instance(transient_socket.TransientSocket):
         self._pt_journey_fare_backend_manager = PtJourneyFareBackendManager(
             self, pt_journey_fare_configurations, None
         )
+
+        self._same_journey_schedules_configuration = same_journey_schedules_configuration or {
+            "allowed_id_type": ["stop_point"],
+            "min_nb_journeys": 5,
+        }
 
     def get_providers_from_db(self):
         """
@@ -814,6 +820,13 @@ class Instance(transient_socket.TransientSocket):
             return self._ghost_words
         instance_db = self.get_models()
         return get_value_or_default('ghost_words', instance_db, self.name)
+
+    @property
+    def same_journey_schedules_configuration(self):
+        instance_db = self.get_models()
+        if instance_db and instance_db.same_journey_schedules_configuration:
+            return instance_db.same_journey_schedules_configuration
+        return self._same_journey_schedules_configuration
 
     @property
     def additional_parameters(self):

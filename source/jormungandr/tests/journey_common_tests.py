@@ -1311,6 +1311,116 @@ class JourneyCommon(object):
 
         assert 'deleted_because_too_short_heavy_mode_fallback' in car_fallback_pt_journey['tags']
 
+    def test_same_journey_schedules_with_line_filtering(self):
+        """Test that same_journey_schedules respects line filtering configuration"""
+
+        instance = i_manager.instances.get('main_routing_test')
+
+        # Skip test if instance not found
+        assert instance is not None
+
+        # Save original configuration
+        original_config = getattr(instance, 'same_journey_schedules_configuration', None)
+
+        assert original_config is not None
+        assert original_config.get('allowed_id_type') == ["stop_point"]
+        assert original_config.get('min_nb_journeys') == 5
+
+        try:
+            test_configs = [
+                {"allowed_id_type": ["stop_point"], "min_nb_journeys": 5},
+                {"allowed_id_type": ["line"], "min_nb_journeys": 5},
+                {"allowed_id_type": ["network"], "min_nb_journeys": 3},
+                # {"allowed_id_type": ["physical_mode"], "min_nb_journeys": 5},
+                {"allowed_id_type": ["commercial_mode"], "min_nb_journeys": 5},
+                {"allowed_id_type": ["stop_point", "line"], "min_nb_journeys": 5},
+                {"allowed_id_type": ["stop_point", "network"], "min_nb_journeys": 5},
+                {"allowed_id_type": ["stop_area", "commercial_mode"], "min_nb_journeys": 5},
+                {"allowed_id_type": ["stop_area"], "min_nb_journeys": 5},
+                # {"allowed_id_type": ["line", "network", "physical_mode"], "min_nb_journeys": 5}
+            ]
+
+            for config in test_configs:
+                with mock.patch.object(
+                    type(instance),
+                    'same_journey_schedules_configuration',
+                    new_callable=mock.PropertyMock,
+                    return_value=config,
+                ):
+                    query = "journeys?from=0.0001796623963909418;8.98311981954709e-05&to=0.0018864551621048887;0.0007186495855637672&datetime=20120614080000&min_nb_journeys={min_nb_journeys}".format(
+                        min_nb_journeys=config.get('min_nb_journeys')
+                    )
+                    r = self.query_region(query)
+
+                    # Verify we have journeys
+                    assert 'journeys' in r
+                    assert len(r['journeys']) == config.get('min_nb_journeys')
+
+                    # Get the first journey with public transport
+                    pt_journey = None
+                    for journey in r['journeys']:
+                        for section in journey.get('sections', []):
+                            if section.get('type') == 'public_transport':
+                                pt_journey = journey
+                                break
+                        if pt_journey:
+                            break
+
+                    assert pt_journey is not None
+
+                    resource_ids = {}
+                    for section in pt_journey['sections']:
+                        if section.get('type') == 'public_transport' and 'links' in section:
+                            for link in section['links']:
+                                if 'type' in link and 'id' in link:
+                                    resource_type = link['type']
+                                    resource_id = link['id']
+                                    resource_ids[resource_type] = resource_id
+
+                    same_journey_link = None
+                    for link in pt_journey.get('links', []):
+                        if link.get('rel') == 'same_journey_schedules':
+                            same_journey_link = link.get('href')
+                            break
+
+                    assert same_journey_link is not None
+
+                    # Check that the href contains the expected resource IDs based on configuration
+                    allowed_id_types = config.get('allowed_id_type', [])
+                    for resource_type in allowed_id_types:
+                        if resource_type in resource_ids:
+                            resource_id = resource_ids[resource_type]
+                            assert (
+                                resource_id in same_journey_link
+                            ), f"Expected {resource_type} ID {resource_id} to be in same_journey_schedules link"
+
+                    # Execute the same_journey_schedules query
+                    same_journey_link = same_journey_link.replace('/v1/coverage/main_routing_test/', '')
+                    same_journey_link = same_journey_link.replace('http://localhostjourneys?', 'journeys?')
+                    r2 = self.query_region(same_journey_link)
+
+                    # Verify we have journeys in the response
+                    assert 'journeys' in r2
+                    assert len(r2['journeys']) > 0
+
+                    # For each configured ID type, check that all journeys use the same resource
+                    for resource_type in allowed_id_types:
+                        if resource_type in resource_ids:
+                            expected_id = resource_ids[resource_type]
+                            print(f"Checking all journeys use the same {resource_type}: {expected_id}")
+
+                            for journey in r2['journeys']:
+                                for section in journey.get('sections', []):
+                                    if section.get('type') == 'public_transport' and 'links' in section:
+                                        for link in section['links']:
+                                            if link.get('type') == resource_type and 'id' in link:
+                                                assert (
+                                                    link['id'] == expected_id
+                                                ), f"Expected {resource_type} ID {expected_id}, got {link['id']}"
+
+        finally:
+            instance._same_journey_schedules_configuration = original_config
+
 
 @dataset({"main_stif_test": {}})
 class AddErrorFieldInJormun(object):

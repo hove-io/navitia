@@ -135,8 +135,11 @@ class add_journey_href(object):
                     if 'stop_point' in o
                 }
 
+                instance = None
+                allowed_id_types = None
                 if 'region' in kwargs:
                     args['region'] = kwargs['region']
+                    instance = i_manager.instances.get(kwargs['region'])
                 if "sections" not in journey:  # this mean it's an isochrone...
                     if 'to' not in args:
                         args['to'] = journey['to']['id']
@@ -159,9 +162,55 @@ class add_journey_href(object):
 
                     args['min_nb_transfers'] = journey['nb_transfers']
                     args['direct_path'] = 'only' if 'non_pt' in journey['tags'] else 'none'
-                    args['min_nb_journeys'] = 5
+
+                    if instance:
+                        args['min_nb_journeys'] = instance.same_journey_schedules_configuration.get(
+                            'min_nb_journeys', 5
+                        )
+                        allowed_id_types = instance.same_journey_schedules_configuration.get(
+                            'allowed_id_type', ["stop_point"]
+                        )
                     args['is_journey_schedules'] = True
                     allowed_ids.update(args.get('allowed_id[]', []))
+
+                    if allowed_id_types:
+                        if 'stop_point' in allowed_id_types:
+                            pass
+                        if 'stop_area' in allowed_id_types:
+                            for section in journey['sections']:
+                                if section.get('type') == 'public_transport' and 'links' in section:
+                                    for link in section['links']:
+                                        if link.get('type') == 'stop_area' and link.get('id'):
+                                            allowed_ids.add(link['id'])
+
+                        if 'line' in allowed_id_types:
+                            for section in journey['sections']:
+                                if section.get('type') == 'public_transport' and 'links' in section:
+                                    for link in section['links']:
+                                        if link.get('type') == 'line' and link.get('id'):
+                                            allowed_ids.add(link['id'])
+
+                        if 'network' in allowed_id_types:
+                            for section in journey['sections']:
+                                if section.get('type') == 'public_transport' and 'links' in section:
+                                    for link in section['links']:
+                                        if link.get('type') == 'network' and link.get('id'):
+                                            allowed_ids.add(link['id'])
+
+                        if 'physical_mode' in allowed_id_types:
+                            for section in journey['sections']:
+                                if section.get('type') == 'public_transport' and 'links' in section:
+                                    for link in section['links']:
+                                        if link.get('type') == 'physical_mode' and link.get('id'):
+                                            allowed_ids.add(link['id'])
+
+                        if 'commercial_mode' in allowed_id_types:
+                            for section in journey['sections']:
+                                if section.get('type') == 'public_transport' and 'links' in section:
+                                    for link in section['links']:
+                                        if link.get('type') == 'commercial_mode' and link.get('id'):
+                                            allowed_ids.add(link['id'])
+
                     args['allowed_id[]'] = list(allowed_ids)
                     args['_type'] = 'journeys'
 

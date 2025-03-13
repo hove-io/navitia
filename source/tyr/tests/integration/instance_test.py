@@ -840,3 +840,28 @@ def test_on_attributs_starting_with_bike(create_instance):
     assert status == 400
     assert "message" in resp
     assert "The type of bicycle" in resp['message']['bicycle_type']
+
+
+def test_same_journey_schedules_configuration(create_instance):
+    instance = create_instance(name="test_instance")
+
+    # Test default configuration
+    assert instance.same_journey_schedules_configuration == {
+        "allowed_id_type": ["stop_point"],
+        "min_nb_journeys": 5,
+    }
+
+    # Update configuration
+    instance.same_journey_schedules_configuration = {
+        "allowed_id_type": ["stop_point", "line"],
+        "min_nb_journeys": 10,
+    }
+
+    # db.session.commit()
+
+    # Verify update
+    updated_instance = models.Instance.query.filter_by(name="test_instance").first()
+    assert updated_instance.same_journey_schedules_configuration == {
+        "allowed_id_type": ["stop_point", "line"],
+        "min_nb_journeys": 10,
+    }

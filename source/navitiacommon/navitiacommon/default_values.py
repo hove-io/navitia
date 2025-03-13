@@ -254,6 +254,7 @@ ghost_words = []  # type: List[str]
 #     }
 # }
 pt_planners_configurations = dict()  # type: dict
+same_journey_schedules_configuration = dict()  # type: dict
 
 # loki pt journey fare
 loki_pt_journey_fare = 'kraken'
