@@ -2255,7 +2255,7 @@ HTTP/1.1 200 OK
 }
 ```
 
-The `/freefloatings_nearby` provides access to nearby shared mobility options (such as bikes, scooters, or cars) based on user-provided coordinates.
+The `/freefloatings_nearby` service provides access to nearby shared mobility options (such as bikes, scooters, or cars) based on user-provided coordinates.
 
 This endpoint allows users to search for shared mobility options near a specific location or object, returning detailed information about available free-floating vehicles, including type, provider, battery level, and distance.
 
