@@ -69,19 +69,20 @@ journey_schedules_configs = [
 
 
 def check_journey_id_type(result, allowed_id_types, resource_ids):
-    for resource_type in allowed_id_types:
-        if resource_type in resource_ids:
-            expected_id = resource_ids[resource_type]
+    for resource_type, expected_id in resource_ids.items():
+        if resource_type in allowed_id_types:
             print(f"Checking all journeys use the same {resource_type}: {expected_id}")
 
-            for journey in result['journeys']:
+            for journey in result.get('journeys', []):
                 for section in journey.get('sections', []):
-                    if section.get('type') == 'public_transport' and 'links' in section:
-                        for link in section['links']:
-                            if link.get('type') == resource_type and 'id' in link:
-                                assert (
-                                    link['id'] == expected_id
-                                ), f"Expected {resource_type} ID {expected_id}, got {link['id']}"
+                    if section.get('type') != 'public_transport' or 'links' not in section:
+                        continue
+
+                    for link in section['links']:
+                        if link.get('type') == resource_type and 'id' in link:
+                            assert (
+                                link['id'] == expected_id
+                            ), f"Expected {resource_type} ID {expected_id}, got {link['id']}"
 
 
 def check_allowed_id_type(allowed_id_types, resource_ids, same_journey_link):
