@@ -174,8 +174,6 @@ class add_journey_href(object):
                     allowed_ids.update(args.get('allowed_id[]', []))
 
                     if allowed_id_types:
-                        if 'stop_point' in allowed_id_types:
-                            pass
                         if 'stop_area' in allowed_id_types:
                             for section in journey['sections']:
                                 if section.get('type') == 'public_transport' and 'links' in section:
