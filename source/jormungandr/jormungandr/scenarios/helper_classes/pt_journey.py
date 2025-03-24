@@ -346,6 +346,7 @@ class PtJourneyPool:
                 global_max_speed=request["_global_max_speed"],
                 use_zonal_odt=request["_use_zonal_odt"],
                 max_waiting_duration_odt=request["_max_waiting_duration_odt"],
+                min_nb_transfers=request['min_nb_transfers'],
             )
 
     def _async_request(self):
