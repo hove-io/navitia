@@ -749,6 +749,13 @@ class Instance(db.Model):  # type: ignore
         server_default=json.dumps(default_values.pt_planners_configurations),
     )
 
+    same_journey_schedules_configuration = db.Column(
+        JSONB,
+        default=default_values.same_journey_schedules_configuration,
+        nullable=False,
+        server_default=json.dumps(default_values.same_journey_schedules_configuration),
+    )
+
     filter_odt_journeys = db.Column(
         db.Boolean,
         default=default_values.filter_odt_journeys,

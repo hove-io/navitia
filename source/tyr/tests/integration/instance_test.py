@@ -97,6 +97,13 @@ def test_get_instance(create_instance):
     assert resp[0]['id'] == create_instance
 
 
+def test_get_instance_with_same_journey_schedules_configuration(create_instance):
+    resp = api_get('/v0/instances/fr')
+    assert len(resp) == 1
+    assert 'same_journey_schedules_configuration' in resp[0]
+    assert resp[0]['same_journey_schedules_configuration'] == {}
+
+
 def test_get_instance_with_traveler_profile(create_instance):
     resp = api_get('/v0/instances/fr')
     assert len(resp) == 1

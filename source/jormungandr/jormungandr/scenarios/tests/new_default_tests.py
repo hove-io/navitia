@@ -795,6 +795,7 @@ class FakeInstance(Instance):
             external_service_provider_configurations=[],
             olympics_forbidden_uris=olympics_forbidden_uris,
             pt_journey_fare_configurations={},
+            same_journey_schedules_configuration={"allowed_id_type": ["stop_point"], "min_nb_journeys": 5},
         )
 
 

@@ -980,6 +980,14 @@ class Instance(flask_restful.Resource):
         )
 
         parser.add_argument(
+            'same_journey_schedules_configuration',
+            type=dict,
+            help='same_journey_schedules_configuration',
+            location=('json', 'values'),
+            default=instance.same_journey_schedules_configuration,
+        )
+
+        parser.add_argument(
             'ghost_words',
             type=str,
             action='append',
@@ -1376,6 +1384,7 @@ class Instance(flask_restful.Resource):
                         'bike_country_crossing_penalty',
                         'bike_destination_only_penalty',
                         'use_predicted_traffic',
+                        'same_journey_schedules_configuration',
                     ],
                 ),
                 maxlen=0,
@@ -2285,7 +2294,7 @@ class TravelerProfile(flask_restful.Resource):
                 return {'error': "Coverage: {0} doesn't exist".format(name)}
             profile = models.TravelerProfile()
             profile.coverage_id = instance.id
-            for (attr, default_value) in default_traveler_profile_params[traveler_type].items():
+            for attr, default_value in default_traveler_profile_params[traveler_type].items():
                 # override hardcoded values by args if args are not None
                 value = default_value if self.args.get(attr) is None else self.args.get(attr)
                 setattr(profile, attr, value)
@@ -2305,7 +2314,7 @@ class TravelerProfile(flask_restful.Resource):
         if profile is None:
             return {'error': 'Non profile is found to update'}, 404
         try:
-            for (attr, args_value) in self.args.items():
+            for attr, args_value in self.args.items():
                 # override hardcoded values by args if args are not None
                 if args_value is not None:
                     setattr(profile, attr, args_value)

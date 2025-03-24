@@ -154,6 +154,7 @@ class FakeInstance(Instance):
             streetnetwork_backend_manager=StreetNetworkBackendManager(),
             external_service_provider_configurations=[],
             pt_journey_fare_configurations={},
+            same_journey_schedules_configuration={"allowed_id_type": ["stop_point"], "min_nb_journeys": 5},
         )
         self.disable_database = disable_database
         self.equipment_provider_manager = EquipmentProviderManager(equipment_details_config)

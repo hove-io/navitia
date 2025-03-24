@@ -51,6 +51,7 @@ from jormungandr.utils import (
     date_to_timestamp,
     dt_to_str,
     has_invalid_reponse_code,
+    is_public_transport_section,
     journeys_absent,
     COVERAGE_ANY_BETA,
     local_str_date_to_str_date_with_offset,
@@ -135,8 +136,11 @@ class add_journey_href(object):
                     if 'stop_point' in o
                 }
 
+                instance = None
+                allowed_id_types = []
                 if 'region' in kwargs:
                     args['region'] = kwargs['region']
+                    instance = i_manager.instances.get(kwargs['region'])
                 if "sections" not in journey:  # this mean it's an isochrone...
                     if 'to' not in args:
                         args['to'] = journey['to']['id']
@@ -159,9 +163,26 @@ class add_journey_href(object):
 
                     args['min_nb_transfers'] = journey['nb_transfers']
                     args['direct_path'] = 'only' if 'non_pt' in journey['tags'] else 'none'
-                    args['min_nb_journeys'] = 5
+
+                    if instance:
+                        args['min_nb_journeys'] = instance.same_journey_schedules_configuration.get(
+                            'min_nb_journeys', 5
+                        )
+                        allowed_id_types = instance.same_journey_schedules_configuration.get(
+                            'allowed_id_type', ["stop_point"]
+                        )
                     args['is_journey_schedules'] = True
                     allowed_ids.update(args.get('allowed_id[]', []))
+
+                    for allowed_type in allowed_id_types:
+                        for section in journey['sections']:
+                            if is_public_transport_section(section):
+                                allowed_ids.update(
+                                    link['id']
+                                    for link in section['links']
+                                    if link.get('type') == allowed_type and link.get('id')
+                                )
+
                     args['allowed_id[]'] = list(allowed_ids)
                     args['_type'] = 'journeys'
 

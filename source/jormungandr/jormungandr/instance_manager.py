@@ -132,6 +132,7 @@ class InstanceManager(object):
             individual_bss_provider=config.get('individual_bss_provider', []),
             individual_car_parking_provider=config.get('individual_car_parking_provider', []),
             timezone=config.get("timezone", "Europe/Paris"),
+            same_journey_schedules_configuration=config.get("same_journey_schedules_configuration", None),
         )
 
         self.instances[instance.name] = instance

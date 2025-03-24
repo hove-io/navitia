@@ -253,6 +253,7 @@ instance_fields = {
     'language': fields.Raw,
     'default_pt_planner': fields.Raw,
     'pt_planners_configurations': fields.Raw,
+    'same_journey_schedules_configuration': fields.Raw,
     'ghost_words': fields.List(fields.String),
     'filter_odt_journeys': fields.Raw,
     'additional_parameters': fields.Raw,
