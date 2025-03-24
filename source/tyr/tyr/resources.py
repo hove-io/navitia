@@ -1384,6 +1384,7 @@ class Instance(flask_restful.Resource):
                         'bike_country_crossing_penalty',
                         'bike_destination_only_penalty',
                         'use_predicted_traffic',
+                        'same_journey_schedules_configuration',
                     ],
                 ),
                 maxlen=0,

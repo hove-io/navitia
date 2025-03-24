@@ -93,6 +93,10 @@ def get_uri_pt_object(pt_object):
     return pt_object.uri
 
 
+def is_public_transport_section(section):
+    return section.get('type') == 'public_transport' and 'links' in section
+
+
 def kilometers_to_meters(distance):
     # type: (float) -> int
     return int(round(distance * 1000.0))

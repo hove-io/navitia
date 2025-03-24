@@ -51,6 +51,7 @@ from jormungandr.utils import (
     date_to_timestamp,
     dt_to_str,
     has_invalid_reponse_code,
+    is_public_transport_section,
     journeys_absent,
     COVERAGE_ANY_BETA,
     local_str_date_to_str_date_with_offset,
@@ -176,38 +177,48 @@ class add_journey_href(object):
                     if allowed_id_types:
                         if 'stop_area' in allowed_id_types:
                             for section in journey['sections']:
-                                if section.get('type') == 'public_transport' and 'links' in section:
-                                    for link in section['links']:
-                                        if link.get('type') == 'stop_area' and link.get('id'):
-                                            allowed_ids.add(link['id'])
+                                if is_public_transport_section(section):
+                                    allowed_ids.update(
+                                        link['id']
+                                        for link in section['links']
+                                        if link.get('type') == 'stop_area' and link.get('id')
+                                    )
 
                         if 'line' in allowed_id_types:
                             for section in journey['sections']:
-                                if section.get('type') == 'public_transport' and 'links' in section:
-                                    for link in section['links']:
-                                        if link.get('type') == 'line' and link.get('id'):
-                                            allowed_ids.add(link['id'])
+                                if is_public_transport_section(section):
+                                    allowed_ids.update(
+                                        link['id']
+                                        for link in section['links']
+                                        if link.get('type') == 'line' and link.get('id')
+                                    )
 
                         if 'network' in allowed_id_types:
                             for section in journey['sections']:
-                                if section.get('type') == 'public_transport' and 'links' in section:
-                                    for link in section['links']:
-                                        if link.get('type') == 'network' and link.get('id'):
-                                            allowed_ids.add(link['id'])
+                                if is_public_transport_section(section):
+                                    allowed_ids.update(
+                                        link['id']
+                                        for link in section['links']
+                                        if link.get('type') == 'network' and link.get('id')
+                                    )
 
                         if 'physical_mode' in allowed_id_types:
                             for section in journey['sections']:
-                                if section.get('type') == 'public_transport' and 'links' in section:
-                                    for link in section['links']:
-                                        if link.get('type') == 'physical_mode' and link.get('id'):
-                                            allowed_ids.add(link['id'])
+                                if is_public_transport_section(section):
+                                    allowed_ids.update(
+                                        link['id']
+                                        for link in section['links']
+                                        if link.get('type') == 'physical_mode' and link.get('id')
+                                    )
 
                         if 'commercial_mode' in allowed_id_types:
                             for section in journey['sections']:
-                                if section.get('type') == 'public_transport' and 'links' in section:
-                                    for link in section['links']:
-                                        if link.get('type') == 'commercial_mode' and link.get('id'):
-                                            allowed_ids.add(link['id'])
+                                if is_public_transport_section(section):
+                                    allowed_ids.update(
+                                        link['id']
+                                        for link in section['links']
+                                        if link.get('type') == 'commercial_mode' and link.get('id')
+                                    )
 
                     args['allowed_id[]'] = list(allowed_ids)
                     args['_type'] = 'journeys'

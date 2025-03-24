@@ -79,7 +79,6 @@ def get_allowed_resources(resource_ids, allowed_id_types):
 
 
 def validate_resource_links(result, resource_type, expected_id):
-    print(f"Checking all journeys use the same {resource_type}: {expected_id}")
     relevant_links = collect_links_for_resource(result, resource_type)
     assert_link_ids_match(relevant_links, resource_type, expected_id)
 
