@@ -218,9 +218,17 @@ class Otlp:
         if not self._meter:
             return
 
-        labels = {"platform": self.__platform, "account": self.__account, "event_type": event_type}
-        labels.update(params)
+        keep_labels = ["call", "event_type", "mode", "coverage", "service", "status"]
+        labels = {
+            "platform": self.__platform,
+            "account": self.__account,
+            "event_type": event_type,
+            "instance_id": self.__instance_id,
+        }
 
+        for keep_label in keep_labels:
+            if keep_label in params:
+                labels[keep_label] = params.pop(keep_label)
         if "navitia_request_id" in labels:
             labels.pop("navitia_request_id")
         if "duration" in labels:
