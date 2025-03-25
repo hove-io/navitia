@@ -111,7 +111,7 @@ class JourneyParameters(object):
         self.global_max_speed = global_max_speed
         self.use_zonal_odt = use_zonal_odt
         self.max_waiting_duration_odt = max_waiting_duration_odt
-        self.min_nb_transfers=min_nb_transfers
+        self.min_nb_transfers = min_nb_transfers
 
 
 # Needed for GraphicalIsochrones
