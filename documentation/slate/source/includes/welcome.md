@@ -111,28 +111,11 @@ To help you in the building of your project, there are some wrappers implemented
 |Language / Framework |Plugin                                              |
 |---------------------|----------------------------------------------------|
 |PHP5                 |<https://github.com/hove-io/NavitiaComponent>       |
-|Symfony 2 or 3       |<https://github.com/hove-io/NavitiaBundle>          |
 |Python               |<https://github.com/leonardbinet/navitia_client>    |
-|Python               |<https://github.com/hove-io/navitia_python_wrapper> |
 
 <h2 id="about-data">About the data</h2>
 
-The street network is extracted from [OpenStreetMap](https://www.openstreetmap.org). The public transport data are provided by networks that provide their timetables as open data. Some data improvements are achieved by Hove and are published back there <https://navitia.opendatasoft.com>.
-
-Want to know if your city is in Navitia? Know if a special contributor is used? You can either search in [datasets](#datasets) of the different [coverages](#coverage). Or use the filter provided on our data catalog <https://navitia.opendatasoft.com>.
-
-<aside class="success">
-    We are gradually supporting more and more cities. If your city has open public transport data and is missing,
-    check our googlegroup and drop us a note at <a href="mailto:navitia@googlegroups.com">navitia@googlegroups.com</a>.
-    </br>
-    We will try to add it to navitia.io
-</aside>
-<aside class="notice">
-    Please note that the creation of a new coverage on our servers requires resources,
-    so on some data integrations we try to make sure that the amount of requests justifies the use of those resources.
-    </br>
-    Your feedback and requests are very welcome so we choose the most useful new coverages depending on available resources.
-</aside>
+The street network is extracted from [OpenStreetMap](https://www.openstreetmap.org). The public transport data are provided by networks that provide their timetables as open data. Some data improvements are achieved by Hove and are published back there <https://data.gouv.fr>.
 
 Getting help
 ------------
@@ -140,13 +123,10 @@ Getting help
 >[Try openAPI / swagger](https://api.navitia.io/v1/schema)
 
 All available functions are documented in [integration part](#interface).
-If you want to go further, there is an Swagger-openAPI documentation at [https://api.navitia.io/v1/schema](https://api.navitia.io/v1/schema)
 
-A mailing list is available to ask questions or request [new data](#about-data) integrations: <a href="mailto:navitia@googlegroups.com">navitia@googlegroups.com</a>
+<aside class="success">
+    If you want to go further, there is an Swagger-openAPI documentation at [https://api.navitia.io/v1/schema](https://api.navitia.io/v1/schema)
+</aside>
 
 In order to report bug and make feature requests please use our github navitia project
 <https://github.com/hove-io/navitia/issues>.
-
-Stay tuned on twitter [@navitia](https://twitter.com/navitia).
-
-At last, we are present on the network `matrix.org`, channel [`#navitia:matrix.org`](https://riot.im/app/#/room/#navitia:matrix.org).
