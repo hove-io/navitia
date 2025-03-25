@@ -1038,6 +1038,9 @@ def create_journeys_request(origins, destinations, datetime, clockwise, journey_
     if journey_parameters.min_nb_journeys:
         req.journeys.min_nb_journeys = journey_parameters.min_nb_journeys
 
+    if journey_parameters.min_nb_transfers:
+        req.journeys.min_nb_transfers = journey_parameters.min_nb_transfers
+
     if journey_parameters.timeframe:
         req.journeys.timeframe_duration = int(journey_parameters.timeframe)
 

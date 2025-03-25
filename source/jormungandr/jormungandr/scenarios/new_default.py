@@ -274,6 +274,8 @@ def create_pb_request(requested_type, request, dep_mode, arr_mode, direct_path_t
         req.journeys.timeframe_duration = int(request['timeframe_duration'])
 
     req.journeys.depth = request['depth']
+    if request["min_nb_transfers"]:
+        req.journeys.min_nb_transfers = request["min_nb_transfers"]
 
     return req
 
