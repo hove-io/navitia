@@ -97,11 +97,34 @@ def test_get_instance(create_instance):
     assert resp[0]['id'] == create_instance
 
 
-def test_get_instance_with_same_journey_schedules_configuration(create_instance):
+def test_get_and_put_instance_with_same_journey_schedules_configuration(create_instance):
     resp = api_get('/v0/instances/fr')
     assert len(resp) == 1
     assert 'same_journey_schedules_configuration' in resp[0]
     assert resp[0]['same_journey_schedules_configuration'] == {}
+
+    sjs_configuration = {
+        "allowed_id_type": ["stop_point"],
+        "min_nb_journeys": 5,
+    }
+    params = {"same_journey_schedules_configuration": sjs_configuration}
+    resp = api_put(
+        '/v0/instances/{}'.format(create_instance), data=json.dumps(params), content_type='application/json'
+    )
+    assert resp['same_journey_schedules_configuration'] == sjs_configuration
+    assert resp['same_journey_schedules_configuration']['min_nb_journeys'] == 5
+
+    sjs_configuration = {
+        "allowed_id_type": ["stop_point", "stop_area", "commercial_mode"],
+        "min_nb_journeys": 2,
+    }
+    params = {"same_journey_schedules_configuration": sjs_configuration}
+    resp = api_put(
+        '/v0/instances/{}'.format(create_instance), data=json.dumps(params), content_type='application/json'
+    )
+    assert resp['same_journey_schedules_configuration'] == sjs_configuration
+    assert "commercial_mode" in resp['same_journey_schedules_configuration']['allowed_id_type']
+    assert resp['same_journey_schedules_configuration']['min_nb_journeys'] == 2
 
 
 def test_get_instance_with_traveler_profile(create_instance):
