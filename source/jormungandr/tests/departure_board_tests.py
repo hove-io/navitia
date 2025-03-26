@@ -307,6 +307,14 @@ class TestDepartureBoard(AbstractTestFixture):
         assert response["stop_schedules"][0]["stop_point"]["id"] == "Tstop1"
         assert response["stop_schedules"][0]["route"]["id"] == "A:1"
         assert len(response["stop_schedules"][0]["date_times"]) == 2
+        date_time = response["stop_schedules"][0]["date_times"][0]
+        assert len(date_time["equipments"]) == 3
+        for equipment in ["has_wheelchair_accessibility", "has_bike_accepted", "has_air_conditioned"]:
+            assert equipment in date_time["equipments"]
+        date_time = response["stop_schedules"][0]["date_times"][1]
+        assert len(date_time["equipments"]) == 3
+        for equipment in ["has_wheelchair_accessibility", "has_bike_accepted", "has_air_conditioned"]:
+            assert equipment in date_time["equipments"]
         assert response["stop_schedules"][0]["date_times"][0]["links"][0]["type"] == "notes"
         assert (
             response["stop_schedules"][0]["date_times"][0]["links"][0]["id"]
@@ -415,6 +423,12 @@ class TestDepartureBoard(AbstractTestFixture):
         assert response["terminus_schedules"][0]["additional_informations"] == "active_disruption"
         assert response["terminus_schedules"][0]["route"]["id"] == "A:1"
         assert len(response["terminus_schedules"][0]["date_times"]) == 0
+
+        date_time = response["stop_schedules"][0]["date_times"][0]
+        assert len(date_time["equipments"]) == 3
+        for equipment in ["has_wheelchair_accessibility", "has_bike_accepted", "has_air_conditioned"]:
+            assert equipment in date_time["equipments"]
+
         assert response["terminus_schedules"][0]["stop_point"]["id"] == "Tstop2"
 
     def test_real_terminus(self):
@@ -814,6 +828,14 @@ class TestDepartureBoard(AbstractTestFixture):
         assert len(nodes) == 3
         assert len(nodes[0]['date_times']) == 1
         date_time = nodes[0]['date_times'][0]
+        assert len(date_time["equipments"]) == 4
+        for equipment in [
+            "has_wheelchair_accessibility",
+            "has_bike_accepted",
+            "has_air_conditioned",
+            "has_audible_announcement",
+        ]:
+            assert equipment in date_time["equipments"]
         assert date_time['base_date_time'] == "20120616T001000"
         assert date_time['date_time'] == "20120616T001000"
         assert len(date_time['additional_informations']) == 0
