@@ -125,7 +125,7 @@ Getting help
 All available functions are documented in [integration part](#interface).
 
 <aside class="success">
-    If you want to go further, there is an Swagger-openAPI documentation at [https://api.navitia.io/v1/schema](https://api.navitia.io/v1/schema)
+    If you want to go further, there is an Swagger-openAPI documentation at https://api.navitia.io/v1/schema
 </aside>
 
 In order to report bug and make feature requests please use our github navitia project
