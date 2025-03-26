@@ -312,6 +312,8 @@ class TestDepartureBoard(AbstractTestFixture):
         for equipment in ["has_wheelchair_accessibility", "has_bike_accepted", "has_air_conditioned"]:
             assert equipment in date_time["equipments"]
         date_time = response["stop_schedules"][0]["date_times"][1]
+        vj1 = next(l['id'] for l in date_time['links'] if l['type'] == 'vehicle_journey')
+        assert vj1 == "vehicle_journey:vj1"
         assert len(date_time["equipments"]) == 3
         for equipment in ["has_wheelchair_accessibility", "has_bike_accepted", "has_air_conditioned"]:
             assert equipment in date_time["equipments"]
@@ -841,6 +843,8 @@ class TestDepartureBoard(AbstractTestFixture):
         assert len(date_time['additional_informations']) == 0
         assert date_time['data_freshness'] == "base_schedule"
         assert len(date_time['links']) == 2
+        vj_d = next(l['id'] for l in date_time['links'] if l['type'] == 'vehicle_journey')
+        assert vj_d == "vehicle_journey:vj_D"
 
         # Node with skipped_stop
         assert len(nodes[1]['date_times']) == 1
