@@ -44,10 +44,10 @@ First step
 
 > It sounds like "3b036afe-0110-4202-b9ed-99718476c2e0"
 
-Get a token here <https://navitia.io/inscription/>. We need your mail to stay in touch when Navitia changes.
+Contact us to get a token.
 
 <aside class="notice">
-The token obtained is private, you should avoid sharing it publicly (beware if you share code examples, url or screenshot).</br>
+The token obtained will be private, you should avoid sharing it publicly (beware if you share code examples, url or screenshot).</br>
 This will avoid having someone use your request quota.
 </aside>
 
