@@ -40,9 +40,7 @@ You have to use yours to get real services on real data (your token has no acces
 
 First step
 ---------------
-> Your token is available on your [navitia.io account page](https://navitia.io/se-connecter/).
-
-> It sounds like "3b036afe-0110-4202-b9ed-99718476c2e0"
+> Your token sounds like "3b036afe-0110-4202-b9ed-99718476c2e0"
 
 [Contact us](https://hove.com/en/solutions/navitia-api-insights/#3) to get a token.
 
