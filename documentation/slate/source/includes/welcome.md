@@ -45,7 +45,7 @@ First step
 [Contact us](https://hove.com/en/solutions/navitia-api-insights/#3) to get a token.
 
 <aside class="notice">
-The token obtained will be private, you should avoid sharing it publicly (beware if you share code examples, url or screenshot).</br>
+The obtained token will be private, you should avoid sharing it publicly (beware if you share code examples, url or screenshot).</br>
 This will avoid having someone use your request quota.
 </aside>
 
