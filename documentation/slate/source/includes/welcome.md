@@ -44,7 +44,7 @@ First step
 
 > It sounds like "3b036afe-0110-4202-b9ed-99718476c2e0"
 
-Contact us to get a token.
+[Contact us](https://hove.com/en/solutions/navitia-api-insights/#3) to get a token.
 
 <aside class="notice">
 The token obtained will be private, you should avoid sharing it publicly (beware if you share code examples, url or screenshot).</br>
