@@ -315,7 +315,7 @@ class TestDepartureBoard(AbstractTestFixture):
         assert vj1 == "vehicle_journey:vj1"
 
         date_time = response["stop_schedules"][0]["date_times"][1]
-        assert len(date_time["equipments"]) == 3
+        assert len(date_time["equipments"]) == 2
         for equipment in ["has_wheelchair_accessibility", "has_bike_accepted"]:
             assert equipment in date_time["equipments"]
         vj2 = next(l['id'] for l in date_time['links'] if l['type'] == 'vehicle_journey')
