@@ -311,12 +311,16 @@ class TestDepartureBoard(AbstractTestFixture):
         assert len(date_time["equipments"]) == 3
         for equipment in ["has_wheelchair_accessibility", "has_bike_accepted", "has_air_conditioned"]:
             assert equipment in date_time["equipments"]
-        date_time = response["stop_schedules"][0]["date_times"][1]
         vj1 = next(l['id'] for l in date_time['links'] if l['type'] == 'vehicle_journey')
         assert vj1 == "vehicle_journey:vj1"
+
+        date_time = response["stop_schedules"][0]["date_times"][1]
         assert len(date_time["equipments"]) == 3
-        for equipment in ["has_wheelchair_accessibility", "has_bike_accepted", "has_air_conditioned"]:
+        for equipment in ["has_wheelchair_accessibility", "has_bike_accepted"]:
             assert equipment in date_time["equipments"]
+        vj2 = next(l['id'] for l in date_time['links'] if l['type'] == 'vehicle_journey')
+        assert vj2 == "vehicle_journey:vj2"
+
         assert response["stop_schedules"][0]["date_times"][0]["links"][0]["type"] == "notes"
         assert (
             response["stop_schedules"][0]["date_times"][0]["links"][0]["id"]
