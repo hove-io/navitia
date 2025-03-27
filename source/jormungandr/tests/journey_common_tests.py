@@ -1462,6 +1462,17 @@ class JourneyCommon(object):
         finally:
             instance._same_journey_schedules_configuration = original_config
 
+    def test_same_journey_schedules_with_line_filtering_allowed_id_in_query(self):
+        query = "journeys?from=0.0001796623963909418;8.98311981954709e-05&to=0.0018864551621048887;0.0007186495855637672&datetime=20120614080000&allowed_id[]=BOB"
+        response = self.query_region(query)
+
+        assert len(response["journeys"]) == 2
+        assert len(response["journeys"][0]["links"]) == 2
+        href_same_journey_schedules = next(
+            l['href'] for l in response["journeys"][0]["links"] if l['rel'] == 'same_journey_schedules'
+        )
+        assert "BOB" not in href_same_journey_schedules
+
 
 @dataset({"main_stif_test": {}})
 class AddErrorFieldInJormun(object):
