@@ -497,12 +497,19 @@ struct calendar_fixture {
 
                 beg = b.data->meta->production_date.begin();
                 end_of_year = beg + boost::gregorian::years(1);
+                navitia::type::VehicleJourney* vj1 = pt_data.vehicle_journeys_map["vehicle_journey:vj1"];
+                vj1->set_vehicle(navitia::type::hasVehicleProperties::AIR_CONDITIONED);
+
+                navitia::type::VehicleJourney* vj_d = pt_data.vehicle_journeys_map["vehicle_journey:vj_D"];
+                vj_d->set_vehicle(navitia::type::hasVehicleProperties::AIR_CONDITIONED);
+                vj_d->set_vehicle(navitia::type::hasVehicleProperties::AUDIBLE_ANNOUNCEMENT);
 
                 navitia::type::VehicleJourney* vj = pt_data.vehicle_journeys_map["vehicle_journey:on_demand_transport"];
                 vj->stop_time_list[0].set_odt(true);
 
                 vj = pt_data.vehicle_journeys_map["vehicle_journey:date_time_estimated"];
                 vj->stop_time_list[0].set_date_time_estimated(true);
+                vj->set_vehicle(navitia::type::hasVehicleProperties::AIR_CONDITIONED);
 
                 vj_week = pt_data.vehicle_journeys_map["vehicle_journey:week"];
                 vj_week->base_validity_pattern()->add(beg, end_of_year, std::bitset<7>{"1111100"});

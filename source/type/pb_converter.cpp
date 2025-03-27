@@ -1744,6 +1744,15 @@ void PbCreator::Filler::fill_pb_object(const StopTimeCalendar* stop_time_calenda
         rs_date_time->clear_base_date_time();
         rs_date_time->clear_realtime_level();
     }
+
+    // Add has_equipments
+    if (stop_time_calendar->stop_time->vehicle_journey != nullptr) {
+        pbnavitia::hasEquipments* has_equipments = rs_date_time->mutable_has_equipments();
+        const auto& vj =
+            VjOrigDest(stop_time_calendar->stop_time->vehicle_journey, stop_time_calendar->stop_time->stop_point,
+                       stop_time_calendar->stop_time->stop_point);
+        fill_with_creator(&vj, [&]() { return has_equipments; });
+    }
 }
 
 void PbCreator::Filler::fill_pb_object(const nt::EntryPoint* point, pbnavitia::PtObject* place) {
