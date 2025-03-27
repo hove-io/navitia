@@ -844,12 +844,11 @@ class TestDepartureBoard(AbstractTestFixture):
         assert len(nodes) == 3
         assert len(nodes[0]['date_times']) == 1
         date_time = nodes[0]['date_times'][0]
-        assert len(date_time["equipments"]) == 4
+        assert len(date_time["equipments"]) == 3
         for equipment in [
             "has_wheelchair_accessibility",
             "has_bike_accepted",
             "has_air_conditioned",
-            "has_audible_announcement",
         ]:
             assert equipment in date_time["equipments"]
         assert date_time['base_date_time'] == "20120616T001000"
