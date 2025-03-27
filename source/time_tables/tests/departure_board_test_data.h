@@ -509,6 +509,7 @@ struct calendar_fixture {
 
                 vj = pt_data.vehicle_journeys_map["vehicle_journey:date_time_estimated"];
                 vj->stop_time_list[0].set_date_time_estimated(true);
+                vj->set_vehicle(navitia::type::hasVehicleProperties::AIR_CONDITIONED);
 
                 vj_week = pt_data.vehicle_journeys_map["vehicle_journey:week"];
                 vj_week->base_validity_pattern()->add(beg, end_of_year, std::bitset<7>{"1111100"});

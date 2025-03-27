@@ -1748,7 +1748,10 @@ void PbCreator::Filler::fill_pb_object(const StopTimeCalendar* stop_time_calenda
     // Add has_equipments
     if (stop_time_calendar->stop_time->vehicle_journey != nullptr) {
         pbnavitia::hasEquipments* has_equipments = rs_date_time->mutable_has_equipments();
-        fill_with_creator(stop_time_calendar->stop_time->vehicle_journey, [&]() { return has_equipments; });
+        const auto& vj =
+            VjOrigDest(stop_time_calendar->stop_time->vehicle_journey, stop_time_calendar->stop_time->stop_point,
+                       stop_time_calendar->stop_time->stop_point);
+        fill_with_creator(&vj, [&]() { return has_equipments; });
     }
 }
 

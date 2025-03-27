@@ -430,11 +430,6 @@ class TestDepartureBoard(AbstractTestFixture):
         assert response["terminus_schedules"][0]["route"]["id"] == "A:1"
         assert len(response["terminus_schedules"][0]["date_times"]) == 0
 
-        date_time = response["terminus_schedules"][0]["date_times"][0]
-        assert len(date_time["equipments"]) == 3
-        for equipment in ["has_wheelchair_accessibility", "has_bike_accepted", "has_air_conditioned"]:
-            assert equipment in date_time["equipments"]
-
         assert response["terminus_schedules"][0]["stop_point"]["id"] == "Tstop2"
 
     def test_real_terminus(self):
@@ -736,6 +731,21 @@ class TestDepartureBoard(AbstractTestFixture):
         assert len(response["terminus_schedules"]) == 1
         is_valid_terminus_schedules(response["terminus_schedules"], self.tester, only_time=False)
         assert len(response["terminus_schedules"][0]["date_times"]) == 2
+
+        date_time = response["terminus_schedules"][0]["date_times"][0]
+        assert len(date_time["equipments"]) == 3
+        for equipment in ["has_wheelchair_accessibility", "has_bike_accepted", "has_air_conditioned"]:
+            assert equipment in date_time["equipments"]
+        vj = next(l['id'] for l in date_time['links'] if l['type'] == 'vehicle_journey')
+        assert vj == "vehicle_journey:date_time_estimated"
+
+        date_time = response["terminus_schedules"][0]["date_times"][1]
+        assert len(date_time["equipments"]) == 2
+        for equipment in ["has_wheelchair_accessibility", "has_bike_accepted"]:
+            assert equipment in date_time["equipments"]
+        vj = next(l['id'] for l in date_time['links'] if l['type'] == 'vehicle_journey')
+        assert vj == "vehicle_journey:on_demand_transport"
+
         assert response["terminus_schedules"][0]["stop_point"]["name"] == "ODTstop1"
         assert response["terminus_schedules"][0]["route"]["name"] == "B"
         assert response["terminus_schedules"][0]["display_informations"]["direction"] == "ODTstop2"
