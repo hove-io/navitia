@@ -1477,7 +1477,6 @@ class JourneyCommon(object):
         assert original_config.get('allowed_id_type') == ["stop_point"]
         assert original_config.get('min_nb_journeys') == 5
 
-
         query = "journeys?from=0.0001796623963909418;8.98311981954709e-05&to=0.0018864551621048887;0.0007186495855637672&datetime=20120614080000&min_nb_journeys={min_nb_journeys}&allowed_id[]=BOB".format(
             min_nb_journeys=original_config.get('min_nb_journeys')
         )
@@ -1485,7 +1484,9 @@ class JourneyCommon(object):
 
         assert len(r["journeys"]) == 2
         assert len(r["journeys"][0]["links"]) == 2
-        same_journey_schedules = next(l['id'] for l in r["journeys"][0]["links"] if l['rel'] == 'same_journey_schedules')
+        same_journey_schedules = next(
+            l['id'] for l in r["journeys"][0]["links"] if l['rel'] == 'same_journey_schedules'
+        )
         assert "BOB" not in same_journey_schedules
 
 
