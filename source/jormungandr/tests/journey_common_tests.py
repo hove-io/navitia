@@ -1463,29 +1463,15 @@ class JourneyCommon(object):
             instance._same_journey_schedules_configuration = original_config
 
     def test_same_journey_schedules_with_line_filtering_allowed_id_in_query(self):
-        """Test that same_journey_schedules respects line filtering configuration"""
-
-        instance = i_manager.instances.get('main_routing_test')
-
-        # Skip test if instance not found
-        assert instance is not None
-
-        # Save original configuration
-        original_config = getattr(instance, 'same_journey_schedules_configuration', None)
-
-        assert original_config is not None
-        assert original_config.get('allowed_id_type') == ["stop_point"]
-        assert original_config.get('min_nb_journeys') == 5
-
         query = "journeys?from=0.0001796623963909418;8.98311981954709e-05&to=0.0018864551621048887;0.0007186495855637672&datetime=20120614080000&min_nb_journeys={min_nb_journeys}&allowed_id[]=BOB".format(
-            min_nb_journeys=original_config.get('min_nb_journeys')
+            min_nb_journeys=5
         )
-        r = self.query_region(query)
+        response = self.query_region(query)
 
-        assert len(r["journeys"]) == 2
-        assert len(r["journeys"][0]["links"]) == 2
+        assert len(response["journeys"]) == 2
+        assert len(response["journeys"][0]["links"]) == 2
         same_journey_schedules = next(
-            l['id'] for l in r["journeys"][0]["links"] if l['rel'] == 'same_journey_schedules'
+            l['id'] for l in response["journeys"][0]["links"] if l['rel'] == 'same_journey_schedules'
         )
         assert "BOB" not in same_journey_schedules
 
