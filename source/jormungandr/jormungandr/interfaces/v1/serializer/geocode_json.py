@@ -204,6 +204,7 @@ class PoiSerializer(serpy.DictSerializer):
     address = jsonschema.MethodField(display_none=False)
     children = PoisSerializer(display_none=False)
     shape = jsonschema.MethodField(display_none=False)
+    weight = jsonschema.MethodField(display_none=False)
 
     def get_poi_type(self, obj):
         poi_types = obj.get('properties', {}).get('geocoding', {}).get('poi_types', [])

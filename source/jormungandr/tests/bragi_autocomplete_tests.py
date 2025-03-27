@@ -1458,6 +1458,7 @@ class TestBragiAutocomplete(AbstractTestFixture):
             assert poi_admins[0]['name'] == "Bobtown"
             assert poi_admins[0]['coord']['lat'] == "48.8396154"
             assert poi_admins[0]['coord']['lon'] == "2.3957517"
+            assert poi_admins[0]['weight'] == 1
 
             address = poi['address']
             assert address['coord']['lat'] == '48.8396154'
@@ -1492,6 +1493,7 @@ class TestBragiAutocomplete(AbstractTestFixture):
             assert poi_admins[0]['name'] == "Bobtown"
             assert poi_admins[0]['coord']['lat'] == "48.8396154"
             assert poi_admins[0]['coord']['lon'] == "2.3957517"
+            assert poi_admins[0]['weight'] == 1
 
             address = poi['address']
             assert address['coord']['lat'] == '48.8396154'
@@ -1508,6 +1510,7 @@ class TestBragiAutocomplete(AbstractTestFixture):
             assert address_admins[0]['name'] == "Bobtown"
             assert address_admins[0]['coord']['lat'] == "48.8396154"
             assert address_admins[0]['coord']['lon'] == "2.3957517"
+            assert address_admins[0]['weight'] == 1
 
     # This test is to verify that query with depth = 2 and 3 gives the same result as in kraken
     def test_autocomplete_call_with_depth_three(self):
@@ -1536,6 +1539,7 @@ class TestBragiAutocomplete(AbstractTestFixture):
             assert poi_admins[0]['name'] == "Bobtown"
             assert poi_admins[0]['coord']['lat'] == "48.8396154"
             assert poi_admins[0]['coord']['lon'] == "2.3957517"
+            assert poi_admins[0]['weight'] == 1
 
             address = poi['address']
             assert address['coord']['lat'] == '48.8396154'
@@ -1552,6 +1556,7 @@ class TestBragiAutocomplete(AbstractTestFixture):
             assert address_admins[0]['name'] == "Bobtown"
             assert address_admins[0]['coord']['lat'] == "48.8396154"
             assert address_admins[0]['coord']['lon'] == "2.3957517"
+            assert address_admins[0]['weight'] == 1
 
     def test_autocomplete_for_admin_depth_zero(self):
         with mock_bragi_autocomplete_call(BRAGI_MOCK_ADMIN):
