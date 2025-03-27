@@ -1468,10 +1468,10 @@ class JourneyCommon(object):
 
         assert len(response["journeys"]) == 2
         assert len(response["journeys"][0]["links"]) == 2
-        same_journey_schedules = next(
-            l['id'] for l in response["journeys"][0]["links"] if l['rel'] == 'same_journey_schedules'
+        href_same_journey_schedules = next(
+            l['href'] for l in response["journeys"][0]["links"] if l['rel'] == 'same_journey_schedules'
         )
-        assert "BOB" not in same_journey_schedules
+        assert "BOB" not in href_same_journey_schedules
 
 
 @dataset({"main_stif_test": {}})
