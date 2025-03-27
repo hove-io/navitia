@@ -172,7 +172,6 @@ class add_journey_href(object):
                             'allowed_id_type', ["stop_point"]
                         )
                     args['is_journey_schedules'] = True
-                    allowed_ids.update(args.get('allowed_id[]', []))
 
                     for allowed_type in allowed_id_types:
                         for section in journey['sections']:
