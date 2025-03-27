@@ -1463,9 +1463,7 @@ class JourneyCommon(object):
             instance._same_journey_schedules_configuration = original_config
 
     def test_same_journey_schedules_with_line_filtering_allowed_id_in_query(self):
-        query = "journeys?from=0.0001796623963909418;8.98311981954709e-05&to=0.0018864551621048887;0.0007186495855637672&datetime=20120614080000&min_nb_journeys={min_nb_journeys}&allowed_id[]=BOB".format(
-            min_nb_journeys=5
-        )
+        query = "journeys?from=0.0001796623963909418;8.98311981954709e-05&to=0.0018864551621048887;0.0007186495855637672&datetime=20120614080000&allowed_id[]=BOB"
         response = self.query_region(query)
 
         assert len(response["journeys"]) == 2
