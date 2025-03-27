@@ -179,7 +179,7 @@ class PoisSerializer(serpy.Field):
                 'coord': {'lon': str(child['coord']['lon']), 'lat': str(child['coord']['lat'])},
                 "type": "poi",
                 'zip_code': format_zip_code(child.get('zip_codes', [])),
-                'weight': child['weight'],
+                'weight': child.get('weight', None),
             }
             poi_type = child.get('poi_type', None)
             res["poi_type"] = (

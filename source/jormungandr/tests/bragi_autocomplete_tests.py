@@ -1183,7 +1183,6 @@ class TestBragiAutocomplete(AbstractTestFixture):
             assert r[0]['id'] == 'bobette'
             assert r[0]['name'] == "bobette's label"
             assert r[0]['embedded_type'] == 'poi'
-            assert r[0]['weight'] == 5
             poi = r[0]["poi"]
             assert poi["id"] == "bobette"
             assert poi["weight"] == 5
@@ -1204,7 +1203,6 @@ class TestBragiAutocomplete(AbstractTestFixture):
             assert r[0]['id'] == 'bobette'
             assert r[0]['name'] == "bobette's label"
             assert r[0]['embedded_type'] == 'poi'
-            assert r[0]['weight'] == 5
             poi = r[0]["poi"]
             assert poi["id"] == "bobette"
             assert poi["weight"] == 5
@@ -1239,7 +1237,6 @@ class TestBragiAutocomplete(AbstractTestFixture):
             assert len(r) == 1
             assert r[0]['id'] == 'bobette'
             assert r[0]['embedded_type'] == 'poi'
-            assert r[0]['weight'] == 5
             assert r[0]['poi']['name'] == 'bobette'
             assert r[0]['poi']['label'] == "bobette's label"
             assert r[0]['poi']['weight'] == 5
@@ -1412,7 +1409,6 @@ class TestBragiAutocomplete(AbstractTestFixture):
             assert len(r) == 1
             assert r[0]['name'] == "bobette's label"
             assert r[0]['embedded_type'] == "poi"
-            assert r[0]['weight'] == 5
             poi = r[0]['poi']
             assert poi['label'] == "bobette's label"
             assert poi['coord']['lat'] == '48.8396154'
@@ -1438,7 +1434,6 @@ class TestBragiAutocomplete(AbstractTestFixture):
             assert len(r) == 1
             assert r[0]['name'] == "bobette's label"
             assert r[0]['embedded_type'] == "poi"
-            assert r[0]['weight'] == 5
             poi = r[0]['poi']
             assert poi['label'] == "bobette's label"
             assert poi['weight'] == 5
@@ -1447,7 +1442,6 @@ class TestBragiAutocomplete(AbstractTestFixture):
             assert poi["children"][0]["type"] == 'poi'
             assert poi["children"][0]["poi_type"]["id"] == 'poi_type:access_point'
             assert poi["children"][0].get("administrative_regions") is None
-            assert poi["children"][0]['weight'] == 5
 
     def test_autocomplete_call_with_depth_one(self):
         with mock_bragi_autocomplete_call(BRAGI_MOCK_BOBETTE_DEPTH_ONE):
@@ -1460,7 +1454,6 @@ class TestBragiAutocomplete(AbstractTestFixture):
             assert len(r) == 1
             assert r[0]['name'] == "bobette's label"
             assert r[0]['embedded_type'] == "poi"
-            assert r[0]['weight'] == 5
             poi = r[0]['poi']
             assert poi['label'] == "bobette's label"
             assert poi['weight'] == 5
@@ -1496,7 +1489,6 @@ class TestBragiAutocomplete(AbstractTestFixture):
             assert len(r) == 1
             assert r[0]['name'] == "bobette's label"
             assert r[0]['embedded_type'] == "poi"
-            assert r[0]['weight'] == 5
             poi = r[0]['poi']
             assert poi['label'] == "bobette's label"
             assert poi['weight'] == 5
@@ -1527,7 +1519,6 @@ class TestBragiAutocomplete(AbstractTestFixture):
             assert address_admins[0]['name'] == "Bobtown"
             assert address_admins[0]['coord']['lat'] == "48.8396154"
             assert address_admins[0]['coord']['lon'] == "2.3957517"
-            assert address_admins[0]['weight'] == 1
 
     # This test is to verify that query with depth = 2 and 3 gives the same result as in kraken
     def test_autocomplete_call_with_depth_three(self):
@@ -1556,7 +1547,6 @@ class TestBragiAutocomplete(AbstractTestFixture):
             assert poi_admins[0]['name'] == "Bobtown"
             assert poi_admins[0]['coord']['lat'] == "48.8396154"
             assert poi_admins[0]['coord']['lon'] == "2.3957517"
-            assert poi_admins[0]['weight'] == 1
 
             address = poi['address']
             assert address['coord']['lat'] == '48.8396154'
@@ -1573,7 +1563,6 @@ class TestBragiAutocomplete(AbstractTestFixture):
             assert address_admins[0]['name'] == "Bobtown"
             assert address_admins[0]['coord']['lat'] == "48.8396154"
             assert address_admins[0]['coord']['lon'] == "2.3957517"
-            assert address_admins[0]['weight'] == 1
 
     def test_autocomplete_for_admin_depth_zero(self):
         with mock_bragi_autocomplete_call(BRAGI_MOCK_ADMIN):
