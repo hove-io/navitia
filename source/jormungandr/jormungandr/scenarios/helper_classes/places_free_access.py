@@ -77,8 +77,7 @@ class PlacesFreeAccess:
 
         if place.embedded_type == type_pb2.STOP_AREA:
             crowfly = {
-                FreeAccessObject(sp[0], sp[1], sp[2])
-                for sp in self._get_stop_points_for_stop_area(place.uri)
+                FreeAccessObject(sp[0], sp[1], sp[2]) for sp in self._get_stop_points_for_stop_area(place.uri)
             }
         elif place.embedded_type == type_pb2.ADMINISTRATIVE_REGION:
             crowfly = {
