@@ -52,7 +52,6 @@ from jormungandr.scenarios.utils import (
     fill_uris,
     updated_common_journey_request_with_default,
 )
-from jormungandr.new_relic import record_custom_parameter
 from jormungandr.otlp import otlp_instance
 from navitiacommon import response_pb2, type_pb2
 from flask_restful import abort
@@ -499,7 +498,6 @@ class Scenario(new_default.Scenario):
         request_id,
         context=None,
     ):
-        record_custom_parameter('scenario', 'distributed')
         otlp_instance.record_label('scenario', 'distributed')
         logger = logging.getLogger(__name__)
         """

@@ -30,7 +30,7 @@
 # www.navitia.io
 from __future__ import absolute_import, print_function, unicode_literals, division
 
-from jormungandr import utils, new_relic
+from jormungandr import utils
 from jormungandr.otlp import otlp_instance
 
 import abc
@@ -60,12 +60,9 @@ class AbstractStreetNetworkService(ABC):  # type: ignore
     def get_street_network_routing_matrix(
         self, instance, origins, destinations, street_network_mode, max_duration, request, request_id, **kwargs
     ):
-        with new_relic.record_streetnetwork_call(
-            "routing_matrix", type(self).__name__, street_network_mode, instance.name
-        ):
-            return self._get_street_network_routing_matrix(
-                instance, origins, destinations, street_network_mode, max_duration, request, request_id, **kwargs
-            )
+        return self._get_street_network_routing_matrix(
+            instance, origins, destinations, street_network_mode, max_duration, request, request_id, **kwargs
+        )
 
     @abc.abstractmethod
     def _get_street_network_routing_matrix(
@@ -99,17 +96,16 @@ class AbstractStreetNetworkService(ABC):  # type: ignore
         direct_path_type,
         request_id,
     ):
-        with new_relic.record_streetnetwork_call("direct_path", type(self).__name__, mode, instance.name):
-            resp = self._direct_path(
-                instance,
-                mode,
-                pt_object_origin,
-                pt_object_destination,
-                fallback_extremity,
-                request,
-                direct_path_type,
-                request_id,
-            )
+        resp = self._direct_path(
+            instance,
+            mode,
+            pt_object_origin,
+            pt_object_destination,
+            fallback_extremity,
+            request,
+            direct_path_type,
+            request_id,
+        )
 
         return resp
 
@@ -155,7 +151,6 @@ class AbstractStreetNetworkService(ABC):  # type: ignore
         """
         params = {'streetnetwork_id': six.text_type(self.sn_system_id), 'status': status}
         params.update(kwargs)
-        new_relic.record_custom_event('streetnetwork', params)
         otlp_instance.send_event_metrics('streetnetwork', params)
 
     def _add_feed_publisher(self, resp):

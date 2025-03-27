@@ -36,7 +36,7 @@ from collections import namedtuple, defaultdict
 from math import sqrt
 from .helper_utils import get_max_fallback_duration
 from jormungandr.street_network.street_network import StreetNetworkPathType
-from jormungandr import new_relic, excluded_zones_manager
+from jormungandr import excluded_zones_manager
 from jormungandr.fallback_modes import FallbackModes
 import logging
 from .timer_logger_helper import timed_logger
@@ -133,7 +133,6 @@ class FallbackDurations:
     def _get_manhattan_duration(self, distance, speed):
         return int((distance * sqrt(2)) / speed)
 
-    @new_relic.distributedEvent("routing_matrix", "street_network")
     def _get_street_network_routing_matrix(self, origins, destinations):
         with timed_logger(self._logger, 'routing_matrix_calling_external_service', self._request_id):
             try:
@@ -200,7 +199,6 @@ class FallbackDurations:
                 if p.distance < free_radius_distance
             )
 
-    @new_relic.distributedEvent("free_access_with_excluded_zones", "street_network")
     def _filter_free_access_with_excluded_zones(self, all_free_access):
         if self._request['_use_excluded_zones'] and all_free_access:
             # the mode is hardcoded to walking because we consider that we access to all free_access places
@@ -220,9 +218,7 @@ class FallbackDurations:
         self._update_free_access_with_free_radius(free_access, proximities_by_crowfly)
         all_free_access = free_access.crowfly | free_access.odt | free_access.free_radius
 
-        return self._filter_free_access_with_excluded_zones(
-            excluded_zones_manager.ExcludedZonesManager.is_excluded, all_free_access
-        )
+        return self._filter_free_access_with_excluded_zones(all_free_access)
 
     def _build_places_isochrone(self, proximities_by_crowfly, all_free_access_uris):
         places_isochrone = []
@@ -464,9 +460,7 @@ class FallbackDurations:
         # sn_routing_matrix: a list of response_pb2.RoutingElement, which is arranged in the same order of requested
         # places
         # Each response_pb2.RoutingElement contains the duration and routing_status
-        sn_routing_matrix = self._get_street_network_routing_matrix(
-            self._streetnetwork_service, origins, destinations
-        )
+        sn_routing_matrix = self._get_street_network_routing_matrix(origins, destinations)
 
         # In case where none of places in isochrone are reachable, we consider that something went awry in the
         # computation, thus we fill the fallback_duration with manhattan distance for every requested place and

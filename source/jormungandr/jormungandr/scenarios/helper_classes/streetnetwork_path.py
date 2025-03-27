@@ -27,7 +27,7 @@
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 from __future__ import absolute_import
-from jormungandr import utils, new_relic
+from jormungandr import utils
 from jormungandr.street_network.street_network import StreetNetworkPathType
 import logging
 import gevent
@@ -157,7 +157,6 @@ class StreetNetworkPath:
             return response
         return None
 
-    @new_relic.distributedEvent("direct_path", "street_network")
     def _direct_path_with_fp(self, origin, destination):
         with timed_logger(self._logger, 'direct_path_calling_external_service', self._request_id):
             try:
@@ -204,7 +203,7 @@ class StreetNetworkPath:
             self._mode,
         )
 
-        dp = self._direct_path_with_fp(self._streetnetwork_service, origin, destination)
+        dp = self._direct_path_with_fp(origin, destination)
 
         if getattr(dp, "journeys", None):
             dp.journeys[0].internal_id = str(utils.generate_id())

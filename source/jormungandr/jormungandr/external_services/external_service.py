@@ -31,7 +31,6 @@ from __future__ import absolute_import, print_function, unicode_literals, divisi
 import abc
 import six
 
-from jormungandr import cache, app, new_relic
 import pybreaker
 import logging
 import requests as requests
@@ -45,7 +44,6 @@ class ExternalServiceError(RuntimeError):
 
 @six.add_metaclass(abc.ABCMeta)
 class AbstractExternalService(object):
-    @new_relic.distributedEvent("call_webservice", "external_service")
     def _call_webservice(self, arguments):
         """
         Call external_services webservice with URL defined in settings
@@ -79,7 +77,6 @@ class AbstractExternalService(object):
         """
         params = {'external_service_id': "Forseti", 'status': status, 'external_service_url': url}
         params.update(kwargs)
-        new_relic.record_custom_event('external_service_status', params)
         otlp_instance.send_event_metrics('external_service_status', params)
 
     @abc.abstractmethod

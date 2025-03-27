@@ -38,7 +38,6 @@ from jormungandr import utils
 
 from navitiacommon import type_pb2, request_pb2, response_pb2
 from copy import deepcopy
-from jormungandr import new_relic
 from jormungandr.otlp import otlp_instance
 from jormungandr.otlp import otlp_instance
 
@@ -216,12 +215,10 @@ class MixedSchedule(object):
         if not rt_system:
             log.info('impossible to find {}, no realtime added'.format(rt_system_code))
             params = {'rt_system_id': rt_system_code, 'message': 'no handler found'}
-            new_relic.record_custom_event('realtime_internal_failure', params)
             otlp_instance.send_event_metrics('realtime_internal_failure', params)
             return None
         return rt_system
 
-    @new_relic.background_task("get_next_realtime_passages", "schedules")
     def _get_next_realtime_passages(self, rt_system, route_point, request):
         log = logging.getLogger(__name__)
         next_rt_passages = None
@@ -240,7 +237,6 @@ class MixedSchedule(object):
                 'failure while requesting next passages to external RT system {}'.format(rt_system.rt_system_id)
             )
             params = {'rt_system_id': six.text_type(rt_system.rt_system_id), 'message': str(e)}
-            new_relic.record_custom_event('realtime_internal_failure', params)
             otlp_instance.send_event_metrics('realtime_internal_failure', params)
 
         if next_rt_passages is None:
