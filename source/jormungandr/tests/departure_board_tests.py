@@ -430,7 +430,7 @@ class TestDepartureBoard(AbstractTestFixture):
         assert response["terminus_schedules"][0]["route"]["id"] == "A:1"
         assert len(response["terminus_schedules"][0]["date_times"]) == 0
 
-        date_time = response["stop_schedules"][0]["date_times"][0]
+        date_time = response["terminus_schedules"][0]["date_times"][0]
         assert len(date_time["equipments"]) == 3
         for equipment in ["has_wheelchair_accessibility", "has_bike_accepted", "has_air_conditioned"]:
             assert equipment in date_time["equipments"]
