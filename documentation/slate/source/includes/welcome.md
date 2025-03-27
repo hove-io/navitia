@@ -40,14 +40,12 @@ You have to use yours to get real services on real data (your token has no acces
 
 First step
 ---------------
-> Your token is available on your [navitia.io account page](https://navitia.io/se-connecter/).
+> Your token sounds like "3b036afe-0110-4202-b9ed-99718476c2e0"
 
-> It sounds like "3b036afe-0110-4202-b9ed-99718476c2e0"
-
-Get a token here <https://navitia.io/inscription/>. We need your mail to stay in touch when Navitia changes.
+[Contact us](https://hove.com/en/solutions/navitia-api-insights/#3) to get a token.
 
 <aside class="notice">
-The token obtained is private, you should avoid sharing it publicly (beware if you share code examples, url or screenshot).</br>
+The obtained token will be private, you should avoid sharing it publicly (beware if you share code examples, url or screenshot).</br>
 This will avoid having someone use your request quota.
 </aside>
 
@@ -125,7 +123,7 @@ Getting help
 All available functions are documented in [integration part](#interface).
 
 <aside class="success">
-    If you want to go further, there is an Swagger-openAPI documentation at [https://api.navitia.io/v1/schema](https://api.navitia.io/v1/schema)
+    If you want to go further, there is an Swagger-openAPI documentation at https://api.navitia.io/v1/schema
 </aside>
 
 In order to report bug and make feature requests please use our github navitia project
