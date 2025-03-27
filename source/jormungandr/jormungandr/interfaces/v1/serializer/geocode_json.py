@@ -179,6 +179,7 @@ class PoisSerializer(serpy.Field):
                 'coord': {'lon': str(child['coord']['lon']), 'lat': str(child['coord']['lat'])},
                 "type": "poi",
                 'zip_code': format_zip_code(child.get('zip_codes', [])),
+                'weight': child['weight'],
             }
             poi_type = child.get('poi_type', None)
             res["poi_type"] = (
@@ -204,7 +205,7 @@ class PoiSerializer(serpy.DictSerializer):
     address = jsonschema.MethodField(display_none=False)
     children = PoisSerializer(display_none=False)
     shape = jsonschema.MethodField(display_none=False)
-    weight = jsonschema.MethodField(display_none=False)
+    weight = NestedPropertyField(attr='properties.geocoding.weight', display_none=True)
 
     def get_poi_type(self, obj):
         poi_types = obj.get('properties', {}).get('geocoding', {}).get('poi_types', [])
