@@ -286,6 +286,7 @@ BRAGI_MOCK_POI_WITHOUT_ADDRESS = {
                     "postcode": "02100",
                     "type": "poi",
                     "citycode": "02000",
+                    "weight": 5,
                     "properties": [
                         {"key": "amenity", "value": "bicycle_rental"},
                         {"key": "capacity", "value": "20"},
@@ -470,6 +471,7 @@ BRAGI_MOCK_BOBETTE = {
                     "postcode": "02100",
                     "type": "poi",
                     "citycode": "02000",
+                    "weight": 5,
                     "properties": [
                         {"key": "amenity", "value": "bicycle_rental"},
                         {"key": "capacity", "value": "20"},
@@ -752,6 +754,7 @@ BRAGI_MOCK_RESPONSE_POI_WITH_CHILDREN = {
                     "name": "Jardin du Luxembourg",
                     "city": "Paris",
                     "citycode": "75056",
+                    "weight": 5,
                     "administrative_regions": [
                         {
                             "id": "admin:fr:75056",
@@ -894,6 +897,7 @@ BRAGI_MOCK_RESPONSE_POI_WITHOUT_CHILDREN = {
                     "name": "Jardin du Luxembourg",
                     "city": "Paris",
                     "citycode": "75056",
+                    "weight": 5,
                     "administrative_regions": [
                         {
                             "id": "admin:fr:75056",
@@ -1181,6 +1185,7 @@ class TestBragiAutocomplete(AbstractTestFixture):
             assert r[0]['embedded_type'] == 'poi'
             poi = r[0]["poi"]
             assert poi["id"] == "bobette"
+            assert poi["weight"] == 5
             assert poi["shape"].startswith("MULTIPOLYGON (((")
 
     def test_features_poi_invalid_with_shape_call(self):
@@ -1200,6 +1205,7 @@ class TestBragiAutocomplete(AbstractTestFixture):
             assert r[0]['embedded_type'] == 'poi'
             poi = r[0]["poi"]
             assert poi["id"] == "bobette"
+            assert poi["weight"] == 5
             assert "shape" not in poi
 
     def test_features_unknown_uri(self):
@@ -1233,6 +1239,7 @@ class TestBragiAutocomplete(AbstractTestFixture):
             assert r[0]['embedded_type'] == 'poi'
             assert r[0]['poi']['name'] == 'bobette'
             assert r[0]['poi']['label'] == "bobette's label"
+            assert r[0]['poi']['weight'] == 5
             assert r[0]['distance'] == '400'
             assert not r[0]['poi'].get('address')
 
@@ -1409,6 +1416,7 @@ class TestBragiAutocomplete(AbstractTestFixture):
             assert poi['properties']["amenity"] == "bicycle_rental"
             assert poi['properties']["capacity"] == "20"
             assert poi['properties']["ref"] == "12"
+            assert poi['weight'] == 5
             # Empty administrative_regions not displayed as in kraken
             assert not poi.get('administrative_regions')
             assert 'administrative_regions' not in poi
@@ -1428,6 +1436,7 @@ class TestBragiAutocomplete(AbstractTestFixture):
             assert r[0]['embedded_type'] == "poi"
             poi = r[0]['poi']
             assert poi['label'] == "bobette's label"
+            assert poi['weight'] == 5
             assert len(poi["children"]) == 1
             assert poi["children"][0]["id"] == 'poi:osm:node:4507085760'
             assert poi["children"][0]["type"] == 'poi'
@@ -1447,6 +1456,7 @@ class TestBragiAutocomplete(AbstractTestFixture):
             assert r[0]['embedded_type'] == "poi"
             poi = r[0]['poi']
             assert poi['label'] == "bobette's label"
+            assert poi['weight'] == 5
             assert poi['properties']["amenity"] == "bicycle_rental"
             assert poi['properties']["capacity"] == "20"
             assert poi['properties']["ref"] == "12"
@@ -1481,6 +1491,7 @@ class TestBragiAutocomplete(AbstractTestFixture):
             assert r[0]['embedded_type'] == "poi"
             poi = r[0]['poi']
             assert poi['label'] == "bobette's label"
+            assert poi['weight'] == 5
             assert poi['properties']["amenity"] == "bicycle_rental"
             assert poi['properties']["capacity"] == "20"
             assert poi['properties']["ref"] == "12"
