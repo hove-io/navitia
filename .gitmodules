@@ -22,3 +22,6 @@
 [submodule "source/third_party/flann"]
 	path = source/third_party/flann
 	url = https://github.com/flann-lib/flann
+[submodule "source/third_party/polylineencoder"]
+	path = source/third_party/polylineencoder
+	url = https://github.com/vahancho/polylineencoder
