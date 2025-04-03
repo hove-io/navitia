@@ -33,6 +33,7 @@ www.navitia.io
 
 #include <boost/algorithm/string/join.hpp>
 #include <boost/format.hpp>
+#include <chrono>
 #include <pqxx/pqxx>
 
 #include <functional>
@@ -46,8 +47,6 @@ void fill_disruption_from_database(const std::string& connection_string,
                                    const std::vector<std::string>& contributors,
                                    int batch_size) {
     auto conn = std::make_unique<pqxx::connection>(connection_string);
-
-    pqxx::work work(*conn, "loading disruptions");
 
     size_t offset = 0, items_per_request = batch_size;
     pqxx::result result;
@@ -201,14 +200,22 @@ void fill_disruption_from_database(const std::string& connection_string,
              % production_date.end() % production_date.begin() % production_date.end() % contributors_array
              % items_per_request % offset)
                 .str();
-        result = work.exec(request);
+        auto sql_before_time_stamp = std::chrono::high_resolution_clock::now();
+        {
+            pqxx::read_transaction sql_transaction(*conn, "loading disruptions");
+            result = sql_transaction.exec(request);
+        }
+        auto sql_execution_time = std::chrono::duration_cast<std::chrono::milliseconds>(
+            std::chrono::high_resolution_clock::now() - sql_before_time_stamp);
+        LOG4CPLUS_INFO(log4cplus::Logger::getInstance("Logger"),
+                       "SQL call to Chaos database (fetching) took " << sql_execution_time << "ms");
         for (auto res : result) {
             reader(res);
         }
 
         offset += result.size();
         LOG4CPLUS_TRACE(log4cplus::Logger::getInstance("sql"), request);
-    } while (!result.empty());
+    } while (!result.empty() && result.size() >= items_per_request);
 
     // counting disruptions & impacts in order to get real numbers
     pqxx::result count;
@@ -228,7 +235,15 @@ void fill_disruption_from_database(const std::string& connection_string,
                        " ;")
          % production_date.end() % production_date.begin() % production_date.end() % contributors_array)
             .str();
-    count = work.exec(request);
+    auto sql_before_time_stamp = std::chrono::high_resolution_clock::now();
+    {
+        pqxx::read_transaction sql_transaction(*conn, "counting disruptions");
+        count = sql_transaction.exec(request);
+    }
+    auto sql_execution_time = std::chrono::duration_cast<std::chrono::milliseconds>(
+        std::chrono::high_resolution_clock::now() - sql_before_time_stamp);
+    LOG4CPLUS_INFO(log4cplus::Logger::getInstance("Logger"),
+                   "SQL call to Chaos database (counting) took " << sql_execution_time << "ms");
     for (auto ct : count) {
         impact_count += ct[1].as<int>();
     }
