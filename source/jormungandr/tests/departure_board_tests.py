@@ -412,11 +412,28 @@ class TestDepartureBoard(AbstractTestFixture):
         assert response["stop_schedules"][0]["date_times"][0]["date_time"] == "20120615T103000"
         assert response["stop_schedules"][0]["date_times"][1]["date_time"] == "20120615T103000"
         assert response["stop_schedules"][0]["stop_point"]["id"] == "StopR2"
+        date_times = response["stop_schedules"][0]["date_times"]
+        dt_links = date_times[0]["links"]
+        origin = next(l["id"] for l in dt_links if l["type"] == "stop_area" and l["category"] == "origin")
+        terminus = next(l["id"] for l in dt_links if l["type"] == "stop_area" and l["category"] == "terminus")
+        assert origin == "StopR1"
+        assert terminus == "StopR4"
+
+        # Test links on origins and terminus in display_informations
+        links = response["stop_schedules"][0]["display_informations"]["links"]
+        assert len(links) == 3
+        origins = [l["id"] for l in links if l["type"] == "stop_area" and l["rel"] == "origins"]
+        terminus = [l["id"] for l in links if l["type"] == "stop_area" and l["rel"] == "terminus"]
+        assert len(origins) == 1
+        assert len(terminus) == 2
+
+        # Test origins and terminus in response
+        assert len(response["origins"]) == 1
+        assert len(response["terminus"]) == 3
 
         # terminus_schedules on partial_terminus with calendar
         # There is neither terminus nor partial_terminus in terminus_schedules
         # Here the disruption could be injected by chaos or kirin
-
         response = self.query_region(
             "stop_areas/Tstop2/terminus_schedules?"
             "from_datetime=20120615T080000&calendar=cal_partial_terminus&data_freshness=realtime"
@@ -429,7 +446,6 @@ class TestDepartureBoard(AbstractTestFixture):
         assert response["terminus_schedules"][0]["additional_informations"] == "active_disruption"
         assert response["terminus_schedules"][0]["route"]["id"] == "A:1"
         assert len(response["terminus_schedules"][0]["date_times"]) == 0
-
         assert response["terminus_schedules"][0]["stop_point"]["id"] == "Tstop2"
 
     def test_real_terminus(self):
@@ -590,7 +606,8 @@ class TestDepartureBoard(AbstractTestFixture):
         assert response["departures"][1]["stop_date_time"]["additional_informations"][0] == "on_demand_transport"
         assert response["departures"][1]["stop_date_time"]["data_freshness"] == "base_schedule"
 
-        assert "terminus" not in response
+        # "terminus" should not be present in response.notes
+        assert len(response["notes"]) == 0
         assert not response["departures"][0]["display_informations"]["links"]
         assert not response["departures"][1]["display_informations"]["links"]
 
@@ -756,6 +773,25 @@ class TestDepartureBoard(AbstractTestFixture):
             response["terminus_schedules"][0]["display_informations"]["trip_short_name"] == "date_time_estimated"
         )
 
+        date_times = response["terminus_schedules"][0]["date_times"]
+        dt_links = date_times[0]["links"]
+        origin = next(l["id"] for l in dt_links if l["type"] == "stop_area" and l["category"] == "origin")
+        terminus = next(l["id"] for l in dt_links if l["type"] == "stop_area" and l["category"] == "terminus")
+        assert origin == "ODTstop1"
+        assert terminus == "ODTstop2"
+
+        # Test links on origins and terminus in display_informations
+        links = response["terminus_schedules"][0]["display_informations"]["links"]
+        assert len(links) == 2
+        origins = [l["id"] for l in links if l["type"] == "stop_area" and l["rel"] == "origins"]
+        terminus = [l["id"] for l in links if l["type"] == "stop_area" and l["rel"] == "terminus"]
+        assert len(origins) == 1
+        assert len(terminus) == 1
+
+        # Test origins and terminus in response
+        assert len(response["origins"]) == 1
+        assert len(response["terminus"]) == 2
+
     # Test on an on_demand_transport with start stop_datetime as on_demand_transport
     def test_journey_with_odt_in_start_stop_date_time(self):
         """
@@ -855,10 +891,13 @@ class TestDepartureBoard(AbstractTestFixture):
         assert date_time['date_time'] == "20120616T001000"
         assert len(date_time['additional_informations']) == 0
         assert date_time['data_freshness'] == "base_schedule"
-        assert len(date_time['links']) == 2
+        assert len(date_time['links']) == 4
         vj_d = next(l['id'] for l in date_time['links'] if l['type'] == 'vehicle_journey')
         assert vj_d == "vehicle_journey:vj_D"
-
+        origin = next(l['id'] for l in date_time['links'] if l['type'] == 'stop_area' and l['category'] == 'origin')
+        terminus = next(l['id'] for l in date_time['links'] if l['type'] == 'stop_area' and l['category'] == 'terminus')
+        assert origin == 'SA1'
+        assert terminus == 'SA3'
         # Node with skipped_stop
         assert len(nodes[1]['date_times']) == 1
         date_time = nodes[1]['date_times'][0]
@@ -867,7 +906,7 @@ class TestDepartureBoard(AbstractTestFixture):
         assert len(date_time['additional_informations']) == 1
         assert date_time['additional_informations'][0] == "skipped_stop"
         assert date_time['data_freshness'] is None
-        assert len(date_time['links']) == 2
+        assert len(date_time['links']) == 4
 
         assert len(nodes[2]['date_times']) == 1
         date_time = nodes[2]['date_times'][0]
@@ -875,7 +914,10 @@ class TestDepartureBoard(AbstractTestFixture):
         assert date_time['date_time'] == "20120616T025000"
         assert len(date_time['additional_informations']) == 0
         assert date_time['data_freshness'] == "base_schedule"
-        assert len(date_time['links']) == 2
+        assert len(date_time['links']) == 4
+
+        assert len(response['origins']) == 0
+        assert len(response['terminus']) == 1
 
 
 StopSchedule = namedtuple('StopSchedule', ['sp', 'route', 'date_times'])
@@ -2224,7 +2266,7 @@ class TestFirstLastDatetimeWithPositiveTimezone(AbstractTestFixture):
         assert stop_schedules[0]['date_times'][3]['date_time'] == "20170103T235000"
 
         # Query without parameter duration (default value = 86399)
-        # Here we have exclude the last date_time at 20170102T235000 + 86400 (24 hours)
+        # Here we have excluded the last date_time at 20170102T235000 + 86400 (24 hours)
         response = self.query_region(
             "stop_points/X_S3/stop_schedules?from_datetime={}"
             "&data_freshness=base_schedule".format(from_datetime)

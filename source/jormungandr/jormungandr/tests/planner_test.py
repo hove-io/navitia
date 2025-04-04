@@ -79,7 +79,7 @@ def check_graphical_isochrones_request(isochrone_request):
 def create_journeys_request_test():
     origin = {"Hove": 42}
     destination = {"Somewhere": 666}
-    journey_parameters = JourneyParameters()
+    journey_parameters = JourneyParameters(direct_path_duration=0)
     datetime = str_to_time_stamp("20120614T080000")
 
     req = create_journeys_request(origin, destination, datetime, True, journey_parameters, False)
@@ -136,7 +136,8 @@ def test_journey_request_current_time():
 def create_graphical_isochrones_request_test():
     origin = {"Hove": 42}
     destination = {"Somewhere": 666}
-    graphical_isochrones_parameters = GraphicalIsochronesParameters()
+    journeys_parameters = JourneyParameters(direct_path_duration=0)
+    graphical_isochrones_parameters = GraphicalIsochronesParameters(journeys_parameters=journeys_parameters)
     datetime = str_to_time_stamp("20120614T080000")
 
     req = create_graphical_isochrones_request(
@@ -150,7 +151,7 @@ def create_graphical_isochrones_request_test():
 def test_journey_request_tranfer_penalties():
     origin = {"Hove": 42}
     destination = {"Somewhere": 666}
-    journey_parameters = JourneyParameters(arrival_transfer_penalty=60, walking_transfer_penalty=240)
+    journey_parameters = JourneyParameters(direct_path_duration=0, arrival_transfer_penalty=60, walking_transfer_penalty=240)
     datetime = str_to_time_stamp("20120614T080000")
 
     req = create_journeys_request(origin, destination, datetime, True, journey_parameters, False)

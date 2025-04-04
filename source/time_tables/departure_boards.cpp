@@ -100,6 +100,24 @@ static void fill_date_times(PbCreator& pb_creator,
     }
 }
 
+static void fill_origin_terminus(PbCreator& pb_creator,
+                                 const navitia::type::StopTime* st,
+                                 pbnavitia::PtDisplayInfo* pt_info) {
+    if (st != nullptr) {
+        const auto* vj = st->vehicle_journey;
+        auto origin = vj->stop_time_list.front().stop_point->stop_area;
+        pb_creator.origins.insert(origin);
+        auto terminus = vj->stop_time_list.back().stop_point->stop_area;
+        pb_creator.terminus.insert(terminus);
+        if (std::find(pt_info->origins().begin(), pt_info->origins().end(), origin->uri) == pt_info->origins().end()) {
+                pt_info->add_origins(origin->uri);
+            }
+        if (std::find(pt_info->terminus().begin(), pt_info->terminus().end(), terminus->uri) == pt_info->terminus().end()) {
+                pt_info->add_terminus(terminus->uri);
+            }
+    }
+}
+
 static void fill_first_last_date_times(PbCreator& pb_creator,
                                        pbnavitia::ScheduleStopTime* date_time,
                                        const std::pair<unsigned int, const navitia::type::StopTime*> stop_time,
@@ -153,6 +171,9 @@ static void render(PbCreator& pb_creator,
                 vj_found = update_display_information(dt_st.second, pt_display_information, pb_creator);
             }
             fill_date_times(pb_creator, schedule, dt_st, calendar_id);
+
+            // Here we can fill origins and destinations in pt_display_information
+            fill_origin_terminus(pb_creator, dt_st.second, pt_display_information);
         }
 
         // add first and last datetime
@@ -218,6 +239,9 @@ static void render(PbCreator& pb_creator,
                 vj_found = update_display_information(dt_st.second, pt_display_information, pb_creator);
             }
             fill_date_times(pb_creator, schedule, dt_st, calendar_id);
+
+            // Here we can fill origins and destinations in pt_display_information
+            fill_origin_terminus(pb_creator, dt_st.second, pt_display_information);
         }
 
         // add first and last datetime

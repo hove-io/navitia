@@ -756,7 +756,13 @@ class RouteDisplayInformationSerializer(PbNestedSerializer):
     trip_short_name = jsonschema.Field(schema_type=str, display_none=True)
 
     def get_links(self, obj):
-        return DisruptionLinkSerializer().to_value(obj.impact_uris)
+        response = DisruptionLinkSerializer().to_value(obj.impact_uris)
+        for origin in obj.origins:
+            response.append(create_internal_link(_type="stop_area", rel="origins", id=origin))
+
+        for terminus in obj.terminus:
+            response.append(create_internal_link(_type="stop_area", rel="terminus", id=terminus))
+        return response
 
 
 class PassageDisplayInformationSerializer(RouteDisplayInformationSerializer):
@@ -817,6 +823,28 @@ def make_properties_links(properties):
                 "rel": "vehicle_journeys",
                 "value": properties.vehicle_journey_id,  # to remove for the v2
                 "id": properties.vehicle_journey_id,
+            }
+        )
+
+    if properties.HasField(str("origin")):
+        response.append(
+            {
+                "type": "stop_area",
+                "rel": "origins",
+                "category": "origin",
+                "id": properties.origin,
+                "internal": True,
+            }
+        )
+
+    if properties.HasField(str("terminus")):
+        response.append(
+            {
+                "type": "stop_area",
+                "rel": "terminus",
+                "category": "terminus",
+                "id": properties.terminus,
+                "internal": True,
             }
         )
 

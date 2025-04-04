@@ -120,6 +120,8 @@ class PTReferentialSerializerNoContext(serpy.Serializer):
     disruptions = pt.DisruptionSerializer(attr='impacts', many=True, display_none=True)
     notes = DescribedField(schema_type=NoteSerializer(many=True))
     links = DescribedField(schema_type=LinkSchema(many=True))
+    origins = pt.StopAreaSerializer(many=True, display_none=True)
+    terminus = pt.StopAreaSerializer(many=True, display_none=True)
 
 
 class PTReferentialSerializer(PTReferentialSerializerNoContext):
@@ -343,7 +345,8 @@ class JourneysSerializer(JourneysCommon):
     journeys = JourneySerializer(many=True)
     tickets = TicketSerializer(many=True, display_none=True)
     disruptions = pt.DisruptionSerializer(attr='impacts', many=True, display_none=True)
-    terminus = pt.StopAreaSerializer(many=True, display_none=True)
+    origins = pt.StopAreaSerializer(many=True, display_none=False)
+    terminus = pt.StopAreaSerializer(many=True, display_none=False)
     context = MethodField(schema_type=ContextSerializer(), display_none=False)
     notes = DescribedField(schema_type=NoteSerializer(many=True))
     exceptions = DescribedField(schema_type=ExceptionSerializer(many=True))
