@@ -202,9 +202,24 @@ class Asgard(TransientSocket, Kraken):
         req.sn_routing_matrix.use_predicted_traffic = request["_use_predicted_traffic"]
 
         # Asgard/Valhalla walking
-        req.sn_routing_matrix.streetnetwork_params.walking_destination_only_penalty = request[
-            'walking_destination_only_penalty'
-        ]
+        for param in [
+            'walking_destination_only_penalty',
+            "walking_walkway_factor",
+            "walking_sidewalk_factor",
+            "walking_alley_factor",
+            "walking_driveway_factor",
+            "walking_step_penalty",
+            "walking_use_ferry",
+            "walking_use_living_streets",
+            "walking_use_tracks",
+            "walking_use_hills",
+            "walking_service_penalty",
+            "walking_service_factor",
+            "walking_max_hiking_difficulty",
+            "walking_shortest",
+            "walking_ignore_oneways",
+        ]:
+            setattr(req.sn_routing_matrix.streetnetwork_params, param, request[param])
 
         # Asgard/Valhalla bike
         req.sn_routing_matrix.streetnetwork_params.bike_use_roads = request['bike_use_roads']
@@ -370,6 +385,7 @@ class Asgard(TransientSocket, Kraken):
         req.direct_path.clockwise = fallback_extremity.represents_start
         req.direct_path.use_excluded_zones = request["_use_excluded_zones"]
         req.direct_path.use_predicted_traffic = request["_use_predicted_traffic"]
+
         profiles = [
             DirectPathProfile(
                 bike_use_roads=request['bike_use_roads'],
