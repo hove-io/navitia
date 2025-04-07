@@ -147,6 +147,13 @@ def create_kraken_matrix_request(
     req.sn_routing_matrix.streetnetwork_params.car_no_park_speed = speed_switcher.get(
         "car_no_park", kwargs.get("car_no_park")
     )
+
+    req.sn_routing_matrix.walking_speed = req.sn_routing_matrix.streetnetwork_params.walking_speed
+    req.sn_routing_matrix.bike_speed = req.sn_routing_matrix.streetnetwork_params.bike_speed
+    req.sn_routing_matrix.bss_speed = req.sn_routing_matrix.streetnetwork_params.bss_speed
+    req.sn_routing_matrix.car_speed = req.sn_routing_matrix.streetnetwork_params.car_speed
+    req.sn_routing_matrix.car_no_park_speed = req.sn_routing_matrix.streetnetwork_params.car_no_park_speed
+
     return req
 
 
