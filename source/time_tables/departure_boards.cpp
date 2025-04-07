@@ -110,11 +110,12 @@ static void fill_origin_terminus(PbCreator& pb_creator,
         auto terminus = vj->stop_time_list.back().stop_point->stop_area;
         pb_creator.terminus.insert(terminus);
         if (std::find(pt_info->origins().begin(), pt_info->origins().end(), origin->uri) == pt_info->origins().end()) {
-                pt_info->add_origins(origin->uri);
-            }
-        if (std::find(pt_info->terminus().begin(), pt_info->terminus().end(), terminus->uri) == pt_info->terminus().end()) {
-                pt_info->add_terminus(terminus->uri);
-            }
+            pt_info->add_origins(origin->uri);
+        }
+        if (std::find(pt_info->terminus().begin(), pt_info->terminus().end(), terminus->uri)
+            == pt_info->terminus().end()) {
+            pt_info->add_terminus(terminus->uri);
+        }
     }
 }
 

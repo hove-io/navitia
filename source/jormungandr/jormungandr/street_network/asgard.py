@@ -321,6 +321,9 @@ class Asgard(TransientSocket, Kraken):
         ):
             profile_param.car_no_park_speed = request['{}_speed'.format(mode)]
             profile_param.max_car_no_park_duration_to_pt = request['max_{}_duration_to_pt'.format(mode)]
+        else:
+            profile_param.car_no_park_speed = 0
+            profile_param.max_car_no_park_duration_to_pt = 0
 
         # In addition to the request for kraken, we add more params for asgard
 

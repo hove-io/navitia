@@ -1714,7 +1714,8 @@ void PbCreator::Filler::fill_pb_object(const StopTimeCalendar* stop_time_calenda
 
     // Fill origin and terminus:
     auto origin_uri = stop_time_calendar->stop_time->vehicle_journey->stop_time_list.front().stop_point->stop_area->uri;
-    auto terminus_uri = stop_time_calendar->stop_time->vehicle_journey->stop_time_list.back().stop_point->stop_area->uri;
+    auto terminus_uri =
+        stop_time_calendar->stop_time->vehicle_journey->stop_time_list.back().stop_point->stop_area->uri;
     hn->set_origin(origin_uri);
     hn->set_terminus(terminus_uri);
 

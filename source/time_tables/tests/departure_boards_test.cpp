@@ -2537,8 +2537,8 @@ BOOST_AUTO_TEST_CASE(terminus_schedule_group_by_stoparea_multiple_routes) {
         BOOST_CHECK_EQUAL(terminus_schedule.date_times(2).time(), time_to_int(11, 45, 00));
         BOOST_CHECK_EQUAL(terminus_schedule.date_times(3).time(), time_to_int(11, 55, 00));
         // Tests on origins and terminus
-        BOOST_REQUIRE_EQUAL(resp.origins().size(),3);
-        BOOST_REQUIRE_EQUAL(resp.terminus().size(),3);
+        BOOST_REQUIRE_EQUAL(resp.origins().size(), 3);
+        BOOST_REQUIRE_EQUAL(resp.terminus().size(), 3);
     }
     {
         // Calculate terminus schedule at StopArea (M)
@@ -2592,8 +2592,8 @@ BOOST_AUTO_TEST_CASE(terminus_schedule_group_by_stoparea_multiple_routes) {
         BOOST_CHECK_EQUAL(terminus_schedule.date_times().size(), 1);
         BOOST_CHECK_EQUAL(terminus_schedule.date_times(0).time(), time_to_int(8, 30, 00));
         // Tests on origins and terminus
-        BOOST_REQUIRE_EQUAL(resp.origins().size(),1);
-        BOOST_REQUIRE_EQUAL(resp.terminus().size(),1);
+        BOOST_REQUIRE_EQUAL(resp.origins().size(), 1);
+        BOOST_REQUIRE_EQUAL(resp.terminus().size(), 1);
     }    
 }
 
@@ -2696,8 +2696,8 @@ BOOST_AUTO_TEST_CASE(terminus_schedule_group_by_stoparea_1) {
     BOOST_CHECK_EQUAL(terminus_schedule.date_times().size(), 2);
     BOOST_CHECK_EQUAL(terminus_schedule.date_times(0).time(), time_to_int(8, 10, 00));
     BOOST_CHECK_EQUAL(terminus_schedule.date_times(1).time(), time_to_int(8, 15, 00));
-    BOOST_REQUIRE_EQUAL(resp.origins().size(),1);
-    BOOST_REQUIRE_EQUAL(resp.terminus().size(),1);
+    BOOST_REQUIRE_EQUAL(resp.origins().size(), 1);
+    BOOST_REQUIRE_EQUAL(resp.terminus().size(), 1);
 }
 
 BOOST_AUTO_TEST_CASE(schedules_with_partial_terminus) {
@@ -2728,7 +2728,7 @@ BOOST_AUTO_TEST_CASE(schedules_with_partial_terminus) {
     {
         navitia::PbCreator pb_creator(data_ptr, bt::second_clock::universal_time(), null_time_period);
         terminus_schedules(pb_creator, "stop_point.uri=B", {}, {}, d("20160802T090000"), 86400, 0, 10, 0,
-                        nt::RTLevel::Base, std::numeric_limits<size_t>::max());
+                           nt::RTLevel::Base, std::numeric_limits<size_t>::max());
 
         pbnavitia::Response resp = pb_creator.get_response();
         BOOST_REQUIRE_EQUAL(resp.terminus_schedules_size(), 2);
@@ -2767,7 +2767,7 @@ BOOST_AUTO_TEST_CASE(schedules_with_partial_terminus) {
         BOOST_CHECK_EQUAL(terminus_schedule.date_times(1).properties().terminus(), "D");
 
         // Tests on origins and terminus
-        BOOST_REQUIRE_EQUAL(resp.origins().size(),3);
-        BOOST_REQUIRE_EQUAL(resp.terminus().size(),3);
+        BOOST_REQUIRE_EQUAL(resp.origins().size(), 3);
+        BOOST_REQUIRE_EQUAL(resp.terminus().size(), 3);
     }
 }

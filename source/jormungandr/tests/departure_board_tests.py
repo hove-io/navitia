@@ -414,8 +414,12 @@ class TestDepartureBoard(AbstractTestFixture):
         assert response["stop_schedules"][0]["stop_point"]["id"] == "StopR2"
         date_times = response["stop_schedules"][0]["date_times"]
         dt_links = date_times[0]["links"]
-        origin = next(l["id"] for l in dt_links if l["type"] == "stop_area" and l["category"] == "origin")
-        terminus = next(l["id"] for l in dt_links if l["type"] == "stop_area" and l["category"] == "terminus")
+        origin = next(
+            l["id"] for l in dt_links if l["type"] == "stop_area" and l["category"] == "origin"
+        )
+        terminus = next(
+            l["id"] for l in dt_links if l["type"] == "stop_area" and l["category"] == "terminus"
+        )
         assert origin == "StopR1"
         assert terminus == "StopR4"
 

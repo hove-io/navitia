@@ -56,7 +56,7 @@ def check_basic_journeys_request(journeys_req):
     assert journeys_req.max_extra_second_pass == 0
     assert journeys_req.forbidden_uris == []
     assert journeys_req.allowed_id == []
-    assert journeys_req.direct_path_duration == 0
+    assert journeys_req.direct_path_duration == 3600 # Default value in navitia-proto
     assert journeys_req.bike_in_pt is False
     assert journeys_req.min_nb_journeys == 0
     assert journeys_req.timeframe_duration == 0
@@ -79,7 +79,7 @@ def check_graphical_isochrones_request(isochrone_request):
 def create_journeys_request_test():
     origin = {"Hove": 42}
     destination = {"Somewhere": 666}
-    journey_parameters = JourneyParameters(direct_path_duration=0)
+    journey_parameters = JourneyParameters()
     datetime = str_to_time_stamp("20120614T080000")
 
     req = create_journeys_request(origin, destination, datetime, True, journey_parameters, False)
@@ -136,8 +136,7 @@ def test_journey_request_current_time():
 def create_graphical_isochrones_request_test():
     origin = {"Hove": 42}
     destination = {"Somewhere": 666}
-    journeys_parameters = JourneyParameters(direct_path_duration=0)
-    graphical_isochrones_parameters = GraphicalIsochronesParameters(journeys_parameters=journeys_parameters)
+    graphical_isochrones_parameters = GraphicalIsochronesParameters()
     datetime = str_to_time_stamp("20120614T080000")
 
     req = create_graphical_isochrones_request(
@@ -151,7 +150,7 @@ def create_graphical_isochrones_request_test():
 def test_journey_request_tranfer_penalties():
     origin = {"Hove": 42}
     destination = {"Somewhere": 666}
-    journey_parameters = JourneyParameters(direct_path_duration=0, arrival_transfer_penalty=60, walking_transfer_penalty=240)
+    journey_parameters = JourneyParameters(arrival_transfer_penalty=60, walking_transfer_penalty=240)
     datetime = str_to_time_stamp("20120614T080000")
 
     req = create_journeys_request(origin, destination, datetime, True, journey_parameters, False)
