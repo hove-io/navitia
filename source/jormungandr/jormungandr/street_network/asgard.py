@@ -385,10 +385,9 @@ class Asgard(TransientSocket, Kraken):
         req.direct_path.clockwise = fallback_extremity.represents_start
         req.direct_path.use_excluded_zones = request["_use_excluded_zones"]
         req.direct_path.use_predicted_traffic = request["_use_predicted_traffic"]
-        req.direct_path.walking_speed = request['walking_speed']
-        req.direct_path.bike_speed = request['bike_speed']
-        req.direct_path.bss_speed = request['bss_speed']
-        req.direct_path.car_speed = request['car_speed']
+        for speed in ["walking_speed", "bike_speed", "bss_speed", "car_speed"]:
+            if speed in request:
+                setattr(req.direct_path, speed, request[speed])
 
         profiles = [
             DirectPathProfile(
