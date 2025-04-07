@@ -608,8 +608,17 @@ class TestDepartureBoard(AbstractTestFixture):
 
         # "terminus" should not be present in response.notes
         assert len(response["notes"]) == 0
-        assert not response["departures"][0]["display_informations"]["links"]
-        assert not response["departures"][1]["display_informations"]["links"]
+        links = response["departures"][0]["display_informations"]["links"]
+        terminus = [l["id"] for l in links if l["type"] == "terminus" and l["rel"] == "notes"]
+        assert len(terminus) == 0
+
+        # origin and terminus should be present as link in display_informations
+        origins = [l["id"] for l in links if l["type"] == "stop_area" and l["rel"] == "origins"]
+        terminus = [l["id"] for l in links if l["type"] == "stop_area" and l["rel"] == "terminus"]
+        assert len(origins) == 1
+        assert len(terminus) == 1
+        assert len(response["origins"]) == 1
+        assert len(response["terminus"]) == 2
 
     def test_departures_arrivals_without_filters(self):
         """
@@ -1517,6 +1526,13 @@ class TestSchedules(AbstractTestFixture):
         assert arrivals[0]["stop_date_time"]["departure_date_time"] == '20160103T181000'
         assert arrivals[0]["stop_date_time"]["base_departure_date_time"] == '20160103T181000'
         assert arrivals[0]["stop_date_time"]["data_freshness"] == 'base_schedule'
+        links = arrivals[0]["display_informations"]["links"]
+        # Verify the presence of links on origin and terminus
+        assert len(links) == 2
+        origins = [l["id"] for l in links if l["type"] == "stop_area" and l["rel"] == "origins"]
+        terminus = [l["id"] for l in links if l["type"] == "stop_area" and l["rel"] == "terminus"]
+        assert len(origins) == 1
+        assert len(terminus) == 1
 
         assert arrivals[1]["route"]["id"] == 'l:freq:9'
         assert arrivals[1]["stop_point"]["id"] == 'stopf2'
@@ -1533,6 +1549,8 @@ class TestSchedules(AbstractTestFixture):
         assert arrivals[2]["stop_date_time"]["departure_date_time"] == '20160103T191000'
         assert arrivals[2]["stop_date_time"]["base_departure_date_time"] == '20160103T191000'
         assert arrivals[2]["stop_date_time"]["data_freshness"] == 'base_schedule'
+        assert len(response["origins"]) == 1
+        assert len(response["terminus"]) == 1
 
     def test_departure_schedule_departures_date_time_frequency_base_schedule(self):
         """

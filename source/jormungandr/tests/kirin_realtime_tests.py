@@ -873,7 +873,13 @@ class TestKirinOnVJOnTime(MockKirinDisruptionsFixture):
             "stop_points/stop_point:stopB/lines/A/stop_schedules?_current_datetime=20120614T080000&data_freshness=realtime"
         )
         assert has_the_disruption(response, 'vjA_late')
-        assert response['stop_schedules'][0]['date_times'][0]['links'][1]['type'] == 'disruption'
+        links = response['stop_schedules'][0]['date_times'][0]['links']
+        disruptions = [l["id"] for l in links if l["type"] == "disruption" and l["rel"] == "disruptions"]
+        assert len(disruptions) == 1
+        origins = [l["id"] for l in links if l["type"] == "stop_area" and l["rel"] == "origins"]
+        terminus = [l["id"] for l in links if l["type"] == "stop_area" and l["rel"] == "terminus"]
+        assert len(origins) == 1
+        assert len(terminus) == 1
         assert response['stop_schedules'][0]['date_times'][0]['date_time'] == '20120614T080101'
         assert response['stop_schedules'][0]['date_times'][0]['base_date_time'] == '20120614T080100'
         assert response['stop_schedules'][0]['date_times'][0]['data_freshness'] == 'realtime'
@@ -883,7 +889,9 @@ class TestKirinOnVJOnTime(MockKirinDisruptionsFixture):
             "stop_points/stop_point:stopB/lines/A/terminus_schedules?_current_datetime=20120614T080000&data_freshness=realtime"
         )
         assert has_the_disruption(response, 'vjA_late')
-        assert response['terminus_schedules'][0]['date_times'][0]['links'][1]['type'] == 'disruption'
+        links = response['terminus_schedules'][0]['date_times'][0]['links']
+        disruptions = [l["id"] for l in links if l["type"] == "disruption" and l["rel"] == "disruptions"]
+        assert len(disruptions) == 1
         assert response['terminus_schedules'][0]['date_times'][0]['date_time'] == '20120614T080101'
         assert response['terminus_schedules'][0]['date_times'][0]['base_date_time'] == '20120614T080100'
         assert response['terminus_schedules'][0]['date_times'][0]['data_freshness'] == 'realtime'
