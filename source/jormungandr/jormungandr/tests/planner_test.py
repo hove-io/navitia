@@ -56,7 +56,7 @@ def check_basic_journeys_request(journeys_req):
     assert journeys_req.max_extra_second_pass == 0
     assert journeys_req.forbidden_uris == []
     assert journeys_req.allowed_id == []
-    assert journeys_req.direct_path_duration == 3600 # Default value in navitia-proto
+    assert journeys_req.direct_path_duration == 3600  # Default value in navitia-proto
     assert journeys_req.bike_in_pt is False
     assert journeys_req.min_nb_journeys == 0
     assert journeys_req.timeframe_duration == 0

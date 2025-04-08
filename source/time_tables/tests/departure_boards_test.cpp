@@ -2594,7 +2594,7 @@ BOOST_AUTO_TEST_CASE(terminus_schedule_group_by_stoparea_multiple_routes) {
         // Tests on origins and terminus
         BOOST_REQUIRE_EQUAL(resp.origins().size(), 1);
         BOOST_REQUIRE_EQUAL(resp.terminus().size(), 1);
-    }    
+    }
 }
 
 BOOST_AUTO_TEST_CASE(terminus_schedule_group_by_stoparea_0) {

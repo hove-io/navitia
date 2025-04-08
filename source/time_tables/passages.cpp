@@ -123,9 +123,7 @@ void fill_route_point(PbCreator& pb_creator,
     pb_creator.fill(line, m_route->mutable_line(), 0);
 }
 
-void fill_origin_terminus(PbCreator& pb_creator,
-                          const navitia::type::StopTime* st,
-                          pbnavitia::PtDisplayInfo* pt_info) {
+void fill_origin_terminus(PbCreator& pb_creator, const navitia::type::StopTime* st, pbnavitia::PtDisplayInfo* pt_info) {
     if (st != nullptr) {
         const auto* vj = st->vehicle_journey;
         auto origin = vj->stop_time_list.front().stop_point->stop_area;

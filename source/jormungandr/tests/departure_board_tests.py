@@ -414,12 +414,8 @@ class TestDepartureBoard(AbstractTestFixture):
         assert response["stop_schedules"][0]["stop_point"]["id"] == "StopR2"
         date_times = response["stop_schedules"][0]["date_times"]
         dt_links = date_times[0]["links"]
-        origin = next(
-            l["id"] for l in dt_links if l["type"] == "stop_area" and l["category"] == "origin"
-        )
-        terminus = next(
-            l["id"] for l in dt_links if l["type"] == "stop_area" and l["category"] == "terminus"
-        )
+        origin = next(l["id"] for l in dt_links if l["type"] == "stop_area" and l["category"] == "origin")
+        terminus = next(l["id"] for l in dt_links if l["type"] == "stop_area" and l["category"] == "terminus")
         assert origin == "StopR1"
         assert terminus == "StopR4"
 
@@ -904,11 +900,13 @@ class TestDepartureBoard(AbstractTestFixture):
         assert date_time['date_time'] == "20120616T001000"
         assert len(date_time['additional_informations']) == 0
         assert date_time['data_freshness'] == "base_schedule"
-        assert len(date_time['links']) == 4
-        vj_d = next(l['id'] for l in date_time['links'] if l['type'] == 'vehicle_journey')
+        links = date_time['links']
+        assert len(links) == 4
+        vj_d = next(l['id'] for l in links if l['type'] == 'vehicle_journey')
         assert vj_d == "vehicle_journey:vj_D"
-        origin = next(l['id'] for l in date_time['links'] if l['type'] == 'stop_area' and l['category'] == 'origin')
-        terminus = next(l['id'] for l in date_time['links'] if l['type'] == 'stop_area' and l['category'] == 'terminus')
+
+        origin = next(l['id'] for l in links if l['type'] == 'stop_area' and l['category'] == 'origin')
+        terminus = next(l['id'] for l in links if l['type'] == 'stop_area' and l['category'] == 'terminus')
         assert origin == 'SA1'
         assert terminus == 'SA3'
         # Node with skipped_stop
