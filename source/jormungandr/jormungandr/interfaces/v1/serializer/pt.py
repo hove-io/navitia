@@ -761,7 +761,9 @@ class RouteDisplayInformationSerializer(PbNestedSerializer):
             response.append(create_internal_link(_type="stop_area", rel="origins", category="origin", id=origin))
 
         for terminus in obj.terminus:
-            response.append(create_internal_link(_type="stop_area", rel="terminus", category="terminus", id=terminus))
+            response.append(
+                create_internal_link(_type="stop_area", rel="terminus", category="terminus", id=terminus)
+            )
         return response
 
 
