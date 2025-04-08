@@ -108,7 +108,8 @@ static void fill_origin_terminus(PbCreator& pb_creator,
         if (vj->stop_time_list.front().stop_point) {
             auto origin = vj->stop_time_list.front().stop_point->stop_area;
             pb_creator.origins.insert(origin);
-            if (std::find(pt_info->origins().begin(), pt_info->origins().end(), origin->uri) == pt_info->origins().end()) {
+            if (std::find(pt_info->origins().begin(), pt_info->origins().end(), origin->uri)
+                == pt_info->origins().end()) {
                 pt_info->add_origins(origin->uri);
             }
         }

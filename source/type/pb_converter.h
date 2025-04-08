@@ -194,7 +194,7 @@ inline pbnavitia::NavitiaType get_embedded_type(const nt::MetaVehicleJourney*) {
 
 struct PbCreator {
     std::set<const nt::Contributor*, Less> contributors;
-    // Used for journeys et timetable
+    // Used for journeys and timetable
     std::set<const nt::StopArea*, Less> terminus;
     std::set<const nt::StopArea*, Less> origins;
     std::set<boost::shared_ptr<type::disruption::Impact>, Less> impacts;
