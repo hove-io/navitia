@@ -758,10 +758,10 @@ class RouteDisplayInformationSerializer(PbNestedSerializer):
     def get_links(self, obj):
         response = DisruptionLinkSerializer().to_value(obj.impact_uris)
         for origin in obj.origins:
-            response.append(create_internal_link(_type="stop_area", rel="origins", id=origin))
+            response.append(create_internal_link(_type="stop_area", rel="origins", category="origin", id=origin))
 
         for terminus in obj.terminus:
-            response.append(create_internal_link(_type="stop_area", rel="terminus", id=terminus))
+            response.append(create_internal_link(_type="stop_area", rel="terminus", category="terminus", id=terminus))
         return response
 
 

@@ -62,7 +62,7 @@ def create_external_link(url, rel, _type=None, templated=False, description=None
     return d
 
 
-def create_internal_link(rel, _type, id, templated=False, description=None):
+def create_internal_link(rel, _type, id, templated=False, description=None, category=None):
     """
     :param rel: relation of the link to the current object
     :param _type: type of linked object
@@ -79,6 +79,8 @@ def create_internal_link(rel, _type, id, templated=False, description=None):
         d['title'] = description
     if id:
         d['id'] = id
+    if category:
+        d['category'] = category
 
     return d
 
