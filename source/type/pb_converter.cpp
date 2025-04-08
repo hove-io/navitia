@@ -1713,11 +1713,18 @@ void PbCreator::Filler::fill_pb_object(const StopTimeCalendar* stop_time_calenda
     }
 
     // Fill origin and terminus:
-    auto origin_uri = stop_time_calendar->stop_time->vehicle_journey->stop_time_list.front().stop_point->stop_area->uri;
-    auto terminus_uri =
-        stop_time_calendar->stop_time->vehicle_journey->stop_time_list.back().stop_point->stop_area->uri;
-    hn->set_origin(origin_uri);
-    hn->set_terminus(terminus_uri);
+    if (!stop_time_calendar->stop_time->vehicle_journey->stop_time_list.empty()) {
+        if (stop_time_calendar->stop_time->vehicle_journey->stop_time_list.front().stop_point) {
+            auto origin_uri =
+                stop_time_calendar->stop_time->vehicle_journey->stop_time_list.front().stop_point->stop_area->uri;
+            hn->set_origin(origin_uri);
+        }
+        if (stop_time_calendar->stop_time->vehicle_journey->stop_time_list.back().stop_point) {
+            auto terminus_uri =
+                stop_time_calendar->stop_time->vehicle_journey->stop_time_list.back().stop_point->stop_area->uri;
+            hn->set_terminus(terminus_uri);
+        }
+    }
 
     fill(pb_creator.data->pt_data->comments.get(*stop_time_calendar->stop_time), hn->mutable_notes());
     if (stop_time_calendar->stop_time->vehicle_journey != nullptr) {

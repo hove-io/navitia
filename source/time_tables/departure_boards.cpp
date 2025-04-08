@@ -103,18 +103,22 @@ static void fill_date_times(PbCreator& pb_creator,
 static void fill_origin_terminus(PbCreator& pb_creator,
                                  const navitia::type::StopTime* st,
                                  pbnavitia::PtDisplayInfo* pt_info) {
-    if (st != nullptr) {
+    if (st != nullptr && !st->vehicle_journey->stop_time_list.empty()) {
         const auto* vj = st->vehicle_journey;
-        auto origin = vj->stop_time_list.front().stop_point->stop_area;
-        pb_creator.origins.insert(origin);
-        auto terminus = vj->stop_time_list.back().stop_point->stop_area;
-        pb_creator.terminus.insert(terminus);
-        if (std::find(pt_info->origins().begin(), pt_info->origins().end(), origin->uri) == pt_info->origins().end()) {
-            pt_info->add_origins(origin->uri);
+        if (vj->stop_time_list.front().stop_point) {
+            auto origin = vj->stop_time_list.front().stop_point->stop_area;
+            pb_creator.origins.insert(origin);
+            if (std::find(pt_info->origins().begin(), pt_info->origins().end(), origin->uri) == pt_info->origins().end()) {
+                pt_info->add_origins(origin->uri);
+            }
         }
-        if (std::find(pt_info->terminus().begin(), pt_info->terminus().end(), terminus->uri)
-            == pt_info->terminus().end()) {
-            pt_info->add_terminus(terminus->uri);
+        if (vj->stop_time_list.back().stop_point) {
+            auto terminus = vj->stop_time_list.back().stop_point->stop_area;
+            pb_creator.terminus.insert(terminus);
+            if (std::find(pt_info->terminus().begin(), pt_info->terminus().end(), terminus->uri)
+                == pt_info->terminus().end()) {
+                pt_info->add_terminus(terminus->uri);
+            }
         }
     }
 }
