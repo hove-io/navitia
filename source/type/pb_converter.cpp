@@ -1711,6 +1711,21 @@ void PbCreator::Filler::fill_pb_object(const StopTimeCalendar* stop_time_calenda
         destination->set_uri("destination:" + std::to_string(hash_fn(sa->name)));
         destination->set_destination(sa->name);
     }
+
+    // Fill origin and terminus:
+    if (!stop_time_calendar->stop_time->vehicle_journey->stop_time_list.empty()) {
+        if (stop_time_calendar->stop_time->vehicle_journey->stop_time_list.front().stop_point) {
+            auto origin_uri =
+                stop_time_calendar->stop_time->vehicle_journey->stop_time_list.front().stop_point->stop_area->uri;
+            hn->set_origin(origin_uri);
+        }
+        if (stop_time_calendar->stop_time->vehicle_journey->stop_time_list.back().stop_point) {
+            auto terminus_uri =
+                stop_time_calendar->stop_time->vehicle_journey->stop_time_list.back().stop_point->stop_area->uri;
+            hn->set_terminus(terminus_uri);
+        }
+    }
+
     fill(pb_creator.data->pt_data->comments.get(*stop_time_calendar->stop_time), hn->mutable_notes());
     if (stop_time_calendar->stop_time->vehicle_journey != nullptr) {
         if (!stop_time_calendar->stop_time->vehicle_journey->odt_message.empty()) {
@@ -2281,6 +2296,8 @@ const pbnavitia::Response& PbCreator::get_response() {
     contributors.clear();
     Filler(0, {DumpMessage::No}, *this).fill_pb_object(impacts, response.mutable_impacts());
     impacts.clear();
+    Filler(0, {DumpMessage::No}, *this).fill_pb_object(origins, response.mutable_origins());
+    origins.clear();
     Filler(0, {DumpMessage::No}, *this).fill_pb_object(terminus, response.mutable_terminus());
     terminus.clear();
     return response;

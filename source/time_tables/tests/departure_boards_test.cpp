@@ -1959,30 +1959,54 @@ BOOST_AUTO_TEST_CASE(schedules_on_merged_routes) {
         auto stop_schedule = resp.stop_schedules(0);
         BOOST_CHECK_EQUAL(stop_schedule.route().name(), "route:bob");
         BOOST_CHECK_EQUAL(stop_schedule.pt_display_informations().direction(), "C");
+        BOOST_CHECK_EQUAL(stop_schedule.pt_display_informations().origins().size(), 1);
+        BOOST_CHECK_EQUAL(stop_schedule.pt_display_informations().origins()[0], "A");
+        BOOST_CHECK_EQUAL(stop_schedule.pt_display_informations().terminus().size(), 1);
+        BOOST_CHECK_EQUAL(stop_schedule.pt_display_informations().terminus()[0], "C");
         BOOST_REQUIRE_EQUAL(stop_schedule.date_times_size(), 1);
         BOOST_CHECK_EQUAL(stop_schedule.date_times(0).date(), builder_date);
         BOOST_CHECK_EQUAL(stop_schedule.date_times(0).time(), time_to_int(11, 00, 00));
+        BOOST_CHECK_EQUAL(stop_schedule.date_times(0).properties().origin(), "A");
+        BOOST_CHECK_EQUAL(stop_schedule.date_times(0).properties().terminus(), "C");
         // Direction B -> A
         stop_schedule = resp.stop_schedules(1);
         BOOST_CHECK_EQUAL(stop_schedule.route().name(), "route:bobette");
         BOOST_CHECK_EQUAL(stop_schedule.pt_display_informations().direction(), "A");
+        BOOST_CHECK_EQUAL(stop_schedule.pt_display_informations().origins().size(), 1);
+        BOOST_CHECK_EQUAL(stop_schedule.pt_display_informations().origins()[0], "C");
+        BOOST_CHECK_EQUAL(stop_schedule.pt_display_informations().terminus().size(), 1);
+        BOOST_CHECK_EQUAL(stop_schedule.pt_display_informations().terminus()[0], "A");
         BOOST_REQUIRE_EQUAL(stop_schedule.date_times_size(), 1);
         BOOST_CHECK_EQUAL(stop_schedule.date_times(0).date(), builder_date);
         BOOST_CHECK_EQUAL(stop_schedule.date_times(0).time(), time_to_int(12, 00, 00));
+        BOOST_CHECK_EQUAL(stop_schedule.date_times(0).properties().origin(), "C");
+        BOOST_CHECK_EQUAL(stop_schedule.date_times(0).properties().terminus(), "A");
         // Directions B -> C -> D
         stop_schedule = resp.stop_schedules(2);
         BOOST_CHECK_EQUAL(stop_schedule.route().name(), "route:boby");
         BOOST_CHECK_EQUAL(stop_schedule.pt_display_informations().direction(), "D");
+        BOOST_CHECK_EQUAL(stop_schedule.pt_display_informations().origins().size(), 1);
+        BOOST_CHECK_EQUAL(stop_schedule.pt_display_informations().origins()[0], "A");
+        BOOST_CHECK_EQUAL(stop_schedule.pt_display_informations().terminus().size(), 1);
+        BOOST_CHECK_EQUAL(stop_schedule.pt_display_informations().terminus()[0], "D");
         BOOST_REQUIRE_EQUAL(stop_schedule.date_times_size(), 1);
         BOOST_CHECK_EQUAL(stop_schedule.date_times(0).date(), builder_date);
         BOOST_CHECK_EQUAL(stop_schedule.date_times(0).time(), time_to_int(11, 15, 00));
+        BOOST_CHECK_EQUAL(stop_schedule.date_times(0).properties().origin(), "A");
+        BOOST_CHECK_EQUAL(stop_schedule.date_times(0).properties().terminus(), "D");
         // Direction B -> A
         stop_schedule = resp.stop_schedules(3);
         BOOST_CHECK_EQUAL(stop_schedule.route().name(), "route:bobynette");
         BOOST_CHECK_EQUAL(stop_schedule.pt_display_informations().direction(), "A");
+        BOOST_CHECK_EQUAL(stop_schedule.pt_display_informations().origins().size(), 1);
+        BOOST_CHECK_EQUAL(stop_schedule.pt_display_informations().origins()[0], "D");
+        BOOST_CHECK_EQUAL(stop_schedule.pt_display_informations().terminus().size(), 1);
+        BOOST_CHECK_EQUAL(stop_schedule.pt_display_informations().terminus()[0], "A");
         BOOST_REQUIRE_EQUAL(stop_schedule.date_times_size(), 1);
         BOOST_CHECK_EQUAL(stop_schedule.date_times(0).date(), builder_date);
         BOOST_CHECK_EQUAL(stop_schedule.date_times(0).time(), time_to_int(13, 00, 00));
+        BOOST_CHECK_EQUAL(stop_schedule.date_times(0).properties().origin(), "D");
+        BOOST_CHECK_EQUAL(stop_schedule.date_times(0).properties().terminus(), "A");
     }
     // we should have two terminus_schedules: B -> C -> D and b -> A
     {
@@ -1997,24 +2021,42 @@ BOOST_AUTO_TEST_CASE(schedules_on_merged_routes) {
         BOOST_CHECK_EQUAL(terminus_schedule.route().name(), "route:bobette");
         BOOST_CHECK_EQUAL(terminus_schedule.route().line().name(), "line:bob");
         BOOST_CHECK_EQUAL(terminus_schedule.pt_display_informations().direction(), "A");
+        BOOST_CHECK_EQUAL(terminus_schedule.pt_display_informations().origins().size(), 2);
+        BOOST_CHECK_EQUAL(terminus_schedule.pt_display_informations().origins()[0], "C");
+        BOOST_CHECK_EQUAL(terminus_schedule.pt_display_informations().origins()[1], "D");
+        BOOST_CHECK_EQUAL(terminus_schedule.pt_display_informations().terminus().size(), 1);
+        BOOST_CHECK_EQUAL(terminus_schedule.pt_display_informations().terminus()[0], "A");
         BOOST_REQUIRE_EQUAL(terminus_schedule.date_times_size(), 2);
         BOOST_CHECK_EQUAL(terminus_schedule.date_times(0).date(), builder_date);
         BOOST_CHECK_EQUAL(terminus_schedule.date_times(0).time(), time_to_int(12, 00, 00));
         BOOST_CHECK_EQUAL(terminus_schedule.date_times(1).time(), time_to_int(13, 00, 00));
         BOOST_CHECK_EQUAL(terminus_schedule.date_times(0).properties().vehicle_journey_id(), "vehicle_journey:vj3");
         BOOST_CHECK_EQUAL(terminus_schedule.date_times(1).properties().vehicle_journey_id(), "vehicle_journey:vj4");
+        BOOST_CHECK_EQUAL(terminus_schedule.date_times(0).properties().origin(), "C");
+        BOOST_CHECK_EQUAL(terminus_schedule.date_times(0).properties().terminus(), "A");
+        BOOST_CHECK_EQUAL(terminus_schedule.date_times(1).properties().origin(), "D");
+        BOOST_CHECK_EQUAL(terminus_schedule.date_times(1).properties().terminus(), "A");
 
         // Direction B -> D (direction B -> C is merged in B -> C -> D)
         terminus_schedule = resp.terminus_schedules(1);
         BOOST_CHECK_EQUAL(terminus_schedule.route().name(), "route:boby");
         BOOST_CHECK_EQUAL(terminus_schedule.route().line().name(), "line:bob");
         BOOST_CHECK_EQUAL(terminus_schedule.pt_display_informations().direction(), "D");
+        BOOST_CHECK_EQUAL(terminus_schedule.pt_display_informations().origins().size(), 1);
+        BOOST_CHECK_EQUAL(terminus_schedule.pt_display_informations().origins()[0], "A");
+        BOOST_CHECK_EQUAL(terminus_schedule.pt_display_informations().terminus().size(), 2);
+        BOOST_CHECK_EQUAL(terminus_schedule.pt_display_informations().terminus()[0], "C");
+        BOOST_CHECK_EQUAL(terminus_schedule.pt_display_informations().terminus()[1], "D");
         BOOST_REQUIRE_EQUAL(terminus_schedule.date_times_size(), 2);
         BOOST_CHECK_EQUAL(terminus_schedule.date_times(0).date(), builder_date);
         BOOST_CHECK_EQUAL(terminus_schedule.date_times(0).time(), time_to_int(11, 00, 00));
         BOOST_CHECK_EQUAL(terminus_schedule.date_times(1).time(), time_to_int(11, 15, 00));
         BOOST_CHECK_EQUAL(terminus_schedule.date_times(0).properties().vehicle_journey_id(), "vehicle_journey:vj1");
         BOOST_CHECK_EQUAL(terminus_schedule.date_times(1).properties().vehicle_journey_id(), "vehicle_journey:vj2");
+        BOOST_CHECK_EQUAL(terminus_schedule.date_times(0).properties().origin(), "A");
+        BOOST_CHECK_EQUAL(terminus_schedule.date_times(0).properties().terminus(), "C");
+        BOOST_CHECK_EQUAL(terminus_schedule.date_times(1).properties().origin(), "A");
+        BOOST_CHECK_EQUAL(terminus_schedule.date_times(1).properties().terminus(), "D");
     }
 }
 
@@ -2457,6 +2499,10 @@ BOOST_AUTO_TEST_CASE(terminus_schedule_group_by_stoparea_multiple_routes) {
         auto terminus_schedule = resp.terminus_schedules(0);
         BOOST_CHECK_EQUAL(terminus_schedule.route().name(), "backward");
         BOOST_CHECK_EQUAL(terminus_schedule.pt_display_informations().direction(), "M");
+        BOOST_CHECK_EQUAL(terminus_schedule.pt_display_informations().origins().size(), 1);
+        BOOST_CHECK_EQUAL(terminus_schedule.pt_display_informations().origins()[0], "A");
+        BOOST_CHECK_EQUAL(terminus_schedule.pt_display_informations().terminus().size(), 1);
+        BOOST_CHECK_EQUAL(terminus_schedule.pt_display_informations().terminus()[0], "M");
         BOOST_CHECK_EQUAL(terminus_schedule.route().line().uri(), "Line1");
         BOOST_CHECK_EQUAL(terminus_schedule.stop_point().uri(), "C:sp");
         BOOST_CHECK_EQUAL(terminus_schedule.date_times().size(), 2);
@@ -2466,6 +2512,10 @@ BOOST_AUTO_TEST_CASE(terminus_schedule_group_by_stoparea_multiple_routes) {
         terminus_schedule = resp.terminus_schedules(1);
         BOOST_CHECK_EQUAL(terminus_schedule.route().name(), "backward");
         BOOST_CHECK_EQUAL(terminus_schedule.pt_display_informations().direction(), "J");
+        BOOST_CHECK_EQUAL(terminus_schedule.pt_display_informations().origins().size(), 1);
+        BOOST_CHECK_EQUAL(terminus_schedule.pt_display_informations().origins()[0], "A");
+        BOOST_CHECK_EQUAL(terminus_schedule.pt_display_informations().terminus().size(), 1);
+        BOOST_CHECK_EQUAL(terminus_schedule.pt_display_informations().terminus()[0], "J");
         BOOST_CHECK_EQUAL(terminus_schedule.route().line().uri(), "Line1");
         BOOST_CHECK_EQUAL(terminus_schedule.stop_point().uri(), "C:sp");
         BOOST_CHECK_EQUAL(terminus_schedule.date_times().size(), 2);
@@ -2475,6 +2525,10 @@ BOOST_AUTO_TEST_CASE(terminus_schedule_group_by_stoparea_multiple_routes) {
         terminus_schedule = resp.terminus_schedules(2);
         BOOST_CHECK_EQUAL(terminus_schedule.route().name(), "forward");
         BOOST_CHECK_EQUAL(terminus_schedule.pt_display_informations().direction(), "A");
+        BOOST_CHECK_EQUAL(terminus_schedule.pt_display_informations().origins().size(), 2);
+        BOOST_CHECK_EQUAL(terminus_schedule.pt_display_informations().origins()[0], "M");
+        BOOST_CHECK_EQUAL(terminus_schedule.pt_display_informations().terminus().size(), 1);
+        BOOST_CHECK_EQUAL(terminus_schedule.pt_display_informations().terminus()[0], "A");
         BOOST_CHECK_EQUAL(terminus_schedule.route().line().uri(), "Line1");
         BOOST_CHECK_EQUAL(terminus_schedule.stop_point().uri(), "C:sp");
         BOOST_CHECK_EQUAL(terminus_schedule.date_times().size(), 4);
@@ -2482,6 +2536,9 @@ BOOST_AUTO_TEST_CASE(terminus_schedule_group_by_stoparea_multiple_routes) {
         BOOST_CHECK_EQUAL(terminus_schedule.date_times(1).time(), time_to_int(11, 25, 00));
         BOOST_CHECK_EQUAL(terminus_schedule.date_times(2).time(), time_to_int(11, 45, 00));
         BOOST_CHECK_EQUAL(terminus_schedule.date_times(3).time(), time_to_int(11, 55, 00));
+        // Tests on origins and terminus
+        BOOST_REQUIRE_EQUAL(resp.origins().size(), 3);
+        BOOST_REQUIRE_EQUAL(resp.terminus().size(), 3);
     }
     {
         // Calculate terminus schedule at StopArea (M)
@@ -2534,6 +2591,9 @@ BOOST_AUTO_TEST_CASE(terminus_schedule_group_by_stoparea_multiple_routes) {
         BOOST_CHECK_EQUAL(terminus_schedule.stop_point().uri(), "J2");
         BOOST_CHECK_EQUAL(terminus_schedule.date_times().size(), 1);
         BOOST_CHECK_EQUAL(terminus_schedule.date_times(0).time(), time_to_int(8, 30, 00));
+        // Tests on origins and terminus
+        BOOST_REQUIRE_EQUAL(resp.origins().size(), 1);
+        BOOST_REQUIRE_EQUAL(resp.terminus().size(), 1);
     }
 }
 
@@ -2636,4 +2696,78 @@ BOOST_AUTO_TEST_CASE(terminus_schedule_group_by_stoparea_1) {
     BOOST_CHECK_EQUAL(terminus_schedule.date_times().size(), 2);
     BOOST_CHECK_EQUAL(terminus_schedule.date_times(0).time(), time_to_int(8, 10, 00));
     BOOST_CHECK_EQUAL(terminus_schedule.date_times(1).time(), time_to_int(8, 15, 00));
+    BOOST_REQUIRE_EQUAL(resp.origins().size(), 1);
+    BOOST_REQUIRE_EQUAL(resp.terminus().size(), 1);
+}
+
+BOOST_AUTO_TEST_CASE(schedules_with_partial_terminus) {
+    /*
+     * Check loosing terminus routes for terminus_schedules
+     *
+     * 1 line, 2 routes, bob, boby (one forward, and one backward)
+     * Bob:     A -> B -> C
+     * Bob:     A -> B -> C -> D
+     * Boby:         C -> B -> A
+     * Boby:    D -> C -> B -> A
+     */
+    ed::builder b("20160802", [&](ed::builder& b) {
+        b.vj("line:bob", "11111111", "", true, "vj1", "")
+            .route("route:bob")("A", "10:00"_t)("B", "11:00"_t)("C", "12:00"_t);
+        b.vj("line:bob", "11111111", "", true, "vj2", "")
+            .route("route:bob")("A", "10:15"_t)("B", "11:15"_t)("C", "12:15"_t)("D", "13:15"_t);
+        b.vj("line:bob", "11111111", "", true, "vj3", "")
+            .route("route:Boby")("C", "11:00"_t)("B", "12:00"_t)("A", "13:00"_t);
+        b.vj("line:bob", "11111111", "", true, "vj4", "")
+            .route("route:Boby")("D", "11:00"_t)("C", "12:00"_t)("B", "13:00"_t)("A", "14:00"_t);
+    });
+    auto* data_ptr = b.data.get();
+
+    auto builder_date = navitia::to_posix_timestamp("20160802T000000"_dt);
+
+    // We will have 2 stop_schedules.
+    {
+        navitia::PbCreator pb_creator(data_ptr, bt::second_clock::universal_time(), null_time_period);
+        terminus_schedules(pb_creator, "stop_point.uri=B", {}, {}, d("20160802T090000"), 86400, 0, 10, 0,
+                           nt::RTLevel::Base, std::numeric_limits<size_t>::max());
+
+        pbnavitia::Response resp = pb_creator.get_response();
+        BOOST_REQUIRE_EQUAL(resp.terminus_schedules_size(), 2);
+        // Directions B -> A
+        auto terminus_schedule = resp.terminus_schedules(0);
+        BOOST_CHECK_EQUAL(terminus_schedule.route().name(), "route:Boby");
+        BOOST_CHECK_EQUAL(terminus_schedule.pt_display_informations().direction(), "A");
+        BOOST_CHECK_EQUAL(terminus_schedule.pt_display_informations().origins().size(), 2);
+        BOOST_CHECK_EQUAL(terminus_schedule.pt_display_informations().origins()[0], "C");
+        BOOST_CHECK_EQUAL(terminus_schedule.pt_display_informations().terminus().size(), 1);
+        BOOST_CHECK_EQUAL(terminus_schedule.pt_display_informations().terminus()[0], "A");
+        BOOST_REQUIRE_EQUAL(terminus_schedule.date_times_size(), 2);
+        BOOST_CHECK_EQUAL(terminus_schedule.date_times(0).date(), builder_date);
+        BOOST_CHECK_EQUAL(terminus_schedule.date_times(0).time(), time_to_int(12, 00, 00));
+        BOOST_CHECK_EQUAL(terminus_schedule.date_times(1).time(), time_to_int(13, 00, 00));
+        BOOST_CHECK_EQUAL(terminus_schedule.date_times(0).properties().origin(), "C");
+        BOOST_CHECK_EQUAL(terminus_schedule.date_times(0).properties().terminus(), "A");
+        BOOST_CHECK_EQUAL(terminus_schedule.date_times(1).properties().origin(), "D");
+        BOOST_CHECK_EQUAL(terminus_schedule.date_times(1).properties().terminus(), "A");
+        // Direction B -> C + D
+        terminus_schedule = resp.terminus_schedules(1);
+        BOOST_CHECK_EQUAL(terminus_schedule.route().name(), "route:bob");
+        BOOST_CHECK_EQUAL(terminus_schedule.pt_display_informations().direction(), "D");
+        BOOST_CHECK_EQUAL(terminus_schedule.pt_display_informations().origins().size(), 1);
+        BOOST_CHECK_EQUAL(terminus_schedule.pt_display_informations().origins()[0], "A");
+        BOOST_CHECK_EQUAL(terminus_schedule.pt_display_informations().terminus().size(), 2);
+        BOOST_CHECK_EQUAL(terminus_schedule.pt_display_informations().terminus()[0], "C");
+        BOOST_CHECK_EQUAL(terminus_schedule.pt_display_informations().terminus()[1], "D");
+        BOOST_REQUIRE_EQUAL(terminus_schedule.date_times_size(), 2);
+        BOOST_CHECK_EQUAL(terminus_schedule.date_times(0).date(), builder_date);
+        BOOST_CHECK_EQUAL(terminus_schedule.date_times(0).time(), time_to_int(11, 00, 00));
+        BOOST_CHECK_EQUAL(terminus_schedule.date_times(1).time(), time_to_int(11, 15, 00));
+        BOOST_CHECK_EQUAL(terminus_schedule.date_times(0).properties().origin(), "A");
+        BOOST_CHECK_EQUAL(terminus_schedule.date_times(0).properties().terminus(), "C");
+        BOOST_CHECK_EQUAL(terminus_schedule.date_times(1).properties().origin(), "A");
+        BOOST_CHECK_EQUAL(terminus_schedule.date_times(1).properties().terminus(), "D");
+
+        // Tests on origins and terminus
+        BOOST_REQUIRE_EQUAL(resp.origins().size(), 3);
+        BOOST_REQUIRE_EQUAL(resp.terminus().size(), 3);
+    }
 }

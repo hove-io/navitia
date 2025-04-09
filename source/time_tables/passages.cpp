@@ -122,6 +122,28 @@ void fill_route_point(PbCreator& pb_creator,
     pb_creator.fill(pm, m_route->mutable_physical_modes(), 0);
     pb_creator.fill(line, m_route->mutable_line(), 0);
 }
+
+void fill_origin_terminus(PbCreator& pb_creator, const navitia::type::StopTime* st, pbnavitia::PtDisplayInfo* pt_info) {
+    if (st != nullptr && !st->vehicle_journey->stop_time_list.empty()) {
+        const auto* vj = st->vehicle_journey;
+        if (vj->stop_time_list.front().stop_point) {
+            auto origin = vj->stop_time_list.front().stop_point->stop_area;
+            pb_creator.origins.insert(origin);
+            if (std::find(pt_info->origins().begin(), pt_info->origins().end(), origin->uri)
+                == pt_info->origins().end()) {
+                pt_info->add_origins(origin->uri);
+            }
+        }
+        if (vj->stop_time_list.back().stop_point) {
+            auto terminus = vj->stop_time_list.back().stop_point->stop_area;
+            pb_creator.terminus.insert(terminus);
+            if (std::find(pt_info->terminus().begin(), pt_info->terminus().end(), terminus->uri)
+                == pt_info->terminus().end()) {
+                pt_info->add_terminus(terminus->uri);
+            }
+        }
+    }
+}
 }  // namespace
 
 void passages(PbCreator& pb_creator,
@@ -185,14 +207,27 @@ void passages(PbCreator& pb_creator,
                 navitia::to_posix_timestamp(base_departure_dt));
             passage->mutable_stop_date_time()->set_base_arrival_date_time(navitia::to_posix_timestamp(base_arrival_dt));
         }
-        pb_creator.fill(dt_stop_time.second, passage->mutable_stop_date_time()->mutable_properties(), 0);
+        auto* properties = passage->mutable_stop_date_time()->mutable_properties();
+        pb_creator.fill(dt_stop_time.second, properties, 0);
+
+        // Fill origin and terminus:
+        auto origin_uri = dt_stop_time.second->vehicle_journey->stop_time_list.front().stop_point->stop_area->uri;
+        auto terminus_uri = dt_stop_time.second->vehicle_journey->stop_time_list.back().stop_point->stop_area->uri;
+        LOG4CPLUS_INFO(log4cplus::Logger::getInstance("logger"), "Adding origin : " << origin_uri);
+        LOG4CPLUS_INFO(log4cplus::Logger::getInstance("logger"), "Adding terminus : " << terminus_uri);
+        properties->set_origin(origin_uri);
+        properties->set_terminus(terminus_uri);
 
         const type::VehicleJourney* vj = dt_stop_time.second->vehicle_journey;
         passage->mutable_stop_date_time()->set_data_freshness(to_pb_realtime_level(vj->realtime_level));
         const auto sts = std::vector<const nt::StopTime*>{dt_stop_time.second};
         const auto& vj_st = navitia::VjStopTimes(vj, sts);
-        pb_creator.fill(&vj_st, passage->mutable_pt_display_informations(), 1);
+        auto pt_display_information = passage->mutable_pt_display_informations();
+        pb_creator.fill(&vj_st, pt_display_information, 1);
         fill_route_point(pb_creator, depth, vj->route, dt_stop_time.second->stop_point, passage);
+
+        // Here we can fill origins and destinations in pt_display_information
+        fill_origin_terminus(pb_creator, dt_stop_time.second, pt_display_information);
     }
     pb_creator.make_paginate(total_result, start_page, count, passages_dt_st.size());
 

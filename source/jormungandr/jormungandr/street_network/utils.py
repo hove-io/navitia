@@ -118,6 +118,9 @@ def create_kraken_direct_path_request(
         req.direct_path.streetnetwork_params.max_car_no_park_duration_to_pt = request[
             'max_{}_duration_to_pt'.format(mode)
         ]
+    else:
+        req.direct_path.streetnetwork_params.car_no_park_speed = 0
+        req.direct_path.streetnetwork_params.max_car_no_park_duration_to_pt = 0
 
     return req
 
