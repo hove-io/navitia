@@ -46,11 +46,18 @@ void fill_disruption_from_database(const std::string& connection_string,
                                    DisruptionDatabaseReader& reader,
                                    const std::vector<std::string>& contributors,
                                    int batch_size) {
+    // For chaos database use chaos contributors only
+    std::vector<std::string> chaos_contributors;
+    for (const auto& contributor : contributors) {
+        if (contributor.rfind("shortterm.", 0) == 0) {  // starts with "shortterm."
+            chaos_contributors.push_back(contributor);
+        }
+    }
     auto conn = std::make_unique<pqxx::connection>(connection_string);
 
     size_t offset = 0, items_per_request = batch_size;
     pqxx::result result;
-    std::string contributors_array = boost::algorithm::join(contributors, ", ");
+    std::string contributors_array = boost::algorithm::join(chaos_contributors, ", ");
     LOG4CPLUS_INFO(log4cplus::Logger::getInstance("Logger"), "Reading disruptions from database");
     {
         pqxx::read_transaction sql_transaction(*conn, "loading disruptions");
@@ -199,6 +206,7 @@ void fill_disruption_from_database(const std::string& connection_string,
                      "     WHERE "
                      "     (NOT (d.start_publication_date >= '%s' OR d.end_publication_date <= '%s')"
                      "     OR (d.start_publication_date<='%s' and d.end_publication_date IS NULL))"
+                     "     AND NOT (a.start_date >= '%s' OR a.end_date <= '%s')"
                      "     AND co.contributor_code = ANY('{%s}')"  // it's like a "IN" but won't crash if empty"
                      "     AND d.status = 'published'"
                      "     AND i.status = 'published'"
@@ -207,8 +215,8 @@ void fill_disruption_from_database(const std::string& connection_string,
                      "     ORDER BY d.id, c.id, t.id, i.id, m.id, ch.id, cht.id"
                      "     LIMIT %i OFFSET %i"
                      " ;")
-                 % production_date.end() % production_date.begin() % production_date.end() % contributors_array
-                 % items_per_request % offset)
+                 % production_date.end() % production_date.begin() % production_date.end() % production_date.end()
+                 % production_date.begin() % contributors_array % items_per_request % offset)
                     .str();
             {
                 auto sql_before_time_stamp = std::chrono::high_resolution_clock::now();
