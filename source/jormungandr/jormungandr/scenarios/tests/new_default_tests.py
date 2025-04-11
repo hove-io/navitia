@@ -884,6 +884,7 @@ def modify_journeys_prev_next_links_s(new_value):
     yield
     app.config["JOURNEYS_PREV_NEXT_LINKS_S"] = old_value
 
+
 def journeys_next_prev_links_test():
     response = response_pb2.Response()
     pb_j = response.journeys.add()
@@ -900,15 +901,15 @@ def journeys_next_prev_links_test():
     assert str_to_time_stamp("20120614T080101") == next_link
     assert str_to_time_stamp("20120614T081959") == prev_link
 
+
 def journeys_next_prev_links_default_value_test():
     response = response_pb2.Response()
     pb_j = response.journeys.add()
     pb_j.departure_date_time = str_to_time_stamp("20120614T080100")
-    pb_j.arrival_date_time =   str_to_time_stamp("20120614T082000")
+    pb_j.arrival_date_time = str_to_time_stamp("20120614T082000")
     pb_j.type = 'best'
     section = pb_j.sections.add()
     section.type = response_pb2.PUBLIC_TRANSPORT
-
 
     scenario = new_default.Scenario()
     next_link = scenario.next_journey_datetime(response.journeys, True)
