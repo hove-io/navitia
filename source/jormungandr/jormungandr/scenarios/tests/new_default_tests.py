@@ -30,7 +30,6 @@
 from __future__ import absolute_import, print_function, unicode_literals, division
 
 import navitiacommon.response_pb2 as response_pb2
-import navitiacommon.type_pb2 as type_pb2
 import jormungandr.scenarios.tests.helpers_tests as helpers_tests
 from jormungandr.scenarios import new_default, journey_filter
 from jormungandr.scenarios.new_default import (
@@ -48,7 +47,6 @@ import pytz
 from jormungandr import app
 from flask import g
 import pytest
-from pytest_mock import mocker
 from collections import defaultdict
 import copy
 
