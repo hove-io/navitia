@@ -1546,7 +1546,6 @@ class Scenario(simple.Scenario):
 
         # Update booking_url in booking_rule for all sections of type ON_DEMAND_TRANSPORT
         update_booking_rule_url_in_response(pb_resp)
-
         self._compute_pagination_links(pb_resp, instance, api_request['clockwise'])
         return pb_resp
 
@@ -1753,8 +1752,8 @@ class Scenario(simple.Scenario):
         if best is None:
             return None
 
-        one_second = 1
-        return best.departure_date_time + one_second
+        nb_seconds = app.config.get('JOURNEYS_PREV_NEXT_LINKS_S', 10)
+        return best.departure_date_time + nb_seconds
 
     def previous_journey_datetime(self, journeys, clockwise):
         """
@@ -1765,8 +1764,8 @@ class Scenario(simple.Scenario):
         if best is None:
             return None
 
-        one_second = 1
-        return best.arrival_date_time - one_second
+        nb_seconds = app.config.get('JOURNEYS_PREV_NEXT_LINKS_S', 10)
+        return best.arrival_date_time - nb_seconds
 
     def get_entrypoint_detail(self, entrypoint, instance, request_id):
         if is_stop_point(entrypoint):
