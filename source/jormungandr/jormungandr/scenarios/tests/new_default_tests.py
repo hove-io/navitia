@@ -910,9 +910,9 @@ def journeys_next_prev_links_default_value_test():
     pb_j.type = 'best'
     section = pb_j.sections.add()
     section.type = response_pb2.PUBLIC_TRANSPORT
-
-    scenario = new_default.Scenario()
-    next_link = scenario.next_journey_datetime(response.journeys, True)
-    prev_link = scenario.previous_journey_datetime(response.journeys, True)
+    with modify_journeys_prev_next_links_s(10):
+        scenario = new_default.Scenario()
+        next_link = scenario.next_journey_datetime(response.journeys, True)
+        prev_link = scenario.previous_journey_datetime(response.journeys, True)
     assert str_to_time_stamp("20120614T080110") == next_link
     assert str_to_time_stamp("20120614T081950") == prev_link
