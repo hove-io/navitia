@@ -335,8 +335,10 @@ void Data::build_administrative_regions() {
         }
     }
     if (cpt_no_projected)
-        LOG4CPLUS_WARN(log, cpt_no_projected << "/" << pt_data->stop_points.size()
+        LOG4CPLUS_WARN(log, cpt_no_projected << "/" << pt_data->stop_areas.size()
                                              << " stop_areas are not associated with any admin");
+    // For stop_areas without any admin, we can always fetch admins of it's stop_points
+    this->pt_data->build_admins_stop_areas();
 
     for (const auto* sa : pt_data->stop_areas) {
         for (auto admin : sa->admin_list) {

@@ -127,6 +127,7 @@ public:
 
     /** Construit l'indexe ProximityList */
     void build_proximity_list();
+    void build_admins_stop_areas();
     /// sort the collections and set the corresponding idx field
     void sort_and_index();
 
