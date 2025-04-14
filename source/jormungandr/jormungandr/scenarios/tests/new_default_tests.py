@@ -30,7 +30,6 @@
 from __future__ import absolute_import, print_function, unicode_literals, division
 
 import navitiacommon.response_pb2 as response_pb2
-import navitiacommon.type_pb2 as type_pb2
 import jormungandr.scenarios.tests.helpers_tests as helpers_tests
 from jormungandr.scenarios import new_default, journey_filter
 from jormungandr.scenarios.new_default import (
@@ -48,9 +47,10 @@ import pytz
 from jormungandr import app
 from flask import g
 import pytest
-from pytest_mock import mocker
 from collections import defaultdict
 import copy
+from contextlib import contextmanager
+
 
 """
  sections       0   1   2   3   4   5   6   7   8   9   10
@@ -875,3 +875,44 @@ def journey_with_booking_rule_test():
             odt_section.booking_rule.booking_url
             == "https://domaine/search?departure-address=P%2BR%20d%27Avon%20%28city%29&destination-address=gare%20de%20l%27est%20%28city%29&requested-departure-time=2024-08-06T08%3A05%3A00%2B0200&from_coord_lat=2.0&from_coord_lon=1.0&not_managed=N/A"
         )
+
+
+@contextmanager
+def modify_journeys_prev_next_links_s(new_value):
+    old_value = app.config.get('JOURNEYS_PREV_NEXT_LINKS_S')
+    app.config["JOURNEYS_PREV_NEXT_LINKS_S"] = new_value
+    yield
+    app.config["JOURNEYS_PREV_NEXT_LINKS_S"] = old_value
+
+
+def journeys_next_prev_links_test():
+    response = response_pb2.Response()
+    pb_j = response.journeys.add()
+    pb_j.departure_date_time = str_to_time_stamp("20120614T080100")
+    pb_j.arrival_date_time = str_to_time_stamp("20120614T082000")
+    pb_j.type = 'best'
+    section = pb_j.sections.add()
+    section.type = response_pb2.PUBLIC_TRANSPORT
+
+    with modify_journeys_prev_next_links_s(1):
+        scenario = new_default.Scenario()
+        next_link = scenario.next_journey_datetime(response.journeys, True)
+        prev_link = scenario.previous_journey_datetime(response.journeys, True)
+    assert str_to_time_stamp("20120614T080101") == next_link
+    assert str_to_time_stamp("20120614T081959") == prev_link
+
+
+def journeys_next_prev_links_default_value_test():
+    response = response_pb2.Response()
+    pb_j = response.journeys.add()
+    pb_j.departure_date_time = str_to_time_stamp("20120614T080100")
+    pb_j.arrival_date_time = str_to_time_stamp("20120614T082000")
+    pb_j.type = 'best'
+    section = pb_j.sections.add()
+    section.type = response_pb2.PUBLIC_TRANSPORT
+    with modify_journeys_prev_next_links_s(10):
+        scenario = new_default.Scenario()
+        next_link = scenario.next_journey_datetime(response.journeys, True)
+        prev_link = scenario.previous_journey_datetime(response.journeys, True)
+    assert str_to_time_stamp("20120614T080110") == next_link
+    assert str_to_time_stamp("20120614T081950") == prev_link
