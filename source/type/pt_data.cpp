@@ -442,6 +442,11 @@ void PT_Data::build_admins_stop_areas() {
         if (!stop_point->stop_area) {
             continue;
         }
+
+        if (!stop_point->stop_area->admin_list.empty()) {
+            continue;
+        }
+
         for (navitia::georef::Admin* admin : stop_point->admin_list) {
             auto find_predicate = [&](navitia::georef::Admin* adm) { return adm->idx == admin->idx; };
             auto it = std::find_if(stop_point->stop_area->admin_list.begin(), stop_point->stop_area->admin_list.end(),

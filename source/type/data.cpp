@@ -296,7 +296,7 @@ void Data::build_administrative_regions() {
     }
     if (cpt_no_projected)
         LOG4CPLUS_WARN(log, cpt_no_projected << "/" << pt_data->stop_points.size()
-                                             << " stop_points are not associated with any admins");
+                                             << " stop_points are not associated with any admin");
 
     // set admins to poi
     cpt_no_projected = 0;
@@ -317,11 +317,27 @@ void Data::build_administrative_regions() {
     }
     if (cpt_no_projected)
         LOG4CPLUS_WARN(log,
-                       cpt_no_projected << "/" << geo_ref->pois.size() << " pois are not associated with any admins");
+                       cpt_no_projected << "/" << geo_ref->pois.size() << " pois are not associated with any admin");
     if (cpt_no_initialized)
         LOG4CPLUS_WARN(log,
                        cpt_no_initialized << "/" << geo_ref->pois.size() << " pois with coordinates not initialized");
 
+    // set admins to stop areas
+    cpt_no_projected = 0;
+    for (type::StopArea* stop_area : pt_data->stop_areas) {
+        if (!stop_area->admin_list.empty()) {
+            continue;
+        }
+        const auto& admins = find_admins(stop_area->coord, admin_tree);
+        boost::push_back(stop_area->admin_list, admins);
+        if (admins.empty()) {
+            ++cpt_no_projected;
+        }
+    }
+    if (cpt_no_projected)
+        LOG4CPLUS_WARN(log, cpt_no_projected << "/" << pt_data->stop_areas.size()
+                                             << " stop_areas are not associated with any admin");
+    // For stop_areas without any admin, we can always fetch admins of it's stop_points
     this->pt_data->build_admins_stop_areas();
 
     for (const auto* sa : pt_data->stop_areas) {
