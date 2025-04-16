@@ -30,7 +30,7 @@ from __future__ import absolute_import
 
 import collections
 from navitiacommon import type_pb2
-from jormungandr import utils, new_relic
+from jormungandr import utils
 from collections import namedtuple
 import logging
 from .timer_logger_helper import timed_logger
@@ -61,13 +61,11 @@ class PlacesFreeAccess:
         self._logger = logging.getLogger(__name__)
         self._pt_planner = self._instance.get_pt_planner(pt_planner_name)
 
-    @new_relic.distributedEvent("get_stop_points_for_stop_area", "places")
     def _get_stop_points_for_stop_area(self, uri):
         with timed_logger(self._logger, 'stop_points_for_stop_area_calling_external_service', self._request_id):
             stop_points = self._instance.georef.get_stop_points_for_stop_area(uri, self._request_id)
             return sorted(stop_points, key=lambda p: p[0])
 
-    @new_relic.distributedEvent("get_odt_stop_points", "places")
     def _get_odt_stop_points(self, coord):
         with timed_logger(self._logger, 'odt_stop_points_calling_external_service', self._request_id):
             return self._pt_planner.get_odt_stop_points(coord, self._request_id)
@@ -79,8 +77,7 @@ class PlacesFreeAccess:
 
         if place.embedded_type == type_pb2.STOP_AREA:
             crowfly = {
-                FreeAccessObject(sp[0], sp[1], sp[2])
-                for sp in self._get_stop_points_for_stop_area(self._instance.georef, place.uri)
+                FreeAccessObject(sp[0], sp[1], sp[2]) for sp in self._get_stop_points_for_stop_area(place.uri)
             }
         elif place.embedded_type == type_pb2.ADMINISTRATIVE_REGION:
             crowfly = {
@@ -97,7 +94,7 @@ class PlacesFreeAccess:
         odt = set()
 
         if coord:
-            odt_sps = self._get_odt_stop_points(self._pt_planner, coord)
+            odt_sps = self._get_odt_stop_points(coord)
             collections.deque(
                 (odt.add(FreeAccessObject(sp.uri, sp.coord.lon, sp.coord.lat)) for sp in odt_sps),
                 maxlen=1,

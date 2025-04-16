@@ -27,7 +27,6 @@
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 from __future__ import absolute_import
-from jormungandr import new_relic
 import logging
 from .timer_logger_helper import timed_logger
 
@@ -42,13 +41,12 @@ class PlaceByUri:
         self._request_id = request_id
         self._async_request()
 
-    @new_relic.distributedEvent("place_by_uri", "places")
     def _place(self):
         with timed_logger(self._logger, 'place_by_uri_calling_external_service', self._request_id):
             return self._instance.georef.place(self._uri, request_id=self._request_id)
 
     def _do_request(self):
-        return self._place(self._instance.georef)
+        return self._place()
 
     def _async_request(self):
         self._value = self._future_manager.create_future(self._do_request)

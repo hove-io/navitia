@@ -31,7 +31,7 @@ from __future__ import absolute_import
 import jormungandr.street_network.utils
 from .helper_utils import get_max_fallback_duration
 from .timer_logger_helper import timed_logger
-from jormungandr import utils, new_relic, fallback_modes as fm
+from jormungandr import utils, fallback_modes as fm
 import logging
 from navitiacommon import type_pb2
 
@@ -75,7 +75,6 @@ class ProximitiesByCrowfly:
         self._pt_planner = self._instance.get_pt_planner(request['_pt_planner'])
         self._async_request()
 
-    @new_relic.distributedEvent("get_crowfly", "street_network")
     def _get_crow_fly(self):
         with timed_logger(self._logger, 'get_crow_fly_calling_external_service', self._request_id):
             pt_planner = self._pt_planner
@@ -112,7 +111,7 @@ class ProximitiesByCrowfly:
 
         coord = utils.get_pt_object_coord(self._requested_place_obj)
         if coord.lat and coord.lon:
-            crow_fly = self._get_crow_fly(self._instance.georef)
+            crow_fly = self._get_crow_fly()
 
             if self._mode == fm.FallbackModes.car.name:
                 # pick up only sytral_parkings with park_ride = yes

@@ -28,7 +28,7 @@
 # www.navitia.io
 
 from __future__ import absolute_import
-from jormungandr import utils, new_relic
+from jormungandr import utils
 from jormungandr.utils import date_to_timestamp, get_pt_object_coord
 from jormungandr.street_network.street_network import StreetNetworkPathType
 from navitiacommon import response_pb2, type_pb2
@@ -82,7 +82,6 @@ class PtJourney:
         self._pt_planner = self._instance.get_pt_planner(request['_pt_planner'])
         self._async_request()
 
-    @new_relic.distributedEvent("journeys", "journeys")
     def _journeys(self, orig_fallback_durations, dest_fallback_durations):
         with timed_logger(self._logger, 'pt_journeys_calling_kraken', self._request_id):
             return self._pt_planner.journeys(
@@ -113,7 +112,7 @@ class PtJourney:
         ):
             return None
 
-        resp = self._journeys(self._pt_planner, orig_fallback_durations, dest_fallback_durations)
+        resp = self._journeys(orig_fallback_durations, dest_fallback_durations)
 
         for j in resp.journeys:
             j.internal_id = str(utils.generate_id())
@@ -135,7 +134,6 @@ class PtJourney:
         )
         return resp
 
-    @new_relic.distributedEvent("graphical_isochrone", "graphical_isochrone")
     def _graphical_isochrone(self, orig_fallback_durations, dest_fallback_durations):
         return self._pt_planner.graphical_isochrones(
             orig_fallback_durations,
@@ -176,9 +174,9 @@ class PtJourney:
             }
 
         if self._request_type == type_pb2.ISOCHRONE:
-            resp = self._journeys(self._pt_planner, **orig_and_dest_fallback_durations)
+            resp = self._journeys(**orig_and_dest_fallback_durations)
         else:
-            resp = self._graphical_isochrone(self._pt_planner, **orig_and_dest_fallback_durations)
+            resp = self._graphical_isochrone(**orig_and_dest_fallback_durations)
 
         for j in resp.journeys:
             j.internal_id = str(utils.generate_id())

@@ -29,7 +29,7 @@
 
 from __future__ import absolute_import, print_function, unicode_literals, division
 
-from jormungandr import cache, app, new_relic
+from jormungandr import cache, app
 from jormungandr.otlp import otlp_instance
 from navitiacommon import type_pb2
 from dateutil import parser
@@ -118,7 +118,6 @@ class SytralProvider(object):
         """
         params = {'parking_system_id': "SytralRT", 'dataset': "sytral", 'status': status}
         params.update(kwargs)
-        new_relic.record_custom_event('parking_status', params)
         otlp_instance.send_event_metrics('parking_status', params)
 
     def _fill_equipment_details(self, equipment_form_web_service, equipment_details):

@@ -37,7 +37,7 @@ import logging
 from jormungandr import app
 from jormungandr.authentication import get_user, get_token, get_app_name, get_used_coverages
 from jormungandr.exceptions import StatManagerError
-from jormungandr import utils, new_relic
+from jormungandr import utils
 import re
 from threading import Lock
 
@@ -186,7 +186,6 @@ class StatManager(object):
         self.exchange = kombu.Exchange(self.exchange_name, type="topic", auto_delete=auto_delete)
         self.producer = self.connection.Producer(exchange=self.exchange)
 
-    @new_relic.statManagerEvent("manage_stat", "stat_manager")
     def manage_stat(self, start_time, call_result):
         """
         Function to fill stat objects (requests, parameters, journeys et sections) sand send them to Broker
@@ -603,7 +602,7 @@ class manage_stat_caller:
             start_time = time.time()
             call_result = f(*args, **kwargs)
             try:
-                self.manager.manage_stat(self, start_time, call_result)
+                self.manager.manage_stat(start_time, call_result)
             except Exception:
                 # if stat are not working we don't want jormungandr to stop.
                 pass

@@ -56,7 +56,7 @@ class ObstacleProvider(AbstractExternalService):
         """
         Get obstacle information from Forseti webservice
         """
-        raw_response = self._call_webservice(self, arguments)
+        raw_response = self._call_webservice(arguments)
 
         return self.response_marshaller(raw_response, arguments)
 

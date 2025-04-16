@@ -97,7 +97,6 @@ import gevent, gevent.pool
 from jormungandr import app
 from jormungandr.autocomplete.geocodejson import GeocodeJson
 from jormungandr import global_autocomplete
-from jormungandr.new_relic import record_custom_parameter
 from jormungandr.otlp import otlp_instance
 from jormungandr import fallback_modes
 
@@ -1567,7 +1566,6 @@ class Scenario(simple.Scenario):
         """
         # TODO: handle min_alternative_journeys
         # TODO: call first bss|bss and do not call walking|walking if no bss in first results
-        record_custom_parameter('scenario', 'new_default')
         otlp_instance.record_label('scenario', 'new_default')
         resp = []
         logger = logging.getLogger(__name__)

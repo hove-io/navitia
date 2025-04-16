@@ -34,7 +34,6 @@ from copy import deepcopy
 from jormungandr.schedule import RoutePoint
 from jormungandr.utils import timestamp_to_datetime, record_external_failure
 from jormungandr.utils import date_to_timestamp, pb_del_if
-from jormungandr import new_relic
 from jormungandr.otlp import otlp_instance
 from navitiacommon import type_pb2
 import datetime
@@ -286,7 +285,6 @@ class RealtimeProxy(six.with_metaclass(ABCMeta, object)):
         params = {'realtime_system_id': six.text_type(self.rt_system_id), 'message': message}
         if comment is not None:
             params['comment'] = comment
-        new_relic.record_custom_event('realtime_internal_failure', params)
         otlp_instance.send_event_metrics('realtime_internal_failure', params)
 
     def record_call(self, status, **kwargs):
@@ -295,7 +293,6 @@ class RealtimeProxy(six.with_metaclass(ABCMeta, object)):
         """
         params = {'realtime_system_id': six.text_type(self.rt_system_id), 'status': status}
         params.update(kwargs)
-        new_relic.record_custom_event('realtime_status', params)
         otlp_instance.send_event_metrics('realtime_status', params)
 
     def record_additional_info(self, status, **kwargs):
@@ -304,7 +301,6 @@ class RealtimeProxy(six.with_metaclass(ABCMeta, object)):
         """
         params = {'realtime_system_id': six.text_type(self.rt_system_id), 'status': status}
         params.update(kwargs)
-        new_relic.record_custom_event('realtime_proxy_additional_info', params)
         otlp_instance.send_event_metrics('realtime_proxy_additional_info', params)
 
     @cache.memoize(app.config.get(str('CACHE_CONFIGURATION'), {}).get(str('TIMEOUT_PTOBJECTS'), 600))

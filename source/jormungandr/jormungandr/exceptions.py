@@ -31,9 +31,7 @@ from __future__ import absolute_import, print_function, unicode_literals, divisi
 from flask import request
 from werkzeug.exceptions import HTTPException
 import logging
-from jormungandr.new_relic import record_exception
 from jormungandr.otlp import otlp_instance
-from typing import Dict
 
 __all__ = [
     "RegionNotFound",
@@ -182,11 +180,9 @@ def log_exception(sender, exception, **extra):
     if isinstance(exception, (HTTPException, RegionNotFound)):
         logger.debug(error)
         if exception.code >= 500:
-            record_exception()
             otlp_instance.record_exception(exception)
     else:
         logger.exception(error)
-        record_exception()
         otlp_instance.record_exception(exception)
 
 
