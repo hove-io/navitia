@@ -602,7 +602,7 @@ class manage_stat_caller:
             start_time = time.time()
             call_result = f(*args, **kwargs)
             try:
-                self.manager.manage_stat(self, start_time, call_result)
+                self.manager.manage_stat(start_time, call_result)
             except Exception:
                 # if stat are not working we don't want jormungandr to stop.
                 pass
