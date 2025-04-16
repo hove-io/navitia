@@ -30,12 +30,13 @@
 from __future__ import absolute_import, print_function, unicode_literals, division
 from jormungandr import i_manager
 from jormungandr.interfaces.v1.ResourceUri import ResourceUri
+from jormungandr.interfaces.v1.decorators import get_serializer
 from jormungandr.interfaces.v1.serializer import api
 
 
 class Elevations(ResourceUri):
     def __init__(self, *args, **kwargs):
-        ResourceUri.__init__(self, output_type_serializer=api.ElevationsDictSerializer, *args, **kwargs)
+        ResourceUri.__init__(self, links=False,*args, **kwargs)
         self.parsers['get'].add_argument(
             "polyline",
             type=str,
@@ -43,6 +44,7 @@ class Elevations(ResourceUri):
             help="Encoded polyline, with 6 digits precision",
         )
 
+    @get_serializer(serpy=api.ElevationsDictSerializer)
     def get(self, region=None):
 
         args = self.parsers["get"].parse_args()
