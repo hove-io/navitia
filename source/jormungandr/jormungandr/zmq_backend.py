@@ -1,4 +1,5 @@
 import pybreaker
+import logging
 from jormungandr import utils
 from jormungandr.transient_socket import TransientSocket
 
@@ -18,6 +19,7 @@ class ZmqBackend:
         self.timeout = timeout
         self.connector_type_for_error_reporting = connector_type_for_error_reporting
         self.connector_name_for_error_reporting = connector_name_for_error_reporting
+        self.logger = logging.getLogger()
 
     def call(self, request: str) -> str:
         try:
