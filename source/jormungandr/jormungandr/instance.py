@@ -321,9 +321,10 @@ class Instance(transient_socket.TransientSocket):
                 "elevation",
                 "asgard",
             )
-            if app.config["ASGARD_ZMQ_SOCKET"]
+            if app.config.get("ASGARD_ZMQ_SOCKET")
             else None
         )
+
         self._same_journey_schedules_configuration = same_journey_schedules_configuration or {
             "allowed_id_type": ["stop_point"],
             "min_nb_journeys": 5,
