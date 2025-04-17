@@ -26,13 +26,10 @@ COPY ./source/tyr ./tyr
 COPY ./docker/run_tyr_worker.sh /usr/src/app/run.sh
 RUN chmod +x /usr/src/app/run.sh
 
-COPY cosmogony2cities*.deb  mimirsbrunn-config*.deb ./
-RUN ls -lt
+COPY cosmogony2cities*.deb ./
 
 # install cosmogony2cities package
-RUN dpkg -i cosmogony2cities*.deb \
-        # install conf mimir package
-        mimirsbrunn-config*.deb
+RUN dpkg -i cosmogony2cities*.deb
 
 RUN apt-get update --fix-missing \
     && apt-get install -y --force-yes unzip curl libgeos-dev libpq5 python3.9 python3-pip git ca-certificates postgresql-client gettext-base jq \
@@ -49,7 +46,7 @@ RUN apt-get update --fix-missing \
     && unzip awscliv2.zip && ./aws/install \
     && (cd navitiacommon && python3 setup.py install) \
     && (cd tyr && python3 setup.py install && pip3 install --no-cache-dir -U -r requirements.txt)\
-    && rm -rf ./cosmogony2cities*.deb ./mimirsbrunn-config*.deb \
+    && rm -rf ./cosmogony2cities*.deb \
     && apt-get purge -y git python3-pip \
     && apt-get autoremove -y
 
@@ -69,6 +66,8 @@ COPY ./docker_build/ed/poi2ed /usr/bin/poi2ed
 
 # Copy: osm2mimir7 && cosmogony2mimir7 && bano2mimir7 && openaddresses2mimir7 && ntfs2mimir7 && poi2mimir7 && ctlmimir7
 COPY --from=mimir_bins /usr/bin/*mimir7 /usr/bin/
+# Copy: mimir config
+COPY --from=mimir_bins /etc/mimirsbrunn /etc/mimir
 
 # TODO change the user to remove this ugly C_FORCE_ROOT
 ENV C_FORCE_ROOT=1
