@@ -36,7 +36,9 @@ from jormungandr.interfaces.v1.serializer import api
 
 class Elevations(ResourceUri):
     def __init__(self, *args, **kwargs):
-        ResourceUri.__init__(self, links=False, *args, **kwargs)
+        ResourceUri.__init__(
+            self, output_type_serializer=api.ElevationsDictSerializer, links=False, *args, **kwargs
+        )
         self.parsers['get'].add_argument(
             "polyline",
             type=str,
