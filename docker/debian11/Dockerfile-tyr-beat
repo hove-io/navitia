@@ -21,4 +21,4 @@ RUN apt-get update --fix-missing \
     && apt-get purge -y git \
     && apt-get autoremove -y
 
-    ENTRYPOINT ["bash", "/run.sh"]
+ENTRYPOINT ["bash", "/run.sh"]
