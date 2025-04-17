@@ -1,0 +1,27 @@
+FROM debian:bullseye-slim
+
+COPY source/ /navitia/source/
+
+RUN apt-get update --fix-missing \
+    && apt-get install -y --force-yes libpq5 python3.9 python3-pip git zip jq curl \
+    libboost-all-dev \
+    libprotobuf-dev \
+    liblog4cplus-2.0.5 \
+    libzmq3-dev \
+    libpqxx-dev \
+    libgoogle-perftools4 \
+    libosmpbf-dev \
+    libproj-dev \
+    && pip3 install --no-cache-dir -U -r /navitia/source/eitri/requirements.txt\
+    && apt-get autoremove -y
+
+# binaries from navitia
+COPY ./docker_build/ed/ed2nav /usr/bin/ed2nav
+COPY ./docker_build/ed/fare2ed /usr/bin/fare2ed
+COPY ./docker_build/ed/fusio2ed /usr/bin/fusio2ed
+COPY ./docker_build/ed/geopal2ed /usr/bin/geopal2ed
+COPY ./docker_build/ed/gtfs2ed /usr/bin/gtfs2ed
+COPY ./docker_build/ed/osm2ed /usr/bin/osm2ed
+COPY ./docker_build/ed/poi2ed /usr/bin/poi2ed
+
+CMD [""]

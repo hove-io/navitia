@@ -184,7 +184,7 @@ class Lock(object):
             logging.debug('args: %s -- kwargs: %s', args, kwargs)
             job = models.Job.query.get(job_id)
             logger = get_instance_logger(job.instance, task_id=job_id)
-            task = args[func.func_code.co_varnames.index('self')]
+            task = args[func.__code__.co_varnames.index('self')]
             try:
                 lock = redis.lock('tyr.lock|' + job.instance.name, timeout=self.timeout)
                 locked = lock.acquire(blocking=False)
