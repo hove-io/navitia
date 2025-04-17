@@ -39,8 +39,6 @@ from jormungandr.scenarios.ridesharing.ridesharing_service import (
     RsFeedPublisher,
     RidesharingServiceError,
 )
-from jormungandr.utils import decode_polyline
-from navitiacommon import type_pb2
 
 DEFAULT_KAROS_FEED_PUBLISHER = {
     'id': 'KAROS',

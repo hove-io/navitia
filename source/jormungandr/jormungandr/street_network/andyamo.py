@@ -36,13 +36,14 @@ import ujson
 import json
 from shapely.geometry import Point, Polygon
 
+import polyline
 
 from jormungandr import utils
 from jormungandr import app
 from jormungandr.street_network.street_network import AbstractStreetNetworkService, StreetNetworkPathKey
 from jormungandr.ptref import FeedPublisher
 from jormungandr.exceptions import AndyamoTechnicalError, InvalidArguments, UnableToParse
-from jormungandr.utils import get_pt_object_coord, mps_to_kmph, decode_polyline, kilometers_to_meters
+from jormungandr.utils import get_pt_object_coord, mps_to_kmph, kilometers_to_meters
 from navitiacommon import response_pb2
 
 DEFAULT_ANDYAMO_FEED_PUBLISHER = {
@@ -382,7 +383,8 @@ class Andyamo(AbstractStreetNetworkService):
                 path_item.instruction = andyamo_instruction["instruction"]
                 path_item.length = kilometers_to_meters(andyamo_instruction["length"])
                 path_item.duration = int(round(andyamo_instruction["time"]))
-            shape = decode_polyline(andyamo_leg['shape'])
+            shape = polyline.decode(andyamo_leg['shape'], precision=6, geojson=True)
+
             for sh in shape:
                 section.street_network.coordinates.add(lon=sh[0], lat=sh[1])
         journey.sections[0].origin.CopyFrom(pt_object_origin)

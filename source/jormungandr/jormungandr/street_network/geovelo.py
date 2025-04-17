@@ -45,7 +45,8 @@ from jormungandr.street_network.street_network import (
     StreetNetworkPathKey,
     StreetNetworkPathType,
 )
-from jormungandr.utils import get_pt_object_coord, is_url, decode_polyline, mps_to_kmph
+import polyline
+from jormungandr.utils import get_pt_object_coord, is_url, mps_to_kmph
 from jormungandr import utils
 from jormungandr.street_network.utils import add_cycle_lane_length
 from jormungandr.ptref import FeedPublisher
@@ -414,7 +415,8 @@ class Geovelo(AbstractStreetNetworkService):
                     street_info.cycle_path_type = cls.get_geovelo_cycle_path_type(geovelo_instruction[4])
                     section.street_network.street_information.append(street_info)
 
-                shape = decode_polyline(geovelo_response['sections'][0]['geometry'])
+                shape = polyline.decode(geovelo_response['sections'][0]['geometry'], precision=6, geojson=True)
+
                 for sh in shape:
                     section.street_network.coordinates.add(lon=sh[0], lat=sh[1])
 

@@ -54,6 +54,7 @@ import six
 import csv
 import os
 import math
+import polyline
 
 PY2 = sys.version_info[0] == 2
 PY3 = sys.version_info[0] == 3
@@ -641,71 +642,6 @@ def get_first_pt_section(journey):
 def record_external_failure(message, connector_type, connector_name):
     params = {'{}_system_id'.format(connector_type): six.text_type(connector_name), 'message': message}
     otlp_instance.send_event_metrics('{}_external_failure'.format(connector_type), params)
-
-
-def decode_polyline(encoded, precision=6):
-    '''
-    Version of : https://developers.google.com/maps/documentation/utilities/polylinealgorithm
-    But with improved precision
-    See: https://mapzen.com/documentation/mobility/decoding/#python (valhalla)
-         http://developers.geovelo.fr/#/documentation/compute (geovelo)
-    '''
-    inv = 10**-precision
-    decoded = []
-    previous = [0, 0]
-    i = 0
-    # for each byte
-    while i < len(encoded):
-        # for each coord (lat, lon)
-        ll = [0, 0]
-        for j in [0, 1]:
-            shift = 0
-            byte = 0x20
-            # keep decoding bytes until you have this coord
-            while byte >= 0x20:
-                byte = ord(encoded[i]) - 63
-                i += 1
-                ll[j] |= (byte & 0x1F) << shift
-                shift += 5
-            # get the final value adding the previous offset and remember it for the next
-            ll[j] = previous[j] + (~(ll[j] >> 1) if ll[j] & 1 else (ll[j] >> 1))
-            previous[j] = ll[j]
-        # scale by the precision and chop off long coords also flip the positions so
-        # #its the far more standard lon,lat instead of lat,lon
-        decoded.append([float('%.6f' % (ll[1] * inv)), float('%.6f' % (ll[0] * inv))])
-        # hand back the list of coordinates
-    return decoded
-
-
-def encode_polyline(coords, precision=6):
-    inv = 10**precision
-    encoded = []
-    previous = [0, 0]
-
-    for coord in coords:
-        lat = int(round(coord[1] * inv))
-        lon = int(round(coord[0] * inv))
-
-        d_lat = lat - previous[1]
-        d_lon = lon - previous[0]
-
-        # Encode latitudes
-        d_lat = (d_lat << 1) ^ (-(d_lat >> 31))
-        while d_lat >= 0x20:
-            encoded.append(chr((0x20 | (d_lat & 0x1F)) + 63))
-            d_lat >>= 5
-        encoded.append(chr(max(0, min(d_lat + 63, 0x10FFFF))))
-
-        # Encode longitudes
-        d_lon = (d_lon << 1) ^ (-(d_lon >> 31))
-        while d_lon >= 0x20:
-            encoded.append(chr((0x20 | (d_lon & 0x1F)) + 63))
-            d_lon >>= 5
-        encoded.append(chr(max(0, min(d_lon + 63, 0x10FFFF))))
-
-        previous = [lon, lat]
-
-    return ''.join(encoded)
 
 
 # PeriodExtremity is used to provide a datetime and it's meaning

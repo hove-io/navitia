@@ -52,7 +52,7 @@ class Elevations(ResourceUri):
         args = self.parsers["get"].parse_args()
         response = i_manager.dispatch(args, "elevations", instance_name=region)
 
-        return {"elevations": response, "polyline": args["polyline"]}, 200
+        return {"elevations": response, "polyline": args["polyline"], "feed_publishers": []}, 200
 
     def options(self, **kwargs):
         return self.api_description(**kwargs)

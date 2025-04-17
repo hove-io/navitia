@@ -44,6 +44,7 @@ from jormungandr.interfaces.v1.make_links import (
     create_internal_link,
     make_external_service_link,
 )
+import polyline
 from jormungandr.interfaces.v1.errors import ManageError
 from collections import defaultdict
 from navitiacommon import response_pb2
@@ -55,7 +56,6 @@ from jormungandr.utils import (
     journeys_absent,
     COVERAGE_ANY_BETA,
     local_str_date_to_str_date_with_offset,
-    encode_polyline,
 )
 from jormungandr.interfaces.v1.serializer import api
 from jormungandr.interfaces.v1.decorators import get_serializer
@@ -224,7 +224,7 @@ class add_journey_href(object):
                             if section.get('type') != 'street_network':
                                 continue
                             coords = section.get('geojson').get('coordinates')
-                            coords_bytes = encode_polyline(coords)
+                            coords_bytes = polyline.encode(coords, precision=6, geojson=True)
                             encoded_bytes = base64.b64encode(coords_bytes.encode('utf-8'))
                             args["path"] = encoded_bytes.decode('utf-8')
                             args["distance"] = 10
@@ -273,6 +273,43 @@ class add_fare_links(object):
                                 rss['links'].append(
                                     create_internal_link(_type="ticket", rel="tickets", id=rs_ticket_needed)
                                 )
+
+            return objects
+
+        return wrapper
+
+
+#
+# add the link between a section and the ticket needed for that section
+class add_elevations_href(object):
+    def __call__(self, f):
+        @wraps(f)
+        def wrapper(*args, **kwargs):
+            objects = f(*args, **kwargs)
+            if has_invalid_reponse_code(objects) or journeys_absent(objects):
+                return objects
+            instance = i_manager.instances.get(kwargs['region'])
+            # no Asgard configured-> no elevation-service
+            if not instance.elevation_service:
+                return objects
+
+            for j in objects[0]['journeys']:
+                if "sections" not in j:
+                    continue
+                for s in j['sections']:
+                    if s.get('mode') == 'walking' and "geojson" in s and 'region' in kwargs:
+                        encoded_polyline = polyline.encode(
+                            s.get("geojson").get("coordinates"), precision=6, geojson=True
+                        )
+                        s['links'].append(
+                            create_external_link(
+                                url="v1.elevations",
+                                region=kwargs['region'],
+                                _type="elevations",
+                                rel="elevations",
+                                polyline=encoded_polyline,
+                            )
+                        )
 
             return objects
 
