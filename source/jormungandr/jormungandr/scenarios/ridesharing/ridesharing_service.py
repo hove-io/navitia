@@ -32,7 +32,7 @@ from __future__ import absolute_import, print_function, unicode_literals, divisi
 import abc
 import six
 from jormungandr.otlp import otlp_instance
-from jormungandr.utils import decode_polyline
+import polyline
 from navitiacommon import type_pb2
 from collections import namedtuple
 import pybreaker
@@ -140,7 +140,8 @@ class AbstractRidesharingService(object):
 
     def _retreive_shape(self, json, field):
         shape = []
-        decoded_shape = decode_polyline(json.get(field), precision=5)
+        decoded_shape = polyline.decode(json.get(field), precision=5, geojson=True)
+
         if decoded_shape:
             shape.extend((type_pb2.GeographicalCoord(lon=c[0], lat=c[1]) for c in decoded_shape))
         return shape

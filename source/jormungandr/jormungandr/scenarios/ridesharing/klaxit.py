@@ -39,8 +39,6 @@ from jormungandr.scenarios.ridesharing.ridesharing_service import (
     RsFeedPublisher,
     RidesharingServiceError,
 )
-from jormungandr.utils import decode_polyline
-from navitiacommon import type_pb2
 
 DEFAULT_KLAXIT_FEED_PUBLISHER = {
     'id': 'Klaxit VIA API',

@@ -35,7 +35,6 @@ import pybreaker
 import pytz
 
 from jormungandr.utils import Coords, make_timestamp_from_str
-from navitiacommon import default_values
 from jormungandr import app
 import jormungandr.scenarios.ridesharing.ridesharing_journey as rsj
 from jormungandr.scenarios.ridesharing.ridesharing_service import (
@@ -43,8 +42,6 @@ from jormungandr.scenarios.ridesharing.ridesharing_service import (
     RsFeedPublisher,
     RidesharingServiceError,
 )
-from jormungandr.utils import decode_polyline
-from navitiacommon import type_pb2
 import jormungandr.street_network.utils
 
 DEFAULT_INSTANT_SYSTEM_FEED_PUBLISHER = {
