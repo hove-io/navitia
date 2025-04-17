@@ -4,8 +4,8 @@ on:
   push:
     branches:
       - dev
-    tags:
-      - '*'
+    # tags:
+    #   - '*'
 
 env:
   SBX_ECR_REGISTRY_BACKEND: "110444322584.dkr.ecr.eu-west-1.amazonaws.com"
@@ -113,7 +113,7 @@ jobs:
             image=${PRD_ECR_REGISTRY}/navitia-bragi-mimirsbrunn:${MIMIR_TAG}
             docker pull ${image}
             docker tag ${image} mimirsbrunn:local
-          
+
       - name: Create builder docker image
         run: |
           docker build -f docker/debian11/Dockerfile-builder-kraken -t navitia/builder_debian11 .
