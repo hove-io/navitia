@@ -35,6 +35,7 @@ from jormungandr.interfaces.v1 import (
     Journeys,
     GraphicalIsochrone,
     HeatMap,
+    Elevations,
     Schedules,
     Places,
     Ptobjects,
@@ -140,6 +141,8 @@ class V1Routing(AModule):
         coord = coverage + lon_lat
 
         self.add_resource(Coverage.Coverage, coverage, region, coord, endpoint='coverage')
+
+        self.add_resource(Elevations.Elevations, region + "elevations", "/elevations", endpoint='elevations')
 
         self.add_resource(
             Coord.Coord,

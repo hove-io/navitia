@@ -74,6 +74,7 @@ from jormungandr.interfaces.v1.serializer.pt import (
     AddressSerializer,
     AccessPointSerializer,
     AirPollutantsSerializer,
+    RoundedField,
 )
 from jormungandr.interfaces.v1.serializer import jsonschema
 from jormungandr.interfaces.v1.serializer.status import CoverageErrorSerializer
@@ -455,6 +456,21 @@ class DictAddressesSerializer(serpy.DictSerializer):
 
     def get_message(self, obj):
         return obj.get('message')
+
+
+class ElevationSerializer(serpy.Serializer):
+    distance_from_start = RoundedField(display_none=True)
+    elevation = RoundedField(display_none=True)
+    geojson_offset = RoundedField(attr="geojson_index", display_none=False)
+
+
+class ElevationsDictSerializer(serpy.DictSerializer):
+    context = MethodField(schema_type=ContextSerializer(), display_none=False)
+    polyline = Field(schema_type=str)
+    elevations = ElevationSerializer(many=True)
+
+    def get_context(self, obj):
+        return ContextSerializer(obj, display_none=False).data
 
 
 class TechnicalStatusSerializer(NullableDictSerializer):

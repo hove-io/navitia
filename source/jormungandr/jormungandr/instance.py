@@ -74,6 +74,7 @@ from jormungandr.utils import (
 from jormungandr.olympic_site_params_manager import OlympicSiteParamsManager
 from jormungandr import pt_planners_manager, transient_socket
 from jormungandr.pt_journey_fare import PtJourneyFareBackendManager
+from jormungandr.zmq_backend import ZmqBackend
 import os
 
 type_to_pttype = {
@@ -303,6 +304,25 @@ class Instance(transient_socket.TransientSocket):
         # TODO: use db
         self._pt_journey_fare_backend_manager = PtJourneyFareBackendManager(
             self, pt_journey_fare_configurations, None
+        )
+        self.elevation_service = (
+            ZmqBackend(
+                transient_socket.TransientSocket(
+                    "asgard_elevation_{}".format(self.name),
+                    self.context,
+                    app.config.get(str("ASGARD_ZMQ_SOCKET")),
+                    app.config['ASGARD_ZMQ_SOCKET_TTL_SECONDS'],
+                ),
+                app.config.get('ELEVATION_SERVICE_TIMEOUT', 5),
+                pybreaker.CircuitBreaker(
+                    fail_max=app.config['CIRCUIT_BREAKER_MAX_ASGARD_FAIL'],
+                    reset_timeout=app.config['CIRCUIT_BREAKER_ASGARD_TIMEOUT_S'],
+                ),
+                "elevation",
+                "asgard",
+            )
+            if app.config.get("ASGARD_ZMQ_SOCKET")
+            else None
         )
 
         self._same_journey_schedules_configuration = same_journey_schedules_configuration or {

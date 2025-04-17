@@ -35,6 +35,7 @@ import copy
 
 import navitiacommon.type_pb2 as type_pb2
 import navitiacommon.request_pb2 as request_pb2
+import navitiacommon.response_pb2 as response_pb2
 from navitiacommon.type_pb2 import ActiveStatus, Severity
 from jormungandr.interfaces.common import pb_odt_level
 from jormungandr.scenarios.utils import places_type, pt_object_type, add_link
@@ -212,6 +213,18 @@ class Scenario(object):
     def places(self, request, instance):
         request["request_id"] = request.get('request_id', flask.request.id)
         return instance.get_autocomplete(request.get('_autocomplete')).get(request, instances=[instance])
+
+    def elevations(self, request, instance):
+        if not instance.elevation_service:
+            abort(500, message="This service is not activated.")
+        req = request_pb2.Request()
+        req.requested_api = type_pb2.elevations
+        request.request_id = request.get('request_id', flask.request.id)
+        req.elevations_request.polyline = request["polyline"]
+        pb = instance.elevation_service.call(req.SerializeToString())
+        resp = response_pb2.Response()
+        resp.ParseFromString(pb)
+        return resp.elevations.elevation
 
     def place_uri(self, request, instance):
         autocomplete = instance.get_autocomplete(request.get('_autocomplete'))
