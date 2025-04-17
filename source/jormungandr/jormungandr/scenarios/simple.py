@@ -215,6 +215,8 @@ class Scenario(object):
         return instance.get_autocomplete(request.get('_autocomplete')).get(request, instances=[instance])
 
     def elevations(self, request, instance):
+        if not instance.elevation_service:
+            abort(500, message="This service is not activated.")
         req = request_pb2.Request()
         req.requested_api = type_pb2.elevations
         request.request_id = request.get('request_id', flask.request.id)
