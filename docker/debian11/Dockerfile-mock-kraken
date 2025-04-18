@@ -1,0 +1,24 @@
+FROM debian:bullseye-slim
+
+WORKDIR /srv/kraken
+
+RUN apt-get update --fix-missing \
+    && apt-get install -y libgoogle-perftools4 \
+    libboost-all-dev \
+    libprotobuf-dev \
+    liblog4cplus-2.0.5 \
+    libzmq3-dev \
+    libpqxx-dev \
+    netcat \
+    && apt-get purge -y \
+    && apt-get autoremove -y
+
+COPY ./docker_build/tests/mock-kraken/departure_board_test /srv/kraken/departure_board_test
+RUN chmod +x /srv/kraken/departure_board_test
+
+COPY ./docker_build/tests/mock-kraken/main_routing_test /srv/kraken/main_routing_test
+RUN chmod +x /srv/kraken/main_routing_test
+
+EXPOSE 30000
+ENV KRAKEN_GENERAL_zmq_socket=tcp://*:30000
+ENV KRAKEN_GENERAL_log_level=INFO
