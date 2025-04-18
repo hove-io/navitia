@@ -250,3 +250,30 @@ jobs:
           sudo chown -R $USER:$USER .
           rm -rf ./*
           rm -rf ./.??*
+
+  run_artemis:
+    runs-on: [self-hosted, corefront, sandbox]
+    needs: [debian11_back_images, debian11_front_images]
+    name: Run artemis Dispatch (Dev)
+    if: github.ref == 'refs/heads/dev'
+    steps:
+
+      - name: Generate github private access token
+        id: ci-core-app-token
+        uses: getsentry/action-github-app-token@v2.0.0
+        with:
+          app_id: ${{ secrets.CI_CORE_APP_ID }}
+          private_key: ${{ secrets.CI_CORE_APP_PEM }}
+
+      - name: Run artemis on push to dev
+        uses: peter-evans/repository-dispatch@v2
+        with:
+          token: ${{ steps.ci-core-app-token.outputs.token }}
+          repository: hove-io/artemis
+          event-type: run_artemis_bullseye_ng
+
+      - name: failure notification
+        if: failure()
+        run: |
+          sudo apt update && sudo apt install -y httpie
+          echo '{"text":":warning: Github Actions: workflow dockers_builder_dev Job run_artemis is failed !"}' | http --json POST ${{secrets.SLACK_NAVITIA_TEAM_URL}}
