@@ -4,8 +4,8 @@ on:
   push:
     branches:
       - dev
-    # tags:
-    #   - '*'
+    tags:
+      - '*'
 
 env:
   SBX_ECR_REGISTRY_BACKEND: "110444322584.dkr.ecr.eu-west-1.amazonaws.com"
@@ -109,7 +109,7 @@ jobs:
         # TODO : use the tag from the release mimir debian 11
         if: startsWith(github.ref, 'refs/tags/')
         run: |
-            MIMIR_TAG="v3.5.3"
+            MIMIR_TAG="v3.5.4${DEBIAN11_SUFFIX}"
             image=${PRD_ECR_REGISTRY}/navitia-bragi-mimirsbrunn:${MIMIR_TAG}
             docker pull ${image}
             docker tag ${image} mimirsbrunn:local
