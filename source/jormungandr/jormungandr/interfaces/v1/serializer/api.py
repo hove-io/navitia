@@ -468,7 +468,7 @@ class ElevationsDictSerializer(serpy.DictSerializer):
     context = MethodField(schema_type=ContextSerializer(), display_none=False)
     polyline = Field(schema_type=str)
     elevations = ElevationSerializer(many=True)
-    feed_publishers = FeedPublisherSerializer(many=True, display_none=True)
+    feed_publishers = Field(many=True, display_none=True, schema_type=str)
 
     def get_context(self, obj):
         return ContextSerializer(obj, display_none=False).data
