@@ -325,8 +325,9 @@ class InstanceManager(object):
             authorized_instances_name = self.get_all_available_instances_names(user)
             authorized_instances = []
             for i_name in authorized_instances_name:
-                if i_name in self.instances:
-                    authorized_instances.append(self.instances[i_name])
+                i = self.instances.get(i_name)
+                if i is not None:
+                    authorized_instances.append(i)
                 else:
                     logging.getLogger(__name__).warning(
                         '{} is authorized but is not available for Jormungandr, please check the instances configurations'.format(
