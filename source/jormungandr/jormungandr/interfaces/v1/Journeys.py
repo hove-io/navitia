@@ -280,7 +280,7 @@ class add_fare_links(object):
 
 
 #
-# add the link between a section and the ticket needed for that section
+# add the link between a section and the ticket needed for this section
 class add_elevations_href(object):
     def __call__(self, f):
         @wraps(f)
