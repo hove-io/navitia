@@ -323,7 +323,17 @@ class InstanceManager(object):
             # Requests without any coverage
             # fetch all the authorized instances (free + private) using cached function has_access()
             authorized_instances_name = self.get_all_available_instances_names(user)
-            authorized_instances = [self.instances[i_name] for i_name in authorized_instances_name]
+            authorized_instances = []
+            for i_name in authorized_instances_name:
+                if i_name in self.instances:
+                    authorized_instances.append(self.instances[i_name])
+                else:
+                    logging.getLogger(__name__).warning(
+                        '{} is authorized but is not available for Jormungandr, please check the instances configurations'.format(
+                            i_name
+                        )
+                    )
+
             if not authorized_instances:
                 # user doesn't have access to any of the instances
                 context = 'User has no access to any instance'
