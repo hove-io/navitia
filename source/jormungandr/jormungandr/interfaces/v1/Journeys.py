@@ -286,11 +286,11 @@ class add_elevations_href(object):
         @wraps(f)
         def wrapper(*args, **kwargs):
             objects = f(*args, **kwargs)
-            if has_invalid_reponse_code(objects) or journeys_absent(objects):
+            if has_invalid_reponse_code(objects) or journeys_absent(objects) or 'region' not in kwargs:
                 return objects
             instance = i_manager.instances.get(kwargs['region'])
             # no Asgard configured-> no elevation-service
-            if not instance.elevation_service:
+            if not instance or not instance.elevation_service:
                 return objects
 
             for j in objects[0]['journeys']:
@@ -829,6 +829,7 @@ class Journeys(JourneyCommon):
     @add_tad_links()
     @add_debug_info()
     @add_fare_links()
+    @add_elevations_href()
     @add_journey_href()
     @handle_poi_disruptions()
     @rig_journey()
