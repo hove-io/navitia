@@ -86,123 +86,135 @@ int main(int argc, char* argv[]) {
     }
     navitia::init_app("fusio2ed", "DEBUG", vm.count("local_syslog"), log_comment);
     auto logger = log4cplus::Logger::getInstance("log");
-
-    if (vm.count("config-file")) {
-        std::ifstream stream;
-        stream.open(vm["config-file"].as<std::string>());
-        if (!stream.is_open()) {
-            throw navitia::exception("loading config file failed");
+    try {
+        if (vm.count("config-file")) {
+            std::ifstream stream;
+            stream.open(vm["config-file"].as<std::string>());
+            if (!stream.is_open()) {
+                throw navitia::exception("loading config file failed");
+            }
+            po::store(po::parse_config_file(stream, desc), vm);
         }
-        po::store(po::parse_config_file(stream, desc), vm);
-    }
 
-    if (vm.count("help") || !vm.count("input")) {
-        std::cout << "Reads and inserts in database fusio files" << std::endl;
-        std::cout << desc << "\n";
+        if (vm.count("help") || !vm.count("input")) {
+            std::cout << "Reads and inserts in database fusio files" << std::endl;
+            std::cout << desc << "\n";
+            return 1;
+        }
+        po::notify(vm);
+
+        if (fare_dir.empty()) {
+            fare_dir = input;
+        }
+
+        pt::ptime start;
+        int read, complete, clean, sort, save, fare(0), main_destination(0);
+
+        ed::Data data;
+        data.simplify_tolerance = simplify_tolerance;
+
+        start = pt::microsec_clock::local_time();
+
+        ed::connectors::FusioParser fusio_parser(input);
+        fusio_parser.fill(data, date);
+        read = (pt::microsec_clock::local_time() - start).total_milliseconds();
+
+        LOG4CPLUS_INFO(logger, "We excluded " << data.count_too_long_connections
+                                              << " connections "
+                                                 " because they were too long");
+        LOG4CPLUS_INFO(logger, "We excluded " << data.count_empty_connections
+                                              << " connections "
+                                                 " because they had no duration time");
+
+        start = pt::microsec_clock::local_time();
+        data.complete();
+        complete = (pt::microsec_clock::local_time() - start).total_milliseconds();
+
+        LOG4CPLUS_INFO(logger, "Starting da ugly ODT hack...");
+        size_t nb_hacked = 0;
+        for (auto* vj : data.vehicle_journeys) {
+            if (vj->stop_time_list.size() != 2) {
+                continue;
+            }
+            if (vj->stop_time_list[0]->stop_point != vj->stop_time_list[1]->stop_point) {
+                continue;
+            }
+            if (vj->stop_time_list[0]->departure_time != vj->stop_time_list[1]->arrival_time) {
+                continue;
+            }
+
+            // No, teleportation can't exist, even on a null distance!
+            // You'll take 10 min, I said!
+            ++nb_hacked;
+            vj->stop_time_list[1]->arrival_time += 10 * 60;
+            vj->stop_time_list[1]->departure_time += 10 * 60;
+            vj->stop_time_list[1]->alighting_time += 10 * 60;
+            vj->stop_time_list[1]->boarding_time += 10 * 60;
+        }
+        LOG4CPLUS_INFO(logger, "Da ugly ODT hack: " << nb_hacked << " patched");
+
+        start = pt::microsec_clock::local_time();
+        data.clean();
+        clean = (pt::microsec_clock::local_time() - start).total_milliseconds();
+
+        start = pt::microsec_clock::local_time();
+        data.sort();
+        sort = (pt::microsec_clock::local_time() - start).total_milliseconds();
+
+        start = pt::microsec_clock::local_time();
+        data.build_route_destination();
+        main_destination = (pt::microsec_clock::local_time() - start).total_milliseconds();
+
+        data.normalize_uri();
+
+        if (vm.count("fare") || boost::filesystem::exists(fare_dir + "/fares.csv")) {
+            start = pt::microsec_clock::local_time();
+            LOG4CPLUS_INFO(logger, "loading fare");
+
+            ed::connectors::fare_parser fareParser(data, fare_dir + "/fares.csv", fare_dir + "/prices.csv",
+                                                   fare_dir + "/od_fares.csv");
+            fareParser.load();
+            fare = (pt::microsec_clock::local_time() - start).total_milliseconds();
+        }
+
+        LOG4CPLUS_INFO(logger, "line: " << data.lines.size());
+        LOG4CPLUS_INFO(logger, "line_group: " << data.line_groups.size());
+        LOG4CPLUS_INFO(logger, "route: " << data.routes.size());
+        LOG4CPLUS_INFO(logger, "stoparea: " << data.stop_areas.size());
+        LOG4CPLUS_INFO(logger, "stoppoint: " << data.stop_points.size());
+        LOG4CPLUS_INFO(logger, "vehiclejourney: " << data.vehicle_journeys.size());
+        LOG4CPLUS_INFO(logger, "stop: " << data.stops.size());
+        LOG4CPLUS_INFO(logger, "connection: " << data.stop_point_connections.size());
+        LOG4CPLUS_INFO(logger, "modes: " << data.physical_modes.size());
+        LOG4CPLUS_INFO(logger, "validity pattern : " << data.validity_patterns.size());
+
+        start = pt::microsec_clock::local_time();
+        ed::EdPersistor p(connection_string);
+        p.persist(data);
+        save = (pt::microsec_clock::local_time() - start).total_milliseconds();
+
+        LOG4CPLUS_INFO(logger, "processing times");
+        LOG4CPLUS_INFO(logger, "\t reading files " << read << "ms");
+        LOG4CPLUS_INFO(logger, "\t data completed " << complete << "ms");
+        LOG4CPLUS_INFO(logger, "\t data cleanup " << clean << "ms");
+        LOG4CPLUS_INFO(logger, "\t data ordering " << sort << "ms");
+        if (vm.count("fare")) {
+            LOG4CPLUS_INFO(logger, "\t fares loaded in : " << fare << "ms");
+        }
+        LOG4CPLUS_INFO(logger, "\t route destination " << main_destination << "ms");
+        LOG4CPLUS_INFO(logger, "\t data saving " << save << "ms");
+
+    } catch (navitia::exception const& e) {
+        LOG4CPLUS_ERROR(logger, "fusio2ed caught navitia exception: " << e.what());
+        LOG4CPLUS_ERROR(logger, "Backtrace: " << e.backtrace());
+        return 1;
+
+    } catch (std::exception const& e) {
+        LOG4CPLUS_ERROR(logger, "fusio2ed caught std exception: " << e.what());
+        return 1;
+    } catch (...) {
+        LOG4CPLUS_ERROR(logger, "fusio2ed caught unknown exception...");
         return 1;
     }
-    po::notify(vm);
-
-    if (fare_dir.empty()) {
-        fare_dir = input;
-    }
-
-    pt::ptime start;
-    int read, complete, clean, sort, save, fare(0), main_destination(0);
-
-    ed::Data data;
-    data.simplify_tolerance = simplify_tolerance;
-
-    start = pt::microsec_clock::local_time();
-
-    ed::connectors::FusioParser fusio_parser(input);
-    fusio_parser.fill(data, date);
-    read = (pt::microsec_clock::local_time() - start).total_milliseconds();
-
-    LOG4CPLUS_INFO(logger, "We excluded " << data.count_too_long_connections
-                                          << " connections "
-                                             " because they were too long");
-    LOG4CPLUS_INFO(logger, "We excluded " << data.count_empty_connections
-                                          << " connections "
-                                             " because they had no duration time");
-
-    start = pt::microsec_clock::local_time();
-    data.complete();
-    complete = (pt::microsec_clock::local_time() - start).total_milliseconds();
-
-    LOG4CPLUS_INFO(logger, "Starting da ugly ODT hack...");
-    size_t nb_hacked = 0;
-    for (auto* vj : data.vehicle_journeys) {
-        if (vj->stop_time_list.size() != 2) {
-            continue;
-        }
-        if (vj->stop_time_list[0]->stop_point != vj->stop_time_list[1]->stop_point) {
-            continue;
-        }
-        if (vj->stop_time_list[0]->departure_time != vj->stop_time_list[1]->arrival_time) {
-            continue;
-        }
-
-        // No, teleportation can't exist, even on a null distance!
-        // You'll take 10 min, I said!
-        ++nb_hacked;
-        vj->stop_time_list[1]->arrival_time += 10 * 60;
-        vj->stop_time_list[1]->departure_time += 10 * 60;
-        vj->stop_time_list[1]->alighting_time += 10 * 60;
-        vj->stop_time_list[1]->boarding_time += 10 * 60;
-    }
-    LOG4CPLUS_INFO(logger, "Da ugly ODT hack: " << nb_hacked << " patched");
-
-    start = pt::microsec_clock::local_time();
-    data.clean();
-    clean = (pt::microsec_clock::local_time() - start).total_milliseconds();
-
-    start = pt::microsec_clock::local_time();
-    data.sort();
-    sort = (pt::microsec_clock::local_time() - start).total_milliseconds();
-
-    start = pt::microsec_clock::local_time();
-    data.build_route_destination();
-    main_destination = (pt::microsec_clock::local_time() - start).total_milliseconds();
-
-    data.normalize_uri();
-
-    if (vm.count("fare") || boost::filesystem::exists(fare_dir + "/fares.csv")) {
-        start = pt::microsec_clock::local_time();
-        LOG4CPLUS_INFO(logger, "loading fare");
-
-        ed::connectors::fare_parser fareParser(data, fare_dir + "/fares.csv", fare_dir + "/prices.csv",
-                                               fare_dir + "/od_fares.csv");
-        fareParser.load();
-        fare = (pt::microsec_clock::local_time() - start).total_milliseconds();
-    }
-
-    LOG4CPLUS_INFO(logger, "line: " << data.lines.size());
-    LOG4CPLUS_INFO(logger, "line_group: " << data.line_groups.size());
-    LOG4CPLUS_INFO(logger, "route: " << data.routes.size());
-    LOG4CPLUS_INFO(logger, "stoparea: " << data.stop_areas.size());
-    LOG4CPLUS_INFO(logger, "stoppoint: " << data.stop_points.size());
-    LOG4CPLUS_INFO(logger, "vehiclejourney: " << data.vehicle_journeys.size());
-    LOG4CPLUS_INFO(logger, "stop: " << data.stops.size());
-    LOG4CPLUS_INFO(logger, "connection: " << data.stop_point_connections.size());
-    LOG4CPLUS_INFO(logger, "modes: " << data.physical_modes.size());
-    LOG4CPLUS_INFO(logger, "validity pattern : " << data.validity_patterns.size());
-
-    start = pt::microsec_clock::local_time();
-    ed::EdPersistor p(connection_string);
-    p.persist(data);
-    save = (pt::microsec_clock::local_time() - start).total_milliseconds();
-
-    LOG4CPLUS_INFO(logger, "processing times");
-    LOG4CPLUS_INFO(logger, "\t reading files " << read << "ms");
-    LOG4CPLUS_INFO(logger, "\t data completed " << complete << "ms");
-    LOG4CPLUS_INFO(logger, "\t data cleanup " << clean << "ms");
-    LOG4CPLUS_INFO(logger, "\t data ordering " << sort << "ms");
-    if (vm.count("fare")) {
-        LOG4CPLUS_INFO(logger, "\t fares loaded in : " << fare << "ms");
-    }
-    LOG4CPLUS_INFO(logger, "\t route destination " << main_destination << "ms");
-    LOG4CPLUS_INFO(logger, "\t data saving " << save << "ms");
-
     return 0;
 }
