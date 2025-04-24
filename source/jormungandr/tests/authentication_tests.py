@@ -231,8 +231,9 @@ class TestBasicAuthentication(AbstractTestAuthentication):
             response_obj = self.app.get('/v1/coverage')
             response = json.loads(response_obj.data)
             assert 'regions' in response
-            assert len(response['regions']) == 1
-            assert response['regions'][0]['id'] == "main_routing_test"
+            assert len(response['regions']) == 2
+            assert response['regions'][0]['id'] == "empty_routing_test"
+            assert response['regions'][1]['id'] == "main_routing_test"
 
     def test_auth_required(self):
         """
@@ -497,9 +498,9 @@ class TestOverlappingAuthentication(AbstractTestAuthentication):
 
             regions = get_not_null(response, 'regions')
             assert len(regions) == 3
-            assert regions[0]["name"] == 'departure board'
-            assert regions[1]["name"] == 'empty routing'
-            assert regions[2]["name"] == 'routing api data'
+            assert regions[0]["id"] == 'departure_board_test'
+            assert regions[1]["id"] == 'empty_routing_test'
+            assert regions[2]["id"] == 'main_routing_test'
 
     def test_coverage_by_coords(self):
         """
