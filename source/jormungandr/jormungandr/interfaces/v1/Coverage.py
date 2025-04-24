@@ -59,9 +59,11 @@ class Coverage(StatedResource):
     @get_serializer(serpy=api.CoveragesSerializer)
     def get(self, region=None, lon=None, lat=None):
         args = self.parsers["get"].parse_args()
-
         request_id = "coverage_{}".format(flask.request.id)
-        resp = i_manager.regions(region, lon, lat, request_id=request_id)
+        if any([region, lat, lon]):
+            resp = i_manager.regions(region, lon, lat, request_id=request_id)
+        else:
+            resp = i_manager.get_db_instances()
         if 'regions' in resp:
             resp['regions'] = sorted(resp['regions'], key=lambda r: r.get('name', r.get('region_id')))
         if args['disable_geojson']:
