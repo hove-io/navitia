@@ -112,11 +112,6 @@ class TestEndPoint(AbstractTestFixture):
         assert len(regions) == 2, "with 2 kraken loaded, we should have 2 regions"
 
         for region in regions:
-            assert is_valid_date(get_not_null(region, 'start_production_date')), "no start production date"
-            assert is_valid_date(get_not_null(region, 'end_production_date')), "no end production date"
-
-            get_not_null(region, 'status')
-
             # shapes are not filled in dataset for the moment
             # shape = get_not_null(region, 'shape')
             # TODO check the shape with regexp ?

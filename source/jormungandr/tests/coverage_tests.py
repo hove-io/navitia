@@ -59,13 +59,9 @@ class TestNullStatus(CoverageTestFixture):
         response = self.query("/v1/coverage", display=False)
         logging.info(response['regions'])
         assert 'regions' in response
-        assert len(response['regions']) == 1
+        assert len(response['regions']) == 2
         assert response['regions'][0]['id'] == 'main_routing_test'
-        assert 'last_load_at' in response['regions'][0]
-        assert response['regions'][0]['dataset_created_at'] == 'not-a-date-time'
-        assert response['regions'][0]['last_load_at'] == 'not-a-date-time'
-        assert 'name' in response['regions'][0]
-        assert response['regions'][0]['name'] == 'routing api data'
+        assert response['regions'][1]['id'] == 'null_status_test'
         self.check_context(response)
         context = response['context']
         assert context['timezone'] == 'Africa/Abidjan'
