@@ -330,7 +330,7 @@ class InstanceManager(object):
         if not instances:
             context = 'User has no access to any instance'
             authentication.abort_request(user=user, context=context)
-        return {"regions": [{"region_id": instance} for instance in instances]}
+        return {"regions": [{"region_id": instance, "name": instance} for instance in instances]}
 
     def get_instances(self, name=None, lon=None, lat=None, object_id=None, api='ALL'):
         if name and name not in self.instances:
