@@ -298,7 +298,22 @@ class InstanceManager(object):
     def get_region(self, region_str=None, lon=None, lat=None, object_id=None, api='ALL'):
         return self.get_regions(region_str, lon, lat, object_id, api, only_one=True)
 
-    def get_regions(self, region_str=None, lon=None, lat=None, object_id=None, api='ALL', only_one=False):
+    def get_regions(
+        self,
+        region_str=None,
+        lon=None,
+        lat=None,
+        object_id=None,
+        api='ALL',
+        only_one=False,
+        only_db_instances=False,
+    ):
+        if only_db_instances:
+            instances = self.get_db_instances()
+            if not instances:
+                raise RegionNotFound(region=region_str, lon=lon, lat=lat, object_id=object_id)
+            return instances
+
         valid_instances = self.get_instances(region_str, lon, lat, object_id, api)
         if not valid_instances:
             raise RegionNotFound(region=region_str, lon=lon, lat=lat, object_id=object_id)
@@ -306,6 +321,16 @@ class InstanceManager(object):
             return choose_best_instance(valid_instances).name
         else:
             return [i.name for i in valid_instances]
+
+    def get_db_instances(
+        self,
+    ):
+        user = authentication.get_user(token=authentication.get_token())
+        instances = self.get_all_available_instances_names(user, only_db_instances=True)
+        if not instances:
+            context = 'User has no access to any instance'
+            authentication.abort_request(user=user, context=context)
+        return {"regions": [{"region_id": instance, "name": instance, "shape": ""} for instance in instances]}
 
     def get_instances(self, name=None, lon=None, lat=None, object_id=None, api='ALL'):
         if name and name not in self.instances:
@@ -399,8 +424,7 @@ class InstanceManager(object):
 
     @memory_cache.memoize(app.config[str('MEMORY_CACHE_CONFIGURATION')].get(str('TIMEOUT_AUTHENTICATION'), 30))
     @cache.memoize(app.config[str('CACHE_CONFIGURATION')].get(str('TIMEOUT_AUTHENTICATION'), 300))
-    def get_all_available_instances_names(self, user):
-        result = []
+    def get_all_available_instances_names(self, user, only_db_instances=False):
         if app.config.get('PUBLIC', False) or app.config.get('DISABLE_DATABASE', False):
             return [key for key in self.instances]
 
@@ -412,10 +436,10 @@ class InstanceManager(object):
             if can_read_user():
                 abort_request(user=user)
             else:
-                return result
+                return []
 
         bdd_instances = user.get_all_available_instances()
-        for bdd_instance in bdd_instances:
-            if bdd_instance.name in self.instances:
-                result.append(bdd_instance.name)
-        return result
+        if only_db_instances:
+            return [bdd_instance.name for bdd_instance in bdd_instances]
+        else:
+            return [bdd_instance.name for bdd_instance in bdd_instances if bdd_instance.name in self.instances]
