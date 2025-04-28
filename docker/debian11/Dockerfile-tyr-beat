@@ -5,7 +5,7 @@ WORKDIR /usr/share/tyr/
 COPY ./source/navitiacommon ./navitiacommon
 COPY ./source/tyr ./tyr
 COPY ./docker/ca-certificates/*.crt /usr/local/share/ca-certificates/
-COPY ./docker/run_tyr_beat.sh /run.sh
+COPY ./docker/run_tyr_beat.sh /run_tyr_beat.sh
 COPY ./source/sql/alembic /usr/share/navitia/ed/alembic
 COPY ./source/sql/requirements.txt /tmp/requirements.txt
 COPY ./source/cities /usr/share/navitia/cities
@@ -21,4 +21,4 @@ RUN apt-get update --fix-missing \
     && apt-get purge -y git \
     && apt-get autoremove -y
 
-ENTRYPOINT ["bash", "/run.sh"]
+ENTRYPOINT ["bash", "/run_tyr_beat.sh"]
