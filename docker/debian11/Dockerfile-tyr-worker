@@ -31,6 +31,8 @@ COPY cosmogony2cities*.deb ./
 # install cosmogony2cities package
 RUN dpkg -i cosmogony2cities*.deb
 
+COPY ./docker/ca-certificates/*.crt /usr/local/share/ca-certificates/
+
 RUN apt-get update --fix-missing \
     && apt-get install -y --force-yes unzip curl libgeos-dev libpq5 python3.9 python3-pip git ca-certificates postgresql-client gettext-base jq \
     libboost-all-dev \
