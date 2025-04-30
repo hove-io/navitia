@@ -16,6 +16,7 @@ RUN apt-get update --fix-missing \
     liblog4cplus-2.0.5 \
     libzmq3-dev \
     libpqxx-dev \
+    curl \
     netcat \
     && (cd /srv/monitor_kraken && pip3 install --no-cache-dir -r requirements.txt && python3 setup.py install) \
     && apt-get purge -y \
