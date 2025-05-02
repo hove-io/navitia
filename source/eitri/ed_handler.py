@@ -175,9 +175,6 @@ def update_db(db_params, alembic_path):
         database=db_params.dbname, user=db_params.user, password=db_params.password, host=db_params.host
     )  # type: psycopg2.connection
     c = cnx.cursor()  # type: psycopg2.connection.cursor
-    c.execute("create extension postgis;")
-    c.close()
-    cnx.commit()
 
     logger.info('message = {}'.format(c.statusmessage))
 
