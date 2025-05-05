@@ -219,12 +219,13 @@ class DockerWrapper(object):
 
 
 def PostgisDocker():
+    env_vars = {'POSTGRES_DB': "postgres", 'POSTGRES_USER': "docker", 'POSTGRES_PASSWORD': "docker"}
     return DockerWrapper(
-        image_name='postgis:2.1',
-        dockerfile_path='github.com/hove-io/docker-postgis.git',
-        dbname='postgres',
-        dbuser='docker',
-        dbpassword='docker',
+        image_name='postgis/postgis:17-3.5',
+        dbname=env_vars['POSTGRES_DB'],
+        dbuser=env_vars['POSTGRES_USER'],
+        dbpassword=env_vars['POSTGRES_PASSWORD'],
+        env_vars=env_vars,
     )
 
 
