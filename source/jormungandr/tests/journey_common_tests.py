@@ -1472,7 +1472,7 @@ class JourneyCommon(object):
             l['href'] for l in response["journeys"][0]["links"] if l['rel'] == 'same_journey_schedules'
         )
         assert "BOB" not in href_same_journey_schedules
-        assert "_pt_planner=kraken" not in href_same_journey_schedules
+        assert "_pt_planner=kraken" in href_same_journey_schedules
 
 
 @dataset({"main_stif_test": {}})
