@@ -620,7 +620,7 @@ static const type::disruption::Disruption* create_disruption(const std::string& 
                 // for deleted stoptime departure (resp. arrival), we disable pickup (resp. drop_off)
                 // but we keep the departure/arrival to be able to match the stoptime to it's base stoptime
                 if (contains({StopTimeUpdate::Status::DELETED, StopTimeUpdate::Status::DELETED_FOR_DETOUR,
-                             StopTimeUpdate::Status::NO_ALIGHTING, StopTimeUpdate::Status::SKIPPED},
+                              StopTimeUpdate::Status::NO_ALIGHTING, StopTimeUpdate::Status::SKIPPED},
                              arrival_status)) {
                     stop_time.set_drop_off_allowed(false);
                 } else {
@@ -628,7 +628,7 @@ static const type::disruption::Disruption* create_disruption(const std::string& 
                 }
 
                 if (contains({StopTimeUpdate::Status::DELETED, StopTimeUpdate::Status::DELETED_FOR_DETOUR,
-                             StopTimeUpdate::Status::NO_BOARDING, StopTimeUpdate::Status::SKIPPED},
+                              StopTimeUpdate::Status::NO_BOARDING, StopTimeUpdate::Status::SKIPPED},
                              departure_status)) {
                     stop_time.set_pick_up_allowed(false);
                 } else {
