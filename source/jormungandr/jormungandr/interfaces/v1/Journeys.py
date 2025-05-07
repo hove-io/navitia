@@ -203,7 +203,8 @@ class add_journey_href(object):
 
                     # Here we create two links same_journey_schedules and this_journey
                     args['rel'] = 'same_journey_schedules'
-                    same_journey_schedules_link = create_external_link('v1.journeys', **args)
+                    # TODO: _pt_planner=kraken should be removed after ticket NAV-4025 is addressed.
+                    same_journey_schedules_link = create_external_link('v1.journeys', _pt_planner="kraken", **args)
                     args['rel'] = 'this_journey'
                     args['min_nb_journeys'] = 1
                     args['count'] = 1
