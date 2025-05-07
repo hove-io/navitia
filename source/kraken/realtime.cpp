@@ -619,27 +619,24 @@ static const type::disruption::Disruption* create_disruption(const std::string& 
 
                 // for deleted stoptime departure (resp. arrival), we disable pickup (resp. drop_off)
                 // but we keep the departure/arrival to be able to match the stoptime to it's base stoptime
-                if (contains({StopTimeUpdate::Status::DELETED,
-                             StopTimeUpdate::Status::DELETED_FOR_DETOUR,
-                             StopTimeUpdate::Status::NO_ALIGHTING,
-                             StopTimeUpdate::Status::SKIPPED},
+                if (contains({StopTimeUpdate::Status::DELETED, StopTimeUpdate::Status::DELETED_FOR_DETOUR,
+                             StopTimeUpdate::Status::NO_ALIGHTING, StopTimeUpdate::Status::SKIPPED},
                              arrival_status)) {
                     stop_time.set_drop_off_allowed(false);
                 } else {
                     stop_time.set_drop_off_allowed(st.arrival().has_time());
                 }
 
-                if (contains({StopTimeUpdate::Status::DELETED,
-                             StopTimeUpdate::Status::DELETED_FOR_DETOUR,
-                             StopTimeUpdate::Status::NO_BOARDING,
-                             StopTimeUpdate::Status::SKIPPED},
+                if (contains({StopTimeUpdate::Status::DELETED, StopTimeUpdate::Status::DELETED_FOR_DETOUR,
+                             StopTimeUpdate::Status::NO_BOARDING, StopTimeUpdate::Status::SKIPPED},
                              departure_status)) {
                     stop_time.set_pick_up_allowed(false);
                 } else {
                     stop_time.set_pick_up_allowed(st.departure().has_time());
                 }
-                auto is_skipped = (departure_status == StopTimeUpdate::Status::SKIPPED || arrival_status == StopTimeUpdate::Status::SKIPPED);
-                    stop_time.set_skipped_stop(is_skipped);
+                auto is_skipped = (departure_status == StopTimeUpdate::Status::SKIPPED
+                                   || arrival_status == StopTimeUpdate::Status::SKIPPED);
+                stop_time.set_skipped_stop(is_skipped);
                 // we update the trip status if the stoptime status is the most important status
                 // the most important status is DELAYED then DELETED
                 most_important_stoptime_status =

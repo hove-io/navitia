@@ -4380,7 +4380,9 @@ class TestKirinWithSkipAlightingBoardingOptions(MockKirinDisruptionsFixture):
         assert len(vjs_before['vehicle_journeys']) == 27
 
         # The vehicle_journey vj:1 is present in navitia without any disruption
-        pt_response = self.query_region('vehicle_journeys/vehicle_journey:vj:1?_current_datetime=20170120T080000')
+        pt_response = self.query_region(
+            'vehicle_journeys/vehicle_journey:vj:1?_current_datetime=20170120T080000'
+        )
 
         assert len(pt_response['vehicle_journeys']) == 1
         assert len(pt_response['disruptions']) == 0
@@ -4507,7 +4509,9 @@ class TestKirinWithSkipAlightingBoardingOptions(MockKirinDisruptionsFixture):
         assert len(vjs_after['vehicle_journeys']) == 28
 
         # A disruption is added for vj:1
-        pt_response = self.query_region('vehicle_journeys/vehicle_journey:vj:1?_current_datetime=20170120T080000')
+        pt_response = self.query_region(
+            'vehicle_journeys/vehicle_journey:vj:1?_current_datetime=20170120T080000'
+        )
         assert len(pt_response['vehicle_journeys']) == 1
         assert len(pt_response['disruptions']) == 1
         impacted_objects = pt_response['disruptions'][0]['impacted_objects']
@@ -4649,12 +4653,12 @@ def make_mock_kirin_item(
             stop_time_update.departure.delay = st.departure_delay
 
             def get_stop_time_status(
-                    is_skipped=False,
-                    is_added=False,
-                    is_detour=False,
-                    pass_thru=False,
-                    no_alighting=False,
-                    no_boarding=False,
+                is_skipped=False,
+                is_added=False,
+                is_detour=False,
+                pass_thru=False,
+                no_alighting=False,
+                no_boarding=False,
             ):
                 if is_skipped:
                     if is_detour:
