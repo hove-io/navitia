@@ -114,6 +114,12 @@ struct PbCreator::Filler::PtObjVisitor : public boost::static_visitor<> {
             case nd::StopTimeUpdate::Status::DELETED:
             case nd::StopTimeUpdate::Status::DELETED_FOR_DETOUR:
                 return pbnavitia::DELETED;
+            case nd::StopTimeUpdate::Status::NO_ALIGHTING:
+                return pbnavitia::NO_ALIGHTING;
+            case nd::StopTimeUpdate::Status::NO_BOARDING:
+                return pbnavitia::NO_BOARDING;
+            case nd::StopTimeUpdate::Status::SKIPPED:
+                return pbnavitia::SKIPPED;
             case nd::StopTimeUpdate::Status::UNCHANGED:
             default:
                 return pbnavitia::UNCHANGED;
