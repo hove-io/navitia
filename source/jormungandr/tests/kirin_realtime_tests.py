@@ -4434,7 +4434,7 @@ class TestKirinWithSkipAlightingBoardingOptions(MockKirinDisruptionsFixture):
         assert journey_ac['journeys'][0]['status'] == ''
         assert len(journey_ac['disruptions']) == 0
 
-        # realtime deletes stop-time in stopC (and REDUCED_SERVICE status)
+        # realtime with pass_thru(SKIPPED) in stopC and no_alighting and no_boarding in stopD
         self.send_mock(
             "vj:1",
             "20170120",
@@ -4719,7 +4719,6 @@ class TestKirinWithSkipAlightingBoardingOptions(MockKirinDisruptionsFixture):
         # Even if the journey is not impacted, disruption is present in the response: why ??
         assert len(journey_ac['disruptions']) == 1
         assert journey_ac['disruptions'][0]['severity']['effect'] == 'REDUCED_SERVICE'
-
 
         # Verify that after sending disruption journey exist also for A to D
         journey_ad_query = (
