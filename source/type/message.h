@@ -332,14 +332,14 @@ struct StopTimeUpdate {
     enum class Status : uint8_t {
         // Note: status are ordered, from least to most important
         UNCHANGED = 0,
-        NO_ALIGHTING,
-        NO_BOARDING,
-        SKIPPED,
         ADDED,
         ADDED_FOR_DETOUR,
         DELETED,
         DELETED_FOR_DETOUR,
-        DELAYED
+        DELAYED,
+        NO_ALIGHTING,
+        NO_BOARDING,
+        SKIPPED
     };
     Status departure_status{Status::UNCHANGED};
     Status arrival_status{Status::UNCHANGED};

@@ -3915,7 +3915,12 @@ class TestKirinThenChaosRailSectionJourney(MockKirinOrChaosDisruptionsFixture):
         assert journey_EH_rt['journeys'][0]['status'] == ''  # No delay, no deletion of pick-up or drop-off used
         assert journey_EH_rt['journeys'][0]['arrival_date_time'] == '20170120T083500'
         assert using_vj1(journey_EH_rt)
+        links = get_links_dict(journey_EH_rt)
+        assert 'bypass_disruptions' not in links
+        # This behavior is not correct but exist
+        # Even if the journey is not impacted, disruption is present in the response: why ??
         assert len(journey_EH_rt['disruptions']) == 1
+        assert journey_EH_rt['disruptions'][0]['severity']['effect'] == 'REDUCED_SERVICE'
 
         journey_AE_adapted = self.query_region(journey_AE_adapted_query)
         assert len(journey_AE_adapted['journeys']) == 1
@@ -4574,6 +4579,162 @@ class TestKirinWithSkipAlightingBoardingOptions(MockKirinDisruptionsFixture):
         assert journey_ac['disruptions'][0]['severity']['effect'] == 'REDUCED_SERVICE'
         links = get_links_dict(journey_ac)
         assert 'bypass_disruptions' in links
+
+        # realtime back to normal stop-times
+        self.send_mock(
+            "vj:1",
+            "20170120",
+            'modified',
+            [
+                UpdatedStopTime(
+                    "stopA",
+                    arrival=tstamp("20170120T080000"),
+                    departure=tstamp("20170120T080000"),
+                    arrival_delay=0,
+                    departure_delay=0,
+                    no_alighting=True,
+                ),
+                UpdatedStopTime(
+                    "stopB",
+                    arrival=tstamp("20170120T080500"),
+                    departure=tstamp("20170120T080500"),
+                    arrival_delay=0,
+                    departure_delay=0,
+                ),
+                UpdatedStopTime(
+                    "stopC",
+                    arrival=tstamp("20170120T081000"),
+                    departure=tstamp("20170120T081000"),
+                    arrival_delay=0,
+                    departure_delay=0,
+                ),
+                UpdatedStopTime(
+                    "stopD",
+                    arrival=tstamp("20170120T081500"),
+                    departure=tstamp("20170120T081500"),
+                    arrival_delay=0,
+                    departure_delay=0,
+                ),
+                UpdatedStopTime(
+                    "stopE",
+                    arrival=tstamp("20170120T082000"),
+                    departure=tstamp("20170120T082000"),
+                    arrival_delay=0,
+                    departure_delay=0,
+                ),
+                UpdatedStopTime(
+                    "stopF",
+                    arrival=tstamp("20170120T082500"),
+                    departure=tstamp("20170120T082500"),
+                    arrival_delay=0,
+                    departure_delay=0,
+                ),
+                UpdatedStopTime(
+                    "stopG",
+                    arrival=tstamp("20170120T083000"),
+                    departure=tstamp("20170120T083000"),
+                    arrival_delay=0,
+                    departure_delay=0,
+                ),
+                UpdatedStopTime(
+                    "stopH",
+                    arrival=tstamp("20170120T083500"),
+                    departure=tstamp("20170120T083500"),
+                    arrival_delay=0,
+                    departure_delay=0,
+                ),
+                UpdatedStopTime(
+                    "stopG",
+                    arrival=tstamp("20170120T084000"),
+                    departure=tstamp("20170120T084000"),
+                    arrival_delay=0,
+                    departure_delay=0,
+                    no_boarding=True,
+                ),
+            ],
+            disruption_id='back_to_normal_service_vj1',
+            effect='unknown',
+        )
+
+        vjs_after = self.query_region('vehicle_journeys?count=100')
+        assert len(vjs_after['vehicle_journeys']) == 28
+
+        # A disruption is added for vj:1
+        pt_response = self.query_region(
+            'vehicle_journeys/vehicle_journey:vj:1?_current_datetime=20170120T080000'
+        )
+        assert len(pt_response['vehicle_journeys']) == 1
+        assert len(pt_response['disruptions']) == 2
+
+        # The previous disruption exist
+        prev_disruption = pt_response['disruptions'][1]
+        assert prev_disruption['id'] == 'reduced_service_vj1'
+        assert prev_disruption['severity']['effect'] == 'REDUCED_SERVICE'
+
+        # Verify the new disruption details
+        new_disruption = pt_response['disruptions'][0]
+        assert new_disruption['id'] == 'back_to_normal_service_vj1'
+        assert new_disruption['severity']['effect'] == 'UNKNOWN_EFFECT'
+        impacted_objects = new_disruption['impacted_objects']
+        assert len(impacted_objects) == 1
+        impacted_stops = impacted_objects[0]['impacted_stops']
+        assert len(impacted_stops) == 9
+
+        imp_stop_a = impacted_stops[0]
+        assert imp_stop_a['stop_point']['id'] == 'stopA'
+        assert imp_stop_a['stop_time_effect'] == 'no_alighting'
+        assert imp_stop_a['arrival_status'] == 'no_alighting'
+        assert imp_stop_a['departure_status'] == 'unchanged'
+        assert imp_stop_a['cause'] == ''
+
+        imp_stop_c = impacted_stops[2]
+        assert imp_stop_c['stop_point']['id'] == 'stopC'
+        assert imp_stop_c['stop_time_effect'] == 'unchanged'
+        assert imp_stop_c['arrival_status'] == 'unchanged'
+        assert imp_stop_c['departure_status'] == 'unchanged'
+        assert imp_stop_c['cause'] == ''
+
+        imp_stop_d = impacted_stops[3]
+        assert imp_stop_d['stop_point']['id'] == 'stopD'
+        assert imp_stop_d['stop_time_effect'] == 'unchanged'
+        assert imp_stop_d['arrival_status'] == 'unchanged'
+        assert imp_stop_d['departure_status'] == 'unchanged'
+        assert imp_stop_d['cause'] == ''
+
+        imp_stop_g = impacted_stops[-1]
+        assert imp_stop_g['stop_point']['id'] == 'stopG'
+        assert imp_stop_g['stop_time_effect'] == 'no_boarding'
+        assert imp_stop_g['arrival_status'] == 'unchanged'
+        assert imp_stop_g['departure_status'] == 'no_boarding'
+        assert imp_stop_g['cause'] == ''
+
+        # Verify that after sending disruption journey exist without disruption
+        journey_ac = self.query_region(journey_ac_query)
+        assert len(journey_ac['journeys']) == 1
+        assert journey_ac['journeys'][0]['status'] == ''
+        links = get_links_dict(journey_ac)
+        assert 'bypass_disruptions' not in links
+
+        # This behavior is not correct but exist
+        # Even if the journey is not impacted, disruption is present in the response: why ??
+        assert len(journey_ac['disruptions']) == 1
+        assert journey_ac['disruptions'][0]['severity']['effect'] == 'REDUCED_SERVICE'
+
+
+        # Verify that after sending disruption journey exist also for A to D
+        journey_ad_query = (
+            "journeys?from=stopA&to=stopD&datetime=20170120T080000&_current_datetime=20170120T080000"
+        )
+        journey_ad = self.query_region(journey_ad_query)
+        assert len(journey_ad['journeys']) == 1
+        assert journey_ad['journeys'][0]['status'] == ''
+        links = get_links_dict(journey_ac)
+        assert 'bypass_disruptions' not in links
+
+        # This behavior is not correct but exist
+        # Even if the journey is not impacted, disruption is present in the response: why ??
+        assert len(journey_ad['disruptions']) == 1
+        assert journey_ac['disruptions'][0]['severity']['effect'] == 'REDUCED_SERVICE'
 
 
 def make_mock_kirin_item(
