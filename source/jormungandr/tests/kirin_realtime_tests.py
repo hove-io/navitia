@@ -74,7 +74,8 @@ UpdatedStopTime = make_namedtuple(
     arrival_skipped=False,
     is_added=False,
     is_detour=False,
-    pass_thru=False,
+    arrival_pass_thru=False,
+    departure_pass_thru=False,
     no_alighting=False,
     no_boarding=False,
 )
@@ -4460,7 +4461,8 @@ class TestKirinWithSkipAlightingBoardingOptions(MockKirinDisruptionsFixture):
                     arrival=tstamp("20170120T081000"),
                     departure=tstamp("20170120T081000"),
                     message='stop_time with pass_thru',
-                    pass_thru=True,
+                    arrival_pass_thru=True,
+                    departure_pass_thru=True,
                 ),
                 UpdatedStopTime(
                     "stopD",
@@ -4475,6 +4477,8 @@ class TestKirinWithSkipAlightingBoardingOptions(MockKirinDisruptionsFixture):
                     departure=tstamp("20170120T082000"),
                     arrival_delay=0,
                     departure_delay=0,
+                    departure_pass_thru=True,
+                    message='stop_time with partial pass_thru',
                 ),
                 UpdatedStopTime(
                     "stopF",
@@ -4552,6 +4556,15 @@ class TestKirinWithSkipAlightingBoardingOptions(MockKirinDisruptionsFixture):
         assert imp_stop_d['departure_status'] == 'no_boarding'
         assert imp_stop_d['cause'] == ''
 
+        # arrival and departure status are independent even for skipped. Both pick_up_allowed and
+        # drop_off_allowed are disabled if arrival or departure status is skipped
+        imp_stop_d = impacted_stops[4]
+        assert imp_stop_d['stop_point']['id'] == 'stopE'
+        assert imp_stop_d['stop_time_effect'] == 'skipped'
+        assert imp_stop_d['arrival_status'] == 'unchanged'
+        assert imp_stop_d['departure_status'] == 'skipped'
+        assert imp_stop_d['cause'] == 'stop_time with partial pass_thru'
+
         imp_stop_g = impacted_stops[-1]
         assert imp_stop_g['stop_point']['id'] == 'stopG'
         assert imp_stop_g['stop_time_effect'] == 'no_boarding'
@@ -4559,7 +4572,7 @@ class TestKirinWithSkipAlightingBoardingOptions(MockKirinDisruptionsFixture):
         assert imp_stop_g['departure_status'] == 'no_boarding'
         assert imp_stop_g['cause'] == ''
 
-        # Verify that after sending disruption journey exist but with message
+        # Verify that after sending disruption journey exist but with impact
         journey_ac = self.query_region(journey_ac_query)
         assert len(journey_ac['journeys']) == 1
         assert journey_ac['journeys'][0]['status'] == 'NO_SERVICE'
@@ -4568,7 +4581,7 @@ class TestKirinWithSkipAlightingBoardingOptions(MockKirinDisruptionsFixture):
         links = get_links_dict(journey_ac)
         assert 'bypass_disruptions' in links
 
-        # Verify that after sending disruption journey exist also for A to D
+        # Verify that after sending disruption journey exist also for A to D with impact
         journey_ad_query = (
             "journeys?from=stopA&to=stopD&datetime=20170120T080000&_current_datetime=20170120T080000"
         )
@@ -4576,8 +4589,20 @@ class TestKirinWithSkipAlightingBoardingOptions(MockKirinDisruptionsFixture):
         assert len(journey_ad['journeys']) == 1
         assert journey_ad['journeys'][0]['status'] == 'NO_SERVICE'
         assert len(journey_ad['disruptions']) == 1
-        assert journey_ac['disruptions'][0]['severity']['effect'] == 'REDUCED_SERVICE'
-        links = get_links_dict(journey_ac)
+        assert journey_ad['disruptions'][0]['severity']['effect'] == 'REDUCED_SERVICE'
+        links = get_links_dict(journey_ad)
+        assert 'bypass_disruptions' in links
+
+        # Verify that after sending disruption journey exist also for A to E with impact
+        journey_ae_query = (
+            "journeys?from=stopA&to=stopE&datetime=20170120T080000&_current_datetime=20170120T080000"
+        )
+        journey_ae = self.query_region(journey_ae_query)
+        assert len(journey_ae['journeys']) == 1
+        assert journey_ae['journeys'][0]['status'] == 'NO_SERVICE'
+        assert len(journey_ae['disruptions']) == 1
+        assert journey_ae['disruptions'][0]['severity']['effect'] == 'REDUCED_SERVICE'
+        links = get_links_dict(journey_ae)
         assert 'bypass_disruptions' in links
 
         # realtime back to normal stop-times
@@ -4837,10 +4862,10 @@ def make_mock_kirin_item(
                 return kirin_pb2.SCHEDULED
 
             stop_time_update.arrival.Extensions[kirin_pb2.stop_time_event_status] = get_stop_time_status(
-                st.arrival_skipped, st.is_added, st.is_detour, st.pass_thru, st.no_alighting, False
+                st.arrival_skipped, st.is_added, st.is_detour, st.arrival_pass_thru, st.no_alighting, False
             )
             stop_time_update.departure.Extensions[kirin_pb2.stop_time_event_status] = get_stop_time_status(
-                st.departure_skipped, st.is_added, st.is_detour, st.pass_thru, False, st.no_boarding
+                st.departure_skipped, st.is_added, st.is_detour, st.departure_pass_thru, False, st.no_boarding
             )
             if st.message:
                 stop_time_update.Extensions[kirin_pb2.stoptime_message] = st.message

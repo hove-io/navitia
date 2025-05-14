@@ -637,6 +637,14 @@ static const type::disruption::Disruption* create_disruption(const std::string& 
                 auto is_skipped = (departure_status == StopTimeUpdate::Status::SKIPPED
                                    || arrival_status == StopTimeUpdate::Status::SKIPPED);
                 stop_time.set_skipped_stop(is_skipped);
+
+                // For a skipped stop with arrival and/or departure status = SKIPPED
+                // we should reset pick_up_allowed and drop_off_allowed to false
+                if (is_skipped) {
+                    stop_time.set_drop_off_allowed(false);
+                    stop_time.set_pick_up_allowed(false);
+                }
+
                 // we update the trip status if the stoptime status is the most important status
                 // the most important status is DELAYED then DELETED
                 most_important_stoptime_status =
