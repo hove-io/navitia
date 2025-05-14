@@ -106,10 +106,9 @@ jobs:
           docker tag ${image} mimirsbrunn:local
 
       - name: Get and tag mimir release image
-        # TODO : use the tag from the release mimir debian 11
         if: startsWith(github.ref, 'refs/tags/')
         run: |
-            MIMIR_TAG="v3.5.4${DEBIAN11_SUFFIX}"
+            MIMIR_TAG="v3.5.6${DEBIAN11_SUFFIX}"
             image=${PRD_ECR_REGISTRY}/navitia-bragi-mimirsbrunn:${MIMIR_TAG}
             docker pull ${image}
             docker tag ${image} mimirsbrunn:local
