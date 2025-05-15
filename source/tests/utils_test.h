@@ -60,6 +60,10 @@ struct RTStopTime {
     bool _is_added = false;
     bool _deleted_for_detour = false;
     bool _added_for_detour = false;
+    // Since skipped is already used as variable, _pass_thru is used
+    bool _no_alighting = false;
+    bool _no_boarding = false;
+    bool _pass_thru = false;
     RTStopTime(std::string n, int arrival_time, int departure_time)
         : _stop_name(std::move(n)), _arrival_time(arrival_time), _departure_time(departure_time) {}
     RTStopTime(std::string n, int time) : _stop_name(std::move(n)), _arrival_time(time), _departure_time(time) {}
@@ -92,6 +96,18 @@ struct RTStopTime {
     }
     RTStopTime& added_for_detour() {
         _added_for_detour = true;
+        return *this;
+    }
+    RTStopTime& no_alighting() {
+        _no_alighting = true;
+        return *this;
+    }
+    RTStopTime& no_boarding() {
+        _no_boarding = true;
+        return *this;
+    }
+    RTStopTime& pass_thru() {
+        _pass_thru = true;
         return *this;
     }
 };
@@ -182,6 +198,16 @@ inline transit_realtime::TripUpdate make_trip_update_message(
         if (delayed_st._added_for_detour) {
             departure->SetExtension(kirin::stop_time_event_status, kirin::StopTimeEventStatus::ADDED_FOR_DETOUR);
             arrival->SetExtension(kirin::stop_time_event_status, kirin::StopTimeEventStatus::ADDED_FOR_DETOUR);
+        }
+        if (delayed_st._no_alighting) {
+            arrival->SetExtension(kirin::stop_time_event_status, kirin::StopTimeEventStatus::NO_ALIGHTING);
+        }
+        if (delayed_st._no_boarding) {
+            departure->SetExtension(kirin::stop_time_event_status, kirin::StopTimeEventStatus::NO_BOARDING);
+        }
+        if (delayed_st._pass_thru) {
+            arrival->SetExtension(kirin::stop_time_event_status, kirin::StopTimeEventStatus::SKIPPED);
+            departure->SetExtension(kirin::stop_time_event_status, kirin::StopTimeEventStatus::SKIPPED);
         }
     }
 
