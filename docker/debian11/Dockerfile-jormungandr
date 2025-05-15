@@ -25,7 +25,7 @@ COPY ./docker/jormungandr.wsgi ./jormungandr.wsgi
 # Add apache config
 RUN rm /etc/apache2/sites-available/000-default.conf /etc/apache2/conf-available/other-vhosts-access-log.conf
 COPY ./docker/apache/jormungandr.default.conf /etc/apache2/sites-available/000-default.conf
-COPY ./docker/schedules/apache/status.conf /etc/apache2/mods-available/status.conf
+COPY ./docker/apache/status.conf /etc/apache2/mods-available/status.conf
 COPY ./docker/apache/apache2.conf /etc/apache2/apache2.conf
 COPY ./docker/apache/envvars /etc/apache2/envvars
 COPY ./docker/apache/logformat.conf /etc/apache2/conf-available/logformat.conf
