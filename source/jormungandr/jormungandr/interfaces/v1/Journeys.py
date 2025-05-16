@@ -307,9 +307,9 @@ class add_elevations_href(object):
                         continue
                     # No link for transfer if coordinates length = 2 (it's a crow_fly)
                     if (
-                            s.get("type") == "transfer"
-                            and "geojson" in s
-                            and s.get("geojson", {}).get("coordinates")
+                        s.get("type") == "transfer"
+                        and "geojson" in s
+                        and s.get("geojson", {}).get("coordinates")
                     ):
                         continue
                     if "geojson" in s and "region" in kwargs:
