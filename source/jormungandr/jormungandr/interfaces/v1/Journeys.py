@@ -311,7 +311,7 @@ class add_elevations_href(object):
                     if s.get("type") == "transfer" and len(coordinates) < 3:
                         continue
 
-                    if "geojson" in s and "region" in kwargs:
+                    if "region" in kwargs:
                         encoded_polyline = polyline.encode(coordinates, precision=6, geojson=True)
                         s['links'].append(
                             create_external_link(
