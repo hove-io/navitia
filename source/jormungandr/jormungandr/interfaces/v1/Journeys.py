@@ -303,16 +303,16 @@ class add_elevations_href(object):
                     # No link for crow_fly or walking
                     if s.get("type") == "crow_fly" or s.get("mode") != "walking":
                         continue
+                    # No link without coordinates
+                    coordinates = s.get("geojson", {}).get("coordinates", [])
+                    if not coordinates:
+                        continue
                     # No link for transfer if coordinates length < 3 (it's a crow_fly)
-                    if s.get("type") == "transfer":
-                        coord = s.get("geojson", {}).get("coordinates", [])
-                        if len(coord) < 3:
-                            continue
+                    if s.get("type") == "transfer" and len(coordinates) < 3:
+                        continue
 
                     if "geojson" in s and "region" in kwargs:
-                        encoded_polyline = polyline.encode(
-                            s.get("geojson").get("coordinates"), precision=6, geojson=True
-                        )
+                        encoded_polyline = polyline.encode(coordinates, precision=6, geojson=True)
                         s['links'].append(
                             create_external_link(
                                 url="v1.elevations",
