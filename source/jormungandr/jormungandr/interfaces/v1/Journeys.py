@@ -124,11 +124,13 @@ class add_journey_href(object):
             if has_invalid_reponse_code(objects) or journeys_absent(objects):
                 return objects
 
+            from_to_aid_types = ["stop_point", "stop_area"]
             for journey in objects[0]['journeys']:
                 # Note: request.args is a MultiDict, we want to flatten it by having list as value when needed
                 # From Python3.6 onwards dict(request.args) != request.args.to_dict(flat=False)
                 args = request.args.to_dict(flat=False)
-                allowed_ids = {
+                # Default allowed ids only for the type=stop_point
+                default_allowed_ids = {
                     o['stop_point']['id']
                     for s in journey.get('sections', [])
                     if 'from' in s
@@ -148,7 +150,7 @@ class add_journey_href(object):
                         args['from'] = journey['from']['id']
                     args['rel'] = 'journeys'
                     journey['links'] = [create_external_link('v1.journeys', **args)]
-                elif allowed_ids and 'public_transport' in (s['type'] for s in journey['sections']):
+                elif default_allowed_ids and 'public_transport' in (s['type'] for s in journey['sections']):
                     # exactly one first_section_mode
                     if any(s['type'].startswith('bss') for s in journey['sections'][:2]):
                         args['first_section_mode[]'] = 'bss'
@@ -173,16 +175,30 @@ class add_journey_href(object):
                         )
                     args['is_journey_schedules'] = True
 
-                    for allowed_type in allowed_id_types:
+                    # link_types=["network", "physical_mode", "commercial_mode", "line", "vehicle_journey"]
+                    link_aid_types =  [type for type in allowed_id_types if type not in from_to_aid_types]
+
+                    link_allowed_ids = set()
+                    # Get allowed ids for link_aid_types
+                    for allowed_type in link_aid_types:
                         for section in journey['sections']:
                             if is_public_transport_section(section):
-                                allowed_ids.update(
+                                link_allowed_ids.update(
                                     link['id']
                                     for link in section['links']
                                     if link.get('type') == allowed_type and link.get('id')
                                 )
-
-                    args['allowed_id[]'] = list(allowed_ids)
+                    # Get allowed ids for "stop_area" if present in allowed_id_types
+                    # Note: if both stop_point and stop_area are present then stop_point is dominant
+                    if "stop_point" not in allowed_id_types and "stop_area" in allowed_id_types:
+                        default_allowed_ids.clear()
+                        for section in journey['sections']:
+                            if section.get('type') == 'public_transport':
+                                default_allowed_ids.add(
+                                    section.get("from", {}).get("stop_point", {}).get("stop_area", {}).get("id"))
+                                default_allowed_ids.add(
+                                    section.get("to", {}).get("stop_point", {}).get("stop_area", {}).get("id"))
+                    args['allowed_id[]'] = list(default_allowed_ids | link_allowed_ids)
                     args['_type'] = 'journeys'
 
                     # Delete arguments that are contradictory to the 'same_journey_schedules' concept
