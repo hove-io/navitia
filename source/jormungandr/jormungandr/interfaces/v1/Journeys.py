@@ -176,7 +176,7 @@ class add_journey_href(object):
                     args['is_journey_schedules'] = True
 
                     # link_types=["network", "physical_mode", "commercial_mode", "line", "vehicle_journey"]
-                    link_aid_types =  [type for type in allowed_id_types if type not in from_to_aid_types]
+                    link_aid_types = [type for type in allowed_id_types if type not in from_to_aid_types]
 
                     link_allowed_ids = set()
                     # Get allowed ids for link_aid_types
@@ -195,9 +195,11 @@ class add_journey_href(object):
                         for section in journey['sections']:
                             if section.get('type') == 'public_transport':
                                 default_allowed_ids.add(
-                                    section.get("from", {}).get("stop_point", {}).get("stop_area", {}).get("id"))
+                                    section.get("from", {}).get("stop_point", {}).get("stop_area", {}).get("id")
+                                )
                                 default_allowed_ids.add(
-                                    section.get("to", {}).get("stop_point", {}).get("stop_area", {}).get("id"))
+                                    section.get("to", {}).get("stop_point", {}).get("stop_area", {}).get("id")
+                                )
                     args['allowed_id[]'] = list(default_allowed_ids | link_allowed_ids)
                     args['_type'] = 'journeys'
 
