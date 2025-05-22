@@ -296,14 +296,23 @@ class add_elevations_href(object):
             if not instance or not instance.elevation_service:
                 return objects
 
-            for j in objects[0]['journeys']:
+            for j in objects[0]["journeys"]:
                 if "sections" not in j:
                     continue
-                for s in j['sections']:
-                    if s.get('mode') == 'walking' and "geojson" in s and 'region' in kwargs:
-                        encoded_polyline = polyline.encode(
-                            s.get("geojson").get("coordinates"), precision=6, geojson=True
-                        )
+                for s in j["sections"]:
+                    # No link for crow_fly or walking
+                    if s.get("type") == "crow_fly" or s.get("mode") != "walking":
+                        continue
+                    # No link without coordinates
+                    coordinates = s.get("geojson", {}).get("coordinates", [])
+                    if not coordinates:
+                        continue
+                    # No link for transfer if coordinates length < 3 (it's a crow_fly)
+                    if s.get("type") == "transfer" and len(coordinates) < 3:
+                        continue
+
+                    if "region" in kwargs:
+                        encoded_polyline = polyline.encode(coordinates, precision=6, geojson=True)
                         s['links'].append(
                             create_external_link(
                                 url="v1.elevations",
