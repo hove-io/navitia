@@ -1444,6 +1444,7 @@ class JourneyCommon(object):
                     assert same_journey_link is not None
 
                     # Check that the href contains the expected resource IDs based on configuration
+                    # except for types stop_point and stop_area
                     allowed_id_types = config.get('allowed_id_type', [])
                     check_allowed_id_type(allowed_id_types, resource_ids, same_journey_link)
 
@@ -1458,6 +1459,63 @@ class JourneyCommon(object):
 
                     # For each configured ID type, check that all journeys use the same resource
                     check_journey_id_type(r2, allowed_id_types, resource_ids)
+
+        finally:
+            instance._same_journey_schedules_configuration = original_config
+
+    def test_same_journey_schedules_with_stop_point_and_stop_area(self):
+        """Test that same_journey_schedules respects stop_point/stop_area filtering configuration"""
+        instance = i_manager.instances.get('main_routing_test')
+
+        # Skip test if instance not found
+        assert instance is not None
+        # Save original configuration
+        original_config = getattr(instance, 'same_journey_schedules_configuration', None)
+        test_configs = [
+            {"allowed_id_type": ["stop_point"], "min_nb_journeys": 5},
+            {"allowed_id_type": ["stop_area", "line"], "min_nb_journeys": 5},
+        ]
+        try:
+            for config in test_configs:
+                with mock.patch.object(
+                    type(instance),
+                    'same_journey_schedules_configuration',
+                    new_callable=mock.PropertyMock,
+                    return_value=config,
+                ):
+                    query = "journeys?from=0.0001796623963909418;8.98311981954709e-05&to=0.0018864551621048887;0.0007186495855637672&datetime=20120614080000&min_nb_journeys={min_nb_journeys}".format(
+                        min_nb_journeys=config.get('min_nb_journeys')
+                    )
+                    r = self.query_region(query)
+
+                    # Verify we have journeys
+                    assert 'journeys' in r
+                    assert len(r['journeys']) == config.get('min_nb_journeys')
+
+                    # Get the first journey with public transport
+                    pt_journey = get_first_journey_with_public_transport(r)
+
+                    assert pt_journey is not None
+
+                    same_journey_link = build_same_journey_link(pt_journey)
+                    assert same_journey_link is not None
+
+                    # Check that the href contains the expected resource IDs based on configuration
+                    allowed_id_types = config.get('allowed_id_type', [])
+
+                    # config = {"allowed_id_type": ["stop_area", "line"], "min_nb_journeys": 5}
+                    if "stop_area" in allowed_id_types:
+                        assert "line" in allowed_id_types
+                        assert "allowed_id%5B%5D=A" in same_journey_link
+                        assert "allowed_id%5B%5D=stopB" in same_journey_link
+                        assert "allowed_id%5B%5D=stopA" in same_journey_link
+
+                    # config = {"allowed_id_type": ["stop_point"], "min_nb_journeys": 5}
+                    if "stop_point" in allowed_id_types:
+                        assert "line" not in allowed_id_types
+                        assert "allowed_id%5B%5D=A" not in same_journey_link
+                        assert "allowed_id%5B%5D=stop_point%3AstopB" in same_journey_link
+                        assert "allowed_id%5B%5D=stop_point%3AstopA" in same_journey_link
 
         finally:
             instance._same_journey_schedules_configuration = original_config
