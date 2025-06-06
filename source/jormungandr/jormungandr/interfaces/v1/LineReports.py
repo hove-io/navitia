@@ -130,11 +130,7 @@ class LineReports(ResourceUri, ResourceUtc):
 
         uri_params = split_uri(uri)
 
-        args["filter"] = (
-            self.get_loki_filter(uri_params)
-            if args["_pt_planner"] == "loki"
-            else self.get_filter(uri_params, args)
-        )
+        args["filter"] =  self.get_filter(uri_params, args)
 
         if args['since']:
             args['since'] = date_to_timestamp(self.convert_to_utc(args['since']))
@@ -144,27 +140,3 @@ class LineReports(ResourceUri, ResourceUtc):
         response = i_manager.dispatch(args, "line_reports", instance_name=self.region)
 
         return response
-
-    def get_loki_filter(self, items):
-        """
-        Multi filter on PT objects is not allowed with Loki
-        Eg: /stop_areas/Massy/physical_modes/Bus/line_reports
-        We can only filter on one PT object among lines, stop_areas, commercial_modes, physical_modes
-        Eg:
-        /commercial_modes/Bus/line_reports
-        /lines/61/line_reports
-        /physical_modes/Bus/line_reports
-        /stop_areas/Massy/line_reports
-        """
-        if len(items) == 0:
-            return ""
-
-        if len(items) != 2:
-            abort(400, message="invalid uri")
-
-        pt_object = items[0]
-
-        if pt_object not in ["lines", "stop_areas", "commercial_modes", "physical_modes"]:
-            abort(400, message="filter on {} not allowed".format(pt_object))
-
-        return {"object_type": collections_to_resource_type[pt_object].upper(), "object_id": items[1]}
