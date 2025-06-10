@@ -130,7 +130,7 @@ class LineReports(ResourceUri, ResourceUtc):
 
         uri_params = split_uri(uri)
 
-        args["filter"] =  self.get_filter(uri_params, args)
+        args["filter"] = self.get_filter(uri_params, args)
 
         if args['since']:
             args['since'] = date_to_timestamp(self.convert_to_utc(args['since']))
