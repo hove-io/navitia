@@ -50,6 +50,7 @@ BILLING_PLAN_NOT_EXIST_MSG = 'billing plan doesn\'t exist'
 MAX_TRY_FOR_REPOST_TO_SECONDARY_TYR = 3
 PY3 = sys.version_info[0] == 3
 
+
 def get_message(key, email, args):
     if key not in ["end_point_id", "billing_plan_id"]:
         raise AttributeError
