@@ -130,12 +130,12 @@ class Timeo(RealtimeProxy):
         except:
             return self.rt_system_id
 
-    def _is_valid_direction(self, direction_uri, passage_direction_uri, group_by_dest):
+    def _is_valid_direction(self, terminus_uris, passage_direction_uri, group_by_dest):
         # If group_by_dest is False then return True
         # otherwise return the comparison result
         if not group_by_dest:
             return True
-        return direction_uri == passage_direction_uri
+        return passage_direction_uri in terminus_uris
 
     @cache.memoize(app.config.get(str('CACHE_CONFIGURATION'), {}).get(str('TIMEOUT_TIMEO'), 60))
     def _call_timeo(self, url):
