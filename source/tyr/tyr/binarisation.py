@@ -854,7 +854,8 @@ def osm2mimir(self, autocomplete_instance, filename, job_id, dataset_uid, autoco
     custom_config_config_toml = '{}/{}.toml'.format(working_directory, custom_config)
     data = autocomplete_instance.config_toml.encode("utf-8")
     cosmogony_file = models.DataSet.get_cosmogony_file_path()
-    with open(custom_config_config_toml, 'wb') as f:
+    mode = "wb" if PY3 else "w"
+    with open(custom_config_config_toml, mode) as f:
         f.write(data)
     params = get_osm2mimir_params(
         autocomplete_instance,
