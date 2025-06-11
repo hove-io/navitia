@@ -60,6 +60,7 @@ import retrying
 from tyr.minio import MinioWrapper
 
 from tyr.poi_to_excluded_zones import poi_to_excluded_zones
+from tyr.helper import PY3
 
 
 def unzip_if_needed(filename):
