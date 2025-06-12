@@ -501,7 +501,10 @@ def parse_poly(lines):
 
         elif in_ring:
             # we are in a ring and picking up new coordinates.
-            ring.append(map(float, line.split()))
+            if PY3:
+                ring.append(list(map(float, line.split())))
+            else:
+                ring.append(map(float, line.split()))
 
         elif not in_ring and line.strip() == 'END':
             # we are at the end of the whole polygon.
