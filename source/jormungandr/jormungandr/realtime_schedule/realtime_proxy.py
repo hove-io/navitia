@@ -218,14 +218,15 @@ class RealtimeProxy(six.with_metaclass(ABCMeta, object)):
 
         # we clean up the old schedule
         pb_del_if(stop_schedule.date_times, self._filter_base_stop_schedule)
-        # direction_uri = stop_schedule.pt_display_informations.uris.stop_area
+        direction_uri = stop_schedule.pt_display_informations.uris.stop_area
         terminus_uris = stop_schedule.pt_display_informations.terminus
         for passage in next_realtime_passages:
             if not self._is_valid_direction(terminus_uris, passage.direction_uri, group_by_dest):
                 continue
             # If the route direction  doesn't match with departure.direction of forseti then
             # we should add direction name as note
-            add_direction = passage.direction_uri not in terminus_uris
+            add_direction = direction_uri != passage.direction_uri
+            # add_direction = passage.direction_uri not in terminus_uris
             self._add_datetime(stop_schedule, passage, add_direction)
 
         stop_schedule.date_times.sort(key=lambda dt: dt.date + dt.time)
