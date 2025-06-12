@@ -60,6 +60,7 @@ import retrying
 from tyr.minio import MinioWrapper
 
 from tyr.poi_to_excluded_zones import poi_to_excluded_zones
+from tyr.helper import PY3
 
 
 def unzip_if_needed(filename):
@@ -500,7 +501,10 @@ def parse_poly(lines):
 
         elif in_ring:
             # we are in a ring and picking up new coordinates.
-            ring.append(map(float, line.split()))
+            if PY3:
+                ring.append(list(map(float, line.split())))
+            else:
+                ring.append(map(float, line.split()))
 
         elif not in_ring and line.strip() == 'END':
             # we are at the end of the whole polygon.
@@ -854,7 +858,8 @@ def osm2mimir(self, autocomplete_instance, filename, job_id, dataset_uid, autoco
     custom_config_config_toml = '{}/{}.toml'.format(working_directory, custom_config)
     data = autocomplete_instance.config_toml.encode("utf-8")
     cosmogony_file = models.DataSet.get_cosmogony_file_path()
-    with open(custom_config_config_toml, 'w') as f:
+    mode = "wb" if PY3 else "w"
+    with open(custom_config_config_toml, mode) as f:
         f.write(data)
     params = get_osm2mimir_params(
         autocomplete_instance,
