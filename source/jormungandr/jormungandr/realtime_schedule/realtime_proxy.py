@@ -220,6 +220,10 @@ class RealtimeProxy(six.with_metaclass(ABCMeta, object)):
         pb_del_if(stop_schedule.date_times, self._filter_base_stop_schedule)
         direction_uri = stop_schedule.pt_display_informations.uris.stop_area
         terminus_uris = stop_schedule.pt_display_informations.terminus
+
+        # For retro-compatibility when terminus_uris is empty we should use direction_uri
+        if not terminus_uris:
+            terminus_uris = [direction_uri]
         for passage in next_realtime_passages:
             if not self._is_valid_direction(terminus_uris, passage.direction_uri, group_by_dest):
                 continue
