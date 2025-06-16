@@ -156,12 +156,12 @@ class RealtimeProxy(six.with_metaclass(ABCMeta, object)):
     def _filter_base_stop_schedule(self, date_time):
         return True
 
-    def _is_valid_direction(self, direction_uri, passage_direction_uri, group_by_dest):
+    def _is_valid_direction(self, terminus_uris, passage_direction_uri, group_by_dest):
         return True
 
     def _add_datetime(self, stop_schedule, passage, add_direction):
         new_dt = stop_schedule.date_times.add()
-        # the midnight is calculated from passage.datetime and it keeps the same timezone as passage.datetime
+        # the midnight is calculated from passage.datetime, and it keeps the same timezone as passage.datetime
         midnight = passage.datetime.replace(hour=0, minute=0, second=0, microsecond=0)
         time = (passage.datetime - midnight).total_seconds()
         new_dt.time = int(time)
@@ -219,8 +219,13 @@ class RealtimeProxy(six.with_metaclass(ABCMeta, object)):
         # we clean up the old schedule
         pb_del_if(stop_schedule.date_times, self._filter_base_stop_schedule)
         direction_uri = stop_schedule.pt_display_informations.uris.stop_area
+        terminus_uris = stop_schedule.pt_display_informations.terminus
+
+        # For retro-compatibility when terminus_uris is empty we should use direction_uri
+        if not terminus_uris:
+            terminus_uris = [direction_uri]
         for passage in next_realtime_passages:
-            if not self._is_valid_direction(direction_uri, passage.direction_uri, group_by_dest):
+            if not self._is_valid_direction(terminus_uris, passage.direction_uri, group_by_dest):
                 continue
             # If the route direction  doesn't match with departure.direction of forseti then
             # we should add direction name as note
@@ -250,7 +255,7 @@ class RealtimeProxy(six.with_metaclass(ABCMeta, object)):
             # https://navitia.atlassian.net/browse/NAV-2893
             direction_uri = route_point.fetch_direction_uri()
             if direction_uri:
-                if not self._is_valid_direction(direction_uri, rt_passage.direction_uri, group_by_dest=False):
+                if not self._is_valid_direction([direction_uri], rt_passage.direction_uri, group_by_dest=False):
                     continue
             new_passage = deepcopy(template)
             new_passage.stop_date_time.arrival_date_time = date_to_timestamp(rt_passage.datetime)

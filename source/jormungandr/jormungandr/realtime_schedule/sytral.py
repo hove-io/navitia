@@ -110,10 +110,10 @@ class Sytral(RealtimeProxy):
             params.append(("direction_type", direction_type))
         return params
 
-    def _is_valid_direction(self, direction_uri, passage_direction_uri, group_by_dest):
+    def _is_valid_direction(self, terminus_uris, passage_direction_uri, group_by_dest):
         # If group_by_dest is True then return the comparison result
         # If not the comparison can also be activated by configuration: self.group_by_destination
-        is_same = direction_uri == passage_direction_uri
+        is_same = passage_direction_uri in terminus_uris
         if group_by_dest:
             return is_same
         if self.group_by_destination:
