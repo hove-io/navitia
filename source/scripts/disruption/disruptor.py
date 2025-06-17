@@ -27,11 +27,6 @@
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 from __future__ import absolute_import, print_function, unicode_literals, division
-import sys
-import os
-
-print(os.path.abspath(os.path.join(os.path.dirname(__file__))))
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 import sys
 import json
@@ -43,8 +38,8 @@ import kombu
 import uuid
 import time
 import datetime, calendar
-from disruption import gtfs_realtime_pb2
-from disruption import chaos_pb2
+import gtfs_realtime_pb2
+import chaos_pb2
 
 
 def to_timestamp(date):
@@ -153,12 +148,9 @@ class Disruption(object):
         disruption.id = self.id
         disruption.cause.id = self.cause
         disruption.cause.wording = self.cause
-        disruption.cause.category.id = "1"
-        disruption.cause.category.name = "name 1"
         disruption.reference = "DisruptionTest"
         disruption.publication_period.start = to_timestamp(self.start)
         disruption.publication_period.end = to_timestamp(self.end)
-        disruption.created_at = to_timestamp(datetime.datetime.utcnow())
 
         if not self.impacted_obj:
             return feed_message.SerializeToString()
@@ -167,7 +159,7 @@ class Disruption(object):
         impact = disruption.impacts.add()
         impact.id = "impact_" + self.id + "_1"
         enums_impact = gtfs_realtime_pb2.Alert.DESCRIPTOR.enum_values_by_name
-        impact.created_at = disruption.created_at
+        impact.created_at = to_timestamp(datetime.datetime.utcnow())
         impact.updated_at = impact.created_at
         impact.severity.effect = enums_impact[self.impact_type].number
         impact.severity.id = "impact id for " + self.impact_type
