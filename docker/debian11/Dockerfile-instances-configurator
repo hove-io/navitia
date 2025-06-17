@@ -10,7 +10,7 @@ COPY docker/instances_configuration.sh /
 RUN chmod +x /instances_configuration.sh
 
 RUN apt-get update --fix-missing \
-    && apt-get install -y libpq5 python3.9-dev python3-pip postgresql-client gettext-base \
+    && apt-get install -y --fix-missing libpq5 python3.9-dev python3-pip postgresql-client gettext-base \
     && pip3 install --no-cache-dir -U -r /tmp/requirements.txt \
     && apt-get autoremove -y
 

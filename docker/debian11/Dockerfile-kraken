@@ -6,7 +6,7 @@ COPY ./docker/ca-certificates/*.crt /usr/local/share/ca-certificates/
 COPY ./source/monitor /srv/monitor_kraken
 
 RUN apt-get update --fix-missing \
-    && apt-get install -y ca-certificates \
+    && apt-get install -y --fix-missing ca-certificates \
     && update-ca-certificates \
     && apt-get install -y libgoogle-perftools4 \
     python3.9 \

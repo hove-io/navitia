@@ -3,7 +3,7 @@ FROM debian:bullseye-slim
 COPY source/ /navitia/source/
 
 RUN apt-get update --fix-missing \
-    && apt-get install -y libpq5 python3.9 python3-pip git zip jq curl \
+    && apt-get install -y --fix-missing libpq5 python3.9 python3-pip git zip jq curl \
     libboost-all-dev \
     libprotobuf-dev \
     liblog4cplus-2.0.5 \
