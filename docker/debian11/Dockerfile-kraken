@@ -25,9 +25,8 @@ RUN apt-get update --fix-missing \
 
 RUN ln -s /usr/local/lib/python*/dist-packages/monitor_kraken/app.py monitor_kraken
 
-COPY docker/run_kraken_deb11.sh /srv/kraken/run_kraken.sh
-
-RUN chmod +x /srv/kraken/run_kraken.sh
+COPY docker/run_kraken_deb11.sh /usr/src/app/run_kraken.sh
+RUN chmod +x /usr/src/app/run_kraken.sh
 
 COPY ./docker_build/kraken/kraken /usr/bin/kraken
 RUN chmod +x /usr/bin/kraken
@@ -49,4 +48,4 @@ EXPOSE 30000
 EXPOSE 5000
 
 
-ENTRYPOINT ["bash", "/srv/kraken/run_kraken.sh"]
+ENTRYPOINT ["bash", "/usr/src/app/run_kraken.sh"]
