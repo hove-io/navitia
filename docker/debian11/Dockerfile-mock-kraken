@@ -3,7 +3,7 @@ FROM debian:bullseye-slim
 WORKDIR /srv/kraken
 
 RUN apt-get update --fix-missing \
-    && apt-get install -y libgoogle-perftools4 \
+    && apt-get install -y --fix-missing libgoogle-perftools4 \
     libboost-all-dev \
     libprotobuf-dev \
     liblog4cplus-2.0.5 \
