@@ -33,7 +33,8 @@ RUN dpkg -i cosmogony2cities*.deb
 
 COPY ./docker/ca-certificates/*.crt /usr/local/share/ca-certificates/
 
-RUN apt update --fix-missing \
+RUN apt clean && \
+    apt update --fix-missing \
     && apt install -y unzip curl libgeos-dev libpq5 python3.9 python3-pip git ca-certificates postgresql-client gettext-base jq \
     libboost-all-dev \
     libprotobuf-dev \
