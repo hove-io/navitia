@@ -9,7 +9,8 @@ COPY ./docker/templates/* /templates/
 COPY docker/instances_configuration.sh /
 RUN chmod +x /instances_configuration.sh
 
-RUN apt update --fix-missing \
+RUN apt clean \
+    && apt update --fix-missing \
     && apt install -y libpq5 python3.9-dev python3-pip postgresql-client gettext-base \
     && pip3 install --no-cache-dir -U -r /tmp/requirements.txt \
     && apt autoremove -y

@@ -2,7 +2,8 @@ FROM debian:bullseye-slim
 
 COPY source/ /navitia/source/
 
-RUN apt update --fix-missing \
+RUN apt clean \
+    && apt update --fix-missing \
     && apt install -y libpq5 python3.9 python3-pip git zip jq curl \
     libboost-all-dev \
     libprotobuf-dev \

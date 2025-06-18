@@ -6,7 +6,8 @@ COPY ./source/navitiacommon ./navitiacommon
 COPY ./source/jormungandr ./jormungandr
 COPY ./docker/ca-certificates/*.crt /usr/local/share/ca-certificates/
 
-RUN apt update --fix-missing \
+RUN apt clean \
+    && apt update --fix-missing \
     && apt install -y curl libpq5 apache2 python3.9-dev python3-pip git libgeos-c1v5 ca-certificates \
     && update-ca-certificates \
     && (cd navitiacommon && python3 setup.py install) \
