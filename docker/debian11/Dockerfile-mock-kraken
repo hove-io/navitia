@@ -4,7 +4,7 @@ WORKDIR /srv/kraken
 
 RUN apt clean \
     && apt update --fix-missing \
-    && apt install -y libgoogle-perftools4 \
+    && apt install -o Acquire::Retries=10 -y libgoogle-perftools4 \
     libboost-all-dev \
     libprotobuf-dev \
     liblog4cplus-2.0.5 \
