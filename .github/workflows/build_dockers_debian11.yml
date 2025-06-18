@@ -100,7 +100,7 @@ jobs:
           registries: "162230498103,110444322584,051314639660,026897623940"
 
       - name: Get and tag mimir dev image
-        if: github.ref == 'refs/heads/dev'
+        # if: github.ref == 'refs/heads/dev'
         run: |
           image=${SBX_ECR_MIMIR_REGISTRY}/mimirsbrunn:latest${DEBIAN11_SUFFIX}
           docker pull ${image}
