@@ -6,6 +6,7 @@ on:
       - dev
     tags:
       - '*'
+  pull_request:
 
 env:
   SBX_ECR_REGISTRY_BACKEND: "110444322584.dkr.ecr.eu-west-1.amazonaws.com"
@@ -127,38 +128,38 @@ jobs:
               docker build -t navitia/$component --build-arg GITHUB_TOKEN=${{ steps.ci-core-app-token.outputs.token }} -f  docker/debian11/Dockerfile-${component} .
           done
 
-      - name: Push dev images on SBX ECR
-        if: github.ref == 'refs/heads/dev'
-        run: |
-          for component in ${{env.backend_debian11_components}}; do
-            component_tag=${SBX_ECR_REGISTRY_BACKEND}/${component}:dev${DEBIAN11_SUFFIX}
-            docker tag navitia/$component ${component_tag}
-            docker push ${component_tag}
-          done
+      # - name: Push dev images on SBX ECR
+      #   if: github.ref == 'refs/heads/dev'
+      #   run: |
+      #     for component in ${{env.backend_debian11_components}}; do
+      #       component_tag=${SBX_ECR_REGISTRY_BACKEND}/${component}:dev${DEBIAN11_SUFFIX}
+      #       docker tag navitia/$component ${component_tag}
+      #       docker push ${component_tag}
+      #     done
 
-      - name: Push release images on PRD ECR
-        if: startsWith(github.ref, 'refs/tags/')
-        run: |
-          # Kraken
-          kraken_tag=${PRD_ECR_REGISTRY}/navitia-kraken-kraken:${{ needs.common_variables.outputs.RELEASE_TAG }}${DEBIAN11_SUFFIX}
-          docker tag navitia/kraken ${kraken_tag}
-          docker push ${kraken_tag}
+      # - name: Push release images on PRD ECR
+      #   if: startsWith(github.ref, 'refs/tags/')
+      #   run: |
+      #     # Kraken
+      #     kraken_tag=${PRD_ECR_REGISTRY}/navitia-kraken-kraken:${{ needs.common_variables.outputs.RELEASE_TAG }}${DEBIAN11_SUFFIX}
+      #     docker tag navitia/kraken ${kraken_tag}
+      #     docker push ${kraken_tag}
 
-          # Tyr-beat
-          tyr_beat_tag=${PRD_ECR_REGISTRY}/navitia-tyr-tyrbeat:${{ needs.common_variables.outputs.RELEASE_TAG }}${DEBIAN11_SUFFIX}
-          docker tag navitia/tyr-beat ${tyr_beat_tag}
-          docker push ${tyr_beat_tag}
+      #     # Tyr-beat
+      #     tyr_beat_tag=${PRD_ECR_REGISTRY}/navitia-tyr-tyrbeat:${{ needs.common_variables.outputs.RELEASE_TAG }}${DEBIAN11_SUFFIX}
+      #     docker tag navitia/tyr-beat ${tyr_beat_tag}
+      #     docker push ${tyr_beat_tag}
 
-          # Tyr-worker
-          tyr_worker_tag=${PRD_ECR_REGISTRY}/navitia-tyr-tyrworker:${{ needs.common_variables.outputs.RELEASE_TAG }}${DEBIAN11_SUFFIX}
-          docker tag navitia/tyr-worker ${tyr_worker_tag}
-          docker push ${tyr_worker_tag}
+      #     # Tyr-worker
+      #     tyr_worker_tag=${PRD_ECR_REGISTRY}/navitia-tyr-tyrworker:${{ needs.common_variables.outputs.RELEASE_TAG }}${DEBIAN11_SUFFIX}
+      #     docker tag navitia/tyr-worker ${tyr_worker_tag}
+      #     docker push ${tyr_worker_tag}
 
-      - name: failure notification
-        if: failure()
-        run: |
-          sudo apt update && sudo apt install -y httpie
-          echo '{"text":":warning: Github Actions: workflow dockers_builder debian11_images failed !"}' | http --json POST ${{secrets.SLACK_NAVITIA_TEAM_URL}}
+      # - name: failure notification
+      #   if: failure()
+      #   run: |
+      #     sudo apt update && sudo apt install -y httpie
+      #     echo '{"text":":warning: Github Actions: workflow dockers_builder debian11_images failed !"}' | http --json POST ${{secrets.SLACK_NAVITIA_TEAM_URL}}
 
       - name: clean up workspace
         if: ${{ always() }}
@@ -215,32 +216,32 @@ jobs:
       - name: Create images for Instance configurator
         run: docker build -t navitia/instances-configurator -f  docker/debian11/Dockerfile-instances-configurator .
 
-      - name: Push Tyr-Web dev image on SBX ECR
-        if: github.ref == 'refs/heads/dev'
-        run: |
-          component_tag=${SBX_ECR_REGISTRY_FRONT}/tyr-web:dev${DEBIAN11_SUFFIX}
-          docker tag navitia/tyr-web ${component_tag}
-          docker push ${component_tag}
+      # - name: Push Tyr-Web dev image on SBX ECR
+      #   if: github.ref == 'refs/heads/dev'
+      #   run: |
+      #     component_tag=${SBX_ECR_REGISTRY_FRONT}/tyr-web:dev${DEBIAN11_SUFFIX}
+      #     docker tag navitia/tyr-web ${component_tag}
+      #     docker push ${component_tag}
 
-      - name: Push Instances configurator dev image on SBX ECR
-        if: github.ref == 'refs/heads/dev'
-        run: |
-          component_tag=${SBX_ECR_REGISTRY_FRONT}/instances-configurator:dev${DEBIAN11_SUFFIX}
-          docker tag navitia/instances-configurator ${component_tag}
-          docker push ${component_tag}
+      # - name: Push Instances configurator dev image on SBX ECR
+      #   if: github.ref == 'refs/heads/dev'
+      #   run: |
+      #     component_tag=${SBX_ECR_REGISTRY_FRONT}/instances-configurator:dev${DEBIAN11_SUFFIX}
+      #     docker tag navitia/instances-configurator ${component_tag}
+      #     docker push ${component_tag}
 
-      - name: Push Try-web release image on PRD ECR
-        if: startsWith(github.ref, 'refs/tags/')
-        run: |
-          # Tyr-web
-          tyr_web_tag=${PRD_ECR_REGISTRY}/navitia-tyr-web-tyr-web:${{ needs.common_variables.outputs.RELEASE_TAG }}${DEBIAN11_SUFFIX}
-          docker tag navitia/tyr-web ${tyr_web_tag}
-          docker push ${tyr_web_tag}
+      # - name: Push Try-web release image on PRD ECR
+      #   if: startsWith(github.ref, 'refs/tags/')
+      #   run: |
+      #     # Tyr-web
+      #     tyr_web_tag=${PRD_ECR_REGISTRY}/navitia-tyr-web-tyr-web:${{ needs.common_variables.outputs.RELEASE_TAG }}${DEBIAN11_SUFFIX}
+      #     docker tag navitia/tyr-web ${tyr_web_tag}
+      #     docker push ${tyr_web_tag}
 
-      - name: failure notification
-        if: failure()
-        run: |
-          echo '{"text":":warning: Github Actions: workflow dockers_builder debian11_images failed !"}' | http --json POST ${{secrets.SLACK_NAVITIA_TEAM_URL}}
+      # - name: failure notification
+      #   if: failure()
+      #   run: |
+      #     echo '{"text":":warning: Github Actions: workflow dockers_builder debian11_images failed !"}' | http --json POST ${{secrets.SLACK_NAVITIA_TEAM_URL}}
 
       - name: clean up workspace
         if: ${{ always() }}
@@ -250,29 +251,29 @@ jobs:
           rm -rf ./*
           rm -rf ./.??*
 
-  run_artemis:
-    runs-on: [self-hosted, corefront, sandbox]
-    needs: [debian11_back_images, debian11_front_images]
-    name: Run artemis Dispatch (Dev)
-    if: github.ref == 'refs/heads/dev'
-    steps:
+  # run_artemis:
+  #   runs-on: [self-hosted, corefront, sandbox]
+  #   needs: [debian11_back_images, debian11_front_images]
+  #   name: Run artemis Dispatch (Dev)
+  #   if: github.ref == 'refs/heads/dev'
+  #   steps:
 
-      - name: Generate github private access token
-        id: ci-core-app-token
-        uses: getsentry/action-github-app-token@v2.0.0
-        with:
-          app_id: ${{ secrets.CI_CORE_APP_ID }}
-          private_key: ${{ secrets.CI_CORE_APP_PEM }}
+  #     - name: Generate github private access token
+  #       id: ci-core-app-token
+  #       uses: getsentry/action-github-app-token@v2.0.0
+  #       with:
+  #         app_id: ${{ secrets.CI_CORE_APP_ID }}
+  #         private_key: ${{ secrets.CI_CORE_APP_PEM }}
 
-      - name: Run artemis on push to dev
-        uses: peter-evans/repository-dispatch@v2
-        with:
-          token: ${{ steps.ci-core-app-token.outputs.token }}
-          repository: hove-io/artemis
-          event-type: run_artemis_bullseye_ng
+  #     - name: Run artemis on push to dev
+  #       uses: peter-evans/repository-dispatch@v2
+  #       with:
+  #         token: ${{ steps.ci-core-app-token.outputs.token }}
+  #         repository: hove-io/artemis
+  #         event-type: run_artemis_bullseye_ng
 
-      - name: failure notification
-        if: failure()
-        run: |
-          sudo apt update && sudo apt install -y httpie
-          echo '{"text":":warning: Github Actions: workflow dockers_builder_dev Job run_artemis is failed !"}' | http --json POST ${{secrets.SLACK_NAVITIA_TEAM_URL}}
+  #     - name: failure notification
+  #       if: failure()
+  #       run: |
+  #         sudo apt update && sudo apt install -y httpie
+  #         echo '{"text":":warning: Github Actions: workflow dockers_builder_dev Job run_artemis is failed !"}' | http --json POST ${{secrets.SLACK_NAVITIA_TEAM_URL}}

@@ -33,8 +33,8 @@ RUN dpkg -i cosmogony2cities*.deb
 
 COPY ./docker/ca-certificates/*.crt /usr/local/share/ca-certificates/
 
-RUN apt-get update --fix-missing \
-    && apt-get install -y --fix-missing unzip curl libgeos-dev libpq5 python3.9 python3-pip git ca-certificates postgresql-client gettext-base jq \
+RUN apt update --fix-missing \
+    && apt install -y --fix-missing unzip curl libgeos-dev libpq5 python3.9 python3-pip git ca-certificates postgresql-client gettext-base jq \
     libboost-all-dev \
     libprotobuf-dev \
     liblog4cplus-2.0.5 \
@@ -49,8 +49,8 @@ RUN apt-get update --fix-missing \
     && (cd navitiacommon && python3 setup.py install) \
     && (cd tyr && python3 setup.py install && pip3 install --no-cache-dir -U -r requirements.txt)\
     && rm -rf ./cosmogony2cities*.deb \
-    && apt-get purge -y git python3-pip \
-    && apt-get autoremove -y
+    && apt purge -y git python3-pip \
+    && apt autoremove -y
 
 # binaries from tartare-tools
 COPY --from=tartare-tools /usr/bin/enrich-ntfs-with-addresses /usr/bin/
