@@ -5,7 +5,8 @@ WORKDIR /srv/kraken
 COPY ./docker/ca-certificates/*.crt /usr/local/share/ca-certificates/
 COPY ./source/monitor /srv/monitor_kraken
 
-RUN apt update --fix-missing \
+RUN apt clean \
+    && apt update --fix-missing \
     && apt install -y ca-certificates \
     && update-ca-certificates \
     && apt install -y libgoogle-perftools4 \

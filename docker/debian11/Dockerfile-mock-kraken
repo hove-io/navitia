@@ -2,8 +2,8 @@ FROM debian:bullseye-slim
 
 WORKDIR /srv/kraken
 
-RUN apt clean && \
-    apt update --fix-missing \
+RUN apt clean \
+    && apt update --fix-missing \
     && apt install -y libgoogle-perftools4 \
     libboost-all-dev \
     libprotobuf-dev \
