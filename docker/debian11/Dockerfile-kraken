@@ -6,9 +6,9 @@ COPY ./docker/ca-certificates/*.crt /usr/local/share/ca-certificates/
 COPY ./source/monitor /srv/monitor_kraken
 
 RUN apt update --fix-missing \
-    && apt install -y --fix-missing ca-certificates \
+    && apt install -y ca-certificates \
     && update-ca-certificates \
-    && apt install -y --fix-missing libgoogle-perftools4 \
+    && apt install -y libgoogle-perftools4 \
     python3.9 \
     python3-pip \
     libboost-all-dev \
