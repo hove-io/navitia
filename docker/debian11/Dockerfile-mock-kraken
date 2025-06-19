@@ -2,16 +2,17 @@ FROM debian:bullseye-slim
 
 WORKDIR /srv/kraken
 
-RUN apt-get update --fix-missing \
-    && apt-get install -y --fix-missing libgoogle-perftools4 \
+RUN apt clean \
+    && apt update --fix-missing \
+    && apt install -o Acquire::Retries=10 -y libgoogle-perftools4 \
     libboost-all-dev \
     libprotobuf-dev \
     liblog4cplus-2.0.5 \
     libzmq3-dev \
     libpqxx-dev \
     netcat \
-    && apt-get purge -y \
-    && apt-get autoremove -y
+    && apt purge -y \
+    && apt autoremove -y
 
 COPY ./docker_build/tests/mock-kraken/departure_board_test /srv/kraken/departure_board_test
 RUN chmod +x /srv/kraken/departure_board_test

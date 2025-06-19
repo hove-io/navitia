@@ -5,10 +5,11 @@ WORKDIR /srv/kraken
 COPY ./docker/ca-certificates/*.crt /usr/local/share/ca-certificates/
 COPY ./source/monitor /srv/monitor_kraken
 
-RUN apt-get update --fix-missing \
-    && apt-get install -y --fix-missing ca-certificates \
+RUN apt clean \
+    && apt update --fix-missing \
+    && apt install -o Acquire::Retries=10 -y ca-certificates \
     && update-ca-certificates \
-    && apt-get install -y --fix-missing libgoogle-perftools4 \
+    && apt install -o Acquire::Retries=10 -y libgoogle-perftools4 \
     python3.9 \
     python3-pip \
     libboost-all-dev \
@@ -19,9 +20,9 @@ RUN apt-get update --fix-missing \
     curl \
     netcat \
     && (cd /srv/monitor_kraken && pip3 install --no-cache-dir -r requirements.txt && python3 setup.py install) \
-    && apt-get purge -y \
-    && apt-get purge -y python3-pip \
-    && apt-get autoremove -y
+    && apt purge -y \
+    && apt purge -y python3-pip \
+    && apt autoremove -y
 
 RUN ln -s /usr/local/lib/python*/dist-packages/monitor_kraken/app.py monitor_kraken
 

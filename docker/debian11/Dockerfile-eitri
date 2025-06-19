@@ -2,8 +2,9 @@ FROM debian:bullseye-slim
 
 COPY source/ /navitia/source/
 
-RUN apt-get update --fix-missing \
-    && apt-get install -y --fix-missing libpq5 python3.9 python3-pip git zip jq curl \
+RUN apt clean \
+    && apt update --fix-missing \
+    && apt install -o Acquire::Retries=10 -y libpq5 python3.9 python3-pip git zip jq curl \
     libboost-all-dev \
     libprotobuf-dev \
     liblog4cplus-2.0.5 \
@@ -13,7 +14,7 @@ RUN apt-get update --fix-missing \
     libosmpbf-dev \
     libproj-dev \
     && pip3 install --no-cache-dir -U -r /navitia/source/eitri/requirements.txt\
-    && apt-get autoremove -y
+    && apt autoremove -y
 
 # binaries from navitia
 COPY ./docker_build/ed/ed2nav /usr/bin/ed2nav
