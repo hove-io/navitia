@@ -34,11 +34,11 @@ jobs:
       run: chown -R $USER:$USER .
     - name: Generate github private access token
       id: ci-core-app-token
-      uses: getsentry/action-github-app-token@v2.0.0
+      uses: getsentry/action-github-app-token@v3.0.0
       with:
         app_id: ${{ secrets.CI_CORE_APP_ID }}
         private_key: ${{ secrets.CI_CORE_APP_PEM }}
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
       with:
         submodules: recursive
         token: ${{ steps.ci-core-app-token.outputs.token }}
@@ -55,7 +55,7 @@ jobs:
     - name: Commit and push changes
       # Handle case with no clang-tidy fix
       continue-on-error: true
-      uses: peter-evans/create-pull-request@v3
+      uses: peter-evans/create-pull-request@v7
       with:
         token: ${{ secrets.GITHUB_TOKEN }}
         commit-message: Clang-tidy the code base
