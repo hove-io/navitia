@@ -34,6 +34,7 @@ www.navitia.io
 #include "routing/routing.h"
 #include "utils/serialization_vector.h"
 #include "utils/logger.h"
+#include "type/request.pb.h"
 
 #include <boost/graph/adjacency_list.hpp>
 #include <boost/date_time/gregorian/gregorian.hpp>
@@ -275,19 +276,25 @@ std::ostream& operator<<(std::ostream& ss, const Label& l);
 
 /// Contient les données retournées par navitia
 struct SectionKey {
-    std::string network;
-    std::string start_stop_area;
-    std::string dest_stop_area;
-    std::string line;
-    uint32_t start_time;
-    uint32_t dest_time;
-    std::string start_zone;
-    std::string dest_zone;
-    std::string mode;
-    boost::gregorian::date date;
-    size_t path_item_idx;
+    std::string network = {};
+    std::string start_stop_area = {};
+    std::string dest_stop_area = {};
+    std::string line = {};
+    long start_time = {};
+    long dest_time = {};
+    std::string start_zone = {};
+    std::string dest_zone = {};
+    std::string mode = {};
+    boost::gregorian::date date = {};
+    size_t path_item_idx = 0;
+
+    boost::optional<std::string> section_id;
 
     SectionKey(const routing::PathItem& path_item, const size_t idx);
+    SectionKey(const pbnavitia::PtFaresRequest::PtSection& section,
+               const type::StopPoint& first_stop_point,
+               const type::StopPoint& last_stop_point);
+
     int duration_at_begin(int ticket_start_time) const;
     int duration_at_end(int ticket_start_time) const;
 };
@@ -357,6 +364,7 @@ struct Fare {
     /// Effectue la recherche du meilleur tarif
     /// Retourne une liste de billets à acheter
     results compute_fare(const routing::Path& path) const;
+    results compute_fare(const pbnavitia::PtFaresRequest::PtJourney& fares, const type::Data& data) const;
 
     template <class Archive>
     void save(Archive& ar, const unsigned int) const {
@@ -377,6 +385,9 @@ private:
     /// Retourne le ticket OD qui va bien ou lève une exception no_ticket si on ne trouve pas
     DateTicket get_od(const Label& label, const SectionKey& section) const;
 
+    std::vector<std::vector<Label>> compute_labels(const size_t nb_nodes,
+                                                   const std::vector<std::vector<Label>>& old_labels,
+                                                   const SectionKey& section_key) const;
     void add_default_ticket();
 
     log4cplus::Logger logger = log4cplus::Logger::getInstance("fare");

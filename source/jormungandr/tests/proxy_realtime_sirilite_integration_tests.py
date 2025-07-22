@@ -38,11 +38,11 @@ import requests_mock
 
 MOCKED_PROXY_CONF = [
     {
-        "object_id_tag": "Kisio数字",
-        "id": "Kisio数字",
+        "object_id_tag": "Hove数字",
+        "id": "Hove数字",
         "class": "jormungandr.realtime_schedule.siri_lite.SiriLite",
         "args": {
-            "destination_id_tag": "Kisio数字",
+            "destination_id_tag": "Hove数字",
             "timezone": "Europe/Paris",
             "service_url": "http://siri.com?apikey=bob",
             "timeout": 15,

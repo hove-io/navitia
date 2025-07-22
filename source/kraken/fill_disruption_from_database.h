@@ -40,6 +40,7 @@ www.navitia.io
 #include <string>
 #include <memory>
 #include <utility>
+#include <map>
 
 namespace navitia {
 #define FILL_NULLABLE_(var_name, arg_name, col_name, type_name) \
@@ -77,7 +78,11 @@ struct DisruptionDatabaseReader {
 
     std::string last_channel_type_id = "";
 
+    std::map<std::string, chaos::PtObject*> map_ptobject;
+
     std::set<std::string> message_ids;
+    // message_id + translation_language
+    std::set<std::string> message_translate_ids;
     std::set<std::tuple<std::string, std::string, std::string>> properties;
     std::set<std::string> application_periods_ids;
     std::set<std::string> pattern_ids;
@@ -112,12 +117,14 @@ struct DisruptionDatabaseReader {
             channel = nullptr;
             pt_object = nullptr;
             message_ids.clear();
+            message_translate_ids.clear();
             application_periods_ids.clear();
             line_section_route_set.clear();
             rail_section_route_set.clear();
             pattern = nullptr;
             pattern_ids.clear();
             time_slot_ids.clear();
+            map_ptobject.clear();
         }
 
         if (disruption && !const_it["property_key"].is_null() && !const_it["property_type"].is_null()
@@ -151,26 +158,27 @@ struct DisruptionDatabaseReader {
             time_slot_ids.insert(const_it["time_slot_id"].template as<std::string>());
         }
 
-        // To manage line_section and it's elements as start, end and routes, we should re-use the pt_object
-        // already existing in informed_entities so that any change in sort order after impact
-        // (message, channel, channel_type..) in the query should work.
-        if (impact && !const_it["ptobject_uri"].is_null()) {
-            auto* entities = impact->mutable_informed_entities();
-            auto pt_obj_it =
-                std::find_if(entities->pointer_begin(), entities->pointer_end(), [&](chaos::PtObject* obj) {
-                    return obj->uri() == const_it["ptobject_uri"].template as<std::string>();
-                });
-            if (pt_obj_it == entities->pointer_end()) {
+        // The ptobject is directly associated with impact for all the types except line_section and rail_section
+        // Normally the ptobject is associated only once to the impact, use of ptobject_uri should work
+        // For line_section and rail section there are more pt_object as children associated to the parent pt_object
+        // and should be managed.
+        // Use of ptobject_uri to distinguish parent ptobject doesn't work. ptobject_id should be used instead.
+        // Final solution: use of pt_object_id should work for all types of pt_object
+        if (impact && !const_it["ptobject_id"].is_null()) {
+            auto pt_obj_it = map_ptobject.find(const_it["ptobject_id"].template as<std::string>());
+            if (pt_obj_it != map_ptobject.end()) {
+                pt_object = pt_obj_it->second;
+            } else {
                 pt_object = impact->add_informed_entities();
                 fill_pt_object(const_it, pt_object);
-            } else {
-                pt_object = *pt_obj_it;
+                map_ptobject[const_it["ptobject_id"].template as<std::string>()] = pt_object;
             }
         }
 
+        // We should use ptobject_id instead of ptobject_uri to attach children routes if present
         if (impact && !const_it["ls_route_uri"].is_null()) {
             std::tuple<std::string, std::string> line_section_route(
-                const_it["ptobject_uri"].template as<std::string>(),
+                const_it["ptobject_id"].template as<std::string>(),
                 const_it["ls_route_uri"].template as<std::string>());
             if (!line_section_route_set.count(line_section_route)) {
                 fill_associate_route(const_it, pt_object);
@@ -178,9 +186,10 @@ struct DisruptionDatabaseReader {
             }
         }
 
+        // We should use ptobject_id instead of ptobject_uri to attach children routes if present
         if (impact && !const_it["rs_route_uri"].is_null()) {
             std::tuple<std::string, std::string> rail_section_route(
-                const_it["ptobject_uri"].template as<std::string>(),
+                const_it["ptobject_id"].template as<std::string>(),
                 const_it["rs_route_uri"].template as<std::string>());
             if (!rail_section_route_set.count(rail_section_route)) {
                 fill_associate_route(const_it, pt_object);
@@ -196,9 +205,21 @@ struct DisruptionDatabaseReader {
             fill_channel(const_it, channel);
             message_ids.insert(const_it["message_id"].template as<std::string>());
         }
-        if (impact && channel && (last_channel_type_id != const_it["channel_type_id"].template as<std::string>())) {
+
+        if (impact && channel && (channel->id() == const_it["channel_id"].template as<std::string>())
+            && (last_channel_type_id != const_it["channel_type_id"].template as<std::string>())) {
             fill_channel_type(const_it, channel);
             last_channel_type_id = const_it["channel_type_id"].template as<std::string>();
+        }
+        // Fill tranlations related to this message
+        if (impact && message && !const_it["translation_language"].is_null()) {
+            std::string message_translate_id = const_it["message_id"].template as<std::string>()
+                                               + const_it["translation_language"].template as<std::string>();
+            if (!message_translate_ids.count(message_translate_id)) {
+                auto* translation = message->add_translations();
+                fill_translation(const_it, translation);
+                message_translate_ids.insert(message_translate_id);
+            }
         }
     }
 
@@ -413,6 +434,13 @@ struct DisruptionDatabaseReader {
     }
 
     template <typename T>
+    void fill_translation(T const_it, chaos::Translation* translation) {
+        FILL_REQUIRED(translation, text, std::string)
+        FILL_NULLABLE(translation, language, std::string)
+        FILL_NULLABLE(translation, url_audio, std::string)
+    }
+
+    template <typename T>
     void fill_channel(T const_it, chaos::Channel* channel) {
         FILL_TIMESTAMPMIXIN(channel)
         FILL_REQUIRED(channel, id, std::string)
@@ -443,6 +471,8 @@ struct DisruptionDatabaseReader {
             channel->add_types(chaos::Channel_Type_title);
         } else if (type_ == "beacon") {
             channel->add_types(chaos::Channel_Type_beacon);
+        } else if (type_ == "pids") {
+            channel->add_types(chaos::Channel_Type_pids);
         } else {
             channel->add_types(chaos::Channel_Type_unkown_type);
         }

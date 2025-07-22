@@ -83,7 +83,7 @@ void ValidityPattern::add(boost::gregorian::date start, boost::gregorian::date e
         } else {
             remove(current_date);
         }
-    };
+    }
 }
 
 void ValidityPattern::remove(boost::gregorian::date date) {

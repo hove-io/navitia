@@ -87,6 +87,15 @@ struct MetaVehicleJourney : public Header, HasMessages {
                                                Route*,
                                                std::vector<StopTime>,
                                                PT_Data&);
+    DiscreteVehicleJourney* create_discrete_vj_with_all_vps(
+        const std::string& uri,
+        const std::string& name,
+        const std::string& headsign,
+        const RTLevel,
+        const flat_enum_map<RTLevel, ValidityPattern>& canceled_vps_by_level,
+        Route*,
+        std::vector<StopTime>,
+        PT_Data&);
 
     void clean_up_useless_vjs(PT_Data&);
 
@@ -118,6 +127,7 @@ struct MetaVehicleJourney : public Header, HasMessages {
                    const Route* filtering_route = nullptr);
 
     VehicleJourney* get_base_vj_circulating_at_date(const boost::gregorian::date& date) const;
+    VehicleJourney* get_rt_vj_for_base_date(const boost::gregorian::date& date) const;
 
     const std::string& get_label() const { return uri; }  // for the moment the label is just the uri
 
@@ -133,7 +143,7 @@ private:
                        const std::string& name,
                        const std::string& headsign,
                        const RTLevel,
-                       const ValidityPattern& canceled_vp,
+                       const flat_enum_map<RTLevel, ValidityPattern>& canceled_vps_by_level,
                        Route*,
                        std::vector<StopTime>,
                        PT_Data&);

@@ -37,6 +37,7 @@ www.navitia.io
 #include "equipment/equipment_api.h"
 #include "access_point/access_point_api.h"
 #include "position/position_api.h"
+#include "fare/fare_api.h"
 #include "proximity_list/proximitylist_api.h"
 #include "ptreferential/ptreferential.h"
 #include "ptreferential/ptreferential_api.h"
@@ -395,7 +396,8 @@ void Worker::init_worker_data(const navitia::type::Data* data,
                               const pt::time_period action_period,
                               const bool disable_geojson,
                               const bool disable_feedpublisher,
-                              const bool disable_disruption) {
+                              const bool disable_disruption,
+                              const std::string language) {
     //@TODO should be done in data_manager
     if (data->data_identifier != this->last_data_identifier || !planner) {
         planner = std::make_unique<routing::RAPTOR>(*data);
@@ -403,7 +405,8 @@ void Worker::init_worker_data(const navitia::type::Data* data,
         this->last_data_identifier = data->data_identifier;
         LOG4CPLUS_INFO(logger, "Instanciate planner");
     }
-    this->pb_creator.init(data, now, action_period, disable_geojson, disable_feedpublisher, disable_disruption);
+    this->pb_creator.init(data, now, action_period, disable_geojson, disable_feedpublisher, disable_disruption,
+                          language);
 }
 
 void Worker::autocomplete(const pbnavitia::PlacesRequest& request) {
@@ -1089,7 +1092,7 @@ void Worker::dispatch(const pbnavitia::Request& request,
     bool disable_geojson = get_geojson_state(request);
     boost::posix_time::ptime current_datetime = bt::from_time_t(request._current_datetime());
     this->init_worker_data(&data, current_datetime, null_time_period, disable_geojson, request.disable_feedpublisher(),
-                           request.disable_disruption());
+                           request.disable_disruption(), request.language());
     if (deadline) {
         deadline->check();
     }
@@ -1188,6 +1191,9 @@ void Worker::dispatch(const pbnavitia::Request& request,
         case pbnavitia::access_points:
             access_points(request.access_points());
             break;
+        case pbnavitia::pt_fares:
+            fares(request.pt_fares());
+            break;
         default:
             LOG4CPLUS_WARN(logger, "Unknown API : " + API_Name(request.requested_api()));
             this->pb_creator.fill_pb_error(pbnavitia::Error::unknown_api, "Unknown API");
@@ -1277,6 +1283,10 @@ void Worker::access_points(const pbnavitia::AccessPointsRequest& access_points) 
 
     access_point::access_points(this->pb_creator, access_points.filter(), access_points.count(), access_points.depth(),
                                 access_points.start_page(), forbidden_uris);
+}
+
+void Worker::fares(const pbnavitia::PtFaresRequest& fares) {
+    navitia::fare::fill_fares(pb_creator, fares);
 }
 
 }  // namespace navitia

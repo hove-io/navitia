@@ -1,4 +1,0 @@
-gitpython
-requests
-pytest
-mock

@@ -80,25 +80,27 @@ With those 2 files, running the commande ```honcho start``` in the Tyr's directo
 
 ## Running tests
 
+Make sure a local Redis server is available.
 You will need to install the dependencies for developements:
-```
-pip install -r requirements_dev.txt
+```sh
+# using python 3.9
+pip install -r ../../tyr/requirements_dev.txt
 ```
 You will need Docker on your machine, it will be used for spawning a database.
 
 You will also need the python protobuf files from Navitia, so you should use CMake target `protobuf_files` for that :
-```
+```sh
 cd <path/to/build/directory>
 cmake <path/to/navitia/repo>/source/
 make protobuf_files
 ```
 
 then run the test:
-```
-PYTHONPATH=../navitiacommon py.test --doctest-modules --ignore=migrations/
+```sh
+make tyr_tests
 ```
 Or if you use honcho:
-```
+```sh
 honcho run py.test --doctest-modules --ignore=migrations/
 ```
 

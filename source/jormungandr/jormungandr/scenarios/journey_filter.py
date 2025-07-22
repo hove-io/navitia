@@ -35,9 +35,17 @@ import abc
 import six
 from jormungandr.scenarios.utils import compare, get_or_default
 from navitiacommon import response_pb2
-from jormungandr.utils import pb_del_if, ComposedFilter, portable_min
+from jormungandr.utils import (
+    pb_del_if,
+    ComposedFilter,
+    portable_min,
+    is_olympic_site,
+    get_first_pt_section,
+    get_last_pt_section,
+)
 from jormungandr.fallback_modes import FallbackModes
 from jormungandr.scenarios.qualifier import get_ASAP_journey
+from jormungandr.olympic_site_params_manager import has_applicable_scenario
 
 
 def delete_journeys(responses, request):
@@ -55,6 +63,21 @@ def delete_journeys(responses, request):
 
 def to_be_deleted(journey):
     return 'to_delete' in journey.tags
+
+
+def is_best_olympics(journey):
+    return 'best_olympics' in journey.tags
+
+
+def remove_to_delete_tag(journey, is_debug, *reasons):
+    journey.tags.remove("to_delete")
+    if is_debug:
+        for reason in reasons:
+            journey.tags.remove("deleted_because_{}".format(reason))
+
+
+def is_olympics(journey):
+    return 'olympics' in journey.tags
 
 
 def mark_as_dead(journey, is_debug, *reasons):
@@ -292,7 +315,8 @@ class FilterMaxSuccessivePhysicalMode(SingleJourneyFilter):
         """
         bus_count = 0
         for s in journey.sections:
-            if s.type != response_pb2.PUBLIC_TRANSPORT:
+            # if s.type != response_pb2.PUBLIC_TRANSPORT:
+            if s.type not in (response_pb2.PUBLIC_TRANSPORT, response_pb2.ON_DEMAND_TRANSPORT):
                 continue
             if s.pt_display_informations.uris.physical_mode == self.successive_physical_mode_to_limit_id:
                 bus_count += 1
@@ -466,7 +490,7 @@ def similar_journeys_generator(journey, pt_functor, sn_functor=_sn_functor, crow
 
     def _similar_pt():
         for idx, s in enumerate(journey.sections):
-            if s.type == response_pb2.PUBLIC_TRANSPORT:
+            if s.type in (response_pb2.PUBLIC_TRANSPORT, response_pb2.ON_DEMAND_TRANSPORT):
                 yield pt_functor(s)
             elif s.type == response_pb2.STREET_NETWORK and is_walk_after_parking(journey, idx):
                 continue
@@ -529,7 +553,7 @@ def shared_section_generator(journey):
 
     # Compare each section of the journey with the criteria in the function description
     for s in journey.sections:
-        if s.type == response_pb2.PUBLIC_TRANSPORT:
+        if s.type in (response_pb2.PUBLIC_TRANSPORT, response_pb2.ON_DEMAND_TRANSPORT):
             yield "origin:{}/dest:{}".format(s.origin.uri, s.destination.uri)
 
 
@@ -581,7 +605,7 @@ def _debug_journey(journey):
 
     sections = []
     for s in journey.sections:
-        if s.type == response_pb2.PUBLIC_TRANSPORT:
+        if s.type in (response_pb2.PUBLIC_TRANSPORT, response_pb2.ON_DEMAND_TRANSPORT):
             sections.append(
                 u"{line} ({vj})".format(
                     line=s.pt_display_informations.uris.line, vj=s.pt_display_informations.uris.vehicle_journey
@@ -669,6 +693,95 @@ def apply_final_journey_filters(response_list, instance, request):
         filter_non_car_tagged_journey(journeys, request)
 
 
+def is_direct_path_walking(j):
+    if not j:
+        return False
+    if not j.sections:
+        return False
+    return j.sections[0].street_network.mode == response_pb2.Walking if len(j.sections) == 1 else False
+
+
+def filter_only_olympic_site(response_list, request):
+    if not has_applicable_scenario(request):
+        return
+    olympic_site_params = request.get("olympic_site_params", {})
+    strict_param = olympic_site_params.get("strict", False)
+    if strict_param:
+        return
+    show_natural_opg_journeys = olympic_site_params.get("show_natural_opg_journeys", False)
+    if show_natural_opg_journeys:
+        return
+
+    all_journeys = (j for resp in response_list for j in resp.journeys)
+    for j in all_journeys:
+        if not j.sections:
+            continue
+        if to_be_deleted(j):
+            continue
+        if not any([is_olympics(j), is_best_olympics(j), is_direct_path_walking(j)]):
+            mark_as_dead(j, request.get('debug'), 'not_olympic_journey')
+
+
+def filter_olympic_site_strict(response_list, request):
+    if not response_list or not has_applicable_scenario(request):
+        return
+    if request.get('wheelchair', True):
+        return
+    strict_param = request.get("olympic_site_params", {}).get("strict", False)
+    if not strict_param:
+        return
+    for resp in response_list:
+        for j in resp.journeys:
+            if not j.sections:
+                continue
+            if to_be_deleted(j):
+                continue
+            if not any([is_best_olympics(j), is_direct_path_walking(j)]):
+                mark_as_dead(j, request.get('debug'), 'Filtered by strict POI')
+
+
+def filter_olympic_site_by_min_pt_duration(
+    response_list, instance, request, pt_object_origin, pt_object_destination
+):
+    if not response_list or not has_applicable_scenario(request):
+        return
+    if not instance.olympics_forbidden_uris:
+        return
+    if request.get('wheelchair', True):
+        return
+    origin_olympic_site = is_olympic_site(pt_object_origin, instance)
+    destination_olympic_site = is_olympic_site(pt_object_destination, instance)
+    if all((origin_olympic_site, destination_olympic_site)):
+        origin_olympic_site = False
+
+    for resp in response_list:
+        if not resp:
+            continue
+        for j in resp.journeys:
+            if not j.sections:
+                continue
+            if to_be_deleted(j):
+                continue
+            if request.get('_keep_olympics_journeys') and is_olympics(j):
+                continue
+            nb_connections = get_nb_connections(j)
+            if nb_connections == 0:
+                continue
+            section_public_transport = get_first_pt_section(j) if origin_olympic_site else get_last_pt_section(j)
+            if not section_public_transport:
+                continue
+            if section_public_transport.uris.physical_mode != 'physical_mode:Bus':
+                continue
+            if (
+                section_public_transport.uris.network
+                in instance.olympics_forbidden_uris.pt_object_olympics_forbidden_uris
+            ):
+                continue
+            if section_public_transport.duration > instance.olympics_forbidden_uris.min_pt_duration:
+                continue
+            mark_as_dead(j, request.get('debug'), 'Filtered by min_pt_duration')
+
+
 def filter_non_car_tagged_journey(journeys, request):
     is_debug = request.get('debug', False)
 
@@ -697,6 +810,86 @@ def apply_final_journey_filters_post_finalize(response_list, request):
         journeys = journey_generator(response_list)
         journey_pairs_pool = itertools.combinations(journeys, 2)
         _filter_similar_line_and_crowfly_journeys(journey_pairs_pool, request)
+
+
+def get_journey_extremity_pt_section(journey, attractivities_virtual_fallbacks):
+    if attractivities_virtual_fallbacks.get("arrival_scenario"):
+        sections = reversed(journey.sections)
+    else:
+        sections = journey.sections
+    extremity_pt_section = next(
+        (s for s in sections if s.type in (response_pb2.PUBLIC_TRANSPORT, response_pb2.ON_DEMAND_TRANSPORT)),
+        None,
+    )
+
+    return extremity_pt_section
+
+
+def get_journey_pt_extremity(journey, attractivities_virtual_fallbacks):
+    extremity_pt_section = get_journey_extremity_pt_section(journey, attractivities_virtual_fallbacks)
+
+    if extremity_pt_section is None:
+        return None, None
+
+    if attractivities_virtual_fallbacks.get("arrival_scenario"):
+        return extremity_pt_section, extremity_pt_section.destination
+    else:
+        return extremity_pt_section, extremity_pt_section.origin
+
+
+def compute_journey_virtual_duration_and_attractivity(journey, attractivities_virtual_fallbacks):
+    extremity_pt_section, extremity = get_journey_pt_extremity(journey, attractivities_virtual_fallbacks)
+    if extremity_pt_section is None:
+        return journey.duration, 0
+    if attractivities_virtual_fallbacks.get("arrival_scenario"):
+        attractivity_virtual_fallback = attractivities_virtual_fallbacks.get("arrival_scenario", {}).get(
+            extremity.uri
+        )
+    else:
+        attractivity_virtual_fallback = attractivities_virtual_fallbacks.get("departure_scenario", {}).get(
+            extremity.uri
+        )
+    virtual_fallback = attractivity_virtual_fallback.virtual_duration if attractivity_virtual_fallback else 0
+    attractivity = attractivity_virtual_fallback.attractivity if attractivity_virtual_fallback else 0
+
+    if attractivities_virtual_fallbacks.get("arrival_scenario"):
+        virtual_duration = extremity_pt_section.end_date_time - journey.departure_date_time + virtual_fallback
+        return virtual_duration, attractivity
+    else:
+        virtual_duration = journey.arrival_date_time - extremity_pt_section.begin_date_time + virtual_fallback
+        return virtual_duration, attractivity
+
+
+class Interval:
+    def __init__(self, minimum, maximum):
+        self.minimum = minimum
+        self.maximum = maximum
+
+    def includes(self, n):
+        return self.minimum <= n <= self.maximum
+
+
+def filter_olympics_journeys(responses, request):
+    if not request.get("_keep_olympics_journeys"):
+        return
+    attractivities_virtual_fallbacks = request.get("olympic_site_params", {})
+    best = (None, float('inf'), 0)
+    for r in responses:
+        for j in r.journeys:
+            if 'olympics' not in j.tags:
+                continue
+
+            virtual_duration, attractivity = compute_journey_virtual_duration_and_attractivity(
+                j, attractivities_virtual_fallbacks
+            )
+            # keep smallest virtual duration, if virtual durations are equal, keep highest attractivity
+            if virtual_duration < best[1] or (virtual_duration == best[1] and attractivity > best[2]):
+                best = (j, virtual_duration, attractivity)
+
+    if best[0] is not None:
+        best[0].tags.append('best_olympics')
+    else:
+        logging.getLogger(__name__).warning("impossible to select the best in filter_olympics_journeys")
 
 
 def replace_bss_tag(journeys):
@@ -739,6 +932,8 @@ def filter_detailed_journeys(responses, request):
     filter_similar_vj_journeys(journey_pairs_pool, request)
 
     replace_bss_tag(journey_generator(responses))
+
+    filter_olympics_journeys(responses, request)
 
 
 def _get_worst_similar(j1, j2, request):
@@ -878,6 +1073,9 @@ def _filter_similar_journeys(journey_pairs_pool, request, *similar_journey_gener
         if to_be_deleted(j1) or to_be_deleted(j2):
             continue
 
+        if request.get('_keep_olympics_journeys') and is_olympics(j1) or is_olympics(j2):
+            continue
+
         if any(compare(j1, j2, generator) for generator in similar_journey_generators):
             # After comparison, if the 2 journeys are similar, the worst one must be eliminated
             worst = _get_worst_similar(j1, j2, request)
@@ -914,6 +1112,7 @@ def _filter_odt_journeys_clockwise(journeys, debug):
     earliest_arrival_pt_journey = portable_min(
         (j for j in journeys if _contains_pt_section(j) and not _contains_odt(j)),
         key=lambda j: j.arrival_date_time,
+        default=None,
     )
 
     # no pt journey found, so there is nothing to filter
@@ -939,6 +1138,7 @@ def _filter_odt_journeys_counter_clockwise(journeys, debug):
     latest_departure_pt_journey = portable_min(
         (j for j in journeys if _contains_pt_section(j) and not _contains_odt(j)),
         key=lambda j: -1 * j.departure_date_time,
+        default=None,
     )
 
     # no pt journey found, so there is nothing to filter
@@ -959,7 +1159,10 @@ def _filter_odt_journeys_counter_clockwise(journeys, debug):
 
 
 def _contains_pt_section(journey):
-    return any(section.type == response_pb2.PUBLIC_TRANSPORT for section in journey.sections)
+    return any(
+        section.type in (response_pb2.PUBLIC_TRANSPORT, response_pb2.ON_DEMAND_TRANSPORT)
+        for section in journey.sections
+    )
 
 
 def _contains_odt(journey):

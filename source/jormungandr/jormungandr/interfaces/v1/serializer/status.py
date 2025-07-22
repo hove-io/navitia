@@ -74,6 +74,7 @@ class ParametersSerializer(serpy.Serializer):
     max_extra_second_pass = Field(schema_type=int)
     additional_time_after_first_section_taxi = Field(schema_type=int)
     additional_time_before_last_section_taxi = Field(schema_type=int)
+    on_street_bike_parking_duration = Field(schema_type=int)
     max_walking_direct_path_duration = Field(schema_type=int)
     max_bike_direct_path_duration = Field(schema_type=int)
     max_bss_direct_path_duration = Field(schema_type=int)
@@ -92,11 +93,39 @@ class ParametersSerializer(serpy.Serializer):
     places_proximity_radius = Field(schema_type=int)
     transfer_path = Field(schema_type=bool)
     access_points = Field(schema_type=bool)
+    poi_access_points = Field(schema_type=bool)
     default_pt_planner = Field(schema_type=str)
     bss_rent_duration = Field(schema_type=int)
     bss_rent_penalty = Field(schema_type=int)
     bss_return_duration = Field(schema_type=int)
     bss_return_penalty = Field(schema_type=int)
+    walking_walkway_factor = Field(schema_type=float)
+    walking_sidewalk_factor = Field(schema_type=float)
+    walking_alley_factor = Field(schema_type=float)
+    walking_driveway_factor = Field(schema_type=float)
+    walking_step_penalty = Field(schema_type=float)
+    walking_use_ferry = Field(schema_type=float)
+    walking_use_living_streets = Field(schema_type=float)
+    walking_use_tracks = Field(schema_type=float)
+    walking_use_hills = Field(schema_type=float)
+    walking_service_factor = Field(schema_type=float)
+    walking_max_hiking_difficulty = Field(schema_type=int)
+    walking_shortest = Field(schema_type=bool)
+    walking_ignore_oneways = Field(schema_type=bool)
+    walking_destination_only_penalty = Field(schema_type=float)
+    bike_use_roads = Field(schema_type=float)
+    bike_use_hills = Field(schema_type=float)
+    bike_use_ferry = Field(schema_type=float)
+    bike_avoid_bad_surfaces = Field(schema_type=float)
+    bike_shortest = Field(schema_type=bool)
+    bicycle_type = Field(schema_type=str)
+    bike_use_living_streets = Field(schema_type=float)
+    bike_maneuver_penalty = Field(schema_type=float)
+    bike_service_penalty = Field(schema_type=float)
+    bike_service_factor = Field(schema_type=float)
+    bike_country_crossing_cost = Field(schema_type=float)
+    bike_country_crossing_penalty = Field(schema_type=float)
+    bike_destination_only_penalty = Field(schema_type=float)
 
 
 class TravelerProfilesSerializer(serpy.Serializer):
@@ -113,6 +142,15 @@ class TravelerProfilesSerializer(serpy.Serializer):
     traveler_type = Field(schema_type=str)
     walking_speed = Field(schema_type=float)
     wheelchair = Field(schema_type=bool)
+    walking_step_penalty = Field(schema_type=float)
+    walking_use_hills = Field(schema_type=float)
+    max_walking_direct_path_duration = Field(schema_type=int)
+    max_bike_direct_path_duration = Field(schema_type=int)
+    max_bss_direct_path_duration = Field(schema_type=int)
+    max_car_direct_path_duration = Field(schema_type=int)
+    max_ridesharing_direct_path_duration = Field(schema_type=int)
+    max_taxi_direct_path_duration = Field(schema_type=int)
+    max_car_no_park_direct_path_duration = Field(schema_type=int)
 
 
 class AutocompleteSerializer(serpy.DictSerializer):
@@ -203,6 +241,18 @@ class RidesharingServicesSerializer(OutsideServiceCommon):
         return obj.get('arrival_radius')
 
 
+class BSSStationsServiceSerializer(OutsideServiceCommon):
+    id = Field(display_none=True)
+    url = Field(display_none=True)
+    class_ = Field(schema_type=str, label='class', attr='class')
+
+
+class CarParkingServiceSerializer(OutsideServiceCommon):
+    id = Field(display_none=True)
+    url = Field(display_none=True)
+    class_ = Field(schema_type=str, label='class', attr='class')
+
+
 class EquipmentProvidersSerializer(NullableDictSerializer):
     key = Field(schema_type=str, display_none=False)
     codes_types = Field(schema_type=str, many=True, display_none=True)
@@ -254,6 +304,8 @@ class CommonStatusSerializer(NullableDictSerializer):
     publication_date = Field(schema_type=str, display_none=False)
     street_networks = StreetNetworkSerializer(many=True, display_none=False)
     ridesharing_services = RidesharingServicesSerializer(many=True, display_none=False)
+    bss_providers = BSSStationsServiceSerializer(many=True, display_none=False)
+    car_parking_providers = CarParkingServiceSerializer(many=True, display_none=False)
     equipment_providers_services = EquipmentProvidersServicesSerializer(display_none=False)
     external_providers_services = ExternalServiceProvidersServicesSerializer(display_none=False)
     start_production_date = Field(schema_type=str, display_none=False)

@@ -333,27 +333,6 @@ void _update_max_impact_severity(boost::optional<type::disruption::Effect>& max,
     }
 }
 
-static void compute_most_serious_disruption(pbnavitia::Journey* pb_journey, const PbCreator& pb_creator) {
-    boost::optional<type::disruption::Effect> max_severity = boost::none;
-
-    for (const auto& section : pb_journey->sections()) {
-        if (section.type() != pbnavitia::PUBLIC_TRANSPORT) {
-            continue;
-        }
-        _update_max_impact_severity(max_severity, section.pt_display_informations(), pb_creator);
-
-        _update_max_impact_severity(max_severity, section.origin().stop_point(), pb_creator);
-        _update_max_impact_severity(max_severity, section.origin().stop_point().stop_area(), pb_creator);
-
-        _update_max_impact_severity(max_severity, section.destination().stop_point(), pb_creator);
-        _update_max_impact_severity(max_severity, section.destination().stop_point().stop_area(), pb_creator);
-    }
-
-    if (max_severity) {
-        pb_journey->set_most_serious_disruption_effect(type::disruption::to_string(*max_severity));
-    }
-}
-
 static void fill_section(PbCreator& pb_creator,
                          pbnavitia::Section* pb_section,
                          const type::VehicleJourney* vj,
@@ -503,6 +482,21 @@ void add_direct_path(PbCreator& pb_creator,
 }
 
 /**
+ * compute the "base validity_pattern" start date (day) considering actual datetime and stop-time-event used
+ */
+static boost::gregorian::date get_base_vj_start_date(const bt::ptime& actual_datetime,
+                                                     const nt::StopTime* stop_time,
+                                                     bool is_departure) {
+    auto validity_pattern_dt_day = actual_datetime.date();
+    // * shift back if considered vj is amended and shifted compared to base-vj
+    validity_pattern_dt_day -= boost::gregorian::days(stop_time->vehicle_journey->shift);
+    // * shift back if the hour in stop-time-event of considered vj is >24h
+    auto hour_of_day_orig = (is_departure ? stop_time->departure_time : stop_time->arrival_time);
+    validity_pattern_dt_day -= boost::gregorian::days(hour_of_day_orig / DateTimeUtils::SECONDS_PER_DAY);
+    return validity_pattern_dt_day;
+}
+
+/**
  * Compute base passage from amended passage, knowing amended and base stop-times
  */
 static bt::ptime get_base_dt(const nt::StopTime* st_orig,
@@ -512,16 +506,19 @@ static bt::ptime get_base_dt(const nt::StopTime* st_orig,
     if (st_orig == nullptr || st_base == nullptr) {
         return bt::not_a_date_time;
     }
-    // compute the "base validity_pattern" day of dt_orig:
-    // * shift back if amended-vj is shifted compared to base-vj
-    // * shift back if the hour in stop-time of amended-vj is >24h
-    auto validity_pattern_dt_day = dt_orig.date();
-    validity_pattern_dt_day -= boost::gregorian::days(st_orig->vehicle_journey->shift);
-    auto hour_of_day_orig = (is_departure ? st_orig->departure_time : st_orig->arrival_time);
-    validity_pattern_dt_day -= boost::gregorian::days(hour_of_day_orig / DateTimeUtils::SECONDS_PER_DAY);
+    auto validity_pattern_dt_day = get_base_vj_start_date(dt_orig, st_orig, is_departure);
     // from the "base validity_pattern" day, we simply have to apply stop_time from base_vj (st_base)
     auto hour_of_day_base = (is_departure ? st_base->departure_time : st_base->arrival_time);
     return {validity_pattern_dt_day, boost::posix_time::seconds(hour_of_day_base)};
+}
+
+static bt::ptime get_st_dt(const nt::StopTime* st, const boost::gregorian::date& dt_day_base, bool is_departure) {
+    if (st == nullptr) {
+        return bt::not_a_date_time;
+    }
+    const auto hour_of_day_st = (is_departure ? st->departure_time : st->arrival_time);
+    const auto shift_duration = boost::gregorian::date_duration(st->vehicle_journey->shift);
+    return {dt_day_base + shift_duration, boost::posix_time::seconds(hour_of_day_st)};
 }
 
 static bt::ptime handle_pt_sections(pbnavitia::Journey* pb_journey,
@@ -541,6 +538,11 @@ static bt::ptime handle_pt_sections(pbnavitia::Journey* pb_journey,
 
     size_t item_idx(0);
     boost::optional<navitia::type::ValidityPattern> vp;
+
+    // considering only stop-time used in journey that are removed in freshest VJ
+    bool pt_not_served_in_rt = false;
+    bool pt_not_served_in_base = false;
+    bool pt_served_at_different_time_in_base_or_in_rt = false;
 
     for (auto path_i = path.items.begin(); path_i < path.items.end(); ++path_i) {
         const auto& item = *path_i;
@@ -699,14 +701,47 @@ static bt::ptime handle_pt_sections(pbnavitia::Journey* pb_journey,
             if (base_dep_st != nullptr) {
                 auto base_dep_dt = get_base_dt(item.stop_times.front(), base_dep_st, item.departure, true);
                 pb_section->set_base_begin_date_time(navitia::to_posix_timestamp(base_dep_dt));
+                if (pb_section->begin_date_time() != pb_section->base_begin_date_time()) {
+                    pt_served_at_different_time_in_base_or_in_rt = true;
+                }
+            }
+            if (base_dep_st == nullptr || !base_dep_st->pick_up_allowed()) {
+                pt_not_served_in_base = true;
             }
             auto base_arr_st = item.stop_times.back()->get_base_stop_time();
             if (base_arr_st != nullptr) {
                 auto base_arr_dt = get_base_dt(item.stop_times.back(), base_arr_st, item.arrival, false);
                 pb_section->set_base_end_date_time(navitia::to_posix_timestamp(base_arr_dt));
+                if (pb_section->end_date_time() != pb_section->base_end_date_time()) {
+                    pt_served_at_different_time_in_base_or_in_rt = true;
+                }
+            }
+            if (base_arr_st == nullptr || !base_arr_st->drop_off_allowed()) {
+                pt_not_served_in_base = true;
             }
             pb_section->set_realtime_level(
                 to_pb_realtime_level(item.stop_times.front()->vehicle_journey->realtime_level));
+
+            const auto base_vj_start_date = get_base_vj_start_date(item.departure, item.stop_times.front(), true);
+            auto rt_vj = item.get_vj()->meta_vj->get_rt_vj_for_base_date(base_vj_start_date);
+            if (rt_vj == nullptr) {
+                pt_not_served_in_rt = true;
+            } else if (rt_vj != item.get_vj()) {
+                auto rt_corresponding_dep_st = item.stop_times.front()->get_corresponding_stop_time(*rt_vj);
+                if (rt_corresponding_dep_st == nullptr || !rt_corresponding_dep_st->pick_up_allowed()) {
+                    pt_not_served_in_rt = true;
+                } else if (navitia::to_posix_timestamp(get_st_dt(rt_corresponding_dep_st, base_vj_start_date, true))
+                           != pb_section->begin_date_time()) {
+                    pt_served_at_different_time_in_base_or_in_rt = true;
+                }
+                auto rt_corresponding_arr_st = item.stop_times.back()->get_corresponding_stop_time(*rt_vj);
+                if (rt_corresponding_arr_st == nullptr || !rt_corresponding_arr_st->drop_off_allowed()) {
+                    pt_not_served_in_rt = true;
+                } else if (navitia::to_posix_timestamp(get_st_dt(rt_corresponding_arr_st, base_vj_start_date, false))
+                           != pb_section->end_date_time()) {
+                    pt_served_at_different_time_in_base_or_in_rt = true;
+                }
+            }
         }
 
         arrival_time = item.arrival;
@@ -718,7 +753,17 @@ static bt::ptime handle_pt_sections(pbnavitia::Journey* pb_journey,
         pb_creator.fill(vect_p, pb_journey->mutable_calendars(), 0);
     }
 
-    compute_most_serious_disruption(pb_journey, pb_creator);
+    if (pt_not_served_in_rt) {
+        // journey status is NO_SERVICE if a disruption in RT prevents from using a PT section in RT
+        pb_journey->set_most_serious_disruption_effect(
+            type::disruption::to_string(type::disruption::Effect::NO_SERVICE));
+    } else if (pt_not_served_in_base) {
+        pb_journey->set_most_serious_disruption_effect(
+            type::disruption::to_string(type::disruption::Effect::MODIFIED_SERVICE));
+    } else if (pt_served_at_different_time_in_base_or_in_rt) {
+        pb_journey->set_most_serious_disruption_effect(
+            type::disruption::to_string(type::disruption::Effect::SIGNIFICANT_DELAYS));
+    }
 
     // fare computation, done at the end for the journey to be complete
     auto before_fare = std::chrono::system_clock::now();
@@ -1374,10 +1419,10 @@ void filter_late_journeys(RAPTOR::Journeys& journeys, const NightBusFilter::Para
 // stop is served by `vj_to_skip`
 //
 // returns `true` if the section has been modified
-bool shorten_section_clockwise(navitia::routing::Journey::Section& section,
-                               const std::string& last_stop_area_uri,
-                               const navitia::type::VehicleJourney* last_vj,
-                               const map_stop_point_duration& fallbacks) {
+static bool shorten_section_clockwise(navitia::routing::Journey::Section& section,
+                                      const std::string& last_stop_area_uri,
+                                      const navitia::type::VehicleJourney* last_vj,
+                                      const map_stop_point_duration& fallbacks) {
     log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
 
     // because of stay-ins, we may have several vj in one section, we have to scan the stop times of all vjs
@@ -1419,10 +1464,10 @@ bool shorten_section_clockwise(navitia::routing::Journey::Section& section,
 // stop is served by `vj_to_skip`
 //
 // returns `true` if the section has been modified
-bool shorten_section_anticlockwise(navitia::routing::Journey::Section& section,
-                                   const std::string& first_stop_area_uri,
-                                   const navitia::type::VehicleJourney* first_vj,
-                                   const map_stop_point_duration& fallbacks) {
+static bool shorten_section_anticlockwise(navitia::routing::Journey::Section& section,
+                                          const std::string& first_stop_area_uri,
+                                          const navitia::type::VehicleJourney* first_vj,
+                                          const map_stop_point_duration& fallbacks) {
     log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
 
     // because of stay-ins, we may have several vj in one section, we have to scan the stop times of all vjs

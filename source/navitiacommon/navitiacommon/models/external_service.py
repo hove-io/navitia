@@ -77,3 +77,9 @@ class ExternalService(db.Model, TimestampMixin):  # type: ignore
 
     def last_update(self):
         return self.updated_at if self.updated_at else self.created_at
+
+    def full_args(self):
+        """
+        generate args form jormungandr implementation of a bss providers from configuration in external service
+        """
+        return self.args

@@ -48,6 +48,7 @@ import requests
 END_POINT_NOT_EXIST_MSG = 'end_point doesn\'t exist'
 BILLING_PLAN_NOT_EXIST_MSG = 'billing plan doesn\'t exist'
 MAX_TRY_FOR_REPOST_TO_SECONDARY_TYR = 3
+PY3 = sys.version_info[0] == 3
 
 
 def get_message(key, email, args):
@@ -337,7 +338,7 @@ def get_named_arg(arg_name, func, args, kwargs):
     if kwargs and arg_name in kwargs:
         return kwargs[arg_name]
     else:
-        idx = func.func_code.co_varnames.index(arg_name)
+        idx = func.__code__.co_varnames.index(arg_name)
         if args and idx < len(args):
             return args[idx]
         else:

@@ -38,6 +38,7 @@ import zipfile
 import datetime
 import shutil
 from functools import wraps
+import subprocess
 
 from flask import current_app
 from shapely.geometry import MultiPolygon
@@ -49,7 +50,7 @@ from navitiacommon.launch_exec import launch_exec
 import navitiacommon.task_pb2
 from tyr import celery, redis
 from tyr.rabbit_mq_handler import RabbitMqHandler
-from navitiacommon import models
+from navitiacommon import models, utils
 from tyr.helper import get_instance_logger, get_named_arg, get_autocomplete_instance_logger, get_task_logger
 from contextlib import contextmanager
 import glob
@@ -57,6 +58,9 @@ from redis.exceptions import ConnectionError
 import retrying
 
 from tyr.minio import MinioWrapper
+
+from tyr.poi_to_excluded_zones import poi_to_excluded_zones
+from tyr.helper import PY3
 
 
 def unzip_if_needed(filename):
@@ -181,7 +185,7 @@ class Lock(object):
             logging.debug('args: %s -- kwargs: %s', args, kwargs)
             job = models.Job.query.get(job_id)
             logger = get_instance_logger(job.instance, task_id=job_id)
-            task = args[func.func_code.co_varnames.index('self')]
+            task = args[func.__code__.co_varnames.index('self')]
             try:
                 lock = redis.lock('tyr.lock|' + job.instance.name, timeout=self.timeout)
                 locked = lock.acquire(blocking=False)
@@ -497,7 +501,10 @@ def parse_poly(lines):
 
         elif in_ring:
             # we are in a ring and picking up new coordinates.
-            ring.append(map(float, line.split()))
+            if PY3:
+                ring.append(list(map(float, line.split())))
+            else:
+                ring.append(map(float, line.split()))
 
         elif not in_ring and line.strip() == 'END':
             # we are at the end of the whole polygon.
@@ -851,7 +858,8 @@ def osm2mimir(self, autocomplete_instance, filename, job_id, dataset_uid, autoco
     custom_config_config_toml = '{}/{}.toml'.format(working_directory, custom_config)
     data = autocomplete_instance.config_toml.encode("utf-8")
     cosmogony_file = models.DataSet.get_cosmogony_file_path()
-    with open(custom_config_config_toml, 'w') as f:
+    mode = "wb" if PY3 else "w"
+    with open(custom_config_config_toml, mode) as f:
         f.write(data)
     params = get_osm2mimir_params(
         autocomplete_instance,
@@ -1125,13 +1133,159 @@ def poi2mimir(self, instance_name, input, autocomplete_version, job_id=None, dat
 @celery.task(bind=True)
 def fusio2s3(self, instance_config, filename, job_id, dataset_uid):
     """Zip fusio file and launch fusio2s3"""
+
+    root_dir = os.path.dirname(filename)
+    loki_dir = os.path.join(root_dir, "for_loki")
+    os.makedirs(loki_dir, 0o755)
+
+    filename = enrich_ntfs_with_addresses("fusio", instance_config, loki_dir, filename, job_id, dataset_uid)
+    filename = split_trip_geometries(loki_dir, filename, job_id, dataset_uid)
     _inner_2s3(self, "fusio", instance_config, filename, job_id, dataset_uid)
+
+
+def enrich_ntfs_with_addresses(dataset_type, instance_config, loki_dir, filename, job_id, dataset_uid):
+    """launch enrich-ntfs-with-addresses"""
+
+    job = models.Job.query.get(job_id)
+    dataset = _retrieve_dataset_and_set_state("fusio", job.id)
+    instance = job.instance
+
+    logger = get_instance_logger(instance, task_id=job_id)
+    filename = zip_if_needed(filename)
+
+    output = os.path.join(loki_dir, "with_addresses.zip")
+    previous_ntfs_path = os.path.join(loki_dir, "/previous_ntfs.zip")
+
+    file_key = "{coverage}/{dataset_type}.zip".format(coverage=instance_config.name, dataset_type=dataset_type)
+
+    use_previous_ntfs = True
+
+    try:
+        minio_wrapper = MinioWrapper()
+        minio_wrapper.get_file(file_key, previous_ntfs_path)
+    except:
+        logger.warning("no previous ntfs found")
+        use_previous_ntfs = False
+
+    try:
+        params = [
+            "--input",
+            filename,
+            "--output",
+            output,
+            "--bragi-url",
+            current_app.config['BRAGI_URL'],
+        ]
+
+        if use_previous_ntfs:
+            params.extend(["--previous-ntfs", previous_ntfs_path])
+
+        binary = "enrich-ntfs-with-addresses"
+
+        res = None
+        with collect_metric(binary, job, dataset_uid):
+            res = launch_exec(binary, params, logger)
+        if res != 0:
+            raise ValueError("{} failed".format(binary))
+    except:
+        logger.exception("")
+        job.state = "failed"
+        dataset.state = "failed"
+        raise
+    finally:
+        models.db.session.commit()
+
+    return output
+
+
+def split_trip_geometries(loki_dir, filename, job_id, dataset_uid):
+    """launch split-trip-geometries"""
+
+    job = models.Job.query.get(job_id)
+    dataset = _retrieve_dataset_and_set_state("fusio", job.id)
+    instance = job.instance
+
+    logger = get_instance_logger(instance, task_id=job_id)
+    filename = zip_if_needed(filename)
+
+    output = os.path.join(loki_dir, "with_split_trip_geometries.zip")
+
+    try:
+        params = [
+            "--input",
+            filename,
+            "--output",
+            output,
+        ]
+
+        binary = "split-trip-geometries"
+        res = None
+        with collect_metric(binary, job, dataset_uid):
+            res = launch_exec(binary, params, logger)
+        if res != 0:
+            raise ValueError("{} failed".format(binary))
+    except:
+        logger.exception("")
+        job.state = "failed"
+        dataset.state = "failed"
+        raise
+    finally:
+        models.db.session.commit()
+
+    return output
 
 
 @celery.task(bind=True)
 def gtfs2s3(self, instance_config, filename, job_id, dataset_uid):
     """Zip fusio file and launch gtfs2s3"""
     _inner_2s3(self, "gtfs", instance_config, filename, job_id, dataset_uid)
+
+
+@celery.task(bind=True)
+def poi2asgard(self, instance_config, filename, job_id, dataset_uid):
+    """Extract excluded zones and synchronize with"""
+    job = models.Job.query.get(job_id)
+    dataset = _retrieve_dataset_and_set_state("poi", job.id)
+    instance = job.instance
+    logger = get_instance_logger(instance, task_id=job_id)
+
+    excluded_zone_dir = "excluded_zones"
+    if os.path.isdir(excluded_zone_dir):
+        shutil.rmtree(excluded_zone_dir)
+
+    os.mkdir(excluded_zone_dir)
+    try:
+        poi_to_excluded_zones(filename, excluded_zone_dir, instance.name)
+        if utils.is_empty_directory(excluded_zone_dir):
+            logger.warning(
+                "opg_excluded_zones: Impossible to push excluded zones to S3 for instance {}, empty directory".format(
+                    instance.name
+                )
+            )
+        else:
+            with collect_metric("poi2Asgard", job, dataset_uid):
+                asgard_bucket = current_app.config.get('MINIO_ASGARD_BUCKET_NAME', None)
+                if not asgard_bucket:
+                    dataset.state = "failed"
+                    return
+
+                bash_command = (
+                    "env REQUESTS_CA_BUNDLE=/etc/ssl/certs/ca-certificates.crt "
+                    "aws s3 sync ./{excluded_zone_dir} s3://{asgard_bucket}/excluded_zones".format(
+                        excluded_zone_dir=excluded_zone_dir, asgard_bucket=asgard_bucket
+                    )
+                )
+                process = subprocess.Popen(bash_command.split(), stdout=subprocess.PIPE)
+                output, error = process.communicate()
+                if error:
+                    raise Exception("Error occurred when putting excluded zones to asgard: {}".format(error))
+    except:
+        logger.exception("")
+        job.state = "failed"
+        dataset.state = "failed"
+        raise
+    finally:
+        models.db.session.commit()
 
 
 def _inner_2s3(self, dataset_type, instance_config, filename, job_id, dataset_uid):

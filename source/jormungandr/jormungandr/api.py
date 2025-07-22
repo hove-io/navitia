@@ -33,17 +33,18 @@
 from __future__ import absolute_import, print_function, unicode_literals, division
 import importlib
 from flask_restful.representations import json
-from flask import request, make_response
-from jormungandr import rest_api, app
+from flask import request, make_response, abort, g
+from jormungandr import rest_api, app, i_manager
 from jormungandr.index import index
 from jormungandr.modules_loader import ModulesLoader
 import ujson
 import logging
-from jormungandr.new_relic import record_custom_parameter
+from jormungandr.utils import content_is_too_large
 from jormungandr.authentication import get_user, get_token, get_app_name, get_used_coverages
 from jormungandr._version import __version__
-from jormungandr.utils import can_connect_to_database
 import six
+from jormungandr.otlp import otlp_instance
+import time
 
 
 @rest_api.representation("text/jsonp")
@@ -75,7 +76,21 @@ def access_log(response, *args, **kwargs):
         'status': response.status_code,
         'external_request_id': request.headers.get('x-request-id'),
     }
-    logger.info(u'"%(method)s %(path)s?%(query_string)s" %(status)s', d, extra=d)
+    if 'readyness' not in request.path:
+        logger.info(u'"%(method)s %(path)s?%(query_string)s" %(status)s', d, extra=d)
+    else:
+        logging.getLogger(__name__).debug(u'"%(method)s %(path)s?%(query_string)s" %(status)s', d, extra=d)
+
+    return response
+
+
+@app.after_request
+def check_content_size(response):
+    coverage_names = get_used_coverages()
+    for name in coverage_names:
+        instance = i_manager.instances.get(name)
+        if content_is_too_large(instance, request.endpoint, response):
+            abort(413)
     return response
 
 
@@ -85,27 +100,47 @@ def add_request_id(response, *args, **kwargs):
     return response
 
 
+def __get_otlp_coverages_label():
+    used_coverages = get_used_coverages()
+
+    return ", ".join(sorted(used_coverages)) if used_coverages else "unknown"
+
+
 @app.after_request
-def add_info_newrelic(response, *args, **kwargs):
+def record_request_call_to_otlp(response, *args, **kwargs):
     try:
-        record_custom_parameter('navitia-request-id', request.id)
-
-        if can_connect_to_database():
-            token = get_token()
-            user = get_user(token=token, abort_if_no_token=False)
-            app_name = get_app_name(token)
-            if user:
-                record_custom_parameter('user_id', str(user.id))
-            record_custom_parameter('token_name', app_name)
-
-        record_custom_parameter('version', __version__)
-        coverages = get_used_coverages()
-        if coverages:
-            record_custom_parameter('coverage', coverages[0])
+        duration = time.time() - g.start
+        token = get_token() if get_token() else "unknown"
+        user = get_user(token=token, abort_if_no_token=False) if token != "unknown" else None
+        user_id = str(user.id) if user else "unknown"
+        token_name = get_app_name(token)
+        token_name = token_name if token_name else "unknown"
+        labels = {
+            "token": token,
+            "user_id": user_id,
+            "token_name": token_name,
+            "status": response.status_code,
+            "coverages": __get_otlp_coverages_label(),
+        }
+        otlp_instance.send_request_call_metrics(duration, labels)
     except:
         logger = logging.getLogger(__name__)
-        logger.exception('error while reporting to newrelic:')
+        logger.exception('error while reporting to otlp from app.after_request')
+
     return response
+
+
+@app.before_request
+def set_request_id():
+    try:
+        g.start = time.time()
+
+        otlp_instance.record_label("api", request.endpoint)
+        otlp_instance.record_label("version", __version__)
+        otlp_instance.record_label("coverage", __get_otlp_coverages_label())
+    except:
+        logger = logging.getLogger(__name__)
+        logger.exception('error while reporting to otlp from app.before_request')
 
 
 # If modules are configured, then load and run them

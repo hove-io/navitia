@@ -36,6 +36,7 @@ www.navitia.io
 #include <prometheus/counter.h>
 #include <prometheus/exposer.h>
 #include <prometheus/registry.h>
+#include <prometheus/histogram.h>
 
 namespace navitia {
 
@@ -103,7 +104,7 @@ Metrics::Metrics(const boost::optional<std::string>& endpoint, const std::string
     }
     auto& in_flight_family = prometheus::BuildGauge()
                                  .Name("kraken_request_in_flight")
-                                 .Help("Number of requests currently beeing processed")
+                                 .Help("Number of requests currently being processed")
                                  .Labels({{"coverage", coverage}})
                                  .Register(*registry);
     this->in_flight = &in_flight_family.Add({});
@@ -113,7 +114,6 @@ Metrics::Metrics(const boost::optional<std::string>& endpoint, const std::string
                                   .Help("Number of cache miss for the next stop_time in raptor")
                                   .Labels({{"coverage", coverage}})
                                   .Register(*registry);
-    ;
     next_st_cache_miss = &cache_miss_family.Add({});
 
     // For the followings with bucket boundaries = {0.5, 1, 2, 4, 8, 16, 32, 64, 128} in seconds
@@ -133,24 +133,52 @@ Metrics::Metrics(const boost::optional<std::string>& endpoint, const std::string
 
     this->handle_rt_histogram = &prometheus::BuildHistogram()
                                      .Name("kraken_handle_rt_duration_seconds")
-                                     .Help("duration for handling realtime")
+                                     .Help("duration for handling realtime batch (add(s)/delete(s) from chaos/kirin")
                                      .Labels({{"coverage", coverage}})
                                      .Register(*registry)
                                      .Add({}, create_exponential_buckets(0.5, 2, 10));
 
-    this->handle_disruption_histogram = &prometheus::BuildHistogram()
-                                             .Name("kraken_handle_disruption_duration_seconds")
-                                             .Help("duration for handling disruption")
-                                             .Labels({{"coverage", coverage}})
-                                             .Register(*registry)
-                                             .Add({}, create_exponential_buckets(0.5, 2, 10));
+    this->retrieve_rt_message_duration_histogram = &prometheus::BuildHistogram()
+                                                        .Name("kraken_retrieve_rt_message_duration_seconds")
+                                                        .Help("duration of RT messages retrieval from RabbitMQ")
+                                                        .Labels({{"coverage", coverage}})
+                                                        .Register(*registry)
+                                                        .Add({}, create_exponential_buckets(0.5, 2, 10));
 
-    this->delete_disruption_histogram = &prometheus::BuildHistogram()
-                                             .Name("kraken_delete_disruption_duration_seconds")
-                                             .Help("duration for deleting a disruption")
-                                             .Labels({{"coverage", coverage}})
-                                             .Register(*registry)
-                                             .Add({}, create_exponential_buckets(0.5, 2, 10));
+    this->retrieved_rt_message_count_histogram = &prometheus::BuildHistogram()
+                                                      .Name("kraken_retrieve_rt_message_count")
+                                                      .Help("number of RT messages retrieved from RabbitMQ")
+                                                      .Labels({{"coverage", coverage}})
+                                                      .Register(*registry)
+                                                      .Add({}, create_exponential_buckets(0.5, 2, 10));
+
+    this->applied_rt_entity_count_histogram = &prometheus::BuildHistogram()
+                                                   .Name("kraken_applied_rt_entity_count")
+                                                   .Help("number of applied RT entity from a message batch")
+                                                   .Labels({{"coverage", coverage}})
+                                                   .Register(*registry)
+                                                   .Add({}, create_exponential_buckets(0.5, 2, 10));
+
+    this->rt_message_age_min_histogram = &prometheus::BuildHistogram()
+                                              .Name("kraken_rt_message_age_min_seconds")
+                                              .Help("Minimum age of RT message from a batch")
+                                              .Labels({{"coverage", coverage}})
+                                              .Register(*registry)
+                                              .Add({}, create_exponential_buckets(0.5, 2, 10));
+
+    this->rt_message_age_average_histogram = &prometheus::BuildHistogram()
+                                                  .Name("kraken_rt_message_age_average_seconds")
+                                                  .Help("Average age of RT message from a batch")
+                                                  .Labels({{"coverage", coverage}})
+                                                  .Register(*registry)
+                                                  .Add({}, create_exponential_buckets(0.5, 2, 10));
+
+    this->rt_message_age_max_histogram = &prometheus::BuildHistogram()
+                                              .Name("kraken_rt_message_age_max_seconds")
+                                              .Help("Maximum age of RT message from a batch")
+                                              .Labels({{"coverage", coverage}})
+                                              .Register(*registry)
+                                              .Add({}, create_exponential_buckets(0.5, 2, 10));
 }
 
 InFlightGuard Metrics::start_in_flight() const {
@@ -194,18 +222,46 @@ void Metrics::observe_handle_rt(double duration) const {
     this->handle_rt_histogram->Observe(duration);
 }
 
-void Metrics::observe_handle_disruption(double duration) const {
+void Metrics::observe_retrieve_rt_message_duration(double duration) const {
     if (!registry) {
         return;
     }
-    this->handle_disruption_histogram->Observe(duration);
+    this->retrieve_rt_message_duration_histogram->Observe(duration);
 }
 
-void Metrics::observe_delete_disruption(double duration) const {
+void Metrics::observe_retrieved_rt_message_count(size_t count) const {
     if (!registry) {
         return;
     }
-    this->delete_disruption_histogram->Observe(duration);
+    this->retrieved_rt_message_count_histogram->Observe(double(count));
+}
+
+void Metrics::observe_applied_rt_entity_count(size_t count) const {
+    if (!registry) {
+        return;
+    }
+    this->applied_rt_entity_count_histogram->Observe(double(count));
+}
+
+void Metrics::observe_rt_message_age_min(double duration) const {
+    if (!registry) {
+        return;
+    }
+    this->rt_message_age_min_histogram->Observe(duration);
+}
+
+void Metrics::observe_rt_message_age_average(double duration) const {
+    if (!registry) {
+        return;
+    }
+    this->rt_message_age_average_histogram->Observe(duration);
+}
+
+void Metrics::observe_rt_message_age_max(double duration) const {
+    if (!registry) {
+        return;
+    }
+    this->rt_message_age_max_histogram->Observe(duration);
 }
 
 void Metrics::set_raptor_cache_miss(size_t nb_cache_miss) const {

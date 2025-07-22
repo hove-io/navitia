@@ -34,7 +34,7 @@ from copy import deepcopy
 from jormungandr.schedule import RoutePoint
 from jormungandr.utils import timestamp_to_datetime, record_external_failure
 from jormungandr.utils import date_to_timestamp, pb_del_if
-from jormungandr import new_relic
+from jormungandr.otlp import otlp_instance
 from navitiacommon import type_pb2
 import datetime
 import hashlib
@@ -156,12 +156,12 @@ class RealtimeProxy(six.with_metaclass(ABCMeta, object)):
     def _filter_base_stop_schedule(self, date_time):
         return True
 
-    def _is_valid_direction(self, direction_uri, passage_direction_uri):
+    def _is_valid_direction(self, terminus_uris, passage_direction_uri, group_by_dest):
         return True
 
     def _add_datetime(self, stop_schedule, passage, add_direction):
         new_dt = stop_schedule.date_times.add()
-        # the midnight is calculated from passage.datetime and it keeps the same timezone as passage.datetime
+        # the midnight is calculated from passage.datetime, and it keeps the same timezone as passage.datetime
         midnight = passage.datetime.replace(hour=0, minute=0, second=0, microsecond=0)
         time = (passage.datetime - midnight).total_seconds()
         new_dt.time = int(time)
@@ -180,18 +180,37 @@ class RealtimeProxy(six.with_metaclass(ABCMeta, object)):
             note.uri = 'note:{md5}'.format(md5=note_uri)  # the id is a md5 of the direction to factorize them
             new_dt.properties.notes.extend([note])
 
-    def _update_stop_schedule(self, stop_schedule, next_realtime_passages, groub_by_dest=False):
+    def _get_first_datetime(self, stop_schedule):
+        if not stop_schedule.HasField('first_datetime'):
+            return None
+        first_datetime = stop_schedule.first_datetime
+        if not first_datetime.HasField('date'):
+            return None
+        return first_datetime.date
+
+    def _update_stop_schedule(self, request, stop_schedule, next_realtime_passages, group_by_dest=False):
         """
-        Update the stopschedule response with the new realtime passages
+        Update the response for /stop_schedules, /terminus_schedules with the new realtime passages
+        group_by_dest = False for /stop_schedules
+        group_by_dest = True for /terminus_schedules
 
         By default, all base schedule data is removed and replaced with realtime data.
         Each proxy can define its own way to merge passages.
 
         If next_realtime_passages is None (and not if it's []) it means that the proxy failed,
         so we use the base schedule
+
+        If next_realtime_passages is empty and (now < first_datetime.date or first_datetime = None)
+        we return None to use the base schedule
         """
         if next_realtime_passages is None:
             return
+
+        if not next_realtime_passages:
+            datetime_now = date_to_timestamp(request['_current_datetime'])
+            first_datetime = self._get_first_datetime(stop_schedule)
+            if first_datetime is None or datetime_now < first_datetime:
+                return
 
         logging.getLogger(__name__).debug(
             'next passages: : {}'.format(["dt: {}".format(d.datetime) for d in next_realtime_passages])
@@ -200,21 +219,29 @@ class RealtimeProxy(six.with_metaclass(ABCMeta, object)):
         # we clean up the old schedule
         pb_del_if(stop_schedule.date_times, self._filter_base_stop_schedule)
         direction_uri = stop_schedule.pt_display_informations.uris.stop_area
+        terminus_uris = stop_schedule.pt_display_informations.terminus
+
+        # For retro-compatibility when terminus_uris is empty we should use direction_uri
+        if not terminus_uris:
+            terminus_uris = [direction_uri]
         for passage in next_realtime_passages:
-            if groub_by_dest and not self._is_valid_direction(direction_uri, passage.direction_uri):
+            if not self._is_valid_direction(terminus_uris, passage.direction_uri, group_by_dest):
                 continue
+            # If the route direction  doesn't match with departure.direction of forseti then
+            # we should add direction name as note
             add_direction = direction_uri != passage.direction_uri
             self._add_datetime(stop_schedule, passage, add_direction)
 
         stop_schedule.date_times.sort(key=lambda dt: dt.date + dt.time)
-        if not len(stop_schedule.date_times) and not stop_schedule.HasField('response_status'):
-            stop_schedule.response_status = type_pb2.no_departure_this_day
 
-    # By default filter passage if they are on the same route point
+    # By default, filter passage if they are on the same route point
     def _filter_base_passage(self, passage, route_point):
         return RoutePoint(passage.route, passage.stop_point) == route_point
 
     def _update_passages(self, passages, route_point, template, next_realtime_passages):
+        """
+        Update the /departures response with the new realtime passages
+        """
         if next_realtime_passages is None:
             return
 
@@ -223,6 +250,13 @@ class RealtimeProxy(six.with_metaclass(ABCMeta, object)):
 
         # append the realtime passages
         for rt_passage in next_realtime_passages:
+            # As in stop_schedule, we should manage group_by_destination to decide whether we keep
+            # realtime passage comparing passage destination with route_point destination
+            # https://navitia.atlassian.net/browse/NAV-2893
+            direction_uri = route_point.fetch_direction_uri()
+            if direction_uri:
+                if not self._is_valid_direction([direction_uri], rt_passage.direction_uri, group_by_dest=False):
+                    continue
             new_passage = deepcopy(template)
             new_passage.stop_date_time.arrival_date_time = date_to_timestamp(rt_passage.datetime)
             new_passage.stop_date_time.departure_date_time = date_to_timestamp(rt_passage.datetime)
@@ -256,7 +290,7 @@ class RealtimeProxy(six.with_metaclass(ABCMeta, object)):
         params = {'realtime_system_id': six.text_type(self.rt_system_id), 'message': message}
         if comment is not None:
             params['comment'] = comment
-        new_relic.record_custom_event('realtime_internal_failure', params)
+        otlp_instance.send_event_metrics('realtime_internal_failure', params)
 
     def record_call(self, status, **kwargs):
         """
@@ -264,7 +298,7 @@ class RealtimeProxy(six.with_metaclass(ABCMeta, object)):
         """
         params = {'realtime_system_id': six.text_type(self.rt_system_id), 'status': status}
         params.update(kwargs)
-        new_relic.record_custom_event('realtime_status', params)
+        otlp_instance.send_event_metrics('realtime_status', params)
 
     def record_additional_info(self, status, **kwargs):
         """
@@ -272,7 +306,7 @@ class RealtimeProxy(six.with_metaclass(ABCMeta, object)):
         """
         params = {'realtime_system_id': six.text_type(self.rt_system_id), 'status': status}
         params.update(kwargs)
-        new_relic.record_custom_event('realtime_proxy_additional_info', params)
+        otlp_instance.send_event_metrics('realtime_proxy_additional_info', params)
 
     @cache.memoize(app.config.get(str('CACHE_CONFIGURATION'), {}).get(str('TIMEOUT_PTOBJECTS'), 600))
     def _get_direction(self, line_uri, object_code, default_value):

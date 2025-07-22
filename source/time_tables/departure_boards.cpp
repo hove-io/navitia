@@ -37,6 +37,7 @@ www.navitia.io
 #include "type/pb_converter.h"
 #include "utils/functions.h"
 #include "utils/paginate.h"
+#include "type/vehicle_journey.h"  //required to inline order()
 
 #include <boost/container/flat_set.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
@@ -65,6 +66,19 @@ static bool is_terminus_for_all_stop_times(const std::vector<routing::datetime_s
     return !stop_times.empty();
 }
 
+bool update_display_information(const navitia::type::StopTime* st,
+                                pbnavitia::PtDisplayInfo* pt_display_information,
+                                PbCreator& pb_creator) {
+    if (st != nullptr) {
+        const auto* vj = st->vehicle_journey;
+        pt_display_information->set_trip_short_name(vj->name);
+        pt_display_information->set_headsign(pb_creator.data->pt_data->headsign_handler.get_headsign(vj));
+        return true;
+    }
+
+    return false;
+}
+
 static void fill_date_times(PbCreator& pb_creator,
                             pbnavitia::StopSchedule* schedule,
                             const std::pair<unsigned int, const navitia::type::StopTime*>& dt_st,
@@ -81,6 +95,30 @@ static void fill_date_times(PbCreator& pb_creator,
         if (vj != nullptr) {
             for (const auto& comment : pb_creator.data->pt_data->comments.get(*vj)) {
                 pb_creator.fill(&comment, date_time->mutable_properties()->add_notes(), 0);
+            }
+        }
+    }
+}
+
+static void fill_origin_terminus(PbCreator& pb_creator,
+                                 const navitia::type::StopTime* st,
+                                 pbnavitia::PtDisplayInfo* pt_info) {
+    if (st != nullptr && !st->vehicle_journey->stop_time_list.empty()) {
+        const auto* vj = st->vehicle_journey;
+        if (vj->stop_time_list.front().stop_point) {
+            auto origin = vj->stop_time_list.front().stop_point->stop_area;
+            pb_creator.origins.insert(origin);
+            if (std::find(pt_info->origins().begin(), pt_info->origins().end(), origin->uri)
+                == pt_info->origins().end()) {
+                pt_info->add_origins(origin->uri);
+            }
+        }
+        if (vj->stop_time_list.back().stop_point) {
+            auto terminus = vj->stop_time_list.back().stop_point->stop_area;
+            pb_creator.terminus.insert(terminus);
+            if (std::find(pt_info->terminus().begin(), pt_info->terminus().end(), terminus->uri)
+                == pt_info->terminus().end()) {
+                pt_info->add_terminus(terminus->uri);
             }
         }
     }
@@ -131,9 +169,17 @@ static void render(PbCreator& pb_creator,
         auto pt_display_information = schedule->mutable_pt_display_informations();
         pb_creator.fill(route, pt_display_information, 0);
 
+        bool vj_found = false;
+
         // Now we fill the date_times
         for (auto dt_st : id_vec.second) {
+            if (!vj_found) {
+                vj_found = update_display_information(dt_st.second, pt_display_information, pb_creator);
+            }
             fill_date_times(pb_creator, schedule, dt_st, calendar_id);
+
+            // Here we can fill origins and destinations in pt_display_information
+            fill_origin_terminus(pb_creator, dt_st.second, pt_display_information);
         }
 
         // add first and last datetime
@@ -191,9 +237,17 @@ static void render(PbCreator& pb_creator,
         pbnavitia::Uris* uris = pt_display_information->mutable_uris();
         uris->set_stop_area(sa->uri);
 
+        bool vj_found = false;
+
         // Now we fill the date_times
         for (auto dt_st : id_vec.second) {
+            if (!vj_found) {
+                vj_found = update_display_information(dt_st.second, pt_display_information, pb_creator);
+            }
             fill_date_times(pb_creator, schedule, dt_st, calendar_id);
+
+            // Here we can fill origins and destinations in pt_display_information
+            fill_origin_terminus(pb_creator, dt_st.second, pt_display_information);
         }
 
         // add first and last datetime

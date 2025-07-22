@@ -60,6 +60,7 @@ from tyr.binarisation import (
     fusio2s3,
     gtfs2s3,
     zip_if_needed,
+    poi2asgard,
 )
 from tyr.binarisation import reload_data, move_to_backupdirectory
 from tyr import celery
@@ -207,7 +208,18 @@ def import_data(
                                 loki_data_source, instance.name
                             )
                         )
-
+            if dataset.type == "poi":
+                if current_app.config.get('MINIO_ASGARD_BUCKET_NAME'):
+                    if not utils.files_exists_in_zipfile(filename, {"poi_properties.txt", "geometries.txt"}):
+                        current_app.logger.warning(
+                            "poi_properties.txt or geometries.txt not found for coverage '{}'".format(
+                                instance.name
+                            )
+                        )
+                    else:
+                        actions.append(poi2asgard.si(instance_config, filename, dataset_uid=dataset.uid))
+                else:
+                    current_app.logger.warning("unknown asgard bucket for coverage '{}'".format(instance.name))
             actions.append(task[dataset.type].si(instance_config, filename, dataset_uid=dataset.uid))
         else:
             # unknown type, we skip it

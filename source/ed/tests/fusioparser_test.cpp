@@ -71,7 +71,7 @@ BOOST_AUTO_TEST_CASE(parse_small_ntfs_dataset) {
 
     // Check website, license of contributor
     BOOST_REQUIRE_EQUAL(data.contributors.size(), 1);
-    BOOST_REQUIRE_EQUAL(data.contributors[0]->website, "http://www.canaltp.fr");
+    BOOST_REQUIRE_EQUAL(data.contributors[0]->website, "http://www.hove.com");
     BOOST_REQUIRE_EQUAL(data.contributors[0]->license, "LICENSE");
 
     // Check datasets
@@ -206,7 +206,7 @@ BOOST_AUTO_TEST_CASE(parse_small_ntfs_dataset) {
     std::map<std::string, std::string> feed_info_test = {{"feed_start_date", "20150325"},
                                                          {"feed_end_date", "20150826"},
                                                          {"feed_publisher_name", "Ile de France open data"},
-                                                         {"feed_publisher_url", "http://www.canaltp.fr"},
+                                                         {"feed_publisher_url", "http://www.hove.com"},
                                                          {"feed_license", "ODBL"},
                                                          {"feed_creation_datetime", "20150415T153234"}};
     BOOST_CHECK_EQUAL_COLLECTIONS(data.feed_infos.begin(), data.feed_infos.end(), feed_info_test.begin(),
@@ -369,7 +369,7 @@ BOOST_AUTO_TEST_CASE(ntfs_with_feed_start_end_date_1) {
     std::map<std::string, std::string> feed_info_test = {{"feed_start_date", "20150325"},
                                                          {"feed_end_date", "20150826"},
                                                          {"feed_publisher_name", "Ile de France open data"},
-                                                         {"feed_publisher_url", "http://www.canaltp.fr"},
+                                                         {"feed_publisher_url", "http://www.hove.com"},
                                                          {"feed_license", "ODBL"},
                                                          {"feed_creation_datetime", "20150415T153234"}};
     BOOST_CHECK_EQUAL_COLLECTIONS(data.feed_infos.begin(), data.feed_infos.end(), feed_info_test.begin(),
@@ -401,7 +401,7 @@ BOOST_AUTO_TEST_CASE(ntfs_with_feed_start_end_date_2) {
     std::map<std::string, std::string> feed_info_test = {{"feed_start_date", "20150325"},
                                                          {"feed_end_date", "20150826"},
                                                          {"feed_publisher_name", "Ile de France open data"},
-                                                         {"feed_publisher_url", "http://www.canaltp.fr"},
+                                                         {"feed_publisher_url", "http://www.hove.com"},
                                                          {"feed_license", "ODBL"},
                                                          {"feed_creation_datetime", "20150415T153234"}};
     BOOST_CHECK_EQUAL_COLLECTIONS(data.feed_infos.begin(), data.feed_infos.end(), feed_info_test.begin(),
@@ -784,4 +784,39 @@ BOOST_AUTO_TEST_CASE(pathway_tests) {
     test(*data.pathways[1], "SP:B:IO:2", "SP:B:IO:2", "SP:B", "IO:2", 3, false, 68, 87, 3, 30, 2, "", "");
 
     test(*data.pathways[2], "SP:B:IO:1", "SP:B:IO:1", "SP:B", "IO:1", 3, true, 42, 60, 40, 30, 2, "", "");
+}
+
+BOOST_AUTO_TEST_CASE(ntfs_with_zonal_odt) {
+    ed::Data data;
+
+    ed::connectors::FusioParser parser(ntfs_path + "_with_zonal_odt");
+    parser.fill(data, "20240916");
+
+    BOOST_REQUIRE_EQUAL(data.lines.size(), 6);
+    BOOST_REQUIRE_EQUAL(data.vehicle_journeys.size(), 6);
+    BOOST_REQUIRE_EQUAL(data.routes.size(), 6);
+    BOOST_REQUIRE_EQUAL(data.stop_points.size(), 18);
+    BOOST_REQUIRE_EQUAL(data.stop_areas.size(), 18);
+
+    BOOST_CHECK_EQUAL(data.lines[0]->uri, "JeanJaures_GareMennecy");
+    BOOST_CHECK_EQUAL(data.lines[0]->name, "TAD");
+    BOOST_CHECK_EQUAL(data.lines[1]->uri, "GareMennecy_CorbeilEssonnes");
+    BOOST_CHECK_EQUAL(data.lines[1]->name, "D");
+    BOOST_CHECK_EQUAL(data.lines[2]->uri, "MoulinGalant_MoulinFoulon");
+    BOOST_CHECK_EQUAL(data.lines[2]->name, "TAD");
+    BOOST_CHECK_EQUAL(data.lines[3]->uri, "bus_aa");
+    BOOST_CHECK_EQUAL(data.lines[3]->name, "AA");
+    BOOST_CHECK_EQUAL(data.lines[4]->uri, "bus_bb");
+    BOOST_CHECK_EQUAL(data.lines[4]->name, "BB");
+    BOOST_CHECK_EQUAL(data.lines[5]->uri, "Juvisy:RisOrangis");
+    BOOST_CHECK_EQUAL(data.lines[5]->name, "Juvisy Ris Orangis");
+
+    BOOST_CHECK_EQUAL(data.vehicle_journeys[0]->uri, "SP:JeanJaures_SP:ODT:GareMennecy");
+    BOOST_CHECK_EQUAL(data.vehicle_journeys[0]->name, "Gare de mennecy");
+    BOOST_REQUIRE_EQUAL(data.vehicle_journeys[0]->stop_time_list.size(), 3);
+    for (auto st : data.vehicle_journeys[0]->stop_time_list) {
+        BOOST_CHECK_EQUAL(st->drop_off_allowed, false);
+        BOOST_CHECK_EQUAL(st->pick_up_allowed, false);
+        BOOST_CHECK_EQUAL(st->departure_time, "10:00:00"_t);  // local time : 12:00:00
+    }
 }

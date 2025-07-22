@@ -250,7 +250,10 @@ struct Impacter {
                               const std::vector<std::string>& route_uris,
                               nt::PT_Data& pt_data);
     Impacter& msg(nt::disruption::Message);
-    Impacter& msg(const std::string& text, nt::disruption::ChannelType = nt::disruption::ChannelType::email);
+    Impacter& msg(const std::string& text,
+                  nt::disruption::ChannelType = nt::disruption::ChannelType::email,
+                  const std::string& translated_text = "",
+                  const std::string& language = "");
     Impacter& publish(const boost::posix_time::time_period& p);
 };
 
@@ -298,7 +301,7 @@ struct builder {
     builder(const std::string& date,
             std::function<void(builder&)> builder_callback = make_builder,
             bool no_dummy = false,
-            const std::string& publisher_name = "canal tp",
+            const std::string& publisher_name = "hove",
             const std::string& timezone_name = "UTC",
             navitia::type::TimeZoneHandler::dst_periods timezone = {});
 
@@ -409,6 +412,10 @@ struct builder {
     navitia::georef::Way* add_way(const std::string& name, const std::string& way_type, const bool visible = true);
 
     const navitia::type::Data& get_data() { return *data.get(); }
+
+    const navitia::type::MetaVehicleJourney* get_meta_vj(const std::string& meta_vj_uri) const {
+        return data->pt_data->meta_vjs.get_mut(meta_vj_uri);
+    }
 };
 
 }  // namespace ed

@@ -537,7 +537,6 @@ BOOST_AUTO_TEST_CASE(parallel_and_same_vertex_edges) {
 
     StreetNetwork worker(b.geo_ref);
     auto origin = nt::EntryPoint();
-    ;
     auto destination = nt::EntryPoint();
     origin.streetnetwork_params.max_duration = 3600_s;
     destination.streetnetwork_params.max_duration = 3600_s;
@@ -1544,6 +1543,6 @@ BOOST_AUTO_TEST_CASE(build_admin_tree_from_admin_with_no_boundary) {
     double x, y;
     it.GetBounds(&x, &y);
 
-    BOOST_CHECK_EQUAL(x, 0.);
-    BOOST_CHECK_EQUAL(y, 0.);
+    BOOST_CHECK_LE(std::abs(x), std::numeric_limits<double>::epsilon());  // x == 0
+    BOOST_CHECK_LE(std::abs(y), std::numeric_limits<double>::epsilon());  // y == 0
 }

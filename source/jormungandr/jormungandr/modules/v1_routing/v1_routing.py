@@ -35,6 +35,7 @@ from jormungandr.interfaces.v1 import (
     Journeys,
     GraphicalIsochrone,
     HeatMap,
+    Elevations,
     Schedules,
     Places,
     Ptobjects,
@@ -50,7 +51,11 @@ from jormungandr.interfaces.v1 import (
     AccessPoints,
     VehiclePositions,
     free_floatings,
+    obstacles,
     users,
+    opg_status,
+    opg_excluded_zones,
+    backends_status,
 )
 from werkzeug.routing import BaseConverter, FloatConverter, PathConverter
 from jormungandr.modules_loader import AModule
@@ -128,12 +133,16 @@ class V1Routing(AModule):
         self.add_resource(Readyness.Readyness, '/readyness', endpoint='readyness')
         self.module_resources_manager.register_resource(Index.TechnicalStatus())
         self.add_resource(Index.TechnicalStatus, '/status', endpoint='technical_status')
+        self.add_resource(backends_status.BackendsStatus, '/backends_status', endpoint='backends_status')
+
         lon_lat = '<lon:lon>;<lat:lat>/'
         coverage = '/coverage/'
         region = coverage + '<region:region>/'
         coord = coverage + lon_lat
 
         self.add_resource(Coverage.Coverage, coverage, region, coord, endpoint='coverage')
+
+        self.add_resource(Elevations.Elevations, region + "elevations", "/elevations", endpoint='elevations')
 
         self.add_resource(
             Coord.Coord,
@@ -310,6 +319,18 @@ class V1Routing(AModule):
         )
 
         self.add_resource(Status.Status, region + 'status', coord + 'status', endpoint='status')
+
+        self.add_resource(
+            opg_status.OpgStatus, region + 'opg_status', coord + 'opg_status', endpoint='opg_status'
+        )
+
+        self.add_resource(
+            opg_excluded_zones.OpgExcludedZones,
+            region + 'opg_excluded_zones',
+            coord + 'opg_excluded_zones',
+            endpoint='opg_excluded_zones',
+        )
+
         self.add_resource(
             GeoStatus.GeoStatus, region + '_geo_status', coord + '_geo_status', endpoint='geo_status'
         )
@@ -342,6 +363,17 @@ class V1Routing(AModule):
             '/coord/' + lon_lat + 'freefloatings_nearby',
             '/coords/' + lon_lat + 'freefloatings_nearby',
             endpoint='freefloatings_nearby',
+        )
+
+        self.add_resource(
+            obstacles.ObstaclesNearby,
+            region + 'obstacles_nearby',
+            coord + 'obstacles_nearby',
+            region + '<uri:uri>/obstacles_nearby',
+            coord + '<uri:uri>/obstacles_nearby',
+            '/coord/' + lon_lat + 'obstacles_nearby',
+            '/coords/' + lon_lat + 'obstacles_nearby',
+            endpoint='obstacles_nearby',
         )
 
         self.add_resource(users.User, "/users", endpoint='users')

@@ -31,8 +31,9 @@ from __future__ import absolute_import, print_function, unicode_literals, divisi
 from navitiacommon.response_pb2 import Response
 
 
-def generate_error(str_, status=400):
+def generate_error(str_, error_id, status=400):
     r = Response()
     r.error.message = str_
+    r.error.id = error_id
     r.status_code = status
     return r

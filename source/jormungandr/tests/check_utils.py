@@ -65,7 +65,7 @@ def check_url(tester, url, might_have_additional_args=False, **kwargs):
         )
     else:
         assert response.status_code == 200, "invalid return code, response : {}".format(
-            json.dumps(json.loads(response.data, encoding='utf-8'), indent=2)
+            json.dumps(json.loads(response.data), indent=2)
         )
     return response
 
@@ -734,7 +734,7 @@ def is_valid_route(route, depth_check=1):
     is_valid_stop_area(get_not_null(direction, "stop_area"), depth_check - 1)
 
     if depth_check > 0:
-        is_valid_line(get_not_null(route, "line"), depth_check - 1)
+        is_valid_line(get_not_null(route, "line"), 0)
     else:
         assert 'line' not in route
 
@@ -772,14 +772,12 @@ def is_valid_line(line, depth_check=1):
     for c in line.get('comments', []):
         is_valid_comment(c)
 
+    is_valid_network(get_not_null(line, 'network'), depth_check - 1)
     if depth_check > 0:
-        is_valid_network(get_not_null(line, 'network'), depth_check - 1)
-
         routes = get_not_null(line, 'routes')
         for r in routes:
             is_valid_route(r, depth_check - 1)
     else:
-        assert 'network' not in line
         assert 'routes' not in line
 
     # test if geojson is valid

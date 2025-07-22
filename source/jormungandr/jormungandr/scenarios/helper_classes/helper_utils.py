@@ -1,3 +1,4 @@
+# encoding: utf-8
 # Copyright (c) 2001-2022, Hove and/or its affiliates. All rights reserved.
 #
 # This file is part of Navitia,
@@ -27,8 +28,10 @@
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 
-from __future__ import absolute_import
+from __future__ import absolute_import, unicode_literals
 
+
+from jormungandr.park_modes import ParkMode
 from jormungandr.street_network.street_network import StreetNetworkPathType
 from jormungandr.utils import (
     PeriodExtremity,
@@ -36,8 +39,10 @@ from jormungandr.utils import (
     get_pt_object_coord,
     generate_id,
 )
-from jormungandr.street_network.utils import crowfly_distance_between
+from jormungandr.street_network.utils import crowfly_distance_between, get_manhattan_duration
 from jormungandr.fallback_modes import FallbackModes, all_fallback_modes
+from jormungandr.scenarios.helper_classes.place_by_uri import PlaceByUri
+import math
 from .helper_exceptions import *
 from navitiacommon import response_pb2, type_pb2
 import copy
@@ -80,7 +85,7 @@ def _is_crowfly_needed(uri, fallback_durations, crowfly_sps, fallback_direct_pat
     f = fallback_durations.get(uri, None)
     is_unknown_projection = f.status == response_pb2.unknown if f else False
 
-    is_crowfly_sp = uri in crowfly_sps
+    is_crowfly_sp = uri in set((sp.uri for sp in crowfly_sps))
 
     # At this point, theoretically, fallback_dp should be found since the isochrone has already given a
     # valid value BUT, in some cases(due to the bad projection, etc), fallback_dp may not exist even
@@ -190,6 +195,34 @@ def _make_ending_car_park_sections(
     car_park_to_sp_section.duration = car_park_crowfly_duration
 
 
+def _make_bike_park(begin_date_time, duration):
+    bike_park_section = response_pb2.Section()
+    bike_park_section.id = "section_bike_park"
+    bike_park_section.duration = duration
+    bike_park_section.type = response_pb2.PARK
+    bike_park_section.begin_date_time = begin_date_time
+    bike_park_section.end_date_time = bike_park_section.begin_date_time + duration
+    return bike_park_section
+
+
+def _make_bike_park_street_network(origin, begin_date_time, destination, end_date_time, duration, length):
+    bike_park_to_sp_section = response_pb2.Section()
+    bike_park_to_sp_section.id = "Street_network_section_2"
+    bike_park_to_sp_section.origin.CopyFrom(origin)
+    bike_park_to_sp_section.destination.CopyFrom(destination)
+    bike_park_to_sp_section.type = response_pb2.STREET_NETWORK
+    bike_park_to_sp_section.street_network.mode = response_pb2.Walking
+    bike_park_to_sp_section.street_network.street_information.extend(
+        [response_pb2.StreetInformation(geojson_offset=0, cycle_path_type=0, length=length)]
+    )
+    bike_park_to_sp_section.street_network.duration = duration
+    bike_park_to_sp_section.begin_date_time = begin_date_time
+    bike_park_to_sp_section.end_date_time = bike_park_to_sp_section.begin_date_time + duration
+    bike_park_to_sp_section.duration = duration
+    bike_park_to_sp_section.street_network.length = length
+    return bike_park_to_sp_section
+
+
 def _extend_with_car_park(
     fallback_dp, pt_journey, fallback_type, walking_speed, car_park, car_park_duration, car_park_crowfly_duration
 ):
@@ -246,23 +279,45 @@ def _extend_with_car_park(
     dp_journey.distances.walking += int(walking_speed * car_park_crowfly_duration)
 
 
-def append_path_item_with_access_point(path_items, stop_point, access_point):
+def get_enter_instruction_words(lan):
+    instructions = {
+        "en-US": u"Then enter {} via {}.",
+        "fr-FR": u"Accédez à {} via {}.",
+        "es-ES": u"Acceso a {} vía {}.",
+        "it-IT": u"Accesso alla {} via {}.",
+    }
+    return instructions.get(lan, instructions["en-US"])
+
+
+def get_exit_instruction_words(lan):
+    instructions = {
+        "en-US": u"Exit {} via {}.",
+        "fr-FR": u"Sortez de {} via {}.",
+        "es-ES": u"Salida {} vía {}.",
+        "it-IT": u"Uscita {} via {}.",
+    }
+    return instructions.get(lan, instructions["en-US"])
+
+
+def append_path_item_with_access_point(path_items, stop_point, access_point, language):
     via = path_items.add()
     via.duration = access_point.traversal_time
     via.length = access_point.length
     via.name = access_point.name
     # Use label in stead of name???
-    via.instruction = u"Then Enter {} via {}.".format(stop_point.label, access_point.name)
+    instruction_words = get_enter_instruction_words(language)
+    via.instruction = instruction_words.format(stop_point.label, access_point.name)
     via.via_uri = access_point.uri
 
 
-def prepend_path_item_with_access_point(path_items, stop_point, access_point):
+def prepend_path_item_with_access_point(path_items, stop_point, access_point, language):
     via = path_items.add()
     via.duration = access_point.traversal_time
     via.length = access_point.length
     via.name = access_point.name
     # Use label in stead of name???
-    via.instruction = u"Exit {} via {}.".format(stop_point.label, access_point.name)
+    instruction_words = get_exit_instruction_words(language)
+    via.instruction = instruction_words.format(stop_point.label, access_point.name)
     via.via_uri = access_point.uri
 
     # we cannot insert an element at the beginning of a list :(
@@ -274,12 +329,51 @@ def prepend_path_item_with_access_point(path_items, stop_point, access_point):
         path_items[-1].CopyFrom(tmp_item)
 
 
-def _extend_with_via_access_point(fallback_dp, pt_object, fallback_type, via_access_point):
-    if via_access_point is None:
+def add_path_item_with_poi_access(fallback_type, path_items, requested_obj, poi_access, language):
+    via = path_items.add()
+    via.duration = 0
+    via.length = 0
+    via.name = poi_access.name
+    if fallback_type == StreetNetworkPathType.ENDING_FALLBACK:
+        instruction_words = get_enter_instruction_words(language)
+        via.instruction = instruction_words.format(requested_obj.name, poi_access.name)
+    via.via_uri = poi_access.uri
+    if fallback_type == StreetNetworkPathType.BEGINNING_FALLBACK:
+        instruction_words = get_exit_instruction_words(language)
+        via.instruction = instruction_words.format(requested_obj.name, poi_access.name)
+        tmp_item = response_pb2.PathItem()
+        # we cannot insert an element at the beginning of a list :(
+        # a little algo to move the last element to the beginning
+        for i in range(len(path_items)):
+            tmp_item.CopyFrom(path_items[i])
+            path_items[i].CopyFrom(path_items[-1])
+            path_items[-1].CopyFrom(tmp_item)
+
+
+def extend_path_with_via_poi_access(fallback_dp, fallback_type, requested_obj, via_poi_access, language):
+    if via_poi_access is None:
+        return
+    for journey in fallback_dp.journeys:
+        section = (
+            journey.sections[-1]
+            if fallback_type == StreetNetworkPathType.BEGINNING_FALLBACK
+            else journey.sections[0]
+        )
+        add_path_item_with_poi_access(
+            fallback_type,
+            section.street_network.path_items,
+            requested_obj,
+            via_poi_access,
+            language,
+        )
+
+
+def _extend_with_via_pt_access(fallback_dp, pt_object, fallback_type, via_pt_access, language):
+    if via_pt_access is None:
         return
 
-    traversal_time = via_access_point.access_point.traversal_time
-    length = via_access_point.access_point.length
+    traversal_time = via_pt_access.access_point.traversal_time
+    length = via_pt_access.access_point.length
 
     dp_journey = fallback_dp.journeys[0]
     dp_journey.duration += traversal_time
@@ -296,7 +390,8 @@ def _extend_with_via_access_point(fallback_dp, pt_object, fallback_type, via_acc
         append_path_item_with_access_point(
             dp_journey.sections[-1].street_network.path_items,
             pt_object.stop_point,
-            via_access_point.access_point,
+            via_pt_access.access_point,
+            language,
         )
 
     elif fallback_type == StreetNetworkPathType.ENDING_FALLBACK:
@@ -306,11 +401,221 @@ def _extend_with_via_access_point(fallback_dp, pt_object, fallback_type, via_acc
         dp_journey.sections[-1].street_network.length += length
 
         prepend_path_item_with_access_point(
-            dp_journey.sections[0].street_network.path_items, pt_object.stop_point, via_access_point.access_point
+            dp_journey.sections[0].street_network.path_items,
+            pt_object.stop_point,
+            via_pt_access.access_point,
+            language,
         )
 
 
-def _update_fallback_sections(journey, fallback_dp, fallback_period_extremity, fallback_type, via_access_point):
+def add_poi_access_point_in_sections(fallback_type, via_poi_access, sections):
+    if not via_poi_access:
+        return
+    section = sections[-1] if fallback_type == StreetNetworkPathType.BEGINNING_FALLBACK else sections[0]
+    poi_access = section.vias.add()
+    poi_access.name = via_poi_access.name
+    poi_access.uri = via_poi_access.uri
+    poi_access.coord.lon = via_poi_access.poi.coord.lon
+    poi_access.coord.lat = via_poi_access.poi.coord.lat
+    poi_access.embedded_type = type_pb2.poi_access_point
+    poi_access.is_exit = True
+    poi_access.is_entrance = True
+
+
+def _update_journey(journey, park_section, street_mode_section, to_replace):
+    journey.duration += park_section.duration + street_mode_section.duration
+    journey.durations.total += park_section.duration + street_mode_section.duration
+    journey.arrival_date_time += park_section.duration + street_mode_section.duration
+    journey.sections.remove(to_replace)
+    journey.sections.extend([street_mode_section, park_section])
+    journey.nb_sections += 2
+
+
+def _get_coords_from_pt_object(pt_object):
+    coord = get_pt_object_coord(pt_object)
+    return coord
+
+
+def _get_walking_information(object_1, object_2, walking_speed):
+    """
+    Calculate the walking time and the distance between two coordinates.
+
+    Args:
+        cord1 (tuple): The (latitude, longitude) of the starting point.
+        cord2 (tuple): The (latitude, longitude) of the destination point.
+        walking_speed (float, optional): Walking speed in meter per seconds.
+
+    Returns:
+        float: The walking time in secondes.
+        float: The distance in meters
+    """
+    cord1 = get_pt_object_coord(object_1)
+    cord2 = get_pt_object_coord(object_2)
+
+    distance = crowfly_distance_between(cord1, cord2)
+    return get_manhattan_duration(distance, walking_speed), round(distance)
+
+
+def _get_place(kwargs, pt_object):
+    """
+    Retrieve a place instance based on the provided URI.
+
+    Args:
+        kwargs (dict): A dictionary containing the following keys:
+            - future_manager: The future manager instance.
+            - instance: The instance to be used.
+            - request_id: The ID of the request.
+        uri (str): The URI of the place to retrieve.
+
+    Returns:
+        PlaceByUri: An instance of PlaceByUri after waiting for the result.
+    """
+    coord = _get_coords_from_pt_object(pt_object)
+    uri = "{};{}".format(coord.lon, coord.lat)
+    place_by_uri_instance = PlaceByUri(kwargs["future_manager"], kwargs["instance"], uri, kwargs["request_id"])
+    return place_by_uri_instance.wait_and_get()
+
+
+def _update_fallback_with_bike_mode(
+    journey, fallback_dp, fallback_period_extremity, fallback_type, via_pt_access, via_poi_access, **kwargs
+):
+    """
+        Updates the journey with bike mode fallback sections.
+    access_point
+        This function updates the journey sections with bike mode fallback sections based on the fallback type
+        (BEGINNING_FALLBACK or ENDING_FALLBACK). It aligns the fallback direct path datetime, updates the section IDs,
+        and creates the necessary links between the fallback and public transport parts. It also handles the addition
+        of POI access points in the sections.
+
+        Args:
+            journey (Journey): The journey object to be updated.
+            fallback_dp (DirectPath): The direct path object for the fallback.
+            fallback_period_extremity (datetime): The extremity datetime for the fallback period.
+            fallback_type (StreetNetworkPathType): The type of fallback (BEGINNING_FALLBACK or ENDING_FALLBACK).
+            via_pt_access (PtObject): The public transport access point object.
+            via_poi_access (POIObject): The point of interest access point object.
+            **kwargs: Additional keyword arguments, including:
+                - origin_mode (list): The mode of origin (e.g., ["bike"]).
+                - destination_mode (list): The mode of destination (e.g., ["bike"]).
+                - future_manager (FutureManager): The future manager instance.
+                - instance (Instance): The instance object.
+                - request_id (str): The request ID.
+                - additional_time (timedelta): The additional time to be added to the sections.
+
+        Returns:
+            None
+    """
+    # Validate required arguments
+    if not all(kwargs.get(key) for key in ("future_manager", "instance", "request_id")):
+        raise EntryPointException(
+            "Future manager, instance, and request ID are required.", response_pb2.Error.internal_error
+        )
+
+    aligned_fallback = _align_fallback_direct_path_datetime(fallback_dp, fallback_period_extremity)
+    fallback_sections = aligned_fallback.journeys[0].sections
+    _rename_fallback_sections_ids(fallback_sections)
+
+    if (
+        fallback_type == StreetNetworkPathType.BEGINNING_FALLBACK
+        and fallback_sections[-1].street_network.mode is response_pb2.Bike
+    ):
+
+        place = _get_place(kwargs, fallback_sections[-1].destination)
+        walktime, walking_distance = _get_walking_information(
+            place,
+            journey.sections[0].destination,
+            kwargs["instance"].walking_speed,
+        )
+
+        fallback_sections[-1].destination.CopyFrom(place)
+        fallback_sections[-1].end_date_time -= kwargs["additional_time"] + walktime
+        fallback_sections[-1].begin_date_time -= kwargs["additional_time"] + walktime
+        park_section = _make_bike_park(fallback_sections[-1].end_date_time, kwargs["additional_time"])
+        journey.durations.walking += walktime
+        street_mode_section = _make_bike_park_street_network(
+            fallback_sections[-1].destination,
+            park_section.end_date_time,
+            journey.sections[0].destination,
+            (fallback_sections[-1].end_date_time + park_section.duration) - journey.sections[0].end_date_time,
+            walktime,
+            walking_distance,
+        )
+        street_mode_section.street_network.coordinates.extend(
+            [journey.sections[0].destination.stop_point.coord, fallback_sections[-1].destination.address.coord]
+        )
+        _update_journey(journey, park_section, street_mode_section, journey.sections[0])
+    if (
+        fallback_type == StreetNetworkPathType.BEGINNING_FALLBACK
+        and fallback_sections[-1].street_network.mode is not response_pb2.Bike
+    ):
+        section_to_replace = journey.sections[0]
+        journey.sections.remove(section_to_replace)
+        fallback_sections[-1].destination.CopyFrom(journey.sections[0].origin)
+    elif (
+        fallback_type == StreetNetworkPathType.ENDING_FALLBACK
+        and fallback_sections[0].street_network.mode is response_pb2.Bike
+    ):
+        walktime, walking_distance = _get_walking_information(
+            journey.sections[-1].origin,
+            fallback_sections[0].origin,
+            kwargs["instance"].walking_speed,
+        )
+        journey.durations.walking += walktime
+        place = _get_place(kwargs, fallback_sections[0].origin)
+        fallback_sections[0].origin.CopyFrom(place)
+        street_mode_section = _make_bike_park_street_network(
+            journey.sections[-1].origin,
+            fallback_sections[0].begin_date_time,
+            fallback_sections[0].origin,
+            (fallback_sections[0].begin_date_time + kwargs["additional_time"])
+            - journey.sections[-1].begin_date_time,
+            walktime,
+            walking_distance,
+        )
+        park_section = _make_bike_park(street_mode_section.begin_date_time, kwargs["additional_time"])
+        fallback_sections[0].begin_date_time += kwargs["additional_time"]
+        street_mode_section.street_network.coordinates.extend(
+            [journey.sections[-1].origin.stop_point.coord, fallback_sections[0].origin.address.coord]
+        )
+        _update_journey(journey, park_section, street_mode_section, journey.sections[-1])
+    elif (
+        fallback_type == StreetNetworkPathType.ENDING_FALLBACK
+        and fallback_sections[0].street_network.mode is not response_pb2.Bike
+    ):
+        section_to_replace = journey.sections[-1]
+        journey.sections.remove(section_to_replace)
+        fallback_sections[0].origin.CopyFrom(journey.sections[-1].destination)
+
+    add_poi_access_point_in_sections(fallback_type, via_poi_access, fallback_sections)
+
+    if isinstance(via_pt_access, type_pb2.PtObject) and via_pt_access.embedded_type == type_pb2.ACCESS_POINT:
+        if fallback_type == StreetNetworkPathType.BEGINNING_FALLBACK:
+            target_section = next((s for s in journey.sections if s.id == "Street_network_section_2"), None)
+            if target_section:
+                target_section.vias.add().CopyFrom(via_pt_access.access_point)
+                target_section.street_network.path_items.extend(
+                    [fallback_sections[-1].street_network.path_items[-1]]
+                )
+                fallback_sections[-1].street_network.path_items.pop()
+                # update the duration and length of the sections
+                # the duration and length of the target section is the duration and length of the access point
+                # the duration and length of the fallback section is the duration and length of the street network minus the duration and length of the access point
+                target_section.duration = via_pt_access.access_point.traversal_time
+                target_section.length = via_pt_access.access_point.length
+                fallback_sections[-1].duration -= via_pt_access.access_point.traversal_time
+                fallback_sections[-1].length -= via_pt_access.access_point.length
+            else:
+                fallback_sections[-1].vias.add().CopyFrom(via_pt_access.access_point)
+
+        else:
+            fallback_sections[0].vias.add().CopyFrom(via_pt_access.access_point)
+    journey.sections.extend(fallback_sections)
+    journey.sections.sort(key=cmp_to_key(SectionSorter()))
+
+
+def _update_fallback_sections(
+    journey, fallback_dp, fallback_period_extremity, fallback_type, via_pt_access, via_poi_access
+):
     """
     Replace journey's fallback sections with the given fallback_dp.
 
@@ -335,14 +640,13 @@ def _update_fallback_sections(journey, fallback_dp, fallback_period_extremity, f
     else:
         fallback_sections[0].origin.CopyFrom(journey.sections[-1].destination)
 
-    if (
-        isinstance(via_access_point, type_pb2.PtObject)
-        and via_access_point.embedded_type == type_pb2.ACCESS_POINT
-    ):
+    add_poi_access_point_in_sections(fallback_type, via_poi_access, fallback_sections)
+
+    if isinstance(via_pt_access, type_pb2.PtObject) and via_pt_access.embedded_type == type_pb2.ACCESS_POINT:
         if fallback_type == StreetNetworkPathType.BEGINNING_FALLBACK:
-            fallback_sections[-1].vias.add().CopyFrom(via_access_point.access_point)
+            fallback_sections[-1].vias.add().CopyFrom(via_pt_access.access_point)
         else:
-            fallback_sections[0].vias.add().CopyFrom(via_access_point.access_point)
+            fallback_sections[0].vias.add().CopyFrom(via_pt_access.access_point)
 
     journey.sections.extend(fallback_sections)
     journey.sections.sort(key=cmp_to_key(SectionSorter()))
@@ -385,6 +689,12 @@ class BeginningFallback(object):
     def set_journey_bound_datetime(self, journey):
         journey.departure_date_time = journey.sections[0].begin_date_time
 
+    def update_shape_coord(self, journey, coord):
+        shape = self.get_first_non_crowfly_section(journey).shape
+        if not shape:
+            return
+        shape[0].CopyFrom(coord)
+
 
 class EndingFallback(object):
     def get_first_non_crowfly_section(self, journey):
@@ -410,6 +720,12 @@ class EndingFallback(object):
 
     def set_journey_bound_datetime(self, journey):
         journey.arrival_date_time = journey.sections[-1].end_date_time
+
+    def update_shape_coord(self, journey, coord):
+        shape = self.get_first_non_crowfly_section(journey).shape
+        if not shape:
+            return
+        shape[-1].CopyFrom(coord)
 
 
 def _build_crowflies(pt_journeys, orig, dest):
@@ -444,8 +760,10 @@ def _build_crowfly(pt_journey, entry_point, mode, places_free_access, fallback_d
         # No need for a crowfly if the pt section starts from the requested object
         return None
 
-    if pt_obj.uri in places_free_access.odt:
+    if pt_obj.uri in [o.uri for o in places_free_access.odt]:
         pt_obj.CopyFrom(entry_point)
+        # Update first or last coord in the shape
+        fallback_logic.update_shape_coord(pt_journey, get_pt_object_coord(pt_obj))
         return None
 
     section_datetime = fallback_logic.get_pt_section_datetime(pt_journey)
@@ -479,6 +797,7 @@ def _build_fallback(
     fallback_durations_pool,
     request,
     fallback_type,
+    **kwargs
 ):
     accessibles_by_crowfly = obj_accessible_by_crowfly.wait_and_get()
     fallback_durations = fallback_durations_pool.wait_and_get(mode)
@@ -487,24 +806,28 @@ def _build_fallback(
     pt_obj = fallback_logic.get_pt_boundaries(pt_journey)
     car_park = None
     car_park_crowfly_duration = None
-    via_access_point = None
+    via_pt_access = None
+    via_poi_access = None
+    language = request.get('language', "fr-FR")
 
     if mode == 'car':
-        _, _, car_park, car_park_crowfly_duration, _ = fallback_durations[pt_obj.uri]
+        _, _, car_park, car_park_crowfly_duration, _, _ = fallback_durations[pt_obj.uri]
     else:
-        # we retrieve the via_access_point from which the being/end of pt journeys is accessed by asking fallback_durations
-        # the via_access_point may be a stop_point or a access_point
-        _, _, _, _, via_access_point = fallback_durations[pt_obj.uri]
+        # we retrieve the via_pt_access from which the being/end of pt journeys is accessed by asking fallback_durations
+        # the via_pt_access may be a stop_point or a access_point
+        _, _, _, _, via_pt_access, via_poi_access = fallback_durations[pt_obj.uri]
 
     if requested_obj.uri != pt_obj.uri:
-        if pt_obj.uri in accessibles_by_crowfly.odt:
+        if pt_obj.uri in [o.uri for o in accessibles_by_crowfly.odt]:
             pt_obj.CopyFrom(requested_obj)
         else:
             # extend the journey with the fallback routing path
             is_after_pt_sections = fallback_logic.is_after_pt_sections()
             pt_datetime = fallback_logic.get_pt_section_datetime(pt_journey)
             fallback_period_extremity = PeriodExtremity(pt_datetime, is_after_pt_sections)
-            orig, dest = fallback_logic.route_params(requested_obj, car_park or via_access_point or pt_obj)
+            orig, dest = fallback_logic.route_params(
+                via_poi_access or requested_obj, car_park or via_pt_access or pt_obj
+            )
 
             real_mode = fallback_durations_pool.get_real_mode(mode, pt_obj.uri)
             fallback_dp = streetnetwork_path_pool.wait_and_get(
@@ -533,11 +856,37 @@ def _build_fallback(
                         car_park_crowfly_duration,
                     )
                 else:
-                    _extend_with_via_access_point(fallback_dp_copy, pt_obj, fallback_type, via_access_point)
+                    _extend_with_via_pt_access(fallback_dp_copy, pt_obj, fallback_type, via_pt_access, language)
+                    extend_path_with_via_poi_access(
+                        fallback_dp_copy, fallback_type, requested_obj, via_poi_access, language
+                    )
 
-                _update_fallback_sections(
-                    pt_journey, fallback_dp_copy, fallback_period_extremity, fallback_type, via_access_point
-                )
+                if request["park_mode"] == ParkMode.on_street.name:
+                    _update_fallback_with_bike_mode(
+                        pt_journey,
+                        fallback_dp_copy,
+                        fallback_period_extremity,
+                        fallback_type,
+                        via_pt_access,
+                        via_poi_access,
+                        park_mode=request["park_mode"],
+                        origin_mode=request["origin_mode"],
+                        destination_mode=request["destination_mode"],
+                        additional_time=request["on_street_bike_parking_duration"],
+                        instance=kwargs["instance"],
+                        future_manager=kwargs["future_manager"],
+                        request_id=kwargs["_request_id"],
+                        request=request,
+                    )
+                else:
+                    _update_fallback_sections(
+                        pt_journey,
+                        fallback_dp_copy,
+                        fallback_period_extremity,
+                        fallback_type,
+                        via_pt_access,
+                        via_poi_access,
+                    )
 
                 # update distances and durations by mode if it's a proper computed streetnetwork fallback
                 if fallback_dp_copy and fallback_dp_copy.journeys:
@@ -549,6 +898,7 @@ def _build_fallback(
                         fb_duration = getattr(fallback_dp_copy.journeys[0].durations, m)
                         main_duration = getattr(pt_journey.durations, m)
                         setattr(pt_journey.durations, m, fb_duration + main_duration)
+
             # if it's only a non-teleport crowfly fallback, update distances and durations by mode
             else:
                 if fallback_type == StreetNetworkPathType.BEGINNING_FALLBACK:
@@ -574,7 +924,7 @@ def _build_fallback(
     return pt_journey
 
 
-def get_max_fallback_duration(request, mode, dp_future):
+def get_max_fallback_duration(request, mode, dp_future, direct_path_timeout):
     """
     By knowing the duration of direct path, we can limit the max duration for proximities by crowfly and fallback
     durations
@@ -585,7 +935,7 @@ def get_max_fallback_duration(request, mode, dp_future):
     """
     # 30 minutes by default
     max_duration = request.get('max_{}_duration_to_pt'.format(mode), 1800)
-    dp = dp_future.wait_and_get() if dp_future else None
+    dp = dp_future.wait_and_get(timeout=direct_path_timeout) if dp_future else None
     dp_duration = dp.journeys[0].durations.total if getattr(dp, 'journeys', None) else max_duration
     return min(max_duration, dp_duration)
 
@@ -622,16 +972,20 @@ def compute_fallback(
         pt_departure = fallback.get_pt_section_datetime(journey)
         fallback_extremity_dep = PeriodExtremity(pt_departure, False)
         from_sub_request_id = "{}_{}_from".format(request_id, i)
-        if from_obj.uri != pt_orig.uri and pt_orig.uri not in orig_all_free_access:
+        if from_obj.uri != pt_orig.uri and pt_orig.uri not in set((p.uri for p in orig_all_free_access)):
             # here, if the mode is car, we have to find from which car park the stop_point is accessed
             if dep_mode == 'car':
                 orig_obj = orig_fallback_durations_pool.wait_and_get(dep_mode)[pt_orig.uri].car_park
                 real_mode = orig_fallback_durations_pool.get_real_mode(dep_mode, orig_obj.uri)
             else:
                 orig_obj = (
-                    orig_fallback_durations_pool.wait_and_get(dep_mode)[pt_orig.uri].via_access_point or pt_orig
+                    orig_fallback_durations_pool.wait_and_get(dep_mode)[pt_orig.uri].via_pt_access or pt_orig
                 )
                 real_mode = orig_fallback_durations_pool.get_real_mode(dep_mode, pt_orig.uri)
+
+                from_obj = (
+                    orig_fallback_durations_pool.wait_and_get(dep_mode)[pt_orig.uri].via_poi_access or from_obj
+                )
 
             streetnetwork_path_pool.add_async_request(
                 from_obj,
@@ -650,16 +1004,19 @@ def compute_fallback(
         pt_arrival = fallback.get_pt_section_datetime(journey)
         fallback_extremity_arr = PeriodExtremity(pt_arrival, True)
         to_sub_request_id = "{}_{}_to".format(request_id, i)
-        if to_obj.uri != pt_dest.uri and pt_dest.uri not in dest_all_free_access:
+        if to_obj.uri != pt_dest.uri and pt_dest.uri not in set((p.uri for p in dest_all_free_access)):
             if arr_mode == 'car':
                 dest_obj = dest_fallback_durations_pool.wait_and_get(arr_mode)[pt_dest.uri].car_park
                 real_mode = dest_fallback_durations_pool.get_real_mode(arr_mode, dest_obj.uri)
 
             else:
                 dest_obj = (
-                    dest_fallback_durations_pool.wait_and_get(arr_mode)[pt_dest.uri].via_access_point or pt_dest
+                    dest_fallback_durations_pool.wait_and_get(arr_mode)[pt_dest.uri].via_pt_access or pt_dest
                 )
                 real_mode = dest_fallback_durations_pool.get_real_mode(arr_mode, pt_dest.uri)
+                to_obj = (
+                    dest_fallback_durations_pool.wait_and_get(arr_mode)[pt_dest.uri].via_poi_access or to_obj
+                )
 
             streetnetwork_path_pool.add_async_request(
                 dest_obj, to_obj, real_mode, fallback_extremity_arr, request, direct_path_type, to_sub_request_id
@@ -678,6 +1035,7 @@ def complete_pt_journey(
     orig_fallback_durations_pool,
     dest_fallback_durations_pool,
     request,
+    **kwargs
 ):
     """
     We complete the pt_journey by adding the beginning fallback and the ending fallback
@@ -696,6 +1054,7 @@ def complete_pt_journey(
         orig_fallback_durations_pool,
         request=request,
         fallback_type=StreetNetworkPathType.BEGINNING_FALLBACK,
+        **kwargs
     )
 
     pt_journey = _build_fallback(
@@ -707,6 +1066,7 @@ def complete_pt_journey(
         dest_fallback_durations_pool,
         request=request,
         fallback_type=StreetNetworkPathType.ENDING_FALLBACK,
+        **kwargs
     )
 
     logger.debug("finish building pt journey starts with %s and ends with %s", dep_mode, arr_mode)
@@ -745,24 +1105,6 @@ def check_final_results_or_raise(final_results, orig_fallback_durations_pool, de
         )
 
 
-@contextmanager
-def timed_logger(logger, task_name, request_id):
-    start = time.time()
-    try:
-        yield logger
-    finally:
-        end = time.time()
-        elapsed_time = (end - start) * 1000
-        start_in_ms = int(start * 1000)
-        end_in_ms = int(end * 1000)
-
-        logger.info(
-            "Task : {}, request : {},  start : {}, end : {}, elapsed time: {} ms".format(
-                task_name, request_id, start_in_ms, end_in_ms, '%.2e' % elapsed_time
-            )
-        )
-
-
 def complete_transfer(pt_journey, transfer_pool):
     """
     We complete the pt_journey by adding to transfer section :
@@ -778,10 +1120,15 @@ def complete_transfer(pt_journey, transfer_pool):
         transfer_pool.wait_and_complete(section)
 
 
-def is_valid_direct_path_streetwork(dp):
+def is_valid_direct_path(dp):
     if not dp or not dp.journeys or not dp.journeys[0].sections:
         return False
+    return True
 
+
+def is_valid_direct_path_streetwork(dp):
+    if not is_valid_direct_path(dp):
+        return False
     # a valid journey's must comprise at least two coordinates
     nb_coords = sum((len(sec.street_network.coordinates) for sec in dp.journeys[0].sections))
     if nb_coords < 2:
@@ -796,18 +1143,19 @@ def prepend_first_coord(dp, pt_obj):
     if not is_valid_direct_path_streetwork(dp):
         return
 
-    starting_coords = dp.journeys[0].sections[0].street_network.coordinates
-    # we are inserting the coord of the origin at the beginning of the geojson
-    coord = get_pt_object_coord(pt_obj)
-    if starting_coords and coord != starting_coords[0]:
-        starting_coords.add(lon=coord.lon, lat=coord.lat)
-        # we cannot insert an element at the beginning of a list :(
-        # a little algo to move the last element to the beginning
-        tmp = type_pb2.GeographicalCoord()
-        for i in range(len(starting_coords)):
-            tmp.CopyFrom(starting_coords[i])
-            starting_coords[i].CopyFrom(starting_coords[-1])
-            starting_coords[-1].CopyFrom(tmp)
+    for j in dp.journeys:
+        starting_coords = j.sections[0].street_network.coordinates
+        # we are inserting the coord of the origin at the beginning of the geojson
+        coord = get_pt_object_coord(pt_obj)
+        if starting_coords and coord != starting_coords[0]:
+            starting_coords.add(lon=coord.lon, lat=coord.lat)
+            # we cannot insert an element at the beginning of a list :(
+            # a little algo to move the last element to the beginning
+            tmp = type_pb2.GeographicalCoord()
+            for i in range(len(starting_coords)):
+                tmp.CopyFrom(starting_coords[i])
+                starting_coords[i].CopyFrom(starting_coords[-1])
+                starting_coords[-1].CopyFrom(tmp)
 
 
 def append_last_coord(dp, pt_obj):
@@ -817,8 +1165,9 @@ def append_last_coord(dp, pt_obj):
     if not is_valid_direct_path_streetwork(dp):
         return
 
-    ending_coords = dp.journeys[0].sections[-1].street_network.coordinates
-    # we are appending the coord of the destination at the end of the geojson
-    coord = get_pt_object_coord(pt_obj)
-    if ending_coords and coord != ending_coords[-1]:
-        ending_coords.add(lon=coord.lon, lat=coord.lat)
+    for j in dp.journeys:
+        ending_coords = j.sections[-1].street_network.coordinates
+        # we are appending the coord of the destination at the end of the geojson
+        coord = get_pt_object_coord(pt_obj)
+        if ending_coords and coord != ending_coords[-1]:
+            ending_coords.add(lon=coord.lon, lat=coord.lat)

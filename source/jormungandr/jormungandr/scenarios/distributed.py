@@ -29,6 +29,8 @@
 
 from __future__ import absolute_import, print_function, unicode_literals, division
 
+from jormungandr.park_modes import ParkMode
+
 try:
     from typing import Dict, Text, Any, Tuple
 except ImportError:
@@ -36,7 +38,8 @@ except ImportError:
 import logging, operator
 from jormungandr.scenarios import new_default
 from jormungandr import app
-from jormungandr.utils import PeriodExtremity, get_pt_object_coord
+from jormungandr.utils import PeriodExtremity, get_pt_object_coord, get_pt_object_from_json
+from jormungandr.error import generate_error
 from jormungandr.street_network.street_network import StreetNetworkPathType
 from jormungandr.scenarios.helper_classes import *
 from jormungandr.scenarios.helper_classes.complete_pt_journey import (
@@ -47,13 +50,12 @@ from jormungandr.scenarios.helper_classes.complete_pt_journey import (
 from jormungandr.street_network.utils import crowfly_distance_between
 from jormungandr.scenarios.utils import (
     fill_uris,
-    switch_back_to_ridesharing,
     updated_common_journey_request_with_default,
 )
-from jormungandr.new_relic import record_custom_parameter
+from jormungandr.otlp import otlp_instance
 from navitiacommon import response_pb2, type_pb2
 from flask_restful import abort
-from .helper_classes.helper_utils import timed_logger
+from .helper_classes.timer_logger_helper import timed_logger
 from .helper_classes.helper_exceptions import (
     NoGraphicalIsochroneFoundException,
     PtException,
@@ -98,7 +100,17 @@ class Distributed(object):
     def is_type_only(direct_path_type):
         return direct_path_type in ("only", "only_with_alternatives")
 
-    def _compute_journeys(self, future_manager, request, instance, krakens_call, context, request_type):
+    def _compute_journeys(
+        self,
+        future_manager,
+        pt_object_origin_detail,
+        pt_object_destination_detail,
+        request,
+        instance,
+        krakens_call,
+        context,
+        request_type,
+    ):
         """
         For all krakens_call, call the kraken and aggregate the responses
 
@@ -131,21 +143,8 @@ class Distributed(object):
         if context.partial_response_is_empty:
             logger.debug('requesting places by uri orig: %s dest %s', request['origin'], request['destination'])
 
-            context.requested_orig = PlaceByUri(
-                future_manager=future_manager,
-                instance=instance,
-                uri=request['origin'],
-                request_id="{}_place_origin".format(request_id),
-            )
-            context.requested_dest = PlaceByUri(
-                future_manager=future_manager,
-                instance=instance,
-                uri=request['destination'],
-                request_id="{}_place_dest".format(request_id),
-            )
-
-            context.requested_orig_obj = get_entry_point_or_raise(context.requested_orig, request['origin'])
-            context.requested_dest_obj = get_entry_point_or_raise(context.requested_dest, request['destination'])
+            context.requested_orig_obj = pt_object_origin_detail
+            context.requested_dest_obj = pt_object_destination_detail
 
             context.streetnetwork_path_pool = StreetNetworkPathPool(
                 future_manager=future_manager, instance=instance
@@ -185,6 +184,10 @@ class Distributed(object):
                 context.streetnetwork_path_pool.add_feed_publishers(request, requested_direct_path_modes, res)
                 return res
 
+            # if the parkmode is set to "on street" we need to subtract additional time to the max_bike_duration_to_pt
+            if ParkMode.on_street.name == request.get("park_mode", ""):
+                request["max_bike_duration_to_pt"] += request.get("on_street_bike_parking_duration", 0)
+
             # We'd like to get the duration of a direct path to do some optimizations in ProximitiesByCrowflyPool and
             # FallbackDurationsPool.
             # Note :direct_paths_by_mode is a dict of mode vs future of a direct paths, this line is not blocking
@@ -193,6 +196,8 @@ class Distributed(object):
             crowfly_distance = crowfly_distance_between(
                 get_pt_object_coord(context.requested_orig_obj), get_pt_object_coord(context.requested_dest_obj)
             )
+
+            direct_path_timeout = app.config.get("DIRECT_PATH_TIMEOUT", 0.1)
             context.orig_proximities_by_crowfly = ProximitiesByCrowflyPool(
                 future_manager=future_manager,
                 instance=instance,
@@ -203,6 +208,7 @@ class Distributed(object):
                 max_nb_crowfly_by_mode=request['max_nb_crowfly_by_mode'],
                 request_id="{}_crowfly_orig".format(request_id),
                 o_d_crowfly_distance=crowfly_distance,
+                direct_path_timeout=direct_path_timeout,
             )
 
             context.dest_proximities_by_crowfly = ProximitiesByCrowflyPool(
@@ -215,18 +221,21 @@ class Distributed(object):
                 max_nb_crowfly_by_mode=request['max_nb_crowfly_by_mode'],
                 request_id="{}_crowfly_dest".format(request_id),
                 o_d_crowfly_distance=crowfly_distance,
+                direct_path_timeout=direct_path_timeout,
             )
 
             context.orig_places_free_access = PlacesFreeAccess(
                 future_manager=future_manager,
                 instance=instance,
                 requested_place_obj=context.requested_orig_obj,
+                pt_planner_name=request['_pt_planner'],
                 request_id="{}_places_free_access_orig".format(request_id),
             )
             context.dest_places_free_access = PlacesFreeAccess(
                 future_manager=future_manager,
                 instance=instance,
                 requested_place_obj=context.requested_dest_obj,
+                pt_planner_name=request['_pt_planner'],
                 request_id="{}_places_free_access_dest".format(request_id),
             )
 
@@ -241,6 +250,7 @@ class Distributed(object):
                 request=request,
                 direct_path_type=StreetNetworkPathType.BEGINNING_FALLBACK,
                 request_id="{}_fallback_orig".format(request_id),
+                direct_path_timeout=direct_path_timeout,
             )
 
             context.dest_fallback_durations_pool = FallbackDurationsPool(
@@ -254,6 +264,7 @@ class Distributed(object):
                 request=request,
                 direct_path_type=StreetNetworkPathType.ENDING_FALLBACK,
                 request_id="{}_fallback_dest".format(request_id),
+                direct_path_timeout=direct_path_timeout,
             )
 
         pt_journey_pool = PtJourneyPool(
@@ -319,12 +330,24 @@ class Distributed(object):
         journeys_to_complete = get_journeys_to_complete(responses, context, is_debug)
 
         transfer_pool = TransferPool(
+            future_manager=future_manager,
+            instance=instance,
+            request=request,
+            request_id=request_id,
+            pt_planner_name=request['_pt_planner'],
+        )
+
+        pt_journey_fare_pool = PtJourneyFarePool(
             future_manager=future_manager, instance=instance, request=request, request_id=request_id
         )
 
         if request['_transfer_path'] is True:
             for journey in journeys_to_complete:
                 transfer_pool.async_compute_transfer(journey.pt_journeys.sections)
+
+        if request['_loki_compute_pt_journey_fare'] is True and request['_pt_planner'] == "loki":
+            for response in responses:
+                pt_journey_fare_pool.async_compute_fare(response, request_id)
 
         wait_and_complete_pt_journey(
             requested_orig_obj=context.requested_orig_obj,
@@ -338,25 +361,36 @@ class Distributed(object):
             request=request,
             journeys=journeys_to_complete,
             request_id="{}_complete_pt_journey".format(request_id),
+            instance=instance,
+            future_manager=future_manager,
+            _request_id=request_id,
         )
+        if request['_loki_compute_pt_journey_fare'] is True and request['_pt_planner'] == "loki":
+            wait_and_complete_pt_journey_fare(
+                pt_elements=journeys_to_complete, pt_journey_fare_pool=pt_journey_fare_pool
+            )
 
-    def _compute_isochrone_common(self, future_manager, request, instance, krakens_call, request_type):
+    def _compute_isochrone_common(
+        self,
+        future_manager,
+        pt_object_origin_detail,
+        pt_object_destination_detail,
+        request,
+        instance,
+        krakens_call,
+        request_type,
+    ):
         logger = logging.getLogger(__name__)
         logger.debug('request datetime: %s', request['datetime'])
 
-        isochrone_center = request['origin'] or request['destination']
+        request["_pt_planner"] = "kraken"
+
+        requested_obj = pt_object_origin_detail or pt_object_destination_detail
 
         mode_getter = operator.itemgetter(0 if request['origin'] else 1)
         requested_modes = {mode_getter(call) for call in krakens_call}
 
-        logger.debug('requesting places by uri orig: %s', isochrone_center)
         request_id = request.get("request_id", None)
-
-        requested_orig = PlaceByUri(
-            future_manager=future_manager, instance=instance, uri=isochrone_center, request_id=request_id
-        )
-
-        requested_obj = get_entry_point_or_raise(requested_orig, isochrone_center)
 
         direct_paths_by_mode = {}
 
@@ -370,12 +404,14 @@ class Distributed(object):
             max_nb_crowfly_by_mode=request.get('max_nb_crowfly_by_mode', {}),
             request_id=request_id,
             o_d_crowfly_distance=None,
+            direct_path_timeout=None,
         )
 
         places_free_access = PlacesFreeAccess(
             future_manager=future_manager,
             instance=instance,
             requested_place_obj=requested_obj,
+            pt_planner_name=request['_pt_planner'],
             request_id=request_id,
         )
 
@@ -396,6 +432,7 @@ class Distributed(object):
             request=request,
             request_id=request_id,
             direct_path_type=direct_path_type,
+            direct_path_timeout=None,
         )
 
         # We don't need requested_orig_obj or requested_dest_obj for isochrone
@@ -409,7 +446,7 @@ class Distributed(object):
             "request": request,
             "request_type": request_type,
             "request_id": request_id,
-            "isochrone_center": isochrone_center,
+            "isochrone_center": requested_obj,
         }
         if request['origin']:
             pt_journey_args.update(
@@ -423,7 +460,7 @@ class Distributed(object):
         pt_journey_pool = PtJourneyPool(**pt_journey_args)
 
         res = []
-        for (dep_mode, arr_mode, future_pt_journey) in pt_journey_pool:
+        for dep_mode, arr_mode, future_pt_journey in pt_journey_pool:
             logger.debug("waiting for pt journey starts with %s and ends with %s", dep_mode, arr_mode)
             pt_journeys = wait_and_get_pt_journeys(future_pt_journey, False)
             if pt_journeys:
@@ -450,8 +487,18 @@ class Scenario(new_default.Scenario):
     def get_context(self):
         return PartialResponseContext()
 
-    def call_kraken(self, request_type, request, instance, krakens_call, request_id, context):
-        record_custom_parameter('scenario', 'distributed')
+    def call_kraken(
+        self,
+        pt_object_origin_detail,
+        pt_object_destination_detail,
+        request_type,
+        request,
+        instance,
+        krakens_call,
+        request_id,
+        context=None,
+    ):
+        otlp_instance.record_label('scenario', 'distributed')
         logger = logging.getLogger(__name__)
         """
         All spawned futures must be started(if they're not yet started) when leaving the scope.
@@ -467,11 +514,24 @@ class Scenario(new_default.Scenario):
             ):
                 if request_type == type_pb2.ISOCHRONE:
                     return self._scenario._compute_isochrone_common(
-                        future_manager, request, instance, krakens_call, type_pb2.ISOCHRONE
+                        future_manager,
+                        pt_object_origin_detail,
+                        pt_object_destination_detail,
+                        request,
+                        instance,
+                        krakens_call,
+                        type_pb2.ISOCHRONE,
                     )
                 elif request_type == type_pb2.PLANNER:
                     return self._scenario._compute_journeys(
-                        future_manager, request, instance, krakens_call, context, type_pb2.PLANNER
+                        future_manager,
+                        pt_object_origin_detail,
+                        pt_object_destination_detail,
+                        request,
+                        instance,
+                        krakens_call,
+                        context,
+                        type_pb2.PLANNER,
                     )
                 else:
                     abort(400, message="This type of request is not supported with distributed")
@@ -500,11 +560,21 @@ class Scenario(new_default.Scenario):
                 # At this point, we should have every details on the journeys.
                 # We refilter again(again and again...)
                 journey_filter.filter_detailed_journeys(responses, request)
+                # Filter olympic site (strict): Jira: NAV-2400
+                journey_filter.filter_olympic_site_strict(responses, request)
+                # Filter only olympic site: Jira: NAV-2616
+                journey_filter.filter_only_olympic_site(responses, request)
 
         except Exception as e:
             logger.exception('')
             final_e = FinaliseException(e)
             return [final_e.get()]
+
+    def get_detail_pt_object(self, instance, arg_pt_object, request_id):
+        if not arg_pt_object:
+            return None
+        detail = self.get_entrypoint_detail(arg_pt_object, instance, request_id=request_id)
+        return get_pt_object_from_json(detail, instance) if detail else None
 
     def graphical_isochrones(self, request, instance):
         logger = logging.getLogger(__name__)
@@ -528,11 +598,48 @@ class Scenario(new_default.Scenario):
                 'additional_time_before_last_section_taxi'
             ] = instance.additional_time_after_first_section_taxi
 
+        if request.get('on_street_bike_parking_duration') is None:
+            request['on_street_bike_parking_duration'] = instance.on_street_bike_parking_duration
+
+        if request.get('_access_points') is None:
+            request['_access_points'] = False
+
         krakens_call = set({(request["origin_mode"][0], request["destination_mode"][0], "indifferent")})
+        pt_object_origin = None
+        pt_object_destination = None
+        request_id = request.get("request_id", None)
+        origin = request.get('origin')
+        if origin:
+            pt_object_origin = self.get_detail_pt_object(
+                instance, origin, request_id="{}_origin_detail".format(request_id)
+            )
+            if not pt_object_origin:
+                return generate_error(
+                    "The entry point: {} is not valid".format(origin),
+                    response_pb2.Error.unknown_object,
+                    404,
+                )
+        destination = request.get('destination')
+        if destination:
+            pt_object_destination = self.get_detail_pt_object(
+                instance, destination, request_id="{}_dest_detail".format(request_id)
+            )
+            if not pt_object_destination:
+                return generate_error(
+                    "The entry point: {} is not valid".format(destination),
+                    response_pb2.Error.unknown_object,
+                    404,
+                )
         try:
             with FutureManager(self.greenlet_pool_size) as future_manager:
                 return self._scenario._compute_isochrone_common(
-                    future_manager, request, instance, krakens_call, type_pb2.graphical_isochrone
+                    future_manager,
+                    pt_object_origin,
+                    pt_object_destination,
+                    request,
+                    instance,
+                    krakens_call,
+                    type_pb2.graphical_isochrone,
                 )
         except PtException as e:
             logger.exception('')

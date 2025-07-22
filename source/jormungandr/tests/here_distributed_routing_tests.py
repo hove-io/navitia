@@ -84,7 +84,7 @@ class TestHere(NewDefaultScenarioAbstractTestFixture):
         assert feeds[0].get('id') == 'builder'
         assert feeds[0].get('name') == 'routing api data'
         assert feeds[0].get('license') == 'ODBL'
-        assert feeds[0].get('url') == 'www.canaltp.fr'
+        assert feeds[0].get('url') == 'www.hove.com'
 
         assert feeds[1].get('id') == 'here'
         assert feeds[1].get('name') == 'here'
@@ -107,7 +107,7 @@ class TestHere(NewDefaultScenarioAbstractTestFixture):
         assert feeds[0].get('id') == 'builder'
         assert feeds[0].get('name') == 'routing api data'
         assert feeds[0].get('license') == 'ODBL'
-        assert feeds[0].get('url') == 'www.canaltp.fr'
+        assert feeds[0].get('url') == 'www.hove.com'
 
         assert feeds[1].get('id') == 'here'
         assert feeds[1].get('name') == 'here'

@@ -47,12 +47,12 @@ void HeadsignHandler::serialize(Archive& ar, const unsigned int /*unused*/) {
 }
 SERIALIZABLE(HeadsignHandler)
 
-void HeadsignHandler::change_name_and_register_as_headsign(VehicleJourney& vj, const std::string& new_name) {
-    std::string prev_name = vj.headsign;
-    vj.headsign = new_name;
+void HeadsignHandler::change_vj_headsign_and_register(VehicleJourney& vj, const std::string& new_headsign) {
+    std::string prev_headsign = vj.headsign;
+    vj.headsign = new_headsign;
     headsign_mvj[vj.headsign].insert(vj.meta_vj);
-    if (prev_name != vj.headsign) {
-        update_headsign_mvj_after_remove(vj, prev_name);
+    if (prev_headsign != vj.headsign) {
+        update_headsign_mvj_after_remove(vj, prev_headsign);
     }
 }
 
@@ -83,23 +83,20 @@ const std::string& HeadsignHandler::get_headsign(const VehicleJourney* vj) const
 }
 
 const std::string& HeadsignHandler::get_headsign(const StopTime& stop_time) const {
-    // if no headsign map for vj: return name
     if (!navitia::contains(headsign_changes, stop_time.vehicle_journey)) {
         return stop_time.vehicle_journey->headsign;
     }
 
-    // otherwise use headsign change map
     const auto& map_stop_time_headsign_change = headsign_changes.at(stop_time.vehicle_journey);
     auto order_stop_time = stop_time.order();
 
-    // if no headsign change stored: return name
     if (map_stop_time_headsign_change.empty()) {
         return stop_time.vehicle_journey->headsign;
     }
 
     // get next change
     auto it_headsign = map_stop_time_headsign_change.upper_bound(order_stop_time);
-    // if next change is the first: return name
+    // if next change is the first: return headsign
     if (it_headsign == map_stop_time_headsign_change.begin()) {
         return stop_time.vehicle_journey->headsign;
     }
@@ -118,7 +115,7 @@ std::set<std::string> HeadsignHandler::get_all_headsigns(const VehicleJourney* v
         return res;
     }
     for (const auto& change : it_changes->second) {
-        // ignore last headsign (vj.name) as it does not concern a stop_time
+        // ignore last headsign (vj.headsign) as it does not concern a stop_time
         if (change.first.val < vj->stop_time_list.size()) {
             res.insert(change.second);
         }
@@ -186,7 +183,7 @@ void HeadsignHandler::affect_headsign_to_stop_time(const StopTime& stop_time, co
     else if (vj_headsign_changes[order + 1] == headsign) {
         vj_headsign_changes.erase(order + 1);
     }
-    // if map for this vj is empty (all headsigns == vj.name): clean map
+    // if map for this vj is empty (all headsigns == vj.headsign): clean map
     if (vj_headsign_changes.empty()) {
         headsign_changes.erase(vj);
     }

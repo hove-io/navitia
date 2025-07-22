@@ -35,8 +35,8 @@ import glob
 setup(
     name='tyr',
     description="Provide an API for managing users and handle data updates",
-    author='CanalTP',
-    author_email='alexandre.jacquin@canaltp.fr',
+    author='Hove',
+    author_email='core@hove.com',
     url='www.navitia.io',
     packages=[str('tyr'), str('tyr.command')],
     requires=['configobj'],
@@ -48,6 +48,6 @@ setup(
         ),
         ('/usr/share/tyr/migrations/versions', glob.glob('migrations/versions/*.py')),
         ('/etc/init.d', ['tyr_beat', 'tyr_worker']),
-        ('/usr/share/tyr', ['requirements.txt']),
+        ('/usr/share/tyr', ['requirements.txt', 'manage_tyr.py']),
     ],
 )

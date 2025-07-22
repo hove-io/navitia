@@ -35,13 +35,9 @@ from setuptools import find_packages
 setup(
     name='jormungandr',
     description='webservice d\'exposition en http de kraken',
-    author='Kisio Digital',
-    author_email='navitia.pt.core@kisio.com',
+    author='Hove',
+    author_email='core@hove.com',
     url='www.navitia.io',
     packages=find_packages(),
-    data_files=[
-        ('/usr/share/jormungandr', ['requirements.txt']),
-        # Add newrelic config
-        ('/etc/jormungandr', ['newrelic.ini']),
-    ],
+    data_files=[('/usr/share/jormungandr', ['requirements.txt'])],
 )

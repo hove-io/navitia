@@ -120,9 +120,9 @@ class TestPtRef(AbstractTestFixture):
 
         feed_publisher = feed_publishers[0]
         assert feed_publisher["id"] == "builder"
-        assert feed_publisher["name"] == "canal tp"
+        assert feed_publisher["name"] == "hove"
         assert feed_publisher["license"] == "ODBL"
-        assert feed_publisher["url"] == "www.canaltp.fr"
+        assert feed_publisher["url"] == "www.hove.com"
         self.check_context(response)
 
     def test_vj_depth_0(self):
@@ -1352,3 +1352,12 @@ class TestPtRefRoutingCov(AbstractTestFixture):
         assert response['pagination']['items_per_page'] == 1000
         assert response['pagination']['items_on_page'] == 9
         assert response['pagination']['total_result'] == 9
+
+    def test_pagination_links_with_count_and_allowed_id(self):
+        response = self.query_region(
+            "stop_points?count=2&start_page=1&allowed_id[]=toto&allowed_id[]=titi", display=True
+        )
+        for link in response['links']:
+            if link['type'] in ('previous', 'next', 'first', 'last'):
+                # Before correction: assert href_value.count('allowed_id') == 1
+                assert link['href'].count('allowed_id') == 2

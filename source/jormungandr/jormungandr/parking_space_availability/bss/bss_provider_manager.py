@@ -67,11 +67,14 @@ class BssProviderManager(AbstractProviderManager):
         self._last_update = datetime.datetime.utcnow()
 
         try:
+            # BSS provider list from the database (table bss_provider)
             providers = self._providers_getter()
         except Exception as e:
             logger.exception('No access to table bss_provider (error: {})'.format(e))
             # database is not accessible, so let's use the values already present in self._bss_providers and
             # self._bss_providers_legacy
+            # avoid sending query to the database for another update_interval
+            self._last_update = datetime.datetime.utcnow()
             return
 
         if not providers:
@@ -80,7 +83,6 @@ class BssProviderManager(AbstractProviderManager):
             self._bss_providers_last_update = {}
             return
 
-        logger.debug('updating with %s', providers)
         for provider in providers:
             # it's a new bss provider or it has been updated, we add it
             if (
@@ -96,11 +98,6 @@ class BssProviderManager(AbstractProviderManager):
 
     def update_provider(self, provider):
         logger = logging.getLogger(__name__)
-        logger.info(
-            'updating/adding %s bss provider with the following configuration: %s',
-            provider.id,
-            provider.full_args(),
-        )
         try:
             self._bss_providers[provider.id] = self._init_class(provider.klass, provider.full_args())
             self._bss_providers_last_update[provider.id] = provider.last_update()
@@ -115,11 +112,13 @@ class BssProviderManager(AbstractProviderManager):
                 return provider
         return None
 
-    # TODO use public version everywhere
     def _get_providers(self):
         self.update_config()
-        # providers from the database have priority on legacies providers
         return list(self._bss_providers.values()) + self._bss_providers_legacy
 
     def get_providers(self):
         return self._get_providers()
+
+    def exist_provider(self):
+        self.update_config()
+        return any(self.get_providers())

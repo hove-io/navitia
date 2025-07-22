@@ -66,18 +66,18 @@ void Data::add_feed_info(const std::string& key, const std::string& value) {
 }
 
 void Data::normalize_uri() {
-    ::ed::normalize_uri(networks);
-    ::ed::normalize_uri(companies);
-    ::ed::normalize_uri(commercial_modes);
-    ::ed::normalize_uri(lines);
-    ::ed::normalize_uri(line_groups);
-    ::ed::normalize_uri(physical_modes);
-    ::ed::normalize_uri(stop_areas);
-    ::ed::normalize_uri(stop_points);
-    ::ed::normalize_uri(vehicle_journeys);
-    ::ed::normalize_uri(validity_patterns);
-    ::ed::normalize_uri(calendars);
-    ::ed::normalize_uri(access_points);
+    ::ed::normalize_uri(networks, true);
+    ::ed::normalize_uri(companies, true);
+    ::ed::normalize_uri(commercial_modes, true);
+    ::ed::normalize_uri(lines, true);
+    ::ed::normalize_uri(line_groups, true);
+    ::ed::normalize_uri(physical_modes, true);
+    ::ed::normalize_uri(stop_areas, true);
+    ::ed::normalize_uri(stop_points, false);
+    ::ed::normalize_uri(vehicle_journeys, true);
+    ::ed::normalize_uri(validity_patterns, true);
+    ::ed::normalize_uri(calendars, true);
+    ::ed::normalize_uri(access_points, true);
 }
 
 void Data::build_block_id() {
@@ -296,7 +296,7 @@ void Data::complete() {
     shift_stop_times();
     finalize_frequency();
 
-    ::ed::normalize_uri(routes);
+    ::ed::normalize_uri(routes, true);
 
     // set StopPoint from old zonal ODT to is_zonal
     for (const auto* vj : vehicle_journeys) {

@@ -45,11 +45,9 @@ init.logger(app)
 
 # we want to patch gevent as early as possible
 if app.config.get(str('PATCH_WITH_GEVENT_SOCKET'), False):
-    init.patch_http()
+    init.patch_http(patch_level=app.config.get(str('PATCH_WITH_GEVENT_SOCKET_LEVEL'), "socket"))
 
-from jormungandr import new_relic
-
-new_relic.init(app.config.get(str('NEWRELIC_CONFIG_PATH'), None))
+from jormungandr import otlp
 
 from jormungandr.exceptions import log_exception
 from jormungandr.helper import ReverseProxied, NavitiaRequest, NavitiaRule

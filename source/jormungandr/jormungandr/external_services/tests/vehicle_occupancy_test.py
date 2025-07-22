@@ -66,7 +66,7 @@ def vehicle_occupancy_get_information_test():
     """
     Test that 'vehicle_occupancies'
     """
-    service = VehicleOccupancyProvider(service_url="vehicle_occupancy.url", timeout=3)
+    service = VehicleOccupancyProvider(id="vehicle_occupancy", service_url="vehicle_occupancy.url", timeout=3)
     brut_result = service._call_webservice = MagicMock(return_value=mock_data)
     vehicle_occupancies = brut_result.return_value.get('vehicle_occupancies', [])
     assert len(vehicle_occupancies) == 4

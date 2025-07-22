@@ -57,6 +57,8 @@ api.add_resource(
 
 api.add_resource(resources.Authorization, '/v<int:version>/users/<int:user_id>/authorizations/')
 
+api.add_resource(resources.SnBackendAuthorization, '/v1/users/<int:user_id>/sn_backend_authorizations/')
+
 api.add_resource(resources.Index, '/')
 
 api.add_resource(resources.Status, '/v0/status')

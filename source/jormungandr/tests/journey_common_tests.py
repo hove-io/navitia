@@ -56,6 +56,97 @@ def find_with_tag(journeys, tag):
     return next((j for j in journeys if tag in j['tags'] and 'non_pt' in j['tags']), None)
 
 
+journey_schedules_configs = [
+    {"allowed_id_type": ["stop_point"], "min_nb_journeys": 5},
+    {"allowed_id_type": ["line"], "min_nb_journeys": 5},
+    {"allowed_id_type": ["network"], "min_nb_journeys": 3},
+    {"allowed_id_type": ["commercial_mode"], "min_nb_journeys": 5},
+    {"allowed_id_type": ["stop_point", "line"], "min_nb_journeys": 5},
+    {"allowed_id_type": ["stop_point", "network"], "min_nb_journeys": 5},
+    {"allowed_id_type": ["stop_area", "commercial_mode"], "min_nb_journeys": 5},
+    {"allowed_id_type": ["stop_area"], "min_nb_journeys": 5},
+]
+
+
+def check_journey_id_type(result, allowed_id_types, resource_ids):
+    allowed_resources = get_allowed_resources(resource_ids, allowed_id_types)
+    for resource_type, expected_id in allowed_resources.items():
+        validate_resource_links(result, resource_type, expected_id)
+
+
+def get_allowed_resources(resource_ids, allowed_id_types):
+    return {rt: eid for rt, eid in resource_ids.items() if rt in allowed_id_types}
+
+
+def validate_resource_links(result, resource_type, expected_id):
+    relevant_links = collect_links_for_resource(result, resource_type)
+    assert_link_ids_match(relevant_links, resource_type, expected_id)
+
+
+def collect_links_for_resource(result, resource_type):
+    links = []
+    for journey in result.get('journeys', []):
+        for section in journey.get('sections', []):
+            if is_public_transport_section(section):
+                links.extend(get_matching_links(section, resource_type))
+    return links
+
+
+def is_public_transport_section(section):
+    return section.get('type') == 'public_transport' and 'links' in section
+
+
+def get_matching_links(section, resource_type):
+    return [link for link in section['links'] if link.get('type') == resource_type and 'id' in link]
+
+
+def assert_link_ids_match(links, resource_type, expected_id):
+    for link in links:
+        assert link['id'] == expected_id, f"Expected {resource_type} ID {expected_id}, got {link['id']}"
+
+
+def check_allowed_id_type(allowed_id_types, resource_ids, same_journey_link):
+    for resource_type in allowed_id_types:
+        if resource_type in resource_ids:
+            resource_id = resource_ids[resource_type]
+            assert (
+                resource_id in same_journey_link
+            ), f"Expected {resource_type} ID {resource_id} to be in same_journey_schedules link"
+
+
+def build_same_journey_link(result):
+    same_journey_link = None
+    for link in result.get('links', []):
+        if link.get('rel') == 'same_journey_schedules':
+            same_journey_link = link.get('href')
+            break
+    return same_journey_link
+
+
+def get_first_journey_with_public_transport(result):
+    pt_journey = None
+    for journey in result['journeys']:
+        for section in journey.get('sections', []):
+            if section.get('type') == 'public_transport':
+                pt_journey = journey
+                break
+        if pt_journey:
+            break
+    return pt_journey
+
+
+def build_resource_ids(result):
+    resource_ids = {}
+    for section in result['sections']:
+        if section.get('type') == 'public_transport' and 'links' in section:
+            for link in section['links']:
+                if 'type' in link and 'id' in link:
+                    resource_type = link['type']
+                    resource_id = link['id']
+                    resource_ids[resource_type] = resource_id
+    return resource_ids
+
+
 @dataset({"main_routing_test": {}})
 class JourneyCommon(object):
 
@@ -76,7 +167,7 @@ class JourneyCommon(object):
         assert feed_publisher["id"] == "builder"
         assert feed_publisher["name"] == 'routing api data'
         assert feed_publisher["license"] == "ODBL"
-        assert feed_publisher["url"] == "www.canaltp.fr"
+        assert feed_publisher["url"] == "www.hove.com"
 
         self.check_context(response)
 
@@ -834,8 +925,8 @@ class JourneyCommon(object):
         )
         response = self.query_region(query, check=False)
         assert response[1] == 404
-        assert response[0]['error']['message'] == u'The entry point: stop_area:non_valid is not valid'
-        assert response[0]['error']['id'] == u'unknown_object'
+        assert response[0]['error']['message'] == 'The entry point: stop_area:non_valid is not valid'
+        assert response[0]['error']['id'] == 'unknown_object'
 
     def test_crow_fly_sections(self):
         """
@@ -1065,7 +1156,7 @@ class JourneyCommon(object):
         )
         response, status = self.query_region(query, check=False)
         assert status == 404
-        assert response['error']['id'] == u'unknown_object'
+        assert response['error']['id'] == u'no_origin_nor_destination'
         assert response['error']['message'] == u'The entry point: vehicle_journey:SNC is not valid'
 
     def test_free_radius_from(self):
@@ -1311,6 +1402,136 @@ class JourneyCommon(object):
 
         assert 'deleted_because_too_short_heavy_mode_fallback' in car_fallback_pt_journey['tags']
 
+    def test_same_journey_schedules_with_line_filtering(self):
+        """Test that same_journey_schedules respects line filtering configuration"""
+
+        instance = i_manager.instances.get('main_routing_test')
+
+        # Skip test if instance not found
+        assert instance is not None
+
+        # Save original configuration
+        original_config = getattr(instance, 'same_journey_schedules_configuration', None)
+
+        assert original_config is not None
+        assert original_config.get('allowed_id_type') == ["stop_point"]
+        assert original_config.get('min_nb_journeys') == 5
+
+        try:
+            for config in journey_schedules_configs:
+                with mock.patch.object(
+                    type(instance),
+                    'same_journey_schedules_configuration',
+                    new_callable=mock.PropertyMock,
+                    return_value=config,
+                ):
+                    query = "journeys?from=0.0001796623963909418;8.98311981954709e-05&to=0.0018864551621048887;0.0007186495855637672&datetime=20120614080000&min_nb_journeys={min_nb_journeys}".format(
+                        min_nb_journeys=config.get('min_nb_journeys')
+                    )
+                    r = self.query_region(query)
+
+                    # Verify we have journeys
+                    assert 'journeys' in r
+                    assert len(r['journeys']) == config.get('min_nb_journeys')
+
+                    # Get the first journey with public transport
+                    pt_journey = get_first_journey_with_public_transport(r)
+
+                    assert pt_journey is not None
+
+                    resource_ids = build_resource_ids(pt_journey)
+                    same_journey_link = build_same_journey_link(pt_journey)
+                    assert same_journey_link is not None
+
+                    # Check that the href contains the expected resource IDs based on configuration
+                    # except for types stop_point and stop_area
+                    allowed_id_types = config.get('allowed_id_type', [])
+                    check_allowed_id_type(allowed_id_types, resource_ids, same_journey_link)
+
+                    # Execute the same_journey_schedules query
+                    same_journey_link = same_journey_link.replace('/v1/coverage/main_routing_test/', '')
+                    same_journey_link = same_journey_link.replace('http://localhostjourneys?', 'journeys?')
+                    r2 = self.query_region(same_journey_link)
+
+                    # Verify we have journeys in the response
+                    assert 'journeys' in r2
+                    assert len(r2['journeys']) > 0
+
+                    # For each configured ID type, check that all journeys use the same resource
+                    check_journey_id_type(r2, allowed_id_types, resource_ids)
+
+        finally:
+            instance._same_journey_schedules_configuration = original_config
+
+    def test_same_journey_schedules_with_stop_point_and_stop_area(self):
+        """Test that same_journey_schedules respects stop_point/stop_area filtering configuration"""
+        instance = i_manager.instances.get('main_routing_test')
+
+        # Skip test if instance not found
+        assert instance is not None
+        # Save original configuration
+        original_config = getattr(instance, 'same_journey_schedules_configuration', None)
+        test_configs = [
+            {"allowed_id_type": ["stop_point"], "min_nb_journeys": 5},
+            {"allowed_id_type": ["stop_area", "line"], "min_nb_journeys": 5},
+        ]
+        try:
+            for config in test_configs:
+                with mock.patch.object(
+                    type(instance),
+                    'same_journey_schedules_configuration',
+                    new_callable=mock.PropertyMock,
+                    return_value=config,
+                ):
+                    query = "journeys?from=0.0001796623963909418;8.98311981954709e-05&to=0.0018864551621048887;0.0007186495855637672&datetime=20120614080000&min_nb_journeys={min_nb_journeys}".format(
+                        min_nb_journeys=config.get('min_nb_journeys')
+                    )
+                    r = self.query_region(query)
+
+                    # Verify we have journeys
+                    assert 'journeys' in r
+                    assert len(r['journeys']) == config.get('min_nb_journeys')
+
+                    # Get the first journey with public transport
+                    pt_journey = get_first_journey_with_public_transport(r)
+
+                    assert pt_journey is not None
+
+                    same_journey_link = build_same_journey_link(pt_journey)
+                    assert same_journey_link is not None
+
+                    # Check that the href contains the expected resource IDs based on configuration
+                    allowed_id_types = config.get('allowed_id_type', [])
+
+                    # config = {"allowed_id_type": ["stop_area", "line"], "min_nb_journeys": 5}
+                    if "stop_area" in allowed_id_types:
+                        assert "line" in allowed_id_types
+                        assert "allowed_id%5B%5D=A" in same_journey_link
+                        assert "allowed_id%5B%5D=stopB" in same_journey_link
+                        assert "allowed_id%5B%5D=stopA" in same_journey_link
+
+                    # config = {"allowed_id_type": ["stop_point"], "min_nb_journeys": 5}
+                    if "stop_point" in allowed_id_types:
+                        assert "line" not in allowed_id_types
+                        assert "allowed_id%5B%5D=A" not in same_journey_link
+                        assert "allowed_id%5B%5D=stop_point%3AstopB" in same_journey_link
+                        assert "allowed_id%5B%5D=stop_point%3AstopA" in same_journey_link
+
+        finally:
+            instance._same_journey_schedules_configuration = original_config
+
+    def test_same_journey_schedules_with_line_filtering_allowed_id_in_query(self):
+        query = "journeys?from=0.0001796623963909418;8.98311981954709e-05&to=0.0018864551621048887;0.0007186495855637672&datetime=20120614080000&allowed_id[]=BOB"
+        response = self.query_region(query)
+
+        assert len(response["journeys"]) == 2
+        assert len(response["journeys"][0]["links"]) == 2
+        href_same_journey_schedules = next(
+            l['href'] for l in response["journeys"][0]["links"] if l['rel'] == 'same_journey_schedules'
+        )
+        assert "BOB" not in href_same_journey_schedules
+        assert "_pt_planner=kraken" in href_same_journey_schedules
+
 
 @dataset({"main_stif_test": {}})
 class AddErrorFieldInJormun(object):
@@ -1472,10 +1693,11 @@ class JourneysNoRegion:
 
         assert status != 200, "the response should not be valid"
 
-        assert response['error']['id'] == "unknown_object"
-
-        error_regexp = re.compile('^No region available for the coordinates.*')
-        assert error_regexp.match(response['error']['message'])
+        assert 'message' in response
+        assert (
+            response['message']
+            == "You don't have the permission to access the requested resource. It is either read-protected or not readable by the server."
+        )
 
 
 @dataset({"basic_routing_test": {}})
@@ -1510,7 +1732,7 @@ class OnBasicRouting:
         feed_publisher = next(f for f in feed_publishers if f['id'] == "base_contributor")
         assert feed_publisher["name"] == "base contributor"
         assert feed_publisher["license"] == "L-contributor"
-        assert feed_publisher["url"] == "www.canaltp.fr"
+        assert feed_publisher["url"] == "www.hove.com"
 
         osm = next(f for f in feed_publishers if f['id'] == "osm")
         assert osm["name"] == "openstreetmap"

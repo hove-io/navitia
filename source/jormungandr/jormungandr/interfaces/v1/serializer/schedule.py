@@ -36,6 +36,7 @@ from jormungandr.interfaces.v1.serializer.fields import LinkSchema, MultiLineStr
 from jormungandr.interfaces.v1.serializer.time import DateTimeField
 from jormungandr.interfaces.v1.make_links import create_internal_link
 from jormungandr.interfaces.v1.serializer.jsonschema.fields import TimeOrDateTimeType
+from jormungandr.interfaces.v1.serializer.pt import Equipments
 from jormungandr.utils import timestamp_to_str
 
 
@@ -72,6 +73,7 @@ class DateTimeTypeSerializer(PbNestedSerializer):
     links = jsonschema.MethodField(schema_type=LinkSchema(many=True), display_none=True)
     data_freshness = EnumField(attr="realtime_level", display_none=True)
     occupancy = jsonschema.MethodField(schema_type=str, display_none=False)
+    equipments = Equipments(attr='has_equipments', display_none=True)
 
     def get_occupancy(self, obj):
         return obj.occupancy if obj.HasField('occupancy') else None

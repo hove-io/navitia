@@ -39,9 +39,10 @@ import glob
 import logging
 from jormungandr.protobuf_to_dict import protobuf_to_dict
 from jormungandr.exceptions import ApiNotFound, RegionNotFound, DeadSocketException, InvalidArguments
-from jormungandr import authentication, cache, app
+from jormungandr.authentication import abort_request, can_read_user
+from jormungandr import authentication, cache, memory_cache, app
 from jormungandr.instance import Instance
-from jormungandr.utils import can_connect_to_database
+from jormungandr.utils import Coords
 import gevent
 import os
 
@@ -100,7 +101,7 @@ class InstanceManager(object):
         self.start_ping = start_ping
         self.instances = {}
         self.context = zmq.Context()
-        self.is_ready = False
+        self.is_ready = False  # type: bool
 
     def __repr__(self):
         return '<InstanceManager>'
@@ -121,8 +122,19 @@ class InstanceManager(object):
             self._streetnetwork_backend_manager,
             config.get('external_services_providers', []),
             config.get('pt_planners', {}),
+            config.get('pt_journey_fares', {}),
             config.get('ghost_words', []),
+            best_boarding_positions_dir=app.config.get(str('BEST_BOARDING_POSITIONS_DIR'), None),
+            olympics_forbidden_uris=config.get('olympics_forbidden_uris', None),
+            use_multi_reverse=config.get('use_multi_reverse', False),
+            resp_content_limit_bytes=config.get('resp_content_limit_bytes', None),
+            resp_content_limit_endpoints_whitelist=config.get('resp_content_limit_endpoints_whitelist', None),
+            individual_bss_provider=config.get('individual_bss_provider', []),
+            individual_car_parking_provider=config.get('individual_car_parking_provider', []),
+            timezone=config.get("timezone", "Europe/Paris"),
+            same_journey_schedules_configuration=config.get("same_journey_schedules_configuration", None),
         )
+
         self.instances[instance.name] = instance
 
     def initialization(self):
@@ -146,30 +158,18 @@ class InstanceManager(object):
 
         # we fetch the krakens metadata first
         # not on the ping thread to always have the data available (for the tests for example)
-        self.init_kraken_instances()
+        if app.config.get('INIT_KRAKEN_INSTANCES', False):
+            self.init_kraken_instances()
 
         if self.start_ping:
             gevent.spawn(self.thread_ping)
-
-    def _clear_cache(self):
-        logging.getLogger(__name__).info('clear cache')
-        try:
-            cache.delete_memoized(self._all_keys_of_id)
-        except:
-            # if there is an error with cache, flask want to access to the app, this will fail at startup
-            # with a "working outside of application context"
-            # redis timeout also raise an exception: redis.exceptions.TimeoutError
-            # each backend has it's own exceptions, so we catch everything :(
-            logger = logging.getLogger(__name__)
-            logger.exception('there seem to be some kind of problems with the cache')
 
     def get_instance_scenario_name(self, instance_name, override_scenario):
         if override_scenario:
             return override_scenario
 
         instance = self.instances[instance_name]
-        instance_db = instance.get_models()
-        scenario_name = instance_db.scenario if instance_db else 'new_default'
+        scenario_name = instance.get_instance_scenario_name_or_default()
         return scenario_name
 
     def dispatch(self, arguments, api, instance_name=None):
@@ -177,16 +177,14 @@ class InstanceManager(object):
             raise RegionNotFound(instance_name)
 
         instance = self.instances[instance_name]
-
+        if not arguments.get('language'):
+            arguments['language'] = instance.language
         scenario = instance.scenario(arguments.get('_override_scenario'))
         if not hasattr(scenario, api) or not callable(getattr(scenario, api)):
             raise ApiNotFound(api)
 
-        publication_date = instance.publication_date
         api_func = getattr(scenario, api)
         resp = api_func(arguments, instance)
-        if instance.publication_date != publication_date:
-            self._clear_cache()
         return resp
 
     def init_kraken_instances(self):
@@ -194,17 +192,11 @@ class InstanceManager(object):
         Call all kraken instances (as found in the instances dir) and store it's metadata
         """
         futures = []
-        purge_cache_needed = False
         for instance in self.instances.values():
             if not instance.is_initialized:
                 futures.append(gevent.spawn(instance.init))
 
         gevent.wait(futures)
-        for future in futures:
-            # we check if an instance needs the cache to be purged
-            if future.get():
-                self._clear_cache()
-                break
 
     def thread_ping(self, timer=10):
         """
@@ -219,23 +211,9 @@ class InstanceManager(object):
         if not self.thread_event.is_set():
             self.thread_event.set()
 
-    def _filter_authorized_instances(self, instances, api):
-        if not instances:
-            return []
-        # During the period database is not accessible, all the instances are valid for the user.
-        if not can_connect_to_database():
-            return instances
-
-        user = authentication.get_user(token=authentication.get_token())
-        valid_instances = [
-            i for i in instances if authentication.has_access(i.name, abort=False, user=user, api=api)
-        ]
-        if not valid_instances:
-            context = 'User has no access to any instance'
-            authentication.abort_request(user, context)
-        return valid_instances
-
-    def _find_coverage_by_object_id(self, object_id):
+    def _find_coverage_by_object_id_in_instances(self, instances, object_id):
+        # Request without coverage and coord (from or to)
+        # Get list of instances if the coordinate point exist in instance.geom
         if object_id.count(";") == 1 or object_id[:6] == "coord:":
             if object_id.count(";") == 1:
                 lon, lat = object_id.split(";")
@@ -246,37 +224,96 @@ class InstanceManager(object):
                 flat = float(lat)
             except:
                 raise InvalidArguments(object_id)
-            return self._all_keys_of_coord(flon, flat)
-        return self._all_keys_of_id(object_id)
+            return self._all_keys_of_coord_in_instances(instances, flon, flat)
 
-    @cache.memoize(app.config[str('CACHE_CONFIGURATION')].get(str('TIMEOUT_PTOBJECTS'), None))
-    def _all_keys_of_id(self, object_id):
-        instances = []
-        futures = {}
-        for name, instance in self.instances.items():
-            futures[name] = gevent.spawn(instance.has_id, object_id)
-        for name, future in futures.items():
-            if future.get():
-                instances.append(name)
+        # Request without coverage and pt_object id (from or to)
+        return self._all_keys_of_id_in_instances(instances, object_id)
 
-        if not instances:
-            raise RegionNotFound(object_id=object_id)
-        return instances
+    def _all_keys_of_id_in_instances(self, instances, object_id):
+        # Get the first occurrence pt_object coordinate and manage as above
+        # If no object with coordinate exist among all the authorized instances
+        # Then we will be obliged to call all krakens as before (necessary for test with bad data)
+        object_coord = self._get_first_object_coord_in_instances_by_id(instances, object_id)
+        if object_coord:
+            return self._all_keys_of_coord_in_instances(instances, object_coord.lon, object_coord.lat)
+        else:
+            valid_instances = []
+            for instance in instances:
+                if self._exists_id_in_instance(instance.name, instance.publication_date, object_id):
+                    valid_instances.append(instance)
+            if not valid_instances:
+                raise RegionNotFound(object_id=object_id)
 
-    def _all_keys_of_coord(self, lon, lat):
+            return valid_instances
+
+    def _get_first_object_coord_in_instances_by_id(self, instances, object_id):
+        """
+        fetch first occurrence of object among instances and return coordinate
+        """
+        for instance in instances:
+            coord = self._get_object_coord_in_instance_by_id(instance.name, instance.publication_date, object_id)
+            if coord:
+                return coord
+        return None
+
+    @memory_cache.memoize(app.config[str('MEMORY_CACHE_CONFIGURATION')].get(str('TIMEOUT_PTOBJECTS'), 30))
+    @cache.memoize(app.config[str('CACHE_CONFIGURATION')].get(str('TIMEOUT_PTOBJECTS'), 300))
+    def _get_object_coord_in_instance_by_id(self, instance_name, instance_publication_date, object_id):
+        """
+        instance's published_date is usually provided as extra_cache_key to invalidate the cache when updating the ntfs
+        As type_pb2.GeographicalCoord() cannot be cached due to the fact that objects from protobuf are not 'picklable'
+        we should transform it to utils.Coord
+        """
+        instance = self.instances.get(instance_name)
+        if not instance:
+            logging.getLogger(__name__).error("Instance {} not found".format(instance_name))
+            return None
+        pb_coord = instance.get_coord_by_id(object_id)
+        if not pb_coord:
+            return None
+        return Coords(pb_coord.lat, pb_coord.lon)
+
+    @memory_cache.memoize(app.config[str('MEMORY_CACHE_CONFIGURATION')].get(str('TIMEOUT_PTOBJECTS'), 30))
+    @cache.memoize(app.config[str('CACHE_CONFIGURATION')].get(str('TIMEOUT_PTOBJECTS'), 300))
+    def _exists_id_in_instance(self, instance_name, instance_publication_date, object_id):
+        """
+        instance's published_date is usually provided as extra_cache_key to invalidate the cache when updating the ntfs
+        """
+        instance = self.instances.get(instance_name)
+        if not instance:
+            logging.getLogger(__name__).error("Instance {} not found".format(instance_name))
+            return False
+        return instance.has_id(object_id)
+
+    def _all_keys_of_coord_in_instances(self, instances, lon, lat):
         p = geometry.Point(lon, lat)
-        instances = [i.name for i in self.instances.values() if i.has_point(p)]
+        valid_instances = [i for i in instances if i.has_point(p)]
         logging.getLogger(__name__).debug(
-            "all_keys_of_coord(self, {}, {}) returns {}".format(lon, lat, instances)
+            "_all_keys_of_coord_in_instances(self, {}, {}) returns {}".format(lon, lat, instances)
         )
-        if not instances:
+        if not valid_instances:
             raise RegionNotFound(lon=lon, lat=lat)
-        return instances
+        return valid_instances
 
     def get_region(self, region_str=None, lon=None, lat=None, object_id=None, api='ALL'):
         return self.get_regions(region_str, lon, lat, object_id, api, only_one=True)
 
-    def get_regions(self, region_str=None, lon=None, lat=None, object_id=None, api='ALL', only_one=False):
+    def get_regions(
+        self,
+        region_str=None,
+        lon=None,
+        lat=None,
+        object_id=None,
+        api='ALL',
+        only_one=False,
+        only_db_instances=False,
+    ):
+        if only_db_instances:
+            instances = self.get_db_instances()
+            if not instances:
+                raise RegionNotFound(region=region_str, lon=lon, lat=lat, object_id=object_id)
+            return instances
+
         valid_instances = self.get_instances(region_str, lon, lat, object_id, api)
         if not valid_instances:
             raise RegionNotFound(region=region_str, lon=lon, lat=lat, object_id=object_id)
@@ -285,38 +322,66 @@ class InstanceManager(object):
         else:
             return [i.name for i in valid_instances]
 
+    def get_db_instances(
+        self,
+    ):
+        user = authentication.get_user(token=authentication.get_token())
+        instances = self.get_all_available_instances_names(user, only_db_instances=True)
+        if not instances:
+            context = 'User has no access to any instance'
+            authentication.abort_request(user=user, context=context)
+        return {"regions": [{"region_id": instance, "name": instance, "shape": ""} for instance in instances]}
+
     def get_instances(self, name=None, lon=None, lat=None, object_id=None, api='ALL'):
-        available_instances = []
+        if name and name not in self.instances:
+            raise RegionNotFound(region=name)
+
+        # Request without token or bad token makes a request exception and exits with a message
+        # get_user is cached hence access to database only once when cache expires.
+        user = authentication.get_user(token=authentication.get_token())
+        valid_instances = []
         if name:
-            if name in self.instances:
-                available_instances = [self.instances[name]]
-        elif lon and lat:
-            available_instances = [
-                self.instances[k] for k in self._all_keys_of_coord(lon, lat) if k in self.instances
-            ]
-        elif object_id:
-            instance_keys = self._find_coverage_by_object_id(object_id)
-            if instance_keys is None:
-                available_instances = []
-            else:
-                available_instances = [self.instances[k] for k in instance_keys if k in self.instances]
+            # Requests with a coverage
+            if authentication.has_access(name, abort=False, user=user, api=api):
+                valid_instances = [self.instances[name]]
         else:
-            available_instances = list(self.instances.values())
-        valid_instances = self._filter_authorized_instances(available_instances, api)
-        if available_instances and not valid_instances:
+            # Requests without any coverage
+            # fetch all the authorized instances (free + private) using cached function has_access()
+            authorized_instances_name = self.get_all_available_instances_names(user)
+            authorized_instances = []
+            for i_name in authorized_instances_name:
+                i = self.instances.get(i_name)
+                if i is not None:
+                    authorized_instances.append(i)
+                else:
+                    logging.getLogger(__name__).warning(
+                        '{} is authorized but is not available for Jormungandr, please check the instances configurations'.format(
+                            i_name
+                        )
+                    )
+
+            if not authorized_instances:
+                # user doesn't have access to any of the instances
+                context = 'User has no access to any instance'
+                authentication.abort_request(user=user, context=context)
+
+            if lon and lat:
+                valid_instances = self._all_keys_of_coord_in_instances(authorized_instances, lon, lat)
+            elif object_id:
+                valid_instances = self._find_coverage_by_object_id_in_instances(authorized_instances, object_id)
+            else:
+                valid_instances = authorized_instances
+
+        if not valid_instances:
             # user doesn't have access to any of the instances
-            context = 'User does not have access to any of the instances'
-            authentication.abort_request(user=authentication.get_user(None), context=context)
+            context = "User has no access to any instance or instance doesn't exist"
+            authentication.abort_request(user=user, context=context)
         else:
             return valid_instances
 
-    def regions(self, region=None, lon=None, lat=None, request_id=None):
-        response = {'regions': []}
-        regions = []
-        if region or lon or lat:
-            regions.append(self.get_region(region_str=region, lon=lon, lat=lat))
-        else:
-            regions = self.get_regions()
+    def get_kraken_coverages(self, regions, request_id=None):
+        response = []
+
         for key_region in regions:
             req = request_pb2.Request()
             req.requested_api = type_pb2.METADATAS
@@ -329,8 +394,52 @@ class InstanceManager(object):
                     "status": "dead",
                     "error": {"code": "dead_socket", "value": "The region {} is dead".format(key_region)},
                 }
-            if resp_dict.get('status') == 'no_data' and not region and not lon and not lat:
-                continue
             resp_dict['region_id'] = key_region
-            response['regions'].append(resp_dict)
+            response.append(resp_dict)
         return response
+
+    def regions(self, region=None, lon=None, lat=None, request_id=None):
+        response = {'regions': []}
+        regions = []
+        if region or lon or lat:
+            regions.append(self.get_region(region_str=region, lon=lon, lat=lat))
+            kraken_coverages = self.get_kraken_coverages(regions, request_id=request_id)
+        else:
+            regions = self.get_regions()
+            if regions:
+                regions.sort()
+
+            @cache.memoize(
+                app.config.get(str('CACHE_CONFIGURATION'), {}).get(str('TIMEOUT_KRAKEN_COVERAGES'), 60)
+            )
+            def get_cached_kraken_coverages(regions_list):
+                return self.get_kraken_coverages(regions_list, request_id=request_id)
+
+            kraken_coverages = get_cached_kraken_coverages(regions)
+        for kraken_coverage in kraken_coverages:
+            if kraken_coverage.get('status') == 'no_data' and not region and not lon and not lat:
+                continue
+            response['regions'].append(kraken_coverage)
+        return response
+
+    @memory_cache.memoize(app.config[str('MEMORY_CACHE_CONFIGURATION')].get(str('TIMEOUT_AUTHENTICATION'), 30))
+    @cache.memoize(app.config[str('CACHE_CONFIGURATION')].get(str('TIMEOUT_AUTHENTICATION'), 300))
+    def get_all_available_instances_names(self, user, only_db_instances=False):
+        if app.config.get('PUBLIC', False) or app.config.get('DISABLE_DATABASE', False):
+            return [key for key in self.instances]
+
+        if not user:
+            logging.getLogger(__name__).warning('get all available instances no user')
+            # for not-public navitia a user is mandatory
+            # To manage database error of the following type we should fetch one more time from database
+            # Can connect to database but at least one table/attribute is not accessible due to transaction problem
+            if can_read_user():
+                abort_request(user=user)
+            else:
+                return []
+
+        bdd_instances = user.get_all_available_instances()
+        if only_db_instances:
+            return [bdd_instance.name for bdd_instance in bdd_instances]
+        else:
+            return [bdd_instance.name for bdd_instance in bdd_instances if bdd_instance.name in self.instances]

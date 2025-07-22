@@ -28,8 +28,8 @@
 # www.navitia.io
 
 from __future__ import absolute_import
-from jormungandr import utils, new_relic
-from jormungandr.utils import date_to_timestamp
+from jormungandr import utils
+from jormungandr.utils import date_to_timestamp, get_pt_object_coord
 from jormungandr.street_network.street_network import StreetNetworkPathType
 from navitiacommon import response_pb2, type_pb2
 from collections import namedtuple
@@ -37,7 +37,7 @@ import six
 import copy
 import logging
 from functools import cmp_to_key
-from .helper_utils import timed_logger
+from .timer_logger_helper import timed_logger
 
 PtPoolElement = namedtuple('PtPoolElement', ['dep_mode', 'arr_mode', 'pt_journey'])
 
@@ -82,7 +82,6 @@ class PtJourney:
         self._pt_planner = self._instance.get_pt_planner(request['_pt_planner'])
         self._async_request()
 
-    @new_relic.distributedEvent("journeys", "journeys")
     def _journeys(self, orig_fallback_durations, dest_fallback_durations):
         with timed_logger(self._logger, 'pt_journeys_calling_kraken', self._request_id):
             return self._pt_planner.journeys(
@@ -113,7 +112,7 @@ class PtJourney:
         ):
             return None
 
-        resp = self._journeys(self._pt_planner, orig_fallback_durations, dest_fallback_durations)
+        resp = self._journeys(orig_fallback_durations, dest_fallback_durations)
 
         for j in resp.journeys:
             j.internal_id = str(utils.generate_id())
@@ -135,7 +134,6 @@ class PtJourney:
         )
         return resp
 
-    @new_relic.distributedEvent("graphical_isochrone", "graphical_isochrone")
     def _graphical_isochrone(self, orig_fallback_durations, dest_fallback_durations):
         return self._pt_planner.graphical_isochrones(
             orig_fallback_durations,
@@ -176,9 +174,9 @@ class PtJourney:
             }
 
         if self._request_type == type_pb2.ISOCHRONE:
-            resp = self._journeys(self._pt_planner, **orig_and_dest_fallback_durations)
+            resp = self._journeys(**orig_and_dest_fallback_durations)
         else:
-            resp = self._graphical_isochrone(self._pt_planner, **orig_and_dest_fallback_durations)
+            resp = self._graphical_isochrone(**orig_and_dest_fallback_durations)
 
         for j in resp.journeys:
             j.internal_id = str(utils.generate_id())
@@ -267,14 +265,22 @@ class PtJourneyPool:
         self._dest_fallback_durations_pool = dest_fallback_durations_pool
         self._isochrone_center = isochrone_center
         self._request_type = request_type
-        self._journey_params = self._create_parameters(request, self._isochrone_center, self._request_type)
+        self._journey_params = self._create_parameters(
+            request,
+            self._isochrone_center,
+            self._request_type,
+        )
         self._request = request
         self._value = []
         self._request_id = request_id
         self._async_request()
 
-    @staticmethod
-    def _create_parameters(request, isochrone_center, request_type):
+    def _create_parameters(
+        self,
+        request,
+        isochrone_center,
+        request_type,
+    ):
         from jormungandr.pt_planners.pt_planner import (
             JourneyParameters,
             GraphicalIsochronesParameters,
@@ -298,6 +304,7 @@ class PtJourneyPool:
                 allowed_id=request['allowed_id[]'],
                 isochrone_center=isochrone_center,
                 sn_params=sn_params,
+                language=request['language'],
             )
             return GraphicalIsochronesParameters(
                 journeys_parameters=journey_parameters,
@@ -305,6 +312,8 @@ class PtJourneyPool:
                 boundary_duration=request.get("boundary_duration[]"),
             )
         else:
+            olympic_site_params = request.get("olympic_site_params", {})
+
             return JourneyParameters(
                 max_duration=request['max_duration'],
                 max_transfers=request['max_transfers'],
@@ -322,7 +331,20 @@ class PtJourneyPool:
                 depth=request['depth'],
                 isochrone_center=isochrone_center,
                 current_datetime=date_to_timestamp(request['_current_datetime']),
-                criteria=request.get('criteria', 'classic'),
+                criteria=request.get('criteria', 'robustness'),
+                olympic_site_params=olympic_site_params,
+                language=request['language'],
+                use_heuristic=request['_use_heuristic'],
+                departure_coord=get_pt_object_coord(self._requested_orig_obj)
+                if self._requested_orig_obj
+                else None,
+                arrival_coord=get_pt_object_coord(self._requested_dest_obj)
+                if self._requested_dest_obj
+                else None,
+                global_max_speed=request["_global_max_speed"],
+                use_zonal_odt=request["_use_zonal_odt"],
+                max_waiting_duration_odt=request["_max_waiting_duration_odt"],
+                min_nb_transfers=request['min_nb_transfers'],
             )
 
     def _async_request(self):

@@ -106,8 +106,8 @@ OUESTGO_RESPONSE = [
                 "monday": 0,
                 "tuesday": 0,
                 "wednesday": 0,
-                "thursday": 0,
-                "friday": 1,
+                "thursday": 1,
+                "friday": 0,
                 "saturday": 0,
                 "sunday": 0,
             },
@@ -168,7 +168,7 @@ class TestOuestgo(NewDefaultScenarioAbstractTestFixture):
         tickets = response.get('tickets')
         assert len(tickets) == 1
         assert tickets[0].get('cost').get('currency') == 'centime'
-        assert tickets[0].get('cost').get('value') == '100.0'
+        assert tickets[0].get('cost').get('value') == '1900.0'
         ticket = tickets[0]
 
         ridesharing_kraken = journeys[0]
@@ -189,7 +189,7 @@ class TestOuestgo(NewDefaultScenarioAbstractTestFixture):
         rs_journeys = sections[0].get('ridesharing_journeys')
         assert len(rs_journeys) == 1
         assert rs_journeys[0].get('distances').get('ridesharing') == 18869
-        assert rs_journeys[0].get('durations').get('walking') == 2
+        assert rs_journeys[0].get('durations').get('walking') == 0
         assert rs_journeys[0].get('durations').get('ridesharing') == 1301
         assert 'ridesharing' in rs_journeys[0].get('tags')
         rsj_sections = rs_journeys[0].get('sections')
@@ -197,14 +197,14 @@ class TestOuestgo(NewDefaultScenarioAbstractTestFixture):
 
         assert rsj_sections[0].get('type') == 'crow_fly'
         assert rsj_sections[0].get('mode') == 'walking'
-        assert rsj_sections[0].get('duration') == 2
-        assert rsj_sections[0].get('departure_date_time') == '20120614T085458'
-        assert rsj_sections[0].get('arrival_date_time') == '20120614T085500'
+        assert rsj_sections[0].get('duration') == 0
+        assert rsj_sections[0].get('departure_date_time') == '20120614T090500'
+        assert rsj_sections[0].get('arrival_date_time') == '20120614T090500'
 
         assert rsj_sections[1].get('type') == 'ridesharing'
         assert rsj_sections[1].get('duration') == 1301
-        assert rsj_sections[1].get('departure_date_time') == '20120614T085500'
-        assert rsj_sections[1].get('arrival_date_time') == '20120614T091641'
+        assert rsj_sections[1].get('departure_date_time') == '20120614T090500'
+        assert rsj_sections[1].get('arrival_date_time') == '20120614T092641'
 
         rsj_info = rsj_sections[1].get('ridesharing_informations')
         assert rsj_info.get('network') == 'Super Covoit'
@@ -227,8 +227,8 @@ class TestOuestgo(NewDefaultScenarioAbstractTestFixture):
         assert rsj_sections[2].get('type') == 'crow_fly'
         assert rsj_sections[2].get('mode') == 'walking'
         assert rsj_sections[2].get('duration') == 0
-        assert rsj_sections[2].get('departure_date_time') == '20120614T091641'
-        assert rsj_sections[2].get('arrival_date_time') == '20120614T091641'
+        assert rsj_sections[2].get('departure_date_time') == '20120614T092641'
+        assert rsj_sections[2].get('arrival_date_time') == '20120614T092641'
 
         fps = response['feed_publishers']
         assert len(fps) == 2

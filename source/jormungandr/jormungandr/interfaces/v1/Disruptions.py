@@ -38,9 +38,10 @@ from jormungandr.interfaces.v1.errors import ManageError
 from jormungandr.interfaces.v1.ResourceUri import ResourceUri
 from jormungandr.interfaces.v1.serializer import api
 from jormungandr.interfaces.common import split_uri
-from navitiacommon.parser_args_type import BooleanType, DateTimeFormat, DepthArgument
+from navitiacommon.parser_args_type import BooleanType, DateTimeFormat, DepthArgument, OptionValue
 from jormungandr.utils import date_to_timestamp
 from jormungandr.resources_utils import ResourceUtc
+from navitiacommon.constants import ENUM_LANGUAGE
 from flask.globals import g
 from flask_restful import abort
 from datetime import datetime
@@ -101,6 +102,11 @@ class TrafficReport(ResourceUri, ResourceUtc):
             hidden=True,
             action="append",
             help="If filled, will restrain the search within the given disruption tags",
+        )
+        parser_get.add_argument(
+            "language",
+            type=OptionValue(ENUM_LANGUAGE),
+            help="Here, select a specific language for disruption message",
         )
 
         parser_get.add_argument("since", type=DateTimeFormat(), help="use disruptions valid after this date")

@@ -307,6 +307,20 @@ class TestDepartureBoard(AbstractTestFixture):
         assert response["stop_schedules"][0]["stop_point"]["id"] == "Tstop1"
         assert response["stop_schedules"][0]["route"]["id"] == "A:1"
         assert len(response["stop_schedules"][0]["date_times"]) == 2
+        date_time = response["stop_schedules"][0]["date_times"][0]
+        assert len(date_time["equipments"]) == 3
+        for equipment in ["has_wheelchair_accessibility", "has_bike_accepted", "has_air_conditioned"]:
+            assert equipment in date_time["equipments"]
+        vj1 = next(l['id'] for l in date_time['links'] if l['type'] == 'vehicle_journey')
+        assert vj1 == "vehicle_journey:vj1"
+
+        date_time = response["stop_schedules"][0]["date_times"][1]
+        assert len(date_time["equipments"]) == 2
+        for equipment in ["has_wheelchair_accessibility", "has_bike_accepted"]:
+            assert equipment in date_time["equipments"]
+        vj2 = next(l['id'] for l in date_time['links'] if l['type'] == 'vehicle_journey')
+        assert vj2 == "vehicle_journey:vj2"
+
         assert response["stop_schedules"][0]["date_times"][0]["links"][0]["type"] == "notes"
         assert (
             response["stop_schedules"][0]["date_times"][0]["links"][0]["id"]
@@ -398,11 +412,28 @@ class TestDepartureBoard(AbstractTestFixture):
         assert response["stop_schedules"][0]["date_times"][0]["date_time"] == "20120615T103000"
         assert response["stop_schedules"][0]["date_times"][1]["date_time"] == "20120615T103000"
         assert response["stop_schedules"][0]["stop_point"]["id"] == "StopR2"
+        date_times = response["stop_schedules"][0]["date_times"]
+        dt_links = date_times[0]["links"]
+        origin = next(l["id"] for l in dt_links if l["type"] == "stop_area" and l["category"] == "origin")
+        terminus = next(l["id"] for l in dt_links if l["type"] == "stop_area" and l["category"] == "terminus")
+        assert origin == "StopR1"
+        assert terminus == "StopR4"
+
+        # Test links on origins and terminus in display_informations
+        links = response["stop_schedules"][0]["display_informations"]["links"]
+        assert len(links) == 3
+        origins = [l["id"] for l in links if l["type"] == "stop_area" and l["rel"] == "origins"]
+        terminus = [l["id"] for l in links if l["type"] == "stop_area" and l["rel"] == "terminus"]
+        assert len(origins) == 1
+        assert len(terminus) == 2
+
+        # Test origins and terminus in response
+        assert len(response["origins"]) == 1
+        assert len(response["terminus"]) == 3
 
         # terminus_schedules on partial_terminus with calendar
         # There is neither terminus nor partial_terminus in terminus_schedules
         # Here the disruption could be injected by chaos or kirin
-
         response = self.query_region(
             "stop_areas/Tstop2/terminus_schedules?"
             "from_datetime=20120615T080000&calendar=cal_partial_terminus&data_freshness=realtime"
@@ -575,9 +606,19 @@ class TestDepartureBoard(AbstractTestFixture):
         assert response["departures"][1]["stop_date_time"]["additional_informations"][0] == "on_demand_transport"
         assert response["departures"][1]["stop_date_time"]["data_freshness"] == "base_schedule"
 
-        assert "terminus" not in response
-        assert not response["departures"][0]["display_informations"]["links"]
-        assert not response["departures"][1]["display_informations"]["links"]
+        # "terminus" should not be present in response.notes
+        assert len(response["notes"]) == 0
+        links = response["departures"][0]["display_informations"]["links"]
+        terminus = [l["id"] for l in links if l["type"] == "terminus" and l["rel"] == "notes"]
+        assert len(terminus) == 0
+
+        # origin and terminus should be present as link in display_informations
+        origins = [l["id"] for l in links if l["type"] == "stop_area" and l["rel"] == "origins"]
+        terminus = [l["id"] for l in links if l["type"] == "stop_area" and l["rel"] == "terminus"]
+        assert len(origins) == 1
+        assert len(terminus) == 1
+        assert len(response["origins"]) == 1
+        assert len(response["terminus"]) == 2
 
     def test_departures_arrivals_without_filters(self):
         """
@@ -683,6 +724,28 @@ class TestDepartureBoard(AbstractTestFixture):
         assert display_information_route['name'] == 'line:A'
         assert display_information_route['code'] == 'A'
 
+    def test_display_informations_in_stop_schedule(self):
+        """
+        verify some attributs in display_informations of a stop_schedule
+        """
+        response = self.query_region(
+            "stop_areas/stop1/stop_schedules?from_datetime=20120615T080000&disable_geojson=true"
+        )
+        schedules = get_not_null(response, 'stop_schedules')
+        assert len(schedules) == 1, "there should be only one elt"
+        schedule = schedules[0]
+        is_valid_stop_schedule(response["stop_schedules"], self.tester, only_time=False)
+
+        display_information_route = get_not_null(schedule, 'display_informations')
+        assert display_information_route['direction'] == 'stop2'
+        assert display_information_route['label'] == 'A'
+        assert display_information_route['color'] == '289728'
+        assert display_information_route['text_color'] == 'FFD700'
+        assert display_information_route['name'] == 'line:A'
+        assert display_information_route['code'] == 'A'
+        assert display_information_route['headsign'] == 'week'
+        assert display_information_route['trip_short_name'] == 'week'
+
     def test_terminus_schedules(self):
         """
         terminus_schedules for a given date
@@ -694,11 +757,49 @@ class TestDepartureBoard(AbstractTestFixture):
         assert len(response["terminus_schedules"]) == 1
         is_valid_terminus_schedules(response["terminus_schedules"], self.tester, only_time=False)
         assert len(response["terminus_schedules"][0]["date_times"]) == 2
+
+        date_time = response["terminus_schedules"][0]["date_times"][0]
+        assert len(date_time["equipments"]) == 3
+        for equipment in ["has_wheelchair_accessibility", "has_bike_accepted", "has_air_conditioned"]:
+            assert equipment in date_time["equipments"]
+        vj = next(l['id'] for l in date_time['links'] if l['type'] == 'vehicle_journey')
+        assert vj == "vehicle_journey:date_time_estimated"
+
+        date_time = response["terminus_schedules"][0]["date_times"][1]
+        assert len(date_time["equipments"]) == 2
+        for equipment in ["has_wheelchair_accessibility", "has_bike_accepted"]:
+            assert equipment in date_time["equipments"]
+        vj = next(l['id'] for l in date_time['links'] if l['type'] == 'vehicle_journey')
+        assert vj == "vehicle_journey:on_demand_transport"
+
         assert response["terminus_schedules"][0]["stop_point"]["name"] == "ODTstop1"
         assert response["terminus_schedules"][0]["route"]["name"] == "B"
         assert response["terminus_schedules"][0]["display_informations"]["direction"] == "ODTstop2"
         assert response["terminus_schedules"][0]["display_informations"]["name"] == "B"
         assert response["terminus_schedules"][0]["display_informations"]["commercial_mode"] == "Bus"
+        assert response["terminus_schedules"][0]["display_informations"]["headsign"] == "date_time_estimated"
+        assert (
+            response["terminus_schedules"][0]["display_informations"]["trip_short_name"] == "date_time_estimated"
+        )
+
+        date_times = response["terminus_schedules"][0]["date_times"]
+        dt_links = date_times[0]["links"]
+        origin = next(l["id"] for l in dt_links if l["type"] == "stop_area" and l["category"] == "origin")
+        terminus = next(l["id"] for l in dt_links if l["type"] == "stop_area" and l["category"] == "terminus")
+        assert origin == "ODTstop1"
+        assert terminus == "ODTstop2"
+
+        # Test links on origins and terminus in display_informations
+        links = response["terminus_schedules"][0]["display_informations"]["links"]
+        assert len(links) == 2
+        origins = [l["id"] for l in links if l["type"] == "stop_area" and l["rel"] == "origins"]
+        terminus = [l["id"] for l in links if l["type"] == "stop_area" and l["rel"] == "terminus"]
+        assert len(origins) == 1
+        assert len(terminus) == 1
+
+        # Test origins and terminus in response
+        assert len(response["origins"]) == 1
+        assert len(response["terminus"]) == 2
 
     # Test on an on_demand_transport with start stop_datetime as on_demand_transport
     def test_journey_with_odt_in_start_stop_date_time(self):
@@ -721,6 +822,7 @@ class TestDepartureBoard(AbstractTestFixture):
         # verify network in links
         assert len(section['links']) == 7
         assert "base_network" in [link['id'] for link in section['links'] if link['type'] == "network"]
+        assert "B" in [link['id'] for link in section['links'] if link['type'] == "line"]
 
         # verify app deep link in links
         deep_link = section['links'][-1]
@@ -729,7 +831,10 @@ class TestDepartureBoard(AbstractTestFixture):
         assert "departure_longitude=0" in deep_link['href']
         assert "destination_latitude=0" in deep_link['href']
         assert "destination_longitude=0" in deep_link['href']
-        assert "requested_departure_time=2012-06-15T11:00:00+0000" in deep_link['href']
+        assert "requested_departure_time=2012-06-15T11%3A00%3A00%2B00%3A00" in deep_link['href']
+        assert "territory=territory%3AB" in deep_link['href']
+        assert "departure_display_name=ODTstop1" in deep_link['href']
+        assert "arrival_display_name=ODTstop2" in deep_link['href']
         assert deep_link['type'] == "tad_dynamic_link"
         assert deep_link['rel'] == "tad_dynamic_link"
         assert deep_link['templated'] is False
@@ -784,12 +889,26 @@ class TestDepartureBoard(AbstractTestFixture):
         assert len(nodes) == 3
         assert len(nodes[0]['date_times']) == 1
         date_time = nodes[0]['date_times'][0]
+        assert len(date_time["equipments"]) == 3
+        for equipment in [
+            "has_wheelchair_accessibility",
+            "has_bike_accepted",
+            "has_air_conditioned",
+        ]:
+            assert equipment in date_time["equipments"]
         assert date_time['base_date_time'] == "20120616T001000"
         assert date_time['date_time'] == "20120616T001000"
         assert len(date_time['additional_informations']) == 0
         assert date_time['data_freshness'] == "base_schedule"
-        assert len(date_time['links']) == 2
+        links = date_time['links']
+        assert len(links) == 4
+        vj_d = next(l['id'] for l in links if l['type'] == 'vehicle_journey')
+        assert vj_d == "vehicle_journey:vj_D"
 
+        origin = next(l['id'] for l in links if l['type'] == 'stop_area' and l['category'] == 'origin')
+        terminus = next(l['id'] for l in links if l['type'] == 'stop_area' and l['category'] == 'terminus')
+        assert origin == 'SA1'
+        assert terminus == 'SA3'
         # Node with skipped_stop
         assert len(nodes[1]['date_times']) == 1
         date_time = nodes[1]['date_times'][0]
@@ -798,7 +917,7 @@ class TestDepartureBoard(AbstractTestFixture):
         assert len(date_time['additional_informations']) == 1
         assert date_time['additional_informations'][0] == "skipped_stop"
         assert date_time['data_freshness'] is None
-        assert len(date_time['links']) == 2
+        assert len(date_time['links']) == 4
 
         assert len(nodes[2]['date_times']) == 1
         date_time = nodes[2]['date_times'][0]
@@ -806,7 +925,10 @@ class TestDepartureBoard(AbstractTestFixture):
         assert date_time['date_time'] == "20120616T025000"
         assert len(date_time['additional_informations']) == 0
         assert date_time['data_freshness'] == "base_schedule"
-        assert len(date_time['links']) == 2
+        assert len(date_time['links']) == 4
+
+        assert len(response['origins']) == 0
+        assert len(response['terminus']) == 1
 
 
 StopSchedule = namedtuple('StopSchedule', ['sp', 'route', 'date_times'])
@@ -833,7 +955,7 @@ def check_stop_schedule(response, reference):
 
         for (resp_dt, ref_st) in zip_longest(resp['date_times'], ref.date_times):
             assert get_not_null(resp_dt, 'date_time') == ref_st.dt
-            assert get_not_null(resp_dt, 'links')[0]['id'] == ref_st.vj
+            assert get_not_null(resp_dt, 'links')[0]['id'].find(ref_st.vj) == 0
 
 
 def check_departures(response, reference):
@@ -934,9 +1056,9 @@ class TestSchedules(AbstractTestFixture):
                     sp='S1',
                     route='A:0',
                     date_times=[
-                        SchedDT(dt='20160101T090700', vj='vehicle_journey:A:vj1:modified:0:delay_vj1'),
-                        SchedDT(dt='20160101T100700', vj='vehicle_journey:A:vj2:modified:0:delay_vj2'),
-                        SchedDT(dt='20160101T110700', vj='vehicle_journey:A:vj3:modified:0:delay_vj3'),
+                        SchedDT(dt='20160101T090700', vj='vehicle_journey:A:vj1:RealTime:'),
+                        SchedDT(dt='20160101T100700', vj='vehicle_journey:A:vj2:RealTime:'),
+                        SchedDT(dt='20160101T110700', vj='vehicle_journey:A:vj3:RealTime:'),
                     ],
                 ),
                 StopSchedule(
@@ -1016,7 +1138,7 @@ class TestSchedules(AbstractTestFixture):
                 StopSchedule(
                     sp='S1',
                     route='A:0',
-                    date_times=[SchedDT(dt='20160101T090700', vj='vehicle_journey:A:vj1:modified:0:delay_vj1')],
+                    date_times=[SchedDT(dt='20160101T090700', vj='vehicle_journey:A:vj1:RealTime:')],
                 ),
                 StopSchedule(
                     sp='S1', route='B:1', date_times=[SchedDT(dt='20160101T113000', vj='vehicle_journey:B:vj1')]
@@ -1406,6 +1528,13 @@ class TestSchedules(AbstractTestFixture):
         assert arrivals[0]["stop_date_time"]["departure_date_time"] == '20160103T181000'
         assert arrivals[0]["stop_date_time"]["base_departure_date_time"] == '20160103T181000'
         assert arrivals[0]["stop_date_time"]["data_freshness"] == 'base_schedule'
+        links = arrivals[0]["display_informations"]["links"]
+        # Verify the presence of links on origin and terminus
+        assert len(links) == 2
+        origins = [l["id"] for l in links if l["type"] == "stop_area" and l["rel"] == "origins"]
+        terminus = [l["id"] for l in links if l["type"] == "stop_area" and l["rel"] == "terminus"]
+        assert len(origins) == 1
+        assert len(terminus) == 1
 
         assert arrivals[1]["route"]["id"] == 'l:freq:9'
         assert arrivals[1]["stop_point"]["id"] == 'stopf2'
@@ -1422,6 +1551,8 @@ class TestSchedules(AbstractTestFixture):
         assert arrivals[2]["stop_date_time"]["departure_date_time"] == '20160103T191000'
         assert arrivals[2]["stop_date_time"]["base_departure_date_time"] == '20160103T191000'
         assert arrivals[2]["stop_date_time"]["data_freshness"] == 'base_schedule'
+        assert len(response["origins"]) == 1
+        assert len(response["terminus"]) == 1
 
     def test_departure_schedule_departures_date_time_frequency_base_schedule(self):
         """
@@ -2155,7 +2286,7 @@ class TestFirstLastDatetimeWithPositiveTimezone(AbstractTestFixture):
         assert stop_schedules[0]['date_times'][3]['date_time'] == "20170103T235000"
 
         # Query without parameter duration (default value = 86399)
-        # Here we have exclude the last date_time at 20170102T235000 + 86400 (24 hours)
+        # Here we have excluded the last date_time at 20170102T235000 + 86400 (24 hours)
         response = self.query_region(
             "stop_points/X_S3/stop_schedules?from_datetime={}"
             "&data_freshness=base_schedule".format(from_datetime)

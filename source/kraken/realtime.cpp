@@ -232,6 +232,12 @@ static nt::disruption::StopTimeUpdate::Status get_status(const transit_realtime:
                 return nt::disruption::StopTimeUpdate::Status::DELETED_FOR_DETOUR;
             case kirin::StopTimeEventStatus::ADDED_FOR_DETOUR:
                 return nt::disruption::StopTimeUpdate::Status::ADDED_FOR_DETOUR;
+            case kirin::StopTimeEventStatus::SKIPPED:
+                return nt::disruption::StopTimeUpdate::Status::SKIPPED;
+            case kirin::StopTimeEventStatus::NO_ALIGHTING:
+                return nt::disruption::StopTimeUpdate::Status::NO_ALIGHTING;
+            case kirin::StopTimeEventStatus::NO_BOARDING:
+                return nt::disruption::StopTimeUpdate::Status::NO_BOARDING;
             default:
                 break;
         }
@@ -320,23 +326,61 @@ static bool is_handleable(const transit_realtime::TripUpdate& trip_update,
     // departure is brought forward), we check the size of stop_time_update because we can't find a proper
     // enum in gtfs-rt proto to express this idea
     if (is_circulating_trip(trip_update)) {
-        // check if company id exists
-        if (is_added_trip(trip_update) && trip_update.trip().HasExtension(kirin::company_id)
-            && pt_data.companies_map.find(trip_update.trip().GetExtension(kirin::company_id))
-                   == pt_data.companies_map.end()) {
-            LOG4CPLUS_DEBUG(log, "Trip company id " << trip_update.trip().GetExtension(kirin::company_id)
-                                                    << " doesn't exist: ignoring trip update id "
-                                                    << trip_update.trip().trip_id());
-            return false;
-        }
-        // check if physical mode id exists
-        if (is_added_trip(trip_update) && trip_update.vehicle().HasExtension(kirin::physical_mode_id)
-            && pt_data.physical_modes_map.find(trip_update.vehicle().GetExtension(kirin::physical_mode_id))
-                   == pt_data.physical_modes_map.end()) {
-            LOG4CPLUS_DEBUG(log, "Trip physical mode id " << trip_update.vehicle().GetExtension(kirin::physical_mode_id)
-                                                          << " doesn't exist: ignoring trip update id "
-                                                          << trip_update.trip().trip_id());
-            return false;
+        if (is_added_trip(trip_update)) {
+            // check if company id exists
+            if (trip_update.trip().HasExtension(kirin::company_id)
+                && !navitia::contains(pt_data.companies_map, trip_update.trip().GetExtension(kirin::company_id))) {
+                LOG4CPLUS_DEBUG(log, "Trip company id " << trip_update.trip().GetExtension(kirin::company_id)
+                                                        << " doesn't exist: ignoring trip update id "
+                                                        << trip_update.trip().trip_id());
+                return false;
+            }
+            // check if physical mode id exists
+            if (trip_update.vehicle().HasExtension(kirin::physical_mode_id)
+                && !navitia::contains(pt_data.physical_modes_map,
+                                      trip_update.vehicle().GetExtension(kirin::physical_mode_id))) {
+                LOG4CPLUS_DEBUG(log, "Trip physical mode id "
+                                         << trip_update.vehicle().GetExtension(kirin::physical_mode_id)
+                                         << " doesn't exist: ignoring trip update id " << trip_update.trip().trip_id());
+                return false;
+            }
+            // check if line id exists (except if empty)
+            if (trip_update.trip().HasExtension(kirin::line_id)
+                && !trip_update.trip().GetExtension(kirin::line_id).empty()
+                && !navitia::contains(pt_data.lines_map, trip_update.trip().GetExtension(kirin::line_id))) {
+                LOG4CPLUS_DEBUG(log, "Trip line id " << trip_update.trip().GetExtension(kirin::line_id)
+                                                     << " doesn't exist: ignoring trip update id "
+                                                     << trip_update.trip().trip_id());
+                return false;
+            }
+            // check if network id exists (except if empty)
+            if (trip_update.trip().HasExtension(kirin::network_id)
+                && !trip_update.trip().GetExtension(kirin::network_id).empty()
+                && !navitia::contains(pt_data.networks_map, trip_update.trip().GetExtension(kirin::network_id))) {
+                LOG4CPLUS_DEBUG(log, "Trip network id " << trip_update.trip().GetExtension(kirin::network_id)
+                                                        << " doesn't exist: ignoring trip update id "
+                                                        << trip_update.trip().trip_id());
+                return false;
+            }
+            // check if dataset id exists (except if empty)
+            if (trip_update.trip().HasExtension(kirin::dataset_id)
+                && !trip_update.trip().GetExtension(kirin::dataset_id).empty()
+                && !navitia::contains(pt_data.datasets_map, trip_update.trip().GetExtension(kirin::dataset_id))) {
+                LOG4CPLUS_DEBUG(log, "Trip dataset id " << trip_update.trip().GetExtension(kirin::dataset_id)
+                                                        << " doesn't exist: ignoring trip update id "
+                                                        << trip_update.trip().trip_id());
+                return false;
+            }
+            // check if commercial_mode id exists (except if empty)
+            if (trip_update.trip().HasExtension(kirin::commercial_mode_id)
+                && !trip_update.trip().GetExtension(kirin::commercial_mode_id).empty()
+                && !navitia::contains(pt_data.commercial_modes_map,
+                                      trip_update.trip().GetExtension(kirin::commercial_mode_id))) {
+                LOG4CPLUS_DEBUG(log, "Trip commercial_mode id "
+                                         << trip_update.trip().GetExtension(kirin::commercial_mode_id)
+                                         << " doesn't exist: ignoring trip update id " << trip_update.trip().trip_id());
+                return false;
+            }
         }
         // WARNING: here trip.start_date is considered UTC, not local
         //(this date differs if vj starts during the period between midnight UTC and local midnight)
@@ -489,6 +533,25 @@ static const type::disruption::Disruption* create_disruption(const std::string& 
         if (trip_update.HasExtension(kirin::headsign)) {
             impact->headsign = trip_update.GetExtension(kirin::headsign);
         }
+        if (trip_update.HasExtension(kirin::trip_short_name)) {
+            impact->trip_short_name = trip_update.GetExtension(kirin::trip_short_name);
+        }
+        if (trip_update.trip().HasExtension(kirin::dataset_id)) {
+            impact->dataset_id = trip_update.trip().GetExtension(kirin::dataset_id);
+        }
+        if (trip_update.trip().HasExtension(kirin::network_id)) {
+            impact->network_id = trip_update.trip().GetExtension(kirin::network_id);
+        }
+        if (trip_update.trip().HasExtension(kirin::commercial_mode_id)) {
+            impact->commercial_mode_id = trip_update.trip().GetExtension(kirin::commercial_mode_id);
+        }
+        if (trip_update.trip().HasExtension(kirin::line_id)) {
+            impact->line_id = trip_update.trip().GetExtension(kirin::line_id);
+        }
+        if (trip_update.trip().HasExtension(kirin::route_id)) {
+            impact->route_id = trip_update.trip().GetExtension(kirin::route_id);
+        }
+
         // TODO: Effect calculated from stoptime_status -> to be removed later
         // when effect completely implemented in trip_update
         nt::disruption::Effect trip_effect = nt::disruption::Effect::UNKNOWN_EFFECT;
@@ -556,20 +619,32 @@ static const type::disruption::Disruption* create_disruption(const std::string& 
 
                 // for deleted stoptime departure (resp. arrival), we disable pickup (resp. drop_off)
                 // but we keep the departure/arrival to be able to match the stoptime to it's base stoptime
-                if (contains({StopTimeUpdate::Status::DELETED, StopTimeUpdate::Status::DELETED_FOR_DETOUR},
+                if (contains({StopTimeUpdate::Status::DELETED, StopTimeUpdate::Status::DELETED_FOR_DETOUR,
+                              StopTimeUpdate::Status::NO_ALIGHTING, StopTimeUpdate::Status::SKIPPED},
                              arrival_status)) {
                     stop_time.set_drop_off_allowed(false);
                 } else {
                     stop_time.set_drop_off_allowed(st.arrival().has_time());
                 }
 
-                if (contains({StopTimeUpdate::Status::DELETED, StopTimeUpdate::Status::DELETED_FOR_DETOUR},
+                if (contains({StopTimeUpdate::Status::DELETED, StopTimeUpdate::Status::DELETED_FOR_DETOUR,
+                              StopTimeUpdate::Status::NO_BOARDING, StopTimeUpdate::Status::SKIPPED},
                              departure_status)) {
                     stop_time.set_pick_up_allowed(false);
                 } else {
                     stop_time.set_pick_up_allowed(st.departure().has_time());
                 }
-                stop_time.set_skipped_stop(false);
+                auto is_skipped = (departure_status == StopTimeUpdate::Status::SKIPPED
+                                   || arrival_status == StopTimeUpdate::Status::SKIPPED);
+                stop_time.set_skipped_stop(is_skipped);
+
+                // For a skipped stop with arrival and/or departure status = SKIPPED
+                // we should reset pick_up_allowed and drop_off_allowed to false
+                if (is_skipped) {
+                    stop_time.set_drop_off_allowed(false);
+                    stop_time.set_pick_up_allowed(false);
+                }
+
                 // we update the trip status if the stoptime status is the most important status
                 // the most important status is DELAYED then DELETED
                 most_important_stoptime_status =

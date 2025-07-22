@@ -32,9 +32,9 @@ from .helper_utils import (
     complete_pt_journey,
     compute_fallback,
     _build_crowflies,
-    timed_logger,
     complete_transfer,
 )
+from .timer_logger_helper import timed_logger
 from .helper_exceptions import InvalidDateBoundException
 from jormungandr.street_network.street_network import StreetNetworkPathType
 from collections import namedtuple
@@ -113,6 +113,23 @@ def wait_and_build_crowflies(
     return res
 
 
+def tag_LEZ(journey):
+    tmp_list = [
+        not section.low_emission_zone.on_path
+        for section in journey.sections
+        if section.HasField('low_emission_zone')
+    ]
+    # all([]) == True it's not what we want :(
+    if tmp_list and all(tmp_list):
+        journey.low_emission_zone.on_path = False
+    elif any(
+        section.low_emission_zone.on_path
+        for section in journey.sections
+        if section.HasField('low_emission_zone')
+    ):
+        journey.low_emission_zone.on_path = True
+
+
 def get_journeys_to_complete(responses, context, is_debug):
     """
     Prepare a list of journeys from the response that will be use to compute street-network as a fallback.
@@ -127,7 +144,7 @@ def get_journeys_to_complete(responses, context, is_debug):
         if r is None:
             continue
         for j in r.journeys:
-            if is_debug == False and "to_delete" in j.tags:
+            if is_debug is False and "to_delete" in j.tags:
                 continue
             if j.internal_id in context.journeys_to_modes:
                 journey_modes = context.journeys_to_modes[j.internal_id]
@@ -149,6 +166,7 @@ def wait_and_complete_pt_journey(
     request,
     journeys,
     request_id,
+    **kwargs
 ):
     """
     In this function, we compute all fallback path once the pt journey is finished, then we build the
@@ -189,7 +207,10 @@ def wait_and_complete_pt_journey(
                 orig_fallback_durations_pool=orig_fallback_durations_pool,
                 dest_fallback_durations_pool=dest_fallback_durations_pool,
                 request=request,
+                **kwargs
             )
+            if {pt_element.dep_mode, pt_element.arr_mode} & {'car', 'car_no_park'}:
+                tag_LEZ(pt_element.pt_journeys)
 
     if request['_transfer_path'] is True:
         with timed_logger(logger, 'complete_transfer', request_id):
@@ -198,3 +219,21 @@ def wait_and_complete_pt_journey(
                     pt_journey=pt_element.pt_journeys,
                     transfer_pool=transfer_pool,
                 )
+
+
+def wait_and_complete_pt_journey_fare(pt_elements, pt_journey_fare_pool):
+    journeys_map = {j.pt_journeys.internal_id: j.pt_journeys for j in pt_elements}
+    for response, fare_response in pt_journey_fare_pool.wait_and_generate():
+        if not fare_response:
+            continue
+        response.tickets.extend(fare_response.tickets)
+        for f in fare_response.pt_journey_fares:
+            journey = journeys_map.get(f.journey_id)
+            if journey is None:
+                logging.getLogger(__name__).warning(
+                    "something wrong has occurred when completing journey fare: journey {} can't be found".format(
+                        f.journey_id
+                    )
+                )
+                continue
+            journey.fare.CopyFrom(f.fare)

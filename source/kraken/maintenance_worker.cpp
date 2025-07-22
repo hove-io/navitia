@@ -43,6 +43,7 @@ www.navitia.io
 #include <boost/algorithm/string/join.hpp>
 #include <boost/optional.hpp>
 #include <boost/thread/thread.hpp>
+#include <boost/range/adaptor/reversed.hpp>
 
 #include <chrono>
 #include <csignal>
@@ -112,7 +113,6 @@ void MaintenanceWorker::open_channel_to_rabbitmq() {
     if (channel_opened) {
         return;
     }
-    std::string instance_name = conf.instance_name();
     // connection through URI, if URI is provided, it will be used in the first place as other other connection options
     // are neglected
     boost::optional<std::string> broker_uri = conf.broker_uri();
@@ -175,6 +175,27 @@ void MaintenanceWorker::load_data() {
     LOG4CPLUS_INFO(logger, "Loading database duration: " << duration);
 }
 
+/**
+ * This function can be called multiple times without creating new queues. The goal is to take advantage
+ * of DeclareQueueWithCounts to get the number of messages remaining (just ready, not unacked) in the queue currently.
+ */
+std::pair<uint32_t, uint32_t> MaintenanceWorker::declare_queue_with_counts(const std::string& queue_name) {
+    bool passive = false;
+    bool durable = true;
+    bool exclusive = false;
+    bool auto_delete_queue = conf.broker_queue_auto_delete();
+
+    AmqpClient::Table args;
+    args.insert(std::make_pair("x-expires", conf.broker_queue_expire() * 1000));
+
+    boost::uint32_t message_count;
+    boost::uint32_t consumer_count;
+
+    channel->DeclareQueueWithCounts(queue_name, message_count, consumer_count, passive, durable, exclusive,
+                                    auto_delete_queue, args);
+    return {message_count, consumer_count};
+}
+
 void MaintenanceWorker::create_task_queue() {
     if (task_queue_created) {
         return;
@@ -188,7 +209,7 @@ void MaintenanceWorker::create_task_queue() {
 
     // first we have to delete the queues, binding can change between two run, and it doesn't seem possible
     // to unbind a queue if we don't know at what topic it's subscribed
-    // if the queue doesn't exist an exception is throw...
+    // if the queue doesn't exist an exception is thrown...
     try {
         channel->DeleteQueue(queue_name_task);
     } catch (const std::runtime_error&) {
@@ -197,16 +218,8 @@ void MaintenanceWorker::create_task_queue() {
     this->channel->DeclareExchange(exchange_name, "topic", false, true, false);
 
     // creation of task queue for this kraken
-    bool passive = false;
-    bool durable = true;
-    bool exclusive = false;
-    bool auto_delete_queue = conf.broker_queue_auto_delete();
-
-    AmqpClient::Table args;
-    args.insert(std::make_pair("x-expires", conf.broker_queue_expire() * 1000));
-
-    channel->DeclareQueue(queue_name_task, passive, durable, exclusive, auto_delete_queue, args);
-    LOG4CPLUS_INFO(logger, "binding queue for tasks: " << this->queue_name_task);
+    declare_queue_with_counts(queue_name_task);
+    LOG4CPLUS_INFO(logger, "binding queue for tasks: " << queue_name_task);
 
     // binding the queue to the exchange for all task for this instance
     channel->BindQueue(queue_name_task, exchange_name, instance_name + ".task.*");
@@ -218,12 +231,12 @@ void MaintenanceWorker::listen_to_task_queue_until_data_loaded() {
     bool no_local = true;
     bool no_ack = false;
     bool exclusive = false;
-    std::string task_tag = this->channel->BasicConsume(this->queue_name_task, "", no_local, no_ack, exclusive);
-    size_t timeout_ms = conf.broker_timeout();
+    std::string task_tag = this->channel->BasicConsume(this->queue_name_task, "", no_local, no_ack, exclusive,
+                                                       conf.broker_prefetch_message_count());
     while (!is_data_loaded()) {
         boost::this_thread::interruption_point();
         try {
-            auto task_envelopes = consume_in_batch(task_tag, 1, timeout_ms, no_ack);
+            auto task_envelopes = consume_in_batch(queue_name_task, task_tag, 1, no_ack);
             handle_task_in_batch(task_envelopes);
         } catch (const navitia::recoverable_exception& e) {
             // on a recoverable an internal server error is returned
@@ -261,16 +274,8 @@ void MaintenanceWorker::create_realtime_queue() {
     this->channel->DeclareExchange(exchange_name, "topic", false, true, false);
 
     // creation of queues for this kraken
-    bool passive = false;
-    bool durable = true;
-    bool exclusive = false;
-    bool auto_delete_queue = conf.broker_queue_auto_delete();
-
-    AmqpClient::Table args;
-    args.insert(std::make_pair("x-expires", conf.broker_queue_expire() * 1000));
-
-    channel->DeclareQueue(this->queue_name_rt, passive, durable, exclusive, auto_delete_queue, args);
-    LOG4CPLUS_INFO(logger, "queue for disruptions: " << this->queue_name_rt);
+    declare_queue_with_counts(queue_name_rt);
+    LOG4CPLUS_INFO(logger, "queue for disruptions: " << queue_name_rt);
     // binding the queue to the exchange for all tasks for this instance
     LOG4CPLUS_INFO(logger, "subscribing to [" << boost::algorithm::join(conf.rt_topics(), ", ") << "]");
     for (const auto& topic : conf.rt_topics()) {
@@ -363,18 +368,36 @@ void MaintenanceWorker::handle_rt_in_batch(const std::vector<AmqpClient::Envelop
     boost::shared_ptr<nt::Data> data{};
     pt::ptime begin = pt::microsec_clock::universal_time();
     bool autocomplete_rebuilding_activated = false;
-    auto rt_action = RTAction::chaos;
-    for (auto& envelope : envelopes) {
+
+    size_t applied_entity_count = 0u;
+    pt::ptime oldest_message_time{pt::max_date_time};
+    pt::ptime youngest_message_time{pt::min_date_time};
+    uint64_t sum_message_age_until_begin_microseconds = 0u;
+    size_t dated_message_count = 0u;
+
+    std::unordered_set<std::string> applied_entity_ids;
+    for (auto& envelope : boost::adaptors::reverse(envelopes)) {
         const auto routing_key = envelope->RoutingKey();
         LOG4CPLUS_DEBUG(logger, "realtime info received from " << routing_key);
         assert(envelope);
         transit_realtime::FeedMessage feed_message;
         if (!feed_message.ParseFromString(envelope->Message()->Body())) {
             LOG4CPLUS_WARN(logger, "protobuf not valid!");
-            return;
+            continue;
+        }
+        if (feed_message.header().has_timestamp()) {
+            auto message_time = navitia::from_posix_timestamp(feed_message.header().timestamp());
+            oldest_message_time = std::min(oldest_message_time, message_time);
+            youngest_message_time = std::max(youngest_message_time, message_time);
+            ++dated_message_count;
+            sum_message_age_until_begin_microseconds += pt::time_duration(begin - message_time).total_microseconds();
         }
         LOG4CPLUS_TRACE(logger, "received entity: " << feed_message.DebugString());
         for (const auto& entity : feed_message.entity()) {
+            auto res = applied_entity_ids.insert(entity.id());
+            if (!res.second) {
+                continue;
+            }
             if (!data) {
                 pt::ptime copy_begin = pt::microsec_clock::universal_time();
                 data = data_manager.get_data_clone();
@@ -382,25 +405,29 @@ void MaintenanceWorker::handle_rt_in_batch(const std::vector<AmqpClient::Envelop
                 this->metrics.observe_data_cloning(duration.total_seconds());
                 LOG4CPLUS_INFO(logger, "data copied (cloned) in " << duration);
             }
+            ++applied_entity_count;
             if (entity.is_deleted()) {
-                LOG4CPLUS_DEBUG(logger, "deletion of disruption " << entity.id());
-                rt_action = RTAction::deletion;
+                LOG4CPLUS_DEBUG(logger, "deletion of Chaos disruption " << entity.id());
                 delete_disruption(entity.id(), *data->pt_data, *data->meta);
             } else if (entity.HasExtension(chaos::disruption)) {
-                LOG4CPLUS_DEBUG(logger, "add/update of disruption " << entity.id());
-                rt_action = RTAction::chaos;
+                LOG4CPLUS_DEBUG(logger, "add/update of Chaos disruption " << entity.id());
                 make_and_apply_disruption(entity.GetExtension(chaos::disruption), *data->pt_data, *data->meta);
             } else if (entity.has_trip_update()) {
-                LOG4CPLUS_DEBUG(logger, "RT trip update" << entity.id());
-                rt_action = RTAction::kirin;
+                LOG4CPLUS_DEBUG(logger, "add/update of Kirin disruption" << entity.id());
                 handle_realtime(entity.id(), navitia::from_posix_timestamp(feed_message.header().timestamp()),
                                 entity.trip_update(), *data, conf.is_realtime_add_enabled(),
                                 conf.is_realtime_add_trip_enabled());
                 autocomplete_rebuilding_activated = autocomplete_rebuilding_needed(entity);
             } else {
                 LOG4CPLUS_WARN(logger, "unsupported gtfs rt feed");
+                --applied_entity_count;
             }
         }
+    }
+    if (!envelopes.empty()) {
+        // messages may contain multiple entities, and some may be skipped
+        this->metrics.observe_applied_rt_entity_count(applied_entity_count);
+        LOG4CPLUS_DEBUG(logger, "Number of RT entity really applied in this message batch: " << applied_entity_count);
     }
     if (data) {
         LOG4CPLUS_INFO(logger, "rebuilding relations");
@@ -419,19 +446,25 @@ void MaintenanceWorker::handle_rt_in_batch(const std::vector<AmqpClient::Envelop
         data_manager.set_data(std::move(data));
 
         // Feed metrics
-        auto duration = pt::microsec_clock::universal_time() - begin;
-        if (rt_action == RTAction::deletion) {
-            this->metrics.observe_delete_disruption(duration.total_milliseconds() / 1000.0);
-            LOG4CPLUS_INFO(logger, "Data updated after deleting disruption, "
-                                       << envelopes.size() << " disruption(s) applied in " << duration);
-        } else if (rt_action == RTAction::chaos) {
-            this->metrics.observe_handle_disruption(duration.total_milliseconds() / 1000.0);
-            LOG4CPLUS_INFO(logger, "Data updated with disruptions from chaos, "
-                                       << envelopes.size() << " disruption(s) applied in " << duration);
-        } else if (rt_action == RTAction::kirin) {
-            this->metrics.observe_handle_rt(duration.total_milliseconds() / 1000.0);
-            LOG4CPLUS_INFO(logger, "Data updated with realtime from kirin, "
-                                       << envelopes.size() << " disruption(s) applied in " << duration);
+        auto end = pt::microsec_clock::universal_time();
+        auto duration = end - begin;
+        this->metrics.observe_handle_rt(duration.total_milliseconds() / 1000.0);
+        LOG4CPLUS_INFO(logger, "Data updated with realtime (add/delete from chaos/kirin): "
+                                   << envelopes.size() << " disruption(s) applied in " << duration);
+        if (dated_message_count > 0) {
+            auto min_age = end - youngest_message_time;
+            auto max_age = end - oldest_message_time;
+            auto sum_message_age_until_end_microseconds =
+                sum_message_age_until_begin_microseconds + (dated_message_count * (end - begin).total_microseconds());
+            auto average_age_microseconds = sum_message_age_until_end_microseconds / dated_message_count;
+            this->metrics.observe_rt_message_age_min(double(min_age.total_milliseconds()) / 1000.0);
+            this->metrics.observe_rt_message_age_max(double(max_age.total_milliseconds()) / 1000.0);
+            this->metrics.observe_rt_message_age_average(double(average_age_microseconds) / 1000000.0);
+            LOG4CPLUS_DEBUG(logger, "Known ages of RT message(s) in batch: min="
+                                        << min_age << ", average=" << pt::microseconds(average_age_microseconds)
+                                        << ", max=" << max_age);
+        } else {
+            LOG4CPLUS_DEBUG(logger, "All ages of RT message(s) in batch are unknown");
         }
     } else if (!envelopes.empty()) {
         // we didn't had to update Data because there is no change but we want to track that realtime data
@@ -442,25 +475,49 @@ void MaintenanceWorker::handle_rt_in_batch(const std::vector<AmqpClient::Envelop
     }
 }
 
-std::vector<AmqpClient::Envelope::ptr_t> MaintenanceWorker::consume_in_batch(const std::string& consume_tag,
+std::vector<AmqpClient::Envelope::ptr_t> MaintenanceWorker::consume_in_batch(const std::string& queue_name,
+                                                                             const std::string& consume_tag,
                                                                              size_t max_nb,
-                                                                             size_t timeout_ms,
                                                                              bool no_ack) {
     assert(consume_tag != "");
     assert(max_nb);
-
     std::vector<AmqpClient::Envelope::ptr_t> envelopes;
-    envelopes.reserve(max_nb);
-    size_t consumed_nb = 0;
-    while (consumed_nb < max_nb) {
+
+    // count ready messages (prefetched messages are excluded from this count)
+    // declare_queue_with_counts() is called but no queue is actually created
+    auto count_messages_consumers = declare_queue_with_counts(queue_name);
+    LOG4CPLUS_DEBUG(logger, "Nb of message(s) ready in queue " << queue_name << ": " << count_messages_consumers.first);
+    LOG4CPLUS_DEBUG(logger, "Nb of consumer(s) on queue" << queue_name << ": " << count_messages_consumers.second);
+    if (count_messages_consumers.second > 1) {
+        // not deadly but suspicious: RT would be partial for this kraken
+        LOG4CPLUS_ERROR(logger, "There is more than one consumer on RabbitMQ's RT queue " << queue_name);
+    }
+
+    auto message_prefetch_count = size_t(conf.broker_prefetch_message_count());
+    auto max_message_to_retrieve = std::min(size_t(count_messages_consumers.first) + message_prefetch_count, max_nb);
+    envelopes.reserve(max_message_to_retrieve);
+
+    auto begin = pt::microsec_clock::universal_time();
+
+    // If there are only prefetched messages (or none), use short "prefetch" timeouts
+    // Otherwise use long (classic) timeouts.
+    bool has_ready_messages = count_messages_consumers.first > 0;
+    auto single_timeout = has_ready_messages ? conf.broker_timeout() : conf.broker_prefetch_timeout();
+    auto total_retrieving_timeout =
+        has_ready_messages ? conf.broker_total_retrieving_timeout() : conf.broker_prefetch_total_retrieving_timeout();
+
+    while (envelopes.size() < max_message_to_retrieve
+           && (pt::microsec_clock::universal_time() - begin).total_milliseconds() < total_retrieving_timeout) {
         AmqpClient::Envelope::ptr_t envelope{};
 
-        /* !
-         * The emptiness is tested thanks to the timeout. We consider that the queue is empty when
-         * BasicConsumeMessage() timeout.
-         * */
-        bool queue_is_empty = !channel->BasicConsumeMessage(consume_tag, envelope, timeout_ms);
-        if (queue_is_empty) {
+        bool queue_is_empty_or_unreachable = !channel->BasicConsumeMessage(consume_tag, envelope, single_timeout);
+        if (queue_is_empty_or_unreachable) {
+            // if it is certain that there was more messages counted, output a warning
+            if (count_messages_consumers.first > 0) {
+                LOG4CPLUS_WARN(logger,
+                               "Could not retrieve all the messages counted for RabbitMQ's RT queue " << queue_name);
+            }
+            // going on with what was retrieved so far
             break;
         }
 
@@ -469,7 +526,6 @@ std::vector<AmqpClient::Envelope::ptr_t> MaintenanceWorker::consume_in_batch(con
             if (!no_ack) {
                 channel->BasicAck(envelope);
             }
-            ++consumed_nb;
         }
     }
     return envelopes;
@@ -482,8 +538,11 @@ void MaintenanceWorker::listen_rabbitmq() {
     bool no_local = true;
     bool no_ack = false;
     bool exclusive = false;
-    std::string task_tag = this->channel->BasicConsume(this->queue_name_task, "", no_local, no_ack, exclusive);
-    std::string rt_tag = this->channel->BasicConsume(this->queue_name_rt, "", no_local, no_ack, exclusive);
+    auto message_prefetch_count = conf.broker_prefetch_message_count();
+    std::string task_tag =
+        this->channel->BasicConsume(this->queue_name_task, "", no_local, no_ack, exclusive, message_prefetch_count);
+    std::string rt_tag =
+        this->channel->BasicConsume(this->queue_name_rt, "", no_local, no_ack, exclusive, message_prefetch_count);
 
     LOG4CPLUS_INFO(logger, "start event loop");
 
@@ -495,17 +554,24 @@ void MaintenanceWorker::listen_rabbitmq() {
             this->next_try_realtime_loading = now + pt::milliseconds(conf.kirin_retry_timeout());
             this->load_realtime();
         }
-        size_t timeout_ms = conf.broker_timeout();
 
         // Arbitrary Number: we suppose that disruptions can be handled very quickly so that,
         // in theory, we can handle a batch of 5000 disruptions in one time very quickly too.
-        size_t max_batch_nb = 5000;
+        size_t max_batch_nb = conf.broker_max_batch_nb();
 
         try {
-            auto rt_envelopes = consume_in_batch(rt_tag, max_batch_nb, timeout_ms, no_ack);
+            auto begin_rt_retrieval = pt::microsec_clock::universal_time();
+            auto rt_envelopes = consume_in_batch(queue_name_rt, rt_tag, max_batch_nb, no_ack);
+            auto duration_rt_retrieval = pt::microsec_clock::universal_time() - begin_rt_retrieval;
+            this->metrics.observe_retrieve_rt_message_duration(double(duration_rt_retrieval.total_milliseconds())
+                                                               / 1000.0);
+            this->metrics.observe_retrieved_rt_message_count(rt_envelopes.size());
+            LOG4CPLUS_DEBUG(logger, "Retrieval of RT messages from RabbitMQ, " << rt_envelopes.size()
+                                                                               << " messages(s) retrieved in "
+                                                                               << duration_rt_retrieval);
             handle_rt_in_batch(rt_envelopes);
 
-            auto task_envelopes = consume_in_batch(task_tag, 1, timeout_ms, no_ack);
+            auto task_envelopes = consume_in_batch(queue_name_task, task_tag, 1, no_ack);
             handle_task_in_batch(task_envelopes);
         } catch (const navitia::recoverable_exception& e) {
             // on a recoverable an internal server error is returned

@@ -29,10 +29,11 @@
 
 from __future__ import absolute_import, print_function, unicode_literals, division
 
-from jormungandr import cache, app, new_relic
+from jormungandr import cache, app
+from jormungandr.otlp import otlp_instance
 from navitiacommon import type_pb2
 from dateutil import parser
-from jormungandr.utils import date_to_timestamp
+from jormungandr.utils import date_to_timestamp, PY3
 
 import pybreaker
 import logging
@@ -46,9 +47,10 @@ class SytralProvider(object):
     Class managing calls to SytralRT webservice, providing real-time equipment details
     """
 
-    def __init__(self, url, timeout=2, code_types=["TCL_ESCALIER", "TCL_ASCENSEUR"], **kwargs):
+    def __init__(self, provider_id, url, timeout=2, code_types=["TCL_ESCALIER", "TCL_ASCENSEUR"], **kwargs):
         self.logger = logging.getLogger(__name__)
         self.url = url
+        self.provider_id = provider_id
         self.timeout = timeout
         self.code_types = code_types
         self.breaker = pybreaker.CircuitBreaker(
@@ -75,6 +77,17 @@ class SytralProvider(object):
 
         if data:
             return self._process_for_equipment_reports(data, stop_area_equipments_list)
+
+    def __repr__(self):
+        """
+        used as the cache key. we use the provider_id to share the cache between servers in production
+        """
+        if PY3:
+            return self.provider_id
+        try:
+            return self.provider_id.encode('utf-8', 'backslashreplace')
+        except:
+            return self.provider_id
 
     @cache.memoize(app.config.get(str('CACHE_CONFIGURATION'), {}).get(str('TIMEOUT_SYTRAL'), 30))
     def _call_webservice(self):
@@ -105,7 +118,7 @@ class SytralProvider(object):
         """
         params = {'parking_system_id': "SytralRT", 'dataset': "sytral", 'status': status}
         params.update(kwargs)
-        new_relic.record_custom_event('parking_status', params)
+        otlp_instance.send_event_metrics('parking_status', params)
 
     def _fill_equipment_details(self, equipment_form_web_service, equipment_details):
         equipment_details.id = equipment_form_web_service['id']

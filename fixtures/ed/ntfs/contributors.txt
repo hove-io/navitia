@@ -1,2 +1,2 @@
 contributor_id,contributor_name,contributor_website,contributor_license
-C1,C1,http://www.canaltp.fr,LICENSE
+C1,C1,http://www.hove.com,LICENSE

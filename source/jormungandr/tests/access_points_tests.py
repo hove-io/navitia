@@ -41,7 +41,7 @@ def access_point_is_present(access_point_list, access_point_name):
 @dataset({"access_points_test": {}})
 class TestAccessPoints(AbstractTestFixture):
     def test_access_points_with_stop_points(self):
-        r = self.query_region('stop_points?depth=3')
+        r = self.query_region('stop_points?depth=2')
         assert len(get_not_null(r, 'stop_points')) == 7
 
         for sp in r['stop_points']:
@@ -82,7 +82,7 @@ class TestAccessPoints(AbstractTestFixture):
                         assert ap['traversal_time'] == 26
                         assert ap['access_point']['access_point_code'] == "access_point_code_4"
 
-        # without depth=3
+        # without depth=2
         r = self.query_region('stop_points')
         assert len(get_not_null(r, 'stop_points')) == 7
 
@@ -94,8 +94,15 @@ class TestAccessPoints(AbstractTestFixture):
             if sp['name'] == 'spC':
                 assert "access_points" not in sp
 
+    def test_access_points_with_stop_points_depth_1(self):
+        r = self.query_region('stop_points?depth=1')
+        assert len(get_not_null(r, 'stop_points')) == 7
+
+        for sp in r['stop_points']:
+            assert "access_points" not in sp
+
     def test_access_points_with_places_nearby(self):
-        response = self.query_region("coords/2.362795;48.872871/places_nearby?depth=3")
+        response = self.query_region("coords/2.362795;48.872871/places_nearby?depth=2")
         assert len(response['places_nearby']) > 0
         is_valid_places(response['places_nearby'])
 
@@ -116,6 +123,15 @@ class TestAccessPoints(AbstractTestFixture):
                         assert ap['is_exit'] == True
                         assert ap['length'] == 10
                         assert ap['traversal_time'] == 23
+
+    def test_access_points_with_places_nearby_depth_1(self):
+        response = self.query_region("coords/2.362795;48.872871/places_nearby?depth=1")
+        assert len(response['places_nearby']) > 0
+        is_valid_places(response['places_nearby'])
+        sp_places_nearby = [sp for sp in response['places_nearby'] if sp["embedded_type"] == "stop_point"]
+        assert len(sp_places_nearby) == 6
+        for pn in sp_places_nearby:
+            assert "access_points" not in pn['stop_point']
 
     def test_access_points_api(self):
         r = self.query_region('access_points')

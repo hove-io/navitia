@@ -36,6 +36,7 @@ from navitiacommon import stat_pb2
 import logging
 from jormungandr import app
 from jormungandr.authentication import get_user, get_token, get_app_name, get_used_coverages
+from jormungandr.exceptions import StatManagerError
 from jormungandr import utils
 import re
 from threading import Lock
@@ -46,9 +47,33 @@ import sys
 import kombu
 import six
 import pybreaker
-import retrying
 
 f_datetime = "%Y%m%dT%H%M%S"
+
+MAP_JOURNEY_TAG = {
+    "unknown": stat_pb2.JOURNEY_TAG_UNKNOWN,
+    "olympics": stat_pb2.JOURNEY_TAG_OLYMPICS,
+    "best_olympics": stat_pb2.JOURNEY_TAG_BEST_OLYMPICS,
+    "ecologic": stat_pb2.JOURNEY_TAG_ECOLOGIC,
+    "walking": stat_pb2.JOURNEY_TAG_WALKING,
+    "ridesharing": stat_pb2.JOURNEY_TAG_RIDESHARING,
+    "bss": stat_pb2.JOURNEY_TAG_BSS,
+    "bike": stat_pb2.JOURNEY_TAG_BIKE,
+    "car": stat_pb2.JOURNEY_TAG_CAR,
+    "taxi": stat_pb2.JOURNEY_TAG_TAXI,
+    "car_no_park": stat_pb2.JOURNEY_TAG_CAR_NO_PARK,
+    "balanced": stat_pb2.JOURNEY_TAG_BALANCED,
+    "comfort": stat_pb2.JOURNEY_TAG_COMFORT,
+    "shortest": stat_pb2.JOURNEY_TAG_SHORTEST,
+    "reliable": stat_pb2.JOURNEY_TAG_RELIABLE,
+    "non_pt": stat_pb2.JOURNEY_TAG_NON_PT,
+    "non_pt_walking": stat_pb2.JOURNEY_TAG_NON_PT_WALKING,
+    "non_pt_bike": stat_pb2.JOURNEY_TAG_NON_PT_BIKE,
+    "non_pt_taxi": stat_pb2.JOURNEY_TAG_NON_PT_TAXI,
+    "non_pt_car": stat_pb2.JOURNEY_TAG_NON_PT_CAR,
+    "non_pt_car_no_park": stat_pb2.JOURNEY_TAG_NON_PT_CAR_NO_PARK,
+    "non_pt_ridesharing": stat_pb2.JOURNEY_TAG_NON_PT_RIDESHARING,
+}
 
 
 def init_journey(stat_journey):
@@ -124,7 +149,19 @@ class StatManager(object):
         self.broker_url = app.config.get('BROKER_URL', None)
         self.exchange_name = app.config.get('EXCHANGE_NAME', None)
         self.connection_timeout = app.config.get('STAT_CONNECTION_TIMEOUT', 1)
-
+        self.retry_policy = {
+            'interval_start': app.config.get('STAT_CONNECTION_RETRY_POLICY', {}).get("interval_start", 0),
+            'interval_step': app.config.get('STAT_CONNECTION_RETRY_POLICY', {}).get("interval_step", 1),
+            'interval_max': app.config.get('STAT_CONNECTION_RETRY_POLICY', {}).get("interval_max", 1),
+            'max_retries': app.config.get('STAT_CONNECTION_RETRY_POLICY', {}).get("max_retries", 5),
+            "timeout": app.config.get('STAT_CONNECTION_RETRY_POLICY', {}).get("timeout", 1),
+        }
+        self.transport_options = {
+            'interval_start': app.config.get('STAT_TRANSPORT_OPTIONS', {}).get("interval_start", 0),
+            'interval_step': app.config.get('STAT_TRANSPORT_OPTIONS', {}).get("interval_step", 1),
+            'interval_max': app.config.get('STAT_TRANSPORT_OPTIONS', {}).get("interval_max", 1),
+            'max_retries': app.config.get('STAT_TRANSPORT_OPTIONS', {}).get("max_retries", 3),
+        }
         if self.save_stat:
             try:
                 self._init_rabbitmq(auto_delete)
@@ -141,10 +178,11 @@ class StatManager(object):
         """
         connection to rabbitmq and initialize queues
         """
-        self.connection = kombu.Connection(self.broker_url, connect_timeout=self.connection_timeout)
-        retry_policy = {'interval_start': 0, 'interval_step': 1, 'interval_max': 1, 'max_retries': 5}
+        self.connection = kombu.Connection(
+            self.broker_url, connect_timeout=self.connection_timeout, transport_options=self.transport_options
+        )
 
-        self.connection.ensure_connection(**retry_policy)
+        self.connection.ensure_connection(**self.retry_policy)
         self.exchange = kombu.Exchange(self.exchange_name, type="topic", auto_delete=auto_delete)
         self.producer = self.connection.Producer(exchange=self.exchange)
 
@@ -157,9 +195,12 @@ class StatManager(object):
 
         try:
             self._manage_stat(start_time, call_result)
+        except pybreaker.CircuitBreakerError as e:
+            logging.getLogger(__name__).error('RabbitMQ is not reachable (error: {})'.format(e))
+            raise StatManagerError('stat circuit breaker open')
         except Exception as e:
-            # if stat are not working we don't want jormungandr to stop.
             logging.getLogger(__name__).exception('Error during stat management')
+            raise StatManagerError("Error during stat management: {}".format(e))
 
     def _manage_stat(self, start_time, call_result):
         end_time = time.time()
@@ -170,11 +211,7 @@ class StatManager(object):
         self.fill_parameters(stat_request)
         self.fill_result(stat_request, call_result)
 
-        retry = retrying.Retrying(
-            stop_max_attempt_number=2,
-            retry_on_exception=lambda e: not isinstance(e, pybreaker.CircuitBreakerError),
-        )
-        retry.call(self.breaker.call, self.publish_request, stat_request.api, stat_request.SerializeToString())
+        self.breaker.call(self.publish_request, stat_request.api, stat_request.SerializeToString())
 
     def fill_info_response(self, stat_info_response, call_result):
         """
@@ -359,6 +396,17 @@ class StatManager(object):
             if admin[2]:
                 stat_journey.last_pt_admin_name = admin[2]
 
+    def fill_tags(self, stat_journey, resp_journey):
+        result = set()
+        for tag in resp_journey.get("tags", []):
+            stat_tag = MAP_JOURNEY_TAG.get(tag, stat_pb2.JOURNEY_TAG_UNKNOWN)
+            if stat_tag == stat_pb2.JOURNEY_TAG_UNKNOWN:
+                logging.getLogger(__name__).warning("Stat tag not found for {} navitia tag.".format(tag))
+                if "delete" in tag:
+                    continue
+            result.add(stat_tag)
+        stat_journey.tags.extend(result)
+
     def fill_journeys(self, stat_request, call_result):
         """
         Fill journeys and sections for each journey (datetimes are all UTC)
@@ -391,6 +439,7 @@ class StatManager(object):
                 stat_journey = stat_request.journeys.add()
                 self.fill_journey(stat_journey, resp_journey)
                 self.fill_sections(stat_journey, resp_journey)
+                self.fill_tags(stat_journey, resp_journey)
 
     def get_section_link(self, resp_section, link_type):
         result = ''
@@ -552,7 +601,11 @@ class manage_stat_caller:
         def wrapper(*args, **kwargs):
             start_time = time.time()
             call_result = f(*args, **kwargs)
-            self.manager.manage_stat(start_time, call_result)
+            try:
+                self.manager.manage_stat(start_time, call_result)
+            except Exception:
+                # if stat are not working we don't want jormungandr to stop.
+                pass
             return call_result
 
         return wrapper

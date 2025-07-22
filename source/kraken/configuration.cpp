@@ -80,6 +80,7 @@ po::options_description get_options_description(const boost::optional<std::strin
         ("GENERAL.log_format", po::value<std::string>()->default_value("[%D{%y-%m-%d %H:%M:%S,%q}] [%p] [%x] - %m %b:%L  %n"), "log format")
 
         ("GENERAL.enable_request_deadline", po::value<bool>()->default_value(true), "enable deadline of request")
+        ("GENERAL.enable_aggressive_memory_decommit", po::value<bool>()->default_value(false), "enable tamalloc aggresive decommit")
         ("GENERAL.metrics_binding", po::value<std::string>(), "IP:PORT to serving metrics in http")
         ("GENERAL.core_file_size_limit", po::value<int>()->default_value(0), "ulimit that define the maximum size of a core file")
 
@@ -92,7 +93,12 @@ po::options_description get_options_description(const boost::optional<std::strin
         ("BROKER.vhost", po::value<std::string>()->default_value("/"), "vhost for rabbitmq")
         ("BROKER.exchange", po::value<std::string>()->default_value("navitia"), "exchange used in rabbitmq")
         ("BROKER.rt_topics", po::value<std::vector<std::string>>(), "list of realtime topic for this instance")
-        ("BROKER.timeout", po::value<int>()->default_value(100), "timeout for maintenance worker in millisecond")
+        ("BROKER.timeout", po::value<int>()->default_value(10000), "RabbitMQ timeout for maintenance/RT worker in millisecond")
+        ("BROKER.max_batch_nb", po::value<int>()->default_value(10000), "max number of realtime messages retrieved in a batch")
+        ("BROKER.total_retrieving_timeout", po::value<int>()->default_value(120000), "max total duration the worker is going to spend when retrieving messages, in milliseconds")
+        ("BROKER.prefetch_timeout", po::value<int>()->default_value(100), "RabbitMQ timeout for prefetched messages (maintenance/RT) in millisecond")
+        ("BROKER.prefetch_message_count", po::value<int>()->default_value(100), "max number of messages (maintenance/RT) prefetched from RabbitMQ")
+        ("BROKER.prefetch_total_retrieving_timeout", po::value<int>()->default_value(10000), "max total duration the worker is going to spend when retrieving prefetched messages, in milliseconds")
         ("BROKER.sleeptime", po::value<int>()->default_value(1), "sleeptime for maintenance worker in second")
         ("BROKER.reconnect_wait", po::value<int>()->default_value(1), "Wait duration between connection attempts to rabbitmq, in seconds")
         ("BROKER.queue", po::value<std::string>(), "rabbitmq's queue name to be bound")
@@ -232,6 +238,26 @@ int Configuration::broker_timeout() const {
     return vm["BROKER.timeout"].as<int>();
 }
 
+int Configuration::broker_max_batch_nb() const {
+    return vm["BROKER.max_batch_nb"].as<int>();
+}
+
+int Configuration::broker_total_retrieving_timeout() const {
+    return vm["BROKER.total_retrieving_timeout"].as<int>();
+}
+
+int Configuration::broker_prefetch_timeout() const {
+    return vm["BROKER.prefetch_timeout"].as<int>();
+}
+
+uint16_t Configuration::broker_prefetch_message_count() const {
+    return uint16_t(vm["BROKER.prefetch_message_count"].as<int>());
+}
+
+int Configuration::broker_prefetch_total_retrieving_timeout() const {
+    return vm["BROKER.prefetch_total_retrieving_timeout"].as<int>();
+}
+
 int Configuration::broker_sleeptime() const {
     return vm["BROKER.sleeptime"].as<int>();
 }
@@ -284,6 +310,10 @@ int Configuration::slow_request_duration() const {
 bool Configuration::enable_request_deadline() const {
     return vm["GENERAL.enable_request_deadline"].as<bool>();
 }
+
+bool Configuration::enable_aggressive_memory_decommit() const {
+    return vm["GENERAL.enable_aggressive_memory_decommit"].as<bool>();
+};
 
 size_t Configuration::raptor_cache_size() const {
     if (!vm.count("GENERAL.raptor_cache_size")) {

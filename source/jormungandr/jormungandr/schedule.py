@@ -38,7 +38,8 @@ from jormungandr import utils
 
 from navitiacommon import type_pb2, request_pb2, response_pb2
 from copy import deepcopy
-from jormungandr import new_relic
+from jormungandr.otlp import otlp_instance
+from jormungandr.otlp import otlp_instance
 
 import gevent
 import gevent.pool
@@ -176,6 +177,13 @@ class RoutePoint(object):
         else:
             return None
 
+    def fetch_direction_uri(self):
+        # type: () -> Optional[Text]
+        if self.pb_route.HasField("direction"):
+            return self.pb_route.direction.uri
+        else:
+            return None
+
 
 def _get_route_point_from_stop_schedule(stop_schedule):
     rp = RoutePoint(stop_point=stop_schedule.stop_point, route=stop_schedule.route)
@@ -206,13 +214,11 @@ class MixedSchedule(object):
         rt_system = self.instance.realtime_proxy_manager.get(rt_system_code)
         if not rt_system:
             log.info('impossible to find {}, no realtime added'.format(rt_system_code))
-            new_relic.record_custom_event(
-                'realtime_internal_failure', {'rt_system_id': rt_system_code, 'message': 'no handler found'}
-            )
+            params = {'rt_system_id': rt_system_code, 'message': 'no handler found'}
+            otlp_instance.send_event_metrics('realtime_internal_failure', params)
             return None
         return rt_system
 
-    @new_relic.background_task("get_next_realtime_passages", "schedules")
     def _get_next_realtime_passages(self, rt_system, route_point, request):
         log = logging.getLogger(__name__)
         next_rt_passages = None
@@ -230,10 +236,8 @@ class MixedSchedule(object):
             log.exception(
                 'failure while requesting next passages to external RT system {}'.format(rt_system.rt_system_id)
             )
-            new_relic.record_custom_event(
-                'realtime_internal_failure',
-                {'rt_system_id': six.text_type(rt_system.rt_system_id), 'message': str(e)},
-            )
+            params = {'rt_system_id': six.text_type(rt_system.rt_system_id), 'message': str(e)}
+            otlp_instance.send_event_metrics('realtime_internal_failure', params)
 
         if next_rt_passages is None:
             log.debug('no next passages, using base schedule')
@@ -342,7 +346,7 @@ class MixedSchedule(object):
 
         return resp
 
-    def _manage_realtime(self, request, schedules, groub_by_dest=False):
+    def _manage_realtime(self, request, schedules, group_by_dest=False):
         futures = []
         pool = gevent.pool.Pool(self.instance.realtime_pool_size)
 
@@ -366,7 +370,7 @@ class MixedSchedule(object):
 
         for future in gevent.iwait(futures):
             rt_proxy, schedule, next_rt_passages = future.get()
-            rt_proxy._update_stop_schedule(schedule, next_rt_passages, groub_by_dest)
+            rt_proxy._update_stop_schedule(request, schedule, next_rt_passages, group_by_dest)
 
     def _manage_occupancies(self, schedules):
         vo_service = self.instance.external_service_provider_manager.get_vehicle_occupancy_service()
@@ -412,7 +416,7 @@ class MixedSchedule(object):
 
         if request['data_freshness'] != RT_PROXY_DATA_FRESHNESS:
             return resp
-        self._manage_realtime(request, resp.terminus_schedules, groub_by_dest=True)
+        self._manage_realtime(request, resp.terminus_schedules, group_by_dest=True)
         self._manage_occupancies(resp.terminus_schedules)
         return resp
 
@@ -422,6 +426,6 @@ class MixedSchedule(object):
         if request['data_freshness'] != RT_PROXY_DATA_FRESHNESS:
             return resp
 
-        self._manage_realtime(request, resp.stop_schedules)
+        self._manage_realtime(request, resp.stop_schedules, group_by_dest=False)
         self._manage_occupancies(resp.stop_schedules)
         return resp

@@ -33,7 +33,7 @@ from __future__ import absolute_import, print_function, unicode_literals, divisi
 from flask_restful import abort
 from flask.globals import g
 import flask
-from jormungandr.authentication import get_all_available_instances
+from jormungandr.authentication import get_all_available_instances_names
 from jormungandr.interfaces.v1.decorators import get_serializer
 from jormungandr.interfaces.v1.serializer.api import PlacesSerializer, PlacesNearbySerializer
 from jormungandr import i_manager, timezone, global_autocomplete, authentication, app
@@ -207,7 +207,8 @@ class Places(ResourceUri):
                 args["q"] = query_string
             response = i_manager.dispatch(args, "places", instance_name=self.region)
         else:
-            available_instances = get_all_available_instances(user, exclude_backend='kraken')
+            available_instances_name = get_all_available_instances_names(user, exclude_backend='kraken')
+            available_instances = [i_manager.instances[name] for name in available_instances_name]
 
             # If no instance available most probably due to database error
             if (not user) and (not available_instances):
@@ -251,6 +252,9 @@ class PlaceUri(ResourceUri):
             "disable_geojson", type=BooleanType(), default=False, help="remove geojson from the response"
         )
         self.parsers['get'].add_argument(
+            "_add_poi_shape", type=BooleanType(), default=False, hidden=True, help="add shape of POI object"
+        )
+        self.parsers['get'].add_argument(
             "disable_disruption", type=BooleanType(), default=False, help="remove disruptions from the response"
         )
         args = self.parsers["get"].parse_args()
@@ -284,7 +288,9 @@ class PlaceUri(ResourceUri):
             response = i_manager.dispatch(args, "place_uri", instance_name=self.region)
         else:
             user = authentication.get_user(token=authentication.get_token(), abort_if_no_token=False)
-            available_instances = get_all_available_instances(user, exclude_backend='kraken')
+
+            available_instances_name = get_all_available_instances_names(user, exclude_backend='kraken')
+            available_instances = [i_manager.instances[name] for name in available_instances_name]
 
             # If no instance available most probably due to database error
             if (not user) and (not available_instances):
@@ -296,7 +302,12 @@ class PlaceUri(ResourceUri):
             autocomplete = global_autocomplete.get(args["_autocomplete"])
             if not autocomplete:
                 raise TechnicalError('world wide autocompletion service not available')
-            response = autocomplete.get_by_uri(args["uri"], request_id=request_id, instances=available_instances)
+            response = autocomplete.get_by_uri(
+                args["uri"],
+                request_id=request_id,
+                instances=available_instances,
+                _add_poi_shape=args.get("_add_poi_shape", False),
+            )
 
         return response, 200
 
@@ -385,7 +396,7 @@ class PlacesNearby(ResourceUri):
             uris = uri.split("/")
             if len(uris) >= 2:
                 args["uri"] = transform_id(uris[-1])
-                # for coherence we check the type of the object
+                # for coherence, we check the type of the object
                 obj_type = uris[-2]
                 if obj_type not in places_types:
                     abort(404, message='places_nearby api not available for {}'.format(obj_type))

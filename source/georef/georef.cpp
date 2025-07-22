@@ -629,7 +629,7 @@ void GeoRef::project_stop_points_and_access_points(const std::vector<type::StopP
             ++access_points_num;
 
             update_message(access_point_messages, ap_pair, ap.coord);
-        };
+        }
     }
 
     auto log = log4cplus::Logger::getInstance("kraken::type::Data::project_stop_point");

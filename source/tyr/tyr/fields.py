@@ -84,6 +84,14 @@ key_fields = {
     'updated_at': FieldDate,
 }
 
+sn_backend_authorization_fields = {
+    'user_id': fields.Raw,
+    'sn_backend_id': fields.Raw,
+    'mode': fields.Raw,
+    'created_at': FieldDate,
+    'updated_at': FieldDate,
+}
+
 generic_field = {
     'id': fields.Raw,
     'klass': fields.Raw,
@@ -130,6 +138,15 @@ traveler_profile = {
     'max_car_duration_to_pt': fields.Raw,
     'first_section_mode': fields.List(fields.String),
     'last_section_mode': fields.List(fields.String),
+    'walking_step_penalty': fields.Raw,
+    'walking_use_hills': fields.Raw,
+    'max_walking_direct_path_duration': fields.Raw,
+    'max_bike_direct_path_duration': fields.Raw,
+    'max_bss_direct_path_duration': fields.Raw,
+    'max_car_direct_path_duration': fields.Raw,
+    'max_ridesharing_direct_path_duration': fields.Raw,
+    'max_taxi_direct_path_duration': fields.Raw,
+    'max_car_no_park_direct_path_duration': fields.Raw,
     'error': fields.String,
 }
 
@@ -190,9 +207,11 @@ instance_fields = {
     'autocomplete_backend': fields.Raw,
     'additional_time_after_first_section_taxi': fields.Raw,
     'additional_time_before_last_section_taxi': fields.Raw,
+    'on_street_bike_parking_duration': fields.Raw,
     'max_additional_connections': fields.Raw,
     'successive_physical_mode_to_limit_id': fields.Raw,
     'car_park_provider': fields.Raw,
+    'disruptions_on_poi': fields.Raw,
     'equipment_details_providers': fields.Nested(equipment_provider_fields),
     'street_network_car': FieldUrlStreetNetworkBackend(),
     'street_network_car_no_park': FieldUrlStreetNetworkBackend(),
@@ -230,10 +249,44 @@ instance_fields = {
     'places_proximity_radius': fields.Raw,
     'transfer_path': fields.Boolean,
     'access_points': fields.Boolean,
-    'asgard_language': fields.Raw,
+    'poi_access_points': fields.Boolean,
+    'language': fields.Raw,
     'default_pt_planner': fields.Raw,
     'pt_planners_configurations': fields.Raw,
+    'same_journey_schedules_configuration': fields.Raw,
     'ghost_words': fields.List(fields.String),
+    'filter_odt_journeys': fields.Raw,
+    'additional_parameters': fields.Raw,
+    'co2_emission_car_value': fields.Raw,
+    'co2_emission_car_unit': fields.Raw,
+    'walking_walkway_factor': fields.Raw,
+    'walking_sidewalk_factor': fields.Raw,
+    'walking_alley_factor': fields.Raw,
+    'walking_driveway_factor': fields.Raw,
+    'walking_step_penalty': fields.Raw,
+    'walking_use_ferry': fields.Raw,
+    'walking_use_living_streets': fields.Raw,
+    'walking_use_tracks': fields.Raw,
+    'walking_use_hills': fields.Raw,
+    'walking_service_factor': fields.Raw,
+    'walking_max_hiking_difficulty': fields.Integer,
+    'walking_shortest': fields.Boolean,
+    'walking_ignore_oneways': fields.Boolean,
+    'walking_destination_only_penalty': fields.Raw,
+    'bike_use_roads': fields.Raw,
+    'bike_use_hills': fields.Raw,
+    'bike_use_ferry': fields.Raw,
+    'bike_avoid_bad_surfaces': fields.Raw,
+    'bike_shortest': fields.Boolean,
+    'bicycle_type': fields.Raw,
+    'bike_use_living_streets': fields.Raw,
+    'bike_maneuver_penalty': fields.Raw,
+    'bike_service_penalty': fields.Raw,
+    'bike_service_factor': fields.Raw,
+    'bike_country_crossing_cost': fields.Raw,
+    'bike_country_crossing_penalty': fields.Raw,
+    'bike_destination_only_penalty': fields.Raw,
+    'use_predicted_traffic': fields.Boolean,
 }
 
 api_fields = {'id': fields.Raw, 'name': fields.Raw}
@@ -278,10 +331,12 @@ user_fields = {
     'shape': Shape,
     'default_coord': fields.Raw,
     'shape_scope': fields.List(fields.String),
+    'has_sn_backend': fields.Boolean,
 }
 
 user_fields_full = deepcopy(user_fields)
 user_fields_full["keys"] = fields.List(fields.Nested(key_fields))
+user_fields_full["sn_backend_authorizations"] = fields.List(fields.Nested(sn_backend_authorization_fields))
 user_fields_full["authorizations"] = fields.List(
     fields.Nested({'instance': fields.Nested(instance_fields), 'api': fields.Nested(api_fields)})
 )

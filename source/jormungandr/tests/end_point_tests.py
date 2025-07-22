@@ -112,11 +112,6 @@ class TestEndPoint(AbstractTestFixture):
         assert len(regions) == 2, "with 2 kraken loaded, we should have 2 regions"
 
         for region in regions:
-            assert is_valid_date(get_not_null(region, 'start_production_date')), "no start production date"
-            assert is_valid_date(get_not_null(region, 'end_production_date')), "no end production date"
-
-            get_not_null(region, 'status')
-
             # shapes are not filled in dataset for the moment
             # shape = get_not_null(region, 'shape')
             # TODO check the shape with regexp ?
@@ -258,3 +253,68 @@ class TestEndPoint(AbstractTestFixture):
         r1 = self.tester.get('v1/coverage/main_routing_test/coord/0.001077974378345651;0.0005839027882705609')
         r2 = self.tester.get('v1/coord/0.001077974378345651;0.0005839027882705609')
         assert r1.get_json()['address'] == r2.get_json()['address']
+
+    def test_backends_status(self):
+        json_response = self.query("/v1/backends_status")
+
+        assert len(json_response['lokis']) == 2
+        assert len(json_response['krakens']) == 2
+
+        for attribute in [
+            'status',
+            'backend_version',
+            'start_date',
+            'end_date',
+            'loaded',
+            'last_load_at',
+            'last_load_status',
+            'is_realtime_loaded',
+            'last_rt_data_loaded',
+        ]:
+            assert attribute in json_response['lokis']['main_ptref_test']
+            assert attribute in json_response['krakens']['main_ptref_test']
+            assert attribute in json_response['lokis']['main_routing_test']
+            assert attribute in json_response['krakens']['main_routing_test']
+
+    def test_parameters_in_one_status(self):
+        json_response = self.query("/v1/coverage/main_routing_test/status")
+        is_valid_region_status(get_not_null(json_response, "status"))
+        self.check_context(json_response)
+
+        # Verify that parameters exist in parameters for walking as wall as bike and some others
+        parameters = json_response['status']['parameters']
+        assert len(parameters) == 90
+        assert parameters['walking_walkway_factor'] == 1.0
+        assert parameters['walking_sidewalk_factor'] == 1.0
+        assert parameters['walking_alley_factor'] == 2.0
+        assert parameters['walking_driveway_factor'] == 5.0
+        assert parameters['walking_step_penalty'] == 30.0
+        assert parameters['walking_use_ferry'] == 0.5
+        assert parameters['walking_use_living_streets'] == 0.6
+        assert parameters['walking_use_tracks'] == 0.5
+        assert parameters['walking_use_hills'] == 0.5
+        assert parameters['walking_service_factor'] == 1
+        assert parameters['walking_max_hiking_difficulty'] == 1
+        assert parameters['walking_shortest'] is False
+        assert parameters['walking_ignore_oneways'] is True
+        assert parameters['walking_destination_only_penalty'] == 120
+
+        assert parameters['bike_use_roads'] == 0.5
+        assert parameters['bike_use_hills'] == 0.5
+        assert parameters['bike_use_ferry'] == 0.5
+        assert parameters['bike_avoid_bad_surfaces'] == 0.25
+        assert parameters['bike_shortest'] is False
+        assert parameters['bicycle_type'] == 'hybrid'
+        assert parameters['bike_use_living_streets'] == 0.5
+        assert parameters['bike_maneuver_penalty'] == 5
+        assert parameters['bike_service_penalty'] == 0
+        assert parameters['bike_service_factor'] == 1
+        assert parameters['bike_country_crossing_cost'] == 600
+        assert parameters['bike_country_crossing_penalty'] == 0
+        assert parameters['bike_destination_only_penalty'] == 120
+
+        assert parameters['max_walking_direct_path_duration'] == 86400  # 24 * 60 * 60
+        assert parameters['max_bike_direct_path_duration'] == 86400
+        assert parameters['max_bss_direct_path_duration'] == 86400
+        assert parameters['max_car_direct_path_duration'] == 86400
+        assert parameters['max_ridesharing_direct_path_duration'] == 86400

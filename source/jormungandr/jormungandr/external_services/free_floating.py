@@ -40,9 +40,10 @@ class FreeFloatingProvider(AbstractExternalService):
     Class managing calls to forseti webservice, providing free_floating
     """
 
-    def __init__(self, service_url, timeout=2, **kwargs):
+    def __init__(self, id, service_url, timeout=2, **kwargs):
         self.logger = logging.getLogger(__name__)
         self.service_url = service_url
+        self.id = id
         self.timeout = timeout
         self.breaker = pybreaker.CircuitBreaker(
             fail_max=kwargs.get('circuit_breaker_max_fail', app.config['CIRCUIT_BREAKER_MAX_FORSETI_FAIL']),

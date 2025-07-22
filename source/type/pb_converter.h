@@ -194,8 +194,9 @@ inline pbnavitia::NavitiaType get_embedded_type(const nt::MetaVehicleJourney*) {
 
 struct PbCreator {
     std::set<const nt::Contributor*, Less> contributors;
-    // Used for journeys
+    // Used for journeys and timetable
     std::set<const nt::StopArea*, Less> terminus;
+    std::set<const nt::StopArea*, Less> origins;
     std::set<boost::shared_ptr<type::disruption::Impact>, Less> impacts;
     // std::reference_wrapper<const nt::Data> data;
     const nt::Data* data = nullptr;
@@ -205,6 +206,7 @@ struct PbCreator {
     bool disable_geojson = false;
     bool disable_feedpublisher = false;
     bool disable_disruption = false;
+    std::string language = "fr-FR";
     // Raptor api
     size_t nb_sections = 0;
     std::map<std::pair<pbnavitia::Journey*, size_t>, std::string> routing_section_map;
@@ -216,26 +218,30 @@ struct PbCreator {
               const pt::time_period action_period,
               const bool disable_geojson = false,
               const bool disable_feedpublisher = false,
-              const bool disable_disruption = false)
+              const bool disable_disruption = false,
+              std::string language = "fr-FR")
         : data(data),
           now(now),
           action_period(action_period),
           disable_geojson(disable_geojson),
           disable_feedpublisher(disable_feedpublisher),
-          disable_disruption(disable_disruption) {}
+          disable_disruption(disable_disruption),
+          language(language) {}
 
     void init(const nt::Data* data,
               const pt::ptime now,
               const pt::time_period action_period,
               const bool disable_geojson = false,
               const bool disable_feedpublisher = false,
-              const bool disable_disruption = false) {
+              const bool disable_disruption = false,
+              const std::string language = "fr-FR") {
         this->data = data;
         this->now = now;
         this->action_period = action_period;
         this->disable_geojson = disable_geojson;
         this->disable_feedpublisher = disable_feedpublisher;
         this->disable_disruption = disable_disruption;
+        this->language = language;
         this->nb_sections = 0;
 
         this->contributors.clear();
@@ -276,6 +282,8 @@ struct PbCreator {
     const std::string& register_section(pbnavitia::Journey* j, size_t section_idx);
     std::string register_section();
     std::string get_section_id(pbnavitia::Journey* j, size_t section_idx);
+    std::string get_translated_message(const std::vector<type::disruption::Translation>& translations,
+                                       const std::string& language);
     void fill_co2_emission(pbnavitia::Section* pb_section, const type::VehicleJourney* vehicle_journey);
     void fill_co2_emission_by_mode(pbnavitia::Section* pb_section, const std::string& mode_uri);
     void fill_fare_section(pbnavitia::Journey* pb_journey, const fare::results& fare);
@@ -292,6 +300,8 @@ struct PbCreator {
                               pbnavitia::Journey* pb_journey,
                               const pt::ptime departure,
                               int max_depth = 1);
+
+    void fill_fare(pbnavitia::Fare* pb_fare, pbnavitia::Journey* pb_journey, const fare::results& fare);
 
     void add_path_item(pbnavitia::StreetNetwork* sn, const ng::PathItem& item, const type::EntryPoint& ori_dest);
 
@@ -321,6 +331,7 @@ struct PbCreator {
     pbnavitia::EquipmentReport* add_equipment_reports();
     pbnavitia::VehiclePosition* add_vehicle_positions();
     pbnavitia::AccessPoint* add_access_points();
+    pbnavitia::PtJourneyFare* add_pt_journey_fares();
 
     ::google::protobuf::RepeatedPtrField<pbnavitia::PtObject>* get_mutable_places();
     bool has_error();

@@ -108,6 +108,21 @@ BOOST_AUTO_TEST_CASE(chaos_fill_disruptions_tests) {
     BOOST_REQUIRE_EQUAL(impact.application_periods().size(), 1);
     BOOST_REQUIRE_EQUAL(impact.messages().size(), 2);
     BOOST_CHECK_EQUAL(impact.send_notifications(), false);
+    // The same line can be present in more than one line_sections of the same impact
+    BOOST_REQUIRE_EQUAL(impact.informed_entities().size(), 2);
+    BOOST_CHECK_EQUAL(impact.informed_entities().Get(0).pt_object_type(), chaos::PtObject_Type_line_section);
+    auto& line_section_1 = impact.informed_entities().Get(0);
+    BOOST_CHECK_EQUAL(line_section_1.pt_line_section().line().uri(), "line:tcl:D");
+    BOOST_CHECK_EQUAL(line_section_1.pt_line_section().start_point().uri(), "stop_area:tcl:SA:5083");
+    BOOST_CHECK_EQUAL(line_section_1.pt_line_section().end_point().uri(), "stop_area:tcl:SA:5062");
+    BOOST_CHECK_EQUAL(line_section_1.pt_line_section().routes().size(), 0);
+
+    BOOST_CHECK_EQUAL(impact.informed_entities().Get(1).pt_object_type(), chaos::PtObject_Type_line_section);
+    auto line_section_2 = impact.informed_entities().Get(1);
+    BOOST_CHECK_EQUAL(line_section_2.pt_line_section().line().uri(), "line:tcl:D");
+    BOOST_CHECK_EQUAL(line_section_2.pt_line_section().start_point().uri(), "stop_area:tcl:SA:5062");
+    BOOST_CHECK_EQUAL(line_section_2.pt_line_section().end_point().uri(), "stop_area:tcl:SA:5083");
+    BOOST_CHECK_EQUAL(line_section_2.pt_line_section().routes().size(), 0);
 
     auto& application_period = impact.application_periods().Get(0);
     BOOST_CHECK_EQUAL(application_period.start(), 1561044000);
@@ -147,4 +162,31 @@ BOOST_AUTO_TEST_CASE(chaos_fill_disruptions_tests) {
     BOOST_CHECK_EQUAL(tag.name(), "TEST");
     BOOST_CHECK_EQUAL(tag.created_at(), 1552921584);
     BOOST_CHECK_EQUAL(tag.updated_at(), 0);
+
+    // Verify all the elements of a complete line_sections in an impact
+    auto& dis = disruptions[3];
+    BOOST_CHECK_EQUAL(dis.id(), "bd3ee57a-968b-11e9-951b-005056a40962");
+    BOOST_REQUIRE_EQUAL(dis.impacts().size(), 1);
+    auto& imp = dis.impacts().Get(0);
+    BOOST_CHECK_EQUAL(imp.id(), "bd3fa10e-968b-11e9-951b-005056a40962");
+    BOOST_REQUIRE_EQUAL(imp.informed_entities().size(), 2);
+
+    auto& ls_1 = imp.informed_entities().Get(0);
+    BOOST_CHECK_EQUAL(ls_1.pt_line_section().line().uri(), "line:tcl:8");
+    BOOST_CHECK_EQUAL(ls_1.pt_object_type(), chaos::PtObject_Type_line_section);
+
+    BOOST_CHECK_EQUAL(ls_1.pt_line_section().start_point().uri(), "stop_area:tcl:SA:5085");
+    BOOST_CHECK_EQUAL(ls_1.pt_line_section().end_point().uri(), "stop_area:tcl:SA:5085");
+    BOOST_CHECK_EQUAL(ls_1.pt_line_section().routes().size(), 2);
+    BOOST_CHECK_EQUAL(ls_1.pt_line_section().routes().Get(0).uri(), "route:tcl:8-F");
+    BOOST_CHECK_EQUAL(ls_1.pt_line_section().routes().Get(1).uri(), "route:tcl:8-B");
+
+    auto& ls_2 = imp.informed_entities().Get(1);
+    BOOST_CHECK_EQUAL(ls_2.pt_object_type(), chaos::PtObject_Type_line_section);
+    BOOST_CHECK_EQUAL(ls_2.pt_line_section().line().uri(), "line:tcl:C20E");
+    BOOST_CHECK_EQUAL(ls_2.pt_line_section().start_point().uri(), "stop_area:tcl:SA:5085");
+    BOOST_CHECK_EQUAL(ls_2.pt_line_section().end_point().uri(), "stop_area:tcl:SA:5085");
+    BOOST_CHECK_EQUAL(ls_2.pt_line_section().routes().size(), 2);
+    BOOST_CHECK_EQUAL(ls_2.pt_line_section().routes().Get(0).uri(), "route:tcl:C20E-B");
+    BOOST_CHECK_EQUAL(ls_2.pt_line_section().routes().Get(1).uri(), "route:tcl:C20E-F");
 }

@@ -296,7 +296,7 @@ void Data::build_administrative_regions() {
     }
     if (cpt_no_projected)
         LOG4CPLUS_WARN(log, cpt_no_projected << "/" << pt_data->stop_points.size()
-                                             << " stop_points are not associated with any admins");
+                                             << " stop_points are not associated with any admin");
 
     // set admins to poi
     cpt_no_projected = 0;
@@ -317,11 +317,27 @@ void Data::build_administrative_regions() {
     }
     if (cpt_no_projected)
         LOG4CPLUS_WARN(log,
-                       cpt_no_projected << "/" << geo_ref->pois.size() << " pois are not associated with any admins");
+                       cpt_no_projected << "/" << geo_ref->pois.size() << " pois are not associated with any admin");
     if (cpt_no_initialized)
         LOG4CPLUS_WARN(log,
                        cpt_no_initialized << "/" << geo_ref->pois.size() << " pois with coordinates not initialized");
 
+    // set admins to stop areas
+    cpt_no_projected = 0;
+    for (type::StopArea* stop_area : pt_data->stop_areas) {
+        if (!stop_area->admin_list.empty()) {
+            continue;
+        }
+        const auto& admins = find_admins(stop_area->coord, admin_tree);
+        boost::push_back(stop_area->admin_list, admins);
+        if (admins.empty()) {
+            ++cpt_no_projected;
+        }
+    }
+    if (cpt_no_projected)
+        LOG4CPLUS_WARN(log, cpt_no_projected << "/" << pt_data->stop_areas.size()
+                                             << " stop_areas are not associated with any admin");
+    // For stop_areas without any admin, we can always fetch admins of it's stop_points
     this->pt_data->build_admins_stop_areas();
 
     for (const auto* sa : pt_data->stop_areas) {
@@ -415,7 +431,7 @@ static void build_datasets(navitia::type::VehicleJourney* vj) {
  *
  * @param vj The vehicle journey to browse
  */
-static void build_route_and_stop_point_relations(navitia::type::VehicleJourney* vj) {
+static void build_route_and_stops_relations(navitia::type::VehicleJourney* vj) {
     for (navitia::type::StopTime& st : vj->stop_time_list) {
         if (st.stop_point) {
             vj->route->stop_point_list.insert(st.stop_point);
@@ -443,7 +459,7 @@ void Data::build_relations() {
     // physical_mode_list of line
     for (auto* vj : pt_data->vehicle_journeys) {
         build_datasets(vj);
-        build_route_and_stop_point_relations(vj);
+        build_route_and_stops_relations(vj);
         if (!vj->physical_mode || !vj->route || !vj->route->line) {
             continue;
         }
@@ -711,7 +727,7 @@ std::set<idx_t> Data::get_target_by_source(Type_e source, Type_e target, const s
     std::set<idx_t> result;
     for (idx_t idx : source_idx) {
         Indexes tmp = get_target_by_one_source(source, target, idx);
-        // TODO: Use flat_set's merge when we pass to boost 1.62
+        // TODO: Use set's merge when we pass to c++17
         result.insert(tmp.begin(), tmp.end());
     }
     return result;

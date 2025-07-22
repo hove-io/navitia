@@ -69,7 +69,19 @@ enum class Effect {
 
 enum class ActiveStatus { past = 0, active = 1, future = 2 };
 
-enum class ChannelType { web = 0, sms, email, mobile, notification, twitter, facebook, unknown_type, title, beacon };
+enum class ChannelType {
+    web = 0,
+    sms,
+    email,
+    mobile,
+    notification,
+    twitter,
+    facebook,
+    unknown_type,
+    title,
+    beacon,
+    pids
+};
 
 inline std::string to_string(Effect effect) {
     switch (effect) {
@@ -149,6 +161,8 @@ inline std::string to_string(ChannelType ct) {
             return "title";
         case ChannelType::beacon:
             return "beacon";
+        case ChannelType::pids:
+            return "pids";
         default:
             throw navitia::exception("unhandled channeltype case");
     }
@@ -227,7 +241,7 @@ struct RailSection {
           blockeds(std::move(blockeds_)),
           impacteds(std::move(impacted_stop_areas_)),
           line(line_),
-          routes(std::move(routes_)){};
+          routes(std::move(routes_)) {}
 
     // never null
     StopArea* start;
@@ -273,7 +287,7 @@ boost::optional<RailSection> try_make_rail_section(
     const std::vector<std::string>& routes_uris    // may be empty
 );
 
-std::set<StopPoint*> get_stop_points_section(const RailSection& rs);
+std::set<StopPoint*> get_stop_points_section(const RailSection& rs, const Effect& effect);
 
 using PtObj = boost::variant<UnknownPtObj,
                              Network*,
@@ -287,6 +301,15 @@ using PtObj = boost::variant<UnknownPtObj,
 
 PtObj make_pt_obj(Type_e type, const std::string& uri, PT_Data& pt_data);
 
+struct Translation {
+    std::string text;
+    std::string language;
+    std::string url_audio;
+
+    template <class Archive>
+    void serialize(Archive& ar, const unsigned int);
+};
+
 struct Message {
     std::string text;
     std::string channel_id;
@@ -297,6 +320,7 @@ struct Message {
     boost::posix_time::ptime updated_at;
 
     std::set<ChannelType> channel_types;
+    std::vector<Translation> translations;
 
     template <class Archive>
     void serialize(Archive& ar, const unsigned int);
@@ -312,7 +336,10 @@ struct StopTimeUpdate {
         ADDED_FOR_DETOUR,
         DELETED,
         DELETED_FOR_DETOUR,
-        DELAYED
+        DELAYED,
+        NO_ALIGHTING,
+        NO_BOARDING,
+        SKIPPED
     };
     Status departure_status{Status::UNCHANGED};
     Status arrival_status{Status::UNCHANGED};
@@ -371,6 +398,12 @@ struct Impact {
     std::string headsign;
     boost::posix_time::ptime created_at;
     boost::posix_time::ptime updated_at;
+    std::string trip_short_name;
+    std::string dataset_id;
+    std::string network_id;
+    std::string commercial_mode_id;
+    std::string line_id;
+    std::string route_id;
 
     // the application period define when the impact happen
     // i.e. the canceled base schedule period for vj

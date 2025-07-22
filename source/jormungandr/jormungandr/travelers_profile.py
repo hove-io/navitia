@@ -57,6 +57,15 @@ class TravelerProfile(object):
         max_bike_duration_to_pt=15 * 60,  # type: int
         max_bss_duration_to_pt=15 * 60,  # type: int
         max_car_duration_to_pt=15 * 60,  # type: int
+        walking_step_penalty=30.0,  # type: float
+        walking_use_hills=0.5,  # type: float
+        max_walking_direct_path_duration=60 * 60,  # type: int
+        max_bike_direct_path_duration=60 * 60,  # type: int
+        max_bss_direct_path_duration=60 * 60,  # type: int
+        max_car_direct_path_duration=40 * 60,  # type: int
+        max_ridesharing_direct_path_duration=60 * 60,  # type: int
+        max_taxi_direct_path_duration=60 * 60,  # type: int
+        max_car_no_park_direct_path_duration=30 * 60,  # type: int
         traveler_type='',  # type: Text
         is_from_db=False,  # type: bool
     ):
@@ -87,6 +96,16 @@ class TravelerProfile(object):
             self.first_section_mode = first_section_mode or []
             self.last_section_mode = last_section_mode or []
 
+        self.walking_step_penalty = walking_step_penalty
+        self.walking_use_hills = walking_use_hills
+        self.max_walking_direct_path_duration = max_walking_direct_path_duration
+        self.max_bike_direct_path_duration = max_bike_direct_path_duration
+        self.max_bss_direct_path_duration = max_bss_direct_path_duration
+        self.max_car_direct_path_duration = max_car_direct_path_duration
+        self.max_ridesharing_direct_path_duration = max_ridesharing_direct_path_duration
+        self.max_taxi_direct_path_duration = max_taxi_direct_path_duration
+        self.max_car_no_park_direct_path_duration = max_car_no_park_direct_path_duration
+
         self.wheelchair = wheelchair
 
     def __repr__(self):
@@ -105,6 +124,15 @@ class TravelerProfile(object):
             ('origin_mode', self.first_section_mode),
             ('destination_mode', self.last_section_mode),
             ('wheelchair', self.wheelchair),
+            ('walking_step_penalty', self.walking_step_penalty),
+            ('walking_use_hills', self.walking_use_hills),
+            ('max_walking_direct_path_duration', self.max_walking_direct_path_duration),
+            ('max_bike_direct_path_duration', self.max_bike_direct_path_duration),
+            ('max_bss_direct_path_duration', self.max_bss_direct_path_duration),
+            ('max_car_direct_path_duration', self.max_car_direct_path_duration),
+            ('max_ridesharing_direct_path_duration', self.max_ridesharing_direct_path_duration),
+            ('max_taxi_direct_path_duration', self.max_taxi_direct_path_duration),
+            ('max_car_no_park_direct_path_duration', self.max_car_no_park_direct_path_duration),
         )
 
         def override(pair):
@@ -132,7 +160,7 @@ class TravelerProfile(object):
         try:
             model = models.TravelerProfile.get_by_coverage_and_type(coverage, traveler_type)
         except Exception as e:
-            logging.getLogger(__name__).error('No access to table traveler_profile (error: {})'.format(e))
+            logging.getLogger(__name__).exception('No access to table traveler_profile (error: {})'.format(e))
             # If the table is not accessible return the default traveler profile for given traveler type
             return default_traveler_profiles[traveler_type]
 
@@ -152,6 +180,15 @@ class TravelerProfile(object):
             max_car_duration_to_pt=model.max_car_duration_to_pt,
             first_section_mode=model.first_section_mode,
             last_section_mode=model.last_section_mode,
+            walking_step_penalty=model.walking_step_penalty,
+            walking_use_hills=model.walking_use_hills,
+            max_walking_direct_path_duration=model.max_walking_direct_path_duration,
+            max_bike_direct_path_duration=model.max_bike_direct_path_duration,
+            max_bss_direct_path_duration=model.max_bss_direct_path_duration,
+            max_car_direct_path_duration=model.max_car_direct_path_duration,
+            max_ridesharing_direct_path_duration=model.max_ridesharing_direct_path_duration,
+            max_taxi_direct_path_duration=model.max_taxi_direct_path_duration,
+            max_car_no_park_direct_path_duration=model.max_car_no_park_direct_path_duration,
             is_from_db=True,
         )
 

@@ -54,17 +54,27 @@ from navitiacommon.default_traveler_profile_params import (
     acceptable_traveler_types,
 )
 from navitiacommon.models import db
-from navitiacommon.parser_args_type import CoordFormat, PositiveFloat, BooleanType, OptionValue, geojson_argument
+from navitiacommon.parser_args_type import (
+    CoordFormat,
+    PositiveFloat,
+    BooleanType,
+    OptionValue,
+    geojson_argument,
+    IntervalValue,
+    PositiveFloat,
+)
 from validate_email import validate_email
 from werkzeug.exceptions import BadRequest
 
 from tyr import api
 from tyr.fields import *
+import tyr.fields
 from tyr.formats import (
     poi_type_conf_format,
     parse_error,
     equipments_provider_format,
     streetnetwork_backend_format,
+    sn_backend_authorization_format,
 )
 from tyr.helper import (
     get_instance_logger,
@@ -124,7 +134,7 @@ class Status(flask_restful.Resource):
 
 
 class Job(flask_restful.Resource):
-    @marshal_with(jobs_fields)
+    @marshal_with(tyr.fields.jobs_fields)
     def get(self, instance_name=None, id=None):
         query = models.Job.query
         if instance_name:
@@ -331,7 +341,7 @@ class Instance(flask_restful.Resource):
     def __init__(self):
         pass
 
-    @marshal_with(instance_fields)
+    @marshal_with(tyr.fields.instance_fields)
     def _get(self, id, name):
         parser = reqparse.RequestParser()
         parser.add_argument(
@@ -710,6 +720,14 @@ class Instance(flask_restful.Resource):
         )
 
         parser.add_argument(
+            "on_street_bike_parking_duration",
+            type=int,
+            help="additionnal time after the bike section when used as first section mode",
+            location=("json", "values"),
+            default=instance.on_street_bike_parking_duration,
+        )
+
+        parser.add_argument(
             'max_additional_connections',
             type=int,
             help='maximum number of connections allowed in journeys',
@@ -723,6 +741,14 @@ class Instance(flask_restful.Resource):
             help='boolean to activate / deactivate call to car parking provider',
             location=('json', 'values'),
             default=instance.car_park_provider,
+        )
+
+        parser.add_argument(
+            'disruptions_on_poi',
+            type=inputs.boolean,
+            help='boolean to activate / deactivate adding disruptions on poi in journeys',
+            location=('json', 'values'),
+            default=instance.disruptions_on_poi,
         )
 
         parser.add_argument(
@@ -882,72 +908,35 @@ class Instance(flask_restful.Resource):
         )
 
         parser.add_argument(
-            "asgard_language",
+            "language",
             type=OptionValue(
                 [
-                    'bulgarian',
-                    'catalan',
-                    'czech',
-                    'danish',
-                    'german',
-                    'greek',
-                    'english_gb',
-                    'english_pirate',
-                    'english_us',
-                    'spanish',
-                    'estonian',
-                    'finnish',
-                    'french',
-                    'hindi',
-                    'hungarian',
-                    'italian',
-                    'japanese',
-                    'bokmal',
-                    'dutch',
-                    'polish',
-                    'portuguese_br',
-                    'portuguese_pt',
-                    'romanian',
-                    'russian',
-                    'slovak',
-                    'slovenian',
-                    'swedish',
-                    'turkish',
-                    'ukrainian',
+                    'nl-NL',
+                    'en-US',
+                    'en-GB',
+                    'fr-FR',
+                    'de-DE',
+                    'hi-IN',
+                    'it-IT',
+                    'ja-JP',
+                    'pt-PT',
+                    'ru-RU',
+                    'es-ES',
                 ]
             ),
-            help='Select a specific language for Asgard guidance instruction.\n'
+            help='Select a specific language for street network instructions.\n'
             'list available:\n'
-            '- bulgarian = bg-BG\n'
-            '- catalan = ca-ES\n'
-            '- czech = cs-CZ\n'
-            '- danish = da-DK\n'
-            '- german = de-DE\n'
-            '- greek = el-GR\n'
-            '- english_gb = en-GB\n'
-            '- english_pirate = en-US-x-pirate\n'
-            '- english_us = en-US\n'
-            '- spanish = es-ES\n'
-            '- estonian = et-EE\n'
-            '- finnish = fi-FI\n'
-            '- french = fr-FR\n'
-            '- hindi = hi-IN\n'
-            '- hungarian = hu-HU\n'
-            '- italian = it-IT\n'
-            '- japanese = ja-JP\n'
-            '- bokmal = nb-NO\n'
-            '- dutch = nl-NL\n'
-            '- polish = pl-PL\n'
-            '- portuguese_br = pt-BR\n'
-            '- portuguese_pt = pt-PT\n'
-            '- romanian = ro-RO\n'
-            '- russian = ru-RU\n'
-            '- slovak = sk-SK\n'
-            '- slovenian = sl-SI\n'
-            '- swedish = sv-SE\n'
-            '- turkish = tr-TR\n'
-            '- ukrainian = uk-UA\n',
-            default=instance.asgard_language,
+            '- nl-NL = dutch\n'
+            '- en-US|en-GB = english\n'
+            '- fr-FR = french\n'
+            '- de-DE = german\n'
+            '- hi-IN = hindi\n'
+            '- it-IT = italian\n'
+            '- ja-JP = japanese\n'
+            '- pt-PT = portuguese\n'
+            '- ru-RU = russian\n'
+            '- es-ES = spanish\n',
+            default=instance.language,
         )
 
         parser.add_argument(
@@ -967,6 +956,14 @@ class Instance(flask_restful.Resource):
         )
 
         parser.add_argument(
+            'poi_access_points',
+            type=inputs.boolean,
+            help='use/disuse poi access points in journey computations',
+            location=('json', 'values'),
+            default=instance.poi_access_points,
+        )
+
+        parser.add_argument(
             'default_pt_planner',
             type=OptionValue(['kraken', 'loki']),
             help='choose public transport calculator for distributed',
@@ -983,6 +980,14 @@ class Instance(flask_restful.Resource):
         )
 
         parser.add_argument(
+            'same_journey_schedules_configuration',
+            type=dict,
+            help='same_journey_schedules_configuration',
+            location=('json', 'values'),
+            default=instance.same_journey_schedules_configuration,
+        )
+
+        parser.add_argument(
             'ghost_words',
             type=str,
             action='append',
@@ -990,6 +995,262 @@ class Instance(flask_restful.Resource):
             help='List of ghost words to remove from search query string for api /places',
             location=('json', 'values'),
             default=instance.ghost_words,
+        )
+
+        parser.add_argument(
+            'filter_odt_journeys',
+            type=inputs.boolean,
+            help='boolean to activate / deactivate filter on on-demand transport journeys',
+            location=('json', 'values'),
+            default=instance.filter_odt_journeys,
+        )
+
+        parser.add_argument(
+            'additional_parameters',
+            type=inputs.boolean,
+            help='boolean to activate / deactivate the management of additional parameters for transport journeys',
+            location=('json', 'values'),
+            default=instance.additional_parameters,
+        )
+
+        parser.add_argument(
+            'co2_emission_car_value',
+            type=float,
+            help='co2 emission car value, per 1Km ',
+            location=('json', 'values'),
+            default=instance.co2_emission_car_value,
+        )
+
+        parser.add_argument(
+            'co2_emission_car_unit',
+            type=str,
+            help='co2 emission car value',
+            location=('json', 'values'),
+            default=instance.co2_emission_car_unit,
+        )
+
+        parser.add_argument(
+            'walking_walkway_factor',
+            type=float,
+            help='A factor that modifies the cost when encountering roads classified as footway',
+            location=('json', 'values'),
+            default=instance.walking_walkway_factor,
+        )
+
+        parser.add_argument(
+            'walking_sidewalk_factor',
+            type=float,
+            help='A factor that modifies the cost when encountering roads with dedicated sidewalks',
+            location=('json', 'values'),
+            default=instance.walking_sidewalk_factor,
+        )
+
+        parser.add_argument(
+            'walking_alley_factor',
+            type=float,
+            help='A factor that modifies (multiplies) the cost when alleys are encountered',
+            location=('json', 'values'),
+            default=instance.walking_alley_factor,
+        )
+
+        parser.add_argument(
+            'walking_driveway_factor',
+            type=float,
+            help='A factor that modifies (multiplies) the cost when encountering a driveway, which is often a private, service road',
+            location=('json', 'values'),
+            default=instance.walking_driveway_factor,
+        )
+
+        parser.add_argument(
+            'walking_step_penalty',
+            type=int,
+            help='A penalty in seconds added to each transition onto a path with steps or stairs',
+            location=('json', 'values'),
+            default=instance.walking_step_penalty,
+        )
+
+        parser.add_argument(
+            'walking_use_ferry',
+            type=float,
+            help='This value indicates the willingness to take ferries with values between 0 and 1',
+            location=('json', 'values'),
+            default=instance.walking_use_ferry,
+        )
+
+        parser.add_argument(
+            'walking_use_living_streets',
+            type=float,
+            help='This value indicates the willingness to take living streets with values between 0 and 1',
+            location=('json', 'values'),
+            default=instance.walking_use_living_streets,
+        )
+
+        parser.add_argument(
+            'walking_use_tracks',
+            type=float,
+            help='This value indicates the willingness to take track roads with values between 0 and 1',
+            location=('json', 'values'),
+            default=instance.walking_use_tracks,
+        )
+
+        parser.add_argument(
+            'walking_use_hills',
+            type=float,
+            help='This value avoid hilly roads in favor of flatter roads or less steep grades where available with values between 0 and 1',
+            location=('json', 'values'),
+            default=instance.walking_use_hills,
+        )
+
+        parser.add_argument(
+            'walking_service_factor',
+            type=float,
+            help='A factor that modifies (multiplies) the cost when generic service roads are encountered',
+            location=('json', 'values'),
+            default=instance.walking_service_factor,
+        )
+
+        parser.add_argument(
+            'walking_max_hiking_difficulty',
+            type=IntervalValue(type=int, min_value=0, max_value=6),
+            help='This value indicates the maximum difficulty of hiking trails that is allowed with values between 0 and 6',
+            location=('json', 'values'),
+            default=instance.walking_max_hiking_difficulty,
+        )
+
+        parser.add_argument(
+            'walking_ignore_oneways',
+            type=inputs.boolean,
+            help='Changes the metric to quasi-shortest, i.e. purely distance-based costing',
+            location=('json', 'values'),
+            default=instance.walking_ignore_oneways,
+        )
+
+        parser.add_argument(
+            'walking_shortest',
+            type=inputs.boolean,
+            help='Allow taking the road in the opposite direction even though the road is tagged oneway',
+            location=('json', 'values'),
+            default=instance.walking_shortest,
+        )
+
+        parser.add_argument(
+            'walking_destination_only_penalty',
+            type=PositiveFloat(),
+            help='Penalty when the way is private, private_hgv, parking aisle, drive way, drive thru',
+            location=('json', 'values'),
+            default=instance.walking_destination_only_penalty,
+        )
+
+        parser.add_argument(
+            'bike_use_roads',
+            type=float,
+            help='The motivation to share the road with other vehicles with values between 0 and 1.0',
+            location=('json', 'values'),
+            default=instance.bike_use_roads,
+        )
+
+        parser.add_argument(
+            'bike_use_hills',
+            type=float,
+            help='This value indicates the choice of using up hill with values between 0 and 1',
+            location=('json', 'values'),
+            default=instance.bike_use_hills,
+        )
+
+        parser.add_argument(
+            'bike_use_ferry',
+            type=float,
+            help='This value indicates the willingness to take ferries with values between 0 and 1',
+            location=('json', 'values'),
+            default=instance.bike_use_ferry,
+        )
+
+        parser.add_argument(
+            'bike_avoid_bad_surfaces',
+            type=float,
+            help='Avoid irregular road surfaces with values between 0 and 1',
+            location=('json', 'values'),
+            default=instance.bike_avoid_bad_surfaces,
+        )
+
+        parser.add_argument(
+            'bike_shortest',
+            type=inputs.boolean,
+            help='Changes the metric to quasi-shortest, i.e. purely distance-based costing',
+            location=('json', 'values'),
+            default=instance.bike_shortest,
+        )
+
+        parser.add_argument(
+            'bicycle_type',
+            type=OptionValue(['road', 'hybrid', 'cross', 'mountain']),
+            help='The type of bicycle',
+            location=('json', 'values'),
+            default=instance.bicycle_type,
+        )
+
+        parser.add_argument(
+            'bike_use_living_streets',
+            type=float,
+            help='This value indicates the willingness to take living streets with values between 0 and 1',
+            location=('json', 'values'),
+            default=instance.bike_use_living_streets,
+        )
+
+        parser.add_argument(
+            'bike_maneuver_penalty',
+            type=float,
+            help='A penalty applied when transitioning between roads that do not have consistent naming',
+            location=('json', 'values'),
+            default=instance.bike_maneuver_penalty,
+        )
+
+        parser.add_argument(
+            'bike_service_penalty',
+            type=float,
+            help='A penalty applied for transition to generic service road',
+            location=('json', 'values'),
+            default=instance.bike_service_penalty,
+        )
+
+        parser.add_argument(
+            'bike_service_factor',
+            type=float,
+            help='A factor that modifies (multiplies) the cost when generic service roads are encountered',
+            location=('json', 'values'),
+            default=instance.bike_service_factor,
+        )
+
+        parser.add_argument(
+            'bike_country_crossing_cost',
+            type=float,
+            help='A cost applied when encountering an international border. This cost is added to the estimated and elapsed times',
+            location=('json', 'values'),
+            default=instance.bike_country_crossing_cost,
+        )
+
+        parser.add_argument(
+            'bike_country_crossing_penalty',
+            type=float,
+            help='A penalty applied for a country crossing. This penalty can be used to create paths that avoid spanning country boundaries.',
+            location=('json', 'values'),
+            default=instance.bike_country_crossing_penalty,
+        )
+
+        parser.add_argument(
+            'bike_destination_only_penalty',
+            type=PositiveFloat(),
+            help='Penalty when the way is private, private_hgv, parking aisle, drive way, drive thru.',
+            location=('json', 'values'),
+            default=instance.bike_destination_only_penalty,
+        )
+
+        parser.add_argument(
+            'use_predicted_traffic',
+            type=inputs.boolean,
+            help='whether or not use predicted traffic for asgard',
+            location=('json', 'values'),
+            default=instance.use_predicted_traffic,
         )
 
         args = parser.parse_args()
@@ -1045,8 +1306,10 @@ class Instance(flask_restful.Resource):
                         'autocomplete_backend',
                         'additional_time_after_first_section_taxi',
                         'additional_time_before_last_section_taxi',
+                        'on_street_bike_parking_duration',
                         'max_additional_connections',
                         'car_park_provider',
+                        'disruptions_on_poi',
                         'street_network_car',
                         'street_network_car_no_park',
                         'street_network_walking',
@@ -1078,9 +1341,10 @@ class Instance(flask_restful.Resource):
                         'ridesharing_greenlet_pool_size',
                         'max_waiting_duration',
                         'places_proximity_radius',
-                        'asgard_language',
+                        'language',
                         'transfer_path',
                         'access_points',
+                        'poi_access_points',
                         'bss_return_duration',
                         'bss_rent_duration',
                         'bss_rent_penalty',
@@ -1088,6 +1352,39 @@ class Instance(flask_restful.Resource):
                         'default_pt_planner',
                         'pt_planners_configurations',
                         'ghost_words',
+                        'filter_odt_journeys',
+                        'additional_parameters',
+                        'co2_emission_car_value',
+                        'co2_emission_car_unit',
+                        'walking_walkway_factor',
+                        'walking_sidewalk_factor',
+                        'walking_alley_factor',
+                        'walking_driveway_factor',
+                        'walking_step_penalty',
+                        'walking_use_ferry',
+                        'walking_use_living_streets',
+                        'walking_use_tracks',
+                        'walking_use_hills',
+                        'walking_service_factor',
+                        'walking_max_hiking_difficulty',
+                        'walking_shortest',
+                        'walking_ignore_oneways',
+                        'walking_destination_only_penalty',
+                        'bike_use_roads',
+                        'bike_use_hills',
+                        'bike_use_ferry',
+                        'bike_avoid_bad_surfaces',
+                        'bike_shortest',
+                        'bicycle_type',
+                        'bike_use_living_streets',
+                        'bike_maneuver_penalty',
+                        'bike_service_penalty',
+                        'bike_service_factor',
+                        'bike_country_crossing_cost',
+                        'bike_country_crossing_penalty',
+                        'bike_destination_only_penalty',
+                        'use_predicted_traffic',
+                        'same_journey_schedules_configuration',
                     ],
                 ),
                 maxlen=0,
@@ -1466,7 +1763,7 @@ class UserV1(User):
 
     def get(self, user_id=None):
         resp = super(UserV1, self).get(user_id)
-        # In case of a response with pagination, the response type is a tuple and it needs to be serialized
+        # In case of a response with pagination, the response type is a tuple, and it needs to be serialized
         if type(resp) == tuple:
             return {'users': resp[0], 'pagination': resp[1]}
         return {'users': resp}
@@ -1641,6 +1938,80 @@ class Authorization(flask_restful.Resource):
         return resp
 
 
+class SnBackendAuthorization(flask_restful.Resource):
+    def __init__(self):
+        pass
+
+    def get(self, user_id):
+        try:
+            objs = models.SnBackendAuthorization.query.filter_by(user_id=user_id).all()
+        except Exception:
+            logging.exception("fail")
+            raise
+        resp = marshal(objs, sn_backend_authorization_fields)
+        return {'sn_backend_authorizations': resp}
+
+    def post(self, user_id):
+        """
+        Add a sn_backend in the db for the user
+        """
+        if not user_id:
+            abort(400, status="error", message='user_id is required')
+
+        try:
+            input_json = request.get_json(force=True, silent=False)
+        except BadRequest:
+            abort(400, status="error", message='Incorrect json provided')
+
+        try:
+            validate(input_json, sn_backend_authorization_format)
+        except ValidationError as e:
+            abort(400, status="invalid data", message='{}'.format(parse_error(e)))
+
+        new_obj = models.SnBackendAuthorization()
+        new_obj.user_id = user_id
+        new_obj.sn_backend_id = input_json['sn_backend_id']
+        new_obj.mode = input_json['mode']
+        user = models.User.query.get_or_404(user_id)
+        try:
+            db.session.add(new_obj)
+            if not user.has_sn_backend:
+                user.has_sn_backend = True
+            db.session.commit()
+        except (sqlalchemy.exc.IntegrityError, sqlalchemy.orm.exc.FlushError) as e:
+            return {'error': str(e)}, 409
+        except Exception as e:
+            abort(400, status="error", message=str(e))
+        return marshal(new_obj, sn_backend_authorization_fields), 201
+
+    def delete(self, user_id):
+        if not user_id:
+            abort(400, status="error", message='user_id is required')
+
+        parser = reqparse.RequestParser()
+        parser.add_argument(
+            'mode',
+            type=str,
+            case_sensitive=True,
+            help='mode is required',
+            choices=['bike', 'bss', 'car', 'car_no_park', 'ridesharing', 'taxi', 'walking'],
+            location=('json', 'values'),
+        )
+        args = parser.parse_args()
+
+        obj = models.SnBackendAuthorization.query.filter_by(user_id=user_id, mode=args['mode']).first_or_404()
+        user = models.User.query.get_or_404(user_id)
+        try:
+            db.session.delete(obj)
+            db.session.flush()
+            user.has_sn_backend = len(models.SnBackendAuthorization.query.filter_by(user_id=user_id).all()) > 0
+            db.session.commit()
+        except Exception:
+            logging.exception("fail")
+            raise
+        return {}, 204
+
+
 class EndPoint(flask_restful.Resource):
     def get(self, version=0):
         resp = marshal(models.EndPoint.query.all(), end_point_fields)
@@ -1801,6 +2172,78 @@ class TravelerProfile(flask_restful.Resource):
         )
         parser.add_argument(
             'last_section_mode', type=OptionValue(fb_modes), action='append', required=False, location='json'
+        ),
+
+        parser.add_argument(
+            'walking_step_penalty',
+            type=PositiveFloat(),
+            required=False,
+            help='A penalty in seconds added to each transition onto a path with steps or stairs',
+            location=('json', 'values'),
+        )
+
+        parser.add_argument(
+            'walking_use_hills',
+            type=PositiveFloat(),
+            required=False,
+            help='This value avoid hilly roads in favor of flatter roads or less steep grades where available with values between 0 and 1',
+            location=('json', 'values'),
+        )
+
+        parser.add_argument(
+            'max_walking_direct_path_duration',
+            type=PositiveFloat(),
+            required=False,
+            help='in second',
+            location=('json', 'values'),
+        )
+
+        parser.add_argument(
+            'max_bike_direct_path_duration',
+            type=PositiveFloat(),
+            required=False,
+            help='in second',
+            location=('json', 'values'),
+        )
+
+        parser.add_argument(
+            'max_bss_direct_path_duration',
+            type=PositiveFloat(),
+            required=False,
+            help='in second',
+            location=('json', 'values'),
+        )
+
+        parser.add_argument(
+            'max_car_direct_path_duration',
+            type=PositiveFloat(),
+            required=False,
+            help='in second',
+            location=('json', 'values'),
+        )
+
+        parser.add_argument(
+            'max_ridesharing_direct_path_duration',
+            type=PositiveFloat(),
+            required=False,
+            help='in second',
+            location=('json', 'values'),
+        )
+
+        parser.add_argument(
+            'max_car_no_park_direct_path_duration',
+            type=PositiveFloat(),
+            required=False,
+            help='in second',
+            location=('json', 'values'),
+        )
+
+        parser.add_argument(
+            'max_taxi_direct_path_duration',
+            type=PositiveFloat(),
+            required=False,
+            help='in second',
+            location=('json', 'values'),
         )
 
         self.args = parser.parse_args()
@@ -1851,7 +2294,7 @@ class TravelerProfile(flask_restful.Resource):
                 return {'error': "Coverage: {0} doesn't exist".format(name)}
             profile = models.TravelerProfile()
             profile.coverage_id = instance.id
-            for (attr, default_value) in default_traveler_profile_params[traveler_type].items():
+            for attr, default_value in default_traveler_profile_params[traveler_type].items():
                 # override hardcoded values by args if args are not None
                 value = default_value if self.args.get(attr) is None else self.args.get(attr)
                 setattr(profile, attr, value)
@@ -1871,7 +2314,7 @@ class TravelerProfile(flask_restful.Resource):
         if profile is None:
             return {'error': 'Non profile is found to update'}, 404
         try:
-            for (attr, args_value) in self.args.items():
+            for attr, args_value in self.args.items():
                 # override hardcoded values by args if args are not None
                 if args_value is not None:
                     setattr(profile, attr, args_value)
@@ -2394,7 +2837,7 @@ def check_cities_db():
         cities_db.dispose()
 
 
-@marshal_with(job_fields)
+@marshal_with(tyr.fields.job_fields)
 def check_cities_job():
     """
     Check status of cities job in Tyr db
@@ -2478,7 +2921,7 @@ class Cities(flask_restful.Resource):
 
 
 class BssProvider(flask_restful.Resource):
-    @marshal_with(bss_provider_list_fields)
+    @marshal_with(tyr.fields.bss_provider_list_fields)
     def get(self, id=None):
         if id:
             try:
@@ -2544,7 +2987,7 @@ class BssProvider(flask_restful.Resource):
 
 
 class EquipmentsProvider(flask_restful.Resource):
-    @marshal_with(equipment_provider_list_fields)
+    @marshal_with(tyr.fields.equipment_provider_list_fields)
     def get(self, id=None):
         if id:
             try:

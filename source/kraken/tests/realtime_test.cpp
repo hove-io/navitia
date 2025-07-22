@@ -321,6 +321,25 @@ BOOST_AUTO_TEST_CASE(train_delayed) {
     res = compute(nt::RTLevel::RealTime);
     BOOST_REQUIRE_EQUAL(res.size(), 1);
     BOOST_CHECK_EQUAL(res[0].items[0].arrival, "20150928T0910"_dt);
+
+    // testing accessibility on the way, as VJ created is wheelchair-accessible and should stay accessible after
+    // delay application
+    nt::AccessibiliteParams accessibility_params;
+    accessibility_params.properties.set(nt::hasProperties::WHEELCHAIR_BOARDING, true);
+    accessibility_params.vehicle_properties.set(nt::hasVehicleProperties::WHEELCHAIR_ACCESSIBLE, true);
+
+    auto compute_wheelchair = [&](nt::RTLevel level) {
+        return raptor.compute(pt_data->stop_areas_map.at("stop1"), pt_data->stop_areas_map.at("stop2"), "08:00"_t, 0,
+                              navitia::DateTimeUtils::inf, level, 2_min, 2_min, true, accessibility_params);
+    };
+
+    auto res_wheelchair = compute_wheelchair(nt::RTLevel::Base);
+    BOOST_REQUIRE_EQUAL(res_wheelchair.size(), 1);
+    BOOST_CHECK_EQUAL(res_wheelchair[0].items[0].arrival, "20150928T0901"_dt);
+
+    res_wheelchair = compute_wheelchair(nt::RTLevel::RealTime);
+    BOOST_REQUIRE_EQUAL(res_wheelchair.size(), 1);
+    BOOST_CHECK_EQUAL(res_wheelchair[0].items[0].arrival, "20150928T0910"_dt);
 }
 
 BOOST_AUTO_TEST_CASE(train_delayed_vj_cleaned_up) {
@@ -1775,24 +1794,26 @@ BOOST_AUTO_TEST_CASE(delays_with_boarding_alighting_times) {
     BOOST_REQUIRE_EQUAL(vj->stop_time_list.back().alighting_time, "08:45"_t);
 
     // Check the realtime vj
-    vj = b.get<nt::VehicleJourney>("vehicle_journey:vj:1:modified:0:feed");
-    BOOST_CHECK_EQUAL(vj->name, "vj:1");
-    BOOST_CHECK_END_VP(vj->rt_validity_pattern(), "0000010");
-    BOOST_CHECK_END_VP(vj->base_validity_pattern(), "0000000");
+    const navitia::type::MetaVehicleJourney* meta_vj = b.get_meta_vj("vj:1");
+    const auto* rt_vj = meta_vj->get_rt_vj()[0].get();
+
+    BOOST_CHECK_EQUAL(rt_vj->name, "vj:1");
+    BOOST_CHECK_END_VP(rt_vj->rt_validity_pattern(), "0000010");
+    BOOST_CHECK_END_VP(rt_vj->base_validity_pattern(), "0000000");
     // The realtime vj should have all 4 stop_times and kept the boarding_times
-    BOOST_REQUIRE_EQUAL(vj->stop_time_list.size(), 4);
-    BOOST_REQUIRE_EQUAL(vj->stop_time_list.front().stop_point->uri, "stop_point:10");
-    BOOST_REQUIRE_EQUAL(vj->stop_time_list.front().departure_time, "08:11"_t);
-    BOOST_REQUIRE_EQUAL(vj->stop_time_list.front().boarding_time, "08:06"_t);
-    BOOST_REQUIRE_EQUAL(vj->stop_time_list.at(1).stop_point->uri, "stop_point:20");
-    BOOST_REQUIRE_EQUAL(vj->stop_time_list.at(1).departure_time, "08:21"_t);
-    BOOST_REQUIRE_EQUAL(vj->stop_time_list.at(1).boarding_time, "08:21"_t);
-    BOOST_REQUIRE_EQUAL(vj->stop_time_list.at(2).stop_point->uri, "stop_point:30");
-    BOOST_REQUIRE_EQUAL(vj->stop_time_list.at(2).departure_time, "08:41"_t);
-    BOOST_REQUIRE_EQUAL(vj->stop_time_list.at(2).boarding_time, "08:41"_t);
-    BOOST_REQUIRE_EQUAL(vj->stop_time_list.back().stop_point->uri, "stop_point:40");
-    BOOST_REQUIRE_EQUAL(vj->stop_time_list.back().arrival_time, "08:50"_t);
-    BOOST_REQUIRE_EQUAL(vj->stop_time_list.back().alighting_time, "08:55"_t);
+    BOOST_REQUIRE_EQUAL(rt_vj->stop_time_list.size(), 4);
+    BOOST_REQUIRE_EQUAL(rt_vj->stop_time_list.front().stop_point->uri, "stop_point:10");
+    BOOST_REQUIRE_EQUAL(rt_vj->stop_time_list.front().departure_time, "08:11"_t);
+    BOOST_REQUIRE_EQUAL(rt_vj->stop_time_list.front().boarding_time, "08:06"_t);
+    BOOST_REQUIRE_EQUAL(rt_vj->stop_time_list.at(1).stop_point->uri, "stop_point:20");
+    BOOST_REQUIRE_EQUAL(rt_vj->stop_time_list.at(1).departure_time, "08:21"_t);
+    BOOST_REQUIRE_EQUAL(rt_vj->stop_time_list.at(1).boarding_time, "08:21"_t);
+    BOOST_REQUIRE_EQUAL(rt_vj->stop_time_list.at(2).stop_point->uri, "stop_point:30");
+    BOOST_REQUIRE_EQUAL(rt_vj->stop_time_list.at(2).departure_time, "08:41"_t);
+    BOOST_REQUIRE_EQUAL(rt_vj->stop_time_list.at(2).boarding_time, "08:41"_t);
+    BOOST_REQUIRE_EQUAL(rt_vj->stop_time_list.back().stop_point->uri, "stop_point:40");
+    BOOST_REQUIRE_EQUAL(rt_vj->stop_time_list.back().arrival_time, "08:50"_t);
+    BOOST_REQUIRE_EQUAL(rt_vj->stop_time_list.back().alighting_time, "08:55"_t);
 }
 
 BOOST_AUTO_TEST_CASE(delays_on_lollipop_with_boarding_alighting_times) {
@@ -1823,23 +1844,25 @@ BOOST_AUTO_TEST_CASE(delays_on_lollipop_with_boarding_alighting_times) {
     BOOST_REQUIRE_EQUAL(vj->stop_time_list.size(), 3);
 
     // Check the realtime vj
-    vj = b.get<nt::VehicleJourney>("vehicle_journey:vj:1:modified:0:feed");
-    BOOST_CHECK_END_VP(vj->rt_validity_pattern(), "0000010");
-    BOOST_CHECK_END_VP(vj->base_validity_pattern(), "0000000");
+    const navitia::type::MetaVehicleJourney* meta_vj = b.get_meta_vj("vj:1");
+    const auto* rt_vj = meta_vj->get_rt_vj()[0].get();
+
+    BOOST_CHECK_END_VP(rt_vj->rt_validity_pattern(), "0000010");
+    BOOST_CHECK_END_VP(rt_vj->base_validity_pattern(), "0000000");
 
     // The realtime vj should have all 3 stop_times
-    BOOST_CHECK_EQUAL(vj->stop_time_list.at(0).stop_point->uri, "stop_point:10");
-    BOOST_CHECK_EQUAL(vj->stop_time_list.at(0).departure_time, "08:11"_t);
-    BOOST_CHECK_EQUAL(vj->stop_time_list.at(0).boarding_time,
+    BOOST_CHECK_EQUAL(rt_vj->stop_time_list.at(0).stop_point->uri, "stop_point:10");
+    BOOST_CHECK_EQUAL(rt_vj->stop_time_list.at(0).departure_time, "08:11"_t);
+    BOOST_CHECK_EQUAL(rt_vj->stop_time_list.at(0).boarding_time,
                       "08:06"_t);  // Boarding time is 5 min (300s) before departure
 
-    BOOST_CHECK_EQUAL(vj->stop_time_list.at(1).stop_point->uri, "stop_point:20");
-    BOOST_CHECK_EQUAL(vj->stop_time_list.at(1).departure_time, "08:21"_t);
-    BOOST_CHECK_EQUAL(vj->stop_time_list.at(1).boarding_time, "08:21"_t);
+    BOOST_CHECK_EQUAL(rt_vj->stop_time_list.at(1).stop_point->uri, "stop_point:20");
+    BOOST_CHECK_EQUAL(rt_vj->stop_time_list.at(1).departure_time, "08:21"_t);
+    BOOST_CHECK_EQUAL(rt_vj->stop_time_list.at(1).boarding_time, "08:21"_t);
 
-    BOOST_CHECK_EQUAL(vj->stop_time_list.at(2).stop_point->uri, "stop_point:10");
-    BOOST_CHECK_EQUAL(vj->stop_time_list.at(2).arrival_time, "08:40"_t);
-    BOOST_CHECK_EQUAL(vj->stop_time_list.at(2).alighting_time,
+    BOOST_CHECK_EQUAL(rt_vj->stop_time_list.at(2).stop_point->uri, "stop_point:10");
+    BOOST_CHECK_EQUAL(rt_vj->stop_time_list.at(2).arrival_time, "08:40"_t);
+    BOOST_CHECK_EQUAL(rt_vj->stop_time_list.at(2).alighting_time,
                       "08:45"_t);  // Alighting time is 5 min (300s) after arrival
 }
 
@@ -1866,27 +1889,28 @@ BOOST_AUTO_TEST_CASE(simple_skipped_stop) {
     BOOST_REQUIRE_EQUAL(vj->stop_time_list.size(), 3);
 
     // Check the realtime vj
-    vj = b.get<nt::VehicleJourney>("vehicle_journey:vj:1:modified:0:feed");
+    const navitia::type::MetaVehicleJourney* meta_vj = b.get_meta_vj("vj:1");
+    const auto* rt_vj = meta_vj->get_rt_vj()[0].get();
     // The realtime vj should have all 3 stop_times but lose the ability to pickup/dropoff on B
-    BOOST_REQUIRE_EQUAL(vj->stop_time_list.size(), 3);
-    BOOST_CHECK_EQUAL(vj->stop_time_list.front().stop_point->uri, "A");
-    BOOST_CHECK_EQUAL(vj->stop_time_list.front().departure_time, "08:10"_t);
-    BOOST_CHECK_EQUAL(vj->stop_time_list.front().boarding_time, "08:10"_t);
-    BOOST_CHECK_EQUAL(vj->stop_time_list.front().pick_up_allowed(), true);
-    BOOST_CHECK_EQUAL(vj->stop_time_list.front().drop_off_allowed(), true);
-    BOOST_CHECK_EQUAL(vj->stop_time_list.front().skipped_stop(), false);
-    BOOST_CHECK_EQUAL(vj->stop_time_list.at(1).stop_point->uri, "B");
-    BOOST_CHECK_EQUAL(vj->stop_time_list.at(1).departure_time, "08:20"_t);
-    BOOST_CHECK_EQUAL(vj->stop_time_list.at(1).boarding_time, "08:20"_t);
-    BOOST_CHECK_EQUAL(vj->stop_time_list.at(1).pick_up_allowed(), false);  // disabled
-    BOOST_CHECK_EQUAL(vj->stop_time_list.at(1).drop_off_allowed(), false);
-    BOOST_CHECK_EQUAL(vj->stop_time_list.at(1).skipped_stop(), false);
-    BOOST_CHECK_EQUAL(vj->stop_time_list.at(2).stop_point->uri, "C");
-    BOOST_CHECK_EQUAL(vj->stop_time_list.at(2).arrival_time, "08:30"_t);
-    BOOST_CHECK_EQUAL(vj->stop_time_list.at(2).alighting_time, "08:30"_t);
-    BOOST_CHECK_EQUAL(vj->stop_time_list.at(2).pick_up_allowed(), true);
-    BOOST_CHECK_EQUAL(vj->stop_time_list.at(2).drop_off_allowed(), true);
-    BOOST_CHECK_EQUAL(vj->stop_time_list.at(2).skipped_stop(), false);
+    BOOST_REQUIRE_EQUAL(rt_vj->stop_time_list.size(), 3);
+    BOOST_CHECK_EQUAL(rt_vj->stop_time_list.front().stop_point->uri, "A");
+    BOOST_CHECK_EQUAL(rt_vj->stop_time_list.front().departure_time, "08:10"_t);
+    BOOST_CHECK_EQUAL(rt_vj->stop_time_list.front().boarding_time, "08:10"_t);
+    BOOST_CHECK_EQUAL(rt_vj->stop_time_list.front().pick_up_allowed(), true);
+    BOOST_CHECK_EQUAL(rt_vj->stop_time_list.front().drop_off_allowed(), true);
+    BOOST_CHECK_EQUAL(rt_vj->stop_time_list.front().skipped_stop(), false);
+    BOOST_CHECK_EQUAL(rt_vj->stop_time_list.at(1).stop_point->uri, "B");
+    BOOST_CHECK_EQUAL(rt_vj->stop_time_list.at(1).departure_time, "08:20"_t);
+    BOOST_CHECK_EQUAL(rt_vj->stop_time_list.at(1).boarding_time, "08:20"_t);
+    BOOST_CHECK_EQUAL(rt_vj->stop_time_list.at(1).pick_up_allowed(), false);  // disabled
+    BOOST_CHECK_EQUAL(rt_vj->stop_time_list.at(1).drop_off_allowed(), false);
+    BOOST_CHECK_EQUAL(rt_vj->stop_time_list.at(1).skipped_stop(), false);
+    BOOST_CHECK_EQUAL(rt_vj->stop_time_list.at(2).stop_point->uri, "C");
+    BOOST_CHECK_EQUAL(rt_vj->stop_time_list.at(2).arrival_time, "08:30"_t);
+    BOOST_CHECK_EQUAL(rt_vj->stop_time_list.at(2).alighting_time, "08:30"_t);
+    BOOST_CHECK_EQUAL(rt_vj->stop_time_list.at(2).pick_up_allowed(), true);
+    BOOST_CHECK_EQUAL(rt_vj->stop_time_list.at(2).drop_off_allowed(), true);
+    BOOST_CHECK_EQUAL(rt_vj->stop_time_list.at(2).skipped_stop(), false);
 
     auto get_journeys = [&](nt::RTLevel level, const std::string& from, const std::string& to) {
         return raptor.compute(b.get<nt::StopArea>(from), b.get<nt::StopArea>(to), "08:00"_t, 0,
@@ -1943,35 +1967,218 @@ BOOST_AUTO_TEST_CASE(skipped_stop_then_delay) {
     BOOST_REQUIRE_EQUAL(vj->stop_time_list.size(), 4);
 
     // Check the realtime vj
-    vj = b.get<nt::VehicleJourney>("vehicle_journey:vj:1:modified:0:feed");
-    BOOST_CHECK_END_VP(vj->rt_validity_pattern(), "0000001");
-    BOOST_CHECK_END_VP(vj->base_validity_pattern(), "0000000");
+    const navitia::type::MetaVehicleJourney* meta_vj = b.get_meta_vj("vj:1");
+    // two disruptions applied, there should be only one realtime vj
+    BOOST_REQUIRE_EQUAL(meta_vj->get_rt_vj().size(), 1);
+
+    auto rt_vj = meta_vj->get_rt_vj()[0].get();
+
+    BOOST_CHECK_END_VP(rt_vj->rt_validity_pattern(), "0000001");
+    BOOST_CHECK_END_VP(rt_vj->base_validity_pattern(), "0000000");
     // The realtime vj should have all 3 stop_times but lose the ability to pickup/dropoff on B
-    BOOST_REQUIRE_EQUAL(vj->stop_time_list.size(), 4);
-    BOOST_CHECK_EQUAL(vj->stop_time_list.front().stop_point->uri, "A");
-    BOOST_CHECK_EQUAL(vj->stop_time_list.front().departure_time, "08:10"_t);
-    BOOST_CHECK_EQUAL(vj->stop_time_list.front().boarding_time, "08:10"_t);
+    BOOST_REQUIRE_EQUAL(rt_vj->stop_time_list.size(), 4);
+    BOOST_CHECK_EQUAL(rt_vj->stop_time_list.front().stop_point->uri, "A");
+    BOOST_CHECK_EQUAL(rt_vj->stop_time_list.front().departure_time, "08:10"_t);
+    BOOST_CHECK_EQUAL(rt_vj->stop_time_list.front().boarding_time, "08:10"_t);
+    BOOST_CHECK_EQUAL(rt_vj->stop_time_list.front().pick_up_allowed(), true);
+    BOOST_CHECK_EQUAL(rt_vj->stop_time_list.front().drop_off_allowed(), true);
+    BOOST_CHECK_EQUAL(rt_vj->stop_time_list.front().skipped_stop(), false);
+    BOOST_CHECK_EQUAL(rt_vj->stop_time_list.at(1).stop_point->uri, "B");
+    BOOST_CHECK_EQUAL(rt_vj->stop_time_list.at(1).departure_time, "08:20"_t);
+    BOOST_CHECK_EQUAL(rt_vj->stop_time_list.at(1).boarding_time, "08:20"_t);
+    BOOST_CHECK_EQUAL(rt_vj->stop_time_list.at(1).pick_up_allowed(), false);  // disabled
+    BOOST_CHECK_EQUAL(rt_vj->stop_time_list.at(1).drop_off_allowed(), true);
+    BOOST_CHECK_EQUAL(rt_vj->stop_time_list.at(1).skipped_stop(), false);
+    BOOST_CHECK_EQUAL(rt_vj->stop_time_list.at(2).stop_point->uri, "C");
+    BOOST_CHECK_EQUAL(rt_vj->stop_time_list.at(2).arrival_time, "08:35"_t);
+    BOOST_CHECK_EQUAL(rt_vj->stop_time_list.at(2).alighting_time, "08:35"_t);
+    BOOST_CHECK_EQUAL(rt_vj->stop_time_list.at(2).pick_up_allowed(), true);
+    BOOST_CHECK_EQUAL(rt_vj->stop_time_list.at(2).drop_off_allowed(), true);
+    BOOST_CHECK_EQUAL(rt_vj->stop_time_list.at(2).skipped_stop(), false);
+    BOOST_CHECK_EQUAL(rt_vj->stop_time_list.at(3).stop_point->uri, "D");
+    BOOST_CHECK_EQUAL(rt_vj->stop_time_list.at(3).arrival_time, "08:40"_t);
+    BOOST_CHECK_EQUAL(rt_vj->stop_time_list.at(3).alighting_time, "08:40"_t);
+    BOOST_CHECK_EQUAL(rt_vj->stop_time_list.at(3).pick_up_allowed(), true);
+    BOOST_CHECK_EQUAL(rt_vj->stop_time_list.at(3).drop_off_allowed(), true);
+    BOOST_CHECK_EQUAL(rt_vj->stop_time_list.at(3).skipped_stop(), false);
+
+    auto get_journeys = [&](nt::RTLevel level, const std::string& from, const std::string& to) {
+        return raptor.compute(b.get<nt::StopArea>(from), b.get<nt::StopArea>(to), "08:00"_t, 0,
+                              navitia::DateTimeUtils::inf, level, 2_min, 2_min, true);
+    };
+
+    BOOST_CHECK(!get_journeys(nt::RTLevel::Base, "A", "B").empty());
+    // possible to do a journey between A and B
+    BOOST_CHECK(!get_journeys(nt::RTLevel::RealTime, "A", "B").empty());
+
+    BOOST_CHECK(!get_journeys(nt::RTLevel::Base, "B", "C").empty());
+    // impossible to do a journey between B and C
+    BOOST_CHECK(get_journeys(nt::RTLevel::RealTime, "B", "C").empty());
+
+    auto journeys = get_journeys(nt::RTLevel::Base, "A", "C");
+    BOOST_REQUIRE_EQUAL(journeys.size(), 1);
+    BOOST_CHECK_EQUAL(journeys[0].items.back().arrival, "20170101T083000"_dt);
+
+    // but A->C is ok, just delayed
+    journeys = get_journeys(nt::RTLevel::RealTime, "A", "C");
+    BOOST_REQUIRE_EQUAL(journeys.size(), 1);
+    BOOST_CHECK_EQUAL(journeys[0].items.back().arrival, "20170101T083500"_dt);
+}
+
+BOOST_AUTO_TEST_CASE(simple_no_alighting_no_boarding_pass_thru_stop) {
+    ed::builder b("20170101",
+                  [](ed::builder& b) { b.vj("l1").name("vj:1")("A", "08:10"_t)("B", "08:20"_t)("C", "08:30"_t); });
+
+    auto trip_update_1 = ntest::make_trip_update_message("vj:1", "20170101",
+                                                         {
+                                                             RTStopTime("A", "20170101T081000"_pts).no_alighting(),
+                                                             RTStopTime("B", "20170101T082000"_pts).pass_thru(),
+                                                             RTStopTime("C", "20170101T083000"_pts).no_boarding(),
+                                                         });
+    navitia::handle_realtime("feed", "20170101T0337"_dt, trip_update_1, *b.data, true, true);
+
+    navitia::routing::RAPTOR raptor(*(b.data));
+
+    BOOST_REQUIRE_EQUAL(b.data->pt_data->lines.size(), 1);
+    BOOST_REQUIRE_EQUAL(b.data->pt_data->routes.size(), 1);
+    BOOST_REQUIRE_EQUAL(b.data->pt_data->vehicle_journeys.size(), 2);
+
+    // Check the original vj
+    auto* vj = b.get<nt::VehicleJourney>("vehicle_journey:vj:1");
+    BOOST_REQUIRE_EQUAL(vj->stop_time_list.size(), 3);
+    // First stop_time with drop_off_allowed = false
     BOOST_CHECK_EQUAL(vj->stop_time_list.front().pick_up_allowed(), true);
-    BOOST_CHECK_EQUAL(vj->stop_time_list.front().drop_off_allowed(), true);
+    BOOST_CHECK_EQUAL(vj->stop_time_list.front().drop_off_allowed(), false);
     BOOST_CHECK_EQUAL(vj->stop_time_list.front().skipped_stop(), false);
-    BOOST_CHECK_EQUAL(vj->stop_time_list.at(1).stop_point->uri, "B");
-    BOOST_CHECK_EQUAL(vj->stop_time_list.at(1).departure_time, "08:20"_t);
-    BOOST_CHECK_EQUAL(vj->stop_time_list.at(1).boarding_time, "08:20"_t);
-    BOOST_CHECK_EQUAL(vj->stop_time_list.at(1).pick_up_allowed(), false);  // disabled
+
+    BOOST_CHECK_EQUAL(vj->stop_time_list.at(1).pick_up_allowed(), true);
     BOOST_CHECK_EQUAL(vj->stop_time_list.at(1).drop_off_allowed(), true);
     BOOST_CHECK_EQUAL(vj->stop_time_list.at(1).skipped_stop(), false);
-    BOOST_CHECK_EQUAL(vj->stop_time_list.at(2).stop_point->uri, "C");
-    BOOST_CHECK_EQUAL(vj->stop_time_list.at(2).arrival_time, "08:35"_t);
-    BOOST_CHECK_EQUAL(vj->stop_time_list.at(2).alighting_time, "08:35"_t);
-    BOOST_CHECK_EQUAL(vj->stop_time_list.at(2).pick_up_allowed(), true);
+
+    // First stop_time with drop_off_allowed = false
+    BOOST_CHECK_EQUAL(vj->stop_time_list.at(2).pick_up_allowed(), false);
     BOOST_CHECK_EQUAL(vj->stop_time_list.at(2).drop_off_allowed(), true);
     BOOST_CHECK_EQUAL(vj->stop_time_list.at(2).skipped_stop(), false);
-    BOOST_CHECK_EQUAL(vj->stop_time_list.at(3).stop_point->uri, "D");
-    BOOST_CHECK_EQUAL(vj->stop_time_list.at(3).arrival_time, "08:40"_t);
-    BOOST_CHECK_EQUAL(vj->stop_time_list.at(3).alighting_time, "08:40"_t);
-    BOOST_CHECK_EQUAL(vj->stop_time_list.at(3).pick_up_allowed(), true);
+
+    // Check the realtime vj
+    const navitia::type::MetaVehicleJourney* meta_vj = b.get_meta_vj("vj:1");
+    const auto* rt_vj = meta_vj->get_rt_vj()[0].get();
+    // The realtime vj should have all 3 stop_times but lose the ability to pickup/dropoff on B
+    BOOST_REQUIRE_EQUAL(rt_vj->stop_time_list.size(), 3);
+    BOOST_CHECK_EQUAL(rt_vj->stop_time_list.front().stop_point->uri, "A");
+    BOOST_CHECK_EQUAL(rt_vj->stop_time_list.front().departure_time, "08:10"_t);
+    BOOST_CHECK_EQUAL(rt_vj->stop_time_list.front().boarding_time, "08:10"_t);
+    BOOST_CHECK_EQUAL(rt_vj->stop_time_list.front().pick_up_allowed(), true);
+    BOOST_CHECK_EQUAL(rt_vj->stop_time_list.front().drop_off_allowed(), false);
+    BOOST_CHECK_EQUAL(rt_vj->stop_time_list.front().skipped_stop(), false);
+    BOOST_CHECK_EQUAL(rt_vj->stop_time_list.at(1).stop_point->uri, "B");
+    BOOST_CHECK_EQUAL(rt_vj->stop_time_list.at(1).departure_time, "08:20"_t);
+    BOOST_CHECK_EQUAL(rt_vj->stop_time_list.at(1).boarding_time, "08:20"_t);
+    BOOST_CHECK_EQUAL(rt_vj->stop_time_list.at(1).pick_up_allowed(), false);
+    BOOST_CHECK_EQUAL(rt_vj->stop_time_list.at(1).drop_off_allowed(), false);
+    BOOST_CHECK_EQUAL(rt_vj->stop_time_list.at(1).skipped_stop(), true);
+    BOOST_CHECK_EQUAL(rt_vj->stop_time_list.at(2).stop_point->uri, "C");
+    BOOST_CHECK_EQUAL(rt_vj->stop_time_list.at(2).arrival_time, "08:30"_t);
+    BOOST_CHECK_EQUAL(rt_vj->stop_time_list.at(2).alighting_time, "08:30"_t);
+    BOOST_CHECK_EQUAL(rt_vj->stop_time_list.at(2).pick_up_allowed(), false);
+    BOOST_CHECK_EQUAL(rt_vj->stop_time_list.at(2).drop_off_allowed(), true);
+    BOOST_CHECK_EQUAL(rt_vj->stop_time_list.at(2).skipped_stop(), false);
+
+    auto get_journeys = [&](nt::RTLevel level, const std::string& from, const std::string& to) {
+        return raptor.compute(b.get<nt::StopArea>(from), b.get<nt::StopArea>(to), "08:00"_t, 0,
+                              navitia::DateTimeUtils::inf, level, 2_min, 2_min, true);
+    };
+
+    BOOST_CHECK(!get_journeys(nt::RTLevel::Base, "A", "B").empty());
+    // impossible to do a journey between A and B
+    BOOST_CHECK(get_journeys(nt::RTLevel::RealTime, "A", "B").empty());
+
+    BOOST_CHECK(!get_journeys(nt::RTLevel::Base, "B", "C").empty());
+    // impossible to do a journey between B and C
+    BOOST_CHECK(get_journeys(nt::RTLevel::RealTime, "B", "C").empty());
+}
+
+/**
+ * A ------------ B ------------ C ------------ D
+ *
+ * We first have no_boarding at B and pass_thru at C, then we send another disruption to stop at C but with a delay
+ */
+BOOST_AUTO_TEST_CASE(pass_thru_stop_then_delay) {
+    ed::builder b("20170101", [](ed::builder& b) {
+        b.vj("l1").name("vj:1")("A", "08:10"_t)("B", "08:20"_t)("C", "08:30"_t)("D", "08:40"_t);
+    });
+
+    auto trip_update_1 = ntest::make_trip_update_message("vj:1", "20170101",
+                                                         {
+                                                             RTStopTime("A", "20170101T081000"_pts).no_alighting(),
+                                                             RTStopTime("B", "20170101T082000"_pts).no_boarding(),
+                                                             RTStopTime("C", "20170101T083000"_pts).pass_thru(),
+                                                             RTStopTime("D", "20170101T084000"_pts).no_boarding(),
+                                                         });
+    navitia::handle_realtime("feed", "20170101T0337"_dt, trip_update_1, *b.data, true, true);
+
+    auto trip_update_2 = ntest::make_trip_update_message("vj:1", "20170101",
+                                                         {
+                                                             RTStopTime("A", "20170101T081000"_pts).no_alighting(),
+                                                             RTStopTime("B", "20170101T082000"_pts).no_boarding(),
+                                                             RTStopTime("C", "20170101T083500"_pts).delay(5_min),
+                                                             RTStopTime("D", "20170101T084000"_pts).no_boarding(),
+                                                         });
+    navitia::handle_realtime("feed", "20170101T0337"_dt, trip_update_2, *b.data, true, true);
+    b.data->build_raptor();
+    navitia::routing::RAPTOR raptor(*(b.data));
+
+    BOOST_REQUIRE_EQUAL(b.data->pt_data->lines.size(), 1);
+    BOOST_REQUIRE_EQUAL(b.data->pt_data->routes.size(), 1);
+    BOOST_REQUIRE_EQUAL(b.data->pt_data->vehicle_journeys.size(), 2);
+
+    // Check the original vj
+    auto* vj = b.get<nt::VehicleJourney>("vehicle_journey:vj:1");
+    BOOST_CHECK_END_VP(vj->rt_validity_pattern(), "1111110");
+    BOOST_CHECK_END_VP(vj->base_validity_pattern(), "1111111");
+    BOOST_REQUIRE_EQUAL(vj->stop_time_list.size(), 4);
+    BOOST_CHECK_EQUAL(vj->stop_time_list.front().pick_up_allowed(), true);
+    BOOST_CHECK_EQUAL(vj->stop_time_list.front().drop_off_allowed(), false);
+    BOOST_CHECK_EQUAL(vj->stop_time_list.front().skipped_stop(), false);
+    BOOST_CHECK_EQUAL(vj->stop_time_list.at(3).pick_up_allowed(), false);
     BOOST_CHECK_EQUAL(vj->stop_time_list.at(3).drop_off_allowed(), true);
     BOOST_CHECK_EQUAL(vj->stop_time_list.at(3).skipped_stop(), false);
+
+    // Check the realtime vj
+    const navitia::type::MetaVehicleJourney* meta_vj = b.get_meta_vj("vj:1");
+    // two disruptions applied, there should be only one realtime vj
+    BOOST_REQUIRE_EQUAL(meta_vj->get_rt_vj().size(), 1);
+
+    auto rt_vj = meta_vj->get_rt_vj()[0].get();
+
+    BOOST_CHECK_END_VP(rt_vj->rt_validity_pattern(), "0000001");
+    BOOST_CHECK_END_VP(rt_vj->base_validity_pattern(), "0000000");
+    // The realtime vj should have all 3 stop_times but lose the ability to pickup/dropoff on B
+    BOOST_REQUIRE_EQUAL(rt_vj->stop_time_list.size(), 4);
+    BOOST_CHECK_EQUAL(rt_vj->stop_time_list.front().stop_point->uri, "A");
+    BOOST_CHECK_EQUAL(rt_vj->stop_time_list.front().departure_time, "08:10"_t);
+    BOOST_CHECK_EQUAL(rt_vj->stop_time_list.front().boarding_time, "08:10"_t);
+    BOOST_CHECK_EQUAL(rt_vj->stop_time_list.front().pick_up_allowed(), true);
+    BOOST_CHECK_EQUAL(rt_vj->stop_time_list.front().drop_off_allowed(), false);  // no_alighting
+    BOOST_CHECK_EQUAL(rt_vj->stop_time_list.front().skipped_stop(), false);
+    BOOST_CHECK_EQUAL(rt_vj->stop_time_list.at(1).stop_point->uri, "B");
+    BOOST_CHECK_EQUAL(rt_vj->stop_time_list.at(1).departure_time, "08:20"_t);
+    BOOST_CHECK_EQUAL(rt_vj->stop_time_list.at(1).boarding_time, "08:20"_t);
+    BOOST_CHECK_EQUAL(rt_vj->stop_time_list.at(1).pick_up_allowed(), false);  // no_boarding
+    BOOST_CHECK_EQUAL(rt_vj->stop_time_list.at(1).drop_off_allowed(), true);
+    BOOST_CHECK_EQUAL(rt_vj->stop_time_list.at(1).skipped_stop(), false);
+    BOOST_CHECK_EQUAL(rt_vj->stop_time_list.at(2).stop_point->uri, "C");
+    BOOST_CHECK_EQUAL(rt_vj->stop_time_list.at(2).arrival_time, "08:35"_t);
+    BOOST_CHECK_EQUAL(rt_vj->stop_time_list.at(2).alighting_time, "08:35"_t);
+    BOOST_CHECK_EQUAL(rt_vj->stop_time_list.at(2).pick_up_allowed(), true);
+    BOOST_CHECK_EQUAL(rt_vj->stop_time_list.at(2).drop_off_allowed(), true);
+    BOOST_CHECK_EQUAL(rt_vj->stop_time_list.at(2).skipped_stop(), false);
+    BOOST_CHECK_EQUAL(rt_vj->stop_time_list.at(3).stop_point->uri, "D");
+    BOOST_CHECK_EQUAL(rt_vj->stop_time_list.at(3).arrival_time, "08:40"_t);
+    BOOST_CHECK_EQUAL(rt_vj->stop_time_list.at(3).alighting_time, "08:40"_t);
+    BOOST_CHECK_EQUAL(rt_vj->stop_time_list.at(3).pick_up_allowed(), false);  // no_boarding
+    BOOST_CHECK_EQUAL(rt_vj->stop_time_list.at(3).drop_off_allowed(), true);
+    BOOST_CHECK_EQUAL(rt_vj->stop_time_list.at(3).skipped_stop(), false);
 
     auto get_journeys = [&](nt::RTLevel level, const std::string& from, const std::string& to) {
         return raptor.compute(b.get<nt::StopArea>(from), b.get<nt::StopArea>(to), "08:00"_t, 0,
@@ -2332,11 +2539,16 @@ BOOST_AUTO_TEST_CASE(add_modify_and_delete_new_stop_time_in_the_trip) {
 
     // Check the realtime vj with a newly added stop_time
     // Il should be initialize with skipped_stop = false
-    vj = b.get<nt::VehicleJourney>("vehicle_journey:vj:1:modified:0:feed-1");
-    BOOST_REQUIRE_EQUAL(vj->stop_time_list[2].pick_up_allowed(), true);
-    BOOST_REQUIRE_EQUAL(vj->stop_time_list[2].drop_off_allowed(), true);
-    BOOST_REQUIRE_EQUAL(vj->stop_time_list[2].skipped_stop(), false);
-    BOOST_REQUIRE_EQUAL(vj->stop_time_list.size(), 4);
+    // Check the realtime vj
+    const navitia::type::MetaVehicleJourney* meta_vj = b.get_meta_vj("vj:1");
+    // two disruptions applied, there should be only one realtime vj
+    BOOST_REQUIRE_EQUAL(meta_vj->get_rt_vj().size(), 1);
+
+    const auto* rt_vj = meta_vj->get_rt_vj()[0].get();
+    BOOST_REQUIRE_EQUAL(rt_vj->stop_time_list[2].pick_up_allowed(), true);
+    BOOST_REQUIRE_EQUAL(rt_vj->stop_time_list[2].drop_off_allowed(), true);
+    BOOST_REQUIRE_EQUAL(rt_vj->stop_time_list[2].skipped_stop(), false);
+    BOOST_REQUIRE_EQUAL(rt_vj->stop_time_list.size(), 4);
 
     // The new stop_time added should be in stop_date_times
     res = compute("20171101T073000", "stop_point:A", "stop_point:C");
@@ -2370,11 +2582,15 @@ BOOST_AUTO_TEST_CASE(add_modify_and_delete_new_stop_time_in_the_trip) {
     b.finalize_disruption_batch();
 
     // Check the realtime vj after the recently added stop_time is deleted
-    vj = b.get<nt::VehicleJourney>("vehicle_journey:vj:1:modified:1:feed-2");
-    BOOST_REQUIRE_EQUAL(vj->stop_time_list[2].pick_up_allowed(), false);
-    BOOST_REQUIRE_EQUAL(vj->stop_time_list[2].drop_off_allowed(), false);
-    BOOST_REQUIRE_EQUAL(vj->stop_time_list[2].skipped_stop(), false);
-    BOOST_REQUIRE_EQUAL(vj->stop_time_list.size(), 4);
+    meta_vj = b.get_meta_vj("vj:1");
+    // two disruptions applied, there should be only one realtime vj
+    BOOST_REQUIRE_EQUAL(meta_vj->get_rt_vj().size(), 1);
+
+    rt_vj = meta_vj->get_rt_vj()[0].get();
+    BOOST_REQUIRE_EQUAL(rt_vj->stop_time_list[2].pick_up_allowed(), false);
+    BOOST_REQUIRE_EQUAL(rt_vj->stop_time_list[2].drop_off_allowed(), false);
+    BOOST_REQUIRE_EQUAL(rt_vj->stop_time_list[2].skipped_stop(), false);
+    BOOST_REQUIRE_EQUAL(rt_vj->stop_time_list.size(), 4);
 
     // The new stop_time added should be in stop_date_times
     res = compute("20171101T073000", "stop_point:A", "stop_point:C");
@@ -2412,11 +2628,15 @@ BOOST_AUTO_TEST_CASE(add_modify_and_delete_new_stop_time_in_the_trip) {
     b.finalize_disruption_batch();
 
     // Check the realtime vj after the recently added stop_time is deleted twice
-    vj = b.get<nt::VehicleJourney>("vehicle_journey:vj:1:modified:1:feed-3");
-    BOOST_REQUIRE_EQUAL(vj->stop_time_list.size(), 4);
-    BOOST_REQUIRE_EQUAL(vj->stop_time_list[2].pick_up_allowed(), false);
-    BOOST_REQUIRE_EQUAL(vj->stop_time_list[2].drop_off_allowed(), false);
-    BOOST_REQUIRE_EQUAL(vj->stop_time_list[2].skipped_stop(), false);
+    meta_vj = b.get_meta_vj("vj:1");
+    // two disruptions applied, there should be only one realtime vj
+    BOOST_REQUIRE_EQUAL(meta_vj->get_rt_vj().size(), 1);
+
+    rt_vj = meta_vj->get_rt_vj()[0].get();
+    BOOST_REQUIRE_EQUAL(rt_vj->stop_time_list.size(), 4);
+    BOOST_REQUIRE_EQUAL(rt_vj->stop_time_list[2].pick_up_allowed(), false);
+    BOOST_REQUIRE_EQUAL(rt_vj->stop_time_list[2].drop_off_allowed(), false);
+    BOOST_REQUIRE_EQUAL(rt_vj->stop_time_list[2].skipped_stop(), false);
 
     res = compute("20171101T073000", "stop_point:A", "stop_point:C");
     BOOST_CHECK_EQUAL(res.impacts_size(), 3);
@@ -2835,7 +3055,7 @@ struct AddTripDataset {
     ed::builder b;
 };
 
-BOOST_FIXTURE_TEST_CASE(add_and_update_trip_to_verify_route_line_commercial_mode_network, AddTripDataset) {
+BOOST_FIXTURE_TEST_CASE(add_and_update_trip_to_verify_default_route_line_commercial_mode_network, AddTripDataset) {
     auto& pt_data = *b.data->pt_data;
     navitia::routing::RAPTOR raptor(*(b.data));
     ng::StreetNetwork sn_worker(*b.data->geo_ref);
@@ -2980,6 +3200,205 @@ BOOST_FIXTURE_TEST_CASE(add_and_update_trip_to_verify_route_line_commercial_mode
     BOOST_CHECK_EQUAL(res.journeys_size(), 1);
 }
 
+BOOST_FIXTURE_TEST_CASE(add_and_update_trip_to_verify_filled_route_line_commercial_mode_network, AddTripDataset) {
+    auto& pt_data = *b.data->pt_data;
+    navitia::routing::RAPTOR raptor(*(b.data));
+    ng::StreetNetwork sn_worker(*b.data->geo_ref);
+
+    auto compute = [&](const std::string& datetime, const std::string& from, const std::string& to) {
+        navitia::type::Type_e origin_type = b.data->get_type_of_id(from);
+        navitia::type::Type_e destination_type = b.data->get_type_of_id(to);
+        navitia::type::EntryPoint origin(origin_type, from);
+        navitia::type::EntryPoint destination(destination_type, to);
+
+        navitia::PbCreator pb_creator(b.data.get(), "20190101T073000"_dt, null_time_period);
+        make_response(pb_creator, raptor, origin, destination, {ntest::to_posix_timestamp(datetime)}, true,
+                      navitia::type::AccessibiliteParams(), {}, {}, sn_worker, nt::RTLevel::RealTime, 2_min);
+        return pb_creator.get_response();
+    };
+
+    // before disruption, no "default-rt" PT objects
+    const std::string default_network_id = "network:additional_service";
+    auto it_default_network = pt_data.networks_map.find(default_network_id);
+    BOOST_CHECK(it_default_network == pt_data.networks_map.end());
+    const std::string default_cm_id = "commercial_mode:additional_service";
+    auto it_default_cm = pt_data.commercial_modes_map.find(default_cm_id);
+    BOOST_CHECK(it_default_cm == pt_data.commercial_modes_map.end());
+    const std::string default_line_id = "line:A_F";
+    auto it_default_line = pt_data.lines_map.find(default_line_id);
+    BOOST_CHECK(it_default_line == pt_data.lines_map.end());
+    const std::string default_route_id = "route:A_F";
+    auto it_default_route = pt_data.routes_map.find(default_route_id);
+    BOOST_CHECK(it_default_route == pt_data.routes_map.end());
+
+    // before disruption, PT objects to be used are already present and linked (except route)
+    auto it_dataset = pt_data.datasets_map.find(dataset_uri);
+    BOOST_CHECK(it_dataset != pt_data.datasets_map.end());
+    const nt::Dataset* dataset = it_dataset->second;
+    const std::string network_id = "base_network";
+    auto it_network = pt_data.networks_map.find(network_id);
+    BOOST_CHECK(it_network != pt_data.networks_map.end());
+    const nt::Network* network = it_network->second;
+    const std::string cm_id = "0x0";
+    auto it_cm = pt_data.commercial_modes_map.find(cm_id);
+    BOOST_CHECK(it_cm != pt_data.commercial_modes_map.end());
+    const nt::CommercialMode* cm = it_cm->second;
+    const std::string line_id = "1";
+    auto it_line = pt_data.lines_map.find(line_id);
+    BOOST_CHECK(it_line != pt_data.lines_map.end());
+    const nt::Line* line = it_line->second;
+    const std::string route_id = "route:1:additional_service";
+    auto it_route = pt_data.routes_map.find(route_id);
+    BOOST_CHECK(it_route == pt_data.routes_map.end());
+    const auto nb_vj_in_dataset_beginning = dataset->vehiclejourney_list.size();
+
+    // check links
+    BOOST_CHECK_EQUAL(network->line_list.front(), line);
+    BOOST_CHECK_EQUAL(line->network, network);
+    BOOST_CHECK(navitia::contains(cm->line_list, line));
+    BOOST_CHECK_EQUAL(line->commercial_mode, cm);
+
+    // check indexes
+    BOOST_CHECK_EQUAL(pt_data.networks[network->idx], network);
+    BOOST_CHECK_EQUAL(pt_data.commercial_modes[cm->idx], cm);
+    BOOST_CHECK_EQUAL(pt_data.lines[line->idx], line);
+
+    transit_realtime::TripUpdate new_trip = ntest::make_trip_update_message(
+        "vj_new_trip", "20190101",
+        {
+            RTStopTime("stop_point:A", "20190101T0800"_pts).added(),
+            RTStopTime("stop_point:F", "20190101T0900"_pts).added(),
+        },
+        transit_realtime::Alert_Effect::Alert_Effect_ADDITIONAL_SERVICE, comp_uri, phy_mode_uri, "", "",
+        "trip_headsign", "trip_short_name", dataset_uri, network_id, cm_id, line_id, route_id);
+
+    navitia::handle_realtime("feed-1", timestamp, new_trip, *b.data, true, true);
+    b.finalize_disruption_batch();
+
+    // after disruption, no "default-rt" PT objects (as existing one are used)
+    it_default_network = pt_data.networks_map.find(default_network_id);
+    BOOST_REQUIRE(it_default_network == pt_data.networks_map.end());
+    it_default_cm = pt_data.commercial_modes_map.find(default_cm_id);
+    BOOST_REQUIRE(it_default_cm == pt_data.commercial_modes_map.end());
+    it_default_line = pt_data.lines_map.find(default_line_id);
+    BOOST_REQUIRE(it_default_line == pt_data.lines_map.end());
+    it_default_route = pt_data.routes_map.find(default_route_id);
+    BOOST_REQUIRE(it_default_route == pt_data.routes_map.end());
+
+    it_route = pt_data.routes_map.find(route_id);
+    BOOST_REQUIRE(it_route != pt_data.routes_map.end());
+    const nt::Route* route = it_route->second;
+
+    const std::string sa_id = "F";
+    auto it_sa = pt_data.stop_areas_map.find(sa_id);
+    const nt::StopArea* sa = it_sa->second;
+
+    // Check destination and direction_type of the route
+    BOOST_CHECK_EQUAL(route->direction_type, "outbound");
+    BOOST_CHECK_EQUAL(route->destination, sa);
+
+    // check links
+    BOOST_CHECK_EQUAL(network->line_list.front(), line);
+    BOOST_CHECK_EQUAL(line->network, network);
+    BOOST_CHECK(navitia::contains(cm->line_list, line));
+    BOOST_CHECK_EQUAL(line->commercial_mode, cm);
+    BOOST_CHECK(navitia::contains(line->route_list, route));
+    BOOST_CHECK_EQUAL(route->line, line);
+    nt::VehicleJourney* rt_vj = pt_data.vehicle_journeys.back();
+    BOOST_CHECK_EQUAL(rt_vj->dataset, dataset);
+    BOOST_CHECK_EQUAL(nb_vj_in_dataset_beginning + 1, dataset->vehiclejourney_list.size());
+    BOOST_CHECK(navitia::contains(dataset->vehiclejourney_list, rt_vj));
+    BOOST_CHECK_EQUAL(rt_vj->route, route);
+
+    // check indexes
+    BOOST_CHECK_EQUAL(pt_data.networks[network->idx], network);
+    BOOST_CHECK_EQUAL(pt_data.commercial_modes[cm->idx], cm);
+    BOOST_CHECK_EQUAL(pt_data.lines[line->idx], line);
+    BOOST_CHECK_EQUAL(pt_data.routes[route->idx], route);
+
+    // check uris
+    BOOST_CHECK_EQUAL(network->uri, network_id);
+    BOOST_CHECK_EQUAL(cm->uri, cm_id);
+    BOOST_CHECK_EQUAL(line->uri, line_id);
+    BOOST_CHECK_EQUAL(route->uri, route_id);
+
+    // check names
+    BOOST_CHECK_EQUAL(network->name, network_id);
+    BOOST_CHECK_EQUAL(cm->name, "Tramway");
+    BOOST_CHECK_EQUAL(line->name, line_id);
+    BOOST_CHECK_EQUAL(route->name, "Additional service");
+
+    // Verify that a journey from stop_point:A to stop_point:F exists
+    auto res = compute("20190101T073000", "stop_point:A", "stop_point:F");
+    BOOST_CHECK_EQUAL(res.response_type(), pbnavitia::ITINERARY_FOUND);
+    BOOST_CHECK_EQUAL(res.journeys_size(), 1);
+
+    // Verify that headsign exists in display_informations
+    BOOST_CHECK_EQUAL(res.journeys(0).sections(0).pt_display_informations().headsign(), "trip_headsign");
+    BOOST_CHECK_EQUAL(res.journeys(0).sections(0).pt_display_informations().trip_short_name(), "trip_short_name");
+    BOOST_CHECK_EQUAL(res.journeys(0).sections(0).pt_display_informations().name(), line_id);
+
+    // Update the trip recently added with destination F replaced by J
+    new_trip = ntest::make_trip_update_message(
+        "vj_new_trip", "20190101",
+        {
+            RTStopTime("stop_point:A", "20190101T0800"_pts).added(),
+            RTStopTime("stop_point:F", "20190101T0900"_pts).skipped(),
+            RTStopTime("stop_point:J", "20190101T0900"_pts).added(),
+        },
+        transit_realtime::Alert_Effect::Alert_Effect_ADDITIONAL_SERVICE, comp_uri, phy_mode_uri, "", "",
+        "new_trip_headsign", "new_trip_short_name", dataset_uri, network_id, cm_id, line_id, route_id);
+
+    navitia::handle_realtime("feed-1", timestamp, new_trip, *b.data, true, true);
+    b.finalize_disruption_batch();
+
+    // after disruption update, still no "default-rt" PT objects (as existing one are used)
+    it_default_network = pt_data.networks_map.find(default_network_id);
+    BOOST_REQUIRE(it_default_network == pt_data.networks_map.end());
+    it_default_cm = pt_data.commercial_modes_map.find(default_cm_id);
+    BOOST_REQUIRE(it_default_cm == pt_data.commercial_modes_map.end());
+    it_default_line = pt_data.lines_map.find(default_line_id);
+    BOOST_REQUIRE(it_default_line == pt_data.lines_map.end());
+    it_default_route = pt_data.routes_map.find(default_route_id);
+    BOOST_REQUIRE(it_default_route == pt_data.routes_map.end());
+
+    it_route = pt_data.routes_map.find(route_id);
+    BOOST_REQUIRE(it_route != pt_data.routes_map.end());
+    route = it_route->second;
+
+    rt_vj = pt_data.vehicle_journeys.back();
+    BOOST_CHECK_EQUAL(rt_vj->dataset, dataset);
+    BOOST_CHECK_EQUAL(nb_vj_in_dataset_beginning + 1, dataset->vehiclejourney_list.size());
+    BOOST_CHECK(navitia::contains(dataset->vehiclejourney_list, rt_vj));
+    BOOST_CHECK_EQUAL(rt_vj->route, route);
+
+    // Check destination and direction_type of the route
+    BOOST_CHECK_EQUAL(route->direction_type, "outbound");
+    BOOST_CHECK_EQUAL(route->destination, sa);
+
+    // check uris
+    BOOST_CHECK_EQUAL(network->uri, network_id);
+    BOOST_CHECK_EQUAL(cm->uri, cm_id);
+    BOOST_CHECK_EQUAL(line->uri, line_id);
+    BOOST_CHECK_EQUAL(route->uri, route_id);
+
+    // check names
+    BOOST_CHECK_EQUAL(network->name, network_id);
+    BOOST_CHECK_EQUAL(cm->name, "Tramway");
+    BOOST_CHECK_EQUAL(line->name, line_id);
+    BOOST_CHECK_EQUAL(route->name, "Additional service");
+
+    // Verify that a journey from stop_point:A to stop_point:J exists
+    res = compute("20190101T073000", "stop_point:A", "stop_point:J");
+    BOOST_CHECK_EQUAL(res.response_type(), pbnavitia::ITINERARY_FOUND);
+    BOOST_CHECK_EQUAL(res.journeys_size(), 1);
+
+    // Verify that headsign exists in display_informations
+    BOOST_CHECK_EQUAL(res.journeys(0).sections(0).pt_display_informations().headsign(), "new_trip_headsign");
+    BOOST_CHECK_EQUAL(res.journeys(0).sections(0).pt_display_informations().trip_short_name(), "new_trip_short_name");
+    BOOST_CHECK_EQUAL(res.journeys(0).sections(0).pt_display_informations().name(), line_id);
+}
+
 BOOST_FIXTURE_TEST_CASE(add_new_trip_and_update, AddTripDataset) {
     using year = navitia::type::ValidityPattern::year_bitset;
     auto& pt_data = *b.data->pt_data;
@@ -3059,24 +3478,27 @@ BOOST_FIXTURE_TEST_CASE(add_new_trip_and_update, AddTripDataset) {
     BOOST_CHECK_EQUAL(vj->adapted_validity_pattern()->days, year("11111111"));
     BOOST_CHECK_EQUAL(vj->rt_validity_pattern()->days, year("11111111"));
 
-    vj = pt_data.vehicle_journeys_map["vehicle_journey:vj_new_trip:modified:0:feed-1"];
-    BOOST_CHECK_EQUAL(vj->company->uri, comp_uri);
-    BOOST_CHECK_EQUAL(vj->company->name, comp_name);
-    BOOST_CHECK_EQUAL(vj->physical_mode->uri, phy_mode_uri);
-    BOOST_CHECK_EQUAL(vj->physical_mode->name, phy_mode_name);
-    BOOST_CHECK_EQUAL(vj->dataset->uri, dataset_uri);
-    BOOST_CHECK_EQUAL(vj->dataset->name, dataset_name);
-    BOOST_CHECK_EQUAL(vj->dataset->contributor->uri, contributor_uri);
-    BOOST_CHECK_EQUAL(vj->dataset->contributor->name, contributor_name);
-    BOOST_CHECK_EQUAL(vj->uri, "vehicle_journey:vj_new_trip:modified:0:feed-1");
-    BOOST_CHECK_EQUAL(vj->idx, 1);
-    BOOST_CHECK_EQUAL(vj->name, "");
-    BOOST_CHECK_EQUAL(vj->headsign, "");
-    BOOST_CHECK_EQUAL(vj->meta_vj->get_label(), "vj_new_trip");
-    BOOST_CHECK_EQUAL(vj->stop_time_list.size(), 4);
-    BOOST_CHECK_EQUAL(vj->base_validity_pattern()->days, year("00000000"));
-    BOOST_CHECK_EQUAL(vj->adapted_validity_pattern()->days, year("00000000"));
-    BOOST_CHECK_EQUAL(vj->rt_validity_pattern()->days, year("00000001"));
+    const navitia::type::MetaVehicleJourney* meta_vj = b.get_meta_vj("vj_new_trip");
+    BOOST_REQUIRE_EQUAL(meta_vj->get_rt_vj().size(), 1);
+
+    const auto* rt_vj = meta_vj->get_rt_vj()[0].get();
+    BOOST_CHECK_EQUAL(rt_vj->company->uri, comp_uri);
+    BOOST_CHECK_EQUAL(rt_vj->company->name, comp_name);
+    BOOST_CHECK_EQUAL(rt_vj->physical_mode->uri, phy_mode_uri);
+    BOOST_CHECK_EQUAL(rt_vj->physical_mode->name, phy_mode_name);
+    BOOST_CHECK_EQUAL(rt_vj->dataset->uri, dataset_uri);
+    BOOST_CHECK_EQUAL(rt_vj->dataset->name, dataset_name);
+    BOOST_CHECK_EQUAL(rt_vj->dataset->contributor->uri, contributor_uri);
+    BOOST_CHECK_EQUAL(rt_vj->dataset->contributor->name, contributor_name);
+    BOOST_ASSERT(boost::algorithm::contains(rt_vj->uri, "RealTime"));
+    BOOST_CHECK_EQUAL(rt_vj->idx, 1);
+    BOOST_CHECK_EQUAL(rt_vj->name, "");
+    BOOST_CHECK_EQUAL(rt_vj->headsign, "");
+    BOOST_CHECK_EQUAL(rt_vj->meta_vj->get_label(), "vj_new_trip");
+    BOOST_CHECK_EQUAL(rt_vj->stop_time_list.size(), 4);
+    BOOST_CHECK_EQUAL(rt_vj->base_validity_pattern()->days, year("00000000"));
+    BOOST_CHECK_EQUAL(rt_vj->adapted_validity_pattern()->days, year("00000000"));
+    BOOST_CHECK_EQUAL(rt_vj->rt_validity_pattern()->days, year("00000001"));
 
     // verify that filters &since and &until work well with vehicle_jouneys added by realtime (added trip)
     // Note: For backward compatibility parameter &data_freshness with base_schedule is added and works
@@ -3209,25 +3631,28 @@ BOOST_FIXTURE_TEST_CASE(add_new_trip_and_update, AddTripDataset) {
     BOOST_REQUIRE_EQUAL(pt_data.vehicle_journeys.size(), 3);
 
     // New VJ
-    vj = pt_data.vehicle_journeys_map["vehicle_journey:vj_new_trip_2:modified:0:feed-2"];
-    BOOST_CHECK_EQUAL(vj->company->uri, comp_uri);
-    BOOST_CHECK_EQUAL(vj->company->name, comp_name);
-    BOOST_CHECK_EQUAL(vj->physical_mode->uri, phy_mode_uri);
-    BOOST_CHECK_EQUAL(vj->physical_mode->name, phy_mode_name);
-    BOOST_CHECK_EQUAL(vj->dataset->uri, dataset_uri);
-    BOOST_CHECK_EQUAL(vj->dataset->name, dataset_name);
-    BOOST_CHECK_EQUAL(vj->dataset->contributor->uri, contributor_uri);
-    BOOST_CHECK_EQUAL(vj->dataset->contributor->name, contributor_name);
-    BOOST_CHECK_EQUAL(vj->uri, "vehicle_journey:vj_new_trip_2:modified:0:feed-2");
-    BOOST_CHECK_EQUAL(vj->idx, 2);
-    BOOST_CHECK_EQUAL(vj->name, "trip_headsign");
-    BOOST_CHECK_EQUAL(vj->headsign, "trip_headsign");
-    BOOST_CHECK_EQUAL(vj->meta_vj->get_label(), "vj_new_trip_2");
-    BOOST_CHECK_EQUAL(vj->stop_time_list.size(), 4);
-    BOOST_CHECK_EQUAL(vj->base_validity_pattern()->days, year("00000000"));
-    BOOST_CHECK_EQUAL(vj->adapted_validity_pattern()->days, year("00000000"));
-    BOOST_CHECK_EQUAL(vj->rt_validity_pattern()->days, year("00000001"));
-    auto st = vj->stop_time_list.front();
+    meta_vj = b.get_meta_vj("vj_new_trip_2");
+    BOOST_REQUIRE_EQUAL(meta_vj->get_rt_vj().size(), 1);
+
+    rt_vj = meta_vj->get_rt_vj()[0].get();
+    BOOST_CHECK_EQUAL(rt_vj->company->uri, comp_uri);
+    BOOST_CHECK_EQUAL(rt_vj->company->name, comp_name);
+    BOOST_CHECK_EQUAL(rt_vj->physical_mode->uri, phy_mode_uri);
+    BOOST_CHECK_EQUAL(rt_vj->physical_mode->name, phy_mode_name);
+    BOOST_CHECK_EQUAL(rt_vj->dataset->uri, dataset_uri);
+    BOOST_CHECK_EQUAL(rt_vj->dataset->name, dataset_name);
+    BOOST_CHECK_EQUAL(rt_vj->dataset->contributor->uri, contributor_uri);
+    BOOST_CHECK_EQUAL(rt_vj->dataset->contributor->name, contributor_name);
+    BOOST_ASSERT(boost::algorithm::contains(rt_vj->uri, "RealTime"));
+    BOOST_CHECK_EQUAL(rt_vj->idx, 2);
+    BOOST_CHECK_EQUAL(rt_vj->name, "trip_headsign");
+    BOOST_CHECK_EQUAL(rt_vj->headsign, "trip_headsign");
+    BOOST_CHECK_EQUAL(rt_vj->meta_vj->get_label(), "vj_new_trip_2");
+    BOOST_CHECK_EQUAL(rt_vj->stop_time_list.size(), 4);
+    BOOST_CHECK_EQUAL(rt_vj->base_validity_pattern()->days, year("00000000"));
+    BOOST_CHECK_EQUAL(rt_vj->adapted_validity_pattern()->days, year("00000000"));
+    BOOST_CHECK_EQUAL(rt_vj->rt_validity_pattern()->days, year("00000001"));
+    auto st = rt_vj->stop_time_list.front();
     BOOST_CHECK_EQUAL(pt_data.headsign_handler.get_headsign(st), "trip_headsign");
 
     // New trip added
@@ -3347,6 +3772,165 @@ BOOST_FIXTURE_TEST_CASE(company_id_doesnt_exist_in_new_trip, AddTripDataset) {
             RTStopTime("stop_point:J", "20190101T0930"_pts).added(),
         },
         transit_realtime::Alert_Effect::Alert_Effect_ADDITIONAL_SERVICE, "company_id_that_doesnt_exist", phy_mode_uri);
+
+    // the new trip update is blocked directly
+    navitia::handle_realtime("feed-1", timestamp, new_trip, *b.data, true, true);
+    b.finalize_disruption_batch();
+    auto res = compute("20190101T073000", "stop_point:A", "stop_point:J");
+    BOOST_CHECK_EQUAL(res.response_type(), pbnavitia::NO_SOLUTION);
+    BOOST_CHECK_EQUAL(res.journeys_size(), 0);
+    BOOST_REQUIRE_EQUAL(pt_data.meta_vjs.exists("vj_new_trip"), false);
+}
+
+BOOST_FIXTURE_TEST_CASE(line_id_doesnt_exist_in_new_trip, AddTripDataset) {
+    auto& pt_data = *b.data->pt_data;
+
+    navitia::routing::RAPTOR raptor(*(b.data));
+    ng::StreetNetwork sn_worker(*b.data->geo_ref);
+
+    auto compute = [&](const std::string& datetime, const std::string& from, const std::string& to) {
+        navitia::type::Type_e origin_type = b.data->get_type_of_id(from);
+        navitia::type::Type_e destination_type = b.data->get_type_of_id(to);
+        navitia::type::EntryPoint origin(origin_type, from);
+        navitia::type::EntryPoint destination(destination_type, to);
+
+        navitia::PbCreator pb_creator(b.data.get(), "20190101T073000"_dt, null_time_period);
+        make_response(pb_creator, raptor, origin, destination, {ntest::to_posix_timestamp(datetime)}, true,
+                      navitia::type::AccessibiliteParams(), {}, {}, sn_worker, nt::RTLevel::RealTime, 2_min);
+        return pb_creator.get_response();
+    };
+
+    // If the line id doesn't exist inside the data with ADDED type, we reject the new trip
+    transit_realtime::TripUpdate new_trip =
+        ntest::make_trip_update_message("vj_new_trip", "20190101",
+                                        {
+                                            RTStopTime("stop_point:A", "20190101T0800"_pts).added(),
+                                            RTStopTime("stop_point:H", "20190101T0830"_pts).added(),
+                                            RTStopTime("stop_point:I", "20190101T0900"_pts).added(),
+                                            RTStopTime("stop_point:J", "20190101T0930"_pts).added(),
+                                        },
+                                        transit_realtime::Alert_Effect::Alert_Effect_ADDITIONAL_SERVICE, comp_uri,
+                                        phy_mode_uri, "", "", "trip_headsign", "trip_short_name", dataset_uri,
+                                        "base_network", "0x0", "wrong_line_id", "route:1:additional_service");
+
+    // the new trip update is blocked directly
+    navitia::handle_realtime("feed-1", timestamp, new_trip, *b.data, true, true);
+    b.finalize_disruption_batch();
+    auto res = compute("20190101T073000", "stop_point:A", "stop_point:J");
+    BOOST_CHECK_EQUAL(res.response_type(), pbnavitia::NO_SOLUTION);
+    BOOST_CHECK_EQUAL(res.journeys_size(), 0);
+    BOOST_REQUIRE_EQUAL(pt_data.meta_vjs.exists("vj_new_trip"), false);
+}
+
+BOOST_FIXTURE_TEST_CASE(dataset_id_doesnt_exist_in_new_trip, AddTripDataset) {
+    auto& pt_data = *b.data->pt_data;
+
+    navitia::routing::RAPTOR raptor(*(b.data));
+    ng::StreetNetwork sn_worker(*b.data->geo_ref);
+
+    auto compute = [&](const std::string& datetime, const std::string& from, const std::string& to) {
+        navitia::type::Type_e origin_type = b.data->get_type_of_id(from);
+        navitia::type::Type_e destination_type = b.data->get_type_of_id(to);
+        navitia::type::EntryPoint origin(origin_type, from);
+        navitia::type::EntryPoint destination(destination_type, to);
+
+        navitia::PbCreator pb_creator(b.data.get(), "20190101T073000"_dt, null_time_period);
+        make_response(pb_creator, raptor, origin, destination, {ntest::to_posix_timestamp(datetime)}, true,
+                      navitia::type::AccessibiliteParams(), {}, {}, sn_worker, nt::RTLevel::RealTime, 2_min);
+        return pb_creator.get_response();
+    };
+
+    // If the dataset id doesn't exist inside the data with ADDED type, we reject the new trip
+    transit_realtime::TripUpdate new_trip =
+        ntest::make_trip_update_message("vj_new_trip", "20190101",
+                                        {
+                                            RTStopTime("stop_point:A", "20190101T0800"_pts).added(),
+                                            RTStopTime("stop_point:H", "20190101T0830"_pts).added(),
+                                            RTStopTime("stop_point:I", "20190101T0900"_pts).added(),
+                                            RTStopTime("stop_point:J", "20190101T0930"_pts).added(),
+                                        },
+                                        transit_realtime::Alert_Effect::Alert_Effect_ADDITIONAL_SERVICE, comp_uri,
+                                        phy_mode_uri, "", "", "trip_headsign", "trip_short_name", "wrong_dataset_id",
+                                        "base_network", "0x0", "1", "route:1:additional_service");
+
+    // the new trip update is blocked directly
+    navitia::handle_realtime("feed-1", timestamp, new_trip, *b.data, true, true);
+    b.finalize_disruption_batch();
+    auto res = compute("20190101T073000", "stop_point:A", "stop_point:J");
+    BOOST_CHECK_EQUAL(res.response_type(), pbnavitia::NO_SOLUTION);
+    BOOST_CHECK_EQUAL(res.journeys_size(), 0);
+    BOOST_REQUIRE_EQUAL(pt_data.meta_vjs.exists("vj_new_trip"), false);
+}
+
+BOOST_FIXTURE_TEST_CASE(network_id_doesnt_exist_in_new_trip, AddTripDataset) {
+    auto& pt_data = *b.data->pt_data;
+
+    navitia::routing::RAPTOR raptor(*(b.data));
+    ng::StreetNetwork sn_worker(*b.data->geo_ref);
+
+    auto compute = [&](const std::string& datetime, const std::string& from, const std::string& to) {
+        navitia::type::Type_e origin_type = b.data->get_type_of_id(from);
+        navitia::type::Type_e destination_type = b.data->get_type_of_id(to);
+        navitia::type::EntryPoint origin(origin_type, from);
+        navitia::type::EntryPoint destination(destination_type, to);
+
+        navitia::PbCreator pb_creator(b.data.get(), "20190101T073000"_dt, null_time_period);
+        make_response(pb_creator, raptor, origin, destination, {ntest::to_posix_timestamp(datetime)}, true,
+                      navitia::type::AccessibiliteParams(), {}, {}, sn_worker, nt::RTLevel::RealTime, 2_min);
+        return pb_creator.get_response();
+    };
+
+    // If the network id doesn't exist inside the data with ADDED type, we reject the new trip
+    transit_realtime::TripUpdate new_trip = ntest::make_trip_update_message(
+        "vj_new_trip", "20190101",
+        {
+            RTStopTime("stop_point:A", "20190101T0800"_pts).added(),
+            RTStopTime("stop_point:H", "20190101T0830"_pts).added(),
+            RTStopTime("stop_point:I", "20190101T0900"_pts).added(),
+            RTStopTime("stop_point:J", "20190101T0930"_pts).added(),
+        },
+        transit_realtime::Alert_Effect::Alert_Effect_ADDITIONAL_SERVICE, comp_uri, phy_mode_uri, "", "",
+        "trip_headsign", "trip_short_name", dataset_uri, "wrong_network_id", "0x0", "1", "route:1:additional_service");
+
+    // the new trip update is blocked directly
+    navitia::handle_realtime("feed-1", timestamp, new_trip, *b.data, true, true);
+    b.finalize_disruption_batch();
+    auto res = compute("20190101T073000", "stop_point:A", "stop_point:J");
+    BOOST_CHECK_EQUAL(res.response_type(), pbnavitia::NO_SOLUTION);
+    BOOST_CHECK_EQUAL(res.journeys_size(), 0);
+    BOOST_REQUIRE_EQUAL(pt_data.meta_vjs.exists("vj_new_trip"), false);
+}
+
+BOOST_FIXTURE_TEST_CASE(commercial_mode_id_doesnt_exist_in_new_trip, AddTripDataset) {
+    auto& pt_data = *b.data->pt_data;
+
+    navitia::routing::RAPTOR raptor(*(b.data));
+    ng::StreetNetwork sn_worker(*b.data->geo_ref);
+
+    auto compute = [&](const std::string& datetime, const std::string& from, const std::string& to) {
+        navitia::type::Type_e origin_type = b.data->get_type_of_id(from);
+        navitia::type::Type_e destination_type = b.data->get_type_of_id(to);
+        navitia::type::EntryPoint origin(origin_type, from);
+        navitia::type::EntryPoint destination(destination_type, to);
+
+        navitia::PbCreator pb_creator(b.data.get(), "20190101T073000"_dt, null_time_period);
+        make_response(pb_creator, raptor, origin, destination, {ntest::to_posix_timestamp(datetime)}, true,
+                      navitia::type::AccessibiliteParams(), {}, {}, sn_worker, nt::RTLevel::RealTime, 2_min);
+        return pb_creator.get_response();
+    };
+
+    // If the commercial_mode id doesn't exist inside the data with ADDED type, we reject the new trip
+    transit_realtime::TripUpdate new_trip =
+        ntest::make_trip_update_message("vj_new_trip", "20190101",
+                                        {
+                                            RTStopTime("stop_point:A", "20190101T0800"_pts).added(),
+                                            RTStopTime("stop_point:H", "20190101T0830"_pts).added(),
+                                            RTStopTime("stop_point:I", "20190101T0900"_pts).added(),
+                                            RTStopTime("stop_point:J", "20190101T0930"_pts).added(),
+                                        },
+                                        transit_realtime::Alert_Effect::Alert_Effect_ADDITIONAL_SERVICE, comp_uri,
+                                        phy_mode_uri, "", "", "trip_headsign", "trip_short_name", dataset_uri,
+                                        "base_network", "wrong_commercial_mode_id", "1", "route:1:additional_service");
 
     // the new trip update is blocked directly
     navitia::handle_realtime("feed-1", timestamp, new_trip, *b.data, true, true);
@@ -3587,9 +4171,12 @@ BOOST_FIXTURE_TEST_CASE(physical_mode_id_only_impact_additional_service, AddTrip
     b.finalize_disruption_batch();
 
     // physical mode =  base VJ physical mode
-    vj = pt_data.vehicle_journeys_map["vehicle_journey:vj:1:modified:0:feed-1"];
-    BOOST_CHECK_EQUAL(vj->physical_mode->uri, phy_mode_uri);
-    BOOST_CHECK_EQUAL(vj->physical_mode->name, phy_mode_name);
+    const navitia::type::MetaVehicleJourney* meta_vj = b.get_meta_vj("vj:1");
+    BOOST_REQUIRE_EQUAL(meta_vj->get_rt_vj().size(), 1);
+
+    const auto* rt_vj = meta_vj->get_rt_vj()[0].get();
+    BOOST_CHECK_EQUAL(rt_vj->physical_mode->uri, phy_mode_uri);
+    BOOST_CHECK_EQUAL(rt_vj->physical_mode->name, phy_mode_name);
 
     update_trip = ntest::make_trip_update_message("vj:1", "20190101",
                                                   {
@@ -3605,9 +4192,13 @@ BOOST_FIXTURE_TEST_CASE(physical_mode_id_only_impact_additional_service, AddTrip
     b.finalize_disruption_batch();
 
     // physical mode =  base VJ physical mode
-    vj = pt_data.vehicle_journeys_map["vehicle_journey:vj:1:modified:0:feed-1"];
-    BOOST_CHECK_EQUAL(vj->physical_mode->uri, phy_mode_uri);
-    BOOST_CHECK_EQUAL(vj->physical_mode->name, phy_mode_name);
+    // physical mode =  base VJ physical mode
+    meta_vj = b.get_meta_vj("vj:1");
+    BOOST_REQUIRE_EQUAL(meta_vj->get_rt_vj().size(), 1);
+
+    rt_vj = meta_vj->get_rt_vj()[0].get();
+    BOOST_CHECK_EQUAL(rt_vj->physical_mode->uri, phy_mode_uri);
+    BOOST_CHECK_EQUAL(rt_vj->physical_mode->name, phy_mode_name);
 }
 
 BOOST_FIXTURE_TEST_CASE(cannot_add_new_trip_if_id_corresponds_to_a_base_VJ_the_same_day, AddTripDataset) {

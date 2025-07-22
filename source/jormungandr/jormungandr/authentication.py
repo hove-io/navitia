@@ -91,6 +91,7 @@ def get_token():
     auth = None
     if 'Authorization' in request.headers:
         auth = request.headers['Authorization']
+    # providing the token via the "key" parameter is deprecated
     elif 'key' in request.args:
         auth = request.args['key']
     if not auth:
@@ -107,7 +108,7 @@ def get_token():
             # Python3 Compatibility 2: Decode bytes to string in order to use split()
             if isinstance(decoded, bytes):
                 decoded = decoded.decode()
-            return decoded.split(':')[0]
+            return decoded.split(':')[0].strip()
         except (binascii.Error, UnicodeDecodeError):
             logging.getLogger(__name__).exception('badly formated token %s', auth)
             flask_restful.abort(401, message="Unauthorized, invalid token", status=401)
@@ -120,7 +121,7 @@ def can_read_user():
     try:
         User.query.options(noload('*')).first()
     except Exception as e:
-        logging.getLogger(__name__).error('No access to table User (error: {})'.format(e))
+        logging.getLogger(__name__).exception('No access to table User (error: {})'.format(e))
         g.can_connect_to_database = False
         return False
 
@@ -141,6 +142,7 @@ def has_access(region, api, abort, user):
     # if jormungandr is on public mode or database is not accessible, we skip the authentication process
     logging.getLogger(__name__).debug('User "has_access" to region/api not cached')
 
+    # Connection to database verified only once when cache expires.
     if current_app.config.get('PUBLIC', False) or (not can_connect_to_database()):
         return True
 
@@ -156,7 +158,7 @@ def has_access(region, api, abort, user):
     try:
         model_instance = Instance.get_by_name(region)
     except Exception as e:
-        logging.getLogger(__name__).error('No access to table Instance (error: {})'.format(e))
+        logging.getLogger(__name__).exception('No access to table Instance (error: {})'.format(e))
         g.can_connect_to_database = False
         return True
 
@@ -193,13 +195,15 @@ def cache_get_user(token):
 
 def uncached_get_user(token):
     logging.getLogger(__name__).debug('Get User from token (uncached)')
-    if not can_connect_to_database():
-        logging.getLogger(__name__).debug('Cannot connect to database, we set User to None')
-        return None
     try:
         user = User.get_from_token(token, datetime.datetime.now())
+
+        # if user doesn't exist for a token, create default user with user.login = unknown_user
+        if not user:
+            user = get_unkown_user()
+            logging.getLogger(__name__).warning('Invalid token : {}'.format(token[0:10]))
     except Exception as e:
-        logging.getLogger(__name__).error('No access to table User (error: {})'.format(e))
+        logging.getLogger(__name__).exception('No access to table User (error: {})'.format(e))
         g.can_connect_to_database = False
         return None
 
@@ -211,12 +215,13 @@ def uncached_get_user(token):
 )
 @cache.memoize(current_app.config[str('CACHE_CONFIGURATION')].get(str('TIMEOUT_AUTHENTICATION'), 300))
 def cache_get_key(token):
+    # This verification is done only once when cache expires.
     if not can_connect_to_database():
         return None
     try:
         key = Key.get_by_token(token)
     except Exception as e:
-        logging.getLogger(__name__).error('No access to table key (error: {})'.format(e))
+        logging.getLogger(__name__).exception('No access to table key (error: {})'.format(e))
         g.can_connect_to_database = False
         return None
     return key
@@ -226,7 +231,7 @@ def cache_get_key(token):
     current_app.config[str('MEMORY_CACHE_CONFIGURATION')].get(str('TIMEOUT_AUTHENTICATION'), 30)
 )
 @cache.memoize(current_app.config[str('CACHE_CONFIGURATION')].get(str('TIMEOUT_AUTHENTICATION'), 300))
-def get_all_available_instances(user, exclude_backend=None):
+def get_all_available_instances_names(user, exclude_backend=None):
     """
     get the list of instances that a user can use (for the autocomplete apis)
     if Jormungandr has no authentication set (or no database), the user can use all the instances
@@ -234,10 +239,10 @@ def get_all_available_instances(user, exclude_backend=None):
 
     Note: only users with access to free instances can use global /places
     """
-    if current_app.config.get('PUBLIC', False) or current_app.config.get('DISABLE_DATABASE', False):
-        from jormungandr import i_manager
+    from jormungandr import i_manager
 
-        return list(i_manager.instances.values())
+    if current_app.config.get('PUBLIC', False) or current_app.config.get('DISABLE_DATABASE', False):
+        return [key for key in i_manager.instances]
 
     if not user:
         # for not-public navitia a user is mandatory
@@ -252,7 +257,8 @@ def get_all_available_instances(user, exclude_backend=None):
         # only users with access to opendata can use the global /places
         abort_request(user=user)
 
-    return user.get_all_available_instances(exclude_backend=exclude_backend)
+    bdd_instances = user.get_all_available_instances(exclude_backend=exclude_backend)
+    return [instance.name for instance in bdd_instances if instance.name in i_manager.instances]
 
 
 def get_user(token, abort_if_no_token=True):
@@ -263,7 +269,7 @@ def get_user(token, abort_if_no_token=True):
         return g.user
     else:
         if not token:
-            # a token is mandatory for non public jormungandr
+            # a token is mandatory for non-public jormungandr
             if not current_app.config.get('PUBLIC', False):
                 if abort_if_no_token:
                     flask_restful.abort(
@@ -273,12 +279,22 @@ def get_user(token, abort_if_no_token=True):
                 else:
                     return None
             else:  # for public one we allow unknown user
-                g.user = User(login="unknown_user")
-                g.user.id = 0
+                g.user = get_unkown_user()
         else:
             g.user = cache_get_user(token)
+            if hasattr(g.user, 'login') and g.user.login == "unknown_user":
+                flask_restful.abort(
+                    401,
+                    message='Token absent in the database You can get one at http://www.navitia.io or contact your support if you’re using the opensource version of Navitia https://github.com/hove-io/navitia',
+                )
 
         return g.user
+
+
+def get_unkown_user():
+    user = User(login="unknown_user")
+    user.id = 0
+    return user
 
 
 def get_app_name(token):

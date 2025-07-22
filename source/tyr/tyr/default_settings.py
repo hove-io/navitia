@@ -2,6 +2,7 @@
 from datetime import timedelta
 from celery import schedules
 import os
+import json
 from flask_restful.inputs import boolean
 
 # URL for the brokker, by default it's the local rabbitmq
@@ -19,6 +20,11 @@ SQLALCHEMY_DATABASE_URI = os.getenv(
     'TYR_SQLALCHEMY_DATABASE_URI', 'postgresql://navitia:navitia@localhost/jormungandr'
 )
 
+DEFAULT_SQLALCHEMY_ENGINE_OPTIONS = {"connect_args": {"application_name": "Tyr"}}
+
+SQLALCHEMY_ENGINE_OPTIONS = (
+    json.loads(os.getenv('TYR_SQLALCHEMY_ENGINE_OPTIONS', '{}')) or DEFAULT_SQLALCHEMY_ENGINE_OPTIONS
+)
 
 # URI for cities database
 # postgresql://<user>:<password>@<host>:<port>/<dbname>
@@ -150,6 +156,8 @@ MINIO_URL = os.getenv('TYR_MINIO_URL', None)
 
 MINIO_BUCKET_NAME = os.getenv('TYR_MINIO_BUCKET_NAME', None)
 
+MINIO_ASGARD_BUCKET_NAME = os.getenv('TYR_MINIO_ASGARD_BUCKET_NAME', None)
+
 MINIO_USE_IAM_PROVIDER = os.getenv('TYR_MINIO_USE_IAM_PROVIDER', 'true').lower() in ['1', 'true', 'yes']
 
 MINIO_ACCESS_KEY = os.getenv('TYR_MINIO_ACCESS_KEY', None)
@@ -172,3 +180,7 @@ POST_DATA_TO_TYR = os.getenv('TYR_POST_DATA_TO_TYR', None)
 USE_LOCAL_SYS_LOG = os.getenv('TYR_USE_LOCAL_SYS_LOG', 'true').lower() in ['1', 'true', 'yes']
 
 ENABLE_USER_EVENT = boolean(os.getenv('TYR_ENABLE_USER_EVENT', True))
+
+# Used by the task fusio2s3
+# NTFS is enriched with addresses and administration regions before being sent to S3 for Loki
+BRAGI_URL = os.getenv('TYR_BRAGI_URL', None)

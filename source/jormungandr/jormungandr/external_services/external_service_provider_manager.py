@@ -72,7 +72,7 @@ class ExternalServiceManager(object):
 
             self._external_services_legacy.setdefault(config['navitia_service'], []).append(service)
 
-    def _init_class(self, cls, arguments):
+    def _init_class(self, id, cls, arguments):
         """
         Create an instance of a external service according to config
         :param cls: name of the class configured in the database
@@ -80,13 +80,10 @@ class ExternalServiceManager(object):
         :return: instance of external service
         """
         try:
-            if '.' not in cls:
-                self.logger.warning('impossible to build, wrongly formated class: {}'.format(cls))
-
             module_path, name = cls.rsplit('.', 1)
             module = import_module(module_path)
             attr = getattr(module, name)
-            return attr(**arguments)
+            return attr(id, **arguments)
         except ImportError:
             self.logger.warning('impossible to build, cannot find class: {}'.format(cls))
 
@@ -121,8 +118,10 @@ class ExternalServiceManager(object):
         try:
             services = self._external_service_getter()
         except Exception as e:
-            self.logger.error('No access to table external_service (error: {})'.format(e))
+            self.logger.exception('No access to table external_service (error: {})'.format(e))
             # database is not accessible, so let's use the values already present in self._external_services_legacy
+            # avoid sending query to the database for another update_interval
+            self._last_update = datetime.datetime.utcnow()
             return
 
         if not services:
@@ -144,7 +143,7 @@ class ExternalServiceManager(object):
     def _update_external_service(self, service):
         self.logger.info('adding {} external service'.format(service.id))
         try:
-            service_obj = self._init_class(service.klass, service.args)
+            service_obj = self._init_class(service.id, service.klass, service.args)
             if service_obj not in self._external_services_from_db.get(service.navitia_service, []):
                 self._external_services_from_db.setdefault(service.navitia_service, []).append(service_obj)
             self._external_services_last_update[service.id] = service.last_update()
@@ -172,6 +171,18 @@ class ExternalServiceManager(object):
         # Return empty object instead of None if error occurs while calling external service.
         return service.get_response(arguments) if service else {'free_floatings': []}
 
+    # Here comes the function to call forseti/obstacles
+    def manage_obstacles(self, navitia_service, arguments):
+        """
+        Get appropriate external service for 'navitia_service' and call it
+        :param navitia_service: external service to be used to query
+        :param arguments: parameters to be added in the query
+        :return: response: external_services json
+        """
+        service = self._get_external_service(navitia_service)
+        # Return empty object instead of None if error occurs while calling external service.
+        return service.get_response(arguments) if service else {'obstacles': []}
+
     # Here comes the function to call forseti/vehicle_positions
     def manage_vehicle_positions(self, instance, response, **kwargs):
 
@@ -180,6 +191,9 @@ class ExternalServiceManager(object):
             return
         # Return empty object instead of None if error occurs while calling external service.
         return service.update_response(instance, response, **kwargs)
+
+    def is_unable_external_service(self, navitia_service):
+        return True if self._get_external_service(navitia_service) else False
 
     def _get_external_service(self, navitia_service):
         # Make sure we update the external services list from the database before returning them

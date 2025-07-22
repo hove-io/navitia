@@ -38,6 +38,7 @@ www.navitia.io
 #include "type/meta_data.h"
 #include "type/meta_vehicle_journey.h"
 #include "type/pt_data.h"
+#include "type/dataset.h"
 #include "utils/logger.h"
 #include "utils/map_find.h"
 #include "utils/functions.h"
@@ -50,6 +51,9 @@ www.navitia.io
 #include <boost/range/algorithm_ext/erase.hpp>
 #include <boost/variant/apply_visitor.hpp>
 #include <boost/variant/static_visitor.hpp>
+#include <boost/uuid/uuid.hpp>
+#include <boost/uuid/uuid_generators.hpp>
+#include <boost/uuid/uuid_io.hpp>
 
 #include <algorithm>
 #include <utility>
@@ -74,8 +78,17 @@ nt::VehicleJourney* create_vj_from_old_vj(nt::MetaVehicleJourney* mvj,
     auto odt_message = vj->odt_message;
     auto vehicle_properties = vj->_vehicle_properties;
 
-    auto* new_vj = mvj->create_discrete_vj(new_vj_uri, vj->name, vj->headsign, rt_level, canceled_vp, vj->route,
-                                           std::move(new_stop_times), pt_data);
+    flat_enum_map<nt::RTLevel, nt::ValidityPattern> canceled_vps;
+    for (const auto l : enum_range<nt::RTLevel>()) {
+        if (l >= rt_level) {
+            canceled_vps[l] = canceled_vp;
+            canceled_vps[l].days = canceled_vp.days & (vj->validity_patterns[l]->days >> vj->shift);
+        } else {
+            canceled_vps[l] = nt::ValidityPattern{canceled_vp.beginning_date};  // empty VP
+        }
+    }
+    auto* new_vj = mvj->create_discrete_vj_with_all_vps(new_vj_uri, vj->name, vj->headsign, rt_level, canceled_vps,
+                                                        vj->route, std::move(new_stop_times), pt_data);
     vj = nullptr;  // after create_discrete_vj, the vj can have been deleted
 
     new_vj->company = company;
@@ -96,6 +109,12 @@ nt::VehicleJourney* create_vj_from_old_vj(nt::MetaVehicleJourney* mvj,
      * */
     new_vj->physical_mode->vehicle_journey_list.push_back(new_vj);
     return new_vj;
+}
+
+std::string make_new_vj_uri(const nt::MetaVehicleJourney* mvj, nt::RTLevel rt_level) {
+    boost::uuids::random_generator gen;
+    return "vehicle_journey:" + mvj->uri + ":" + type::get_string_from_rt_level(rt_level) + ":"
+           + boost::uuids::to_string(gen());
 }
 
 struct apply_impacts_visitor : public boost::static_visitor<> {
@@ -152,7 +171,7 @@ struct apply_impacts_visitor : public boost::static_visitor<> {
         // we cannot ensure that all VJ of a MetaVJ are on the same route,
         // and since we want all actions to operate on MetaVJ, we collect all MetaVJ of the route
         // (but we'll change only the route's vj)
-        std::set<nt::MetaVehicleJourney*> mvjs;
+        std::unordered_set<nt::MetaVehicleJourney*> mvjs;
         route->for_each_vehicle_journey([&mvjs](nt::VehicleJourney& vj) {
             mvjs.insert(vj.meta_vj);
             return true;
@@ -180,34 +199,67 @@ type::ValidityPattern compute_base_disrupted_vp(const std::vector<boost::posix_t
     return vp;
 }
 
-std::string concatenate_impact_uris(const nt::MetaVehicleJourney& mvj) {
-    std::stringstream impacts_uris;
-    for (auto& mvj_impacts : mvj.modified_by) {
-        if (auto i = mvj_impacts.lock()) {
-            if (impacts_uris.str().find(i->disruption->uri) == std::string::npos) {
-                impacts_uris << ":" << i->disruption->uri;
-            }
-        }
-    }
-    return impacts_uris.str();
-}
-
 nt::Route* get_or_create_route(const nt::disruption::Impact& impact, nt::PT_Data& pt_data) {
-    nt::Network* network = pt_data.get_or_create_network("network:additional_service", "additional service");
-    nt::CommercialMode* comm_mode =
-        pt_data.get_or_create_commercial_mode("commercial_mode:additional_service", "additional service");
+    log4cplus::Logger logger = log4cplus::Logger::getInstance("log");
+    // If ptobject id is present in the impact (line, network, dataset, commercial_mode), it should exist
+    // otherwise disruption is rejected
+    // whereas if ptobject id is absent, create a default object
+    nt::Network* network = nullptr;
+    if (!impact.network_id.empty()) {
+        network = pt_data.get_network(impact.network_id);
+        if (network == nullptr) {
+            LOG4CPLUS_INFO(logger, "Rejecting impact (" << impact.uri << "): network_id (" << impact.network_id
+                                                        << ") provided is absent");
+            return nullptr;
+        }
+    } else {
+        network = pt_data.get_or_create_network("network:additional_service", "additional service");
+    }
+
+    nt::CommercialMode* comm_mode = nullptr;
+    if (!impact.commercial_mode_id.empty()) {
+        comm_mode = pt_data.get_commercial_mode(impact.commercial_mode_id);
+        if (comm_mode == nullptr) {
+            LOG4CPLUS_INFO(logger, "Rejecting impact (" << impact.uri << "): commercial_mode_id ("
+                                                        << impact.commercial_mode_id << ") provided is absent");
+            return nullptr;
+        }
+    } else {
+        comm_mode = pt_data.get_or_create_commercial_mode("commercial_mode:additional_service", "additional service");
+    }
 
     // We get the first and last stop_area to create route and line
     const auto& st_depart = impact.aux_info.stop_times.front();
     const auto& sa_depart = st_depart.stop_time.stop_point->stop_area;
     const auto& st_arrival = impact.aux_info.stop_times.back();
     const auto& sa_arrival = st_arrival.stop_time.stop_point->stop_area;
-    std::string line_uri = "line:" + sa_depart->uri + "_" + sa_arrival->uri;
-    std::string line_name = sa_depart->name + " - " + sa_arrival->name;
-    std::string route_uri = "route:" + sa_depart->uri + "_" + sa_arrival->uri;
-    std::string route_name = sa_depart->name + " - " + sa_arrival->name;
-    nt::Line* line = pt_data.get_or_create_line(line_uri, line_name, network, comm_mode);
-    nt::Route* route = pt_data.get_or_create_route(route_uri, route_name, line, sa_arrival, "forward");
+    nt::Line* line = nullptr;
+    if (!impact.line_id.empty()) {
+        line = pt_data.get_line(impact.line_id);
+        if (line == nullptr) {
+            LOG4CPLUS_INFO(logger, "Rejecting impact (" << impact.uri << "): line_id (" << impact.line_id
+                                                        << ") provided is absent");
+            return nullptr;
+        }
+    } else {
+        std::string line_uri = "line:" + sa_depart->uri + "_" + sa_arrival->uri;
+        std::string line_name = sa_depart->name + " - " + sa_arrival->name;
+        line = pt_data.get_or_create_line(line_uri, line_name, network, comm_mode);
+    }
+
+    std::string route_uri = "";
+    std::string route_name = "";
+    std::string direction_type = "";
+    if (!impact.route_id.empty()) {
+        route_uri = impact.route_id;
+        route_name = "Additional service";
+        direction_type = "outbound";
+    } else {
+        route_uri = "route:" + sa_depart->uri + "_" + sa_arrival->uri;
+        route_name = sa_depart->name + " - " + sa_arrival->name;
+        direction_type = "forward";
+    }
+    nt::Route* route = pt_data.get_or_create_route(route_uri, route_name, line, sa_arrival, direction_type);
 
     return route;
 }
@@ -314,20 +366,31 @@ struct add_impacts_visitor : public apply_impacts_visitor {
                     r = mvj->get_base_vj().at(0)->route;
                 } else {
                     r = get_or_create_route(*impact, pt_data);
+                    if (r == nullptr) {
+                        return;
+                    }
                 }
             }
 
-            auto nb_rt_vj = mvj->get_rt_vj().size();
-            std::string new_vj_uri =
-                "vehicle_journey:" + mvj->uri + ":modified:" + std::to_string(nb_rt_vj) + ":" + impact->disruption->uri;
+            auto new_vj_uri = make_new_vj_uri(mvj, rt_level);
+
             std::vector<type::StopTime> stoptimes;  // we copy all the stoptimes
             for (const auto& stu : impact->aux_info.stop_times) {
                 stoptimes.push_back(stu.stop_time);
             }
 
             // Create new VJ (default name/headsign is empty)
-            auto* vj = mvj->create_discrete_vj(new_vj_uri, "", "", type::RTLevel::RealTime, canceled_vp, r,
-                                               std::move(stoptimes), pt_data);
+            auto rt_level = nt::RTLevel::RealTime;
+            navitia::flat_enum_map<nt::RTLevel, nt::ValidityPattern> canceled_vps;
+            for (const auto l : navitia::enum_range<nt::RTLevel>()) {
+                if (l >= rt_level) {
+                    canceled_vps[l] = canceled_vp;
+                } else {
+                    canceled_vps[l] = nt::ValidityPattern{canceled_vp.beginning_date};  // empty VP
+                }
+            }
+            auto* vj = mvj->create_discrete_vj_with_all_vps(new_vj_uri, "", "", rt_level, canceled_vps, r,
+                                                            std::move(stoptimes), pt_data);
             LOG4CPLUS_TRACE(log, "New vj has been created " << vj->uri);
 
             // Add company
@@ -396,24 +459,48 @@ struct add_impacts_visitor : public apply_impacts_visitor {
                 }
             }
 
-            // name and dataset
+            // name, dataset and VehicleProperties (accessibility, AC, etc.)
             if (!mvj->get_base_vj().empty()) {
                 vj->name = mvj->get_base_vj().at(0)->name;
                 vj->headsign = mvj->get_base_vj().at(0)->headsign;
-                vj->dataset = mvj->get_base_vj().at(0)->dataset;
+                vj->_vehicle_properties = mvj->get_base_vj().at(0)->_vehicle_properties;  // otherwise all to default
+                auto* dataset = mvj->get_base_vj().at(0)->dataset;
+                if (dataset) {
+                    vj->dataset = dataset;
+                    vj->dataset->vehiclejourney_list.insert(vj);
+                }
             } else {
                 // Affect the headsign to vj if present in gtfs-rt
                 if (!impact->headsign.empty()) {
-                    vj->headsign = impact->headsign;
                     vj->name = impact->headsign;
-                    pt_data.headsign_handler.change_name_and_register_as_headsign(*vj, impact->headsign);
+                    pt_data.headsign_handler.change_vj_headsign_and_register(*vj, impact->headsign);
                 }
 
+                // Affect the trip_short_name to vj if present in gtfs-rt
+                if (!impact->trip_short_name.empty()) {
+                    vj->name = impact->trip_short_name;
+                }
+
+                nt::Dataset* dataset = nullptr;
+                if (!impact->dataset_id.empty()) {
+                    dataset = pt_data.get_dataset(impact->dataset_id);
+                    if (dataset == nullptr) {
+                        LOG4CPLUS_INFO(log, "Problem with impact (" << impact->uri << "): dataset_id ("
+                                                                    << impact->dataset_id << ") provided is absent");
+                    }
+                }
                 // for protection, use the datasets[0]
                 // TODO : Create default data set
-                vj->dataset = pt_data.datasets[0];
-                LOG4CPLUS_WARN(
-                    log, "[disruption] Associate random dataset to new VJ doesn't work because base VJ doesn't exist");
+                if (dataset == nullptr && !pt_data.datasets.empty() && pt_data.datasets[0]) {
+                    dataset = pt_data.datasets[0];
+                    LOG4CPLUS_INFO(log, "impact ("
+                                            << impact->uri
+                                            << "): associate random dataset to new VJ because base VJ doesn't exist");
+                }
+                if (dataset != nullptr) {
+                    vj->dataset = dataset;
+                    vj->dataset->vehiclejourney_list.insert(vj);
+                }
             }
             vj->physical_mode->vehicle_journey_list.push_back(vj);
             // we need to associate the stoptimes to the created vj
@@ -455,7 +542,7 @@ struct add_impacts_visitor : public apply_impacts_visitor {
         auto impacted_vjs = nt::disruption::get_impacted_vehicle_journeys(rs, *impact, meta.production_date, rt_level);
 
         // Loop on each affected vj
-        for (auto& impacted_vj : impacted_vjs) {
+        for (const auto& impacted_vj : impacted_vjs) {
             std::vector<nt::StopTime> new_stop_times;
             const std::string& vj_uri = impacted_vj.vj_uri;
             LOG4CPLUS_TRACE(log, "Impacted vj : " << vj_uri);
@@ -470,7 +557,6 @@ struct add_impacts_visitor : public apply_impacts_visitor {
             }
 
             nt::VehicleJourney* vj = vj_iterator->second;
-            auto& new_vp = impacted_vj.new_vp;
 
             if (impact->severity->effect == nt::disruption::Effect::REDUCED_SERVICE
                 || impact->severity->effect == nt::disruption::Effect::DETOUR) {
@@ -490,16 +576,12 @@ struct add_impacts_visitor : public apply_impacts_visitor {
                 mvj->cancel_vj(rt_level, impact->application_periods, pt_data);
                 continue;
             }
-            auto nb_rt_vj = mvj->get_vjs_at(rt_level).size();
-            std::string new_vj_uri = vj->uri + ":" + type::get_string_from_rt_level(rt_level) + ":"
-                                     + std::to_string(nb_rt_vj) + ":" + impact->disruption->uri;
-
-            new_vp.days = new_vp.days & (vj->validity_patterns[rt_level]->days >> vj->shift);
+            auto new_vj_uri = make_new_vj_uri(mvj, rt_level);
 
             LOG4CPLUS_TRACE(log, "meta_vj : " << mvj->uri << " \n  old_vj: " << vj->uri
                                               << " to be deleted \n new_vj_uri " << new_vj_uri);
-            auto* new_vj =
-                create_vj_from_old_vj(mvj, vj, new_vj_uri, rt_level, new_vp, std::move(new_stop_times), pt_data);
+            auto* new_vj = create_vj_from_old_vj(mvj, vj, new_vj_uri, rt_level, impacted_vj.new_vp,
+                                                 std::move(new_stop_times), pt_data);
             vj = nullptr;  // after the call to create_vj, vj may have been deleted :(
 
             LOG4CPLUS_TRACE(log, "new_vj: " << new_vj->uri << " is created");
@@ -512,7 +594,7 @@ struct add_impacts_visitor : public apply_impacts_visitor {
         this->log_start_action(uri);
 
         auto blocking_effects = {nt::disruption::Effect::NO_SERVICE, nt::disruption::Effect::DETOUR,
-                                 nt::disruption::Effect::REDUCED_SERVICE};
+                                 nt::disruption::Effect::REDUCED_SERVICE, nt::disruption::Effect::MODIFIED_SERVICE};
         if (!navitia::contains(blocking_effects, impact->severity->effect)) {
             LOG4CPLUS_DEBUG(log, "Unhandled action on " << uri);
             this->log_end_action(uri);
@@ -525,7 +607,7 @@ struct add_impacts_visitor : public apply_impacts_visitor {
         auto impacted_vjs = nt::disruption::get_impacted_vehicle_journeys(ls, *impact, meta.production_date, rt_level);
 
         // Loop on each affected vj
-        for (auto& impacted_vj : impacted_vjs) {
+        for (const auto& impacted_vj : impacted_vjs) {
             std::vector<nt::StopTime> new_stop_times;
             const std::string& vj_uri = impacted_vj.vj_uri;
             LOG4CPLUS_TRACE(log, "Impacted vj : " << vj_uri);
@@ -535,7 +617,6 @@ struct add_impacts_visitor : public apply_impacts_visitor {
                 continue;
             }
             nt::VehicleJourney* vj = vj_iterator->second;
-            auto& new_vp = impacted_vj.new_vp;
 
             for (const auto& st : vj->stop_time_list) {
                 // We need to get the associated base stop_time to compare its rank
@@ -559,16 +640,12 @@ struct add_impacts_visitor : public apply_impacts_visitor {
                 mvj->cancel_vj(rt_level, impact->application_periods, pt_data);
                 continue;
             }
-            auto nb_rt_vj = mvj->get_vjs_at(rt_level).size();
-            std::string new_vj_uri = vj->uri + ":" + type::get_string_from_rt_level(rt_level) + ":"
-                                     + std::to_string(nb_rt_vj) + ":" + impact->disruption->uri;
-
-            new_vp.days = new_vp.days & (vj->validity_patterns[rt_level]->days >> vj->shift);
+            auto new_vj_uri = make_new_vj_uri(mvj, rt_level);
 
             LOG4CPLUS_TRACE(log, "meta_vj : " << mvj->uri << " \n  old_vj: " << vj->uri
                                               << " to be deleted \n new_vj_uri " << new_vj_uri);
-            auto* new_vj =
-                create_vj_from_old_vj(mvj, vj, new_vj_uri, rt_level, new_vp, std::move(new_stop_times), pt_data);
+            auto* new_vj = create_vj_from_old_vj(mvj, vj, new_vj_uri, rt_level, impacted_vj.new_vp,
+                                                 std::move(new_stop_times), pt_data);
             vj = nullptr;  // after the call to create_vj, vj may have been deleted :(
 
             LOG4CPLUS_TRACE(log, "new_vj: " << new_vj->uri << " is created");
@@ -699,10 +776,9 @@ struct add_impacts_visitor : public apply_impacts_visitor {
             vj_vp_pairs.emplace_back(vj, new_vp);
         }
 
-        for (auto& vj_vp : vj_vp_pairs) {
+        for (const auto& vj_vp : vj_vp_pairs) {
             std::vector<nt::StopTime> new_stop_times;
             const auto* vj = vj_vp.first;
-            auto& new_vp = vj_vp.second;
 
             for (const auto& st : vj->stop_time_list) {
                 if (st.stop_point == stop_point) {
@@ -715,14 +791,10 @@ struct add_impacts_visitor : public apply_impacts_visitor {
             auto mvj = vj->meta_vj;
             mvj->push_unique_impact(impact);
 
-            auto nb_rt_vj = mvj->get_vjs_at(rt_level).size();
-            std::string new_vj_uri = "vehicle_journey:" + mvj->uri + ":" + type::get_string_from_rt_level(rt_level)
-                                     + ":" + std::to_string(nb_rt_vj) + concatenate_impact_uris(*mvj);
-
-            new_vp.days = new_vp.days & (vj->validity_patterns[rt_level]->days >> vj->shift);
+            auto new_vj_uri = make_new_vj_uri(mvj, rt_level);
 
             auto* new_vj =
-                create_vj_from_old_vj(mvj, vj, new_vj_uri, rt_level, new_vp, std::move(new_stop_times), pt_data);
+                create_vj_from_old_vj(mvj, vj, new_vj_uri, rt_level, vj_vp.second, std::move(new_stop_times), pt_data);
             vj = nullptr;  // after the call to create_vj, vj may have been deleted :(
 
             LOG4CPLUS_TRACE(log, "new_vj: " << new_vj->uri << " is created");
@@ -866,7 +938,7 @@ struct delete_impacts_visitor : public apply_impacts_visitor {
         for (auto& mvj : pt_data.meta_vjs) {
             if (std::any_of(std::begin(mvj->modified_by), std::end(mvj->modified_by), find_impact)) {
                 (*this)(mvj.get());
-            };
+            }
         }
     }
 
@@ -902,7 +974,7 @@ struct delete_impacts_visitor : public apply_impacts_visitor {
         for (auto& mvj : pt_data.meta_vjs) {
             if (std::any_of(std::begin(mvj->modified_by), std::end(mvj->modified_by), find_impact)) {
                 (*this)(mvj.get());
-            };
+            }
         }
     }
 
@@ -916,7 +988,7 @@ struct delete_impacts_visitor : public apply_impacts_visitor {
         for (auto& mvj : pt_data.meta_vjs) {
             if (std::any_of(std::begin(mvj->modified_by), std::end(mvj->modified_by), find_impact)) {
                 (*this)(mvj.get());
-            };
+            }
         }
     }
 };

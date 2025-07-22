@@ -71,17 +71,25 @@ size_t PT_Data::nb_stop_times() const {
             nb += vj.stop_time_list.size();
             return true;
         });
-    };
+    }
     return nb;
 }
 
-type::Network* PT_Data::get_or_create_network(const std::string& uri, const std::string& name, int sort) {
+type::Network* PT_Data::get_network(const std::string& uri) {
     const auto it = networks_map.find(uri);
     if (it != networks_map.end()) {
         return it->second;
     }
+    return nullptr;
+}
 
-    auto* network = new nt::Network();
+type::Network* PT_Data::get_or_create_network(const std::string& uri, const std::string& name, int sort) {
+    auto* network = get_network(uri);
+    if (network != nullptr) {
+        return network;
+    }
+
+    network = new nt::Network();
     network->uri = uri;
     network->name = name;
     network->sort = sort;
@@ -109,13 +117,21 @@ type::Company* PT_Data::get_or_create_company(const std::string& uri, const std:
     return company;
 }
 
-type::CommercialMode* PT_Data::get_or_create_commercial_mode(const std::string& uri, const std::string& name) {
+type::CommercialMode* PT_Data::get_commercial_mode(const std::string& uri) {
     const auto it = commercial_modes_map.find(uri);
     if (it != commercial_modes_map.end()) {
         return it->second;
     }
+    return nullptr;
+}
 
-    auto* mode = new nt::CommercialMode();
+type::CommercialMode* PT_Data::get_or_create_commercial_mode(const std::string& uri, const std::string& name) {
+    auto* mode = get_commercial_mode(uri);
+    if (mode != nullptr) {
+        return mode;
+    }
+
+    mode = new nt::CommercialMode();
     mode->uri = uri;
     mode->name = name;
 
@@ -138,7 +154,7 @@ type::PhysicalMode* PT_Data::get_or_create_physical_mode(const std::string& uri,
     mode->name = name;
     mode->uri = uri;
 
-    if (co2_emission >= 0.f)
+    if (co2_emission >= 0.)
         mode->co2_emission = co2_emission;
 
     mode->idx = physical_modes.size();
@@ -148,15 +164,23 @@ type::PhysicalMode* PT_Data::get_or_create_physical_mode(const std::string& uri,
     return mode;
 }
 
+type::Dataset* PT_Data::get_dataset(const std::string& uri) {
+    const auto it = datasets_map.find(uri);
+    if (it != datasets_map.end()) {
+        return it->second;
+    }
+    return nullptr;
+}
+
 type::Dataset* PT_Data::get_or_create_dataset(const std::string& uri,
                                               const std::string& name,
                                               type::Contributor* contributor) {
-    const auto dataset_it = datasets_map.find(uri);
+    auto* dataset = get_dataset(uri);
+    if (dataset != nullptr) {
+        return dataset;
+    }
 
-    if (dataset_it != datasets_map.end())
-        return dataset_it->second;
-
-    auto* dataset = new navitia::type::Dataset();
+    dataset = new navitia::type::Dataset();
     dataset->idx = datasets.size();
     dataset->uri = uri;
     dataset->name = name;
@@ -185,6 +209,14 @@ type::Contributor* PT_Data::get_or_create_contributor(const std::string& uri, co
     return contributor;
 }
 
+type::Line* PT_Data::get_line(const std::string& uri) {
+    const auto it = lines_map.find(uri);
+    if (it != lines_map.end()) {
+        return it->second;
+    }
+    return nullptr;
+}
+
 type::Line* PT_Data::get_or_create_line(const std::string& uri,
                                         const std::string& name,
                                         type::Network* network,
@@ -192,12 +224,12 @@ type::Line* PT_Data::get_or_create_line(const std::string& uri,
                                         int sort,
                                         const std::string& color,
                                         const std::string& text_color) {
-    const auto it = lines_map.find(uri);
-    if (it != lines_map.end()) {
-        return it->second;
+    auto* line = get_line(uri);
+    if (line != nullptr) {
+        return line;
     }
 
-    auto* line = new nt::Line();
+    line = new nt::Line();
     line->uri = uri;
     line->name = name;
     line->sort = sort;
@@ -410,6 +442,11 @@ void PT_Data::build_admins_stop_areas() {
         if (!stop_point->stop_area) {
             continue;
         }
+
+        if (!stop_point->stop_area->admin_list.empty()) {
+            continue;
+        }
+
         for (navitia::georef::Admin* admin : stop_point->admin_list) {
             auto find_predicate = [&](navitia::georef::Admin* adm) { return adm->idx == admin->idx; };
             auto it = std::find_if(stop_point->stop_area->admin_list.begin(), stop_point->stop_area->admin_list.end(),

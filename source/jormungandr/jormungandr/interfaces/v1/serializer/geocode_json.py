@@ -47,8 +47,9 @@ from jormungandr.interfaces.v1.serializer.base import (
 )
 from jormungandr.interfaces.v1.serializer.api import ContextSerializer
 from jormungandr.utils import get_house_number
-from jormungandr.autocomplete.geocodejson import create_address_field, get_lon_lat
+from jormungandr.autocomplete.geocodejson import create_address_field, get_lon_lat, format_zip_code
 from jormungandr.interfaces.v1.serializer.jsonschema.fields import MethodField
+from shapely.geometry import shape
 
 
 class CoordField(jsonschema.Field):
@@ -88,6 +89,19 @@ class CoordId(jsonschema.Field):
         return None
 
 
+def make_admin(admin):
+    res = {
+        'id': admin['id'],
+        'insee': admin['insee'],
+        'name': admin['name'],
+        'label': admin['label'],
+        'level': admin['level'],
+        'coord': {'lon': str(admin['coord']['lon']), 'lat': str(admin['coord']['lat'])},
+        'zip_code': format_zip_code(admin.get('zip_codes', [])),
+    }
+    return res
+
+
 class AdministrativeRegionsSerializer(serpy.Field):
     def as_getter(self, serializer_field_name, serializer_cls):
         return lambda obj: self.make(obj)
@@ -95,25 +109,6 @@ class AdministrativeRegionsSerializer(serpy.Field):
     def make(self, obj):
         admins = value_by_path(obj, 'properties.geocoding.administrative_regions', [])
         if admins:
-
-            def make_admin(admin):
-                res = {
-                    'id': admin['id'],
-                    'insee': admin['insee'],
-                    'name': admin['name'],
-                    'label': admin['label'],
-                    'level': admin['level'],
-                    'coord': {'lon': str(admin['coord']['lon']), 'lat': str(admin['coord']['lat'])},
-                }
-                zip_codes = admin.get('zip_codes', [])
-                if all(zip_code == "" for zip_code in zip_codes):
-                    pass
-                elif len(zip_codes) == 1:
-                    res['zip_code'] = zip_codes[0]
-                else:
-                    res['zip_code'] = '{}-{}'.format(min(zip_codes), max(zip_codes))
-                return res
-
             return [make_admin(admin) for admin in admins]
         admins = obj.get('properties', {}).get('geocoding', {}).get('admin', {})
         return [
@@ -167,6 +162,38 @@ class PoiTypeSerializer(serpy.DictSerializer):
     name = serpy.StrField(display_none=True)
 
 
+class PoisSerializer(serpy.Field):
+    def as_getter(self, serializer_field_name, serializer_cls):
+        return lambda obj: self.make(obj)
+
+    def make(self, obj):
+        children = value_by_path(obj, 'properties.geocoding.children', [])
+        if not children:
+            return None
+
+        def make_child(child):
+            res = {
+                'id': child['id'],
+                'name': child['name'],
+                'label': child['label'],
+                'coord': {'lon': str(child['coord']['lon']), 'lat': str(child['coord']['lat'])},
+                "type": "poi",
+                'zip_code': format_zip_code(child.get('zip_codes', [])),
+                'weight': child.get('weight', None),
+            }
+            poi_type = child.get('poi_type', None)
+            res["poi_type"] = (
+                PoiTypeSerializer(poi_type).data if isinstance(poi_type, dict) and poi_type else None
+            )
+            res["properties"] = {
+                p.get("key"): p.get("value")
+                for p in child.get('properties', {}).get('geocoding', {}).get('properties', [])
+            }
+            return res
+
+        return [make_child(child) for child in children]
+
+
 class PoiSerializer(serpy.DictSerializer):
     id = NestedPropertyField(attr='properties.geocoding.id', display_none=True)
     coord = CoordField()
@@ -176,10 +203,26 @@ class PoiSerializer(serpy.DictSerializer):
     poi_type = jsonschema.MethodField(display_none=False)
     properties = jsonschema.MethodField(display_none=False)
     address = jsonschema.MethodField(display_none=False)
+    children = PoisSerializer(display_none=False)
+    shape = jsonschema.MethodField(display_none=False)
+    weight = NestedPropertyField(attr='properties.geocoding.weight', display_none=True)
 
     def get_poi_type(self, obj):
         poi_types = obj.get('properties', {}).get('geocoding', {}).get('poi_types', [])
         return PoiTypeSerializer(poi_types[0]).data if isinstance(poi_types, list) and poi_types else None
+
+    def get_shape(self, obj):
+        geojson = obj.get('properties', {}).get('geocoding', {}).get("shape")
+        if geojson:
+            try:
+                return shape(geojson).to_wkt()
+            except Exception as e:
+                logging.getLogger(__name__).error(
+                    'Error while loading boundary shape : object id {}'.format(
+                        obj.get('properties', {}).get('geocoding', {}).get("id")
+                    )
+                )
+        return None
 
     def get_properties(self, obj):
         return {
@@ -278,6 +321,25 @@ class GeocodePlacesSerializer(serpy.DictSerializer):
     def get_context(self, obj):
         return ContextSerializer(obj, display_none=False).data
 
+    def _is_valid_geocoding(self, geocoding, type_, map_serializer):
+        if not type_ or type_ not in map_serializer:
+            logging.getLogger(__name__).debug(
+                'Place not serialized (unknown type): type={place_type}, id= {id}'.format(
+                    place_type=geocoding.get("type"), id=geocoding.get("id")
+                )
+            )
+            return False
+        zone_type = geocoding.get('zone_type')
+        # TODO: do something smart with other zone type
+        if type_ == 'zone' and zone_type != 'city':
+            logging.getLogger(__name__).debug(
+                'Place not serialized (invalid zone type): zone_type={zone_type}, id= {id}'.format(
+                    zone_type=geocoding.get("zone_type"), id=geocoding.get("id")
+                )
+            )
+            return False
+        return True
+
     def get_places(self, obj):
         map_serializer = {
             'city': GeocodeAdminSerializer,
@@ -292,15 +354,18 @@ class GeocodePlacesSerializer(serpy.DictSerializer):
         for feature in obj.get('features', []):
             geocoding = feature.get('properties', {}).get('geocoding', {})
             type_ = geocoding.get('type')
-            if not type_ or type_ not in map_serializer:
-                logging.getLogger(__name__).error('Place not serialized (unknown type): {}'.format(feature))
-                continue
-            zone_type = geocoding.get('zone_type')
-            # TODO: do something smart with other zone type
-            if type_ == 'zone' and zone_type != 'city':
-                logging.getLogger(__name__).error('Place not serialized (invalid zone type): {}'.format(feature))
+            if not self._is_valid_geocoding(geocoding, type_, map_serializer):
                 continue
             res.append(map_serializer[type_](feature).data)
+        # Add within in street or house object
+        if obj.get('zones', []) and len(res) < 2:
+            res[0]["within_zones"] = []
+            for zone in obj.get('zones', []):
+                geocoding = zone.get('properties', {}).get('geocoding', {})
+                type_ = geocoding.get('type')
+                if not self._is_valid_geocoding(geocoding, type_, map_serializer):
+                    continue
+                res[0]["within_zones"].append(map_serializer[type_](zone).data)
         return res
 
     def get_feed_publishers(self, obj):

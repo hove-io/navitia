@@ -31,6 +31,7 @@ from __future__ import absolute_import, print_function, unicode_literals, divisi
 
 
 class EquipmentsProviderMock(object):
-    def __init__(self, url, timeout=2, **kwargs):
+    def __init__(self, provider_id, url, timeout=2, **kwargs):
         self.url = url
+        self.provider_id = provider_id
         self.timeout = timeout

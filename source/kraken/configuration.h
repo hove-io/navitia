@@ -64,6 +64,11 @@ public:
     bool broker_queue_auto_delete() const;
     int broker_queue_expire() const;
     int broker_timeout() const;
+    int broker_max_batch_nb() const;
+    int broker_total_retrieving_timeout() const;
+    int broker_prefetch_timeout() const;
+    uint16_t broker_prefetch_message_count() const;
+    int broker_prefetch_total_retrieving_timeout() const;
     int broker_sleeptime() const;
     int broker_reconnect_wait() const;
     bool is_realtime_enabled() const;
@@ -79,6 +84,7 @@ public:
     boost::optional<std::string> log_format() const;
     boost::optional<std::string> metrics_binding() const;
     bool enable_request_deadline() const;
+    bool enable_aggressive_memory_decommit() const;
 
     std::vector<std::string> rt_topics() const;
 };

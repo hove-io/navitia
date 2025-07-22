@@ -38,11 +38,11 @@ from .tests_mechanism import AbstractTestFixture, dataset
 
 MOCKED_PROXY_CONF = [
     {
-        "object_id_tag": "Kisio数字",
-        "id": "Kisio数字",
+        "object_id_tag": "Hove数字",
+        "id": "Hove数字",
         "class": "jormungandr.realtime_schedule.sytral.Sytral",
         "args": {
-            "destination_id_tag": "Kisio数字",
+            "destination_id_tag": "Hove数字",
             "timezone": "UTC",
             "service_url": "http://XXXX",
             "timeout": 15,
@@ -73,7 +73,7 @@ class TestSytralSchedules(AbstractTestFixture):
                     {
                         "departures": [
                             {
-                                "line": "Kisio数字 A",
+                                "line": "Hove数字 A",
                                 "stop": "syn_stoppoint1",
                                 "direction_id": "SP_2",
                                 "direction_name": "Piscine Chambéry",
@@ -81,7 +81,7 @@ class TestSytralSchedules(AbstractTestFixture):
                                 "type": "E",
                             },
                             {
-                                "line": "Kisio数字 A",
+                                "line": "Hove数字 A",
                                 "stop": "syn_stoppoint1",
                                 "direction_id": "SP_2",
                                 "direction_name": "Piscine Chambéry",
@@ -131,7 +131,7 @@ class TestSytralSchedules(AbstractTestFixture):
                     {
                         "departures": [
                             {
-                                "line": "Kisio数字 A",
+                                "line": "Hove数字 A",
                                 "stop": "syn_stoppoint1",
                                 "direction": "SA_2",
                                 "direction_name": "Piscine Chambéry",
@@ -139,7 +139,7 @@ class TestSytralSchedules(AbstractTestFixture):
                                 "type": "E",
                             },
                             {
-                                "line": "Kisio数字 A",
+                                "line": "Hove数字 A",
                                 "stop": "syn_stoppoint1",
                                 "direction": "SA_2",
                                 "direction_name": "Piscine Chambéry",

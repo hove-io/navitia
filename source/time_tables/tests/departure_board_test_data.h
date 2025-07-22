@@ -55,23 +55,23 @@ struct departure_board_fixture {
                     .name("B:vj1")("B:s", "10:30"_t)("S1", "11:30"_t)("B:e", "12:30"_t);
 
                 b.vj("C").name("C:vj1")("C:S0", "11:30"_t)("C:S1", "12:30"_t)("C:S2", "13:30"_t);
-                b.lines.find("C")->second->properties["realtime_system"] = "Kisio数字";
+                b.lines.find("C")->second->properties["realtime_system"] = "Hove数字";
 
                 // J is late
                 b.vj("J")("S40", "11:00"_t)("S42", "12:00"_t)("S43", "13:00"_t);
-                b.lines.find("J")->second->properties["realtime_system"] = "Kisio数字";
+                b.lines.find("J")->second->properties["realtime_system"] = "Hove数字";
 
                 b.vj("K")("S41", "08:59"_t)("S42", "09:59"_t)("S43", "10:59"_t);
                 b.vj("K")("S41", "09:03"_t)("S42", "10:03"_t)("S43", "11:03"_t);
                 b.vj("K")("S41", "09:06"_t)("S42", "10:06"_t)("S43", "11:06"_t);
                 b.vj("K")("S41", "09:09"_t)("S42", "10:09"_t)("S43", "11:09"_t);
                 b.vj("K")("S41", "09:19"_t)("S42", "10:19"_t)("S43", "11:19"_t);
-                b.lines.find("K")->second->properties["realtime_system"] = "Kisio数字";
+                b.lines.find("K")->second->properties["realtime_system"] = "Hove数字";
 
                 b.vj("L")("S39", "09:02"_t)("S42", "10:02"_t)("S43", "11:02"_t);
                 b.vj("L")("S39", "09:07"_t)("S42", "10:07"_t)("S43", "11:07"_t);
                 b.vj("L")("S39", "09:11"_t)("S42", "10:11"_t)("S43", "11:11"_t);
-                b.lines.find("L")->second->properties["realtime_system"] = "Kisio数字";
+                b.lines.find("L")->second->properties["realtime_system"] = "Hove数字";
 
                 b.vj("M", "1111111")("M:s", "10:30"_t)("S11", "11:30"_t, "11:35"_t)("M:e", "12:30"_t);
                 b.vj("P", "11111")
@@ -88,7 +88,7 @@ struct departure_board_fixture {
                 b.vj("T")("TS39", "09:02"_t)("TS42", "10:02"_t)("S43", "11:02"_t);
                 b.vj("T")("TS39", "09:07"_t)("TS42", "10:07"_t)("S43", "11:07"_t);
                 b.vj("T")("TS39", "09:11"_t)("TS42", "10:11"_t)("S43", "11:11"_t);
-                b.lines.find("T")->second->properties["realtime_system"] = "Kisio数字";
+                b.lines.find("T")->second->properties["realtime_system"] = "Hove数字";
 
                 // Terminus_schedule
                 // 1 line, 1 routes and 2 VJs
@@ -135,7 +135,7 @@ struct departure_board_fixture {
                     .name("AVJ4")("Avj2", "09:00"_t)("A2", "09:10"_t)("B:sp", "10:10"_t)("C:sp", "11:10"_t)("D:sp",
                                                                                                             "11:25"_t);
 
-                b.lines.find("Line1")->second->properties["realtime_system"] = "Kisio数字";
+                b.lines.find("Line1")->second->properties["realtime_system"] = "Hove数字";
 
                 // 1 line, 1 routes and 2 VJs
                 // * VJ1 : AA->BB->CC->DD->EE
@@ -151,7 +151,11 @@ struct departure_board_fixture {
                     "CC:sp", "09:00"_t)("DD:sp", "10:00"_t)("EE:sp", "11:00"_t);
                 b.vj("Line2").route("Route12").name("BB:VJ2")("AA:sp", "07:55"_t)("BB:sp", "08:55"_t)(
                     "CC:sp", "09:30"_t)("DD:sp", "10:10"_t);
-                b.lines.find("Line2")->second->properties["realtime_system"] = "Kisio数字";
+                b.lines.find("Line2")->second->properties["realtime_system"] = "Hove数字";
+                b.lines.find("Line2")->second->opening_time =
+                    boost::make_optional(boost::posix_time::duration_from_string("02:00"));
+                b.lines.find("Line2")->second->closing_time =
+                    boost::make_optional(boost::posix_time::duration_from_string("14:00"));
 
                 // Terminus_schedule
                 // 1 line, 2 routes and 2 VJs
@@ -175,7 +179,7 @@ struct departure_board_fixture {
                     .name("TS_AVJ2")("TS_D:sp", "08:45"_t)("TS_D:sp", "09:00"_t)("TS_C:sp", "09:10"_t)(
                         "TS_B:sp", "10:10"_t)("TS_A:sp", "11:10"_t);
 
-                b.lines.find("Line3")->second->properties["realtime_system"] = "Kisio数字";
+                b.lines.find("Line3")->second->properties["realtime_system"] = "Hove数字";
                 b.lines.find("Line3")->second->opening_time =
                     boost::make_optional(boost::posix_time::duration_from_string("06:00"));
                 b.lines.find("Line3")->second->closing_time =
@@ -240,33 +244,33 @@ struct departure_board_fixture {
         b.data->meta->production_date = bg::date_period(bg::date(2016, 1, 1), bg::days(10));
 
         sp_ptr = b.data->pt_data->stop_points_map["BB:sp"];
-        b.data->pt_data->codes.add(sp_ptr, "Kisio数字", "Kisio数字_BB:sp");
+        b.data->pt_data->codes.add(sp_ptr, "Hove数字", "Hove数字_BB:sp");
 
         sp_ptr = b.data->pt_data->stop_points_map["C:sp"];
-        b.data->pt_data->codes.add(sp_ptr, "Kisio数字", "Kisio数字_C:sp");
+        b.data->pt_data->codes.add(sp_ptr, "Hove数字", "Hove数字_C:sp");
 
         sp_ptr = b.data->pt_data->stop_points_map["C:S0"];
-        b.data->pt_data->codes.add(sp_ptr, "Kisio数字", "Kisio数字_C:S0");
+        b.data->pt_data->codes.add(sp_ptr, "Hove数字", "Hove数字_C:S0");
         sp_ptr = b.data->pt_data->stop_points_map["C:S1"];
-        b.data->pt_data->codes.add(sp_ptr, "Kisio数字", "Kisio数字_C:S1");
+        b.data->pt_data->codes.add(sp_ptr, "Hove数字", "Hove数字_C:S1");
         b.data->pt_data->codes.add(sp_ptr, "AnotherSource", "AnotherSource_C:S1");
 
         sp_ptr = b.data->pt_data->stop_points_map["S43"];
-        b.data->pt_data->codes.add(sp_ptr, "Kisio数字", "Kisio数字_C:S43");
+        b.data->pt_data->codes.add(sp_ptr, "Hove数字", "Hove数字_C:S43");
 
         sp_ptr = b.data->pt_data->stop_points_map["Avj1"];
-        b.data->pt_data->codes.add(sp_ptr, "Kisio数字", "Avj1");
+        b.data->pt_data->codes.add(sp_ptr, "Hove数字", "Avj1");
 
         sp_ptr = b.data->pt_data->stop_points_map["Avj2"];
-        b.data->pt_data->codes.add(sp_ptr, "Kisio数字", "Avj2");
+        b.data->pt_data->codes.add(sp_ptr, "Hove数字", "Avj2");
 
         sp_ptr = b.data->pt_data->stop_points_map["E:sp"];
-        b.data->pt_data->codes.add(sp_ptr, "Kisio数字", "E:sp");
+        b.data->pt_data->codes.add(sp_ptr, "Hove数字", "E:sp");
 
         sp_ptr = b.data->pt_data->stop_points_map["TS_D:sp"];
-        b.data->pt_data->codes.add(sp_ptr, "Kisio数字", "TS_D:sp");
+        b.data->pt_data->codes.add(sp_ptr, "Hove数字", "TS_D:sp");
         sp_ptr = b.data->pt_data->stop_points_map["C:S2"];
-        b.data->pt_data->codes.add(sp_ptr, "Kisio数字", "Kisio数字_C:S2");
+        b.data->pt_data->codes.add(sp_ptr, "Hove数字", "Hove数字_C:S2");
 
         sp_ptr = b.data->pt_data->stop_points_map.at("C:S0");
         b.data->pt_data->codes.add(sp_ptr, "source", "C:S0");
@@ -337,9 +341,10 @@ struct departure_board_fixture {
                 RTStopTime("stopP3", "20160104T0017"_pts).delay(4_min),
             });
         navitia::handle_realtime("bib", "20160101T1337"_dt, trip_update, *b.data, true, true);
+        const auto* mvj_vjP = b.get_meta_vj("vjP:1");
+        auto* rt_vj_vjP = mvj_vjP->get_rt_vj()[0].get();
 
-        auto* vj = b.data->pt_data->vehicle_journeys_map.at("vehicle_journey:vjP:1:modified:0:bib");
-        b.data->pt_data->codes.add(vj, "source", "vehicle_journey:vjP:1:modified:0:bib");
+        b.data->pt_data->codes.add(rt_vj_vjP, "source", rt_vj_vjP->uri);
 
         //
         //      20160103                    |    20160104
@@ -366,8 +371,11 @@ struct departure_board_fixture {
                 RTStopTime("stopQ3", "20160104T0016"_pts).delay(21_min),
             });
         navitia::handle_realtime("Q", "20160101T1337"_dt, trip_update_q, *b.data, true, true);
-        vj = b.data->pt_data->vehicle_journeys_map.at("vehicle_journey:vjQ:1:modified:0:Q");
-        b.data->pt_data->codes.add(vj, "source", "vehicle_journey:vjQ:1:modified:0:Q");
+
+        const auto* mvj_vjQ = b.get_meta_vj("vjQ:1");
+        auto* rt_vj_vjQ = mvj_vjQ->get_rt_vj()[0].get();
+
+        b.data->pt_data->codes.add(rt_vj_vjQ, "source", rt_vj_vjQ->uri);
 
         b.data->build_raptor();
     }
@@ -484,15 +492,24 @@ struct calendar_fixture {
                 pt_data.codes.add(b.get<nt::StopPoint>("StopR3"), "source", "Code-StopR3");
                 pt_data.codes.add(b.get<nt::StopPoint>("StopR4"), "source", "Code-StopR4");
                 pt_data.codes.add(b.get<nt::Network>("base_network"), "app_code", "ilevia");
+                pt_data.codes.add(b.get<nt::Line>("B"), "source", "B");
+                pt_data.codes.add(b.get<nt::Line>("B"), "territory", "territory:B");
 
                 beg = b.data->meta->production_date.begin();
                 end_of_year = beg + boost::gregorian::years(1);
+                navitia::type::VehicleJourney* vj1 = pt_data.vehicle_journeys_map["vehicle_journey:vj1"];
+                vj1->set_vehicle(navitia::type::hasVehicleProperties::AIR_CONDITIONED);
+
+                navitia::type::VehicleJourney* vj_d = pt_data.vehicle_journeys_map["vehicle_journey:vj_D"];
+                vj_d->set_vehicle(navitia::type::hasVehicleProperties::AIR_CONDITIONED);
+                vj_d->set_vehicle(navitia::type::hasVehicleProperties::AUDIBLE_ANNOUNCEMENT);
 
                 navitia::type::VehicleJourney* vj = pt_data.vehicle_journeys_map["vehicle_journey:on_demand_transport"];
                 vj->stop_time_list[0].set_odt(true);
 
                 vj = pt_data.vehicle_journeys_map["vehicle_journey:date_time_estimated"];
                 vj->stop_time_list[0].set_date_time_estimated(true);
+                vj->set_vehicle(navitia::type::hasVehicleProperties::AIR_CONDITIONED);
 
                 vj_week = pt_data.vehicle_journeys_map["vehicle_journey:week"];
                 vj_week->base_validity_pattern()->add(beg, end_of_year, std::bitset<7>{"1111100"});

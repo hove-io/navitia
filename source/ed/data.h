@@ -44,17 +44,28 @@ www.navitia.io
 #include "fare/fare.h"
 #include "type/datetime.h"
 #include "type/address_from_ntfs.h"
+#include "utils/logger.h"
 
 namespace nt = navitia::type;
 /** Ce namespace contient toutes les structures de données \b temporaires, à remplir par le connecteur */
 namespace ed {
 
 template <typename T>
-void normalize_uri(std::vector<T*>& vec) {
+void normalize_uri(std::vector<T*>& vec, bool remove_whitespaces) {
     std::string prefix = navitia::type::static_data::get()->captionByType(T::type);
+
     for (auto* element : vec) {
-        // Suppression des espaces de l'URI
-        boost::algorithm::replace_all(element->uri, " ", "");
+        if (element->uri.find(' ') != std::string::npos) {
+            if (!remove_whitespaces) {
+                LOG4CPLUS_ERROR(log4cplus::Logger::getInstance("log"),
+                                "Keeping spaces for: " << prefix << ":" << element->uri);
+            } else {
+                // Suppression des espaces de l'URI
+                LOG4CPLUS_ERROR(log4cplus::Logger::getInstance("log"),
+                                "Removing spaces for: " << prefix << ":" << element->uri);
+                boost::algorithm::replace_all(element->uri, " ", "");
+            }
+        }
         element->uri = prefix + ":" + element->uri;
     }
 }

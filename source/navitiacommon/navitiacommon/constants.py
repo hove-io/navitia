@@ -33,5 +33,25 @@ from __future__ import absolute_import
 
 ENUM_SHAPE_SCOPE = ('admin', 'street', 'addr', 'poi', 'stop')
 DEFAULT_SHAPE_SCOPE = ('admin', 'street', 'addr', 'poi')
-
-ENUM_EXTERNAL_SERVICE = ('free_floatings', 'vehicle_occupancies', 'realtime_proxies', 'vehicle_positions')
+ENUM_LANGUAGE = [
+    'nl-NL',
+    'en-US',
+    'en-GB',
+    'fr-FR',
+    'de-DE',
+    'hi-IN',
+    'it-IT',
+    'ja-JP',
+    'pt-PT',
+    'ru-RU',
+    'es-ES',
+]
+ENUM_EXTERNAL_SERVICE = (
+    'free_floatings',
+    'vehicle_occupancies',
+    'realtime_proxies',
+    'vehicle_positions',
+    'bss_stations',
+    'obstacles',
+    'car_parkings',
+)

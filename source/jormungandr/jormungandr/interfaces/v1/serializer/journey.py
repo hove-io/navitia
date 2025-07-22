@@ -39,6 +39,8 @@ from jormungandr.interfaces.v1.serializer.pt import (
     StopDateTimeSerializer,
     StringListField,
     PathWaySerializer,
+    AirPollutantsSerializer,
+    LowEmissionZoneSerializer,
 )
 from jormungandr.interfaces.v1.serializer.time import DateTimeField
 from jormungandr.interfaces.v1.serializer.fields import (
@@ -55,7 +57,6 @@ from jormungandr.interfaces.v1.serializer.base import (
     NestedEnumField,
     PbField,
     PbStrField,
-    IntNestedPropertyField,
     PbIntField,
 )
 from flask import g
@@ -66,6 +67,8 @@ from navitiacommon.response_pb2 import (
     StreetNetworkMode,
     SectionType,
     CyclePathType,
+    BoardingPosition,
+    BookingRule,
 )
 import navitiacommon.response_pb2
 from navitiacommon.type_pb2 import RTLevel
@@ -219,6 +222,7 @@ CYCLEPATHTYPE_TO_STR = {
 class StreetInformationSerializer(PbNestedSerializer):
     geojson_offset = jsonschema.MethodField(schema_type=int, display_none=False)
     cycle_path_type = jsonschema.MethodField(schema_type=str, display_none=False)
+    length = jsonschema.MethodField(schema_type=float, display_none=False)
 
     def get_cycle_path_type(self, obj):
         if obj.HasField(str('cycle_path_type')):
@@ -229,6 +233,12 @@ class StreetInformationSerializer(PbNestedSerializer):
     def get_geojson_offset(self, obj):
         if obj.HasField(str('geojson_offset')):
             return obj.geojson_offset
+        else:
+            return None
+
+    def get_length(self, obj):
+        if obj.HasField(str('length')):
+            return float("{:.2f}".format(obj.length))
         else:
             return None
 
@@ -322,13 +332,23 @@ class RidesharingInformationSerializer(PbNestedSerializer):
     seats = SeatsDescriptionSerializer(display_none=False)
 
 
+class BookingRuleSerializer(PbNestedSerializer):
+    name = jsonschema.Field(schema_type=str, display_none=True)
+    info_url = jsonschema.Field(schema_type=str, display_none=True)
+    message = jsonschema.Field(schema_type=str, display_none=True)
+    phone_number = jsonschema.Field(schema_type=str, display_none=True)
+    booking_url = jsonschema.Field(schema_type=str, display_none=True)
+    applies_on = EnumListField(attr='applies_on', pb_type=BookingRule.AppliesOn)
+
+
 class SectionSerializer(PbNestedSerializer):
     id = jsonschema.Field(schema_type=str, display_none=True)
     duration = jsonschema.Field(
         schema_type=int, display_none=True, description='Duration of the section (seconds)'
     )
     co2_emission = AmountSerializer(display_none=True, default_unit='gEC')
-
+    air_pollutants = AirPollutantsSerializer(display_none=False)
+    low_emission_zone = LowEmissionZoneSerializer(display_none=False)
     transfer_type = EnumField(attr='transfer_type', pb_type=TransferType)
     departure_date_time = DateTimeField(
         attr='begin_date_time', description='Departure date and time of the section'
@@ -347,7 +367,7 @@ class SectionSerializer(PbNestedSerializer):
         if obj.HasField(str('type')):
             enum = obj.DESCRIPTOR.fields_by_name['type'].enum_type.values_by_number
             ret_value = enum[getattr(obj, 'type')].name
-            if ret_value == 'WAITING':
+            if ret_value == 'WAITING' or (ret_value == 'PARK' and 'section_bike_park' in obj.id):
                 return None
         return PlaceSerializer(obj.destination).data
 
@@ -357,7 +377,7 @@ class SectionSerializer(PbNestedSerializer):
         if obj.HasField(str('type')):
             enum = obj.DESCRIPTOR.fields_by_name['type'].enum_type.values_by_number
             ret_value = enum[getattr(obj, 'type')].name
-            if ret_value == 'WAITING':
+            if ret_value == 'WAITING' or (ret_value == 'PARK' and 'section_bike_park' in obj.id):
                 return None
         return PlaceSerializer(obj.origin).data
 
@@ -397,6 +417,7 @@ class SectionSerializer(PbNestedSerializer):
     ridesharing_journeys = jsonschema.MethodField(
         schema_type=lambda: JourneySerializer(display_none=False, many=True)
     )
+    best_boarding_positions = EnumListField(attr='best_boarding_positions', pb_type=BoardingPosition)
 
     def get_ridesharing_journeys(self, obj):
         if not hasattr(obj, 'ridesharing_journeys') or not obj.ridesharing_journeys:
@@ -410,6 +431,7 @@ class SectionSerializer(PbNestedSerializer):
     street_informations = StreetInformationSerializer(
         attr="street_network.street_information", many=True, display_none=False
     )
+    booking_rule = BookingRuleSerializer(display_none=False)
 
 
 class JourneySerializer(PbNestedSerializer):
@@ -434,11 +456,15 @@ class JourneySerializer(PbNestedSerializer):
         attr="most_serious_disruption_effect",
         display_none=True,
         description='Status from the whole journey taking into account the most '
-        'disturbing information retrieved on every object used '
-        '(can be "NO_SERVICE", "SIGNIFICANT_DELAYS", ...',
+        'disturbing information retrieved on PT object used '
+        '(can be "NO_SERVICE", "SIGNIFICANT_DELAYS", ...).\n'
+        'A base-schedule journey using a stop-time that is deleted in realtime '
+        'will have a NO_SERVICE status (no matter the effect of the disruption causing it).',
     )
     tags = StringListField(display_none=True)
     co2_emission = AmountSerializer(display_none=True, default_unit='gEC')
+    air_pollutants = AirPollutantsSerializer(display_none=False)
+    low_emission_zone = LowEmissionZoneSerializer(display_none=False)
     durations = DurationsSerializer()
     distances = DistancesSerializer()
     fare = FareSerializer(display_none=True)

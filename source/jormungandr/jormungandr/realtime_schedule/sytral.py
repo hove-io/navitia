@@ -30,6 +30,7 @@
 # www.navitia.io
 from __future__ import absolute_import, print_function, division
 from jormungandr.realtime_schedule.realtime_proxy import RealtimeProxy, RealtimeProxyError
+from jormungandr.utils import PY3
 import logging
 import pybreaker
 import pytz
@@ -60,6 +61,7 @@ class Sytral(RealtimeProxy):
         destination_id_tag="source",
         instance=None,
         timeout=2,
+        group_by_destination=False,
         **kwargs
     ):
         self.service_url = service_url
@@ -68,6 +70,7 @@ class Sytral(RealtimeProxy):
         self.object_id_tag = object_id_tag
         self.destination_id_tag = destination_id_tag
         self.instance = instance
+        self.group_by_destination = group_by_destination
 
         fail_max = kwargs.get(
             'circuit_breaker_max_fail', app.config.get(str('CIRCUIT_BREAKER_MAX_SYTRAL_FAIL'), 5)
@@ -81,6 +84,8 @@ class Sytral(RealtimeProxy):
         """
         used as the cache key. We use the rt_system_id to share the cache between servers in production
         """
+        if PY3:
+            return self.rt_system_id
         try:
             return self.rt_system_id.encode('utf-8', 'backslashreplace')
         except:
@@ -105,8 +110,15 @@ class Sytral(RealtimeProxy):
             params.append(("direction_type", direction_type))
         return params
 
-    def _is_valid_direction(self, direction_uri, passage_direction_uri):
-        return direction_uri == passage_direction_uri
+    def _is_valid_direction(self, terminus_uris, passage_direction_uri, group_by_dest):
+        # If group_by_dest is True then return the comparison result
+        # If not the comparison can also be activated by configuration: self.group_by_destination
+        is_same = passage_direction_uri in terminus_uris
+        if group_by_dest:
+            return is_same
+        if self.group_by_destination:
+            return is_same
+        return True
 
     @cache.memoize(app.config['CACHE_CONFIGURATION'].get('TIMEOUT_SYTRAL', 30))
     def _call(self, params):

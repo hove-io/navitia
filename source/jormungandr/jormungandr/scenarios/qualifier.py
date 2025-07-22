@@ -58,6 +58,7 @@ def get_fallback_duration(journey):
     for section in sections:
         if section.type not in (
             response_pb2.PUBLIC_TRANSPORT,
+            response_pb2.ON_DEMAND_TRANSPORT,
             response_pb2.WAITING,
             response_pb2.boarding,
             response_pb2.landing,
@@ -103,7 +104,10 @@ def has_no_bss(journey):
 
 def non_pt_journey(journey):
     """check if the journey has not public transport section"""
-    has_pt = all(section.type != response_pb2.PUBLIC_TRANSPORT for section in journey.sections)
+    has_pt = all(
+        section.type not in (response_pb2.PUBLIC_TRANSPORT, response_pb2.ON_DEMAND_TRANSPORT)
+        for section in journey.sections
+    )
     return has_pt
 
 

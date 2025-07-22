@@ -46,6 +46,10 @@ class AbstractPtPlanner(six.with_metaclass(ABCMeta, object)):  # type: ignore
     ):
         pass
 
+    @abstractmethod
+    def get_access_points(self, pt_object, access_point_filter, request_id):
+        raise NotImplementedError()
+
 
 class JourneyParameters(object):
     def __init__(
@@ -69,6 +73,15 @@ class JourneyParameters(object):
         sn_params=None,
         current_datetime=None,
         criteria=None,
+        olympic_site_params=None,
+        language="fr-FR",
+        use_heuristic=False,
+        departure_coord=None,
+        arrival_coord=None,
+        global_max_speed=None,
+        use_zonal_odt=False,
+        max_waiting_duration_odt=default_values.max_waiting_duration_odt,
+        min_nb_transfers=None,
     ):
 
         self.max_duration = max_duration
@@ -90,6 +103,15 @@ class JourneyParameters(object):
         self.arrival_transfer_penalty = arrival_transfer_penalty
         self.walking_transfer_penalty = walking_transfer_penalty
         self.criteria = criteria
+        self.olympic_site_params = olympic_site_params or {}
+        self.language = language
+        self.use_heuristic = use_heuristic
+        self.departure_coord = departure_coord
+        self.arrival_coord = arrival_coord
+        self.global_max_speed = global_max_speed
+        self.use_zonal_odt = use_zonal_odt
+        self.max_waiting_duration_odt = max_waiting_duration_odt
+        self.min_nb_transfers = min_nb_transfers
 
 
 # Needed for GraphicalIsochrones

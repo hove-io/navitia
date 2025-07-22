@@ -39,6 +39,7 @@ import mock
 from jormungandr.tests import utils_test
 from jormungandr import utils
 import json
+import pytz
 
 
 fake_response = """
@@ -119,6 +120,7 @@ class DummyInstance:
     walking_speed = 1.12
     greenlet_pool_for_ridesharing_services = True
     ridesharing_greenlet_pool_size = 42
+    timezone = 'UTC'
 
 
 def klaxit_service_config_test():
@@ -168,12 +170,14 @@ def klaxit_service_test():
         from_coord = '47.28696,0.78981'
         to_coord = '47.38642,0.69039'
 
-        period_extremity = utils.PeriodExtremity(
-            datetime=utils.str_to_time_stamp("20171225T060000"), represents_start=True
+        request_dates = utils.RequestDates(
+            departure_datetime=utils.str_to_time_stamp("20171225T060000"),
+            arrival_datetime=utils.str_to_time_stamp("20171225T060000"),
+            represents_start=True,
         )
         params = RidesharingServiceManager.InstanceParams.make_params(DummyInstance())
         ridesharing_journeys, feed_publisher = klaxit.request_journeys_with_feed_publisher(
-            from_coord=from_coord, to_coord=to_coord, period_extremity=period_extremity, instance_params=params
+            from_coord=from_coord, to_coord=to_coord, request_dates=request_dates, instance_params=params
         )
 
         assert len(ridesharing_journeys) == 2
@@ -241,8 +245,10 @@ def test_request_journeys_should_raise_on_non_200():
             klaxit._request_journeys(
                 '1.2,3.4',
                 '5.6,7.8',
-                utils.PeriodExtremity(
-                    datetime=utils.str_to_time_stamp("20171225T060000"), represents_start=True
+                utils.RequestDates(
+                    departure_datetime=utils.str_to_time_stamp("20171225T060000"),
+                    arrival_datetime=utils.str_to_time_stamp("20171225T060000"),
+                    represents_start=True,
                 ),
                 DummyInstance(),
             )

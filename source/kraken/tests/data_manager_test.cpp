@@ -56,7 +56,7 @@ public:
     size_t data_identifier;
 
     explicit Data(size_t data_identifier = 0)
-        : data_identifier(data_identifier), is_connected_to_rabbitmq(false), loaded(false) {}
+        : loaded(false), is_connected_to_rabbitmq(false), data_identifier(data_identifier) {}
 
     ~Data() { Data::destructor_called = true; }
 };

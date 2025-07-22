@@ -28,13 +28,29 @@
 # www.navitia.io
 
 from __future__ import absolute_import, print_function, unicode_literals, division
+
 import navitiacommon.response_pb2 as response_pb2
 import jormungandr.scenarios.tests.helpers_tests as helpers_tests
 from jormungandr.scenarios import new_default, journey_filter
-from jormungandr.scenarios.new_default import _tag_journey_by_mode, get_kraken_calls
+from jormungandr.scenarios.new_default import (
+    _tag_journey_by_mode,
+    get_kraken_calls,
+    update_best_boarding_positions,
+    update_disruptions_on_pois,
+    update_booking_rule_url_in_response,
+)
+from jormungandr.instance import Instance
 from jormungandr.scenarios.utils import switch_back_to_ridesharing
+from jormungandr.utils import make_origin_destination_key, str_to_time_stamp
 from werkzeug.exceptions import HTTPException
+import pytz
+from jormungandr import app
+from flask import g
 import pytest
+from collections import defaultdict
+import copy
+from contextlib import contextmanager
+
 
 """
  sections       0   1   2   3   4   5   6   7   8   9   10
@@ -273,11 +289,61 @@ def culling_journeys_4_test():
         assert jrny.type in ('best', 'comfort', 'non_pt_walk')
 
 
+def culling_journeys_5_test():
+    """
+    When max_nb_journeys == 3 and nb_must_have_journeys == 4 and one journey has best_olympics in its tags
+    """
+    mocked_pb_response = build_mocked_response()
+    # tag last journeys with
+    mocked_pb_response.journeys[10].tags.append("best_olympics")
+    mocked_request = {'max_nb_journeys': 6, 'debug': False, 'datetime': 1444903200}
+    new_default.culling_journeys(mocked_pb_response, mocked_request)
+
+    best_olympic = next((j for j in mocked_pb_response.journeys if 'best_olympics' in j.tags))
+    assert best_olympic
+
+
+def culling_journeys_6_test():
+    """
+    When max_nb_journeys == 3 and nb_must_have_journeys == 4 and one journey has best_olympics in its tags
+    """
+    mocked_pb_response = build_mocked_response()
+    # tag last journeys with
+    mocked_pb_response.journeys[5].tags.append("best_olympics")
+
+    mocked_request = {'max_nb_journeys': 3, 'debug': False, 'datetime': 1444903200}
+    new_default.culling_journeys(mocked_pb_response, mocked_request)
+    assert len(mocked_pb_response.journeys) == 3
+
+    best_olympic = next((j for j in mocked_pb_response.journeys if 'best_olympics' in j.tags))
+    assert best_olympic
+
+
 def aggregate_journeys_test():
     mocked_pb_response = build_mocked_response()
     aggregated_journeys, remaining_journeys = new_default.aggregate_journeys(mocked_pb_response.journeys)
     assert len(aggregated_journeys) == 17
     assert len(remaining_journeys) == 2
+
+    journeys_uris = {(tuple(s.uris.line for s in j.sections), j.arrival_date_time) for j in aggregated_journeys}
+    # J19 is dominated by J3, because it arrives later than J3
+    # J3 should be found in final result
+    assert ((u'uri_2', u'uri_3', u'uri_4', u'walking'), 1444905600) in journeys_uris
+    # J3 should NOT be found in final result
+    assert ((u'uri_2', u'uri_3', u'uri_4', u'walking'), 1444905720) not in journeys_uris
+
+    mocked_pb_response = build_mocked_response()
+    mocked_pb_response.journeys[18].tags.append("best_olympics")
+
+    aggregated_journeys, remaining_journeys = new_default.aggregate_journeys(mocked_pb_response.journeys)
+    assert len(aggregated_journeys) == 17
+    assert len(remaining_journeys) == 2
+    journeys_uris = {(tuple(s.uris.line for s in j.sections), j.arrival_date_time) for j in aggregated_journeys}
+    # J19 is dominated by J3, BUT it has joker because it has been tagged "best_olympics"
+    # J3 should be NOT found in final result
+    assert ((u'uri_2', u'uri_3', u'uri_4', u'walking'), 1444905600) not in journeys_uris
+    # J3 should be found in final result
+    assert ((u'uri_2', u'uri_3', u'uri_4', u'walking'), 1444905720) in journeys_uris
 
 
 def merge_responses_on_errors_test():
@@ -334,17 +400,6 @@ def merge_responses_feed_publishers_test():
     # With 'debug=True', the journey to delete is exposed and so is its feed publisher
     merged_response = new_default.merge_responses(r, True)
     assert len(merged_response.feed_publishers) == 2
-
-
-def add_pt_sections(journey):
-    section = journey.sections.add()
-    section.type = response_pb2.STREET_NETWORK
-    section.street_network.mode = response_pb2.Walking
-    section = journey.sections.add()
-    section.type = response_pb2.PUBLIC_TRANSPORT
-    section = journey.sections.add()
-    section.type = response_pb2.STREET_NETWORK
-    section.street_network.mode = response_pb2.Walking
 
 
 def get_kraken_calls_test():
@@ -656,3 +711,208 @@ def filter_non_car_tagged_journey_test():
     mocked_request['origin_mode'] = ['car']
     journey_filter.apply_final_journey_filters([mocked_pb_response], instance, mocked_request)
     expected_deleted_non_car_journey(mocked_pb_response.journeys, 1)
+
+
+def build_response_with_transfer_and_vias():
+    response = response_pb2.Response()
+    journey = response.journeys.add()
+
+    section = journey.sections.add()
+    section.type = response_pb2.STREET_NETWORK
+    section.street_network.mode = response_pb2.Ridesharing
+    section = journey.sections.add()
+    section.type = response_pb2.PUBLIC_TRANSPORT
+    section = journey.sections.add()
+    section.type = response_pb2.TRANSFER
+    section.origin.uri = 'stop_a'
+    section.destination.uri = 'stop_b'
+    section = journey.sections.add()
+    section.type = response_pb2.PUBLIC_TRANSPORT
+    section = journey.sections.add()
+    section.type = response_pb2.STREET_NETWORK
+    section.street_network.mode = response_pb2.Walking
+    section.origin.uri = 'stop_x'
+    via = section.vias.add()
+    via.uri = 'stop_y'
+    path_item = section.street_network.path_items.add()
+    path_item.via_uri = 'stop_y'
+    return response
+
+
+def update_best_boarding_positions_test():
+    def mock_get_best_boarding_position(from_id, to_id):
+        my_key = make_origin_destination_key(from_id, to_id)
+        return instance.best_boarding_positions.get(my_key, [])
+
+    instance = lambda: None
+    instance.best_boarding_positions = defaultdict(set)
+    key = make_origin_destination_key('stop_a', 'stop_b')
+    instance.best_boarding_positions[key].add(response_pb2.FRONT)
+    key = make_origin_destination_key('stop_x', 'stop_y')
+    instance.best_boarding_positions[key].add(response_pb2.MIDDLE)
+    key = make_origin_destination_key('stop_x', 'stop_z')
+    instance.best_boarding_positions[key].add(response_pb2.BACK)
+
+    response = build_response_with_transfer_and_vias()
+    instance.get_best_boarding_position = mock_get_best_boarding_position
+    assert len(response.journeys) == 1
+    journey = response.journeys[0]
+    assert len(journey.sections) == 5
+    assert journey.sections[1].type == response_pb2.PUBLIC_TRANSPORT
+    assert not journey.sections[1].best_boarding_positions
+    assert journey.sections[3].type == response_pb2.PUBLIC_TRANSPORT
+    assert not journey.sections[3].best_boarding_positions
+    update_best_boarding_positions(response, instance)
+    # First PT section with ['FRONT'] calculated from the third section of type TRANSFER
+    assert journey.sections[1].best_boarding_positions
+    assert len(journey.sections[1].best_boarding_positions) == 1
+    assert {response_pb2.BoardingPosition.FRONT} == set(iter(journey.sections[1].best_boarding_positions))
+    # Second PT section with '['MIDDLE']' calculated from the last section of STREET_NETWORK with the via of the first path_item
+    assert len(journey.sections[3].best_boarding_positions) == 1
+    assert {response_pb2.BoardingPosition.MIDDLE} == set(iter(journey.sections[3].best_boarding_positions))
+
+
+class FakeInstance:
+    def __init__(self, name="fake_instance", criteria=None):
+        self.name = name
+        self.olympic_criteria = criteria
+
+
+class FakeInstance(Instance):
+    def __init__(self, name="fake_instance", olympics_forbidden_uris=None):
+        super(FakeInstance, self).__init__(
+            context=None,
+            name=name,
+            zmq_socket=None,
+            street_network_configurations=[],
+            ridesharing_configurations={},
+            instance_equipment_providers=[],
+            realtime_proxies_configuration=[],
+            pt_planners_configurations={},
+            zmq_socket_type=None,
+            autocomplete_type='kraken',
+            streetnetwork_backend_manager=None,
+            external_service_provider_configurations=[],
+            olympics_forbidden_uris=olympics_forbidden_uris,
+            pt_journey_fare_configurations={},
+            same_journey_schedules_configuration={"allowed_id_type": ["stop_point"], "min_nb_journeys": 5},
+        )
+
+
+DEFAULT_OLYMPICS_FORBIDDEN_URIS = {
+    "pt_object_olympics_forbidden_uris": ["nt:abc"],
+    "poi_property_key": "olympic",
+    "poi_property_value": "1234",
+}
+
+
+def journey_with_disruptions_on_poi_test(mocker):
+    with app.app_context():
+        instance = lambda: None
+        g.origin_detail = helpers_tests.get_json_entry_point(id='poi_uri', name='poi_name_from_kraken')
+        g.destination_detail = helpers_tests.get_json_entry_point(id='poi_b', name='poi_n_name')
+        # As in navitia, object poi in the response of places_nearby doesn't have any impact
+        response_journey_with_pois = helpers_tests.get_journey_with_pois()
+        assert len(response_journey_with_pois.impacts) == 0
+        assert len(response_journey_with_pois.journeys) == 1
+        journey = response_journey_with_pois.journeys[0]
+        assert len(journey.sections) == 3
+
+        original_response = copy.deepcopy(response_journey_with_pois)
+
+        # Prepare disruptions on poi as response of end point poi_disruptions of loki
+        # pt_object poi as impacted object is absent in the response of poi_disruptions
+        disruptions_with_poi = helpers_tests.get_response_with_a_disruption_on_poi()
+        assert len(disruptions_with_poi.impacts) == 1
+        assert disruptions_with_poi.impacts[0].uri == "test_impact_uri"
+        assert len(disruptions_with_poi.impacts[0].impacted_objects) == 1
+        object = disruptions_with_poi.impacts[0].impacted_objects[0].pt_object
+        helpers_tests.verify_poi_in_impacted_objects(object=object, poi_empty=True)
+
+        mock = mocker.patch(
+            'jormungandr.scenarios.new_default.get_disruptions_on_poi', return_value=disruptions_with_poi
+        )
+        mocked_request = {'origin_mode': [], 'destination_mode': [], '_disruptions_on_poi': True}
+        update_disruptions_on_pois(instance, mocked_request, response_journey_with_pois)
+
+        assert len(response_journey_with_pois.impacts) == 1
+        impact = response_journey_with_pois.impacts[0]
+        assert len(impact.impacted_objects) == 1
+        object = impact.impacted_objects[0].pt_object
+
+        # In this state we haven't yet managed the final response so poi object is empty
+        helpers_tests.verify_poi_in_impacted_objects(object=object, poi_empty=True)
+        mocked_request = {'origin_mode': [], 'destination_mode': [], '_disruptions_on_poi': True}
+        update_disruptions_on_pois(instance, mocked_request, original_response)
+        assert len(original_response.impacts) == 1
+
+        mock.assert_called()
+        return
+
+
+def journey_with_booking_rule_test():
+    with app.app_context():
+        g.timezone = pytz.timezone("Europe/Paris")
+        booking_url = (
+            "https://domaine/search?departure-address={from_name}&destination-address={to_name}"
+            "&requested-departure-time={departure_datetime}&from_coord_lat={from_coord_lat}"
+            "&from_coord_lon={from_coord_lon}&not_managed={not_managed}"
+        )
+        response_journey_with_odt = helpers_tests.get_odt_journey(booking_url=booking_url)
+        assert len(response_journey_with_odt.journeys) == 1
+        journey = response_journey_with_odt.journeys[0]
+        assert len(journey.sections) == 3
+        odt_section = journey.sections[1]
+        assert odt_section.type == response_pb2.ON_DEMAND_TRANSPORT
+        assert (
+            odt_section.booking_rule.booking_url
+            == "https://domaine/search?departure-address={from_name}&destination-address={to_name}&requested-departure-time={departure_datetime}&from_coord_lat={from_coord_lat}&from_coord_lon={from_coord_lon}&not_managed={not_managed}"
+        )
+
+        update_booking_rule_url_in_response(response_journey_with_odt)
+        odt_section = response_journey_with_odt.journeys[0].sections[1]
+        assert (
+            odt_section.booking_rule.booking_url
+            == "https://domaine/search?departure-address=P%2BR%20d%27Avon%20%28city%29&destination-address=gare%20de%20l%27est%20%28city%29&requested-departure-time=2024-08-06T08%3A05%3A00%2B0200&from_coord_lat=2.0&from_coord_lon=1.0&not_managed=N/A"
+        )
+
+
+@contextmanager
+def modify_journeys_prev_next_links_s(new_value):
+    old_value = app.config.get('JOURNEYS_PREV_NEXT_LINKS_S')
+    app.config["JOURNEYS_PREV_NEXT_LINKS_S"] = new_value
+    yield
+    app.config["JOURNEYS_PREV_NEXT_LINKS_S"] = old_value
+
+
+def journeys_next_prev_links_test():
+    response = response_pb2.Response()
+    pb_j = response.journeys.add()
+    pb_j.departure_date_time = str_to_time_stamp("20120614T080100")
+    pb_j.arrival_date_time = str_to_time_stamp("20120614T082000")
+    pb_j.type = 'best'
+    section = pb_j.sections.add()
+    section.type = response_pb2.PUBLIC_TRANSPORT
+
+    with modify_journeys_prev_next_links_s(1):
+        scenario = new_default.Scenario()
+        next_link = scenario.next_journey_datetime(response.journeys, True)
+        prev_link = scenario.previous_journey_datetime(response.journeys, True)
+    assert str_to_time_stamp("20120614T080101") == next_link
+    assert str_to_time_stamp("20120614T081959") == prev_link
+
+
+def journeys_next_prev_links_default_value_test():
+    response = response_pb2.Response()
+    pb_j = response.journeys.add()
+    pb_j.departure_date_time = str_to_time_stamp("20120614T080100")
+    pb_j.arrival_date_time = str_to_time_stamp("20120614T082000")
+    pb_j.type = 'best'
+    section = pb_j.sections.add()
+    section.type = response_pb2.PUBLIC_TRANSPORT
+    with modify_journeys_prev_next_links_s(10):
+        scenario = new_default.Scenario()
+        next_link = scenario.next_journey_datetime(response.journeys, True)
+        prev_link = scenario.previous_journey_datetime(response.journeys, True)
+    assert str_to_time_stamp("20120614T080110") == next_link
+    assert str_to_time_stamp("20120614T081950") == prev_link

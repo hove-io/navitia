@@ -286,6 +286,7 @@ BRAGI_MOCK_POI_WITHOUT_ADDRESS = {
                     "postcode": "02100",
                     "type": "poi",
                     "citycode": "02000",
+                    "weight": 5,
                     "properties": [
                         {"key": "amenity", "value": "bicycle_rental"},
                         {"key": "capacity", "value": "20"},
@@ -309,6 +310,30 @@ BRAGI_MOCK_POI_WITHOUT_ADDRESS = {
             "distance": 400,
         }
     ]
+}
+
+
+BRAGI_MOCK_POI_WITH_SHAPE = deepcopy(BRAGI_MOCK_POI_WITHOUT_ADDRESS)
+BRAGI_MOCK_POI_WITH_SHAPE["features"][0]["properties"]["geocoding"]["shape"] = {
+    "type": "MultiPolygon",
+    "coordinates": [
+        [[[102.0, 2.0], [103.0, 2.0], [103.0, 3.0], [102.0, 3.0], [102.0, 2.0]]],
+        [
+            [[100.0, 0.0], [101.0, 0.0], [101.0, 1.0], [100.0, 1.0], [100.0, 0.0]],
+            [[100.2, 0.2], [100.8, 0.2], [100.8, 0.8], [100.2, 0.8], [100.2, 0.2]],
+        ],
+    ],
+}
+
+BRAGI_MOCK_POI_WITH_INVALID_SHAPE = deepcopy(BRAGI_MOCK_POI_WITHOUT_ADDRESS)
+BRAGI_MOCK_POI_WITH_INVALID_SHAPE["features"][0]["properties"]["geocoding"]["shape"] = {
+    "coordinates": [
+        [[[102.0, 2.0], [103.0, 2.0], [103.0, 3.0], [102.0, 3.0], [102.0, 2.0]]],
+        [
+            [[100.0, 0.0], [101.0, 0.0], [101.0, 1.0], [100.0, 1.0], [100.0, 0.0]],
+            [[100.2, 0.2], [100.8, 0.2], [100.8, 0.8], [100.2, 0.8], [100.2, 0.2]],
+        ],
+    ],
 }
 
 BRAGI_MOCK_STOP_AREA_WITH_MORE_ATTRIBUTS = {
@@ -446,6 +471,7 @@ BRAGI_MOCK_BOBETTE = {
                     "postcode": "02100",
                     "type": "poi",
                     "citycode": "02000",
+                    "weight": 5,
                     "properties": [
                         {"key": "amenity", "value": "bicycle_rental"},
                         {"key": "capacity", "value": "20"},
@@ -500,6 +526,42 @@ BRAGI_MOCK_BOBETTE_DEPTH_ZERO["features"][0]["geometry"] = {
 BRAGI_MOCK_BOBETTE_DEPTH_ONE = deepcopy(BRAGI_MOCK_BOBETTE_DEPTH_ZERO)
 BRAGI_MOCK_BOBETTE_DEPTH_TWO = deepcopy(BRAGI_MOCK_BOBETTE_DEPTH_ZERO)
 BRAGI_MOCK_BOBETTE_DEPTH_THREE = deepcopy(BRAGI_MOCK_BOBETTE_DEPTH_ZERO)
+BRAGI_MOCK_BOBETTE_WITH_CHILDREN = deepcopy(BRAGI_MOCK_BOBETTE)
+BRAGI_MOCK_BOBETTE_WITH_CHILDREN["features"][0]["properties"]["geocoding"]["children"] = [
+    {
+        "type": "poi",
+        "id": "poi:osm:node:4507085760",
+        "label": "Jardin du Luxembourg: Porte Vavin (Paris)",
+        "name": "Jardin du Luxembourg: Porte Vavin",
+        "coord": {"lon": 2.3324915, "lat": 48.8448854},
+        "administrative_regions": [
+            {
+                "type": "admin",
+                "id": "admin:fr:75056",
+                "insee": "75056",
+                "level": 8,
+                "label": "Paris (75000-75116), Île-de-France, France",
+                "name": "Paris",
+                "weight": 0.0015625185714285715,
+                "coord": {"lon": 2.3483915, "lat": 48.8534951},
+                "administrative_regions": [],
+                "zone_type": "city",
+                "parent_id": "admin:osm:relation:71525",
+                "country_codes": [],
+                "names": {"fr": "Paris"},
+                "labels": {},
+            }
+        ],
+        "weight": 0.0015625185714285715,
+        "zip_codes": [],
+        "poi_type": {"id": "poi_type:access_point", "name": "Point d'accès"},
+        "properties": {},
+        "country_codes": ["FR"],
+        "names": {},
+        "labels": {},
+        "children": [],
+    }
+]
 
 BOB_STREET = {
     "features": [
@@ -677,6 +739,206 @@ BRAGI_MOCK_RESPONSE_STOP_AREA_WITHOUT_COMMENTS = {
             },
         }
     ],
+}
+
+BRAGI_MOCK_RESPONSE_POI_WITH_CHILDREN = {
+    "features": [
+        {
+            "type": "Feature",
+            "geometry": {"coordinates": [2.33642846001, 48.8487134929], "type": "Point"},
+            "properties": {
+                "geocoding": {
+                    "id": "poi:10309",
+                    "type": "poi",
+                    "label": "Jardin du Luxembourg (Paris)",
+                    "name": "Jardin du Luxembourg",
+                    "city": "Paris",
+                    "citycode": "75056",
+                    "weight": 5,
+                    "administrative_regions": [
+                        {
+                            "id": "admin:fr:75056",
+                            "insee": "75056",
+                            "level": 8,
+                            "label": "Paris (75000-75116), Île-de-France, France",
+                            "name": "Paris",
+                            "coord": {"lon": 2.3483915, "lat": 48.8534951},
+                            "zone_type": "city",
+                            "parent_id": "admin:osm:relation:71525",
+                        }
+                    ],
+                    "poi_types": [{"id": "poi_type:jardin", "name": "Jardin"}],
+                    "children": [
+                        {
+                            "type": "poi",
+                            "id": "poi:osm:node:4507085760",
+                            "label": "Jardin du Luxembourg: Porte Vavin (Paris)",
+                            "name": "Jardin du Luxembourg: Porte Vavin",
+                            "coord": {"lon": 2.3324915, "lat": 48.8448854},
+                            "administrative_regions": [
+                                {
+                                    "type": "admin",
+                                    "id": "admin:fr:75056",
+                                    "insee": "75056",
+                                    "level": 8,
+                                    "label": "Paris (75000-75116), Île-de-France, France",
+                                    "name": "Paris",
+                                    "weight": 0.0015625185714285715,
+                                    "coord": {"lon": 2.3483915, "lat": 48.8534951},
+                                    "administrative_regions": [],
+                                    "zone_type": "city",
+                                    "parent_id": "admin:osm:relation:71525",
+                                    "country_codes": [],
+                                    "names": {"fr": "Paris"},
+                                    "labels": {},
+                                }
+                            ],
+                            "weight": 0.0015625185714285715,
+                            "zip_codes": [],
+                            "poi_type": {"id": "poi_type:access_point", "name": "Point d'accès"},
+                            "properties": {},
+                            "country_codes": ["FR"],
+                            "names": {},
+                            "labels": {},
+                            "children": [],
+                        },
+                        {
+                            "type": "poi",
+                            "id": "poi:osm:node:790012494",
+                            "label": "Jardin du Luxembourg: Porte Croquet (Paris)",
+                            "name": "Jardin du Luxembourg: Porte Croquet",
+                            "coord": {"lon": 2.3325078, "lat": 48.845564},
+                            "administrative_regions": [
+                                {
+                                    "type": "admin",
+                                    "id": "admin:fr:75056",
+                                    "insee": "75056",
+                                    "level": 8,
+                                    "label": "Paris (75000-75116), Île-de-France, France",
+                                    "name": "Paris",
+                                    "weight": 0.0015625185714285715,
+                                    "coord": {"lon": 2.3483915, "lat": 48.8534951},
+                                    "administrative_regions": [],
+                                    "zone_type": "city",
+                                    "parent_id": "admin:osm:relation:71525",
+                                    "country_codes": [],
+                                    "names": {"fr": "Paris"},
+                                    "labels": {},
+                                }
+                            ],
+                            "weight": 0.0015625185714285715,
+                            "poi_type": {"id": "poi_type:access_point", "name": "Point d'accès"},
+                            "properties": {},
+                            "address": {
+                                "type": "addr",
+                                "id": "addr:2.332236;48.845573:38",
+                                "name": "38 Rue Guynemer",
+                                "house_number": "38",
+                                "street": {
+                                    "type": "street",
+                                    "id": "street:751064442R",
+                                    "name": "Rue Guynemer",
+                                    "label": "Rue Guynemer (Paris)",
+                                    "weight": 0.0015625185714285715,
+                                    "coord": {"lon": 2.332236, "lat": 48.845573},
+                                    "zip_codes": ["75006"],
+                                    "country_codes": ["fr"],
+                                },
+                                "label": "38 Rue Guynemer (Paris)",
+                                "coord": {"lon": 2.332236, "lat": 48.845573},
+                                "weight": 0.0015625185714285715,
+                                "zip_codes": ["75006"],
+                            },
+                            "names": {},
+                            "labels": {},
+                            "children": [],
+                        },
+                    ],
+                    "address": {
+                        "id": "street:osm:way:261896959",
+                        "type": "street",
+                        "label": "Cour de Jonction (Paris)",
+                        "name": "Cour de Jonction",
+                        "street": "Cour de Jonction",
+                        "postcode": "75006",
+                        "city": "Paris",
+                        "citycode": "75056",
+                        "administrative_regions": [
+                            {
+                                "id": "admin:fr:75056",
+                                "insee": "75056",
+                                "level": 8,
+                                "label": "Paris (75000-75116), Île-de-France, France",
+                                "name": "Paris",
+                                "coord": {"lon": 2.3483915, "lat": 48.8534951},
+                                "zone_type": "city",
+                                "parent_id": "admin:osm:relation:71525",
+                            }
+                        ],
+                        "country_codes": ["FR"],
+                    },
+                    "country_codes": ["FR"],
+                }
+            },
+        }
+    ]
+}
+
+BRAGI_MOCK_RESPONSE_POI_WITHOUT_CHILDREN = {
+    "features": [
+        {
+            "type": "Feature",
+            "geometry": {"coordinates": [2.33642846001, 48.8487134929], "type": "Point"},
+            "properties": {
+                "geocoding": {
+                    "id": "poi:10309",
+                    "type": "poi",
+                    "label": "Jardin du Luxembourg (Paris)",
+                    "name": "Jardin du Luxembourg",
+                    "city": "Paris",
+                    "citycode": "75056",
+                    "weight": 5,
+                    "administrative_regions": [
+                        {
+                            "id": "admin:fr:75056",
+                            "insee": "75056",
+                            "level": 8,
+                            "label": "Paris (75000-75116), Île-de-France, France",
+                            "name": "Paris",
+                            "coord": {"lon": 2.3483915, "lat": 48.8534951},
+                            "zone_type": "city",
+                            "parent_id": "admin:osm:relation:71525",
+                        }
+                    ],
+                    "poi_types": [{"id": "poi_type:jardin", "name": "Jardin"}],
+                    "address": {
+                        "id": "street:osm:way:261896959",
+                        "type": "street",
+                        "label": "Cour de Jonction (Paris)",
+                        "name": "Cour de Jonction",
+                        "street": "Cour de Jonction",
+                        "postcode": "75006",
+                        "city": "Paris",
+                        "citycode": "75056",
+                        "administrative_regions": [
+                            {
+                                "id": "admin:fr:75056",
+                                "insee": "75056",
+                                "level": 8,
+                                "label": "Paris (75000-75116), Île-de-France, France",
+                                "name": "Paris",
+                                "coord": {"lon": 2.3483915, "lat": 48.8534951},
+                                "zone_type": "city",
+                                "parent_id": "admin:osm:relation:71525",
+                            }
+                        ],
+                        "country_codes": ["FR"],
+                    },
+                    "country_codes": ["FR"],
+                }
+            },
+        }
+    ]
 }
 
 
@@ -906,6 +1168,46 @@ class TestBragiAutocomplete(AbstractTestFixture):
             assert r[0]['address']['name'] == 'Rue Bob'
             assert r[0]['address']['label'] == '20 Rue Bob (Bobtown)'
 
+    def test_features_poi_with_shape_call(self):
+        url = 'https://host_of_bragi'
+        params = {'timeout': 200, 'pt_dataset[]': 'main_routing_test', "_add_poi_shape": "true"}
+
+        url += "/features/bobette?{}".format(urlencode(params, doseq=True))
+        with requests_mock.Mocker() as m:
+            m.get(url, json=BRAGI_MOCK_POI_WITH_SHAPE)
+            response = self.query_region("places/bobette?&pt_dataset[]=main_routing_test&_add_poi_shape=true")
+            assert m.called
+
+            r = response.get('places')
+            assert len(r) == 1
+            assert r[0]['id'] == 'bobette'
+            assert r[0]['name'] == "bobette's label"
+            assert r[0]['embedded_type'] == 'poi'
+            poi = r[0]["poi"]
+            assert poi["id"] == "bobette"
+            assert poi["weight"] == 5
+            assert poi["shape"].startswith("MULTIPOLYGON (((")
+
+    def test_features_poi_invalid_with_shape_call(self):
+        url = 'https://host_of_bragi'
+        params = {'timeout': 200, 'pt_dataset[]': 'main_routing_test', "_add_poi_shape": "true"}
+
+        url += "/features/bobette?{}".format(urlencode(params, doseq=True))
+        with requests_mock.Mocker() as m:
+            m.get(url, json=BRAGI_MOCK_POI_WITH_INVALID_SHAPE)
+            response = self.query_region("places/bobette?&pt_dataset[]=main_routing_test&_add_poi_shape=true")
+            assert m.called
+
+            r = response.get('places')
+            assert len(r) == 1
+            assert r[0]['id'] == 'bobette'
+            assert r[0]['name'] == "bobette's label"
+            assert r[0]['embedded_type'] == 'poi'
+            poi = r[0]["poi"]
+            assert poi["id"] == "bobette"
+            assert poi["weight"] == 5
+            assert "shape" not in poi
+
     def test_features_unknown_uri(self):
         url = 'https://host_of_bragi'
         params = {'timeout': 200, 'pt_dataset[]': 'main_routing_test'}
@@ -937,6 +1239,7 @@ class TestBragiAutocomplete(AbstractTestFixture):
             assert r[0]['embedded_type'] == 'poi'
             assert r[0]['poi']['name'] == 'bobette'
             assert r[0]['poi']['label'] == "bobette's label"
+            assert r[0]['poi']['weight'] == 5
             assert r[0]['distance'] == '400'
             assert not r[0]['poi'].get('address')
 
@@ -1113,11 +1416,32 @@ class TestBragiAutocomplete(AbstractTestFixture):
             assert poi['properties']["amenity"] == "bicycle_rental"
             assert poi['properties']["capacity"] == "20"
             assert poi['properties']["ref"] == "12"
+            assert poi['weight'] == 5
             # Empty administrative_regions not displayed as in kraken
             assert not poi.get('administrative_regions')
             assert 'administrative_regions' not in poi
             # Address absent as in kraken
             assert 'address' not in poi
+
+    def test_autocomplete_with_children(self):
+        with mock_bragi_autocomplete_call(BRAGI_MOCK_BOBETTE_WITH_CHILDREN):
+            response = self.query_region(
+                "places?q=bob&pt_dataset[]=main_routing_test&type[]=stop_area"
+                "&type[]=address&type[]=poi&type[]=administrative_region&depth=0"
+            )
+
+            r = response.get('places')
+            assert len(r) == 1
+            assert r[0]['name'] == "bobette's label"
+            assert r[0]['embedded_type'] == "poi"
+            poi = r[0]['poi']
+            assert poi['label'] == "bobette's label"
+            assert poi['weight'] == 5
+            assert len(poi["children"]) == 1
+            assert poi["children"][0]["id"] == 'poi:osm:node:4507085760'
+            assert poi["children"][0]["type"] == 'poi'
+            assert poi["children"][0]["poi_type"]["id"] == 'poi_type:access_point'
+            assert poi["children"][0].get("administrative_regions") is None
 
     def test_autocomplete_call_with_depth_one(self):
         with mock_bragi_autocomplete_call(BRAGI_MOCK_BOBETTE_DEPTH_ONE):
@@ -1132,6 +1456,7 @@ class TestBragiAutocomplete(AbstractTestFixture):
             assert r[0]['embedded_type'] == "poi"
             poi = r[0]['poi']
             assert poi['label'] == "bobette's label"
+            assert poi['weight'] == 5
             assert poi['properties']["amenity"] == "bicycle_rental"
             assert poi['properties']["capacity"] == "20"
             assert poi['properties']["ref"] == "12"
@@ -1166,6 +1491,7 @@ class TestBragiAutocomplete(AbstractTestFixture):
             assert r[0]['embedded_type'] == "poi"
             poi = r[0]['poi']
             assert poi['label'] == "bobette's label"
+            assert poi['weight'] == 5
             assert poi['properties']["amenity"] == "bicycle_rental"
             assert poi['properties']["capacity"] == "20"
             assert poi['properties']["ref"] == "12"
@@ -1739,6 +2065,57 @@ class AbstractAutocompletePoiDataset:
             params = m.request_history[0].qs
             assert params
             assert params.get('poi_dataset[]') == ['priv.bob']
+
+    def test_poi_with_children(self):
+
+        url = 'https://host_of_bragi'
+        params = {'pt_dataset[]': 'main_routing_test', "poi_dataset[]": "priv.bob", 'timeout': 200}
+        url += "/features/bobette?{}".format(urlencode(params, doseq=True))
+        with requests_mock.Mocker() as m:
+            m.get(url, json=BRAGI_MOCK_RESPONSE_POI_WITH_CHILDREN)
+            response = self.query(
+                "/v1/coverage/{pt_dataset}/places/bobette".format(pt_dataset=params.get('pt_dataset[]'))
+            )
+            assert m.called
+            params = m.request_history[0].qs
+            assert params
+            assert params.get('poi_dataset[]') == ['priv.bob']
+
+            assert len(response["places"]) == 1
+            first_place = response["places"][0]
+            assert first_place["id"] == 'poi:10309'
+            assert first_place['embedded_type'] == 'poi'
+            assert len(first_place['poi']["children"]) == 2
+            assert first_place['poi']["children"][0]["id"] == 'poi:osm:node:4507085760'
+            assert first_place['poi']["children"][0]["type"] == 'poi'
+            assert first_place['poi']["children"][0]["poi_type"]["id"] == 'poi_type:access_point'
+            assert first_place['poi']["children"][0].get("administrative_regions") is None
+
+            assert first_place['poi']["children"][1]["id"] == 'poi:osm:node:790012494'
+            assert first_place['poi']["children"][1]["type"] == 'poi'
+            assert first_place['poi']["children"][1]["poi_type"]["id"] == 'poi_type:access_point'
+            assert first_place['poi']["children"][1].get("administrative_regions") is None
+
+    def test_poi_without_children(self):
+
+        url = 'https://host_of_bragi'
+        params = {'pt_dataset[]': 'main_routing_test', "poi_dataset[]": "priv.bob", 'timeout': 200}
+        url += "/features/bobette?{}".format(urlencode(params, doseq=True))
+        with requests_mock.Mocker() as m:
+            m.get(url, json=BRAGI_MOCK_RESPONSE_POI_WITHOUT_CHILDREN)
+            response = self.query(
+                "/v1/coverage/{pt_dataset}/places/bobette".format(pt_dataset=params.get('pt_dataset[]'))
+            )
+            assert m.called
+            params = m.request_history[0].qs
+            assert params
+            assert params.get('poi_dataset[]') == ['priv.bob']
+
+            assert len(response["places"]) == 1
+            first_place = response["places"][0]
+            assert first_place["id"] == 'poi:10309'
+            assert first_place['embedded_type'] == 'poi'
+            assert 'children' not in first_place
 
     def test_poi_dataset_journeys(self):
 

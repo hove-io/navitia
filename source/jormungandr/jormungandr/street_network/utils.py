@@ -31,7 +31,7 @@
 from __future__ import absolute_import, print_function, unicode_literals, division
 
 import math
-from navitiacommon import request_pb2, type_pb2
+from navitiacommon import request_pb2, type_pb2, response_pb2
 from jormungandr.fallback_modes import FallbackModes
 
 N_DEG_TO_RAD = 0.01745329238
@@ -118,12 +118,15 @@ def create_kraken_direct_path_request(
         req.direct_path.streetnetwork_params.max_car_no_park_duration_to_pt = request[
             'max_{}_duration_to_pt'.format(mode)
         ]
+    else:
+        req.direct_path.streetnetwork_params.car_no_park_speed = 0
+        req.direct_path.streetnetwork_params.max_car_no_park_duration_to_pt = 0
 
     return req
 
 
 def create_kraken_matrix_request(
-    connector, origins, destinations, street_network_mode, max_duration, speed_switcher, _, **kwargs
+    connector, origins, destinations, street_network_mode, max_duration, speed_switcher, request, **kwargs
 ):
     req = request_pb2.Request()
     req.requested_api = type_pb2.street_network_routing_matrix
@@ -147,5 +150,25 @@ def create_kraken_matrix_request(
     req.sn_routing_matrix.streetnetwork_params.car_no_park_speed = speed_switcher.get(
         "car_no_park", kwargs.get("car_no_park")
     )
-
     return req
+
+
+def add_cycle_lane_length(response):
+    def _is_cycle_lane(path):
+        if path.HasField(str("cycle_path_type")):
+            return path.cycle_path_type != response_pb2.NoCycleLane
+
+        return False
+
+    # We have multiple journeys and multiple sections in direct path
+    for journey in response.journeys:
+        for section in journey.sections:
+            # do not add cycle_lane_length for bss_rent/bss_return & walking sections
+            if section.type == response_pb2.STREET_NETWORK and section.street_network.mode == response_pb2.Bike:
+                cycle_lane_length = sum(
+                    (s.length for s in section.street_network.street_information if _is_cycle_lane(s))
+                )
+                # Since path.length are doubles and we want an int32 in the proto
+                section.cycle_lane_length = int(cycle_lane_length)
+
+    return response

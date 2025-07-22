@@ -165,6 +165,7 @@ mock_instances = {
 
 class AbstractTestAuthentication(AbstractTestFixture):
     def setUp(self):
+        app.config['CIRCUIT_BREAKER_MAX_BRAGI_FAIL'] = 5
         self.old_public_val = app.config['PUBLIC']
         app.config['PUBLIC'] = False
         self.old_db_val = app.config['DISABLE_DATABASE']
@@ -230,8 +231,9 @@ class TestBasicAuthentication(AbstractTestAuthentication):
             response_obj = self.app.get('/v1/coverage')
             response = json.loads(response_obj.data)
             assert 'regions' in response
-            assert len(response['regions']) == 1
-            assert response['regions'][0]['id'] == "main_routing_test"
+            assert len(response['regions']) == 2
+            assert response['regions'][0]['id'] == "empty_routing_test"
+            assert response['regions'][1]['id'] == "main_routing_test"
 
     def test_auth_required(self):
         """
@@ -251,9 +253,9 @@ class TestBasicAuthentication(AbstractTestAuthentication):
             # stopA and stopB and in main routing test, all is ok
             ('/v1/journeys?from=stopA&to=stopB&datetime=20120614T080000', 200),
             # stop1 is in departure board -> KO
-            ('/v1/journeys?from=stopA&to=stop2&datetime=20120614T080000', 403),
+            ('/v1/journeys?from=stopA&to=stop2&datetime=20120614T080000', 404),
             # stop1 and stop2 are in departure board -> KO
-            ('/v1/journeys?from=stop1&to=stop2&datetime=20120614T080000', 403),
+            ('/v1/journeys?from=stop1&to=stop2&datetime=20120614T080000', 404),
         ]
 
         with user_set(app, FakeUserAuth, 'bob'):
@@ -262,7 +264,7 @@ class TestBasicAuthentication(AbstractTestAuthentication):
 
     def test_unkown_region(self):
         """
-        the authentication process must not mess if the region is not found
+        the authentication process prevails even if the region is not found
         """
         with user_set(app, FakeUserAuth, 'bob'):
             r, status = self.query_no_assert('/v1/coverage/the_marvelous_unknown_region/stop_areas')
@@ -419,7 +421,7 @@ class TestOverlappingAuthentication(AbstractTestAuthentication):
             response = self.query('/v1/journeys?from=stopA&to=stopB&datetime=20120614T080000')
             assert 'error' not in response
             _, status = self.query_no_assert('/v1/journeys?from=stop1&to=stop2&datetime=20120614T080000')
-            assert status == 403
+            assert status == 404
 
             _, status = self.query_no_assert(
                 '/v1/coverage/empty_routing_test/journeys?from=stop1&to=stop2&datetime=20120614T080000'
@@ -444,9 +446,9 @@ class TestOverlappingAuthentication(AbstractTestAuthentication):
         """
         with user_set(app, FakeUserAuth, 'bobette'):
             response, status = self.query_no_assert('/v1/journeys?from=stopA&to=stopB&datetime=20120614T080000')
-            assert status == 403
+            assert status == 404
             response, status = self.query_no_assert('/v1/journeys?from=stop1&to=stop2&datetime=20120614T080000')
-            assert status == 403
+            assert status == 404
 
             response, status = self.query_no_assert(
                 '/v1/journeys?from={from_coord}&to={to_coord}&datetime={d}'.format(
@@ -496,9 +498,9 @@ class TestOverlappingAuthentication(AbstractTestAuthentication):
 
             regions = get_not_null(response, 'regions')
             assert len(regions) == 3
-            assert regions[0]["name"] == 'departure board'
-            assert regions[1]["name"] == 'empty routing'
-            assert regions[2]["name"] == 'routing api data'
+            assert regions[0]["id"] == 'departure_board_test'
+            assert regions[1]["id"] == 'empty_routing_test'
+            assert regions[2]["id"] == 'main_routing_test'
 
     def test_coverage_by_coords(self):
         """
@@ -583,7 +585,7 @@ class TestOverlappingAuthentication(AbstractTestAuthentication):
                 r, status = self.query_no_assert('/v1/places?q=bob')
                 assert status == 403
 
-        # tgv has not access to the open_data but can use main_routing_test, it cannot use the global place
+        # tgv has no access to the open_data but can use main_routing_test, it cannot use the global place
         with user_set(app, FakeUserAuth, 'tgv'):
             with requests_mock.Mocker() as m:
                 _, status = self.query_no_assert('/v1/places?q=bob')

@@ -29,8 +29,9 @@
 from __future__ import absolute_import
 
 import jormungandr.street_network.utils
-from .helper_utils import get_max_fallback_duration, timed_logger
-from jormungandr import utils, new_relic, fallback_modes as fm
+from .helper_utils import get_max_fallback_duration
+from .timer_logger_helper import timed_logger
+from jormungandr import utils, fallback_modes as fm
 import logging
 from navitiacommon import type_pb2
 
@@ -74,10 +75,14 @@ class ProximitiesByCrowfly:
         self._pt_planner = self._instance.get_pt_planner(request['_pt_planner'])
         self._async_request()
 
-    @new_relic.distributedEvent("get_crowfly", "street_network")
     def _get_crow_fly(self):
         with timed_logger(self._logger, 'get_crow_fly_calling_external_service', self._request_id):
-            return self._pt_planner.get_crow_fly(
+            pt_planner = self._pt_planner
+            if self._mode == 'car':
+                # loki is unable to handle car park P+R so for kraken to be the pt_planner
+                pt_planner = self._instance.get_pt_planner('kraken')
+
+            return pt_planner.get_crow_fly(
                 utils.get_uri_pt_object(self._requested_place_obj),
                 self._mode,
                 self._max_duration,
@@ -94,9 +99,6 @@ class ProximitiesByCrowfly:
 
     def _do_request(self):
         logger = logging.getLogger(__name__)
-        logger.debug(
-            "requesting proximities by crowfly from %s in %s", self._requested_place_obj.uri, self._mode
-        )
 
         # When max_duration_to_pt is 0, there is no need to compute the fallback to pt, except if place is a stop_point
         # or a stop_area
@@ -109,10 +111,10 @@ class ProximitiesByCrowfly:
 
         coord = utils.get_pt_object_coord(self._requested_place_obj)
         if coord.lat and coord.lon:
-            crow_fly = self._get_crow_fly(self._instance.georef)
+            crow_fly = self._get_crow_fly()
 
             if self._mode == fm.FallbackModes.car.name:
-                # pick up only parkings with park_ride = yes
+                # pick up only sytral_parkings with park_ride = yes
                 crow_fly = jormungandr.street_network.utils.pick_up_park_ride_car_park(crow_fly)
 
             logger.debug(
@@ -142,6 +144,7 @@ class ProximitiesByCrowflyPool:
         max_nb_crowfly_by_mode,
         request_id,
         o_d_crowfly_distance,
+        direct_path_timeout,
     ):
         """
         A ProximitiesByCrowflyPool is a set of ProximitiesByCrowfly grouped by mode
@@ -173,26 +176,28 @@ class ProximitiesByCrowflyPool:
         self._value = {}
         self._request_id = request_id
         self._o_d_crowfly_distance = o_d_crowfly_distance
-        self._async_request()
+        self._async_request(direct_path_timeout)
 
-    def _async_request(self):
+    def _async_request(self, direct_path_timeout):
 
         for mode in self._modes:
             object_type = type_pb2.STOP_POINT
             filter = None
-            # if access_point is true, access points are filled in stop points
-            depth = 3 if self._request["_access_points"] else 2
+            depth = 2
             if mode == fm.FallbackModes.car.name:
-                depth = 2
                 object_type = type_pb2.POI
                 filter = "poi_type.uri=\"poi_type:amenity:parking\""
 
             dp_future = self._direct_paths_by_mode.get(mode)
-            max_fallback_duration = get_max_fallback_duration(self._request, mode, dp_future)
+            max_fallback_duration = get_max_fallback_duration(
+                self._request, mode, dp_future, direct_path_timeout
+            )
             speed = jormungandr.street_network.utils.make_speed_switcher(self._request).get(mode)
 
             no_dp = (
-                dp_future is None or dp_future.wait_and_get() is None or not dp_future.wait_and_get().journeys
+                dp_future is None
+                or dp_future.wait_and_get(timeout=direct_path_timeout) is None
+                or not dp_future.wait_and_get(timeout=direct_path_timeout).journeys
             )
 
             if mode == fm.FallbackModes.car.name and no_dp and self._o_d_crowfly_distance is not None:

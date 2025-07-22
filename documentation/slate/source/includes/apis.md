@@ -954,11 +954,16 @@ The [isochrones](#isochrones) service exposes another response structure, which 
 
 <h3 id="journeys-disruptions">Disruptions</h3>
 
-By default, Navitia only computes journeys without their associated disruption(s), meaning that the journeys in the response will be based on the theoritical schedules. The disruption present in the response is for information only.
-If you want to provide journeys without blocking disruptions, you need to make an other request with the parameter `data_freshness=realtime`.
+By default, Navitia only computes journeys without their associated disruption(s), meaning that the journeys in the response will be based on the theoretical schedules. The disruption present in the response is for information only.
+In order to get an "undisrupted" journey (consider all disruptions during journey planning), you just have to add a `&data_freshness=realtime` parameter (or use the `bypass_disruptions` link from response).
 
 In a journey's response, different disruptions may have different meanings.
-Each journey has a `status` attribute that indicates the most serious disruption effect.
+Each journey has a `status` attribute that indicates the actual effect affecting pick-up and drop-off used by
+the journey (no matter the effects of the disruptions attached to the journey).
+A journey using a stop-time pick-up (or drop-off) that is deleted in realtime will have a `NO_SERVICE` status.
+A journey using a stop-time pick-up (or drop-off) that is added in realtime will have a `MODIFIED_SERVICE` status.
+A journey using a stop-time pick-up (or drop-off) that is early or late in realtime will have a `SIGNIFICANT_DELAYS` status.
+All other journeys will have an empty status.
 Disruptions are on the sections, the ones that impact the journey are in the sections's display_informations links  (`sections[].display_informations.links[]`).
 
 You might also have other disruptions in the response. They don't directly impact the journey, but might affect them.
@@ -975,12 +980,13 @@ See how disruptions affect a journey in the [real time](#realtime) section.
 | nop       | to                      | id            | The id of the arrival of your journey. If none are provided an isochrone is computed. Should be different than `from` or no journey will be computed. |               |
 | nop       | datetime                | [iso-date-time](#iso-date-time) | Date and time to go.<br>Note: the datetime must be in the [coverage's publication period](#coverage)                                                   | now           |
 | nop       | datetime_represents     | string        | Can be `departure` or `arrival`.<br>If `departure`, the request will retrieve journeys starting after datetime.<br>If `arrival` it will retrieve journeys arriving before datetime.                      | departure     |
-| nop       | <a name="traveler-type"></a>traveler_type | enum | Define speeds and accessibility values for different kind of people.<br>Each profile also automatically determines appropriate first and last section modes to the covered area. Note: this means that you might get car, bike, etc fallback routes even if you set `forbidden_uris[]`! You can overload all parameters (especially speeds, distances, first and last modes) by setting all of them specifically.<br> We advise that you don't rely on the traveler_type's fallback modes (`first_section_mode[]` and `last_section_mode[]`) and set them yourself.<br>enum values:<ul><li>standard</li><li>slow_walker</li><li>fast_walker</li><li>luggage</li><li>wheelchair</li></ul>|               |
+| nop       | <a name="traveler-type"></a>traveler_type | enum | Define speeds and accessibility values for different kind of people.<br>Each profile also automatically determines appropriate first and last section modes to the covered area. Note: this means that you might get car, bike, etc fallback routes even if you set `forbidden_uris[]`! You can overload all parameters (especially speeds, distances, first and last modes) by setting all of them specifically.<br> We advise that you don't rely on the traveler_type's fallback modes (`first_section_mode[]` and `last_section_mode[]`) and set them yourself.<br>Enum values:<ul><li>standard</li><li>slow_walker</li><li>fast_walker</li><li>luggage</li><li>wheelchair</li></ul>|               |
 | nop       | data_freshness          | enum          | Define the freshness of data to use to compute journeys <ul><li>realtime</li><li>base_schedule</li></ul> _**when using the following parameter**_ "&data_freshness=base_schedule" <br> you can get disrupted journeys in the response. You can then display the disruption message to the traveler and make a realtime request to get a new "undisrupted" solution (considering all disruptions during journey planning).   | base_schedule |
 | nop       | forbidden_uris[]        | id            | If you want to avoid lines, modes, networks, etc.</br> Note: the forbidden_uris[] concern only the public transport objects. You can't for example forbid the use of the bike with them, you have to set the fallback modes for this (`first_section_mode[]` and `last_section_mode[]`) |               |
 |nop        | allowed_id[]            | id            | If you want to use only a small subset of the public transport objects in your solution. The constraint intersects with `forbidden_uris[]`. For example, if you ask for `allowed_id[]=line:A&forbidden_uris[]=physical_mode:Bus`, only vehicles of the line A that are not buses will be used. | everything |
 | nop       | first_section_mode[]    | array of string   | Force the first section mode if the first section is not a public transport one. It takes the following values: `walking`, `car`, `bike`, `bss`, `ridesharing`, `taxi`.<br>It's an array, you can give multiple modes.<br><br>See [Ridesharing](#ridesharing-stuff) and [Taxi](#taxi-stuff) sections for more details on these modes.<br>`bss` stands for bike sharing system.<br>Note: choosing `bss` implicitly allows the `walking` mode since you might have to walk to the bss station.<br> Note 2: The parameter is inclusive, not exclusive, so if you want to forbid a mode, you need to add all the other modes.<br> Eg: If you never want to use a `car`, you need: `first_section_mode[]=walking&first_section_mode[]=bss&first_section_mode[]=bike&last_section_mode[]=walking&last_section_mode[]=bss&last_section_mode[]=bike` | walking |
 | nop       | last_section_mode[]     | array of string   | Same as first_section_mode but for the last section  | walking     |
+| nop       | language     | enum   | Language for path guidance in walking sections.<br>Enum values:<ul><li>de-DE</li><li>en-GB</li><li>en-US</li><li>es-ES</li><li>fr-FR</li><li>hi-IN</li><li>it-IT</li><li>ja-JP</li><li>nl-NL</li><li>pt-PT</li><li>ru-RU</li></ul>  | fr-FR     |
 | nop       | depth                   | int               | Json response [depth](#depth)                        | 1           |
 
 ### Other parameters
@@ -991,21 +997,43 @@ See how disruptions affect a journey in the [real time](#realtime) section.
 | nop     | walking_speed        | float   | Walking speed for the fallback sections<br>Speed unit must be in meter/seconds         | 1.12 m/s<br>(4 km/h)<br>*Yes, man, they got the metric system* |
 | nop     | bike_speed           | float   | Biking speed for the fallback<br>Speed unit must be in meter/seconds | 4.1 m/s<br>(14.7 km/h)   |
 | nop     | bss_speed            | float   | Speed while using a bike from a bike sharing system for the fallback sections<br>Speed unit must be in meter/seconds | 4.1 m/s<br>(14.7 km/h)    |
-| nop     | car_speed            | float   | Driving speed for the fallback sections<br>Speed unit must be in meter/seconds         | 16.8 m/s<br>(60 km/h)   |
 | nop     | min_nb_journeys      | non-negative int | Minimum number of different suggested journeys<br>More in multiple_journeys  |             |
 | nop     | max_nb_journeys      | positive int | Maximum number of different suggested journeys<br>More in multiple_journeys  |             |
 | nop     | count                | int     | Fixed number of different journeys<br>More in multiple_journeys  |             |
-| nop     | max_nb_transfers      | int     | Maximum number of transfers in each journey  | 10          |
+| nop     | max_nb_transfers     | int     | Maximum number of transfers in each journey  | 10          |
 | nop     | min_nb_transfers     | int     | Minimum number of transfers in each journey  | 0           |
 | nop     | max_duration         | int     | If `datetime` represents the departure of the journeys requested, then the last public transport section of all journeys will end before `datetime` + `max_duration`.<br>If `datetime` represents the arrival of the journeys requested, then the first public transport section of all journeys will start after `datetime` - `max_duration`.<br>More useful when computing an isochrone (only `from` or `to` is provided)<br>Unit is seconds    | 86400       |
-| nop     | wheelchair           | boolean | If true the traveler is considered to be using a wheelchair, thus only accessible public transport are used<br>be warned: many data are currently too faint to provide acceptable answers with this parameter on       | False       |
-| nop     | direct_path          | enum    | Specify if Navitia should suggest direct paths (= only fallback modes are used).<br>Possible values: <ul><li>`indifferent`</li><li>`none` for only journeys using some PT</li><li>`only` for only journeys without PT</li></ul>      | indifferent |
-| nop     | direct_path_mode[]	     | array of strings     | Force direct-path modes. If this list is not empty, we only compute direct_path for modes in this list and filter all the direct_paths of modes in first_section_mode[]. It can take the following values: `walking`, `car`, `bike`, `bss`, `ridesharing`, `taxi`. It's an array, you can give multiple modes. If this list is empty, we will compute direct_path for modes of the first_section_modes.  | first_section_modes[]           |
+| nop     | wheelchair           | boolean | If true the traveler is considered to be using a wheelchair, thus only accessible public transport are used<br>You should prefer using the parameter `&traveler_type=wheelchair` which adjusts many other parameters (speed, walkways, etc.)<br>Be warned: many data are currently too faint to provide acceptable answers with this parameter on.       | False       |
+| nop     | direct_path          | enum    | Specify if Navitia should suggest direct paths (= only fallback modes are used).<br>Possible values: <ul><li>`indifferent`</li><li>`none` for only journeys using some PT</li><li>`only` for only journeys without PT</li><li>`only_with_alternatives` for different journey alternatives without PT</li> </ul>      | indifferent |
+| nop     | direct_path_mode[]	 | array of strings     | Force direct-path modes. If this list is not empty, we only compute direct_path for modes in this list and filter all the direct_paths of modes in first_section_mode[]. It can take the following values: `walking`, `car`, `bike`, `bss`, `ridesharing`, `taxi`. It's an array, you can give multiple modes. If this list is empty, we will compute direct_path for modes of the first_section_modes.  | first_section_modes[]           |
 | nop     | add_poi_infos[]      | boolean | Activate the output of additional infomations about the poi. For example, parking availability(BSS, car parking etc.) in the pois of response. Possible values are `bss_stands`, `car_park`    | []
 | nop     | debug                | boolean | Debug mode<br>No journeys are filtered in this mode     | False       |
 | nop     | free_radius_from     | int     | Radius length (in meters) around the coordinates of departure in which the stop points are considered free to go (crowfly=0) | 0           |
-| nop     | free_radius_to	     | int     | Radius length (in meters) around the coordinates of arrival in which the stop points are considered free to go (crowfly=0)  | 0           |
-| nop     | timeframe_duration	     | int     | Minimum timeframe to search journeys (in seconds, maximum allowed value = 86400). For example 'timeframe_duration=3600' will search for all interesting journeys departing within the next hour.  | 0           |
+| nop     | free_radius_to	 | int     | Radius length (in meters) around the coordinates of arrival in which the stop points are considered free to go (crowfly=0)   | 0           |
+| nop     | timeframe_duration	 | int     | Minimum timeframe to search journeys (in seconds, maximum allowed value = 86400). For example 'timeframe_duration=3600' will search for all interesting journeys departing within the next hour.  | 0           |
+| nop     | park_mode	         | enum    | Method to prk your bike before taking public transport. Value between <ul><li>`none`</li><li>`on_street`</li><li>`park_and_ride`</li> </ul> When using `on_street`, Navitia will add a "park" section (to hang your bike), and a "walk" section to reach the next stop_point via the access_point  | none        |
+
+
+### Additional Parameters for Biking and Walking
+
+Navitia’s routing engine for biking, walking, and driving is powered by [Valhalla](https://valhalla.github.io/valhalla/). This robust and flexible software enables advanced and efficient route calculations. Valhalla is deeply integrated into Navitia, enabling high-performance intermodal routing calculations.
+
+As a result, Navitia supports all available costing parameters provided by Valhalla. These parameters are detailed in the [Valhalla API reference](https://valhalla.github.io/valhalla/api/turn-by-turn/api-reference), and you can experiment with them using the [Valhalla demo tool](https://valhalla.openstreetmap.de/directions?profile=pedestrian\&wps=2.335753440856934,48.871990875012344).
+
+To customize routing behavior, you can use these parameters in Navitia by adding the appropriate prefix (`walking_` or `bike_`). For example, setting `walking_walkway_factor=3` increases the preference for pedestrian paths, while `bike_use_hills=0` avoids hilly terrain when cycling. Below are two examples:
+
+| Mode    | Valhalla Parameter | Description                                                                                                                                                                                  | Navitia Parameter        | Example API Request                                                                                                                                                               |
+| ------- | ------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Walking | `walkway_factor`   | Adjusts the cost of roads classified as `footway`, such as designated footpaths or sidewalks along residential streets. Pedestrian routes generally favor these paths. Default value: `1.0`. | `walking_walkway_factor` | [Example](https://api.navitia.io/v1/coverage/fr-idf/journeys?from=2.37715%3B48.846781\&to=2.396956%3B48.845602\&walking_walkway_factor=3&)                                        |
+| Biking  | `use_hills`        | Defines a cyclist’s willingness to tackle hills. Ranges from `0` (avoids hills, even if the route is longer) to `1` (willing to take on hills and steep grades). Default value: `0.5`.       | `bike_use_hills`         | [Example](https://api.navitia.io/v1/coverage/fr-idf/journeys?from=2.37715%3B48.846781\&to=2.396956%3B48.845602\&bike_use_hills=0\&direct_path=only\&direct_path_mode%5B%5D=bike&) |
+
+These parameters empower users to tailor their pedestrian and cycling routes in Navitia, optimizing travel times, avoiding undesirable terrain, and enhancing overall navigation efficiency to better suit their individual needs. Here are some of our favorite parameters:
+
+- **`bike_avoid_bad_surfaces`**: Helps cyclists avoid rough or unpaved surfaces, improving ride comfort.
+- **`bike_maneuver_penalty`**: Adjusts the cost of making turns, influencing route selection to favor smoother navigation.
+- **`bike_use_living_streets`**: Controls the preference for cycling on residential and low-traffic streets.
+- **`walking_step_penalty`**: Modifies the cost of taking stairs, allowing for more accessible pedestrian routes.
+- **`walking_use_hills`**: Determines a pedestrian’s willingness to walk on hilly terrain, adjusting routes accordingly.
 
 ### Precisions on `forbidden_uris[]` and `allowed_id[]`
 
@@ -1099,7 +1127,7 @@ Here is a typical journey, all sections are detailed below
   type                | *enum* string                | Used to qualify a journey. See the [journey-qualification](#journey-qualification-process) section for more information
   fare                | [fare](#fare)                | Fare of the journey (tickets and price)
   tags                | array of string              | List of tags on the journey. The tags add additional information on the journey beside the journey type. See for example [multiple_journeys](#multiple-journeys).
-  status              | *enum*                       | Status from the whole journey taking into acount the most disturbing information retrieved on every object used. Can be: <ul><li>NO_SERVICE</li><li>REDUCED_SERVICE</li><li>SIGNIFICANT_DELAYS</li><li>DETOUR</li><li>ADDITIONAL_SERVICE</li><li>MODIFIED_SERVICE</li><li>OTHER_EFFECT</li><li>UNKNOWN_EFFECT</li><li>STOP_MOVED</li></ul> In order to get an "undisrupted" journey (consider all disruptions during journey planning), you just have to add a *&data_freshness=realtime* parameter.
+  status              | *enum*                       | Status of the whole journey taking into acount the actual effect of disruptions retrieved on pick-ups and drop-offs used. See the [journey-disruption](#journeys-disruptions) section for more information.
 
 <aside class="notice">
     When used with just a "from" or a "to" parameter, it will not contain any sections.
@@ -1109,7 +1137,7 @@ Here is a typical journey, all sections are detailed below
 
 Field                    | Type                                          | Description
 -------------------------|-----------------------------------------------|------------
-type                     | *enum* string                                 | Type of the section.<ul><li>`public_transport`: public transport section</li><li>`street_network`: street section</li><li>`waiting`: waiting section between transport</li><li><p>`stay_in`: this “stay in the vehicle” section occurs when the traveller has to stay in the vehicle when the bus change its routing. Here is an exemple for a journey from A to B: (lollipop line)</p><p>![image](stay_in.png)</p></li><li>`transfer`: transfert section</li><li><p>`crow_fly`: teleportation section, most of the time. Useful to make navitia idempotent when starting from or arriving to a city or a stop_area (“potato shaped” objects) in order to route to the nearest stop_point. Be careful: neither “path” nor “geojson” available in a crow_fly section.</p><p> Can also be used when no street_network data are available and not be considered as teleportation. The distance of such a crow_fly section will be a straight line between the point of departure and arrival (hence the name 'crow_fly'). The duration of the section will be calculated with the Manhattan distance of the section (distance x √2). In this case, “geojson” is available.</p><p>![image](crow_fly.png)</p></li><li>`on_demand_transport`: vehicle may not drive along: traveler will have to call agency to confirm journey</li><li>`bss_rent`: taking a bike from a bike sharing system (bss)</li><li>`bss_put_back`: putting back a bike from a bike sharing system (bss)</li><li>`boarding`: boarding on plane</li><li>`landing`: landing off the plane</li><li>`alighting`: getting off a vehicle (boat, on-demand-transport, plane, ...)</li><li>`park`: parking a car</li><li>`ridesharing`: car-pooling section</li></ul>
+type                     | *enum* string                                 | Type of the section.<ul><li>`public_transport`: public transport section</li><li>`street_network`: street section</li><li>`waiting`: waiting section between transport</li><li><p>`stay_in`: this “stay in the vehicle” section occurs when the traveller has to stay in the vehicle when the bus change its routing. Here is an exemple for a journey from A to B: (lollipop line)</p><p>![image](stay_in.png)</p></li><li>`transfer`: transfert section</li><li><p>`crow_fly`: teleportation section, most of the time. Useful to make navitia idempotent when starting from or arriving to a city or a stop_area (“potato shaped” objects) in order to route to the nearest stop_point. Be careful: neither “path” nor “geojson” available in a crow_fly section.</p><p> Can also be used when no street_network data are available and not be considered as teleportation. The distance of such a crow_fly section will be a straight line between the point of departure and arrival (hence the name 'crow_fly'). The duration of the section will be calculated with the Manhattan distance of the section (distance x √2). In this case, “geojson” is available.</p><p>![image](crow_fly.png)</p></li><li>`on_demand_transport`: vehicle may not drive along: traveler will have to call agency to confirm journey</li><li>`bss_rent`: taking a bike from a bike sharing system (bss)</li><li>`bss_put_back`: putting back a bike from a bike sharing system (bss)</li><li>`boarding`: boarding on vehicle (boat, on-demand-transport, plane, ...)</li><li>`alighting`: getting off a vehicle</li><li>`park`: parking a bike or your personnal car</li><li>`ridesharing`: car-pooling section</li></ul>
 id                       | string                                        | Id of the section
 mode                     | *enum* string                                 | Mode of the street network and crow_fly: `Walking`, `Bike`, `Car`, 'Taxi'
 duration                 | int                                           | Duration of this section
@@ -2147,7 +2175,7 @@ Details for disruption objects: [disruptions](#disruptions)
     -   each stop_area contains at least a link to its disruptions<br>If a stop_area is used by multiple networks, it will appear each time.
 
 
-Equipment_Reports
+Equipment Reports
 ---------------------------------------------
 
 ``` shell
@@ -2214,3 +2242,64 @@ no       | depth            | int    | Json response [depth](#depth)            
 no       | filter           | string | A [filter](#filter) to refine your request          |
 no       | forbidden_uris[] | id     | If you want to avoid lines, modes, networks, etc.   |
 no       | start_page       | int    | The page number (cf. the [paging section](#paging)) | 0
+
+
+
+<h2 id="Freefloatings-nearby-api">Freefloatings Nearby</h2>
+
+
+``` shell
+#request
+$ curl 'https://api.navitia.io/v1/coverage/<my_coverage>/freefloatings_nearby'
+```
+
+``` shell
+# response, composed by 1 main list: "freefloatings_nearby"
+HTTP/1.1 200 OK
+
+{
+    "free_floatings": [
+        {
+            "public_id": "scooter_12345",
+            "provider_name": "Lime",
+            "id": "scooter_12345",
+            "type": "scooter",
+            "propulsion": "electric",
+            "battery": 85,
+            "distance": 120,
+            "deeplink": "https://lime.com/scooter_12345",
+            "coord": {
+                "lat": "48.8560",
+                "lon": "2.3500"
+            }
+        }
+    ],
+}
+```
+
+The `/freefloatings_nearby` service provides access to nearby shared mobility options (such as bikes, scooters, or cars) based on user-provided coordinates.
+
+This endpoint allows users to search for shared mobility options near a specific location or object, returning detailed information about available free-floating vehicles, including type, provider, battery level, and distance.
+
+
+<aside class="warning">
+    This feature requires a specific configuration from a freefloating data service provider.
+    Therefore this service is not available by default.
+</aside>
+
+### Accesses
+
+| url                                                    | Result                                                                         |
+|--------------------------------------------------------|--------------------------------------------------------------------------------|
+| `/coverage/{lon;lat}/coords/{lon;lat}/freefloatings_nearby`   | List of objects near the resource, navitia guesses the region from coordinates |
+| `/coord/{lon;lat}/freefloatings_nearby`                       | List of objects near the resource without any region id (same result as above) |
+| `/coverage/{region_id}/coords/{lon;lat}/freefloatings_nearby` | List of objects near a coordinate                                              |
+| `/coverage/{region_id}/{resource_path}/freefloatings_nearby`  | List of objects near the resource                                              |
+
+### Parameters
+
+| Name       | Type    | Required | Default | Description |
+|------------|--------|----------|---------|-------------|
+| `type[]`   | string | No       | -       | The type of shared mobility vehicles to return (e.g., `bike`, `scooter`, `car`). |
+| `distance` | int    | No       | 500     | Search radius in meters. |
+| `count`    | int    | No       | 10      | Maximum number of results to return. |

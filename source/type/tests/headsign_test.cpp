@@ -127,7 +127,7 @@ BOOST_FIXTURE_TEST_CASE(headsign_handler_internal_test, HeadsignFixture) {
     auto& vj_vec = b.data->pt_data->vehicle_journeys;
     // done for the "actual" handler in build helper but not on test handler
     for (const auto& vj : vj_vec) {
-        headsign_handler.change_name_and_register_as_headsign(*vj, vj->headsign);
+        headsign_handler.change_vj_headsign_and_register(*vj, vj->headsign);
     }
 
     headsign_handler.affect_headsign_to_stop_time(vj_vec[0]->stop_time_list.at(0), "A00");

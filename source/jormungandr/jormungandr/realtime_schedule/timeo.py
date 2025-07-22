@@ -38,6 +38,7 @@ from jormungandr.realtime_schedule.realtime_proxy import RealtimeProxy, Realtime
 from jormungandr.schedule import RealTimePassage
 from datetime import datetime, time
 from navitiacommon.ratelimit import RateLimiter, FakeRateLimiter
+from jormungandr.utils import PY3
 import six
 
 
@@ -122,13 +123,19 @@ class Timeo(RealtimeProxy):
         """
         used as the cache key. we use the rt_system_id to share the cache between servers in production
         """
+        if PY3:
+            return self.rt_system_id
         try:
             return self.rt_system_id.encode('utf-8', 'backslashreplace')
         except:
             return self.rt_system_id
 
-    def _is_valid_direction(self, direction_uri, passage_direction_uri):
-        return direction_uri == passage_direction_uri
+    def _is_valid_direction(self, terminus_uris, passage_direction_uri, group_by_dest):
+        # If group_by_dest is False then return True
+        # otherwise return the comparison result
+        if not group_by_dest:
+            return True
+        return passage_direction_uri in terminus_uris
 
     @cache.memoize(app.config.get(str('CACHE_CONFIGURATION'), {}).get(str('TIMEOUT_TIMEO'), 60))
     def _call_timeo(self, url):

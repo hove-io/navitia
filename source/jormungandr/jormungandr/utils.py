@@ -29,7 +29,7 @@
 
 from __future__ import absolute_import, print_function, unicode_literals, division
 import calendar
-from collections import deque, namedtuple
+from collections import deque, namedtuple, defaultdict
 from datetime import datetime
 from google.protobuf.descriptor import FieldDescriptor
 import pytz
@@ -40,7 +40,8 @@ from importlib import import_module
 import logging
 from jormungandr.exceptions import ConfigException, UnableToParse, InvalidArguments
 from six.moves.urllib.parse import urlparse
-from jormungandr import new_relic, app
+from jormungandr import app
+from jormungandr.otlp import otlp_instance
 from six.moves import zip, range
 from jormungandr.exceptions import TechnicalError
 from flask import request, g
@@ -50,6 +51,10 @@ from contextlib import contextmanager
 import functools
 import sys
 import six
+import csv
+import os
+import math
+import polyline
 
 PY2 = sys.version_info[0] == 2
 PY3 = sys.version_info[0] == 3
@@ -59,20 +64,43 @@ UTC_DATETIME_FORMAT = "%Y-%m-%dT%H:%M:%S%z"
 NOT_A_DATE_TIME = "not-a-date-time"
 WEEK_DAYS_MAPPING = ("monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday")
 COVERAGE_ANY_BETA = "any-beta"
+ORIGIN_DESTINATION_KEY = "{}-{}"
+ONE_DAY = 86400
+DATE_FORMAT = "%Y-%m-%d"
+
+MAP_STRING_PTOBJECT_TYPE = {
+    "stop_point": type_pb2.STOP_POINT,
+    "stop_area": type_pb2.STOP_AREA,
+    "address": type_pb2.ADDRESS,
+    "administrative_region": type_pb2.ADMINISTRATIVE_REGION,
+    "poi": type_pb2.POI,
+    "access_point": type_pb2.ACCESS_POINT,
+}
 
 
 def get_uri_pt_object(pt_object):
+    coord_format = "coord:{}:{}"
     if pt_object.embedded_type == type_pb2.ADDRESS:
         coords = pt_object.uri.split(';')
-        return "coord:{}:{}".format(coords[0], coords[1])
+        return coord_format.format(coords[0], coords[1])
     if pt_object.embedded_type == type_pb2.ACCESS_POINT:
-        return "coord:{}:{}".format(pt_object.access_point.coord.lon, pt_object.access_point.coord.lat)
+        return coord_format.format(pt_object.access_point.coord.lon, pt_object.access_point.coord.lat)
+    if pt_object.embedded_type == type_pb2.POI:
+        return coord_format.format(pt_object.poi.coord.lon, pt_object.poi.coord.lat)
+    if pt_object.embedded_type == type_pb2.ADMINISTRATIVE_REGION:
+        return coord_format.format(
+            pt_object.administrative_region.coord.lon, pt_object.administrative_region.coord.lat
+        )
     return pt_object.uri
 
 
+def is_public_transport_section(section):
+    return section.get('type') == 'public_transport' and 'links' in section
+
+
 def kilometers_to_meters(distance):
-    # type: (float) -> float
-    return distance * 1000.0
+    # type: (float) -> int
+    return int(round(distance * 1000.0))
 
 
 class Coords:
@@ -128,15 +156,21 @@ def navitia_utcfromtimestamp(timestamp):
         return None
 
 
-def str_to_time_stamp(str):
+def str_to_time_stamp(datetime_str):
     """
     convert a string to a posix timestamp
     the string must be in the YYYYMMDDTHHMMSS format
     like 20170534T124500
     """
-    date = datetime.strptime(str, DATETIME_FORMAT)
+    try:
+        date = datetime.strptime(datetime_str, DATETIME_FORMAT)
 
-    return date_to_timestamp(date)
+        return date_to_timestamp(date)
+    except Exception as e:
+        logging.getLogger(__name__).exception(
+            'Error while converting a string to a posix timestamp with exception: {}'.format(str(e))
+        )
+        return None
 
 
 def str_to_dt(str):
@@ -175,6 +209,14 @@ def local_str_date_to_utc(str, tz=None):
     return None
 
 
+def local_str_date_to_str_date_with_offset(str, tz):
+    timezone = tz or get_timezone()
+    dt = str_to_dt(str)
+    local = pytz.timezone(timezone)
+    local_dt = local.localize(dt, is_dst=None)
+    return local_dt.isoformat()
+
+
 def timestamp_to_datetime(timestamp, tz=None):
     """
     Convert a timestamp to datetime
@@ -206,6 +248,17 @@ def timestamp_to_str(timestamp):
     dt = timestamp_to_datetime(timestamp)
     if dt:
         return dt_to_str(dt)
+    return None
+
+
+def dt_to_date_str(dt, _format=DATE_FORMAT):
+    return dt.strftime(_format)
+
+
+def timestamp_to_date_str(timestamp, tz=None, _format=DATE_FORMAT):
+    dt = timestamp_to_datetime(timestamp, tz=tz)
+    if dt:
+        return dt_to_date_str(dt, _format=_format)
     return None
 
 
@@ -343,6 +396,8 @@ def create_object(configuration):
         )
 
     kwargs = configuration.get('args', {})
+    if "id" in configuration:
+        kwargs["id"] = configuration["id"]
 
     try:
         if '.' not in class_path:
@@ -372,6 +427,126 @@ def generate_id():
     import shortuuid
 
     return shortuuid.uuid()
+
+
+def add_children(pt_object, dict_pt_object):
+    for ch in dict_pt_object.get("poi", {}).get("children", []):
+        ch_poi = pt_object.poi.children.add()
+        ch_poi.uri = ch["id"]
+        ch_poi.name = ch.get("name", "")
+        coord = Coords(ch["coord"]["lat"], ch["coord"]["lon"])
+        ch_poi.coord.lon = coord.lon
+        ch_poi.coord.lat = coord.lat
+
+
+def add_properties(pt_object, dict_pt_object):
+    for key, value in dict_pt_object.get("poi", {}).get("properties", {}).items():
+        property = pt_object.poi.properties.add()
+        property.type = key
+        property.value = value
+
+
+def str_to_embedded_type(str_embedded_type):
+    return MAP_STRING_PTOBJECT_TYPE.get(str_embedded_type)
+
+
+def check_dict_object(dict_pt_object):
+    if not isinstance(dict_pt_object, dict):
+        logging.getLogger(__name__).error('Invalid dict_pt_object')
+        raise InvalidArguments('dict_pt_object')
+    embedded_type = MAP_STRING_PTOBJECT_TYPE.get(dict_pt_object.get("embedded_type"))
+    if not embedded_type:
+        logging.getLogger(__name__).error('Invalid embedded_type')
+        raise InvalidArguments('embedded_type')
+
+
+def populate_pt_object(pt_object, dict_pt_object):
+    pt_object.uri = dict_pt_object["id"]
+    pt_object.name = dict_pt_object.get("name", "")
+    text_embedded_type = dict_pt_object.get("embedded_type")
+    embedded_type = MAP_STRING_PTOBJECT_TYPE.get(text_embedded_type)
+    pt_object.embedded_type = embedded_type
+
+    map_pt_object_type_to_pt_object = {
+        type_pb2.STOP_POINT: pt_object.stop_point,
+        type_pb2.STOP_AREA: pt_object.stop_area,
+        type_pb2.ADDRESS: pt_object.address,
+        type_pb2.ADMINISTRATIVE_REGION: pt_object.administrative_region,
+        type_pb2.POI: pt_object.poi,
+        type_pb2.ACCESS_POINT: pt_object.access_point,
+    }
+
+    obj = map_pt_object_type_to_pt_object.get(embedded_type)
+    obj.uri = dict_pt_object[text_embedded_type]["id"]
+    obj.name = dict_pt_object[text_embedded_type].get("name", "")
+    coord = Coords(
+        dict_pt_object[text_embedded_type]["coord"]["lat"], dict_pt_object[text_embedded_type]["coord"]["lon"]
+    )
+    obj.coord.lon = coord.lon
+    obj.coord.lat = coord.lat
+    if embedded_type == type_pb2.POI:
+        add_children(pt_object, dict_pt_object)
+        add_properties(pt_object, dict_pt_object)
+
+
+def get_pt_object_from_json(dict_pt_object, instance):
+    check_dict_object(dict_pt_object)
+    embedded_type = MAP_STRING_PTOBJECT_TYPE.get(dict_pt_object.get("embedded_type"))
+    if embedded_type == type_pb2.ADMINISTRATIVE_REGION:
+        # In this case we need the main_stop_area
+        pt_object = instance.georef.place(dict_pt_object["id"])
+        if pt_object:
+            return pt_object
+    pt_object = type_pb2.PtObject()
+    populate_pt_object(pt_object, dict_pt_object)
+
+    within_zones = dict_pt_object.get("within_zones", [])
+    if pt_object.embedded_type == type_pb2.ADDRESS and within_zones:
+        for within_zone in within_zones:
+            pt_object_within_zone = pt_object.address.within_zones.add()
+            populate_pt_object(pt_object_within_zone, within_zone)
+    return pt_object
+
+
+def replace_address_with_custom_poi(dict_pt_object, uri):
+    new_poi = next(
+        (
+            wz
+            for wz in dict_pt_object.get("within_zones", [])
+            if MAP_STRING_PTOBJECT_TYPE.get(wz.get("embedded_type")) == type_pb2.POI
+            and wz.get("poi", {}).get("children", [])
+        ),
+        None,
+    )
+    if not new_poi:
+        return dict_pt_object
+    if not is_coord(uri):
+        return dict_pt_object
+    lon, lat = get_lon_lat(uri)
+    # We're putting back the coordinate of the end-user, who is in a POI area (with entrypoints).
+    # If we don't, barycenter of the POI area will be displayed which means nothing for the end user.
+    new_poi["poi"]["coord"]["lon"] = "{}".format(lon)
+    new_poi["poi"]["coord"]["lat"] = "{}".format(lat)
+    return new_poi
+
+
+def entrypoint_uri_refocus(dict_pt_object, uri):
+    if not dict_pt_object:
+        return None
+    if MAP_STRING_PTOBJECT_TYPE.get(dict_pt_object.get("embedded_type")) == type_pb2.ADDRESS:
+        return replace_address_with_custom_poi(dict_pt_object, uri)
+    return dict_pt_object
+
+
+def json_address_from_uri(uri):
+    if is_coord(uri):
+        lon, lat = get_lon_lat(uri)
+        return {
+            "id": uri,
+            "embedded_type": "address",
+            "address": {"id": uri, "coord": {"lon": "{}".format(lon), "lat": "{}".format(lat)}},
+        }
+    return None
 
 
 def get_pt_object_coord(pt_object):
@@ -411,43 +586,62 @@ def get_pt_object_coord(pt_object):
     return coord
 
 
+def is_olympic_poi(pt_object, instance):
+    if pt_object.embedded_type != type_pb2.POI:
+        return False
+    if not (hasattr(pt_object.poi, 'properties') and pt_object.poi.properties):
+        return False
+    olympic_site = next(
+        (
+            p
+            for p in pt_object.poi.properties
+            if p.type == instance.olympics_forbidden_uris.poi_property_key
+            and p.value == instance.olympics_forbidden_uris.poi_property_value
+        ),
+        None,
+    )
+    return olympic_site
+
+
+def is_olympic_site(entry_point, instance):
+    if not entry_point:
+        return False
+    if is_olympic_poi(entry_point, instance):
+        return True
+    if entry_point.embedded_type == type_pb2.ADDRESS:
+        if not (hasattr(entry_point.address, 'within_zones') and entry_point.address.within_zones):
+            return False
+        for within_zone in entry_point.address.within_zones:
+            if is_olympic_poi(within_zone, instance):
+                return True
+    return False
+
+
+def get_last_pt_section(journey):
+    return next(
+        (
+            s
+            for s in reversed(journey.sections)
+            if s.type in (response_pb2.PUBLIC_TRANSPORT, response_pb2.ON_DEMAND_TRANSPORT)
+        ),
+        None,
+    )
+
+
+def get_first_pt_section(journey):
+    return next(
+        (
+            s
+            for s in journey.sections
+            if s.type in (response_pb2.PUBLIC_TRANSPORT, response_pb2.ON_DEMAND_TRANSPORT)
+        ),
+        None,
+    )
+
+
 def record_external_failure(message, connector_type, connector_name):
     params = {'{}_system_id'.format(connector_type): six.text_type(connector_name), 'message': message}
-    new_relic.record_custom_event('{}_external_failure'.format(connector_type), params)
-
-
-def decode_polyline(encoded, precision=6):
-    '''
-    Version of : https://developers.google.com/maps/documentation/utilities/polylinealgorithm
-    But with improved precision
-    See: https://mapzen.com/documentation/mobility/decoding/#python (valhalla)
-         http://developers.geovelo.fr/#/documentation/compute (geovelo)
-    '''
-    inv = 10**-precision
-    decoded = []
-    previous = [0, 0]
-    i = 0
-    # for each byte
-    while i < len(encoded):
-        # for each coord (lat, lon)
-        ll = [0, 0]
-        for j in [0, 1]:
-            shift = 0
-            byte = 0x20
-            # keep decoding bytes until you have this coord
-            while byte >= 0x20:
-                byte = ord(encoded[i]) - 63
-                i += 1
-                ll[j] |= (byte & 0x1F) << shift
-                shift += 5
-            # get the final value adding the previous offset and remember it for the next
-            ll[j] = previous[j] + (~(ll[j] >> 1) if ll[j] & 1 else (ll[j] >> 1))
-            previous[j] = ll[j]
-        # scale by the precision and chop off long coords also flip the positions so
-        # #its the far more standard lon,lat instead of lat,lon
-        decoded.append([float('%.6f' % (ll[1] * inv)), float('%.6f' % (ll[0] * inv))])
-        # hand back the list of coordinates
-    return decoded
+    otlp_instance.send_event_metrics('{}_external_failure'.format(connector_type), params)
 
 
 # PeriodExtremity is used to provide a datetime and it's meaning
@@ -456,13 +650,24 @@ def decode_polyline(encoded, precision=6):
 # (mostly used for fallback management in experimental scenario)
 PeriodExtremity = namedtuple('PeriodExtremity', ['datetime', 'represents_start'])
 
+# RequestDates is used by ridesharing services
+# instant_system needs both departure_datetime and arrival_datetime
+# other services use only departure_datetime without any condition
+RequestDates = namedtuple('RequestDates', ['departure_datetime', 'arrival_datetime', 'represents_start'])
+
 
 class SectionSorter(object):
     def __call__(self, a, b):
         if a.begin_date_time != b.begin_date_time:
             return -1 if a.begin_date_time < b.begin_date_time else 1
-        else:
+        elif a.end_date_time != b.end_date_time:
             return -1 if a.end_date_time < b.end_date_time else 1
+        elif a.destination.uri == b.origin.uri:
+            return -1
+        elif a.origin.uri == b.destination.uri:
+            return 1
+        else:
+            return 0
 
 
 def make_namedtuple(typename, *fields, **fields_with_default):
@@ -636,8 +841,16 @@ def portable_min(*args, **kwargs):
     1
     >>> portable_min([], default=42)
     42
+    >>> portable_min([]) # only behavioral change compared to py3's min: default to None (could be reconsidered, forcing caller to provide default)
+
+    >>> portable_min((j for j in [])) # same, default to None
+
+    >>> portable_min((j for j in []), key=lambda j: j) # same, default to None
+
     >>> portable_min(iter(()), default=43) # empty iterable
     43
+    >>> portable_min((j for j in [{"s": 5}, {"s": 9},{"s": 1}]), key=lambda j: j["s"]) # not comparable without key
+    {'s': 1}
 
     """
     if PY2:
@@ -649,6 +862,7 @@ def portable_min(*args, **kwargs):
         except Exception:
             raise
     if PY3:
+        kwargs.setdefault('default', None)  # may be changed before really switching to py3's min().
         return min(*args, **kwargs)
 
 
@@ -705,15 +919,33 @@ def can_connect_to_database():
 def create_journeys_request(origins, destinations, datetime, clockwise, journey_parameters, bike_in_pt):
     req = request_pb2.Request()
     req.requested_api = type_pb2.pt_planner
+    req.language = journey_parameters.language
+
+    def _set_departure_attractivity(stop_point_id, location):
+        attractivity_virtual_duration = journey_parameters.olympic_site_params.get("departure_scenario", {}).get(
+            stop_point_id
+        )
+        if attractivity_virtual_duration:
+            location.attractivity = attractivity_virtual_duration.attractivity
+
+    def _set_arrival_attractivity(stop_point_id, location):
+        attractivity_virtual_duration = journey_parameters.olympic_site_params.get("arrival_scenario", {}).get(
+            stop_point_id
+        )
+        if attractivity_virtual_duration:
+            location.attractivity = attractivity_virtual_duration.attractivity
+
     for stop_point_id, access_duration in origins.items():
         location = req.journeys.origin.add()
         location.place = stop_point_id
         location.access_duration = access_duration
+        _set_departure_attractivity(stop_point_id, location)
 
     for stop_point_id, access_duration in destinations.items():
         location = req.journeys.destination.add()
         location.place = stop_point_id
         location.access_duration = access_duration
+        _set_arrival_attractivity(stop_point_id, location)
 
     req.journeys.night_bus_filter_max_factor = journey_parameters.night_bus_filter_max_factor
     req.journeys.night_bus_filter_base_factor = journey_parameters.night_bus_filter_base_factor
@@ -741,6 +973,9 @@ def create_journeys_request(origins, destinations, datetime, clockwise, journey_
     if journey_parameters.min_nb_journeys:
         req.journeys.min_nb_journeys = journey_parameters.min_nb_journeys
 
+    if journey_parameters.min_nb_transfers:
+        req.journeys.min_nb_transfers = journey_parameters.min_nb_transfers
+
     if journey_parameters.timeframe:
         req.journeys.timeframe_duration = int(journey_parameters.timeframe)
 
@@ -748,7 +983,7 @@ def create_journeys_request(origins, destinations, datetime, clockwise, journey_
         req.journeys.depth = journey_parameters.depth
 
     if journey_parameters.isochrone_center:
-        req.journeys.isochrone_center.place = journey_parameters.isochrone_center
+        req.journeys.isochrone_center.place = journey_parameters.isochrone_center.uri
         req.journeys.isochrone_center.access_duration = 0
         req.requested_api = type_pb2.ISOCHRONE
 
@@ -771,12 +1006,41 @@ def create_journeys_request(origins, destinations, datetime, clockwise, journey_
     if journey_parameters.arrival_transfer_penalty:
         req.journeys.arrival_transfer_penalty = journey_parameters.arrival_transfer_penalty
 
-    if journey_parameters.criteria == "robustness":
+    if journey_parameters.wheelchair or journey_parameters.criteria == "classic":
+        req.journeys.criteria = request_pb2.Classic
+    elif journey_parameters.criteria == "robustness":
         req.journeys.criteria = request_pb2.Robustness
     elif journey_parameters.criteria == "occupancy":
         req.journeys.criteria = request_pb2.Occupancy
-    elif journey_parameters.criteria == "classic":
-        req.journeys.criteria = request_pb2.Classic
+    elif journey_parameters.criteria == "arrival_stop_attractivity":
+        req.journeys.criteria = request_pb2.ArrivalStopAttractivity
+    elif journey_parameters.criteria == "departure_stop_attractivity":
+        req.journeys.criteria = request_pb2.DepartureStopAttractivity
+    elif journey_parameters.criteria == "pseudo_duration":
+        req.journeys.criteria = request_pb2.PseudoDuration
+
+    ####################
+    # for loki
+    req.journeys.use_heuristic = journey_parameters.use_heuristic
+    if (
+        journey_parameters.departure_coord
+        and journey_parameters.arrival_coord
+        and journey_parameters.global_max_speed
+    ):
+        req.journeys.departure_coord.CopyFrom(
+            type_pb2.GeographicalCoord(
+                lon=journey_parameters.departure_coord.lon, lat=journey_parameters.departure_coord.lat
+            )
+        )
+        req.journeys.arrival_coord.CopyFrom(
+            type_pb2.GeographicalCoord(
+                lon=journey_parameters.arrival_coord.lon, lat=journey_parameters.arrival_coord.lat
+            )
+        )
+        req.journeys.global_max_speed = journey_parameters.global_max_speed
+        req.journeys.use_zonal_odt = journey_parameters.use_zonal_odt
+        req.journeys.max_waiting_duration_odt = journey_parameters.max_waiting_duration_odt
+    ####################
 
     return req
 
@@ -812,13 +1076,105 @@ def create_graphical_isochrones_request(
 
 def remove_ghost_words(query_string, ghost_words):
     for gw in ghost_words:
-        query_string = query_string.replace(gw, '').strip()
+        query_string = re.sub(gw, '', query_string, flags=re.IGNORECASE)
     return query_string
 
 
-def get_weekday(timestamp):
+def get_weekday(timestamp, timezone):
     try:
-        date_time = datetime.fromtimestamp(timestamp)
+        date_time = datetime.fromtimestamp(timestamp, tz=timezone)
         return WEEK_DAYS_MAPPING[date_time.weekday()]
     except ValueError:
         return None
+
+
+def is_stop_point(uri):
+    return uri.startswith("stop_point") if uri else False
+
+
+def make_origin_destination_key(from_id, to_id):
+    return ORIGIN_DESTINATION_KEY.format(from_id, to_id)
+
+
+def read_best_boarding_positions(file_path):
+    logger = logging.getLogger(__name__)
+    if not os.path.exists(file_path):
+        logger.warning("file: %s does not exist", file_path)
+        return None
+
+    logger.info("reading best boarding position from file: %s", file_path)
+    position_str_to_enum = {
+        'front': response_pb2.BoardingPosition.FRONT,
+        'middle': response_pb2.BoardingPosition.MIDDLE,
+        'back': response_pb2.BoardingPosition.BACK,
+    }
+    try:
+        my_dict = defaultdict(set)
+        fieldnames = ['from_id', 'to_id', 'positionnement_navitia']
+        with open(file_path) as f:
+            csv_reader = csv.DictReader(f, fieldnames)
+            # skip the header
+            next(csv_reader)
+
+            for line in csv_reader:
+                key = make_origin_destination_key(line['from_id'], line['to_id'])
+                pos_str = line['positionnement_navitia']
+                pos_enum = position_str_to_enum.get(pos_str.lower())
+                if pos_enum is None:
+                    logger.warning(
+                        "Error occurs when loading best_boarding_positions, wrong position string: %s", pos_str
+                    )
+                    continue
+                my_dict[key].add(pos_enum)
+
+        return my_dict
+    except Exception as e:
+        logger.exception(
+            'Error while loading best_boarding_positions file: {} with exception: {}'.format(file_path, str(e))
+        )
+        return None
+
+
+def ceil_by_half(f):
+    """Return f ceiled by 0.5.
+    >>> ceil_by_half(1.0)
+    1.0
+    >>> ceil_by_half(0.6)
+    1.0
+    >>> ceil_by_half(0.5)
+    0.5
+    >>> ceil_by_half(0.1)
+    0.5
+    >>> ceil_by_half(0.0)
+    0.0
+    """
+    return 0.5 * math.ceil(2.0 * float(f))
+
+
+def content_is_too_large(instance, endpoint, response):
+    if not instance:
+        return False
+    if instance.resp_content_limit_bytes is None:
+        return False
+    if endpoint in instance.resp_content_limit_endpoints_whitelist:
+        return False
+    if response.content_length is None:
+        return False
+    if response.content_length <= instance.resp_content_limit_bytes:
+        return False
+
+    return True
+
+
+def is_different_geographic_position(addr1, addr2):
+    """
+    Returns True if both params are address with different id (also means different coordinate) else False
+    :return: boolean
+    """
+    if not (addr1 and addr2):
+        return False
+    if addr1.get('embedded_type') != "address":
+        return False
+    if addr1.get('id') != addr2.get('id'):
+        return True
+    return False

@@ -54,7 +54,7 @@ def logger(app):
         app.logger.setLevel('INFO')
 
 
-def patch_http():
+def patch_http(patch_level="socket"):
     logger = logging.getLogger(__name__)
     logger.info(
         "Warning! You'are patching socket with gevent, parallel http/https calling by requests is activated"
@@ -62,8 +62,18 @@ def patch_http():
 
     from gevent import monkey
 
-    monkey.patch_ssl()
-    monkey.patch_socket()
+    logger.warning("patch_level : {}".format(patch_level))
+    if patch_level == "all":
+        monkey.patch_all()
+    elif patch_level == "thread":
+        monkey.patch_ssl()
+        monkey.patch_socket()
+        monkey.patch_thread()
+        monkey.patch_selectors()
+    else:
+        # Socket default value
+        monkey.patch_ssl()
+        monkey.patch_socket()
 
 
 def street_network_backends(app):

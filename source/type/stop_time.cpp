@@ -62,18 +62,8 @@ bool StopTime::is_valid_day(u_int32_t day, const bool is_arrival, const RTLevel 
     return vehicle_journey->validity_patterns[rt_level]->check(day);
 }
 
-const StopTime* StopTime::get_base_stop_time() const {
-    if (vehicle_journey == nullptr) {
-        return nullptr;
-    }
-
-    auto base_vj = vehicle_journey->get_corresponding_base();
-
-    if (base_vj == nullptr) {
-        return nullptr;
-    }
-
-    if (vehicle_journey == base_vj) {
+const StopTime* StopTime::get_corresponding_stop_time(const VehicleJourney& corresponding_vj) const {
+    if (vehicle_journey == &corresponding_vj) {
         return this;
     }
 
@@ -89,29 +79,43 @@ const StopTime* StopTime::get_base_stop_time() const {
     //          ie. Base VJ:     A - B - C - B - D
     //              RT VJ:       A - - - C - B - D
     // TODO - Use Levenshtein (edit) distance to handle those cases properly
-    size_t rank_current_vj = 0;
+    size_t rank_sp_in_current_vj = 0;  // which occurrence of stop-point should be considered
     for (const auto& st : vehicle_journey->stop_time_list) {
         if (st.is_similar(*this)) {
             break;
         }
         if (stop_point == st.stop_point) {
-            rank_current_vj++;
+            rank_sp_in_current_vj++;
         }
     }
 
-    for (const auto& base_st : base_vj->stop_time_list) {
-        if (stop_point->idx == base_st.stop_point->idx) {
-            if (rank_current_vj == 0) {
-                return &base_st;
+    for (const auto& corresponding_st : corresponding_vj.stop_time_list) {
+        if (stop_point->idx == corresponding_st.stop_point->idx) {
+            if (rank_sp_in_current_vj == 0) {
+                return &corresponding_st;
             }
-            rank_current_vj--;
+            rank_sp_in_current_vj--;
         }
     }
 
     auto logger = log4cplus::Logger::getInstance("log");
     LOG4CPLUS_DEBUG(logger, "Ignored stop_time " << stop_point->uri << ":" << departure_time
-                                                 << ": impossible to match exactly one base stop_time");
+                                                 << ": impossible to match exactly one corresponding stop_time");
     return nullptr;
+}
+
+const StopTime* StopTime::get_base_stop_time() const {
+    if (vehicle_journey == nullptr) {
+        return nullptr;
+    }
+
+    auto base_vj = vehicle_journey->get_corresponding_base();
+
+    if (base_vj == nullptr) {
+        return nullptr;
+    }
+
+    return get_corresponding_stop_time(*base_vj);
 }
 
 bool StopTime::is_similar(const StopTime& st) const {

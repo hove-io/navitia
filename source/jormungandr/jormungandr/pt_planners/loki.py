@@ -28,7 +28,7 @@
 # www.navitia.io
 from __future__ import absolute_import, print_function, unicode_literals, division
 
-from jormungandr.pt_planners.common import ZmqSocket, get_crow_fly
+from jormungandr.pt_planners.common import ZmqSocket, get_crow_fly, get_odt_stop_points
 from jormungandr import utils, app
 from .pt_planner import AbstractPtPlanner
 from navitiacommon import type_pb2
@@ -40,7 +40,12 @@ class PlannerLokiException(Exception):
 
 class Loki(ZmqSocket, AbstractPtPlanner):
     def __init__(
-        self, name, zmq_context, zmq_socket, zmq_socket_type, timeout=app.config.get(str('INSTANCE_TIMEOUT'), 10)
+        self,
+        name,
+        zmq_context,
+        zmq_socket,
+        zmq_socket_type,
+        timeout=app.config.get(str('INSTANCES_TIMEOUT'), 10),
     ):
         super(Loki, self).__init__(
             "pt_planner_loki_{}".format(name), zmq_context, zmq_socket, zmq_socket_type, timeout
@@ -56,6 +61,13 @@ class Loki(ZmqSocket, AbstractPtPlanner):
         self, origins, destinations, datetime, clockwise, graphical_isochrones_parameters, bike_in_pt
     ):
         raise NotImplementedError("Too bad, you cannot ask loki for graphical isochrones :)")
+
+    def get_access_points(self, pt_object, access_point_filter, request_id):
+        return [
+            type_pb2.PtObject(name=ap.name, uri=ap.uri, embedded_type=type_pb2.ACCESS_POINT, access_point=ap)
+            for ap in pt_object.stop_point.access_points
+            if access_point_filter(ap)
+        ]
 
     def get_crow_fly(
         self,
@@ -93,3 +105,6 @@ class Loki(ZmqSocket, AbstractPtPlanner):
             allowed_id,
             **kwargs
         )
+
+    def get_odt_stop_points(self, coord, request_id):
+        return get_odt_stop_points(self, coord, request_id)

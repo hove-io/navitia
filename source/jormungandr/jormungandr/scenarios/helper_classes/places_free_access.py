@@ -27,12 +27,16 @@
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 from __future__ import absolute_import
+
+import collections
 from navitiacommon import type_pb2
-from jormungandr import utils, new_relic
+from jormungandr import utils
 from collections import namedtuple
 import logging
-from .helper_utils import timed_logger
+from .timer_logger_helper import timed_logger
+from jormungandr.street_network.utils import crowfly_distance_between
 
+FreeAccessObject = namedtuple('FreeAccessObject', ['uri', 'lon', 'lat'])
 PlaceFreeAccessResult = namedtuple('PlaceFreeAccessResult', ['crowfly', 'odt', 'free_radius'])
 
 
@@ -41,7 +45,7 @@ class PlacesFreeAccess:
     stop_points that are accessible freely from a given place: odt, stop_points of a stop_area, etc.
     """
 
-    def __init__(self, future_manager, instance, requested_place_obj, request_id):
+    def __init__(self, future_manager, instance, requested_place_obj, pt_planner_name, request_id):
         """
 
         :param instance: instance of the coverage, all outside services callings pass through it(street network,
@@ -55,38 +59,46 @@ class PlacesFreeAccess:
         self._request_id = request_id
         self._async_request()
         self._logger = logging.getLogger(__name__)
+        self._pt_planner = self._instance.get_pt_planner(pt_planner_name)
 
-    @new_relic.distributedEvent("get_stop_points_for_stop_area", "places")
     def _get_stop_points_for_stop_area(self, uri):
         with timed_logger(self._logger, 'stop_points_for_stop_area_calling_external_service', self._request_id):
-            return self._instance.georef.get_stop_points_for_stop_area(uri, self._request_id)
+            stop_points = self._instance.georef.get_stop_points_for_stop_area(uri, self._request_id)
+            return sorted(stop_points, key=lambda p: p[0])
 
-    @new_relic.distributedEvent("get_odt_stop_points", "places")
     def _get_odt_stop_points(self, coord):
         with timed_logger(self._logger, 'odt_stop_points_calling_external_service', self._request_id):
-            return self._instance.georef.get_odt_stop_points(coord, self._request_id)
+            return self._pt_planner.get_odt_stop_points(coord, self._request_id)
 
     def _do_request(self):
         self._logger.debug("requesting places with free access from %s", self._requested_place_obj.uri)
-
-        stop_points = []
+        crowfly = set()
         place = self._requested_place_obj
 
         if place.embedded_type == type_pb2.STOP_AREA:
-            stop_points = self._get_stop_points_for_stop_area(self._instance.georef, place.uri)
+            crowfly = {
+                FreeAccessObject(sp[0], sp[1], sp[2]) for sp in self._get_stop_points_for_stop_area(place.uri)
+            }
         elif place.embedded_type == type_pb2.ADMINISTRATIVE_REGION:
-            stop_points = [sp for sa in place.administrative_region.main_stop_areas for sp in sa.stop_points]
+            crowfly = {
+                FreeAccessObject(sp.uri, sp.coord.lon, sp.coord.lat)
+                for sa in place.administrative_region.main_stop_areas
+                for sp in sa.stop_points
+            }
         elif place.embedded_type == type_pb2.STOP_POINT:
-            stop_points = [place.stop_point]
-
-        crowfly = {stop_point.uri for stop_point in stop_points}
+            crowfly = {
+                FreeAccessObject(place.stop_point.uri, place.stop_point.coord.lon, place.stop_point.coord.lat)
+            }
 
         coord = utils.get_pt_object_coord(place)
         odt = set()
 
         if coord:
-            odt_sps = self._get_odt_stop_points(self._instance.georef, coord)
-            [odt.add(stop_point.uri) for stop_point in odt_sps]
+            odt_sps = self._get_odt_stop_points(coord)
+            collections.deque(
+                (odt.add(FreeAccessObject(sp.uri, sp.coord.lon, sp.coord.lat)) for sp in odt_sps),
+                maxlen=1,
+            )
 
         self._logger.debug("finish places with free access from %s", self._requested_place_obj.uri)
 

@@ -59,6 +59,7 @@ from navitiacommon.type_pb2 import (
     EquipmentDetails,
     CurrentAvailability,
     OccupancyStatus,
+    AccessPointType,
 )
 
 
@@ -120,6 +121,7 @@ class PtObjectSerializer(PbGenericSerializer):
     quality = jsonschema.Field(schema_type=int, required=False, display_none=True, deprecated=True)
     stop_area = jsonschema.MethodField(schema_type=lambda: StopAreaSerializer())
     stop_point = jsonschema.MethodField(schema_type=lambda: StopPointSerializer())
+    poi = jsonschema.MethodField(schema_type=lambda: PoiSerializer())
     line = jsonschema.MethodField(schema_type=lambda: LineSerializer())
     network = jsonschema.MethodField(schema_type=lambda: NetworkSerializer())
     route = jsonschema.MethodField(schema_type=lambda: RouteSerializer())
@@ -166,6 +168,12 @@ class PtObjectSerializer(PbGenericSerializer):
     def get_stop_point(self, obj):
         if obj.HasField(str('stop_point')):
             return StopPointSerializer(obj.stop_point, display_none=False).data
+        else:
+            return None
+
+    def get_poi(self, obj):
+        if obj.HasField(str('poi')):
+            return PoiSerializer(obj.poi, display_none=False).data
         else:
             return None
 
@@ -333,6 +341,7 @@ class CarParkSerializer(PbNestedSerializer):
     available_electric_vehicle = jsonschema.IntField()
     occupied_electric_vehicle = jsonschema.IntField()
     state = jsonschema.Field(schema_type=str)
+    availability = jsonschema.Field(schema_type=bool, display_none=True)
 
 
 class AdminSerializer(SortedGenericSerializer, PbGenericSerializer):
@@ -355,6 +364,7 @@ class AddressSerializer(PbGenericSerializer):
 
 class PoiSerializer(PbGenericSerializer):
     coord = CoordSerializer(required=False)
+    links = DisruptionLinkSerializer(attr='impact_uris', display_none=False)
     label = jsonschema.Field(schema_type=str)
     administrative_regions = AdminSerializer(many=True, display_none=False)
     poi_type = PoiTypeSerializer(display_none=False)
@@ -414,6 +424,7 @@ class EquipmentDetailsSerializer(PbNestedSerializer):
 class AccessPointSerializer(PbGenericSerializer):
     coord = CoordSerializer(required=False)
     access_point_code = jsonschema.MethodField(schema_type=str, display_none=False)
+    embedded_type = EnumField(pb_type=AccessPointType, display_none=True)
 
     def get_access_point_code(self, obj):
         return get_proto_attr_or_default(obj, 'stop_code')
@@ -738,12 +749,22 @@ class RouteDisplayInformationSerializer(PbNestedSerializer):
 
     color = jsonschema.Field(schema_type=str)
     code = jsonschema.Field(schema_type=str)
+    headsign = jsonschema.Field(schema_type=str, display_none=True)
     name = jsonschema.Field(schema_type=str)
     links = jsonschema.MethodField(display_none=True, schema_type=LinkSchema(many=True))
     text_color = jsonschema.Field(schema_type=str)
+    trip_short_name = jsonschema.Field(schema_type=str, display_none=True)
 
     def get_links(self, obj):
-        return DisruptionLinkSerializer().to_value(obj.impact_uris)
+        response = DisruptionLinkSerializer().to_value(obj.impact_uris)
+        for origin in obj.origins:
+            response.append(create_internal_link(_type="stop_area", rel="origins", category="origin", id=origin))
+
+        for terminus in obj.terminus:
+            response.append(
+                create_internal_link(_type="stop_area", rel="terminus", category="terminus", id=terminus)
+            )
+        return response
 
 
 class PassageDisplayInformationSerializer(RouteDisplayInformationSerializer):
@@ -807,6 +828,28 @@ def make_properties_links(properties):
             }
         )
 
+    if properties.HasField(str("origin")):
+        response.append(
+            {
+                "type": "stop_area",
+                "rel": "origins",
+                "category": "origin",
+                "id": properties.origin,
+                "internal": True,
+            }
+        )
+
+    if properties.HasField(str("terminus")):
+        response.append(
+            {
+                "type": "stop_area",
+                "rel": "terminus",
+                "category": "terminus",
+                "id": properties.terminus,
+                "internal": True,
+            }
+        )
+
     return response
 
 
@@ -835,3 +878,29 @@ class StopDateTimeSerializer(PbNestedSerializer):
     links = PropertiesLinksSerializer(attr="properties")
     data_freshness = EnumField(pb_type=RTLevel)
     departure_occupancy = EnumField(pb_type=OccupancyStatus)
+
+
+class PollutantValueSerializer(PbNestedSerializer):
+    nox = jsonschema.MethodField(schema_type=float, display_none=False)
+    pm = jsonschema.MethodField(schema_type=float, display_none=False)
+
+    def get_nox(self, obj):
+        if obj.HasField(str('nox')):
+            return float("{:.4f}".format(obj.nox))
+        else:
+            return None
+
+    def get_pm(self, obj):
+        if obj.HasField(str('pm10')):
+            return float("{:.4f}".format(obj.pm10))
+        else:
+            return None
+
+
+class AirPollutantsSerializer(PbNestedSerializer):
+    unit = jsonschema.Field(schema_type=str)
+    values = PollutantValueSerializer()
+
+
+class LowEmissionZoneSerializer(PbNestedSerializer):
+    on_path = jsonschema.Field(schema_type=bool)

@@ -1,0 +1,74 @@
+    _ _ _     _                         _ _
+   | (_) |__ | | _____  ___ _ __   __ _| (_)_   _____
+   | | | '_ \| |/ / _ \/ _ \ '_ \ / _` | | \ \ / / _ \
+   | | | |_) |   <  __/  __/ |_) | (_| | | |\ V /  __/
+   |_|_|_.__/|_|\_\___|\___| .__/ \__,_|_|_| \_/ \___|
+                           |_|
+
+   (C) Fabio Busatto <fabio.busatto@gmail.com>
+
+
+
+1. OVERVIEW
+   Many systems provide the ability to keep tcp connections alive, so they
+   aren't reset by peers or by routers because of inactivity.
+
+   Even if this feature is present, only a few programs correctly implement
+   the code to use it. If your favourite foo-client is not written with
+   support for tcp keepalive, you'll continue to see your connection reset.
+
+   libkeepalive library provides a way to enable tcp keepalive support in
+   any program that uses shared libraries (e.g.: glibc shared object) to
+   perform network operations. Using the preload method, you will be able to
+   intercept normal program execution and to inject the code needed to enable
+   the keepalive routines, everything done without modifying the original
+   binary file and with no need to gain root privileges.
+
+2. OBTAINING SOFTWARE
+   Latest version of libkeepalive is available on
+   http://libkeepalive.sourceforge.net/#download.
+
+3. BUILDING BINARIES
+   Just run make (use gmake if your default make is another one).
+
+4. INSTALLING
+   Simply copy libkeepalive.so in some cool directory (/usr/lib, or ~/lib if
+   you're not so elite to have root privileges).
+   If you want to enable keepalive in suid programs too, you have to copy
+   libkeepalive.so in /lib or /usr/lib and suid it (according to ld.so
+   manpage). In any other scenarios the library will not work with suid
+   binaries.
+
+5. USER CONFIGURATION
+   libkeepalive will do its job if you set the environment variable LD_PRELOAD
+   to the path of libkeepalive.so shared library before executing the target
+   program.  You must specify the full path of the library if ld.so cannot is
+   not able to find it. You can also set the variable in your startup script
+   (i.e.: ~/.profile), depending from your shell.
+   For informations about setting environment variables, refer to your shell
+   documentation.
+
+6. SYSTEM-WIDE CONFIGURATION
+   Host administrators may want to impose the use of libkeepalive to all their
+   users and all daemons loaded by the system startup process.
+   Adding the full path of the libkeepalive.so dynamic library to
+   /etc/ld.so.preload you obtain the same result as the LD_PRELOAD variable is
+   always set, forcing the use indipendently from the environment.
+
+7. DISABLING FOR A SPECIFIC EXECUTION
+   If you need to disable the action of libkeepalive for a single job, or if
+   your admin set the ld.so.preload, you can set the KEEPALIVE environment
+   variable to "off", inhibiting the library even if it will be loaded.
+
+8. TUNING KEEPALIVE PARAMETERS
+   You can change the keepalive parameters using environment variables or via
+   sysctl/procfs.
+
+       env             sysctl
+   KEEPCNT     <=>   net.ipv4.tcp_keepalive_probes
+   KEEPIDLE    <=>   net.ipv4.tcp_keepalive_time
+   KEEPINTVL   <=>   net.ipv4.tcp_keepalive_intvl
+
+DON'T FORGET to configure your system-specific parameters for keepalive!
+Many times, defaults are not what you need and you have to change your
+settings (see your system documentation for this).

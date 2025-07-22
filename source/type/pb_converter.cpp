@@ -114,6 +114,12 @@ struct PbCreator::Filler::PtObjVisitor : public boost::static_visitor<> {
             case nd::StopTimeUpdate::Status::DELETED:
             case nd::StopTimeUpdate::Status::DELETED_FOR_DETOUR:
                 return pbnavitia::DELETED;
+            case nd::StopTimeUpdate::Status::NO_ALIGHTING:
+                return pbnavitia::NO_ALIGHTING;
+            case nd::StopTimeUpdate::Status::NO_BOARDING:
+                return pbnavitia::NO_BOARDING;
+            case nd::StopTimeUpdate::Status::SKIPPED:
+                return pbnavitia::SKIPPED;
             case nd::StopTimeUpdate::Status::UNCHANGED:
             default:
                 return pbnavitia::UNCHANGED;
@@ -459,6 +465,9 @@ void PbCreator::Filler::add_contributor(const T* nav) {
     if (pb_creator.disable_feedpublisher) {
         return;
     }
+    if (pb_creator.data->pt_data->contributors.size() == pb_creator.contributors.size()) {
+        return;
+    }
     const auto& contributors = ptref_indexes<nt::Contributor>(nav);
     for (const nt::Contributor* c : contributors) {
         if (!c->license.empty()) {
@@ -597,6 +606,7 @@ void PbCreator::Filler::fill_pb_object(const ng::Admin* adm, pbnavitia::Administ
 void PbCreator::Filler::create_access_point(const nt::AccessPoint& access_point, pbnavitia::AccessPoint* ap) {
     ap->set_name(access_point.name);
     ap->set_uri(access_point.uri);
+    ap->set_embedded_type(pbnavitia::pt_access_point);
     if (access_point.coord.is_initialized()) {
         ap->mutable_coord()->set_lon(access_point.coord.lon());
         ap->mutable_coord()->set_lat(access_point.coord.lat());
@@ -698,7 +708,7 @@ void PbCreator::Filler::fill_pb_object(const nt::StopPoint* sp, pbnavitia::StopP
         fill(sp->admin_list, stop_point->mutable_administrative_regions());
     }
     // access points
-    if (depth > 2) {
+    if (depth > 1) {
         fill_access_points(sp->access_points, stop_point);
     }
 
@@ -792,14 +802,14 @@ void PbCreator::Filler::fill_pb_object(const nt::Line* l, pbnavitia::Line* line)
     }
     fill(l->physical_mode_list, line->mutable_physical_modes());
     fill(l->commercial_mode, line);
+    fill(l->network, line);
 
     if (depth > 0) {
         if (!this->pb_creator.disable_geojson) {
             fill(&l->shape, line);
         }
 
-        fill(l->route_list, line->mutable_routes());
-        fill(l->network, line);
+        copy(0, dump_message_options).fill(l->route_list, line->mutable_routes());
 
         fill(l->line_group_list, line->mutable_line_groups());
     }
@@ -821,7 +831,8 @@ void PbCreator::Filler::fill_pb_object(const nt::Line* l, pbnavitia::Line* line)
          * the behavior too much.
          * */
         auto fill_line_section_message = [&](const nt::VehicleJourney& vj) {
-            for (const auto& impact_ptr : vj.meta_vj->get_publishable_messages(pb_creator.now)) {
+            for (const auto& impact_ptr :
+                 vj.meta_vj->get_applicable_messages(pb_creator.now, pb_creator.action_period)) {
                 if (impact_ptr->is_line_section_of(*vj.route->line)) {
                     fill_message(impact_ptr, line);
                 }
@@ -840,7 +851,8 @@ void PbCreator::Filler::fill_pb_object(const nt::Line* l, pbnavitia::Line* line)
          * the behavior too much.
          * */
         auto fill_rail_section_message = [&](const nt::VehicleJourney& vj) {
-            for (const auto& impact_ptr : vj.meta_vj->get_publishable_messages(pb_creator.now)) {
+            for (const auto& impact_ptr :
+                 vj.meta_vj->get_applicable_messages(pb_creator.now, pb_creator.action_period)) {
                 if (impact_ptr->is_rail_section_of(*vj.route->line)) {
                     fill_message(impact_ptr, line);
                 }
@@ -870,7 +882,10 @@ void PbCreator::Filler::fill_pb_object(const nt::Route* r, pbnavitia::Route* rou
         return;
     }
 
-    fill(r->line, route);
+    copy(0, dump_message_options).fill(r->line, route);
+    if ((depth > 1) && (!this->pb_creator.disable_geojson)) {
+        fill(&r->line->shape, route->mutable_line());
+    }
 
     if (!this->pb_creator.disable_geojson) {
         fill(&r->shape, route);
@@ -1339,6 +1354,11 @@ void PbCreator::Filler::fill_pb_object(const nd::Impact* impact, pbnavitia::Impa
     for (const auto& m : impact->messages) {
         auto pb_m = pb_impact->add_messages();
         pb_m->set_text(m.text);
+
+        auto translated_text = this->pb_creator.get_translated_message(m.translations, this->pb_creator.language);
+        if (!translated_text.empty()) {
+            pb_m->set_text(translated_text);
+        }
         auto pb_channel = pb_m->mutable_channel();
         pb_channel->set_content_type(m.channel_content_type);
         pb_channel->set_id(m.channel_id);
@@ -1374,6 +1394,9 @@ void PbCreator::Filler::fill_pb_object(const nd::Impact* impact, pbnavitia::Impa
                     break;
                 case nd::ChannelType::beacon:
                     pb_channel->add_channel_types(pbnavitia::Channel::beacon);
+                    break;
+                case nd::ChannelType::pids:
+                    pb_channel->add_channel_types(pbnavitia::Channel::pids);
                     break;
             }
         }
@@ -1694,6 +1717,21 @@ void PbCreator::Filler::fill_pb_object(const StopTimeCalendar* stop_time_calenda
         destination->set_uri("destination:" + std::to_string(hash_fn(sa->name)));
         destination->set_destination(sa->name);
     }
+
+    // Fill origin and terminus:
+    if (!stop_time_calendar->stop_time->vehicle_journey->stop_time_list.empty()) {
+        if (stop_time_calendar->stop_time->vehicle_journey->stop_time_list.front().stop_point) {
+            auto origin_uri =
+                stop_time_calendar->stop_time->vehicle_journey->stop_time_list.front().stop_point->stop_area->uri;
+            hn->set_origin(origin_uri);
+        }
+        if (stop_time_calendar->stop_time->vehicle_journey->stop_time_list.back().stop_point) {
+            auto terminus_uri =
+                stop_time_calendar->stop_time->vehicle_journey->stop_time_list.back().stop_point->stop_area->uri;
+            hn->set_terminus(terminus_uri);
+        }
+    }
+
     fill(pb_creator.data->pt_data->comments.get(*stop_time_calendar->stop_time), hn->mutable_notes());
     if (stop_time_calendar->stop_time->vehicle_journey != nullptr) {
         if (!stop_time_calendar->stop_time->vehicle_journey->odt_message.empty()) {
@@ -1726,6 +1764,15 @@ void PbCreator::Filler::fill_pb_object(const StopTimeCalendar* stop_time_calenda
         rs_date_time->set_time(std::numeric_limits<u_int64_t>::max());
         rs_date_time->clear_base_date_time();
         rs_date_time->clear_realtime_level();
+    }
+
+    // Add has_equipments
+    if (stop_time_calendar->stop_time->vehicle_journey != nullptr) {
+        pbnavitia::hasEquipments* has_equipments = rs_date_time->mutable_has_equipments();
+        const auto& vj =
+            VjOrigDest(stop_time_calendar->stop_time->vehicle_journey, stop_time_calendar->stop_time->stop_point,
+                       stop_time_calendar->stop_time->stop_point);
+        fill_with_creator(&vj, [&]() { return has_equipments; });
     }
 }
 
@@ -1845,6 +1892,16 @@ std::string PbCreator::get_section_id(pbnavitia::Journey* j, size_t section_idx)
     return it->second;
 }
 
+std::string PbCreator::get_translated_message(const std::vector<type::disruption::Translation>& translations,
+                                              const std::string& language) {
+    for (const auto& t : translations) {
+        if (!t.text.empty() && (t.language == language)) {
+            return t.text;
+        }
+    }
+    return "";
+}
+
 void PbCreator::fill_co2_emission_by_mode(pbnavitia::Section* pb_section, const std::string& mode_uri) {
     if (!mode_uri.empty()) {
         const auto it_physical_mode = data->pt_data->physical_modes_map.find(mode_uri);
@@ -1864,7 +1921,10 @@ void PbCreator::fill_co2_emission(pbnavitia::Section* pb_section, const type::Ve
 
 void PbCreator::fill_fare_section(pbnavitia::Journey* pb_journey, const fare::results& fare) {
     auto pb_fare = pb_journey->mutable_fare();
+    fill_fare(pb_fare, pb_journey, fare);
+}
 
+void PbCreator::fill_fare(pbnavitia::Fare* pb_fare, pbnavitia::Journey* pb_journey, const fare::results& fare) {
     size_t cpt_ticket = response.tickets_size();
 
     boost::optional<std::string> currency;
@@ -1902,9 +1962,13 @@ void PbCreator::fill_fare_section(pbnavitia::Journey* pb_journey, const fare::re
             pb_fare->add_ticket_id(pb_ticket->id());
         }
 
-        for (auto section : ticket.sections) {
-            auto section_id = get_section_id(pb_journey, section.path_item_idx);
-            pb_ticket->add_section_id(section_id);
+        for (const auto& section : ticket.sections) {
+            if (section.section_id) {
+                pb_ticket->add_section_id(*section.section_id);
+            } else if (pb_journey) {
+                auto section_id = get_section_id(pb_journey, section.path_item_idx);
+                pb_ticket->add_section_id(section_id);
+            }
         }
     }
     pb_fare->mutable_total()->set_value(fare.total.value);
@@ -2238,6 +2302,8 @@ const pbnavitia::Response& PbCreator::get_response() {
     contributors.clear();
     Filler(0, {DumpMessage::No}, *this).fill_pb_object(impacts, response.mutable_impacts());
     impacts.clear();
+    Filler(0, {DumpMessage::No}, *this).fill_pb_object(origins, response.mutable_origins());
+    origins.clear();
     Filler(0, {DumpMessage::No}, *this).fill_pb_object(terminus, response.mutable_terminus());
     terminus.clear();
     return response;
@@ -2339,6 +2405,10 @@ pbnavitia::VehiclePosition* PbCreator::add_vehicle_positions() {
 
 pbnavitia::AccessPoint* PbCreator::add_access_points() {
     return response.add_access_points();
+}
+
+pbnavitia::PtJourneyFare* PbCreator::add_pt_journey_fares() {
+    return response.add_pt_journey_fares();
 }
 
 bool PbCreator::has_error() {

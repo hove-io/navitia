@@ -70,7 +70,7 @@ nt::Type_e get_type_enum(const std::string& str) {
     if ("stop_time" == str) {
         return nt::Type_e::StopTime;
     }
-    LOG4CPLUS_WARN(log4cplus::Logger::getInstance("log"), "unkown navitia type: " << str);
+    LOG4CPLUS_WARN(log4cplus::Logger::getInstance("log"), "unknown navitia type: " << str);
     return nt::Type_e::Unknown;
 }
 
@@ -326,7 +326,6 @@ void StopsGtfsHandler::finish(Data& data) {
     handle_stop_point_without_area(data);
 
     LOG4CPLUS_TRACE(logger, data.stop_points.size() << " added stop points");
-    ;
     LOG4CPLUS_TRACE(logger, data.stop_areas.size() << " added stop areas");
     LOG4CPLUS_TRACE(logger, ignored << " points ignored because of dupplicates");
 }
@@ -550,7 +549,7 @@ int PathWayGtfsHandler::fill_pathway_field(const csv_row& row, const int key, co
     if (has_col(key, row) && row[key] != "") {
         try {
             return (int)boost::lexical_cast<float>(row[key]);
-        } catch (boost::bad_lexical_cast const& e) {
+        } catch (boost::bad_lexical_cast const&) {
             LOG4CPLUS_ERROR(log4cplus::Logger::getInstance("log"),
                             "impossible to parse " << column_name << ": " << row[key]);
         }
@@ -568,7 +567,6 @@ ed::types::PathWay* PathWayGtfsHandler::handle_line(Data& data, const csv_row& r
     pw->to_stop_id = row[to_stop_id_c];
     pw->pathway_mode = fill_pathway_field(row, pathway_mode_c, "pathway.pathway_mode");
     pw->is_bidirectional = fill_pathway_field(row, is_bidirectional_c, "pathway.is_bidirectional");
-    ;
 
     // Optionnal fields
 
@@ -1089,6 +1087,8 @@ void StopTimeGtfsHandler::init(Data&) {
     stop_seq_c = csv.get_pos_col("stop_sequence");
     pickup_c = csv.get_pos_col("pickup_type");
     drop_off_c = csv.get_pos_col("drop_off_type");
+    start_pickup_drop_off_window_c = csv.get_pos_col("start_pickup_drop_off_window");
+    end_pickup_drop_off_window_c = csv.get_pos_col("end_pickup_drop_off_window");
 }
 
 void StopTimeGtfsHandler::finish(Data& data) {
@@ -1152,6 +1152,14 @@ static int to_utc(const std::string& local_time, int utc_offset) {
     return local;
 }
 
+bool StopTimeGtfsHandler::is_zonal_odt(const csv_row& row) {
+    if (row[arrival_c].empty() && row[departure_c].empty()) {
+        return has_col(start_pickup_drop_off_window_c, row) && has_col(end_pickup_drop_off_window_c, row)
+               && (!row[start_pickup_drop_off_window_c].empty()) && (!row[end_pickup_drop_off_window_c].empty());
+    }
+    return false;
+}
+
 std::vector<nm::StopTime*> StopTimeGtfsHandler::handle_line(Data& data, const csv_row& row, bool) {
     auto stop_it = gtfs_data.stop_point_map.find(row[stop_c]);
     if (stop_it == gtfs_data.stop_point_map.end()) {
@@ -1173,13 +1181,6 @@ std::vector<nm::StopTime*> StopTimeGtfsHandler::handle_line(Data& data, const cs
         // we need to convert the stop times in UTC
         int utc_offset = data.tz_wrapper.tz_handler.get_utc_offset(*vj_it->second->validity_pattern);
 
-        stop_time->arrival_time = to_utc(row[arrival_c], utc_offset);
-        stop_time->departure_time = to_utc(row[departure_c], utc_offset);
-
-        // GTFS don't handle boarding / alighting duration, assuming 0
-        stop_time->alighting_time = stop_time->arrival_time;
-        stop_time->boarding_time = stop_time->departure_time;
-
         stop_time->stop_point = stop_it->second;
         stop_time->order = boost::lexical_cast<unsigned int>(row[stop_seq_c]);
         stop_time->vehicle_journey = vj_it->second;
@@ -1199,6 +1200,20 @@ std::vector<nm::StopTime*> StopTimeGtfsHandler::handle_line(Data& data, const cs
             stop_time->drop_off_allowed = (row[drop_off_c] != "1" && row[drop_off_c] != "3");
         else
             stop_time->drop_off_allowed = true;
+
+        if (is_zonal_odt(row)) {
+            stop_time->arrival_time = to_utc("12:00:00", utc_offset);
+            stop_time->departure_time = to_utc("12:00:00", utc_offset);
+            stop_time->pick_up_allowed = false;
+            stop_time->drop_off_allowed = false;
+        } else {
+            stop_time->arrival_time = to_utc(row[arrival_c], utc_offset);
+            stop_time->departure_time = to_utc(row[departure_c], utc_offset);
+        }
+
+        // GTFS don't handle boarding / alighting duration, assuming 0
+        stop_time->alighting_time = stop_time->arrival_time;
+        stop_time->boarding_time = stop_time->departure_time;
 
         stop_time->vehicle_journey->stop_time_list.push_back(stop_time);
         stop_time->wheelchair_boarding = stop_time->vehicle_journey->wheelchair_boarding;
@@ -1257,8 +1272,6 @@ GenericGtfsParser::~GenericGtfsParser() = default;
 
 void GenericGtfsParser::fill(Data& data, const std::string& beginning_date) {
     parse_files(data, beginning_date);
-
-    normalize_extcodes(data);
 }
 
 void GenericGtfsParser::fill_default_modes(Data& data) {
@@ -1350,15 +1363,6 @@ void GenericGtfsParser::fill_default_modes(Data& data) {
     gtfs_data.commercial_mode_map["5"] = commercial_mode;
     // for physical mode, CableCar is Funicular
     gtfs_data.physical_mode_map[commercial_mode->uri] = physical_mode;
-}
-
-void normalize_extcodes(Data& data) {
-    for (nm::StopArea* sa : data.stop_areas) {
-        boost::algorithm::replace_first(sa->uri, "StopArea:", "");
-    }
-    for (nm::StopPoint* sp : data.stop_points) {
-        boost::algorithm::replace_first(sp->uri, "StopPoint:", "");
-    }
 }
 
 boost::gregorian::date_period GenericGtfsParser::basic_production_date(const std::string& beginning_date) {

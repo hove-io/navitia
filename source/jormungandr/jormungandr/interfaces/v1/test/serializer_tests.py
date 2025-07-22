@@ -31,6 +31,12 @@
 from __future__ import absolute_import, print_function, unicode_literals, division
 
 from jormungandr.interfaces.v1.serializer.base import SortedGenericSerializer
+from jormungandr.interfaces.v1.decorators import get_serializer
+from jormungandr.interfaces.v1.serializer import api
+from jormungandr import app
+import pytz
+from flask import g
+import jormungandr.scenarios.tests.helpers_tests as helpers_tests
 import serpy
 
 
@@ -47,3 +53,29 @@ def test_sorted_generic_serializer():
     assert data[1]['v'] == 2
     assert data[2]['v'] == 3
     assert data[3]['v'] == 4
+
+
+@get_serializer(serpy=api.JourneysSerializer)
+def abcd():
+    booking_url = "https://toto.com?from=from_value&to=to_value"
+    return helpers_tests.get_odt_journey(booking_url=booking_url)
+
+
+def booking_rule_serialization_test():
+    with app.app_context():
+        with app.test_request_context():
+            g.timezone = pytz.utc
+            # get journey response in json
+            resp = abcd()
+            assert len(resp.get("journeys", 0)) == 1
+            journey = resp["journeys"][0]
+            assert len(journey.get("sections", 0)) == 3
+            section = journey["sections"][1]
+            booking_rule = section.get("booking_rule", None)
+            assert booking_rule is not None
+            assert booking_rule["info_url"] == "odt_url_value"
+            assert booking_rule["name"] == "odt_name_value"
+            assert booking_rule["phone_number"] == "odt_phone_value"
+            assert booking_rule["message"] == "odt_conditions_value"
+            assert booking_rule["booking_url"] == "https://toto.com?from=from_value&to=to_value"
+            assert booking_rule["applies_on"] == ["from"]

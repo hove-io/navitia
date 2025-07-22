@@ -7,14 +7,14 @@ Multiple journeys
 Navitia can compute several kind of journeys with a journey query.
 
 The
-[RAPTOR](http://research.microsoft.com/apps/pubs/default.aspx?id=156567)
+[RAPTOR](https://www.microsoft.com/en-us/research/publication/round-based-public-transit-routing)
 algorithm used in Navitia is a multi-objective algorithm. Thus it might
 return multiple journeys if it cannot know that one is better than the
 other. For example it cannot decide that a one hour journey with no
 connection is better than a 45 minutes journey with one connection
 (it is called the [pareto front](http://en.wikipedia.org/wiki/Pareto_efficiency)).
-The 3 objectives Navitia uses are roughly the arrival datetime, the number of transfers
-and the duration of "walking" (transfers and fallback).
+Navitia uses multiple objectives : arrival datetime, the number of transfers,
+the duration of "walking" (transfers and fallback), reliability of lines, occupancy, etc.
 
 If the user asks for more journeys than the number of journeys given by
 RAPTOR (with the parameter `min_nb_journeys` or `count`), Navitia will
@@ -48,6 +48,8 @@ The different journey types are:
 |less_fallback_bike|A journey with less biking|
 |less_fallback_bss|A journey with less bss|
 |fastest|A journey with minimum duration|
+|ecologic|A friendly journey for Earth|
+|reliable|A really steady journey|
 |bike_in_pt|A journey with bike both at the beginning and the end, and where bike is allowed in public transport used|
 |non_pt_walk|A journey without public transport, only walking|
 |non_pt_bike|A journey without public transport, only biking|

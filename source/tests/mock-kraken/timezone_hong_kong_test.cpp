@@ -100,7 +100,7 @@ int main(int argc, const char* const argv[]) {
             // closing time should be the latest arrival of all vjs of the line and it's stored as local time
             line_X->closing_time = boost::make_optional(boost::posix_time::duration_from_string("00:55"));
         },
-        false, "canal tp", "Asia/Hong_Kong", timezones);
+        false, "hove", "Asia/Hong_Kong", timezones);
 
     b.data->meta->production_date = bg::date_period(bg::date(2017, 1, 1), bg::days(30));
 

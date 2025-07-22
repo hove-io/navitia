@@ -100,11 +100,14 @@ night_bus_filter_base_factor = 15 * 60  # seconds
 # will be chosen.
 priority = 0
 
-# activate / desactivate call to bss provider
+# activate / deactivate call to bss provider
 bss_provider = True
 
-# activate / desactivate call to car parking provider
+# activate / deactivate call to car parking provider
 car_park_provider = True
+
+# activate / deactivate adding disruptions on poi in journeys
+disruptions_on_poi = False
 
 # Maximum number of connections allowed in journeys is calculated as
 # max_additional_connections + minimum connections among the journeys
@@ -150,6 +153,10 @@ additional_time_after_first_section_taxi = 5 * 60
 
 # Additionnal time in second before the taxi section when used as last section mode
 additional_time_before_last_section_taxi = 5 * 60
+
+# Additionnal time in second after the parking section when used as first section mode
+on_street_bike_parking_duration = 5 * 60
+
 
 max_walking_direct_path_duration = 24 * 60 * 60
 
@@ -207,8 +214,11 @@ max_taxi_direct_path_distance = 200000  # 200 Km
 # Proximity radius for autocomplete used in /places endpoint
 places_proximity_radius = 20000  # 20 Km
 
+# TODO: Should be deleted after deploying the next release to all the platforms
 # Asgard language by default
 asgard_language = "english_us"
+
+language = "fr-FR"
 
 # Compute pathways using the street_network engine for transfers between surface physical modes
 transfer_path = False
@@ -216,9 +226,16 @@ transfer_path = False
 # use/disuse access points in journey computations
 access_points = False
 
+# use/disuse poi access points in journey computations
+poi_access_points = False
+
 default_pt_planner = 'kraken'
 
 filter_odt_journeys = False
+
+additional_parameters = False
+
+max_waiting_duration_odt = 30 * 60  # 30 minutes
 
 ghost_words = []  # type: List[str]
 
@@ -237,6 +254,48 @@ ghost_words = []  # type: List[str]
 #     }
 # }
 pt_planners_configurations = dict()  # type: dict
+same_journey_schedules_configuration = dict()  # type: dict
+
+# loki pt journey fare
+loki_pt_journey_fare = 'kraken'
+loki_compute_pt_journey_fare = True
+loki_pt_journey_fare_configurations = dict()  # type: dict
+
+co2_emission_car_value = 184.0  # gEC by Km
+co2_emission_car_unit = 'gEC'
+
+use_predicted_traffic = False
+
+# Parameters on walk
+walking_walkway_factor = 1.0
+walking_sidewalk_factor = 1.0
+walking_alley_factor = 2.0
+walking_driveway_factor = 5.0
+walking_step_penalty = 30.0
+walking_use_ferry = 0.5
+walking_use_living_streets = 0.6
+walking_use_tracks = 0.5
+walking_use_hills = 0.5
+walking_service_factor = 1.0
+walking_max_hiking_difficulty = 1
+walking_shortest = False
+walking_ignore_oneways = True
+walking_destination_only_penalty = 120
+
+# Parameters on bike
+bike_use_roads = 0.5  # (0 - 1.0)
+bike_use_hills = 0.5  # (0 - 1.0)
+bike_use_ferry = 0.5  # (0 - 1.0)
+bike_avoid_bad_surfaces = 0.25  # (0 - 1.0)
+bike_shortest = False
+bicycle_type = 'hybrid'  # The type of bicycle [road, hybrid, cross, mountain]
+bike_use_living_streets = 0.5  # (0 - 1.0)
+bike_maneuver_penalty = 5  # (seconds)
+bike_service_penalty = 0
+bike_service_factor = 1
+bike_country_crossing_cost = 600  # (seconds)
+bike_country_crossing_penalty = 0
+bike_destination_only_penalty = 120
 
 
 def get_value_or_default(attr, instance, instance_name):

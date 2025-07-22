@@ -32,11 +32,12 @@ import pytest
 from jormungandr.pt_planners.pt_planner import JourneyParameters, GraphicalIsochronesParameters
 from jormungandr.utils import str_to_time_stamp, create_journeys_request, create_graphical_isochrones_request
 import navitiacommon.type_pb2 as type_pb2
+from jormungandr.olympic_site_params_manager import AttractivityVirtualFallback
 
 
 def check_basic_journeys_request(journeys_req):
     assert len(journeys_req.origin) == 1
-    assert journeys_req.origin[0].place == "Kisio Digital"
+    assert journeys_req.origin[0].place == "Hove"
     assert journeys_req.origin[0].access_duration == 42
 
     assert len(journeys_req.destination) == 1
@@ -55,7 +56,7 @@ def check_basic_journeys_request(journeys_req):
     assert journeys_req.max_extra_second_pass == 0
     assert journeys_req.forbidden_uris == []
     assert journeys_req.allowed_id == []
-    assert journeys_req.direct_path_duration == 0
+    assert journeys_req.direct_path_duration == 3600  # Default value in navitia-proto
     assert journeys_req.bike_in_pt is False
     assert journeys_req.min_nb_journeys == 0
     assert journeys_req.timeframe_duration == 0
@@ -76,7 +77,7 @@ def check_graphical_isochrones_request(isochrone_request):
 
 
 def create_journeys_request_test():
-    origin = {"Kisio Digital": 42}
+    origin = {"Hove": 42}
     destination = {"Somewhere": 666}
     journey_parameters = JourneyParameters()
     datetime = str_to_time_stamp("20120614T080000")
@@ -89,8 +90,41 @@ def create_journeys_request_test():
     assert req.journeys.arrival_transfer_penalty == 120
 
 
+def create_journeys_request_with_attractivities_test():
+    origin = {"Hove": 42}
+    destination = {"Somewhere": 666}
+    departure_olympic_site_params = {
+        "departure_scenario": {
+            "Hove": AttractivityVirtualFallback(1, 2),
+            "Somewhere": AttractivityVirtualFallback(2, 3),
+        },
+        "arrival_scenario": {},
+    }
+    journey_parameters = JourneyParameters(olympic_site_params=departure_olympic_site_params)
+    datetime = str_to_time_stamp("20120614T080000")
+
+    req = create_journeys_request(origin, destination, datetime, True, journey_parameters, False)
+    assert req.journeys.origin[0].attractivity == 1
+    assert not req.journeys.destination[0].HasField("attractivity")
+
+    arrival_olympic_site_params = {
+        "departure_scenario": {},
+        "arrival_scenario": {
+            "Hove": AttractivityVirtualFallback(1, 2),
+            "Somewhere": AttractivityVirtualFallback(2, 3),
+        },
+    }
+
+    journey_parameters = JourneyParameters(olympic_site_params=arrival_olympic_site_params)
+    datetime = str_to_time_stamp("20120614T080000")
+
+    req = create_journeys_request(origin, destination, datetime, True, journey_parameters, False)
+    assert req.journeys.destination[0].attractivity == 2
+    assert not req.journeys.origin[0].HasField("attractivity")
+
+
 def test_journey_request_current_time():
-    origin = {"Kisio Digital": 42}
+    origin = {"Hove": 42}
     destination = {"Somewhere": 666}
     datetime = str_to_time_stamp("20120614T080000")
     journey_parameters = JourneyParameters(current_datetime=123456789)
@@ -100,7 +134,7 @@ def test_journey_request_current_time():
 
 
 def create_graphical_isochrones_request_test():
-    origin = {"Kisio Digital": 42}
+    origin = {"Hove": 42}
     destination = {"Somewhere": 666}
     graphical_isochrones_parameters = GraphicalIsochronesParameters()
     datetime = str_to_time_stamp("20120614T080000")
@@ -114,7 +148,7 @@ def create_graphical_isochrones_request_test():
 
 
 def test_journey_request_tranfer_penalties():
-    origin = {"Kisio Digital": 42}
+    origin = {"Hove": 42}
     destination = {"Somewhere": 666}
     journey_parameters = JourneyParameters(arrival_transfer_penalty=60, walking_transfer_penalty=240)
     datetime = str_to_time_stamp("20120614T080000")

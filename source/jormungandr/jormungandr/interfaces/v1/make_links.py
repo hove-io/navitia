@@ -38,6 +38,7 @@ from jormungandr.interfaces.v1.converters_collection_type import (
 from flask_restful.utils import unpack
 from jormungandr import app
 from jormungandr.utils import COVERAGE_ANY_BETA
+from six.moves.urllib.parse import urlencode
 
 
 def create_external_link(url, rel, _type=None, templated=False, description=None, **kwargs):
@@ -61,7 +62,7 @@ def create_external_link(url, rel, _type=None, templated=False, description=None
     return d
 
 
-def create_internal_link(rel, _type, id, templated=False, description=None):
+def create_internal_link(rel, _type, id, templated=False, description=None, category=None):
     """
     :param rel: relation of the link to the current object
     :param _type: type of linked object
@@ -78,12 +79,14 @@ def create_internal_link(rel, _type, id, templated=False, description=None):
         d['title'] = description
     if id:
         d['id'] = id
+    if category:
+        d['category'] = category
 
     return d
 
 
 def make_external_service_link(url, rel, _type, templated=False, **kwargs):
-    call_params = "&".join(["{}={}".format(key, value) for key, value in kwargs.items()])
+    call_params = urlencode(kwargs, doseq=True)
     return {"href": url + call_params, "rel": rel, "type": _type, "templated": templated}
 
 
@@ -121,7 +124,9 @@ class add_pagination_links(object):
                 data = objects
             pagination = data.get('pagination', None)
             endpoint = request.endpoint
-            kwargs.update(request.args)
+            # Note: request.args is a MultiDict, we want to flatten it by having list as value when needed
+            # From Python3.6 onwards dict(request.args) != request.args.to_dict(flat=False)
+            kwargs.update(request.args.to_dict(flat=False))
 
             # We remove the region any-beta if present. This is a temporary hack and should be removed later
             if kwargs.get('region') == COVERAGE_ANY_BETA:

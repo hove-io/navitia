@@ -37,12 +37,14 @@ from jormungandr import i_manager, app, fallback_modes
 from jormungandr.interfaces.parsers import default_count_arg_type
 from jormungandr.interfaces.v1.ResourceUri import complete_links
 from functools import wraps
+from jormungandr.park_modes import all_park_modes
 from jormungandr.timezone import set_request_timezone
 from jormungandr.interfaces.v1.make_links import (
     create_external_link,
     create_internal_link,
     make_external_service_link,
 )
+import polyline
 from jormungandr.interfaces.v1.errors import ManageError
 from collections import defaultdict
 from navitiacommon import response_pb2
@@ -50,10 +52,10 @@ from jormungandr.utils import (
     date_to_timestamp,
     dt_to_str,
     has_invalid_reponse_code,
+    is_public_transport_section,
     journeys_absent,
-    local_str_date_to_utc,
-    UTC_DATETIME_FORMAT,
     COVERAGE_ANY_BETA,
+    local_str_date_to_str_date_with_offset,
 )
 from jormungandr.interfaces.v1.serializer import api
 from jormungandr.interfaces.v1.decorators import get_serializer
@@ -69,12 +71,14 @@ from navitiacommon.parser_args_type import (
     UnsignedInteger,
     PositiveInteger,
     DepthArgument,
-    PositiveFloat,
 )
 from jormungandr.interfaces.common import add_poi_infos_types, handle_poi_infos
 from jormungandr.fallback_modes import FallbackModes
 from copy import deepcopy
 from jormungandr.travelers_profile import TravelerProfile
+from navitiacommon.constants import ENUM_LANGUAGE
+import urllib.parse
+import base64
 
 
 f_datetime = "%Y%m%dT%H%M%S"
@@ -120,9 +124,13 @@ class add_journey_href(object):
             if has_invalid_reponse_code(objects) or journeys_absent(objects):
                 return objects
 
+            from_to_aid_types = ["stop_point", "stop_area"]
             for journey in objects[0]['journeys']:
-                args = dict(request.args)
-                allowed_ids = {
+                # Note: request.args is a MultiDict, we want to flatten it by having list as value when needed
+                # From Python3.6 onwards dict(request.args) != request.args.to_dict(flat=False)
+                args = request.args.to_dict(flat=False)
+                # Default allowed ids only for the type=stop_point
+                default_allowed_ids = {
                     o['stop_point']['id']
                     for s in journey.get('sections', [])
                     if 'from' in s
@@ -130,8 +138,11 @@ class add_journey_href(object):
                     if 'stop_point' in o
                 }
 
+                instance = None
+                allowed_id_types = []
                 if 'region' in kwargs:
                     args['region'] = kwargs['region']
+                    instance = i_manager.instances.get(kwargs['region'])
                 if "sections" not in journey:  # this mean it's an isochrone...
                     if 'to' not in args:
                         args['to'] = journey['to']['id']
@@ -139,7 +150,7 @@ class add_journey_href(object):
                         args['from'] = journey['from']['id']
                     args['rel'] = 'journeys'
                     journey['links'] = [create_external_link('v1.journeys', **args)]
-                elif allowed_ids and 'public_transport' in (s['type'] for s in journey['sections']):
+                elif default_allowed_ids and 'public_transport' in (s['type'] for s in journey['sections']):
                     # exactly one first_section_mode
                     if any(s['type'].startswith('bss') for s in journey['sections'][:2]):
                         args['first_section_mode[]'] = 'bss'
@@ -154,10 +165,42 @@ class add_journey_href(object):
 
                     args['min_nb_transfers'] = journey['nb_transfers']
                     args['direct_path'] = 'only' if 'non_pt' in journey['tags'] else 'none'
-                    args['min_nb_journeys'] = 5
+
+                    if instance:
+                        args['min_nb_journeys'] = instance.same_journey_schedules_configuration.get(
+                            'min_nb_journeys', 5
+                        )
+                        allowed_id_types = instance.same_journey_schedules_configuration.get(
+                            'allowed_id_type', ["stop_point"]
+                        )
                     args['is_journey_schedules'] = True
-                    allowed_ids.update(args.get('allowed_id[]', []))
-                    args['allowed_id[]'] = list(allowed_ids)
+
+                    # link_types=["network", "physical_mode", "commercial_mode", "line", "vehicle_journey"]
+                    link_aid_types = [type for type in allowed_id_types if type not in from_to_aid_types]
+
+                    link_allowed_ids = set()
+                    # Get allowed ids for link_aid_types
+                    for allowed_type in link_aid_types:
+                        for section in journey['sections']:
+                            if is_public_transport_section(section):
+                                link_allowed_ids.update(
+                                    link['id']
+                                    for link in section['links']
+                                    if link.get('type') == allowed_type and link.get('id')
+                                )
+                    # Get allowed ids for "stop_area" if present in allowed_id_types
+                    # Note: if both stop_point and stop_area are present then stop_point is dominant
+                    if "stop_point" not in allowed_id_types and "stop_area" in allowed_id_types:
+                        default_allowed_ids.clear()
+                        for section in journey['sections']:
+                            if section.get('type') == 'public_transport':
+                                default_allowed_ids.add(
+                                    section.get("from", {}).get("stop_point", {}).get("stop_area", {}).get("id")
+                                )
+                                default_allowed_ids.add(
+                                    section.get("to", {}).get("stop_point", {}).get("stop_area", {}).get("id")
+                                )
+                    args['allowed_id[]'] = list(default_allowed_ids | link_allowed_ids)
                     args['_type'] = 'journeys'
 
                     # Delete arguments that are contradictory to the 'same_journey_schedules' concept
@@ -178,12 +221,38 @@ class add_journey_href(object):
 
                     # Here we create two links same_journey_schedules and this_journey
                     args['rel'] = 'same_journey_schedules'
-                    same_journey_schedules_link = create_external_link('v1.journeys', **args)
+                    # TODO: _pt_planner=kraken should be removed after ticket NAV-4025 is addressed.
+                    args_same_journey = deepcopy(args)
+                    args_same_journey.update({"_pt_planner": "kraken"})
+                    same_journey_schedules_link = create_external_link('v1.journeys', **args_same_journey)
                     args['rel'] = 'this_journey'
                     args['min_nb_journeys'] = 1
                     args['count'] = 1
                     this_journey_link = create_external_link('v1.journeys', **args)
                     journey['links'] = [same_journey_schedules_link, this_journey_link]
+
+                if 'sections' in journey and 'region' in kwargs:
+                    instance = i_manager.instances.get(kwargs['region'])
+                    if instance and instance.external_service_provider_manager.is_unable_external_service(
+                        "obstacles"
+                    ):
+                        args = request.args.to_dict(flat=False)
+                        args['region'] = kwargs['region']
+                        for param in ["from", "to", "data_freshness", "datetime"]:
+                            if param in args:
+                                del args[param]
+                        for section in journey['sections']:
+                            if section.get('type') != 'street_network':
+                                continue
+                            coords = section.get('geojson').get('coordinates')
+                            coords_bytes = polyline.encode(coords, precision=6, geojson=True)
+                            encoded_bytes = base64.b64encode(coords_bytes.encode('utf-8'))
+                            args["path"] = encoded_bytes.decode('utf-8')
+                            args["distance"] = 10
+                            args['rel'] = 'obstacles'
+                            obstacle = create_external_link('v1.obstacles_nearby', **args)
+                            section['links'].append(obstacle)
+
             return objects
 
         return wrapper
@@ -211,7 +280,6 @@ class add_fare_links(object):
                 if "sections" not in j:
                     continue
                 for s in j['sections']:
-
                     # them we add the link to the different tickets needed
                     for ticket_needed in ticket_by_section[s["id"]]:
                         s['links'].append(create_internal_link(_type="ticket", rel="tickets", id=ticket_needed))
@@ -226,6 +294,52 @@ class add_fare_links(object):
                                 rss['links'].append(
                                     create_internal_link(_type="ticket", rel="tickets", id=rs_ticket_needed)
                                 )
+
+            return objects
+
+        return wrapper
+
+
+#
+# add the link between a section and the ticket needed for this section
+class add_elevations_href(object):
+    def __call__(self, f):
+        @wraps(f)
+        def wrapper(*args, **kwargs):
+            objects = f(*args, **kwargs)
+            if has_invalid_reponse_code(objects) or journeys_absent(objects) or 'region' not in kwargs:
+                return objects
+            instance = i_manager.instances.get(kwargs['region'])
+            # no Asgard configured-> no elevation-service
+            if not instance or not instance.elevation_service:
+                return objects
+
+            for j in objects[0]["journeys"]:
+                if "sections" not in j:
+                    continue
+                for s in j["sections"]:
+                    # No link for crow_fly or walking
+                    if s.get("type") == "crow_fly" or s.get("mode") != "walking":
+                        continue
+                    # No link without coordinates
+                    coordinates = s.get("geojson", {}).get("coordinates", [])
+                    if not coordinates:
+                        continue
+                    # No link for transfer if coordinates length < 3 (it's a crow_fly)
+                    if s.get("type") == "transfer" and len(coordinates) < 3:
+                        continue
+
+                    if "region" in kwargs:
+                        encoded_polyline = polyline.encode(coordinates, precision=6, geojson=True)
+                        s['links'].append(
+                            create_external_link(
+                                url="v1.elevations",
+                                region=kwargs['region'],
+                                _type="elevations",
+                                rel="elevations",
+                                polyline=encoded_polyline,
+                            )
+                        )
 
             return objects
 
@@ -275,23 +389,115 @@ class add_tad_links(object):
                         if not app_value:
                             continue
 
+                        # Get the territory value for the line used and use in deeplink
+                        territory_value = None
+                        line_id = next(
+                            (link['id'] for link in s.get('links', []) if link['type'] == "line"), None
+                        )
+                        if line_id:
+                            line_details = instance.ptref.get_objs(
+                                type_pb2.LINE, 'line.uri=\"{}\"'.format(line_id), type_pb2.OdtLevel.all
+                            )
+                            line_dict = protobuf_to_dict(next(line_details))
+                            territory_value = next(
+                                (
+                                    code['value']
+                                    for code in line_dict.get('codes', [])
+                                    if code.get('type') == "territory"
+                                ),
+                                None,
+                            )
+
                         # Prepare parameters for the deeplink of external service
                         from_embedded_type = s.get('from').get('embedded_type')
                         to_embedded_type = s.get('to').get('embedded_type')
                         from_coord = s.get('from').get(from_embedded_type).get('coord')
                         to_coord = s.get('to').get(to_embedded_type).get('coord')
+                        from_name = s.get('from').get(from_embedded_type).get('name')
+                        to_name = s.get('to').get(from_embedded_type).get('name')
                         args = dict()
-                        date_utc = local_str_date_to_utc(s.get('departure_date_time'), instance.timezone)
+                        dep_offset_dt_str = local_str_date_to_str_date_with_offset(
+                            s.get('departure_date_time'), instance.timezone
+                        )
                         args['departure_latitude'] = from_coord.get('lat')
                         args['departure_longitude'] = from_coord.get('lon')
                         args['destination_latitude'] = to_coord.get('lat')
                         args['destination_longitude'] = to_coord.get('lon')
-                        args['requested_departure_time'] = dt_to_str(date_utc, _format=UTC_DATETIME_FORMAT)
+                        args['requested_departure_time'] = dep_offset_dt_str
+                        if territory_value:
+                            args['territory'] = territory_value
+                        if from_name:
+                            args['departure_display_name'] = from_name
+                        if to_name:
+                            args['arrival_display_name'] = to_name
+
                         url = "{}://home?".format(app_value)
                         tad_link = make_external_service_link(
                             url=url, rel="tad_dynamic_link", _type="tad_dynamic_link", **args
                         )
                         s['links'].append(tad_link)
+
+            return objects
+
+        return wrapper
+
+
+class handle_poi_disruptions(object):
+    @staticmethod
+    def is_absent(links, id):
+        return next((False for link in links if link['id'] == id), True)
+
+    def __call__(self, f):
+        @wraps(f)
+        def wrapper(*args, **kwargs):
+            objects = f(*args, **kwargs)
+            if has_invalid_reponse_code(objects) or journeys_absent(objects):
+                return objects
+
+            def get_disruption_uris(object):
+                uris = set()
+                for d in objects[0].get('disruptions', []):
+                    for io in d.get('impacted_objects', []):
+                        if io['pt_object']['embedded_type'] == "poi" and io['pt_object']['id'] == object['id']:
+                            uris.add(d['id'])
+                            if 'poi' not in io['pt_object']:
+                                io['pt_object']['poi'] = object
+
+                return uris
+
+            def impact_on_poi():
+                for d in objects[0].get('disruptions', []):
+                    for io in d.get('impacted_objects', []):
+                        if io.get('pt_object', {}).get('embedded_type') == "poi":
+                            return True
+
+                return False
+
+            def update_for_poi(object):
+                # Add links in poi object
+                object_copy = deepcopy(object)
+                object.setdefault('links', [])
+                disruption_uris = get_disruption_uris(object_copy)
+                for disruption_uri in disruption_uris:
+                    if self.is_absent(object['links'], disruption_uri):
+                        object['links'].append(
+                            create_internal_link(_type="disruption", rel="disruptions", id=disruption_uri)
+                        )
+
+            # If no disruption on poi exist, no action to do
+            if not impact_on_poi():
+                return objects
+
+            # We should update 'from' and 'to' object of all the sections if object is POI
+            for j in objects[0].get('journeys', []):
+                if "sections" not in j:
+                    continue
+
+                for s in j.get('sections', []):
+                    if s.get('from', {}).get('embedded_type') == "poi":
+                        update_for_poi(s['from']['poi'])
+                    if s.get('to', {}).get('embedded_type') == "poi":
+                        update_for_poi(s['to']['poi'])
 
             return objects
 
@@ -304,6 +510,11 @@ class rig_journey(object):
     those origin/destination can be changed internally by some scenarios
     (querying external autocomplete service)
     """
+
+    @staticmethod
+    def clean_global_origin_destination_detail(json_object):
+        if isinstance(json_object, dict) and 'within_zones' in json_object:
+            del json_object["within_zones"]
 
     def __call__(self, f):
         @wraps(f)
@@ -329,9 +540,28 @@ class rig_journey(object):
                     )
                 )
                 if g.origin_detail:
+                    self.clean_global_origin_destination_detail(g.origin_detail)
                     j['sections'][0]['from'] = g.origin_detail
+
+                    # Replace coord by origin position if present in g.request_origin
+                    if hasattr(g, 'request_origin') and g.request_origin:
+                        coord = j['sections'][0]['from'].get('address', {}).get('coord')
+                        if coord:
+                            j['sections'][0]['from']['address']['coord'] = g.request_origin.get('address').get(
+                                'coord'
+                            )
+
                 if g.destination_detail:
+                    self.clean_global_origin_destination_detail(g.destination_detail)
                     j['sections'][-1]['to'] = g.destination_detail
+
+                    # Replace coord by destination position if present in g.request_destination
+                    if hasattr(g, 'request_destination') and g.request_destination:
+                        coord = j['sections'][-1]['to'].get('address', {}).get('coord')
+                        if coord:
+                            j['sections'][-1]['to']['address']['coord'] = g.request_destination.get(
+                                'address'
+                            ).get('coord')
 
             return objects
 
@@ -341,7 +571,6 @@ class rig_journey(object):
 class Journeys(JourneyCommon):
     def __init__(self):
         # journeys must have a custom authentication process
-
         super(Journeys, self).__init__(output_type_serializer=api.JourneysSerializer)
 
         parser_get = self.parsers["get"]
@@ -425,6 +654,7 @@ class Journeys(JourneyCommon):
             help="Show more information about the poi if it's available, for instance, show "
             "BSS/car park availability in the pois(BSS/car park) of response",
         )
+
         parser_get.add_argument(
             "_no_shared_section",
             type=BooleanType(),
@@ -496,44 +726,20 @@ class Journeys(JourneyCommon):
             help="Here, Active or not the realtime traffic information (True/False)",
         )
         parser_get.add_argument(
-            "_here_language",
-            type=OptionValue(
-                [
-                    'afrikaans',
-                    'arabic',
-                    'chinese',
-                    'dutch',
-                    'english',
-                    'french',
-                    'german',
-                    'hebrew',
-                    'hindi',
-                    'italian',
-                    'japanese',
-                    'nepali',
-                    'portuguese',
-                    'russian',
-                    'spanish',
-                ]
-            ),
-            hidden=True,
+            "language",
+            type=OptionValue(ENUM_LANGUAGE),
             help='Here, select a specific language for guidance instruction.\n'
             'list available:\n'
-            '- afrikaans = af\n'
-            '- arabic = ar-sa\n'
-            '- chinese = zh-cn\n'
-            '- dutch = nl-nl\n'
-            '- english = en-gb\n'
-            '- french = fr-fr\n'
-            '- german = de-de\n'
-            '- hebrew = he\n'
-            '- hindi = hi\n'
-            '- italian = it-it\n'
-            '- japanese = ja-jp\n'
-            '- nepali = ne-np\n'
-            '- portuguese = pt-pt\n'
-            '- russian = ru-ru\n'
-            '- spanish = es-es\n',
+            '- nl-NL = dutch\n'
+            '- en-US | en-GB = english\n'
+            '- fr-FR = french\n'
+            '- de-DE = german\n'
+            '- hi-IN = hindi\n'
+            '- it-IT = italian\n'
+            '- ja-JP = japanese\n'
+            '- pt-PT = portuguese\n'
+            '- ru-RU = russian\n'
+            '- es-ES = spanish\n',
         )
         parser_get.add_argument(
             "_here_matrix_type",
@@ -559,74 +765,6 @@ class Journeys(JourneyCommon):
             'Coord_1!Coord_2 with Coord=lat;lon\n'
             ' - exemple : _here_exclusion_area[]=2.40553;48.84866!2.41453;48.85677\n'
             ' - This is a list, you can add to the maximun 20 _here_exclusion_area[]\n',
-        )
-        parser_get.add_argument(
-            "_asgard_language",
-            type=OptionValue(
-                [
-                    'bulgarian',
-                    'catalan',
-                    'czech',
-                    'danish',
-                    'german',
-                    'greek',
-                    'english_gb',
-                    'english_pirate',
-                    'english_us',
-                    'spanish',
-                    'estonian',
-                    'finnish',
-                    'french',
-                    'hindi',
-                    'hungarian',
-                    'italian',
-                    'japanese',
-                    'bokmal',
-                    'dutch',
-                    'polish',
-                    'portuguese_br',
-                    'portuguese_pt',
-                    'romanian',
-                    'russian',
-                    'slovak',
-                    'slovenian',
-                    'swedish',
-                    'turkish',
-                    'ukrainian',
-                ]
-            ),
-            hidden=True,
-            help='Select a specific language for Asgard guidance instruction.\n'
-            'list available:\n'
-            '- bulgarian = bg-BG\n'
-            '- catalan = ca-ES\n'
-            '- czech = cs-CZ\n'
-            '- danish = da-DK\n'
-            '- german = de-DE\n'
-            '- greek = el-GR\n'
-            '- english_gb = en-GB\n'
-            '- english_pirate = en-US-x-pirate\n'
-            '- english_us = en-US\n'
-            '- spanish = es-ES\n'
-            '- estonian = et-EE\n'
-            '- finnish = fi-FI\n'
-            '- french = fr-FR\n'
-            '- hindi = hi-IN\n'
-            '- hungarian = hu-HU\n'
-            '- italian = it-IT\n'
-            '- japanese = ja-JP\n'
-            '- bokmal = nb-NO\n'
-            '- dutch = nl-NL\n'
-            '- polish = pl-PL\n'
-            '- portuguese_br = pt-BR\n'
-            '- portuguese_pt = pt-PT\n'
-            '- romanian = ro-RO\n'
-            '- russian = ru-RU\n'
-            '- slovak = sk-SK\n'
-            '- slovenian = sl-SI\n'
-            '- swedish = sv-SE\n'
-            '- turkish = tr-TR\n'
-            '- ukrainian = uk-UA\n',
         )
         parser_get.add_argument(
             "equipment_details",
@@ -701,38 +839,29 @@ class Journeys(JourneyCommon):
         )
 
         parser_get.add_argument(
-            "_asgard_max_walking_duration_coeff",
-            type=PositiveFloat(),
-            default=1.12,
+            "_loki_pt_journey_fare",
+            type=OptionValue(['kraken']),
+            default='kraken',
             hidden=True,
-            help="used to adjust the search range in Asgard when computing matrix",
+            help="only works when loki is selected as pt journey engine, "
+            "choose which PT-fare engine to compute the journey's PT-fares",
         )
+
         parser_get.add_argument(
-            "_asgard_max_bike_duration_coeff",
-            type=PositiveFloat(),
-            default=2.8,
+            "_loki_compute_pt_journey_fare",
+            type=BooleanType(),
+            default=True,
             hidden=True,
-            help="used to adjust the search range in Asgard when computing matrix",
-        )
-        parser_get.add_argument(
-            "_asgard_max_bss_duration_coeff",
-            type=PositiveFloat(),
-            default=0.46,
-            hidden=True,
-            help="used to adjust the search range in Asgard when computing matrix",
-        )
-        parser_get.add_argument(
-            "_asgard_max_car_duration_coeff",
-            type=PositiveFloat(),
-            default=1,
-            hidden=True,
-            help="used to adjust the search range in Asgard when computing matrix",
+            help="only works when loki is selected as pt journey engine, "
+            "whether to use external engine to compute pt journey fare",
         )
 
     @add_tad_links()
     @add_debug_info()
     @add_fare_links()
+    @add_elevations_href()
     @add_journey_href()
+    @handle_poi_disruptions()
     @rig_journey()
     @get_serializer(serpy=api.JourneysSerializer)
     @ManageError()
@@ -809,6 +938,9 @@ class Journeys(JourneyCommon):
             if args.get('additional_time_before_last_section_taxi') is None:
                 args['additional_time_before_last_section_taxi'] = mod.additional_time_before_last_section_taxi
 
+            if args.get("on_street_bike_parking_duration") is None:
+                args["on_street_bike_parking_duration"] = mod.on_street_bike_parking_duration
+
             if args.get('_stop_points_nearby_duration') is None:
                 args['_stop_points_nearby_duration'] = mod.stop_points_nearby_duration
 
@@ -836,11 +968,14 @@ class Journeys(JourneyCommon):
             if args.get('_access_points') is None:
                 args['_access_points'] = mod.access_points
 
+            if args.get('_poi_access_points') is None:
+                args['_poi_access_points'] = mod.poi_access_points
+
             if args.get('_pt_planner') is None:
                 args['_pt_planner'] = mod.default_pt_planner
 
-            if args.get('_asgard_language') is None:
-                args['_asgard_language'] = mod.asgard_language
+            if args.get('language') is None:
+                args['language'] = mod.language
 
             if args.get('bss_rent_duration') is None:
                 args['bss_rent_duration'] = mod.bss_rent_duration
@@ -856,6 +991,76 @@ class Journeys(JourneyCommon):
 
             if args.get('_filter_odt_journeys') is None:
                 args['_filter_odt_journeys'] = mod.filter_odt_journeys
+
+            if args.get('_loki_pt_journey_fare') is None:
+                args['_loki_pt_journey_fare'] = mod.loki_pt_journey_fare
+
+            if args.get('_loki_compute_pt_journey_fare') is None:
+                args['_loki_compute_pt_journey_fare'] = mod.loki_compute_pt_journey_fare
+
+            if args.get('_use_predicted_traffic') is None:
+                args['_use_predicted_traffic'] = mod.use_predicted_traffic
+
+            if args.get('_disruptions_on_poi') is None:
+                args['_disruptions_on_poi'] = mod.disruptions_on_poi
+
+            # Set params for advanced parameters for valhalla walking
+            if args.get('walking_walkway_factor') is None:
+                args['walking_walkway_factor'] = mod.walking_walkway_factor
+            if args.get('walking_sidewalk_factor') is None:
+                args['walking_sidewalk_factor'] = mod.walking_sidewalk_factor
+            if args.get('walking_alley_factor') is None:
+                args['walking_alley_factor'] = mod.walking_alley_factor
+            if args.get('walking_driveway_factor') is None:
+                args['walking_driveway_factor'] = mod.walking_driveway_factor
+            if args.get('walking_step_penalty') is None:
+                args['walking_step_penalty'] = mod.walking_step_penalty
+            if args.get('walking_use_ferry') is None:
+                args['walking_use_ferry'] = mod.walking_use_ferry
+            if args.get('walking_use_living_streets') is None:
+                args['walking_use_living_streets'] = mod.walking_use_living_streets
+            if args.get('walking_use_tracks') is None:
+                args['walking_use_tracks'] = mod.walking_use_tracks
+            if args.get('walking_use_hills') is None:
+                args['walking_use_hills'] = mod.walking_use_hills
+            if args.get('walking_service_factor') is None:
+                args['walking_service_factor'] = mod.walking_service_factor
+            if args.get('walking_max_hiking_difficulty') is None:
+                args['walking_max_hiking_difficulty'] = mod.walking_max_hiking_difficulty
+            if args.get('walking_shortest') is None:
+                args['walking_shortest'] = mod.walking_shortest
+            if args.get('walking_ignore_oneways') is None:
+                args['walking_ignore_oneways'] = mod.walking_ignore_oneways
+            if args.get('walking_destination_only_penalty') is None:
+                args['walking_destination_only_penalty'] = mod.walking_destination_only_penalty
+
+            # Set params for advanced parameters for valhalla bike
+            if args.get('bike_use_roads') is None:
+                args['bike_use_roads'] = mod.bike_use_roads
+            if args.get('bike_use_hills') is None:
+                args['bike_use_hills'] = mod.bike_use_hills
+            if args.get('bike_use_ferry') is None:
+                args['bike_use_ferry'] = mod.bike_use_ferry
+            if args.get('bike_avoid_bad_surfaces') is None:
+                args['bike_avoid_bad_surfaces'] = mod.bike_avoid_bad_surfaces
+            if args.get('bike_shortest') is None:
+                args['bike_shortest'] = mod.bike_shortest
+            if args.get('bicycle_type') is None:
+                args['bicycle_type'] = mod.bicycle_type
+            if args.get('bike_use_living_streets') is None:
+                args['bike_use_living_streets'] = mod.bike_use_living_streets
+            if args.get('bike_maneuver_penalty') is None:
+                args['bike_maneuver_penalty'] = mod.bike_maneuver_penalty
+            if args.get('bike_service_penalty') is None:
+                args['bike_service_penalty'] = mod.bike_service_penalty
+            if args.get('bike_service_factor') is None:
+                args['bike_service_factor'] = mod.bike_service_factor
+            if args.get('bike_country_crossing_cost') is None:
+                args['bike_country_crossing_cost'] = mod.bike_country_crossing_cost
+            if args.get('bike_country_crossing_penalty') is None:
+                args['bike_country_crossing_penalty'] = mod.bike_country_crossing_penalty
+            if args.get('bike_destination_only_penalty') is None:
+                args['bike_destination_only_penalty'] = mod.bike_destination_only_penalty
 
         # When computing 'same_journey_schedules'(is_journey_schedules=True), some parameters need to be overridden
         # because they are contradictory to the request
@@ -958,9 +1163,8 @@ class Journeys(JourneyCommon):
                 response.response_type = response_pb2.NO_SOLUTION
 
             if response.HasField(str('error')) and len(possible_regions) > 1:
-
                 if args['debug']:
-                    # In debug we store all errors
+                    # In debug, we store all errors
                     if not hasattr(g, 'errors_by_region'):
                         g.errors_by_region = {}
                     g.errors_by_region[r] = response.error
@@ -974,7 +1178,7 @@ class Journeys(JourneyCommon):
                 args = base_args
                 continue
 
-            # If every journeys found doesn't use PT, request the next possible region
+            # If every journey found doesn't use PT, request the next possible region
             non_pt_types = ("non_pt_walk", "non_pt_bike", "non_pt_bss", "car")
             if all(j.type in non_pt_types for j in response.journeys) or all(
                 "non_pt" in j.tags for j in response.journeys

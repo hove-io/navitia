@@ -52,7 +52,12 @@ def manager():
     return instance_manager
 
 
-def get_instances_test(manager):
+def get_instances_test(manager, mocker):
+    mock = mocker.patch.object(
+        manager,
+        'get_all_available_instances_names',
+        return_value=['paris', 'pdl'],
+    )
     with app.test_request_context('/'):
         instances = manager.get_instances()
         assert len(instances) == 2
@@ -62,11 +67,16 @@ def get_instances_test(manager):
         assert len(instances) == 1
         assert 'paris' == instances[0].name
 
-        assert manager.get_instances('foo') == []
-
 
 def get_instances_by_coord_test(manager, mocker):
-    mock = mocker.patch.object(manager, '_all_keys_of_coord', return_value=['paris'])
+    mock = mocker.patch.object(
+        manager, '_all_keys_of_coord_in_instances', return_value=[manager.instances['paris']]
+    )
+    mock = mocker.patch.object(
+        manager,
+        'get_all_available_instances_names',
+        return_value=['paris', 'pdl'],
+    )
     with app.test_request_context('/'):
         instances = manager.get_instances(lon=4, lat=3)
         assert len(instances) == 1
@@ -75,7 +85,12 @@ def get_instances_by_coord_test(manager, mocker):
 
 
 def get_instances_by_object_id_test(manager, mocker):
-    mock = mocker.patch.object(manager, '_all_keys_of_id', return_value=['pdl'])
+    mock = mocker.patch.object(manager, '_all_keys_of_id_in_instances', return_value=[manager.instances['pdl']])
+    mock = mocker.patch.object(
+        manager,
+        'get_all_available_instances_names',
+        return_value=['paris', 'pdl'],
+    )
     with app.test_request_context('/'):
         instances = manager.get_instances(object_id='sa:pdl')
         assert len(instances) == 1

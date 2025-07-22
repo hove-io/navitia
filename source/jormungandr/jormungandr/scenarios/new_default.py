@@ -47,6 +47,10 @@ from jormungandr.scenarios.utils import (
     switch_back_to_ridesharing,
     nCr,
     updated_common_journey_request_with_default,
+    get_disruptions_on_poi,
+    add_disruptions,
+    get_impact_uris_for_poi,
+    update_booking_rule_url_in_section,
 )
 from navitiacommon import type_pb2, response_pb2, request_pb2
 from jormungandr.scenarios.qualifier import (
@@ -72,23 +76,49 @@ from jormungandr.scenarios.qualifier import (
 )
 import numpy as np
 import collections
-from jormungandr.utils import date_to_timestamp, copy_flask_request_context, copy_context_in_greenlet_stack
+from jormungandr.utils import (
+    date_to_timestamp,
+    copy_flask_request_context,
+    copy_context_in_greenlet_stack,
+    is_stop_point,
+    get_lon_lat,
+    is_coord,
+    get_pt_object_from_json,
+    json_address_from_uri,
+    entrypoint_uri_refocus,
+    get_pt_object_coord,
+    is_different_geographic_position,
+)
+from jormungandr.error import generate_error
+from jormungandr.utils import Coords
 from jormungandr.scenarios.simple import get_pb_data_freshness
+from jormungandr.street_network.utils import crowfly_distance_between
 import gevent, gevent.pool
 from jormungandr import app
 from jormungandr.autocomplete.geocodejson import GeocodeJson
 from jormungandr import global_autocomplete
-from jormungandr.new_relic import record_custom_parameter
+from jormungandr.otlp import otlp_instance
 from jormungandr import fallback_modes
 
 from six.moves import filter
 from six.moves import range
 from six.moves import zip
 from functools import cmp_to_key
+from datetime import datetime
 
-SECTION_TYPES_TO_RETAIN = {response_pb2.PUBLIC_TRANSPORT, response_pb2.STREET_NETWORK}
+SECTION_TYPES_TO_RETAIN = {
+    response_pb2.PUBLIC_TRANSPORT,
+    response_pb2.ON_DEMAND_TRANSPORT,
+    response_pb2.STREET_NETWORK,
+}
+JOURNEY_TAGS_TO_RETAIN = ['best_olympics']
 JOURNEY_TYPES_TO_RETAIN = ['best', 'comfort', 'non_pt_walk', 'non_pt_bike', 'non_pt_bss']
+JOURNEY_TYPES_SCORE = {t: i for i, t in enumerate(JOURNEY_TYPES_TO_RETAIN)}
 STREET_NETWORK_MODE_TO_RETAIN = {response_pb2.Ridesharing, response_pb2.Car, response_pb2.Bike, response_pb2.Bss}
+TEMPLATE_MSG_UNKNOWN_OBJECT = "The entry point: {} is not valid"
+
+# https://github.com/hove-io/navitia/blob/dev/source/kraken/worker.cpp#L61
+CO2_ESTIMATION_COEFF = 1.35
 
 
 def get_kraken_calls(request):
@@ -158,6 +188,7 @@ def create_pb_request(requested_type, request, dep_mode, arr_mode, direct_path_t
     req = request_pb2.Request()
     req.requested_api = requested_type
     req._current_datetime = date_to_timestamp(request['_current_datetime'])
+    req.language = request['language']
 
     if "origin" in request and request["origin"]:
         if requested_type != type_pb2.NMPLANNER:
@@ -242,12 +273,14 @@ def create_pb_request(requested_type, request, dep_mode, arr_mode, direct_path_t
         req.journeys.timeframe_duration = int(request['timeframe_duration'])
 
     req.journeys.depth = request['depth']
+    if request["min_nb_transfers"]:
+        req.journeys.min_nb_transfers = request["min_nb_transfers"]
 
     return req
 
 
 def _has_pt(j):
-    return any(s.type == response_pb2.PUBLIC_TRANSPORT for s in j.sections)
+    return any(s.type in (response_pb2.PUBLIC_TRANSPORT, response_pb2.ON_DEMAND_TRANSPORT) for s in j.sections)
 
 
 def sort_journeys(resp, journey_order, clockwise):
@@ -272,28 +305,105 @@ def fill_missing_co2_emission(pb_resp, instance, request_id):
         car_sections = (s for s in j.sections if is_car_section_without_co2(s))
 
         for s in car_sections:
-            co2_emission = instance.georef.get_car_co2_emission(s.street_network.length, request_id)
-            s.co2_emission.CopyFrom(co2_emission)
+            co2_emission = instance.georef.get_car_co2_emission(request_id)
+            pb_co2_emission = s.co2_emission
+            pb_co2_emission.value = (co2_emission * s.street_network.length) / 1000.0 if co2_emission > 0 else 0
+            pb_co2_emission.unit = "gEC"
 
 
-def compute_car_co2_emission(pb_resp, api_request, instance, request_id):
+def fill_air_pollutants(pb_resp, instance, request_id):
+    if not pb_resp.journeys:
+        return
+
+    is_car_section = lambda s: s.type in [
+        response_pb2.STREET_NETWORK,
+        response_pb2.CROW_FLY,
+    ] and s.street_network.mode in [response_pb2.Car, response_pb2.CarNoPark]
+
+    for j in pb_resp.journeys:
+        if not {'car', 'car_no_park'} & set(j.tags):
+            continue
+
+        car_sections = (s for s in j.sections if is_car_section(s))
+
+        for s in car_sections:
+            pollutants_values = helpers.get_pollutants_value(s.street_network.length)
+            if pollutants_values:
+                s.air_pollutants.unit = helpers.AIR_POLLUTANTS_UNIT
+                s.air_pollutants.values.CopyFrom(pollutants_values)
+
+
+def get_via_of_first_path_item(section):
+    if section.HasField('street_network') and section.street_network.path_items:
+        first_path_item = section.street_network.path_items[0]
+        if first_path_item.HasField('via_uri'):
+            return first_path_item.via_uri
+    return None
+
+
+def get_best_boarding_positions(section, instance):
+    if section.type == response_pb2.TRANSFER:
+        # Transfer may contain two different situations
+        # first: a transfer may happen when one transfer from metro to metro, in this case, the transfer section's
+        # origin and destination are used to determine the pathway.
+        # second: a transfer may happen when one transfer from metro to ground transport(bus, tram...), in this case,
+        # we should use the first via in the path item to determin the pathway
+        best_positions = instance.get_best_boarding_position(section.origin.uri, section.destination.uri)
+        if best_positions:
+            return best_positions
+        via_uri = get_via_of_first_path_item(section)
+        if via_uri:
+            return instance.get_best_boarding_position(section.origin.uri, via_uri)
+        return []
+    elif section.type == response_pb2.STREET_NETWORK and hasattr(section, 'vias') and section.vias:
+        via_uri = get_via_of_first_path_item(section)
+        return instance.get_best_boarding_position(section.origin.uri, via_uri)
+
+    return []
+
+
+def update_best_boarding_positions(pb_resp, instance):
+    if not instance.best_boarding_positions:
+        return
+    for j in pb_resp.journeys:
+        prev_iter = iter(j.sections)
+        current_iter = itertools.islice(j.sections, 1, None)
+        for prev, curr in zip(prev_iter, current_iter):
+            if prev.type not in (response_pb2.PUBLIC_TRANSPORT, response_pb2.ON_DEMAND_TRANSPORT):
+                continue
+            boarding_positions = get_best_boarding_positions(curr, instance)
+            helpers.fill_best_boarding_position(prev, boarding_positions)
+
+
+def compute_car_co2_emission(pb_resp, pt_object_origin, pt_object_destination, instance):
     if not pb_resp.journeys:
         return
     car = next((j for j in pb_resp.journeys if helpers.is_car_direct_path(j)), None)
     if car is None or not car.HasField('co2_emission'):
-        # if there is no car journey found, we request kraken to give us an estimation of
-        # co2 emission
-        co2_estimation = instance.georef.get_car_co2_emission_on_crow_fly(
-            api_request['origin'], api_request['destination'], request_id
+        orig_coord = get_pt_object_coord(pt_object_origin)
+        dest_coord = get_pt_object_coord(pt_object_destination)
+
+        crowfly_distance = crowfly_distance_between(orig_coord, dest_coord)
+
+        # Assign car_co2_emission into the resp, these value will be exposed in the final result
+        pb_resp.car_co2_emission.value = (
+            crowfly_distance / 1000.0 * CO2_ESTIMATION_COEFF * instance.co2_emission_car_value
         )
-        if co2_estimation:
-            # Assign car_co2_emission into the resp, these value will be exposed in the final result
-            pb_resp.car_co2_emission.value = co2_estimation.value
-            pb_resp.car_co2_emission.unit = co2_estimation.unit
+        pb_resp.car_co2_emission.unit = instance.co2_emission_car_unit
     else:
         # Assign car_co2_emission into the resp, these value will be exposed in the final result
         pb_resp.car_co2_emission.value = car.co2_emission.value
         pb_resp.car_co2_emission.unit = car.co2_emission.unit
+
+
+def compute_air_pollutants_for_context(pb_resp, api_request, instance, request_id):
+    if not pb_resp.journeys:
+        return
+
+    pollutants_values = get_crowfly_air_pollutants(api_request['origin'], api_request['destination'])
+    if pollutants_values:
+        pb_resp.air_pollutants.unit = helpers.AIR_POLLUTANTS_UNIT
+        pb_resp.air_pollutants.values.CopyFrom(pollutants_values)
 
 
 def tag_ecologic(resp):
@@ -320,7 +430,9 @@ def _tag_direct_path(responses):
     }
 
     for j in itertools.chain.from_iterable(r.journeys for r in responses if r is not None):
-        if all(s.type != response_pb2.PUBLIC_TRANSPORT for s in j.sections):
+        if all(
+            s.type not in (response_pb2.PUBLIC_TRANSPORT, response_pb2.ON_DEMAND_TRANSPORT) for s in j.sections
+        ):
             j.tags.extend(['non_pt'])
 
         # TODO: remove that (and street_network_mode_tag_map) when NMP stops using it
@@ -341,7 +453,7 @@ def _is_bike_section(s):
 def _is_pt_bike_accepted_section(s):
     bike_ok = type_pb2.hasEquipments.has_bike_accepted
     return (
-        s.type == response_pb2.PUBLIC_TRANSPORT
+        s.type in (response_pb2.PUBLIC_TRANSPORT, response_pb2.ON_DEMAND_TRANSPORT)
         and bike_ok in s.pt_display_informations.has_equipments.has_equipments
         and bike_ok in s.origin.stop_point.has_equipments.has_equipments
         and bike_ok in s.destination.stop_point.has_equipments.has_equipments
@@ -371,13 +483,6 @@ def _tag_bike_in_pt(responses):
             j.tags.extend(['bike_in_pt'])
 
 
-def tag_journeys(resp):
-    """
-    tag the journeys
-    """
-    tag_ecologic(resp)
-
-
 def update_durations(pb_resp):
     """
     update journey.duration and journey.durations.total
@@ -400,6 +505,94 @@ def update_total_co2_emission(pb_resp):
         j.co2_emission.unit = 'gEC'
 
 
+def update_disruptions_on_pois(instance, api_request, pb_resp):
+    """
+    Maintain a set of uri from g.origin_detail and g.destination_detail of type Poi
+    Add uri from all journey.section.origin and journey.section.destination of type Poi
+    Call loki with api api_disruptions&pois[]...
+    For each disruption on poi, add disruption id in the attribute links and add disruptions in the response
+    """
+    required_mode_list = {'bss', 'car'}
+    if not api_request.get('_disruptions_on_poi'):
+        return
+    if not pb_resp.journeys:
+        return
+    # Add uri of all the pois in a set
+    poi_uris = set()
+    poi_objets = []
+    since_datetime = date_to_timestamp(datetime.utcnow())
+    until_datetime = date_to_timestamp(datetime.utcnow())
+
+    # Here we manage origin and destination of type POI
+    if g.origin_detail and g.origin_detail.get('embedded_type') == "poi":
+        poi_uris.add(g.origin_detail.get('id'))
+
+    if g.destination_detail and g.destination_detail.get('embedded_type') == "poi":
+        poi_uris.add(g.destination_detail.get('id'))
+
+    # Add pois present in all journeys if any of modes={'bss', 'car'} is present in
+    # origin_mode or destination_mode or direct_path_mode
+    mode_list = api_request.get('origin_mode', [])
+    mode_list.extend(api_request.get('destination_mode', []))
+    if set(mode_list).intersection(required_mode_list):
+        for j in pb_resp.journeys:
+            for s in j.sections:
+                if s.origin.embedded_type == type_pb2.POI:
+                    poi_uris.add(s.origin.uri)
+                    poi_objets.append(s.origin.poi)
+                    since_datetime = min(since_datetime, s.begin_date_time)
+
+                if s.destination.embedded_type == type_pb2.POI:
+                    poi_uris.add(s.destination.uri)
+                    poi_objets.append(s.destination.poi)
+                    until_datetime = max(until_datetime, s.end_date_time)
+
+    if since_datetime >= until_datetime:
+        since_datetime = until_datetime - 1
+
+    # Get disruptions for poi_uris calling loki with api poi_disruptions and poi_uris in param
+    poi_disruptions = get_disruptions_on_poi(instance, poi_uris, since_datetime, until_datetime)
+    if poi_disruptions is None:
+        return
+
+    # For each poi in pt_objects:
+    # add impact_uris from resp_poi and
+    # copy object poi in impact.impacted_objects
+    for pt_object in poi_objets:
+        impact_uris = get_impact_uris_for_poi(poi_disruptions, pt_object)
+        for impact_uri in impact_uris:
+            pt_object.impact_uris.append(impact_uri)
+
+    # Add all impacts from resp_poi to the response
+    add_disruptions(pb_resp, poi_disruptions)
+
+
+def update_booking_rule_url_in_response(pb_resp):
+    """
+    Update placeholders present in sections[i].booking_rule.booking_url with their values for each journey
+    for each section of type ON_DEMAND_TRANSPORT
+    """
+    if not pb_resp.journeys:
+        return
+
+    for j in pb_resp.journeys:
+        for s in j.sections:
+            if s.type == response_pb2.ON_DEMAND_TRANSPORT:
+                update_booking_rule_url_in_section(s)
+
+
+def update_total_air_pollutants(pb_resp):
+    """
+    update journey.air_pollutants
+    """
+    if not pb_resp.journeys:
+        return
+    for j in pb_resp.journeys:
+        j.air_pollutants.values.nox = sum(s.air_pollutants.values.nox for s in j.sections)
+        j.air_pollutants.values.pm10 = sum(s.air_pollutants.values.pm10 for s in j.sections)
+        j.air_pollutants.unit = helpers.AIR_POLLUTANTS_UNIT
+
+
 def _get_section_id(section):
     street_network_mode = None
     if section.type in SECTION_TYPES_TO_RETAIN:
@@ -413,8 +606,8 @@ def _build_candidate_pool_and_sections_set(journeys):
     candidates_pool = list()
     idx_of_jrny_must_keep = list()
 
-    for (i, jrny) in enumerate(journeys):
-        if jrny.type in JOURNEY_TYPES_TO_RETAIN:
+    for i, jrny in enumerate(journeys):
+        if set(jrny.tags) & set(JOURNEY_TAGS_TO_RETAIN) or jrny.type in set(JOURNEY_TYPES_TO_RETAIN):
             idx_of_jrny_must_keep.append(i)
         sections_set |= set([_get_section_id(s) for s in jrny.sections if s.type in SECTION_TYPES_TO_RETAIN])
         candidates_pool.append(jrny)
@@ -649,16 +842,16 @@ def culling_journeys(resp, request):
         )
 
         # At this point, resp.journeys should contain only must-have journeys
-        list_dict = collections.defaultdict(list)
-        for jrny in resp.journeys:
-            if not journey_filter.to_be_deleted(jrny):
-                list_dict[jrny.type].append(jrny)
+        must_have = [j for j in resp.journeys if not journey_filter.to_be_deleted(j)]
 
-        sorted_by_type_journeys = []
-        for t in JOURNEY_TYPES_TO_RETAIN:
-            sorted_by_type_journeys.extend(list_dict.get(t, []))
+        def journey_score(j):
+            if set(j.tags) & set(JOURNEY_TAGS_TO_RETAIN):
+                return -100
+            return JOURNEY_TYPES_SCORE.get(j.type, float('inf'))
 
-        for jrny in sorted_by_type_journeys[max_nb_journeys:]:
+        must_have.sort(key=journey_score)
+
+        for jrny in must_have[max_nb_journeys:]:
             journey_filter.mark_as_dead(jrny, is_debug, 'Filtered by max_nb_journeys')
 
         journey_filter.delete_journeys((resp,), request)
@@ -781,6 +974,8 @@ reliable_physical_modes = [
     "physical_mode:LongDistanceTrain",
 ]
 reliable_fallback_modes = [response_pb2.Bike, response_pb2.Walking]
+
+
 # returns true if :
 #  - a journey has at least one public transport section
 #  - all public transport sections use reliable physical modes
@@ -806,7 +1001,7 @@ def is_reliable_journey(journey):
                 if mode not in reliable_fallback_modes:
                     return False
 
-        if section.type != response_pb2.PUBLIC_TRANSPORT:
+        if section.type not in (response_pb2.PUBLIC_TRANSPORT, response_pb2.ON_DEMAND_TRANSPORT):
             continue
         if not section.HasField("uris"):
             continue
@@ -939,7 +1134,7 @@ def merge_responses(responses, debug):
 
     if not merged_response.journeys:
         # we aggregate the errors found
-        errors = {r.error.id: r.error for r in responses if r.HasField(str('error'))}
+        errors = {r.error.id: r.error for r in responses if r and r.HasField(str('error'))}
 
         # Only one errors field
         if len(errors) == 1:
@@ -979,9 +1174,46 @@ def get_kraken_id(entrypoint_detail):
     return '{};{}'.format(coord['lon'], coord['lat'])
 
 
+def get_object_coord(entrypoint_detail):
+    """
+    returns coordinate from the entrypoint detail
+    """
+    if not entrypoint_detail:
+        # impossible to find the object
+        return None
+
+    emb_type = entrypoint_detail.get('embedded_type')
+    coord = entrypoint_detail.get(emb_type, {}).get('coord')
+
+    return Coords(lon=coord['lon'], lat=coord['lat'])
+
+
+def get_crowfly_air_pollutants(origin, destination):
+    if g.origin_detail:
+        origin_coord = get_object_coord(g.origin_detail)
+    elif is_coord(origin):
+        lon, lat = get_lon_lat(origin)
+        origin_coord = Coords(lon=lon, lat=lat)
+    else:
+        return None
+
+    if g.destination_detail:
+        destination_coord = get_object_coord(g.destination_detail)
+    elif is_coord(destination):
+        lon, lat = get_lon_lat(destination)
+        destination_coord = Coords(lon=lon, lat=lat)
+    else:
+        return None
+
+    if origin_coord and destination_coord:
+        crowfly_distance = crowfly_distance_between(origin_coord, destination_coord)
+        return helpers.get_pollutants_value(crowfly_distance)
+    return None
+
+
 def aggregate_journeys(journeys):
     """
-    when building candidates_pool, we should take into count the similarity of journeys, which means, we add a journey
+    when building candidates_pool, we should take into account the similarity of journeys, which means, we add a journey
     into the pool only when there are no other "similar" journey already existing in the pool.
 
     the similarity is defined by a tuple of journeys sections.
@@ -990,13 +1222,19 @@ def aggregate_journeys(journeys):
     aggregated_journeys = list()
     remaining_journeys = list()
 
+    def to_retain(j):
+        return j.type in JOURNEY_TYPES_TO_RETAIN or set(j.tags) & set(JOURNEY_TAGS_TO_RETAIN)
+
+    journeys_to_retain = (j for j in journeys if to_retain(j))
+    journeys_not_to_retain = (j for j in journeys if not to_retain(j))
+
     # we pick out all journeys that must be kept:
-    for j in (j for j in journeys if j.type in JOURNEY_TYPES_TO_RETAIN):
+    for j in journeys_to_retain:
         section_id = tuple(_get_section_id(s) for s in j.sections if s.type in SECTION_TYPES_TO_RETAIN)
         aggregated_journeys.append(j)
         added_sections_ids.add(section_id)
 
-    for j in (j for j in journeys if j.type not in JOURNEY_TYPES_TO_RETAIN):
+    for j in journeys_not_to_retain:
         section_id = tuple(_get_section_id(s) for s in j.sections if s.type in SECTION_TYPES_TO_RETAIN)
 
         if section_id in added_sections_ids:
@@ -1004,6 +1242,9 @@ def aggregate_journeys(journeys):
         else:
             aggregated_journeys.append(j)
             added_sections_ids.add(section_id)
+
+    # aggregated_journeys will be passed to culling algorithm,
+    # remaining_journeys are the redundant ones to be removed
     return aggregated_journeys, remaining_journeys
 
 
@@ -1104,12 +1345,46 @@ class Scenario(simple.Scenario):
         origin_detail = self.get_entrypoint_detail(
             api_request.get('origin'), instance, request_id="{}_origin_detail".format(request_id)
         )
+
         destination_detail = self.get_entrypoint_detail(
             api_request.get('destination'), instance, request_id="{}_dest_detail".format(request_id)
         )
+
         # we store the origin/destination detail in g to be able to use them after the marshall
+        # If origin/destination is address and id doesn't match with calculated id (by autocomplete) then
+        # we should use the original request address id and update later
         g.origin_detail = origin_detail
+        request_origin = json_address_from_uri(api_request.get('origin'))
+        if is_different_geographic_position(origin_detail, request_origin):
+            origin_detail = request_origin
+            g.request_origin = request_origin
+        else:
+            origin_detail = origin_detail or request_origin
+
+        if not origin_detail:
+            return generate_error(
+                TEMPLATE_MSG_UNKNOWN_OBJECT.format(api_request.get('origin')),
+                response_pb2.Error.unknown_object,
+                404,
+            )
+
         g.destination_detail = destination_detail
+        request_destination = json_address_from_uri(api_request.get('destination'))
+        if is_different_geographic_position(destination_detail, request_destination):
+            destination_detail = request_destination
+            g.request_destination = request_destination
+        else:
+            destination_detail = destination_detail or request_destination
+
+        if not destination_detail:
+            return generate_error(
+                TEMPLATE_MSG_UNKNOWN_OBJECT.format(api_request.get('destination')),
+                response_pb2.Error.unknown_object,
+                404,
+            )
+
+        pt_object_origin = get_pt_object_from_json(origin_detail, instance)
+        pt_object_destination = get_pt_object_from_json(destination_detail, instance)
 
         api_request['origin'] = get_kraken_id(origin_detail) or api_request.get('origin')
         api_request['destination'] = get_kraken_id(destination_detail) or api_request.get('destination')
@@ -1124,6 +1399,8 @@ class Scenario(simple.Scenario):
 
         # Return the possible combinations (origin_mode ,destination_mode, direct_path_type)
         krakens_call = get_kraken_calls(api_request)
+
+        instance.olympic_site_params_manager.build(pt_object_origin, pt_object_destination, api_request)
 
         # We need the original request (api_request) for filtering, but request
         # is modified by create_next_kraken_request function.
@@ -1164,6 +1441,8 @@ class Scenario(simple.Scenario):
                 request['min_nb_journeys'] = max(0, min_nb_journeys_left)
 
             new_resp = self.call_kraken(
+                pt_object_origin,
+                pt_object_destination,
                 request_type,
                 request,
                 instance,
@@ -1210,6 +1489,11 @@ class Scenario(simple.Scenario):
 
         journey_filter.apply_final_journey_filters(responses, instance, api_request)
 
+        # Filter olympic site: Jira NAV-2130
+        journey_filter.filter_olympic_site_by_min_pt_duration(
+            responses, instance, api_request, pt_object_origin, pt_object_destination
+        )
+
         self.finalise_journeys(
             api_request, responses, distributed_context, instance, api_request['debug'], request_id
         )
@@ -1222,8 +1506,10 @@ class Scenario(simple.Scenario):
         pb_resp = merge_responses(responses, api_request['debug'])
 
         sort_journeys(pb_resp, instance.journey_order, api_request['clockwise'])
-        compute_car_co2_emission(pb_resp, api_request, instance, "{}_car_co2".format(request_id))
-        tag_journeys(pb_resp)
+        compute_car_co2_emission(pb_resp, pt_object_origin, pt_object_destination, instance)
+        compute_air_pollutants_for_context(
+            pb_resp, api_request, instance, "{}_car_air_pollutants".format(request_id)
+        )
 
         # Handle ridesharing service
         self.handle_ridesharing_services(logger, instance, ridesharing_req, pb_resp)
@@ -1234,10 +1520,19 @@ class Scenario(simple.Scenario):
 
         # We fill empty co2_emission with estimations for car sections
         fill_missing_co2_emission(pb_resp, instance, "{}_missing_car_co2".format(request_id))
+        # We fill air pollutants with estimations for car sections
+        fill_air_pollutants(pb_resp, instance, "{}_car_air_pollutants".format(request_id))
         # We have to update total duration as some sections could be updated in distributed.
         update_durations(pb_resp)
         # We have to update total co2_emission as some sections could be updated in distributed.
         update_total_co2_emission(pb_resp)
+        # We have to update total api_pollutants in a journey.
+        update_total_air_pollutants(pb_resp)
+        # Tag ecologic should be done at the end
+        tag_ecologic(pb_resp)
+
+        # Update best boarding positions in PT sections
+        update_best_boarding_positions(pb_resp, instance)
 
         # need to clean extra tickets after culling journeys
         journey_filter.remove_excess_tickets(pb_resp)
@@ -1245,10 +1540,25 @@ class Scenario(simple.Scenario):
         # need to clean extra terminus after culling journeys
         journey_filter.remove_excess_terminus(pb_resp)
 
+        # Update disruptions on pois
+        update_disruptions_on_pois(instance, api_request, pb_resp)
+
+        # Update booking_url in booking_rule for all sections of type ON_DEMAND_TRANSPORT
+        update_booking_rule_url_in_response(pb_resp)
         self._compute_pagination_links(pb_resp, instance, api_request['clockwise'])
         return pb_resp
 
-    def call_kraken(self, request_type, request, instance, krakens_call, request_id, context=None):
+    def call_kraken(
+        self,
+        pt_object_origin_detail,
+        pt_object_destination_detail,
+        request_type,
+        request,
+        instance,
+        krakens_call,
+        request_id,
+        context=None,
+    ):
         """
         For all krakens_call, call the kraken and aggregate the responses
 
@@ -1256,7 +1566,7 @@ class Scenario(simple.Scenario):
         """
         # TODO: handle min_alternative_journeys
         # TODO: call first bss|bss and do not call walking|walking if no bss in first results
-        record_custom_parameter('scenario', 'new_default')
+        otlp_instance.record_label('scenario', 'new_default')
         resp = []
         logger = logging.getLogger(__name__)
         futures = []
@@ -1302,6 +1612,14 @@ class Scenario(simple.Scenario):
     def journeys(self, request, instance):
         return self.__on_journeys(type_pb2.PLANNER, request, instance)
 
+    def get_pt_object(self, instance, arg_pt_object, request_id):
+        if not arg_pt_object:
+            return None
+        detail = self.get_entrypoint_detail(
+            arg_pt_object, instance, request_id="{}".format(request_id)
+        ) or json_address_from_uri(arg_pt_object)
+        return get_pt_object_from_json(detail, instance) if detail else None
+
     def isochrone(self, request, instance):
         updated_request_with_default(request, instance)
         # we don't want to filter anything!
@@ -1309,9 +1627,43 @@ class Scenario(simple.Scenario):
         # Initialize a context for distributed
         distributed_context = self.get_context()
         request_id = request.get("request_id", None)
+
+        pt_object_origin = None
+        pt_object_destination = None
+        origin = request.get('origin')
+        if origin:
+            pt_object_origin = self.get_pt_object(
+                instance, origin, request_id="{}_origin_detail".format(request_id)
+            )
+            if not pt_object_origin:
+                return generate_error(
+                    TEMPLATE_MSG_UNKNOWN_OBJECT.format(origin),
+                    response_pb2.Error.no_origin_nor_destination,
+                    404,
+                )
+
+        destination = request.get('destination')
+        if destination:
+            pt_object_destination = self.get_pt_object(
+                instance, destination, request_id="{}_dest_detail".format(request_id)
+            )
+            if not pt_object_destination:
+                return generate_error(
+                    TEMPLATE_MSG_UNKNOWN_OBJECT.format(destination),
+                    response_pb2.Error.no_origin_nor_destination,
+                    404,
+                )
+
         resp = merge_responses(
             self.call_kraken(
-                type_pb2.ISOCHRONE, request, instance, krakens_call, request_id, distributed_context
+                pt_object_origin,
+                pt_object_destination,
+                type_pb2.ISOCHRONE,
+                request,
+                instance,
+                krakens_call,
+                request_id,
+                distributed_context,
             ),
             request['debug'],
         )
@@ -1398,8 +1750,8 @@ class Scenario(simple.Scenario):
         if best is None:
             return None
 
-        one_second = 1
-        return best.departure_date_time + one_second
+        nb_seconds = app.config.get('JOURNEYS_PREV_NEXT_LINKS_S', 10)
+        return best.departure_date_time + nb_seconds
 
     def previous_journey_datetime(self, journeys, clockwise):
         """
@@ -1410,22 +1762,33 @@ class Scenario(simple.Scenario):
         if best is None:
             return None
 
-        one_second = 1
-        return best.arrival_date_time - one_second
+        nb_seconds = app.config.get('JOURNEYS_PREV_NEXT_LINKS_S', 10)
+        return best.arrival_date_time - nb_seconds
 
     def get_entrypoint_detail(self, entrypoint, instance, request_id):
-        logging.debug("calling autocomplete {} for {}".format(instance.autocomplete, entrypoint))
-        detail = instance.autocomplete.get_object_by_uri(entrypoint, instances=[instance], request_id=request_id)
+        if is_stop_point(entrypoint):
+            logging.debug("calling autocomplete Kraken for {}".format(entrypoint))
+            return global_autocomplete.get("kraken").get_object_by_uri(
+                entrypoint, instances=[instance], request_id=request_id
+            )
+        else:
+            logging.debug("calling autocomplete {} for {}".format(instance.autocomplete, entrypoint))
+            detail = instance.autocomplete.get_object_by_uri(
+                entrypoint, instances=[instance], request_id=request_id
+            )
 
         if detail:
-            return detail
+            # Transform address in (from, to) to poi with ES
+            return entrypoint_uri_refocus(detail, entrypoint)
 
         if not isinstance(instance.autocomplete, GeocodeJson):
             bragi = global_autocomplete.get(app.config.get('DEFAULT_AUTOCOMPLETE_BACKEND', 'bragi'))
             if bragi:
                 # if the instance's autocomplete is not a geocodejson autocomplete, we also check in the
                 # global autocomplete instance
-                return bragi.get_object_by_uri(entrypoint, instances=[instance], request_id=request_id)
+                detail = bragi.get_object_by_uri(entrypoint, instances=[instance], request_id=request_id)
+                # Transform address in (from, to) to poi with ES
+                return entrypoint_uri_refocus(detail, entrypoint)
 
         return None
 

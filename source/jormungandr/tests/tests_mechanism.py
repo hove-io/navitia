@@ -75,6 +75,7 @@ class FakeModel(object):
         scenario='new_default',
         equipment_details_providers=[],
         poi_dataset=None,
+        same_journey_schedules_configuration=None,
     ):
         self.priority = priority
         self.is_free = is_free
@@ -83,6 +84,7 @@ class FakeModel(object):
         self.equipment_details_providers = equipment_details_providers
         self.poi_dataset = poi_dataset
         self.max_nb_journeys = max_nb_journeys
+        self.same_journey_schedules_configuration = same_journey_schedules_configuration
 
 
 class AbstractTestFixture(unittest.TestCase):
@@ -139,7 +141,16 @@ class AbstractTestFixture(unittest.TestCase):
     @classmethod
     def create_dummy_json(cls):
         for name in cls.krakens_pool:
-            instance_config = {"key": name, "zmq_socket": cls._get_zmq_socket_name(name)}
+            instance_config = {
+                "key": name,
+                "zmq_socket": cls._get_zmq_socket_name(name),
+                "pt_planners": {
+                    "loki": {
+                        "class": "jormungandr.pt_planners.loki.Loki",
+                        "args": {"timeout": 10000, "zmq_socket": cls._get_zmq_socket_name(name)},
+                    }
+                },
+            }
             instance_config.update(cls.data_sets[name].get('instance_config', {}))
             with open(os.path.join(krakens_dir, name) + '.json', 'w') as f:
                 logging.debug("writing ini file {} for {}".format(f.name, name))
@@ -602,7 +613,7 @@ def mock_car_park_providers(pois_supported):
 
 def mock_equipment_providers(equipment_provider_manager, data, code_types_list):
     equipment_provider_manager._equipment_providers = {
-        "sytral": SytralProvider(url="fake.url", timeout=3, code_types=code_types_list)
+        "sytral": SytralProvider(provider_id='sytral', url="fake.url", timeout=3, code_types=code_types_list)
     }
     equipment_provider_manager._equipment_providers["sytral"]._call_webservice = mock.MagicMock(
         return_value=data

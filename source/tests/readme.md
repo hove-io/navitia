@@ -6,6 +6,14 @@
 
 ## How to run the tests
 
+Make sure a local RabbitMQ server is available.
+
+You will need to install the jormungandr dependencies for developements:
+```sh
+# using python 3.9
+pip install -r ../jormungandr/requirements_dev.txt
+```
+
 From the your build directory, run the command:
 
 ```sh
@@ -53,3 +61,9 @@ This should give you:
  * the options being used with the binary
  * the environment variables you need to set
 
+## Other tests in repository
+
+Please see also other tests in:
+* [Chaos tests](./chaos/readme.md)
+* [Tyr tests](../tyr/readme.md)
+* [Ed docker tests](../ed/readme.md)

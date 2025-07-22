@@ -35,7 +35,8 @@ import requests as requests
 from jormungandr import app
 import json
 from jormungandr.exceptions import TechnicalError, InvalidArguments, ApiNotFound
-from jormungandr.utils import is_url, kilometers_to_meters, get_pt_object_coord, decode_polyline
+from jormungandr.utils import is_url, kilometers_to_meters, get_pt_object_coord
+import polyline
 from copy import deepcopy
 from jormungandr.street_network.street_network import (
     AbstractStreetNetworkService,
@@ -222,7 +223,8 @@ class Valhalla(AbstractStreetNetworkService):
                 # TODO: calculate direction
                 path_item.direction = 0
 
-            shape = decode_polyline(leg['shape'])
+            shape = polyline.decode(leg['shape'], precision=6, geojson=True)
+
             for sh in shape:
                 coord = section.street_network.coordinates.add()
                 coord.lon = sh[0]

@@ -70,13 +70,19 @@ from jormungandr.utils import (
     NOT_A_DATE_TIME,
     navitia_utcfromtimestamp,
 )
-from jormungandr.interfaces.v1.serializer.pt import AddressSerializer, AccessPointSerializer
+from jormungandr.interfaces.v1.serializer.pt import (
+    AddressSerializer,
+    AccessPointSerializer,
+    AirPollutantsSerializer,
+    RoundedField,
+)
 from jormungandr.interfaces.v1.serializer import jsonschema
 from jormungandr.interfaces.v1.serializer.status import CoverageErrorSerializer
 
 
 class CO2Serializer(PbNestedSerializer):
     co2_emission = AmountSerializer(attr='car_co2_emission', display_none=False)
+    air_pollutants = AirPollutantsSerializer(display_none=False)
 
 
 class ContextSerializer(PbNestedSerializer):
@@ -115,6 +121,8 @@ class PTReferentialSerializerNoContext(serpy.Serializer):
     disruptions = pt.DisruptionSerializer(attr='impacts', many=True, display_none=True)
     notes = DescribedField(schema_type=NoteSerializer(many=True))
     links = DescribedField(schema_type=LinkSchema(many=True))
+    origins = pt.StopAreaSerializer(many=True, display_none=True)
+    terminus = pt.StopAreaSerializer(many=True, display_none=True)
 
 
 class PTReferentialSerializer(PTReferentialSerializerNoContext):
@@ -338,7 +346,8 @@ class JourneysSerializer(JourneysCommon):
     journeys = JourneySerializer(many=True)
     tickets = TicketSerializer(many=True, display_none=True)
     disruptions = pt.DisruptionSerializer(attr='impacts', many=True, display_none=True)
-    terminus = pt.StopAreaSerializer(many=True, display_none=True)
+    origins = pt.StopAreaSerializer(many=True, display_none=False)
+    terminus = pt.StopAreaSerializer(many=True, display_none=False)
     context = MethodField(schema_type=ContextSerializer(), display_none=False)
     notes = DescribedField(schema_type=NoteSerializer(many=True))
     exceptions = DescribedField(schema_type=ExceptionSerializer(many=True))
@@ -447,6 +456,22 @@ class DictAddressesSerializer(serpy.DictSerializer):
 
     def get_message(self, obj):
         return obj.get('message')
+
+
+class ElevationSerializer(serpy.Serializer):
+    distance_from_start = RoundedField(display_none=True)
+    elevation = RoundedField(display_none=True)
+    geojson_offset = RoundedField(attr="geojson_index", display_none=False)
+
+
+class ElevationsDictSerializer(serpy.DictSerializer):
+    context = MethodField(schema_type=ContextSerializer(), display_none=False)
+    polyline = Field(schema_type=str)
+    elevations = ElevationSerializer(many=True)
+    feed_publishers = Field(many=True, display_none=True, schema_type=str)
+
+    def get_context(self, obj):
+        return ContextSerializer(obj, display_none=False).data
 
 
 class TechnicalStatusSerializer(NullableDictSerializer):

@@ -40,7 +40,7 @@ MOCKED_ASGARD_CONF = [
         "modes": ['walking', 'car', 'bss', 'bike', 'car_no_park'],
         "class": "tests.direct_path_asgard_integration_tests.MockAsgard",
         "args": {
-            "costing_options": {"bicycle": {"bicycle_type": "Hybrid"}},
+            "costing_options": {"bicycle": {"bicycle_type": "hybrid"}},
             "api_key": "",
             "asgard_socket": "bob_socket",
             "service_url": "http://bob.com",
@@ -53,7 +53,7 @@ MOCKED_ASGARD_CONF_WITH_BAD_RESPONSE = [
         "modes": ['walking', 'car', 'bss', 'bike'],
         "class": "tests.direct_path_asgard_integration_tests.MockAsgardWithBadResponse",
         "args": {
-            "costing_options": {"bicycle": {"bicycle_type": "Hybrid"}},
+            "costing_options": {"bicycle": {"bicycle_type": "hybrid"}},
             "api_key": "",
             "asgard_socket": "bob_socket",
             "service_url": "http://bob.com",
@@ -111,7 +111,9 @@ def journey_response(journey, mode):
     elif mode == "car":
         journey.durations.car = duration
         journey.distances.car = distance
+        journey.low_emission_zone.on_path = True
         section.street_network.mode = response_pb2.Car
+        section.low_emission_zone.on_path = True
     else:
         journey.durations.bike = duration
         journey.distances.bike = distance
@@ -246,7 +248,7 @@ def valid_request(request):
             assert params.max_bss_duration_to_pt == 1800
             assert params.car_speed == 11.11
             assert params.max_car_duration_to_pt == 1800
-            assert params.language == "en-US"
+            assert params.language == "fr-FR"
             assert params.car_no_park_speed == (11.11 if params.origin_mode in ("car", "car_no_park") else 0)
             assert params.max_car_no_park_duration_to_pt == (
                 1800 if params.origin_mode in ("car", "car_no_park") else 0
@@ -280,7 +282,7 @@ def valid_request(request):
                 assert params.max_bss_duration_to_pt == 1800
                 assert params.car_speed == 11.11
                 assert params.max_car_duration_to_pt == 1800
-                assert params.language == "en-US"
+                assert params.language == "fr-FR"
                 assert params.car_no_park_speed == (11.11 if params.origin_mode in ("car", "car_no_park") else 0)
                 assert params.max_car_no_park_duration_to_pt == (
                     1800 if params.origin_mode in ("car", "car_no_park") else 0
@@ -381,9 +383,20 @@ class TestAsgardDirectPath(AbstractTestFixture):
         assert response['journeys'][0]['durations']['car'] == 500
         assert response['journeys'][0]['durations']['total'] == 500
         assert response['journeys'][0]['distances']['car'] == 50
+        assert response['journeys'][0]['low_emission_zone']['on_path']
+
         assert response['journeys'][0]['sections'][0]['co2_emission'] == {'value': 9.2, 'unit': 'gEC'}
+        assert response['journeys'][0]['sections'][0]['air_pollutants']['values'] == {
+            'nox': 0.022,
+            'pm': 0.0028,
+        }
         assert response['journeys'][0]['co2_emission'] == {'value': 9.2, 'unit': 'gEC'}
+        assert response['journeys'][0]['air_pollutants'] == {
+            'values': {'nox': 0.022, 'pm': 0.0028},
+            'unit': 'g',
+        }
         assert not response['journeys'][0]['sections'][0].get('cycle_lane_length')
+        assert response['journeys'][0]['sections'][0]['low_emission_zone']['on_path']
 
         # bike direct path from asgard
         assert 'bike' in response['journeys'][1]['tags']

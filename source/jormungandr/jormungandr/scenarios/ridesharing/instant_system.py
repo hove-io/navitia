@@ -35,7 +35,6 @@ import pybreaker
 import pytz
 
 from jormungandr.utils import Coords, make_timestamp_from_str
-from navitiacommon import default_values
 from jormungandr import app
 import jormungandr.scenarios.ridesharing.ridesharing_journey as rsj
 from jormungandr.scenarios.ridesharing.ridesharing_service import (
@@ -43,8 +42,6 @@ from jormungandr.scenarios.ridesharing.ridesharing_service import (
     RsFeedPublisher,
     RidesharingServiceError,
 )
-from jormungandr.utils import decode_polyline
-from navitiacommon import type_pb2
 import jormungandr.street_network.utils
 
 DEFAULT_INSTANT_SYSTEM_FEED_PUBLISHER = {
@@ -230,22 +227,25 @@ class InstantSystem(AbstractRidesharingService):
 
         return ridesharing_journeys
 
-    def _request_journeys(self, from_coord, to_coord, period_extremity, instance_params, limit=None):
+    def _request_journeys(self, from_coord, to_coord, request_dates, instance_params, limit=None):
         """
 
         :param from_coord: lat,lon ex: '48.109377,-1.682103'
         :param to_coord: lat,lon ex: '48.020335,-1.743929'
-        :param period_extremity: a tuple of [timestamp(utc), clockwise]
+        :param request_dates: a tuple of [timestamp(utc), timestamp(utc), clockwise]
         :param limit: optional
         :return:
         """
-        # format of datetime: 2017-12-25T07:00:00Z
-        datetime_str = datetime.datetime.fromtimestamp(period_extremity.datetime, pytz.utc).strftime(
-            '%Y-%m-%dT%H:%M:%SZ'
-        )
-        if period_extremity.represents_start:
+        if request_dates.represents_start:
+            # format of datetime: 2017-12-25T07:00:00Z
+            datetime_str = datetime.datetime.fromtimestamp(request_dates.departure_datetime, pytz.utc).strftime(
+                '%Y-%m-%dT%H:%M:%SZ'
+            )
             datetime_str = '{}/PT{}S'.format(datetime_str, self.timeframe_duration)
         else:
+            datetime_str = datetime.datetime.fromtimestamp(request_dates.arrival_datetime, pytz.utc).strftime(
+                '%Y-%m-%dT%H:%M:%SZ'
+            )
             datetime_str = 'PT{}S/{}'.format(self.timeframe_duration, datetime_str)
 
         params = {
@@ -253,7 +253,7 @@ class InstantSystem(AbstractRidesharingService):
             'to': to_coord,
             'fromRadius': self.crowfly_radius,
             'toRadius': self.crowfly_radius,
-            ('arrivalDate', 'departureDate')[bool(period_extremity.represents_start)]: datetime_str,
+            ('arrivalDate', 'departureDate')[bool(request_dates.represents_start)]: datetime_str,
         }
 
         if limit is not None:

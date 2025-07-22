@@ -28,16 +28,20 @@
 # www.navitia.io
 from __future__ import absolute_import, print_function, unicode_literals, division
 
-from jormungandr.pt_planners.common import ZmqSocket, get_crow_fly
+from jormungandr.pt_planners.common import ZmqSocket, get_crow_fly, get_odt_stop_points, get_stop_points_from_uri
 from jormungandr import utils, app
 from .pt_planner import AbstractPtPlanner
-from navitiacommon import type_pb2, request_pb2
-import logging
+from navitiacommon import type_pb2
 
 
 class Kraken(ZmqSocket, AbstractPtPlanner):
     def __init__(
-        self, name, zmq_context, zmq_socket, zmq_socket_type, timeout=app.config.get(str('INSTANCE_TIMEOUT'), 10)
+        self,
+        name,
+        zmq_context,
+        zmq_socket,
+        zmq_socket_type,
+        timeout=app.config.get(str('INSTANCES_TIMEOUT'), 10),
     ):
         super(Kraken, self).__init__(
             "pt_planner_kraken_{}".format(name), zmq_context, zmq_socket, zmq_socket_type, timeout
@@ -56,6 +60,17 @@ class Kraken(ZmqSocket, AbstractPtPlanner):
             origins, destinations, datetime, clockwise, graphical_isochrones_parameters, bike_in_pt
         )
         return self.send_and_receive(req)
+
+    def get_access_points(self, pt_object, access_point_filter, request_id):
+        stop_points = get_stop_points_from_uri(self, pt_object.uri, request_id, depth=2)
+        if not stop_points:
+            return None
+
+        return [
+            type_pb2.PtObject(name=ap.name, uri=ap.uri, embedded_type=type_pb2.ACCESS_POINT, access_point=ap)
+            for ap in stop_points[0].access_points
+            if access_point_filter(ap)
+        ]
 
     def get_crow_fly(
         self,
@@ -87,3 +102,6 @@ class Kraken(ZmqSocket, AbstractPtPlanner):
             allowed_id,
             **kwargs
         )
+
+    def get_odt_stop_points(self, coord, request_id):
+        return get_odt_stop_points(self, coord, request_id)

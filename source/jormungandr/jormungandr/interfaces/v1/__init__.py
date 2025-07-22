@@ -56,6 +56,14 @@ def add_common_status(response, instance):
     for rss in instance.get_all_ridesharing_services():
         response['status']['ridesharing_services'].append(rss.status())
 
+    response['status']['bss_providers'] = []
+    for bp in instance.get_all_bss_providers():
+        response['status']['bss_providers'].append(bp.status())
+
+    response['status']['car_parking_providers'] = []
+    for cpp in instance.get_all_car_parking_providers():
+        response['status']['car_parking_providers'].append(cpp.status())
+
     response['status']['equipment_providers_services'] = {}
     response['status']['equipment_providers_services'][
         'equipment_providers_keys'

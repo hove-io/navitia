@@ -44,7 +44,7 @@ class FakeInstance(object):
 
     name = 'fake_instance'
     context = None
-    asgard_language = "en-US"
+    language = "en-GB"
 
 
 def status_test():
@@ -69,7 +69,7 @@ def status_test():
     assert status['circuit_breaker']['fail_counter'] == 0
     assert status['circuit_breaker']['reset_timeout'] == 60
     assert status['zmq_socket_ttl'] == 60
-    assert status['language'] == 'en-US'
+    assert status['language'] == 'en-GB'
 
 
 def asgard_socket_var_test(config_asgard_socket):

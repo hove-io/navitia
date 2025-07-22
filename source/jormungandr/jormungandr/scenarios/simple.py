@@ -35,10 +35,15 @@ import copy
 
 import navitiacommon.type_pb2 as type_pb2
 import navitiacommon.request_pb2 as request_pb2
+import navitiacommon.response_pb2 as response_pb2
 from navitiacommon.type_pb2 import ActiveStatus, Severity
 from jormungandr.interfaces.common import pb_odt_level
 from jormungandr.scenarios.utils import places_type, pt_object_type, add_link
-from jormungandr.scenarios.utils import build_pagination
+from jormungandr.scenarios.utils import (
+    build_pagination,
+    fill_disruptions_on_pois,
+    fill_disruptions_on_places_nearby,
+)
 from jormungandr.exceptions import UnknownObject
 
 
@@ -99,6 +104,7 @@ class Scenario(object):
         req.traffic_reports.count = request['count']
         req.traffic_reports.start_page = request['start_page']
         req._current_datetime = date_to_timestamp(request['_current_datetime'])
+        req.language = request.get("language", '')
 
         if request["forbidden_uris[]"]:
             for forbidden_uri in request["forbidden_uris[]"]:
@@ -118,10 +124,23 @@ class Scenario(object):
         req = request_pb2.Request()
         req.requested_api = type_pb2.line_reports
         req.line_reports.depth = request['depth']
-        req.line_reports.filter = request['filter']
+
+        if isinstance(request['filter'], str):
+            req.line_reports.filter = request['filter']
+        elif (
+            isinstance(request['filter'], dict)
+            and 'object_id' in request['filter']
+            and 'object_type' in request['filter']
+        ):
+            req.line_reports.object_type = request_pb2.LineReportsRequest.Type.Value(
+                request['filter']['object_type']
+            )
+            req.line_reports.object_id = request['filter']['object_id']
+
         req.line_reports.count = request['count']
         req.line_reports.start_page = request['start_page']
         req._current_datetime = date_to_timestamp(request['_current_datetime'])
+        req.language = request.get("language", '')
 
         if request["forbidden_uris[]"]:
             for forbidden_uri in request["forbidden_uris[]"]:
@@ -136,7 +155,13 @@ class Scenario(object):
         if request['until']:
             req.line_reports.until_datetime = request['until']
 
-        resp = instance.send_and_receive(req)
+        # We call Loki's line_reports only if _pt_planner=loki
+        if request["_pt_planner"] == "loki":
+            pt_planner = instance.get_pt_planner(request["_pt_planner"])
+            resp = pt_planner.send_and_receive(req)
+        else:
+            resp = instance.send_and_receive(req)
+
         return resp
 
     def equipment_reports(self, request, instance):
@@ -189,6 +214,18 @@ class Scenario(object):
         request["request_id"] = request.get('request_id', flask.request.id)
         return instance.get_autocomplete(request.get('_autocomplete')).get(request, instances=[instance])
 
+    def elevations(self, request, instance):
+        if not instance.elevation_service:
+            abort(500, message="This service is not activated.")
+        req = request_pb2.Request()
+        req.requested_api = type_pb2.elevations
+        request.request_id = request.get('request_id', flask.request.id)
+        req.elevations_request.polyline = request["polyline"]
+        pb = instance.elevation_service.call(req.SerializeToString())
+        resp = response_pb2.Response()
+        resp.ParseFromString(pb)
+        return resp.elevations.elevation
+
     def place_uri(self, request, instance):
         autocomplete = instance.get_autocomplete(request.get('_autocomplete'))
         request_id = request.get('request_id', flask.request.id)
@@ -198,6 +235,7 @@ class Scenario(object):
                 request_id=request_id,
                 instances=[instance],
                 current_datetime=request['_current_datetime'],
+                _add_poi_shape=request.get("_add_poi_shape", False),
             )
         except UnknownObject as e:
             # the autocomplete have not found anything
@@ -211,6 +249,7 @@ class Scenario(object):
                     request_id=request_id,
                     instances=[instance],
                     current_datetime=request['_current_datetime'],
+                    _add_poi_shape=request.get("_add_poi_shape", False),
                 )
                 if res.get("places"):
                     return res
@@ -279,6 +318,9 @@ class Scenario(object):
         req.places_nearby.filter = request["filter"]
         req.disable_disruption = request["disable_disruption"] if request.get("disable_disruption") else False
         resp = instance.send_and_receive(req)
+        # For pois, ws should also call loki to get disruptions on pois
+        if not req.disable_disruption:
+            fill_disruptions_on_places_nearby(instance, resp)
         build_pagination(request, resp)
         return resp
 
@@ -304,7 +346,18 @@ class Scenario(object):
             req.ptref.until_datetime = request['until']
         req.ptref.realtime_level = get_pb_data_freshness(request)
         req.disable_disruption = request["disable_disruption"]
-        resp = instance.send_and_receive(req)
+        req.language = request.get("language", '')
+
+        # We call Loki's disruptions only if _pt_planner=loki
+        if request["_pt_planner"] == "loki":
+            pt_planner = instance.get_pt_planner(request["_pt_planner"])
+            resp = pt_planner.send_and_receive(req)
+        else:
+            resp = instance.send_and_receive(req)
+
+            # For api = pois, ws should also call loki to get disruptions on pois
+            if (not req.disable_disruption) and req.ptref.requested_type == type_pb2.POI:
+                fill_disruptions_on_pois(instance, resp)
         build_pagination(request, resp)
         return resp
 
@@ -379,10 +432,21 @@ class Scenario(object):
         add_link(resp, rel='ridesharing_journeys', **req)
 
     def _add_bypass_disruptions_link(self, resp, params):
-        # find first impact with a NO_SERVICE severity
+        # find first journey with a NO_SERVICE or SIGNIFICANT_DELAY status
         if 'realtime' in params.get('data_freshness', []):
             return
-        found = next((True for impact in resp.impacts if impact.severity.effect == Severity.NO_SERVICE), False)
+        found = next(
+            (
+                True
+                for j in resp.journeys
+                if j.most_serious_disruption_effect
+                in [
+                    Severity.Effect.Name(Severity.Effect.NO_SERVICE),
+                    Severity.Effect.Name(Severity.Effect.SIGNIFICANT_DELAYS),
+                ]
+            ),
+            False,
+        )
         if found:
             cloned_params = copy.deepcopy(params)
             cloned_params['data_freshness'] = 'realtime'

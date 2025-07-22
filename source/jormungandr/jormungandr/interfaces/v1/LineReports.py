@@ -34,6 +34,7 @@ from __future__ import absolute_import, print_function, unicode_literals, divisi
 from navitiacommon.parser_args_type import BooleanType, DateTimeFormat, DepthArgument, OptionValue
 from jormungandr import i_manager, timezone
 from jormungandr.interfaces.parsers import default_count_arg_type
+from jormungandr.interfaces.v1.converters_collection_type import collections_to_resource_type
 from jormungandr.interfaces.v1.decorators import get_obj_serializer
 from jormungandr.interfaces.v1.errors import ManageError
 from jormungandr.interfaces.v1.ResourceUri import ResourceUri
@@ -42,7 +43,9 @@ from jormungandr.interfaces.common import split_uri
 from jormungandr.resources_utils import ResourceUtc
 from jormungandr.utils import date_to_timestamp
 from navitiacommon.type_pb2 import ActiveStatus
+from navitiacommon.constants import ENUM_LANGUAGE
 from flask.globals import g
+from flask_restful import abort
 from datetime import datetime
 import six
 
@@ -97,6 +100,18 @@ class LineReports(ResourceUri, ResourceUtc):
             action="append",
             schema_metadata={'format': 'pt-object'},
         )
+        parser_get.add_argument(
+            "language",
+            type=OptionValue(ENUM_LANGUAGE),
+            help="Here, select a specific language for disruption message",
+        )
+
+        parser_get.add_argument(
+            "_pt_planner",
+            type=OptionValue(['kraken', 'loki']),
+            hidden=True,
+            help="choose which pt engine to compute the pt journey",
+        )
 
         self.collection = 'line_reports'
         self.get_decorators.insert(0, ManageError())
@@ -113,7 +128,9 @@ class LineReports(ResourceUri, ResourceUtc):
         if args['disable_geojson']:
             g.disable_geojson = True
 
-        args["filter"] = self.get_filter(split_uri(uri), args)
+        uri_params = split_uri(uri)
+
+        args["filter"] = self.get_filter(uri_params, args)
 
         if args['since']:
             args['since'] = date_to_timestamp(self.convert_to_utc(args['since']))

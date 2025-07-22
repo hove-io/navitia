@@ -33,7 +33,7 @@ from __future__ import absolute_import, print_function, unicode_literals, divisi
 from abc import abstractmethod, ABCMeta
 from jormungandr.exceptions import UnknownObject, TechnicalError, log_exception
 import six
-from jormungandr.new_relic import record_custom_event
+from jormungandr.otlp import otlp_instance
 
 
 class AutocompleteError(RuntimeError):
@@ -54,7 +54,7 @@ class AbstractAutocomplete(six.with_metaclass(ABCMeta, object)):
         pass
 
     @abstractmethod
-    def get_by_uri(self, uri, request_id, instances=None, current_datetime=None):
+    def get_by_uri(self, uri, request_id, instances=None, current_datetime=None, _add_poi_shape=False):
         """
         look for an object with its uri
 
@@ -78,7 +78,7 @@ class AbstractAutocomplete(six.with_metaclass(ABCMeta, object)):
         data = {'type': self.__class__.__name__, 'status': status}
         if exc is not None:
             data["cause"] = str(exc)
-        record_custom_event('autocomplete_status', data)
+        otlp_instance.send_event_metrics('autocomplete_status', data)
 
     def get_object_by_uri(self, uri, request_id=None, instances=None, current_datetime=None):
         """

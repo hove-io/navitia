@@ -49,7 +49,6 @@ class Histogram;
 }  // namespace prometheus
 
 namespace navitia {
-enum class RTAction { deletion = 0, chaos, kirin };
 
 class InFlightGuard {
     prometheus::Gauge* gauge;
@@ -72,8 +71,12 @@ protected:
     prometheus::Histogram* data_loading_histogram;
     prometheus::Histogram* data_cloning_histogram;
     prometheus::Histogram* handle_rt_histogram;
-    prometheus::Histogram* handle_disruption_histogram;
-    prometheus::Histogram* delete_disruption_histogram;
+    prometheus::Histogram* retrieve_rt_message_duration_histogram;
+    prometheus::Histogram* retrieved_rt_message_count_histogram;
+    prometheus::Histogram* applied_rt_entity_count_histogram;
+    prometheus::Histogram* rt_message_age_min_histogram;
+    prometheus::Histogram* rt_message_age_average_histogram;
+    prometheus::Histogram* rt_message_age_max_histogram;
     prometheus::Gauge* next_st_cache_miss;
 
 public:
@@ -84,8 +87,12 @@ public:
     void observe_data_loading(double duration) const;
     void observe_data_cloning(double duration) const;
     void observe_handle_rt(double duration) const;
-    void observe_handle_disruption(double duration) const;
-    void observe_delete_disruption(double duration) const;
+    void observe_retrieve_rt_message_duration(double duration) const;
+    void observe_retrieved_rt_message_count(size_t count) const;
+    void observe_applied_rt_entity_count(size_t count) const;
+    void observe_rt_message_age_min(double duration) const;
+    void observe_rt_message_age_average(double duration) const;
+    void observe_rt_message_age_max(double duration) const;
     void set_raptor_cache_miss(size_t nb_cache_miss) const;
 };
 

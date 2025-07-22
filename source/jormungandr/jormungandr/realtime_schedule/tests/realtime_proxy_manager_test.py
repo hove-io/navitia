@@ -61,8 +61,52 @@ def realtime_proxy_creation_test():
     timeo = manager.get('proxy_id')
 
     assert timeo
-    timeo.service_url = 'http://custom_url.com'
-    timeo.service_args = {'serviceID': 'custom_id', 'EntityID': 'custom_entity', 'Media': 'custom_media'}
+    assert timeo.service_url == 'http://custom_url.com'
+    assert timeo.service_args == {'serviceID': 'custom_id', 'EntityID': 'custom_entity', 'Media': 'custom_media'}
+
+
+def realtime_proxy_verify_default_value_test():
+    """
+    SytralRT proxy without param group_by_destination
+    """
+    config = [
+        {
+            'id': 'SytralRT',
+            'object_id_tag': 'source',
+            'class': 'jormungandr.realtime_schedule.sytral.Sytral',
+            'args': {'service_url': 'https://custom_url.com', 'timeout': 10},
+        }
+    ]
+
+    manager = RealtimeProxyManager(config, MockInstance())
+    sytral = manager.get('SytralRT')
+
+    assert sytral
+    assert sytral.service_url == 'https://custom_url.com'
+    assert sytral.timeout == 10
+    assert sytral.group_by_destination is False
+
+
+def realtime_proxy_verify_added_param_test():
+    """
+    SytralRT proxy with param group_by_destination
+    """
+    config = [
+        {
+            'id': 'SytralRT',
+            'object_id_tag': 'source',
+            'class': 'jormungandr.realtime_schedule.sytral.Sytral',
+            'args': {'service_url': 'https://custom_url.com', 'timeout': 10, 'group_by_destination': True},
+        }
+    ]
+
+    manager = RealtimeProxyManager(config, MockInstance())
+    sytral = manager.get('SytralRT')
+
+    assert sytral
+    assert sytral.service_url == 'https://custom_url.com'
+    assert sytral.timeout == 10
+    assert sytral.group_by_destination is True
 
 
 def wrong_realtime_proxy_class_test():
@@ -182,7 +226,7 @@ All_realtime_proxies = [
             "timezone": "Europe/Paris",
             "service_url": "https://clever_age.com",
             "timeout": 1,
-            "service_args": {"X-Keolis-Api-Version": "1.0", "X-Keolis-Api-Key": "KISIO_2021"},
+            "service_args": {"X-Keolis-Api-Version": "1.0", "X-Keolis-Api-Key": "HOVE_2021"},
         },
     },
     {
@@ -202,7 +246,7 @@ def mock_get_realtime_proxies_from_db():
             'service_url': 'https://clever_age.come',
             'timeout': 1,
             "timezone": "Europe/Paris",
-            "service_args": {"X-Keolis-Api-Version": "1.0", "X-Keolis-Api-Key": "KISIO_2021"},
+            "service_args": {"X-Keolis-Api-Version": "1.0", "X-Keolis-Api-Key": "HOVE_2021"},
         },
     }
     rt_proxies["clever_age_TBC"] = ExternalService(id='clever_age_TBC', json=json)

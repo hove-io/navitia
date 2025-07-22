@@ -146,13 +146,15 @@ def blablalines_test():
         from_coord = '47.28696,0.78981'
         to_coord = '47.38642,0.69039'
 
-        period_extremity = utils.PeriodExtremity(
-            datetime=utils.str_to_time_stamp("20171225T060000"), represents_start=True
+        request_dates = utils.RequestDates(
+            departure_datetime=utils.str_to_time_stamp("20171225T060000"),
+            arrival_datetime=utils.str_to_time_stamp("20171225T060000"),
+            represents_start=True,
         )
         ridesharing_journeys, feed_publisher = blablalines.request_journeys_with_feed_publisher(
             from_coord=from_coord,
             to_coord=to_coord,
-            period_extremity=period_extremity,
+            request_dates=request_dates,
             instance_params=DummyInstance(),
         )
 
@@ -215,8 +217,10 @@ def test_request_journeys_should_raise_on_non_200():
             blablalines._request_journeys(
                 '1.2,3.4',
                 '5.6,7.8',
-                utils.PeriodExtremity(
-                    datetime=utils.str_to_time_stamp("20171225T060000"), represents_start=True
+                utils.RequestDates(
+                    departure_datetime=utils.str_to_time_stamp("20171225T060000"),
+                    arrival_datetime=utils.str_to_time_stamp("20171225T060000"),
+                    represents_start=True,
                 ),
                 DummyInstance(),
             )

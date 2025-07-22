@@ -41,6 +41,7 @@ from jormungandr import utils
 import json
 import requests_mock
 import pytest
+import pytz
 
 # https://stackoverflow.com/a/9312242/1614576
 import re
@@ -56,7 +57,7 @@ fake_response = """
       "arrivalDate": "2017-12-25T08:25:36+01:00",
       "duration": 1057,
       "distance": 12650,
-      "url": "https://jky8k.app.goo.gl/?efr=1&apn=com.is.android.rennes&ibi=&isi=&utm_campaign=KISIO&link=https%3A%2F%2Fwww.star.fr%2Fsearch%2F%3FfeatureName%3DsearchResultDetail%26networkId%3D33%26journeyId%3D4bcd0b9d-2c9d-42a2-8ffb-4508c952f4fb",
+      "url": "https://jky8k.app.goo.gl/?efr=1&apn=com.is.android.rennes&ibi=&isi=&utm_campaign=HOVE&link=https%3A%2F%2Fwww.star.fr%2Fsearch%2F%3FfeatureName%3DsearchResultDetail%26networkId%3D33%26journeyId%3D4bcd0b9d-2c9d-42a2-8ffb-4508c952f4fb",
       "paths": [
         {
           "mode": "RIDESHARINGAD",
@@ -112,7 +113,7 @@ fake_response = """
       "arrivalDate": "2017-12-25T08:53:09+01:00",
       "duration": 1047,
       "distance": 11686,
-      "url": "https://jky8k.app.goo.gl/?efr=1&apn=com.is.android.rennes&ibi=&isi=&utm_campaign=KISIO&link=https%3A%2F%2Fwww.star.fr%2Fsearch%2F%3FfeatureName%3DsearchResultDetail%26networkId%3D33%26journeyId%3D05223c04-834d-4710-905f-aa3796da5837",
+      "url": "https://jky8k.app.goo.gl/?efr=1&apn=com.is.android.rennes&ibi=&isi=&utm_campaign=HOVE&link=https%3A%2F%2Fwww.star.fr%2Fsearch%2F%3FfeatureName%3DsearchResultDetail%26networkId%3D33%26journeyId%3D05223c04-834d-4710-905f-aa3796da5837",
       "paths": [
         {
           "mode": "RIDESHARINGAD",
@@ -163,7 +164,7 @@ fake_response = """
       ]
     }
   ],
-  "url": "https://jky8k.app.goo.gl/?efr=1&apn=com.is.android.rennes&ibi=&isi=&utm_campaign=KISIO&link=https%3A%2F%2Fwww.star.fr%2Fsearch%2F%3FfeatureName%3DsearchResults%26networkId%3D33%26from%3D48.109377%252C-1.682103%26to%3D48.020335%252C-1.743929%26multimodal%3Dfalse%26departureDate%3D2017-12-25T08%253A00%253A00%252B01%253A00"
+  "url": "https://jky8k.app.goo.gl/?efr=1&apn=com.is.android.rennes&ibi=&isi=&utm_campaign=HOVE&link=https%3A%2F%2Fwww.star.fr%2Fsearch%2F%3FfeatureName%3DsearchResults%26networkId%3D33%26from%3D48.109377%252C-1.682103%26to%3D48.020335%252C-1.743929%26multimodal%3Dfalse%26departureDate%3D2017-12-25T08%253A00%253A00%252B01%253A00"
 }
 
 """
@@ -181,6 +182,7 @@ class DummyInstance:
     walking_speed = 1.12
     greenlet_pool_for_ridesharing_services = True
     ridesharing_greenlet_pool_size = 42
+    timezone = 'UTC'
 
 
 def get_ridesharing_service_test():
@@ -248,13 +250,14 @@ def instant_system_test():
         from_coord = '48.109377,-1.682103'
         to_coord = '48.020335,-1.743929'
 
-        period_extremity = utils.PeriodExtremity(
-            datetime=utils.str_to_time_stamp("20171225T060000"), represents_start=True
+        request_dates = utils.RequestDates(
+            departure_datetime=utils.str_to_time_stamp("20171225T060000"),
+            arrival_datetime=utils.str_to_time_stamp("20171225T060000"),
+            represents_start=True,
         )
-
         params = RidesharingServiceManager.InstanceParams.make_params(DummyInstance())
         ridesharing_journeys, feed_publisher = instant_system.request_journeys_with_feed_publisher(
-            from_coord=from_coord, to_coord=to_coord, period_extremity=period_extremity, instance_params=params
+            from_coord=from_coord, to_coord=to_coord, request_dates=request_dates, instance_params=params
         )
 
         assert len(ridesharing_journeys) == 2
@@ -264,7 +267,7 @@ def instant_system_test():
         assert ridesharing_journeys[0].metadata.rating_scale_max == 10
         assert (
             ridesharing_journeys[0].ridesharing_ad
-            == 'https://jky8k.app.goo.gl/?efr=1&apn=com.is.android.rennes&ibi=&isi=&utm_campaign=KISIO&link=https%3A%2F%2Fwww.star.fr%2Fsearch%2F%3FfeatureName%3DsearchResultDetail%26networkId%3D33%26journeyId%3D4bcd0b9d-2c9d-42a2-8ffb-4508c952f4fb'
+            == 'https://jky8k.app.goo.gl/?efr=1&apn=com.is.android.rennes&ibi=&isi=&utm_campaign=HOVE&link=https%3A%2F%2Fwww.star.fr%2Fsearch%2F%3FfeatureName%3DsearchResultDetail%26networkId%3D33%26journeyId%3D4bcd0b9d-2c9d-42a2-8ffb-4508c952f4fb'
         )
 
         assert ridesharing_journeys[0].pickup_place.addr == ""  # address is not provided in mock
@@ -306,7 +309,7 @@ def instant_system_test():
         assert ridesharing_journeys[1].shape
         assert (
             ridesharing_journeys[1].ridesharing_ad
-            == "https://jky8k.app.goo.gl/?efr=1&apn=com.is.android.rennes&ibi=&isi=&utm_campaign=KISIO&link=https%3A%2F%2Fwww.star.fr%2Fsearch%2F%3FfeatureName%3DsearchResultDetail%26networkId%3D33%26journeyId%3D05223c04-834d-4710-905f-aa3796da5837"
+            == "https://jky8k.app.goo.gl/?efr=1&apn=com.is.android.rennes&ibi=&isi=&utm_campaign=HOVE&link=https%3A%2F%2Fwww.star.fr%2Fsearch%2F%3FfeatureName%3DsearchResultDetail%26networkId%3D33%26journeyId%3D05223c04-834d-4710-905f-aa3796da5837"
         )
 
         assert ridesharing_journeys[1].pickup_place.addr == ""
@@ -345,8 +348,10 @@ def test_request_journeys_should_raise_on_non_200():
             instant_system._request_journeys(
                 '1.2,3.4',
                 '5.6,7.8',
-                utils.PeriodExtremity(
-                    datetime=utils.str_to_time_stamp("20171225T060000"), represents_start=True
+                utils.RequestDates(
+                    departure_datetime=utils.str_to_time_stamp("20171225T060000"),
+                    arrival_datetime=utils.str_to_time_stamp("20171225T060000"),
+                    represents_start=True,
                 ),
                 DummyInstance(),
             )

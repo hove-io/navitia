@@ -44,7 +44,7 @@ import copy
 from jormungandr.exceptions import TechnicalError
 from navitiacommon import response_pb2, request_pb2, type_pb2
 from navitiacommon.default_values import get_value_or_default
-from jormungandr.timezone import set_request_instance_timezone
+from jormungandr.timezone import set_request_instance_timezone, get_instance_str_timezone
 import logging
 from jormungandr.exceptions import DeadSocketException
 from navitiacommon import models
@@ -58,14 +58,24 @@ import pybreaker
 from jormungandr import georef, schedule, realtime_schedule, ptref, street_network, fallback_modes
 from jormungandr.scenarios.ridesharing.ridesharing_service_manager import RidesharingServiceManager
 import six
-import time
-from collections import deque
+from collections import namedtuple
 from datetime import datetime, timedelta
 from navitiacommon import default_values
 from jormungandr.equipments import EquipmentProviderManager
 from jormungandr.external_services import ExternalServiceManager
-from jormungandr.utils import can_connect_to_database
+from jormungandr.parking_space_availability.bss.bss_provider_manager import BssProviderManager
+from jormungandr.parking_space_availability.car.car_park_provider_manager import CarParkingProviderManager
+from jormungandr.utils import (
+    can_connect_to_database,
+    make_origin_destination_key,
+    read_best_boarding_positions,
+    get_pt_object_coord,
+)
+from jormungandr.olympic_site_params_manager import OlympicSiteParamsManager
 from jormungandr import pt_planners_manager, transient_socket
+from jormungandr.pt_journey_fare import PtJourneyFareBackendManager
+from jormungandr.zmq_backend import ZmqBackend
+import os
 
 type_to_pttype = {
     "stop_area": request_pb2.PlaceCodeRequest.StopArea,  # type: ignore
@@ -77,6 +87,11 @@ type_to_pttype = {
     "stop_point": request_pb2.PlaceCodeRequest.StopPoint,  # type: ignore
     "calendar": request_pb2.PlaceCodeRequest.Calendar,  # type: ignore
 }
+
+OlympicsForbiddenUris = namedtuple(
+    'OlympicsForbiddenUris',
+    ['pt_object_olympics_forbidden_uris', 'poi_property_key', 'poi_property_value', 'min_pt_duration'],
+)
 
 
 @app.before_request
@@ -101,6 +116,37 @@ def _make_property_getter(attr_name):
     return property(_getter)
 
 
+def parse_and_get_olympics_forbidden_uris(dict_olympics_forbidden_uris):
+    if not dict_olympics_forbidden_uris:
+        return None
+    if not isinstance(dict_olympics_forbidden_uris, dict):
+        logging.getLogger(__name__).error('olympic_criteria: invalid parameter type.')
+        return None
+    if "pt_object_olympics_forbidden_uris" not in dict_olympics_forbidden_uris or not isinstance(
+        dict_olympics_forbidden_uris["pt_object_olympics_forbidden_uris"], list
+    ):
+        logging.getLogger(__name__).error(
+            'olympic_criteria: invalid parameter, pt_object_olympics_forbidden_uris not found or invalid'
+        )
+        return None
+    for p in ["poi_property_key", "poi_property_value"]:
+        if p not in dict_olympics_forbidden_uris:
+            logging.getLogger(__name__).error('olympic_criteria: invalid parameter, {} not found'.format(p))
+            return None
+    if not isinstance(dict_olympics_forbidden_uris.get('min_pt_duration'), int):
+        logging.getLogger(__name__).error(
+            'olympic_criteria: invalid parameter, min_pt_duration is not an integer'
+        )
+        return None
+
+    return OlympicsForbiddenUris(
+        pt_object_olympics_forbidden_uris=dict_olympics_forbidden_uris["pt_object_olympics_forbidden_uris"],
+        poi_property_key=dict_olympics_forbidden_uris["poi_property_key"],
+        poi_property_value=dict_olympics_forbidden_uris["poi_property_value"],
+        min_pt_duration=dict_olympics_forbidden_uris["min_pt_duration"],
+    )
+
+
 class Instance(transient_socket.TransientSocket):
     name = None  # type: Text
 
@@ -118,8 +164,18 @@ class Instance(transient_socket.TransientSocket):
         streetnetwork_backend_manager,
         external_service_provider_configurations,
         pt_planners_configurations,
+        pt_journey_fare_configurations,
         ghost_words=None,
         instance_db=None,
+        best_boarding_positions_dir=None,
+        olympics_forbidden_uris=None,
+        use_multi_reverse=False,
+        resp_content_limit_bytes=None,
+        resp_content_limit_endpoints_whitelist=None,
+        individual_bss_provider=[],
+        individual_car_parking_provider=[],
+        timezone=None,
+        same_journey_schedules_configuration=None,
     ):
         super(Instance, self).__init__(
             name=name,
@@ -136,7 +192,7 @@ class Instance(transient_socket.TransientSocket):
         self.lock = Lock()
         self.context = context
         self.name = name
-        self.timezone = None  # timezone will be fetched from the kraken
+        self.timezone = get_instance_str_timezone(timezone, name)
         self.publication_date = -1
         self.is_initialized = False  # kraken hasn't been called yet we don't have geom nor timezone
         self.breaker = pybreaker.CircuitBreaker(
@@ -156,6 +212,8 @@ class Instance(transient_socket.TransientSocket):
             self.ridesharing_services_manager = RidesharingServiceManager(
                 self, ridesharing_configurations, self.get_ridesharing_services_from_db
             )
+
+        self.olympics_forbidden_uris = parse_and_get_olympics_forbidden_uris(olympics_forbidden_uris)
 
         self._pt_planner_manager = pt_planners_manager.PtPlannersManager(
             pt_planners_configurations,
@@ -206,9 +264,71 @@ class Instance(transient_socket.TransientSocket):
             self.external_service_provider_manager = ExternalServiceManager(
                 self, external_service_provider_configurations, self.get_external_service_providers_from_db
             )
+
+        # Init BSS provider manager from config from external services in bdd
+        if disable_database:
+            self.bss_provider_manager = BssProviderManager(individual_bss_provider)
+        else:
+            self.bss_provider_manager = BssProviderManager(
+                individual_bss_provider, self.get_bss_stations_services_from_db
+            )
+
+        # Init CAR provider manager from config from external services in bdd
+        if disable_database:
+            self.car_parking_provider_manager = CarParkingProviderManager(individual_car_parking_provider)
+        else:
+            self.car_parking_provider_manager = CarParkingProviderManager(
+                individual_car_parking_provider, self.get_car_parking_services_from_db
+            )
+
         self.external_service_provider_manager.init_external_services()
         self.instance_db = instance_db
         self._ghost_words = ghost_words or []
+        self.best_boarding_positions = None
+        self.use_multi_reverse = use_multi_reverse
+        self.olympic_site_params_manager = None
+        self.resp_content_limit_bytes = resp_content_limit_bytes
+        # a list of endpoints that are not affected by the resp_content_limit_bytes
+        self.resp_content_limit_endpoints_whitelist = set(resp_content_limit_endpoints_whitelist or [])
+
+        # Read the best_boarding_positions files if any
+        if best_boarding_positions_dir is not None:
+            file_path = os.path.join(best_boarding_positions_dir, "{}.csv".format(self.name))
+            self.best_boarding_positions = read_best_boarding_positions(file_path)
+
+        # load stop_point attractivities, the feature is only available when loki is selected as pt_planner
+        self.olympic_site_params_manager = OlympicSiteParamsManager(
+            self, app.config.get(str('OLYMPIC_SITE_PARAMS_BUCKET'), {})
+        )
+
+        # TODO: use db
+        self._pt_journey_fare_backend_manager = PtJourneyFareBackendManager(
+            self, pt_journey_fare_configurations, None
+        )
+        self.elevation_service = (
+            ZmqBackend(
+                transient_socket.TransientSocket(
+                    "asgard_elevation_{}".format(self.name),
+                    self.context,
+                    app.config.get(str("ASGARD_ZMQ_SOCKET")),
+                    app.config['ASGARD_ZMQ_SOCKET_TTL_SECONDS'],
+                ),
+                app.config.get('ELEVATION_SERVICE_TIMEOUT', 5),
+                pybreaker.CircuitBreaker(
+                    fail_max=app.config['CIRCUIT_BREAKER_MAX_ASGARD_FAIL'],
+                    reset_timeout=app.config['CIRCUIT_BREAKER_ASGARD_TIMEOUT_S'],
+                ),
+                "elevation",
+                "asgard",
+            )
+            if app.config.get("ASGARD_ZMQ_SOCKET")
+            else None
+        )
+
+        self._same_journey_schedules_configuration = same_journey_schedules_configuration or {
+            "allowed_id_type": ["stop_point"],
+            "min_nb_journeys": 5,
+        }
 
     def get_providers_from_db(self):
         """
@@ -229,11 +349,11 @@ class Instance(transient_socket.TransientSocket):
         :return: a callable query of external services associated to the current instance in db
         """
         models = self._get_models()
-        result = models.external_services if models else None
+        result = models.external_services if models else []
         return [
             res
             for res in result
-            if res.navitia_service in ['free_floatings', 'vehicle_occupancies', "vehicle_positions"]
+            if res.navitia_service in ['free_floatings', 'vehicle_occupancies', "vehicle_positions", "obstacles"]
         ]
 
     def get_realtime_proxies_from_db(self):
@@ -243,6 +363,22 @@ class Instance(transient_socket.TransientSocket):
         models = self._get_models()
         result = models.external_services if models else None
         return [res for res in result if res.navitia_service == 'realtime_proxies']
+
+    def get_bss_stations_services_from_db(self):
+        """
+        :return: a callable query of external services associated to the current instance in db
+        """
+        models = self._get_models()
+        result = models.external_services if models else []
+        return [res for res in result if res.navitia_service == 'bss_stations']
+
+    def get_car_parking_services_from_db(self):
+        """
+        :return: a callable query of external services associated to the current instance in db
+        """
+        models = self._get_models()
+        result = models.external_services if models else []
+        return [res for res in result if res.navitia_service == 'car_parkings']
 
     @property
     def autocomplete(self):
@@ -278,12 +414,36 @@ class Instance(transient_socket.TransientSocket):
         try:
             instance_db = models.Instance.get_by_name(self.name)
         except Exception as e:
-            logging.getLogger(__name__).error('No access to table instance (error: {})'.format(e))
+            logging.getLogger(__name__).exception('No access to table instance (error: {})'.format(e))
             g.can_connect_to_database = False
             return self.instance_db
 
         self.instance_db = instance_db
         return self.instance_db
+
+    @memory_cache.memoize(app.config[str('MEMORY_CACHE_CONFIGURATION')].get(str('TIMEOUT_PARAMS'), 30))
+    @cache.memoize(app.config[str('CACHE_CONFIGURATION')].get(str('TIMEOUT_PARAMS'), 5 * 60))
+    def _get_sn_backend_for_user(self, user_id, mode):
+        if app.config['DISABLE_DATABASE']:
+            return None
+        if not can_connect_to_database():
+            return None
+        try:
+            backend_record = models.SnBackendAuthorization.get_backend(user_id, mode)
+        except Exception as e:
+            logging.getLogger(__name__).exception(
+                'No access to table sn_backend_authorization (error: {})'.format(e)
+            )
+            return None
+
+        if backend_record:
+            return backend_record.sn_backend_id
+
+        return None
+
+    def get_instance_scenario_name_or_default(self, default='distributed'):
+        instance_db = self.get_models()
+        return instance_db.scenario if instance_db else default
 
     def scenario(self, override_scenario=None):
         """
@@ -314,8 +474,7 @@ class Instance(transient_socket.TransientSocket):
             g.scenario[self.name] = scenario
             return scenario
 
-        instance_db = self.get_models()
-        scenario_name = instance_db.scenario if instance_db else 'new_default'
+        scenario_name = self.get_instance_scenario_name_or_default()
         # for the sake of backwards compatibility... some users may still be using experimental...
         scenario_name = replace_experimental_scenario(scenario_name)
         if not self._scenario or scenario_name != self._scenario_name:
@@ -480,6 +639,12 @@ class Instance(transient_socket.TransientSocket):
         # type: () -> bool
         instance_db = self.get_models()
         return get_value_or_default('car_park_provider', instance_db, self.name)
+
+    @property
+    def disruptions_on_poi(self):
+        # type: () -> bool
+        instance_db = self.get_models()
+        return get_value_or_default('disruptions_on_poi', instance_db, self.name)
 
     @property
     def max_additional_connections(self):
@@ -676,10 +841,25 @@ class Instance(transient_socket.TransientSocket):
         instance_db = self.get_models()
         return get_value_or_default('ghost_words', instance_db, self.name)
 
+    @property
+    def same_journey_schedules_configuration(self):
+        instance_db = self.get_models()
+        if instance_db and instance_db.same_journey_schedules_configuration:
+            return instance_db.same_journey_schedules_configuration
+        return self._same_journey_schedules_configuration
+
+    @property
+    def additional_parameters(self):
+        # type: () -> bool
+        instance_db = self.get_models()
+        return get_value_or_default('additional_parameters', instance_db, self.name)
+
     # TODO: refactorise all properties
     taxi_speed = _make_property_getter('taxi_speed')
     additional_time_after_first_section_taxi = _make_property_getter('additional_time_after_first_section_taxi')
     additional_time_before_last_section_taxi = _make_property_getter('additional_time_before_last_section_taxi')
+
+    on_street_bike_parking_duration = _make_property_getter('on_street_bike_parking_duration')
 
     max_walking_direct_path_duration = _make_property_getter('max_walking_direct_path_duration')
     max_bike_direct_path_duration = _make_property_getter('max_bike_direct_path_duration')
@@ -702,19 +882,67 @@ class Instance(transient_socket.TransientSocket):
     bss_rent_penalty = _make_property_getter('bss_rent_penalty')
     bss_return_duration = _make_property_getter('bss_return_duration')
     bss_return_penalty = _make_property_getter('bss_rent_penalty')
-    asgard_language = _make_property_getter('asgard_language')
+    language = _make_property_getter('language')
 
     transfer_path = _make_property_getter('transfer_path')
     access_points = _make_property_getter('access_points')
+    poi_access_points = _make_property_getter('poi_access_points')
 
     default_pt_planner = _make_property_getter('default_pt_planner')
     pt_planners_configurations = _make_property_getter('pt_planners_configurations')
 
+    loki_pt_journey_fare = _make_property_getter('loki_pt_journey_fare')
+    loki_compute_pt_journey_fare = _make_property_getter('loki_compute_pt_journey_fare')
+    loki_pt_journey_fare_configurations = _make_property_getter('loki_pt_journey_fare_configurations')
+
     filter_odt_journeys = _make_property_getter('filter_odt_journeys')
+
+    co2_emission_car_value = _make_property_getter('co2_emission_car_value')
+    co2_emission_car_unit = _make_property_getter('co2_emission_car_unit')
+
+    use_predicted_traffic = _make_property_getter('use_predicted_traffic')
+
+    # Add some attributes on walking
+    walking_walkway_factor = _make_property_getter('walking_walkway_factor')
+    walking_sidewalk_factor = _make_property_getter('walking_sidewalk_factor')
+    walking_alley_factor = _make_property_getter('walking_alley_factor')
+    walking_driveway_factor = _make_property_getter('walking_driveway_factor')
+    walking_step_penalty = _make_property_getter('walking_step_penalty')
+    walking_use_ferry = _make_property_getter('walking_use_ferry')
+    walking_use_living_streets = _make_property_getter('walking_use_living_streets')
+    walking_use_tracks = _make_property_getter('walking_use_tracks')
+    walking_use_hills = _make_property_getter('walking_use_hills')
+    walking_service_factor = _make_property_getter('walking_service_factor')
+    walking_max_hiking_difficulty = _make_property_getter('walking_max_hiking_difficulty')
+    walking_shortest = _make_property_getter('walking_shortest')
+    walking_ignore_oneways = _make_property_getter('walking_ignore_oneways')
+    walking_destination_only_penalty = _make_property_getter('walking_destination_only_penalty')
+
+    # Add some attributes on bike
+    bike_use_roads = _make_property_getter('bike_use_roads')
+    bike_use_hills = _make_property_getter('bike_use_hills')
+    bike_use_ferry = _make_property_getter('bike_use_ferry')
+    bike_avoid_bad_surfaces = _make_property_getter('bike_avoid_bad_surfaces')
+    bike_shortest = _make_property_getter('bike_shortest')
+    bicycle_type = _make_property_getter('bicycle_type')
+    bike_use_living_streets = _make_property_getter('bike_use_living_streets')
+    bike_maneuver_penalty = _make_property_getter('bike_maneuver_penalty')
+    bike_service_penalty = _make_property_getter('bike_service_penalty')
+    bike_service_factor = _make_property_getter('bike_service_factor')
+    bike_country_crossing_cost = _make_property_getter('bike_country_crossing_cost')
+    bike_country_crossing_penalty = _make_property_getter('bike_country_crossing_penalty')
+    bike_destination_only_penalty = _make_property_getter('bike_destination_only_penalty')
 
     def get_pt_planner(self, pt_planner_id=None):
         pt_planner_id = pt_planner_id or self.default_pt_planner
         return self._pt_planner_manager.get_pt_planner(pt_planner_id)
+
+    def get_all_pt_planners(self):
+        return self._pt_planner_manager.get_all_pt_planners()
+
+    def get_pt_journey_fare(self, loki_pt_journey_fare_id=None):
+        pt_journey_fare_id = loki_pt_journey_fare_id or self.loki_pt_journey_fare
+        return self._pt_journey_fare_backend_manager.get_pt_journey_fare(pt_journey_fare_id)
 
     @property
     def places_proximity_radius(self):
@@ -731,7 +959,7 @@ class Instance(transient_socket.TransientSocket):
         except pybreaker.CircuitBreakerError as e:
             raise DeadSocketException(self.name, self.socket_path)
 
-    def _send_and_receive(self, request, timeout=app.config.get('INSTANCE_TIMEOUT', 10), quiet=False, **kwargs):
+    def _send_and_receive(self, request, timeout=app.config.get('INSTANCES_TIMEOUT', 10), quiet=False, **kwargs):
         deadline = datetime.utcnow() + timedelta(milliseconds=timeout * 1000)
         request.deadline = deadline.strftime('%Y%m%dT%H%M%S,%f')
 
@@ -758,7 +986,7 @@ class Instance(transient_socket.TransientSocket):
         req = request_pb2.Request()
         req.requested_api = type_pb2.place_uri
         req.place_uri.uri = id_
-        return self.send_and_receive(req, timeout=app.config.get(str('INSTANCE_FAST_TIMEOUT'), 1))
+        return self.send_and_receive(req, timeout=app.config.get(str('PLACE_FAST_TIMEOUT'), 1))
 
     def has_id(self, id_):
         """
@@ -768,6 +996,21 @@ class Instance(transient_socket.TransientSocket):
             return len(self.get_id(id_).places) > 0
         except DeadSocketException:
             return False
+
+    def get_coord_by_id(self, id_):
+        """
+        If this instance has this id then get coordinate
+        """
+        try:
+            pt_objects = self.get_id(id_).places
+            pt_object = pt_objects[0] if len(pt_objects) > 0 else None
+            if pt_object:
+                coord = get_pt_object_coord(pt_object)
+                return coord if (coord and coord.lon != 0 and coord.lat != 0) else None
+            else:
+                return None
+        except DeadSocketException:
+            return None
 
     def has_coord(self, lon, lat):
         return self.has_point(geometry.Point(lon, lat))
@@ -796,7 +1039,7 @@ class Instance(transient_socket.TransientSocket):
         req.place_code.type_code = "external_code"
         req.place_code.code = id_
         # we set the timeout to 1s
-        return self.send_and_receive(req, timeout=app.config.get(str('INSTANCE_FAST_TIMEOUT'), 1))
+        return self.send_and_receive(req, timeout=app.config.get(str('PLACE_FAST_TIMEOUT'), 1))
 
     def has_external_code(self, type_, id_):
         """
@@ -863,14 +1106,27 @@ class Instance(transient_socket.TransientSocket):
         return False
 
     def _get_street_network(self, mode, request):
+        """
+
+        :param mode: fallback mode among ['bike', 'bss', 'car', 'car_no_park', 'ridesharing', 'taxi', 'walking']
+        :param request: This parameter in required only for file configuration.
+        :return: street_network backend connector for the mode
+        """
         if app.config[str('DISABLE_DATABASE')]:
             return self._streetnetwork_backend_manager.get_street_network_legacy(self, mode, request)
         else:
-            # We get the name of the column in the database corresponding to the mode used in the request
-            # And we get the value of this column for this instance
-            column_in_db = "street_network_{}".format(mode)
-            streetnetwork_backend_conf = getattr(self, column_in_db)
-            return self._streetnetwork_backend_manager.get_street_network_db(self, streetnetwork_backend_conf)
+            streetnetwork_backend_id = None
+            if hasattr(g, 'user') and g.user.has_sn_backend:
+                # We can call a function to get streetnetwork_backend_id if present in the table
+                # sn_backend_authorization
+                streetnetwork_backend_id = self._get_sn_backend_for_user(g.user.id, mode)
+
+            if streetnetwork_backend_id is None:
+                # We get the name of the column in the database corresponding to the mode used in the request
+                # And we get the value of this column for this instance
+                column_in_db = "street_network_{}".format(mode)
+                streetnetwork_backend_id = getattr(self, column_in_db)
+            return self._streetnetwork_backend_manager.get_street_network_db(self, streetnetwork_backend_id)
 
     def get_street_network(self, mode, request):
         if mode != fallback_modes.FallbackModes.car.name:
@@ -883,6 +1139,11 @@ class Instance(transient_socket.TransientSocket):
         )
 
     def get_all_street_networks(self):
+        """
+        Used only to display street_network backends in status.street_networks[]
+        :return: A list of street_network backends configured in the attributes of the form
+        instance.street_network_{<mode>} and present in the table streetnetwork_backend
+        """
         if app.config[str('DISABLE_DATABASE')]:
             return self._streetnetwork_backend_manager.get_all_street_networks_legacy(self)
         else:
@@ -891,6 +1152,12 @@ class Instance(transient_socket.TransientSocket):
     def get_all_ridesharing_services(self):
         return self.ridesharing_services_manager.get_all_ridesharing_services()
 
+    def get_all_bss_providers(self):
+        return self.bss_provider_manager.get_providers()
+
+    def get_all_car_parking_providers(self):
+        return self.car_parking_provider_manager.get_providers()
+
     def get_autocomplete(self, requested_autocomplete):
         if not requested_autocomplete:
             return self.autocomplete
@@ -898,3 +1165,9 @@ class Instance(transient_socket.TransientSocket):
         if not autocomplete:
             raise TechnicalError('autocomplete {} not available'.format(requested_autocomplete))
         return autocomplete
+
+    def get_best_boarding_position(self, from_id, to_id):
+        if not self.best_boarding_positions:
+            return []
+        key = make_origin_destination_key(from_id, to_id)
+        return self.best_boarding_positions.get(key, [])

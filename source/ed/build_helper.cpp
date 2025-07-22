@@ -196,7 +196,7 @@ nt::VehicleJourney* VJ::make() {
     }
     vj->physical_mode->vehicle_journey_list.push_back(vj);
 
-    pt_data.headsign_handler.change_name_and_register_as_headsign(*vj, vj_headsign);
+    pt_data.headsign_handler.change_vj_headsign_and_register(*vj, vj_headsign);
 
     if (!_block_id.empty()) {
         b.block_vjs.insert(std::make_pair(_block_id, vj));
@@ -544,15 +544,24 @@ Impacter& Impacter::msg(dis::Message m) {
     return *this;
 }
 
-Impacter& Impacter::msg(const std::string& text, nt::disruption::ChannelType c) {
+Impacter& Impacter::msg(const std::string& text,
+                        nt::disruption::ChannelType c,
+                        const std::string& translated_text,
+                        const std::string& language) {
     dis::Message m;
     auto str = to_string(c);
     m.text = text;
     m.channel_id = str;
-    m.channel_id = str;
     m.channel_name = str + " channel";
     m.channel_content_type = "content type";
     m.created_at = boost::posix_time::ptime(b.data->meta->production_date.begin(), boost::posix_time::minutes(0));
+
+    if (!translated_text.empty()) {
+        dis::Translation t;
+        t.text = translated_text;
+        t.language = language;
+        m.translations.push_back(std::move(t));
+    }
 
     m.channel_types.insert(c);
     return msg(std::move(m));
@@ -637,7 +646,7 @@ builder::builder(const std::string& date,
     data->loaded = true;
     data->meta->instance_name = "builder";
     data->meta->publisher_name = publisher_name;
-    data->meta->publisher_url = "www.canaltp.fr";
+    data->meta->publisher_url = "www.hove.com";
     data->meta->license = "ODBL";
 
     // for the moment we can only have one timezone per dataset

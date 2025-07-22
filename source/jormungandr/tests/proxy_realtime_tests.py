@@ -40,7 +40,7 @@ import pytz
 from .check_utils import is_valid_stop_date_time, get_not_null
 
 
-MOCKED_PROXY_CONF = [{"id": "Kisio数字", "class": "tests.proxy_realtime_tests.MockedTestProxy", "args": {}}]
+MOCKED_PROXY_CONF = [{"id": "Hove数字", "class": "tests.proxy_realtime_tests.MockedTestProxy", "args": {}}]
 
 
 class MockedTestProxy(realtime_proxy.RealtimeProxy):
@@ -64,13 +64,13 @@ class MockedTestProxy(realtime_proxy.RealtimeProxy):
     def _get_next_passage_for_route_point(
         self, route_point, count=None, from_dt=None, current_dt=None, duration=None
     ):
-        if route_point.fetch_stop_id(self.object_id_tag) == "Kisio数字_C:S1":
+        if route_point.fetch_stop_id(self.object_id_tag) == "Hove数字_C:S1":
             return []
 
         if route_point.fetch_stop_id(self.object_id_tag) == "AnotherSource_C:S1":
             return self._create_next_passages([("10:42:42", "l'infini"), ("11:42:42", "l'au dela")])
 
-        if route_point.fetch_stop_id(self.object_id_tag) == "Kisio数字_C:S0":
+        if route_point.fetch_stop_id(self.object_id_tag) == "Hove数字_C:S0":
             return self._create_next_passages([("11:32:42", "l'infini"), ("11:42:42", "l'au dela")])
 
         if route_point.pb_stop_point.uri == "S42":
@@ -129,7 +129,9 @@ class TestDepartures(AbstractTestFixture):
         response = self.query_region(query)
         stop_schedules = response['stop_schedules'][0]['date_times']
         next_passage_dts = [dt["date_time"] for dt in stop_schedules]
-        assert len(next_passage_dts) == 0
+        # Here since realtime_passages is empty and first_datetime absent we return None
+        # so that stop_schedule with one date_times is not updated
+        assert len(next_passage_dts) == 1
 
         for dt in stop_schedules:
             assert dt['data_freshness'] == 'base_schedule'
@@ -406,7 +408,7 @@ class TestDepartures(AbstractTestFixture):
 
 MOCKED_PROXY_CONF = [
     {
-        "id": "Kisio数字",
+        "id": "Hove数字",
         "object_id_tag": "AnotherSource",
         "class": "tests.proxy_realtime_tests.MockedTestProxy",
         "args": {},
@@ -431,7 +433,7 @@ class TestDeparturesWithAnotherSource(AbstractTestFixture):
 
 
 MOCKED_PROXY_WITH_TIMEZONE_CONF = [
-    {"id": "Kisio数字", "class": "tests.proxy_realtime_tests.MockedTestProxyWithTimezone", "args": {}}
+    {"id": "Hove数字", "class": "tests.proxy_realtime_tests.MockedTestProxyWithTimezone", "args": {}}
 ]
 
 
@@ -443,7 +445,7 @@ class MockedTestProxyWithTimezone(MockedTestProxy):
         self, route_point, count=None, from_dt=None, current_dt=None, duration=None
     ):
 
-        if route_point.fetch_stop_id(self.object_id_tag) == "Kisio数字_C:S0":
+        if route_point.fetch_stop_id(self.object_id_tag) == "Hove数字_C:S0":
             return self._create_next_passages(
                 [("00:03:00", "l'infini"), ("00:04:00", "l'au dela")],
                 year=2016,
@@ -471,7 +473,7 @@ class TestDeparturesWithTimeZone(AbstractTestFixture):
 
 
 MOCKED_PROXY_WITH_CUSTOM_MERGING_CONF = [
-    {"id": "Kisio数字", "class": "tests.proxy_realtime_tests.MockedTestProxyWithCustomMerging", "args": {}}
+    {"id": "Hove数字", "class": "tests.proxy_realtime_tests.MockedTestProxyWithCustomMerging", "args": {}}
 ]
 
 
