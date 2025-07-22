@@ -41,52 +41,6 @@ import fcntl
 import errno
 
 
-class LogLine(object):
-    def __init__(self, line):
-        if line.startswith('DEBUG') or line.startswith('TRACE') or line.startswith('NOTICE') or not line:
-            self.level = 10
-        elif line.startswith('INFO'):
-            self.level = 20
-        elif line.startswith('WARN'):
-            self.level = 30
-        else:
-            self.level = 40
-
-        pos = line.find(' - ')
-        if 0 < pos < 10:
-            self.msg = line[pos + 3 :]
-        else:
-            self.msg = line
-
-
-def parse_log(buff):
-    logs = []
-    line, sep, buff = buff.partition('\n')
-    while sep and line:
-        logs.append(LogLine(line))
-        line, sep, buff = buff.partition('\n')
-    if not sep:
-        buff = line  # we put back the last unterminated line in the buffer
-    return logs, buff
-
-
-# from: http://stackoverflow.com/questions/7729336/how-can-i-print-and-display-subprocess-stdout-and-stderr-output-without-distorti/7730201#7730201
-def make_async(fd):
-    fcntl.fcntl(fd, fcntl.F_SETFL, fcntl.fcntl(fd, fcntl.F_GETFL) | os.O_NONBLOCK)
-
-
-# Helper function to read some data from a file descriptor, ignoring EAGAIN errors
-# (those errors mean that there are no data available for the moment)
-def read_async(fd):
-    try:
-        return fd.read()
-    except IOError as e:
-        if e.errno != errno.EAGAIN:
-            raise e
-        else:
-            return ''
-
-
 def hide_args(whole_args, args_to_be_hidden):
     """hide the given args' contents.
 
@@ -101,7 +55,7 @@ def hide_args(whole_args, args_to_be_hidden):
     return args_copy
 
 
-def launch_exec_traces(exec_name, args, logger):
+def launch_exec(exec_name, args, logger):
     """Launch an exec with args, log the outputs"""
     hidden_args = hide_args(args, ["--cities-connection-string", "--connection-string"])
     log = 'Launching ' + exec_name + ' ' + ' '.join(hidden_args)
@@ -110,34 +64,5 @@ def launch_exec_traces(exec_name, args, logger):
 
     args.insert(0, exec_name)
 
-    proc = subprocess.Popen(args, stderr=subprocess.PIPE, stdout=subprocess.PIPE, close_fds=True)
-    traces = ""
-    try:
-        make_async(proc.stderr)
-        make_async(proc.stdout)
-        while True:
-            select.select([proc.stdout, proc.stderr], [], [])
-
-            try:
-                for pipe in proc.stdout, proc.stderr:
-                    log_pipe = read_async(pipe)
-                    if log_pipe:
-                        logs, line = parse_log(log_pipe.decode("utf-8", errors="replace"))
-                        for l in logs:
-                            logger.log(l.level, l.msg)
-                            traces += "##  {}  ##".format(l.msg)
-            except Exception as e:
-                logger.error("error in forwarding logs but process continuing: {}".format(e))
-
-            if proc.poll() is not None:
-                break
-    finally:
-        proc.stdout.close()
-        proc.stderr.close()
-
-    return proc.returncode, traces
-
-
-def launch_exec(exec_name, args, logger):
-    code, _ = launch_exec_traces(exec_name, args, logger)
-    return code
+    proc = subprocess.Popen(args, close_fds=True)
+    return proc.wait()
