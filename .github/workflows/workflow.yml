@@ -6,9 +6,6 @@ on:
       - dev
       - auto/clang-tidy
   pull_request:
-  release:
-    types:
-      - created
 env:
   REGION: eu-west-1
 
