@@ -189,6 +189,23 @@ jobs:
           sudo apt update && sudo apt install -y httpie
           echo '{"text":":warning: Github Actions: workflow dockers_builder debian11_images failed !"}' | http --json POST ${{secrets.SLACK_NAVITIA_TEAM_URL}}
 
+      - name: Create jormun image
+        run: |
+          echo "*********  Building Jormungandr ***************"
+          docker build -t navitia/jormungandr_debian11 -f  docker/debian11/Dockerfile-jormungandr .
+      - name: Push jormun dev image on SBX ECR
+        if: github.ref == 'refs/heads/dev'
+        run: |
+          jormun_tag=${SBX_ECR_REGISTRY_FRONT}/jormungandr:no_config_dev
+          docker tag navitia/jormungandr_debian11 ${jormun_tag}
+          docker push ${jormun_tag}
+      - name: Push jormun release image on SBX ECR
+        if: startsWith(github.ref, 'refs/tags/')
+        run: |
+          jormun_tag=${SBX_ECR_REGISTRY_FRONT}/jormungandr:no_config_${{ needs.common_variables.outputs.RELEASE_TAG }}
+          docker tag navitia/jormungandr_debian11 ${jormun_tag}
+          docker push ${jormun_tag}
+
       - name: clean up workspace
         if: ${{ always() }}
         run: |
