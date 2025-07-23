@@ -6,6 +6,9 @@ COPY ./source/navitiacommon ./navitiacommon
 COPY ./source/jormungandr ./jormungandr
 COPY ./docker/ca-certificates/*.crt /usr/local/share/ca-certificates/
 
+#WARNING to build a proper jomungandr package, it's necessary to:
+#  - call cmake on the /source directory. This will generate a jormungandr/_version.py file
+#  - generate protobuf files: call `make protobuf_files`
 RUN apt clean \
     && apt update --fix-missing \
     && apt install -o Acquire::Retries=10 -y curl libpq5 apache2 python3.9-dev python3-pip git libgeos-c1v5 ca-certificates \
