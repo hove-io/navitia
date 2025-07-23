@@ -214,6 +214,37 @@ jobs:
           rm -rf ./*
           rm -rf ./.??*
 
+  publish_aws:
+    runs-on: [self-hosted, corefront, sandbox]
+    name: Aws Dispatch (Dev)
+    needs: [debian11_back_images, common_variables]
+    steps:
+
+      - name: Generate token for aws images
+        id: app-token
+        uses: getsentry/action-github-app-token@v2.0.0
+        with:
+          app_id: ${{ secrets.GA_OS_WORKFLOW_TRIGGER_APP_ID }}
+          private_key: ${{ secrets.GA_OS_WORKFLOW_TRIGGER_APP_PEM }}
+
+      - name: Aws Dispatch Frontend for dev
+        if: github.ref == 'refs/heads/dev'
+        uses: peter-evans/repository-dispatch@v2
+        with:
+          token: ${{ steps.app-token.outputs.token }}
+          repository: hove-io/corefront-aws-assets
+          event-type: build-trigger
+          client-payload: '{"branch": "dev", "tag": "dev"}'
+
+      - name: Aws Dispatch Frontend for release
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: peter-evans/repository-dispatch@v2
+        with:
+          token: ${{ steps.app-token.outputs.token }}
+          repository: hove-io/corefront-aws-assets
+          event-type: build-trigger
+          client-payload: '{"branch": "release", "tag": "${{ needs.common_variables.outputs.RELEASE_TAG }}"}'
+
   run_artemis:
     runs-on: [self-hosted, corefront, sandbox]
     needs: [debian11_back_images]
