@@ -88,6 +88,8 @@ navitia python model.
 The directory will also contain the protobuf files from Navitia (python and cpp).
 So you might need to use CMake target protobuf_files to generate them :
 ```
+sudo apt install libboost-all-dev libpqxx-dev libosmpbf-dev
+
 cd <path/to/build/directory>
 cmake <path/to/navitia/repo>/source/
 make protobuf_files
