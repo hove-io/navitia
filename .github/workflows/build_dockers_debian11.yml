@@ -154,61 +154,6 @@ jobs:
           docker tag navitia/tyr-worker ${tyr_worker_tag}
           docker push ${tyr_worker_tag}
 
-      - name: failure notification
-        if: failure()
-        run: |
-          sudo apt update && sudo apt install -y httpie
-          echo '{"text":":warning: Github Actions: workflow dockers_builder debian11_images failed !"}' | http --json POST ${{secrets.SLACK_NAVITIA_TEAM_URL}}
-
-      - name: clean up workspace
-        if: ${{ always() }}
-        run: |
-          # some files are created by a docker container
-          sudo chown -R $USER:$USER .
-          rm -rf ./*
-          rm -rf ./.??*
-
-  debian11_front_images:
-    runs-on: [self-hosted, corefront, sandbox]
-    name: Build debian11 front images
-    needs: common_variables
-    steps:
-      - name: force chown to avoid errors
-        run: sudo chown -R $USER:$USER .
-
-      - name: Git config
-        run: git config --global --add safe.directory /__w/navitia/navitia
-
-      - name: Generate github private access token
-        id: ci-core-app-token
-        uses: getsentry/action-github-app-token@v2.0.0
-        with:
-          app_id: ${{ secrets.CI_CORE_APP_ID }}
-          private_key: ${{ secrets.CI_CORE_APP_PEM }}
-
-      - name: Checkout
-        uses: actions/checkout@v3
-        with:
-          submodules: recursive
-          token: ${{ steps.ci-core-app-token.outputs.token }}
-
-      - name: Login to Amazon ECR
-        uses: aws-actions/amazon-ecr-login@v1
-        env:
-          AWS_REGION: eu-west-1
-        with:
-          # 162230498103 : shared
-          # 051314639660 : corefront sbx
-          registries: "162230498103,051314639660"
-
-      - name: Create builder docker
-        run: |
-          docker build -f docker/debian11/Dockerfile-builder -t navitia/builder .
-
-      - name: Build navitia
-        run: |
-          docker run -v `pwd`:/navitia/navitia/  navitia/builder
-
       - name: Create images for Tyr-web
         run: docker build -t navitia/tyr-web -f  docker/debian11/Dockerfile-tyr-web .
 
@@ -237,10 +182,29 @@ jobs:
           docker tag navitia/tyr-web ${tyr_web_tag}
           docker push ${tyr_web_tag}
 
+
       - name: failure notification
         if: failure()
         run: |
+          sudo apt update && sudo apt install -y httpie
           echo '{"text":":warning: Github Actions: workflow dockers_builder debian11_images failed !"}' | http --json POST ${{secrets.SLACK_NAVITIA_TEAM_URL}}
+
+      - name: Create jormun image
+        run: |
+          echo "*********  Building Jormungandr ***************"
+          docker build -t navitia/jormungandr_debian11 -f  docker/debian11/Dockerfile-jormungandr .
+      - name: Push jormun dev image on SBX ECR
+        if: github.ref == 'refs/heads/dev'
+        run: |
+          jormun_tag=${SBX_ECR_REGISTRY_FRONT}/jormungandr:no_config_dev
+          docker tag navitia/jormungandr_debian11 ${jormun_tag}
+          docker push ${jormun_tag}
+      - name: Push jormun release image on SBX ECR
+        if: startsWith(github.ref, 'refs/tags/')
+        run: |
+          jormun_tag=${SBX_ECR_REGISTRY_FRONT}/jormungandr:no_config_${{ needs.common_variables.outputs.RELEASE_TAG }}
+          docker tag navitia/jormungandr_debian11 ${jormun_tag}
+          docker push ${jormun_tag}
 
       - name: clean up workspace
         if: ${{ always() }}
@@ -250,9 +214,40 @@ jobs:
           rm -rf ./*
           rm -rf ./.??*
 
+  publish_aws:
+    runs-on: [self-hosted, corefront, sandbox]
+    name: Aws Dispatch (Dev)
+    needs: [debian11_back_images, common_variables]
+    steps:
+
+      - name: Generate token for aws images
+        id: app-token
+        uses: getsentry/action-github-app-token@v2.0.0
+        with:
+          app_id: ${{ secrets.GA_OS_WORKFLOW_TRIGGER_APP_ID }}
+          private_key: ${{ secrets.GA_OS_WORKFLOW_TRIGGER_APP_PEM }}
+
+      - name: Aws Dispatch Frontend for dev
+        if: github.ref == 'refs/heads/dev'
+        uses: peter-evans/repository-dispatch@v2
+        with:
+          token: ${{ steps.app-token.outputs.token }}
+          repository: hove-io/corefront-aws-assets
+          event-type: build-trigger
+          client-payload: '{"branch": "dev", "tag": "dev"}'
+
+      - name: Aws Dispatch Frontend for release
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: peter-evans/repository-dispatch@v2
+        with:
+          token: ${{ steps.app-token.outputs.token }}
+          repository: hove-io/corefront-aws-assets
+          event-type: build-trigger
+          client-payload: '{"branch": "release", "tag": "${{ needs.common_variables.outputs.RELEASE_TAG }}"}'
+
   run_artemis:
     runs-on: [self-hosted, corefront, sandbox]
-    needs: [debian11_back_images, debian11_front_images]
+    needs: [debian11_back_images]
     name: Run artemis Dispatch (Dev)
     if: github.ref == 'refs/heads/dev'
     steps:
