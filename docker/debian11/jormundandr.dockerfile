@@ -1,24 +1,29 @@
+ARG GIT_REVISION="UNKNOWN_VERSION"
 FROM debian:bullseye-slim
+ARG GIT_REVISION
 
 WORKDIR /usr/src/app
 
 COPY ./source/navitiacommon ./navitiacommon
 COPY ./source/jormungandr ./jormungandr
+COPY ./source/navitia-proto ./navitia-proto
 COPY ./docker/ca-certificates/*.crt /usr/local/share/ca-certificates/
+RUN echo "__version__ = \'$GIT_REVISION\'" > jormungandr/_version.py
 
-#WARNING to build a proper jomungandr package, it's necessary to:
-#  - call cmake on the /source directory. This will generate a jormungandr/_version.py file
-#  - generate protobuf files: call `make protobuf_files`
 RUN apt clean \
     && apt update --fix-missing \
-    && apt install -o Acquire::Retries=10 -y curl libpq5 apache2 python3.9-dev python3-pip git libgeos-c1v5 ca-certificates \
+    && apt install -o Acquire::Retries=10 -y curl libpq5 apache2 python3.9-dev python3-pip git libgeos-c1v5 ca-certificates protobuf-compiler 2to3 \
     && update-ca-certificates \
+    && (cd navitia-proto && protoc --python_out=../navitiacommon/navitiacommon type.proto response.proto request.proto task.proto stat.proto) \
+    && 2to3 --no-diffs -w ./navitiacommon/navitiacommon \
     && (cd navitiacommon && python3 setup.py install) \
     && (cd jormungandr && python3 setup.py install && pip3 install --no-cache-dir -U -r requirements.txt)\
     && pip3 install --no-cache-dir uwsgi==2.0.21 \
-    && rm -rf navitiacommon jormungandr \
+    && rm -rf navitiacommon jormungandr navitia-proto \
     && apt purge -y \
         python3-pip \
+        2to3 \
+        protobuf-compiler \
         git \
     && apt autoremove -y
 

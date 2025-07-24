@@ -153,12 +153,55 @@ jobs:
           tyr_worker_tag=${PRD_ECR_REGISTRY}/navitia-tyr-tyrworker:${{ needs.common_variables.outputs.RELEASE_TAG }}${DEBIAN11_SUFFIX}
           docker tag navitia/tyr-worker ${tyr_worker_tag}
           docker push ${tyr_worker_tag}
+      - name: failure notification
+        if: failure()
+        run: |
+          sudo apt update && sudo apt install -y httpie
+          echo '{"text":":warning: Github Actions: workflow dockers_builder debian11_images failed !"}' | http --json POST ${{secrets.SLACK_NAVITIA_TEAM_URL}}
+      - name: clean up workspace
+        if: ${{ always() }}
+        run: |
+          # some files are created by a docker container
+          sudo chown -R $USER:$USER .
+          rm -rf ./*
+          rm -rf ./.??*
+
+  # "front" images need to be created on a "corefront" runner to be able to push on the sbx corefront registry
+  debian11_front_images:
+    runs-on: [self-hosted, corefront, sandbox]
+    name: Build debian11 front images
+    needs: common_variables
+    steps:
+      - name: force chown to avoid errors
+        run: sudo chown -R $USER:$USER .
+
+      - name: Git config
+        run: git config --global --add safe.directory /__w/navitia/navitia
+
+      - name: Generate github private access token
+        id: ci-core-app-token
+        uses: getsentry/action-github-app-token@v2.0.0
+        with:
+          app_id: ${{ secrets.CI_CORE_APP_ID }}
+          private_key: ${{ secrets.CI_CORE_APP_PEM }}
+
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          submodules: recursive
+          token: ${{ steps.ci-core-app-token.outputs.token }}
+
+      - name: Login to Amazon ECR
+        uses: aws-actions/amazon-ecr-login@v1
+        env:
+          AWS_REGION: eu-west-1
+        with:
+          # 162230498103 : shared
+          # 051314639660 : corefront sbx
+          registries: "162230498103,051314639660"
 
       - name: Create images for Tyr-web
-        run: docker build -t navitia/tyr-web -f  docker/debian11/Dockerfile-tyr-web .
-
-      - name: Create images for Instance configurator
-        run: docker build -t navitia/instances-configurator -f  docker/debian11/Dockerfile-instances-configurator .
+        run: docker build -t navitia/tyr-web -f  docker/debian11/tyr-web.dockerfile .
 
       - name: Push Tyr-Web dev image on SBX ECR
         if: github.ref == 'refs/heads/dev'
@@ -167,14 +210,7 @@ jobs:
           docker tag navitia/tyr-web ${component_tag}
           docker push ${component_tag}
 
-      - name: Push Instances configurator dev image on SBX ECR
-        if: github.ref == 'refs/heads/dev'
-        run: |
-          component_tag=${SBX_ECR_REGISTRY_FRONT}/instances-configurator:dev${DEBIAN11_SUFFIX}
-          docker tag navitia/instances-configurator ${component_tag}
-          docker push ${component_tag}
-
-      - name: Push Try-web release image on PRD ECR
+      - name: Push Tyr-web release image on PRD ECR
         if: startsWith(github.ref, 'refs/tags/')
         run: |
           # Tyr-web
@@ -182,6 +218,16 @@ jobs:
           docker tag navitia/tyr-web ${tyr_web_tag}
           docker push ${tyr_web_tag}
 
+      - name: Create images for Instance configurator
+        run: docker build -t navitia/instances-configurator -f  docker/debian11/instances-configurator.dockerfile .
+
+
+      - name: Push Instances configurator dev image on SBX ECR
+        if: github.ref == 'refs/heads/dev'
+        run: |
+          component_tag=${SBX_ECR_REGISTRY_FRONT}/instances-configurator:dev${DEBIAN11_SUFFIX}
+          docker tag navitia/instances-configurator ${component_tag}
+          docker push ${component_tag}
 
       - name: failure notification
         if: failure()
@@ -192,7 +238,7 @@ jobs:
       - name: Create jormun image
         run: |
           echo "*********  Building Jormungandr ***************"
-          docker build -t navitia/jormungandr_debian11 -f  docker/debian11/Dockerfile-jormungandr .
+          docker build -t navitia/jormungandr_debian11 -f  docker/debian11/jormungandr.dockerfile --build-arg GIT_REVISION=${{ needs.common_variables.outputs.RELEASE_TAG }} .
       - name: Push jormun dev image on SBX ECR
         if: github.ref == 'refs/heads/dev'
         run: |
@@ -217,7 +263,7 @@ jobs:
   publish_aws:
     runs-on: [self-hosted, corefront, sandbox]
     name: Aws Dispatch (Dev)
-    needs: [debian11_back_images, common_variables]
+    needs: [debian11_front_images, common_variables]
     steps:
 
       - name: Generate token for aws images
@@ -247,7 +293,7 @@ jobs:
 
   run_artemis:
     runs-on: [self-hosted, corefront, sandbox]
-    needs: [debian11_back_images]
+    needs: [debian11_back_images,debian11_front_images]
     name: Run artemis Dispatch (Dev)
     if: github.ref == 'refs/heads/dev'
     steps:
