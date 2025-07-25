@@ -7,7 +7,6 @@ on:
     branches: [ dev ]
 
 env:
-   SONAR_SCANNER_VERSION: 5.0.1.3006
    REGION: eu-west-1
 
 jobs:
@@ -31,6 +30,8 @@ jobs:
           password: ${{ needs.aws_creds.outputs.token }}
 
     steps:
+    - name: Install sonar dependencies
+      run: apt update -y && apt install -y unzip
     - name: force chown to avoid errors
       run: chown -R $(whoami):$(whoami) .
     - name: Display remaining space
@@ -45,36 +46,18 @@ jobs:
       with:
         submodules: recursive
         token: ${{ steps.ci-core-app-token.outputs.token }}
-    - name: Install SonarCloud's dependencies for C++ analysis
-      run : |
-        apt update -y
-        apt install -y unzip wget
-        wget https://sonarcloud.io/static/cpp/build-wrapper-linux-x86.zip https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-$SONAR_SCANNER_VERSION-linux.zip
-        unzip -u build-wrapper-linux-x86.zip
-        unzip -u sonar-scanner-cli-$SONAR_SCANNER_VERSION-linux.zip
-
-    - name: Cache Sonar
-      id: cache-sonar
-      uses: actions/cache@v3
-      with:
-        path: sonar_cache
-        key: sonar-cache-${{ github.event.head_commit.id }}
-        restore-keys: |
-            sonar-cache-
     - name: Configure
-      run: cmake -DCMAKE_BUILD_TYPE=Profile -DSTRIP_SYMBOLS=ON source
-    - name: Build
-      run: build-wrapper-linux-x86/build-wrapper-linux-x86-64 --out-dir build-wrapper-output-dir make -j $(nproc)
-    - name: SonarCloud Scan
-      # We only want 1 scan as it would bloat sonarcube otherwise
-      # And only on an internal merge (to dev/master) as SonarCloud's token uses Secrets that not available from a fork :( (eg. https://docs.github.com/en/actions/reference/encrypted-secrets#using-encrypted-secrets-in-a-workflow)
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
       run: |
-          sonar-scanner-$SONAR_SCANNER_VERSION-linux/bin/sonar-scanner \
-                -Dsonar.cfamily.threads=$(nproc)
-
+        mkdir build
+        cmake -DCMAKE_BUILD_TYPE=Profile -DSTRIP_SYMBOLS=ON -S source -B build
+    - name: SonarQube Scan
+      uses: SonarSource/sonarqube-scan-action@v4
+      env:
+        SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+          args: >
+            --define sonar.cfamily.compile-commands=build/compile_commands.json
     - name: clean up workspace
       if: ${{ always() }}
       run: |
