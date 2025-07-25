@@ -32,7 +32,7 @@ jobs:
         password: ${{ needs.credentials.outputs.aws_token }}
     steps:
     - name: force chown to avoid errors
-      run: chown -R $USER:$USER .
+      run: chown -R $(whoami):$(whoami) .
     - name: Git config
       run: git config --global --add safe.directory /__w/navitia/navitia/*
     - name: Generate github private access token
@@ -68,7 +68,7 @@ jobs:
         password: ${{ needs.credentials.outputs.aws_token }}
     steps:
       - name: force chown to avoid errors
-        run: chown -R $USER:$USER .
+        run: chown -R $(whoami):$(whoami) .
       - name: Git config
         run: git config --global --add safe.directory /__w/navitia/navitia/*
       - name: Generate github private access token
@@ -99,11 +99,7 @@ jobs:
           LC_ALL: C.UTF-8
           LANG: C.UTF-8
         run: |
-          ls -la
-          whoami
-          echo "$USER"
-          pwd
-          pre-commit install --install-hooks ||  cat /github/home/.cache/pre-commit/pre-commit.log 
+          pre-commit install --install-hooks
           pre-commit run --all --show-diff-on-failure
 
       - name: clean up workspace
@@ -140,7 +136,7 @@ jobs:
           - 6379:6379
     steps:
     - name: force chown to avoid errors
-      run: chown -R $USER:$USER .
+      run: chown -R $(whoami):$(whoami) .
     - name: Git config
       run: git config --global --add safe.directory /__w/navitia/navitia/*
     - name: Generate github private access token
