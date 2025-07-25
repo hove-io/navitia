@@ -99,7 +99,11 @@ jobs:
           LC_ALL: C.UTF-8
           LANG: C.UTF-8
         run: |
-          pre-commit install --install-hooks
+          ls -la
+          whoami
+          echo "$USER"
+          pwd
+          pre-commit install --install-hooks ||  cat /github/home/.cache/pre-commit/pre-commit.log 
           pre-commit run --all --show-diff-on-failure
 
       - name: clean up workspace
