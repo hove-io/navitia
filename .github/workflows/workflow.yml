@@ -34,7 +34,7 @@ jobs:
     - name: force chown to avoid errors
       run: chown -R $USER:$USER .
     - name: Git config
-      run: git config --global --add safe.directory /__w/navitia/navitia
+      run: git config --global --add safe.directory /__w/navitia/navitia/*
     - name: Generate github private access token
       id: ci-core-app-token
       uses: getsentry/action-github-app-token@v2.0.0
@@ -70,7 +70,7 @@ jobs:
       - name: force chown to avoid errors
         run: chown -R $USER:$USER .
       - name: Git config
-        run: git config --global --add safe.directory /__w/navitia/navitia
+        run: git config --global --add safe.directory /__w/navitia/navitia/*
       - name: Generate github private access token
         id: ci-core-app-token
         uses: getsentry/action-github-app-token@v2.0.0
@@ -138,7 +138,7 @@ jobs:
     - name: force chown to avoid errors
       run: chown -R $USER:$USER .
     - name: Git config
-      run: git config --global --add safe.directory /__w/navitia/navitia
+      run: git config --global --add safe.directory /__w/navitia/navitia/*
     - name: Generate github private access token
       id: ci-core-app-token
       uses: getsentry/action-github-app-token@v2.0.0
