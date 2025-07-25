@@ -18,7 +18,7 @@ jobs:
     - name: Git config
       run: git config --global --add safe.directory /__w/navitia/navitia
     - name: Checkout
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
     - name: Build website in Slate format
       uses: addnab/docker-run-action@v3
       with:
@@ -32,7 +32,7 @@ jobs:
           cp -r /srv/slate/build /work/documentation/slate
     - name: Deploy to GitHub Pages
       if: success()
-      uses: crazy-max/ghaction-github-pages@v2
+      uses: crazy-max/ghaction-github-pages@v4
       with:
         target_branch: gh-pages
         build_dir: documentation/slate/build
