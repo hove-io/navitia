@@ -33,8 +33,6 @@ jobs:
     steps:
     - name: force chown to avoid errors
       run: chown -R $(whoami):$(whoami) .
-    - name: Git config
-      run: git config --global --add safe.directory /__w/navitia/navitia
     - name: Display remaining space
       run: df -h
     - name: Generate github private access token
