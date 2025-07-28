@@ -8,7 +8,8 @@ COPY ./source/navitiacommon ./navitiacommon
 COPY ./source/jormungandr ./jormungandr
 COPY ./source/navitia-proto ./navitia-proto
 COPY ./docker/ca-certificates/*.crt /usr/local/share/ca-certificates/
-RUN echo "__version__ = \'$GIT_REVISION\'" > jormungandr/_version.py
+#TODO remove the need for this file
+RUN echo "__version__ = '$GIT_REVISION'" > jormungandr/jormungandr/_version.py
 
 RUN apt clean \
     && apt update --fix-missing \
