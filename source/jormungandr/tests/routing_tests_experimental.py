@@ -1527,10 +1527,10 @@ class TestLinksDistributed(NewDefaultScenarioAbstractTestFixture):
 
     def test_links_in_journey(self):
         query = (
-                sub_query
-                + "&datetime=20120614T080000"
-                + "&first_section_mode[]=walking"
-                + "&last_section_mode[]=walking"
+            sub_query
+            + "&datetime=20120614T080000"
+            + "&first_section_mode[]=walking"
+            + "&last_section_mode[]=walking"
         )
 
         response = self.query_region(query)
