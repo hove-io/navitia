@@ -1272,6 +1272,7 @@ class TestPtRefRoutingCov(AbstractTestFixture):
         assert journeys[0]['sections'][0]['display_informations']['label'] == "1A"
         assert journeys[0]['sections'][0]['display_informations']['code'] == "1A"
         assert journeys[0]['sections'][0]['display_informations']['name'] == "A"
+        assert journeys[0]['sections'][0]['display_informations']['company'] == "base_company"
 
     def test_stop_points_depth_3(self):
         """

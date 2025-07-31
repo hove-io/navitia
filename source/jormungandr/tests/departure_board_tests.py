@@ -820,7 +820,7 @@ class TestDepartureBoard(AbstractTestFixture):
         assert len(section['stop_date_times'][1]['additional_informations']) == 0
 
         # verify network in links
-        assert len(section['links']) == 7
+        assert len(section['links']) == 8
         assert "base_network" in [link['id'] for link in section['links'] if link['type'] == "network"]
         assert "B" in [link['id'] for link in section['links'] if link['type'] == "line"]
 

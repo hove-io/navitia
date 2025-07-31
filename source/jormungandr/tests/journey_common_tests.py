@@ -1275,6 +1275,7 @@ class JourneyCommon(object):
         # Here the heassign is modified by the headsign at stop.
         assert r['journeys'][0]['sections'][1]['display_informations']['trip_short_name'] == 'vjA'
         assert r['journeys'][0]['sections'][1]['display_informations']['headsign'] == 'A00'
+        assert r['journeys'][0]['sections'][1]['display_informations']['company'] == 'base_company'
         first_journey_pt = r['journeys'][0]['sections'][1]['display_informations']['name']
 
         # we can also verify the properties of the vehicle_journey in the section
