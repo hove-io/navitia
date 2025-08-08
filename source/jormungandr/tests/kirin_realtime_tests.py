@@ -1940,6 +1940,7 @@ class TestKirinAddNewTrip(MockKirinDisruptionsFixture):
         assert pt_journey['status'] == 'MODIFIED_SERVICE'  # using added pick-up and drop-off
         assert pt_journey['sections'][0]['data_freshness'] == 'realtime'
         assert pt_journey['sections'][0]['display_informations']['commercial_mode'] == 'additional service'
+        assert pt_journey['sections'][0]['display_informations']['company'] == 'base_company'
         assert pt_journey['sections'][0]['display_informations']['physical_mode'] == 'Bus'
 
         # Check date_times

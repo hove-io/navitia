@@ -1429,10 +1429,12 @@ class TestRoutingWithTransfer(NewDefaultScenarioAbstractTestFixture):
         assert len(journeys) == 1
         assert len(journeys[0]['sections']) == 6
         assert journeys[0]['sections'][1]['display_informations']['physical_mode'] == 'Bus'
+        assert journeys[0]['sections'][1]['display_informations']['company'] == 'base_company'
         assert journeys[0]['sections'][2]['type'] == 'transfer'
         assert journeys[0]['sections'][2]['transfer_type'] == 'walking'
         assert journeys[0]['sections'][3]['type'] == 'waiting'
         assert journeys[0]['sections'][4]['display_informations']['physical_mode'] == 'Metro'
+        assert journeys[0]['sections'][4]['display_informations']['company'] == 'base_company'
         assert 'path' not in journeys[0]['sections'][2]
         assert 'geojson' in journeys[0]['sections'][2]
         assert 'coordinates' in journeys[0]['sections'][2]['geojson']
@@ -1522,6 +1524,25 @@ class TestLinksDistributed(NewDefaultScenarioAbstractTestFixture):
         assert href_value is not None
         # Before correction: assert href_value.count('allowed_id') == 11
         assert href_value.count('allowed_id') == 2
+
+    def test_links_in_journey(self):
+        query = (
+            sub_query
+            + "&datetime=20120614T080000"
+            + "&first_section_mode[]=walking"
+            + "&last_section_mode[]=walking"
+        )
+
+        response = self.query_region(query)
+        self.is_valid_journey_response(response, query)
+
+        links = get_links_dict(response)
+        assert links is not None
+        link_company = links.get('companies')
+        assert link_company is not None
+        assert "company.id" in link_company.get('href')
+        assert link_company.get('rel') == "companies"
+        assert link_company.get('type') == "company"
 
 
 @dataset({"main_routing_test": {"scenario": "distributed"}})

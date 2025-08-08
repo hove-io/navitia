@@ -335,6 +335,7 @@ def fill_uris(resp):
                 uris.commercial_mode = pt_infos.uris.commercial_mode
                 uris.physical_mode = pt_infos.uris.physical_mode
                 uris.network = pt_infos.uris.network
+                uris.company = pt_infos.uris.company
 
 
 def get_pseudo_duration(journey, requested_dt, is_clockwise):
