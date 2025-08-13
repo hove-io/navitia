@@ -388,7 +388,12 @@ class TestPlaces(AbstractTestFixture):
     def test_places_poi_types_requires_poi_type(self):
         resp, status = self.query_region("places?q=bike&poi_types[]=poi_type:amenity:cafe", check=False)
         assert status == 400
-        assert 'poi_types[] requires type[]=poi' in resp.get('message', '') or 'poi_types[] requires type[]=poi' in resp.get('error', {}).get('message', '')
+        assert 'poi_types[] requires type[]=poi' in resp.get(
+            'message', ''
+        ) or 'poi_types[] requires type[]=poi' in resp.get('error', {}).get('message', '')
+
+
+
     def test_places_poi_types_with_poi_ok(self):
         resp, status = self.query_region("places?q=bike&type[]=poi&poi_types[]=poi_type:amenity:cafe", check=False)
         assert status == 200
