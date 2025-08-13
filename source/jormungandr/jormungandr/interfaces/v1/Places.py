@@ -147,6 +147,13 @@ class Places(ResourceUri):
         )
 
         self.parsers["get"].add_argument(
+            "poi_types[]",
+            type=six.text_type,
+            action="append",
+            help="Filter returned POIs by POI types",
+        )
+
+        self.parsers["get"].add_argument(
             "shape_scope[]",
             type=OptionValue(ENUM_SHAPE_SCOPE),
             action="append",
@@ -164,6 +171,8 @@ class Places(ResourceUri):
         size_q = len(args['q'])
         if size_q == 0:
             abort(400, message="Search word absent")
+        if args.get("poi_types[]") and "poi" not in (args.get("type[]") or []):
+            raise InvalidArguments("poi_types[] requires type[]=poi")
 
         if size_q > 1024:
             abort(413, message="Number of characters allowed for the search is 1024")

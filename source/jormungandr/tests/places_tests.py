@@ -385,6 +385,11 @@ class TestPlaces(AbstractTestFixture):
         assert status == 500
         assert 'error' in response
         assert response["error"]["message"] == "world wide autocompletion service not available"
+    def test_places_poi_types_requires_poi_type(self):
+        resp, status = self.query_region("places?q=bike&poi_types[]=poi_type:amenity:cafe", check=False)
+        assert status == 400
+        assert 'poi_types[] requires type[]=poi' in resp.get('message', '') or 'poi_types[] requires type[]=poi' in resp.get('error', {}).get('message', '')
+
 
     def test_stop_area_attributes_with_different_depth(self):
         """verify that stop_area contains lines in all apis with depth>2"""

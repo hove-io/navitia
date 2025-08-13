@@ -56,3 +56,11 @@ and won't have any stop_area or way.
 Most of the complains we've got on the autocompletion is that a stop_area can't be found.
 In fact the stop_area isn't in the ten first results, thus it isn't visible. This is due to how the "scoring" is done, when `search_mode=0` the order of the response is only based on the *global score* (aka. the *importance* of the
 object) and not on how much it matches the request.
+
+## Poi types filter on /places
+
+- New parameter: `poi_types[]` (repeatable) to filter returned POIs by their POI type identifiers (for example: `poi_type:amenity:bicycle_rental`).
+- Strict requirement (Option B): if `poi_types[]` is provided, the request must also include `type[]=poi`. Otherwise, the API returns HTTP 400.
+- Scope: supported when the autocomplete backend is Bragi. Kraken-backed autocomplete does not support `poi_types[]`.
+- Example:
+  - `/v1/places?q=bike&type[]=poi&poi_types[]=poi_type:amenity:bicycle_rental&_autocomplete=bragi`

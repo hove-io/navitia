@@ -86,3 +86,19 @@ def test_geocodejson_config_timeout_bragi_es():
 
     timeout_bragi_es = next((param[1] for param in params if param[0] == 'timeout'), None)
     assert timeout_bragi_es == 1800
+
+def test_geocodejson_forwards_poi_types():
+    url = 'https://geocode.json'
+    gj = GeocodeJson(host=url)
+    request = {
+        "q": "bike",
+        "count": 5,
+        "type[]": ["poi"],
+        "poi_types[]": ["poi_type:amenity:cafe", "poi_type:amenity:restaurant"],
+        "request_id": "002",
+    }
+    params = gj.make_params(request, [FakeInstance()])
+
+    poi_types = [v for (k, v) in params if k == "poi_types[]"]
+    assert "poi_type:amenity:cafe" in poi_types
+    assert "poi_type:amenity:restaurant" in poi_types
