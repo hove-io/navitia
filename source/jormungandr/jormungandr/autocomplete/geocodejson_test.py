@@ -102,3 +102,29 @@ def test_geocodejson_forwards_poi_types():
     poi_types = [v for (k, v) in params if k == "poi_types[]"]
     assert "poi_type:amenity:cafe" in poi_types
     assert "poi_type:amenity:restaurant" in poi_types
+def test_geocodejson_forwards_poi_types_with_shape_scope():
+    url = 'https://geocode.json'
+    gj = GeocodeJson(host=url)
+    request = {
+        "q": "bike",
+        "count": 3,
+        "type[]": ["poi"],
+        "shape_scope[]": ["poi", "admin"],
+        "poi_types[]": ["poi_type:amenity:cafe", "poi_type:amenity:restaurant"],
+        "request_id": "003",
+    }
+    params = gj.make_params(request, [FakeInstance()])
+
+    ss_vals = [v for (k, v) in params if k == "shape_scope[]"]
+    assert "poi" in ss_vals and "admin" in ss_vals
+
+    poi_vals = [v for (k, v) in params if k == "poi_types[]"]
+    assert "poi_type:amenity:cafe" in poi_vals and "poi_type:amenity:restaurant" in poi_vals
+
+
+def test_geocodejson_no_poi_types_no_forwarding():
+    url = 'https://geocode.json'
+    gj = GeocodeJson(host=url)
+    request = {"q": "abc", "count": 2, "type[]": ["poi"], "request_id": "004"}
+    params = gj.make_params(request, [FakeInstance()])
+    assert not any(k == "poi_types[]" for (k, _) in params)
