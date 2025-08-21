@@ -873,7 +873,7 @@ Enum from
 |headsign|String|Text that appears on vehicle signage identifying the trip's destination for example|
 |label|String|The label of the object|
 |name|String|Full name of the line|
-|trip_short_name|String|Short name of the route|
+|trip_short_name|String|Short name for the vehicle journey. If this information is not available in the transit data, the field is automatically populated with the headsign value.|
 |equipments|Array of String|list of [equipment](#equipment) of the object|
 |description|String|An optionnal description|
 
