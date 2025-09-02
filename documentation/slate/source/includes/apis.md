@@ -1012,6 +1012,7 @@ See how disruptions affect a journey in the [real time](#realtime) section.
 | nop     | free_radius_to	 | int     | Radius length (in meters) around the coordinates of arrival in which the stop points are considered free to go (crowfly=0)   | 0           |
 | nop     | timeframe_duration	 | int     | Minimum timeframe to search journeys (in seconds, maximum allowed value = 86400). For example 'timeframe_duration=3600' will search for all interesting journeys departing within the next hour.  | 0           |
 | nop     | park_mode	         | enum    | Method to prk your bike before taking public transport. Value between <ul><li>`none`</li><li>`on_street`</li><li>`park_and_ride`</li> </ul> When using `on_street`, Navitia will add a "park" section (to hang your bike), and a "walk" section to reach the next stop_point via the access_point  | none        |
+| nop     | is_journey_schedules | boolean | When "true", Navitia may display several schedule alternatives based on the same route. Mainly used by the "same_journey_schedules" links provided in every journeys response. Useful to compute intermodal timetable sheets.  | False       |
 
 
 ### Additional Parameters for Biking and Walking
