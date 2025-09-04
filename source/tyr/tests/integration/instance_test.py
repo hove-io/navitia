@@ -876,3 +876,16 @@ def test_on_attributs_starting_with_bike(create_instance):
     assert status == 400
     assert "message" in resp
     assert "The type of bicycle" in resp['message']['bicycle_type']
+
+
+def test_create_instance_and_update_tc_backends(create_instance):
+    resp = api_get('/v0/instances/fr')
+    assert not resp[0]['tc_backends']
+
+    params = {'tc_backends': {"disruptions": "loki", "line_reports": "loki", "lines": "kraken"}}
+    _ = api_put('/v0/instances/fr', data=json.dumps(params), content_type='application/json')
+    resp = api_get('/v0/instances/fr')
+    tc_backends = resp[0]['tc_backends']
+    assert tc_backends["disruptions"] == "loki"
+    assert tc_backends["line_reports"] == "loki"
+    assert tc_backends["lines"] == "kraken"
