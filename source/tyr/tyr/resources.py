@@ -1392,6 +1392,7 @@ class Instance(flask_restful.Resource):
                         'bike_destination_only_penalty',
                         'use_predicted_traffic',
                         'same_journey_schedules_configuration',
+                        "tc_backends",
                     ],
                 ),
                 maxlen=0,
@@ -1402,11 +1403,6 @@ class Instance(flask_restful.Resource):
             new = copy.deepcopy(instance.max_nb_crowfly_by_mode)
             new.update(max_nb_crowfly_by_mode)
             instance.max_nb_crowfly_by_mode = new
-
-            req_tc_backends = args.get('tc_backends')
-            new_tc_backends = copy.deepcopy(instance.tc_backends)
-            new_tc_backends.update(req_tc_backends)
-            instance.tc_backends = new_tc_backends
 
             instance.equipment_details_providers = []
             for provider_id in args.equipment_details_providers:

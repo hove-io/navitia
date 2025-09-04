@@ -14,6 +14,7 @@ from alembic import op
 import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
 
+
 def upgrade():
     op.add_column('instance', sa.Column('tc_backends', postgresql.JSONB(astext_type=sa.Text()), nullable=True))
 
