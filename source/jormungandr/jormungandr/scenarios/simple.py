@@ -60,10 +60,16 @@ class Scenario(object):
     """
     The most basic scenario: it's so simple, it doesn't implement journeys!
     """
+
     def get_backend(self, api, request, instance):
         if request["_pt_planner"] in ["loki", "kraken"]:
             return instance.get_pt_planner(request["_pt_planner"])
-        if instance and hasattr(instance, 'tc_backends') and instance.tc_backends and instance.tc_backends.get(api) in ["loki", "kraken"]:
+        if (
+            instance
+            and hasattr(instance, 'tc_backends')
+            and instance.tc_backends
+            and instance.tc_backends.get(api) in ["loki", "kraken"]
+        ):
             return instance.get_pt_planner(instance.tc_backends.get(api))
         return instance.get_pt_planner("kraken")
 
@@ -164,7 +170,6 @@ class Scenario(object):
         # We call Loki's line_reports only if _pt_planner=loki
         backend = self.get_backend("line_reports", request, instance)
         return backend.send_and_receive(req)
-
 
     def equipment_reports(self, request, instance):
         req = request_pb2.Request()
