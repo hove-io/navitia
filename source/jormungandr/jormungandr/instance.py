@@ -774,6 +774,12 @@ class Instance(transient_socket.TransientSocket):
         return d
 
     @property
+    def tc_backends(self):
+        # type: () -> Dict[Text, int]
+        instance_db = self.get_models()
+        return instance_db.tc_backends if instance_db else None
+
+    @property
     def poi_dataset(self):
         # type: () -> Text
         instance_db = self.get_models()
