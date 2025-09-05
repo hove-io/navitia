@@ -1253,6 +1253,13 @@ class Instance(flask_restful.Resource):
             default=instance.use_predicted_traffic,
         )
 
+        parser.add_argument(
+            'api_backends',
+            type=dict,
+            help='Map between APIs and backends',
+            location=('json', 'values'),
+            default=instance.api_backends,
+        )
         args = parser.parse_args()
 
         try:
@@ -1385,6 +1392,7 @@ class Instance(flask_restful.Resource):
                         'bike_destination_only_penalty',
                         'use_predicted_traffic',
                         'same_journey_schedules_configuration',
+                        "api_backends",
                     ],
                 ),
                 maxlen=0,

@@ -981,6 +981,9 @@ class Instance(db.Model):  # type: ignore
         nullable=False,
         server_default=str(default_values.bike_destination_only_penalty),
     )
+    # Example:
+    # {"line_reports": "loki", "disruptions": "kraken"}
+    api_backends = db.Column(JSONB, nullable=False)
 
     def __init__(self, name=None, is_free=False, authorizations=None, jobs=None):
         self.name = name

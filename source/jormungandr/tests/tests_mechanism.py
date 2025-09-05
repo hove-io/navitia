@@ -85,6 +85,7 @@ class FakeModel(object):
         self.poi_dataset = poi_dataset
         self.max_nb_journeys = max_nb_journeys
         self.same_journey_schedules_configuration = same_journey_schedules_configuration
+        self.api_backends = None
 
 
 class AbstractTestFixture(unittest.TestCase):
