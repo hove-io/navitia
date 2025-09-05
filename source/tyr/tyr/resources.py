@@ -1254,11 +1254,11 @@ class Instance(flask_restful.Resource):
         )
 
         parser.add_argument(
-            'tc_backends',
+            'api_backends',
             type=dict,
             help='Map between APIs and backends',
             location=('json', 'values'),
-            default=instance.tc_backends,
+            default=instance.api_backends,
         )
         args = parser.parse_args()
 
@@ -1392,7 +1392,7 @@ class Instance(flask_restful.Resource):
                         'bike_destination_only_penalty',
                         'use_predicted_traffic',
                         'same_journey_schedules_configuration',
-                        "tc_backends",
+                        "api_backends",
                     ],
                 ),
                 maxlen=0,

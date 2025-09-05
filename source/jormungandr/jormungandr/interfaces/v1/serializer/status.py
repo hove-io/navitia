@@ -126,7 +126,7 @@ class ParametersSerializer(serpy.Serializer):
     bike_country_crossing_cost = Field(schema_type=float)
     bike_country_crossing_penalty = Field(schema_type=float)
     bike_destination_only_penalty = Field(schema_type=float)
-    tc_backends = Field(schema_type=dict)
+    api_backends = Field(schema_type=dict)
 
 
 class TravelerProfilesSerializer(serpy.Serializer):

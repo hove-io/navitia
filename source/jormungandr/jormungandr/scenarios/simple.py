@@ -66,11 +66,11 @@ class Scenario(object):
             return instance.get_pt_planner(request["_pt_planner"])
         if (
             instance
-            and hasattr(instance, 'tc_backends')
-            and instance.tc_backends
-            and instance.tc_backends.get(api) in ["loki", "kraken"]
+            and hasattr(instance, 'api_backends')
+            and instance.api_backends
+            and instance.api_backends.get(api) in ["loki", "kraken"]
         ):
-            return instance.get_pt_planner(instance.tc_backends.get(api))
+            return instance.get_pt_planner(instance.api_backends.get(api))
         return instance.get_pt_planner("kraken")
 
     def status(self, request, instance):

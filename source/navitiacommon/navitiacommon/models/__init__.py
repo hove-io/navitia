@@ -983,7 +983,7 @@ class Instance(db.Model):  # type: ignore
     )
     # Example:
     # {"line_reports": "loki", "disruptions": "kraken"}
-    tc_backends = db.Column(JSONB, nullable=False)
+    api_backends = db.Column(JSONB, nullable=False)
 
     def __init__(self, name=None, is_free=False, authorizations=None, jobs=None):
         self.name = name

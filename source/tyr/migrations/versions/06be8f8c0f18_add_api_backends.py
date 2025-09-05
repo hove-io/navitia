@@ -1,4 +1,4 @@
-"""Add_tc_backends
+"""Add_api_backends
 
 Revision ID: 06be8f8c0f18
 Revises: 8b3ddc6272b0
@@ -16,8 +16,8 @@ from sqlalchemy.dialects import postgresql
 
 
 def upgrade():
-    op.add_column('instance', sa.Column('tc_backends', postgresql.JSONB(astext_type=sa.Text()), nullable=True))
+    op.add_column('instance', sa.Column('api_backends', postgresql.JSONB(astext_type=sa.Text()), nullable=True))
 
 
 def downgrade():
-    op.drop_column('instance', 'tc_backends')
+    op.drop_column('instance', 'api_backends')
