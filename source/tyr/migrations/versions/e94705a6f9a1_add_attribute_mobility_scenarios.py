@@ -1,4 +1,4 @@
-"""Add attribute mobility_scenarios in the table instance
+"""Add attribute mobility_scenarios_enabled in the table instance
 
 Revision ID: e94705a6f9a1
 Revises: 06be8f8c0f18
@@ -17,9 +17,9 @@ from sqlalchemy.dialects import postgresql
 
 def upgrade():
     op.add_column(
-        'instance', sa.Column('mobility_scenarios', sa.Boolean(), server_default='False', nullable=False)
+        'instance', sa.Column('mobility_scenarios_enabled', sa.Boolean(), server_default='False', nullable=False)
     )
 
 
 def downgrade():
-    op.drop_column('instance', 'mobility_scenarios')
+    op.drop_column('instance', 'mobility_scenarios_enabled')

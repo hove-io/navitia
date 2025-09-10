@@ -318,4 +318,4 @@ class TestEndPoint(AbstractTestFixture):
         assert parameters['max_bss_direct_path_duration'] == 86400
         assert parameters['max_car_direct_path_duration'] == 86400
         assert parameters['max_ridesharing_direct_path_duration'] == 86400
-        assert parameters['mobility_scenarios'] is False
+        assert parameters['mobility_scenarios_enabled'] is False

@@ -861,10 +861,10 @@ class Instance(transient_socket.TransientSocket):
         return get_value_or_default('additional_parameters', instance_db, self.name)
 
     @property
-    def mobility_scenarios(self):
+    def mobility_scenarios_enabled(self):
         # type: () -> bool
         instance_db = self.get_models()
-        return get_value_or_default('mobility_scenarios', instance_db, self.name)
+        return get_value_or_default('mobility_scenarios_enabled', instance_db, self.name)
 
     # TODO: refactorise all properties
     taxi_speed = _make_property_getter('taxi_speed')
