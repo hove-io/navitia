@@ -14,8 +14,11 @@ from alembic import op
 import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
 
+
 def upgrade():
-    op.add_column('instance', sa.Column('mobility_scenarios', sa.Boolean(), server_default='False', nullable=False))
+    op.add_column(
+        'instance', sa.Column('mobility_scenarios', sa.Boolean(), server_default='False', nullable=False)
+    )
 
 
 def downgrade():
