@@ -319,6 +319,13 @@ class GeocodeJson(AbstractAutocomplete):
 
                 for t in map_type[type]:
                     params.append(("type[]", t))
+
+        # If type[]=POI is present along with poi_types[] then add all poi_types[]
+        # if "poi" in request.get("type[]"):
+        if request.get("poi_types[]"):
+            for poi_type in request.get("poi_types[]", []):
+                params.append(("poi_types[]", poi_type))
+
         shape_scope = request.get("shape_scope[]")
         shape_scope = shape_scope if shape_scope else DEFAULT_SHAPE_SCOPE
         for ss in shape_scope:
