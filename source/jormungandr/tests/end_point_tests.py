@@ -283,7 +283,7 @@ class TestEndPoint(AbstractTestFixture):
 
         # Verify that parameters exist in parameters for walking as wall as bike and some others
         parameters = json_response['status']['parameters']
-        assert len(parameters) == 90
+        assert len(parameters) == 91
         assert parameters['walking_walkway_factor'] == 1.0
         assert parameters['walking_sidewalk_factor'] == 1.0
         assert parameters['walking_alley_factor'] == 2.0
