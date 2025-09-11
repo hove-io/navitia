@@ -2,7 +2,7 @@
     :alt: navitia
     :align: center
 
-Che r membre de la communauté Navitia,
+Cher membre de la communauté Navitia,
 
 Nous vous remercions de l’intérêt que vous portez à nos produits et plus particulièrement à notre plateforme d’information voyageurs.
 
