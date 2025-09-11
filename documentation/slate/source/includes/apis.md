@@ -993,7 +993,7 @@ Using more than 1 mode<ul>
 Notes<ul>
 <li>See [Ridesharing](#ridesharing-stuff) and [Taxi](#taxi-stuff) sections for more details on these modes.</li>
 <li>`bss` stands for bike sharing system.<br>Note: choosing `bss` implicitly allows the `walking` mode since you might have to walk to the bss station.</li>
-<li>The parameter is inclusive, not exclusive, so if you want to forbid a mode, you need to add all the other modes.</li> 
+<li>The parameter is inclusive, not exclusive, so if you want to forbid a mode, you need to add all the other modes.</li>
 <li>Example : if you want to use other mode but not `car`, you can request : `first_section_mode[]=walking&first_section_mode[]=bss&first_section_mode[]=bike&last_section_mode[]=walking&last_section_mode[]=bss&last_section_mode[]=bike`</li>
 </ul> | walking |
 | nop       | last_section_mode[]     | array of string   | Same as first_section_mode but for the last section  | walking     |
