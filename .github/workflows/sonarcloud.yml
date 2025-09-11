@@ -51,7 +51,7 @@ jobs:
         mkdir build
         cmake -DCMAKE_BUILD_TYPE=Profile -DSTRIP_SYMBOLS=ON -S source -B build
     - name: SonarQube Scan
-      uses: SonarSource/sonarqube-scan-action@v4
+      uses: SonarSource/sonarqube-scan-action@v5.3.1
       env:
         SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
