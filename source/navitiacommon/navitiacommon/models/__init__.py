@@ -985,6 +985,13 @@ class Instance(db.Model):  # type: ignore
     # {"line_reports": "loki", "disruptions": "kraken"}
     api_backends = db.Column(JSONB, nullable=False)
 
+    mobility_scenarios_enabled = db.Column(
+        db.Boolean,
+        default=default_values.mobility_scenarios_enabled,
+        nullable=False,
+        server_default=str(default_values.mobility_scenarios_enabled),
+    )
+
     def __init__(self, name=None, is_free=False, authorizations=None, jobs=None):
         self.name = name
         self.is_free = is_free

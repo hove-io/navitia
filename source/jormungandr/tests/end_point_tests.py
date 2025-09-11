@@ -283,7 +283,7 @@ class TestEndPoint(AbstractTestFixture):
 
         # Verify that parameters exist in parameters for walking as wall as bike and some others
         parameters = json_response['status']['parameters']
-        assert len(parameters) == 90
+        assert len(parameters) == 91
         assert parameters['walking_walkway_factor'] == 1.0
         assert parameters['walking_sidewalk_factor'] == 1.0
         assert parameters['walking_alley_factor'] == 2.0
@@ -318,3 +318,4 @@ class TestEndPoint(AbstractTestFixture):
         assert parameters['max_bss_direct_path_duration'] == 86400
         assert parameters['max_car_direct_path_duration'] == 86400
         assert parameters['max_ridesharing_direct_path_duration'] == 86400
+        assert parameters['mobility_scenarios_enabled'] is False

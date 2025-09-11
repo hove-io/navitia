@@ -1260,6 +1260,14 @@ class Instance(flask_restful.Resource):
             location=('json', 'values'),
             default=instance.api_backends,
         )
+
+        parser.add_argument(
+            'mobility_scenarios_enabled',
+            type=inputs.boolean,
+            help='boolean to activate / deactivate the management of mobility_scenarios for transport journeys',
+            location=('json', 'values'),
+            default=instance.mobility_scenarios_enabled,
+        )
         args = parser.parse_args()
 
         try:
@@ -1393,6 +1401,7 @@ class Instance(flask_restful.Resource):
                         'use_predicted_traffic',
                         'same_journey_schedules_configuration',
                         "api_backends",
+                        "mobility_scenarios_enabled",
                     ],
                 ),
                 maxlen=0,

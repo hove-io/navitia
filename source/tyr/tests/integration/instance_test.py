@@ -619,6 +619,7 @@ def test_update_forgotten_attributs_in_backend(create_instance):
     assert resp[0]['filter_odt_journeys'] is False
     assert resp[0]['additional_parameters'] is False
     assert resp[0]['disruptions_on_poi'] is False
+    assert resp[0]['mobility_scenarios_enabled'] is False
 
     params = {
         'max_additional_connections': 3,
@@ -627,6 +628,7 @@ def test_update_forgotten_attributs_in_backend(create_instance):
         'filter_odt_journeys': True,
         'additional_parameters': True,
         'disruptions_on_poi': True,
+        'mobility_scenarios_enabled': True,
     }
     resp = api_put('/v0/instances/fr', data=json.dumps(params), content_type='application/json')
     assert resp['max_additional_connections'] == 3
@@ -635,6 +637,7 @@ def test_update_forgotten_attributs_in_backend(create_instance):
     assert resp['filter_odt_journeys'] is True
     assert resp['additional_parameters'] is True
     assert resp['disruptions_on_poi'] is True
+    assert resp['mobility_scenarios_enabled'] is True
 
     resp = api_get('/v0/instances/fr')
     assert resp[0]['max_additional_connections'] == 3

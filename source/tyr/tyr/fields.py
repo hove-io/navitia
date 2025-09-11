@@ -288,6 +288,7 @@ instance_fields = {
     'bike_destination_only_penalty': fields.Raw,
     'use_predicted_traffic': fields.Boolean,
     'api_backends': fields.Raw,
+    'mobility_scenarios_enabled': fields.Raw,
 }
 
 api_fields = {'id': fields.Raw, 'name': fields.Raw}
