@@ -22,3 +22,6 @@
 [submodule "source/third_party/flann"]
 	path = source/third_party/flann
 	url = https://github.com/flann-lib/flann
+[submodule "source/navitiacommon"]
+	path = source/navitiacommon
+	url = git@github.com:hove-io/navitiacommon.git
