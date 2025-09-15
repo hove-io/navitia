@@ -135,5 +135,7 @@ def car_park_maker(divia_class, search_pattern):
 
 divia_pr_park_test = car_park_maker(
     DiviaPRParkProvider,
-    SearchPattern(id_park='identifiant_parking', available='nombre_de_places_libres', total='nombre_de_places_totales'),
+    SearchPattern(
+        id_park='identifiant_parking', available='nombre_de_places_libres', total='nombre_de_places_totales'
+    ),
 )

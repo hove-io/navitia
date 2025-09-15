@@ -84,7 +84,9 @@ def divia_maker(search_patterns):
 
 
 DiviaPRParkProvider = divia_maker(
-    SearchPattern(id_park='identifiant_parking', available='nombre_de_places_libres', total='nombre_de_places_totales')
+    SearchPattern(
+        id_park='identifiant_parking', available='nombre_de_places_libres', total='nombre_de_places_totales'
+    )
 )
 
 # TODO: This class (connector) is no more used and to be deleted later on
