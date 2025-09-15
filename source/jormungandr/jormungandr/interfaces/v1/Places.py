@@ -158,6 +158,12 @@ class Places(ResourceUri):
             help="Radius used to prioritize " "the objects around coordinate from",
         )
 
+        self.parsers["get"].add_argument(
+            "poi_types[]",
+            action="append",
+            help="The type of poi data to search",
+        )
+
     def get(self, region=None, lon=None, lat=None):
         args = self.parsers["get"].parse_args()
         self._register_interpreted_parameters(args)

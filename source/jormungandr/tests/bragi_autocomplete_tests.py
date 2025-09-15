@@ -1082,6 +1082,28 @@ class TestBragiAutocomplete(AbstractTestFixture):
             assert 'type[]' in params
             assert set(params['type[]']) == set(['public_transport:stop_area', 'street', 'house', 'poi', 'city'])
 
+    def test_autocomplete_call_with_poi_types(self):
+        """
+        test that parameter poi_types[] is passed to bragi if used in request navitia
+        :return:
+        """
+        with requests_mock.Mocker() as m:
+            m.post('https://host_of_bragi/autocomplete', json={})
+            self.query_region('places?q=bob')
+            assert m.called
+            params = m.request_history[0].qs
+            assert params
+            assert 'type[]' in params
+            assert set(params['type[]']) == set(['public_transport:stop_area', 'street', 'house', 'poi', 'city'])
+            assert params.get("poi_types[]") is None
+
+            m.post('https://host_of_bragi/autocomplete', json={})
+            self.query_region('places?q=bob&poi_types[]=toto')
+            assert m.called
+            params = m.request_history[1].qs
+            assert params
+            assert params.get("poi_types[]") == ['toto']
+
     def test_autocomplete_call_with_no_shape(self):
         """
         test that the coverage shape is sent to bragi if no shape is set
