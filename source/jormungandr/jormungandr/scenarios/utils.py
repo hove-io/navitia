@@ -485,7 +485,7 @@ def get_impact_uris_for_poi(response, poi):
     return impact_uris
 
 
-def fill_disruptions_on_pois(instance, response, pb_request):
+def fill_disruptions_on_pois(instance, response, pb_request=None):
     if not response.pois:
         return
 
