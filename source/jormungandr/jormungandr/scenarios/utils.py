@@ -485,7 +485,7 @@ def get_impact_uris_for_poi(response, poi):
     return impact_uris
 
 
-def fill_disruptions_on_pois(instance, response):
+def fill_disruptions_on_pois(instance, response, pb_request=None):
     if not response.pois:
         return
 
@@ -495,7 +495,7 @@ def fill_disruptions_on_pois(instance, response):
         poi_uris.add(poi.uri)
 
     # calling loki with api poi_disruptions
-    resp_poi = get_disruptions_on_poi(instance, poi_uris)
+    resp_poi = get_disruptions_on_poi(instance, poi_uris, pb_request)
 
     # For each poi in the response add impact_uris from resp_poi
     # and copy object poi in impact.impacted_objects
@@ -508,7 +508,7 @@ def fill_disruptions_on_pois(instance, response):
     add_disruptions(response, resp_poi)
 
 
-def fill_disruptions_on_places_nearby(instance, response):
+def fill_disruptions_on_places_nearby(instance, response, pb_request=None):
     if not response.places_nearby:
         return
 
@@ -519,7 +519,7 @@ def fill_disruptions_on_places_nearby(instance, response):
             poi_uris.add(place_nearby.uri)
 
     # calling loki with api poi_disruptions
-    resp_poi = get_disruptions_on_poi(instance, poi_uris)
+    resp_poi = get_disruptions_on_poi(instance, poi_uris, pb_request=pb_request)
 
     # For each poi in the response add impact_uris from resp_poi
     # and copy object poi in impact.impacted_objects
@@ -533,13 +533,15 @@ def fill_disruptions_on_places_nearby(instance, response):
     add_disruptions(response, resp_poi)
 
 
-def get_disruptions_on_poi(instance, uris, since_datetime=None, until_datetime=None):
+def get_disruptions_on_poi(instance, uris, pb_request=None, since_datetime=None, until_datetime=None):
     if not uris:
         return None
     try:
         pt_planner = instance.get_pt_planner("loki")
         req = request_pb2.Request()
         req.requested_api = type_pb2.poi_disruptions
+        if pb_request and hasattr(pb_request, "_current_datetime"):
+            req._current_datetime = pb_request._current_datetime
 
         req.poi_disruptions.pois.extend(uris)
         if since_datetime:

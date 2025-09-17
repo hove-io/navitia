@@ -327,7 +327,7 @@ class Scenario(object):
         resp = instance.send_and_receive(req)
         # For pois, ws should also call loki to get disruptions on pois
         if not req.disable_disruption:
-            fill_disruptions_on_places_nearby(instance, resp)
+            fill_disruptions_on_places_nearby(instance, resp, req)
         build_pagination(request, resp)
         return resp
 
@@ -364,7 +364,7 @@ class Scenario(object):
 
             # For api = pois, ws should also call loki to get disruptions on pois
             if (not req.disable_disruption) and req.ptref.requested_type == type_pb2.POI:
-                fill_disruptions_on_pois(instance, resp)
+                fill_disruptions_on_pois(instance, resp, pb_request=req)
         build_pagination(request, resp)
         return resp
 
