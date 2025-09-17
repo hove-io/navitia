@@ -356,12 +356,9 @@ class Scenario(object):
         req.language = request.get("language", '')
 
         # We call Loki's disruptions only if _pt_planner=loki
-        if request["_pt_planner"] == "loki":
-            pt_planner = instance.get_pt_planner(request["_pt_planner"])
-            resp = pt_planner.send_and_receive(req)
-        else:
-            resp = instance.send_and_receive(req)
-
+        backend = self.get_backend(resource_name, request, instance)
+        resp = backend.send_and_receive(req)
+        if request["_pt_planner"] != "loki":
             # For api = pois, ws should also call loki to get disruptions on pois
             if (not req.disable_disruption) and req.ptref.requested_type == type_pb2.POI:
                 fill_disruptions_on_pois(instance, resp)
