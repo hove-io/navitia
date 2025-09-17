@@ -533,7 +533,7 @@ def fill_disruptions_on_places_nearby(instance, response, pb_request=None):
     add_disruptions(response, resp_poi)
 
 
-def get_disruptions_on_poi(instance, uris, pb_request= None, since_datetime=None, until_datetime=None):
+def get_disruptions_on_poi(instance, uris, pb_request=None, since_datetime=None, until_datetime=None):
     if not uris:
         return None
     try:
