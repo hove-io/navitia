@@ -374,6 +374,23 @@ Real time and disruption objects
             "end": "20160608T230959"
         }
     ],
+    "application_patterns": [
+        {
+            "application_period": { "begin": "20121001", "end": "20121015" },
+            "week_pattern": {
+                "monday": true,
+                "tuesday": true,
+                "wednesday": true,
+                "thursday": true,
+                "friday": true,
+                "saturday": true,
+                "sunday": true
+            },
+            "time_slots": [
+                { "begin": "000000", "end": "120000" }
+            ]
+        }
+    ],
     "messages": [
         {"text": "Strike"}
     ],
@@ -394,6 +411,7 @@ Real time and disruption objects
 |impact_id     | string                         |for traceability: Id of original input impact
 |severity      | [severity](#severity)          |gives some categorization element
 |application_periods |array of [period](#period)      |dates where the current disruption is active
+|application_patterns|array of [application_pattern](#application-pattern)|Advanced activation patterns combining a date range, week days and optional time slots; complements `application_periods`
 |messages            |array of [message](#message)    |texts to provide to the traveler
 |updated_at          |[iso-date-time](#iso-date-time) |date_time of last modifications
 |impacted_objects    |array of [impacted_object](#impacted-object) |The list of public transport objects which are affected by the disruption
@@ -403,6 +421,33 @@ Real time and disruption objects
 |uri                 |string                   |deprecated
 |disruption_uri      |string                   |deprecated
 
+### &lt;a name="application-pattern"&gt;&lt;/a&gt;Application_pattern
+
+A pattern describing when a disruption is active within a period, optionally narrowed to specific days of week and daily time slots.
+
+``` json
+{
+  "application_period": { "begin": "YYYYMMDD", "end": "YYYYMMDD" },
+  "week_pattern": {
+    "monday": true, "tuesday": true, "wednesday": true,
+    "thursday": true, "friday": true, "saturday": true, "sunday": true
+  },
+  "time_slots": [
+    { "begin": "HHMMSS", "end": "HHMMSS" }
+  ]
+}
+```
+
+|Field|Type|Description|
+|-----|----|-----------|
+|application_period|[period](#period)|Inclusive date range (dates only, format `YYYYMMDD`) during which the pattern may apply|
+|week_pattern|object|Flags for each weekday (`monday`..`sunday`) when the disruption applies within the application_period|
+|time_slots|array of [period_time](#period-time)|Optional list of daily time ranges within selected days; each object has `begin` and `end` in `HHMMSS`|
+
+Notes:
+- `application_patterns` are evaluated in addition to the global `application_periods`.
+- If `time_slots` is empty or omitted, the pattern applies the whole day for the selected weekdays within `application_period`.
+- If `week_pattern` selects all days, the pattern applies every day within `application_period`.
 ### <a name="impacted-object"></a>Impacted_object
 
 ``` json
