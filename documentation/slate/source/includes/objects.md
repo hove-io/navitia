@@ -421,7 +421,7 @@ Real time and disruption objects
 |uri                 |string                   |deprecated
 |disruption_uri      |string                   |deprecated
 
-### &lt;a name="application-pattern"&gt;&lt;/a&gt;Application_pattern
+### <a name="application-pattern">Application_pattern</a>
 
 A pattern describing when a disruption is active within a period, optionally narrowed to specific days of week and daily time slots.
 
@@ -445,9 +445,8 @@ A pattern describing when a disruption is active within a period, optionally nar
 |time_slots|array of [period_time](#period-time)|Optional list of daily time ranges within selected days; each object has `begin` and `end` in `HHMMSS`|
 
 Notes:
-- `application_patterns` are evaluated in addition to the global `application_periods`.
+- `application_patterns` are evaluated within the global `application_periods`.
 - If `time_slots` is empty or omitted, the pattern applies the whole day for the selected weekdays within `application_period`.
-- If `week_pattern` selects all days, the pattern applies every day within `application_period`.
 ### <a name="impacted-object"></a>Impacted_object
 
 ``` json
