@@ -696,7 +696,14 @@ Differents kind of objects can be returned (sorted as):
   nop      | disable_geojson | boolean | remove geojson from the response | False
   nop      | depth       | int             | Json response [depth](#depth)     | 1
   nop      | from | string | Coordinates longitude;latitude used to prioritize the objects around this coordinate. Note this parameter will be taken into account only if the autocomplete's backend can handle it |
+  nop      | shape | string (JSON-encoded GeoJSON) | Geographical shape to limit the search. The value must be a JSON-encoded GeoJSON object (Feature or Geometry). When a coverage is specified via the path (e.g. `/coverage/{region_id}/places`) and `shape` is not provided, the coverage’s GeoJSON shape is applied automatically. |
+  nop      | shape_scope[] | array of enum | Scope of the shape filtering over returned objects. Allowed values: `admin`, `street`, `addr`, `poi`, `stop`. Example: `shape_scope[]=addr&shape_scope[]=poi`. |
 
+<![CDATA[<aside class="notice">
+  The `shape` parameter expects a JSON string. Example:<br/>
+  shape={"type":"Feature","properties":{},"geometry":{"type":"Polygon","coordinates":[[[2.33,48.85],[2.37,48.85],[2.37,48.88],[2.33,48.88],[2.33,48.85]]]}}<br/>
+  URL-encode the JSON if needed by your client.
+</aside>]]>
 
 <h2 id="places-nearby-api">Places nearby</h2>
 
