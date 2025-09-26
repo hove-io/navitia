@@ -145,12 +145,6 @@ def import_data(
         if reload:
             actions.append(reload_data.si(instance_config, job.id))
 
-        if not skip_mimir:
-            for dataset in job.data_sets:
-                actions.extend(send_to_mimir(instance, dataset.name, dataset.family_type))
-        else:
-            current_app.logger.info("skipping mimir import")
-
         actions.append(finish_job.si(job.id))
 
         # We should delete old backup directories related to this instance
@@ -164,6 +158,7 @@ def import_data(
     if skip_2ed:
         # For skip_2ed, skip inserting last_load_dataset files into ed database
         return process_ed2nav()
+
     for _file in files:
         filename = None
 
@@ -231,6 +226,12 @@ def import_data(
         dataset.state = "pending"
         models.db.session.add(dataset)
         job.data_sets.append(dataset)
+
+    if not skip_mimir:
+        for dataset in job.data_sets:
+            actions.extend(send_to_mimir(instance, dataset.name, dataset.family_type))
+    else:
+        current_app.logger.info("skipping mimir import")
 
     if actions:
         return process_ed2nav()
