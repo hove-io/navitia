@@ -258,6 +258,16 @@ def import_data(
     models.db.session.add(job)
     models.db.session.commit()
 
+    def set_job_id(job_id, actions):
+        for action in actions:
+            if 'job_id' not in action :
+                action.kwargs['job_id'] = job_id
+
+    # Set Job ids to all tasks apart from Mimir which has its own job
+    set_job_id(job.id, kraken_actions)
+    set_job_id(job.id, loki_actions)
+    set_job_id(job.id, asgard_actions)
+
     if not skip_mimir:
         for dataset in job.data_sets:
             mimir_actions.extend(
@@ -274,15 +284,6 @@ def import_data(
         current_app.logger.info("skipping *2Ed import tasks")
     else:
         kraken_actions.extend(ed2nav_actions)
-
-    def set_job_id(job_id, actions):
-        for action in actions:
-            action.kwargs['job_id'] = job_id
-
-    # Set Job ids to all tasks apart from Mimir which has its own job
-    set_job_id(job.id, kraken_actions)
-    set_job_id(job.id, loki_actions)
-    set_job_id(job.id, asgard_actions)
 
     return trigger_actions_in_parallel(kraken_actions, loki_actions, asgard_actions, mimir_actions, async_=asynchronous)
 
