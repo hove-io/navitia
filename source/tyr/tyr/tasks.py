@@ -75,6 +75,7 @@ from tyr.helper import (
 from navitiacommon.launch_exec import launch_exec
 from datetime import datetime, timedelta
 
+
 @celery.task()
 def finish_job(job_id):
     """
@@ -88,14 +89,14 @@ def finish_job(job_id):
 
 def trigger_actions_in_parallel(*actions, async_=True):
     """
-        Takes an arbitrary number of arrays (lists/tuples) as parameters.
-        Each array's items are chained together, and all chains are grouped in parallel.
+    Takes an arbitrary number of arrays (lists/tuples) as parameters.
+    Each array's items are chained together, and all chains are grouped in parallel.
     """
 
-    if not actions :
+    if not actions:
         return
 
-    chains = [ chain(*action) for action in actions if action ]
+    chains = [chain(*action) for action in actions if action]
     groups = group(*chains)
 
     if not async_:
@@ -103,6 +104,7 @@ def trigger_actions_in_parallel(*actions, async_=True):
         return groups.apply()
 
     return groups.delay()
+
 
 def import_data(
     files,
@@ -155,15 +157,13 @@ def import_data(
         'shape': shape2ed,
     }
 
-    current_app.logger.info(
-        "Tyr.task : [{}] Import Data : {}".format(instance.name, files)
-    )
+    current_app.logger.info("Tyr.task : [{}] Import Data : {}".format(instance.name, files))
 
     def process_ed2nav():
         # Create binary file (New .nav.lz4)
         binarisation = [ed2nav.si(instance_config, job.id, custom_output_dir)]
         ed2nav_actions = [chain(*binarisation)]
-        
+
         # Reload kraken with new data after binarisation (New .nav.lz4)
         if reload:
             ed2nav_actions.append(reload_data.si(instance_config, job.id))
@@ -171,9 +171,7 @@ def import_data(
         ed2nav_actions.append(finish_job.si(job.id))
 
         # We should delete old backup directories related to this instance
-        ed2nav_actions.append(
-            purge_instance.si(instance.id, current_app.config["DATASET_MAX_BACKUPS_TO_KEEP"])
-        )
+        ed2nav_actions.append(purge_instance.si(instance.id, current_app.config["DATASET_MAX_BACKUPS_TO_KEEP"]))
 
         return ed2nav_actions
 
@@ -209,13 +207,9 @@ def import_data(
                 if loki_data_source is not None:
                     if loki_data_source == "minio":
                         if dataset.type == "fusio":
-                            loki_actions.append(
-                                fusio2s3.si(instance_config, filename, dataset_uid=dataset.uid)
-                            )
+                            loki_actions.append(fusio2s3.si(instance_config, filename, dataset_uid=dataset.uid))
                         if dataset.type == "gtfs":
-                            loki_actions.append(
-                                gtfs2s3.si(instance_config, filename, dataset_uid=dataset.uid)
-                            )
+                            loki_actions.append(gtfs2s3.si(instance_config, filename, dataset_uid=dataset.uid))
                     elif loki_data_source == "local" and dataset.type in ["fusio", "gtfs"]:
                         zip_file = zip_if_needed(filename)
                         dest = os.path.join(os.path.dirname(instance_config.target_file), "ntfs.zip")
@@ -235,15 +229,11 @@ def import_data(
                             )
                         )
                     else:
-                        asgard_actions.append(
-                            poi2asgard.si(instance_config, filename, dataset_uid=dataset.uid)
-                        )
+                        asgard_actions.append(poi2asgard.si(instance_config, filename, dataset_uid=dataset.uid))
                 else:
                     current_app.logger.warning("unknown asgard bucket for coverage '{}'".format(instance.name))
 
-            kraken_actions.append(
-                tasks_2ed[dataset.type].si(instance_config, filename, dataset_uid=dataset.uid)
-            )
+            kraken_actions.append(tasks_2ed[dataset.type].si(instance_config, filename, dataset_uid=dataset.uid))
         else:
             # unknown type, we skip it
             current_app.logger.debug("unknown file type: {} for file {}".format(dataset.type, _file))
@@ -260,7 +250,7 @@ def import_data(
 
     def set_job_id(job_id, actions):
         for action in actions:
-            if 'job_id' not in action :
+            if 'job_id' not in action:
                 action.kwargs['job_id'] = job_id
 
     # Set Job ids to all tasks apart from Mimir which has its own job
@@ -270,9 +260,7 @@ def import_data(
 
     if not skip_mimir:
         for dataset in job.data_sets:
-            mimir_actions.extend(
-                send_to_mimir(instance, dataset.name, dataset.family_type)
-            )
+            mimir_actions.extend(send_to_mimir(instance, dataset.name, dataset.family_type))
     else:
         current_app.logger.info("skipping mimir import")
 
@@ -285,7 +273,9 @@ def import_data(
     else:
         kraken_actions.extend(ed2nav_actions)
 
-    return trigger_actions_in_parallel(kraken_actions, loki_actions, asgard_actions, mimir_actions, async_=asynchronous)
+    return trigger_actions_in_parallel(
+        kraken_actions, loki_actions, asgard_actions, mimir_actions, async_=asynchronous
+    )
 
 
 def send_to_mimir(instance, filename, family_type):
