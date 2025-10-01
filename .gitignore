@@ -37,4 +37,5 @@ source/compile_commands.json
 .DS_Store
 dev
 docker_build
+docker/.env
 .vscode

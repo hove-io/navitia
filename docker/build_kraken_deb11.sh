@@ -1,6 +1,8 @@
 #!/bin/bash
+set -x
 
-cd /navitia/navitia/
+cd $1
+
 mkdir -p docker_build && cd docker_build
 cmake -DCMAKE_BUILD_TYPE=Release ../source
 
