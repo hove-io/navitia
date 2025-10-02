@@ -236,7 +236,11 @@ def timestamp_to_datetime(timestamp, tz=None):
     timezone = tz or get_timezone()
     if timezone:
         dt = pytz.utc.localize(dt)
-        return dt.astimezone(timezone)
+        try:
+            return dt.astimezone(timezone)
+        except Exception:
+            logging.exception(f"Error while converting date:{dt} - {timezone}")
+            return None
     return None
 
 
