@@ -1,7 +1,7 @@
 # Compilation of rust binaries from tartare-tools
-FROM rust:1.82-bullseye AS tartare-tools
+FROM rust:1.90-bullseye AS tartare-tools
 
-ARG TARTARE_TOOLS_VERSION="v0.47.1"
+ARG TARTARE_TOOLS_VERSION="v0.66.0"
 ARG GITHUB_TOKEN
 RUN git config --global url."https://x-access-token:${GITHUB_TOKEN}@github.com/hove-io/".insteadOf "ssh://git@github.com/hove-io/"
 RUN git clone -b ${TARTARE_TOOLS_VERSION} --depth 1 https://x-access-token:${GITHUB_TOKEN}@github.com/hove-io/tartare-tools
