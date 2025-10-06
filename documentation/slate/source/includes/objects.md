@@ -445,7 +445,7 @@ A pattern describing when a disruption is active within a period, optionally nar
 |time_slots|array of [period_time](#period-time)|Optional list of daily time ranges within selected days; each object has `begin` and `end` in `HHMMSS`|
 
 Notes:
-- `application_patterns` are evaluated within the global `application_periods`.
+- `application_patterns` are calculated bases on the global `application_periods`.
 - If `time_slots` is empty or omitted, the pattern applies the whole day for the selected weekdays within `application_period`.
 ### <a name="impacted-object"></a>Impacted_object
 
