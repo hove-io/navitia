@@ -34,7 +34,7 @@ import shutil
 import re
 import zipfile
 
-from celery import chain
+from celery import chain, group
 from celery.signals import task_postrun
 from flask import current_app
 import kombu
@@ -87,6 +87,25 @@ def finish_job(job_id):
     models.db.session.commit()
 
 
+def trigger_actions_in_parallel(*actions, async_=True):
+    """
+    Takes an arbitrary number of arrays (lists/tuples) as parameters.
+    Each array's items are chained together, and all chains are grouped in parallel.
+    """
+
+    if not actions:
+        return
+
+    chains = [chain(*action) for action in actions if action]
+    groups = group(*chains)
+
+    if not async_:
+        # all job are run in sequence and import_data will only return when all the jobs are finish
+        return groups.apply()
+
+    return groups.delay()
+
+
 def import_data(
     files,
     instance,
@@ -116,12 +135,18 @@ def import_data(
     - update the jormungandr db with the new data for the instance
     - reload the krakens
     """
-    actions = []
-    job = models.Job()
+    kraken_actions = []
+    loki_actions = []
+    mimir_actions = []
+    asgard_actions = []
+
     instance_config = load_instance_config(instance.name)
+
+    job = models.Job()
     job.instance = instance
     job.state = 'running'
-    task = {
+
+    tasks_2ed = {
         'gtfs': gtfs2ed,
         'fusio': fusio2ed,
         'osm': osm2ed,
@@ -132,38 +157,24 @@ def import_data(
         'shape': shape2ed,
     }
 
+    current_app.logger.info("Tyr.task : [{}] Import Data : {}".format(instance.name, files))
+
     def process_ed2nav():
-        models.db.session.add(job)
-        models.db.session.commit()
-        # We pass the job id to each tasks, but job need to be commited for having an id
-        for action in actions:
-            action.kwargs['job_id'] = job.id
         # Create binary file (New .nav.lz4)
         binarisation = [ed2nav.si(instance_config, job.id, custom_output_dir)]
-        actions.append(chain(*binarisation))
+        ed2nav_actions = [chain(*binarisation)]
+
         # Reload kraken with new data after binarisation (New .nav.lz4)
         if reload:
-            actions.append(reload_data.si(instance_config, job.id))
+            ed2nav_actions.append(reload_data.si(instance_config, job.id))
 
-        if not skip_mimir:
-            for dataset in job.data_sets:
-                actions.extend(send_to_mimir(instance, dataset.name, dataset.family_type))
-        else:
-            current_app.logger.info("skipping mimir import")
-
-        actions.append(finish_job.si(job.id))
+        ed2nav_actions.append(finish_job.si(job.id))
 
         # We should delete old backup directories related to this instance
-        actions.append(purge_instance.si(instance.id, current_app.config['DATASET_MAX_BACKUPS_TO_KEEP']))
-        if asynchronous:
-            return chain(*actions).delay()
-        else:
-            # all job are run in sequence and import_data will only return when all the jobs are finish
-            return chain(*actions).apply()
+        ed2nav_actions.append(purge_instance.si(instance.id, current_app.config["DATASET_MAX_BACKUPS_TO_KEEP"]))
 
-    if skip_2ed:
-        # For skip_2ed, skip inserting last_load_dataset files into ed database
-        return process_ed2nav()
+        return ed2nav_actions
+
     for _file in files:
         filename = None
 
@@ -181,7 +192,7 @@ def import_data(
             )
             continue
 
-        if dataset.type in task:
+        if dataset.type in tasks_2ed:
             if backup_file:
                 filename = move_to_backupdirectory(_file, instance_config.backup_directory, manage_sp_char=True)
             else:
@@ -190,14 +201,15 @@ def import_data(
             has_pt_planner_loki = (
                 hasattr(instance, 'pt_planners_configurations') and "loki" in instance.pt_planners_configurations
             )
+
             if has_pt_planner_loki:
                 loki_data_source = instance.pt_planners_configurations.get('loki', {}).get('data_source')
                 if loki_data_source is not None:
                     if loki_data_source == "minio":
                         if dataset.type == "fusio":
-                            actions.append(fusio2s3.si(instance_config, filename, dataset_uid=dataset.uid))
+                            loki_actions.append(fusio2s3.si(instance_config, filename, dataset_uid=dataset.uid))
                         if dataset.type == "gtfs":
-                            actions.append(gtfs2s3.si(instance_config, filename, dataset_uid=dataset.uid))
+                            loki_actions.append(gtfs2s3.si(instance_config, filename, dataset_uid=dataset.uid))
                     elif loki_data_source == "local" and dataset.type in ["fusio", "gtfs"]:
                         zip_file = zip_if_needed(filename)
                         dest = os.path.join(os.path.dirname(instance_config.target_file), "ntfs.zip")
@@ -217,10 +229,11 @@ def import_data(
                             )
                         )
                     else:
-                        actions.append(poi2asgard.si(instance_config, filename, dataset_uid=dataset.uid))
+                        asgard_actions.append(poi2asgard.si(instance_config, filename, dataset_uid=dataset.uid))
                 else:
                     current_app.logger.warning("unknown asgard bucket for coverage '{}'".format(instance.name))
-            actions.append(task[dataset.type].si(instance_config, filename, dataset_uid=dataset.uid))
+
+            kraken_actions.append(tasks_2ed[dataset.type].si(instance_config, filename, dataset_uid=dataset.uid))
         else:
             # unknown type, we skip it
             current_app.logger.debug("unknown file type: {} for file {}".format(dataset.type, _file))
@@ -232,8 +245,37 @@ def import_data(
         models.db.session.add(dataset)
         job.data_sets.append(dataset)
 
-    if actions:
-        return process_ed2nav()
+    models.db.session.add(job)
+    models.db.session.commit()
+
+    def set_job_id(job_id, actions):
+        for action in actions:
+            if 'job_id' not in action:
+                action.kwargs['job_id'] = job_id
+
+    # Set Job ids to all tasks apart from Mimir which has its own job
+    set_job_id(job.id, kraken_actions)
+    set_job_id(job.id, loki_actions)
+    set_job_id(job.id, asgard_actions)
+
+    if not skip_mimir:
+        for dataset in job.data_sets:
+            mimir_actions.extend(send_to_mimir(instance, dataset.name, dataset.family_type))
+    else:
+        current_app.logger.info("skipping mimir import")
+
+    ed2nav_actions = process_ed2nav()
+
+    if skip_2ed:
+        # For skip_2ed, skip inserting last_load_dataset files into ed database
+        kraken_actions = ed2nav_actions
+        current_app.logger.info("skipping *2Ed import tasks")
+    else:
+        kraken_actions.extend(ed2nav_actions)
+
+    return trigger_actions_in_parallel(
+        kraken_actions, loki_actions, asgard_actions, mimir_actions, async_=asynchronous
+    )
 
 
 def send_to_mimir(instance, filename, family_type):
