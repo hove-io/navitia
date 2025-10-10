@@ -251,6 +251,9 @@ static bool rename_file(const std::string& source_name, const std::string& dest_
             LOG4CPLUS_ERROR(logger, "Unable to rename data file: " << source_name << std::strerror(errno));
             return false;
         }
+    } else {
+        LOG4CPLUS_ERROR(logger, "Cannot rename file : " << source_name << " because it does not exist");
+        return false;
     }
     LOG4CPLUS_INFO(logger, "Renaming file success");
     return true;
@@ -268,6 +271,7 @@ static bool remove_file(const std::string& filename) {
 
     return true;
 }
+
 template <class T>
 bool write_data_to_file(const std::string& output_filename, const T& data) {
     std::string temp_output_filename = output_filename + ".temp";
@@ -281,7 +285,9 @@ bool write_data_to_file(const std::string& output_filename, const T& data) {
     if (!rename_file(temp_output_filename, output_filename)) {
         return false;
     }
-
+    if (!rename_file(backup_output_filename, output_filename)) {
+        return false;
+    }
     return remove_file(backup_output_filename);
 }
 
