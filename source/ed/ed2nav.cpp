@@ -283,9 +283,7 @@ bool write_data_to_file(const std::string& output_filename, const T& data) {
         return false;
     }
     if (!rename_file(temp_output_filename, output_filename)) {
-        return false;
-    }
-    if (!rename_file(backup_output_filename, output_filename)) {
+        rename_file(backup_output_filename, output_filename);
         return false;
     }
     return remove_file(backup_output_filename);
