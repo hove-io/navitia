@@ -136,6 +136,11 @@ void Data::load_nav(const std::string& filename) {
 
     try {
         std::ifstream ifs(filename.c_str(), std::ios::in | std::ios::binary);
+        if (!ifs) {
+            auto msg = "Data loading failed: Data path ["+filename+"] does not exist";
+            LOG4CPLUS_ERROR(logger, msg);
+            throw navitia::data::data_loading_error(msg);
+        }
         ifs.exceptions(std::ifstream::failbit | std::ifstream::badbit);
         this->load(ifs);
         last_load_at = pt::microsec_clock::universal_time();
