@@ -137,7 +137,7 @@ void Data::load_nav(const std::string& filename) {
     try {
         std::ifstream ifs(filename.c_str(), std::ios::in | std::ios::binary);
         if (!ifs) {
-            auto msg = "Data loading failed: Data file ["+filename+"] does not exist";
+            auto msg = "Data loading failed: Data file [" + filename + "] does not exist";
             LOG4CPLUS_ERROR(logger, msg);
             throw navitia::data::data_loading_error(msg);
         }
