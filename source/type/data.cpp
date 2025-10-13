@@ -125,8 +125,9 @@ SPLIT_SERIALIZABLE(Data)
  */
 void Data::load_nav(const std::string& filename) {
     // Add logger
+    pt::ptime start = pt::microsec_clock::local_time();
     log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
-    LOG4CPLUS_DEBUG(logger, "Start to load nav");
+    LOG4CPLUS_INFO(logger, "Start to load nav");
 
     if (filename.empty()) {
         LOG4CPLUS_ERROR(logger, "Data loading failed: Data path is empty");
@@ -135,6 +136,11 @@ void Data::load_nav(const std::string& filename) {
 
     try {
         std::ifstream ifs(filename.c_str(), std::ios::in | std::ios::binary);
+        if (!ifs) {
+            auto msg = "Data loading failed: Data file [" + filename + "] does not exist";
+            LOG4CPLUS_ERROR(logger, msg);
+            throw navitia::data::data_loading_error(msg);
+        }
         ifs.exceptions(std::ifstream::failbit | std::ifstream::badbit);
         this->load(ifs);
         last_load_at = pt::microsec_clock::universal_time();
@@ -149,7 +155,8 @@ void Data::load_nav(const std::string& filename) {
         LOG4CPLUS_ERROR(logger, "Data loading failed");
         throw navitia::data::data_loading_error("Data loading failed");
     }
-    LOG4CPLUS_DEBUG(logger, "Finished to load nav");
+    int load = (pt::microsec_clock::local_time() - start).total_seconds();
+    LOG4CPLUS_INFO(logger, "Finished to load nav: " << load << "s");
 }
 
 void Data::load(std::istream& ifs) {
