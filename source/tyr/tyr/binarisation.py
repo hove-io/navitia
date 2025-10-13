@@ -244,7 +244,7 @@ def _retrieve_dataset_and_set_state(dataset_type, job_id):
 
 
 @celery.task(bind=True)
-@Lock(timeout=30 * 60)
+@Lock(timeout=90 * 60)
 def fusio2ed(self, instance_config, filename, job_id, dataset_uid):
     """Unzip fusio file and launch fusio2ed"""
 
@@ -284,7 +284,7 @@ def fusio2ed(self, instance_config, filename, job_id, dataset_uid):
 
 
 @celery.task(bind=True)
-@Lock(30 * 60)
+@Lock(90 * 60)
 def gtfs2ed(self, instance_config, gtfs_filename, job_id, dataset_uid):
     """Unzip gtfs file launch gtfs2ed"""
 
@@ -324,7 +324,7 @@ def gtfs2ed(self, instance_config, gtfs_filename, job_id, dataset_uid):
 
 
 @celery.task(bind=True)
-@Lock(timeout=30 * 60)
+@Lock(timeout=60 * 60)
 def osm2ed(self, instance_config, osm_filename, job_id, dataset_uid):
     """launch osm2ed"""
     job = models.Job.query.get(job_id)
@@ -409,7 +409,7 @@ def geopal2ed(self, instance_config, filename, job_id, dataset_uid):
 
 
 @celery.task(bind=True)
-@Lock(timeout=10 * 60)
+@Lock(timeout=20 * 60)
 def poi2ed(self, instance_config, filename, job_id, dataset_uid):
     """launch poi2ed"""
 
@@ -614,7 +614,7 @@ def reload_data(self, instance_config, job_id):
 
 
 @celery.task(bind=True)
-@Lock(10 * 60)
+@Lock(30 * 60)
 def ed2nav(self, instance_config, job_id, custom_output_dir):
     """Launch ed2nav"""
     job = models.Job.query.get(job_id)
