@@ -326,6 +326,8 @@ The effect of the disruption is `NO_SERVICE`. It means that the train won't be c
 In the disruption, the deleted trip can be found in the "impacted_objects" list with the
 "application_periods" describing the period(s) of unavailability for the trip.<br>See the [disruption](#disruption) objects section for its full content and description.
 
+In addition to `application_periods`, disruptions may also expose `application_patterns` for advanced activation windows (by weekdays and optional time slots); see [application_pattern](#application-pattern).
+
 <div></div>
 
 ### Journeys
