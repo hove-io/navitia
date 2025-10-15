@@ -511,6 +511,7 @@ class StopPointSerializer(PbGenericSerializer):
     def get_lines(self, obj):
         return LineSerializer(obj.lines, many=True, display_none=False).data
 
+
 class StopAreaSerializer(PbGenericSerializer):
     comments = CommentSerializer(many=True, display_none=False)
     comment = FirstCommentField(attr='comments', display_none=False, deprecated=True)

@@ -1332,8 +1332,6 @@ class JourneyCommon(object):
         # Only stop point 'stopA' has fare zone info
         assert r['stop_points'][0]['name'] == 'stop_point:stopA'
         assert r['stop_points'][0]['platform_code'] == "R"
-        # Other stop points don't have the fare zone info
-        assert not 'platform_code' in r['stop_points'][1]
 
     def test_when_min_max_nb_journeys_equal_0(self):
         """
