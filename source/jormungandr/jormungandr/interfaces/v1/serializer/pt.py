@@ -494,7 +494,10 @@ class StopPointSerializer(PbGenericSerializer):
     equipment_details = EquipmentDetailsSerializer(many=True)
     lines = jsonschema.MethodField(schema_type=lambda: LineSerializer(many=True), display_none=False)
     access_points = PathWaySerializer(many=True, display_none=False)
-    platform_code = jsonschema.Field(schema_type=str, display_none=False)
+    platform_code = jsonschema.MethodField(schema_type=str, display_none=False)
+
+    def get_platform_code(self, obj):
+        return obj.platform_code if obj.HasField(str('platform_code')) else None
 
     def get_fare_zone(self, obj):
         if obj.HasField(str('fare_zone')):

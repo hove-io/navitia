@@ -1324,14 +1324,18 @@ class JourneyCommon(object):
         # Other stop points don't have the fare zone info
         assert not 'fare_zone' in r['stop_points'][1]
 
-    def test_section_platform_code(self):
+    def test_stop_point_with_platform_code(self):
         """
         In a 'stop_point', the section 'platform_code' should be present if the info is available
         """
-        r = self.query('/v1/coverage/main_routing_test/stop_points')
-        # Only stop point 'stopA' has fare zone info
+        r = self.query('/v1/coverage/main_routing_test/stop_points/stop_point:stopA')
         assert r['stop_points'][0]['name'] == 'stop_point:stopA'
         assert r['stop_points'][0]['platform_code'] == "R"
+
+    def test_stop_point_without_platform_code(self):
+        r = self.query('/v1/coverage/main_routing_test/stop_points/stop_point:stopB')
+        assert r['stop_points'][0]['name'] == 'stop_point:stopB'
+        assert 'platform_code' not in r['stop_points'][0]
 
     def test_when_min_max_nb_journeys_equal_0(self):
         """
