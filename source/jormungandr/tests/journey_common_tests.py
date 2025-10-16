@@ -149,7 +149,6 @@ def build_resource_ids(result):
 
 @dataset({"main_routing_test": {}})
 class JourneyCommon(object):
-
     """
     Test the structure of the journeys response
     """
@@ -1324,6 +1323,15 @@ class JourneyCommon(object):
         assert r['stop_points'][0]['fare_zone']['name'] == "2"
         # Other stop points don't have the fare zone info
         assert not 'fare_zone' in r['stop_points'][1]
+
+    def test_section_platform_code(self):
+        """
+        In a 'stop_point', the section 'platform_code' should be present if the info is available
+        """
+        r = self.query('/v1/coverage/main_routing_test/stop_points')
+        # Only stop point 'stopA' has fare zone info
+        assert r['stop_points'][0]['name'] == 'stop_point:stopA'
+        assert r['stop_points'][0]['platform_code'] == "R"
 
     def test_when_min_max_nb_journeys_equal_0(self):
         """

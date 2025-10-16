@@ -525,6 +525,7 @@ struct routing_api_data {
         b.data->pt_data->codes.add(sp, "TCL_ASCENSEUR", "5");
         // Add a fare_zone in stop point A
         sp->fare_zone = "2";
+        sp->platform_code = "R";
 
         // add access_point
         b.add_access_point("stop_point:stopA", "access_point:A1", true, false, 1, 2, 0.000718649585563767,
