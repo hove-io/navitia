@@ -504,6 +504,16 @@ class TestPtRef(AbstractTestFixture):
 
         self._test_links(response, 'stop_points')
 
+    def test_orphan_stop_points(self):
+        """An orphan stop_point is a stop_point not attached to a stop_area."""
+        response = self.query_region("stop_points/stop_point:orphan_stop_point")
+
+        stops = get_not_null(response, 'stop_points')
+        assert len(stops) == 1
+
+        s = next((s for s in stops if s['name'] == 'stop_area:stop2'))  # yes, that's a stop_point
+        is_valid_stop_point(s, depth_check=0)
+
     def test_simple_crow_fly(self):
         journey_basic_query = "journeys?from=9;9.001&to=stop_area%3Astop2&datetime=20140105T000000"
         response = self.query_region(journey_basic_query)

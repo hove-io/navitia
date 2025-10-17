@@ -124,6 +124,10 @@ struct data_set {
                     .name("vj:freq")("stop_area:stop2", "10:00:00"_t, "10:00:00"_t)("stop_area:stop1", "10:05:00"_t,
                                                                                     "10:05:00"_t);
 
+                // Let's create an Orphan Stop point.
+                // It's being used when a VJ arrival is only known at realtime.
+                ed::SP::create_stop_point(b, nullptr, "stop_point:orphan_stop_point");
+
                 // Company added
                 auto* cmp1 = new navitia::type::Company();
                 cmp1->line_list.push_back(b.lines["line:A"]);
