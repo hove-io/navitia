@@ -61,6 +61,7 @@ from tyr.binarisation import (
     gtfs2s3,
     zip_if_needed,
     poi2asgard,
+    unzip_if_needed,
 )
 from tyr.binarisation import reload_data, move_to_backupdirectory
 from tyr import celery
@@ -197,6 +198,8 @@ def import_data(
                 filename = move_to_backupdirectory(_file, instance_config.backup_directory, manage_sp_char=True)
             else:
                 filename = _file
+
+            filename = unzip_if_needed(filename)
 
             has_pt_planner_loki = (
                 hasattr(instance, 'pt_planners_configurations') and "loki" in instance.pt_planners_configurations
