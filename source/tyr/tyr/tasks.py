@@ -199,7 +199,8 @@ def import_data(
             else:
                 filename = _file
 
-            filename = unzip_if_needed(filename)
+            if dataset.type not in ['poi', 'synonym', 'shape']:
+                filename = unzip_if_needed(filename)
 
             has_pt_planner_loki = (
                 hasattr(instance, 'pt_planners_configurations') and "loki" in instance.pt_planners_configurations
