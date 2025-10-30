@@ -33,7 +33,6 @@ import os
 import requests
 from minio import Minio
 
-
 from flask import current_app
 
 
@@ -41,6 +40,10 @@ class MinioWrapper:
     def __init__(self):
         self.endpoint = current_app.config.get('MINIO_URL', None)
         self.bucket_name = current_app.config.get('MINIO_BUCKET_NAME', None)
+        self.use_ssl = current_app.config.get('MINIO_USE_SSL', True)
+
+        current_app.logger.info("Tyr::MinioWrapper::__init__ : {}/{}".format(self.endpoint, self.bucket_name))
+
         if self.endpoint is None:
             raise Exception("MINIO_URL is not configured")
         if self.bucket_name is None:
@@ -68,13 +71,17 @@ class MinioWrapper:
         metadata={},  # tags that will be applied to the file in the bucket
         content_type="application/zip",
     ):
+        current_app.logger.info("Tyr::MinioWrapper::upload_file: {} -> {} ".format(file_key, filename))
+
         if self.use_iam_provider:
             self.retrieve_credentials()
+
         client = Minio(
             endpoint=self.endpoint,
             access_key=self.access_key,
             secret_key=self.secret_key,
             session_token=self.session_token,
+            secure=self.use_ssl,
         )
         client.fput_object(self.bucket_name, file_key, filename, metadata=metadata, content_type=content_type)
 
@@ -86,6 +93,7 @@ class MinioWrapper:
             access_key=self.access_key,
             secret_key=self.secret_key,
             session_token=self.session_token,
+            secure=self.use_ssl,
         )
         return client.fget_object(self.bucket_name, object_name, file_path)
 
