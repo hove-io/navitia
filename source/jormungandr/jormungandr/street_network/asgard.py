@@ -443,8 +443,11 @@ class Asgard(TransientSocket, Kraken):
     ):
         # https://navitia.atlassian.net/browse/NAV-4411
         # To avoid aberrant journey with loki, we don't need the following optimization for LOKI
-        if not (request.get("_pt_planner",
-                            "") == "loki" and mode == "car" and direct_path_type == StreetNetworkPathType.DIRECT):
+        if not (
+                request.get("_pt_planner", "") == "loki"
+                and mode == "car"
+                and direct_path_type == StreetNetworkPathType.DIRECT
+        ):
             # if the crowfly distance between origin and destination is too large, there is no need to call asgard
             crowfly_distance = crowfly_distance_between(
                 get_pt_object_coord(pt_object_origin), get_pt_object_coord(pt_object_destination)
