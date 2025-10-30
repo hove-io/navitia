@@ -441,6 +441,12 @@ class Asgard(TransientSocket, Kraken):
         direct_path_type,
         request_id,
     ):
+        # https://navitia.atlassian.net/browse/NAV-4411
+        # To avoid aberrant journey with loki, update parameter value so that direct_path duration
+        # is sent to loki (kraken doesn't need this value)
+        if request.get("_pt_planner","") == "loki" and mode == "car" and direct_path_type == StreetNetworkPathType.DIRECT:
+            request["max_car_direct_path_duration"] = 24 * 60 * 60
+
         # if the crowfly distance between origin and destination is too large, there is no need to call asgard
         crowfly_distance = crowfly_distance_between(
             get_pt_object_coord(pt_object_origin), get_pt_object_coord(pt_object_destination)
