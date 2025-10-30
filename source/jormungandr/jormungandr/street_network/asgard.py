@@ -441,25 +441,32 @@ class Asgard(TransientSocket, Kraken):
         direct_path_type,
         request_id,
     ):
-        # if the crowfly distance between origin and destination is too large, there is no need to call asgard
-        crowfly_distance = crowfly_distance_between(
-            get_pt_object_coord(pt_object_origin), get_pt_object_coord(pt_object_destination)
-        )
-
-        # if the crowfly distance between origin and destination is
-        # bigger than max_{mode}_direct_path_distance don't compute direct_path
-        if crowfly_distance > int(request['max_{mode}_direct_path_distance'.format(mode=mode)]):
-            return response_pb2.Response()
-        max_duration_param_name = (
-            'max_{mode}_direct_path_duration'.format(mode=mode)
-            if direct_path_type == StreetNetworkPathType.DIRECT
-            else 'max_{mode}_duration_to_pt'.format(mode=mode)
-        )
-        if (
-            crowfly_distance / float(request['{mode}_speed'.format(mode=mode)])
-            > request[max_duration_param_name]
+        # https://navitia.atlassian.net/browse/NAV-4411
+        # To avoid aberrant journey with loki, we don't need the following optimization for LOKI
+        if not (
+            request.get("_pt_planner", "") == "loki"
+            and mode == "car"
+            and direct_path_type == StreetNetworkPathType.DIRECT
         ):
-            return response_pb2.Response()
+            # if the crowfly distance between origin and destination is too large, there is no need to call asgard
+            crowfly_distance = crowfly_distance_between(
+                get_pt_object_coord(pt_object_origin), get_pt_object_coord(pt_object_destination)
+            )
+
+            # if the crowfly distance between origin and destination is
+            # bigger than max_{mode}_direct_path_distance don't compute direct_path
+            if crowfly_distance > int(request['max_{mode}_direct_path_distance'.format(mode=mode)]):
+                return response_pb2.Response()
+            max_duration_param_name = (
+                'max_{mode}_direct_path_duration'.format(mode=mode)
+                if direct_path_type == StreetNetworkPathType.DIRECT
+                else 'max_{mode}_duration_to_pt'.format(mode=mode)
+            )
+            if (
+                crowfly_distance / float(request['{mode}_speed'.format(mode=mode)])
+                > request[max_duration_param_name]
+            ):
+                return response_pb2.Response()
 
         language = self.get_language_parameter(request)
 
