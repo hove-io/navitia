@@ -136,13 +136,24 @@ class Status(flask_restful.Resource):
 class Job(flask_restful.Resource):
     @marshal_with(tyr.fields.jobs_fields)
     def get(self, instance_name=None, id=None):
+        parser = reqparse.RequestParser()
+        parser.add_argument(
+            'count',
+            type=IntervalValue(type=int, min_value=1, max_value=1000),
+            required=False,
+            help='Maximum number of jobs to return',
+            location=('json', 'values'),
+            default=30,
+        )
+        args = parser.parse_args()
+
         query = models.Job.query
         if instance_name:
             query = query.join(models.Instance)
             query = query.filter(models.Instance.name == instance_name)
         if id:
             query = query.filter(models.Job.id == id)
-        jobs = query.order_by(models.Job.created_at.desc()).limit(30)
+        jobs = query.order_by(models.Job.created_at.desc()).limit(args['count'])
         return {'jobs': jobs}
 
     def post(self, instance_name):

@@ -37,12 +37,12 @@ import datetime
 def create_dataset(dataset_type):
     dataset = models.DataSet()
     dataset.type = dataset_type
-    dataset.family_type = '{}_family'.format(dataset_type)
-    dataset.name = '/path/to/dataset_{}'.format(dataset_type)
+    dataset.family_type = "{}_family".format(dataset_type)
+    dataset.name = "/path/to/dataset_{}".format(dataset_type)
     models.db.session.add(dataset)
 
     metric = models.Metric()
-    metric.type = '{}2ed'.format(dataset_type)
+    metric.type = "{}2ed".format(dataset_type)
     metric.duration = datetime.timedelta(seconds=9.0001)
     metric.dataset = dataset
     models.db.session.add(metric)
@@ -176,3 +176,38 @@ def test_jobs_deletion(create_instances):
     # --- 7 --- BONUS: WHEN NO JOB TO DELETE, STATUS = 204
     resp, status_code = api_delete("/v0/jobs?confirm=yes", check=False, no_json=True)
     assert status_code == 204
+
+
+def test_jobs_count_parameter():
+    """
+    Test GET method for /jobs with count parameter
+    """
+    with app.app_context():
+        instance = models.Instance(name="test_count_instance")
+        models.db.session.add(instance)
+
+        for i in range(2000):
+            job = models.Job()
+            job.state = "done"
+            dataset, metric = create_dataset("fusio")
+            job.data_sets.append(dataset)
+            job.metrics.append(metric)
+            instance.jobs.append(job)
+
+        models.db.session.commit()
+
+    # Test default behavior (should return 30 jobs)
+    resp = api_get("/v0/jobs/test_count_instance")
+    assert len(resp["jobs"]) == 30
+
+    # Test with custom count
+    resp = api_get("/v0/jobs/test_count_instance?count=10")
+    assert len(resp["jobs"]) == 10
+
+    # Test boundary: count=0 should clamp to 1
+    resp = api_get("/v0/jobs/test_count_instance?count=0")
+    assert len(resp["jobs"]) == 1
+
+    # Test boundary: count=2000 should clamp to 1000
+    resp = api_get("/v0/jobs/test_count_instance?count=2000")
+    assert len(resp["jobs"]) == 1000
