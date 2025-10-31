@@ -346,6 +346,15 @@ user_fields_full["authorizations"] = fields.List(
 dataset_field = {'type': fields.Raw, 'name': fields.Raw, 'family_type': fields.Raw, 'state': fields.Raw}
 metric_field = {'type': fields.Raw, 'duration': FieldTimedelta}
 
+pagination_fields = {
+    "items_on_page": fields.Integer,
+    "items_per_page": fields.Integer,
+    "current_page": fields.Integer,
+    "total_items": fields.Integer,
+    "next": fields.String,
+    "prev": fields.String,
+}
+
 job_fields = {
     'id': fields.Raw,
     'state': fields.Raw,
@@ -356,7 +365,9 @@ job_fields = {
     'instance': fields.Nested(instance_fields),
 }
 
-jobs_fields = {'jobs': fields.List(fields.Nested(job_fields))}
+jobs_fields = {
+    'jobs': fields.List(fields.Nested(job_fields)),
+}
 
 one_job_fields = {'job': fields.Nested(job_fields)}
 
