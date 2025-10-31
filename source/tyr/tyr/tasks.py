@@ -199,6 +199,7 @@ def import_data(
             else:
                 filename = _file
 
+            origin_filename = filename
             if dataset.type not in ['poi', 'synonym', 'shape']:
                 filename = unzip_if_needed(filename)
 
@@ -211,11 +212,15 @@ def import_data(
                 if loki_data_source is not None:
                     if loki_data_source == "minio":
                         if dataset.type == "fusio":
-                            loki_actions.append(fusio2s3.si(instance_config, filename, dataset_uid=dataset.uid))
+                            loki_actions.append(
+                                fusio2s3.si(instance_config, origin_filename, dataset_uid=dataset.uid)
+                            )
                         if dataset.type == "gtfs":
-                            loki_actions.append(gtfs2s3.si(instance_config, filename, dataset_uid=dataset.uid))
+                            loki_actions.append(
+                                gtfs2s3.si(instance_config, origin_filename, dataset_uid=dataset.uid)
+                            )
                     elif loki_data_source == "local" and dataset.type in ["fusio", "gtfs"]:
-                        zip_file = zip_if_needed(filename)
+                        zip_file = zip_if_needed(origin_filename)
                         dest = os.path.join(os.path.dirname(instance_config.target_file), "ntfs.zip")
                         shutil.copy(zip_file, dest)
                     else:

@@ -1133,6 +1133,7 @@ def poi2mimir(self, instance_name, input, autocomplete_version, job_id=None, dat
 @celery.task(bind=True)
 def fusio2s3(self, instance_config, filename, job_id, dataset_uid):
     """Zip fusio file and launch fusio2s3"""
+    current_app.logger.info("Tyr.bina > [{}] fusio2s3 : {}".format(instance_config.name, filename))
 
     root_dir = os.path.dirname(filename)
     loki_dir = os.path.join(root_dir, "for_loki")
@@ -1145,6 +1146,12 @@ def fusio2s3(self, instance_config, filename, job_id, dataset_uid):
 
 def enrich_ntfs_with_addresses(dataset_type, instance_config, loki_dir, filename, job_id, dataset_uid):
     """launch enrich-ntfs-with-addresses"""
+
+    current_app.logger.info(
+        "Tyr.bina > [{}] enrich-ntfs-with-addresses - dir:{}, filename:{} ".format(
+            instance_config.name, loki_dir, filename
+        )
+    )
 
     job = models.Job.query.get(job_id)
     dataset = _retrieve_dataset_and_set_state("fusio", job.id)

@@ -164,6 +164,8 @@ MINIO_ACCESS_KEY = os.getenv('TYR_MINIO_ACCESS_KEY', None)
 
 MINIO_SECRET_KEY = os.getenv('TYR_MINIO_SECRET_KEY', None)
 
+MINIO_USE_SSL = os.getenv('TYR_MINIO_USE_SSL', 'true').lower() in ['1', 'true', 'yes']
+
 ACCESS_CONTROL_ALLOW_ORIGIN = os.getenv('TYR_ACCESS_CONTROL_ALLOW_ORIGIN', None)
 
 # we don't enable serpy for now
