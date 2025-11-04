@@ -367,6 +367,10 @@ class PtJourneyPool:
                 if dp and dp.journeys:
                     self._journey_params.direct_path_duration = dp.journeys[0].durations.total
                 else:
+                    # If no solution for mode = car then no need to calculate for this mode combination to avoid
+                    # aberrant journey. It may be because there is no parking available
+                    if dep_mode == "car":
+                        continue
                     self._journey_params.direct_path_duration = None
 
             bike_in_pt = dep_mode == 'bike' and arr_mode == 'bike'
