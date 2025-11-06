@@ -44,7 +44,7 @@ import six
 import sqlalchemy
 import werkzeug
 from werkzeug.utils import secure_filename
-from flask import current_app, request
+from flask import current_app, request, url_for
 from flask_restful import marshal_with, marshal, reqparse, inputs, abort
 from jsonschema import validate, ValidationError
 from navitiacommon import models, utils
@@ -134,16 +134,50 @@ class Status(flask_restful.Resource):
 
 
 class Job(flask_restful.Resource):
-    @marshal_with(tyr.fields.jobs_fields)
     def get(self, instance_name=None, id=None):
+        parser = reqparse.RequestParser()
+        parser.add_argument(
+            'count',
+            type=IntervalValue(type=int, min_value=1, max_value=1000),
+            required=False,
+            help='Maximum number of jobs to return',
+            location=('json', 'values'),
+            default=30,
+        )
+        parser.add_argument('page', type=int, required=False, default=1)
+        args = parser.parse_args()
+
         query = models.Job.query
         if instance_name:
             query = query.join(models.Instance)
             query = query.filter(models.Instance.name == instance_name)
+
         if id:
-            query = query.filter(models.Job.id == id)
-        jobs = query.order_by(models.Job.created_at.desc()).limit(30)
-        return {'jobs': jobs}
+            job = query.filter(models.Job.id == id).all()
+            return marshal({'jobs': job}, tyr.fields.jobs_fields)
+
+        # Use pagination for list queries
+        query = query.order_by(models.Job.created_at.desc())
+        pagination = query.paginate(args['page'], args['count'], error_out=False)
+
+        response = marshal({'jobs': pagination.items}, tyr.fields.jobs_fields)
+        pagination_data = {
+            'items_on_page': len(pagination.items),
+            'items_per_page': pagination.per_page,
+            'current_page': pagination.page,
+            'total_items': pagination.total,
+        }
+
+        if pagination.has_next:
+            pagination_data['next'] = url_for(request.endpoint, count=args['count'], page=pagination.next_num)
+
+        if pagination.has_prev:
+            pagination_data['prev'] = url_for(request.endpoint, count=args['count'], page=pagination.prev_num)
+
+        if not id and (pagination.has_next or pagination.has_prev):
+            response['pagination'] = marshal(pagination_data, tyr.fields.pagination_fields)
+
+        return response
 
     def post(self, instance_name):
         instance = models.Instance.query_existing().filter_by(name=instance_name).first_or_404()

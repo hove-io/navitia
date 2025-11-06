@@ -119,6 +119,10 @@ You may want to specify job id to filter these jobs :
 
     GET $HOST/v0/jobs/<ID>
 
+Get the last 10 jobs for an instance:
+
+    GET $HOST/v0/jobs/<INSTANCE>?count=10
+
 A job is created when a new dataset is detected by tyr_beat.
 You can also trigger a data integration by posting your dataset to the job endpoint filtered by instance.
 

@@ -37,12 +37,12 @@ import datetime
 def create_dataset(dataset_type):
     dataset = models.DataSet()
     dataset.type = dataset_type
-    dataset.family_type = '{}_family'.format(dataset_type)
-    dataset.name = '/path/to/dataset_{}'.format(dataset_type)
+    dataset.family_type = "{}_family".format(dataset_type)
+    dataset.name = "/path/to/dataset_{}".format(dataset_type)
     models.db.session.add(dataset)
 
     metric = models.Metric()
-    metric.type = '{}2ed'.format(dataset_type)
+    metric.type = "{}2ed".format(dataset_type)
     metric.duration = datetime.timedelta(seconds=9.0001)
     metric.dataset = dataset
     models.db.session.add(metric)
@@ -176,3 +176,128 @@ def test_jobs_deletion(create_instances):
     # --- 7 --- BONUS: WHEN NO JOB TO DELETE, STATUS = 204
     resp, status_code = api_delete("/v0/jobs?confirm=yes", check=False, no_json=True)
     assert status_code == 204
+
+
+def test_jobs_count_parameter():
+    """
+    Test GET method for /jobs with count parameter
+    """
+    with app.app_context():
+        instance = models.Instance(name="test_count_instance")
+        models.db.session.add(instance)
+
+        for _ in range(2000):
+            job = models.Job()
+            job.state = "done"
+            dataset, metric = create_dataset("fusio")
+            job.data_sets.append(dataset)
+            job.metrics.append(metric)
+            instance.jobs.append(job)
+
+        models.db.session.commit()
+
+    # Test default behavior (should return 30 jobs)
+    resp = api_get("/v0/jobs/test_count_instance")
+    assert len(resp["jobs"]) == 30
+
+    # Test with custom count
+    resp = api_get("/v0/jobs/test_count_instance?count=10")
+    assert len(resp["jobs"]) == 10
+
+    # Test boundary: count=0 should clamp to 1
+    resp = api_get("/v0/jobs/test_count_instance?count=0")
+    assert len(resp["jobs"]) == 1
+
+    # Test boundary: count=2000 should clamp to 1000
+    resp = api_get("/v0/jobs/test_count_instance?count=2000")
+    assert len(resp["jobs"]) == 1000
+
+
+def test_jobs_pagination():
+    """
+    Test GET method for /jobs with pagination
+    """
+    with app.app_context():
+        instance = models.Instance(name="test_pagination_instance")
+        models.db.session.add(instance)
+
+        # Create 25 jobs for testing pagination
+        for i in range(25):
+            job = models.Job()
+            job.state = "done"
+            dataset, metric = create_dataset("fusio")
+            job.data_sets.append(dataset)
+            job.metrics.append(metric)
+            instance.jobs.append(job)
+
+        models.db.session.commit()
+
+    # Test page 1 with count=10 (should have next link)
+    resp = api_get("/v0/jobs/test_pagination_instance?count=10")
+    assert "pagination" in resp
+    assert "next" in resp["pagination"]
+    assert "page=2" in resp["pagination"]["next"]
+
+    # Test page 3 - last page (should have 5 jobs, no next link)
+    resp = api_get("/v0/jobs/test_pagination_instance?count=10&page=3")
+    assert len(resp["jobs"]) == 5
+    assert "pagination" in resp
+
+    # Test page beyond available data (should return empty)
+    resp = api_get("/v0/jobs/test_pagination_instance?count=10&page=10")
+    assert len(resp["jobs"]) == 0
+    assert "pagination" in resp
+
+    # Test default count (30) - should return all 25 jobs in one page
+    resp = api_get("/v0/jobs/test_pagination_instance")
+    assert len(resp["jobs"]) == 25
+    assert "pagination" not in resp
+
+    # Test with count=25 exactly (no next link)
+    resp = api_get("/v0/jobs/test_pagination_instance?count=25")
+    assert len(resp["jobs"]) == 25
+    assert "pagination" not in resp
+
+    # Test page 2 (should have next and prev link)
+    resp = api_get("/v0/jobs/test_pagination_instance?count=10&page=2")
+    assert "pagination" in resp
+    assert "next" in resp["pagination"]
+    assert "page=3" in resp["pagination"]["next"]
+    assert "prev" in resp["pagination"]
+    assert "page=1" in resp["pagination"]["prev"]
+
+    # Follow the next link
+    next_resp = api_get(resp["pagination"]["next"])
+    assert next_resp["pagination"]["current_page"] == 3
+
+    # Follow the prev link
+    prev_resp = api_get(resp["pagination"]["prev"])
+    assert prev_resp["pagination"]["current_page"] == 1
+
+
+def test_jobs_pagination_by_id_no_pagination():
+    """
+    Test that querying a specific job by ID doesn't include pagination
+    """
+    with app.app_context():
+        instance = models.Instance(name="test_id_query")
+        models.db.session.add(instance)
+
+        for i in range(5):
+            job = models.Job()
+            job.state = "done"
+            dataset, metric = create_dataset("fusio")
+            job.data_sets.append(dataset)
+            job.metrics.append(metric)
+            instance.jobs.append(job)
+
+        models.db.session.commit()
+
+    # Get first job to get an ID
+    resp = api_get("/v0/jobs/test_id_query")
+    job_id = resp["jobs"][0]["id"]
+
+    # Query specific job by ID (should not have pagination)
+    resp = api_get(f"/v0/jobs/{job_id}")
+    assert len(resp["jobs"]) == 1
+    assert "pagination" not in resp
