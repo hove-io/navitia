@@ -34,7 +34,7 @@ import shutil
 import re
 import zipfile
 
-from celery import chain, group
+from celery import chain, group, chord
 from celery.signals import task_postrun
 from flask import current_app
 import kombu
@@ -88,7 +88,7 @@ def finish_job(job_id):
     models.db.session.commit()
 
 
-def trigger_actions_in_parallel(*actions, async_=True):
+def group_actions_in_parallel(*actions):
     """
     Takes an arbitrary number of arrays (lists/tuples) as parameters.
     Each array's items are chained together, and all chains are grouped in parallel.
@@ -98,13 +98,15 @@ def trigger_actions_in_parallel(*actions, async_=True):
         return
 
     chains = [chain(*action) for action in actions if action]
-    groups = group(*chains)
+    return group(*chains)
 
+
+def run_tasks(tasks, async_=True):
     if not async_:
         # all job are run in sequence and import_data will only return when all the jobs are finish
-        return groups.apply()
+        return tasks.apply()
 
-    return groups.delay()
+    return tasks.delay()
 
 
 def import_data(
@@ -170,9 +172,6 @@ def import_data(
             ed2nav_actions.append(reload_data.si(instance_config, job.id))
 
         ed2nav_actions.append(finish_job.si(job.id))
-
-        # We should delete old backup directories related to this instance
-        ed2nav_actions.append(purge_instance.si(instance.id, current_app.config["DATASET_MAX_BACKUPS_TO_KEEP"]))
 
         return ed2nav_actions
 
@@ -282,9 +281,11 @@ def import_data(
     else:
         kraken_actions.extend(ed2nav_actions)
 
-    return trigger_actions_in_parallel(
-        kraken_actions, loki_actions, asgard_actions, mimir_actions, async_=asynchronous
-    )
+    tasks = group_actions_in_parallel(kraken_actions, loki_actions, asgard_actions, mimir_actions)
+
+    # Finally, we should delete old backup directories related to this instance
+    end_taks = chain(tasks, purge_instance.si(instance.id, current_app.config["DATASET_MAX_BACKUPS_TO_KEEP"]))
+    return run_tasks(end_taks, async_=asynchronous)
 
 
 def send_to_mimir(instance, filename, family_type):
