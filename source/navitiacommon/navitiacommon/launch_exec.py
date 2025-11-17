@@ -31,14 +31,11 @@
 """
 Function to launch a bin
 """
+
 from __future__ import absolute_import, unicode_literals
 
 import subprocess
-import os
-import select
 import re
-import fcntl
-import errno
 
 
 def hide_args(whole_args, args_to_be_hidden):
@@ -58,11 +55,15 @@ def hide_args(whole_args, args_to_be_hidden):
 def launch_exec(exec_name, args, logger):
     """Launch an exec with args, log the outputs"""
     hidden_args = hide_args(args, ["--cities-connection-string", "--connection-string"])
-    log = 'Launching ' + exec_name + ' ' + ' '.join(hidden_args)
+    log = "Launching " + exec_name + " " + " ".join(hidden_args)
     # we hide the password in logs
-    logger.info(re.sub('password=\w+', 'password=xxxxxxxxx', log))
+    logger.info(re.sub("password=\w+", "password=xxxxxxxxx", log))
 
     args.insert(0, exec_name)
 
-    proc = subprocess.Popen(args, close_fds=True)
+    proc = subprocess.Popen(args, close_fds=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+
+    for line in iter(proc.stdout.readline, b""):  # b'\n'-separated lines
+        logger.info(line)
+
     return proc.wait()
