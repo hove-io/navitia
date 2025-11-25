@@ -5,3 +5,5 @@ SP:ODT:MoulinGalant_SP:MoulinFoulon,MoulinGalant_MoulinFoulon,Bus,dataset,S1,Mou
 bus_aa,bus_aa,Bus,dataset,S1,Vers gare de mennecy,,,C1,,,
 bus_bb,bus_bb,Bus,dataset,S1,Vers le Bras de Fer,,,C1,,,
 Juvisy:RisOrangis,Juvisy:RisOrangis,Bus,dataset,S1,Vers Ris Orangis,,,C1,,,
+JeanJaures_GareMennecy_same_departure_arrival_times,JeanJaures_GareMennecy_same_departure_arrival_times,Bus,dataset,S1,Gare de mennecy,,,C1,,,
+first_time_fixe,first_time_fixe,Bus,dataset,S1,Gare de mennecy,,,C1,,,

@@ -17,4 +17,9 @@ stop_time_id₃,SP:JeanJaures_SP:ODT:GareMennecy,,,0,0,SP:ODT:GareMennecy,2,,1,0
 vj_mixte_1,Juvisy:RisOrangis,11:10:00,11:10:00,0,0,SP:Juvisy,0,,0,1,,,,
 vj_mixte_2,Juvisy:RisOrangis,,,0,0,SP:ViryChatillon,1,,2,2,,2,11:10:00,11:20:00
 vj_mixte_3,Juvisy:RisOrangis,,,0,0,SP:RisOrangis,2,,2,2,,2,11:20:00,11:30:00
-
+stop_time_id_1,JeanJaures_GareMennecy_same_departure_arrival_times,,,0,0,SP:JeanJaures,0,,0,1,,,10:00:00,16:00:00
+stop_time_id₂,JeanJaures_GareMennecy_same_departure_arrival_times,,,0,0,SP:BelAir,1,,0,0,,,10:00:00,16:00:00
+stop_time_id₃,JeanJaures_GareMennecy_same_departure_arrival_times,,,0,0,SP:ODT:GareMennecy,2,,1,0,,,10:00:00,16:00:00
+stop_time_id_1,first_time_fixe,09:50:00,09:50:00,0,0,SP:JeanJaures,0,,0,1,,,,
+stop_time_id₂,first_time_fixe,,,0,0,SP:BelAir,1,,0,0,,,10:00:00,16:00:00
+stop_time_id₃,first_time_fixe,,,0,0,SP:ODT:GareMennecy,2,,1,0,,,10:00:00,16:00:00

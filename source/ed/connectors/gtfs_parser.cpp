@@ -1202,8 +1202,12 @@ std::vector<nm::StopTime*> StopTimeGtfsHandler::handle_line(Data& data, const cs
             stop_time->drop_off_allowed = true;
 
         if (is_zonal_odt(row)) {
-            stop_time->arrival_time = to_utc("12:00:00", utc_offset);
-            stop_time->departure_time = to_utc("12:00:00", utc_offset);
+            // Note
+            // when the schedules are time windows,
+            // we convert them into fixed schedules in order to keep the TC objects for the ptref API.
+            // This is why we will set pick_up_allowed=false and drop_off_allowed=false.
+            stop_time->arrival_time = to_utc(row[start_pickup_drop_off_window_c], utc_offset);
+            stop_time->departure_time = stop_time->arrival_time;
             stop_time->pick_up_allowed = false;
             stop_time->drop_off_allowed = false;
         } else {
