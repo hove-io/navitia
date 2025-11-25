@@ -10,7 +10,7 @@ Nous avons le plaisir de vous informer qu’**une nouvelle version de Navitia se
 
 Dans le cadre du lancement de cette nouvelle version, nous avons pris la décision de limiter l’accès à notre code source. Cette décision se traduit par la fermeture progressive d’ici à fin septembre de nos répertoires sur Github. Cette décision est avant tout motivée par le désir d’offrir à nos clients une meilleure qualité de services tant sur le plan fonctionnel que sur le plan des performances. Elle répond également à un certain nombre d’exigences en termes de cyber sécurité.
 
-La version historique de Navitia, ouverte en 2014, restera disponible. Cette version est également disponible avec notre offre fremium via https://navitia.io , offre qui évoluera progressivement vers notre nouvelle version Navitia à partir de fin 2023.
+La version historique de Navitia, ouverte en 2014, restera disponible. Cette version est également disponible avec notre offre fremium via https://navitia.io , offre qui évoluera progressivement vers notre nouvelle version Navitia.
 Cette offre vous permet, sous certaines conditions, de disposer d’une assistance.
 
 Notre service commercial sales@hove.com reste bien entendu à votre disposition pour vous étudier avec vous une formule adaptée à vos besoins.
@@ -28,59 +28,20 @@ Hove
     :target: https://github.com/hove-io/navitia/releases
     :alt: version
 
-..  |Build Status| image:: https://img.shields.io/github/workflow/status/hove-io/navitia/Build%20Navitia%20Packages%20For%20Release?logo=github&style=flat-square
-    :target: https://github.com/hove-io/navitia/actions?query=workflow%3A%22Build+Navitia+Packages+For+Release%22
+.. |Build Status| image:: https://img.shields.io/github/actions/workflow/status/hove-io/navitia/workflow.yml?branch=dev
+    :target: https://github.com/hove-io/navitia/actions/workflows/build_navitia_packages_for_release.yml
     :alt: Last build
 
-.. |License| image:: https://img.shields.io/github/license/hove-io/navitia?color=9873b9&style=flat-square
+.. |License| image:: https://img.shields.io/github/license/hove-io/navitia
+    :target: https://github.com/hove-io/navitia#AGPL-3.0-1-ov-file
     :alt: license
 
-.. |Chat| image:: https://img.shields.io/matrix/navitia:matrix.org?logo=riot&style=flat-square
-    :target: https://app.element.io/#/room/#navitia:matrix.org
-    :alt: chat
 
-.. |Code Coverage| image:: https://sonarcloud.io/api/project_badges/measure?project=Hove_navitia&metric=coverage
-    :alt: SonarCloud Coverage
-
-.. |Vulnerabilities| image:: https://sonarcloud.io/api/project_badges/measure?project=Hove_navitia&metric=vulnerabilities
-    :alt: SonarCloud Vulnerabilities
-
-.. |Security Rating| image:: https://sonarcloud.io/api/project_badges/measure?project=Hove_navitia&metric=security_rating
-    :alt: SonarCloud Security Rating
-
-
-
-
-+----------------+----------------+-----------+--------+-----------------+-------------------+-------------------+
-| Version        | Build status   | License   | Chat   | Code Coverage   | Vulnerabilities   | Security Rating   |
-+----------------+----------------+-----------+--------+-----------------+-------------------+-------------------+
-| |Version Logo| | |Build Status| | |License| | |Chat| | |Code Coverage| | |Vulnerabilities| | |Security Rating| |
-+----------------+----------------+-----------+--------+-----------------+-------------------+-------------------+
-
-
-.. |Maintainability Rating| image:: https://sonarcloud.io/api/project_badges/measure?project=Hove_navitia&metric=sqale_rating
-    :alt: SonarCloud Maintainability Rating
-
-.. |Quality Gate Status| image:: https://sonarcloud.io/api/project_badges/measure?project=Hove_navitia&metric=alert_status
-    :alt: SonarCloud Quality Gate Status
-
-.. |Duplicated Lines (%)| image:: https://sonarcloud.io/api/project_badges/measure?project=Hove_navitia&metric=duplicated_lines_density
-    :alt: SonarCloud Duplicated Lines (%)
-
-.. |Reliability Rating| image:: https://sonarcloud.io/api/project_badges/measure?project=Hove_navitia&metric=reliability_rating
-    :alt: SonarCloud Reliability Rating
-
-.. |Bugs| image:: https://sonarcloud.io/api/project_badges/measure?project=Hove_navitia&metric=bugs
-    :alt: SonarCloud Bugs
-
-.. |Lines of Code| image:: https://sonarcloud.io/api/project_badges/measure?project=Hove_navitia&metric=ncloc
-    :alt: SonarCloud Lines of Code
-
-+--------------------------+-----------------------+------------------------+----------------------+--------+-------------------+
-| Maintainability          | Quality Gate          | Duplicated Lines (%)   | Reliability          |  Bugs  |   Lines of Code   |
-+--------------------------+-----------------------+------------------------+----------------------+--------+-------------------+
-| |Maintainability Rating| | |Quality Gate Status| | |Duplicated Lines (%)| | |Reliability Rating| | |Bugs| |  |Lines of Code|  |
-+--------------------------+-----------------------+------------------------+----------------------+--------+-------------------+
++----------------+----------------+-----------+
+| Version        | Build status   | License   |
++----------------+----------------+-----------+
+| |Version Logo| | |Build Status| | |License| |
++----------------+----------------+-----------+
 
 
 Presentation
@@ -108,7 +69,8 @@ Approach
 | Navitia is an open-source web API, **initially** built to provide traveler information on urban
   transportation networks.
 |
-| Its main purpose is to provide day-to-day informations to travelers.
+| Its main purpose is to provide day-to-day information to travelers.
+
 | Over time, Navitia has been able to do way more, *sometimes* for technical and debuging purpose
   *or* because other functional needs fit quite well in what Navitia can do *or* just because it was
   quite easy and super cool.
@@ -121,7 +83,8 @@ Approach
 Who's who
 ----------
 
-| Navitia is instanciated and exposed publicly through api.navitia.io_.
+| Navitia is instantiated and exposed publicly through api.navitia.io_.
+
 | Developments on Navitia are lead by Hove (previously Kisio Digital and CanalTP).
 | Hove is a subsidiary of Keolis (itself a subsidiary of SNCF, French national railway company).
 
