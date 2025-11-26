@@ -5,3 +5,6 @@ MoulinGalant_MoulinFoulon,Moulin Galant Moulin Foulon,inbound,MoulinGalant_Mouli
 bus_aa,Vers gare mennecy,inbound,bus_aa,,
 bus_bb,Vers le Bras de Fer,inbound,bus_bb,,
 Juvisy:RisOrangis,Vers Ris Orangis,inbound,Juvisy:RisOrangis,,
+JeanJaures_GareMennecy_same_departure_arrival_times,TAD Same departure Arrival times,outbound,JeanJaures_GareMennecy_same_departure_arrival_times,,
+first_time_fixe,horaire de début est fixe,outbound,first_time_fixe,,
+

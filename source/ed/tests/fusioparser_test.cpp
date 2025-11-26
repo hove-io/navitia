@@ -792,9 +792,9 @@ BOOST_AUTO_TEST_CASE(ntfs_with_zonal_odt) {
     ed::connectors::FusioParser parser(ntfs_path + "_with_zonal_odt");
     parser.fill(data, "20240916");
 
-    BOOST_REQUIRE_EQUAL(data.lines.size(), 6);
-    BOOST_REQUIRE_EQUAL(data.vehicle_journeys.size(), 6);
-    BOOST_REQUIRE_EQUAL(data.routes.size(), 6);
+    BOOST_REQUIRE_EQUAL(data.lines.size(), 8);
+    BOOST_REQUIRE_EQUAL(data.vehicle_journeys.size(), 8);
+    BOOST_REQUIRE_EQUAL(data.routes.size(), 8);
     BOOST_REQUIRE_EQUAL(data.stop_points.size(), 18);
     BOOST_REQUIRE_EQUAL(data.stop_areas.size(), 18);
 
@@ -811,12 +811,61 @@ BOOST_AUTO_TEST_CASE(ntfs_with_zonal_odt) {
     BOOST_CHECK_EQUAL(data.lines[5]->uri, "Juvisy:RisOrangis");
     BOOST_CHECK_EQUAL(data.lines[5]->name, "Juvisy Ris Orangis");
 
-    BOOST_CHECK_EQUAL(data.vehicle_journeys[0]->uri, "SP:JeanJaures_SP:ODT:GareMennecy");
-    BOOST_CHECK_EQUAL(data.vehicle_journeys[0]->name, "Gare de mennecy");
-    BOOST_REQUIRE_EQUAL(data.vehicle_journeys[0]->stop_time_list.size(), 3);
-    for (auto st : data.vehicle_journeys[0]->stop_time_list) {
+    // SP:JeanJaures_SP:ODT:GareMennecy
+    //          S1                          S2                        S3
+    //         Window                     Window                    Window
+    //      [10:10:00-10:20:00]     [10:20:00-10:30:00]        [10:30:00-10:40:00]
+    const auto* vj = data.vehicle_journeys[0];
+    BOOST_CHECK_EQUAL(vj->uri, "SP:JeanJaures_SP:ODT:GareMennecy");
+    BOOST_CHECK_EQUAL(vj->name, "Gare de mennecy");
+    BOOST_REQUIRE_EQUAL(vj->stop_time_list.size(), 3);
+    const auto* st = vj->stop_time_list[0];
+    BOOST_CHECK_EQUAL(st->drop_off_allowed, false);
+    BOOST_CHECK_EQUAL(st->pick_up_allowed, false);
+    BOOST_CHECK_EQUAL(st->departure_time, "08:10:00"_t);
+
+    st = vj->stop_time_list[1];
+    BOOST_CHECK_EQUAL(st->drop_off_allowed, false);
+    BOOST_CHECK_EQUAL(st->pick_up_allowed, false);
+    BOOST_CHECK_EQUAL(st->departure_time, "08:20:00"_t);
+
+    st = vj->stop_time_list[2];
+    BOOST_CHECK_EQUAL(st->drop_off_allowed, false);
+    BOOST_CHECK_EQUAL(st->pick_up_allowed, false);
+    BOOST_CHECK_EQUAL(st->departure_time, "08:30:00"_t);
+
+    // JeanJaures_GareMennecy_same_departure_arrival_times
+    //          S1                          S2                          S3
+    //         Window                     Window                    Window
+    //      [10:00:00-16:00:00]     [10:00:00-16:00:00]        [10:00:00-16:00:00]
+    vj = data.vehicle_journeys[6];
+    BOOST_CHECK_EQUAL(vj->uri, "JeanJaures_GareMennecy_same_departure_arrival_times");
+    BOOST_CHECK_EQUAL(vj->name, "Gare de mennecy");
+    BOOST_REQUIRE_EQUAL(vj->stop_time_list.size(), 3);
+    for (auto st : vj->stop_time_list) {
         BOOST_CHECK_EQUAL(st->drop_off_allowed, false);
         BOOST_CHECK_EQUAL(st->pick_up_allowed, false);
-        BOOST_CHECK_EQUAL(st->departure_time, "10:00:00"_t);  // local time : 12:00:00
+        BOOST_CHECK_EQUAL(st->departure_time, "08:00:00"_t);  // local time : 10:00:00
     }
+
+    //          S1                          S2                          S3
+    //         fixed                      Window                    Window
+    //       09:50:00               [10:00:00-16:00:00]        [10:00:00-16:00:00]
+    vj = data.vehicle_journeys[7];
+    BOOST_CHECK_EQUAL(vj->uri, "first_time_fixe");
+    BOOST_CHECK_EQUAL(vj->name, "Gare de mennecy");
+    BOOST_REQUIRE_EQUAL(vj->stop_time_list.size(), 3);
+
+    st = vj->stop_time_list[0];
+    BOOST_CHECK_EQUAL(st->departure_time, "07:50:00"_t);
+
+    st = vj->stop_time_list[1];
+    BOOST_CHECK_EQUAL(st->drop_off_allowed, false);
+    BOOST_CHECK_EQUAL(st->pick_up_allowed, false);
+    BOOST_CHECK_EQUAL(st->departure_time, "08:00:00"_t);
+
+    st = vj->stop_time_list[2];
+    BOOST_CHECK_EQUAL(st->drop_off_allowed, false);
+    BOOST_CHECK_EQUAL(st->pick_up_allowed, false);
+    BOOST_CHECK_EQUAL(st->departure_time, "08:00:00"_t);
 }
