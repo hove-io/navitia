@@ -7,7 +7,7 @@ Disclaimer
 The following packages have been tested with **Debian 11**.
 Later version of Debian or Ubuntu are not supported so far.
 
-Note: If you are not using Debian 11, one can build within a docker container.
+⚠️ If you are not using Debian 11, one can build within a docker container. ⚠️
 
 
 Dependencies
