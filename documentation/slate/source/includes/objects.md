@@ -469,6 +469,7 @@ Notes:
 |-----|----|-----------|
 |pt_object|[pt_object](#pt-object)|The impacted public transport object|
 |impacted_section|[impacted_section](#impacted-section)|Only for line section impact, the impacted section|
+|impacted_rail_section|[impacted_rail_section](#impacted-rail-section)|Only for rail section impact, the impacted rail section|
 |impacted_stops|array of [impacted_stop](#impacted-stop)|Only for [trip](#trip) delay, the list of delays, stop by stop
 
 ### <a name="impacted-section"></a>Impacted_section
@@ -499,6 +500,35 @@ Notes:
 |from|[pt_object](#pt-object)|The beginning of the section|
 |to|[pt_object](#pt-object)|The end of the section. This can be the same as `from` when only one point is impacted|
 |routes|[route](#route)| The list of impacted routes by the impacted_section|
+
+### <a name="impacted-rail-section"></a>Impacted_rail_section
+
+``` json
+{
+    "from": {
+        "embedded_type": "stop_area",
+        "id": "C",
+        "name": "C",
+        "stop_area": {
+            "...": "..."
+        }
+    },
+    "to": {
+        "embedded_type": "stop_area",
+        "id": "E",
+        "name": "E",
+        "stop_area": {
+            "...": "..."
+        }
+    }
+}
+```
+
+|Field|Type|Description|
+|-----|----|-----------|
+|from|[pt_object](#pt-object)|The beginning of the rail section|
+|to|[pt_object](#pt-object)|The end of the rail section. This can be the same as `from` when only one point is impacted|
+|routes|[route](#route)| The list of impacted routes by the impacted_rail_section|
 
 ### <a name="impacted-stop"></a>Impacted_stop
 
