@@ -2,36 +2,49 @@
 How to build kraken and run it
 ******************************
 
+Disclaimer
+============
+The following packages have been tested with **Debian 11**.
+Later version of Debian or Ubuntu are not supported so far.
+
+⚠️ If you are not using Debian 11, one can build within a docker container. ⚠️
+
+
 Dependencies
 ============
 
 #. C++
 
-   * gcc 4.7 or newer
    * cmake
-   * log4cplus
-   * osmpbf (https://github.com/scrosby/OSM-binary)
-   * boost (test, chrono, regex, system, serialization, date-time, thread, filesystem, iostreams, program-options)
-   * zeromq 2.2
-   * libpqxx 3
+   * gcc (4.7 or newer)
+   * libboost-all-dev (test, chrono, regex, system, serialization, date-time, thread, filesystem, iostreams, program-options)
+   * libgeos++-dev
    * libgoogle-perftools-dev (tcmalloc)
-   * protobuf
-   * proj
-   * libgeos-dev
+   * liblog4cplus-dev
+   * libosmpbf-dev (https://github.com/scrosby/OSM-binary)
+   * libpqxx-dev (postgres)
+   * libproj-dev
+   * libprotobuf-dev
+   * libssl-dev
+   * libzmq3-dev
 
 #. Python
+
+   * python3.9
+   * python3-pip
+   * 2to3
 
    Each python module have a pip requirements.txt (and some of them a requirements_dev.txt) file that list it's dependencies.
 
    To install the dependencies for a module use `pip` (you can also wrap that in a virtualenv):
 
-   ``pip install -r {path_to_navitia_source}/jormungandr/requirements.txt``
-
-   ``pip install -r {path_to_navitia_source}/jormungandr/requirements_dev.txt``
+   ``pip install -r source/jormungandr/requirements_dev.txt``
 
 
 #. Other
 
+   * git
+   * protobuf-compiler
    * RabbitMQ server
    * PostgreSQL (9.1+) and Postgis (2.0+)
    * Redis server
@@ -39,38 +52,34 @@ Dependencies
 Build instruction
 =================
 
-We hope you got the source code from git.
+#. Get the sources and the submodules of the project :
 
-#. Get the submodules: at the root of project :
+   ``git clone --recurse-submodules git@github.com:hove-io/navitia.git``
 
-   ``git submodule update --init --recursive``
+#. With CMake you can build outside of you source-tree :
 
-#. With CMake you can build in a repository different than the source directory.
+   Let's bulid inside the `build_navitia` folder, next to the source:
 
-   By convention, you can have one build repository for each kind of build.
-   Create a directory where everything will be built and enter it
-   ``mkdir release``
-   ``cd release``
+   ``cmake -B build_navitia -S navitia/source``
 
-#. Run cmake
-
-   ``cmake ../source``
    Note: it will build in release mode. If you want to compile it with debug symbols run
-   ``cmake -DCMAKE_BUILD_TYPE=Debug ../source``
 
-   list of options
+   ``cmake -DCMAKE_BUILD_TYPE=Debug  ...``
 
-   * SKIP_TESTS=ON : Compile without the test parts
-   * STRIP_SYMBOLS=ON : Strip symbols within all code (Active -s option)
+   A few of the Cmake options:
+
+   * CMAKE_BUILD_TYPE=Release/Debug/RelWithDebInfo
+   * SKIP_TESTS=ON - Compile without the test parts
+   * STRIP_SYMBOLS=ON - Strip symbols within all code (Active -s option)
 
 #. Compile
 
-   ``make -j4``
+   ``make -C build_navitia -j${nproc}``
    Note: adjust -jX according to the number of cores you have
 
 #. Run the tests
 
-   ``make test``
+   ``make -C build_navitia test``
 
 Testing
 =======

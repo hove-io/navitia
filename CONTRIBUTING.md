@@ -3,12 +3,10 @@
 
 ## Overview on how-to contribute
 
-Dev branch: [![Last build](https://img.shields.io/github/workflow/status/hove-io/navitia/Build%20Navitia%20Packages%20For%20Dev?logo=github&style=flat-square)](https://github.com/hove-io/navitia/actions?query=workflow%3A%22Build+Navitia+Packages+For+Dev%22)
+Dev branch: [![Last build](https://img.shields.io/github/actions/workflow/status/hove-io/navitia/workflow.yml?branch=dev)](https://github.com/hove-io/navitia/actions?query=event%3Apush)
+
 
 Fork the github repo, create a new branch from dev, and submit your pull request!
-
-Make sure to run the tests before submitting the pull request (`make test` in the build directory,
-you may also run `make docker_test` for important contributions), and have a wee look at what follows.
 
 ### Acceptance process and merge
 
@@ -18,7 +16,7 @@ If you have the rights, once your PR has 2 approvals, you are encouraged to merg
 
 ## Build Navitia
 
-If you want to build navitia, please refer to the
+If you want to build Navitia, please refer to the
 [installation documentation](https://github.com/hove-io/navitia/blob/dev/install.rst).
 
 You can install a full development environment with helping
@@ -39,15 +37,15 @@ navitia_dir/run/jormungandr/jormungandr_settings.jon
 navitia_dir/run/jormungandr/venv_jormungandr/
 ```
 
-
 ## Code Organisation
 
 At the root of the repository, several directories can be found:
 
 1. source: contains the navitia source code (c++ and python)
 2. documentation: all the navitia documentation
-3. release: contains [script_release.py](https://github.com/hove-io/navitia/blob/dev/release/script_release.py) to run the release process
-4. scripts: different useful scripts
+3. docker: contains Docker configurations for building and running Navitia
+5. scripts: different useful scripts
+
 
 ### `data_version` management
 
@@ -87,8 +85,8 @@ pre-commit init-templatedir ~/.git-template
 
 ### Python formatting
 
-Python source code in this project is formatted using [Black](https://black.readthedocs.io/en/stable/)
-You should enable the pre-commit git hook to make sure it's being run before commiting your changes, it's
+Python source code in this project is formatted using [Black](https://black.readthedocs.io/en/stable/).
+You should enable the pre-commit git hook to make sure it's being run before committing your changes, it's
 also the easiest way to run Black.<br>Otherwise, to only update the files that you've changed, simply run:
 ```
 pre-commit run black
@@ -97,15 +95,13 @@ If you want to run it on the whole project, you can add `--all`:
 ```
 pre-commit run black --all
 ```
-You can also [install Black traditionally](https://black.readthedocs.io/en/stable/installation_and_usage.html)
-But bare in mind, it requires python 3.6+ to run.
 
 ### C++ formatting
 
-Our pre-commit hooks are running [Clang-format](https://releases.llvm.org/10.0.0/tools/clang/docs/ClangFormat.html) to format our c++ codebase.
-You'll need version 10 (or above) in order to pass our CI.
+Our pre-commit hooks are running [Clang-format](https://clang.llvm.org/docs/ClangFormat.html) to format our C++ codebase.
+You'll need version 10 or above in order to pass our CI.
 ```sh
-sudo apt install clang-format-10  # available on Ubuntu 20.04
+sudo apt install clang-format  # Available on Ubuntu
 ```
 
 In case you might want to run Clang-format on the entire codebase, you can do:
