@@ -994,18 +994,7 @@ See how disruptions affect a journey in the [real time](#realtime) section.
 | nop       | data_freshness          | enum          | Define the freshness of data to use to compute journeys <ul><li>realtime</li><li>base_schedule</li></ul> _**when using the following parameter**_ "&data_freshness=base_schedule" <br> you can get disrupted journeys in the response. You can then display the disruption message to the traveler and make a realtime request to get a new "undisrupted" solution (considering all disruptions during journey planning).   | base_schedule |
 | nop       | forbidden_uris[]        | id            | If you want to avoid lines, modes, networks, etc.</br> Note: the forbidden_uris[] concern only the public transport objects. You can't for example forbid the use of the bike with them, you have to set the fallback modes for this (`first_section_mode[]` and `last_section_mode[]`) |               |
 |nop        | allowed_id[]            | id            | If you want to use only a small subset of the public transport objects in your solution. The constraint intersects with `forbidden_uris[]`. For example, if you ask for `allowed_id[]=line:A&forbidden_uris[]=physical_mode:Bus`, only vehicles of the line A that are not buses will be used. | everything |
-| nop       | first_section_mode[]    | array of string   | Force the first section mode if the first section is not a public transport one. It takes the following values: `walking`, `car`, `bike`, `bss`, `ridesharing`, `taxi`.<br>
-It's an array, you can give multiple modes.<br>
-Using more than 1 mode<ul>
-<li>may impact heavily performance</li>
-<li>may hide many alternatives</li>
-</ul>
-Notes<ul>
-<li>See [Ridesharing](#ridesharing-stuff) and [Taxi](#taxi-stuff) sections for more details on these modes.</li>
-<li>`bss` stands for bike sharing system.<br>Note: choosing `bss` implicitly allows the `walking` mode since you might have to walk to the bss station.</li>
-<li>The parameter is inclusive, not exclusive, so if you want to forbid a mode, you need to add all the other modes.</li>
-<li>Example : if you want to use other mode but not `car`, you can request : `first_section_mode[]=walking&first_section_mode[]=bss&first_section_mode[]=bike&last_section_mode[]=walking&last_section_mode[]=bss&last_section_mode[]=bike`</li>
-</ul> | walking |
+| nop       | first_section_mode[]    | array of string   | Force the first section mode if the first section is not a public transport one. It takes the following values: `walking`, `car`, `bike`, `bss`, `ridesharing`, `taxi`.<br>It's an array, you can give multiple modes.<br>Using more than 1 mode<ul><li>may impact heavily performance</li><li>may hide many alternatives</li></ul>Notes<ul><li>See [Ridesharing](#ridesharing-stuff) and [Taxi](#taxi-stuff) sections for more details on these modes.</li><li>`bss` stands for bike sharing system.<br>Note: choosing `bss` implicitly allows the `walking` mode since you might have to walk to the bss station.</li><li>The parameter is inclusive, not exclusive, so if you want to forbid a mode, you need to add all the other modes.</li><li>Example : if you want to use other mode but not `car`, you can request : `first_section_mode[]=walking&first_section_mode[]=bss&first_section_mode[]=bike&last_section_mode[]=walking&last_section_mode[]=bss&last_section_mode[]=bike`</li></ul> | walking |
 | nop       | last_section_mode[]     | array of string   | Same as first_section_mode but for the last section  | walking     |
 | nop       | language     | enum   | Language for path guidance in walking sections.<br>Enum values:<ul><li>de-DE</li><li>en-GB</li><li>en-US</li><li>es-ES</li><li>fr-FR</li><li>hi-IN</li><li>it-IT</li><li>ja-JP</li><li>nl-NL</li><li>pt-PT</li><li>ru-RU</li></ul>  | fr-FR     |
 | nop       | depth                   | int               | Json response [depth](#depth)                        | 1           |
