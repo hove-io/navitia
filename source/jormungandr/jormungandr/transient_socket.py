@@ -140,6 +140,9 @@ class TransientSocket(object):
         return self.make_new_socket()
 
     def call(self, content, timeout, debug_cb=lambda: "", quiet=False):
+        return self._call_with_retry(content, timeout, debug_cb, quiet, retry_count=0)
+
+    def _call_with_retry(self, content, timeout, debug_cb, quiet, retry_count):
         timed_socket = self.get_socket()
 
         try:
@@ -148,9 +151,18 @@ class TransientSocket(object):
                 pb = timed_socket.socket.recv()
                 return pb
             else:
-                if not quiet:
-                    self._logger.error('request on %s failed: %s', self._zmq_socket, debug_cb())
-                raise DeadSocketException(self.name, self._zmq_socket)
+                if retry_count < 1:
+                    self._logger.warning(
+                        'request on %s timed out, retrying with new socket (attempt %d)',
+                        self._zmq_socket,
+                        retry_count + 1,
+                    )
+                    self.close_socket(timed_socket.socket)
+                    return self._call_with_retry(content, timeout, debug_cb, quiet, retry_count + 1)
+                else:
+                    if not quiet:
+                        self._logger.error('request on %s failed after retry: %s', self._zmq_socket, debug_cb())
+                    raise DeadSocketException(self.name, self._zmq_socket)
 
         except DeadSocketException as e:
             self.close_socket(timed_socket.socket)
