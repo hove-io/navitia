@@ -102,6 +102,7 @@ class TransientSocket(object):
         if SET_ZMQ_HANDSHAKE_IVL:
             socket.setsockopt(zmq.HANDSHAKE_IVL, 0)
 
+        socket.setsockopt(zmq.IMMEDIATE, 1)
         socket.connect(self._zmq_socket)
         self._logger.debug(
             "it took %s ms to open a socket of %s",
