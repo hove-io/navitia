@@ -719,17 +719,42 @@ JourneysArg::JourneysArg(type::EntryPoints origins,
       isochrone_center(std::move(isochrone_center)) {}
 JourneysArg::JourneysArg() = default;
 
+std::vector<pbnavitia::LocationContext> Worker::build_and_get_locations(const pbnavitia::LocationContext& location){
+    std::vector<pbnavitia::LocationContext> result;
+    const auto* data = this->pb_creator.data;
+    auto type_orig = data->get_type_of_id(location.place());
+    if (type_orig == type::Type_e::StopArea){
+        auto sa_it = data->pt_data->stop_areas_map.find(location.place());
+        if (sa_it != data->pt_data->stop_areas_map.end()) {
+            for (const auto stop_point: sa_it->second->stop_point_list) {
+                pbnavitia::LocationContext lc;
+                lc.set_place(stop_point->uri);
+                lc.set_access_duration(location.access_duration());
+                result.push_back(lc);
+            }
+        }
+    } else {
+       result.push_back(location);
+    }
+    return result;
+}
 navitia::JourneysArg Worker::fill_journeys(const pbnavitia::JourneysRequest& request) {
     const auto* data = this->pb_creator.data;
     type::EntryPoints origins;
     const auto* sn_params = request.has_streetnetwork_params() ? &request.streetnetwork_params() : nullptr;
     for (int i = 0; i < request.origin().size(); i++) {
-        origins.push_back(create_journeys_entry_point(request.origin(i), sn_params, data, true));
+        const auto locations = this->build_and_get_locations(request.origin(i));
+        for (const auto& location: locations){
+            origins.push_back(create_journeys_entry_point(location, sn_params, data, true));
+        }
     }
 
     type::EntryPoints destinations;
     for (int i = 0; i < request.destination().size(); i++) {
-        destinations.push_back(create_journeys_entry_point(request.destination(i), sn_params, data, false));
+        const auto locations = this->build_and_get_locations(request.destination(i));
+        for (const auto& location: locations){
+            destinations.push_back(create_journeys_entry_point(location, sn_params, data, false));
+        }
     }
 
     std::vector<std::string> forbidden;

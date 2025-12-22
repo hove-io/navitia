@@ -116,6 +116,7 @@ private:
     void next_stop_times(const pbnavitia::NextStopTimeRequest& request, pbnavitia::API api);
     void proximity_list(const pbnavitia::PlacesNearbyRequest& request);
 
+    std::vector<pbnavitia::LocationContext> build_and_get_locations(const pbnavitia::LocationContext& location);
     JourneysArg fill_journeys(const pbnavitia::JourneysRequest& request);
     void err_msg_isochron(navitia::PbCreator& pb_creator, const std::string& err_msg);
     void journeys(const pbnavitia::JourneysRequest& request,
