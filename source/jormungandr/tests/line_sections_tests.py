@@ -41,7 +41,7 @@ from .check_utils import (
 import pytest
 
 
-@dataset({"line_sections_test": {}})
+@dataset({"line_sections_test": {"scenario": "distributed"}})
 class TestLineSections(AbstractTestFixture):
     def default_query(self, q, **kwargs):
         """
