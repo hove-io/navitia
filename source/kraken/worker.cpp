@@ -74,6 +74,17 @@ struct coord_conversion_exception : public recoverable_exception {
 
     ~coord_conversion_exception() noexcept override = default;
 };
+
+struct location_exception : public recoverable_exception {
+    explicit location_exception(const std::string& msg) : recoverable_exception(msg) {}
+
+    location_exception(const location_exception&) = default;
+    location_exception& operator=(const location_exception&) = default;
+
+    location_exception(location_exception&&) = default;
+
+    ~location_exception() noexcept override = default;
+};
 }  // namespace
 
 template <typename T>
@@ -725,7 +736,11 @@ std::vector<pbnavitia::LocationContext> Worker::build_and_get_locations(const pb
     auto type_orig = data->get_type_of_id(location.place());
     if (type_orig == type::Type_e::StopArea) {
         auto sa_it = data->pt_data->stop_areas_map.find(location.place());
-        if (sa_it != data->pt_data->stop_areas_map.end()) {
+        if (sa_it == data->pt_data->stop_areas_map.end()) {
+            LOG4CPLUS_DEBUG(log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger")),
+                            "The entry point: " << location.place() << " is not valid");
+            throw navitia::location_exception{"The entry point: " + location.place() + " is not valid"};
+        } else {
             for (const auto stop_point : sa_it->second->stop_point_list) {
                 pbnavitia::LocationContext lc;
                 lc.set_place(stop_point->uri);
@@ -845,6 +860,8 @@ void Worker::journeys(const pbnavitia::JourneysRequest& request,
         }
     } catch (const navitia::coord_conversion_exception& e) {
         this->pb_creator.fill_pb_error(pbnavitia::Error::bad_format, e.what());
+    } catch (const navitia::location_exception& e) {
+        this->pb_creator.fill_pb_error(pbnavitia::Error::bad_format, e.what());
     }
 }
 
@@ -893,6 +910,9 @@ bool Worker::set_journeys_args(const pbnavitia::JourneysRequest& request, Journe
     try {
         arg = fill_journeys(request);
     } catch (const navitia::coord_conversion_exception& e) {
+        this->pb_creator.fill_pb_error(pbnavitia::Error::bad_format, e.what());
+        return false;
+    } catch (const navitia::location_exception& e) {
         this->pb_creator.fill_pb_error(pbnavitia::Error::bad_format, e.what());
         return false;
     }
