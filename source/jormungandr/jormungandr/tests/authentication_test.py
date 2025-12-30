@@ -67,6 +67,11 @@ if six.PY2:  # Authorization header is kept as unicode only in Py2
                 get_token()
 
 
+def get_token_url_test():
+    with app.test_request_context('/', query_string='key=mykey'):
+        assert get_token() == 'mykey'
+
+
 def get_used_coverages_test():
     with app.test_request_context('/v1/coverage/fr-idf'):
         assert get_used_coverages() == ['fr-idf']
