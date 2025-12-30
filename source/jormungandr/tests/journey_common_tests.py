@@ -1241,7 +1241,7 @@ class JourneyCommon(object):
 
         # With the free_radius, the PT journey is displayed thanks to the 'free' crow_fly
         r = self.query(
-            '/v1/coverage/main_routing_test/journeys?from=stopA&to=coord%3A8.98311981954709e-05%3A8.98311981954709e-05&datetime=20120614T080118&free_radius_to=20&_override_scenario=experimental&datetime_represents=arrival&'
+            '/v1/coverage/main_routing_test/journeys?from=stopA&to=coord%3A8.98311981954709e-05%3A8.98311981954709e-05&datetime=20120614T080118&free_radius_to=20&datetime_represents=arrival&'
         )
         assert len(r['journeys'][0]['sections']) > 1
         assert r['journeys'][0]['sections'][-1]['type'] == 'crow_fly'

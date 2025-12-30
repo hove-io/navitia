@@ -1307,9 +1307,7 @@ class TestRoutingWithTransfer(AbstractTestFixture):
         - same duration as with _transfer_path=false
         """
         query = (
-            '/v1/coverage/routing_with_transfer_test/journeys?'
-            'from={}&to={}&'
-            'datetime=20120614T100000&_override_scenario=distributed'
+            '/v1/coverage/routing_with_transfer_test/journeys?from={}&to={}&datetime=20120614T100000'
         ).format("stopF", "stopA")
 
         response = self.query(query)
@@ -1331,7 +1329,7 @@ class TestRoutingWithTransfer(AbstractTestFixture):
         query = (
             '/v1/coverage/routing_with_transfer_test/journeys?'
             'from={}&to={}&_transfer_path=true&'
-            'datetime=20120614T100000&_override_scenario=distributed'
+            'datetime=20120614T100000'
         ).format("stopF", "stopA")
 
         response = self.query(query)
@@ -1364,7 +1362,7 @@ class TestRoutingWithTransfer(AbstractTestFixture):
         query = (
             '/v1/coverage/routing_with_transfer_test/journeys?'
             'from={}&to={}&forbidden_uris[]=physical_mode:Coach&'
-            'datetime=20120614T100000&_override_scenario=distributed'
+            'datetime=20120614T100000'
         ).format("stopF", "stopA")
 
         response = self.query(query)
@@ -1387,7 +1385,7 @@ class TestRoutingWithTransfer(AbstractTestFixture):
         query = (
             '/v1/coverage/routing_with_transfer_test/journeys?'
             'from={}&to={}&_transfer_path=true&forbidden_uris[]=physical_mode:Coach&'
-            'datetime=20120614T100000&_override_scenario=distributed'
+            'datetime=20120614T100000'
         ).format("stopF", "stopA")
 
         response = self.query(query)
@@ -1412,7 +1410,7 @@ class TestRoutingWithTransfer(AbstractTestFixture):
     def test_complete_transfer_path_bus_rer_with_access_points(self):
         query = (
             '/v1/coverage/routing_with_transfer_test/journeys?'
-            'from={}&to={}&datetime=20120614T080000&_override_scenario=distributed&count=1&_transfer_path=true&'
+            'from={}&to={}&datetime=20120614T080000&count=1&_transfer_path=true&'
             'language=en-US'
         ).format("stopA", "stopF")
 

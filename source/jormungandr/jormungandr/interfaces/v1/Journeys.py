@@ -1075,9 +1075,6 @@ class Journeys(JourneyCommon):
         # generate an id that :
         #  - depends on the coverage and differents arguments of the request (from, to, datetime, etc.)
         #  - does not depends on the order of the arguments in the request (only on their values)
-        #  - does not depend on the _override_scenario argument
-        #  - if  _override_scenario is present, its type is added at the end of the id in
-        #    order to identify identical requests made with the different scenarios
         #  - we add the current_datetime of the request so as to differentiate
         #    the same request made at distinct moments
         def generate_request_id():
@@ -1127,10 +1124,8 @@ class Journeys(JourneyCommon):
 
             scenario_name = i_manager.get_instance_scenario_name(self.region)
 
-            if scenario_name == "new_default" and (
-                "taxi" in args["origin_mode"] or "taxi" in args["destination_mode"]
-            ):
-                abort(400, message="taxi is not available with new_default scenario")
+            if scenario_name != "distributed":
+                abort(400, message="Only distributed scenario accepted, {}".format(scenario_name))
 
             response = i_manager.dispatch(args, api, instance_name=self.region)
 
