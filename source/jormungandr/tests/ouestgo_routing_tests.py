@@ -32,12 +32,11 @@ import pytest
 
 from jormungandr.tests.utils_test import MockResponse
 from tests.check_utils import get_not_null, get_links_dict
-from tests.tests_mechanism import dataset, NewDefaultScenarioAbstractTestFixture
+from tests.tests_mechanism import dataset, AbstractTestFixture
 
 DUMMY_OUESTGO_FEED_PUBLISHER = {'id': '10', 'name': 'ouestgo', 'license': 'I dunno', 'url': 'http://ouest.tf'}
 
 MOCKED_INSTANCE_CONF = {
-    'scenario': 'new_default',
     'instance_config': {
         'ridesharing': [
             {
@@ -138,7 +137,7 @@ def mock_http_ouestgo(monkeypatch):
 
 
 @dataset({'main_routing_test': MOCKED_INSTANCE_CONF})
-class TestOuestgo(NewDefaultScenarioAbstractTestFixture):
+class TestOuestgo(AbstractTestFixture):
     """
     Integration test with Ouestgo
     Note: '&forbidden_uris[]=PM' used to avoid line 'PM' and it's vj=vjPB in /journeys

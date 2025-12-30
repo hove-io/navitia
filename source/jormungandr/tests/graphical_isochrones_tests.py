@@ -29,7 +29,7 @@
 
 from __future__ import absolute_import, print_function, unicode_literals, division
 
-from .tests_mechanism import AbstractTestFixture, dataset, config, NewDefaultScenarioAbstractTestFixture
+from .tests_mechanism import dataset, config, AbstractTestFixture
 from .check_utils import *
 from jormungandr import app
 from shapely.geometry import asShape, Point
@@ -390,24 +390,13 @@ class TestGraphicalIsochrone(AbstractTestFixture):
         assert normal_response['message'] == 'you cannot provide more than 10 \'boundary_duration[]\''
 
 
-@dataset({"main_routing_test": {"scenario": "new_default"}})
-class TestGraphicalIsochroneTaxiNewDefault(NewDefaultScenarioAbstractTestFixture):
-    def test_graphical_isochrone_taxi_with_new_default(self):
-        query = "isochrones?from={}&datetime={}&max_duration={}&first_section_mode[]=taxi"
-        query = query.format(s_coord, "20120614T080000", "3600")
-        response = self.query_region(query, check=False)
-        print(response)
-        assert response[1] == 400
-        assert "taxi is not available with new_default scenario" in response[0]['message']
-
-
 @config({"scenario": "distributed"})
-class TestGraphicalIsochroneDistributed(TestGraphicalIsochrone, NewDefaultScenarioAbstractTestFixture):
+class TestGraphicalIsochroneDistributed(TestGraphicalIsochrone, AbstractTestFixture):
     pass
 
 
 @dataset({"main_routing_test": {"scenario": "distributed"}})
-class TestGraphicalIsochroneTaxiDistributed(NewDefaultScenarioAbstractTestFixture):
+class TestGraphicalIsochroneTaxiDistributed(AbstractTestFixture):
     def test_graphical_isochrone_taxi_with_new_default(self):
         # We should have the same response as "test_graphical_isochrone_section_mode"
         q_section_mode = (

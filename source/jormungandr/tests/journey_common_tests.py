@@ -1969,23 +1969,6 @@ class WithoutPt:
         assert response['debug']['regions_called'][0]['name'] == "main_routing_without_pt_test"
         assert response['debug']['regions_called'][1]['name'] == "main_routing_test"
 
-    def test_one_region_without_pt_new_default(self):
-        """
-        Test if we still responds when one kraken has no pt solution using new_default
-        """
-        query = "v1/" + journey_basic_query + "&debug=true"
-        response = self.query(query)
-        check_best(response)
-        self.is_valid_journey_response(response, query)
-
-        assert len(response['journeys']) == 2
-        assert len(response['journeys'][0]['sections']) == 3
-        assert response['journeys'][0]['sections'][1]['type'] == 'public_transport'
-        assert len(response['debug']['regions_called']) == 2
-        assert response['debug']['regions_called'][0]['name'] == "main_routing_without_pt_test"
-        assert response['debug']['regions_called'][1]['name'] == "main_routing_test"
-
-
 @dataset(
     {
         "main_routing_without_pt_test": {"priority": 42, "min_nb_journeys": 10},

@@ -72,7 +72,7 @@ class FakeModel(object):
         is_free,
         is_open_data,
         max_nb_journeys,
-        scenario='new_default',
+        scenario='distributed',
         equipment_details_providers=[],
         poi_dataset=None,
         same_journey_schedules_configuration=None,
@@ -230,7 +230,7 @@ class AbstractTestFixture(unittest.TestCase):
             logging.info('instance %s has priority %s', name, priority)
             is_free = cls.data_sets[name].get('is_free', False)
             is_open_data = cls.data_sets[name].get('is_open_data', False)
-            scenario = cls.data_sets[name].get('scenario', 'new_default')
+            scenario = cls.data_sets[name].get('scenario', 'distributed')
             poi_dataset = cls.data_sets[name].get('poi_dataset', None)
             max_nb_journeys = cls.data_sets[name].get('max_nb_journeys', None)
             cls.mocks.append(
@@ -510,10 +510,6 @@ class AbstractTestFixture(unittest.TestCase):
 
         j_departure = get_valid_datetime(j_to_compare['arrival_date_time'])
         assert j_departure - timedelta(seconds=1) == dt
-
-
-class NewDefaultScenarioAbstractTestFixture(AbstractTestFixture):
-    pass
 
 
 def dataset(datasets, global_config={}):

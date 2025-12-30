@@ -36,7 +36,6 @@ from six.moves.urllib.parse import urlencode
 from jormungandr.tests.utils_test import MockRequests
 
 MOCKED_INSTANCE_CONF = {
-    'scenario': 'new_default',
     'instance_config': {
         'external_services_providers': [
             {

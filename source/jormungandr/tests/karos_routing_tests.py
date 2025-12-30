@@ -32,12 +32,11 @@ import pytest
 
 from jormungandr.tests.utils_test import MockResponse
 from tests.check_utils import get_not_null, get_links_dict
-from tests.tests_mechanism import dataset, NewDefaultScenarioAbstractTestFixture
+from tests.tests_mechanism import dataset, AbstractTestFixture
 
 DUMMY_KAROS_FEED_PUBLISHER = {'id': '42', 'name': '42', 'license': 'I dunno', 'url': 'http://w.tf'}
 
 MOCKED_INSTANCE_CONF = {
-    'scenario': 'new_default',
     'instance_config': {
         'ridesharing': [
             {
@@ -98,7 +97,7 @@ def mock_http_karos(monkeypatch):
 
 
 @dataset({'main_routing_test': MOCKED_INSTANCE_CONF})
-class TestKaros(NewDefaultScenarioAbstractTestFixture):
+class TestKaros(AbstractTestFixture):
     """
     Integration test with Karos VIA API
     Note: '&forbidden_uris[]=PM' used to avoid line 'PM' and it's vj=vjPB in /journeys
