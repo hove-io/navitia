@@ -971,6 +971,17 @@ class Instance(transient_socket.TransientSocket):
         except pybreaker.CircuitBreakerError as e:
             raise DeadSocketException(self.name, self.socket_path)
 
+    def get_backend(self, api, request):
+        if '_pt_planner' in request and request["_pt_planner"] in ["loki", "kraken"]:
+            return self.get_pt_planner(request["_pt_planner"])
+        if (
+            hasattr(self, 'api_backends')
+            and self.api_backends
+            and self.api_backends.get(api) in ["loki", "kraken"]
+        ):
+            return self.get_pt_planner(self.api_backends.get(api))
+        return self.get_pt_planner("kraken")
+
     def _send_and_receive(self, request, timeout=app.config.get('INSTANCES_TIMEOUT', 10), quiet=False, **kwargs):
         deadline = datetime.utcnow() + timedelta(milliseconds=timeout * 1000)
         request.deadline = deadline.strftime('%Y%m%dT%H%M%S,%f')
