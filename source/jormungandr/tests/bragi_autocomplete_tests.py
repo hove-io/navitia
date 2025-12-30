@@ -2027,9 +2027,7 @@ class AbstractAutocompleteAndRouting:
 
 
 @config({'scenario': 'distributed'})
-class TestDistributedAutocompleteAndRouting(
-    AbstractAutocompleteAndRouting, AbstractTestFixture
-):
+class TestDistributedAutocompleteAndRouting(AbstractAutocompleteAndRouting, AbstractTestFixture):
     pass
 
 

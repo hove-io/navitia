@@ -164,10 +164,7 @@ class InstanceManager(object):
         if self.start_ping:
             gevent.spawn(self.thread_ping)
 
-    def get_instance_scenario_name(self, instance_name, override_scenario):
-        if override_scenario:
-            return override_scenario
-
+    def get_instance_scenario_name(self, instance_name):
         instance = self.instances[instance_name]
         scenario_name = instance.get_instance_scenario_name_or_default()
         return scenario_name
@@ -179,7 +176,7 @@ class InstanceManager(object):
         instance = self.instances[instance_name]
         if not arguments.get('language'):
             arguments['language'] = instance.language
-        scenario = instance.scenario(arguments.get('_override_scenario'))
+        scenario = instance.scenario()
         if not hasattr(scenario, api) or not callable(getattr(scenario, api)):
             raise ApiNotFound(api)
 

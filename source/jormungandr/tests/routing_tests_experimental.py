@@ -757,6 +757,7 @@ class TestDistributedMaxDistanceForDirectPathLowerLimit(AbstractTestFixture):
     b = '8.98311981954709e-05;0.0002694935945864127'
     test_max_taxi_direct_path_distance = _make_function_distance_under_lower_limit(a, b, 'taxi')
 
+
 def _make_function_duration_over_upper_limit(from_coord, to_coord, mode, op):
     def test_ko_direct_path_longer_than_max_mode_direct_path_duration(self):
         query = (
