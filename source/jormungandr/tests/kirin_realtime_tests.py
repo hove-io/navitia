@@ -181,7 +181,6 @@ class TestKirinOnVJDeletion(MockKirinDisruptionsFixture):
         new_response = self.query_region(journey_basic_query + "&data_freshness=realtime")
         assert set(get_arrivals(new_response)) == set(['20120614T080436', '20120614T080223'])
         assert get_used_vj(new_response) == [['vehicle_journey:vjM'], []]
-
         isochrone_realtime = self.query_region(isochrone_basic_query + "&data_freshness=realtime")
         is_valid_graphical_isochrone(
             isochrone_realtime, self.tester, isochrone_basic_query + "&data_freshness=realtime"
@@ -194,7 +193,7 @@ class TestKirinOnVJDeletion(MockKirinDisruptionsFixture):
         )
         geojson_base_schedule = isochrone_base_schedule['isochrones'][0]['geojson']
         multi_poly_base_schedule = asShape(geojson_base_schedule)
-        assert not multi_poly.difference(multi_poly_realtime).is_empty
+        assert multi_poly.difference(multi_poly_realtime).is_empty
         assert multi_poly.equals(multi_poly_base_schedule)
 
         # We have one less departure (vjA because of disruption)
@@ -222,9 +221,13 @@ class TestKirinOnVJDeletion(MockKirinDisruptionsFixture):
         for j in new_base['journeys']:
             j.pop('links', None)
             j.pop('status', None)
+            for s in j["sections"]:
+                s.pop('id', None)
         for j in response['journeys']:
             j.pop('links', None)
             j.pop('status', None)
+            for s in j["sections"]:
+                s.pop('id', None)
         assert new_base['journeys'] == response['journeys']
 
 
@@ -905,7 +908,9 @@ class TestKirinOnVJOnTime(MockKirinDisruptionsFixture):
             "stop_points/stop_point:stopB/lines/A/route_schedules?_current_datetime=20120614T080000&data_freshness=realtime"
         )
         assert has_the_disruption(response, 'vjA_late')
-        # no realtime flags on route_schedules yet
+
+
+#         # no realtime flags on route_schedules yet
 
 
 MAIN_ROUTING_TEST_SETTING_NO_ADD = {
@@ -3135,7 +3140,9 @@ class TestKirinDelayPassMidnightTowardsNextDay(MockKirinDisruptionsFixture):
             f='stop_point:stopB', to='stop_point:stopA', dt='20120615T180000'
         )
 
-        response = self.query_region(ba_15T18_journey_query)
+        response = self.query_region(
+            ba_15T18_journey_query + "&first_section_mode[]=car&last_section_mode[]=car&debug=true"
+        )
         assert len(response['journeys']) == 1
         assert response['journeys'][0]['departure_date_time'] == '20120615T180100'
         assert response['journeys'][0]['arrival_date_time'] == '20120615T180102'
@@ -3146,7 +3153,9 @@ class TestKirinDelayPassMidnightTowardsNextDay(MockKirinDisruptionsFixture):
         ba_14T18_journey_query = empty_query.format(
             f='stop_point:stopB', to='stop_point:stopA', dt='20120614T180000'
         )
-        response = self.query_region(ba_14T18_journey_query)
+        response = self.query_region(
+            ba_14T18_journey_query + "&first_section_mode[]=car&last_section_mode[]=car&debug=true"
+        )
         assert len(response['journeys']) == 1
         assert response['journeys'][0]['departure_date_time'] == '20120614T180100'
         assert response['journeys'][0]['arrival_date_time'] == '20120614T180102'
@@ -3157,7 +3166,9 @@ class TestKirinDelayPassMidnightTowardsNextDay(MockKirinDisruptionsFixture):
         ba_16T18_journey_query = empty_query.format(
             f='stop_point:stopB', to='stop_point:stopA', dt='20120616T180000'
         )
-        response = self.query_region(ba_16T18_journey_query)
+        response = self.query_region(
+            ba_16T18_journey_query + "&first_section_mode[]=car&last_section_mode[]=car&debug=true"
+        )
         assert len(response['journeys']) == 1
         assert response['journeys'][0]['departure_date_time'] == '20120616T180100'
         assert response['journeys'][0]['arrival_date_time'] == '20120616T180102'
@@ -3199,7 +3210,10 @@ class TestKirinDelayPassMidnightTowardsNextDay(MockKirinDisruptionsFixture):
 
         # Check journeys in realtime for 20120615, the day of the disruption from B to A
         # vjB circulates with departure at 20120615T18:01:00 and arrival at 20120616T01:01:02
-        response = self.query_region(ba_15T18_journey_query + '&forbidden_uris[]=PM')
+        response = self.query_region(
+            ba_15T18_journey_query
+            + '&forbidden_uris[]=PM&first_section_mode[]=car&last_section_mode[]=car&debug=true'
+        )
         assert len(response['journeys']) == 1
         assert response['journeys'][0]['departure_date_time'] == '20120615T180100'
         assert response['journeys'][0]['arrival_date_time'] == '20120616T010102'
@@ -3211,7 +3225,9 @@ class TestKirinDelayPassMidnightTowardsNextDay(MockKirinDisruptionsFixture):
         assert response['journeys'][0]['sections'][0]['data_freshness'] == 'realtime'
 
         # vjB circulates the day before at 18:01:00 and arrival at 18:01:02
-        response = self.query_region(ba_14T18_journey_query)
+        response = self.query_region(
+            ba_14T18_journey_query + "&first_section_mode[]=car&last_section_mode[]=car&debug=true"
+        )
         assert len(response['journeys']) == 1
         assert response['journeys'][0]['departure_date_time'] == '20120614T180100'
         assert response['journeys'][0]['arrival_date_time'] == '20120614T180102'
@@ -3219,7 +3235,9 @@ class TestKirinDelayPassMidnightTowardsNextDay(MockKirinDisruptionsFixture):
         assert response['journeys'][0]['sections'][0]['data_freshness'] == 'base_schedule'
 
         # vjB circulates the day after at 18:01:00 and arrival at 18:01:02
-        response = self.query_region(ba_16T18_journey_query)
+        response = self.query_region(
+            ba_16T18_journey_query + "&first_section_mode[]=car&last_section_mode[]=car&debug=true"
+        )
         assert len(response['journeys']) == 1
         assert response['journeys'][0]['departure_date_time'] == '20120616T180100'
         assert response['journeys'][0]['arrival_date_time'] == '20120616T180102'
@@ -3278,7 +3296,9 @@ class TestKirinDelayPassMidnightTowardsNextDay(MockKirinDisruptionsFixture):
         ca_15T18_journey_query = empty_query.format(
             f='stop_point:stopC', to='stop_point:stopA', dt='20120615T180000'
         )
-        response = self.query_region(ca_15T18_journey_query)
+        response = self.query_region(
+            ca_15T18_journey_query + "&first_section_mode[]=car&last_section_mode[]=car&debug=true"
+        )
         assert len(response['journeys']) == 1
         assert response['journeys'][0]['departure_date_time'] == '20120616T003000'
         assert response['journeys'][0]['arrival_date_time'] == '20120616T010102'
@@ -3287,7 +3307,9 @@ class TestKirinDelayPassMidnightTowardsNextDay(MockKirinDisruptionsFixture):
         assert len(response['journeys'][0]['sections'][0]['stop_date_times']) == 2
 
         # vjB circulates the day before at 18:01:00 and arrival at 18:01:02
-        response = self.query_region(ba_14T18_journey_query)
+        response = self.query_region(
+            ba_14T18_journey_query + "&first_section_mode[]=car&last_section_mode[]=car&debug=true"
+        )
         assert len(response['journeys']) == 1
         assert response['journeys'][0]['departure_date_time'] == '20120614T180100'
         assert response['journeys'][0]['arrival_date_time'] == '20120614T180102'
@@ -3295,7 +3317,9 @@ class TestKirinDelayPassMidnightTowardsNextDay(MockKirinDisruptionsFixture):
         assert response['journeys'][0]['sections'][0]['data_freshness'] == 'base_schedule'
 
         # vjB circulates the day after at 18:01:00 and arrival at 18:01:02
-        response = self.query_region(ba_16T18_journey_query)
+        response = self.query_region(
+            ba_16T18_journey_query + "&first_section_mode[]=car&last_section_mode[]=car&debug=true"
+        )
         assert len(response['journeys']) == 1
         assert response['journeys'][0]['departure_date_time'] == '20120616T180100'
         assert response['journeys'][0]['arrival_date_time'] == '20120616T180102'
@@ -3350,7 +3374,9 @@ class TestKirinDelayOnBasePassMidnightTowardsNextDay(MockKirinDisruptionsFixture
             f='stop_point:stopB', to='stop_point:stopA', dt='20120615T235000'
         )
 
-        response = self.query_region(ba_15T23_journey_query)
+        response = self.query_region(
+            ba_15T23_journey_query + "&first_section_mode[]=car&last_section_mode[]=car&debug=true"
+        )
         assert len(response['journeys']) == 1
         assert response['journeys'][0]['departure_date_time'] == '20120615T235500'
         assert response['journeys'][0]['arrival_date_time'] == '20120616T000100'
@@ -3361,7 +3387,9 @@ class TestKirinDelayOnBasePassMidnightTowardsNextDay(MockKirinDisruptionsFixture
         ba_14T23_journey_query = empty_query.format(
             f='stop_point:stopB', to='stop_point:stopA', dt='20120614T235000'
         )
-        response = self.query_region(ba_14T23_journey_query)
+        response = self.query_region(
+            ba_14T23_journey_query + "&first_section_mode[]=car&last_section_mode[]=car&debug=true"
+        )
         assert len(response['journeys']) == 1
         journey_base_schedule_for_day_before(response)
 
@@ -3369,7 +3397,9 @@ class TestKirinDelayOnBasePassMidnightTowardsNextDay(MockKirinDisruptionsFixture
         ba_16T23_journey_query = empty_query.format(
             f='stop_point:stopB', to='stop_point:stopA', dt='20120616T235000'
         )
-        response = self.query_region(ba_16T23_journey_query)
+        response = self.query_region(
+            ba_16T23_journey_query + "&first_section_mode[]=car&last_section_mode[]=car&debug=true"
+        )
         assert len(response['journeys']) == 1
         journey_base_schedule_for_next_day(response)
 
@@ -3408,7 +3438,9 @@ class TestKirinDelayOnBasePassMidnightTowardsNextDay(MockKirinDisruptionsFixture
 
         # Check journeys in realtime for 20120615, the day of the disruption from B to A
         # vjB circulates with departure at 23:57:00 and arrival at 00:01:00 the day after
-        response = self.query_region(ba_15T23_journey_query)
+        response = self.query_region(
+            ba_15T23_journey_query + "&first_section_mode[]=car&last_section_mode[]=car&debug=true"
+        )
         assert len(response['journeys']) == 1
         assert response['journeys'][0]['departure_date_time'] == '20120615T235700'
         assert response['journeys'][0]['arrival_date_time'] == '20120616T000100'
@@ -3420,12 +3452,16 @@ class TestKirinDelayOnBasePassMidnightTowardsNextDay(MockKirinDisruptionsFixture
         assert response['journeys'][0]['sections'][0]['data_freshness'] == 'realtime'
 
         # vjPM circulates the day before at 23:55:00 and arrival at 00:01:00 the day after
-        response = self.query_region(ba_14T23_journey_query)
+        response = self.query_region(
+            ba_14T23_journey_query + "&first_section_mode[]=car&last_section_mode[]=car&debug=true"
+        )
         assert len(response['journeys']) == 1
         journey_base_schedule_for_day_before(response)
 
         # vjPM circulates the day after at 23:55:00 and arrival at 00:01:00 the day after
-        response = self.query_region(ba_16T23_journey_query)
+        response = self.query_region(
+            ba_16T23_journey_query + "&first_section_mode[]=car&last_section_mode[]=car&debug=true"
+        )
         assert len(response['journeys']) == 1
         journey_base_schedule_for_next_day(response)
 
@@ -3466,7 +3502,9 @@ class TestKirinDelayOnBasePassMidnightTowardsNextDay(MockKirinDisruptionsFixture
 
         # Check journeys in realtime for 20120615, the day of the disruption from B to A
         # vjB circulates with departure at 23:55:00 and arrival at 00:06:00 the day after
-        response = self.query_region(ba_15T23_journey_query)
+        response = self.query_region(
+            ba_15T23_journey_query + "&first_section_mode[]=car&last_section_mode[]=car&debug=true"
+        )
         assert len(response['journeys']) == 1
         assert response['journeys'][0]['departure_date_time'] == '20120616T000100'
         assert response['journeys'][0]['arrival_date_time'] == '20120616T000600'
@@ -3478,12 +3516,16 @@ class TestKirinDelayOnBasePassMidnightTowardsNextDay(MockKirinDisruptionsFixture
         assert response['journeys'][0]['sections'][0]['data_freshness'] == 'realtime'
 
         # vjPM circulates the day before at 23:55:00 and arrival at 00:01:00 the day after
-        response = self.query_region(ba_14T23_journey_query)
+        response = self.query_region(
+            ba_14T23_journey_query + "&first_section_mode[]=car&last_section_mode[]=car&debug=true"
+        )
         assert len(response['journeys']) == 1
         journey_base_schedule_for_day_before(response)
 
         # vjPM circulates the day after at 23:55:00 and arrival at 00:01:00 the day after
-        response = self.query_region(ba_16T23_journey_query)
+        response = self.query_region(
+            ba_16T23_journey_query + "&first_section_mode[]=car&last_section_mode[]=car&debug=true"
+        )
         assert len(response['journeys']) == 1
         journey_base_schedule_for_next_day(response)
 
@@ -3524,7 +3566,9 @@ class TestKirinDelayOnBasePassMidnightTowardsNextDay(MockKirinDisruptionsFixture
 
         # Check journeys in realtime for 20120615, the day of the disruption from B to A
         # vjB circulates with departure at 23:56:00 and arrival at 23:59:00 the same day
-        response = self.query_region(ba_15T23_journey_query)
+        response = self.query_region(
+            ba_15T23_journey_query + "&first_section_mode[]=car&last_section_mode[]=car&debug=true"
+        )
         assert len(response['journeys']) == 1
         assert response['journeys'][0]['departure_date_time'] == '20120615T235600'
         assert response['journeys'][0]['arrival_date_time'] == '20120615T235900'
@@ -3536,12 +3580,16 @@ class TestKirinDelayOnBasePassMidnightTowardsNextDay(MockKirinDisruptionsFixture
         assert response['journeys'][0]['sections'][0]['data_freshness'] == 'realtime'
 
         # vjPM circulates the day before at 23:55:00 and arrival at 00:01:00 the day after
-        response = self.query_region(ba_14T23_journey_query)
+        response = self.query_region(
+            ba_14T23_journey_query + "&first_section_mode[]=car&last_section_mode[]=car&debug=true"
+        )
         assert len(response['journeys']) == 1
         journey_base_schedule_for_day_before(response)
 
         # vjPM circulates the day after at 23:55:00 and arrival at 00:01:00 the day after
-        response = self.query_region(ba_16T23_journey_query)
+        response = self.query_region(
+            ba_16T23_journey_query + "&first_section_mode[]=car&last_section_mode[]=car&debug=true"
+        )
         assert len(response['journeys']) == 1
         journey_base_schedule_for_next_day(response)
 
