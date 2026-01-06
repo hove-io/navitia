@@ -111,6 +111,12 @@ class TrafficReport(ResourceUri, ResourceUtc):
 
         parser_get.add_argument("since", type=DateTimeFormat(), help="use disruptions valid after this date")
         parser_get.add_argument("until", type=DateTimeFormat(), help="use disruptions valid before this date")
+        parser_get.add_argument(
+            "_pt_planner",
+            type=OptionValue(['kraken', 'loki']),
+            hidden=True,
+            help="choose which pt engine to compute the pt journey",
+        )
 
         self.collection = 'traffic_reports'
         self.get_decorators.insert(0, ManageError())

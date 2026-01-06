@@ -169,6 +169,12 @@ class Schedules(ResourceUri, ResourceUtc):
             'When you select backward, you filter with: [backward, anticlockwise, outbound].',
             type=OptionValue(['all', 'forward', 'backward']),
         )
+        parser_get.add_argument(
+            "_pt_planner",
+            type=OptionValue(['kraken', 'loki']),
+            hidden=True,
+            help="choose which pt engine to compute the pt journey",
+        )
 
         self.get_decorators.insert(0, ManageError())
         self.get_decorators.insert(1, get_obj_serializer(self))

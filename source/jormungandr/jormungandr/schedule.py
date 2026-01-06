@@ -276,7 +276,7 @@ class MixedSchedule(object):
         if request.get("calendar"):
             st.calendar = request["calendar"]
         st.realtime_level = utils.realtime_level_to_pbf(request['data_freshness'])
-        resp = self.instance.send_and_receive(req)
+        resp = self.instance.get_backend(type_pb2.API.Name(api).lower(), request).send_and_receive(req)
 
         return resp
 
