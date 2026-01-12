@@ -33,6 +33,7 @@ from __future__ import absolute_import, unicode_literals
 
 import navitiacommon.type_pb2 as type_pb2
 from jormungandr.olympic_site_params_manager import OlympicSiteParamsManager
+from jormungandr.street_network.streetnetwork_backend_manager import StreetNetworkBackendManager
 from jormungandr.street_network.tests.streetnetwork_test_utils import make_pt_object
 from jormungandr.instance import Instance
 from copy import deepcopy
@@ -154,7 +155,7 @@ class FakeInstance(Instance):
             pt_planners_configurations={},
             zmq_socket_type=None,
             autocomplete_type='kraken',
-            streetnetwork_backend_manager=None,
+            streetnetwork_backend_manager=StreetNetworkBackendManager(),
             external_service_provider_configurations=[],
             olympics_forbidden_uris=olympics_forbidden_uris,
             pt_journey_fare_configurations={},

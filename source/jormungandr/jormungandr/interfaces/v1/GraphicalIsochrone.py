@@ -54,12 +54,6 @@ class GraphicalIsochrone(JourneyCommon):
             action="append",
             help="To provide multiple duration parameters",
         )
-        parser_get.add_argument(
-            "_override_scenario",
-            type=six.text_type,
-            hidden=True,
-            help="debug param to specify a custom scenario",
-        )
 
     @get_serializer(serpy=GraphicalIsrochoneSerializer)
     @ManageError()

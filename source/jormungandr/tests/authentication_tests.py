@@ -37,6 +37,10 @@ from jormungandr import app
 import json
 from navitiacommon.constants import DEFAULT_SHAPE_SCOPE
 from datetime import datetime
+from navitiacommon.models.streetnetwork_backend import StreetNetworkBackend
+from jormungandr.street_network.streetnetwork_backend_manager import StreetNetworkBackendManager
+from mock import MagicMock
+from jormungandr import i_manager
 
 
 BRAGI_RESPONSE = {"features": []}
@@ -175,10 +179,22 @@ class AbstractTestAuthentication(AbstractTestFixture):
         self.old_instance_getter = models.Instance.get_by_name
         models.Instance.get_by_name = FakeInstance.get_by_name
 
+        for instance in i_manager.instances:
+            manager = StreetNetworkBackendManager(self.sn_backends_getter)
+            manager._can_connect_to_database = MagicMock(return_value=True)
+            i_manager.instances[instance]._streetnetwork_backend_manager = manager
+
     def tearDown(self):
         app.config['PUBLIC'] = self.old_public_val
         app.config['DISABLE_DATABASE'] = self.old_db_val
         models.Instance.get_by_name = self.old_instance_getter
+
+    def sn_backends_getter(self):
+        kraken = StreetNetworkBackend(id='kraken')
+        kraken.klass = "jormungandr.street_network.tests.MockKraken"
+        kraken.args = {'timeout': 10}
+        kraken.created_at = datetime.utcnow()
+        return [kraken]
 
 
 @dataset({"main_routing_test": {}})

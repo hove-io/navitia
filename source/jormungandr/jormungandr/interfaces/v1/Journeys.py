@@ -620,12 +620,6 @@ class Journeys(JourneyCommon):
             help="DEPRECATED (always True), show more identification codes",
         )
         parser_get.add_argument(
-            "_override_scenario",
-            type=six.text_type,
-            hidden=True,
-            help="debug param to specify a custom scenario",
-        )
-        parser_get.add_argument(
             "_street_network", type=six.text_type, hidden=True, help="choose the streetnetwork component"
         )
         parser_get.add_argument("_walking_transfer_penalty", hidden=True, type=int)
@@ -1081,16 +1075,10 @@ class Journeys(JourneyCommon):
         # generate an id that :
         #  - depends on the coverage and differents arguments of the request (from, to, datetime, etc.)
         #  - does not depends on the order of the arguments in the request (only on their values)
-        #  - does not depend on the _override_scenario argument
-        #  - if  _override_scenario is present, its type is added at the end of the id in
-        #    order to identify identical requests made with the different scenarios
         #  - we add the current_datetime of the request so as to differentiate
         #    the same request made at distinct moments
         def generate_request_id():
-            if "_override_scenario" in args:
-                scenario = str(args["_override_scenario"])
-            else:
-                scenario = "new_default"
+            scenario = "distributed"
 
             json_hash = request.id
 
@@ -1134,12 +1122,10 @@ class Journeys(JourneyCommon):
                 new_datetime = self.convert_to_utc(original_datetime)
             args['datetime'] = date_to_timestamp(new_datetime)
 
-            scenario_name = i_manager.get_instance_scenario_name(self.region, args.get('_override_scenario'))
+            scenario_name = i_manager.get_instance_scenario_name(self.region)
 
-            if scenario_name == "new_default" and (
-                "taxi" in args["origin_mode"] or "taxi" in args["destination_mode"]
-            ):
-                abort(400, message="taxi is not available with new_default scenario")
+            if scenario_name != "distributed":
+                abort(400, message="Only distributed scenario accepted, {}".format(scenario_name))
 
             response = i_manager.dispatch(args, api, instance_name=self.region)
 

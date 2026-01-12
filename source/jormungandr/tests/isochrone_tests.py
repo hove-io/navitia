@@ -29,7 +29,7 @@
 from __future__ import absolute_import, print_function, unicode_literals, division
 import logging
 
-from .tests_mechanism import AbstractTestFixture, dataset, config, NewDefaultScenarioAbstractTestFixture
+from .tests_mechanism import AbstractTestFixture, dataset, config, AbstractTestFixture
 from .check_utils import *
 
 
@@ -165,5 +165,5 @@ class TestIsochrone(AbstractTestFixture):
 
 
 @config({"scenario": "distributed"})
-class TestIsochroneDistributed(TestIsochrone, NewDefaultScenarioAbstractTestFixture):
+class TestIsochroneDistributed(TestIsochrone, AbstractTestFixture):
     pass

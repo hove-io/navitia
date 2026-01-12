@@ -31,7 +31,7 @@ import pytest
 
 from jormungandr.tests.utils_test import MockResponse
 from tests.check_utils import get_not_null, s_coord, r_coord
-from tests.tests_mechanism import dataset, NewDefaultScenarioAbstractTestFixture
+from tests.tests_mechanism import dataset, AbstractTestFixture
 
 
 def sortFeeds(elem):
@@ -61,7 +61,7 @@ QUERY_DATETIME_STR = "20120614T070000"
 
 
 @dataset({'main_routing_test': MOCKED_INSTANCE_CONF})
-class TestHere(NewDefaultScenarioAbstractTestFixture):
+class TestHere(AbstractTestFixture):
     """
     Integration test with HERE
     """

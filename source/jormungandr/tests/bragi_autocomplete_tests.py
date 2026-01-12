@@ -35,7 +35,6 @@ from pytest import raises
 from jormungandr.tests.utils_test import user_set, FakeUser
 from tests.check_utils import is_valid_global_autocomplete
 from tests import check_utils
-from tests.tests_mechanism import NewDefaultScenarioAbstractTestFixture
 from .tests_mechanism import AbstractTestFixture, dataset
 from jormungandr import app
 from six.moves.urllib.parse import urlencode
@@ -2027,17 +2026,8 @@ class AbstractAutocompleteAndRouting:
             assert response == {'message': 'geo_status not implemented'}
 
 
-@config({'scenario': 'new_default'})
-class TestNewDefaultAutocompleteAndRouting(
-    AbstractAutocompleteAndRouting, NewDefaultScenarioAbstractTestFixture
-):
-    pass
-
-
 @config({'scenario': 'distributed'})
-class TestDistributedAutocompleteAndRouting(
-    AbstractAutocompleteAndRouting, NewDefaultScenarioAbstractTestFixture
-):
+class TestDistributedAutocompleteAndRouting(AbstractAutocompleteAndRouting, AbstractTestFixture):
     pass
 
 
@@ -2163,5 +2153,5 @@ class AbstractAutocompletePoiDataset:
 
 
 @config({'poi_dataset': 'priv.bob'})
-class TestPoiDatasetAutocomplete(AbstractAutocompletePoiDataset, NewDefaultScenarioAbstractTestFixture):
+class TestPoiDatasetAutocomplete(AbstractAutocompletePoiDataset, AbstractTestFixture):
     pass

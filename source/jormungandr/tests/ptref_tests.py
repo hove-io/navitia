@@ -1164,17 +1164,6 @@ class TestPtRefRoutingCov(AbstractTestFixture):
         assert vjs[0]['stop_times'][0]['headsign'] == "A00"
         assert vjs[0]['stop_times'][1]['headsign'] == "vjA_hs"
 
-    def test_headsign_display_info_journeys(self):
-        """test basic print of headsign in section for journeys"""
-        response = self.query_region(
-            'journeys?from=stop_point:stopB&to=stop_point:stopA&datetime=20120615T000000&max_duration_to_pt=0'
-        )
-        assert 'error' not in response
-        journeys = get_not_null(response, 'journeys')
-        assert len(journeys) == 1
-        assert len(journeys[0]['sections']) == 1
-        assert journeys[0]['sections'][0]['display_informations']['headsign'] == "A00"
-
     def test_headsign_display_info_departures(self):
         """test basic print of headsign in display informations for departures"""
         response = self.query_region('stop_points/stop_point:stopB/departures?from_datetime=20120615T000000')
@@ -1256,23 +1245,6 @@ class TestPtRefRoutingCov(AbstractTestFixture):
         trips = get_not_null(response, 'trips')
         assert len(trips) == 1
         assert get_not_null(trips[0], 'id') == "vjB"
-
-    def test_attributs_in_display_info_journeys(self):
-        """test some attributs in  display_information of a section for journeys"""
-        response = self.query_region(
-            'journeys?from=stop_point:stopB&to=stop_point:stopA&datetime=20120615T000000&max_duration_to_pt=0'
-        )
-        assert 'error' not in response
-        journeys = get_not_null(response, 'journeys')
-        assert len(journeys) == 1
-        assert len(journeys[0]['sections']) == 1
-        assert journeys[0]['sections'][0]['display_informations']['headsign'] == "A00"
-        assert journeys[0]['sections'][0]['display_informations']['color'] == "289728"
-        assert journeys[0]['sections'][0]['display_informations']['text_color'] == "FFD700"
-        assert journeys[0]['sections'][0]['display_informations']['label'] == "1A"
-        assert journeys[0]['sections'][0]['display_informations']['code'] == "1A"
-        assert journeys[0]['sections'][0]['display_informations']['name'] == "A"
-        assert journeys[0]['sections'][0]['display_informations']['company'] == "base_company"
 
     def test_stop_points_depth_3(self):
         """

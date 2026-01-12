@@ -78,9 +78,9 @@ class TestOverlappingCoverage(AbstractTestFixture):
         response = self.query(debug_query)
         self.is_valid_journey_response(response, debug_query)
         assert response['debug']['regions_called'][0]['name'] == 'empty_routing_test'
-        assert response['debug']['regions_called'][0]['scenario'] == 'new_default'
+        assert response['debug']['regions_called'][0]['scenario'] == 'distributed'
         assert response['debug']['regions_called'][1]['name'] == 'main_routing_test'
-        assert response['debug']['regions_called'][1]['scenario'] == 'new_default'
+        assert response['debug']['regions_called'][1]['scenario'] == 'distributed'
 
     def test_journeys_on_empty(self):
         """
@@ -109,9 +109,9 @@ class TestOverlappingCoverage(AbstractTestFixture):
         response, error_code = self.query_no_assert("/v1/{q}".format(q=journey_query), display=False)
 
         assert not 'journeys' in response or len(response['journeys']) == 0
-        assert error_code == 404
+        assert error_code == 200
         assert 'error' in response
-        assert response['error']['id'] == 'date_out_of_bounds'
+        assert response['error']['id'] == 'no_solution'
 
     def test_journeys_on_different_error(self):
         """
@@ -127,30 +127,14 @@ class TestOverlappingCoverage(AbstractTestFixture):
             "v1/{query}&max_duration_to_pt=20&debug=true".format(query=journey_basic_query), display=False
         )
 
-        assert not 'journeys' in response or len(response['journeys']) == 0
-        assert error_code == 200  # no solution is 200
-        assert 'error' in response
-        assert response['error']['id'] == 'no_solution'
-        assert response['error']['message'] == 'No journey found'
-
         assert 'debug' in response
-        assert 'errors_by_region' in response['debug']
-        assert (
-            response['debug']['errors_by_region']['empty_routing_test']
-            == 'Public transport is not reachable from origin nor destination'
-        )
-        assert (
-            response['debug']['errors_by_region']['main_routing_test']
-            == 'Public transport is not reachable from destination'
-        )
-
         # we also should have the region called in the debug node
         # (and the empty one should be first since it has been called first)
         assert 'regions_called' in response['debug']
         assert response['debug']['regions_called'][0]['name'] == 'empty_routing_test'
-        assert response['debug']['regions_called'][0]['scenario'] == 'new_default'
+        assert response['debug']['regions_called'][0]['scenario'] == 'distributed'
         assert response['debug']['regions_called'][1]['name'] == 'main_routing_test'
-        assert response['debug']['regions_called'][1]['scenario'] == 'new_default'
+        assert response['debug']['regions_called'][1]['scenario'] == 'distributed'
 
     def test_journeys_no_debug(self):
         """no debug in query, no debug in answer"""

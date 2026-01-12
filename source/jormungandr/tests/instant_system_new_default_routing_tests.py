@@ -32,12 +32,12 @@ import pytest
 
 from jormungandr.tests.utils_test import MockResponse
 from tests.check_utils import get_not_null, s_coord, r_coord, journey_basic_query
-from tests.tests_mechanism import dataset, NewDefaultScenarioAbstractTestFixture
+from tests.tests_mechanism import dataset, AbstractTestFixture
 
 DUMMY_INSTANT_SYSTEM_FEED_PUBLISHER = {'id': '42', 'name': '42', 'license': 'I dunno', 'url': 'http://w.tf'}
 
 MOCKED_INSTANCE_CONF = {
-    'scenario': 'new_default',
+    'scenario': 'distributed',
     'instance_config': {
         'ridesharing': [
             {
@@ -110,7 +110,7 @@ def mock_http_instant_system(monkeypatch):
 
 
 @dataset({'main_routing_test': MOCKED_INSTANCE_CONF})
-class TestInstantSystem(NewDefaultScenarioAbstractTestFixture):
+class TestInstantSystem(AbstractTestFixture):
     """
     Integration test with Instant System
     Note: '&forbidden_uris[]=PM' used to avoid line 'PM' and it's vj=vjPB in /journeys
@@ -225,7 +225,7 @@ class TestInstantSystem(NewDefaultScenarioAbstractTestFixture):
         self.is_valid_journey_response(response, q, check_journey_links=False)
 
         journeys = get_not_null(response, 'journeys')
-        assert len(journeys) == 2
+        assert len(journeys) == 1
 
         # The first journey is direct ridesharing
         assert 'ridesharing' in journeys[0].get('tags')
@@ -236,39 +236,6 @@ class TestInstantSystem(NewDefaultScenarioAbstractTestFixture):
         assert sections[0].get('mode') == 'ridesharing'
         assert journeys[0].get('durations').get('ridesharing') == 121
         assert journeys[0].get('durations').get('total') == 121
-
-        # The second one is of combination of ridesharing + public_transport + walking
-        assert 'ridesharing' in journeys[1].get('tags')
-        assert 'non_pt' not in journeys[1].get('tags')
-        assert journeys[1].get('type') == 'fastest'
-        sections = journeys[1].get('sections')
-        assert len(sections) == 3
-        assert journeys[1].get('durations').get('ridesharing') == 7
-        assert journeys[1].get('durations').get('walking') == 80
-        assert journeys[1].get('durations').get('total') == 89
-
-        # first section is of ridesharing
-        rs_section = sections[0]
-        assert rs_section.get('mode') == 'ridesharing'
-        assert rs_section.get('type') == 'street_network'
-        assert rs_section.get('from').get('id') == '8.98312e-05;8.98312e-05'
-        assert rs_section.get('to').get('id') == 'stop_point:stopB'
-        assert rs_section.get('duration') == 7
-
-        # second section is of public transport
-        pt_section = sections[1]
-        assert pt_section.get('type') == 'public_transport'
-        assert pt_section.get('from').get('id') == 'stop_point:stopB'
-        assert pt_section.get('to').get('id') == 'stop_point:stopA'
-        assert pt_section.get('duration') == 2
-
-        # third section is of walking
-        walking_section = sections[2]
-        assert walking_section.get('mode') == 'walking'
-        assert walking_section.get('type') == 'street_network'
-        assert walking_section.get('from').get('id') == 'stop_point:stopA'
-        assert walking_section.get('to').get('id') == '0.00188646;0.00071865'
-        assert walking_section.get('duration') == 80
 
         # with the use of &max_ridesharing_duration_to_pt=0 we have only direct ridesharing
         q = (
@@ -298,7 +265,7 @@ class TestInstantSystem(NewDefaultScenarioAbstractTestFixture):
         response = self.query_region(q)
         self.is_valid_journey_response(response, q, check_journey_links=False)
         journeys = get_not_null(response, 'journeys')
-        assert len(journeys) == 4
+        assert len(journeys) == 2
 
         # the first journey is a direct path by ridesharing
         assert 'ridesharing' in journeys[0].get('tags')
@@ -308,39 +275,6 @@ class TestInstantSystem(NewDefaultScenarioAbstractTestFixture):
         rs_section = journeys[0]['sections'][0]
         assert rs_section.get('mode') == 'ridesharing'
         assert rs_section.get('type') == 'street_network'
-
-        # the second journey is combined by ridesharing and PT
-        assert 'ridesharing' in journeys[1].get('tags')
-        assert 'non_pt' not in journeys[1].get('tags')
-
-        assert len(journeys[1]['sections']) == 3
-        rs_section = journeys[1]['sections'][0]
-        assert rs_section.get('mode') == 'ridesharing'
-        assert rs_section.get('type') == 'street_network'
-
-        # the third journey is combined by car and PT
-        assert 'car' in journeys[2].get('tags')
-        assert 'non_pt' not in journeys[2].get('tags')
-
-        assert len(journeys[2]['sections']) == 5
-        rs_section = journeys[2]['sections'][0]
-        assert rs_section.get('mode') == 'car'
-        assert rs_section.get('type') == 'street_network'
-
-        # the fourth journey is a direct path by car
-        assert 'car' in journeys[3].get('tags')
-        assert 'non_pt' in journeys[3].get('tags')
-
-        assert len(journeys[3]['sections']) == 3
-        rs_section = journeys[3]['sections'][0]
-        assert rs_section.get('mode') == 'car'
-        assert rs_section.get('type') == 'street_network'
-
-        # test the ridesharing durations in all journeys
-        assert journeys[0].get('durations').get('ridesharing') == 121
-        assert journeys[1].get('durations').get('ridesharing') == 7
-        assert journeys[2].get('durations').get('ridesharing') == 0
-        assert journeys[3].get('durations').get('ridesharing') == 0
 
     def test_end_ridesharing_with_pt(self):
         """

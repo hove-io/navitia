@@ -41,7 +41,7 @@ from .check_utils import (
 )
 
 
-@dataset({"rail_sections_test": {}})
+@dataset({"rail_sections_test": {"scenario": "distributed"}})
 class TestRailSections(AbstractTestFixture):
     def default_query(self, q, data_freshness=None, count=None, **kwargs):
         """

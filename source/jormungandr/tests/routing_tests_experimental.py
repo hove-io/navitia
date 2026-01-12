@@ -32,7 +32,7 @@ from __future__ import absolute_import, print_function, unicode_literals, divisi
 from jormungandr import app
 from jormungandr.street_network.streetnetwork_backend_manager import StreetNetworkBackendManager
 from navitiacommon.models.streetnetwork_backend import StreetNetworkBackend
-from .tests_mechanism import config, NewDefaultScenarioAbstractTestFixture
+from .tests_mechanism import config, AbstractTestFixture
 from mock import MagicMock
 from .journey_common_tests import *
 import operator
@@ -58,7 +58,7 @@ unit for scenario experimental
         },
     }
 )
-class TestJourneysDistributedWithMock(JourneyMinBikeMinCar, NewDefaultScenarioAbstractTestFixture):
+class TestJourneysDistributedWithMock(JourneyMinBikeMinCar, AbstractTestFixture):
     def test_first_and_last_section_multi_modes(self):
         """Test to verify optimization of direct path calls"""
         # Initialize counter value in the object MockKraken
@@ -135,7 +135,7 @@ class TestJourneysDistributed(
     JourneyCommon,
     DirectPath,
     JourneyMinBikeMinCar,
-    NewDefaultScenarioAbstractTestFixture,
+    AbstractTestFixture,
     JourneysDirectPathMode,
 ):
     """
@@ -552,33 +552,33 @@ class TestJourneysDistributed(
 
 
 @config({"scenario": "distributed"})
-class TestDistributedJourneysWithPtref(JourneysWithPtref, NewDefaultScenarioAbstractTestFixture):
+class TestDistributedJourneysWithPtref(JourneysWithPtref, AbstractTestFixture):
     pass
 
 
 @config({"scenario": "distributed"})
-class TestDistributedOnBasicRouting(OnBasicRouting, NewDefaultScenarioAbstractTestFixture):
+class TestDistributedOnBasicRouting(OnBasicRouting, AbstractTestFixture):
     def test_isochrone(self):
         super(TestDistributedOnBasicRouting, self).test_isochrone()
 
 
 @config({"scenario": "distributed"})
-class TestDistributedMinNbJourneys(JourneysMinNbJourneys, NewDefaultScenarioAbstractTestFixture):
+class TestDistributedMinNbJourneys(JourneysMinNbJourneys, AbstractTestFixture):
     pass
 
 
 @config({"scenario": "distributed"})
-class TestDistributedWithNightBusFilter(JourneysWithNightBusFilter, NewDefaultScenarioAbstractTestFixture):
+class TestDistributedWithNightBusFilter(JourneysWithNightBusFilter, AbstractTestFixture):
     pass
 
 
 @config({"scenario": "distributed"})
-class TestDistributedTimeFrameDuration(JourneysTimeFrameDuration, NewDefaultScenarioAbstractTestFixture):
+class TestDistributedTimeFrameDuration(JourneysTimeFrameDuration, AbstractTestFixture):
     pass
 
 
 @config({"scenario": "distributed"})
-class TestDistributedJourneyTickets(JourneysTickets, NewDefaultScenarioAbstractTestFixture):
+class TestDistributedJourneyTickets(JourneysTickets, AbstractTestFixture):
     def test_journey_tickets_pt_journey_fare(self):
         """
         test tickets with pt_journey_fare
@@ -616,7 +616,7 @@ class TestDistributedJourneyTickets(JourneysTickets, NewDefaultScenarioAbstractT
 
 
 @config({"scenario": "distributed"})
-class TestDistributedJourneyTicketsWithDebug(JourneysTicketsWithDebug, NewDefaultScenarioAbstractTestFixture):
+class TestDistributedJourneyTicketsWithDebug(JourneysTicketsWithDebug, AbstractTestFixture):
     pass
 
 
@@ -657,7 +657,7 @@ def _make_function_distance_over_upper_limit(from_coord, to_coord, mode, op):
 
 
 @dataset({"main_routing_test": {"scenario": "distributed"}})
-class TestDistributedMaxDistanceForDirectPathUpperLimit(NewDefaultScenarioAbstractTestFixture):
+class TestDistributedMaxDistanceForDirectPathUpperLimit(AbstractTestFixture):
     """
     Test max_{mode}_direct_path_distance's upper limit
     Direct path should be filtered if its crow_fly distance is greater than max_{mode}_direct_path_distance
@@ -677,7 +677,7 @@ class TestDistributedMaxDistanceForDirectPathUpperLimit(NewDefaultScenarioAbstra
 
 
 @dataset({"main_routing_test": {"scenario": "distributed"}})
-class TestDistributedWithDestinationPositionNotMatchingAutocomplete(NewDefaultScenarioAbstractTestFixture):
+class TestDistributedWithDestinationPositionNotMatchingAutocomplete(AbstractTestFixture):
     """
     Test on geographical position as destination which doesn't match with address found by autocomplete
     """
@@ -741,7 +741,7 @@ def _make_function_distance_under_lower_limit(from_coord, to_coord, mode):
 
 
 @dataset({"main_routing_test": {"scenario": "distributed"}})
-class TestDistributedMaxDistanceForDirectPathLowerLimit(NewDefaultScenarioAbstractTestFixture):
+class TestDistributedMaxDistanceForDirectPathLowerLimit(AbstractTestFixture):
     """
     Test max_{mode}_direct_path_distance's lower limit
     Direct path should be found if its crow_fly distance is lower than max_{mode}_direct_path_duration.
@@ -756,21 +756,6 @@ class TestDistributedMaxDistanceForDirectPathLowerLimit(NewDefaultScenarioAbstra
     a = '0.001077974378345651;0.0007186495855637672'
     b = '8.98311981954709e-05;0.0002694935945864127'
     test_max_taxi_direct_path_distance = _make_function_distance_under_lower_limit(a, b, 'taxi')
-
-
-@dataset({"main_routing_test": {"scenario": "new_default"}})
-class TestNewDefaultMaxDistanceForDirectPath(NewDefaultScenarioAbstractTestFixture):
-    """
-    the max_{mode}_direct_path_distance should be deactivated in new_default
-    """
-
-    s = '8.98311981954709e-05;8.98311981954709e-05'
-    r = '0.0018864551621048887;0.0007186495855637672'
-    test_max_walking_direct_path_duration = _make_function_distance_over_upper_limit(
-        s, r, 'walking', operator.not_
-    )
-    test_max_car_direct_path_duration = _make_function_distance_over_upper_limit(s, r, 'car', operator.not_)
-    test_max_bike_direct_path_duration = _make_function_distance_over_upper_limit(s, r, 'bike', operator.not_)
 
 
 def _make_function_duration_over_upper_limit(from_coord, to_coord, mode, op):
@@ -808,7 +793,7 @@ def _make_function_duration_over_upper_limit(from_coord, to_coord, mode, op):
 
 
 @dataset({"main_routing_test": {"scenario": "distributed"}})
-class TestDistributedMaxDurationForDirectPathUpperLimit(NewDefaultScenarioAbstractTestFixture):
+class TestDistributedMaxDurationForDirectPathUpperLimit(AbstractTestFixture):
     """
     Test max_{mode}_direct_path_duration's upper limit
 
@@ -858,7 +843,7 @@ def _make_function_duration_under_upper_limit(from_coord, to_coord, mode):
 
 
 @dataset({"main_routing_test": {"scenario": "distributed"}})
-class TestDistributedMaxDurationForDirectPathLowerLimit(NewDefaultScenarioAbstractTestFixture):
+class TestDistributedMaxDurationForDirectPathLowerLimit(AbstractTestFixture):
     """
     Test max_{mode}_direct_path_duration's lower limit
 
@@ -876,22 +861,6 @@ class TestDistributedMaxDurationForDirectPathLowerLimit(NewDefaultScenarioAbstra
     a = '0.001077974378345651;0.0007186495855637672'
     b = '8.98311981954709e-05;0.0002694935945864127'
     test_max_taxi_direct_path_duration = _make_function_duration_under_upper_limit(a, b, 'taxi')
-
-
-@dataset({"main_routing_test": {"scenario": "new_default"}})
-class TestNewDefaultMaxDurationForDirectPath(NewDefaultScenarioAbstractTestFixture):
-    """
-    the max_{mode}_direct_path_duration should be deactivated in new_default
-    """
-
-    s = '8.98311981954709e-05;8.98311981954709e-05'
-    r = '0.0018864551621048887;0.0007186495855637672'
-    test_max_walking_direct_path_duration = _make_function_duration_over_upper_limit(
-        s, r, 'walking', operator.not_
-    )
-    test_max_car_direct_path_duration = _make_function_duration_over_upper_limit(s, r, 'car', operator.not_)
-    test_max_bss_direct_path_duration = _make_function_duration_over_upper_limit(s, r, 'bss', operator.not_)
-    test_max_bike_direct_path_duration = _make_function_duration_over_upper_limit(s, r, 'bike', operator.not_)
 
 
 @config(
@@ -914,7 +883,7 @@ class TestNewDefaultMaxDurationForDirectPath(NewDefaultScenarioAbstractTestFixtu
     }
 )
 class TestJourneysRidesharingDistributed(
-    JourneysRidesharing, JourneyCommon, DirectPath, JourneyMinBikeMinCar, NewDefaultScenarioAbstractTestFixture
+    JourneysRidesharing, JourneyCommon, DirectPath, JourneyMinBikeMinCar, AbstractTestFixture
 ):
     def test_best_filtering(self):
         """
@@ -942,7 +911,7 @@ class TestJourneysRidesharingDistributed(
 
 
 @dataset({"main_routing_test": {"scenario": "distributed"}})
-class TestTaxiDistributed(NewDefaultScenarioAbstractTestFixture):
+class TestTaxiDistributed(AbstractTestFixture):
     def test_first_section_mode_taxi(self):
         query = sub_query + "&datetime=20120614T075000" + "&first_section_mode[]=taxi" + "&debug=true"
 
@@ -1186,7 +1155,7 @@ class TestTaxiDistributed(NewDefaultScenarioAbstractTestFixture):
 
 
 @dataset({'main_routing_test': {"scenario": "distributed"}, 'min_nb_journeys_test': {"scenario": "distributed"}})
-class TestKrakenDistributedWithDatabase(NewDefaultScenarioAbstractTestFixture):
+class TestKrakenDistributedWithDatabase(AbstractTestFixture):
     def setUp(self):
         self.old_db_val = app.config['DISABLE_DATABASE']
         app.config['DISABLE_DATABASE'] = False
@@ -1229,7 +1198,7 @@ class TestKrakenDistributedWithDatabase(NewDefaultScenarioAbstractTestFixture):
 
 
 @dataset({"main_routing_test": {"scenario": "distributed"}})
-class TestCarNoParkDistributed(NewDefaultScenarioAbstractTestFixture):
+class TestCarNoParkDistributed(AbstractTestFixture):
     def test_max_car_no_park_duration_to_pt(self):
         # we begin with a normal request to get the fallback duration in taxi
         query = (
@@ -1278,7 +1247,7 @@ class TestCarNoParkDistributed(NewDefaultScenarioAbstractTestFixture):
 
 
 @dataset({"main_routing_test": {"scenario": "distributed"}})
-class TestCarDistributed(NewDefaultScenarioAbstractTestFixture):
+class TestCarDistributed(AbstractTestFixture):
     def test_stop_points_nearby_duration_park_n_ride(self):
         # we begin with a normal request to get the fallback duration in taxi
         query = (
@@ -1323,12 +1292,12 @@ class TestCarDistributed(NewDefaultScenarioAbstractTestFixture):
 
 
 @config({"scenario": "distributed"})
-class TesDistributedJourneyNoCoverageParams(NoCoverageParams, NewDefaultScenarioAbstractTestFixture):
+class TesDistributedJourneyNoCoverageParams(NoCoverageParams, AbstractTestFixture):
     pass
 
 
 @dataset({"routing_with_transfer_test": {"scenario": "distributed"}})
-class TestRoutingWithTransfer(NewDefaultScenarioAbstractTestFixture):
+class TestRoutingWithTransfer(AbstractTestFixture):
     def test_complete_transfer_path_bus_coach(self):
         """
         We first query without requesting walking _transfer_path and then with _transfer_path
@@ -1338,9 +1307,7 @@ class TestRoutingWithTransfer(NewDefaultScenarioAbstractTestFixture):
         - same duration as with _transfer_path=false
         """
         query = (
-            '/v1/coverage/routing_with_transfer_test/journeys?'
-            'from={}&to={}&'
-            'datetime=20120614T100000&_override_scenario=distributed'
+            '/v1/coverage/routing_with_transfer_test/journeys?from={}&to={}&datetime=20120614T100000'
         ).format("stopF", "stopA")
 
         response = self.query(query)
@@ -1362,7 +1329,7 @@ class TestRoutingWithTransfer(NewDefaultScenarioAbstractTestFixture):
         query = (
             '/v1/coverage/routing_with_transfer_test/journeys?'
             'from={}&to={}&_transfer_path=true&'
-            'datetime=20120614T100000&_override_scenario=distributed'
+            'datetime=20120614T100000'
         ).format("stopF", "stopA")
 
         response = self.query(query)
@@ -1395,7 +1362,7 @@ class TestRoutingWithTransfer(NewDefaultScenarioAbstractTestFixture):
         query = (
             '/v1/coverage/routing_with_transfer_test/journeys?'
             'from={}&to={}&forbidden_uris[]=physical_mode:Coach&'
-            'datetime=20120614T100000&_override_scenario=distributed'
+            'datetime=20120614T100000'
         ).format("stopF", "stopA")
 
         response = self.query(query)
@@ -1418,7 +1385,7 @@ class TestRoutingWithTransfer(NewDefaultScenarioAbstractTestFixture):
         query = (
             '/v1/coverage/routing_with_transfer_test/journeys?'
             'from={}&to={}&_transfer_path=true&forbidden_uris[]=physical_mode:Coach&'
-            'datetime=20120614T100000&_override_scenario=distributed'
+            'datetime=20120614T100000'
         ).format("stopF", "stopA")
 
         response = self.query(query)
@@ -1443,7 +1410,7 @@ class TestRoutingWithTransfer(NewDefaultScenarioAbstractTestFixture):
     def test_complete_transfer_path_bus_rer_with_access_points(self):
         query = (
             '/v1/coverage/routing_with_transfer_test/journeys?'
-            'from={}&to={}&datetime=20120614T080000&_override_scenario=distributed&count=1&_transfer_path=true&'
+            'from={}&to={}&datetime=20120614T080000&count=1&_transfer_path=true&'
             'language=en-US'
         ).format("stopA", "stopF")
 
@@ -1482,7 +1449,7 @@ class TestRoutingWithTransfer(NewDefaultScenarioAbstractTestFixture):
 
 
 @dataset({"main_routing_test": {"scenario": "distributed"}})
-class TestLinksDistributed(NewDefaultScenarioAbstractTestFixture):
+class TestLinksDistributed(AbstractTestFixture):
     def test_same_journey_schedules_link(self):
         query = (
             sub_query
@@ -1546,7 +1513,7 @@ class TestLinksDistributed(NewDefaultScenarioAbstractTestFixture):
 
 
 @dataset({"main_routing_test": {"scenario": "distributed"}})
-class TestBikeWithParkingPenalty(NewDefaultScenarioAbstractTestFixture):
+class TestBikeWithParkingPenalty(AbstractTestFixture):
     def test_bike_with_parking_penalty_first_section(self):
         query = (
             sub_query

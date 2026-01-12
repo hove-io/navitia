@@ -1241,7 +1241,7 @@ class JourneyCommon(object):
 
         # With the free_radius, the PT journey is displayed thanks to the 'free' crow_fly
         r = self.query(
-            '/v1/coverage/main_routing_test/journeys?from=stopA&to=coord%3A8.98311981954709e-05%3A8.98311981954709e-05&datetime=20120614T080118&free_radius_to=20&_override_scenario=experimental&datetime_represents=arrival&'
+            '/v1/coverage/main_routing_test/journeys?from=stopA&to=coord%3A8.98311981954709e-05%3A8.98311981954709e-05&datetime=20120614T080118&free_radius_to=20&datetime_represents=arrival&'
         )
         assert len(r['journeys'][0]['sections']) > 1
         assert r['journeys'][0]['sections'][-1]['type'] == 'crow_fly'
@@ -1956,22 +1956,6 @@ class WithoutPt:
     def test_one_region_without_pt(self):
         """
         Test if we still responds when one kraken has no pt solution
-        """
-        query = "v1/" + journey_basic_query + "&debug=true"
-        response = self.query(query)
-        check_best(response)
-        self.is_valid_journey_response(response, query)
-
-        assert len(response['journeys']) == 2
-        assert len(response['journeys'][0]['sections']) == 3
-        assert response['journeys'][0]['sections'][1]['type'] == 'public_transport'
-        assert len(response['debug']['regions_called']) == 2
-        assert response['debug']['regions_called'][0]['name'] == "main_routing_without_pt_test"
-        assert response['debug']['regions_called'][1]['name'] == "main_routing_test"
-
-    def test_one_region_without_pt_new_default(self):
-        """
-        Test if we still responds when one kraken has no pt solution using new_default
         """
         query = "v1/" + journey_basic_query + "&debug=true"
         response = self.query(query)

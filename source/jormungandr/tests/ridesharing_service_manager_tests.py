@@ -32,12 +32,11 @@ import pytest
 
 from jormungandr.tests.utils_test import MockResponse
 from tests.check_utils import get_not_null, s_coord, r_coord, journey_basic_query
-from tests.tests_mechanism import dataset, NewDefaultScenarioAbstractTestFixture
+from tests.tests_mechanism import dataset, AbstractTestFixture
 
 DUMMY_INSTANT_SYSTEM_FEED_PUBLISHER = {'id': '42', 'name': '42', 'license': 'I dunno', 'url': 'http://w.tf'}
 
 MOCKED_INSTANCE_CONF = {
-    'scenario': 'new_default',
     'instance_config': {
         'ridesharing': [
             {
@@ -116,7 +115,7 @@ def mock_instance_ridesharing_greenlet_pool_size(monkeypatch):
 
 
 @dataset({'main_routing_test': MOCKED_INSTANCE_CONF})
-class TestRidesharingServiceManager(NewDefaultScenarioAbstractTestFixture):
+class TestRidesharingServiceManager(AbstractTestFixture):
     """
     Integration test with Instant System
     Note: '&forbidden_uris[]=PM' used to avoid line 'PM' and it's vj=vjPB in /journeys

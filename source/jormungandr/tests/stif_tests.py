@@ -50,7 +50,7 @@ class TestStif(AbstractTestFixture):
         So here we want journeys 1 and 2
         """
         query = (
-            "journeys?from={from_sp}&to={to_sp}&datetime={datetime}&_override_scenario=new_default"
+            "journeys?from={from_sp}&to={to_sp}&datetime={datetime}"
             "&min_nb_journeys=1&_min_journeys_calls=2&_final_line_filter=true&_max_successive_physical_mode=3".format(
                 from_sp="stopA", to_sp="stopB", datetime="20140614T075500"
             )
@@ -68,7 +68,7 @@ class TestStif(AbstractTestFixture):
         So here we only want journeys 1
         """
         query = (
-            "journeys?from={from_sp}&to={to_sp}&datetime={datetime}&_override_scenario=new_default"
+            "journeys?from={from_sp}&to={to_sp}&datetime={datetime}"
             "&min_nb_journeys=1&_min_journeys_calls=1&_final_line_filter=true&_max_successive_physical_mode=3".format(
                 from_sp="stopA", to_sp="stopB", datetime="20140614T075500"
             )
@@ -86,7 +86,7 @@ class TestStif(AbstractTestFixture):
         So here we want journeys 1, 2 and 3
         """
         query = (
-            "journeys?from={from_sp}&to={to_sp}&datetime={datetime}&_override_scenario=new_default"
+            "journeys?from={from_sp}&to={to_sp}&datetime={datetime}"
             "&min_nb_journeys=1&_min_journeys_calls=2&_final_line_filter=false&_max_successive_physical_mode=3".format(
                 from_sp="stopA", to_sp="stopB", datetime="20140614T075500"
             )
@@ -114,7 +114,7 @@ class TestStif(AbstractTestFixture):
         So here we want journey1
         """
         query = (
-            "journeys?from={from_sp}&to={to_sp}&datetime={datetime}&_override_scenario=new_default"
+            "journeys?from={from_sp}&to={to_sp}&datetime={datetime}"
             "&_max_successive_physical_mode=3&_max_additional_connections=10".format(
                 from_sp="stopP", to_sp="stopT", datetime="20140614T145500"
             )
@@ -125,7 +125,7 @@ class TestStif(AbstractTestFixture):
 
         # As we modify the value of _max_successive_physical_mode to 5 we want two journeys
         query = (
-            "journeys?from={from_sp}&to={to_sp}&datetime={datetime}&_override_scenario=new_default"
+            "journeys?from={from_sp}&to={to_sp}&datetime={datetime}"
             "&_max_successive_physical_mode=5&_max_additional_connections=10".format(
                 from_sp="stopP", to_sp="stopT", datetime="20140614T145500"
             )
@@ -151,7 +151,7 @@ class TestStif(AbstractTestFixture):
         # As there are 4 buses successive to be used from stopP to stopW and _max_successive_physical_mode = 3
         # we have 1 journey
         query = (
-            "journeys?from={from_sp}&to={to_sp}&datetime={datetime}&_override_scenario=new_default"
+            "journeys?from={from_sp}&to={to_sp}&datetime={datetime}"
             "&_max_successive_physical_mode=3&_max_additional_connections=10".format(
                 from_sp="stopP", to_sp="stopW", datetime="20140614T145500"
             )
@@ -162,7 +162,7 @@ class TestStif(AbstractTestFixture):
 
         # As we modify the value of _max_successive_physical_mode to 5 we want two journeys
         query = (
-            "journeys?from={from_sp}&to={to_sp}&datetime={datetime}&_override_scenario=new_default"
+            "journeys?from={from_sp}&to={to_sp}&datetime={datetime}"
             "&_max_successive_physical_mode=5&_max_additional_connections=10".format(
                 from_sp="stopP", to_sp="stopW", datetime="20140614T145500"
             )
@@ -174,7 +174,7 @@ class TestStif(AbstractTestFixture):
         # As we modify the value of _max_additional_connections to 2
         # since the best journey is the one with 6 connexions, we will find 2 journeys
         query = (
-            "journeys?from={from_sp}&to={to_sp}&datetime={datetime}&_override_scenario=new_default"
+            "journeys?from={from_sp}&to={to_sp}&datetime={datetime}"
             "&_max_successive_physical_mode=5&_max_additional_connections=2".format(
                 from_sp="stopP", to_sp="stopW", datetime="20140614T145500"
             )
@@ -190,7 +190,7 @@ class TestStif(AbstractTestFixture):
         Waiting 30 minutes in StopC
         """
         # default max_waiting_duration = 4*60*60
-        query = "journeys?from={from_sp}&to={to_sp}&datetime={datetime}&_override_scenario=new_default".format(
+        query = "journeys?from={from_sp}&to={to_sp}&datetime={datetime}".format(
             from_sp="stopA", to_sp="stopB", datetime="20140614T084500"
         )
 
@@ -210,7 +210,7 @@ class TestStif(AbstractTestFixture):
         # override max_waiting_duration 15 minutes
         # max_waiting_duration = 15*60 = 900
         query = (
-            "journeys?from={from_sp}&to={to_sp}&datetime={datetime}&_override_scenario=new_default"
+            "journeys?from={from_sp}&to={to_sp}&datetime={datetime}"
             "&max_waiting_duration={max_waiting_duration}".format(
                 from_sp="stopA", to_sp="stopB", datetime="20140614T084500", max_waiting_duration=15 * 60
             )
@@ -229,7 +229,7 @@ class TestStif(AbstractTestFixture):
         # override max_waiting_duration
         # max_waiting_duration = -10
         query = (
-            "journeys?from={from_sp}&to={to_sp}&datetime={datetime}&_override_scenario=new_default"
+            "journeys?from={from_sp}&to={to_sp}&datetime={datetime}"
             "&max_waiting_duration={max_waiting_duration}".format(
                 from_sp="stopA", to_sp="stopB", datetime="20140614T084500", max_waiting_duration=-10
             )
