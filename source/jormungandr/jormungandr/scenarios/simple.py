@@ -117,7 +117,7 @@ class Scenario(object):
         if request['until']:
             req.traffic_reports.application_period_end = until
 
-        resp = instance.get_backend("line_reports", request).send_and_receive(req)
+        resp = instance.get_backend("traffic_reports", request).send_and_receive(req)
         return resp
 
     def line_reports(self, request, instance):
