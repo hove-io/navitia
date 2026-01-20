@@ -1121,6 +1121,8 @@ class TestChaosDisruptionsUpdate(ChaosDisruptionsFixture):
         )
         assert len(response['traffic_reports']) == 1
         assert len(response['disruptions']) == 3
+        for disruption in response['disruptions']:
+            assert "publication_period" not in disruption
         assert response['traffic_reports'][0]['network']['id'] == 'base_network'
         assert len(response['traffic_reports'][0]['lines']) == 1
         assert response['traffic_reports'][0]['lines'][0]['id'] == 'A'
