@@ -25,7 +25,7 @@ pybreaker==0.2.3
 requests==2.25.1
 future==0.15.2
 zeep==1.1.0
-gevent==21.8.0
+gevent==23.9.0
 serpy-ctp==0.2.1
 python-json-logger==0.1.7
 jmespath==0.9.3
