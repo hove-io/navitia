@@ -5,13 +5,9 @@ swagger-spec-validator==2.1.0
 mock==1.0.1
 validators==0.10
 
-pytest==4.6.5 ; python_version < "3.9"
-pytest-mock==1.10.0 ; python_version < "3.9"
-pytest-cov==2.5.1; python_version < "3.9"
-
-pytest==8.3.3 ; python_version >= "3.9"
-pytest-mock==3.14.0 ; python_version >= "3.9"
-pytest-cov==4.1.0 ; python_version >= "3.9"
+pytest==8.3.3
+pytest-mock==3.14.0
+pytest-cov==4.1.0
 
 requests-mock==1.12.1
 flex==6.10.0
