@@ -48,7 +48,6 @@ echo_instance() {
 upgrade_cities_db() {
   # Prepare the upgrade file for the cities db in the docker-compose
   cd /usr/share/navitia/cities/
-  sed -i 's/dev/alembic/g' alembic.ini
   sed -i 's/localhost/cities_database/g' alembic.ini
 
   # Wait for cities db ready
