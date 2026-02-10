@@ -328,12 +328,18 @@ class add_passages_links:
             max_dt = "19000101T000000"
             min_dt = "29991231T235959"
             time_field = "arrival_date_time" if api == "arrivals" else "departure_date_time"
+            fallback_field = "departure_date_time" if api == "arrivals" else "arrival_date_time"
             for passage_ in passages:
-                dt = passage_["stop_date_time"][time_field]
+                stop_dt = passage_.get("stop_date_time", {})
+                dt = stop_dt.get(time_field) or stop_dt.get(fallback_field)
+                if not dt:
+                    continue
                 if min_dt > dt:
                     min_dt = dt
                 if max_dt < dt:
                     max_dt = dt
+            if min_dt == "29991231T235959" or max_dt == "19000101T000000":
+                return response, status, other
             if "links" not in response:
                 response["links"] = []
             # request.args is a MultiDict, we want to flatten it by having list as value when needed
