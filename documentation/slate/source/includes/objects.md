@@ -136,7 +136,8 @@ As "direction" is a [place](#place) , it can be a poi in some data.
     },
     "administrative_regions":[{"...": "..."}],
     "equipments":[{"...": "..."}],
-    "stop_area":{"...": "..."}
+    "stop_area":{"...": "..."},
+    "access_points":[{"...": "..."}]
 }
 ```
 
@@ -148,6 +149,13 @@ As "direction" is a [place](#place) , it can be a poi in some data.
 |administrative_regions|array of [admin](#admin)|Administrative regions of the stop point in which is the stop point|
 |equipments|array of string|list of [equipment](#equipment) of the stop point|
 |stop_area|[stop_area](#stop-area)|Stop Area containing this stop point|
+|access_points|array of [pathway](#pathway)|Access points of the stop point, with pathway details (entrance/exit, length, traversal time, etc.)|
+
+<aside class="notice">
+    The <code>access_points</code> array on a stop point contains <a href="#pathway">pathway</a> objects
+    (which embed the <a href="#access-point">access point</a> fields plus indoor routing details like
+    <code>is_entrance</code>, <code>is_exit</code>, <code>length</code>, and <code>traversal_time</code>).
+</aside>
 
 ### <a name="stop-area"></a>Stop Area
 
@@ -684,38 +692,132 @@ Poi = Point Of Interest
 |poi_type|[poi_type](#poi-type)|Type of the poi                                                     |
 |stands  |[stands](#stands)    |Information on the spots available, for BSS stations                |
 
-### <a name="access-point"></a>Access_point
+### <a name="access-point"></a>Access Point
 
 ``` shell
 $ curl 'https://api.navitia.io/v1/coverage/sandbox/access_points' -H 'Authorization: 3b036afe-0110-4202-b9ed-99718476c2e0'
+
+HTTP/1.1 200 OK
+
+{
+    "access_points": [
+        {
+            "id": "access_point:SA:main_entrance",
+            "name": "Main Entrance",
+            "coord": {
+                "lat": "48.846781",
+                "lon": "2.37715"
+            },
+            "access_point_code": "A1",
+            "embedded_type": "pt_access_point"
+        },
+        {
+            "id": "access_point:SA:south_exit",
+            "name": "South Exit",
+            "coord": {
+                "lat": "48.846612",
+                "lon": "2.37698"
+            },
+            "access_point_code": "B2",
+            "embedded_type": "pt_access_point"
+        }
+    ]
+}
 ```
 
-Access_point = point of access from the pavement to a station, a multimodal area.
+An access point represents a physical entry or exit point that connects the street (pavement) to a
+public transport station or a multimodal interchange area. Typical examples include metro station
+entrances, elevator exits, escalator accesses, or any identifiable passage leading into or out of a
+station.
 
-|Field                  |Type                     |Description                                                         |
-|-----------------------|-------------------------|--------------------------------------------------------------------|
-|id                     |string                   |Identifier of the access point                                      |
-|name                   |string                   |Name of the access point                                            |
-|coord                  |[coord](#coord)          |Coordinates of the access point                                     |
-|access_point_code      |string                   |Identifies the well-known code for the access_point                 |
+Access points are attached to [stop points](#stop-point). When queried via the
+[/access_points](#access-points-api) endpoint, they are deduplicated across stop points so that each
+unique access point appears only once in the response.
 
-You should labelized the access-point using "access_point_code" and "name".
-For example: "follow the `access_point_code` - `name` to exit from `parent_station` "
+Access points are also used during journey planning: when the `park_mode` parameter is set to
+`on_street` (for bike parking), Navitia adds a walk section that routes the traveler from the
+street to the next stop point through the appropriate access point.
+
+#### Fields
+
+|Field                  |Type                              |Description                                                         |
+|-----------------------|----------------------------------|--------------------------------------------------------------------|
+|id                     |string                            |Identifier of the access point                                      |
+|name                   |string                            |Name of the access point                                            |
+|coord                  |[coord](#coord)                   |Coordinates of the access point (street-level location)             |
+|access_point_code      |string                            |A well-known short code for the access point, useful for signage    |
+|embedded_type          |enum                              |Type of the access point: `pt_access_point` (linked to a stop point) or `poi_access_point` (linked to a POI)|
+
+<aside class="notice">
+You should label the access point for the traveler using both <code>access_point_code</code> and <code>name</code>.
+For example: "Follow <b>A1</b> - <b>Main Entrance</b> to enter <b>Gare de Lyon</b>".
+</aside>
+
+#### Where access points appear
+
+Access points can be found in:
+
+-   The dedicated [/access_points](#access-points-api) endpoint, which lists all access points for a given coverage or filtered by stop point.
+-   Inside [stop_point](#stop-point) objects, in the `access_points` array (serialized as [pathways](#pathway) that include the access point together with indoor routing details).
+-   In [journeys](#journeys) responses, within walking sections as `vias` entries, representing the pathway the traveler must walk through to reach or leave the platform.
 
 ### <a name="pathway"></a>Pathway
 
-Pathway = indoor way from a stop point to an access point. It could be an entrance, an exit or both.
+``` json
+{
+    "id": "access_point:SA:main_entrance",
+    "name": "Main Entrance",
+    "coord": {
+        "lat": "48.846781",
+        "lon": "2.37715"
+    },
+    "access_point_code": "A1",
+    "embedded_type": "pt_access_point",
+    "is_entrance": true,
+    "is_exit": true,
+    "length": 120,
+    "traversal_time": 90,
+    "pathway_mode": 1,
+    "stair_count": 24,
+    "max_slope": 0,
+    "min_width": 200,
+    "signposted_as": "Sortie Rue de Bercy",
+    "reversed_signposted_as": "Direction Quais"
+}
+```
 
-|Field                  |Type                     |Description                                                         |
-|-----------------------|-------------------------|--------------------------------------------------------------------|
-|id                     |string                   |Identifier of the access point                                      |
-|name                   |string                   |Name of the access point                                            |
-|is_entrance            |boolean                  |Identifies whether the path is an entrance                          |
-|is_exit                |boolean                  |Identifies whether the path is an exit                              |
-|length                 |int                      |Length of the path                                                  |
-|traversal_time         |int                      |Duration to walk the path when it's known                           |
+A pathway describes an indoor route from a [stop point](#stop-point) to an [access point](#access-point).
+It includes all the physical characteristics of the passage (stairs, length, width, etc.) as well as
+the access point information itself.
 
-You can find pathways in [journeys](#journeys) service, where there is some "vias" in walking sections. "Vias" are "pathways" in navitia.
+Pathways appear inside the `access_points` array of a [stop_point](#stop-point) object and as `vias`
+entries in walking sections of [journeys](#journeys) responses.
+
+#### Fields
+
+|Field                  |Type                              |Description                                                         |
+|-----------------------|----------------------------------|--------------------------------------------------------------------|
+|id                     |string                            |Identifier of the access point                                      |
+|name                   |string                            |Name of the access point                                            |
+|coord                  |[coord](#coord)                   |Coordinates of the access point                                     |
+|access_point_code      |string                            |A well-known short code for the access point                        |
+|embedded_type          |enum                              |Type of the access point: `pt_access_point` or `poi_access_point`   |
+|is_entrance            |boolean                           |Whether the pathway can be used as an entrance into the station     |
+|is_exit                |boolean                           |Whether the pathway can be used as an exit from the station         |
+|length                 |int                               |Length of the pathway in centimeters                                |
+|traversal_time         |int                               |Estimated time to walk the pathway in seconds                       |
+|pathway_mode           |int                               |Type of pathway (e.g. walkway, stairs, escalator, elevator)         |
+|stair_count            |int                               |Number of stairs along this pathway                                 |
+|max_slope              |int                               |Maximum slope along the pathway                                     |
+|min_width              |int                               |Minimum width of the pathway in centimeters                         |
+|signposted_as          |string                            |Text visible on signage when walking in the forward direction       |
+|reversed_signposted_as |string                            |Text visible on signage when walking in the reverse direction       |
+
+<aside class="notice">
+The <code>length</code> and <code>traversal_time</code> fields are only available in pathway context
+(inside a stop_point's <code>access_points</code> array or in journey <code>vias</code>).
+They are not returned by the standalone <code>/access_points</code> endpoint.
+</aside>
 
 ### Address
 
