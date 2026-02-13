@@ -198,6 +198,20 @@ class TravelerProfile(object):
         traveler_profiles = []
         for traveler_type in acceptable_traveler_types:
             profile = cls.make_traveler_profile(coverage, traveler_type)
+            if profile is None:
+                logging.getLogger(__name__).warning(
+                    'make_traveler_profile returned None for coverage=%s, traveler_type=%s, using default',
+                    coverage,
+                    traveler_type,
+                )
+                profile = default_traveler_profiles.get(traveler_type)
+                if profile is None:
+                    logging.getLogger(__name__).warning(
+                        'Cannot find default traveler profile for coverage=%s traveler_type=%s, skipping the traveler type',
+                        coverage,
+                        traveler_type,
+                    )
+                    continue
             traveler_profiles.append(profile)
         return traveler_profiles
 

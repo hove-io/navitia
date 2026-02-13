@@ -29,8 +29,10 @@
 
 from __future__ import absolute_import, print_function, unicode_literals, division
 
+from unittest.mock import patch
 from jormungandr.travelers_profile import TravelerProfile, default_traveler_profiles
 from jormungandr import cache
+from navitiacommon.default_traveler_profile_params import acceptable_traveler_types
 from six.moves import map
 
 
@@ -95,3 +97,21 @@ def test_make_profile_cache_decorator():
     traveler_profile_2 = TravelerProfile.make_traveler_profile(region, traveler_type)
 
     assert traveler_profile_1 is traveler_profile_2
+
+
+def test_get_profiles_by_coverage_none_fallback():
+    """
+    When make_traveler_profile returns None (e.g. corrupted cache entry),
+    get_profiles_by_coverage should fall back to default profiles instead of
+    including None in the result list.
+    """
+    with patch.object(TravelerProfile, 'make_traveler_profile', return_value=None):
+        profiles = TravelerProfile.get_profiles_by_coverage('default')
+
+    assert len(profiles) == len(acceptable_traveler_types)
+
+    for profile in profiles:
+        assert profile is not None
+        assert isinstance(profile, TravelerProfile)
+        # Verify we can access attributes without AttributeError
+        assert profile.bike_speed is not None
