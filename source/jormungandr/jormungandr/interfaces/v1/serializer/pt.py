@@ -295,7 +295,7 @@ class DisruptionSerializer(PbNestedSerializer):
     impact_id = jsonschema.Field(schema_type=str, attr='uri')
     title = (jsonschema.Field(schema_type=str),)
     application_periods = PeriodSerializer(many=True)
-    publication_period = jsonschema.MethodField(schema_type=lambda: PeriodSerializer(), display_none=False)
+    publication_period = PeriodSerializer(many=False, display_none=False)
     application_patterns = ApplicationPatternSerializer(many=True, display_none=False)
     status = EnumField(attr='status', pb_type=ActiveStatus)
     updated_at = DateTimeField()
