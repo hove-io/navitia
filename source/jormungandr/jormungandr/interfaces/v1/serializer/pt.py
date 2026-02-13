@@ -308,12 +308,6 @@ class DisruptionSerializer(PbNestedSerializer):
             return obj.category
         return None
 
-    def get_publication_period(self, obj):
-        if hasattr(obj, "publication_period") and obj.publication_period:
-            data = PeriodSerializer(obj.publication_period, display_none=False).data
-            return data if data else None
-        return None
-
     severity = SeveritySerializer()
     messages = MessageSerializer(many=True)
     impacted_objects = ImpactedSerializer(many=True, display_none=False)
