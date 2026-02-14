@@ -1,0 +1,8 @@
+libkeepalive-0.3:
+   - support for IPv6
+   - code cleanup and fix
+   - license changed to MIT
+libkeepalive-0.2:
+   - support for runtime tuning using environment variables
+libkeepalive-0.1:
+   - first version of libkeepalive

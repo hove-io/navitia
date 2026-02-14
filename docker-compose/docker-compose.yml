@@ -1,0 +1,209 @@
+version: "3"
+
+volumes:
+  tyr_data:
+  tyr_instance_conf:
+  pgdata_jormun:
+  pgdata_cities:
+
+services:
+  database:
+    image: postgis/postgis:13-3.2
+    container_name: navitia_database
+    environment:
+      - POSTGRES_USER=navitia
+      - POSTGRES_PASSWORD=navitia
+      - POSTGRES_DB=jormungandr
+    volumes:
+      - pgdata_jormun:/var/lib/postgresql/data
+
+  cities_database:
+    image: postgis/postgis:13-3.2
+    container_name: navitia_cities_database
+    environment:
+      - POSTGRES_USER=navitia
+      - POSTGRES_PASSWORD=navitia
+      - POSTGRES_DB=cities
+    volumes:
+      - pgdata_cities:/var/lib/postgresql/data
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: navitia_rabbitmq
+
+  redis:
+    image: redis:3-alpine
+    container_name: navitia_redis
+
+  tyr_web:
+    container_name: navitia_tyr_web
+    image: navitia/tyr-web:${TAG}
+    build:
+      context: ..
+      dockerfile: docker-compose/debian11/tyr-web.dockerfile
+      network: host
+    volumes:
+      - tyr_data:/srv/ed
+      - tyr_instance_conf:/etc/tyr.d
+    ports:
+      - "9898:80"
+    environment:
+      - TYR_DATABASE_HOST=navitia_database
+      - TYR_CITIES_DATABASE_URI=postgresql://navitia:navitia@navitia_cities_database/cities
+      - TYR_CITIES_OSM_FILE_PATH=/srv/ed/
+      - TYR_CELERY_BROKER_URL=amqp://guest:guest@navitia_rabbitmq:5672//
+      - TYR_KRAKEN_BROKER_URL=amqp://guest:guest@navitia_rabbitmq:5672//
+      - TYR_SQLALCHEMY_DATABASE_URI=postgresql://navitia:navitia@navitia_database/jormungandr
+      - TYR_REDIS_HOST=navitia_redis
+      - TYR_INSTANCES_DIR=/etc/tyr.d
+    depends_on:
+      - database
+      - cities_database
+      - rabbitmq
+
+  tyr_beat:
+    container_name: navitia_tyr_beat
+    image: navitia/tyr-beat:${TAG}
+    build:
+      context: ..
+      dockerfile: docker-compose/debian11/Dockerfile-tyr-beat
+      network: host
+    environment:
+      - TYR_CITIES_DATABASE_HOST=navitia_cities_database
+      - TYR_ED_DATABASE_HOST=navitia_database
+      - TYR_CITIES_DATABASE_URI=postgresql://navitia:navitia@navitia_cities_database/cities
+      - TYR_CITIES_OSM_FILE_PATH=/srv/ed/
+      - TYR_CELERY_BROKER_URL=amqp://guest:guest@navitia_rabbitmq:5672//
+      - TYR_KRAKEN_BROKER_URL=amqp://guest:guest@navitia_rabbitmq:5672//
+      - TYR_SQLALCHEMY_DATABASE_URI=postgresql://navitia:navitia@navitia_database/jormungandr
+      - TYR_REDIS_HOST=navitia_redis
+      - TYR_INSTANCES_DIR=/etc/tyr.d
+      - >
+        TYR_INSTANCE_default={
+        "instance": {
+        "name": "default",
+        "source-directory": "/ed/source/default",
+        "backup-directory": "/ed/backup/default",
+        "aliases_file": "/ed/aliases",
+        "synonyms_file": "/ed/synonyms",
+        "target-file": "/ed/target_file/default",
+        "tmp_file": "/ed/tmp_file/default",
+        "is-free": true,
+        "exchange": "exchange"
+        },
+        "database": {
+        "host": "navitia_database",
+        "dbname": "default",
+        "username": "navitia",
+        "password": "navitia",
+        "port": 5432
+        }}
+
+    volumes:
+      - tyr_data:/srv/ed
+      - tyr_instance_conf:/etc/tyr.d
+    depends_on:
+      - database
+      - cities_database
+      - rabbitmq
+
+  instances_configurator:
+    container_name: navitia_instances_configurator
+    image: navitia/instances-configurator:${TAG}
+    build:
+      context: ..
+      dockerfile: docker-compose/debian11/instances-configurator.dockerfile
+      network: host
+    volumes:
+      - tyr_data:/srv/ed
+      - tyr_instance_conf:/etc/tyr.d
+    environment:
+      - INSTANCE_default=true # Init the database for the 'default' instance
+    depends_on:
+      - database
+      - cities_database
+
+  tyr_worker:
+    container_name: navitia_tyr_worker
+    image: navitia/tyr-worker:${TAG}
+    build:
+      context: ..
+      dockerfile: docker-compose/debian11/Dockerfile-tyr-worker
+      network: host
+      args: # To be set in your .env file
+        GITHUB_USER: ${GITHUB_USER}
+        GITHUB_TOKEN: ${GITHUB_TOKEN}
+    volumes:
+      - tyr_data:/srv/ed
+      - tyr_instance_conf:/etc/tyr.d
+    environment:
+      - TYR_CITIES_DATABASE_URI=postgresql://navitia:navitia@navitia_cities_database/cities
+      - TYR_CITIES_OSM_FILE_PATH=/srv/ed/
+      - TYR_CELERY_BROKER_URL=amqp://guest:guest@navitia_rabbitmq:5672//
+      - TYR_KRAKEN_BROKER_URL=amqp://guest:guest@navitia_rabbitmq:5672//
+      - TYR_SQLALCHEMY_DATABASE_URI=postgresql://navitia:navitia@navitia_database/jormungandr
+      - TYR_REDIS_HOST=navitia_redis
+      - TYR_INSTANCES_DIR=/etc/tyr.d
+    depends_on:
+      - database
+      - cities_database
+      - rabbitmq
+
+  jormungandr:
+    container_name: navitia_jormungandr
+    image: navitia/jormungandr:${TAG}
+    build:
+      context: ..
+      dockerfile: docker-compose/debian11/jormungandr.dockerfile
+      network: host
+    environment:
+      - JORMUNGANDR_SQLALCHEMY_DATABASE_URI=postgresql://navitia:navitia@navitia_database/jormungandr
+      - >
+        JORMUNGANDR_INSTANCE_DEFAULT={
+        "key":"fr-transilien","zmq_socket":"tcp://kraken-default:30000", 
+        "pt_planners": { 
+        "kraken": { "class": "jormungandr.pt_planners.kraken.Kraken", "args": { "zmq_socket": "tcp://kraken-default:30000" } }, 
+        "loki": { "class": "jormungandr.pt_planners.loki.Loki", "args": { "zmq_socket": "tcp://host.docker.internal:30001" } } 
+        }
+        }
+      - JORMUNGANDR_MEMORY_CACHE_CONFIGURATION={ "CACHE_TYPE":"uwsgi","CACHE_UWSGI_NAME":"jormungandr"}
+      - APACHE_SERVER_NAME=localhost
+      - APACHE_SERVER_ALIAS=127.0.0.1
+      - JORMUNGANDR_ZMQ_DEFAULT_SOCKET_TYPE=transient
+      - JORMUNGANDR_PATCH_WITH_GEVENT_SOCKET=true
+      - JORMUNGANDR_START_MONITORING_THREAD=false
+      - UWSGI_PROCESSES=1
+      - UWSGI_LISTEN=10
+    ports:
+      - "80:80"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    depends_on:
+      - database
+
+  kraken-default:
+    image: navitia/kraken:${TAG}
+    build:
+      context: ..
+      dockerfile: docker-compose/debian11/Dockerfile-kraken
+      network: host
+    environment:
+      - KRAKEN_GENERAL_database=/srv/ed/output/default.nav.lz4
+      - KRAKEN_GENERAL_log_level=DEBUG
+      - KRAKEN_GENERAL_zmq_socket=tcp://*:30000
+      - KRAKEN_GENERAL_instance_name=default
+      - KRAKEN_GENERAL_is_realtime_enabled=false
+      - KRAKEN_GENERAL_is_realtime_add_enabled=false
+      - KRAKEN_GENERAL_is_realtime_add_trip_enabled=false
+      - KRAKEN_BROKER_protocol=amqp
+      - KRAKEN_BROKER_host=navitia_rabbitmq
+      - KRAKEN_BROKER_port=5672
+      - KRAKEN_BROKER_username=guest
+      - KRAKEN_BROKER_password=guest
+      - KRAKEN_BROKER_exchange=navitia
+    volumes:
+      - tyr_data:/srv/ed:ro
+    expose:
+      - "30000"
+    depends_on:
+      - rabbitmq
