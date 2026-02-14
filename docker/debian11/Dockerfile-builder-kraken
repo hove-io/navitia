@@ -1,37 +1,8 @@
-FROM debian:bullseye-slim
+FROM 162230498103.dkr.ecr.eu-west-1.amazonaws.com/mutable-debian11_dev:latest
 
-RUN apt update && apt clean \
-    && apt update --fix-missing \
-    && apt install -o Acquire::Retries=10 -y ca-certificates \
-    && update-ca-certificates \
-    && apt install -o Acquire::Retries=10 -y \
-    clang-format \
-    clang-tidy \ 
-    cmake \
-    cmake \
-    curl \
-    g++ \
-    git \
-    libboost-all-dev \
-    libgeos++-dev \
-    libgoogle-perftools-dev \
-    liblog4cplus-dev \
-    libosmpbf-dev \
-    libpqxx-dev \
-    libproj-dev \
-    libprotobuf-dev \
-    libssl-dev \
-    libzmq3-dev \
-    netcat \
-    protobuf-compiler \
-    python3-pip \
-    python3.9 \
-    wget \
-    && apt purge -y \
-    && apt autoremove -y
+RUN apt update && apt install -y git wget
 
-
-RUN git clone https://github.com/hove-io/navitia.git
+RUN git config --global --add safe.directory /navitia/navitia
 
 COPY docker/build_kraken_deb11.sh /build_navitia.sh
 RUN chmod +x /build_navitia.sh
