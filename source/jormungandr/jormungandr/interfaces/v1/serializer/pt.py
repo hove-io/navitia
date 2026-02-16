@@ -295,7 +295,7 @@ class DisruptionSerializer(PbNestedSerializer):
     impact_id = jsonschema.Field(schema_type=str, attr='uri')
     title = (jsonschema.Field(schema_type=str),)
     application_periods = PeriodSerializer(many=True)
-    publication_period = jsonschema.MethodField(schema_type=str, display_none=False)
+    publication_period = PeriodSerializer(many=False, display_none=False)
     application_patterns = ApplicationPatternSerializer(many=True, display_none=False)
     status = EnumField(attr='status', pb_type=ActiveStatus)
     updated_at = DateTimeField()
@@ -306,12 +306,6 @@ class DisruptionSerializer(PbNestedSerializer):
     def get_category(self, obj):
         if obj.HasField(str("category")) and obj.category:
             return obj.category
-        return None
-
-    def get_publication_period(self, obj):
-        if hasattr(obj, "publication_period") and obj.publication_period:
-            data = PeriodSerializer(obj.publication_period, display_none=False).data
-            return data if data else None
         return None
 
     severity = SeveritySerializer()
