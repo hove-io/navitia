@@ -410,8 +410,17 @@ void MaintenanceWorker::handle_rt_in_batch(const std::vector<AmqpClient::Envelop
                 LOG4CPLUS_DEBUG(logger, "deletion of Chaos disruption " << entity.id());
                 delete_disruption(entity.id(), *data->pt_data, *data->meta);
             } else if (entity.HasExtension(chaos::disruption)) {
-                LOG4CPLUS_DEBUG(logger, "add/update of Chaos disruption " << entity.id());
-                make_and_apply_disruption(entity.GetExtension(chaos::disruption), *data->pt_data, *data->meta);
+                const auto& chaos_disruption = entity.GetExtension(chaos::disruption);
+                const auto& pub_period = chaos_disruption.publication_period();
+                if (pub_period.end() != 0
+                    && navitia::from_posix_timestamp(pub_period.end()) <= pt::microsec_clock::universal_time()) {
+                    LOG4CPLUS_DEBUG(logger, "Chaos disruption " << entity.id()
+                                                                << " publication period has ended, treating as deletion");
+                    delete_disruption(entity.id(), *data->pt_data, *data->meta);
+                } else {
+                    LOG4CPLUS_DEBUG(logger, "add/update of Chaos disruption " << entity.id());
+                    make_and_apply_disruption(chaos_disruption, *data->pt_data, *data->meta);
+                }
             } else if (entity.has_trip_update()) {
                 LOG4CPLUS_DEBUG(logger, "add/update of Kirin disruption" << entity.id());
                 handle_realtime(entity.id(), navitia::from_posix_timestamp(feed_message.header().timestamp()),
