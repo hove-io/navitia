@@ -164,7 +164,7 @@ class add_journey_href(object):
                         args['last_section_mode[]'] = journey['sections'][-1].get('mode', 'walking')
 
                     args['min_nb_transfers'] = journey['nb_transfers']
-                    args['direct_path'] = 'only' if 'non_pt' in journey.get('tags', []) else 'none'
+                    args['direct_path'] = 'only' if 'non_pt' in journey['tags'] else 'none'
 
                     if instance:
                         args['min_nb_journeys'] = instance.same_journey_schedules_configuration.get(
@@ -181,18 +181,18 @@ class add_journey_href(object):
                     link_allowed_ids = set()
                     # Get allowed ids for link_aid_types
                     for allowed_type in link_aid_types:
-                        for section in journey.get('sections', []):
+                        for section in journey['sections']:
                             if is_public_transport_section(section):
                                 link_allowed_ids.update(
                                     link['id']
-                                    for link in section.get('links', [])
+                                    for link in section['links']
                                     if link.get('type') == allowed_type and link.get('id')
                                 )
                     # Get allowed ids for "stop_area" if present in allowed_id_types
                     # Note: if both stop_point and stop_area are present then stop_point is dominant
                     if "stop_point" not in allowed_id_types and "stop_area" in allowed_id_types:
                         default_allowed_ids.clear()
-                        for section in journey.get('sections', []):
+                        for section in journey['sections']:
                             if section.get('type') == 'public_transport':
                                 default_allowed_ids.add(
                                     section.get("from", {}).get("stop_point", {}).get("stop_area", {}).get("id")
@@ -210,18 +210,14 @@ class add_journey_href(object):
                         del args['_no_shared_section']
 
                     # Add datetime depending on datetime_represents parameter
-                    departure_date_time = journey.get('departure_date_time')
-                    arrival_date_time = journey.get('arrival_date_time')
                     if 'datetime_represents' not in args:
-                        if departure_date_time:
-                            args['datetime'] = departure_date_time
+                        args['datetime'] = journey['departure_date_time']
                     else:
-                        if 'departure' in args.get('datetime_represents') and departure_date_time:
-                            args['datetime'] = departure_date_time
-                        else:
-                            if arrival_date_time:
-                                args['datetime'] = arrival_date_time
-
+                        args['datetime'] = (
+                            journey['departure_date_time']
+                            if 'departure' in args.get('datetime_represents')
+                            else journey['arrival_date_time']
+                        )
                     # Here we create two links same_journey_schedules and this_journey
                     args['rel'] = 'same_journey_schedules'
                     # TODO: _pt_planner=kraken should be removed after ticket NAV-4025 is addressed.
@@ -244,7 +240,7 @@ class add_journey_href(object):
                         for param in ["from", "to", "data_freshness", "datetime"]:
                             if param in args:
                                 del args[param]
-                        for section in journey.get('sections', []):
+                        for section in journey['sections']:
                             if section.get('type') != 'street_network':
                                 continue
                             coords = section.get('geojson').get('coordinates')
