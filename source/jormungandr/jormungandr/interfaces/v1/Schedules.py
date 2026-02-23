@@ -334,7 +334,9 @@ class add_passages_links:
             for passage_ in passages:
                 dt = passage_.get("stop_date_time", {}).get(time_field)
                 if not dt:
-                    logging.getLogger(__name__).error("Passage ignord, {} not found for {}".format(time_field, api))
+                    logging.getLogger(__name__).error(
+                        "Passage ignord, {} not found for {}".format(time_field, api)
+                    )
                     continue
                 if min_dt > dt:
                     min_dt = dt
@@ -342,7 +344,9 @@ class add_passages_links:
                     max_dt = dt
 
             if max_dt == "19000101T000000" or min_dt == "29991231T235959":
-                logging.getLogger(__name__).error("Unable to compute the next and previous links for {}".format(api))
+                logging.getLogger(__name__).error(
+                    "Unable to compute the next and previous links for {}".format(api)
+                )
                 return response, status, other
 
             if "links" not in response:
