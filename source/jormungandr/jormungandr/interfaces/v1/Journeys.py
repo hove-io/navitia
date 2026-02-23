@@ -218,7 +218,6 @@ class add_journey_href(object):
                             if 'departure' in args.get('datetime_represents')
                             else journey['arrival_date_time']
                         )
-
                     # Here we create two links same_journey_schedules and this_journey
                     args['rel'] = 'same_journey_schedules'
                     # TODO: _pt_planner=kraken should be removed after ticket NAV-4025 is addressed.
