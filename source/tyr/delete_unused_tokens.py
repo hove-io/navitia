@@ -101,19 +101,13 @@ def generate_sql(valid_entries, corrupted_entries):
 
     # --- Part 2: Delete by key ID (corrupted entries) ---
     if corrupted_entries:
-        lines.append(
-            f"-- Partie 2: Suppression par ID de clé ({len(corrupted_entries)} entrées)"
-        )
-        lines.append(
-            "-- Ces entrées avaient un préfixe de token corrompu par Excel (notation scientifique)"
-        )
+        lines.append(f"-- Partie 2: Suppression par ID de clé ({len(corrupted_entries)} entrées)")
+        lines.append("-- Ces entrées avaient un préfixe de token corrompu par Excel (notation scientifique)")
         lines.append("-- On utilise donc le tyr_id (= key.id) pour les supprimer directement.")
         lines.append("")
 
         for tyr_id, login, raw_prefix in corrupted_entries:
-            lines.append(
-                f"-- login={login}, préfixe corrompu: {raw_prefix}"
-            )
+            lines.append(f"-- login={login}, préfixe corrompu: {raw_prefix}")
 
         lines.append("")
         key_ids = ", ".join(entry[0] for entry in corrupted_entries)
@@ -161,9 +155,7 @@ def execute_sql(sql, db_uri):
 
 
 def main():
-    parser = argparse.ArgumentParser(
-        description="Delete unused tokens from the TYR database"
-    )
+    parser = argparse.ArgumentParser(description="Delete unused tokens from the TYR database")
     parser.add_argument(
         "--csv",
         required=True,
@@ -206,11 +198,9 @@ def main():
 
         db_uri = args.db_uri or os.environ.get("SQLALCHEMY_DATABASE_URI")
         if not db_uri:
-            print(
-                "ERROR: --db-uri or SQLALCHEMY_DATABASE_URI env var required for --execute mode"
-            )
+            print("ERROR: --db-uri or SQLALCHEMY_DATABASE_URI env var required for --execute mode")
             sys.exit(1)
-        print(f"\nExecuting against database...")
+        print("\nExecuting against database...")
         execute_sql(sql, db_uri)
     else:
         with open(args.output, "w", encoding="utf-8") as f:
