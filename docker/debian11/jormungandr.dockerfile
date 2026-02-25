@@ -58,7 +58,7 @@ RUN a2ensite 000-default.conf \
 RUN git config --global url."https://x-access-token:${GITHUB_TOKEN}@github.com/hove-io/".insteadOf "ssh://git@github.com/hove-io/"
 RUN git clone --verbose https://x-access-token:${GITHUB_TOKEN}@github.com/hove-io/corefront-aws-assets
 
-RUN cd corefront-aws-assets && ls -lt jormungandr/ && cp -r ./jormungandr /jormungandr && cd .. && rm -rf corefront-aws-assets
+RUN cd corefront-aws-assets && cp -r ./jormungandr /jormungandr && cd .. && rm -rf corefront-aws-assets
 RUN apt purge -y \
         git \
     && apt autoremove -y
