@@ -54,7 +54,7 @@ jobs:
     name: Build debian11 back images
     needs: common_variables
     env:
-      backend_debian11_components: 'kraken tyr-beat tyr-worker mock-kraken eitri'
+      backend_debian11_components: 'kraken tyr-beat tyr-worker eitri'
     steps:
       - name: force chown to avoid errors
         run: sudo chown -R $USER:$USER .
@@ -124,11 +124,25 @@ jobs:
       - name: Push dev images on SBX ECR
         if: github.ref == 'refs/heads/dev'
         run: |
-          for component in ${{env.backend_debian11_components}}; do
-            component_tag=${PRD_ECR_REGISTRY}/dev-${component}:dev${DEBIAN11_SUFFIX}
-            docker tag navitia/$component ${component_tag}
-            docker push ${component_tag}
-          done
+          # Kraken
+          kraken_tag=${PRD_ECR_REGISTRY}/dev-navitia-kraken-kraken:dev${DEBIAN11_SUFFIX}
+          docker tag navitia/kraken ${kraken_tag}
+          docker push ${kraken_tag}
+
+          # Tyr-beat
+          tyr_beat_tag=${PRD_ECR_REGISTRY}/dev-navitia-tyr-tyrbeat:dev${DEBIAN11_SUFFIX}
+          docker tag navitia/tyr-beat ${tyr_beat_tag}
+          docker push ${tyr_beat_tag}
+
+          # Tyr-worker
+          tyr_worker_tag=${PRD_ECR_REGISTRY}/dev-navitia-tyr-tyrworker:dev${DEBIAN11_SUFFIX}
+          docker tag navitia/tyr-worker ${tyr_worker_tag}
+          docker push ${tyr_worker_tag}
+
+          # eitri
+          eitri_tag=${PRD_ECR_REGISTRY}/dev-navitia-eitri:dev${DEBIAN11_SUFFIX}
+          docker tag navitia/eitri ${eitri_tag}
+          docker push ${eitri_tag}
 
       - name: Push release images on PRD ECR
         if: startsWith(github.ref, 'refs/tags/')
