@@ -1,6 +1,8 @@
 ARG GIT_REVISION="UNKNOWN_VERSION"
 FROM debian:bullseye-slim
+
 ARG GIT_REVISION
+ARG GITHUB_TOKEN
 
 WORKDIR /usr/src/app
 
@@ -24,10 +26,7 @@ RUN apt clean \
     && apt purge -y \
         python3-pip \
         2to3 \
-        protobuf-compiler \
-        git \
-    && apt autoremove -y
-
+        protobuf-compiler
 
 COPY ./docker/run_jormungandr.sh ./run.sh
 COPY ./docker/jormungandr.wsgi ./jormungandr.wsgi
@@ -55,6 +54,18 @@ RUN a2ensite 000-default.conf \
  RUN ln -sf /proc/self/fd/1 /var/log/apache2/access.log \
      && ln -sf /proc/self/fd/2 /var/log/apache2/error.log
 
+# Jormungandr configuration files
+RUN git config --global url."https://x-access-token:${GITHUB_TOKEN}@github.com/hove-io/".insteadOf "ssh://git@github.com/hove-io/"
+RUN git clone --verbose https://x-access-token:${GITHUB_TOKEN}@github.com/hove-io/corefront-aws-assets
+
+RUN cd corefront-aws-assets && ls -lt jormungandr/ && cp -r ./jormungandr /jormungandr && cd .. && rm -rf corefront-aws-assets
+RUN apt purge -y \
+        git \
+    && apt autoremove -y
+
+ENV JORMUNGANDR_BEST_BOARDING_POSITIONS_DIR=/jormungandr/best_boarding_positions/
+ENV JORMUNGANDR_ORIGIN_DESTINATION_DIR=/jormungandr/origin_destination_data/
+ENV JORMUNGANDR_OLYMPIC_SITE_PARAMS_DIR=/jormungandr/olympic_site_params/
 
 HEALTHCHECK CMD curl -f http://localhost/v1 || exit 1
 
