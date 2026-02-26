@@ -213,7 +213,7 @@ jobs:
       - name: Push Tyr-Web dev image on PRD ECR
         if: github.ref == 'refs/heads/dev'
         run: |
-          component_tag=${PRD_ECR_REGISTRY}/dev-tyr-web:dev${DEBIAN11_SUFFIX}
+          component_tag=${PRD_ECR_REGISTRY}/dev-navitia-tyr-web-tyr-web:dev${DEBIAN11_SUFFIX}
           docker tag navitia/tyr-web ${component_tag}
           docker push ${component_tag}
 
