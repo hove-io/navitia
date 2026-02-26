@@ -140,7 +140,7 @@ jobs:
           docker push ${tyr_worker_tag}
 
           # eitri
-          eitri_tag=${PRD_ECR_REGISTRY}/dev-navitia-eitri:dev${DEBIAN11_SUFFIX}
+          eitri_tag=${PRD_ECR_REGISTRY}/dev-navitia-kraken-eitri:dev${DEBIAN11_SUFFIX}
           docker tag navitia/eitri ${eitri_tag}
           docker push ${eitri_tag}
 
@@ -213,7 +213,7 @@ jobs:
       - name: Push Tyr-Web dev image on PRD ECR
         if: github.ref == 'refs/heads/dev'
         run: |
-          component_tag=${PRD_ECR_REGISTRY}/dev-tyr-web:dev${DEBIAN11_SUFFIX}
+          component_tag=${PRD_ECR_REGISTRY}/dev-navitia-tyr-web-tyr-web:dev${DEBIAN11_SUFFIX}
           docker tag navitia/tyr-web ${component_tag}
           docker push ${component_tag}
 
@@ -232,7 +232,7 @@ jobs:
       - name: Push Instances configurator dev image on PRD ECR
         if: github.ref == 'refs/heads/dev'
         run: |
-          component_tag=${PRD_ECR_REGISTRY}/dev-instances-configurator:dev${DEBIAN11_SUFFIX}
+          component_tag=${PRD_ECR_REGISTRY}/dev-navitia-tyr-web-instances-configurator:dev${DEBIAN11_SUFFIX}
           docker tag navitia/instances-configurator ${component_tag}
           docker push ${component_tag}
 

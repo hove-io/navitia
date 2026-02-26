@@ -21,8 +21,6 @@ build_targets() {
 # kraken
 build_targets protobuf_files kraken
 
-# mocks for integration tests
-build_targets departure_board_test main_routing_test
 
 # some binaries for tyr-worker
 build_targets cities ed2nav fare2ed fusio2ed geopal2ed gtfs2ed osm2ed poi2ed
