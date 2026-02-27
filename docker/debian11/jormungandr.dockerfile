@@ -67,6 +67,9 @@ ENV JORMUNGANDR_BEST_BOARDING_POSITIONS_DIR=/jormungandr/best_boarding_positions
 ENV JORMUNGANDR_ORIGIN_DESTINATION_DIR=/jormungandr/origin_destination_data/
 ENV JORMUNGANDR_OLYMPIC_SITE_PARAMS_DIR=/jormungandr/olympic_site_params/
 
+ENV JORMUNGANDR_LOG_LOGFMT_KEYS='["time", "level", "request_id", "module", "process"]'
+ENV JORMUNGANDR_LOG_LOGFMT_MAPPING='{"time": "asctime", "level": "levelname"}'
+
 HEALTHCHECK CMD curl -f http://localhost/v1 || exit 1
 
 EXPOSE 80 9091 5050

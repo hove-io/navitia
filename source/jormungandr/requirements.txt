@@ -36,6 +36,7 @@ coloredlogs==10.0
 sortedcontainers==2.1.0
 dramatiq
 vine==5.0.0
+logfmter==0.0.11
 # don't update these packages' versions unless you're very sure
 amqp==5.0.6
 kombu==5.0.2

@@ -56,11 +56,15 @@ log_format = os.getenv(
 log_formatter = os.getenv('JORMUNGANDR_LOG_FORMATTER', 'default')  # default or json
 log_extras = json.loads(os.getenv('JORMUNGANDR_LOG_EXTRAS', '{}'))  # fields to add to the logger
 
+
 access_log_format = os.getenv(
     'JORMUNGANDR_ACCESS_LOG_FORMAT',
     '[%(asctime)s] [%(request_id)s] [%(process)5s] [%(name)10s] %(message)s',
 )
 access_log_formatter = os.getenv('JORMUNGANDR_ACCESS_LOG_FORMATTER', 'access_log')
+
+logfmt_keys = json.loads(os.getenv('JORMUNGANDR_LOG_LOGFMT_KEYS', '[]'))
+logfmt_mapping = json.loads(os.getenv('JORMUNGANDR_LOG_LOGFMT_MAPPING', '{}'))
 
 # logger configuration
 LOGGER = {
@@ -73,6 +77,11 @@ LOGGER = {
             '()': 'jormungandr.logging_utils.CustomJsonFormatter',
             'format': log_format,
             'extras': log_extras,
+        },
+        'logfmt': {
+            '()': 'logfmter.Logfmter',
+            'keys': logfmt_keys,
+            'mapping': logfmt_mapping,
         },
     },
     'filters': {'IdFilter': {'()': IdFilter}},
