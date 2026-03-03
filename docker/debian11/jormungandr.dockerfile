@@ -69,6 +69,8 @@ ENV JORMUNGANDR_OLYMPIC_SITE_PARAMS_DIR=/jormungandr/olympic_site_params/
 
 ENV JORMUNGANDR_LOG_LOGFMT_KEYS='["time", "level", "request_id", "module", "process"]'
 ENV JORMUNGANDR_LOG_LOGFMT_MAPPING='{"time": "asctime", "level": "levelname"}'
+ENV JORMUNGANDR_LOG_FORMATTER="logfmt"
+ENV JORMUNGANDR_ACCESS_LOG_FORMATTER="logfmt"
 
 HEALTHCHECK CMD curl -f http://localhost/v1 || exit 1
 
