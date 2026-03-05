@@ -269,7 +269,7 @@ class Scenario(object):
         req.disable_disruption = request["disable_disruption"]
         req.pt_objects.filter = request['filter']
 
-        resp = instance.send_and_receive(req)
+        resp = instance.get_backend("pt_objects", request).send_and_receive(req)
         # The result contains places but not pt_objects,
         # object place is transformed to pt_object afterwards.
         if len(resp.places) == 0 and request['search_type'] == 0:

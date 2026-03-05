@@ -89,6 +89,12 @@ class Ptobjects(ResourceUri):
             "disable_disruption", type=BooleanType(), default=False, help="remove disruptions from the response"
         )
         self.parsers['get'].add_argument("filter", type=six.text_type, default="", help="Filter your objects")
+        self.parsers['get'].add_argument(
+            "_pt_planner",
+            type=OptionValue(['kraken', 'loki']),
+            hidden=True,
+            help="choose which pt engine to compute the pt journey",
+        )
         self.collection = 'pt_objects'
         self.get_decorators.insert(0, get_obj_serializer(self))
 
