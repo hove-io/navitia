@@ -1,11 +1,7 @@
 name: Build Navitia Dockers Debian 11
 
 on:
-  push:
-    branches:
-      - dev
-    tags:
-      - '*'
+  pull_request:
 
 env:
   PRD_ECR_REGISTRY: "162230498103.dkr.ecr.eu-west-1.amazonaws.com"
@@ -93,19 +89,10 @@ jobs:
           registries: "162230498103"
 
       - name: Get and tag mimir dev image
-        if: github.ref == 'refs/heads/dev'
         run: |
           image=${PRD_ECR_REGISTRY}/dev-navitia-bragi-mimirsbrunn:latest${DEBIAN11_SUFFIX}
           docker pull ${image}
           docker tag ${image} mimirsbrunn:local
-
-      - name: Get and tag mimir release image
-        if: startsWith(github.ref, 'refs/tags/')
-        run: |
-            MIMIR_TAG="v3.10.2${DEBIAN11_SUFFIX}"
-            image=${PRD_ECR_REGISTRY}/navitia-bragi-mimirsbrunn:${MIMIR_TAG}
-            docker pull ${image}
-            docker tag ${image} mimirsbrunn:local
 
       - name: Create builder docker image
         run: |
@@ -122,7 +109,6 @@ jobs:
           done
 
       - name: Push dev images on SBX ECR
-        if: github.ref == 'refs/heads/dev'
         run: |
           # Kraken
           kraken_tag=${PRD_ECR_REGISTRY}/dev-navitia-kraken-kraken:dev${DEBIAN11_SUFFIX}
@@ -144,23 +130,6 @@ jobs:
           docker tag navitia/eitri ${eitri_tag}
           docker push ${eitri_tag}
 
-      - name: Push release images on PRD ECR
-        if: startsWith(github.ref, 'refs/tags/')
-        run: |
-          # Kraken
-          kraken_tag=${PRD_ECR_REGISTRY}/navitia-kraken-kraken:${{ needs.common_variables.outputs.RELEASE_TAG }}${DEBIAN11_SUFFIX}
-          docker tag navitia/kraken ${kraken_tag}
-          docker push ${kraken_tag}
-
-          # Tyr-beat
-          tyr_beat_tag=${PRD_ECR_REGISTRY}/navitia-tyr-tyrbeat:${{ needs.common_variables.outputs.RELEASE_TAG }}${DEBIAN11_SUFFIX}
-          docker tag navitia/tyr-beat ${tyr_beat_tag}
-          docker push ${tyr_beat_tag}
-
-          # Tyr-worker
-          tyr_worker_tag=${PRD_ECR_REGISTRY}/navitia-tyr-tyrworker:${{ needs.common_variables.outputs.RELEASE_TAG }}${DEBIAN11_SUFFIX}
-          docker tag navitia/tyr-worker ${tyr_worker_tag}
-          docker push ${tyr_worker_tag}
       - name: failure notification
         if: failure()
         run: |
@@ -211,26 +180,18 @@ jobs:
         run: docker build -t navitia/tyr-web -f  docker/debian11/tyr-web.dockerfile .
 
       - name: Push Tyr-Web dev image on PRD ECR
-        if: github.ref == 'refs/heads/dev'
+        # if: github.ref == 'refs/heads/dev'
         run: |
           component_tag=${PRD_ECR_REGISTRY}/dev-navitia-tyr-web-tyr-web:dev${DEBIAN11_SUFFIX}
           docker tag navitia/tyr-web ${component_tag}
           docker push ${component_tag}
-
-      - name: Push Tyr-web release image on PRD ECR
-        if: startsWith(github.ref, 'refs/tags/')
-        run: |
-          # Tyr-web
-          tyr_web_tag=${PRD_ECR_REGISTRY}/navitia-tyr-web-tyr-web:${{ needs.common_variables.outputs.RELEASE_TAG }}${DEBIAN11_SUFFIX}
-          docker tag navitia/tyr-web ${tyr_web_tag}
-          docker push ${tyr_web_tag}
 
       - name: Create images for Instance configurator
         run: docker build -t navitia/instances-configurator -f  docker/debian11/instances-configurator.dockerfile .
 
 
       - name: Push Instances configurator dev image on PRD ECR
-        if: github.ref == 'refs/heads/dev'
+        # if: github.ref == 'refs/heads/dev'
         run: |
           component_tag=${PRD_ECR_REGISTRY}/dev-navitia-tyr-web-instances-configurator:dev${DEBIAN11_SUFFIX}
           docker tag navitia/instances-configurator ${component_tag}
@@ -248,16 +209,9 @@ jobs:
           docker build -t navitia/jormungandr_debian11 -f  docker/debian11/jormungandr.dockerfile --build-arg GIT_REVISION=${{ needs.common_variables.outputs.RELEASE_TAG }} --build-arg GITHUB_TOKEN=${{ steps.ci-core-app-token.outputs.token }} .
 
       - name: Push jormun dev image on PRD ECR
-        if: github.ref == 'refs/heads/dev'
+        # if: github.ref == 'refs/heads/dev'
         run: |
           jormun_tag=${PRD_ECR_REGISTRY}/dev-navitia-jormungandr-jormungandr:dev
-          docker tag navitia/jormungandr_debian11 ${jormun_tag}
-          docker push ${jormun_tag}
-
-      - name: Push jormun release image on PRD ECR
-        if: startsWith(github.ref, 'refs/tags/')
-        run: |
-          jormun_tag=${SBX_ECR_REGISTRY_FRONT}/navitia-jormungandr-jormungandr:${{ needs.common_variables.outputs.RELEASE_TAG }}
           docker tag navitia/jormungandr_debian11 ${jormun_tag}
           docker push ${jormun_tag}
 
@@ -268,30 +222,3 @@ jobs:
           sudo chown -R $USER:$USER .
           rm -rf ./*
           rm -rf ./.??*
-
-  run_artemis:
-    runs-on: [self-hosted, corefront, sandbox]
-    needs: [debian11_back_images,debian11_front_images]
-    name: Run artemis Dispatch (Dev)
-    if: github.ref == 'refs/heads/dev'
-    steps:
-
-      - name: Generate github private access token
-        id: ci-core-app-token
-        uses: getsentry/action-github-app-token@v2.0.0
-        with:
-          app_id: ${{ secrets.CI_CORE_APP_ID }}
-          private_key: ${{ secrets.CI_CORE_APP_PEM }}
-
-      - name: Run artemis on push to dev
-        uses: peter-evans/repository-dispatch@v2
-        with:
-          token: ${{ steps.ci-core-app-token.outputs.token }}
-          repository: hove-io/artemis
-          event-type: run_artemis_bullseye_ng
-
-      - name: failure notification
-        if: failure()
-        run: |
-          sudo apt update && sudo apt install -y httpie
-          echo '{"text":":warning: Github Actions: workflow dockers_builder_dev Job run_artemis is failed !"}' | http --json POST ${{secrets.SLACK_NAVITIA_TEAM_URL}}
