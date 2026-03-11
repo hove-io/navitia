@@ -257,7 +257,7 @@ jobs:
       - name: Push jormun release image on PRD ECR
         if: startsWith(github.ref, 'refs/tags/')
         run: |
-          jormun_tag=${SBX_ECR_REGISTRY_FRONT}/navitia-jormungandr-jormungandr:${{ needs.common_variables.outputs.RELEASE_TAG }}
+          jormun_tag=${PRD_ECR_REGISTRY}/navitia-jormungandr-jormungandr:${{ needs.common_variables.outputs.RELEASE_TAG }}
           docker tag navitia/jormungandr_debian11 ${jormun_tag}
           docker push ${jormun_tag}
 
