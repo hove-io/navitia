@@ -57,3 +57,29 @@ class CustomJsonFormatter(jsonlogger.JsonFormatter):
     def process_log_record(self, log_record):
         log_record.update(self.extras)
         return log_record
+
+
+class ColorFormatter(logging.Formatter):
+    RESET = "\033[0m"
+
+    COLORS = {
+        "time": "\033[2m",  # gris léger
+        "level_DEBUG": "\033[36m",
+        "level_INFO": "\033[32m",
+        "level_WARNING": "\033[33m",
+        "level_ERROR": "\033[31m",
+        "level_CRITICAL": "\033[41m",
+        "name": "\033[90m",  # magenta
+        "request": "\033[34m",  # bleu
+    }
+
+    def format(self, record):
+        level_color = self.COLORS.get(f"level_{record.levelname}", "")
+
+        record.level_colored = f"{level_color}{record.levelname:<5}{self.RESET}"
+        record.time_colored = f"{self.COLORS['time']}{self.formatTime(record)}{self.RESET}"
+        record.name_colored = f"{self.COLORS['name']}{record.name}{self.RESET}"
+        request_id = getattr(record, "request_id", "-")
+        record.request_colored = f"{self.COLORS['request']}{request_id}{self.RESET}"
+
+        return super().format(record)

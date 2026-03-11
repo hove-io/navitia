@@ -5,6 +5,7 @@ import os
 import json
 from flask_restful.inputs import boolean
 from datetime import timedelta
+import logging
 
 # sql queries will return an exception if the query did not succeed before `statement_timeout`
 DEFAULT_SQLALCHEMY_ENGINE_OPTIONS = {
@@ -51,7 +52,7 @@ from jormungandr.logging_utils import IdFilter
 log_level = os.getenv('JORMUNGANDR_LOG_LEVEL', 'DEBUG')
 log_format = os.getenv(
     'JORMUNGANDR_LOG_FORMAT',
-    '[%(asctime)s] [%(request_id)s] [%(levelname)5s] [%(process)5s] [%(name)10s] %(message)s',
+    "%(time_colored)s %(level_colored)s %(name_colored)s %(request_colored)s %(message)s",
 )
 log_formatter = os.getenv('JORMUNGANDR_LOG_FORMATTER', 'default')  # default or json
 log_extras = json.loads(os.getenv('JORMUNGANDR_LOG_EXTRAS', '{}'))  # fields to add to the logger
@@ -59,7 +60,7 @@ log_extras = json.loads(os.getenv('JORMUNGANDR_LOG_EXTRAS', '{}'))  # fields to 
 
 access_log_format = os.getenv(
     'JORMUNGANDR_ACCESS_LOG_FORMAT',
-    '[%(asctime)s] [%(request_id)s] [%(process)5s] [%(name)10s] %(message)s',
+    '%(time_colored)s %(level_colored)s %(name_colored)s %(request_colored)s %(message)s',
 )
 access_log_formatter = os.getenv('JORMUNGANDR_ACCESS_LOG_FORMATTER', 'access_log')
 
@@ -71,8 +72,8 @@ LOGGER = {
     'version': 1,
     'disable_existing_loggers': False,
     'formatters': {
-        'default': {'format': log_format},
-        'access_log': {'format': access_log_format},
+        'default': {'()': 'jormungandr.logging_utils.ColorFormatter', 'format': log_format},
+        'access_log': {'()': 'jormungandr.logging_utils.ColorFormatter', 'format': access_log_format},
         'json': {
             '()': 'jormungandr.logging_utils.CustomJsonFormatter',
             'format': log_format,
