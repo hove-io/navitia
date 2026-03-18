@@ -39,7 +39,7 @@ class DirectStopPoints(ResourceUri):
             "stop_point_id",
             type=str,
             required=True,
-            help="Id of the stop point from where we want to acess others stop points"
+            help="Id of the stop point from where we want to acess others stop points",
         )
         parser_get.add_argument(
             "line_id", type=str, required=True, help="Id of the line from where we want to access stop points"
