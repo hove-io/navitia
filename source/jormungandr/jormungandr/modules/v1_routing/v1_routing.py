@@ -56,6 +56,7 @@ from jormungandr.interfaces.v1 import (
     opg_status,
     opg_excluded_zones,
     backends_status,
+    direct_stop_points,
 )
 from werkzeug.routing import BaseConverter, FloatConverter, PathConverter
 from jormungandr.modules_loader import AModule
@@ -374,6 +375,12 @@ class V1Routing(AModule):
             '/coord/' + lon_lat + 'obstacles_nearby',
             '/coords/' + lon_lat + 'obstacles_nearby',
             endpoint='obstacles_nearby',
+        )
+
+        self.add_resource(
+            direct_stop_points.DirectStopPoints,
+            region + 'direct_stop_points',
+            endpoint='direct_stop_points',
         )
 
         self.add_resource(users.User, "/users", endpoint='users')
