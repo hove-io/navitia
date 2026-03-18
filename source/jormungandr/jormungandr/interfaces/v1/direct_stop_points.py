@@ -27,8 +27,8 @@
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 
-from source.jormungandr.jormungandr.interfaces.v1 import ResourceUri
-from source.jormungandr.jormungandr.interfaces.v1.serializer.direct_stop_points import DirectStopPointsSerializer
+from jormungandr.interfaces.v1.ResourceUri import ResourceUri
+from jormungandr.interfaces.v1.serializer.direct_stop_points import DirectStopPointsSerializer
 
 
 class DirectStopPoints(ResourceUri):
