@@ -1619,6 +1619,17 @@ void PbCreator::Filler::fill_pb_object(const VjStopTimes* vj_stoptimes, pbnaviti
         const auto& jp_idx =
             pb_creator.data->dataRaptor->jp_container.get_jp_from_vj()[navitia::routing::VjIdx(*vj_stoptimes->vj)];
         uris->set_journey_pattern(pb_creator.data->dataRaptor->jp_container.get_id(jp_idx));
+
+        // Override the terminus with the VJ's actual last stop area.
+        // The Route's destination may differ from the VJ's real terminus
+        // (e.g. a partial terminus on the route vs the actual end of the vehicle journey).
+        if (!vj_stoptimes->vj->stop_time_list.empty()) {
+            const auto* last_sa = vj_stoptimes->vj->stop_time_list.back().stop_point->stop_area;
+            if (last_sa != nullptr) {
+                this->pb_creator.terminus.insert(last_sa);
+                uris->set_stop_area(last_sa->uri);
+            }
+        }
     }
 
     fill_messages(vj_stoptimes, pt_display_info);
