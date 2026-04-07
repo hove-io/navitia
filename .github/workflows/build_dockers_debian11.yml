@@ -102,7 +102,7 @@ jobs:
       - name: Get and tag mimir release image
         if: startsWith(github.ref, 'refs/tags/')
         run: |
-            MIMIR_TAG="v3.10.2${DEBIAN11_SUFFIX}"
+            MIMIR_TAG="v3.11.0${DEBIAN11_SUFFIX}"
             image=${PRD_ECR_REGISTRY}/navitia-bragi-mimirsbrunn:${MIMIR_TAG}
             docker pull ${image}
             docker tag ${image} mimirsbrunn:local
