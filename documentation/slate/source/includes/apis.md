@@ -2422,12 +2422,12 @@ Also known as the `"/direct_stop_points"` service.
 
 Given a stop point and a line, this endpoint returns all stop points that can be reached
 directly (without any transfer) from the origin stop point, on any trip of the given line.
-It iterates over all trip patterns (missions) serving the origin stop point, filters them
-to only those belonging to the requested line, and collects every downstream stop point.
+For every trip of the requested line that serves the origin stop point, every downstream
+stop point is collected and returned.
 
 <aside class="warning">
-    This endpoint is only available on coverages using the Loki backend.
-    It is not supported by the Kraken backend.
+    This endpoint is not enabled on every coverage.
+    Please contact us if you want to use it on a coverage where it is not available yet.
 </aside>
 
 ### Accesses
