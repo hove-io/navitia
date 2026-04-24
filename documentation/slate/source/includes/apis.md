@@ -662,7 +662,7 @@ Differents kind of objects can be returned (sorted as):
 -   stop_area
 -   poi
 -   address
--   stop_point (appears only if specified, using `&type[]=stop_point` filter)
+-   ~~stop_point~~ (Deprecated)
 
 <aside class="warning">
     There is no pagination for this api.
@@ -691,7 +691,7 @@ Differents kind of objects can be returned (sorted as):
   Required | Name      | Type        | Description            | Default value
   ---------|-----------|-------------|------------------------|-------------------
   yep      | q           | string    | The search term        |
-  nop      | type[]      | array of string | Type of objects you want to query It takes one the following values: [`stop_area`, `address`, `administrative_region`, `poi`, `stop_point`] | [`stop_area`, `address`, `poi`, `administrative_region`]
+  nop      | type[]      | array of string | Type of objects you want to query It takes one the following values: [`stop_area`, `address`, `administrative_region`, `poi`, ~~`stop_point`~~]. The `stop_point` value is deprecated and should no longer be used. | [`stop_area`, `address`, `poi`, `administrative_region`]
   nop      | poi_types[] | array of string | Filter returned POIs by POI type IDs. Only applies when querying POIs (i.e., with `type[]=poi`). Values are POI type IDs such as `poi_type:amenity:bicycle_rental`. See the POI types section for the full list. |
   nop      | ~~admin_uri[]~~ |   | Deprecated. Filters on shape are now possible straight in user account
   nop      | disable_geojson | boolean | remove geojson from the response | False
