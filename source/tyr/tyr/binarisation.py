@@ -204,7 +204,7 @@ class Lock(object):
                     raise
             if not locked:
                 countdown = 300
-                max_retries = max(10, (self.timeout / countdown) + 2)
+                max_retries = max(10, (self.timeout // countdown) + 2)
                 logger.info(
                     'lock on %s retry %s in %s sec (max_retries=%s)',
                     job.instance.name,
@@ -636,7 +636,7 @@ def reload_data(self, instance_config, job_id):
 
 
 @celery.task(bind=True)
-@Lock(30 * 60)
+@Lock(50 * 60)
 def ed2nav(self, instance_config, job_id, custom_output_dir):
     """Launch ed2nav"""
     job = models.Job.query.get(job_id)
