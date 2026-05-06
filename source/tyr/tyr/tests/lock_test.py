@@ -1,4 +1,3 @@
-
 import logging
 import pytest
 from unittest.mock import patch, MagicMock, PropertyMock
@@ -10,6 +9,7 @@ from tyr.binarisation import Lock
 # =====================================================
 # Helpers
 # =====================================================
+
 
 def make_mock_job(instance_name='test-instance', state='running'):
     """Create a mock Job with a mock Instance."""
@@ -53,12 +53,13 @@ def make_decorated_function(lock_timeout=5400):
 # Patches applied to all tests
 # =====================================================
 
+
 @pytest.fixture(autouse=True)
 def mock_dependencies():
     """Mock all external dependencies of Lock."""
-    with patch('tyr.binarisation.models') as mock_models, \
-            patch('tyr.binarisation.redis') as mock_redis, \
-            patch('tyr.binarisation.get_instance_logger') as mock_get_logger:
+    with patch('tyr.binarisation.models') as mock_models, patch('tyr.binarisation.redis') as mock_redis, patch(
+        'tyr.binarisation.get_instance_logger'
+    ) as mock_get_logger:
         mock_get_logger.return_value = logging.getLogger('test_lock')
 
         yield {
@@ -67,9 +68,11 @@ def mock_dependencies():
             'get_logger': mock_get_logger,
         }
 
+
 # =====================================================
 # Test 1: Lock acquired → function executes normally
 # =====================================================
+
 
 def test_lock_acquired_function_executes(mock_dependencies):
     """When the lock is acquired, the wrapped function should execute and return its result."""
@@ -96,6 +99,7 @@ def test_lock_acquired_function_executes(mock_dependencies):
 # Test 2: Lock NOT acquired → Celery retry
 # =====================================================
 
+
 def test_lock_not_acquired_retries(mock_dependencies):
     """When the lock is NOT acquired, task.retry() should be called with countdown=300."""
     job = make_mock_job()
@@ -121,6 +125,7 @@ def test_lock_not_acquired_retries(mock_dependencies):
 # Test 3: Lock NOT acquired + max retries exceeded
 #          → job.state = 'failed'
 # =====================================================
+
 
 def test_lock_not_acquired_max_retries_sets_job_failed(mock_dependencies):
     """
@@ -150,6 +155,7 @@ def test_lock_not_acquired_max_retries_sets_job_failed(mock_dependencies):
 # Test 4: Redis ConnectionError → retry with countdown=10
 # =====================================================
 
+
 def test_redis_connection_error_retries(mock_dependencies):
     """When Redis raises ConnectionError, task should retry in 10 seconds."""
     job = make_mock_job()
@@ -175,6 +181,7 @@ def test_redis_connection_error_retries(mock_dependencies):
 #          → job.state = 'failed'
 # =====================================================
 
+
 def test_redis_connection_error_max_retries_sets_job_failed(mock_dependencies):
     """
     When Redis raises ConnectionError and max retries are exceeded,
@@ -198,6 +205,7 @@ def test_redis_connection_error_max_retries_sets_job_failed(mock_dependencies):
 # =====================================================
 # Test 6: max_retries adapté au lock timeout
 # =====================================================
+
 
 def test_max_retries_adapted_to_lock_timeout(mock_dependencies):
     """
@@ -250,6 +258,7 @@ def test_max_retries_minimum_10_for_short_timeout(mock_dependencies):
 # Test 7: Lock released after function execution
 # =====================================================
 
+
 def test_lock_released_after_execution(mock_dependencies):
     """The lock should be released after the wrapped function completes."""
     job = make_mock_job()
@@ -271,6 +280,7 @@ def test_lock_released_after_execution(mock_dependencies):
 # =====================================================
 # Test 8: Lock released even if function raises
 # =====================================================
+
 
 def test_lock_released_on_function_exception(mock_dependencies):
     """The lock should be released even if the wrapped function raises an exception."""
@@ -297,6 +307,7 @@ def test_lock_released_on_function_exception(mock_dependencies):
 # Test 9: job_id extrait des kwargs
 # =====================================================
 
+
 def test_job_id_from_kwargs(mock_dependencies):
     """Lock should correctly extract job_id from keyword arguments."""
     job = make_mock_job()
@@ -318,6 +329,7 @@ def test_job_id_from_kwargs(mock_dependencies):
 # Test 10: Lock key uses instance name
 # =====================================================
 
+
 def test_lock_key_uses_instance_name(mock_dependencies):
     """The Redis lock key should include the instance name."""
     job = make_mock_job(instance_name='fr-idf')
@@ -338,6 +350,7 @@ def test_lock_key_uses_instance_name(mock_dependencies):
 # =====================================================
 # Test 11: Concurrent jobs on same instance → retry
 # =====================================================
+
 
 def test_concurrent_jobs_same_instance(mock_dependencies):
     """
