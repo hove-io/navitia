@@ -106,6 +106,50 @@ def trigger_actions_in_parallel(*actions, async_=True):
 
     return groups.delay()
 
+def select_last_file_by_type(files, backup_file, instance_config):
+    """
+    result = {
+        "fusio": {
+            "modified_at": datetime.datetime(2026, 4, 28, 11, 38, 49, 86159),
+            "file": "fusio.zip"
+            },
+        ...
+    }
+    """
+    result = {}
+    for path in files:
+        try:
+            file_type, _ = utils.type_of_data(path)
+            mtime = datetime.fromtimestamp(os.stat(path).st_mtime)
+            existing = result.get(file_type)
+            if not existing:
+                result[file_type] = {
+                    "modified_at": mtime,
+                    "file": path
+                }
+                continue
+            if mtime > existing.get("modified_at"):
+                current_app.logger.warning(f"Replacing older file with: {path}")
+                try:
+                    shutil.rmtree(existing["file"])
+                except Exception:
+                    existing_file= existing['file']
+                    current_app.logger.debug(f"Failed to delete {existing_file}")
+                result[file_type] = {
+                    "modified_at": mtime,
+                    "file": path
+                }
+            else:
+                current_app.logger.warning(f"Ignored source file: {path}")
+                shutil.rmtree(path)
+        except Exception:
+            if backup_file:
+                move_to_backupdirectory(path, instance_config.backup_directory)
+
+            current_app.logger.debug(
+                f"Corrupted source file: {path} moved to {instance_config.backup_directory}"
+            )
+    return result
 
 def import_data(
     files,
@@ -143,6 +187,10 @@ def import_data(
 
     instance_config = load_instance_config(instance.name)
 
+    current_app.logger.info("Tyr.task : [{}] Import Data : {}".format(instance.name, files))
+    selected_files = select_last_file_by_type(files, backup_file, instance_config)
+    if not selected_files:
+        return
     job = models.Job()
     job.instance = instance
     job.state = 'running'
@@ -157,8 +205,6 @@ def import_data(
         'synonym': synonym2ed,
         'shape': shape2ed,
     }
-
-    current_app.logger.info("Tyr.task : [{}] Import Data : {}".format(instance.name, files))
 
     def process_ed2nav():
         # Create binary file (New .nav.lz4)
@@ -176,22 +222,15 @@ def import_data(
 
         return ed2nav_actions
 
-    for _file in files:
+    for data_type, file_info in selected_files.items():
         filename = None
-
         dataset = models.DataSet()
-        # NOTE: for the moment we do not use the path to load the data here
-        # but we'll need to refactor this to take it into account
-        try:
-            dataset.type, _ = utils.type_of_data(_file)
-            dataset.family_type = utils.family_of_data(dataset.type)
-        except Exception:
-            if backup_file:
-                move_to_backupdirectory(_file, instance_config.backup_directory)
-            current_app.logger.debug(
-                "Corrupted source file : {} moved to {}".format(_file, instance_config.backup_directory)
-            )
+        dataset.type = data_type
+        _file = file_info.get('file')
+        if not _file:
             continue
+
+        dataset.family_type = utils.family_of_data(dataset.type)
 
         if dataset.type in tasks_2ed:
             if backup_file:
