@@ -106,6 +106,7 @@ def trigger_actions_in_parallel(*actions, async_=True):
 
     return groups.delay()
 
+
 def select_last_file_by_type(files, backup_file, instance_config):
     """
     result = {
@@ -123,22 +124,16 @@ def select_last_file_by_type(files, backup_file, instance_config):
             mtime = datetime.fromtimestamp(os.stat(path).st_mtime)
             existing = result.get(file_type)
             if not existing:
-                result[file_type] = {
-                    "modified_at": mtime,
-                    "file": path
-                }
+                result[file_type] = {"modified_at": mtime, "file": path}
                 continue
             if mtime > existing.get("modified_at"):
                 current_app.logger.warning(f"Replacing older file with: {path}")
                 try:
                     shutil.rmtree(existing["file"])
                 except Exception:
-                    existing_file= existing['file']
+                    existing_file = existing['file']
                     current_app.logger.debug(f"Failed to delete {existing_file}")
-                result[file_type] = {
-                    "modified_at": mtime,
-                    "file": path
-                }
+                result[file_type] = {"modified_at": mtime, "file": path}
             else:
                 current_app.logger.warning(f"Ignored source file: {path}")
                 shutil.rmtree(path)
@@ -150,6 +145,7 @@ def select_last_file_by_type(files, backup_file, instance_config):
                 f"Corrupted source file: {path} moved to {instance_config.backup_directory}"
             )
     return result
+
 
 def import_data(
     files,
