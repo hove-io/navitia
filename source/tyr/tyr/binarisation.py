@@ -174,6 +174,11 @@ def lock_release(lock, logger):
         raise
 
 
+def update_job(job, status):
+    job.state = status
+    models.db.session.commit()
+
+
 class Lock(object):
     def __init__(self, timeout):
         self.timeout = timeout
@@ -191,11 +196,28 @@ class Lock(object):
                 locked = lock.acquire(blocking=False)
             except ConnectionError:
                 logging.exception('Exception with redis while locking. Retrying in 10sec')
-                task.retry(countdown=10, max_retries=10)
+                try:
+                    task.retry(countdown=10, max_retries=10)
+                except task.MaxRetriesExceededError:
+                    logger.error('Max retries exceeded (redis connection) for job %s', job_id)
+                    update_job(job, 'failed')
+                    raise
             if not locked:
                 countdown = 300
-                logger.info('lock on %s retry %s in %s sec', job.instance.name, func.__name__, countdown)
-                task.retry(countdown=countdown, max_retries=10)
+                max_retries = max(10, (self.timeout // countdown) + 2)
+                logger.info(
+                    'lock on %s retry %s in %s sec (max_retries=%s)',
+                    job.instance.name,
+                    func.__name__,
+                    countdown,
+                    max_retries,
+                )
+                try:
+                    task.retry(countdown=countdown, max_retries=max_retries)
+                except task.MaxRetriesExceededError:
+                    logger.error('max retries exceeded for lock on %s', job.instance.name)
+                    update_job(job, 'failed')
+                    raise
             else:
                 try:
                     logger.debug('lock acquired on %s for %s', job.instance.name, func.__name__)
@@ -614,7 +636,7 @@ def reload_data(self, instance_config, job_id):
 
 
 @celery.task(bind=True)
-@Lock(30 * 60)
+@Lock(50 * 60)
 def ed2nav(self, instance_config, job_id, custom_output_dir):
     """Launch ed2nav"""
     job = models.Job.query.get(job_id)

@@ -101,8 +101,8 @@ CELERY_ACCEPT_CONTENT = os.getenv('TYR_CELERY_ACCEPT_CONTENT', ['pickle', 'json'
 CELERYBEAT_SCHEDULE = {
     'udpate-data-every-30-seconds': {
         'task': 'tyr.tasks.update_data',
-        'schedule': timedelta(seconds=30),
-        'options': {'expires': 25},
+        'schedule': timedelta(minutes=1),
+        'options': {'expires': 50},
     },
     'scan-instances-every-minutes': {
         'task': 'tyr.tasks.scan_instances',
