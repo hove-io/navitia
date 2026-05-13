@@ -490,16 +490,19 @@ void Worker::next_stop_times(const pbnavitia::NextStopTimeRequest& request, pbna
     try {
         switch (api) {
             case pbnavitia::NEXT_DEPARTURES:
+                LOG4CPLUS_WARN(logger, "Called on deprecated API: NextDepartures");
                 timetables::passages(this->pb_creator, request.departure_filter(), forbidden_uri, from_datetime,
                                      request.duration(), request.nb_stoptimes(), request.depth(),
                                      type::AccessibiliteParams(), rt_level, api, request.count(), request.start_page());
                 break;
             case pbnavitia::NEXT_ARRIVALS:
+                LOG4CPLUS_WARN(logger, "Called on deprecated API: NextArrivals");
                 timetables::passages(this->pb_creator, request.arrival_filter(), forbidden_uri, from_datetime,
                                      request.duration(), request.nb_stoptimes(), request.depth(),
                                      type::AccessibiliteParams(), rt_level, api, request.count(), request.start_page());
                 break;
             case pbnavitia::DEPARTURE_BOARDS:
+                LOG4CPLUS_WARN(logger, "Called on deprecated API: DepartureBoards");
                 timetables::departure_board(
                     this->pb_creator, request.departure_filter(),
                     request.has_calendar() ? boost::optional<const std::string>(request.calendar())
@@ -508,6 +511,7 @@ void Worker::next_stop_times(const pbnavitia::NextStopTimeRequest& request, pbna
                     request.start_page(), rt_level, request.items_per_schedule());
                 break;
             case pbnavitia::ROUTE_SCHEDULES:
+                LOG4CPLUS_WARN(logger, "Called on deprecated API: RouteSchedules");
                 timetables::route_schedule(
                     this->pb_creator, request.departure_filter(),
                     request.has_calendar() ? boost::optional<const std::string>(request.calendar())
@@ -516,6 +520,7 @@ void Worker::next_stop_times(const pbnavitia::NextStopTimeRequest& request, pbna
                     request.count(), request.start_page(), rt_level);
                 break;
             case pbnavitia::terminus_schedules:
+                LOG4CPLUS_WARN(logger, "Called on deprecated API: TerminusSchedules");
                 timetables::terminus_schedules(
                     this->pb_creator, request.departure_filter(),
                     request.has_calendar() ? boost::optional<const std::string>(request.calendar())
@@ -1159,6 +1164,7 @@ void Worker::dispatch(const pbnavitia::Request& request,
 
     switch (request.requested_api()) {
         case pbnavitia::places:
+            LOG4CPLUS_WARN(logger, "Called on deprecated API: Places");
             autocomplete(request.places());
             break;
         case pbnavitia::pt_objects:
@@ -1177,6 +1183,7 @@ void Worker::dispatch(const pbnavitia::Request& request,
         case pbnavitia::NMPLANNER:
         case pbnavitia::pt_planner:
         case pbnavitia::PLANNER:
+            LOG4CPLUS_WARN(logger, "Called on deprecated API: PtPlanner");
             journeys(request.journeys(), request.requested_api(), current_datetime);
             break;
         case pbnavitia::ISOCHRONE:
@@ -1186,54 +1193,72 @@ void Worker::dispatch(const pbnavitia::Request& request,
             proximity_list(request.places_nearby());
             break;
         case pbnavitia::PTREFERENTIAL:
+            LOG4CPLUS_WARN(logger,
+                           "Called on deprecated API: PTRef - " << NavitiaType_Name(request.ptref().requested_type()));
             pt_ref(request.ptref());
             break;
         case pbnavitia::traffic_reports:
+            LOG4CPLUS_WARN(logger, "Called on deprecated API: TrafficReport");
             traffic_reports(request.traffic_reports());
             break;
         case pbnavitia::line_reports:
+            LOG4CPLUS_WARN(logger, "Called on deprecated API: LineReport");
             line_reports(request.line_reports());
             break;
         case pbnavitia::calendars:
+            LOG4CPLUS_WARN(logger, "Called on deprecated API: Calendar");
             calendars(request.calendars());
             break;
         case pbnavitia::place_code:
+            LOG4CPLUS_WARN(logger, "Called on deprecated API: PlaceCode");
             place_code(request.place_code());
             break;
         case pbnavitia::nearest_stop_points:
+            LOG4CPLUS_WARN(logger, "Called on deprecated API: NearestStopPoints");
             nearest_stop_points(request.nearest_stop_points());
             break;
         case pbnavitia::geo_status:
+            LOG4CPLUS_WARN(logger, "Called on deprecated API: GeoStatus");
             geo_status();
             break;
         case pbnavitia::car_co2_emission:
+            LOG4CPLUS_WARN(logger, "Called on deprecated API: Co2Emission");
             car_co2_emission(request.car_co2_emission());
             break;
         case pbnavitia::direct_path:
+            LOG4CPLUS_WARN(logger, "Called on deprecated API: DirectPath");
             direct_path(request);
             break;
         case pbnavitia::graphical_isochrone:
+            LOG4CPLUS_WARN(logger, "Called on deprecated API: GraphicalIsochrone");
             graphical_isochrone(request.isochrone());
             break;
         case pbnavitia::heat_map:
+            LOG4CPLUS_WARN(logger, "Called on deprecated API: HeatMap");
             heat_map(request.heat_map());
             break;
         case pbnavitia::street_network_routing_matrix:
+            LOG4CPLUS_WARN(logger, "Called on deprecated API: StreetNetworkRoutingMatrix");
             street_network_routing_matrix(request.sn_routing_matrix());
             break;
         case pbnavitia::odt_stop_points:
+            LOG4CPLUS_WARN(logger, "Called on deprecated API: ODTSTopPoints");
             odt_stop_points(request.coord());
             break;
         case pbnavitia::matching_routes:
+            LOG4CPLUS_WARN(logger, "Called on deprecated API: MatchingRoutes");
             get_matching_routes(request.matching_routes());
             break;
         case pbnavitia::equipment_reports:
+            LOG4CPLUS_WARN(logger, "Called on deprecated API: EquipmentReports");
             equipment_reports(request.equipment_reports());
             break;
         case pbnavitia::vehicle_positions:
+            LOG4CPLUS_WARN(logger, "Called on deprecated API: VehiclePositions");
             vehicle_positions(request.vehicle_positions());
             break;
         case pbnavitia::access_points:
+            LOG4CPLUS_WARN(logger, "Called on deprecated API: AccessPoints");
             access_points(request.access_points());
             break;
         case pbnavitia::pt_fares:
