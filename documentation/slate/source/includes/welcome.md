@@ -25,7 +25,7 @@ Technically, Navitia is a [HATEOAS](https://en.wikipedia.org/wiki/HATEOAS) API t
 
 ### Who's who
 
-Navitia is instanciated and exposed publicly through [api.navitia.io](https://api.navitia.io).<br>Developments on Navitia are lead by Hove (previously Kisio Digital and CanalTP).<br>Hove is a subsidiary of Keolis (itself a subsidiary of SNCF, French national railway company).
+Navitia is instanciated and exposed publicly through [api.navitia.io](https://api.navitia.io).<br>Developments on Navitia are lead by Hove (previously Kisio Digital and CanalTP).
 
 ### About "sandbox" coverage
 
@@ -101,19 +101,10 @@ if you only want to challenge Navitia functionality, take your token and go to t
 
 ![Try Navitia playgroung](/images/navitia_playground.png)
 
-Wrappers
---------------
-
-To help you in the building of your project, there are some wrappers implemented (by Hove or not) to query the API Navitia:
-
-|Language / Framework |Plugin                                              |
-|---------------------|----------------------------------------------------|
-|PHP5                 |<https://github.com/hove-io/NavitiaComponent>       |
-|Python               |<https://github.com/leonardbinet/navitia_client>    |
 
 <h2 id="about-data">About the data</h2>
 
-The street network is extracted from [OpenStreetMap](https://www.openstreetmap.org). The public transport data are provided by networks that provide their timetables as open data. Some data improvements are achieved by Hove and are published back there <https://data.gouv.fr>.
+The street network is extracted from [OpenStreetMap](https://www.openstreetmap.org). The public transport data are provided by networks that provide their timetables as open data. Some data improvements are achieved by Hove based on <https://transport.data.gouv.fr/>.
 
 Getting help
 ------------
