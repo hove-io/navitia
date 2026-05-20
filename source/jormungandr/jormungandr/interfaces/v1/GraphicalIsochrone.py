@@ -80,6 +80,11 @@ class GraphicalIsochrone(JourneyCommon):
         if 'ridesharing' in args['origin_mode'] or 'ridesharing' in args['destination_mode']:
             abort(400, message='ridesharing isn\'t available on isochrone')
 
+        if args.get('_pt_planner') is None:
+            mod = i_manager.instances[self.region]
+            if mod.api_backends and mod.api_backends.get('isochrone') in ['loki', 'kraken']:
+                args['_pt_planner'] = mod.api_backends.get('isochrone')
+
         set_request_timezone(self.region)
         original_datetime = args['original_datetime']
         if original_datetime:
