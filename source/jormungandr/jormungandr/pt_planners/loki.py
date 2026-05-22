@@ -60,10 +60,7 @@ class Loki(ZmqSocket, AbstractPtPlanner):
     def graphical_isochrones(
         self, origins, destinations, datetime, clockwise, graphical_isochrones_parameters, bike_in_pt
     ):
-        req = utils.create_graphical_isochrones_request(
-            origins, destinations, datetime, clockwise, graphical_isochrones_parameters, bike_in_pt
-        )
-        return self.send_and_receive(req)
+        raise NotImplementedError("Too bad, you cannot ask loki for graphical isochrones :)")
 
     def get_access_points(self, pt_object, access_point_filter, request_id):
         return [
