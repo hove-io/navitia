@@ -901,7 +901,7 @@ class Journeys(JourneyCommon):
             if 'ridesharing' in (args['origin_mode'] or []) or 'ridesharing' in (args['destination_mode'] or []):
                 abort(400, message='ridesharing isn\'t available on isochrone')
 
-        def _set_specific_params(mod):
+        def _set_specific_params(mod, api):
             if args.get('max_duration') is None:
                 args['max_duration'] = mod.max_duration
             if args.get('_arrival_transfer_penalty') is None:
@@ -965,6 +965,12 @@ class Journeys(JourneyCommon):
                 args['_poi_access_points'] = mod.poi_access_points
 
             if args.get('_pt_planner') is None:
+                # dont look at default_pt_planner for isochrone
+                if api == 'isochrone':
+                    if mod.api_backends and mod.api_backends.get('isochrone') == 'loki':
+                        args['_pt_planner'] = 'loki'
+                    else:
+                        args['_pt_planner'] = 'kraken'
                 args['_pt_planner'] = mod.default_pt_planner
 
             if args.get('language') is None:
@@ -1111,7 +1117,7 @@ class Journeys(JourneyCommon):
             args['origin_mode'] = args.get('origin_mode') or ['walking']
             args['destination_mode'] = args['destination_mode'] or ['walking']
 
-            _set_specific_params(i_manager.instances[r])
+            _set_specific_params(i_manager.instances[r], api)
             set_request_timezone(self.region)
             logging.getLogger(__name__).debug("Querying region : {}".format(r))
 
