@@ -84,7 +84,14 @@ class GraphicalIsochrone(JourneyCommon):
         original_datetime = args['original_datetime']
         if original_datetime:
             new_datetime = self.convert_to_utc(original_datetime)
+        mod = i_manager.instances[self.region]
         args['datetime'] = date_to_timestamp(new_datetime)
+        if args.get('_pt_planner') is None:
+            # dont look at default_pt_planner for graphical_isochrone
+            if mod.api_backends and mod.api_backends.get('graphical_isochrone') == 'loki':
+                args['_pt_planner'] = 'loki'
+            else:
+                args['_pt_planner'] = 'kraken'
 
         response = i_manager.dispatch(args, "graphical_isochrones", self.region)
 
