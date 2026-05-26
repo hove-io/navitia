@@ -361,17 +361,10 @@ class TestSwaggerSchemaDepartureBoard(AbstractTestFixture, SchemaChecker):
         )
 
     def test_stop_schedules(self):
-        obj, errors = self._check_schema(
+        obj = self._check_schema(
             '/v1/coverage/departure_board_test/networks%2Fbase_network/stop_schedules'
             '?from_datetime=20120615T080000&count=20&',
-            hard_check=False,
         )
-
-        # we have some errors, but only on additional_informations
-        assert len(errors) == 9
-        for k, e in errors.items():
-            assert k.endswith('additional_informations[0].type[0]')
-            assert "Got value `None` of type `null`. Value must be of type(s):" in e
 
         # we check that the response is not empty
         assert any((o.get('date_times') for o in obj.get('stop_schedules', [])))
