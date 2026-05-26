@@ -265,27 +265,13 @@ class TestSwaggerSchema(AbstractTestFixture, SchemaChecker):
     def test_stop_schedule(self):
         """
         test the stop_schedule swagger
-
-        the problem with this API is that we return sometime `null` field and swagger does not like this
-        since the navitia SDK handle those and we haven't found a way around those (we can't use swagger3 yet)
-        we consider those error acceptable
         """
         # Note: swagger does not handle '/' in parameters, so we cannot express our '<uris>'
         # so the '/' is urlencoded as %2F to be able to test the call
 
-        obj, errors = self._check_schema(
+        obj = self._check_schema(
             '/v1/coverage/main_routing_test/stop_areas%2FstopB/stop_schedules?from_datetime=20120614T165200',
-            hard_check=False,
         )
-
-        pattern_error = re.compile(
-            "Got value `None` of type `null`. Value must be of type\(s\): `\(u?'string',\)`"
-        )
-        # we have some errors, but only on additional_informations
-        assert len(errors) == 4
-        for k, e in errors.items():
-            assert k.endswith('additional_informations[0].type[0]')
-            assert pattern_error.match(e)
 
         # we check that the response is not empty
         assert any((o.get('date_times') for o in obj.get('stop_schedules', [])))
@@ -293,27 +279,13 @@ class TestSwaggerSchema(AbstractTestFixture, SchemaChecker):
     def test_route_schedule(self):
         """
         test the route_schedule swagger
-
-        the problem with this API is that we return sometime `null` field and swagger does not like this
-        since the navitia SDK handle those and we haven't found a way around those (we can't use swagger3 yet)
-        we consider those error acceptable
         """
         # Note: swagger does not handle '/' in parameters, so we cannot express our '<uris>'
         # so the '/' is urlencoded as %2F to be able to test the call
 
-        _, errors = self._check_schema(
+        self._check_schema(
             '/v1/coverage/main_routing_test/routes%2FA:0/route_schedules?from_datetime=20120614T165200',
-            hard_check=False,
         )
-
-        pattern_error = re.compile(
-            "Got value `None` of type `null`. Value must be of type\(s\): `\(u?'string',\)`"
-        )
-        # we have some errors, but only on additional_informations
-        assert len(errors) == 1
-        for k, e in errors.items():
-            assert k.endswith('additional_informations[0].type[0]')
-            assert pattern_error.match(e)
 
     def test_departures(self):
         self._check_schema(
