@@ -111,7 +111,7 @@ class StopScheduleSerializer(PbNestedSerializer):
 class TerminusScheduleSerializer(PbNestedSerializer):
     stop_point = pt.StopPointSerializer()
     route = pt.RouteSerializer()
-    additional_informations = EnumField(attr="response_status", display_none=True)
+    additional_informations = EnumField(attr="response_status", display_none=False)
     display_informations = pt.RouteDisplayInformationSerializer(attr='pt_display_informations')
     date_times = DateTimeTypeSerializer(many=True, display_none=True)
     links = jsonschema.MethodField(schema_type=LinkSchema(many=True))
