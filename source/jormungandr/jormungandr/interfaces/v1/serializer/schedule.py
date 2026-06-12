@@ -97,7 +97,9 @@ class DateTimeTypeSerializer(PbNestedSerializer):
 class StopScheduleSerializer(PbNestedSerializer):
     stop_point = pt.StopPointSerializer()
     route = pt.RouteSerializer()
-    additional_informations = EnumField(attr="response_status", display_none=True)
+    additional_informations = EnumField(
+        attr="response_status", display_none=True, schema_metadata={'type': ['string', 'null']}
+    )
     display_informations = pt.RouteDisplayInformationSerializer(attr='pt_display_informations')
     date_times = DateTimeTypeSerializer(many=True, display_none=True)
     links = jsonschema.MethodField(schema_type=LinkSchema(many=True))
@@ -111,7 +113,9 @@ class StopScheduleSerializer(PbNestedSerializer):
 class TerminusScheduleSerializer(PbNestedSerializer):
     stop_point = pt.StopPointSerializer()
     route = pt.RouteSerializer()
-    additional_informations = EnumField(attr="response_status", display_none=True)
+    additional_informations = EnumField(
+        attr="response_status", display_none=True, schema_metadata={'type': ['string', 'null']}
+    )
     display_informations = pt.RouteDisplayInformationSerializer(attr='pt_display_informations')
     date_times = DateTimeTypeSerializer(many=True, display_none=True)
     links = jsonschema.MethodField(schema_type=LinkSchema(many=True))
@@ -145,7 +149,9 @@ class RouteScheduleSerializer(PbNestedSerializer):
     table = TableSerializer()
     display_informations = pt.RouteDisplayInformationSerializer(attr='pt_display_informations')
     geojson = MultiLineStringField(display_none=False)
-    additional_informations = EnumField(attr="response_status", display_none=True)
+    additional_informations = EnumField(
+        attr="response_status", display_none=True, schema_metadata={'type': ['string', 'null']}
+    )
     links = jsonschema.MethodField(schema_type=LinkSchema(many=True))
 
     def get_links(self, obj):
