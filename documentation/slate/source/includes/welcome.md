@@ -19,7 +19,7 @@ Have a look at the [examples below](#some-examples) to learn what services we pr
 
 ### Approach
 
-Navitia is an open-source web API, **initially** built to provide traveler information on urban transportation networks.<br>Its main purpose is to provide day-to-day informations to travelers.<br>Over time, Navitia has been able to do way more, _sometimes_ for technical and debuging purpose _or_ because other functional needs fit quite well in what Navitia can do _or_ just because it was quite easy and super cool.
+Navitia is a web API, **initially** built to provide traveler information on urban transportation networks.<br>Its main purpose is to provide day-to-day informations to travelers.<br>Over time, Navitia has been able to do way more, _sometimes_ for technical and debuging purpose _or_ because other functional needs fit quite well in what Navitia can do _or_ just because it was quite easy and super cool.
 
 Technically, Navitia is a [HATEOAS](https://en.wikipedia.org/wiki/HATEOAS) API that returns JSON formated results.
 
