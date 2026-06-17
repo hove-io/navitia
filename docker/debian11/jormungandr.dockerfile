@@ -15,7 +15,7 @@ RUN echo "__version__ = '$GIT_REVISION'" > jormungandr/jormungandr/_version.py
 
 RUN apt clean \
     && apt update --fix-missing \
-    && apt install -o Acquire::Retries=10 -y curl libpq5 apache2 python3.9-dev python3-pip git libgeos-c1v5 ca-certificates protobuf-compiler 2to3 \
+    && apt install -o Acquire::Retries=10 -y curl libpq5 apache2 python3.10-dev python3-pip git libgeos-c1v5 ca-certificates protobuf-compiler 2to3 \
     && update-ca-certificates \
     && (cd navitia-proto && protoc --python_out=../navitiacommon/navitiacommon type.proto response.proto request.proto task.proto stat.proto) \
     && 2to3 --no-diffs -w ./navitiacommon/navitiacommon \

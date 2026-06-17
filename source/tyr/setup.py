@@ -29,7 +29,7 @@
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 
-from distutils.core import setup
+from setuptools import setup
 import glob
 
 setup(

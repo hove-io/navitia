@@ -10,7 +10,7 @@ RUN apt clean \
     && apt install -o Acquire::Retries=10 -y ca-certificates \
     && update-ca-certificates \
     && apt install -o Acquire::Retries=10 -y libgoogle-perftools4 \
-    python3.9 \
+    python3.10 \
     python3-pip \
     libboost-all-dev \
     libprotobuf-dev \
