@@ -42,7 +42,7 @@ kombu==5.0.2
 redis==2.10.6
 flexpolyline==0.1.0
 pickle-mixin==1.0.2
-Flask-Caching==1.7.2
+Flask-Caching==2.0.2
 boto3==1.28.82
 opentelemetry-api==1.28.2
 opentelemetry-sdk==1.28.2

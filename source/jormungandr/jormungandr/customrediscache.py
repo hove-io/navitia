@@ -1,5 +1,4 @@
-from flask_caching._compat import integer_types, string_types
-from flask_caching.backends.base import BaseCache, iteritems_wrapper
+from flask_caching.backends.base import BaseCache
 
 try:
     import cPickle as pickle
@@ -53,7 +52,7 @@ class CustomRedisCache(BaseCache):
         self.key_prefix = key_prefix or ""
 
     def _get_client(self, host, port, password, db, **kwargs):
-        if isinstance(host, string_types):
+        if isinstance(host, str):
             try:
                 import redis
             except ImportError:
@@ -76,7 +75,7 @@ class CustomRedisCache(BaseCache):
         integers as regular string and pickle dumps everything else.
         """
         t = type(value)
-        if t in integer_types:
+        if t is int:
             return str(value).encode("ascii")
         return b"!" + pickle.dumps(value)
 
@@ -127,7 +126,7 @@ class CustomRedisCache(BaseCache):
         # which is not supported by twemproxy
         pipe = self._write_client.pipeline(transaction=False)
 
-        for key, value in iteritems_wrapper(mapping):
+        for key, value in mapping.items():
             dump = self.dump_object(value)
             if timeout == -1:
                 pipe.set(name=self.key_prefix + key, value=dump)
