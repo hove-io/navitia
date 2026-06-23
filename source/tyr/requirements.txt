@@ -1,6 +1,6 @@
 Flask==2.0.3
 Flask-Migrate==2.5.2
-flask_restful==0.3.7
+flask_restful==0.3.10
 Flask-SQLAlchemy==2.4
 Flask-Cors==3.0.9
 # Warning: Project is no longer maintained
