@@ -2,7 +2,7 @@
 apt clean
 apt update --fix-missing
 apt install -y -o Acquire::Retries=10 \
-    libpq5 python3.10-dev python3-pip \
+    libpq5 python3-pip \
     git libgeos-c1v5 ca-certificates \
     protobuf-compiler 2to3 \
     libgoogle-perftools-dev libboost-all-dev \
