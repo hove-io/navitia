@@ -1,4 +1,4 @@
-FROM debian:bullseye-slim
+FROM python:3.10-slim-bullseye
 
 WORKDIR /srv/kraken
 
@@ -10,8 +10,6 @@ RUN apt clean \
     && apt install -o Acquire::Retries=10 -y ca-certificates \
     && update-ca-certificates \
     && apt install -o Acquire::Retries=10 -y libgoogle-perftools4 \
-    python3.9 \
-    python3-pip \
     libboost-all-dev \
     libprotobuf-dev \
     liblog4cplus-2.0.5 \
@@ -19,12 +17,11 @@ RUN apt clean \
     libpqxx-dev \
     curl \
     netcat \
-    && (cd /srv/monitor_kraken && pip3 install --no-cache-dir -r requirements.txt && python3 setup.py install) \
+    && (cd /srv/monitor_kraken && python3.10 -m pip install .  && python3.10 -m pip install --no-cache-dir -U -r requirements.txt) \
     && apt purge -y \
-    && apt purge -y python3-pip \
     && apt autoremove -y
 
-RUN ln -s /usr/local/lib/python*/dist-packages/monitor_kraken/app.py monitor_kraken
+RUN ln -s /usr/local/lib/python3.10/site-packages/monitor_kraken/app.py monitor_kraken
 
 COPY docker/run_kraken_deb11.sh /usr/src/app/run_kraken.sh
 RUN chmod +x /usr/src/app/run_kraken.sh

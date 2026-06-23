@@ -17,7 +17,7 @@ RUN cd tartare-tools \
 # *2mimir7 executables
 FROM mimirsbrunn:local AS mimir_bins
 
-FROM debian:bullseye-slim
+FROM python:3.10-slim-bullseye
 
 WORKDIR /usr/src/app/
 
@@ -35,7 +35,7 @@ COPY ./docker/ca-certificates/*.crt /usr/local/share/ca-certificates/
 
 RUN apt clean \
     && apt update --fix-missing \
-    && apt install -o Acquire::Retries=10 -y unzip curl libgeos-dev libpq5 python3-setuptools  python3.9 python3-pip git ca-certificates postgresql-client gettext-base jq \
+    && apt install -o Acquire::Retries=10 -y unzip curl libgeos-dev libpq5 git ca-certificates postgresql-client gettext-base jq \
     libboost-all-dev \
     libprotobuf-dev \
     liblog4cplus-2.0.5 \
@@ -47,10 +47,9 @@ RUN apt clean \
     && update-ca-certificates \
     && curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip" \
     && unzip awscliv2.zip && ./aws/install \
-    && (cd navitiacommon && python3 setup.py install) \
-    && (cd tyr && python3 setup.py install && pip3 install --no-cache-dir -U -r requirements.txt)\
+    && (cd navitiacommon && python setup.py install) \
+    && (cd tyr && python3.10 -m pip install . && python3.10 -m pip install --no-cache-dir -U -r requirements.txt)\
     && rm -rf ./cosmogony2cities*.deb \
-    && apt purge -y git python3-pip \
     && apt autoremove -y
 
 # binaries from tartare-tools

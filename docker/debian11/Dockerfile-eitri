@@ -1,10 +1,10 @@
-FROM debian:bullseye-slim
+FROM python:3.10-slim-bullseye
 
 COPY source/ /navitia/source/
 
 RUN apt clean \
     && apt update --fix-missing \
-    && apt install -o Acquire::Retries=10 -y libpq5 python3.9 python3-pip git zip jq curl \
+    && apt install -o Acquire::Retries=10 -y libpq5 git zip jq curl \
     libboost-all-dev \
     libprotobuf-dev \
     liblog4cplus-2.0.5 \
@@ -13,7 +13,7 @@ RUN apt clean \
     libgoogle-perftools4 \
     libosmpbf-dev \
     libproj-dev \
-    && pip3 install --no-cache-dir -U -r /navitia/source/eitri/requirements.txt\
+    && pip install --no-cache-dir -U -r /navitia/source/eitri/requirements.txt\
     && apt autoremove -y
 
 # binaries from navitia

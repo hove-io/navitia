@@ -10,7 +10,7 @@ jobs:
   static_analysis:
     runs-on: [self-hosted, corefront, sandbox]
     container:
-        image: debian:bullseye
+        image: python:3.10-bullseye
 
     steps:
     - name: Install git

@@ -30,6 +30,16 @@
 # www.navitia.io
 
 from __future__ import absolute_import, print_function, unicode_literals, division
+
+import collections
+import collections.abc
+import sys
+
+if sys.version_info >= (3, 10):
+    for _attr in ('Callable', 'Mapping', 'MutableMapping', 'Sequence', 'MutableSequence'):
+        if not hasattr(collections, _attr):
+            setattr(collections, _attr, getattr(collections.abc, _attr))
+
 import logging
 import logging.config
 from flask import Flask, got_request_exception

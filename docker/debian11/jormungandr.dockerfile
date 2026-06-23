@@ -1,5 +1,5 @@
 ARG GIT_REVISION="UNKNOWN_VERSION"
-FROM debian:bullseye-slim
+FROM python:3.10-slim-bullseye
 
 ARG GIT_REVISION
 ARG GITHUB_TOKEN
@@ -15,18 +15,18 @@ RUN echo "__version__ = '$GIT_REVISION'" > jormungandr/jormungandr/_version.py
 
 RUN apt clean \
     && apt update --fix-missing \
-    && apt install -o Acquire::Retries=10 -y curl libpq5 apache2 python3.9-dev python3-pip git libgeos-c1v5 ca-certificates protobuf-compiler 2to3 \
+    && apt install -o Acquire::Retries=10 -y curl libpq5 apache2 git libgeos-c1v5 ca-certificates protobuf-compiler gcc \
     && update-ca-certificates \
     && (cd navitia-proto && protoc --python_out=../navitiacommon/navitiacommon type.proto response.proto request.proto task.proto stat.proto) \
-    && 2to3 --no-diffs -w ./navitiacommon/navitiacommon \
-    && (cd navitiacommon && python3 setup.py install) \
-    && (cd jormungandr && python3 setup.py install && pip3 install --no-cache-dir -U -r requirements.txt)\
-    && pip3 install --no-cache-dir uwsgi==2.0.21 \
+    && 2to3 -w navitiacommon/navitiacommon/*_pb2.py \
+    && (cd navitiacommon && python setup.py install) \
+    && (cd jormungandr && python setup.py install && pip install --no-cache-dir -U -r requirements.txt)\
+    && pip install --no-cache-dir uwsgi==2.0.21 \
     && rm -rf navitiacommon jormungandr navitia-proto \
     && apt purge -y \
-        python3-pip \
         2to3 \
-        protobuf-compiler
+        protobuf-compiler \
+        python3-pip
 
 COPY ./docker/run_jormungandr.sh ./run.sh
 COPY ./docker/jormungandr.wsgi ./jormungandr.wsgi

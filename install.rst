@@ -30,7 +30,7 @@ Dependencies
 
 #. Python
 
-   * python3.9
+   * python3.10
    * python3-pip
    * 2to3
 

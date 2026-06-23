@@ -2928,7 +2928,7 @@ class Cities(flask_restful.Resource):
             return {'message': 'cities db not reachable'}, 404
 
         parser = reqparse.RequestParser()
-        parser.add_argument('file', type=werkzeug.FileStorage, location='files')
+        parser.add_argument('file', type=werkzeug.datastructures.FileStorage, location='files')
         args = parser.parse_args()
 
         if not args['file']:
