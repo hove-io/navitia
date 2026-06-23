@@ -1822,7 +1822,7 @@ class Scenario(simple.Scenario):
                     req.isochrone.boundary_duration.append(duration)
         req.isochrone.boundary_duration.insert(0, journey_req.max_duration)
         req.isochrone.boundary_duration.append(request["min_duration"])
-        resp = instance.send_and_receive(req)
+        resp = instance.get_backend('graphical_isochrone', request).send_and_receive(req)
         return resp
 
     def heat_maps(self, request, instance):
@@ -1834,5 +1834,5 @@ class Scenario(simple.Scenario):
         max_resolution = 1000
         req.heat_map.resolution = min(request["resolution"], max_resolution)
         req.heat_map.journeys_request.max_duration = request["max_duration"]
-        resp = instance.send_and_receive(req)
+        resp = instance.get_backend('heat_map', request).send_and_receive(req)
         return resp

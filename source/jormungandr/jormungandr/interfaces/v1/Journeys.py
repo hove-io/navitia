@@ -971,7 +971,8 @@ class Journeys(JourneyCommon):
                         args['_pt_planner'] = 'loki'
                     else:
                         args['_pt_planner'] = 'kraken'
-                args['_pt_planner'] = mod.default_pt_planner
+                else:
+                    args['_pt_planner'] = mod.default_pt_planner
 
             if args.get('language') is None:
                 args['language'] = mod.language

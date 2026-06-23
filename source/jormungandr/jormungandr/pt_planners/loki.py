@@ -63,7 +63,14 @@ class Loki(ZmqSocket, AbstractPtPlanner):
         req = utils.create_graphical_isochrones_request(
             origins, destinations, datetime, clockwise, graphical_isochrones_parameters, bike_in_pt
         )
-        return self.send_and_receive(req)
+        durations = [d for d in req.isochrone.boundary_duration if d > 0]
+        del req.isochrone.boundary_duration[:]
+        req.isochrone.boundary_duration.extend(durations)
+        resp = self.send_and_receive(req)
+        valid = [iso for iso in resp.graphical_isochrones if iso.geojson]
+        del resp.graphical_isochrones[:]
+        resp.graphical_isochrones.extend(valid)
+        return resp
 
     def get_access_points(self, pt_object, access_point_filter, request_id):
         return [
