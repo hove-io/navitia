@@ -1,4 +1,7 @@
-FROM 162230498103.dkr.ecr.eu-west-1.amazonaws.com/mutable-debian11_dev:latest
+FROM debian:bullseye
+COPY scripts/navitia_dependencies.sh /navitia_dependencies.sh
+RUN chmod +x /navitia_dependencies.sh
+RUN bash /navitia_dependencies.sh
 
 RUN apt update && apt install -y git wget
 
