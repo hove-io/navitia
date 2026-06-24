@@ -1,3 +1,12 @@
+import collections
+import collections.abc
+import sys
+
+if sys.version_info >= (3, 10):
+    for _attr in ('Callable', 'Mapping', 'MutableMapping', 'Sequence', 'MutableSequence'):
+        if not hasattr(collections, _attr):
+            setattr(collections, _attr, getattr(collections.abc, _attr))
+
 # encoding: utf-8
 
 #  Copyright (c) 2001-2022, Hove and/or its affiliates. All rights reserved.
