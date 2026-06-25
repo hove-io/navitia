@@ -23,6 +23,7 @@ WORKDIR /usr/src/app/
 
 COPY ./source/navitiacommon ./navitiacommon
 COPY ./source/tyr ./tyr
+COPY ./source/navitia-proto ./navitia-proto
 COPY ./docker/run_tyr_worker.sh /usr/src/app/run.sh
 RUN chmod +x /usr/src/app/run.sh
 
@@ -35,7 +36,7 @@ COPY ./docker/ca-certificates/*.crt /usr/local/share/ca-certificates/
 
 RUN apt clean \
     && apt update --fix-missing \
-    && apt install -o Acquire::Retries=10 -y unzip curl libgeos-dev libpq5 git ca-certificates postgresql-client gettext-base jq \
+    && apt install -o Acquire::Retries=10 -y unzip curl libgeos-dev libpq5 git ca-certificates postgresql-client gettext-base jq protobuf-compiler \
     libboost-all-dev \
     libprotobuf-dev \
     liblog4cplus-2.0.5 \
@@ -47,6 +48,8 @@ RUN apt clean \
     && update-ca-certificates \
     && curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip" \
     && unzip awscliv2.zip && ./aws/install \
+    && (cd navitia-proto && protoc --python_out=../navitiacommon/navitiacommon type.proto response.proto request.proto task.proto stat.proto) \
+    && 2to3 -w navitiacommon/navitiacommon/*_pb2.py \
     && (cd navitiacommon && python setup.py install) \
     && (cd tyr && python3.10 -m pip install . && python3.10 -m pip install --no-cache-dir -U -r requirements.txt)\
     && rm -rf ./cosmogony2cities*.deb \

@@ -4,6 +4,7 @@ WORKDIR /usr/share/tyr/
 
 COPY ./source/navitiacommon ./navitiacommon
 COPY ./source/tyr ./tyr
+COPY ./source/navitia-proto ./navitia-proto
 COPY ./docker/ca-certificates/*.crt /usr/local/share/ca-certificates/
 COPY ./docker/run_tyr_beat.sh /run_tyr_beat.sh
 COPY ./source/sql/alembic /usr/share/navitia/ed/alembic
@@ -14,8 +15,10 @@ RUN chmod +x /run_tyr_beat.sh
 
 RUN apt clean \
     && apt update --fix-missing \
-    && apt install -o Acquire::Retries=10 -y libgeos-dev libpq5 git ca-certificates postgresql-client gettext-base jq gcc \
+    && apt install -o Acquire::Retries=10 -y libgeos-dev libpq5 git ca-certificates postgresql-client gettext-base jq gcc protobuf-compiler \
     && update-ca-certificates \
+    && (cd navitia-proto && protoc --python_out=../navitiacommon/navitiacommon type.proto response.proto request.proto task.proto stat.proto) \
+    && 2to3 -w navitiacommon/navitiacommon/*_pb2.py \
     && (cd navitiacommon && python setup.py install) \
     && (cd tyr && python setup.py install && pip install --no-cache-dir -U -r requirements.txt)\
     && pip install --no-cache-dir -U -r /tmp/requirements.txt \
