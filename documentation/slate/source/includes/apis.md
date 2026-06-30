@@ -2451,3 +2451,135 @@ stop point is collected and returned.
 | `direct_stop_points.from_stop_point_id`      | string           | The origin stop point id echoed from the request      |
 | `direct_stop_points.accessible_stop_points`  | array of objects | Stop points reachable without transfer                |
 | `accessible_stop_points[].id`                | string           | URI of an accessible stop point                       |
+
+<h2 id="mobility-scenarios">Mobility Scenarios</h2>
+
+``` shell
+#request
+$ curl 'https://api.navitia.io/v1/coverage/{region_id}/mobility_scenarios' -H 'Authorization: YOUR_TOKEN'
+```
+
+``` shell
+#response
+HTTP/1.1 200 OK
+
+{
+    "id:shape_name": {
+        "name": "Stade de France",
+        "shape": {
+            "type": "FeatureCollection",
+            "features": [
+                {
+                    "type": "Feature",
+                    "properties": {
+                        "name": "Drancy"
+                    },
+                    "geometry": {
+                        "type": "Polygon",
+                        "coordinates": [
+                            [
+                                [2.4350, 48.9200],
+                                [2.4350, 48.9600],
+                                [2.4750, 48.9600],
+                                [2.4750, 48.9200],
+                                [2.4350, 48.9200]
+                            ]
+                        ]
+                    }
+                }
+            ]
+        },
+        "scenarios": {
+            "Default_departure": {
+                "journey_parameters": {
+                    "max_walking_duration_to_pt": 1800,
+                    "min_nb_journeys": 2,
+                    "max_nb_journeys": 4,
+                    "forbidden_uris": [
+                        "stop_point:IDFM:463150",
+                        "stop_point:IDFM:22085",
+                        "line:IDFM:C01099"
+                    ]
+                }
+            },
+            "Default_arrival": {
+                "journey_parameters": {
+                    "max_walking_duration_to_pt": 1800,
+                    "min_nb_journeys": 2,
+                    "max_nb_journeys": 4,
+                    "forbidden_uris": [
+                        "stop_point:IDFM:463150",
+                        "stop_point:IDFM:22085",
+                        "line:IDFM:C01099"
+                    ]
+                }
+            }
+        },
+        "events": [
+            {
+                "departure_scenario": "Default_departure",
+                "arrival_scenario": "Default_arrival",
+                "from_datetime": "20250712T050000",
+                "to_datetime": "20250714T020000"
+            }
+        ]
+    }
+}
+```
+
+Also known as `/mobility_scenarios` service.
+
+This endpoint provides access to mobility scenario configurations for a given coverage.
+Mobility scenarios define geographic zones (as GeoJSON polygons) and time-bounded events that override journey parameters when computing journeys.
+
+When mobility scenarios are enabled on a coverage, the journeys service checks whether the origin or destination falls inside a scenario's geographic shape during an active event period. If a match is found, the scenario's journey parameters (such as `forbidden_uris`, `allowed_id`, `max_walking_duration_to_pt`, `min_nb_journeys`, `max_nb_journeys`) override the default ones. The matched scenario information is returned in the journeys response under `context.mobility_scenarios`.
+
+<aside class="warning">
+    This endpoint requires a specific mobility scenario configuration for the coverage.
+    Therefore this service is not available by default.
+</aside>
+
+### Accesses
+
+| url                                                                  | Result                                                |
+|----------------------------------------------------------------------|-------------------------------------------------------|
+| `/coverage/{region_id}/mobility_scenarios`                           | List of all mobility scenarios for the coverage       |
+
+
+### Response
+
+The response is a JSON object where each key is a mobility scenario id, and the value is an [event_shape](#event-shape) object.
+
+### <a name="event-shape"></a>Event Shape object
+
+| Field       | Type                           | Description                                                                 |
+|-------------|--------------------------------|-----------------------------------------------------------------------------|
+| `name`      | string (optional)              | Human-readable name of the mobility scenario                                |
+| `shape`     | GeoJSON FeatureCollection      | Geographic zone as a GeoJSON FeatureCollection (typically contains Polygons) |
+| `scenarios` | object                         | Map of scenario names to [scenario](#mobility-scenario) objects             |
+| `events`    | array of [event](#mobility-event) | Time-bounded events that activate scenarios                              |
+
+### <a name="mobility-scenario"></a>Scenario object
+
+| Field               | Type   | Description                                                   |
+|---------------------|--------|---------------------------------------------------------------|
+| `journey_parameters`| object | Journey parameter overrides (see below)                       |
+
+Journey parameters may include:
+
+| Field                        | Type             | Description                                                         |
+|------------------------------|------------------|---------------------------------------------------------------------|
+| `forbidden_uris`             | array of strings | URIs of stop points, lines, etc. to avoid                           |
+| `allowed_id`                 | array of strings | URIs of allowed stop points, lines, etc.                            |
+| `max_walking_duration_to_pt` | int              | Maximum walking duration to public transport in seconds             |
+| `min_nb_journeys`            | int              | Minimum number of journeys to compute                               |
+| `max_nb_journeys`            | int              | Maximum number of journeys to compute                               |
+
+### <a name="mobility-event"></a>Event object
+
+| Field                | Type   | Description                                                                    |
+|----------------------|--------|--------------------------------------------------------------------------------|
+| `from_datetime`      | string | Start of the event period (format: `YYYYMMDDTHHmmss`)                          |
+| `to_datetime`        | string | End of the event period (format: `YYYYMMDDTHHmmss`)                            |
+| `departure_scenario` | string (optional) | Name of the scenario to apply when the origin is inside the shape     |
+| `arrival_scenario`   | string (optional) | Name of the scenario to apply when the destination is inside the shape |
