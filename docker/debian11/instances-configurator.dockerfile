@@ -1,4 +1,4 @@
-FROM debian:bullseye-slim
+FROM python:3.10-slim-bullseye
 
 
 COPY ./source/sql/alembic /usr/share/navitia/ed/alembic
@@ -11,8 +11,8 @@ RUN chmod +x /instances_configuration.sh
 
 RUN apt clean \
     && apt update --fix-missing \
-    && apt install -o Acquire::Retries=10 -y libpq5 python3.9-dev python3-pip postgresql-client gettext-base \
-    && pip3 install --no-cache-dir -U -r /tmp/requirements.txt \
+    && apt install -o Acquire::Retries=10 -y libpq5 postgresql-client gettext-base \
+    && pip install --no-cache-dir -U -r /tmp/requirements.txt \
     && apt autoremove -y
 
 ENTRYPOINT ["/bin/bash","/instances_configuration.sh"]

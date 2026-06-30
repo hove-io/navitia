@@ -12,7 +12,7 @@ jobs:
   build_navitia_ci:
     runs-on: [self-hosted, corefront, sandbox]
     container:
-      image: debian:bullseye
+      image: python:3.10-bullseye
 
     services:
       rabbitmq:
@@ -84,7 +84,7 @@ jobs:
     - name: Tests python3
       working-directory: ./build
       run: |
-        virtualenv -p  python3.9 navitia_py3
+        virtualenv -p  python navitia_py3
         . navitia_py3/bin/activate
         pip install -r ../source/jormungandr/requirements_dev.txt
         export JORMUNGANDR_BROKER_URL='amqp://guest:guest@rabbitmq:5672//'
@@ -96,7 +96,7 @@ jobs:
     - name: Docker test python3
       working-directory: ./build
       run: |
-        virtualenv -p python3.9 navitia_py3
+        virtualenv -p python navitia_py3
         . navitia_py3/bin/activate
         pip install -r ../source/tyr/requirements_dev.txt
         pip install -r ../source/sql/requirements.txt

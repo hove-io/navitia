@@ -29,8 +29,7 @@
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 
-from distutils.core import setup
-from setuptools import find_packages
+from setuptools import setup, find_packages
 
 setup(
     name='jormungandr',
