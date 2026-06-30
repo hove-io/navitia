@@ -1,9 +1,12 @@
 from flask_caching.backends.base import BaseCache
+import logging
 
 try:
     import cPickle as pickle
 except ImportError:  # pragma: no cover
     import pickle  # type: ignore
+
+logger = logging.getLogger(__name__)
 
 
 class CustomRedisCache(BaseCache):
@@ -89,6 +92,7 @@ class CustomRedisCache(BaseCache):
             try:
                 return pickle.loads(value[1:])
             except pickle.PickleError:
+                logger.error("Redis cache error: failed to unpickle cached value, returning None")
                 return None
         try:
             return int(value)
