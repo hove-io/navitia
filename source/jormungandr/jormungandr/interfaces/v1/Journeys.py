@@ -528,6 +528,14 @@ class rig_journey(object):
             response = objects[0]
             for j in response.get('journeys', []):
                 if 'sections' not in j:
+                    # isochrone (only 'from' or only 'to' requested): origin/destination
+                    # are stored directly on the journey, not nested in sections
+                    if g.origin_detail:
+                        self.clean_global_origin_destination_detail(g.origin_detail)
+                        j['from'] = g.origin_detail
+                    if g.destination_detail:
+                        self.clean_global_origin_destination_detail(g.destination_detail)
+                        j['to'] = g.destination_detail
                     continue
                 logging.debug(
                     'for journey changing origin: {old_o} to {new_o}'

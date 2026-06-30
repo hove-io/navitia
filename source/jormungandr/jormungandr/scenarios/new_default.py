@@ -1612,12 +1612,16 @@ class Scenario(simple.Scenario):
     def journeys(self, request, instance):
         return self.__on_journeys(type_pb2.PLANNER, request, instance)
 
-    def get_pt_object(self, instance, arg_pt_object, request_id):
+    def get_pt_object(self, instance, arg_pt_object, request_id, g_attr_name=None):
         if not arg_pt_object:
             return None
-        detail = self.get_entrypoint_detail(
-            arg_pt_object, instance, request_id="{}".format(request_id)
-        ) or json_address_from_uri(arg_pt_object)
+        detail = self.get_entrypoint_detail(arg_pt_object, instance, request_id="{}".format(request_id))
+        if g_attr_name:
+            # we store the resolved detail in g to be able to reuse it after the marshall
+            # (see rig_journey), the coord fallback below is only used to compute the isochrone,
+            # it must not be used to enrich the response
+            setattr(g, g_attr_name, detail)
+        detail = detail or json_address_from_uri(arg_pt_object)
         return get_pt_object_from_json(detail, instance) if detail else None
 
     def isochrone(self, request, instance):
@@ -1631,9 +1635,10 @@ class Scenario(simple.Scenario):
         pt_object_origin = None
         pt_object_destination = None
         origin = request.get('origin')
+        g.origin_detail = None
         if origin:
             pt_object_origin = self.get_pt_object(
-                instance, origin, request_id="{}_origin_detail".format(request_id)
+                instance, origin, request_id="{}_origin_detail".format(request_id), g_attr_name='origin_detail'
             )
             if not pt_object_origin:
                 return generate_error(
@@ -1643,9 +1648,13 @@ class Scenario(simple.Scenario):
                 )
 
         destination = request.get('destination')
+        g.destination_detail = None
         if destination:
             pt_object_destination = self.get_pt_object(
-                instance, destination, request_id="{}_dest_detail".format(request_id)
+                instance,
+                destination,
+                request_id="{}_dest_detail".format(request_id),
+                g_attr_name='destination_detail',
             )
             if not pt_object_destination:
                 return generate_error(
