@@ -54,6 +54,7 @@ from jormungandr.scenarios.utils import (
 )
 from jormungandr.otlp import otlp_instance
 from navitiacommon import response_pb2, type_pb2
+from flask import g
 from flask_restful import abort
 from .helper_classes.timer_logger_helper import timed_logger
 from .helper_classes.helper_exceptions import (
@@ -568,12 +569,6 @@ class Scenario(new_default.Scenario):
             final_e = FinaliseException(e)
             return [final_e.get()]
 
-    def get_detail_pt_object(self, instance, arg_pt_object, request_id):
-        if not arg_pt_object:
-            return None
-        detail = self.get_entrypoint_detail(arg_pt_object, instance, request_id=request_id)
-        return get_pt_object_from_json(detail, instance) if detail else None
-
     def graphical_isochrones(self, request, instance):
         logger = logging.getLogger(__name__)
         """
@@ -608,9 +603,11 @@ class Scenario(new_default.Scenario):
         request_id = request.get("request_id", None)
         origin = request.get('origin')
         if origin:
-            pt_object_origin = self.get_detail_pt_object(
-                instance, origin, request_id="{}_origin_detail".format(request_id)
+            origin_detail = self.get_entrypoint_detail(
+                origin, instance, request_id="{}_origin_detail".format(request_id)
             )
+            g.origin_detail = origin_detail
+            pt_object_origin = get_pt_object_from_json(origin_detail, instance) if origin_detail else None
             if not pt_object_origin:
                 return generate_error(
                     "The entry point: {} is not valid".format(origin),
@@ -619,8 +616,12 @@ class Scenario(new_default.Scenario):
                 )
         destination = request.get('destination')
         if destination:
-            pt_object_destination = self.get_detail_pt_object(
-                instance, destination, request_id="{}_dest_detail".format(request_id)
+            destination_detail = self.get_entrypoint_detail(
+                destination, instance, request_id="{}_dest_detail".format(request_id)
+            )
+            g.destination_detail = destination_detail
+            pt_object_destination = (
+                get_pt_object_from_json(destination_detail, instance) if destination_detail else None
             )
             if not pt_object_destination:
                 return generate_error(
@@ -630,7 +631,7 @@ class Scenario(new_default.Scenario):
                 )
         try:
             with FutureManager(self.greenlet_pool_size) as future_manager:
-                return self._scenario._compute_isochrone_common(
+                resp = self._scenario._compute_isochrone_common(
                     future_manager,
                     pt_object_origin,
                     pt_object_destination,
@@ -639,6 +640,7 @@ class Scenario(new_default.Scenario):
                     krakens_call,
                     type_pb2.graphical_isochrone,
                 )
+                return resp
         except PtException as e:
             logger.exception('')
             return e.get()

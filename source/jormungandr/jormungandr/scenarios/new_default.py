@@ -1801,9 +1801,22 @@ class Scenario(simple.Scenario):
                 request_datetime_list.append(r.next_request_date_time)
         return min(request_datetime_list) if request_datetime_list else None
 
+    def _store_entrypoint_details(self, request, instance):
+        request_id = request.get("request_id", None)
+        if request.get('origin'):
+            g.origin_detail = self.get_entrypoint_detail(
+                request['origin'], instance, request_id="{}_origin_detail".format(request_id)
+            )
+        if request.get('destination'):
+            g.destination_detail = self.get_entrypoint_detail(
+                request['destination'], instance, request_id="{}_dest_detail".format(request_id)
+            )
+
     def graphical_isochrones(self, request, instance):
         if "taxi" in request["origin_mode"] or "taxi" in request["destination_mode"]:
             abort(400, message="taxi is not available with new_default scenario")
+
+        self._store_entrypoint_details(request, instance)
 
         req = request_pb2.Request()
         req._current_datetime = date_to_timestamp(request["_current_datetime"])
