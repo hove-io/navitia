@@ -20,15 +20,24 @@ def parse_file(filename):
 
 def get_excluded_zones(path):
     result = {}
+
     for row in parse_file(path + "/poi_properties.txt"):
+        if len(row) < 3:
+            logging.getLogger(__name__).warning(
+                "opg_excluded_zones: Ignored malformed line (%s)", row
+            )
+            continue
+
         if row[1].lower() != "excluded_zones":
             continue
+
         try:
             result[row[0]] = json.loads(row[2])
-        except Exception:
+        except json.JSONDecodeError:
             logging.getLogger(__name__).error(
-                "opg_excluded_zones: Ignored line, Invalid json ({})".format(row[2])
+                "opg_excluded_zones: Ignored line, invalid JSON (%s)", row[2]
             )
+
     return result
 
 
