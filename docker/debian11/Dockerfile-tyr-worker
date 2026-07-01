@@ -70,6 +70,7 @@ COPY ./docker_build/ed/poi2ed /usr/bin/poi2ed
 COPY --from=mimir_bins /usr/bin/*mimir7 /usr/bin/
 # Copy: mimir config
 COPY --from=mimir_bins /etc/mimirsbrunn /etc/mimir
+COPY --from=mimir_bins /etc/opensearch /etc/opensearch
 
 # TODO change the user to remove this ugly C_FORCE_ROOT
 ENV C_FORCE_ROOT=1
