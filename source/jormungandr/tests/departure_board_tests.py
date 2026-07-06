@@ -1552,7 +1552,7 @@ class TestSchedules(AbstractTestFixture):
         assert arrivals[2]["stop_date_time"]["base_departure_date_time"] == '20160103T191000'
         assert arrivals[2]["stop_date_time"]["data_freshness"] == 'base_schedule'
         assert len(response.get("origins", [])) == 1
-        assert len(response("terminus", [])) == 1
+        assert len(response.get("terminus", [])) == 1
 
     def test_departure_schedule_departures_date_time_frequency_base_schedule(self):
         """
