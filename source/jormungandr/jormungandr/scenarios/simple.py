@@ -64,7 +64,7 @@ class Scenario(object):
     def status(self, request, instance):
         req = request_pb2.Request()
         req.requested_api = type_pb2.STATUS
-        resp = instance.send_and_receive(req)
+        resp = instance.get_backend("status", request).send_and_receive(req)
         return resp
 
     def geo_status(self, request, instance):
@@ -170,7 +170,7 @@ class Scenario(object):
             for forbidden_uri in request["forbidden_uris[]"]:
                 req.equipment_reports.forbidden_uris.append(forbidden_uri)
 
-        resp = instance.send_and_receive(req)
+        resp = instance.get_backend("equipment_reports", request).send_and_receive(req)
         return resp
 
     def access_points(self, request, instance):
@@ -201,7 +201,7 @@ class Scenario(object):
             for forbidden_uri in request["forbidden_uris[]"]:
                 req.vehicle_positions.forbidden_uris.append(forbidden_uri)
 
-        resp = instance.send_and_receive(req)
+        resp = instance.get_backend("vehicle_positions", request).send_and_receive(req)
         return resp
 
     def places(self, request, instance):
