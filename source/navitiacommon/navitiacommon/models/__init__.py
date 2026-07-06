@@ -982,7 +982,7 @@ class Instance(db.Model):  # type: ignore
         server_default=str(default_values.bike_destination_only_penalty),
     )
     # Example:
-    # {"line_reports": "loki", "disruptions": "kraken"}
+    # {"line_reports": "loki", "disruptions": "kraken", "status": "loki", "vehicle_positions": "loki", "equipment_reports": "kraken"}
     api_backends = db.Column(JSONB, nullable=False)
 
     mobility_scenarios_enabled = db.Column(
