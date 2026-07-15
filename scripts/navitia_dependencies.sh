@@ -11,4 +11,4 @@ apt install -y -o Acquire::Retries=10 \
     python3-setuptools  postgresql-client  \
     gettext-base jq libssl-dev \
     libosmpbf-dev libproj-dev gcc g++ cmake \
-    virtualenv clang-format
+    virtualenv clang-format ccache
