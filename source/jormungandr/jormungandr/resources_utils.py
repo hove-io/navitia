@@ -93,7 +93,7 @@ class ResourceUtc(object):
         try:
             utctime = localized_dt.astimezone(pytz.utc)
         except ValueError as e:
-            raise UnableToParse("Unable to parse datetime, " + e.message)
+            raise UnableToParse("Unable to parse datetime, " + str(e))
 
         return utctime
 
@@ -124,10 +124,17 @@ class DocumentedResource(Resource):
         but for the moment we don't want all DocumentedResource to have an 'options' method
         """
         args = self.parsers["options"].parse_args()
+        from flask import request
+
         options_response = jormungandr.app.make_default_options_response()
+        # Werkzeug 3's allowed_methods() (used by make_default_options_response)
+        # returns nothing when the requested path lacks the trailing slash of the
+        # matched rule, leaving the 'Allow' header empty. Populate it from the
+        # rule that actually matched the request instead.
+        if request.url_rule is not None and request.url_rule.methods:
+            options_response.allow.update(m.lower() for m in request.url_rule.methods)
         if not args['schema']:
             return options_response
-        from flask import request
 
         schema = make_schema(resource=self, rule=request.url_rule)
         return SwaggerOptionPathSerializer(schema).data, 200, {'Allow': options_response.allow}

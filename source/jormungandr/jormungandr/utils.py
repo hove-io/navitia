@@ -773,11 +773,18 @@ def copy_context_in_greenlet_stack(request_context):
 
     :param request_context: a copy of the 'main' flask request context
     """
-    request_context.push()
+    # Flask 3 tracks the active request context through a ContextVar whose reset
+    # token is stored on the RequestContext object itself. gevent runs each
+    # greenlet in its own contextvars.Context, so pushing/popping a single shared
+    # context object from several greenlets corrupts that token stack
+    # ("ValueError: Token was created in a different Context"). Give every
+    # greenlet its own copy so push()/pop() stay balanced within the greenlet.
+    local_context = request_context.copy()
+    local_context.push()
     try:
         yield
     finally:
-        request_context.pop()
+        local_context.pop()
 
 
 def compose(*funs):

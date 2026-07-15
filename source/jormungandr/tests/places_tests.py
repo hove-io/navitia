@@ -65,7 +65,9 @@ class TestPlaces(AbstractTestFixture):
         assert response['places'][0]['name'] == "Condom (03430)"
 
     def test_places_invalid_encoding(self):
-        _, status = self.query_no_assert(u'/v1/coverage/main_routing_test/places/?q=ch\xe2teau'.encode('utf-8'))
+        # Werkzeug 3's test client rejects bytes URLs (urlsplit needs str); pass the
+        # unicode path directly, the client percent-encodes the non-ascii character.
+        _, status = self.query_no_assert(u'/v1/coverage/main_routing_test/places/?q=ch\xe2teau')
         assert status != 500
 
     def test_places_do_not_loose_precision(self):
