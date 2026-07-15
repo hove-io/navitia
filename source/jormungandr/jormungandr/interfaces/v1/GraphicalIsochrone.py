@@ -29,16 +29,50 @@
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 from __future__ import absolute_import, print_function, unicode_literals, division
+from functools import wraps
+from flask import g
 from flask_restful import abort
 from jormungandr import i_manager
 from jormungandr.timezone import set_request_timezone
 from jormungandr.interfaces.v1.errors import ManageError
-from jormungandr.utils import date_to_timestamp
+from jormungandr.utils import date_to_timestamp, has_invalid_reponse_code
 from jormungandr.interfaces.v1.journey_common import JourneyCommon
 from jormungandr.interfaces.v1.serializer.api import GraphicalIsrochoneSerializer
 from jormungandr.interfaces.v1.decorators import get_serializer
 from navitiacommon.parser_args_type import UnsignedInteger
 import six
+
+
+class rig_isochrone(object):
+    """
+    decorator to fill isochrone zones' from/to with the resolved origin/destination detail
+    """
+
+    @staticmethod
+    def clean_global_origin_destination_detail(json_object):
+        if isinstance(json_object, dict) and 'within_zones' in json_object:
+            del json_object["within_zones"]
+        if isinstance(json_object, dict) and 'administrative_regions' in json_object:
+            json_object['administrative_regions'] = [
+                admin for admin in json_object['administrative_regions'] if admin.get('level') == 8
+            ]
+
+    def __call__(self, f):
+        @wraps(f)
+        def wrapper(*args, **kwargs):
+            objects = f(*args, **kwargs)
+            if has_invalid_reponse_code(objects):
+                return objects
+            for isochrone in objects[0].get('isochrones', []):
+                if getattr(g, 'origin_detail', None):
+                    self.clean_global_origin_destination_detail(g.origin_detail)
+                    isochrone['from'] = g.origin_detail
+                if getattr(g, 'destination_detail', None):
+                    self.clean_global_origin_destination_detail(g.destination_detail)
+                    isochrone['to'] = g.destination_detail
+            return objects
+
+        return wrapper
 
 
 class GraphicalIsochrone(JourneyCommon):
@@ -55,6 +89,7 @@ class GraphicalIsochrone(JourneyCommon):
             help="To provide multiple duration parameters",
         )
 
+    @rig_isochrone()
     @get_serializer(serpy=GraphicalIsrochoneSerializer)
     @ManageError()
     def get(self, region=None, lon=None, lat=None, uri=None):

@@ -916,3 +916,91 @@ def journeys_next_prev_links_default_value_test():
         prev_link = scenario.previous_journey_datetime(response.journeys, True)
     assert str_to_time_stamp("20120614T080110") == next_link
     assert str_to_time_stamp("20120614T081950") == prev_link
+
+
+def _isochrone_base_request(origin=None, destination=None):
+    return {
+        'origin': origin,
+        'destination': destination,
+        'debug': False,
+        'max_nb_journeys': None,
+        'origin_mode': ['walking'],
+        'destination_mode': ['walking'],
+    }
+
+
+def isochrone_sets_g_origin_detail_when_only_origin_requested_test(mocker):
+    """
+    /journeys?from=X (no 'to') is routed to Scenario.isochrone(). It must expose the resolved
+    origin detail on flask.g (like graphical_isochrones already does) so rig_journey can later
+    fill the isochrone entries' 'from'. destination_detail must stay None since it wasn't requested.
+    """
+    mocker.patch('jormungandr.scenarios.new_default.merge_responses', return_value=response_pb2.Response())
+    mocker.patch('jormungandr.scenarios.new_default.get_kraken_calls', return_value=set())
+    mocker.patch('jormungandr.scenarios.new_default.updated_request_with_default')
+    mocker.patch('jormungandr.scenarios.new_default.get_pt_object_from_json', return_value=mocker.MagicMock())
+
+    scenario = new_default.Scenario()
+    instance = mocker.MagicMock()
+    origin_detail = helpers_tests.get_json_entry_point(id='resolved_origin', name='Resolved origin')
+    request = _isochrone_base_request(origin='origin_uri')
+
+    with app.app_context():
+        with app.test_request_context():
+            mocker.patch.object(scenario, 'get_entrypoint_detail', return_value=origin_detail)
+            mocker.patch.object(scenario, 'call_kraken', return_value=iter([]))
+            scenario.isochrone(request, instance)
+
+            assert g.origin_detail == origin_detail
+            assert g.destination_detail is None
+
+
+def isochrone_sets_g_destination_detail_when_only_destination_requested_test(mocker):
+    """Symmetric case: only 'to' requested, only g.destination_detail must be resolved."""
+    mocker.patch('jormungandr.scenarios.new_default.merge_responses', return_value=response_pb2.Response())
+    mocker.patch('jormungandr.scenarios.new_default.get_kraken_calls', return_value=set())
+    mocker.patch('jormungandr.scenarios.new_default.updated_request_with_default')
+    mocker.patch('jormungandr.scenarios.new_default.get_pt_object_from_json', return_value=mocker.MagicMock())
+
+    scenario = new_default.Scenario()
+    instance = mocker.MagicMock()
+    destination_detail = helpers_tests.get_json_entry_point(
+        id='resolved_destination', name='Resolved destination'
+    )
+    request = _isochrone_base_request(destination='destination_uri')
+
+    with app.app_context():
+        with app.test_request_context():
+            mocker.patch.object(scenario, 'get_entrypoint_detail', return_value=destination_detail)
+            mocker.patch.object(scenario, 'call_kraken', return_value=iter([]))
+            scenario.isochrone(request, instance)
+
+            assert g.destination_detail == destination_detail
+            assert g.origin_detail is None
+
+
+def isochrone_falls_back_to_coord_without_setting_g_origin_detail_test(mocker):
+    """
+    When the entrypoint autocomplete lookup finds nothing, isochrone() still builds the pt_object
+    used for the actual computation from the raw coordinate (json_address_from_uri fallback). But
+    g.origin_detail must stay None: there is no resolved detail to enrich the isochrone entries
+    with, so rig_journey knows to leave 'from'/'to' untouched for this request.
+    """
+    mocker.patch('jormungandr.scenarios.new_default.get_kraken_calls', return_value=set())
+    mocker.patch('jormungandr.scenarios.new_default.updated_request_with_default')
+    merge_responses_mock = mocker.patch(
+        'jormungandr.scenarios.new_default.merge_responses', return_value=response_pb2.Response()
+    )
+
+    scenario = new_default.Scenario()
+    instance = mocker.MagicMock()
+    request = _isochrone_base_request(origin='2.3522;48.8566')
+
+    with app.app_context():
+        with app.test_request_context():
+            mocker.patch.object(scenario, 'get_entrypoint_detail', return_value=None)
+            mocker.patch.object(scenario, 'call_kraken', return_value=iter([]))
+            resp = scenario.isochrone(request, instance)
+
+            assert g.origin_detail is None
+            assert resp is merge_responses_mock.return_value

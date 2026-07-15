@@ -287,3 +287,76 @@ def handle_poi_disruptions_test():
             destination = sections[2]['to']['poi']
             assert destination['id'] == "poi_uri_b"
             assert len(destination["links"]) == 0
+
+
+@rig_journey()
+def get_isochrone_like_response():
+    """
+    Fakes what /journeys returns when called with only 'from' or only 'to': the entries have no
+    'sections' at all, 'from'/'to' are set directly on the journey.
+    """
+    return (
+        {
+            'journeys': [
+                {
+                    'from': {'id': 'requested_uri', 'name': 'requested (unresolved)'},
+                    'to': {'id': 'reached_place', 'name': 'reached place'},
+                }
+            ]
+        },
+        200,
+    )
+
+
+def rig_journey_fills_isochrone_from_when_only_origin_requested_test():
+    """
+    isochrone entries have no 'sections', so rig_journey must fill 'from' directly on the journey
+    from g.origin_detail (mirrors what happens for full journeys' sections[0]['from']).
+    """
+    with app.app_context():
+        with app.test_request_context():
+            g.origin_detail = helpers_tests.get_json_entry_point(id='resolved_origin', name='Resolved origin')
+            g.destination_detail = None
+
+            resp = get_isochrone_like_response()
+            journey = resp[0]['journeys'][0]
+
+            assert journey['from']['id'] == 'resolved_origin'
+            # 'to' is the reached point of the isochrone: it must stay untouched
+            assert journey['to']['id'] == 'reached_place'
+
+
+def rig_journey_fills_isochrone_to_when_only_destination_requested_test():
+    """
+    Symmetric case: only 'to' was requested, so only journey['to'] must be overwritten from
+    g.destination_detail, journey['from'] (the reached point) must stay untouched.
+    """
+    with app.app_context():
+        with app.test_request_context():
+            g.origin_detail = None
+            g.destination_detail = helpers_tests.get_json_entry_point(
+                id='resolved_destination', name='Resolved destination'
+            )
+
+            resp = get_isochrone_like_response()
+            journey = resp[0]['journeys'][0]
+
+            assert journey['to']['id'] == 'resolved_destination'
+            assert journey['from']['id'] == 'requested_uri'
+
+
+def rig_journey_leaves_isochrone_untouched_without_g_attrs_test():
+    """
+    If origin_detail/destination_detail were never resolved (both None, as set by
+    Scenario.isochrone() when the entrypoint lookup fails), rig_journey must not touch the entry.
+    """
+    with app.app_context():
+        with app.test_request_context():
+            g.origin_detail = None
+            g.destination_detail = None
+
+            resp = get_isochrone_like_response()
+            journey = resp[0]['journeys'][0]
+
+            assert journey['from']['id'] == 'requested_uri'
+            assert journey['to']['id'] == 'reached_place'
