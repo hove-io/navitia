@@ -2,7 +2,7 @@
 -r ../../requirements_pre-commit.txt
 
 docker==3.4.1
-pytest==7.1.2
+pytest==9.0.3
 pytest-cov==3.0.0
 python-dateutil==2.8.2
 mock==4.0.3

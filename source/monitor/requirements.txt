@@ -4,5 +4,5 @@ MarkupSafe==3.0.3
 Werkzeug==3.1.8
 argparse==1.4.0
 itsdangerous==2.2.0
-protobuf==3.20.3
+protobuf==5.29.6
 pyzmq==25.0.2
