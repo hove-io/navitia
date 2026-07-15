@@ -27,7 +27,7 @@
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 
-from flask_script import Command, Option
+from tyr.command_utils import Command, Option
 from navitiacommon import models
 from tyr.tasks import load_data
 import logging

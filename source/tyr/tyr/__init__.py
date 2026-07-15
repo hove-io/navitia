@@ -34,7 +34,7 @@ import flask_restful
 from tyr.helper import configure_logger, make_celery
 from redis import Redis
 from celery.signals import setup_logging
-from flask_script import Manager
+from tyr.command_utils import Manager
 from flask_cors import CORS
 from tyr.rabbit_mq_handler import RabbitMqHandler
 

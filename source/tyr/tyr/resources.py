@@ -125,7 +125,8 @@ class Status(flask_restful.Resource):
     def get(self):
         def check_db():
             try:
-                return db.engine.scalar('select version_num from alembic_version;')
+                with db.engine.connect() as connection:
+                    return connection.scalar(sqlalchemy.text('select version_num from alembic_version;'))
             except Exception as e:
                 logging.exception("Tyr db not reachable : {}".format(e.message))
                 raise

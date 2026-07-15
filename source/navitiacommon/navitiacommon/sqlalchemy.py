@@ -32,15 +32,12 @@ import flask_sqlalchemy
 
 class SQLAlchemy(flask_sqlalchemy.SQLAlchemy):
     def init_app(self, app):
+        # Flask-SQLAlchemy 3.x dropped the ``apply_pool_defaults`` hook, engine
+        # options are now configured through ``SQLALCHEMY_ENGINE_OPTIONS``.
+        # We keep the historical ``SQLALCHEMY_POOLCLASS`` setting by folding it
+        # into the engine options before the engine is created.
+        poolclass = app.config.setdefault('SQLALCHEMY_POOLCLASS', None)
+        if poolclass is not None:
+            engine_options = app.config.setdefault('SQLALCHEMY_ENGINE_OPTIONS', {})
+            engine_options.setdefault('poolclass', poolclass)
         super(SQLAlchemy, self).init_app(app)
-        app.config.setdefault('SQLALCHEMY_POOLCLASS', None)
-
-    def apply_pool_defaults(self, app, options):
-        super(SQLAlchemy, self).apply_pool_defaults(app, options)
-
-        def _setdefault(optionkey, configkey):
-            value = app.config[configkey]
-            if value is not None:
-                options[optionkey] = value
-
-        _setdefault('poolclass', 'SQLALCHEMY_POOLCLASS')

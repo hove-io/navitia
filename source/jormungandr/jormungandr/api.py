@@ -164,7 +164,7 @@ if rest_api.app.config.get('ACTIVATE_PROFILING'):
     rest_api.app.logger.warning('=======================================================')
     import profile
 
-    from werkzeug.contrib.profiler import ProfilerMiddleware
+    from werkzeug.middleware.profiler import ProfilerMiddleware
 
     rest_api.app.config['PROFILE'] = True
     f = open('/tmp/profiler.log', 'a')

@@ -64,7 +64,7 @@ In the Tyr's directory, create 2 files:
 
 Procfile:
 ```
-web: ./manage_tyr.py runserver
+web: ./manage_tyr.py run
 worker: celery worker -A tyr.tasks
 scheduler: celery beat -A tyr.tasks
 ```
