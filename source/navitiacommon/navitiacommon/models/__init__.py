@@ -1013,7 +1013,7 @@ class Instance(db.Model):  # type: ignore
         family_types = query.all()
 
         result = []
-        for family_type in family_types:
+        for (family_type,) in family_types:
             data_sets = (
                 db.session.query(DataSet)
                 .join(Job)
@@ -1446,7 +1446,7 @@ class AutocompleteParameter(db.Model, TimestampMixin):  # type: ignore
         )
 
         result = []
-        for family_type in family_types:
+        for (family_type,) in family_types:
             data_sets = (
                 db.session.query(DataSet)
                 .join(Job)
