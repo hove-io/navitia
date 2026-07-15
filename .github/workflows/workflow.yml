@@ -14,6 +14,11 @@ jobs:
     container:
       image: python:3.10-bullseye
 
+    env:
+      CCACHE_DIR: /ccache
+      CCACHE_MAXSIZE: 2G
+      CCACHE_COMPILERCHECK: content
+
     services:
       rabbitmq:
         image: rabbitmq:3-alpine
@@ -74,12 +79,25 @@ jobs:
         pre-commit install --install-hooks
         pre-commit run --all --show-diff-on-failure
 
+    - name: ccache cache (shared across runners)
+      uses: actions/cache@v4
+      with:
+        path: /ccache
+        key: ccache-${{ github.ref_name }}-${{ github.sha }}
+        restore-keys: |
+          ccache-${{ github.ref_name }}-
+          ccache-
+
     - name: Configure for release
       run: mkdir build && cd ./build && cmake -DSTRIP_SYMBOLS=ON ../source
 
     - name: Build navitia
       working-directory: ./build
       run: make -j $(nproc)
+
+    - name: ccache stats
+      if: ${{ always() }}
+      run: ccache -s
 
     - name: Tests python3
       working-directory: ./build
