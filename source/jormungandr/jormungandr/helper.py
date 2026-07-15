@@ -60,6 +60,28 @@ class ReverseProxied(object):
         return self.app(environ, start_response)
 
 
+class StripTrailingSlash(object):
+    """
+    Werkzeug >= 2.3 no longer honours ``strict_slashes = False`` for rules that
+    contain a non part-isolating converter (typically the ``<uri:uri>`` path
+    converter): a request with a trailing slash then fails to match and returns
+    a 404. Navitia has always treated ``/foo`` and ``/foo/`` as equivalent
+    (strict_slashes=False), so normalise the path by dropping the trailing slash
+    before routing.
+
+    :param app: the WSGI application
+    """
+
+    def __init__(self, app):
+        self.app = app
+
+    def __call__(self, environ, start_response):
+        path = environ.get('PATH_INFO', '')
+        if len(path) > 1 and path.endswith('/'):
+            environ['PATH_INFO'] = path.rstrip('/') or '/'
+        return self.app(environ, start_response)
+
+
 class NavitiaRequest(Request):
     """
     override the request of flask to add an id on all request

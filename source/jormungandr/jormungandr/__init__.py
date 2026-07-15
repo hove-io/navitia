@@ -60,7 +60,7 @@ if app.config.get(str('PATCH_WITH_GEVENT_SOCKET'), False):
 from jormungandr import otlp
 
 from jormungandr.exceptions import log_exception
-from jormungandr.helper import ReverseProxied, NavitiaRequest, NavitiaRule
+from jormungandr.helper import ReverseProxied, StripTrailingSlash, NavitiaRequest, NavitiaRule
 from jormungandr import compat, utils
 
 app.url_rule_class = NavitiaRule
@@ -76,6 +76,7 @@ app.config[str('CORS_HEADERS')] = 'Content-Type'
 
 
 app.wsgi_app = ReverseProxied(app.wsgi_app)  # type: ignore
+app.wsgi_app = StripTrailingSlash(app.wsgi_app)  # type: ignore
 got_request_exception.connect(log_exception, app)
 
 # we want the old behavior for reqparse
