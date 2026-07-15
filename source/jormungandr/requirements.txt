@@ -19,7 +19,7 @@ pytz==2023.3
 retrying==1.3.3
 aniso8601==0.82
 git+https://github.com/ultrajson/ultrajson.git@ac4637fbc4e72bd59f221d9bba19127820d21023
-urllib3==2.7.0
+urllib3==2.0.7
 numpy==1.22.0
 pybreaker==0.2.3
 requests==2.33.0
@@ -46,5 +46,5 @@ Flask-Caching==2.0.2
 boto3==1.28.82
 opentelemetry-api==1.28.2
 opentelemetry-sdk==1.28.2
-opentelemetry-exporter-otlp-proto-http==1.15.0
+opentelemetry-exporter-otlp-proto-http==1.28.2
 polyline==2.0.2
