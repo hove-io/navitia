@@ -82,6 +82,12 @@ got_request_exception.connect(log_exception, app)
 # we want the old behavior for reqparse
 compat.patch_reqparse()
 
+# flask-restful reads the json body eagerly: keep it lenient about the content
+# type (Flask >= 2.1 would otherwise raise a 415 on non-json requests)
+from navitiacommon.flask_restful_compat import patch_reqparse_json_location
+
+patch_reqparse_json_location()
+
 rest_api = Api(app, catch_all_404s=True, serve_challenge_on_401=True)
 
 from navitiacommon.models import db
