@@ -20,6 +20,7 @@ RUN apt clean \
     && update-ca-certificates \
     && bash install_protoc.sh \
     && (cd navitia-proto && protoc-python --python_out=../navitiacommon/navitiacommon type.proto response.proto request.proto task.proto stat.proto) \
+    && 2to3 --no-diffs -w navitiacommon/navitiacommon/*_pb2.py \
     && (cd navitiacommon && python setup.py install) \
     && (cd jormungandr && python setup.py install && pip install --no-cache-dir -U -r requirements.txt)\
     && pip install --no-cache-dir uwsgi==2.0.21 \
