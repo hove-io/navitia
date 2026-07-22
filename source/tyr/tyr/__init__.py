@@ -34,9 +34,12 @@ import flask_restful
 from tyr.helper import configure_logger, make_celery
 from redis import Redis
 from celery.signals import setup_logging
-from flask_script import Manager
+from tyr.command_utils import Manager
 from flask_cors import CORS
 from tyr.rabbit_mq_handler import RabbitMqHandler
+from navitiacommon.flask_restful_compat import patch_reqparse_json_location
+
+patch_reqparse_json_location()
 
 app = Flask(__name__)
 app.config.from_object('tyr.default_settings')  # type: ignore

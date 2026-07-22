@@ -60,7 +60,7 @@ if app.config.get(str('PATCH_WITH_GEVENT_SOCKET'), False):
 from jormungandr import otlp
 
 from jormungandr.exceptions import log_exception
-from jormungandr.helper import ReverseProxied, NavitiaRequest, NavitiaRule
+from jormungandr.helper import ReverseProxied, StripTrailingSlash, NavitiaRequest, NavitiaRule
 from jormungandr import compat, utils
 
 app.url_rule_class = NavitiaRule
@@ -76,10 +76,17 @@ app.config[str('CORS_HEADERS')] = 'Content-Type'
 
 
 app.wsgi_app = ReverseProxied(app.wsgi_app)  # type: ignore
+app.wsgi_app = StripTrailingSlash(app.wsgi_app)  # type: ignore
 got_request_exception.connect(log_exception, app)
 
 # we want the old behavior for reqparse
 compat.patch_reqparse()
+
+# flask-restful reads the json body eagerly: keep it lenient about the content
+# type (Flask >= 2.1 would otherwise raise a 415 on non-json requests)
+from navitiacommon.flask_restful_compat import patch_reqparse_json_location
+
+patch_reqparse_json_location()
 
 rest_api = Api(app, catch_all_404s=True, serve_challenge_on_401=True)
 

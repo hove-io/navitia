@@ -71,6 +71,11 @@ class RegionConverter(BaseConverter):
 
     type_ = str
     regex = '[^(/;)]+'
+    # Werkzeug >= 2.3 sets part_isolating to False when the regex contains a '/'
+    # (here inside the excluded character class). This region only ever matches a
+    # single path segment, so keep it isolating; otherwise it merges with the
+    # following path segments and breaks routing (trailing slashes, sub-resources).
+    part_isolating = True
 
     def __init__(self, *args, **kwargs):
         BaseConverter.__init__(self, *args, **kwargs)

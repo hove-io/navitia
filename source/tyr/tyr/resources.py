@@ -125,7 +125,8 @@ class Status(flask_restful.Resource):
     def get(self):
         def check_db():
             try:
-                return db.engine.scalar('select version_num from alembic_version;')
+                with db.engine.connect() as connection:
+                    return connection.scalar(sqlalchemy.text('select version_num from alembic_version;'))
             except Exception as e:
                 logging.exception("Tyr db not reachable : {}".format(e.message))
                 raise
@@ -158,7 +159,7 @@ class Job(flask_restful.Resource):
 
         # Use pagination for list queries
         query = query.order_by(models.Job.created_at.desc())
-        pagination = query.paginate(args['page'], args['count'], error_out=False)
+        pagination = query.paginate(page=args['page'], per_page=args['count'], error_out=False)
 
         response = marshal({'jobs': pagination.items}, tyr.fields.jobs_fields)
         pagination_data = {
@@ -1801,7 +1802,7 @@ class UserV1(User):
         filter_params = {k: v for k, v in args.items() if v and k != 'page'}
 
         pagination = models.User.query.filter_by(**filter_params).paginate(
-            args['page'], current_app.config.get('MAX_ITEMS_PER_PAGE', 5)
+            page=args['page'], per_page=current_app.config.get('MAX_ITEMS_PER_PAGE', 5)
         )
         pagination_json = {
             'current_page': pagination.page,
@@ -3094,7 +3095,7 @@ class StreetNetworkBackend(flask_restful.Resource):
         args = parser.parse_args()
 
         return models.StreetNetworkBackend.query.filter_by(discarded=False).paginate(
-            args['page'], current_app.config.get('MAX_ITEMS_PER_PAGE', 5)
+            page=args['page'], per_page=current_app.config.get('MAX_ITEMS_PER_PAGE', 5)
         )
 
     def get(self, backend_id=None):

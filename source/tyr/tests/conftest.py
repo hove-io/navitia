@@ -63,7 +63,10 @@ def init_flask_db(docker):
     )
 
     # re-init the db by overriding the db_url
+    # Flask-SQLAlchemy 3 refuses a second init_app on the same app, so we drop
+    # the extension registered at import time before re-initializing it.
     app.config['SQLALCHEMY_DATABASE_URI'] = db_url
+    app.extensions.pop('sqlalchemy', None)
     db.init_app(app)
 
 

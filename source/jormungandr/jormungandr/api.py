@@ -68,7 +68,7 @@ def output_json(data, code, headers=None):
 @app.after_request
 def access_log(response, *args, **kwargs):
     logger = logging.getLogger('jormungandr.access')
-    query_string = request.query_string.decode(request.url_charset, 'replace')
+    query_string = request.query_string.decode('utf-8', 'replace')
     d = {
         'method': request.method,
         'path': request.path,
@@ -164,7 +164,7 @@ if rest_api.app.config.get('ACTIVATE_PROFILING'):
     rest_api.app.logger.warning('=======================================================')
     import profile
 
-    from werkzeug.contrib.profiler import ProfilerMiddleware
+    from werkzeug.middleware.profiler import ProfilerMiddleware
 
     rest_api.app.config['PROFILE'] = True
     f = open('/tmp/profiler.log', 'a')

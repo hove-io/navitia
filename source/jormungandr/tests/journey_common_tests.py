@@ -1527,8 +1527,8 @@ class JourneyCommon(object):
                     if "stop_point" in allowed_id_types:
                         assert "line" not in allowed_id_types
                         assert "allowed_id%5B%5D=A" not in same_journey_link
-                        assert "allowed_id%5B%5D=stop_point%3AstopB" in same_journey_link
-                        assert "allowed_id%5B%5D=stop_point%3AstopA" in same_journey_link
+                        assert "allowed_id%5B%5D=stop_point:stopB" in same_journey_link
+                        assert "allowed_id%5B%5D=stop_point:stopA" in same_journey_link
 
         finally:
             instance._same_journey_schedules_configuration = original_config

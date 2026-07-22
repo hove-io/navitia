@@ -31,17 +31,20 @@
 # www.navitia.io
 
 from tyr import app, db, manager
-from flask_migrate import Migrate, MigrateCommand
+from flask.cli import FlaskGroup
+from flask_migrate import Migrate
 from tyr.command import ReloadKrakenCommand, BuildDataCommand, LoadDataCommand, BuildDataRemoteCommand
 
 
+# Flask-Migrate >= 3 registers the ``db`` command group on ``app.cli`` itself,
+# there is no MigrateCommand to add anymore.
 migrate = Migrate(app, db)
-manager.add_command('db', MigrateCommand)
 manager.add_command('reload_kraken', ReloadKrakenCommand())
 manager.add_command('build_data', BuildDataCommand())
 manager.add_command('build_data_remote', BuildDataRemoteCommand())
 manager.add_command('load_data', LoadDataCommand())
 
+cli = FlaskGroup(create_app=lambda: app)
+
 if __name__ == '__main__':
-    app.config['DEBUG'] = True
-    manager.run()
+    cli()
