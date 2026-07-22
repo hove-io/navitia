@@ -27,6 +27,16 @@ SET(PROTO_SRCS ${CMAKE_CURRENT_BINARY_DIR}/chaos.pb.cc
     ${CMAKE_CURRENT_BINARY_DIR}/type.pb.cc
 )
 
+# The python protobuf bindings are generated with a modern protoc (installed as
+# `protoc-python` by scripts/install_protoc.sh) so the generated code is
+# compatible with the protobuf>=5 python runtime. The C++ bindings above keep
+# using the distribution `protoc` to stay ABI-compatible with libprotobuf.
+find_program(PROTOC_PYTHON_EXECUTABLE NAMES protoc-python
+    DOC "protoc used to generate the python protobuf bindings")
+if(NOT PROTOC_PYTHON_EXECUTABLE)
+    message(FATAL_ERROR "protoc-python not found, run scripts/install_protoc.sh")
+endif()
+
 SET(NAVITIACOMMON_DIR ${CMAKE_SOURCE_DIR}/navitiacommon/navitiacommon)
 SET(NAVITIACOMMON_PROTO_PY
     ${NAVITIACOMMON_DIR}/request_pb2.py
@@ -57,25 +67,22 @@ add_custom_command(OUTPUT ${PROTO_HDRS} ${PROTO_SRCS}
     DEPENDS ${PROTO_FILES})
 
 add_custom_command (OUTPUT ${NAVITIACOMMON_PROTO_PY}
-    COMMAND protoc ARGS "--python_out=${NAVITIACOMMON_DIR}"
+    COMMAND ${PROTOC_PYTHON_EXECUTABLE} ARGS "--python_out=${NAVITIACOMMON_DIR}"
     type.proto response.proto request.proto task.proto stat.proto
-    COMMAND 2to3 --no-diffs -w ${NAVITIACOMMON_PROTO_PY}
     WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}/navitia-proto" VERBATIM
     DEPENDS ${PROTO_FILES})
 
 #we don't want a dependancy to navitiacommon for monitor
 add_custom_command (OUTPUT ${MONITOR_KRAKEN_PROTO_PY}
-    COMMAND protoc ARGS "--python_out=${MONITOR_KRAKEN_DIR}"
+    COMMAND ${PROTOC_PYTHON_EXECUTABLE} ARGS "--python_out=${MONITOR_KRAKEN_DIR}"
     type.proto response.proto request.proto
-    COMMAND 2to3 --no-diffs -w ${MONITOR_KRAKEN_PROTO_PY}
     WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}/navitia-proto" VERBATIM
     DEPENDS ${PROTO_FILES})
 
 #for integration tests, we need chaos protobuf
 add_custom_command (OUTPUT ${JORMUNGANDR_TEST_PY}
-    COMMAND protoc ARGS "--python_out=${JORMUNGANDR_TEST_DIR}"
+    COMMAND ${PROTOC_PYTHON_EXECUTABLE} ARGS "--python_out=${JORMUNGANDR_TEST_DIR}"
     chaos.proto gtfs-realtime.proto kirin.proto
-    COMMAND 2to3 --no-diffs -w ${JORMUNGANDR_TEST_PY}
     WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}/chaos-proto" VERBATIM
     DEPENDS ${PROTO_FILES})
 

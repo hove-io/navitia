@@ -44,7 +44,10 @@ Dependencies
 #. Other
 
    * git
-   * protobuf-compiler
+   * protobuf-compiler (generates the C++ protobuf bindings)
+   * a modern ``protoc`` installed as ``protoc-python`` (generates the python
+     protobuf bindings, compatible with the protobuf>=5 python runtime); run
+     ``scripts/install_protoc.sh`` to install it
    * RabbitMQ server
    * PostgreSQL (9.1+) and Postgis (2.0+)
    * Redis server
