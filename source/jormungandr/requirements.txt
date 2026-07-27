@@ -10,7 +10,7 @@ Shapely==1.5.0
 Werkzeug==3.1.8
 blinker==1.9.0
 itsdangerous==2.2.0
-protobuf==3.20.3
+protobuf==5.29.5
 psycopg2-binary==2.9.7
 pyzmq==25.0.2
 six==1.13.0
@@ -46,5 +46,5 @@ Flask-Caching==2.3.1
 boto3==1.28.82
 opentelemetry-api==1.28.2
 opentelemetry-sdk==1.28.2
-opentelemetry-exporter-otlp-proto-http==1.15.0
+opentelemetry-exporter-otlp-proto-http==1.28.2
 polyline==2.0.2

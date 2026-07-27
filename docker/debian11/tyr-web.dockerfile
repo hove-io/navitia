@@ -9,20 +9,20 @@ COPY ./docker/run_tyr_web.sh /usr/src/app/run.sh
 
 RUN apt clean \
     && apt update --fix-missing \
-    && apt install -o Acquire::Retries=10 -y curl libpq5 git ca-certificates libgeos-c1v5 postgresql-client protobuf-compiler gcc \
+    && apt install -o Acquire::Retries=10 -y curl libpq5 git ca-certificates libgeos-c1v5 postgresql-client gcc \
     && update-ca-certificates \
-    && (cd navitia-proto && protoc --python_out=../navitiacommon/navitiacommon type.proto response.proto request.proto task.proto stat.proto) \
-    && 2to3 --no-diffs -w ./navitiacommon/navitiacommon \
+    && curl -fsSL -o /tmp/protoc-python.zip https://github.com/protocolbuffers/protobuf/releases/download/v29.5/protoc-29.5-linux-x86_64.zip \
+    && python3 -m zipfile -e /tmp/protoc-python.zip /tmp/protoc-python && install -Dm0755 /tmp/protoc-python/bin/protoc /usr/local/bin/protoc-python \
+    && (cd navitia-proto && protoc-python --python_out=../navitiacommon/navitiacommon type.proto response.proto request.proto task.proto stat.proto) \
+    && 2to3 --no-diffs -w navitiacommon/navitiacommon/*_pb2.py \
     && (cd navitiacommon && python setup.py install) \
     && (cd tyr && python setup.py install && pip install --no-cache-dir -U -r requirements.txt)\
     && pip install --no-cache-dir uwsgi==2.0.22 \
     && chmod +x /usr/src/app/run.sh \
     && ln -sf /usr/share/tyr/migrations migrations \
     && ln -sf /usr/share/tyr/manage_tyr.py manage_tyr.py \
-    && rm -rf navitia-proto \
+    && rm -rf navitia-proto /usr/local/bin/protoc-python \
     && apt purge -y \
-        protobuf-compiler \
-        2to3 \
         python3-pip \
         git \
     && apt autoremove -y
