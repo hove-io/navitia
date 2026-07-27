@@ -28,7 +28,7 @@ SET(PROTO_SRCS ${CMAKE_CURRENT_BINARY_DIR}/chaos.pb.cc
 )
 
 # The python protobuf bindings are generated with a modern protoc (installed as
-# `protoc-python` by scripts/install_protoc.sh) so the generated code is
+# `protoc-python`) so the generated code is
 # compatible with the protobuf>=5 python runtime. The C++ bindings above keep
 # using the distribution `protoc` to stay ABI-compatible with libprotobuf.
 # 2to3 is kept to rewrite the flat `import xxx_pb2` emitted by protoc into
@@ -36,7 +36,7 @@ SET(PROTO_SRCS ${CMAKE_CURRENT_BINARY_DIR}/chaos.pb.cc
 find_program(PROTOC_PYTHON_EXECUTABLE NAMES protoc-python
     DOC "protoc used to generate the python protobuf bindings")
 if(NOT PROTOC_PYTHON_EXECUTABLE)
-    message(FATAL_ERROR "protoc-python not found, run scripts/install_protoc.sh")
+    message(FATAL_ERROR "protoc-python not found, install protoc v29.5 as /usr/local/bin/protoc-python")
 endif()
 
 SET(NAVITIACOMMON_DIR ${CMAKE_SOURCE_DIR}/navitiacommon/navitiacommon)

@@ -9,7 +9,6 @@ WORKDIR /usr/src/app
 COPY ./source/navitiacommon ./navitiacommon
 COPY ./source/jormungandr ./jormungandr
 COPY ./source/navitia-proto ./navitia-proto
-COPY ./scripts/install_protoc.sh ./install_protoc.sh
 COPY ./docker/ca-certificates/*.crt /usr/local/share/ca-certificates/
 #TODO remove the need for this file
 RUN echo "__version__ = '$GIT_REVISION'" > jormungandr/jormungandr/_version.py
@@ -18,13 +17,14 @@ RUN apt clean \
     && apt update --fix-missing \
     && apt install -o Acquire::Retries=10 -y curl libpq5 apache2 git libgeos-c1v5 ca-certificates gcc \
     && update-ca-certificates \
-    && bash install_protoc.sh \
+    && curl -fsSL -o /tmp/protoc-python.zip https://github.com/protocolbuffers/protobuf/releases/download/v29.5/protoc-29.5-linux-x86_64.zip \
+    && python3 -m zipfile -e /tmp/protoc-python.zip /tmp/protoc-python && install -Dm0755 /tmp/protoc-python/bin/protoc /usr/local/bin/protoc-python \
     && (cd navitia-proto && protoc-python --python_out=../navitiacommon/navitiacommon type.proto response.proto request.proto task.proto stat.proto) \
     && 2to3 --no-diffs -w navitiacommon/navitiacommon/*_pb2.py \
     && (cd navitiacommon && python setup.py install) \
     && (cd jormungandr && python setup.py install && pip install --no-cache-dir -U -r requirements.txt)\
     && pip install --no-cache-dir uwsgi==2.0.21 \
-    && rm -rf navitiacommon jormungandr navitia-proto install_protoc.sh /usr/local/bin/protoc-python \
+    && rm -rf navitiacommon jormungandr navitia-proto /usr/local/bin/protoc-python \
     && apt purge -y \
         python3-pip
 

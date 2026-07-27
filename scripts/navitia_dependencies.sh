@@ -15,4 +15,5 @@ apt install -y -o Acquire::Retries=10 \
     virtualenv clang-format ccache
 
 # modern protoc (protoc-python) used to generate the python protobuf bindings
-bash "$(dirname "$0")/install_protoc.sh"
+curl -fsSL -o /tmp/protoc-python.zip https://github.com/protocolbuffers/protobuf/releases/download/v29.5/protoc-29.5-linux-x86_64.zip
+python3 -m zipfile -e /tmp/protoc-python.zip /tmp/protoc-python && install -Dm0755 /tmp/protoc-python/bin/protoc /usr/local/bin/protoc-python
