@@ -1,5 +1,5 @@
 ARG GIT_REVISION="UNKNOWN_VERSION"
-FROM python:3.10-slim-bullseye
+FROM python:3.11-slim-bullseye
 
 ARG GIT_REVISION
 ARG GITHUB_TOKEN

@@ -17,7 +17,7 @@ RUN cd tartare-tools \
 # *2mimir7 executables
 FROM mimirsbrunn:local AS mimir_bins
 
-FROM python:3.10-slim-bullseye
+FROM python:3.11-slim-bullseye
 
 WORKDIR /usr/src/app/
 
@@ -48,7 +48,7 @@ RUN apt clean \
     && curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip" \
     && unzip awscliv2.zip && ./aws/install \
     && (cd navitiacommon && python setup.py install) \
-    && (cd tyr && python3.10 -m pip install . && python3.10 -m pip install --no-cache-dir -U -r requirements.txt)\
+    && (cd tyr && python3.11 -m pip install . && python3.11 -m pip install --no-cache-dir -U -r requirements.txt)\
     && rm -rf ./cosmogony2cities*.deb \
     && apt autoremove -y
 

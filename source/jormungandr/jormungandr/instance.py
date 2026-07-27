@@ -32,7 +32,7 @@
 from __future__ import absolute_import, print_function, unicode_literals, division
 
 try:
-    from typing import Dict, Text, Deque, List, Tuple
+    from typing import Dict, Optional, Text, Deque, List, Tuple
 except ImportError:
     pass
 from contextlib import contextmanager
@@ -745,13 +745,13 @@ class Instance(transient_socket.TransientSocket):
 
     @property
     def api_backends(self):
-        # type: () -> Dict[Text, Text]
+        # type: () -> Optional[Dict[Text, Text]]
         instance_db = self.get_models()
         return instance_db.api_backends if instance_db else None
 
     @property
     def poi_dataset(self):
-        # type: () -> Text
+        # type: () -> Optional[Text]
         instance_db = self.get_models()
         return instance_db.poi_dataset if instance_db else None
 

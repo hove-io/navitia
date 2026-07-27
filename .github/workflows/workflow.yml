@@ -12,7 +12,7 @@ jobs:
   build_navitia_ci:
     runs-on: [self-hosted, corefront, sandbox]
     container:
-      image: python:3.10-bullseye
+      image: python:3.11-bullseye
 
     env:
       CCACHE_DIR: /ccache

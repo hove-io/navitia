@@ -1,4 +1,4 @@
-FROM python:3.10-bullseye
+FROM python:3.11-bullseye
 COPY scripts/navitia_dependencies.sh /navitia_dependencies.sh
 RUN chmod +x /navitia_dependencies.sh
 RUN bash /navitia_dependencies.sh

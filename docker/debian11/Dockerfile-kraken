@@ -1,4 +1,4 @@
-FROM python:3.10-slim-bullseye
+FROM python:3.11-slim-bullseye
 
 WORKDIR /srv/kraken
 
@@ -17,11 +17,11 @@ RUN apt clean \
     libpqxx-dev \
     curl \
     netcat \
-    && (cd /srv/monitor_kraken && python3.10 -m pip install .  && python3.10 -m pip install --no-cache-dir -U -r requirements.txt) \
+    && (cd /srv/monitor_kraken && python3.11 -m pip install .  && python3.11 -m pip install --no-cache-dir -U -r requirements.txt) \
     && apt purge -y \
     && apt autoremove -y
 
-RUN ln -s /usr/local/lib/python3.10/site-packages/monitor_kraken/app.py monitor_kraken
+RUN ln -s /usr/local/lib/python3.11/site-packages/monitor_kraken/app.py monitor_kraken
 
 COPY docker/run_kraken_deb11.sh /usr/src/app/run_kraken.sh
 RUN chmod +x /usr/src/app/run_kraken.sh
