@@ -155,6 +155,6 @@ To view the generated file, the following packages are needed:
 Run the following command to generate and visualize the graph:
  `gprof2dot -f pstats <your_profiling.prof> | dot -Tsvg -o callgraph.svg | eog callgraph.svg&`
 
-Note that, in order to profile the real performance, you should activate the cpp implementation of protobuf by adding the env vars: `PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION_VERSION=2 PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION=cpp`.
+Note that, in order to profile the real performance, you should keep the default (native) protobuf implementation `upb`. The legacy `PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION=cpp` value no longer exists since protobuf 5 and makes the app crash at import time.
 
 Have fun!

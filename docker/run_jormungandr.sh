@@ -53,6 +53,14 @@ fi
 
 jormungandr_cache2="name=jormungandr,items=${jormun_cache_items}"
 
+# The 'cpp' protobuf python implementation does not exist anymore since protobuf 5,
+# importing it fails. 'upb' is the native implementation shipped with the wheel.
+if [ "$PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION" == "cpp" ]
+then
+  echo "PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION=cpp is not supported anymore, using upb instead"
+  export PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION=upb
+fi
+
 if [[ ! -z $gormungandr_url ]] && [[ ! -z $gormungandr_version ]];
 then
   echo "export GORMUNGANDR_URL=$gormungandr_url" >> /etc/apache2/envvars
