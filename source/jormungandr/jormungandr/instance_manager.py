@@ -102,6 +102,7 @@ class InstanceManager(object):
         self.instances = {}
         self.context = zmq.Context()
         self.is_ready = False  # type: bool
+        self.thread_event = gevent.event.Event()
 
     def __repr__(self):
         return '<InstanceManager>'
@@ -186,22 +187,28 @@ class InstanceManager(object):
 
     def init_kraken_instances(self):
         """
-        Call all kraken instances (as found in the instances dir) and store it's metadata
+        Call all kraken instances (as found in the instances dir) and store its metadata.
+        Also re-ping instances that reported as initialized but whose geometry never loaded
+        (kraken was still loading its data when we first pinged it).
         """
         futures = []
         for instance in self.instances.values():
-            if not instance.is_initialized:
+            if not instance.is_initialized or instance.geom is None:
                 futures.append(gevent.spawn(instance.init))
 
         gevent.wait(futures)
 
     def thread_ping(self, timer=10):
         """
-        fetch krakens metadata
+        Periodically fetch krakens metadata.
+
+        The loop keeps running even after every instance is initialized so that:
+          - an instance whose geom never loaded (kraken still loading) self-heals,
+          - publication_date / geom changes on kraken are picked up without a restart.
         """
-        while [i for i in self.instances.values() if not i.is_initialized]:
+        while not self.thread_event.is_set():
             self.init_kraken_instances()
-            gevent.sleep(timer)
+            self.thread_event.wait(timer)
         logging.getLogger(__name__).debug('end of ping thread')
 
     def stop(self):
@@ -285,6 +292,19 @@ class InstanceManager(object):
     def _all_keys_of_coord_in_instances(self, instances, lon, lat):
         p = geometry.Point(lon, lat)
         valid_instances = [i for i in instances if i.has_point(p)]
+        if not valid_instances:
+            # a covering instance may have latched geom=None (kraken was still
+            # loading at ping time); force a metadata refresh and re-check before failing
+            stale = [i for i in instances if i.geom is None]
+            if stale:
+                logging.getLogger(__name__).info(
+                    "coord (%s, %s) matched nothing, refreshing %d instance(s) with empty geom",
+                    lon,
+                    lat,
+                    len(stale),
+                )
+                gevent.wait([gevent.spawn(i.init) for i in stale])
+                valid_instances = [i for i in instances if i.has_point(p)]
         logging.getLogger(__name__).debug(
             "_all_keys_of_coord_in_instances(self, {}, {}) returns {}".format(lon, lat, instances)
         )

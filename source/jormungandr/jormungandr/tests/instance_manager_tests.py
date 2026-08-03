@@ -35,13 +35,96 @@ from pytest_mock import mocker
 
 from jormungandr import app
 from jormungandr.instance_manager import choose_best_instance
+import gevent
 
 
 class FakeInstance:
-    def __init__(self, name, is_free=False, priority=0):
+    def __init__(self, name, is_free=False, priority=0, geom=None, is_initialized=True):
         self.name = name
         self.is_free = is_free
         self.priority = priority
+        self.geom = geom
+        self.is_initialized = is_initialized
+        self.init_call_count = 0
+
+    def has_point(self, p):
+        return bool(self.geom and self.geom.contains(p))
+
+    def init(self):
+        # simulate kraken finishing its load: geom becomes available
+        self.init_call_count += 1
+        from shapely.geometry import box
+
+        self.geom = box(0, 0, 10, 10)  # covers (4, 3)
+        self.is_initialized = True
+        return True
+
+
+def init_kraken_repings_instance_with_empty_geom_test():
+    """
+    init_kraken_instances must re-ping an instance that is initialized
+    but has geom == None (kraken was still loading at first ping).
+    """
+    im = InstanceManager(None)
+    im.instances['paris'] = FakeInstance('paris', geom=None, is_initialized=True)
+    im.init_kraken_instances()
+    assert im.instances['paris'].init_call_count == 1
+    assert im.instances['paris'].geom is not None
+
+
+def all_keys_of_coord_refreshes_stale_instance_test():
+    """
+    _all_keys_of_coord_in_instances must trigger a fresh init() on an
+    instance whose geom is None, then succeed once the geom is loaded.
+    """
+    im = InstanceManager(None)
+    paris = FakeInstance('paris', geom=None, is_initialized=True)
+    im.instances['paris'] = paris
+    result = im._all_keys_of_coord_in_instances([paris], lon=4, lat=3)
+    assert paris.init_call_count == 1
+    assert result == [paris]
+
+
+def all_keys_of_coord_raises_when_no_instance_has_geom_test():
+    """
+    If no candidate has (or can load) a geom containing the point,
+    RegionNotFound is still raised.
+    """
+    from jormungandr.exceptions import RegionNotFound
+    from pytest import raises
+
+    im = InstanceManager(None)
+    far = FakeInstance('paris', geom=None, is_initialized=True)
+    # override init so geom stays empty (kraken has no data)
+    far.init = lambda: None
+    far.geom = None
+    im.instances['paris'] = far
+    with raises(RegionNotFound):
+        im._all_keys_of_coord_in_instances([far], lon=200, lat=200)
+
+
+def thread_ping_keeps_running_until_stopped_test(mocker):
+    """
+    thread_ping must keep re-fetching metadata on a timer and only stop
+    when thread_event is set (it no longer exits once all are initialized).
+    """
+    im = InstanceManager(None)
+    im.instances['paris'] = FakeInstance('paris', geom=None, is_initialized=True)
+
+    call_count = {'n': 0}
+
+    def fake_init_kraken():
+        call_count['n'] += 1
+        if call_count['n'] >= 3:
+            im.stop()  # sets thread_event, breaks the loop
+
+    mocker.patch.object(im, 'init_kraken_instances', side_effect=fake_init_kraken)
+
+    g = gevent.spawn(im.thread_ping, 0.01)
+    g.join(timeout=5)
+
+    assert call_count['n'] >= 3
+    assert im.thread_event.is_set()
 
 
 @fixture
