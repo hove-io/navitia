@@ -1063,6 +1063,11 @@ class Instance(transient_socket.TransientSocket):
                     except ReadingError:
                         self.geom = None
                 else:
+                    # kraken answered but has no shape loaded yet; the ping thread
+                    # will keep refreshing this instance until a shape is available
+                    logging.getLogger(__name__).info(
+                        'instance %s initialized with empty shape, will keep retrying', self.name
+                    )
                     self.geom = None
                 self.timezone = response.metadatas.timezone
                 self._update_geojson()
