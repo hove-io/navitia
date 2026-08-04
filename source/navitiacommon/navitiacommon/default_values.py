@@ -229,7 +229,7 @@ access_points = False
 # use/disuse poi access points in journey computations
 poi_access_points = False
 
-default_pt_planner = 'kraken'
+default_pt_planner = 'loki'
 
 filter_odt_journeys = False
 
