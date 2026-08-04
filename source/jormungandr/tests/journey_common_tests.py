@@ -324,6 +324,7 @@ class JourneyCommon(object):
         query = (
             "journeys?from={from_coord}&to={to_coord}&datetime={datetime}&"
             "min_nb_journeys=3&_night_bus_filter_base_factor=86400&"
+            "_pt_planner=kraken&"
             "datetime_represents=arrival".format(
                 from_coord=s_coord, to_coord=r_coord, datetime="20120614T185500"
             )
@@ -2239,13 +2240,13 @@ class JourneyMinBikeMinCar(object):
             assert response['journeys'][2]['sections'][0]['duration'] == 276
 
     def test_min_nb_transfers(self):
-        query = '{sub_query}&datetime={datetime}'.format(sub_query=sub_query, datetime="20120614T080000")
+        query = '{sub_query}&datetime={datetime}&_pt_planner=kraken'.format(sub_query=sub_query, datetime="20120614T080000")
         response = self.query_region(query)
         self.is_valid_journey_response(response, query)
         assert len(response['journeys']) == 2
 
         # set the min_nb_transfers to 1
-        query = '{sub_query}&datetime={datetime}&min_nb_transfers=1&debug=true'.format(
+        query = '{sub_query}&datetime={datetime}&min_nb_transfers=1&debug=true&_pt_planner=kraken'.format(
             sub_query=sub_query, datetime="20120614T080000"
         )
         response = self.query_region(query)
@@ -2268,7 +2269,7 @@ class JourneysMinNbJourneys:
         Note : The night bus filter is loaded with default parameters.
         With this data, night bus filter parameters doesn't filter anything.
         """
-        query = 'journeys?from=2.39592;48.84838&to=2.36381;48.86750&datetime=20180309T080000&min_nb_journeys=0'
+        query = 'journeys?from=2.39592;48.84838&to=2.36381;48.86750&datetime=20180309T080000&min_nb_journeys=0&_pt_planner=kraken'
         response = self.query_region(query)
         self.is_valid_journey_response(response, query)
         assert len(response['journeys']) >= 2
@@ -2280,7 +2281,7 @@ class JourneysMinNbJourneys:
         Note : The night bus filter is loaded with default parameters.
         With this data, night bus filter parameters doesn't filter anything.
         """
-        query = "journeys?from=2.39592;48.84838&to=2.36381;48.86750&datetime=20180309T080000&min_nb_journeys=1"
+        query = "journeys?from=2.39592;48.84838&to=2.36381;48.86750&datetime=20180309T080000&min_nb_journeys=1&_pt_planner=kraken"
         response = self.query_region(query)
         self.is_valid_journey_response(response, query)
         assert len(response['journeys']) >= 2
@@ -2292,7 +2293,7 @@ class JourneysMinNbJourneys:
         Note : The night bus filter is loaded with default parameters.
         With this data, night bus filter parameters doesn't filter anything.
         """
-        query = "journeys?from=2.39592;48.84838&to=2.36381;48.86750&datetime=20180309T080000&min_nb_journeys=3"
+        query = "journeys?from=2.39592;48.84838&to=2.36381;48.86750&datetime=20180309T080000&min_nb_journeys=3&_pt_planner=kraken"
         response = self.query_region(query)
         self.is_valid_journey_response(response, query)
         assert len(response['journeys']) >= 3
@@ -2305,7 +2306,7 @@ class JourneysMinNbJourneys:
         Note : The night bus filter is loaded with default parameters.
         With this data, night bus filter parameters doesn't filter anything.
         """
-        query = "journeys?from=2.39592;48.84838&to=2.36381;48.86750&datetime=20180309T080000&min_nb_journeys=7"
+        query = "journeys?from=2.39592;48.84838&to=2.36381;48.86750&datetime=20180309T080000&min_nb_journeys=7&_pt_planner=kraken"
         response = self.query_region(query)
         self.is_valid_journey_response(response, query)
         assert len(response['journeys']) <= 6
@@ -2337,7 +2338,7 @@ class JourneysWithNightBusFilter:
         We shouldn't have this configuration of filter, but rather ax + b with a = 1, b = 0
         to have a filter with no effect.
         """
-        query = "journeys?from=2.39592;48.84838&to=2.36381;48.86750&datetime=20180309T080400&_night_bus_filter_base_factor=0&_night_bus_filter_max_factor=0"
+        query = "journeys?from=2.39592;48.84838&to=2.36381;48.86750&datetime=20180309T080400&_night_bus_filter_base_factor=0&_night_bus_filter_max_factor=0&_pt_planner=kraken"
         response = self.query_region(query)
         self.is_valid_journey_response(response, query)
         assert len(response['journeys']) == 1
@@ -2354,7 +2355,7 @@ class JourneysWithNightBusFilter:
         The filter is active but we compare directly the 2 journeys
         It's the tightest configuration
         """
-        query = "journeys?from=2.39592;48.84838&to=2.36381;48.86750&datetime=20180309T080400&_night_bus_filter_base_factor=0&_night_bus_filter_max_factor=1"
+        query = "journeys?from=2.39592;48.84838&to=2.36381;48.86750&datetime=20180309T080400&_night_bus_filter_base_factor=0&_night_bus_filter_max_factor=1&_pt_planner=kraken"
         response = self.query_region(query)
         self.is_valid_journey_response(response, query)
         assert len(response['journeys']) == 1
@@ -2766,7 +2767,7 @@ class JourneysTickets:
         """
         2 solutions are found with 1 ticket for each journey
         """
-        query = 'journeys?from=2.39592;48.84838&to=2.36381;48.86750&datetime=20180309T080000'
+        query = 'journeys?from=2.39592;48.84838&to=2.36381;48.86750&datetime=20180309T080000&_pt_planner=kraken'
         response = self.query_region(query)
         self.is_valid_journey_response(response, query)
 
@@ -2800,7 +2801,7 @@ class JourneysTickets:
         Check there is only one ticket.
         The max_nb_journeys option forces filtering of one journey and the associated ticket too
         """
-        query = 'journeys?from=2.39592;48.84838&to=2.36381;48.86750&datetime=20180309T080000&max_nb_journeys=1'
+        query = 'journeys?from=2.39592;48.84838&to=2.36381;48.86750&datetime=20180309T080000&max_nb_journeys=1&_pt_planner=kraken'
         response = self.query_region(query)
         self.is_valid_journey_response(response, query)
 
@@ -2838,7 +2839,7 @@ class JourneysTicketsWithDebug:
         """
         # debug = false
         # Tickets have to be filtered like journeys
-        query = "journeys?from=stopP&to=stopT&datetime=20140614T145500&" "_max_successive_physical_mode=3"
+        query = "journeys?from=stopP&to=stopT&datetime=20140614T145500&" "_max_successive_physical_mode=3&_pt_planner=kraken"
         response = self.query_region(query)
 
         # Journeys
@@ -2858,7 +2859,7 @@ class JourneysTicketsWithDebug:
         # debug = true
         # All solutions are retreived with their associated tickets
         query = (
-            "journeys?from=stopP&to=stopT&datetime=20140614T145500&" "_max_successive_physical_mode=3&debug=true"
+            "journeys?from=stopP&to=stopT&datetime=20140614T145500&" "_max_successive_physical_mode=3&debug=true&_pt_planner=kraken"
         )
         response = self.query_region(query)
 

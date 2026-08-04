@@ -68,6 +68,7 @@ class TestJourneysDistributedWithMock(JourneyMinBikeMinCar, AbstractTestFixture)
         query = (
             "journeys?from={from_coord}&to={to_coord}&datetime={datetime}&"
             "first_section_mode[]=bike&first_section_mode[]=walking&"
+            "_pt_planner=kraken&"
             "last_section_mode[]=walking&min_nb_journeys=10&last_section_mode[]=bike&debug=true".format(
                 from_coord=s_coord, to_coord=r_coord, datetime="20120614T075500"
             )
@@ -107,6 +108,7 @@ class TestJourneysDistributedWithMock(JourneyMinBikeMinCar, AbstractTestFixture)
         query = (
             "journeys?from={from_coord}&to={to_coord}&datetime={datetime}&"
             "first_section_mode[]=bike&first_section_mode[]=walking&"
+            "_pt_planner=kraken&"
             "last_section_mode[]=walking&min_nb_journeys=10&last_section_mode[]=bike".format(
                 from_coord=s_coord, to_coord=r_coord, datetime="20120614T075500"
             )
@@ -587,8 +589,9 @@ class TestDistributedJourneyTickets(JourneysTickets, AbstractTestFixture):
         appear twice
         """
         query = 'journeys?from=2.39592;48.84838&to=2.36381;48.86750&datetime=20180309T080000'
-        response = self.query_region(query)
-        self.is_valid_journey_response(response, query)
+        query_temp = query + "&_pt_planner=kraken"
+        response = self.query_region(query_temp)
+        self.is_valid_journey_response(response, query_temp)
 
         # Tickets
         default_tickets = response['tickets']
@@ -1164,7 +1167,7 @@ class TestKrakenDistributedWithDatabase(AbstractTestFixture):
         app.config['DISABLE_DATABASE'] = self.old_db_val
 
     def _call_and_check_journeys_on_coverage(self, coverage, query_from, query_to, datetime):
-        query = 'v1/coverage/{coverage}/journeys?from={query_from}&to={query_to}&datetime={datetime}&debug=true'.format(
+        query = 'v1/coverage/{coverage}/journeys?from={query_from}&to={query_to}&datetime={datetime}&debug=true&_pt_planner=kraken'.format(
             coverage=coverage, query_from=query_from, query_to=query_to, datetime=datetime
         )
         response = self.query(query)
@@ -1411,6 +1414,7 @@ class TestRoutingWithTransfer(AbstractTestFixture):
         query = (
             '/v1/coverage/routing_with_transfer_test/journeys?'
             'from={}&to={}&datetime=20120614T080000&count=1&_transfer_path=true&'
+            '_pt_planner=kraken&'
             'language=en-US'
         ).format("stopA", "stopF")
 
