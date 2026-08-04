@@ -2240,7 +2240,9 @@ class JourneyMinBikeMinCar(object):
             assert response['journeys'][2]['sections'][0]['duration'] == 276
 
     def test_min_nb_transfers(self):
-        query = '{sub_query}&datetime={datetime}&_pt_planner=kraken'.format(sub_query=sub_query, datetime="20120614T080000")
+        query = '{sub_query}&datetime={datetime}&_pt_planner=kraken'.format(
+            sub_query=sub_query, datetime="20120614T080000"
+        )
         response = self.query_region(query)
         self.is_valid_journey_response(response, query)
         assert len(response['journeys']) == 2
@@ -2839,7 +2841,10 @@ class JourneysTicketsWithDebug:
         """
         # debug = false
         # Tickets have to be filtered like journeys
-        query = "journeys?from=stopP&to=stopT&datetime=20140614T145500&" "_max_successive_physical_mode=3&_pt_planner=kraken"
+        query = (
+            "journeys?from=stopP&to=stopT&datetime=20140614T145500&"
+            "_max_successive_physical_mode=3&_pt_planner=kraken"
+        )
         response = self.query_region(query)
 
         # Journeys
@@ -2859,7 +2864,8 @@ class JourneysTicketsWithDebug:
         # debug = true
         # All solutions are retreived with their associated tickets
         query = (
-            "journeys?from=stopP&to=stopT&datetime=20140614T145500&" "_max_successive_physical_mode=3&debug=true&_pt_planner=kraken"
+            "journeys?from=stopP&to=stopT&datetime=20140614T145500&"
+            "_max_successive_physical_mode=3&debug=true&_pt_planner=kraken"
         )
         response = self.query_region(query)
 
