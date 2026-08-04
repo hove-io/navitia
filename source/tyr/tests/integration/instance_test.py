@@ -220,7 +220,8 @@ def test_update_instances(create_instance):
     resp = api_get('/v0/instances/{}'.format(create_instance))
     assert resp[0]['access_points'] is False
     assert resp[0]['poi_access_points'] is False
-    assert resp[0]['default_pt_planner'] == 'kraken'
+    # default_pt_planner=loki not kraken
+    assert resp[0]['default_pt_planner'] == 'loki'
     assert resp[0]['pt_planners_configurations'] == {}
     assert resp[0]['language'] == 'fr-FR'
 
