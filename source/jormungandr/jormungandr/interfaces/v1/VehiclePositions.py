@@ -31,7 +31,7 @@
 
 from __future__ import absolute_import, print_function, unicode_literals, division
 
-from navitiacommon.parser_args_type import DepthArgument, DateTimeFormat
+from navitiacommon.parser_args_type import DepthArgument, DateTimeFormat, OptionValue
 from jormungandr import i_manager, timezone
 from jormungandr.interfaces.parsers import default_count_arg_type
 from jormungandr.interfaces.v1.decorators import get_obj_serializer
@@ -76,6 +76,13 @@ class VehiclePositions(ResourceUri, ResourceUtc):
             'of the disruptions.',
         )
 
+        parser_get.add_argument(
+            "_pt_planner",
+            type=OptionValue(['kraken', 'loki']),
+            hidden=True,
+            help="choose which pt engine to compute the pt journey",
+        )
+
         self.collection = 'vehicle_positions'
         self.get_decorators.insert(0, ManageError())
         self.get_decorators.insert(1, get_obj_serializer(self))
@@ -95,4 +102,3 @@ class VehiclePositions(ResourceUri, ResourceUtc):
             instance, response.vehicle_positions, **args
         )
         return response
-        #
