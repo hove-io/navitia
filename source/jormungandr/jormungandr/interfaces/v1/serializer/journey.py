@@ -339,6 +339,11 @@ class BookingRuleSerializer(PbNestedSerializer):
     phone_number = jsonschema.Field(schema_type=str, display_none=True)
     booking_url = jsonschema.Field(schema_type=str, display_none=True)
     applies_on = EnumListField(attr='applies_on', pb_type=BookingRule.AppliesOn)
+    booking_type = EnumField(attr='booking_type', pb_type=BookingRule.BookingType)
+    prior_notice_duration_min = PbIntField(display_none=False)
+    prior_notice_duration_max = PbIntField(display_none=False)
+    prior_notice_last_day = PbIntField(display_none=False)
+    prior_notice_last_time = PbIntField(display_none=False)
 
 
 class SectionSerializer(PbNestedSerializer):
