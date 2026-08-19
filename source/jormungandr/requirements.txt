@@ -28,7 +28,7 @@ zeep==1.1.0
 gevent==23.9.0
 serpy-ctp==0.2.1
 python-json-logger==0.1.7
-jmespath==0.9.3
+jmespath==1.1.0
 shortuuid==0.5.0
 click==8.1.8
 coloredlogs==10.0
