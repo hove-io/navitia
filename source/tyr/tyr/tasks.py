@@ -778,7 +778,9 @@ def close_session(*args, **kwargs):
     # a scoped session factory, given that we are maintaining the same app
     # context, this ensures tasks have a fresh session (e.g. session errors
     # won't propagate across tasks)
-    models.db.session.remove()
+    from tyr import app
+    with app.app_context():
+        models.db.session.remove()
 
 
 @celery.task()
