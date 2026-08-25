@@ -779,6 +779,7 @@ def close_session(*args, **kwargs):
     # context, this ensures tasks have a fresh session (e.g. session errors
     # won't propagate across tasks)
     from tyr import app
+
     with app.app_context():
         models.db.session.remove()
 
