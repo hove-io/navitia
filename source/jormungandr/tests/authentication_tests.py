@@ -194,7 +194,13 @@ class AbstractTestAuthentication(AbstractTestFixture):
         kraken.klass = "jormungandr.street_network.tests.MockKraken"
         kraken.args = {'timeout': 10}
         kraken.created_at = datetime.utcnow()
-        return [kraken]
+
+        asgard = StreetNetworkBackend(id='asgard')
+        asgard.klass = "jormungandr.street_network.tests.MockKraken"
+        asgard.args = {'timeout': 10}
+        asgard.created_at = datetime.utcnow()
+
+        return [kraken, asgard]
 
 
 @dataset({"main_routing_test": {}})
