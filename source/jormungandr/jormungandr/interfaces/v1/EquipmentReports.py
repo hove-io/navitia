@@ -71,7 +71,7 @@ class EquipmentReports(ResourceUri, ResourceUtc):
             "_pt_planner",
             type=OptionValue(['kraken', 'loki']),
             hidden=True,
-            help="choose which pt engine to compute the pt journey",
+            help="choose which pt engine to compute the equipment reports",
         )
 
         self.collection = 'equipment_reports'
