@@ -31,7 +31,7 @@
 
 from __future__ import absolute_import, print_function, unicode_literals, division
 
-from navitiacommon.parser_args_type import DepthArgument
+from navitiacommon.parser_args_type import DepthArgument, OptionValue
 from flask_restful import abort
 from jormungandr import i_manager, timezone
 from jormungandr.interfaces.parsers import default_count_arg_type
@@ -65,6 +65,13 @@ class EquipmentReports(ResourceUri, ResourceUtc):
             default=[],
             action="append",
             schema_metadata={'format': 'pt-object'},
+        )
+
+        parser_get.add_argument(
+            "_pt_planner",
+            type=OptionValue(['kraken', 'loki']),
+            hidden=True,
+            help="choose which pt engine to compute the equipment reports",
         )
 
         self.collection = 'equipment_reports'
