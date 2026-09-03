@@ -9,6 +9,7 @@ COPY ./docker/run_tyr_web.sh /usr/src/app/run.sh
 
 RUN apt clean \
     && apt update --fix-missing \
+    && apt-get upgrade -y \
     && apt install -o Acquire::Retries=10 -y curl libpq5 git ca-certificates libgeos-c1v5 postgresql-client gcc \
     && update-ca-certificates \
     && curl -fsSL -o /tmp/protoc-python.zip https://github.com/protocolbuffers/protobuf/releases/download/v29.5/protoc-29.5-linux-x86_64.zip \
