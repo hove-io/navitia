@@ -35,6 +35,7 @@ COPY ./docker/ca-certificates/*.crt /usr/local/share/ca-certificates/
 
 RUN apt clean \
     && apt update --fix-missing \
+    && apt-get upgrade -y \
     && apt install -o Acquire::Retries=10 -y unzip curl libgeos-dev libpq5 git ca-certificates postgresql-client gettext-base jq \
     libboost-all-dev \
     libprotobuf-dev \
