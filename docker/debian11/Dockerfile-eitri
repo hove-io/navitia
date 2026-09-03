@@ -4,6 +4,7 @@ COPY source/ /navitia/source/
 
 RUN apt clean \
     && apt update --fix-missing \
+    && apt-get upgrade -y \
     && apt install -o Acquire::Retries=10 -y libpq5 git zip jq curl \
     libboost-all-dev \
     libprotobuf-dev \

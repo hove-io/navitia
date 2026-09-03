@@ -7,6 +7,7 @@ COPY ./source/monitor /srv/monitor_kraken
 
 RUN apt clean \
     && apt update --fix-missing \
+    && apt-get upgrade -y \
     && apt install -o Acquire::Retries=10 -y ca-certificates \
     && update-ca-certificates \
     && apt install -o Acquire::Retries=10 -y libgoogle-perftools4 \

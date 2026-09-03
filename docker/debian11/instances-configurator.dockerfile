@@ -11,6 +11,7 @@ RUN chmod +x /instances_configuration.sh
 
 RUN apt clean \
     && apt update --fix-missing \
+    && apt-get upgrade -y \
     && apt install -o Acquire::Retries=10 -y libpq5 postgresql-client gettext-base \
     && pip install --no-cache-dir -U -r /tmp/requirements.txt \
     && apt autoremove -y
