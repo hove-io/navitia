@@ -66,7 +66,9 @@ class ResourceUri(StatedResource):
     def get_filter(self, items, args):
         # external_code
         if args.get("external_code"):
-            f = u"{}.has_code(external_code,{})".format(collections_to_resource_type[self.collection], protect(args["external_code"]))
+            f = u"{}.has_code(external_code,{})".format(
+                collections_to_resource_type[self.collection], protect(args["external_code"])
+            )
             if args.get("filter"):
                 args["filter"] = '({}) and {}'.format(args["filter"], f)
             else:
