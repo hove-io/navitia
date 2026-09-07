@@ -1,7 +1,8 @@
 #!/bin/bash
 set -e
 apt clean
-apt update --fix-missing
+rm -rf /var/lib/apt/lists/*
+apt update
 apt install -y -o Acquire::Retries=10 \
     libpq5 \
     git libgeos-c1v5 ca-certificates curl \
