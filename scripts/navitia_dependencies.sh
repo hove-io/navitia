@@ -3,8 +3,8 @@ set -e
 apt clean
 rm -rf /var/lib/apt/lists/*
 echo "deb http://archive.debian.org/debian/ bullseye main" > /etc/apt/sources.list
-echo "deb http://archive.debian.org/debian/ bullseye-updates main" > /etc/apt/sources.list
-echo "deb http://archive.debian.org/debian-security/ bullseye-security main" > /etc/apt/sources.list
+echo "deb http://archive.debian.org/debian/ bullseye-updates main" >> /etc/apt/sources.list
+echo "deb http://archive.debian.org/debian-security/ bullseye-security main" >> /etc/apt/sources.list
 apt-get -o Acquire::Check-Valid-Until=false update
 apt install -y -o Acquire::Retries=10 \
     libpq5 \
