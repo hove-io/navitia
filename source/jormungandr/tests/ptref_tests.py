@@ -803,8 +803,8 @@ class TestPtRef(AbstractTestFixture):
 
         response, code = self.query_no_assert("v1/coverage/main_ptref_test/networks?external_code=wrong_code")
         assert code == 404
-        message = get_not_null(response, 'message')
-        assert 'Unable to find an object for the external_code wrong_code' in message
+        message = get_not_null(response["error"], 'message')
+        assert 'ptref : Filters: Unable to find object' in message
 
         # without coverage
         response, code = self.query_no_assert("v1/networks?external_code=A")
@@ -815,8 +815,8 @@ class TestPtRef(AbstractTestFixture):
 
         response, code = self.query_no_assert("v1/networks?external_code=wrong_code")
         assert code == 404
-        message = get_not_null(response, 'message')
-        assert 'Unable to find an object for the external_code wrong_code' in message
+        message = get_not_null(response["error"], 'message')
+        assert 'ptref : Filters: Unable to find object' in message
 
         # Without coverage, networks have to work with external_code
         response, code = self.query_no_assert("v1/networks")
@@ -842,8 +842,8 @@ class TestPtRef(AbstractTestFixture):
 
         response, code = self.query_no_assert("v1/coverage/main_ptref_test/lines?external_code=wrong_code")
         assert code == 404
-        message = get_not_null(response, 'message')
-        assert 'Unable to find an object for the external_code wrong_code' in message
+        message = get_not_null(response["error"], 'message')
+        assert 'ptref : Filters: Unable to find object' in message
 
         # without coverage
         response, code = self.query_no_assert("v1/lines?external_code=A")
@@ -854,8 +854,8 @@ class TestPtRef(AbstractTestFixture):
 
         response, code = self.query_no_assert("v1/lines?external_code=wrong_code")
         assert code == 404
-        message = get_not_null(response, 'message')
-        assert 'Unable to find an object for the external_code wrong_code' in message
+        message = get_not_null(response["error"], 'message')
+        assert 'ptref : Filters: Unable to find object' in message
 
         # Without coverage, networks have to work with external_code
         response, code = self.query_no_assert("v1/lines")
@@ -880,8 +880,8 @@ class TestPtRef(AbstractTestFixture):
 
         response, code = self.query_no_assert("v1/coverage/main_ptref_test/stop_points?external_code=wrong_code")
         assert code == 404
-        message = get_not_null(response, 'message')
-        assert 'Unable to find an object for the external_code wrong_code' in message
+        message = get_not_null(response["error"], 'message')
+        assert 'ptref : Filters: Unable to find object' in message
 
         # without coverage
         response, code = self.query_no_assert("v1/stop_points?external_code=stop1_code")
@@ -892,8 +892,8 @@ class TestPtRef(AbstractTestFixture):
 
         response, code = self.query_no_assert("v1/stop_points?external_code=wrong_code")
         assert code == 404
-        message = get_not_null(response, 'message')
-        assert 'Unable to find an object for the external_code wrong_code' in message
+        message = get_not_null(response["error"], 'message')
+        assert 'ptref : Filters: Unable to find object' in message
 
         # Without coverage, networks have to work with external_code
         response, code = self.query_no_assert("v1/stop_points")
