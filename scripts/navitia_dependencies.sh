@@ -1,7 +1,9 @@
 #!/bin/bash
 set -e
 apt clean
-apt update --fix-missing
+rm -rf /var/lib/apt/lists/*
+printf 'deb [check-valid-until=no] http://archive.debian.org/debian/ bullseye main\ndeb [check-valid-until=no] http://archive.debian.org/debian/ bullseye-updates main\ndeb [check-valid-until=no] http://snapshot.debian.org/archive/debian-security/20260903T000000Z bullseye-security main\n' > /etc/apt/sources.list
+apt-get -o Acquire::Check-Valid-Until=false update
 apt install -y -o Acquire::Retries=10 \
     libpq5 \
     git libgeos-c1v5 ca-certificates curl \

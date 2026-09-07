@@ -14,8 +14,9 @@ COPY ./docker/ca-certificates/*.crt /usr/local/share/ca-certificates/
 RUN echo "__version__ = '$GIT_REVISION'" > jormungandr/jormungandr/_version.py
 
 RUN apt clean \
-    && apt update --fix-missing \
-    && apt-get upgrade -y \
+    && rm -rf /var/lib/apt/lists/* \
+	&& printf 'deb [check-valid-until=no] http://archive.debian.org/debian/ bullseye main\ndeb [check-valid-until=no] http://archive.debian.org/debian/ bullseye-updates main\ndeb [check-valid-until=no] http://snapshot.debian.org/archive/debian-security/20260903T000000Z bullseye-security main\n' > /etc/apt/sources.list \
+	&& apt-get -o Acquire::Check-Valid-Until=false update -y \
     && apt install -o Acquire::Retries=10 -y curl libpq5 apache2 git libgeos-c1v5 ca-certificates gcc \
     && update-ca-certificates \
     && curl -fsSL -o /tmp/protoc-python.zip https://github.com/protocolbuffers/protobuf/releases/download/v29.5/protoc-29.5-linux-x86_64.zip \
