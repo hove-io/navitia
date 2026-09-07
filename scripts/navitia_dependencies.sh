@@ -2,7 +2,7 @@
 set -e
 apt clean
 rm -rf /var/lib/apt/lists/*
-apt update
+apt update --fix-missing
 apt install -y -o Acquire::Retries=10 \
     libpq5 \
     git libgeos-c1v5 ca-certificates curl \
