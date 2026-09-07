@@ -64,7 +64,13 @@ class ResourceUri(StatedResource):
             self.get_decorators.append(authentication_required)
 
     def get_filter(self, items, args):
-
+        # external_code
+        if args.get("external_code"):
+            f = u"{}.has_code(external_code,{})".format(collections_to_resource_type[self.collection], protect(args["external_code"]))
+            if args.get("filter"):
+                args["filter"] = '({}) and {}'.format(args["filter"], f)
+            else:
+                args["filter"] = f
         # handle headsign
         if args.get("headsign"):
             f = u"vehicle_journey.has_headsign({})".format(protect(args["headsign"]))

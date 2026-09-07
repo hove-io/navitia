@@ -180,26 +180,6 @@ class Uri(ResourceUri, ResourceUtc):
         if "odt_level" in args and args["odt_level"] != "all" and "lines" not in self.collection:
             abort(404, message="bad request: odt_level filter can only be applied to lines")
 
-        if args.get("external_code") is not None:
-            type_ = collections_to_resource_type[self.collection]
-            if all(obj is None for obj in (region, lat, lon)):
-                for instance in i_manager.get_regions():
-                    res = i_manager.instances[instance].has_external_code(type_, args["external_code"])
-                    if res:
-                        region = instance
-                        id = res
-                        break
-                if not region:
-                    abort(
-                        404, message="Unable to find an object for the external_code %s" % args["external_code"]
-                    )
-            else:
-                id = i_manager.instances[region].has_external_code(type_, args["external_code"])
-                if id == None:
-                    abort(
-                        404, message="Unable to find an object for the external_code %s" % args["external_code"]
-                    )
-
         self.region = i_manager.get_region(region, lon, lat)
 
         # we store the region in the 'g' object, which is local to a request
