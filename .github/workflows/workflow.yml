@@ -45,9 +45,9 @@ jobs:
       run: |
         apt clean
         rm -rf /var/lib/apt/lists/*
-        echo "deb http://archive.debian.org/debian/ bullseye main" > /etc/apt/sources.list
-        echo "deb http://archive.debian.org/debian/ bullseye-updates main" >> /etc/apt/sources.list
-        echo "deb http://archive.debian.org/debian/ bullseye-security main" >> /etc/apt/sources.list
+        echo "deb [check-valid-until=no] http://archive.debian.org/debian/ bullseye main" > /etc/apt/sources.list
+        echo "deb [check-valid-until=no] http://archive.debian.org/debian/ bullseye-updates main" >> /etc/apt/sources.list
+        echo "deb [check-valid-until=no] http://snapshot.debian.org/archive/debian-security/20260903T000000Z bullseye-security main" >> /etc/apt/sources.list
         apt-get -o Acquire::Check-Valid-Until=false update -y
         apt install -o Acquire::Retries=10 git -y
 
