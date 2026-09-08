@@ -1,0 +1,242 @@
+<h1 id="some-examples">Some examples</h1>
+
+<p>This chapter shows some usages with the minimal required arguments. However, this is not a reference and not all APIs nor arguments are shown.</p>
+
+<aside class="notice">
+You will have to use your own token with the examples below (if you switch to another coverage than "sandbox").
+</aside>
+<h2 id='basics-on-the-api-request'>Basics on the API request</h2><div class="highlight"><pre class="highlight shell tab-shell"><code><span class="c"># Web is too shiny: JSON, urlencode and curl forever!</span>
+<span class="nv">$ </span>curl <span class="s1">'https://api.navitia.io/v1/coverage/sandbox/stop_areas/stop_area%3ARAT%3ASA%3ABASTI/lines/line%3ARAT%3AM5/departures?count=4&amp;depth=2&amp;'</span> <span class="nt">-H</span> <span class="s1">'Authorization: 3b036afe-0110-4202-b9ed-99718476c2e0'</span>
+</code></pre></div>
+<p>A query to Navitia&#39;s API is divided in 4 parts, as highlighted by colors in a <a href="https://playground.navitia.io/play.html?request=https%3A%2F%2Fapi.navitia.io%2Fv1%2Fcoverage%2Fsandbox%2Fstop_areas%2Fstop_area%253ARAT%253ASA%253ABASTI%2Flines%2Fline%253ARAT%253AM5%2Fdepartures%3Fcount%3D4%26depth%3D2%26&amp;token=3b036afe-0110-4202-b9ed-99718476c2e0">Navitia Playground example</a>:<br><img src="/images/navitia_basic-05136d70.png" alt="Navitia basic request" /></p>
+
+<ol>
+<li><strong>Root url</strong> of the API, the address of the server.<br>Here <code>https://api.navitia.io/v1/</code></li>
+<li><strong>Path</strong>, used to filter the request and precise what is affected by the query. This filter is an intersection of multiple <code>key/value</code> (logical <em>AND</em>).<br>Here <code>/coverage/sandbox/stop_areas/stop_area:RAT:SA:BASTI/lines/line:RAT:M5/</code> means we are looking for information on everything that is in the region <em>&quot;sandbox&quot;</em> and that is stricly related to both station <em>&quot;Bastille&quot;</em> and line <em>&quot;metro 5&quot;</em>.</li>
+<li><strong>Endpoint</strong>, specifies what type of information is requested, so the <em>feature</em>. It can be a service, like <em>journeys</em>, <em>isochrones</em>, <em>places</em> or a collection of objects, like <em>lines</em>, <em>stop_areas</em>, etc.
+Here <code>/departures?</code> means we are requesting <em>&quot;next departures&quot;</em>.</li>
+<li><strong>Parameters</strong>, used to specify any additional detail linked to the endpoint requested.<br>Here <code>?count=4&amp;depth=2&amp;</code> means we are requesting the next <strong><em>4</em></strong> departures and we want the response to be detailed to a depth of <strong><em>2</em></strong>.</li>
+</ol>
+
+<aside class="success">
+    Tadaaa!
+    </br>
+    <a href="https://playground.navitia.io/play.html?request=https%3A%2F%2Fapi.navitia.io%2Fv1%2Fcoverage%2Fsandbox%2Fstop_areas%2Fstop_area%253ARAT%253ASA%253ABASTI%2Flines%2Fline%253ARAT%253AM5%2Fdepartures%3Fcount%3D4%26depth%3D2%26&token=3b036afe-0110-4202-b9ed-99718476c2e0">https://api.navitia.io/v1/coverage/sandbox/stop_areas/stop_area:RAT:SA:BASTI/lines/line:RAT:M5/departures?count=4&depth=2</a>
+    </br>
+    We get the next 4 departures for the metro 5 at Bastille in the great "sandbox" region, and with a middle level of details.
+</aside>
+<h2 id='a-quick-exploration'>A quick exploration</h2><div class="highlight"><pre class="highlight shell tab-shell"><code><span class="nv">$ </span>curl <span class="s1">'https://api.navitia.io/v1/coverage'</span> <span class="nt">-H</span> <span class="s1">'Authorization: 3b036afe-0110-4202-b9ed-99718476c2e0'</span>
+
+
+HTTP/1.1 200 OK
+
+<span class="o">{</span>
+    <span class="s2">"start_production_date"</span>: <span class="s2">"20140105"</span>,
+    <span class="s2">"status"</span>: <span class="s2">"running"</span>,
+    <span class="s2">"shape"</span>: <span class="s2">"POLYGON((-74.500997 40.344999,-74.500997 41.096999,-73.226 41.096999,-73.226 40.344999,-74.500997 40.344999))"</span>,
+    <span class="s2">"id"</span>: <span class="s2">"sandbox"</span>,
+    <span class="s2">"end_production_date"</span>: <span class="s2">"20140406"</span>
+<span class="o">}</span>
+</code></pre></div>
+<p><em>navitia</em> allows to dive into the public transport data.</p>
+
+<p>To better understand how the API works let&#39;s ask the API the different main possibilities by simply querying the API endpoint: <a href="https://api.navitia.io/v1/">https://api.navitia.io/v1/</a></p>
+
+<p>The <code>links</code> section of the answer contains the different possible interactions with the API.</p>
+
+<p>As you can see there are several possibilities like for example <a href="#coverage">coverage</a> to navigate through the covered regions data or <a href="#journeys">journeys</a> to compute a journey.</p>
+
+<p>Now let&#39;s see what interactions are possible with <code>coverage</code>:</p>
+
+<p>This request will give you:</p>
+
+<ul>
+<li>in the <code>regions</code> section the list of covered regions</li>
+<li>in the <code>links</code> section the list of possible interactions with them</li>
+</ul>
+<div class="highlight"><pre class="highlight shell tab-shell"><code><span class="nv">$ </span>curl <span class="s1">'https://api.navitia.io/v1/coverage/sandbox/lines'</span> <span class="nt">-H</span> <span class="s1">'Authorization: 3b036afe-0110-4202-b9ed-99718476c2e0'</span>
+
+
+HTTP/1.1 200 OK
+
+<span class="o">{</span>
+    <span class="s2">"lines"</span>:[
+        <span class="o">{</span>
+            <span class="s2">"id"</span>:<span class="s2">"line:RAT:M1"</span>,
+            <span class="s2">"code"</span>:<span class="s2">"1"</span>,
+            <span class="s2">"name"</span>:<span class="s2">"Château de Vincennes - La Défense"</span>,
+            <span class="s2">"opening_time"</span>:<span class="s2">"053000"</span>,
+            <span class="s2">"closing_time"</span>:<span class="s2">"013600"</span>,
+            <span class="s2">"color"</span>:<span class="s2">"F2C931"</span>,
+            <span class="s2">"commercial_mode"</span>:<span class="o">{</span>
+                <span class="s2">"id"</span>:<span class="s2">"commercial_mode:Metro"</span>,
+                <span class="s2">"name"</span>:<span class="s2">"Metro"</span>
+            <span class="o">}</span>,
+            <span class="s2">"physical_modes"</span>:[
+                <span class="o">{</span>
+                    <span class="s2">"id"</span>:<span class="s2">"physical_mode:Metro"</span>,
+                    <span class="s2">"name"</span>:<span class="s2">"Métro"</span>
+                <span class="o">}</span>
+            <span class="o">]</span>,
+            <span class="s2">"network"</span>:<span class="o">{</span>
+                <span class="s2">"id"</span>:<span class="s2">"network:RAT:1"</span>,
+                <span class="s2">"name"</span>:<span class="s2">"RATP"</span>
+            <span class="o">}</span>,
+            <span class="s2">"routes"</span>:[
+                <span class="o">{</span>
+                    <span class="s2">"id"</span>:<span class="s2">"route:RAT:M1"</span>,
+                    <span class="s2">"name"</span>:<span class="s2">"Château de Vincennes - La Défense"</span>,
+                    <span class="s2">"direction"</span>:<span class="o">{</span>
+                        <span class="s2">"id"</span>:<span class="s2">"stop_area:RAT:SA:DENFE"</span>,
+                        <span class="s2">"name"</span>:<span class="s2">"La Défense Grande Arche (Puteaux)"</span>
+                    <span class="o">}</span>
+                <span class="o">}</span>,
+                <span class="o">{</span>
+                    <span class="s2">"id"</span>:<span class="s2">"route:RAT:M12_R"</span>,
+                    <span class="s2">"name"</span>:<span class="s2">"Mairie d'Issy - Front Populaire"</span>,
+                    <span class="s2">"direction"</span>:<span class="o">{</span>
+                        <span class="s2">"id"</span>:<span class="s2">"stop_area:RAT:SA:MISSY"</span>,
+                        <span class="s2">"name"</span>:<span class="s2">"Mairie d'Issy (Vanves)"</span>
+                    <span class="o">}</span>
+                <span class="o">}</span>
+            <span class="o">]</span>
+        <span class="o">}</span>
+    <span class="o">]</span>
+<span class="o">}</span>
+</code></pre></div>
+<p>In the <code>links</code> section there is for example this link: <code>&quot;href&quot;: &quot;https://api.navitia.io/v1/coverage/{regions.id}/lines&quot;</code></p>
+
+<p>This link is about lines (according to its <code>rel</code> attribute) and is templated which means that it needs additional parameters.<br>
+The parameters are identified with the <code>{</code> <code>}</code> syntax.
+In this case it needs a region id. This id can be found in the <code>regions</code> section.</p>
+
+<p>To query for the public transport lines of New York we thus have to call: <a href="https://api.navitia.io/v1/coverage/us-ny/lines">https://api.navitia.io/v1/coverage/us-ny/lines</a></p>
+
+<p>Easy isn&#39;t it?</p>
+
+<p><a
+    href="https://jsfiddle.net/kisiodigital/vLugkLgw/"
+    target="_blank">
+    Code it yourself on JSFiddle
+</a></p>
+
+<p>We could push the exploration further and:</p>
+
+<ul>
+<li>Where am I? (WGS 84 coordinates)
+
+<ul>
+<li><a href="https://api.navitia.io/v1/coord/2.377310;48.847002">https://api.navitia.io/v1/coord/2.377310;48.847002</a></li>
+<li>I&#39;m on the &quot;/fr-idf&quot; coverage, at &quot;20, rue Hector Malot in Paris, France&quot;</li>
+</ul></li>
+<li>Services available on this coverage
+
+<ul>
+<li><a href="https://api.navitia.io/v1/coverage/fr-idf">https://api.navitia.io/v1/coverage/fr-idf</a></li>
+<li>Let&#39;s take a look at the links at the bottom of the previous stream</li>
+</ul></li>
+<li>Networks available? (see what <a href="#network">network</a> is)
+
+<ul>
+<li><a href="https://api.navitia.io/v1/coverage/fr-idf/networks">https://api.navitia.io/v1/coverage/fr-idf/networks</a></li>
+<li>pwooo, many networks on this coverage ;)</li>
+</ul></li>
+<li>Is there any Metro lines or networks?
+
+<ul>
+<li>there is an api for that. See <a href="#pt-objects">pt_objects</a></li>
+<li><a href="https://api.navitia.io/v1/coverage/fr-idf/pt_objects?q=metro">https://api.navitia.io/v1/coverage/fr-idf/pt_objects?q=metro</a></li>
+<li>Response contain one network, one mode, and many lines</li>
+</ul></li>
+<li>Let&#39;s try some filtering (see <a href="#pt-ref">PT objects exploration</a>)
+
+<ul>
+<li>filter on the specific metro network (&quot;id&quot;: &quot;network:OIF:439&quot; extracted from last request)</li>
+<li><a href="https://api.navitia.io/v1/coverage/fr-idf/networks/network:OIF:439/">https://api.navitia.io/v1/coverage/fr-idf/networks/network:OIF:439/</a></li>
+<li>physical modes managed by this network</li>
+<li><a href="https://api.navitia.io/v1/coverage/fr-idf/networks/network:OIF:439/physical_modes">https://api.navitia.io/v1/coverage/fr-idf/networks/network:OIF:439/physical_modes</a></li>
+<li>metro lines</li>
+<li><a href="https://api.navitia.io/v1/coverage/fr-idf/networks/network:OIF:439/physical_modes/physical_mode:Metro/lines">https://api.navitia.io/v1/coverage/fr-idf/networks/network:OIF:439/physical_modes/physical_mode:Metro/lines</a></li>
+</ul></li>
+<li>By the way, what stuff are close to me?
+
+<ul>
+<li><a href="https://api.navitia.io/v1/coverage/fr-idf/coords/2.377310;48.847002/places_nearby">https://api.navitia.io/v1/coverage/fr-idf/coords/2.377310;48.847002/places_nearby</a></li>
+<li>or <a href="https://api.navitia.io/v1/coverage/fr-idf/coords/2.377310;48.847002/lines">https://api.navitia.io/v1/coverage/fr-idf/coords/2.377310;48.847002/lines</a></li>
+<li>or <a href="https://api.navitia.io/v1/coverage/fr-idf/coords/2.377310;48.847002/stop_schedules">https://api.navitia.io/v1/coverage/fr-idf/coords/2.377310;48.847002/stop_schedules</a></li>
+<li>or <a href="https://api.navitia.io/v1/coverage/fr-idf/coords/2.377310;48.847002/terminus_schedules">https://api.navitia.io/v1/coverage/fr-idf/coords/2.377310;48.847002/terminus_schedules</a></li>
+<li>or ...</li>
+</ul></li>
+</ul>
+<h2 id='seek-and-search'>Seek and search</h2><h3 id='what-places-have-a-name-that-start-with-39-eiff-39'>What places have a name that start with &#39;eiff&#39;</h3>
+<p>The <a href="#places">/places</a> API finds any object whose name matches the first letters of the query.</p>
+
+<p>To find the objects that start with &quot;tran&quot; the request should be: <a href="https://api.navitia.io/v1/coverage/fr-idf/places?q=eiff">https://api.navitia.io/v1/coverage/fr-idf/places?q=eiff</a></p>
+
+<p>This API is fast enough to use it for autocompleting a user request.</p>
+<h3 id='what-places-are-within-1000-meters'>What places are within 1000 meters</h3>
+<p>The <a href="#places-nearby">/places_nearby</a> API finds any object within a certain radius as a crow flies.
+This API is not accessible from the main endpoint but has to be applied on a stop point, an address, some coordinates,...</p>
+
+<p>All objects around the coordinates of the Transamerica Pyramid can be fetched with the following request: <a href="https://api.navitia.io/v1/coverage/us-ca/coords/-122.402770;37.794682/places_nearby">https://api.navitia.io/v1/coverage/us-ca/coords/-122.402770;37.794682/places_nearby</a></p>
+
+<p>We could, in the same fashion, ask for the objects around a particuliar stop area (<code>stop_area:OSF:SA:CTP4025</code> for example): <a href="https://api.navitia.io/v1/coverage/us-ca/stop_areas/stop_area:OSF:SA:CTP4025/places_nearby">https://api.navitia.io/v1/coverage/us-ca/stop_areas/stop_area:OSF:SA:CTP4025/places_nearby</a></p>
+
+<p>Optionally you can select what object types to return and change the radius.</p>
+<h2 id='about-itinerary'>About itinerary</h2><h3 id='a-simple-route-computation'>A simple route computation</h3>
+<p>Let&#39;s find out how to get from the view point of the Golden Gate bridge to the Transamerica Pyramid in San Francisco.
+We need to use the <code>journeys</code> API.</p>
+
+<p>The coordinates of the view point are <code>longitude = -122.4752</code>, <code>latitude = 37.80826</code> and the coordinates of the Transamercia Pyramid are <code>longitude = -122.402770</code>, <code>latitude = 37.794682</code>.
+The coordinates are always in decimal degrees as WGS84 (also known as GPS coordinates). The coordinates are given to the API with the following format: <code>longitute;latitude</code>.</p>
+
+<p>The arguments are the following:</p>
+
+<ul>
+<li><code>from=-122.4752;37.80826</code></li>
+<li><code>to=-122.402770;37.794682</code>
+Hence, the complete URL: <a href="https://api.navitia.io/v1/journeys?from=-122.4752;37.80826&to=-122.402770;37.794682">https://api.navitia.io/v1/journeys?from=-122.4752;37.80826&amp;to=-122.402770;37.794682</a>.</li>
+</ul>
+
+<aside class="success">
+A `journeys` request might return multiple journeys. Those journeys are said to be equivalent. For instance
+a journey can be faster than an other but requires more changes or more walking.
+</aside>
+
+<p>This API has more options explained in the reference as:</p>
+
+<blockquote>
+<p><a href="https://playground.navitia.io/play.html?request=https%3A%2F%2Fapi.navitia.io%2Fv1%2Fcoverage%2Fsandbox%2Fjourneys%3Ffrom%3D2.380465%253B48.861081%26to%3D2.37715%253B48.846781%26datetime%3D20220601T120000%26datetime_represents%3Darrival%26&amp;token=3b036afe-0110-4202-b9ed-99718476c2e0">Try it on Navitia playground using &quot;datetime&quot; and &quot;datetime_represents&quot; parameters)</a></p>
+</blockquote>
+
+<ul>
+<li><p>The dates are given in the basic form of the ISO 8601 datetime format: <code>YYYYMMDDTHHMM</code>.
+For example, if you want to compute a journey on friday, April 07 use <code>datetime=20170407T120000</code>.</p></li>
+<li><p>To get the latest departure, you can query for journeys arriving before the end of the service using the <code>datetime_represents</code> parameter</p></li>
+</ul>
+
+<blockquote>
+<p><a href="https://playground.navitia.io/play.html?request=https%3A%2F%2Fapi.navitia.io%2Fv1%2Fcoverage%2Fsandbox%2Fjourneys%3Ffrom%3D2.380465%253B48.861081%26to%3D2.37715%253B48.846781%26traveler_type%3Dstandard%26forbidden_uris%255B%255D%3Dline%253ARAT%253AM5%26&amp;token=3b036afe-0110-4202-b9ed-99718476c2e0">Try personalization capacities on Navitia playground)</a></p>
+</blockquote>
+
+<ul>
+<li><p>You can also change the <a href="#traveler-type">traveler profile</a> (to adapt the walking/biking/driving parts and comfort of journeys)</p></li>
+<li><p>Forbid certain lines, routes or modes:
+for example you can forbid the line 5 and all lines using cable car mode. See <a href="#journeys">/journeys</a> section.</p></li>
+</ul>
+
+<blockquote>
+<p><a href="https://playground.navitia.io/play.html?request=https%3A%2F%2Fapi.navitia.io%2Fv1%2Fjourneys%3Ffrom%3D2.37715%253B48.846781%26to%3D2.380464%253B48.861081%26first_section_mode%255B%255D%3Dbss%26first_section_mode%255B%255D%3Dwalking%26first_section_mode%255B%255D%3Dbike%26">Using your token! You can try &quot;real life&quot; personalizations on Paris area)</a></p>
+</blockquote>
+
+<ul>
+<li>You can override traveler_type parameters by enabling biking, driving or bike sharing system (bss) in your area. For instance, you can allow bss (and walking since it&#39;s implicit with it) at the departure from Paris area</li>
+</ul>
+<h3 id='what-stations-can-be-reached-in-the-next-20-minutes'>What stations can be reached in the next 20 minutes</h3>
+<p>The API can computes <em>all</em> the reachable stop points from an origin within a given maximum travel duration.
+That&#39;s what we call an <code>isochrone</code> (see <a href="#journeys">journeys section</a>)</p>
+
+<p>All the stop points that can be reached from the Transamerica Pyramid can be fetched with the following request:
+<a href="https://api.navitia.io/v1/coverage/us-ca/coords/-122.402770;37.794682/journeys?max_duration=1200">https://api.navitia.io/v1/coverage/us-ca/coords/-122.402770;37.794682/journeys?max_duration=1200</a></p>
+
+<p>It returns for each destination stop point the earliest arrival and a link to the journey detail.</p>

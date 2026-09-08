@@ -1,0 +1,46 @@
+<h1 id="isochrones">Isochrones</h1>
+
+<blockquote>
+<p><a href="https://playground.navitia.io/play.html?request=https%3A%2F%2Fapi.navitia.io%2Fv1%2Fcoverage%2Fsandbox%2Fisochrones%3Ffrom%3D2.377097%253B48.846905%26boundary_duration%255B%255D%3D600%26boundary_duration%255B%255D%3D1200%26boundary_duration%255B%255D%3D1800%26boundary_duration%255B%255D%3D2400%26boundary_duration%255B%255D%3D3000%26&amp;token=3b036afe-0110-4202-b9ed-99718476c2e0">Try it on Navitia playground (click on &quot;MAP&quot; buttons for &quot;wow effect&quot;)</a></p>
+</blockquote>
+
+<p>Whether using a specific set of coordinates or a general location, you can find places within
+your reach at a given time and their corresponding travel times, using a variety of transportation options.
+You can even specify the maximum amount of time you want to spare on travel and find
+the quickest way to reach your destination.</p>
+
+<p><a href="https://playground.navitia.io/play.html?request=https%3A%2F%2Fapi.navitia.io%2Fv1%2Fcoverage%2Fsandbox%2Fisochrones%3Ffrom%3D2.377097%3B48.846905%26max_duration%3D2000%26min_duration%3D1000&amp;token=3b036afe-0110-4202-b9ed-99718476c2e0"><img src="/images/isochrones_example-68a68c7e.png" alt="a simple isochrone request on Navitia playground" /></a></p>
+
+<p>Isochrone computing exposes information under two formats:</p>
+
+<ul>
+<li>  either <a href="#journeys">Journeys</a> service which provides a list with all the reachable stops at a given time from a potential destination
+with their respective arrival times, travel times and number of matches. Here is a fiddle example:</li>
+</ul>
+
+<p><a
+    href="https://jsfiddle.net/kisiodigital/x6207t6f/"
+    target="_blank">
+    Code it yourself on JSFiddle
+</a></p>
+
+<ul>
+<li>  or <a href="#isochrones-api">isochrones</a> service which provides a multi-polygon stream in order to plate colors directly on a map,
+or to filter geocoded objects inside the polygon. Here is a fiddle example:</li>
+</ul>
+
+<p><a
+    href="https://jsfiddle.net/kisiodigital/u22zsg9y/"
+    target="_blank">
+    Code it yourself on JSFiddle
+</a></p>
+
+<p>You can use these APIs (click on them for details):</p>
+
+<ul>
+<li>  some <strong><a href="#places">Places</a></strong> requests: autocomplete on geographical data from an input text to find the isochrone starting point.</li>
+<li>  <strong><a href="#journeys">Journeys</a></strong>: Compute all journeys from a departure point at a given time to every reachable point,
+and returns a list of all reachable points, ordered by time to reach.</li>
+<li>  <strong><a href="#isochrones-api">isochrones</a></strong>: Compute all journeys from a departure point at a given time to every reachable point,
+and returns multiple geoJson ready to be displayed on map. This service is currently in beta.</li>
+</ul>
