@@ -33,6 +33,7 @@ from __future__ import absolute_import, print_function, unicode_literals, divisi
 
 from flask_restful import abort
 
+from jormungandr.instance import Instance
 from jormungandr.parking_space_availability.parking_places_manager import ManageParkingPlaces
 from jormungandr import i_manager
 from jormungandr.interfaces.v1.converters_collection_type import collections_to_resource_type
@@ -184,6 +185,8 @@ class Uri(ResourceUri, ResourceUtc):
             type_ = collections_to_resource_type[self.collection]
             if all(obj is None for obj in (region, lat, lon)):
                 for instance in i_manager.get_regions():
+                    if i_manager.instances[instance].is_loki_pt_planner(self.collection, args):
+                        abort(404, message="external_code not implemented for loki")
                     res = i_manager.instances[instance].has_external_code(type_, args["external_code"])
                     if res:
                         region = instance
@@ -194,7 +197,10 @@ class Uri(ResourceUri, ResourceUtc):
                         404, message="Unable to find an object for the external_code %s" % args["external_code"]
                     )
             else:
-                id = i_manager.instances[region].has_external_code(type_, args["external_code"])
+                instance = i_manager.instances[region]
+                if instance.is_loki_pt_planner(self.collection, args):
+                    abort(404, message="external_code not implemented for loki")
+                id = instance.has_external_code(type_, args["external_code"])
                 if id == None:
                     abort(
                         404, message="Unable to find an object for the external_code %s" % args["external_code"]

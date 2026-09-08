@@ -780,6 +780,16 @@ class TestPtRef(AbstractTestFixture):
         )
         assert len(response['disruptions']) == 1
 
+    def test_call_loki_with_external_code(self):
+        """test stop_points with external_code parameter"""
+        for collection in ["networks", "lines", "stop_points", "stop_areas"]:
+            query = "v1/coverage/main_ptref_test/{}?external_code=wrong_code&_pt_planner=loki".format(collection)
+            response, code = self.query_no_assert(query)
+            assert code == 404
+            message = get_not_null(response, 'message')
+            assert 'external_code not implemented for loki' in message
+
+
     def test_networks_with_external_code(self):
         """test networks with external_code parameter"""
         response = self.query_region("networks")

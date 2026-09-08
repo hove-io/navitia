@@ -75,6 +75,7 @@ from jormungandr.olympic_site_params_manager import OlympicSiteParamsManager
 from jormungandr import pt_planners_manager, transient_socket
 from jormungandr.pt_journey_fare import PtJourneyFareBackendManager
 from jormungandr.zmq_backend import ZmqBackend
+from jormungandr.pt_planners.loki import Loki
 import os
 
 type_to_pttype = {
@@ -918,6 +919,10 @@ class Instance(transient_socket.TransientSocket):
     def get_pt_planner(self, pt_planner_id=None):
         pt_planner_id = pt_planner_id or self.default_pt_planner
         return self._pt_planner_manager.get_pt_planner(pt_planner_id)
+
+    def is_loki_pt_planner(self, api, request):
+        pt_planner = self.get_backend(api, request)
+        return isinstance(pt_planner, Loki)
 
     def get_all_pt_planners(self):
         return self._pt_planner_manager.get_all_pt_planners()
