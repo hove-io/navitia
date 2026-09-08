@@ -789,7 +789,6 @@ class TestPtRef(AbstractTestFixture):
             message = get_not_null(response, 'message')
             assert 'external_code not implemented for loki' in message
 
-
     def test_networks_with_external_code(self):
         """test networks with external_code parameter"""
         response = self.query_region("networks")
