@@ -10,6 +10,7 @@ on:
 env:
   PRD_ECR_REGISTRY: "162230498103.dkr.ecr.eu-west-1.amazonaws.com"
   DEBIAN11_SUFFIX: "-bullseye"
+  DEBIAN12_SUFFIX: "-bookworm"
 
 jobs:
   common_variables:
@@ -92,6 +93,10 @@ jobs:
           # 162230498103 : shared
           registries: "162230498103"
 
+      - name: Create tyr-beat debian 12 image
+        run: |
+              docker build -t navitia/tyr-beat${DEBIAN12_SUFFIX} -f  docker/debian12/Dockerfile-${component} .
+
       - name: Get and tag mimir dev image
         if: github.ref == 'refs/heads/dev'
         run: |
@@ -129,9 +134,14 @@ jobs:
           docker tag navitia/kraken ${kraken_tag}
           docker push ${kraken_tag}
 
-          # Tyr-beat
+          # Tyr-beat: debian 11
           tyr_beat_tag=${PRD_ECR_REGISTRY}/dev-navitia-tyr-tyrbeat:dev${DEBIAN11_SUFFIX}
           docker tag navitia/tyr-beat ${tyr_beat_tag}
+          docker push ${tyr_beat_tag}
+
+          # Tyr-beat: debian 12
+          tyr_beat_tag=${PRD_ECR_REGISTRY}/dev-navitia-tyr-tyrbeat:dev${DEBIAN12_SUFFIX}
+          docker tag navitia/tyr-beat${DEBIAN12_SUFFIX} ${tyr_beat_tag}
           docker push ${tyr_beat_tag}
 
           # Tyr-worker
@@ -152,9 +162,14 @@ jobs:
           docker tag navitia/kraken ${kraken_tag}
           docker push ${kraken_tag}
 
-          # Tyr-beat
+          # Tyr-beat: debian 11
           tyr_beat_tag=${PRD_ECR_REGISTRY}/navitia-tyr-tyrbeat:${{ needs.common_variables.outputs.RELEASE_TAG }}${DEBIAN11_SUFFIX}
           docker tag navitia/tyr-beat ${tyr_beat_tag}
+          docker push ${tyr_beat_tag}
+
+          # Tyr-beat: debian 12
+          tyr_beat_tag=${PRD_ECR_REGISTRY}/navitia-tyr-tyrbeat:${{ needs.common_variables.outputs.RELEASE_TAG }}${DEBIAN12_SUFFIX}
+          docker tag navitia/tyr-beat${DEBIAN12_SUFFIX} ${tyr_beat_tag}
           docker push ${tyr_beat_tag}
 
           # Tyr-worker
