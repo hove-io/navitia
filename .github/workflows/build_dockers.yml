@@ -331,12 +331,19 @@ jobs:
           app_id: ${{ secrets.CI_CORE_APP_ID }}
           private_key: ${{ secrets.CI_CORE_APP_PEM }}
 
-      - name: Run artemis on push to dev
+      - name: Run Artemis Bullseye
         uses: peter-evans/repository-dispatch@v2
         with:
           token: ${{ steps.ci-core-app-token.outputs.token }}
           repository: hove-io/artemis
           event-type: run_artemis_bullseye_ng
+
+      - name: Run Artemis Bookworm
+        uses: peter-evans/repository-dispatch@v2
+        with:
+          token: ${{ steps.ci-core-app-token.outputs.token }}
+          repository: hove-io/artemis
+          event-type: run_artemis_bookworm_ng
 
       - name: failure notification
         if: failure()
