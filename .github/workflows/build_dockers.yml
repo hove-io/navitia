@@ -255,16 +255,18 @@ jobs:
           docker tag navitia/tyr-web${DEBIAN12_SUFFIX} ${tyr_web_tag}
           docker push ${tyr_web_tag}
 
-      - name: Create images for Instance configurator
-        run: docker build -t navitia/instances-configurator -f  docker/debian11/instances-configurator.dockerfile .
-
-
       - name: Push Instances configurator dev image on PRD ECR
         if: github.ref == 'refs/heads/dev'
         run: |
+          # Instance configurator: debian 11
           component_tag=${PRD_ECR_REGISTRY}/dev-navitia-tyr-web-instances-configurator:dev${DEBIAN11_SUFFIX}
-          docker tag navitia/instances-configurator ${component_tag}
-          docker push ${component_tag}
+          docker build -t ${component_tag} -f  docker/debian11/instances-configurator.dockerfile .
+          ocker push ${component_tag}
+
+          # Instance configurator: debian 12
+          component_tag=${PRD_ECR_REGISTRY}/dev-navitia-tyr-web-instances-configurator:dev${DEBIAN12_SUFFIX}
+          docker build -t ${component_tag} -f  docker/debian12/instances-configurator.dockerfile .
+          ocker push ${component_tag}
 
       - name: failure notification
         if: failure()
