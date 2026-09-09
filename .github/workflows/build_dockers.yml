@@ -1,4 +1,4 @@
-name: Build Navitia Dockers Debian 11
+name: Build Navitia Dockers
 
 on:
   push:
@@ -49,9 +49,9 @@ jobs:
           echo '{"text":":warning: Github Actions: workflow dockers_builder common_variables failed !"}' | http --json POST ${{secrets.SLACK_NAVITIA_TEAM_URL}}
 
 
-  debian11_back_images:
+  debian_back_end_images:
     runs-on: [self-hosted, kraken, sandbox]
-    name: Build debian11 back images
+    name: Build backend images
     needs: common_variables
     env:
       backend_debian11_components: 'kraken tyr-beat tyr-worker eitri'
@@ -175,9 +175,9 @@ jobs:
           rm -rf ./.??*
 
   # "front" images need to be created on a "corefront" runner to be able to push on the sbx corefront registry
-  debian11_front_images:
+  debian_front_end_images:
     runs-on: [self-hosted, corefront, sandbox]
-    name: Build debian11 front images
+    name: Build frontend images
     needs: common_variables
     steps:
       - name: force chown to avoid errors
@@ -271,7 +271,7 @@ jobs:
 
   run_artemis:
     runs-on: [self-hosted, corefront, sandbox]
-    needs: [debian11_back_images,debian11_front_images]
+    needs: [debian_back_end_images,debian_front_end_images]
     name: Run artemis Dispatch (Dev)
     if: github.ref == 'refs/heads/dev'
     steps:
