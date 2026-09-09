@@ -277,20 +277,36 @@ jobs:
       - name: Create jormun image
         run: |
           echo "*********  Building Jormungandr ***************"
+          # jormungandr: debian 11
           docker build -t navitia/jormungandr_debian11 -f  docker/debian11/jormungandr.dockerfile --build-arg GIT_REVISION=${{ needs.common_variables.outputs.RELEASE_TAG }} --build-arg GITHUB_TOKEN=${{ steps.ci-core-app-token.outputs.token }} .
+
+          # jormungandr: debian 12
+          docker build -t navitia/jormungandr_debian12 -f  docker/debian12/jormungandr.dockerfile --build-arg GIT_REVISION=${{ needs.common_variables.outputs.RELEASE_TAG }} --build-arg GITHUB_TOKEN=${{ steps.ci-core-app-token.outputs.token }} .
 
       - name: Push jormun dev image on PRD ECR
         if: github.ref == 'refs/heads/dev'
         run: |
+          # jormungandr: debian 11
           jormun_tag=${PRD_ECR_REGISTRY}/dev-navitia-jormungandr-jormungandr:dev
           docker tag navitia/jormungandr_debian11 ${jormun_tag}
+          docker push ${jormun_tag}
+
+          # jormungandr: debian 12
+          jormun_tag=${PRD_ECR_REGISTRY}/dev-navitia-jormungandr-jormungandr:dev${DEBIAN12_SUFFIX}
+          docker tag navitia/jormungandr_debian12 ${jormun_tag}
           docker push ${jormun_tag}
 
       - name: Push jormun release image on PRD ECR
         if: startsWith(github.ref, 'refs/tags/')
         run: |
+          # jormungandr: debian 11
           jormun_tag=${PRD_ECR_REGISTRY}/navitia-jormungandr-jormungandr:${{ needs.common_variables.outputs.RELEASE_TAG }}
           docker tag navitia/jormungandr_debian11 ${jormun_tag}
+          docker push ${jormun_tag}
+
+          # jormungandr: debian 12
+          jormun_tag=${PRD_ECR_REGISTRY}/navitia-jormungandr-jormungandr:${{ needs.common_variables.outputs.RELEASE_TAG }}${DEBIAN12_SUFFIX}
+          docker tag navitia/jormungandr_debian12 ${jormun_tag}
           docker push ${jormun_tag}
 
       - name: clean up workspace
