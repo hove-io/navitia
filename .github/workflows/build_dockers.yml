@@ -95,7 +95,7 @@ jobs:
 
       - name: Create tyr-beat debian 12 image
         run: |
-              docker build -t navitia/tyr-beat${DEBIAN12_SUFFIX} -f  docker/debian12/Dockerfile-${component} .
+              docker build -t navitia/tyr-beat${DEBIAN12_SUFFIX} -f  docker/debian12/Dockerfile-tyr-beat .
 
       - name: Get and tag mimir dev image
         if: github.ref == 'refs/heads/dev'
@@ -130,26 +130,31 @@ jobs:
         if: github.ref == 'refs/heads/dev'
         run: |
           # Kraken
+          echo "Push Kraken image"
           kraken_tag=${PRD_ECR_REGISTRY}/dev-navitia-kraken-kraken:dev${DEBIAN11_SUFFIX}
           docker tag navitia/kraken ${kraken_tag}
           docker push ${kraken_tag}
 
           # Tyr-beat: debian 11
+          echo "Push Tyr-beat image: bebian 11"
           tyr_beat_tag=${PRD_ECR_REGISTRY}/dev-navitia-tyr-tyrbeat:dev${DEBIAN11_SUFFIX}
           docker tag navitia/tyr-beat ${tyr_beat_tag}
           docker push ${tyr_beat_tag}
 
           # Tyr-beat: debian 12
+          echo "Push Tyr-beat image: bebian 12"
           tyr_beat_tag=${PRD_ECR_REGISTRY}/dev-navitia-tyr-tyrbeat:dev${DEBIAN12_SUFFIX}
           docker tag navitia/tyr-beat${DEBIAN12_SUFFIX} ${tyr_beat_tag}
           docker push ${tyr_beat_tag}
 
           # Tyr-worker
+          echo "Push Tyr-worker image"
           tyr_worker_tag=${PRD_ECR_REGISTRY}/dev-navitia-tyr-tyrworker:dev${DEBIAN11_SUFFIX}
           docker tag navitia/tyr-worker ${tyr_worker_tag}
           docker push ${tyr_worker_tag}
 
           # eitri
+          echo "Push eitri image"
           eitri_tag=${PRD_ECR_REGISTRY}/dev-navitia-kraken-eitri:dev${DEBIAN11_SUFFIX}
           docker tag navitia/eitri ${eitri_tag}
           docker push ${eitri_tag}
@@ -158,21 +163,25 @@ jobs:
         if: startsWith(github.ref, 'refs/tags/')
         run: |
           # Kraken
+          echo "Push Kraken image"
           kraken_tag=${PRD_ECR_REGISTRY}/navitia-kraken-kraken:${{ needs.common_variables.outputs.RELEASE_TAG }}${DEBIAN11_SUFFIX}
           docker tag navitia/kraken ${kraken_tag}
           docker push ${kraken_tag}
 
           # Tyr-beat: debian 11
+          echo "Push Tyr-beat image: debian 11"
           tyr_beat_tag=${PRD_ECR_REGISTRY}/navitia-tyr-tyrbeat:${{ needs.common_variables.outputs.RELEASE_TAG }}${DEBIAN11_SUFFIX}
           docker tag navitia/tyr-beat ${tyr_beat_tag}
           docker push ${tyr_beat_tag}
 
           # Tyr-beat: debian 12
+          echo "Push Tyr-beat image: debian 12"
           tyr_beat_tag=${PRD_ECR_REGISTRY}/navitia-tyr-tyrbeat:${{ needs.common_variables.outputs.RELEASE_TAG }}${DEBIAN12_SUFFIX}
           docker tag navitia/tyr-beat${DEBIAN12_SUFFIX} ${tyr_beat_tag}
           docker push ${tyr_beat_tag}
 
           # Tyr-worker
+          echo "Push Tyr-worker image"
           tyr_worker_tag=${PRD_ECR_REGISTRY}/navitia-tyr-tyrworker:${{ needs.common_variables.outputs.RELEASE_TAG }}${DEBIAN11_SUFFIX}
           docker tag navitia/tyr-worker ${tyr_worker_tag}
           docker push ${tyr_worker_tag}
@@ -225,19 +234,23 @@ jobs:
       - name: Create images for Tyr-web
         run: |
           # debian 11
+          echo "Genarate Tyr-web image: debian 11"
           docker build -t navitia/tyr-web -f  docker/debian11/tyr-web.dockerfile .
           # debian 12
+          echo "Genarate Tyr-web image: debian 12"
           docker build -t navitia/tyr-web${DEBIAN12_SUFFIX} -f  docker/debian12/tyr-web.dockerfile .
 
       - name: Push Tyr-Web dev image on PRD ECR
         if: github.ref == 'refs/heads/dev'
         run: |
           # Tyr-web: debian 11
+          echo "Push Tyr-web image: debian 11"
           component_tag=${PRD_ECR_REGISTRY}/dev-navitia-tyr-web-tyr-web:dev${DEBIAN11_SUFFIX}
           docker tag navitia/tyr-web ${component_tag}
           docker push ${component_tag}
 
           # Tyr-web: debian 12
+          echo "Push Tyr-web image: debian 12"
           component_tag=${PRD_ECR_REGISTRY}/dev-navitia-tyr-web-tyr-web:dev${DEBIAN12_SUFFIX}
           docker tag navitia/tyr-web${DEBIAN12_SUFFIX} ${component_tag}
           docker push ${component_tag}
@@ -246,11 +259,13 @@ jobs:
         if: startsWith(github.ref, 'refs/tags/')
         run: |
           # Tyr-web: debian 11
+          echo "Push Tyr-web image: debian 11"
           tyr_web_tag=${PRD_ECR_REGISTRY}/navitia-tyr-web-tyr-web:${{ needs.common_variables.outputs.RELEASE_TAG }}${DEBIAN11_SUFFIX}
           docker tag navitia/tyr-web ${tyr_web_tag}
           docker push ${tyr_web_tag}
 
           # Tyr-web: debian 12
+          echo "Push Tyr-web image: debian 12"
           tyr_web_tag=${PRD_ECR_REGISTRY}/navitia-tyr-web-tyr-web:${{ needs.common_variables.outputs.RELEASE_TAG }}${DEBIAN12_SUFFIX}
           docker tag navitia/tyr-web${DEBIAN12_SUFFIX} ${tyr_web_tag}
           docker push ${tyr_web_tag}
@@ -259,14 +274,16 @@ jobs:
         if: github.ref == 'refs/heads/dev'
         run: |
           # Instance configurator: debian 11
+          echo "Create and Push Instance configurator image: debian 11"
           component_tag=${PRD_ECR_REGISTRY}/dev-navitia-tyr-web-instances-configurator:dev${DEBIAN11_SUFFIX}
           docker build -t ${component_tag} -f  docker/debian11/instances-configurator.dockerfile .
-          ocker push ${component_tag}
+          docker push ${component_tag}
 
           # Instance configurator: debian 12
+          echo "Create and Push Instance configurator image: debian 12"
           component_tag=${PRD_ECR_REGISTRY}/dev-navitia-tyr-web-instances-configurator:dev${DEBIAN12_SUFFIX}
           docker build -t ${component_tag} -f  docker/debian12/instances-configurator.dockerfile .
-          ocker push ${component_tag}
+          docker push ${component_tag}
 
       - name: failure notification
         if: failure()
@@ -278,20 +295,24 @@ jobs:
         run: |
           echo "*********  Building Jormungandr ***************"
           # jormungandr: debian 11
+          echo "Create jormungandr: debian 11"
           docker build -t navitia/jormungandr_debian11 -f  docker/debian11/jormungandr.dockerfile --build-arg GIT_REVISION=${{ needs.common_variables.outputs.RELEASE_TAG }} --build-arg GITHUB_TOKEN=${{ steps.ci-core-app-token.outputs.token }} .
 
           # jormungandr: debian 12
+          echo "Create jormungandr: debian 12"
           docker build -t navitia/jormungandr_debian12 -f  docker/debian12/jormungandr.dockerfile --build-arg GIT_REVISION=${{ needs.common_variables.outputs.RELEASE_TAG }} --build-arg GITHUB_TOKEN=${{ steps.ci-core-app-token.outputs.token }} .
 
       - name: Push jormun dev image on PRD ECR
         if: github.ref == 'refs/heads/dev'
         run: |
           # jormungandr: debian 11
+          echo "Push jormungandr: debian 11"
           jormun_tag=${PRD_ECR_REGISTRY}/dev-navitia-jormungandr-jormungandr:dev
           docker tag navitia/jormungandr_debian11 ${jormun_tag}
           docker push ${jormun_tag}
 
           # jormungandr: debian 12
+          echo "Push jormungandr: debian 12"
           jormun_tag=${PRD_ECR_REGISTRY}/dev-navitia-jormungandr-jormungandr:dev${DEBIAN12_SUFFIX}
           docker tag navitia/jormungandr_debian12 ${jormun_tag}
           docker push ${jormun_tag}
@@ -300,11 +321,13 @@ jobs:
         if: startsWith(github.ref, 'refs/tags/')
         run: |
           # jormungandr: debian 11
+          echo "Push jormungandr: debian 11"
           jormun_tag=${PRD_ECR_REGISTRY}/navitia-jormungandr-jormungandr:${{ needs.common_variables.outputs.RELEASE_TAG }}
           docker tag navitia/jormungandr_debian11 ${jormun_tag}
           docker push ${jormun_tag}
 
           # jormungandr: debian 12
+          echo "Push jormungandr: debian 12"
           jormun_tag=${PRD_ECR_REGISTRY}/navitia-jormungandr-jormungandr:${{ needs.common_variables.outputs.RELEASE_TAG }}${DEBIAN12_SUFFIX}
           docker tag navitia/jormungandr_debian12 ${jormun_tag}
           docker push ${jormun_tag}
