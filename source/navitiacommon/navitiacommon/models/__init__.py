@@ -82,7 +82,12 @@ class EndPoint(db.Model):  # type: ignore
         'Host', backref='end_point', lazy='joined', cascade='save-update, merge, delete, delete-orphan'
     )
     default = db.Column(db.Boolean, nullable=False, default=False)
-    users = db.relationship('User', lazy='dynamic', cascade='save-update, merge, delete, delete-orphan')
+    users = db.relationship(
+        'User',
+        lazy='dynamic',
+        cascade='save-update, merge, delete, delete-orphan',
+        overlaps="end_point",
+    )
 
     @property
     def hostnames(self):
@@ -117,7 +122,7 @@ class User(db.Model, TimestampMixin):  # type: ignore
     blocked_at = db.Column(db.Date, nullable=True)
 
     end_point_id = db.Column(db.Integer, db.ForeignKey('end_point.id'), nullable=False)
-    end_point = db.relationship('EndPoint', lazy='joined', cascade='save-update, merge')
+    end_point = db.relationship('EndPoint', lazy='joined', cascade='save-update, merge', overlaps='users')
 
     billing_plan_id = db.Column(db.Integer, db.ForeignKey('billing_plan.id'), nullable=False)
     billing_plan = db.relationship('BillingPlan', lazy='joined', cascade='save-update, merge')
