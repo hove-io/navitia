@@ -55,7 +55,7 @@ jobs:
     name: Build backend images
     needs: common_variables
     env:
-      backend_debian11_components: 'kraken tyr-beat tyr-worker eitri'
+      backend_debian11_components: 'kraken tyr-worker eitri'
     steps:
       - name: force chown to avoid errors
         run: sudo chown -R $USER:$USER .
@@ -135,12 +135,6 @@ jobs:
           docker tag navitia/kraken ${kraken_tag}
           docker push ${kraken_tag}
 
-          # Tyr-beat: debian 11
-          echo "Push Tyr-beat image: bebian 11"
-          tyr_beat_tag=${PRD_ECR_REGISTRY}/dev-navitia-tyr-tyrbeat:dev${DEBIAN11_SUFFIX}
-          docker tag navitia/tyr-beat ${tyr_beat_tag}
-          docker push ${tyr_beat_tag}
-
           # Tyr-beat: debian 12
           echo "Push Tyr-beat image: bebian 12"
           tyr_beat_tag=${PRD_ECR_REGISTRY}/dev-navitia-tyr-tyrbeat:dev${DEBIAN12_SUFFIX}
@@ -167,12 +161,6 @@ jobs:
           kraken_tag=${PRD_ECR_REGISTRY}/navitia-kraken-kraken:${{ needs.common_variables.outputs.RELEASE_TAG }}${DEBIAN11_SUFFIX}
           docker tag navitia/kraken ${kraken_tag}
           docker push ${kraken_tag}
-
-          # Tyr-beat: debian 11
-          echo "Push Tyr-beat image: debian 11"
-          tyr_beat_tag=${PRD_ECR_REGISTRY}/navitia-tyr-tyrbeat:${{ needs.common_variables.outputs.RELEASE_TAG }}${DEBIAN11_SUFFIX}
-          docker tag navitia/tyr-beat ${tyr_beat_tag}
-          docker push ${tyr_beat_tag}
 
           # Tyr-beat: debian 12
           echo "Push Tyr-beat image: debian 12"
@@ -233,9 +221,6 @@ jobs:
 
       - name: Create images for Tyr-web
         run: |
-          # debian 11
-          echo "Genarate Tyr-web image: debian 11"
-          docker build -t navitia/tyr-web -f  docker/debian11/tyr-web.dockerfile .
           # debian 12
           echo "Genarate Tyr-web image: debian 12"
           docker build -t navitia/tyr-web${DEBIAN12_SUFFIX} -f  docker/debian12/tyr-web.dockerfile .
@@ -243,11 +228,6 @@ jobs:
       - name: Push Tyr-Web dev image on PRD ECR
         if: github.ref == 'refs/heads/dev'
         run: |
-          # Tyr-web: debian 11
-          echo "Push Tyr-web image: debian 11"
-          component_tag=${PRD_ECR_REGISTRY}/dev-navitia-tyr-web-tyr-web:dev${DEBIAN11_SUFFIX}
-          docker tag navitia/tyr-web ${component_tag}
-          docker push ${component_tag}
 
           # Tyr-web: debian 12
           echo "Push Tyr-web image: debian 12"
@@ -258,11 +238,6 @@ jobs:
       - name: Push Tyr-web release image on PRD ECR
         if: startsWith(github.ref, 'refs/tags/')
         run: |
-          # Tyr-web: debian 11
-          echo "Push Tyr-web image: debian 11"
-          tyr_web_tag=${PRD_ECR_REGISTRY}/navitia-tyr-web-tyr-web:${{ needs.common_variables.outputs.RELEASE_TAG }}${DEBIAN11_SUFFIX}
-          docker tag navitia/tyr-web ${tyr_web_tag}
-          docker push ${tyr_web_tag}
 
           # Tyr-web: debian 12
           echo "Push Tyr-web image: debian 12"
@@ -273,12 +248,6 @@ jobs:
       - name: Push Instances configurator dev image on PRD ECR
         if: github.ref == 'refs/heads/dev'
         run: |
-          # Instance configurator: debian 11
-          echo "Create and Push Instance configurator image: debian 11"
-          component_tag=${PRD_ECR_REGISTRY}/dev-navitia-tyr-web-instances-configurator:dev${DEBIAN11_SUFFIX}
-          docker build -t ${component_tag} -f  docker/debian11/instances-configurator.dockerfile .
-          docker push ${component_tag}
-
           # Instance configurator: debian 12
           echo "Create and Push Instance configurator image: debian 12"
           component_tag=${PRD_ECR_REGISTRY}/dev-navitia-tyr-web-instances-configurator:dev${DEBIAN12_SUFFIX}
@@ -294,10 +263,6 @@ jobs:
       - name: Create jormun image
         run: |
           echo "*********  Building Jormungandr ***************"
-          # jormungandr: debian 11
-          echo "Create jormungandr: debian 11"
-          docker build -t navitia/jormungandr_debian11 -f  docker/debian11/jormungandr.dockerfile --build-arg GIT_REVISION=${{ needs.common_variables.outputs.RELEASE_TAG }} --build-arg GITHUB_TOKEN=${{ steps.ci-core-app-token.outputs.token }} .
-
           # jormungandr: debian 12
           echo "Create jormungandr: debian 12"
           docker build -t navitia/jormungandr_debian12 -f  docker/debian12/jormungandr.dockerfile --build-arg GIT_REVISION=${{ needs.common_variables.outputs.RELEASE_TAG }} --build-arg GITHUB_TOKEN=${{ steps.ci-core-app-token.outputs.token }} .
@@ -305,12 +270,6 @@ jobs:
       - name: Push jormun dev image on PRD ECR
         if: github.ref == 'refs/heads/dev'
         run: |
-          # jormungandr: debian 11
-          echo "Push jormungandr: debian 11"
-          jormun_tag=${PRD_ECR_REGISTRY}/dev-navitia-jormungandr-jormungandr:dev
-          docker tag navitia/jormungandr_debian11 ${jormun_tag}
-          docker push ${jormun_tag}
-
           # jormungandr: debian 12
           echo "Push jormungandr: debian 12"
           jormun_tag=${PRD_ECR_REGISTRY}/dev-navitia-jormungandr-jormungandr:dev${DEBIAN12_SUFFIX}
@@ -320,12 +279,6 @@ jobs:
       - name: Push jormun release image on PRD ECR
         if: startsWith(github.ref, 'refs/tags/')
         run: |
-          # jormungandr: debian 11
-          echo "Push jormungandr: debian 11"
-          jormun_tag=${PRD_ECR_REGISTRY}/navitia-jormungandr-jormungandr:${{ needs.common_variables.outputs.RELEASE_TAG }}
-          docker tag navitia/jormungandr_debian11 ${jormun_tag}
-          docker push ${jormun_tag}
-
           # jormungandr: debian 12
           echo "Push jormungandr: debian 12"
           jormun_tag=${PRD_ECR_REGISTRY}/navitia-jormungandr-jormungandr:${{ needs.common_variables.outputs.RELEASE_TAG }}${DEBIAN12_SUFFIX}
@@ -354,19 +307,12 @@ jobs:
           app_id: ${{ secrets.CI_CORE_APP_ID }}
           private_key: ${{ secrets.CI_CORE_APP_PEM }}
 
-      - name: Run Artemis Bullseye
+      - name: Run Artemis
         uses: peter-evans/repository-dispatch@v2
         with:
           token: ${{ steps.ci-core-app-token.outputs.token }}
           repository: hove-io/artemis
-          event-type: run_artemis_bullseye_ng
-
-      - name: Run Artemis Bookworm
-        uses: peter-evans/repository-dispatch@v2
-        with:
-          token: ${{ steps.ci-core-app-token.outputs.token }}
-          repository: hove-io/artemis
-          event-type: run_artemis_bookworm_ng
+          event-type: run_artemis_ng
 
       - name: failure notification
         if: failure()
