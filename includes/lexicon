@@ -1,0 +1,55 @@
+<h1 id='lexicon'>Lexicon</h1>
+<h2 id="lexicon-introduction">Introduction</h2>
+
+<p>The world of public transportation is really specific, you will see here a small
+introduction to it. A lot of people in the world of public transportation use
+different words to speak about the same thing. Here are the definitions of terms
+employed in www.navitia.io</p>
+
+<p>You can read a mobility lexicon at
+<a href="https://github.com/OpenTransport/vocabulary/blob/master/vocabulary.md">https://github.com/OpenTransport/vocabulary/blob/master/vocabulary.md</a></p>
+
+<p>You will often read &quot;PT&quot; in this document. PT stands for public transport.</p>
+
+<h2 id="lexicon-stop-point">Stop Point</h2>
+
+<p>A stop point is the physical object were someone waits for his bus
+(subway, or whatever type of vehicle you can have in a public transport system).</p>
+
+<h2 id="lexicon-stop-area">Stop Area</h2>
+
+<p>A stop area is a collection of stop points. Generally there are at least two stop
+points per stop area, one per direction of a line. Now think of a hub, you will
+have more than one line. Therefore your stop area will contain more than two stop
+points. In particular cases your stop area can contain only one stop point.</p>
+
+<p>Some datasets do not contain any stop area.</p>
+
+<h2 id="lexicon-connection">Connection</h2>
+
+<p>This object links two stop points together (named origin and destination).
+It is the walkable part in a transfer between 2 public transport vehicles.</p>
+
+<h2 id="lexicon-journey-pattern">Journey Pattern</h2>
+
+<p>A journey pattern is an ordered list of stop points. Two vehicles that serve exactly the
+same stop points in exactly the same order belong to to the same journey pattern.</p>
+
+<h2 id="lexicon-route">Route</h2>
+
+<p>A route is a collection of journey pattern that match the same commercial direction.</p>
+
+<aside class="warning">
+    The GTFS specification uses the term <b>route</b> for the object we call <b>line</b>. It does not
+    have this notion of commercial direction.
+</aside>
+
+<h2 id="lexicon-line">Line</h2>
+
+<p>A line is a collection of routes. Most of the time you&#39;ll just have just two routes.
+This object is called <em>route</em> in the GTFS format.</p>
+
+<h2 id="lexicon-stop-time">Stop Time</h2>
+
+<p>A stop time represents the time when a bus is planned to arrive and to leave a
+stop point.</p>
