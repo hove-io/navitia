@@ -1180,7 +1180,12 @@ class TestKrakenDistributedWithDatabase(AbstractTestFixture):
         kraken.args = {'timeout': 10}
         kraken.created_at = datetime.datetime.utcnow()
 
-        return [kraken]
+        asgard = StreetNetworkBackend(id='asgard')
+        asgard.klass = "jormungandr.street_network.tests.MockKraken"
+        asgard.args = {'timeout': 10}
+        asgard.created_at = datetime.datetime.utcnow()
+
+        return [kraken, asgard]
 
     def test_call_with_two_krakens(self):
         """
