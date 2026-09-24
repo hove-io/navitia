@@ -341,6 +341,8 @@ class Scenario(object):
         req.ptref.realtime_level = get_pb_data_freshness(request)
         req.disable_disruption = request["disable_disruption"]
         req.language = request.get("language", '')
+        for reference in request.get("reference[]", []):
+            req.ptref.disruption_reference.append(reference)
 
         # We call Loki's disruptions only if _pt_planner=loki
         resp = instance.get_backend(resource_name, request).send_and_receive(req)

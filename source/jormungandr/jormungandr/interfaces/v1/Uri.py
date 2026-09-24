@@ -505,6 +505,14 @@ def disruptions(is_collection):
             self.parsers["get"].add_argument(
                 "original_id", type=six.text_type, help="original uri of the object you want to query"
             )
+            self.parsers["get"].add_argument(
+                "reference[]",
+                type=six.text_type,
+                action="append",
+                default=[],
+                help="If filled, will restrain the search to the disruptions with the given reference values "
+                "(situation_number). Handled by loki only.",
+            )
 
     return Disruptions
 

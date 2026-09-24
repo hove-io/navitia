@@ -315,6 +315,7 @@ class DisruptionSerializer(PbNestedSerializer):
     disruption_uri = jsonschema.Field(schema_type=str)
     contributor = jsonschema.Field(schema_type=str, display_none=True)
     properties = DisruptionPropertySerializer(many=True, display_none=False)
+    reference = jsonschema.Field(schema_type=str, display_none=False)
 
 
 class PoiTypeSerializer(PbGenericSerializer):
