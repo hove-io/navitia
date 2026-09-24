@@ -510,7 +510,7 @@ def disruptions(is_collection):
                 type=six.text_type,
                 action="append",
                 default=[],
-                help="If filled, will restrain the search to the disruptions with the given reference "
+                help="If filled, will restrain the search to the disruptions with the given reference values "
                 "(situation_number). Handled by loki only.",
             )
 
