@@ -47,6 +47,10 @@ zmq_version = [int(n) for n in zmq.zmq_version().split(".")[:2]]
 # ZMQ_HANDSHAKE_IVL is available from 4.2.x
 SET_ZMQ_HANDSHAKE_IVL = zmq_version[0] > 4 or (zmq_version[0] == 4 and zmq_version[1] >= 2)
 
+# Default retry configuration
+DEFAULT_MAX_RETRIES = 3
+DEFAULT_RETRY_DELAY = 0.1  # 100ms between retries
+
 
 class TransientSocket(object):
     """
@@ -69,18 +73,21 @@ class TransientSocket(object):
     # one.
     _logger = logging.getLogger(__name__)
 
-    def __init__(self, name, zmq_context, zmq_socket, socket_ttl, *args, **kwargs):
+    def __init__(self, name, zmq_context, zmq_socket, socket_ttl, max_retries=DEFAULT_MAX_RETRIES, retry_delay=DEFAULT_RETRY_DELAY, *args, **kwargs):
         super(TransientSocket, self).__init__(*args, **kwargs)
         self.name = name
         self._zmq_context = zmq_context
         self._zmq_socket = zmq_socket
         self._ttl = socket_ttl
+        self._max_retries = max_retries
+        self._retry_delay = retry_delay
         self._semaphore = BoundedSemaphore(1)
         self._sockets = SortedList([], key=lambda s: -s.t)
 
     def make_new_socket(self):
         start = time.time()
         socket = self._zmq_context.socket(zmq.REQ)
+        
         # During the migration to debian 11, the socket was closed by server because of HANDSHAKE_FAILED_NO_DETAIL
         # exception.
         # This is very likely due to the fact that jormungandr(client) and kraken(server) are not using the same version
@@ -101,6 +108,11 @@ class TransientSocket(object):
         # setsockopt(zmq.HANDSHAKE_IVL, 0)
         if SET_ZMQ_HANDSHAKE_IVL:
             socket.setsockopt(zmq.HANDSHAKE_IVL, 0)
+
+        # Configure ZMQ_IMMEDIATE to 1
+        # This option restricts the outgoing routing queue to only one endpoint
+        # and will fail immediately if that endpoint is not connected
+        socket.setsockopt(zmq.IMMEDIATE, 1)
 
         socket.connect(self._zmq_socket)
         self._logger.debug(
@@ -140,38 +152,86 @@ class TransientSocket(object):
         return self.make_new_socket()
 
     def call(self, content, timeout, debug_cb=lambda: "", quiet=False):
-        timed_socket = self.get_socket()
+        last_exception = None
+        
+        for attempt in range(self._max_retries):
+            timed_socket = self.get_socket()
+            
+            try:
+                timed_socket.socket.send(content)
+                if timed_socket.socket.poll(timeout=timeout * 1000) > 0:
+                    pb = timed_socket.socket.recv()
+                    # Success - return the socket to the pool if still valid
+                    if not timed_socket.socket.closed:
+                        now = time.time()
+                        if now - timed_socket.t >= self._ttl:
+                            self.close_socket(timed_socket.socket)
+                        else:
+                            with self._semaphore:
+                                self._sockets.add(timed_socket)
+                    return pb
+                else:
+                    if not quiet:
+                        self._logger.warning(
+                            'request on %s failed (attempt %d/%d): %s',
+                            self._zmq_socket,
+                            attempt + 1,
+                            self._max_retries,
+                            debug_cb()
+                        )
+                    last_exception = DeadSocketException(self.name, self._zmq_socket)
+                    self.close_socket(timed_socket.socket)
 
-        try:
-            timed_socket.socket.send(content)
-            if timed_socket.socket.poll(timeout=timeout * 1000) > 0:
-                pb = timed_socket.socket.recv()
-                return pb
-            else:
+            except DeadSocketException as e:
+                self.close_socket(timed_socket.socket)
+                last_exception = e
                 if not quiet:
-                    self._logger.error('request on %s failed: %s', self._zmq_socket, debug_cb())
-                raise DeadSocketException(self.name, self._zmq_socket)
-
-        except DeadSocketException as e:
-            self.close_socket(timed_socket.socket)
-            raise e
-        except:
-            self.close_socket(timed_socket.socket)
+                    self._logger.warning(
+                        'DeadSocketException on %s (attempt %d/%d): %s',
+                        self._zmq_socket,
+                        attempt + 1,
+                        self._max_retries,
+                        debug_cb()
+                    )
+            except Exception as e:
+                self.close_socket(timed_socket.socket)
+                last_exception = e
+                self._logger.warning(
+                    'Exception on %s (attempt %d/%d), coverage: %s, debug_info: %s, error: %s',
+                    self._zmq_socket,
+                    attempt + 1,
+                    self._max_retries,
+                    self.name,
+                    debug_cb(),
+                    str(e)
+                )
+            
+            # Wait before retry (except on last attempt)
+            if attempt < self._max_retries - 1:
+                time.sleep(self._retry_delay)
+        
+        # All retries exhausted
+        if not quiet:
+            self._logger.error(
+                'All %d retry attempts failed for %s: %s',
+                self._max_retries,
+                self._zmq_socket,
+                debug_cb()
+            )
+        
+        if isinstance(last_exception, DeadSocketException):
+            raise last_exception
+        elif last_exception:
             self._logger.exception(
                 'Unexpected transient socket exception with coverage: %s, zmq_socket: %s, debug_info: %s',
                 self.name,
                 self._zmq_socket,
                 debug_cb(),
             )
-
-        finally:
-            if not timed_socket.socket.closed:
-                now = time.time()
-                if now - timed_socket.t >= self._ttl:
-                    self.close_socket(timed_socket.socket)
-                else:
-                    with self._semaphore:
-                        self._sockets.add(timed_socket)
+            raise last_exception
+        else:
+            # This shouldn't happen, but just in case
+            raise DeadSocketException(self.name, self._zmq_socket)
 
     def close_socket(self, socket):
         try:
