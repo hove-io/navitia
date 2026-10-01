@@ -28,7 +28,7 @@
 # www.navitia.io
 
 from __future__ import absolute_import, print_function, unicode_literals, division
-from jormungandr import i_manager
+from jormungandr import i_manager, timezone
 from jormungandr.interfaces.v1.ResourceUri import ResourceUri
 from navitiacommon.type_pb2 import _NAVITIATYPE
 import datetime
@@ -88,8 +88,10 @@ class Coord(ResourceUri):
             response = self._response_from_place_uri(r, args)
             if response:
                 response.update({"regions": [r]})
+                timezone.set_request_timezone(r)
                 return response, 200
-
+        if len(regions) > 0:
+            timezone.set_request_timezone(regions[0])
         return {"regions": regions, "message": "No address for these coords"}, 404
 
     def options(self, **kwargs):
