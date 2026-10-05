@@ -1,0 +1,16 @@
+<h1 id="timetables">Timetables</h1>
+
+<p>The Timetables features gives you access to line schedules on public transport,
+allowing you to find the times public transport is expected at specific stops.</p>
+
+<p>It returns a variety of differents informations, including: stop points in right order, times,
+accessibility informations, vehicle informations, etc.</p>
+
+<p>In order to display line schedules, you may have to use these APIs (click on them for details):</p>
+
+<ul>
+<li>  <strong><a href="#pt-ref">Public transportation objects</a></strong>: List of the public transport
+objects of a region</li>
+<li>  <strong><a href="#route-schedules">Route Schedules</a></strong> and <strong><a href="#stop-schedules">Stop Schedules</a></strong>:
+Compute time tables for a given resource</li>
+</ul>
