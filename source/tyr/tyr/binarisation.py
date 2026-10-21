@@ -562,7 +562,7 @@ def load_bounding_shape(instance_name, instance_conf, shape_path):
     if not shape.is_valid:
         raise ValueError("shape isn't valid")
 
-    connection_string = "postgres://{u}:{pw}@{h}:{port}/{db}".format(
+    connection_string = "postgresql://{u}:{pw}@{h}:{port}/{db}".format(
         u=instance_conf.pg_username,
         pw=instance_conf.pg_password,
         h=instance_conf.pg_host,
@@ -571,22 +571,27 @@ def load_bounding_shape(instance_name, instance_conf, shape_path):
     )
     engine = sqlalchemy.create_engine(connection_string)
     try:
-        # create the line if it does not exists
-        engine.execute(
-            """
-        INSERT INTO navitia.parameters (shape)
-        SELECT NULL WHERE NOT EXISTS (SELECT * FROM navitia.parameters)
-        """
-        ).close()
-        # update the line, simplified to approx 100m
-        engine.execute(
-            """
-        UPDATE navitia.parameters
-        SET shape_computed = FALSE, shape = ST_Multi(ST_SimplifyPreserveTopology(ST_GeomFromText('{shape}'), 0.001))
-        """.format(
-                shape=wkt.dumps(shape)
+        with engine.begin() as conn:
+            # create the line if it does not exists
+            conn.execute(
+                sqlalchemy.text(
+                    """
+                    INSERT INTO navitia.parameters (shape)
+                    SELECT NULL WHERE NOT EXISTS (SELECT * FROM navitia.parameters)
+                    """
+                )
             )
-        ).close()
+            # update the line, simplified to approx 100m
+            conn.execute(
+                sqlalchemy.text(
+                    """
+                    UPDATE navitia.parameters
+                    SET shape_computed = FALSE,
+                        shape = ST_Multi(ST_SimplifyPreserveTopology(ST_GeomFromText(:shape), 0.001))
+                    """
+                ),
+                {"shape": wkt.dumps(shape)},
+            )
     finally:
         engine.dispose()
 
