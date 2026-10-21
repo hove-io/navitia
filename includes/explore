@@ -1,0 +1,20 @@
+<h1 id='explore-transport'>Explore transport</h1>
+<blockquote>
+<p><a href="https://playground.navitia.io/play.html?request=https%3A%2F%2Fapi.navitia.io%2Fv1%2Fcoverage%2Fsandbox%2Flines&amp;token=3b036afe-0110-4202-b9ed-99718476c2e0">Try it on Navitia playground</a></p>
+</blockquote>
+
+<p>The Explore Transport feature lets you explore places, coordinates, bus stops, subway stations, etc.
+to navigate all the data available on the API (collection service).</p>
+
+<p><a href="https://playground.navitia.io/play.html?request=https%3A%2F%2Fapi.navitia.io%2Fv1%2Fcoverage%2Fsandbox%2Flines&amp;token=3b036afe-0110-4202-b9ed-99718476c2e0"><img src="/images/playground_pt_ref-1c557a7b.png" alt="some data request on Navitia playground" /></a></p>
+
+<p>If you want to play with Navitia at a hardcore gamer level, you may want to build some advanced requests: here is <a href="https://github.com/hove-io/navitia/blob/dev/documentation/rfc/ptref_grammar.md">how to</a></p>
+
+<p>You can use these APIs (click on them for details):</p>
+
+<ul>
+<li>  <strong><a href="#coverage">Coverage</a></strong>: List of the region covered by navitia</li>
+<li>  <strong><a href="#pt-ref">Public transportation objects</a></strong>: List of the public transport
+objects of a region</li>
+<li>  <strong><a href="#places">Places</a></strong> and <strong><a href="#pt-objects">PT_objects</a></strong>: Search for data using autocomplete input.</li>
+</ul>
