@@ -72,14 +72,15 @@ class StreetNetworkBackendManager(object):
             instance_configuration = []
 
         kraken = {'class': 'jormungandr.street_network.Kraken', 'args': {'timeout': 10}, 'modes': []}
+        asgard = {'class': 'jormungandr.street_network.Asgard', 'args': {'timeout': 10}, 'modes': []}
         taxi = {
             'class': 'jormungandr.street_network.Taxi',
-            'args': {'street_network': copy.deepcopy(kraken)},
+            'args': {'street_network': copy.deepcopy(asgard)},
             'modes': ['taxi'],
         }
         ridesharing = {
             'class': 'jormungandr.street_network.Ridesharing',
-            'args': {'street_network': copy.deepcopy(kraken)},
+            'args': {'street_network': copy.deepcopy(asgard)},
             'modes': ['ridesharing'],
         }
 
@@ -94,8 +95,10 @@ class StreetNetworkBackendManager(object):
         if 'ridesharing' in modes_not_set:
             instance_configuration.append(ridesharing)
 
-        kraken['modes'] = [m for m in modes_not_set - {'taxi', 'ridesharing'}]
+        asgard['modes'] = [m for m in modes_not_set - {'taxi', 'ridesharing'}]
+
         instance_configuration.append(copy.deepcopy(kraken))
+        instance_configuration.append(copy.deepcopy(asgard))
 
         return instance_configuration
 
