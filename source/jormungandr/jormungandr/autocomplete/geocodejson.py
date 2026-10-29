@@ -70,8 +70,8 @@ def create_admin_field(geocoding):
 
 
 def format_zip_code(zip_codes):
-    if all(zip_code == "" for zip_code in zip_codes):
-        return None
+    if not zip_codes or all(zip_code == "" for zip_code in zip_codes):
+        return ""
     elif len(zip_codes) == 1:
         return zip_codes[0]
     else:
