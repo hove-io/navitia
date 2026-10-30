@@ -5,11 +5,11 @@ Flask-SQLAlchemy==3.0.5
 Flask-Cors==6.0.0
 geojson==2.5.0
 Jinja2==3.1.6
-Mako==1.3.12
+Mako==1.4.2
 MarkupSafe==3.0.3
 SQLAlchemy==1.4.54
 Shapely==1.8.5
-Werkzeug==3.1.8
+Werkzeug==3.1.9
 alembic==1.13.3
 aniso8601==0.82
 argparse==1.2.1
@@ -30,5 +30,5 @@ amqp==5.0.6
 redis==2.10.6
 celery==5.2.2
 minio==6.0.2
-urllib3==2.7.0
+urllib3==2.8.0
 requests==2.33.0
