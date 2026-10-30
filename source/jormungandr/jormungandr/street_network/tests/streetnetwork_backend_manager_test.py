@@ -269,13 +269,13 @@ def wrong_streetnetwork_backend_test():
 def append_default_street_network_to_config_test():
     manager = StreetNetworkBackendManager(sn_backends_getter=None, update_interval=-1)
 
-    # Kraken is used for all the modes.
+    # Asgard is used for all the modes.
     config_full_default = [
         {
             'args': {
                 'street_network': {
                     'args': {'timeout': 10},
-                    'class': 'jormungandr.street_network.Kraken',
+                    'class': 'jormungandr.street_network.Asgard',
                     'modes': [],
                 }
             },
@@ -286,7 +286,7 @@ def append_default_street_network_to_config_test():
             'args': {
                 'street_network': {
                     'args': {'timeout': 10},
-                    'class': 'jormungandr.street_network.Kraken',
+                    'class': 'jormungandr.street_network.Asgard',
                     'modes': [],
                 }
             },
@@ -295,49 +295,13 @@ def append_default_street_network_to_config_test():
         },
         {
             'args': {'timeout': 10},
-            'class': 'jormungandr.street_network.Kraken',
+            'class': 'jormungandr.street_network.Asgard',
             'modes': ['car', 'walking', 'bike', 'bss'],
         },
     ]
 
     response = manager._append_default_street_network_to_config(None)
     compare_list_of_dicts("class", response, config_full_default)
-
-    # Asgard is used for car, Kraken for all the other modes.
-    config_car_asgard = [{'class': 'jormungandr.street_network.Asgard', 'modes': ['car']}]
-    response = manager._append_default_street_network_to_config(config_car_asgard)
-
-    config_asgard_plus_default = [
-        {'class': 'jormungandr.street_network.Asgard', 'modes': ['car']},
-        {
-            'args': {
-                'street_network': {
-                    'args': {'timeout': 10},
-                    'class': 'jormungandr.street_network.Kraken',
-                    'modes': [],
-                }
-            },
-            'class': 'jormungandr.street_network.Taxi',
-            'modes': ['taxi'],
-        },
-        {
-            'args': {
-                'street_network': {
-                    'args': {'timeout': 10},
-                    'class': 'jormungandr.street_network.Kraken',
-                    'modes': [],
-                }
-            },
-            'class': 'jormungandr.street_network.Ridesharing',
-            'modes': ['ridesharing'],
-        },
-        {
-            'args': {'timeout': 10},
-            'class': 'jormungandr.street_network.Kraken',
-            'modes': ['walking', 'bike', 'bss'],
-        },
-    ]
-    compare_list_of_dicts("class", response, config_asgard_plus_default)
 
     # Surf is used for surf, Kraken for all the other modes.
     # Surf stay in the config but is not used.
@@ -350,7 +314,7 @@ def append_default_street_network_to_config_test():
             'args': {
                 'street_network': {
                     'args': {'timeout': 10},
-                    'class': 'jormungandr.street_network.Kraken',
+                    'class': 'jormungandr.street_network.Asgard',
                     'modes': [],
                 }
             },
@@ -361,7 +325,7 @@ def append_default_street_network_to_config_test():
             'args': {
                 'street_network': {
                     'args': {'timeout': 10},
-                    'class': 'jormungandr.street_network.Kraken',
+                    'class': 'jormungandr.street_network.Asgard',
                     'modes': [],
                 }
             },
@@ -370,7 +334,7 @@ def append_default_street_network_to_config_test():
         },
         {
             'args': {'timeout': 10},
-            'class': 'jormungandr.street_network.Kraken',
+            'class': 'jormungandr.street_network.Asgard',
             'modes': ['car', 'walking', 'bike', 'bss'],
         },
     ]
