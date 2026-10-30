@@ -1,0 +1,22 @@
+<h1 id="places-nearby">Places nearby</h1>
+
+<blockquote>
+<p><a href="https://playground.navitia.io/play.html?request=https%3A%2F%2Fapi.navitia.io%2Fv1%2Fcoverage%2Fsandbox%2Fstop_areas%2Fstop_area%3ARAT%3ASA%3ACAMPO%2Fplaces_nearby&amp;token=3b036afe-0110-4202-b9ed-99718476c2e0">Try it on Navitia playground (click on &quot;MAP&quot; buttons to see places)</a></p>
+</blockquote>
+
+<p>The Places Nearby feature displays the different transport options around a location - a GPS coordinate,
+or an address, for example.</p>
+
+<p><a href="https://playground.navitia.io/play.html?request=https%3A%2F%2Fapi.navitia.io%2Fv1%2Fcoverage%2Fsandbox%2Fcoord%2F2.32794%253B48.817184%2Fplaces_nearby%3F&amp;token=3b036afe-0110-4202-b9ed-99718476c2e0"><img src="/images/playground_places_nearby-05c55519.png" alt="a map around on Navitia playground" /></a></p>
+
+<p>Using OpenStreetMap data, this function also provides information about bicycle parking, public park schedules, and parking fees.</p>
+
+<p>You can use these APIs (click on them for details):</p>
+
+<ul>
+<li>  <strong><a href="#coverage">Coverage</a></strong>: List of the region covered by navitia</li>
+<li>  <strong><a href="#pt-ref">Public transportation objects</a></strong>: Seek and search within the public transport objects of a region</li>
+<li>  <strong><a href="#places-nearby-api">Places nearby</a></strong>: List of objects near an object or using longitude and latitude</li>
+<li>  <strong><a href="#stop-schedules">Stop Schedules</a></strong>, <strong><a href="#departures">Departures</a></strong> and <strong><a href="#arrivals">Arrivals</a></strong>:
+Compute time tables for a given resource</li>
+</ul>
