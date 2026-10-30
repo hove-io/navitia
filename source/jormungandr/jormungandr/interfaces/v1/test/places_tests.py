@@ -34,13 +34,13 @@ from jormungandr.interfaces.common import handle_poi_infos
 
 def test_format_zip_code():
     zip_codes = []
-    assert format_zip_code(zip_codes) == None
+    assert format_zip_code(zip_codes) == ""
 
     zip_codes = [""]
-    assert format_zip_code(zip_codes) == None
+    assert format_zip_code(zip_codes) == ""
 
     zip_codes = ["", ""]
-    assert format_zip_code(zip_codes) == None
+    assert format_zip_code(zip_codes) == ""
 
     zip_codes = ["75000"]
     assert format_zip_code(zip_codes) == "75000"
