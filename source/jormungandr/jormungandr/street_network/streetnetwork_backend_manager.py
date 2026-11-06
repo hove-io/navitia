@@ -71,7 +71,6 @@ class StreetNetworkBackendManager(object):
         if not isinstance(instance_configuration, list):
             instance_configuration = []
 
-        kraken = {'class': 'jormungandr.street_network.Kraken', 'args': {'timeout': 10}, 'modes': []}
         asgard = {'class': 'jormungandr.street_network.Asgard', 'args': {'timeout': 10}, 'modes': []}
         taxi = {
             'class': 'jormungandr.street_network.Taxi',
@@ -97,7 +96,6 @@ class StreetNetworkBackendManager(object):
 
         asgard['modes'] = [m for m in modes_not_set - {'taxi', 'ridesharing'}]
 
-        instance_configuration.append(copy.deepcopy(kraken))
         instance_configuration.append(copy.deepcopy(asgard))
 
         return instance_configuration
