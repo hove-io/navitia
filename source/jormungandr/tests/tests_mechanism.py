@@ -162,9 +162,7 @@ class AbstractTestFixture(unittest.TestCase):
                         "args": {
                             "street_network": {
                                 "class": "jormungandr.street_network.Kraken",
-                                "args": {
-                                    "timeout": 10
-                                }
+                                "args": {"timeout": 10},
                             }
                         },
                         "modes": ["taxi"],
@@ -174,9 +172,7 @@ class AbstractTestFixture(unittest.TestCase):
                         "args": {
                             "street_network": {
                                 "class": "jormungandr.street_network.Kraken",
-                                "args": {
-                                    "timeout": 10
-                                }
+                                "args": {"timeout": 10},
                             }
                         },
                         "modes": ["ridesharing"],
