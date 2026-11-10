@@ -160,13 +160,25 @@ class AbstractTestFixture(unittest.TestCase):
                     {
                         "class": "jormungandr.street_network.Taxi",
                         "args": {
-                            "street_network": {"class": "jormungandr.street_network.Kraken", "args": {"timeout": 10}}},
+                            "street_network": {
+                                "class": "jormungandr.street_network.Kraken",
+                                "args": {
+                                    "timeout": 10
+                                }
+                            }
+                        },
                         "modes": ["taxi"],
                     },
                     {
                         "class": "jormungandr.street_network.Ridesharing",
                         "args": {
-                            "street_network": {"class": "jormungandr.street_network.Kraken", "args": {"timeout": 10}}},
+                            "street_network": {
+                                "class": "jormungandr.street_network.Kraken",
+                                "args": {
+                                    "timeout": 10
+                                }
+                            }
+                        },
                         "modes": ["ridesharing"],
                     },
                 ],
