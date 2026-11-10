@@ -151,6 +151,33 @@ class AbstractTestFixture(unittest.TestCase):
                         "args": {"timeout": 10000, "zmq_socket": cls._get_zmq_socket_name(name)},
                     }
                 },
+                "street_network": [
+                    {
+                        "class": "jormungandr.street_network.Kraken",
+                        "args": {"timeout": 10},
+                        "modes": ["walking", "bike", "bss", "car", "car_no_park"],
+                    },
+                    {
+                        "class": "jormungandr.street_network.Taxi",
+                        "args": {
+                            "street_network": {
+                                "class": "jormungandr.street_network.Kraken",
+                                "args": {"timeout": 10},
+                            }
+                        },
+                        "modes": ["taxi"],
+                    },
+                    {
+                        "class": "jormungandr.street_network.Ridesharing",
+                        "args": {
+                            "street_network": {
+                                "class": "jormungandr.street_network.Kraken",
+                                "args": {"timeout": 10},
+                            }
+                        },
+                        "modes": ["ridesharing"],
+                    },
+                ],
             }
             instance_config.update(cls.data_sets[name].get('instance_config', {}))
             with open(os.path.join(krakens_dir, name) + '.json', 'w') as f:

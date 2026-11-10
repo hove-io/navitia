@@ -708,38 +708,36 @@ def test_update_min_taxi(create_instance):
 
 def test_update_streetnetwork_backends(create_instance):
     resp = api_get('/v0/instances/fr')
-    assert resp[0]['street_network_car'] == "http://localhost/v0/streetnetwork_backends/kraken"
-    assert resp[0]['street_network_walking'] == "http://localhost/v0/streetnetwork_backends/kraken"
-    assert resp[0]['street_network_bike'] == "http://localhost/v0/streetnetwork_backends/kraken"
-    assert resp[0]['street_network_bss'] == "http://localhost/v0/streetnetwork_backends/kraken"
-    assert (
-        resp[0]['street_network_ridesharing'] == "http://localhost/v0/streetnetwork_backends/ridesharingKraken"
-    )
-    assert resp[0]['street_network_taxi'] == "http://localhost/v0/streetnetwork_backends/taxiKraken"
+    assert resp[0]['street_network_car'] == "http://localhost/v0/streetnetwork_backends/asgard"
+    assert resp[0]['street_network_walking'] == "http://localhost/v0/streetnetwork_backends/asgard"
+    assert resp[0]['street_network_bike'] == "http://localhost/v0/streetnetwork_backends/asgard"
+    assert resp[0]['street_network_bss'] == "http://localhost/v0/streetnetwork_backends/asgard"
+    assert resp[0]['street_network_ridesharing'] == "http://localhost/v0/streetnetwork_backends/asgard"
+    assert resp[0]['street_network_taxi'] == "http://localhost/v0/streetnetwork_backends/asgard"
 
     params = {
-        'street_network_car': "taxiKraken",
-        'street_network_walking': "taxiKraken",
-        'street_network_bike': "taxiKraken",
-        'street_network_bss': "taxiKraken",
-        'street_network_ridesharing': "kraken",
-        'street_network_taxi': "ridesharingKraken",
+        'street_network_car': "asgard",
+        'street_network_walking': "asgard",
+        'street_network_bike': "asgard",
+        'street_network_bss': "asgard",
+        'street_network_ridesharing': "asgard",
+        'street_network_taxi': "asgard",
     }
     resp = api_put('/v0/instances/fr', data=json.dumps(params), content_type='application/json')
-    assert resp['street_network_car'] == "http://localhost/v0/streetnetwork_backends/taxiKraken"
-    assert resp['street_network_walking'] == "http://localhost/v0/streetnetwork_backends/taxiKraken"
-    assert resp['street_network_bike'] == "http://localhost/v0/streetnetwork_backends/taxiKraken"
-    assert resp['street_network_bss'] == "http://localhost/v0/streetnetwork_backends/taxiKraken"
-    assert resp['street_network_ridesharing'] == "http://localhost/v0/streetnetwork_backends/kraken"
-    assert resp['street_network_taxi'] == "http://localhost/v0/streetnetwork_backends/ridesharingKraken"
+    assert resp['street_network_car'] == "http://localhost/v0/streetnetwork_backends/asgard"
+    assert resp['street_network_walking'] == "http://localhost/v0/streetnetwork_backends/asgard"
+    assert resp['street_network_bike'] == "http://localhost/v0/streetnetwork_backends/asgard"
+    assert resp['street_network_bss'] == "http://localhost/v0/streetnetwork_backends/asgard"
+    assert resp['street_network_ridesharing'] == "http://localhost/v0/streetnetwork_backends/asgard"
+    assert resp['street_network_taxi'] == "http://localhost/v0/streetnetwork_backends/asgard"
 
     resp = api_get('/v0/instances/fr')
-    assert resp[0]['street_network_car'] == "http://localhost/v0/streetnetwork_backends/taxiKraken"
-    assert resp[0]['street_network_walking'] == "http://localhost/v0/streetnetwork_backends/taxiKraken"
-    assert resp[0]['street_network_bike'] == "http://localhost/v0/streetnetwork_backends/taxiKraken"
-    assert resp[0]['street_network_bss'] == "http://localhost/v0/streetnetwork_backends/taxiKraken"
-    assert resp[0]['street_network_ridesharing'] == "http://localhost/v0/streetnetwork_backends/kraken"
-    assert resp[0]['street_network_taxi'] == "http://localhost/v0/streetnetwork_backends/ridesharingKraken"
+    assert resp[0]['street_network_car'] == "http://localhost/v0/streetnetwork_backends/asgard"
+    assert resp[0]['street_network_walking'] == "http://localhost/v0/streetnetwork_backends/asgard"
+    assert resp[0]['street_network_bike'] == "http://localhost/v0/streetnetwork_backends/asgard"
+    assert resp[0]['street_network_bss'] == "http://localhost/v0/streetnetwork_backends/asgard"
+    assert resp[0]['street_network_ridesharing'] == "http://localhost/v0/streetnetwork_backends/asgard"
+    assert resp[0]['street_network_taxi'] == "http://localhost/v0/streetnetwork_backends/asgard"
 
     # The key does not exist in streetnetwork_backend table
     with pytest.raises(Exception):

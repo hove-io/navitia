@@ -172,13 +172,13 @@ max_taxi_direct_path_duration = 24 * 60 * 60
 
 max_ridesharing_direct_path_duration = 24 * 60 * 60
 
-street_network_car = "kraken"
-street_network_car_no_park = "kraken"
-street_network_walking = "kraken"
-street_network_bike = "kraken"
-street_network_bss = "kraken"
-street_network_ridesharing = "ridesharingKraken"
-street_network_taxi = "taxiKraken"
+street_network_car = "asgard"
+street_network_car_no_park = "asgard"
+street_network_walking = "asgard"
+street_network_bike = "asgard"
+street_network_bss = "asgard"
+street_network_ridesharing = "asgard"
+street_network_taxi = "asgard"
 
 # Here - https://developer.here.com/
 here_max_matrix_points = 100
