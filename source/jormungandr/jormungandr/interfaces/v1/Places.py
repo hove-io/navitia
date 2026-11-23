@@ -220,9 +220,9 @@ class Places(ResourceUri):
             if (not user) and (not available_instances):
                 raise TechnicalError('world wide autocompletion service not available temporarily')
 
-            # If parameter '_autocomplete' is absent use 'bragi' as default value
+            # If parameter '_autocomplete' is absent use 'bragi7' as default value
             if args["_autocomplete"] is None:
-                args["_autocomplete"] = app.config.get('DEFAULT_AUTOCOMPLETE_BACKEND', 'bragi')
+                args["_autocomplete"] = app.config.get('DEFAULT_AUTOCOMPLETE_BACKEND', 'bragi7')
             autocomplete = global_autocomplete.get(args["_autocomplete"])
             if not autocomplete:
                 raise TechnicalError('world wide autocompletion service not available')
@@ -302,9 +302,9 @@ class PlaceUri(ResourceUri):
             if (not user) and (not available_instances):
                 raise TechnicalError('world wide autocompletion service not available temporarily')
 
-            # If parameter '_autocomplete' is absent use 'bragi' as default value
+            # If parameter '_autocomplete' is absent use 'bragi7' as default value
             if args["_autocomplete"] is None:
-                args["_autocomplete"] = app.config.get('DEFAULT_AUTOCOMPLETE_BACKEND', 'bragi')
+                args["_autocomplete"] = app.config.get('DEFAULT_AUTOCOMPLETE_BACKEND', 'bragi7')
             autocomplete = global_autocomplete.get(args["_autocomplete"])
             if not autocomplete:
                 raise TechnicalError('world wide autocompletion service not available')
