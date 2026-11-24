@@ -73,7 +73,7 @@ class PtRef(object):
         if line_uri:
             req.ptref.filter = req.ptref.filter + ' and line.uri="{}"'.format(line_uri)
 
-        result = self.instance.send_and_receive(req)
+        result = self.instance.get_backend("stop_points", {}).send_and_receive(req)
         if len(result.stop_points) == 0:
             logging.getLogger(__name__).info(
                 'PtRef, Unable to find stop_point with filter {}'.format(req.ptref.filter)
@@ -101,7 +101,9 @@ class PtRef(object):
         if pb_type == type_pb2.LINE:
             req.ptref.odt_level = odt_level
         while True:
-            result = self.instance.send_and_receive(req)
+            result = self.instance.get_backend(
+                type_pb2.NavitiaType.Name(pb_type).lower() + 's', {}
+            ).send_and_receive(req)
 
             objects = getattr(result, PT_TYPE_RESPONSE_MAPPING[pb_type])
             if not objects:
