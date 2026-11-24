@@ -2045,7 +2045,7 @@ class AbstractAutocompletePoiDataset:
             m.post('https://host_of_bragi/autocomplete', json={})
             self.query_region('places?q=bob&from=3.25;49.84')
             assert m.called
-            params = m.request_history[0].qs    
+            params = m.request_history[0].qs
             assert params
             assert params.get('poi_dataset[]') == ['priv.bob']
 
