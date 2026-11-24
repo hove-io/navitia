@@ -280,7 +280,7 @@ TO_ADDRESS_WITHIN_ZONES = {
     ],
 }
 
-MOCKED_INSTANCE_CONF = {"scenario": "distributed", 'instance_config': {'default_autocomplete': 'bragi'}}
+MOCKED_INSTANCE_CONF = {"scenario": "distributed", 'instance_config': {'default_autocomplete': 'bragi7'}}
 
 
 @dataset({'main_routing_test': MOCKED_INSTANCE_CONF}, global_config={'activate_bragi': True})
@@ -751,7 +751,7 @@ class TestJourneysDistributedPoiAccessPoint(AbstractTestFixture):
 
 MOCKED_INSTANCE_CONF = {
     "scenario": "distributed",
-    'instance_config': {'use_multi_reverse': True, 'default_autocomplete': 'bragi'},
+    'instance_config': {'use_multi_reverse': True, 'default_autocomplete': 'bragi7'},
 }
 
 
