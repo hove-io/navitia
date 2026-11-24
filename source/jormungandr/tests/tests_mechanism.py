@@ -180,7 +180,7 @@ class AbstractTestFixture(unittest.TestCase):
                     'bragi7': utils.create_object(
                         {
                             'class': 'jormungandr.autocomplete.geocodejson.GeocodeJson',
-                            'args': {"host": "https://host_of_bragi7"},
+                            'args': {"host": "https://host_of_bragi"},
                         }
                     ),
                     'kraken': utils.create_object({'class': 'jormungandr.autocomplete.kraken.Kraken'}),

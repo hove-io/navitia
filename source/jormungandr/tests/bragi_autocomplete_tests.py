@@ -70,10 +70,10 @@ user_in_db_bragi = {
 }
 
 
-MOCKED_INSTANCE_CONF = {'instance_config': {'default_autocomplete': 'bragi'}}
+MOCKED_INSTANCE_CONF = {'instance_config': {'default_autocomplete': 'bragi7'}}
 
 MOCKED_INSTANCE_POI_DATASET_CONF = {
-    'instance_config': {'default_autocomplete': 'bragi', 'poi_dataset': 'priv.bob'}
+    'instance_config': {'default_autocomplete': 'bragi7', 'poi_dataset': 'priv.bob'}
 }
 
 BRAGI_MOCK_RESPONSE = {
