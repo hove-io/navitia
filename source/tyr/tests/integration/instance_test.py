@@ -556,19 +556,19 @@ def test_update_autocomplete_backend(create_instance):
     resp = api_get('/v0/instances/fr')
     assert resp[0]['autocomplete_backend'] == 'kraken'
 
-    params = {'autocomplete_backend': 'bragi7'}
+    params = {'autocomplete_backend': 'bragi'}
     resp = api_put('/v0/instances/fr', data=json.dumps(params), content_type='application/json')
-    assert resp['autocomplete_backend'] == 'bragi7'
+    assert resp['autocomplete_backend'] == 'bragi'
 
     resp = api_get('/v0/instances/fr')
-    assert resp[0]['autocomplete_backend'] == 'bragi7'
+    assert resp[0]['autocomplete_backend'] == 'bragi'
 
-    params = {'autocomplete_backend': 'bragi7'}
+    params = {'autocomplete_backend': 'bragi'}
     resp = api_put('/v0/instances/fr', data=json.dumps(params), content_type='application/json')
-    assert resp['autocomplete_backend'] == 'bragi7'
+    assert resp['autocomplete_backend'] == 'bragi'
 
     resp = api_get('/v0/instances/fr')
-    assert resp[0]['autocomplete_backend'] == 'bragi7'
+    assert resp[0]['autocomplete_backend'] == 'bragi'
 
 
 def test_update_additional_time_for_taxi(create_instance):
