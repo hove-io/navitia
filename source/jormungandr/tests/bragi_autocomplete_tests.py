@@ -1733,7 +1733,7 @@ class TestBragiShape(AbstractTestFixture):
         with user_set(app, FakeUserBragi, "test_user_with_shape"):
             with requests_mock.Mocker() as m:
                 m.post('https://host_of_bragi/autocomplete', json={})
-                self.query('v1/coverage/main_routing_test/places?q=toto&_autocomplete=bragi')
+                self.query('v1/coverage/main_routing_test/places?q=toto&_autocomplete=bragi7')
                 assert m.called
                 self.query('v1/places?q=toto')
                 assert m.call_count == 2
@@ -1746,7 +1746,7 @@ class TestBragiShape(AbstractTestFixture):
 
             with requests_mock.Mocker() as m:
                 m.post('https://host_of_bragi/autocomplete', json={})
-                self.query('v1/coverage/main_routing_test/places?q=toto&_autocomplete=bragi')
+                self.query('v1/coverage/main_routing_test/places?q=toto&_autocomplete=bragi7')
                 assert m.called
                 check_shape(m)
                 self.query('v1/places?q=toto')
@@ -1760,7 +1760,7 @@ class TestBragiShape(AbstractTestFixture):
         with user_set(app, FakeUserBragi, "test_user_no_shape"):
             with requests_mock.Mocker() as m:
                 m.post('https://host_of_bragi/autocomplete', json={})
-                self.query('v1/coverage/main_routing_test/places?q=toto&_autocomplete=bragi')
+                self.query('v1/coverage/main_routing_test/places?q=toto&_autocomplete=bragi7')
                 assert m.called
 
                 m.get('https://host_of_bragi/autocomplete', json={})
@@ -1774,7 +1774,7 @@ class TestBragiShape(AbstractTestFixture):
         with user_set(app, FakeUserBragi, "test_user_with_coord"):
             with requests_mock.Mocker() as m:
                 m.post('https://host_of_bragi/autocomplete', json={})
-                self.query('v1/coverage/main_routing_test/places?q=toto&_autocomplete=bragi')
+                self.query('v1/coverage/main_routing_test/places?q=toto&_autocomplete=bragi7')
                 assert m.called
                 params = m.request_history[0].qs
                 assert params
@@ -2045,7 +2045,7 @@ class AbstractAutocompletePoiDataset:
             m.post('https://host_of_bragi/autocomplete', json={})
             self.query_region('places?q=bob&from=3.25;49.84')
             assert m.called
-            params = m.request_history[0].qs
+            params = m.request_history[0].qs    
             assert params
             assert params.get('poi_dataset[]') == ['priv.bob']
 
@@ -2053,7 +2053,7 @@ class AbstractAutocompletePoiDataset:
 
         with requests_mock.Mocker() as m:
             m.post('https://host_of_bragi/autocomplete', json={})
-            self.query('v1/coverage/main_routing_test/places?q=bob&_autocomplete=bragi')
+            self.query('v1/coverage/main_routing_test/places?q=bob&_autocomplete=bragi7')
             assert m.called
 
             params = m.request_history[0].qs
