@@ -1788,7 +1788,7 @@ class TestBragiShape(AbstractTestFixture):
         with user_set(app, FakeUserBragi, "test_user_with_coord"):
             with requests_mock.Mocker() as m:
                 m.post('https://host_of_bragi/autocomplete', json={})
-                self.query('v1/coverage/main_routing_test/places?q=toto&_autocomplete=bragi&from=1;2')
+                self.query('v1/coverage/main_routing_test/places?q=toto&_autocomplete=bragi7&from=1;2')
                 assert m.called
                 params = m.request_history[0].qs
                 assert params
@@ -1802,7 +1802,7 @@ class TestBragiShape(AbstractTestFixture):
         with user_set(app, FakeUserBragi, "test_user_with_coord"):
             with requests_mock.Mocker() as m:
                 m.post('https://host_of_bragi/autocomplete', json={})
-                self.query('v1/coverage/main_routing_test/places?q=toto&_autocomplete=bragi&from=')
+                self.query('v1/coverage/main_routing_test/places?q=toto&_autocomplete=bragi7&from=')
                 assert m.called
                 params = m.request_history[0].qs
                 assert params
@@ -1814,7 +1814,7 @@ class TestBragiShape(AbstractTestFixture):
         Test that we get an error if we give an empty coord
         (and if there is no user defined coord to override)
         """
-        r, s = self.query_no_assert('v1/coverage/main_routing_test/places?q=toto&_autocomplete=bragi&from=')
+        r, s = self.query_no_assert('v1/coverage/main_routing_test/places?q=toto&_autocomplete=bragi7&from=')
         assert s == 400
         assert "if 'from' is provided it cannot be null" in r.get('message')
 
@@ -1843,7 +1843,7 @@ class TestBragiShape(AbstractTestFixture):
         with requests_mock.Mocker() as m:
             m.get(url, json=BRAGI_MOCK_RESPONSE)
             response = self.query(
-                "/v1/coverage/{pt_dataset}/coords/{lon};{lat}?_autocomplete=bragi".format(
+                "/v1/coverage/{pt_dataset}/coords/{lon};{lat}?_autocomplete=bragi7".format(
                     lon=params.get('lon'), lat=params.get('lat'), pt_dataset=params.get('pt_dataset[]')
                 )
             )
