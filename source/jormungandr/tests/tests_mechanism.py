@@ -177,7 +177,7 @@ class AbstractTestFixture(unittest.TestCase):
             jormungandr.global_autocomplete.clear()
             jormungandr.global_autocomplete.update(
                 {
-                    'bragi': utils.create_object(
+                    'bragi7': utils.create_object(
                         {
                             'class': 'jormungandr.autocomplete.geocodejson.GeocodeJson',
                             'args': {"host": "https://host_of_bragi"},

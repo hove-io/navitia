@@ -1791,7 +1791,7 @@ class Scenario(simple.Scenario):
             return entrypoint_uri_refocus(detail, entrypoint)
 
         if not isinstance(instance.autocomplete, GeocodeJson):
-            bragi = global_autocomplete.get(app.config.get('DEFAULT_AUTOCOMPLETE_BACKEND', 'bragi'))
+            bragi = global_autocomplete.get(app.config.get('DEFAULT_AUTOCOMPLETE_BACKEND', 'bragi7'))
             if bragi:
                 # if the instance's autocomplete is not a geocodejson autocomplete, we also check in the
                 # global autocomplete instance

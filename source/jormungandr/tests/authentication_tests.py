@@ -625,7 +625,7 @@ class TestOverlappingAuthentication(AbstractTestAuthentication):
             with requests_mock.Mocker() as m:
                 m.post(requests_mock.ANY, json=response)
                 _, status = self.query_no_assert(
-                    '/v1/coverage/main_routing_test/places?q=bob&_autocomplete=bragi'
+                    '/v1/coverage/main_routing_test/places?q=bob&_autocomplete=bragi7'
                 )
                 assert status == 200
                 assert m.called
@@ -633,7 +633,7 @@ class TestOverlappingAuthentication(AbstractTestAuthentication):
             with requests_mock.Mocker() as m:
                 m.get(requests_mock.ANY, json=response)
                 _, status = self.query_no_assert(
-                    '/v1/coverage/departure_board_test/places?q=bob&_autocomplete=bragi'
+                    '/v1/coverage/departure_board_test/places?q=bob&_autocomplete=bragi7'
                 )
                 assert status == 200
                 assert m.called
@@ -673,7 +673,7 @@ class AuthenticationPublicNavitia(AbstractTestFixture):
             with requests_mock.Mocker() as m:
                 m.post(requests_mock.ANY, json=BRAGI_RESPONSE)
                 _, status = self.query_no_assert(
-                    '/v1/coverage/main_routing_test/places?q=bob&_autocomplete=bragi'
+                    '/v1/coverage/main_routing_test/places?q=bob&_autocomplete=bragi7'
                 )
                 assert status == 200
                 assert m.called
@@ -683,14 +683,14 @@ class AuthenticationPublicNavitia(AbstractTestFixture):
         """even without a user we can access all the places apis"""
         with requests_mock.Mocker() as m:
             m.post(requests_mock.ANY, json=BRAGI_RESPONSE)
-            _, status = self.query_no_assert('/v1/coverage/main_routing_test/places?q=bob&_autocomplete=bragi')
+            _, status = self.query_no_assert('/v1/coverage/main_routing_test/places?q=bob&_autocomplete=bragi7')
             assert status == 200
             assert m.called
             check_dataset(m, {'main_routing_test'})
 
         with requests_mock.Mocker() as m:
             m.get(requests_mock.ANY, json=BRAGI_RESPONSE)
-            _, status = self.query_no_assert('/v1/places?q=bob&_autocomplete=bragi')
+            _, status = self.query_no_assert('/v1/places?q=bob&_autocomplete=bragi7')
             assert status == 200
             assert m.called
             check_dataset(m, {'main_routing_test', 'empty_routing_test', 'departure_board_test'})

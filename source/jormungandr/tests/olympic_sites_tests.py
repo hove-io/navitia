@@ -322,7 +322,7 @@ DEFAULT_FORBIDDEN_URIS = {
 MOCKED_INSTANCE_CONF = {
     "scenario": "distributed",
     'instance_config': {
-        'default_autocomplete': 'bragi',
+        'default_autocomplete': 'bragi7',
         "use_multi_reverse": True,
         "olympics_forbidden_uris": DEFAULT_FORBIDDEN_URIS,
     },
