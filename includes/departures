@@ -1,0 +1,42 @@
+<h1 id="next_departures_and_arrivals">Next departures and arrivals</h1>
+
+<p>The &quot;Next Departures&quot; feature provides the next scheduled departures or arrivals
+for a specific mode of public transport (bus, tram, metro, train) at your selected stop, near coordinates, etc.</p>
+
+<blockquote>
+<p><a href="https://playground.navitia.io/play.html?request=https%3A%2F%2Fapi.navitia.io%2Fv1%2Fcoverage%2Fsandbox%2Fstop_areas%2Fstop_area%253ARAT%253ASA%253AGDLYO%2Fterminus_schedules%3Fitems_per_schedule%3D2%26&amp;token=3b036afe-0110-4202-b9ed-99718476c2e0">Try it on Navitia playground (click on &quot;EXT&quot; buttons to see times)</a></p>
+</blockquote>
+
+<ul>
+<li>use <code>terminus_schedules</code> if you want to display departures grouped by terminus (2 next departures for each terminus for example). Terminus are automaticily computed by Navitia
+<a href="https://playground.navitia.io/play.html?request=https%3A%2F%2Fapi.navitia.io%2Fv1%2Fcoverage%2Fsandbox%2Fstop_areas%2Fstop_area%253ARAT%253ASA%253AGDLYO%2Fstop_schedules%3Fitems_per_schedule%3D2%26&amp;token=3b036afe-0110-4202-b9ed-99718476c2e0"><img src="https://upload.wikimedia.org/wikipedia/commons/thumb/7/7d/Panneau_SIEL_couleurs_Paris-Op%C3%A9ra.jpg/640px-Panneau_SIEL_couleurs_Paris-Op%C3%A9ra.jpg" alt="a terminus_schedules on Navitia playground" /></a></li>
+</ul>
+
+<blockquote>
+<p><a href="https://playground.navitia.io/play.html?request=https%3A%2F%2Fapi.navitia.io%2Fv1%2Fcoverage%2Fsandbox%2Fstop_areas%2Fstop_area%253ARAT%253ASA%253AGDLYO%2Fstop_schedules%3Fitems_per_schedule%3D2%26&amp;token=3b036afe-0110-4202-b9ed-99718476c2e0">Try it on Navitia playground (click on &quot;EXT&quot; buttons to see times)</a></p>
+</blockquote>
+
+<ul>
+<li>use <code>stop_schedules</code> if you want to display departures grouped by route (2 next departures for each route for example). Compared to &quot;terminus_schedules&quot;, routes are managed by the GTFS providers.
+<img src="/images/stop_vs_terminus_schedules-99bcd9ad.png" alt="stop_vs_terminus_schedules" /></li>
+</ul>
+
+<blockquote>
+<p><a href="https://playground.navitia.io/play.html?request=https%3A%2F%2Fapi.navitia.io%2Fv1%2Fcoverage%2Fsandbox%2Fstop_areas%2Fstop_area%253ARAT%253ASA%253AGDLYO%2Fstop_schedules%3Fitems_per_schedule%3D2%26&amp;token=3b036afe-0110-4202-b9ed-99718476c2e0">Try it on Navitia playground</a></p>
+</blockquote>
+
+<ul>
+<li>use <code>departures</code> or <code>arrivals</code> if you want to display a multi-route table (like big departure boards in train stations)
+<a href="https://playground.navitia.io/play.html?request=https%3A%2F%2Fapi.navitia.io%2Fv1%2Fcoverage%2Fsandbox%2Fstop_areas%2Fstop_area%253ARAT%253ASA%253AGDLYO%2Fdepartures%3F&amp;token=3b036afe-0110-4202-b9ed-99718476c2e0"><img src="https://upload.wikimedia.org/wikipedia/commons/thumb/c/c7/Display_at_bus_stop_sign_in_Karlovo_n%C3%A1m%C4%9Bst%C3%AD%2C_T%C5%99eb%C3%AD%C4%8D%2C_T%C5%99eb%C3%AD%C4%8D_District.JPG/640px-Display_at_bus_stop_sign_in_Karlovo_n%C3%A1m%C4%9Bst%C3%AD%2C_T%C5%99eb%C3%AD%C4%8D%2C_T%C5%99eb%C3%AD%C4%8D_District.JPG" alt="a departures on Navitia playground" /></a></li>
+</ul>
+
+<p>In order to display departures, you may have to use these APIs (click on them for details):</p>
+
+<ul>
+<li>  <strong><a href="#pt-ref">Public transportation objects</a></strong>: List of the public transport
+objects of a region</li>
+<li>  <strong><a href="#stop-schedules">Stop Schedules</a></strong>, <strong><a href="#terminus-schedules">Terminus Schedules</a></strong>, <strong><a href="#departures">Departures</a></strong> and <strong><a href="#arrivals">Arrivals</a></strong>:
+Compute time tables for a given resource</li>
+</ul>
+
+<p>See how disruptions affect the next departures in the <a href="#realtime">real time</a> section.</p>
